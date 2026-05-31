@@ -1,0 +1,138 @@
+{
+  "name": "@dreamboard-games/ui-sdk",
+  "version": "0.2.0",
+  "private": false,
+  "description": "UI SDK for dreamboard plugin development",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "dreamboard-source": "./src/index.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./components": {
+      "types": "./dist/components/index.d.ts",
+      "dreamboard-source": "./src/components/index.ts",
+      "import": "./dist/components/index.js",
+      "default": "./dist/components/index.js"
+    },
+    "./defaults": {
+      "types": "./dist/defaults/index.d.ts",
+      "dreamboard-source": "./src/defaults/index.ts",
+      "import": "./dist/defaults/index.js",
+      "default": "./dist/defaults/index.js"
+    },
+    "./types/player-state": {
+      "types": "./dist/types/player-state.d.ts",
+      "dreamboard-source": "./src/types/player-state.ts",
+      "import": "./dist/types/player-state.js",
+      "default": "./dist/types/player-state.js"
+    },
+    "./plugin-styles.css": {
+      "dreamboard-source": "./src/plugin-styles.css",
+      "default": "./dist/plugin-styles.css"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "LICENSE.md",
+    "dist",
+    "src",
+    "type-stubs",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/__fixtures__/**",
+    "!src/**/*.stories.ts",
+    "!src/**/*.stories.tsx",
+    "!src/stories/**",
+    "!visual/**",
+    "!.turbo/**",
+    "!tsconfig.tsbuildinfo"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b && cp src/plugin-styles.css dist/plugin-styles.css && rollup -c rollup.config.js",
+    "build:clean": "pnpm run clean && pnpm run build",
+    "postbuild": "echo '✅ Generated ui-sdk.d.ts'",
+    "typecheck": "tsc -b --pretty false",
+    "dev": "storybook dev -p 6006",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build -o storybook-static",
+    "storybook:test": "concurrently -k -s first -n storybook,test \"http-server storybook-static -p 6006 -s --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",
+    "storybook:test:visual": "playwright test --config .storybook/visual-runner.config.ts",
+    "storybook:test:visual:update": "playwright test --config .storybook/visual-runner.config.ts --update-snapshots",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "test": "bun test ./src",
+    "test:unit": "bun test ./src",
+    "clean": "rm -rf dist storybook-static tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@dreamboard-games/sdk-types": "workspace:*",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@use-gesture/react": "^10.3.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.0",
+    "tailwindcss": "^4.1.5",
+    "vaul": "^1.1.2",
+    "zustand": "^5.0.4"
+  },
+  "devDependencies": {
+    "@storybook/addon-a11y": "^10.4.1",
+    "@storybook/addon-themes": "^10.4.1",
+    "@storybook/react-vite": "^10.4.1",
+    "@storybook/test-runner": "^0.24.4",
+    "@tailwindcss/postcss": "^4.1.5",
+    "@tailwindcss/vite": "^4.1.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "axe-playwright": "^2.0.3",
+    "concurrently": "^9.1.0",
+    "eslint": "^9.34.0",
+    "eslint-plugin-storybook": "^10.4.1",
+    "http-server": "^14.1.1",
+    "playwright": "1.60.0",
+    "wait-on": "^8.0.1",
+    "postcss": "^8.5.3",
+    "react-dom": "^19.2.0",
+    "rollup": "^4.28.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "storybook": "^10.4.1",
+    "typescript": "5.7.3",
+    "vite": "^5.4.10",
+    "zod": "4.4.3"
+  },
+  "peerDependencies": {
+    "framer-motion": "^11.0.0",
+    "react": "^19.0.0",
+    "zod": "4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git",
+    "directory": "packages/ui-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "react",
+    "ui"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

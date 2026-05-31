@@ -1,0 +1,6 @@
+{
+  "effectId": "ef1",
+  "type": "shufflePlayerZone",
+  "zoneId": "deck",
+  "playerId": "player-1"
+}

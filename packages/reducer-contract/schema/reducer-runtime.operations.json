@@ -1,0 +1,51 @@
+{
+  "$schema": "./reducer-runtime.operations.schema.json",
+  "description": "Callable reducer bundle boundary layered on top of reducer-runtime.schema.json payload DTOs.",
+  "versionProperty": {
+    "name": "reducerContractVersion",
+    "type": "ReducerContractVersion"
+  },
+  "operations": [
+    {
+      "name": "initialize",
+      "input": "InitializeRequest",
+      "output": "ReducerSessionState",
+      "maybePromise": true
+    },
+    {
+      "name": "initializePhase",
+      "input": "InitializePhaseRequest",
+      "output": "ReducerSessionState",
+      "maybePromise": true
+    },
+    {
+      "name": "validateInput",
+      "input": "ValidateInputRequest",
+      "output": "ReducerInputValidationResult",
+      "maybePromise": true
+    },
+    {
+      "name": "reduce",
+      "input": "ReduceRequest",
+      "output": "ReduceResult",
+      "maybePromise": true
+    },
+    {
+      "name": "dispatch",
+      "input": "DispatchRequest",
+      "output": "DispatchResult",
+      "maybePromise": true
+    },
+    {
+      "name": "projectStatic",
+      "input": null,
+      "output": "BoardStaticProjection",
+      "nullableOutput": true
+    },
+    {
+      "name": "projectSeatsDynamic",
+      "input": "ProjectSeatsDynamicRequest",
+      "output": "SeatProjectionBundle"
+    }
+  ]
+}

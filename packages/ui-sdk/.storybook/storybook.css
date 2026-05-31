@@ -1,0 +1,62 @@
+/**
+ * Storybook-only styles.
+ *
+ * Mirrors the Tailwind plugin styles consumed by the SDK so stories render
+ * identically to apps that mount `plugin-styles.css`.
+ */
+@import "@dreamboard/tailwind-config";
+
+@source "../src/**/*.{ts,tsx}";
+
+html,
+body,
+#storybook-root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+#storybook-root {
+  /*
+   * Each story renders inside a `ThemeProvider` that paints its own surface
+   * color. The empty body backstop keeps controls/visual snapshots stable
+   * regardless of preset.
+   */
+  background: transparent;
+}
+
+.sb-theme-host {
+  display: block;
+  min-height: 100vh;
+}
+
+.sb-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.sb-stage--center {
+  align-items: center;
+  justify-content: center;
+}
+
+.sb-stage--row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.sb-stage h2,
+.sb-stage h3 {
+  font-family: var(--db-font-display, ui-sans-serif);
+  color: var(--db-text-primary, currentColor);
+  margin: 0;
+}
+
+.sb-stage p {
+  color: var(--db-text-muted, currentColor);
+  margin: 0;
+}

@@ -1,0 +1,76 @@
+{
+  "name": "@dreamboard-games/sdk",
+  "version": "0.2.0",
+  "description": "Dreamboard SDK package set metadata and public facade",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package-set": {
+      "types": "./dist/package-set.d.ts",
+      "import": "./dist/package-set.js",
+      "default": "./dist/package-set.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "LICENSE.md",
+    "dist",
+    "src",
+    "README.md",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/__fixtures__/**",
+    "!src/**/*.stories.ts",
+    "!src/**/*.stories.tsx",
+    "!src/stories/**",
+    "!visual/**",
+    "!.turbo/**",
+    "!tsconfig.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint 'src/**/*.ts'",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@dreamboard-games/api-client": "workspace:*",
+    "@dreamboard-games/app-sdk": "workspace:*",
+    "@dreamboard-games/reducer-contract": "workspace:*",
+    "@dreamboard-games/sdk-types": "workspace:*",
+    "@dreamboard-games/testing": "workspace:*",
+    "@dreamboard-games/ui-runtime": "workspace:*",
+    "@dreamboard-games/ui-sdk": "workspace:*",
+    "@dreamboard-games/workspace-codegen": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "eslint": "^9.39.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "package-set"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

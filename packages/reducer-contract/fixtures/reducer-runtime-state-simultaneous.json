@@ -1,0 +1,17 @@
+{
+  "rng": { "seed": 2026, "cursor": 3, "trace": ["deal:card-1"] },
+  "setup": null,
+  "simultaneous": {
+    "current": {
+      "phaseName": "choose",
+      "actors": ["player-1", "player-2"],
+      "submissions": {
+        "player-1": {
+          "interactionId": "submit",
+          "params": { "choice": "left" }
+        }
+      }
+    }
+  },
+  "lastTransition": { "from": "main", "to": "choose" }
+}

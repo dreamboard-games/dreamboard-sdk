@@ -1,0 +1,1115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamboard.games/schemas/reducer-runtime.schema.json",
+  "title": "ReducerRuntimeContract",
+  "description": "Wire-format contract between the JS reducer bundle (guest) and the Kotlin reducer runtime (host). Authored by hand; consumed by codegen in both languages. Any change here is a breaking protocol change and must bump REDUCER_CONTRACT_VERSION.",
+  "type": "object",
+  "properties": {
+    "version": { "$ref": "#/$defs/ReducerContractVersion" }
+  },
+  "required": ["version"],
+  "additionalProperties": false,
+
+  "$defs": {
+    "ReducerContractVersion": {
+      "description": "Semver-style major.minor.patch string. Major bumps are incompatible; the Kotlin adapter refuses bundles with a different major.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+
+    "EffectId": {
+      "description": "Locally-unique id scoped to a single accept payload. The SDK mints these; the host uses them as keys into the continuations map.",
+      "type": "string",
+      "minLength": 1
+    },
+
+    "ContinuationToken": {
+      "description": "Opaque handle the host passes back to the bundle when the effect resolves.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "data": { "$ref": "#/$defs/JsonValue" }
+      },
+      "required": ["id", "data"],
+      "additionalProperties": false
+    },
+
+    "ContinuationMap": {
+      "description": "Sparse map keyed by EffectId. Presence = effect has a continuation; absence = fire-and-forget.",
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/ContinuationToken" }
+    },
+
+    "JsonValue": {
+      "description": "Any JSON-compatible value. Deliberately permissive; callers enforce payload shapes elsewhere.",
+      "anyOf": [
+        { "type": "object" },
+        { "type": "array" },
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" }
+      ]
+    },
+
+    "ReducerSetupSelection": {
+      "description": "Resolved setup profile and option values selected for this reducer session.",
+      "type": "object",
+      "properties": {
+        "profileId": { "type": "string", "minLength": 1 },
+        "optionValues": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }]
+          }
+        }
+      },
+      "required": ["profileId", "optionValues"],
+      "additionalProperties": false
+    },
+
+    "RngState": {
+      "description": "Deterministic RNG cursor state owned by the reducer runtime.",
+      "type": "object",
+      "properties": {
+        "seed": {
+          "anyOf": [
+            { "type": "integer", "format": "int64" },
+            { "type": "null" }
+          ]
+        },
+        "cursor": { "type": "integer" },
+        "trace": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      },
+      "required": ["seed", "cursor", "trace"],
+      "additionalProperties": false
+    },
+
+    "ReducerFlowState": {
+      "description": "Current reducer phase and actor bookkeeping.",
+      "type": "object",
+      "properties": {
+        "currentPhase": { "type": "string", "minLength": 1 },
+        "turn": { "type": "integer" },
+        "round": { "type": "integer" },
+        "activePlayers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": ["currentPhase", "turn", "round", "activePlayers"],
+      "additionalProperties": false
+    },
+
+    "RuntimeSimultaneousSubmission": {
+      "description": "A sealed simultaneous-phase submission captured before all actors have submitted.",
+      "type": "object",
+      "properties": {
+        "interactionId": { "type": "string", "minLength": 1 },
+        "params": { "$ref": "#/$defs/JsonValue" }
+      },
+      "required": ["interactionId", "params"],
+      "additionalProperties": false
+    },
+
+    "RuntimeSimultaneousCurrent": {
+      "description": "In-progress simultaneous phase submission bucket.",
+      "type": "object",
+      "properties": {
+        "phaseName": { "type": "string", "minLength": 1 },
+        "actors": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "submissions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RuntimeSimultaneousSubmission"
+          }
+        }
+      },
+      "required": ["phaseName", "actors", "submissions"],
+      "additionalProperties": false
+    },
+
+    "RuntimeSimultaneousState": {
+      "description": "Runtime storage for simultaneous-player phases. `current: null` means no simultaneous submission is pending.",
+      "type": "object",
+      "properties": {
+        "current": {
+          "anyOf": [
+            { "$ref": "#/$defs/RuntimeSimultaneousCurrent" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["current"],
+      "additionalProperties": false
+    },
+
+    "TransitionRecord": {
+      "description": "Last phase transition applied by the reducer runtime.",
+      "type": "object",
+      "properties": {
+        "from": { "type": "string", "minLength": 1 },
+        "to": { "type": "string", "minLength": 1 }
+      },
+      "required": ["from", "to"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeState": {
+      "description": "Cross-runtime reducer bookkeeping that must round-trip through Kotlin unchanged.",
+      "type": "object",
+      "properties": {
+        "rng": { "$ref": "#/$defs/RngState" },
+        "setup": {
+          "anyOf": [
+            { "$ref": "#/$defs/ReducerSetupSelection" },
+            { "type": "null" }
+          ]
+        },
+        "simultaneous": { "$ref": "#/$defs/RuntimeSimultaneousState" },
+        "lastTransition": {
+          "anyOf": [{ "$ref": "#/$defs/TransitionRecord" }, { "type": "null" }]
+        }
+      },
+      "required": ["rng", "setup", "simultaneous", "lastTransition"],
+      "additionalProperties": false
+    },
+
+    "ReducerDomainState": {
+      "description": "Reducer domain state envelope. Game-authored payloads remain JSON-erased here and are validated by the app SDK against the manifest and phase schemas.",
+      "type": "object",
+      "properties": {
+        "table": { "$ref": "#/$defs/JsonValue" },
+        "publicState": { "$ref": "#/$defs/JsonValue" },
+        "privateState": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/JsonValue" }
+        },
+        "hiddenState": { "$ref": "#/$defs/JsonValue" },
+        "flow": { "$ref": "#/$defs/ReducerFlowState" },
+        "phase": { "$ref": "#/$defs/JsonValue" }
+      },
+      "required": [
+        "table",
+        "publicState",
+        "privateState",
+        "hiddenState",
+        "flow",
+        "phase"
+      ],
+      "additionalProperties": false
+    },
+
+    "ReducerSessionState": {
+      "description": "Canonical session snapshot exchanged between the JS reducer bundle, Kotlin engine, and backend persistence.",
+      "type": "object",
+      "properties": {
+        "domain": { "$ref": "#/$defs/ReducerDomainState" },
+        "runtime": { "$ref": "#/$defs/ReducerRuntimeState" }
+      },
+      "required": ["domain", "runtime"],
+      "additionalProperties": false
+    },
+
+    "GameInput": {
+      "description": "Input submitted by a player. Tagged union; kind is the discriminator. Currently a single variant (interaction) so the union is trivially closed, but kept as oneOf so future input shapes (system events, etc.) can be added without breaking the code path.",
+      "oneOf": [{ "$ref": "#/$defs/GameInputInteraction" }]
+    },
+
+    "GameInputInteraction": {
+      "description": "A player submitting an interaction. An interaction is the unified authoring primitive for every player-originated input, identified by interactionId, with params carrying any collector-specific payload (e.g., prompt selection, board target, form fields).",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "interaction" },
+        "playerId": { "type": "string", "minLength": 1 },
+        "interactionId": { "type": "string", "minLength": 1 },
+        "params": { "$ref": "#/$defs/JsonValue" }
+      },
+      "required": ["kind", "playerId", "interactionId", "params"],
+      "additionalProperties": false
+    },
+
+    "Effect": {
+      "description": "A thing the host should do. Every variant has effectId + type and carries NO continuation field. Continuations are expressed via the sibling ContinuationMap keyed by effectId.",
+      "oneOf": [
+        { "$ref": "#/$defs/EffectTransition" },
+        { "$ref": "#/$defs/EffectRollDie" },
+        { "$ref": "#/$defs/EffectShuffleSharedZone" },
+        { "$ref": "#/$defs/EffectShufflePlayerZone" }
+      ]
+    },
+
+    "EffectTransition": {
+      "type": "object",
+      "properties": {
+        "effectId": { "$ref": "#/$defs/EffectId" },
+        "type": { "const": "transition" },
+        "to": { "type": "string", "minLength": 1 }
+      },
+      "required": ["effectId", "type", "to"],
+      "additionalProperties": false
+    },
+
+    "EffectRollDie": {
+      "type": "object",
+      "properties": {
+        "effectId": { "$ref": "#/$defs/EffectId" },
+        "type": { "const": "rollDie" },
+        "dieId": { "type": "string", "minLength": 1 }
+      },
+      "required": ["effectId", "type", "dieId"],
+      "additionalProperties": false
+    },
+
+    "EffectShuffleSharedZone": {
+      "type": "object",
+      "properties": {
+        "effectId": { "$ref": "#/$defs/EffectId" },
+        "type": { "const": "shuffleSharedZone" },
+        "zoneId": { "type": "string", "minLength": 1 }
+      },
+      "required": ["effectId", "type", "zoneId"],
+      "additionalProperties": false
+    },
+
+    "EffectShufflePlayerZone": {
+      "type": "object",
+      "properties": {
+        "effectId": { "$ref": "#/$defs/EffectId" },
+        "type": { "const": "shufflePlayerZone" },
+        "zoneId": { "type": "string", "minLength": 1 },
+        "playerId": { "type": "string", "minLength": 1 }
+      },
+      "required": ["effectId", "type", "zoneId", "playerId"],
+      "additionalProperties": false
+    },
+
+    "ReducerInputValidationResult": {
+      "type": "object",
+      "properties": {
+        "valid": { "type": "boolean" },
+        "errorCode": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "required": ["valid"],
+      "additionalProperties": false
+    },
+
+    "InitializeRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).initialize(...)`. `table` is intentionally erased at this contract layer; the authored bundle validates it against its manifest-derived schema.",
+      "type": "object",
+      "properties": {
+        "table": { "$ref": "#/$defs/JsonValue" },
+        "playerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rngSeed": {
+          "anyOf": [
+            { "type": "integer", "format": "int64" },
+            { "type": "null" }
+          ]
+        },
+        "setup": {
+          "anyOf": [
+            { "$ref": "#/$defs/ReducerSetupSelection" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["table", "playerIds"],
+      "additionalProperties": false
+    },
+
+    "InitializePhaseRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).initializePhase(...)`.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "to": { "type": "string", "minLength": 1 }
+      },
+      "required": ["state", "to"],
+      "additionalProperties": false
+    },
+
+    "ValidateInputRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).validateInput(...)`.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "input": { "$ref": "#/$defs/GameInput" }
+      },
+      "required": ["state", "input"],
+      "additionalProperties": false
+    },
+
+    "ReduceRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).reduce(...)`.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "input": { "$ref": "#/$defs/GameInput" }
+      },
+      "required": ["state", "input"],
+      "additionalProperties": false
+    },
+
+    "DispatchRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).dispatch(...)`.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "input": { "$ref": "#/$defs/GameInput" }
+      },
+      "required": ["state", "input"],
+      "additionalProperties": false
+    },
+
+    "ReduceResult": {
+      "description": "Pure reduce output (no host side-effects yet). Discriminator is `kind`.",
+      "oneOf": [
+        { "$ref": "#/$defs/ReduceResultReject" },
+        { "$ref": "#/$defs/ReduceResultAccept" }
+      ]
+    },
+
+    "ReduceResultReject": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "reject" },
+        "errorCode": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" }
+      },
+      "required": ["kind", "errorCode"],
+      "additionalProperties": false
+    },
+
+    "ReduceResultAccept": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "accept" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/Effect" }
+        },
+        "continuations": { "$ref": "#/$defs/ContinuationMap" }
+      },
+      "required": ["kind", "state", "effects", "continuations"],
+      "additionalProperties": false
+    },
+
+    "DispatchTrace": {
+      "description": "Per-step trace emitted by the host as it applies effects. Parallel in shape to ReducerRuntimeLogEntry but without the version field.",
+      "oneOf": [
+        { "$ref": "#/$defs/DispatchTraceAcceptedClientInput" },
+        { "$ref": "#/$defs/DispatchTraceAppliedEffect" },
+        { "$ref": "#/$defs/DispatchTraceRngConsumption" }
+      ]
+    },
+
+    "DispatchTraceAcceptedClientInput": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "acceptedClientInput" },
+        "input": { "$ref": "#/$defs/GameInput" }
+      },
+      "required": ["kind", "input"],
+      "additionalProperties": false
+    },
+
+    "DispatchTraceAppliedEffect": {
+      "description": "Applied effect trace. The continuation is inlined here so each trace entry is self-contained; the host emits the token it pulled from the sibling ContinuationMap at accept time.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "appliedEffect" },
+        "effect": { "$ref": "#/$defs/Effect" },
+        "continuation": { "$ref": "#/$defs/ContinuationToken" }
+      },
+      "required": ["kind", "effect"],
+      "additionalProperties": false
+    },
+
+    "DispatchTraceRngConsumption": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "rngConsumption" },
+        "operation": { "type": "string", "minLength": 1 },
+        "traceEntry": { "type": "string" }
+      },
+      "required": ["kind", "operation", "traceEntry"],
+      "additionalProperties": false
+    },
+
+    "DispatchResult": {
+      "description": "Result of dispatching a pure reduce result (i.e., applying effects).",
+      "oneOf": [
+        { "$ref": "#/$defs/DispatchResultReject" },
+        { "$ref": "#/$defs/DispatchResultAccept" }
+      ]
+    },
+
+    "DispatchResultReject": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "reject" },
+        "errorCode": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" }
+      },
+      "required": ["kind", "errorCode"],
+      "additionalProperties": false
+    },
+
+    "DispatchResultAccept": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "accept" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "trace": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/DispatchTrace" }
+        }
+      },
+      "required": ["kind", "state", "trace"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeLogEntry": {
+      "description": "Persisted reducer runtime log entry. Parallel to dispatch trace, with a committed version and state snapshots for recovery.",
+      "oneOf": [
+        { "$ref": "#/$defs/ReducerRuntimeLogEntryAcceptedClientInput" },
+        { "$ref": "#/$defs/ReducerRuntimeLogEntryAppliedEffect" },
+        { "$ref": "#/$defs/ReducerRuntimeLogEntryRngConsumption" },
+        { "$ref": "#/$defs/ReducerRuntimeLogEntryStateCommit" }
+      ]
+    },
+
+    "ReducerRuntimeLogEntryAcceptedClientInput": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "acceptedClientInput" },
+        "version": { "type": "integer" },
+        "input": { "$ref": "#/$defs/GameInput" }
+      },
+      "required": ["kind", "version", "input"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeLogEntryAppliedEffect": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "appliedEffect" },
+        "version": { "type": "integer" },
+        "effect": { "$ref": "#/$defs/Effect" },
+        "continuation": {
+          "anyOf": [{ "$ref": "#/$defs/ContinuationToken" }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "version", "effect", "continuation"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeLogEntryRngConsumption": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "rngConsumption" },
+        "version": { "type": "integer" },
+        "operation": { "type": "string", "minLength": 1 },
+        "traceEntry": { "type": "string" }
+      },
+      "required": ["kind", "version", "operation", "traceEntry"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeLogEntryStateCommit": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "stateCommit" },
+        "version": { "type": "integer" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" }
+      },
+      "required": ["kind", "version", "state"],
+      "additionalProperties": false
+    },
+
+    "SeatProjection": {
+      "description": "One seat's slice of `projectSeatsDynamic(...)`. `availableInteractionRefs` and `zones` stay JSON-erased here because their concrete shapes are owned by the gameplay payload/OpenAPI contracts, not reducer-contract.",
+      "type": "object",
+      "properties": {
+        "view": { "$ref": "#/$defs/JsonValue" },
+        "availableInteractionRefs": { "$ref": "#/$defs/JsonValue" },
+        "zones": { "$ref": "#/$defs/JsonValue" }
+      },
+      "additionalProperties": false
+    },
+
+    "SimultaneousPhaseProjection": {
+      "description": "Visibility-safe progress metadata for an active simultaneous-player phase. Submission params stay hidden in runtime state; projection exposes only which actors have sealed or are still pending.",
+      "type": "object",
+      "properties": {
+        "phaseName": { "type": "string", "minLength": 1 },
+        "interactionId": { "type": "string", "minLength": 1 },
+        "actorIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "sealedPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pendingPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": [
+        "phaseName",
+        "interactionId",
+        "actorIds",
+        "sealedPlayerIds",
+        "pendingPlayerIds"
+      ],
+      "additionalProperties": false
+    },
+
+    "SeatProjectionBundle": {
+      "description": "Result of `createReducerBundle(...).projectSeatsDynamic(...)`.",
+      "type": "object",
+      "properties": {
+        "currentStage": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "stageSeats": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "simultaneousPhase": {
+          "anyOf": [
+            { "$ref": "#/$defs/SimultaneousPhaseProjection" },
+            { "type": "null" }
+          ]
+        },
+        "interactionsByRef": { "$ref": "#/$defs/JsonValue" },
+        "seats": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/SeatProjection" }
+        }
+      },
+      "required": ["seats"],
+      "additionalProperties": false
+    },
+
+    "ProjectSeatsDynamicRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).projectSeatsDynamic(...)`.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "playerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "viewId": { "type": "string", "minLength": 1 },
+        "projectionMode": {
+          "anyOf": [
+            { "type": "string", "enum": ["full", "actionsOnly"] },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["state", "playerIds"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerRuntimeBundleRef": {
+      "description": "Backend artifact key prefix for a runtime bundle consumed by the reducer-worker service.",
+      "type": "object",
+      "properties": {
+        "artifactKeyPrefix": { "type": "string", "minLength": 1 },
+        "entryPoint": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "required": ["artifactKeyPrefix"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerBundleRef": {
+      "description": "Reducer-worker bundle reference resolved through the backend artifact proxy.",
+      "type": "object",
+      "properties": {
+        "runtimeBundle": {
+          "anyOf": [
+            { "$ref": "#/$defs/ReducerWorkerRuntimeBundleRef" },
+            { "type": "null" }
+          ]
+        },
+        "cacheKey": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionRequest": {
+      "description": "Authoritative reducer-worker action submission request.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "format": "uuid" },
+        "gameId": { "type": "string", "format": "uuid" },
+        "buildId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        },
+        "bundleRef": { "$ref": "#/$defs/ReducerWorkerBundleRef" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "actorUserId": { "type": "string", "format": "uuid" },
+        "input": { "$ref": "#/$defs/GameInput" },
+        "expectedVersion": { "type": "integer", "minimum": 0 },
+        "ownerWorkerId": { "type": "string", "minLength": 1 },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "clientActionId": { "type": "string", "minLength": 1 },
+        "actionFingerprint": { "type": "string", "minLength": 1 },
+        "runtimeContractVersion": { "type": "string", "minLength": 1 },
+        "bundleCacheKey": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "inlineBudgetMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "projectionPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includeStaticProjection": { "type": "boolean" },
+        "viewId": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "projectionMode": {
+          "anyOf": [
+            { "type": "string", "enum": ["full", "actionsOnly"] },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "sessionId",
+        "gameId",
+        "actorUserId",
+        "input",
+        "expectedVersion",
+        "ownerWorkerId",
+        "epoch",
+        "clientActionId",
+        "actionFingerprint",
+        "runtimeContractVersion"
+      ],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionResponseAcceptedCommitted": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "acceptedCommitted" },
+        "version": { "type": "integer", "minimum": 0 },
+        "currentPhase": { "type": "string", "minLength": 1 },
+        "activePlayers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
+        "staticProjection": {
+          "anyOf": [
+            { "$ref": "#/$defs/BoardStaticProjection" },
+            { "type": "null" }
+          ]
+        },
+        "logEntries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ReducerRuntimeLogEntry" }
+        },
+        "idempotentReplay": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kind",
+        "version",
+        "currentPhase",
+        "activePlayers",
+        "state",
+        "logEntries",
+        "idempotentReplay"
+      ],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionResponseRejected": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "rejected" },
+        "version": { "type": "integer", "minimum": 0 },
+        "errorCode": { "type": "string", "minLength": 1 },
+        "message": { "type": "string" },
+        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
+        "staticProjection": {
+          "anyOf": [
+            { "$ref": "#/$defs/BoardStaticProjection" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["kind", "errorCode"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionResponseDeferred": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "deferred" },
+        "reason": { "type": "string", "minLength": 1 },
+        "retryAfterMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "workJobId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "reason"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionResponseRedirect": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "redirect" },
+        "ownerWorkerId": { "type": "string", "minLength": 1 },
+        "endpoint": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "epoch": {
+          "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "ownerWorkerId"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerSubmitActionResponse": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ReducerWorkerSubmitActionResponseAcceptedCommitted"
+        },
+        { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseRejected" },
+        { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseDeferred" },
+        { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseRedirect" }
+      ]
+    },
+
+    "ReducerWorkerProjectSessionRequest": {
+      "description": "Reducer-worker dynamic projection request.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "format": "uuid" },
+        "bundleRef": { "$ref": "#/$defs/ReducerWorkerBundleRef" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "playerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includeStaticProjection": { "type": "boolean" },
+        "viewId": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "projectionMode": {
+          "anyOf": [
+            { "type": "string", "enum": ["full", "actionsOnly"] },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["sessionId", "playerIds"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerProjectSessionResponseProjected": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "projected" },
+        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
+        "staticProjection": {
+          "anyOf": [
+            { "$ref": "#/$defs/BoardStaticProjection" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["kind", "projection"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerProjectSessionResponseDeferred": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "deferred" },
+        "reason": { "type": "string", "minLength": 1 },
+        "retryAfterMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "workJobId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "reason"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerProjectSessionResponseRedirect": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "redirect" },
+        "ownerWorkerId": { "type": "string", "minLength": 1 },
+        "endpoint": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "epoch": {
+          "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "ownerWorkerId"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerProjectSessionResponse": {
+      "oneOf": [
+        { "$ref": "#/$defs/ReducerWorkerProjectSessionResponseProjected" },
+        { "$ref": "#/$defs/ReducerWorkerProjectSessionResponseDeferred" },
+        { "$ref": "#/$defs/ReducerWorkerProjectSessionResponseRedirect" }
+      ]
+    },
+
+    "ReducerWorkerInitializeSessionRequest": {
+      "description": "Reducer-worker cold session initialization request. The worker owns table materialization, reducer initialization, and first projection.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "format": "uuid" },
+        "gameId": { "type": "string", "format": "uuid" },
+        "buildId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        },
+        "bundleRef": { "$ref": "#/$defs/ReducerWorkerBundleRef" },
+        "manifest": { "$ref": "#/$defs/JsonValue" },
+        "playerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "rngSeed": {
+          "anyOf": [
+            { "type": "integer", "format": "int64" },
+            { "type": "null" }
+          ]
+        },
+        "setup": {
+          "anyOf": [
+            { "$ref": "#/$defs/ReducerSetupSelection" },
+            { "type": "null" }
+          ]
+        },
+        "projectionPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includeStaticProjection": { "type": "boolean" },
+        "viewId": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "projectionMode": {
+          "anyOf": [
+            { "type": "string", "enum": ["full", "actionsOnly"] },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["sessionId", "gameId", "bundleRef", "manifest", "playerIds"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerInitializeSessionResponseInitialized": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "initialized" },
+        "version": { "type": "integer", "minimum": 0 },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
+        "staticProjection": {
+          "anyOf": [
+            { "$ref": "#/$defs/BoardStaticProjection" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["kind", "version", "state"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerInitializeSessionResponseDeferred": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "deferred" },
+        "reason": { "type": "string", "minLength": 1 },
+        "retryAfterMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "workJobId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "reason"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerInitializeSessionResponseRedirect": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "redirect" },
+        "ownerWorkerId": { "type": "string", "minLength": 1 },
+        "endpoint": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "epoch": {
+          "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "ownerWorkerId"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerInitializeSessionResponse": {
+      "oneOf": [
+        { "$ref": "#/$defs/ReducerWorkerInitializeSessionResponseInitialized" },
+        { "$ref": "#/$defs/ReducerWorkerInitializeSessionResponseDeferred" },
+        { "$ref": "#/$defs/ReducerWorkerInitializeSessionResponseRedirect" }
+      ]
+    },
+
+    "ReducerWorkerRecoverSessionRequest": {
+      "description": "Reducer-worker session recovery request.",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "format": "uuid" },
+        "gameId": { "type": "string", "format": "uuid" },
+        "buildId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        },
+        "bundleRef": { "$ref": "#/$defs/ReducerWorkerBundleRef" },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "targetVersion": { "type": "integer", "minimum": 0 },
+        "inlineBudgetMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "projectionPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "includeStaticProjection": { "type": "boolean" },
+        "viewId": {
+          "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+        },
+        "projectionMode": {
+          "anyOf": [
+            { "type": "string", "enum": ["full", "actionsOnly"] },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["sessionId", "gameId"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerRecoverSessionResponseRecovered": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "recovered" },
+        "version": { "type": "integer", "minimum": 0 },
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
+        "staticProjection": {
+          "anyOf": [
+            { "$ref": "#/$defs/BoardStaticProjection" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": ["kind", "version", "state"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerRecoverSessionResponseDeferred": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "deferred" },
+        "reason": { "type": "string", "minLength": 1 },
+        "retryAfterMs": {
+          "anyOf": [{ "type": "integer", "minimum": 1 }, { "type": "null" }]
+        },
+        "workJobId": {
+          "anyOf": [{ "type": "string", "format": "uuid" }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "reason"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerRecoverSessionResponseRedirect": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "redirect" },
+        "ownerWorkerId": { "type": "string", "minLength": 1 },
+        "endpoint": {
+          "anyOf": [{ "type": "string", "format": "uri" }, { "type": "null" }]
+        },
+        "epoch": {
+          "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }]
+        }
+      },
+      "required": ["kind", "ownerWorkerId"],
+      "additionalProperties": false
+    },
+
+    "ReducerWorkerRecoverSessionResponse": {
+      "oneOf": [
+        { "$ref": "#/$defs/ReducerWorkerRecoverSessionResponseRecovered" },
+        { "$ref": "#/$defs/ReducerWorkerRecoverSessionResponseDeferred" },
+        { "$ref": "#/$defs/ReducerWorkerRecoverSessionResponseRedirect" }
+      ]
+    },
+
+    "ReducerWorkerErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "retryable": { "type": "boolean" }
+      },
+      "required": ["code", "message"],
+      "additionalProperties": false
+    },
+
+    "BoardStaticProjection": {
+      "description": "Session-scoped projection produced by `projectStatic`. Computed once per reducer session from the manifest + setup profile (no mutable state), cached on the Kotlin host, and merged back into each seat view on the client. `hash` identifies the payload so clients and the host can detect accidental drift. `manifestVersion` identifies the bundle build so a restart with a new bundle invalidates the cache. Per-seat dynamic projection (view, availableInteractionRefs, zones) continues to flow through `projectSeatsDynamic` and is decoded into typed `InteractionDescriptor` / `ZoneHandles` shapes defined by the OpenAPI game-messages schema, so it is not modeled here.",
+      "type": "object",
+      "properties": {
+        "view": { "$ref": "#/$defs/JsonValue" },
+        "hash": { "type": "string", "minLength": 1 },
+        "manifestVersion": { "type": "string" }
+      },
+      "required": ["view", "hash", "manifestVersion"],
+      "additionalProperties": false
+    }
+  }
+}

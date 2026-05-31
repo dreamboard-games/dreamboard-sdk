@@ -1,0 +1,31 @@
+{
+  "currentStage": "play",
+  "stageSeats": ["player-1"],
+  "seats": {
+    "player-1": {
+      "view": {
+        "coins": 3
+      },
+      "availableInteractionRefs": [
+        {
+          "interactionId": "claim",
+          "label": "Claim"
+        }
+      ],
+      "zones": {
+        "player-1": {
+          "hand": {
+            "visibleCardIds": ["c1"]
+          }
+        }
+      }
+    },
+    "player-2": {
+      "view": {
+        "coins": 1
+      },
+      "availableInteractionRefs": [],
+      "zones": {}
+    }
+  }
+}

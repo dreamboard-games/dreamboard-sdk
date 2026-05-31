@@ -1,0 +1,14 @@
+{
+  "table": {
+    "playerOrder": ["player-1", "player-2"],
+    "zones": { "shared": {}, "perPlayer": {}, "visibility": {} }
+  },
+  "playerIds": ["player-1", "player-2"],
+  "rngSeed": 1337,
+  "setup": {
+    "profileId": "short",
+    "optionValues": {
+      "difficulty": "normal"
+    }
+  }
+}

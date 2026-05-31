@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true
+  },
+  "include": [
+    "src/reducer/core/runtime-input.test.ts",
+    "src/reducer/interaction-input-types.test.ts"
+  ],
+  "exclude": []
+}
