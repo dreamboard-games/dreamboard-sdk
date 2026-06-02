@@ -40,7 +40,6 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@dreamboard-games/api-client": "workspace:*",
     "@dreamboard-games/app-sdk": "workspace:*",
     "@dreamboard-games/reducer-contract": "workspace:*",
     "@dreamboard-games/sdk-types": "workspace:*",

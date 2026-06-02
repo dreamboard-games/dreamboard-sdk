@@ -6,7 +6,6 @@ Public SDK package-set repository for Dreamboard game authoring.
 
 All packages in this repo are released with one fixed version:
 
-- `@dreamboard-games/api-client`
 - `@dreamboard-games/sdk-types`
 - `@dreamboard-games/reducer-contract`
 - `@dreamboard-games/app-sdk`

@@ -5,7 +5,7 @@ import type {
   GameTopologyManifest as ApiGameTopologyManifest,
   JsonValue,
   PropertySchema,
-} from "@dreamboard-games/api-client/types.gen";
+} from "./contracts.js";
 
 type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
   sides?: ApiDieTypeSpec["sides"];

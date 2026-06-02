@@ -25,9 +25,6 @@
       ],
       "#dreamboard/ui-contract": [
         "../type-stubs/ui-contract"
-      ],
-      "@dreamboard-games/api-client": [
-        "../../api-client/dist/index.d.ts"
       ]
     }
   },

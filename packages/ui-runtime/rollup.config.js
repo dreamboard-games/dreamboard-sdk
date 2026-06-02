@@ -1,8 +1,4 @@
 import dts from "rollup-plugin-dts";
-import { fileURLToPath } from "url";
-import path from "path";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Plugin to strip JSDoc comments from the generated .d.ts file
 function stripComments() {
@@ -41,13 +37,6 @@ const commonExternal = [
 
 const dtsPlugin = dts({
   respectExternal: true, // Respect the external array above
-  compilerOptions: {
-    paths: {
-      "@dreamboard-games/api-client": [
-        path.resolve(__dirname, "../api-client/dist/index.d.ts"),
-      ],
-    },
-  },
 });
 
 // Generate config for each entry + output combination

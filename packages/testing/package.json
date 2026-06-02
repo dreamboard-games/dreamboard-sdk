@@ -33,7 +33,6 @@
     "!tsconfig.tsbuildinfo"
   ],
   "dependencies": {
-    "@dreamboard-games/api-client": "workspace:*",
     "@dreamboard-games/app-sdk": "workspace:*",
     "@dreamboard-games/reducer-contract": "workspace:*",
     "@dreamboard-games/ui-runtime": "workspace:*",

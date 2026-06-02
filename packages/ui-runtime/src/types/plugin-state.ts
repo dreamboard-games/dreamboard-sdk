@@ -189,8 +189,6 @@ export interface PluginSessionState {
 // History State (host only)
 // ============================================================================
 
-// HistoryEntrySummary is re-exported from @dreamboard-games/api-client (see imports above)
-
 /**
  * History state for the host's history navigator.
  * Only sent to the host user.

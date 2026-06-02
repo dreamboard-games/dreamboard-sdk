@@ -1,9 +1,5 @@
 export const sdkPackages = [
   {
-    name: "@dreamboard-games/api-client",
-    dir: "packages/api-client",
-  },
-  {
     name: "@dreamboard-games/sdk-types",
     dir: "packages/sdk-types",
   },

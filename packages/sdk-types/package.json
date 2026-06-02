@@ -31,9 +31,6 @@
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
-  "dependencies": {
-    "@dreamboard-games/api-client": "workspace:*"
-  },
   "devDependencies": {
     "eslint": "^9.39.0",
     "typescript": "^5.9.2"

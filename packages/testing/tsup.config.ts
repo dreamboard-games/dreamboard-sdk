@@ -11,7 +11,6 @@ export default defineConfig({
   sourcemap: true,
   splitting: false,
   external: [
-    "@dreamboard-games/api-client",
     "@dreamboard-games/app-sdk",
     "@dreamboard-games/ui-runtime",
     "@dreamboard-games/ui-sdk",
