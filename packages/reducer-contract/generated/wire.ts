@@ -103,19 +103,17 @@ export type ReducerWorkerBundleRef = { "runtimeBundle"?: ReducerWorkerRuntimeBun
 
 export type ReducerWorkerSubmitActionRequest = { "sessionId": string; "gameId": string; "buildId"?: string | null; "bundleRef"?: ReducerWorkerBundleRef; "state"?: ReducerSessionState; "actorUserId": string; "input": GameInput; "expectedVersion": number; "ownerWorkerId": string; "epoch": number; "clientActionId": string; "actionFingerprint": string; "runtimeContractVersion": string; "bundleCacheKey"?: string | null; "inlineBudgetMs"?: number | null; "projectionPlayerIds"?: Array<string>; "includeStaticProjection"?: boolean; "viewId"?: string | null; "projectionMode"?: "full" | "actionsOnly" | null };
 
-export type ReducerWorkerSubmitActionResponseAcceptedCommitted = { "kind": "acceptedCommitted"; "version": number; "currentPhase": string; "activePlayers": Array<string>; "state": ReducerSessionState; "projection"?: SeatProjectionBundle; "staticProjection"?: BoardStaticProjection | null; "logEntries": Array<ReducerRuntimeLogEntry>; "idempotentReplay": boolean };
-
 export type ReducerWorkerSubmitActionResponseRejected = { "kind": "rejected"; "version"?: number; "errorCode": string; "message"?: string; "projection"?: SeatProjectionBundle; "staticProjection"?: BoardStaticProjection | null };
 
 export type ReducerWorkerSubmitActionResponseDeferred = { "kind": "deferred"; "reason": string; "retryAfterMs"?: number | null; "workJobId"?: string | null };
 
 export type ReducerWorkerSubmitActionResponseRedirect = { "kind": "redirect"; "ownerWorkerId": string; "endpoint"?: string | null; "epoch"?: number | null };
 
-export type ReducerWorkerSubmitActionResponse = ReducerWorkerSubmitActionResponseAcceptedCommitted | ReducerWorkerSubmitActionResponseRejected | ReducerWorkerSubmitActionResponseDeferred | ReducerWorkerSubmitActionResponseRedirect;
+export type ReducerWorkerSubmitActionResponse = ReducerWorkerSubmitActionResponseRejected | ReducerWorkerSubmitActionResponseDeferred | ReducerWorkerSubmitActionResponseRedirect;
 
-export type ReducerWorkerProjectSessionRequest = { "sessionId": string; "bundleRef"?: ReducerWorkerBundleRef; "state"?: ReducerSessionState; "playerIds": Array<string>; "includeStaticProjection"?: boolean; "viewId"?: string | null; "projectionMode"?: "full" | "actionsOnly" | null };
+export type ReducerWorkerProjectSessionRequest = { "sessionId": string; "bundleRef"?: ReducerWorkerBundleRef; "state"?: ReducerSessionState; "stateVersion"?: number; "playerIds": Array<string>; "includeStaticProjection"?: boolean; "viewId"?: string | null; "projectionMode"?: "full" | "actionsOnly" | null };
 
-export type ReducerWorkerProjectSessionResponseProjected = { "kind": "projected"; "projection": SeatProjectionBundle; "staticProjection"?: BoardStaticProjection | null };
+export type ReducerWorkerProjectSessionResponseProjected = { "kind": "projected"; "version": number; "currentPhase": string; "activePlayers": Array<string>; "projection": SeatProjectionBundle; "staticProjection"?: BoardStaticProjection | null };
 
 export type ReducerWorkerProjectSessionResponseDeferred = { "kind": "deferred"; "reason": string; "retryAfterMs"?: number | null; "workJobId"?: string | null };
 

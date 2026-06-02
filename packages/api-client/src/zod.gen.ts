@@ -1439,6 +1439,7 @@ export const zHostSessionStatus = z.enum(['active', 'ended']);
  */
 export const zHistoryEntrySummary = z.object({
     id: z.string(),
+    generation: z.int(),
     version: z.int(),
     timestamp: z.iso.datetime(),
     description: z.string(),
@@ -1740,6 +1741,19 @@ export const zSessionLogBatchResponse = z.object({
     cursor: z.coerce.bigint().min(BigInt('-9223372036854775808'), { error: 'Invalid value: Expected int64 to be >= -9223372036854775808' }).max(BigInt('9223372036854775807'), { error: 'Invalid value: Expected int64 to be <= 9223372036854775807' }),
     logs: z.array(zLogMessageDto),
     timedOut: z.boolean()
+});
+
+export const zGameplayCapabilityResponse = z.object({
+    websocketUrl: z.url(),
+    token: z.string().min(1),
+    expiresAt: z.iso.datetime(),
+    sessionId: z.uuid(),
+    playerId: z.string().min(1),
+    permissions: z.array(z.enum([
+        'observe',
+        'submit',
+        'restore-history'
+    ]))
 });
 
 export const zPlayerActionRequest = z.object({
@@ -2138,6 +2152,7 @@ export const zHostActionSubmitResponse = z.object({
     version: z.int(),
     actionSetVersion: z.string(),
     accepted: z.optional(z.boolean()),
+    durabilityStatus: z.optional(z.enum(['COMMITTED'])),
     errorCode: z.optional(z.string()),
     message: z.optional(z.string()),
     clientActionId: z.optional(z.string()),
@@ -2732,6 +2747,20 @@ export const zGetSessionLogBatchData = z.object({
  * Session log batch
  */
 export const zGetSessionLogBatchResponse = zSessionLogBatchResponse;
+
+export const zCreateGameplayCapabilityData = z.object({
+    body: z.optional(z.never()),
+    path: z.object({
+        sessionId: z.uuid(),
+        playerId: z.string()
+    }),
+    query: z.optional(z.never())
+});
+
+/**
+ * Gameplay capability issued successfully
+ */
+export const zCreateGameplayCapabilityResponse = zGameplayCapabilityResponse;
 
 export const zValidatePlayerActionData = z.object({
     body: zPlayerActionRequest,

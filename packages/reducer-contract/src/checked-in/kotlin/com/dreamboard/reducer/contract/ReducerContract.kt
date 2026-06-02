@@ -460,27 +460,6 @@ data class ReducerWorkerSubmitActionRequest(
 @JsonClassDiscriminator("kind")
 sealed interface ReducerWorkerSubmitActionResponse {
     @Serializable
-    @SerialName("acceptedCommitted")
-    data class AcceptedCommitted(
-        @SerialName("version")
-        val version: Int,
-        @SerialName("currentPhase")
-        val currentPhase: String,
-        @SerialName("activePlayers")
-        val activePlayers: List<String>,
-        @SerialName("state")
-        val state: ReducerSessionState,
-        @SerialName("projection")
-        val projection: SeatProjectionBundle? = null,
-        @SerialName("staticProjection")
-        val staticProjection: BoardStaticProjection? = null,
-        @SerialName("logEntries")
-        val logEntries: List<ReducerRuntimeLogEntry>,
-        @SerialName("idempotentReplay")
-        val idempotentReplay: Boolean,
-    ) : ReducerWorkerSubmitActionResponse
-
-    @Serializable
     @SerialName("rejected")
     data class Rejected(
         @SerialName("version")
@@ -526,6 +505,8 @@ data class ReducerWorkerProjectSessionRequest(
     val bundleRef: ReducerWorkerBundleRef? = null,
     @SerialName("state")
     val state: ReducerSessionState? = null,
+    @SerialName("stateVersion")
+    val stateVersion: Int? = null,
     @SerialName("playerIds")
     val playerIds: List<String>,
     @SerialName("includeStaticProjection")
@@ -542,6 +523,12 @@ sealed interface ReducerWorkerProjectSessionResponse {
     @Serializable
     @SerialName("projected")
     data class Projected(
+        @SerialName("version")
+        val version: Int,
+        @SerialName("currentPhase")
+        val currentPhase: String,
+        @SerialName("activePlayers")
+        val activePlayers: List<String>,
         @SerialName("projection")
         val projection: SeatProjectionBundle,
         @SerialName("staticProjection")

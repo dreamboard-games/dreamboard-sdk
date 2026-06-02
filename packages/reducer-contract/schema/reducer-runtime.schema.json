@@ -711,44 +711,6 @@
       "additionalProperties": false
     },
 
-    "ReducerWorkerSubmitActionResponseAcceptedCommitted": {
-      "type": "object",
-      "properties": {
-        "kind": { "const": "acceptedCommitted" },
-        "version": { "type": "integer", "minimum": 0 },
-        "currentPhase": { "type": "string", "minLength": 1 },
-        "activePlayers": {
-          "type": "array",
-          "items": { "type": "string", "minLength": 1 }
-        },
-        "state": { "$ref": "#/$defs/ReducerSessionState" },
-        "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
-        "staticProjection": {
-          "anyOf": [
-            { "$ref": "#/$defs/BoardStaticProjection" },
-            { "type": "null" }
-          ]
-        },
-        "logEntries": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/ReducerRuntimeLogEntry" }
-        },
-        "idempotentReplay": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "kind",
-        "version",
-        "currentPhase",
-        "activePlayers",
-        "state",
-        "logEntries",
-        "idempotentReplay"
-      ],
-      "additionalProperties": false
-    },
-
     "ReducerWorkerSubmitActionResponseRejected": {
       "type": "object",
       "properties": {
@@ -802,9 +764,6 @@
 
     "ReducerWorkerSubmitActionResponse": {
       "oneOf": [
-        {
-          "$ref": "#/$defs/ReducerWorkerSubmitActionResponseAcceptedCommitted"
-        },
         { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseRejected" },
         { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseDeferred" },
         { "$ref": "#/$defs/ReducerWorkerSubmitActionResponseRedirect" }
@@ -818,6 +777,7 @@
         "sessionId": { "type": "string", "format": "uuid" },
         "bundleRef": { "$ref": "#/$defs/ReducerWorkerBundleRef" },
         "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "stateVersion": { "type": "integer", "minimum": 0 },
         "playerIds": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
@@ -841,6 +801,12 @@
       "type": "object",
       "properties": {
         "kind": { "const": "projected" },
+        "version": { "type": "integer", "minimum": 0 },
+        "currentPhase": { "type": "string", "minLength": 1 },
+        "activePlayers": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
         "projection": { "$ref": "#/$defs/SeatProjectionBundle" },
         "staticProjection": {
           "anyOf": [
@@ -849,7 +815,13 @@
           ]
         }
       },
-      "required": ["kind", "projection"],
+      "required": [
+        "kind",
+        "version",
+        "currentPhase",
+        "activePlayers",
+        "projection"
+      ],
       "additionalProperties": false
     },
 

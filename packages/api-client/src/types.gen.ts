@@ -2403,6 +2403,7 @@ export type HostSessionStatus = 'active' | 'ended';
  */
 export type HistoryEntrySummary = {
     id: string;
+    generation: number;
     version: number;
     timestamp: string;
     description: string;
@@ -3016,6 +3017,15 @@ export type PlayerActionsResponse = {
     availableInteractionRefs: Array<string>;
 };
 
+export type GameplayCapabilityResponse = {
+    websocketUrl: string;
+    token: string;
+    expiresAt: string;
+    sessionId: string;
+    playerId: string;
+    permissions: Array<'observe' | 'submit' | 'restore-history'>;
+};
+
 export type PlayerActionResponse = {
     version: number;
     actionSetVersion: string;
@@ -3057,6 +3067,7 @@ export type HostActionSubmitResponse = {
     version: number;
     actionSetVersion: string;
     accepted?: boolean;
+    durabilityStatus?: 'COMMITTED';
     errorCode?: string;
     message?: string;
     clientActionId?: string;
@@ -5363,6 +5374,56 @@ export type ListPlayerActionsResponses = {
 };
 
 export type ListPlayerActionsResponse = ListPlayerActionsResponses[keyof ListPlayerActionsResponses];
+
+export type CreateGameplayCapabilityData = {
+    body?: never;
+    path: {
+        /**
+         * Unique identifier for the game session
+         */
+        sessionId: string;
+        /**
+         * Unique identifier for the player (e.g., 'player-1')
+         */
+        playerId: string;
+    };
+    query?: never;
+    url: '/api/sessions/{sessionId}/players/{playerId}/gameplay-capability';
+};
+
+export type CreateGameplayCapabilityErrors = {
+    /**
+     * Bad request - invalid input parameters
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized - authentication required
+     */
+    401: ProblemDetails;
+    /**
+     * Forbidden - insufficient permissions
+     */
+    403: ProblemDetails;
+    /**
+     * Resource not found
+     */
+    404: ProblemDetails;
+    /**
+     * Internal server error
+     */
+    500: ProblemDetails;
+};
+
+export type CreateGameplayCapabilityError = CreateGameplayCapabilityErrors[keyof CreateGameplayCapabilityErrors];
+
+export type CreateGameplayCapabilityResponses = {
+    /**
+     * Gameplay capability issued successfully
+     */
+    200: GameplayCapabilityResponse;
+};
+
+export type CreateGameplayCapabilityResponse = CreateGameplayCapabilityResponses[keyof CreateGameplayCapabilityResponses];
 
 export type DescribePlayerActionData = {
     body?: never;

@@ -106,19 +106,17 @@ export const ReducerWorkerSubmitActionRequestSchema = z.object({ "sessionId": z.
 
 export const BoardStaticProjectionSchema = z.object({ "view": JsonValueSchema, "hash": z.string().min(1), "manifestVersion": z.string() }).strict();
 
-export const ReducerWorkerSubmitActionResponseAcceptedCommittedSchema = z.object({ "kind": z.literal("acceptedCommitted"), "version": z.number().int(), "currentPhase": z.string().min(1), "activePlayers": z.array(z.string().min(1)), "state": ReducerSessionStateSchema, "projection": SeatProjectionBundleSchema.optional(), "staticProjection": z.union([BoardStaticProjectionSchema, z.null()]).optional(), "logEntries": z.array(ReducerRuntimeLogEntrySchema), "idempotentReplay": z.boolean() }).strict();
-
 export const ReducerWorkerSubmitActionResponseRejectedSchema = z.object({ "kind": z.literal("rejected"), "version": z.number().int().optional(), "errorCode": z.string().min(1), "message": z.string().optional(), "projection": SeatProjectionBundleSchema.optional(), "staticProjection": z.union([BoardStaticProjectionSchema, z.null()]).optional() }).strict();
 
 export const ReducerWorkerSubmitActionResponseDeferredSchema = z.object({ "kind": z.literal("deferred"), "reason": z.string().min(1), "retryAfterMs": z.union([z.number().int(), z.null()]).optional(), "workJobId": z.union([z.string(), z.null()]).optional() }).strict();
 
 export const ReducerWorkerSubmitActionResponseRedirectSchema = z.object({ "kind": z.literal("redirect"), "ownerWorkerId": z.string().min(1), "endpoint": z.union([z.string(), z.null()]).optional(), "epoch": z.union([z.number().int(), z.null()]).optional() }).strict();
 
-export const ReducerWorkerSubmitActionResponseSchema = z.discriminatedUnion("kind", [ReducerWorkerSubmitActionResponseAcceptedCommittedSchema, ReducerWorkerSubmitActionResponseRejectedSchema, ReducerWorkerSubmitActionResponseDeferredSchema, ReducerWorkerSubmitActionResponseRedirectSchema]);
+export const ReducerWorkerSubmitActionResponseSchema = z.discriminatedUnion("kind", [ReducerWorkerSubmitActionResponseRejectedSchema, ReducerWorkerSubmitActionResponseDeferredSchema, ReducerWorkerSubmitActionResponseRedirectSchema]);
 
-export const ReducerWorkerProjectSessionRequestSchema = z.object({ "sessionId": z.string(), "bundleRef": ReducerWorkerBundleRefSchema.optional(), "state": ReducerSessionStateSchema.optional(), "playerIds": z.array(z.string().min(1)), "includeStaticProjection": z.boolean().optional(), "viewId": z.union([z.string().min(1), z.null()]).optional(), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
+export const ReducerWorkerProjectSessionRequestSchema = z.object({ "sessionId": z.string(), "bundleRef": ReducerWorkerBundleRefSchema.optional(), "state": ReducerSessionStateSchema.optional(), "stateVersion": z.number().int().optional(), "playerIds": z.array(z.string().min(1)), "includeStaticProjection": z.boolean().optional(), "viewId": z.union([z.string().min(1), z.null()]).optional(), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
 
-export const ReducerWorkerProjectSessionResponseProjectedSchema = z.object({ "kind": z.literal("projected"), "projection": SeatProjectionBundleSchema, "staticProjection": z.union([BoardStaticProjectionSchema, z.null()]).optional() }).strict();
+export const ReducerWorkerProjectSessionResponseProjectedSchema = z.object({ "kind": z.literal("projected"), "version": z.number().int(), "currentPhase": z.string().min(1), "activePlayers": z.array(z.string().min(1)), "projection": SeatProjectionBundleSchema, "staticProjection": z.union([BoardStaticProjectionSchema, z.null()]).optional() }).strict();
 
 export const ReducerWorkerProjectSessionResponseDeferredSchema = z.object({ "kind": z.literal("deferred"), "reason": z.string().min(1), "retryAfterMs": z.union([z.number().int(), z.null()]).optional(), "workJobId": z.union([z.string(), z.null()]).optional() }).strict();
 

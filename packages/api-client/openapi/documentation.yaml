@@ -1612,6 +1612,36 @@ paths:
           $ref: "#/components/responses/NotFoundError"
         "500": 
           $ref: "#/components/responses/InternalServerError"
+  "/api/sessions/{sessionId}/players/{playerId}/gameplay-capability": 
+    parameters: 
+      - $ref: "#/components/parameters/SessionId"
+      - $ref: "#/components/parameters/PlayerId"
+    post: 
+      summary: Issue a gameplay authority capability
+      description: "Returns a short-lived, session/player-scoped token and WebSocket URL for connecting to the gameplay authority service."
+      operationId: createGameplayCapability
+      security: 
+        - BearerAuth: 
+            []
+      tags: 
+        - Sessions
+      responses: 
+        "200": 
+          description: Gameplay capability issued successfully
+          content: 
+            application/json: 
+              schema: 
+                $ref: "#/components/schemas/GameplayCapabilityResponse"
+        "400": 
+          $ref: "#/components/responses/BadRequestError"
+        "401": 
+          $ref: "#/components/responses/UnauthorizedError"
+        "403": 
+          $ref: "#/components/responses/ForbiddenError"
+        "404": 
+          $ref: "#/components/responses/NotFoundError"
+        "500": 
+          $ref: "#/components/responses/InternalServerError"
   "/api/sessions/{sessionId}/players/{playerId}/actions/{interactionId}": 
     parameters: 
       - $ref: "#/components/parameters/SessionId"
@@ -5521,6 +5551,7 @@ components:
       description: Summary of a game state history entry.
       required: 
         - id
+        - generation
         - version
         - timestamp
         - description
@@ -5528,6 +5559,8 @@ components:
       properties: 
         id: 
           type: string
+        generation: 
+          type: integer
         version: 
           type: integer
         timestamp: 
@@ -6669,6 +6702,39 @@ components:
           type: array
           items: 
             type: string
+    GameplayCapabilityResponse: 
+      type: object
+      required: 
+        - websocketUrl
+        - token
+        - expiresAt
+        - sessionId
+        - playerId
+        - permissions
+      properties: 
+        websocketUrl: 
+          type: string
+          format: uri
+        token: 
+          type: string
+          minLength: 1
+        expiresAt: 
+          type: string
+          format: date-time
+        sessionId: 
+          type: string
+          format: uuid
+        playerId: 
+          type: string
+          minLength: 1
+        permissions: 
+          type: array
+          items: 
+            type: string
+            enum: 
+              - observe
+              - submit
+              - restore-history
     PlayerActionResponse: 
       type: object
       required: 
@@ -6761,6 +6827,11 @@ components:
           type: string
         accepted: 
           type: boolean
+          nullable: true
+        durabilityStatus: 
+          type: string
+          enum: 
+            - COMMITTED
           nullable: true
         errorCode: 
           type: string
