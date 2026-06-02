@@ -174,5 +174,5 @@ await rt.submit(rt.seat(1), "placeThingCard", {
 ```
 
 Internally `createTestRuntime` builds reducer-native plugin snapshots from the
-reducer contract projection, so authored tests do not depend on product-repo
-host runtime packages.
+reducer contract projection, so authored tests do not depend on host runtime
+packages outside this SDK.

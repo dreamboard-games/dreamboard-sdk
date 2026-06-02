@@ -1,6 +1,6 @@
 # Dreamboard SDK
 
-Public SDK package-set monorepo for Dreamboard game authoring.
+Public SDK package-set repository for Dreamboard game authoring.
 
 ## Packages
 
@@ -36,15 +36,14 @@ same exact release train as every other package in this repo.
 
 ## Local Registry
 
-Local SDK snapshots are published from this repo, not the product repo:
+Local SDK snapshots can be published to a local Verdaccio registry:
 
 ```sh
 pnpm local-registry:publish
 ```
 
 By default the command publishes to Verdaccio at `http://127.0.0.1:4873` and
-writes `.dreamboard-dev/local-registry/sdk-package-set.json`. Product repo
-local-AWS seeding should consume that receipt through `DREAMBOARD_SDK_REPO`.
+writes `.dreamboard-dev/local-registry/sdk-package-set.json`.
 
 ## Alpha Publishing
 

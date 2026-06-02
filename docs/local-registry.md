@@ -1,7 +1,7 @@
 # Local SDK Registry
 
-The SDK repo owns local SDK package artifacts. Product repo local-AWS registry
-seeding should call this repo through `DREAMBOARD_SDK_REPO`.
+The SDK repo owns local SDK package artifacts for local development and
+integration testing.
 
 Default registry:
 
@@ -27,7 +27,8 @@ It writes the package-set receipt to:
 .dreamboard-dev/local-registry/sdk-package-set.json
 ```
 
-Generated product workspaces should consume the receipt versions and write:
+Generated workspaces or local integration tools should consume the receipt
+versions and write:
 
 ```ini
 @dreamboard-games:registry=http://127.0.0.1:4873
