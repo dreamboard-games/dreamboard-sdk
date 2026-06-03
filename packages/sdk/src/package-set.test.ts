@@ -11,6 +11,9 @@ test("SDK facade exposes one fixed package-set version", () => {
   expect(new Set(Object.values(DREAMBOARD_SDK_PACKAGES))).toEqual(
     new Set([DREAMBOARD_SDK_VERSION]),
   );
+  expect(Object.keys(DREAMBOARD_SDK_PACKAGES)).toEqual([
+    "@dreamboard-games/sdk",
+  ]);
   expect(DREAMBOARD_SDK_PACKAGES["@dreamboard-games/sdk"]).toBe(
     DREAMBOARD_SDK_VERSION,
   );

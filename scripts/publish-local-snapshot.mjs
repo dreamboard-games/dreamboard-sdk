@@ -51,7 +51,10 @@ async function hashDirectory(hash, dir) {
 }
 
 function localTimestamp(date = new Date()) {
-  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  return date
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}Z$/, "Z");
 }
 
 function rewriteDeps(deps, localVersion) {
@@ -128,7 +131,7 @@ async function main() {
   for (const pkg of sdkPackages) {
     const outDir = await preparePackage(pkg, localVersion, tempRoot);
     const distStats = await stat(path.join(outDir, "dist")).catch(() => null);
-    if (pkg.name !== "@dreamboard-games/reducer-contract" && !distStats) {
+    if (!distStats) {
       throw new Error(`${pkg.name} did not produce dist/ before publish`);
     }
     run("npm", ["publish", "--registry", registryUrl, "--tag", "local"], {
@@ -140,7 +143,13 @@ async function main() {
     sdkPackages.map((pkg) => [pkg.name, localVersion]),
   );
   for (const [name, version] of Object.entries(packages)) {
-    run("npm", ["view", `${name}@${version}`, "version", "--registry", registryUrl]);
+    run("npm", [
+      "view",
+      `${name}@${version}`,
+      "version",
+      "--registry",
+      registryUrl,
+    ]);
   }
 
   const receipt = {

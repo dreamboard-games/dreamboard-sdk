@@ -16,6 +16,94 @@
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
     },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "default": "./dist/types.js"
+    },
+    "./reducer": {
+      "types": "./dist/reducer.d.ts",
+      "import": "./dist/reducer.js",
+      "default": "./dist/reducer.js"
+    },
+    "./ui": {
+      "types": "./dist/ui.d.ts",
+      "import": "./dist/ui.js",
+      "default": "./dist/ui.js"
+    },
+    "./ui/components": {
+      "types": "./dist/ui/components.d.ts",
+      "import": "./dist/ui/components.js",
+      "default": "./dist/ui/components.js"
+    },
+    "./ui/defaults": {
+      "types": "./dist/ui/defaults.d.ts",
+      "import": "./dist/ui/defaults.js",
+      "default": "./dist/ui/defaults.js"
+    },
+    "./ui/types/player-state": {
+      "types": "./dist/ui/types/player-state.d.ts",
+      "import": "./dist/ui/types/player-state.js",
+      "default": "./dist/ui/types/player-state.js"
+    },
+    "./ui/plugin-styles.css": {
+      "default": "./dist/ui/plugin-styles.css"
+    },
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "import": "./dist/runtime.js",
+      "default": "./dist/runtime.js"
+    },
+    "./runtime/primitives": {
+      "types": "./dist/runtime/primitives.d.ts",
+      "import": "./dist/runtime/primitives.js",
+      "default": "./dist/runtime/primitives.js"
+    },
+    "./runtime/workspace-contract": {
+      "types": "./dist/runtime/workspace-contract.d.ts",
+      "import": "./dist/runtime/workspace-contract.js",
+      "default": "./dist/runtime/workspace-contract.js"
+    },
+    "./runtime/types/runtime-api": {
+      "types": "./dist/runtime/types/runtime-api.d.ts",
+      "import": "./dist/runtime/types/runtime-api.js",
+      "default": "./dist/runtime/types/runtime-api.js"
+    },
+    "./generated/runtime": {
+      "types": "./dist/generated/runtime.d.ts",
+      "import": "./dist/generated/runtime.js",
+      "default": "./dist/generated/runtime.js"
+    },
+    "./generated/runtime-api": {
+      "types": "./dist/generated/runtime-api.d.ts",
+      "import": "./dist/generated/runtime-api.js",
+      "default": "./dist/generated/runtime-api.js"
+    },
+    "./generated/runtime/primitives": {
+      "types": "./dist/generated/runtime/primitives.d.ts",
+      "import": "./dist/generated/runtime/primitives.js",
+      "default": "./dist/generated/runtime/primitives.js"
+    },
+    "./generated/workspace-contract": {
+      "types": "./dist/generated/workspace-contract.d.ts",
+      "import": "./dist/generated/workspace-contract.js",
+      "default": "./dist/generated/workspace-contract.js"
+    },
+    "./infrastructure/reducer-bundle-abi": {
+      "types": "./dist/infrastructure/reducer-bundle-abi.d.ts",
+      "import": "./dist/infrastructure/reducer-bundle-abi.js",
+      "default": "./dist/infrastructure/reducer-bundle-abi.js"
+    },
+    "./infrastructure/workspace-codegen": {
+      "types": "./dist/infrastructure/workspace-codegen.d.ts",
+      "import": "./dist/infrastructure/workspace-codegen.js",
+      "default": "./dist/infrastructure/workspace-codegen.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "default": "./dist/testing.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -34,25 +122,41 @@
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && mkdir -p dist/ui && cp src/ui/plugin-styles.css dist/ui/plugin-styles.css",
     "typecheck": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts'",
     "test": "bun test"
   },
   "dependencies": {
-    "@dreamboard-games/app-sdk": "workspace:*",
-    "@dreamboard-games/reducer-contract": "workspace:*",
-    "@dreamboard-games/sdk-types": "workspace:*",
-    "@dreamboard-games/testing": "workspace:*",
-    "@dreamboard-games/ui-runtime": "workspace:*",
-    "@dreamboard-games/ui-sdk": "workspace:*",
-    "@dreamboard-games/workspace-codegen": "workspace:*"
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@use-gesture/react": "^10.3.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.5",
+    "vaul": "^1.1.2",
+    "zod": "4.4.3",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "eslint": "^9.39.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "framer-motion": "^11.0.0 || ^12.0.0",
+    "react": "^19.0.0",
+    "zod": "4.4.3"
   },
   "publishConfig": {
     "access": "public"

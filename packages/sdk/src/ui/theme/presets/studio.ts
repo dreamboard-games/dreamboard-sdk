@@ -1,0 +1,261 @@
+import type { Theme } from "../tokens.js";
+
+/**
+ * `studio` — clean monochrome theme for prototypes and design reviews.
+ *
+ * Visual identity: pure white surfaces, near-black text, single brand
+ * accent, generous whitespace. Designed for screenshot-friendly demos
+ * and games where the board art does the storytelling.
+ */
+export const studioTheme: Theme = {
+  meta: {
+    id: "studio",
+    name: "Studio",
+    mode: "light",
+  },
+  color: {
+    neutral: {
+      50: "#ffffff",
+      100: "#f5f5f5",
+      200: "#e5e5e5",
+      400: "#a3a3a3",
+      600: "#525252",
+      800: "#262626",
+      950: "#0a0a0a",
+    },
+    brand: {
+      50: "#eef2ff",
+      100: "#e0e7ff",
+      200: "#c7d2fe",
+      400: "#818cf8",
+      600: "#4f46e5",
+      800: "#3730a3",
+      950: "#1e1b4b",
+    },
+    accent: {
+      50: "#fdf4ff",
+      100: "#fae8ff",
+      200: "#f5d0fe",
+      400: "#e879f9",
+      600: "#a21caf",
+      800: "#701a75",
+      950: "#4a044e",
+    },
+    success: {
+      50: "#ecfdf5",
+      100: "#d1fae5",
+      200: "#a7f3d0",
+      400: "#34d399",
+      600: "#059669",
+      800: "#065f46",
+      950: "#022c22",
+    },
+    warning: {
+      50: "#fffbeb",
+      100: "#fef3c7",
+      200: "#fde68a",
+      400: "#facc15",
+      600: "#ca8a04",
+      800: "#854d0e",
+      950: "#422006",
+    },
+    danger: {
+      50: "#fef2f2",
+      100: "#fee2e2",
+      200: "#fecaca",
+      400: "#f87171",
+      600: "#dc2626",
+      800: "#991b1b",
+      950: "#450a0a",
+    },
+    info: {
+      50: "#eff6ff",
+      100: "#dbeafe",
+      200: "#bfdbfe",
+      400: "#60a5fa",
+      600: "#2563eb",
+      800: "#1e40af",
+      950: "#172554",
+    },
+  },
+  semantic: {
+    surface: {
+      app: "#fafafa",
+      board: "#ffffff",
+      hud: "#ffffff",
+      card: "#ffffff",
+      sheet: "#ffffff",
+      overlay: "rgba(10, 10, 10, 0.4)",
+      inset: "#f5f5f5",
+    },
+    text: {
+      primary: "#0a0a0a",
+      muted: "#525252",
+      onIntent: "#ffffff",
+      accent: "#4f46e5",
+      disabled: "#a3a3a3",
+    },
+    border: {
+      subtle: "#f5f5f5",
+      default: "#e5e5e5",
+      strong: "#a3a3a3",
+      focus: "#4f46e5",
+    },
+    intent: {
+      primary: {
+        solid: "#0a0a0a",
+        on: "#ffffff",
+        soft: "#f5f5f5",
+        onSoft: "#0a0a0a",
+        border: "#0a0a0a",
+      },
+      secondary: {
+        solid: "#ffffff",
+        on: "#0a0a0a",
+        soft: "#f5f5f5",
+        onSoft: "#0a0a0a",
+        border: "#e5e5e5",
+      },
+      success: {
+        solid: "#059669",
+        on: "#ffffff",
+        soft: "#d1fae5",
+        onSoft: "#065f46",
+        border: "#34d399",
+      },
+      danger: {
+        solid: "#dc2626",
+        on: "#ffffff",
+        soft: "#fee2e2",
+        onSoft: "#991b1b",
+        border: "#f87171",
+      },
+      warning: {
+        solid: "#ca8a04",
+        on: "#ffffff",
+        soft: "#fef3c7",
+        onSoft: "#854d0e",
+        border: "#facc15",
+      },
+      info: {
+        solid: "#2563eb",
+        on: "#ffffff",
+        soft: "#dbeafe",
+        onSoft: "#1e40af",
+        border: "#60a5fa",
+      },
+    },
+  },
+  radius: {
+    none: "0px",
+    sm: "4px",
+    md: "8px",
+    lg: "12px",
+    hud: "16px",
+    pill: "9999px",
+  },
+  space: {
+    0: "0",
+    0.5: "0.125rem",
+    1: "0.25rem",
+    1.5: "0.375rem",
+    2: "0.5rem",
+    3: "0.75rem",
+    4: "1rem",
+    6: "1.5rem",
+    8: "2rem",
+    12: "3rem",
+  },
+  typography: {
+    fontFamily: {
+      display:
+        '"Inter", "SF Pro Display", system-ui, -apple-system, sans-serif',
+      body: '"Inter", "SF Pro Text", system-ui, -apple-system, sans-serif',
+      tabular: '"Inter", "SF Pro Text", system-ui, sans-serif',
+      mono: '"JetBrains Mono", "SF Mono", ui-monospace, monospace',
+    },
+    fontSize: {
+      xs: "0.75rem",
+      sm: "0.875rem",
+      md: "1rem",
+      lg: "1.125rem",
+      xl: "1.25rem",
+      "2xl": "1.5rem",
+      "3xl": "2rem",
+    },
+    fontWeight: {
+      regular: "400",
+      medium: "500",
+      bold: "600",
+    },
+    lineHeight: {
+      tight: "1.2",
+      normal: "1.5",
+      relaxed: "1.65",
+    },
+    letterSpacing: {
+      tight: "-0.015em",
+      normal: "0",
+      wide: "0.02em",
+      caps: "0.08em",
+    },
+  },
+  elevation: {
+    rest: "0 1px 2px rgba(10, 10, 10, 0.05)",
+    hover: "0 4px 8px rgba(10, 10, 10, 0.06), 0 1px 2px rgba(10, 10, 10, 0.04)",
+    lifted:
+      "0 12px 24px rgba(10, 10, 10, 0.08), 0 2px 4px rgba(10, 10, 10, 0.06)",
+    overlay: "0 24px 48px rgba(10, 10, 10, 0.18)",
+    inset: "inset 0 1px 0 rgba(10, 10, 10, 0.04)",
+  },
+  motion: {
+    duration: {
+      fast: "100ms",
+      normal: "180ms",
+      slow: "300ms",
+      ambient: "2400ms",
+    },
+    easing: {
+      out: "cubic-bezier(0.16, 1, 0.3, 1)",
+      in: "cubic-bezier(0.4, 0, 1, 0.4)",
+      inOut: "cubic-bezier(0.65, 0, 0.35, 1)",
+      spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+    },
+    reducedMotion: "false",
+  },
+  player: [
+    { solid: "#4f46e5", soft: "#e0e7ff", on: "#ffffff" },
+    { solid: "#dc2626", soft: "#fee2e2", on: "#ffffff" },
+    { solid: "#059669", soft: "#d1fae5", on: "#ffffff" },
+    { solid: "#ca8a04", soft: "#fef3c7", on: "#ffffff" },
+    { solid: "#a21caf", soft: "#fae8ff", on: "#ffffff" },
+    { solid: "#0891b2", soft: "#cffafe", on: "#ffffff" },
+  ],
+  component: {
+    board: {
+      frameBorder: "#e5e5e5",
+      frameBackground: "#ffffff",
+      hoverRing: "#4f46e5",
+      eligibleHint: "rgba(79, 70, 229, 0.4)",
+    },
+    card: {
+      border: "#e5e5e5",
+      backBorder: "#0a0a0a",
+      backBackground: "#0a0a0a",
+      selectedRing: "#4f46e5",
+    },
+    playerCard: {
+      activeBackground: "#f5f5f5",
+      activeBorder: "#0a0a0a",
+      activeGlow: "rgba(10, 10, 10, 0.06)",
+      youBadgeBackground: "#0a0a0a",
+      youBadgeForeground: "#ffffff",
+    },
+    toast: {
+      successBackground: "#059669",
+      errorBackground: "#dc2626",
+      infoBackground: "#2563eb",
+      foreground: "#ffffff",
+    },
+  },
+};

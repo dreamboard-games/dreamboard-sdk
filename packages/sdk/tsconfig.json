@@ -5,9 +5,33 @@
     "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "baseUrl": "./src",
+    "paths": {
+      "@dreamboard/manifest-contract": [
+        "./type-stubs/manifest-contract"
+      ],
+      "#dreamboard/ui-contract": [
+        "./type-stubs/ui-contract"
+      ]
+    }
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/**/__fixtures__/**",
+    "src/**/*.stories.ts",
+    "src/**/*.stories.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
   ]
 }
