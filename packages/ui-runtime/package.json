@@ -1,7 +1,7 @@
 {
   "name": "@dreamboard-games/ui-runtime",
   "version": "0.2.0",
-  "private": false,
+  "private": true,
   "description": "Dreamboard-aware React runtime adapters for generated UI contracts",
   "type": "module",
   "main": "./dist/index.js",
@@ -54,9 +54,6 @@
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "rm -rf dist tsconfig.tsbuildinfo && tsc -b && rollup -c rollup.config.js",
     "postbuild": "echo 'Generated ui-runtime.d.ts'",

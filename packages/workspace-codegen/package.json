@@ -1,6 +1,7 @@
 {
   "name": "@dreamboard-games/workspace-codegen",
   "version": "0.2.0",
+  "private": true,
   "description": "Internal Dreamboard workspace source generator",
   "type": "module",
   "main": "./dist/index.js",
@@ -29,9 +30,6 @@
     "eslint": "^9.39.0",
     "typescript": "5.7.3",
     "zod": "4.4.3"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "files": [
     "LICENSE.md",

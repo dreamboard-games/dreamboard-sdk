@@ -27,5 +27,5 @@ jobs:
       - run: pnpm build
       - run: pnpm test
       - run: pnpm pack:dry-run
-      - name: Publish alpha packages
-        run: pnpm -r --filter './packages/*' publish --access public --tag alpha --provenance --no-git-checks
+      - name: Publish alpha SDK package
+        run: pnpm --filter @dreamboard-games/sdk publish --access public --tag alpha --provenance --no-git-checks

@@ -14,3 +14,15 @@ for (const pkg of sdkPackages) {
     process.exit(result.status ?? 1);
   }
 }
+
+const selfContainedResult = spawnSync(
+  "node",
+  ["scripts/assert-sdk-tarball-self-contained.mjs"],
+  {
+    cwd: root,
+    stdio: "inherit",
+  },
+);
+if (selfContainedResult.status !== 0) {
+  process.exit(selfContainedResult.status ?? 1);
+}

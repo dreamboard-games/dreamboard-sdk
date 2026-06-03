@@ -4,16 +4,12 @@ Public SDK package-set repository for Dreamboard game authoring.
 
 ## Packages
 
-All packages in this repo are released with one fixed version:
+This repository publishes one public author SDK package:
 
-- `@dreamboard-games/sdk-types`
-- `@dreamboard-games/reducer-contract`
-- `@dreamboard-games/app-sdk`
-- `@dreamboard-games/ui-sdk`
-- `@dreamboard-games/ui-runtime`
-- `@dreamboard-games/testing`
-- `@dreamboard-games/workspace-codegen`
 - `@dreamboard-games/sdk`
+
+The leaf implementation packages in `packages/` are private implementation
+inputs. They are not published.
 
 The fixed-version guard runs in CI:
 
@@ -30,8 +26,8 @@ pnpm test
 pnpm pack:dry-run
 ```
 
-`@dreamboard-games/sdk` is the facade/package-set package. It depends on the
-same exact release train as every other package in this repo.
+`@dreamboard-games/sdk` owns the supported authoring, generated runtime,
+testing and infrastructure ABI subpaths.
 
 ## Local Registry
 
@@ -46,13 +42,30 @@ writes `.dreamboard-dev/local-registry/sdk-package-set.json`.
 
 ## Alpha Publishing
 
-The `release-alpha` GitHub Actions workflow publishes all SDK packages with
-provenance and the `alpha` npm dist-tag.
+Manual alpha dry-run:
 
-Before using it, configure npm Trusted Publishing for every package:
+```sh
+pnpm publish:alpha:dry-run
+```
+
+Manual alpha publish:
+
+```sh
+pnpm publish:alpha
+```
+
+This publishes only `@dreamboard-games/sdk` with the `alpha` npm dist-tag. See
+[`docs/alpha-publish.md`](docs/alpha-publish.md) for the full checklist.
+
+The `release-alpha` GitHub Actions workflow publishes the SDK package with
+provenance and the `alpha` npm dist-tag after npm Trusted Publishing is
+configured.
+
+Before using it, configure npm Trusted Publishing for the SDK package:
 
 - owner: `dreamboard-games`
 - repository: `dreamboard-sdk`
+- package: `@dreamboard-games/sdk`
 - workflow: `release-alpha.yml`
 - environment: `npm-alpha`
 

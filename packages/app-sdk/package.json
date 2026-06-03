@@ -1,6 +1,7 @@
 {
   "name": "@dreamboard-games/app-sdk",
   "version": "0.2.0",
+  "private": true,
   "description": "App authoring SDK for Dreamboard game logic",
   "type": "module",
   "main": "./dist/index.js",
@@ -49,9 +50,6 @@
   },
   "peerDependencies": {
     "zod": "4.4.3"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",

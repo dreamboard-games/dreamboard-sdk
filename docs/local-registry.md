@@ -1,6 +1,6 @@
 # Local SDK Registry
 
-The SDK repo owns local SDK package artifacts for local development and
+The SDK repo owns the local `@dreamboard-games/sdk` package artifact for local development and
 integration testing.
 
 Default registry:
@@ -15,7 +15,7 @@ Publish a coordinated local SDK snapshot:
 pnpm local-registry:publish
 ```
 
-The command publishes every SDK package with one exact version:
+The command publishes `@dreamboard-games/sdk` with one exact version:
 
 ```text
 0.2.0-local.<timestamp>.<fingerprint>

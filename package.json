@@ -10,12 +10,15 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "check": "pnpm version:check && pnpm build && pnpm test && pnpm pack:dry-run",
+    "check": "pnpm publication:check && pnpm version:check && pnpm build && pnpm test && pnpm pack:dry-run",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",
     "local-registry:publish": "node scripts/publish-local-snapshot.mjs",
     "pack:dry-run": "node scripts/pack-dry-run.mjs",
+    "publication:check": "node scripts/assert-publication-boundary.mjs",
+    "publish:alpha": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha",
+    "publish:alpha:dry-run": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha --dry-run",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "version:check": "node scripts/assert-fixed-version.mjs"

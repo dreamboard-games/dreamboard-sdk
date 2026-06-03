@@ -1,6 +1,7 @@
 {
   "name": "@dreamboard-games/reducer-contract",
   "version": "0.2.0",
+  "private": true,
   "description": "Single-source-of-truth wire contract between the JS reducer bundle and the Kotlin reducer runtime. The JSON Schema in ./schema is authoritative; TS and Kotlin artifacts are generated.",
   "type": "module",
   "main": "./src/index.ts",
@@ -50,9 +51,6 @@
   },
   "peerDependencies": {
     "zod": "4.4.3"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",

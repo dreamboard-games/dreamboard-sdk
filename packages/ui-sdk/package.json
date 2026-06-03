@@ -1,7 +1,7 @@
 {
   "name": "@dreamboard-games/ui-sdk",
   "version": "0.2.0",
-  "private": false,
+  "private": true,
   "description": "UI SDK for dreamboard plugin development",
   "type": "module",
   "main": "./dist/index.js",
@@ -52,9 +52,6 @@
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
     "build": "tsc -b && cp src/plugin-styles.css dist/plugin-styles.css && rollup -c rollup.config.js",
     "build:clean": "pnpm run clean && pnpm run build",

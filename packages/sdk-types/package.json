@@ -1,6 +1,7 @@
 {
   "name": "@dreamboard-games/sdk-types",
   "version": "0.2.0",
+  "private": true,
   "description": "Public Dreamboard authoring and manifest types",
   "type": "module",
   "main": "./dist/index.js",
@@ -34,9 +35,6 @@
   "devDependencies": {
     "eslint": "^9.39.0",
     "typescript": "^5.9.2"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "repository": {
     "type": "git",
