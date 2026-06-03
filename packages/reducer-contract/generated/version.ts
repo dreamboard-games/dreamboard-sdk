@@ -4,6 +4,6 @@
 /**
  * The wire-protocol version this package implements. Bumped in lockstep with
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
- * time the Kotlin adapter refuses bundles whose major version differs.
+ * time hosts refuse bundles whose major version differs.
  */
 export const REDUCER_CONTRACT_VERSION = "0.2.0" as const;

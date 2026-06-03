@@ -1,10 +1,11 @@
 # @dreamboard-games/reducer-contract
 
-Wire contract shared by Dreamboard reducer bundles and reducer runtimes.
+TypeScript wire contract used by Dreamboard reducer bundles and the SDK-owned
+reducer bundle ABI.
 
-This package is part of the fixed-version `@dreamboard-games/*` SDK release
-train. The JSON Schema in `schema/` is authoritative; TypeScript and Kotlin
-contract artifacts are generated from it.
+This private workspace package feeds generated TypeScript artifacts into
+`@dreamboard-games/sdk`. It is not published. The JSON Schema in `schema/` is
+authoritative.
 
 Typical imports:
 
@@ -13,4 +14,8 @@ import type { ReducerSessionState } from "@dreamboard-games/reducer-contract/wir
 import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract/bundle";
 ```
 
-Use `@dreamboard-games/sdk` to inspect the coordinated package-set version.
+Public consumers should import the supported SDK facade instead:
+
+```ts
+import type { ReducerWire } from "@dreamboard-games/sdk/infrastructure/reducer-bundle-abi";
+```

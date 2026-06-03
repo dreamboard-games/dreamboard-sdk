@@ -189,10 +189,9 @@ describe("protocol version constant", () => {
   });
 });
 
-// Strictness guard: mirrors the Kotlin `strict json rejects unknown keys`
-// test. If the generator ever drops `.strict()` on a branch, unknown fields
-// would silently pass through and we'd lose the wire-drift signal that the
-// whole contract package exists to provide.
+// Strictness guard: if the generator ever drops `.strict()` on a branch,
+// unknown fields would silently pass through and we'd lose the wire-drift
+// signal that the whole contract package exists to provide.
 describe("strict zod rejects unknown keys", () => {
   test("effects reject an extra field", () => {
     const effectWithExtra = {
@@ -294,9 +293,8 @@ describe("round-trip stability", () => {
 });
 
 // Canonicalize sort keys so structural comparison is order-insensitive.
-// The test matters because the Kotlin conformance test runs the same
-// canonicalization and asserts the same fixture-equality invariant. If both
-// sides independently pass, kotlinx and zod agree byte-for-byte modulo key
+// The test matters because these fixtures are the canonical reducer bundle
+// wire examples. zod-parsed output should match the raw fixture modulo key
 // order and whitespace.
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) {
@@ -312,12 +310,8 @@ function canonicalize(value: unknown): unknown {
   return value;
 }
 
-describe("cross-language parity: zod-parsed fixtures match raw fixture JSON", () => {
-  // Mirror of the Kotlin conformance test
-  // `kotlinx encode output matches the raw fixture JSON element-for-element`.
-  // Together, these two tests prove kotlinx-encode(raw) ≡ zod-parse(raw) ≡ raw
-  // up to key ordering — the real byte-parity invariant the contract exists
-  // to uphold.
+describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
+  // zod-parse(raw) should equal raw up to key ordering.
   for (const fixture of FIXTURES) {
     test(`${fixture.name} zod-parsed output equals raw fixture`, () => {
       const schemaForTypeName: Record<

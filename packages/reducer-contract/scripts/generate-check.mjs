@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Drift check for the reducer-contract package: regenerates TS + Kotlin
+// Drift check for the reducer-contract package: regenerates TypeScript
 // artifacts from schema/reducer-runtime.schema.json and fails if the result
 // differs from what is currently on disk.
 //
@@ -22,7 +22,6 @@ const REPO_ROOT = path.resolve(PKG_ROOT, "..", "..");
 const TRACKED_OUTPUT_PATHS = [
   path.join(PKG_ROOT, "generated"),
   path.join(PKG_ROOT, "src", "bundle.ts"),
-  path.join(PKG_ROOT, "src", "checked-in", "kotlin"),
 ];
 
 function run(cmd, args, opts = {}) {
@@ -57,7 +56,15 @@ function isClean(relativePath) {
   const afterPath = path.join(REPO_ROOT, relativePath);
   const res = spawnSync(
     "git",
-    ["diff", "--no-index", "--quiet", "--exit-code", "--", beforePath, afterPath],
+    [
+      "diff",
+      "--no-index",
+      "--quiet",
+      "--exit-code",
+      "--",
+      beforePath,
+      afterPath,
+    ],
     { cwd: snapshotRoot },
   );
   return res.status === 0;
@@ -100,9 +107,8 @@ const snapshotRoot = fs.mkdtempSync(
 try {
   snapshotTrackedOutputs();
 
-  // Regenerate both sides.
+  // Regenerate the TypeScript SDK-side reducer contract.
   run("node", ["scripts/generate-ts.mjs"]);
-  run("node", ["scripts/generate-kotlin.mjs"]);
 
   const drift = [];
   for (const outputPath of TRACKED_OUTPUT_PATHS) {

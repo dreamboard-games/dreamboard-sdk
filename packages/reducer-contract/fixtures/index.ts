@@ -1,8 +1,8 @@
 // Canonical wire fixtures. These are the *only* "is the wire agreement
-// real?" truth-markers for the reducer-contract package. Both the Kotlin
-// conformance test and the TS conformance test load these same JSON files,
-// decode with their language's generated schema, and assert structural
-// agreement. Any new wire shape becomes a new fixture here.
+// real?" truth-markers for the reducer-contract package. The TypeScript
+// conformance test loads these JSON files, decodes them with the generated
+// schema, and asserts structural agreement. Any new wire shape becomes a new
+// fixture here.
 //
 // Each fixture includes a short `why` so future readers understand what
 // invariant it locks in.
@@ -47,7 +47,7 @@ export const FIXTURES = [
   {
     name: "reducer-runtime-state-simultaneous",
     typeName: "ReducerRuntimeState" as const,
-    why: "Runtime state with an in-flight simultaneous-player submission bucket; catches JS/Kotlin drift on runtime.simultaneous.",
+    why: "Runtime state with an in-flight simultaneous-player submission bucket; catches schema drift on runtime.simultaneous.",
     value: reducerRuntimeStateSimultaneous,
   },
   {
@@ -77,7 +77,7 @@ export const FIXTURES = [
   {
     name: "effect-shuffle-fire-and-forget",
     typeName: "Effect" as const,
-    why: "Parallel to rollDie fire-and-forget. Previously the only variant that was correctly handled on the Kotlin side.",
+    why: "Parallel to rollDie fire-and-forget. Guards the effect union's player-zone shuffle variant.",
     value: effectShuffleFireAndForget,
   },
   {

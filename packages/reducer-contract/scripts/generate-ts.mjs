@@ -129,8 +129,8 @@ function zodExprOf(def) {
       return def.pattern
         ? `z.string().regex(new RegExp(${JSON.stringify(def.pattern)}))`
         : def.minLength
-        ? `z.string().min(${def.minLength})`
-        : "z.string()";
+          ? `z.string().min(${def.minLength})`
+          : "z.string()";
     case "number":
       return "z.number()";
     case "integer":
@@ -176,8 +176,10 @@ function unionDiscriminator(def) {
   for (const member of def.oneOf) {
     const target = member.$ref ? defs[refName(member.$ref)] : member;
     if (!target?.properties) continue;
-    if (target.properties.kind && isConst(target.properties.kind)) return "kind";
-    if (target.properties.type && isConst(target.properties.type)) return "type";
+    if (target.properties.kind && isConst(target.properties.kind))
+      return "kind";
+    if (target.properties.type && isConst(target.properties.type))
+      return "type";
   }
   return null;
 }
@@ -245,7 +247,9 @@ fs.writeFileSync(path.join(OUT_DIR, "wire.ts"), typeLines.join("\n"));
 // -----------------------------------------------------------------------------
 
 if (!operationsContract.versionProperty) {
-  throw new Error("Missing versionProperty in reducer-runtime.operations.json.");
+  throw new Error(
+    "Missing versionProperty in reducer-runtime.operations.json.",
+  );
 }
 if (!Array.isArray(operationsContract.operations)) {
   throw new Error("Missing operations[] in reducer-runtime.operations.json.");
@@ -296,14 +300,22 @@ bundleLines.push(``);
 bundleLines.push(`export type MaybePromise<T> = T | Promise<T>;`);
 bundleLines.push(``);
 bundleLines.push(`/**`);
-bundleLines.push(` * Canonical erased reducer boundary for \`createReducerBundle(...)\`.`);
+bundleLines.push(
+  ` * Canonical erased reducer boundary for \`createReducerBundle(...)\`.`,
+);
 bundleLines.push(` *`);
 bundleLines.push(` * The callable method list is generated from`);
-bundleLines.push(` * \`schema/reducer-runtime.operations.json\`; payload DTOs come from`);
+bundleLines.push(
+  ` * \`schema/reducer-runtime.operations.json\`; payload DTOs come from`,
+);
 bundleLines.push(` * \`schema/reducer-runtime.schema.json\`.`);
 bundleLines.push(` *`);
-bundleLines.push(` * This interface models the host/guest surface only. The concrete`);
-bundleLines.push(` * authored bundle stays strongly typed in \`@dreamboard-games/app-sdk/reducer\`, but every`);
+bundleLines.push(
+  ` * This interface models the host/guest surface only. The concrete`,
+);
+bundleLines.push(
+  ` * authored bundle stays strongly typed in \`@dreamboard-games/app-sdk/reducer\`, but every`,
+);
 bundleLines.push(` * cross-runtime caller should agree on this shape.`);
 bundleLines.push(` */`);
 bundleLines.push(`export interface ReducerBundleContract {`);
@@ -421,9 +433,15 @@ builderLines.push(``);
 builderLines.push(`export type EffectIdMinter = () => Wire.EffectId;`);
 builderLines.push(``);
 builderLines.push(`/**`);
-builderLines.push(` * Produces sequential, deterministic effect ids scoped to a single accept`);
-builderLines.push(` * payload: "ef0", "ef1", ... . Uniqueness only needs to be local to the`);
-builderLines.push(` * payload because the host consumes and discards them per dispatch.`);
+builderLines.push(
+  ` * Produces sequential, deterministic effect ids scoped to a single accept`,
+);
+builderLines.push(
+  ` * payload: "ef0", "ef1", ... . Uniqueness only needs to be local to the`,
+);
+builderLines.push(
+  ` * payload because the host consumes and discards them per dispatch.`,
+);
 builderLines.push(` */`);
 builderLines.push(`export function createEffectIdMinter(): EffectIdMinter {`);
 builderLines.push(`  let i = 0;`);
@@ -452,12 +470,8 @@ for (const v of effectVariants) {
   builderLines.push(
     `      const effect = { effectId: mint(), type: "${v.tag}" as const, ${argSpread} };`,
   );
-  builderLines.push(
-    `      return continuation === undefined`,
-  );
-  builderLines.push(
-    `        ? (effect as PendingEffect)`,
-  );
+  builderLines.push(`      return continuation === undefined`);
+  builderLines.push(`        ? (effect as PendingEffect)`);
   builderLines.push(
     `        : Object.assign(effect, { __continuation: continuation });`,
   );
@@ -467,9 +481,15 @@ builderLines.push(`  };`);
 builderLines.push(`}`);
 builderLines.push(``);
 builderLines.push(`/**`);
-builderLines.push(` * Takes a list of PendingEffects and splits them into the canonical wire`);
-builderLines.push(` * shape: \`effects[]\` (stripped of \`__continuation\`) + \`continuations\` map`);
-builderLines.push(` * keyed by effectId. Use at the boundary where reduce/dispatch results leave`);
+builderLines.push(
+  ` * Takes a list of PendingEffects and splits them into the canonical wire`,
+);
+builderLines.push(
+  ` * shape: \`effects[]\` (stripped of \`__continuation\`) + \`continuations\` map`,
+);
+builderLines.push(
+  ` * keyed by effectId. Use at the boundary where reduce/dispatch results leave`,
+);
 builderLines.push(` * author code and enter the wire.`);
 builderLines.push(` */`);
 builderLines.push(
@@ -481,10 +501,14 @@ builderLines.push(`} {`);
 builderLines.push(`  const effects: Wire.Effect[] = [];`);
 builderLines.push(`  const continuations: Wire.ContinuationMap = {};`);
 builderLines.push(`  for (const pe of pending) {`);
-builderLines.push(`    const { __continuation, ...effect } = pe as PendingEffect & { __continuation?: Wire.ContinuationToken };`);
+builderLines.push(
+  `    const { __continuation, ...effect } = pe as PendingEffect & { __continuation?: Wire.ContinuationToken };`,
+);
 builderLines.push(`    effects.push(effect as Wire.Effect);`);
 builderLines.push(`    if (__continuation !== undefined) {`);
-builderLines.push(`      continuations[(effect as Wire.Effect).effectId] = __continuation;`);
+builderLines.push(
+  `      continuations[(effect as Wire.Effect).effectId] = __continuation;`,
+);
 builderLines.push(`    }`);
 builderLines.push(`  }`);
 builderLines.push(`  return { effects, continuations };`);
@@ -503,7 +527,7 @@ fs.writeFileSync(
 /**
  * The wire-protocol version this package implements. Bumped in lockstep with
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
- * time the Kotlin adapter refuses bundles whose major version differs.
+ * time hosts refuse bundles whose major version differs.
  */
 export const REDUCER_CONTRACT_VERSION = ${JSON.stringify(pkg.version)} as const;
 `,
