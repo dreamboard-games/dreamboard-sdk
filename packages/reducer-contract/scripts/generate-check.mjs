@@ -22,6 +22,16 @@ const REPO_ROOT = path.resolve(PKG_ROOT, "..", "..");
 const TRACKED_OUTPUT_PATHS = [
   path.join(PKG_ROOT, "generated"),
   path.join(PKG_ROOT, "src", "bundle.ts"),
+  path.join(REPO_ROOT, "packages", "sdk", "src", "generated", "reducer-contract"),
+  path.join(
+    REPO_ROOT,
+    "packages",
+    "sdk",
+    "src",
+    "infrastructure",
+    "reducer-contract",
+    "bundle.ts",
+  ),
 ];
 
 function run(cmd, args, opts = {}) {

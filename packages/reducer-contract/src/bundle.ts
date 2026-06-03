@@ -14,7 +14,7 @@ export type MaybePromise<T> = T | Promise<T>;
  * `schema/reducer-runtime.schema.json`.
  *
  * This interface models the host/guest surface only. The concrete
- * authored bundle stays strongly typed in `@dreamboard-games/app-sdk/reducer`, but every
+ * authored bundle stays strongly typed in `@dreamboard-games/sdk/reducer`, but every
  * cross-runtime caller should agree on this shape.
  */
 export interface ReducerBundleContract {
