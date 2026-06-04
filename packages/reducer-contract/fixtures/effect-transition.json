@@ -1,0 +1,5 @@
+{
+  "effectId": "ef0",
+  "type": "transition",
+  "to": "takeTurn"
+}

@@ -1,0 +1,18 @@
+{
+  "view": {
+    "coins": 3
+  },
+  "availableInteractionRefs": [
+    {
+      "interactionId": "claim",
+      "label": "Claim"
+    }
+  ],
+  "zones": {
+    "player-1": {
+      "hand": {
+        "visibleCardIds": ["c1"]
+      }
+    }
+  }
+}

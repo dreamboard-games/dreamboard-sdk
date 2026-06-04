@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dreamboard.games/schemas/reducer-runtime.operations.schema.json",
+  "title": "ReducerRuntimeOperationsContract",
+  "type": "object",
+  "properties": {
+    "description": { "type": "string" },
+    "versionProperty": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 }
+      },
+      "required": ["name", "type"],
+      "additionalProperties": false
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "input": {
+            "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+          },
+          "output": { "type": "string", "minLength": 1 },
+          "nullableOutput": { "type": "boolean" },
+          "maybePromise": { "type": "boolean" }
+        },
+        "required": ["name", "input", "output"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["versionProperty", "operations"],
+  "additionalProperties": false
+}

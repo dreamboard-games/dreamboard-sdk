@@ -1,0 +1,55 @@
+{
+  "name": "@dreamboard-games/sdk-types",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Public Dreamboard authoring and manifest types",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "dreamboard-source": "./src/index.ts",
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "lint": "eslint 'src/**/*.ts'"
+  },
+  "files": [
+    "LICENSE.md",
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "!src/**/*.test.tsx",
+    "!src/**/__fixtures__/**",
+    "!src/**/*.stories.ts",
+    "!src/**/*.stories.tsx",
+    "!src/stories/**",
+    "!visual/**",
+    "!.turbo/**",
+    "!tsconfig.tsbuildinfo"
+  ],
+  "devDependencies": {
+    "eslint": "^9.39.0",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git",
+    "directory": "packages/sdk-types"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "types",
+    "authoring"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

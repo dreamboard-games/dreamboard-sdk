@@ -1,0 +1,8 @@
+{
+  "kind": "interaction",
+  "playerId": "player-1",
+  "interactionId": "discardHalf",
+  "params": {
+    "discards": ["card-a", "card-b"]
+  }
+}

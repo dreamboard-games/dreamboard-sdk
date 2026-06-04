@@ -1,0 +1,8 @@
+{
+  "kind": "interaction",
+  "playerId": "player-1",
+  "interactionId": "rollForResources",
+  "params": {
+    "targetDieId": "die-red"
+  }
+}

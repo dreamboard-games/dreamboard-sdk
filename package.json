@@ -1,0 +1,50 @@
+{
+  "name": "dreamboard-sdk",
+  "private": true,
+  "version": "0.2.1-alpha.0",
+  "description": "Dreamboard public SDK package-set monorepo",
+  "type": "module",
+  "packageManager": "pnpm@10.4.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "check": "pnpm publication:check && pnpm version:check && pnpm build && pnpm test && pnpm pack:dry-run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "turbo run lint",
+    "local-registry:publish": "node scripts/publish-local-snapshot.mjs",
+    "pack:dry-run": "node scripts/pack-dry-run.mjs",
+    "publication:check": "node scripts/assert-publication-boundary.mjs",
+    "publish:alpha": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha",
+    "publish:alpha:dry-run": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha --dry-run",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "version:check": "node scripts/assert-fixed-version.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "^24.5.2",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2",
+    "turbo": "^2.6.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.48.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "games",
+    "monorepo"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

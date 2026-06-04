@@ -1,0 +1,42 @@
+{
+  "kind": "accept",
+  "state": {
+    "domain": {
+      "table": {
+        "playerOrder": ["player-1", "player-2"],
+        "zones": { "shared": {}, "perPlayer": {}, "visibility": {} }
+      },
+      "publicState": { "turnCount": 1 },
+      "privateState": { "player-1": {}, "player-2": {} },
+      "hiddenState": {},
+      "flow": {
+        "currentPhase": "takeTurn",
+        "turn": 1,
+        "round": 0,
+        "activePlayers": ["player-2"]
+      },
+      "phase": {}
+    },
+    "runtime": {
+      "rng": { "seed": 1337, "cursor": 0, "trace": [] },
+      "setup": null,
+      "simultaneous": { "current": null },
+      "lastTransition": { "from": "main", "to": "takeTurn" }
+    }
+  },
+  "effects": [
+    { "effectId": "ef0", "type": "transition", "to": "resolve" },
+    { "effectId": "ef1", "type": "rollDie", "dieId": "die-red" },
+    {
+      "effectId": "ef2",
+      "type": "shuffleSharedZone",
+      "zoneId": "dev-deck"
+    }
+  ],
+  "continuations": {
+    "ef2": {
+      "id": "afterShuffle",
+      "data": {}
+    }
+  }
+}

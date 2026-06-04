@@ -1,0 +1,27 @@
+{
+  "domain": {
+    "table": {
+      "playerOrder": ["player-1", "player-2"],
+      "zones": { "shared": {}, "perPlayer": {}, "visibility": {} }
+    },
+    "publicState": { "turnCount": 1 },
+    "privateState": { "player-1": {}, "player-2": {} },
+    "hiddenState": {},
+    "flow": {
+      "currentPhase": "main",
+      "turn": 0,
+      "round": 0,
+      "activePlayers": ["player-1"]
+    },
+    "phase": {}
+  },
+  "runtime": {
+    "rng": { "seed": 1337, "cursor": 0, "trace": [] },
+    "setup": {
+      "profileId": "short",
+      "optionValues": { "difficulty": "normal", "map": null }
+    },
+    "simultaneous": { "current": null },
+    "lastTransition": null
+  }
+}

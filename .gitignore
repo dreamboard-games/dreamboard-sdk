@@ -1,0 +1,8 @@
+node_modules
+dist
+build
+.turbo
+.dreamboard-dev
+storybook-static
+tsconfig.tsbuildinfo
+*.tgz

@@ -1,0 +1,5 @@
+{
+  "kind": "reject",
+  "errorCode": "INVALID_ACTION",
+  "message": "Action rejected by reducer validation."
+}
