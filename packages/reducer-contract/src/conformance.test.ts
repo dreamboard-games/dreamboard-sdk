@@ -43,6 +43,36 @@ describe("wire fixtures parse under generated Zod", () => {
   }
 });
 
+describe("JsonValueSchema", () => {
+  test("accepts nested JSON-compatible values", () => {
+    const value: Wire.JsonValue = {
+      table: {
+        seats: ["player-1", "player-2"],
+        options: { drawCount: 2, public: true, note: null },
+      },
+    };
+
+    expect(Zod.JsonValueSchema.safeParse(value).success).toBe(true);
+  });
+
+  test("rejects nested non-JSON values", () => {
+    expect(
+      Zod.JsonValueSchema.safeParse({
+        table: {
+          nested: [{ notJson: undefined }],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      Zod.JsonValueSchema.safeParse({
+        table: {
+          nested: [{ notJson: () => "nope" }],
+        },
+      }).success,
+    ).toBe(false);
+  });
+});
+
 describe("generated builders produce wire-valid effects", () => {
   test("rollDie without continuation has NO __continuation and NO resume key", () => {
     const mint = Builders.createEffectIdMinter();

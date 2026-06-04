@@ -8,7 +8,9 @@ export const ReducerContractVersionSchema = z.string().regex(new RegExp("^[0-9]+
 
 export const EffectIdSchema = z.string().min(1);
 
-export const JsonValueSchema = z.union([z.record(z.string(), z.unknown()), z.array(z.unknown()), z.string(), z.number(), z.boolean(), z.null()]);
+let JsonValueSchemaInternal: z.ZodType<unknown>;
+JsonValueSchemaInternal = z.lazy(() => z.union([z.record(z.string(), JsonValueSchemaInternal), z.array(JsonValueSchemaInternal), z.string(), z.number(), z.boolean(), z.null()]));
+export const JsonValueSchema = JsonValueSchemaInternal;
 
 export const ContinuationTokenSchema = z.object({ "id": z.string().min(1), "data": JsonValueSchema }).strict();
 

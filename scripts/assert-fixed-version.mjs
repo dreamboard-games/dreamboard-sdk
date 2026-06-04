@@ -4,6 +4,13 @@ import { sdkPackages } from "./sdk-packages.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const versions = new Map();
+const sdkPackageSetSourcePath = path.join(
+  root,
+  "packages",
+  "sdk",
+  "src",
+  "package-set.ts",
+);
 
 for (const pkg of sdkPackages) {
   const packageJsonPath = path.join(root, pkg.dir, "package.json");
@@ -27,4 +34,23 @@ if (uniqueVersions.size !== 1) {
   throw new Error(`SDK package versions drifted:\n${detail}`);
 }
 
-console.log(`SDK fixed version OK: ${[...uniqueVersions][0]}`);
+const [fixedVersion] = uniqueVersions;
+const sdkPackageSetSource = await readFile(sdkPackageSetSourcePath, "utf8");
+const sourceVersionMatch = sdkPackageSetSource.match(
+  /export const DREAMBOARD_SDK_VERSION = "([^"]+)";/,
+);
+
+if (!sourceVersionMatch) {
+  throw new Error(
+    `${sdkPackageSetSourcePath} must export a literal DREAMBOARD_SDK_VERSION`,
+  );
+}
+
+const sourceVersion = sourceVersionMatch[1];
+if (sourceVersion !== fixedVersion) {
+  throw new Error(
+    `DREAMBOARD_SDK_VERSION drifted from packages/sdk/package.json: ${sourceVersion} !== ${fixedVersion}`,
+  );
+}
+
+console.log(`SDK fixed version OK: ${fixedVersion}`);

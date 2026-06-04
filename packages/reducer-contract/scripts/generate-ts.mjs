@@ -56,6 +56,8 @@ const schema = JSON.parse(fs.readFileSync(SCHEMA_PATH, "utf8"));
 const operationsContract = JSON.parse(fs.readFileSync(OPERATIONS_PATH, "utf8"));
 const pkg = JSON.parse(fs.readFileSync(PKG_PATH, "utf8"));
 const defs = schema.$defs;
+const JSON_VALUE_TYPE =
+  "string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }";
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.mkdirSync(SRC_DIR, { recursive: true });
@@ -255,7 +257,8 @@ typeLines.push(`/* eslint-disable */`);
 typeLines.push(``);
 
 for (const [name, def] of Object.entries(defs)) {
-  typeLines.push(`export type ${name} = ${tsTypeOf(def)};`);
+  const typeExpr = name === "JsonValue" ? JSON_VALUE_TYPE : tsTypeOf(def);
+  typeLines.push(`export type ${name} = ${typeExpr};`);
   typeLines.push(``);
 }
 
@@ -315,7 +318,9 @@ for (const operation of operationsContract.operations) {
 function renderBundleContract({ wireImportPath, authoredReducerImport }) {
   const bundleLines = [BUNDLE_GENERATED_HEADER];
   bundleLines.push(`/* eslint-disable */`);
-  bundleLines.push(`import type * as Wire from ${JSON.stringify(wireImportPath)};`);
+  bundleLines.push(
+    `import type * as Wire from ${JSON.stringify(wireImportPath)};`,
+  );
   bundleLines.push(``);
   bundleLines.push(`export type MaybePromise<T> = T | Promise<T>;`);
   bundleLines.push(``);
@@ -418,6 +423,15 @@ for (const name of Object.keys(defs)) visit(name);
 
 for (const name of order) {
   const def = defs[name];
+  if (name === "JsonValue") {
+    zodLines.push(`let JsonValueSchemaInternal: z.ZodType<unknown>;`);
+    zodLines.push(
+      `JsonValueSchemaInternal = z.lazy(() => z.union([z.record(z.string(), JsonValueSchemaInternal), z.array(JsonValueSchemaInternal), z.string(), z.number(), z.boolean(), z.null()]));`,
+    );
+    zodLines.push(`export const JsonValueSchema = JsonValueSchemaInternal;`);
+    zodLines.push(``);
+    continue;
+  }
   const expr = def.oneOf ? renderUnionZod(def) : zodExprOf(def);
   zodLines.push(`export const ${name}Schema = ${expr};`);
   zodLines.push(``);

@@ -11,7 +11,7 @@ export type ContinuationToken = { "id": string; "data": JsonValue };
 
 export type ContinuationMap = Record<string, ContinuationToken>;
 
-export type JsonValue = Record<string, unknown> | Array<unknown> | string | number | boolean | null;
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type ReducerSetupSelection = { "profileId": string; "optionValues": Record<string, string | null> };
 

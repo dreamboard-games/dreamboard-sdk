@@ -320,7 +320,7 @@ export function createReducerBundle<
     }: Wire.InitializeRequest) {
       const { table: parsedTable, playerIds: parsedPlayerIds } =
         codec.parseInitialTable(
-          table as Parameters<typeof codec.parseInitialTable>[0],
+          table as unknown as Parameters<typeof codec.parseInitialTable>[0],
           playerIds,
         );
       return codec.serializeState(
