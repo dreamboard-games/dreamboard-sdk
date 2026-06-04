@@ -70,9 +70,8 @@ export function defineCardAction<
 >() {
   return <
     Collectors extends Record<string, InputCollector> = Record<string, never>,
-    const PlayFrom extends PlayerZoneIdOfManifest<
-      ContractManifest<Contract>
-    > = PlayerZoneIdOfManifest<ContractManifest<Contract>>,
+    const PlayFrom extends PlayerZoneIdOfManifest<ContractManifest<Contract>> =
+      PlayerZoneIdOfManifest<ContractManifest<Contract>>,
   >(
     definition: CardActionSpec<
       Collectors,

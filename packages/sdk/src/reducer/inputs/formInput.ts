@@ -483,10 +483,8 @@ function choiceInput<
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
-  const Dependencies extends readonly InputFieldRef<
-    string,
-    unknown
-  >[] = readonly InputFieldRef<string, unknown>[],
+  const Dependencies extends readonly InputFieldRef<string, unknown>[] =
+    readonly InputFieldRef<string, unknown>[],
 >(options: {
   dependsOn: Dependencies;
   choices: DependentDomainChoices<Value, State, Dependencies>;
@@ -497,10 +495,8 @@ function choiceInput<
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
-  const Dependencies extends readonly InputFieldRef<
-    string,
-    unknown
-  >[] = readonly InputFieldRef<string, unknown>[],
+  const Dependencies extends readonly InputFieldRef<string, unknown>[] =
+    readonly InputFieldRef<string, unknown>[],
 >(options: {
   dependsOn: Dependencies;
   choices: DependentDomainChoices<Value, State, Dependencies>;

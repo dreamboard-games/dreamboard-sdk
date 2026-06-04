@@ -446,16 +446,16 @@ export type InitSetupSelectionInput<
 // --- Setup Bootstrap Types ---
 
 export type SetupBootstrapSharedZoneRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "sharedZone";
   zoneId: SharedZoneIdOfManifest<Manifest>;
 };
 
 export type SetupBootstrapPerPlayerZoneRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "playerZone";
   zoneId: PlayerZoneIdOfManifest<Manifest>;
@@ -463,8 +463,8 @@ export type SetupBootstrapPerPlayerZoneRef<
 };
 
 export type SetupBootstrapSharedBoardContainerRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "sharedBoardContainer";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -472,8 +472,8 @@ export type SetupBootstrapSharedBoardContainerRef<
 };
 
 export type SetupBootstrapPerPlayerBoardContainerRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "playerBoardContainer";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -482,8 +482,8 @@ export type SetupBootstrapPerPlayerBoardContainerRef<
 };
 
 export type SetupBootstrapSharedBoardSpaceRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "sharedBoardSpace";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -491,8 +491,8 @@ export type SetupBootstrapSharedBoardSpaceRef<
 };
 
 export type SetupBootstrapPerPlayerBoardSpaceRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   type: "playerBoardSpace";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -501,8 +501,8 @@ export type SetupBootstrapPerPlayerBoardSpaceRef<
 };
 
 export type SetupBootstrapContainerRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > =
   | SetupBootstrapSharedZoneRef<Manifest>
   | SetupBootstrapPerPlayerZoneRef<Manifest>
@@ -510,16 +510,16 @@ export type SetupBootstrapContainerRef<
   | SetupBootstrapPerPlayerBoardContainerRef<Manifest>;
 
 export type SetupBootstrapDestinationRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > =
   | SetupBootstrapContainerRef<Manifest>
   | SetupBootstrapSharedBoardSpaceRef<Manifest>
   | SetupBootstrapPerPlayerBoardSpaceRef<Manifest>;
 
 export type SetupBootstrapPerPlayerContainerTemplateRef<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > =
   | {
       type: "playerZone";
@@ -532,8 +532,8 @@ export type SetupBootstrapPerPlayerContainerTemplateRef<
     };
 
 export type SetupBootstrapStep<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > =
   | {
       type: "shuffle";
@@ -562,8 +562,8 @@ export type SetupBootstrapStep<
 
 export type SetupProfileDefinition<
   PhaseName extends string = string,
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = {
   initialPhase?: PhaseName;
   bootstrap?: readonly SetupBootstrapStep<Manifest>[];

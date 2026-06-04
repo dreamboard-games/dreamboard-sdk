@@ -49,7 +49,7 @@ function routeInteraction(input: UntrustedRuntimeInput): {
 // ---------------------------------------------------------------------------
 // Wire-protocol adapter.
 //
-// The trusted bundle (see ./trusted-bundle.ts) keeps the app-sdk runtime
+// The trusted bundle (see ./trusted-bundle.ts) keeps the SDK reducer runtime
 // instruction shape at reducer boundaries where:
 //   - Results discriminate on `type: "accept" | "reject"`.
 //   - Reducer-returned instructions carry `kind`.
@@ -63,7 +63,7 @@ function routeInteraction(input: UntrustedRuntimeInput): {
 //     for dispatch results.
 //   - Each DispatchTrace entry discriminates on `kind` (no `type` field).
 //
-// This module is the ONLY place in the app-sdk that converts runtime
+// This module is the ONLY place in the SDK reducer that converts runtime
 // instructions into wire effects. It does so through
 // `@dreamboard-games/sdk/infrastructure/reducer-bundle-abi` (the single source of truth for
 // wire-effect construction) rather than hand-rolling the mapping locally —

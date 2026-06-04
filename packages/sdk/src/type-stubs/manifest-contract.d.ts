@@ -16,7 +16,7 @@ export type DieId = string;
 /**
  * Stub of the `PerPlayer<Value>` primitive emitted by the real
  * `@dreamboard-games/sdk/reducer` module. The SDK UI surface does not
- * depend on app-sdk directly, so we mirror the structural shape here so
+ * depend on SDK reducer directly, so we mirror the structural shape here so
  * that view types can reference runtime-accurate per-player containers.
  */
 export type PerPlayer<Value> = {

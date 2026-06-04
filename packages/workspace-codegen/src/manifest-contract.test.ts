@@ -18,7 +18,7 @@ const workspaceCodegenNodeModulesRoot = path.join(
   workspaceCodegenRoot,
   "node_modules",
 );
-const appSdkPackageRoot = path.join(repoRoot, "packages/app-sdk");
+const sdkPackageRoot = path.join(repoRoot, "packages/sdk");
 const sdkTypesPackageRoot = path.join(repoRoot, "packages/sdk-types");
 
 const TEST_MANIFEST: GameTopologyManifest = {
@@ -592,16 +592,8 @@ async function createGeneratedContractTempRoot(tempPrefix: string) {
     path.join(nodeModulesRoot, "zod"),
     "dir",
   );
-  await symlink(
-    appSdkPackageRoot,
-    path.join(scopedRoot, "app-sdk"),
-    "dir",
-  );
-  await symlink(
-    sdkTypesPackageRoot,
-    path.join(scopedRoot, "sdk-types"),
-    "dir",
-  );
+  await symlink(sdkPackageRoot, path.join(scopedRoot, "sdk"), "dir");
+  await symlink(sdkTypesPackageRoot, path.join(scopedRoot, "sdk-types"), "dir");
   return tempRoot;
 }
 
@@ -696,7 +688,7 @@ test("generateManifestContractSource emits typed topology fields and helper lite
   expect(source).toContain("function buildPerPlayerCardIds(");
   expect(source).toContain("export type CardIdsBySharedZoneId = {");
   expect(source).toContain("function buildPlayerResources(");
-  expect(source).toContain('from "@dreamboard-games/app-sdk/reducer";');
+  expect(source).toContain('from "@dreamboard-games/sdk/reducer";');
   expect(source).toContain("export function dealToPlayerZone(options: {");
   expect(source).toContain(
     "export function dealToPlayerBoardContainer(options: {",
@@ -1154,7 +1146,7 @@ test("generateManifestContractSource emits variant card property schemas", async
   await expectGeneratedContractTypechecks({
     tempPrefix: ".tmp-variant-card-properties-contract-",
     manifest,
-    usageSource: `import { asPlayerId, createTableQueries } from "@dreamboard-games/app-sdk/reducer";
+    usageSource: `import { asPlayerId, createTableQueries } from "@dreamboard-games/sdk/reducer";
 import { createInitialTable } from "./manifest-contract";
 
 const table = createInitialTable({ playerIds: ["player-1", "player-2"] });
@@ -1686,7 +1678,7 @@ test("generateManifestContractSource typechecks typed zone card helpers against 
   await expectGeneratedContractTypechecks({
     tempPrefix: ".tmp-zone-card-helper-contract-",
     manifest: TEST_MANIFEST,
-    usageSource: `import { asPlayerId, createTableQueries } from "@dreamboard-games/app-sdk/reducer";
+    usageSource: `import { asPlayerId, createTableQueries } from "@dreamboard-games/sdk/reducer";
 import { createInitialTable } from "./manifest-contract";
 
 const table = createInitialTable({

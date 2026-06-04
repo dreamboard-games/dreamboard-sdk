@@ -1284,8 +1284,8 @@ export type CardActionSpec<
   Manifest extends ManifestContract<TableOfState<State>> = ManifestContract<
     TableOfState<State>
   >,
-  PlayFrom extends
-    PlayerZoneIdOfManifest<Manifest> = PlayerZoneIdOfManifest<Manifest>,
+  PlayFrom extends PlayerZoneIdOfManifest<Manifest> =
+    PlayerZoneIdOfManifest<Manifest>,
 > = {
   cardType: CardTypeOfState<State>;
   playFrom: PlayFrom;

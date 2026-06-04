@@ -512,7 +512,7 @@ const GENERATED_ID_FAMILIES: readonly GeneratedIdFamily[] = [
 // `playerIds` are excluded from the generated `records`/`idGuards` surfaces:
 // `PlayerId` is now an opaque brand whose runtime roster comes from the active
 // session, not `manifest.players.maxPlayers`. Authors must use
-// `perPlayer(runtimeIds, init)` and `asPlayerId` from `@dreamboard-games/app-sdk/reducer`
+// `perPlayer(runtimeIds, init)` and `asPlayerId` from `@dreamboard-games/sdk/reducer`
 // instead of a `Record<PlayerId, T>` keyed on the max-players set.
 const GENERATED_ID_FAMILIES_WITHOUT_PLAYERS: readonly GeneratedIdFamily[] =
   GENERATED_ID_FAMILIES.filter((family) => family.literalKey !== "playerIds");
@@ -4946,7 +4946,7 @@ import {
   type SetupProfileDefinition,
   type SharedBoardRef,
   type StaticBoards,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -5024,7 +5024,7 @@ export const literals = {
   )},
 } as const;
 
-// PlayerId is an opaque brand imported from @dreamboard-games/app-sdk/reducer.
+// PlayerId is an opaque brand imported from @dreamboard-games/sdk/reducer.
 // We intentionally do NOT enumerate the manifest's max-players roster here:
 // the runtime session may have fewer active seats than the manifest declares,
 // and requiring ingress to pick a literal from the max-players set reintroduces
@@ -5141,7 +5141,7 @@ ${renderGeneratedIdGuards()}
 // Historically this emitted PlayerRecord<T> = Record<PlayerId, T>, but that
 // type reified the "total roster" assumption (one entry per max-player). It has
 // been replaced throughout the generated contract with PerPlayer<T> from
-// @dreamboard-games/app-sdk/reducer, whose entries array matches the
+// @dreamboard-games/sdk/reducer, whose entries array matches the
 // actual runtime seat list.
 export type SharedZoneRecord<T> = Record<SharedZoneId, T>;
 export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
@@ -6158,7 +6158,7 @@ const generatedFileBanner = `/**
 function extractGeneratedLiteralsBlock(source: string): string {
   const startMarker = "export const literals = {";
   const endMarker =
-    "\n\n// PlayerId is an opaque brand imported from @dreamboard-games/app-sdk/reducer.";
+    "\n\n// PlayerId is an opaque brand imported from @dreamboard-games/sdk/reducer.";
   const start = source.indexOf(startMarker);
   const end = source.indexOf(endMarker, start);
 
@@ -6192,8 +6192,8 @@ function renderManifestRuntimeSource(legacySource: string): string {
   return withoutLiterals
     .replace(generatedFileBanner, `${generatedFileBanner}\n// @ts-nocheck`)
     .replace(
-      `} from "@dreamboard-games/app-sdk/reducer";\n\nconst unknownRecordSchema`,
-      `} from "@dreamboard-games/app-sdk/reducer";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
+      `} from "@dreamboard-games/sdk/reducer";\n\nconst unknownRecordSchema`,
+      `} from "@dreamboard-games/sdk/reducer";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
     )
     .replaceAll(
       "literals.playerIds as unknown as readonly PlayerId[]",
@@ -6381,7 +6381,7 @@ import type {
   RuntimePieceData,
   RuntimeRecord,
   RuntimeTableRecord,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 import { literals } from "./manifest-literals";
 
 export type PlayerId = (typeof literals.playerIds)[number];

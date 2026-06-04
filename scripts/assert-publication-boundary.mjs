@@ -1,4 +1,4 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { sdkPackages } from "./sdk-packages.mjs";
 
@@ -14,9 +14,22 @@ const removedLeafPackageNames = new Set([
   "@dreamboard-games/ui-sdk",
   "@dreamboard-games/workspace-codegen",
 ]);
+const retiredSourcePackageDirs = ["app-sdk", "testing"];
 
 function fail(message) {
   throw new Error(`SDK publication boundary violation: ${message}`);
+}
+
+async function pathExists(filePath) {
+  try {
+    await stat(filePath);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      return false;
+    }
+    throw error;
+  }
 }
 
 async function readJson(filePath) {
@@ -36,6 +49,15 @@ async function assertPackageManifests() {
   const rootManifest = await readJson(path.join(root, "package.json"));
   if (rootManifest.private !== true) {
     fail("root package.json must remain private");
+  }
+
+  for (const packageDir of retiredSourcePackageDirs) {
+    const retiredPackagePath = path.join(packagesDir, packageDir);
+    if (await pathExists(retiredPackagePath)) {
+      fail(
+        `packages/${packageDir} must not exist; use ${publicPackageName} as the canonical source`,
+      );
+    }
   }
 
   const packageDirs = await readdir(packagesDir, { withFileTypes: true });

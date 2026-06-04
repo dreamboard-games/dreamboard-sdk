@@ -11,8 +11,8 @@ import type {
 } from "./model";
 
 export function shuffle<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 >(
   container: SetupBootstrapContainerRef<Manifest>,
 ): SetupBootstrapStep<Manifest> {
@@ -23,8 +23,8 @@ export function shuffle<
 }
 
 export function dealToPlayerZone<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 >({
   from,
   zoneId,
@@ -55,8 +55,8 @@ export function dealToPlayerZone<
 }
 
 export function dealToPlayerBoardContainer<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 >({
   from,
   boardId,
@@ -93,8 +93,8 @@ export function dealToPlayerBoardContainer<
 }
 
 export function seedSharedBoardContainer<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 >({
   from,
   boardId,
@@ -132,8 +132,8 @@ export function seedSharedBoardContainer<
 }
 
 export function seedSharedBoardSpace<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 >({
   from,
   boardId,

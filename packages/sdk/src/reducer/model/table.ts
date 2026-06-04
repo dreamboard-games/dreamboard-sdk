@@ -26,7 +26,7 @@ export type RuntimeDeckMap = Record<string, string[]>;
 // `Record<playerId, T>` shape. The prior structure implicitly encoded the
 // "total roster" assumption (one entry per configured player seat) which
 // didn't survive runtime reshuffles where fewer seats were present. See
-// `packages/app-sdk/src/reducer/per-player.ts` for the primitive + helpers.
+// `packages/sdk/src/reducer/per-player.ts` for the primitive + helpers.
 export type RuntimeHandMap = Record<string, PerPlayer<string[]>>;
 export type RuntimeZoneMap = {
   shared: Record<string, string[]>;

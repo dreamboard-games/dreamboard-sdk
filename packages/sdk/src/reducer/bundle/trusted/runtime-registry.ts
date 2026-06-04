@@ -45,9 +45,9 @@ export interface TrustedPhaseRegistry<
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
 > extends Omit<
-    ReducerDefinitionPhaseIndex<Contract, Definitions, Views>,
-    "effects"
-  > {}
+  ReducerDefinitionPhaseIndex<Contract, Definitions, Views>,
+  "effects"
+> {}
 
 export interface TrustedRuntimeRegistry<
   Contract extends ReducerGameContractLike,

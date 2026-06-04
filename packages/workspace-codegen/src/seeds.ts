@@ -12,7 +12,7 @@ function generateUiContractContent(): string {
 import game from "../../app/game";
 import {
   createClientParamSchemasByPhase,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 import type {
   CardInputZoneIdsOfDefinition,
   ClientParamsOfInteractionOfDefinition,
@@ -24,7 +24,7 @@ import type {
   StageNamesOfDefinitionPhase,
   ViewNamesOfDefinition,
   ViewOfDefinition,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 import {
   type BoardSpaceIdOf,
   type InteractionVisualState,
@@ -1215,7 +1215,7 @@ function generateReducerSupportSeed(): string {
   return `import {
   createReducerEdit,
   createStateQueries,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 import type { GameState } from "./game-contract";
 
 /**
@@ -1302,7 +1302,7 @@ function generateReducerDerivedSeed(): string {
 //
 // Uncomment the example below once you have something to derive.
 
-// import { defineDerived } from "@dreamboard-games/app-sdk/reducer";
+// import { defineDerived } from "@dreamboard-games/sdk/reducer";
 // import type { GameContract } from "./game-contract";
 //
 // export const winnerOf = defineDerived<GameContract>()({
@@ -1320,7 +1320,7 @@ export {};
 function generateReducerGameContractSeed(): string {
   return `import { z } from "zod";
 import { ids, manifestContract } from "../shared/manifest-contract";
-import { defineGameContract, type GameStateOf } from "@dreamboard-games/app-sdk/reducer";
+import { defineGameContract, type GameStateOf } from "@dreamboard-games/sdk/reducer";
 
 // Contract files should stay focused on schemas, phases, and exported
 // state types. Put reducers in app/phases/* and pure computations in
@@ -1350,7 +1350,7 @@ export type GameState = GameStateOf<GameContract>;
 }
 
 function generateReducerGameSeed(): string {
-  return `import { defineGame } from "@dreamboard-games/app-sdk/reducer";
+  return `import { defineGame } from "@dreamboard-games/sdk/reducer";
 import { gameContract } from "./game-contract";
 import { phases } from "./phases";
 import setupProfiles from "./setup-profiles";
@@ -1415,7 +1415,7 @@ import {
   defineInteraction,
   definePhase,
   formInput,
-} from "@dreamboard-games/app-sdk/reducer";
+} from "@dreamboard-games/sdk/reducer";
 import { edit } from "../reducer-support";
 
 const setupMoodChoices = [
@@ -1460,7 +1460,7 @@ export const setup = definePhase<GameContract>()({
 function generatePhaseIndexSeed(): string {
   return `import { setup } from "./setup";
 import type { GameContract } from "../game-contract";
-import type { PhaseMapOf } from "@dreamboard-games/app-sdk/reducer";
+import type { PhaseMapOf } from "@dreamboard-games/sdk/reducer";
 
 export const phases = {
   setup,
@@ -1470,7 +1470,7 @@ export const phases = {
 
 function generateReducerAppIndex(): string {
   return `import game from "./game";
-import { createReducerBundle } from "@dreamboard-games/app-sdk/reducer";
+import { createReducerBundle } from "@dreamboard-games/sdk/reducer";
 
 export default createReducerBundle(game);
 `;

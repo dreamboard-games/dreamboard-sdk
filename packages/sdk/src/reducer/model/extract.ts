@@ -619,16 +619,16 @@ export type SetupSelectionOfManifest<Manifest> = {
   optionValues: Record<SetupOptionIdOfManifest<Manifest>, string | null>;
 };
 export type RuntimeSetupSelectionInput<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = SetupSelectionInputOfManifest<Manifest>;
 export type RuntimeSetupSelection<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = SetupSelectionOfManifest<Manifest>;
 export type RuntimeSetupSelectionOverride<
-  Manifest extends
-    GeneratedManifestContractLike = GeneratedManifestContractLike,
+  Manifest extends GeneratedManifestContractLike =
+    GeneratedManifestContractLike,
 > = SetupSelectionInputOfManifest<Manifest>;
 export type StateDefinitionOfContract<Contract> = Contract extends {
   state: infer StateDefinitionValue;
