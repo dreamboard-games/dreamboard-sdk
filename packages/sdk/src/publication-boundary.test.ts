@@ -3,7 +3,13 @@ import path from "node:path";
 import { expect, test } from "bun:test";
 
 const repoRoot = path.resolve(import.meta.dir, "../../..");
-const retiredPackageDirs = ["app-sdk", "testing", "ui-runtime", "ui-sdk"];
+const retiredPackageDirs = [
+  "app-sdk",
+  "testing",
+  "ui-runtime",
+  "ui-sdk",
+  "workspace-codegen",
+];
 const retiredPackageSpecifiers = retiredPackageDirs.map(
   (name) => `@dreamboard-games/${name}`,
 );
@@ -33,7 +39,10 @@ test("retired leaf package source directories stay removed", async () => {
 
 test("workspace codegen emits SDK UI and runtime imports", async () => {
   const seed = await readFile(
-    path.join(repoRoot, "packages/workspace-codegen/src/seeds.ts"),
+    path.join(
+      repoRoot,
+      "packages/sdk/src/infrastructure/workspace-codegen/seeds.ts",
+    ),
     "utf8",
   );
 

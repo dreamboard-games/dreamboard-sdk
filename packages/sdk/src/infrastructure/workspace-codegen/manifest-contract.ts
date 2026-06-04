@@ -859,9 +859,7 @@ function geometryKeyFromEdgeRef(
   ref: HexEdgeRef,
   spacesById: ReadonlyMap<string, HexSpaceSpec>,
 ): string {
-  const [leftId, rightId] = [...ref.spaces].sort((a, b) =>
-    a.localeCompare(b),
-  );
+  const [leftId, rightId] = [...ref.spaces].sort((a, b) => a.localeCompare(b));
   if (leftId === undefined || rightId === undefined) {
     throw new Error("Hex edge ref must reference exactly two spaces.");
   }

@@ -23,6 +23,7 @@ const jsSubpaths = [
   "@dreamboard-games/sdk/generated/workspace-contract",
   "@dreamboard-games/sdk/generated/runtime-api",
   "@dreamboard-games/sdk/infrastructure/reducer-bundle-abi",
+  "@dreamboard-games/sdk/infrastructure/workspace-codegen",
 ] as const;
 
 describe("SDK facade exports", () => {
