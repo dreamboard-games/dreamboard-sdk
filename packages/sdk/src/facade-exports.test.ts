@@ -38,4 +38,21 @@ describe("SDK facade exports", () => {
   test("exports plugin styles through the facade package", () => {
     expect(existsSync(`${packageRoot}/dist/ui/plugin-styles.css`)).toBe(true);
   });
+
+  test("dist generated runtime facade shares canonical runtime modules", async () => {
+    const runtime = await import("../dist/runtime.js");
+    const workspaceContract =
+      await import("../dist/runtime/workspace-contract.js");
+    const generatedRuntime = await import("../dist/generated/runtime.js");
+    const generatedWorkspaceContract =
+      await import("../dist/generated/workspace-contract.js");
+
+    expect(generatedRuntime.PluginRuntime).toBe(runtime.PluginRuntime);
+    expect(generatedRuntime.createWorkspaceUIContract).toBe(
+      workspaceContract.createWorkspaceUIContract,
+    );
+    expect(generatedWorkspaceContract.createWorkspaceUIContract).toBe(
+      workspaceContract.createWorkspaceUIContract,
+    );
+  });
 });
