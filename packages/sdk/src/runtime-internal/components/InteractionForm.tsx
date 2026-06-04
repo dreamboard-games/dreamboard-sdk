@@ -76,17 +76,16 @@ export type InteractionButtonSlotProps = InteractionSlotComponentProps &
     "children" | "disabled" | "type" | "value"
   >;
 
-export interface InteractionTargetSlotProps
-  extends Omit<
-    ButtonHTMLAttributes<HTMLButtonElement>,
-    | "children"
-    | "disabled"
-    | "aria-disabled"
-    | "aria-pressed"
-    | "onClick"
-    | "type"
-    | "value"
-  > {
+export interface InteractionTargetSlotProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  | "children"
+  | "disabled"
+  | "aria-disabled"
+  | "aria-pressed"
+  | "onClick"
+  | "type"
+  | "value"
+> {
   value: string;
   children?: ReactNode;
 }

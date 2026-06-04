@@ -58,10 +58,7 @@ import {
   type ZoneRootProps,
 } from "./primitives/index.js";
 import type { InteractionDescriptor } from "./types/plugin-state.js";
-import type {
-  AnyHexBoardInput,
-  BoardSpaceIdOf,
-} from "../ui.js";
+import type { AnyHexBoardInput, BoardSpaceIdOf } from "../ui.js";
 
 /**
  * Workspace-aware UI typing extension point.

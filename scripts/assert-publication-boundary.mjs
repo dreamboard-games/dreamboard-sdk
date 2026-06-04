@@ -14,7 +14,7 @@ const removedLeafPackageNames = new Set([
   "@dreamboard-games/ui-sdk",
   "@dreamboard-games/workspace-codegen",
 ]);
-const retiredSourcePackageDirs = ["app-sdk", "testing"];
+const retiredSourcePackageDirs = ["app-sdk", "testing", "ui-runtime", "ui-sdk"];
 
 function fail(message) {
   throw new Error(`SDK publication boundary violation: ${message}`);

@@ -466,7 +466,8 @@ function manyCardSelectionForZone(
           ? [input.domain.zoneId]
           : (input.domain.zoneIds ?? []);
       if (declaredZones.length !== 0 && !declaredZones.includes(zone)) continue;
-      if (input.domain.selection?.mode === "many") return input.domain.selection;
+      if (input.domain.selection?.mode === "many")
+        return input.domain.selection;
     }
   }
   return null;

@@ -28,8 +28,8 @@ import type {
 import {
   type BoardSpaceIdOf,
   type InteractionVisualState,
-} from "@dreamboard-games/ui-sdk";
-import { type InteractionDescriptor } from "@dreamboard-games/ui-runtime";
+} from "@dreamboard-games/sdk/ui";
+import { type InteractionDescriptor } from "@dreamboard-games/sdk/generated/runtime";
 import {
   createWorkspaceUIContract,
   type BoardHexGridProps as BoardHexGridPropsGeneric,
@@ -63,7 +63,7 @@ import {
 	  type WorkspaceSurfaceSpec,
 	  type ZoneCardRenderItem,
 	  type ZoneListProps,
-	} from "@dreamboard-games/ui-runtime/workspace-contract";
+	} from "@dreamboard-games/sdk/generated/workspace-contract";
 import { type ButtonHTMLAttributes, type ReactElement, type ReactNode } from "react";
 import {
   boardHelpers,
@@ -87,10 +87,10 @@ import {
 /**
  * Boundary tripwire (do not remove).
  *
- * The authored UI boundary depends on \`@dreamboard-games/ui-runtime\` resolving to
+ * The authored UI boundary depends on \`@dreamboard-games/sdk/generated/runtime\` resolving to
  * real types in every typecheck path (local \`tsc\` and the remote compiler
  * service). If a future change to module resolution or type loading silently
- * degrades \`@dreamboard-games/ui-runtime\` to \`any\`, the assertions below stop
+ * degrades \`@dreamboard-games/sdk/generated/runtime\` to \`any\`, the assertions below stop
  * compiling, turning invisible type erosion into a hard typecheck error in
  * every generated workspace. \`InteractionDescriptor\` comes from the package
  * root and \`ZoneCardRenderItem\` from the \`/workspace-contract\` subpath, so
@@ -98,7 +98,7 @@ import {
  */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type AssertNotAny<T> = IsAny<T> extends true
-  ? "ui-runtime types resolved to any — boundary degraded"
+  ? "SDK runtime types resolved to any — boundary degraded"
   : true;
 const _uiRuntimeBoundaryResolved: [
   AssertNotAny<InteractionDescriptor>,
@@ -979,7 +979,7 @@ export const uiContract = {
   boardTargets: {} as UIBoardTargetRegistry,
 } satisfies UIContract;
 
-declare module "@dreamboard-games/ui-runtime" {
+declare module "@dreamboard-games/sdk/generated/runtime" {
   interface DreamboardUIRegister {
     contract: GameDefinition;
     ui: typeof uiContract;

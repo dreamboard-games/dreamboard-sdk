@@ -291,8 +291,9 @@ function DefaultChoiceField({ input }: { input: InteractionInputDescriptor }) {
   );
 }
 
-export interface DefaultZoneProps<ZoneValue extends string = ZoneKey>
-  extends PrimitiveCommonProps {
+export interface DefaultZoneProps<
+  ZoneValue extends string = ZoneKey,
+> extends PrimitiveCommonProps {
   zone: ZoneValue;
   empty?: ReactNode;
   layout?: "row" | "column" | "grid" | "fan";

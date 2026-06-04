@@ -130,8 +130,7 @@ export function useZonePileContext(): ZonePileContextValue {
 }
 
 export interface ZoneRootProps<Zone extends string = ZoneKey>
-  extends PrimitiveCommonProps,
-    HTMLAttributes<HTMLElement> {
+  extends PrimitiveCommonProps, HTMLAttributes<HTMLElement> {
   zone: Zone;
 }
 
@@ -160,7 +159,8 @@ export function ZoneRoot<Zone extends string = ZoneKey>({
 }
 
 export interface ZoneListProps
-  extends Omit<PrimitiveCommonProps, "children">,
+  extends
+    Omit<PrimitiveCommonProps, "children">,
     Omit<HTMLAttributes<HTMLElement>, "children"> {
   children?: ReactNode | ((card: ZoneCardRenderItem) => ReactNode);
   empty?: ReactNode;
@@ -222,8 +222,7 @@ export function useZoneCards({
 }
 
 export interface ZoneItemProps
-  extends PrimitiveCommonProps,
-    HTMLAttributes<HTMLElement> {
+  extends PrimitiveCommonProps, HTMLAttributes<HTMLElement> {
   card: string | ZoneCardRenderItem;
 }
 
@@ -260,8 +259,10 @@ export function ZoneItem({ card, children, ...props }: ZoneItemProps) {
   );
 }
 
-export interface ZoneCardAtProps<Zone extends string = ZoneKey>
-  extends Omit<ZoneItemProps, "card" | "children"> {
+export interface ZoneCardAtProps<Zone extends string = ZoneKey> extends Omit<
+  ZoneItemProps,
+  "card" | "children"
+> {
   zone?: Zone;
   index: number;
   children?: ReactNode | ((card: ZoneCardRenderItem) => ReactNode);
@@ -319,7 +320,8 @@ export type ZoneCardActionExtraInputs =
   | ((cardId: string) => Record<string, unknown>);
 
 export interface ZoneCardActionProps<Card extends string = string>
-  extends PrimitiveCommonProps,
+  extends
+    PrimitiveCommonProps,
     Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onSelect"> {
   card?: Card;
   interaction?: string;
@@ -449,8 +451,10 @@ export function ZoneCardAction<Card extends string = string>({
   });
 }
 
-export interface ZonePileRootProps<Zone extends string = ZoneKey>
-  extends Omit<ZoneRootProps<Zone>, "children"> {
+export interface ZonePileRootProps<Zone extends string = ZoneKey> extends Omit<
+  ZoneRootProps<Zone>,
+  "children"
+> {
   label: string;
   children?: ReactNode;
   hiddenDescription?: string | null;
@@ -539,8 +543,7 @@ function ZonePileProvider({
 }
 
 export interface ZonePileTriggerProps
-  extends PrimitiveCommonProps,
-    ButtonHTMLAttributes<HTMLButtonElement> {}
+  extends PrimitiveCommonProps, ButtonHTMLAttributes<HTMLButtonElement> {}
 
 export function ZonePileTrigger({ children, ...props }: ZonePileTriggerProps) {
   const pile = useZonePileContext();

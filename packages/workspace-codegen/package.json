@@ -21,9 +21,8 @@
     "test:unit": "bun test --timeout 30000"
   },
   "dependencies": {
-    "@dreamboard-games/sdk-types": "workspace:*",
-    "@dreamboard-games/ui-runtime": "workspace:*",
-    "@dreamboard-games/ui-sdk": "workspace:*"
+    "@dreamboard-games/sdk": "workspace:*",
+    "@dreamboard-games/sdk-types": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",

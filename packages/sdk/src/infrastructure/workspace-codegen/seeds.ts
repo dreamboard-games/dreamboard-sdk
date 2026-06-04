@@ -98,7 +98,7 @@ import {
  */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type AssertNotAny<T> = IsAny<T> extends true
-  ? "ui-runtime types resolved to any — boundary degraded"
+  ? "SDK runtime types resolved to any — boundary degraded"
   : true;
 const _uiRuntimeBoundaryResolved: [
   AssertNotAny<InteractionDescriptor>,
