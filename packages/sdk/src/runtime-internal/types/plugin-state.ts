@@ -388,6 +388,10 @@ interface InteractionDescriptorBase<Key extends string = string> {
   interactionId: string;
   /** Draft commit policy. Always materialized by the trusted reducer bundle. */
   commit: InteractionCommitPolicy;
+  /** Canonical descriptor digest used by browser replay/protocol tooling when projected by the host. */
+  descriptorDigest?: string;
+  /** Canonical draft digest used by browser replay/protocol tooling when projected by the host. */
+  draftDigest?: string;
   /** Source zone id for zone-scoped interactions (e.g., cardInput). */
   zoneId?: string;
   /** Source zone ids for zone-scoped interactions that span multiple zones. */

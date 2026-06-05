@@ -1,0 +1,80 @@
+export {
+  BROWSER_INTERACTION_ACTUATOR_KINDS,
+  BROWSER_INTERACTION_ATTRIBUTES,
+  BROWSER_INTERACTION_CANDIDATE_STATES,
+  BROWSER_INTERACTION_READINESS_VALUES,
+  BROWSER_INTERACTION_RECORD_ROLES,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+  GAMEPLAY_BROWSER_INTERACTION_INTENTS,
+  GAMEPLAY_BROWSER_INTERACTION_SURFACE,
+} from "./constants.js";
+export {
+  compareStableJson,
+  decodeCanonicalCandidateValue,
+  encodeCanonicalCandidateValue,
+  type CanonicalBrowserInteractionValue,
+} from "./canonical.js";
+export {
+  createBrowserInteractionActuatorAttributes,
+  createBrowserInteractionActuatorKey,
+  createBrowserInteractionRootAttributes,
+  createGameplayActuatorAttributes,
+  createGameplayInteractionRootAttributes,
+  type BrowserInteractionActuatorAttributesInput,
+  type BrowserInteractionAttributeMap,
+  type BrowserInteractionRootAttributesInput,
+  type GameplayActuatorAttributesInput,
+  type GameplayInteractionRootAttributesInput,
+} from "./attributes.js";
+export {
+  createBrowserInteractionRegistry,
+  defaultBrowserInteractionRegistry,
+  defineBrowserInteractionSurface,
+  gameplayBrowserInteractionSurface,
+} from "./registry.js";
+export {
+  actuatorIdentityKey,
+  isSemanticSurfaceSnapshot,
+  normalizeBrowserInteractionRecords,
+  targetIdentityKey,
+  validateBrowserInteractionSnapshot,
+  type NormalizeBrowserInteractionRecordsOptions,
+} from "./normalize.js";
+export { resolveBrowserInteractionIntent } from "./resolve.js";
+export {
+  browserGameplayInteractionSchema,
+  browserGameplaySurfaceSnapshotSchema,
+  browserInteractionActuatorSchema,
+  browserInteractionDiagnosticSchema,
+  browserInteractionSnapshotSchema,
+  browserSemanticSurfaceSnapshotSchema,
+  browserUnknownSurfaceSnapshotSchema,
+} from "./schemas.js";
+export type {
+  BrowserGameplayInteraction,
+  BrowserGameplaySurfaceSnapshot,
+  BrowserInteractionActuator,
+  BrowserInteractionActuatorKind,
+  BrowserInteractionCandidateState,
+  BrowserInteractionDiagnostic,
+  BrowserInteractionEntity,
+  BrowserInteractionIntent,
+  BrowserInteractionIntentRequest,
+  BrowserInteractionPreparationTarget,
+  BrowserInteractionProtocolIdentity,
+  BrowserInteractionRawRecord,
+  BrowserInteractionReadiness,
+  BrowserInteractionRegistry,
+  BrowserInteractionResolution,
+  BrowserInteractionResolutionFailure,
+  BrowserInteractionResolutionSuccess,
+  BrowserInteractionSemanticSurfaceSnapshot,
+  BrowserInteractionSnapshot,
+  BrowserInteractionSurface,
+  BrowserInteractionSurfaceDefinition,
+  BrowserInteractionSurfaceSnapshot,
+  BrowserInteractionUnknownSurfaceSnapshot,
+  GameplayBrowserInteractionIntent,
+  GameplayBrowserInteractionSurface,
+} from "./types.js";

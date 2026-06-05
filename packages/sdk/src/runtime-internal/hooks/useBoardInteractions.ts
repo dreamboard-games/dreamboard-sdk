@@ -30,6 +30,11 @@ import {
   shouldRouteInteractionPending,
 } from "../utils/interaction-router.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
+import {
+  createGameplayActuatorAttributes,
+  type BrowserInteractionAttributeMap,
+} from "../../browser-interaction/index.js";
+import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
 
 export type BoardEligibleTargets = Readonly<
   Record<BoardTargetKind, ReadonlySet<string>>
@@ -379,7 +384,7 @@ export function useBoardInteractions<I extends string = string>(
           return [];
         }
         if (!isInteractionAvailable(descriptor)) return [];
-        const draft = store.getDraft(descriptor.interactionKey);
+        const draft = drafts[descriptor.interactionKey] ?? {};
         const inputKey = inputKeyForTarget(
           descriptor,
           targetKind,
@@ -392,7 +397,7 @@ export function useBoardInteractions<I extends string = string>(
           input &&
           !isTargetSelectable(
             input,
-            store.getDraft(descriptor.interactionKey),
+            draft,
             targetId,
           )
         ) {
@@ -410,7 +415,7 @@ export function useBoardInteractions<I extends string = string>(
       });
       return matches;
     },
-    [armedIds, interactions, store],
+    [armedIds, drafts, interactions],
   );
 
   const selectByKind = useCallback(
@@ -486,9 +491,19 @@ export function useBoardInteractions<I extends string = string>(
           ? candidates.map((candidate) => candidate.descriptor.interactionKey)
           : undefined,
         unavailableReason: candidateUnavailableReason(selected, conflict),
+        browserAttributes: selected
+          ? boardTargetBrowserAttributes({
+              descriptor: selected.descriptor,
+              inputKey: selected.inputKey,
+              targetKind,
+              targetId,
+              enabled: eligible && !!controllingPlayerId,
+              draft: drafts[selected.descriptor.interactionKey] ?? {},
+            })
+          : undefined,
       };
     },
-    [controllingPlayerId, pendingInteractionKey, resolveTargetMatches],
+    [controllingPlayerId, drafts, pendingInteractionKey, resolveTargetMatches],
   );
 
   const targetLayers = useMemo(() => {
@@ -632,6 +647,52 @@ interface MatchingDescriptor<I extends string> {
   descriptor: InteractionDescriptor<I>;
   inputKey: string;
   armed: boolean;
+}
+
+const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";
+
+function boardTargetBrowserAttributes({
+  descriptor,
+  inputKey,
+  targetKind,
+  targetId,
+  enabled,
+  draft,
+}: {
+  descriptor: InteractionDescriptor;
+  inputKey: string;
+  targetKind: BoardTargetKind;
+  targetId: string;
+  enabled: boolean;
+  draft: Readonly<Record<string, unknown>>;
+}): BrowserInteractionAttributeMap {
+  return createGameplayActuatorAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    intent: "select",
+    enabled,
+    actuatorKind: "click",
+    actuatorId: `board:${targetKind}:${targetId}`,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? { draftDigest: interactionDraftDigestForValues(descriptor, draft) }
+      : {}),
+    inputKey,
+    candidateValue: targetId,
+    candidateState: isBoardTargetSelected(draft[inputKey], targetId)
+      ? "selected"
+      : "unselected",
+  });
+}
+
+function isBoardTargetSelected(value: unknown, targetId: string): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) => String(item) === targetId);
+  }
+  return value !== undefined && String(value) === targetId;
 }
 
 function selectDispatchCandidate<I extends string>(

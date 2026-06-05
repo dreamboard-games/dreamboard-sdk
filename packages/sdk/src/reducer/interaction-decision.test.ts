@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
@@ -242,6 +243,35 @@ function hydrateRefs<T>(
   refs: readonly string[] | undefined,
 ): T[] {
   return (refs ?? []).map((ref) => interactionsByRef[ref]).filter(Boolean);
+}
+
+function nodeSha256Digest(value: unknown): string {
+  return `sha256:${createHash("sha256")
+    .update(JSON.stringify(canonicalizeJson(value)))
+    .digest("hex")}`;
+}
+
+function canonicalizeJson(value: unknown): unknown {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "number" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalizeJson(item));
+  }
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, canonicalizeJson(item)]),
+    );
+  }
+  return null;
 }
 
 function hydrateCardRefs<T>(
@@ -513,6 +543,72 @@ function makeBundle() {
 }
 
 describe("trusted interaction decision pipeline", () => {
+  test("projected descriptors carry stable descriptor digests and seat-scoped initial draft digests", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const oneSeatProjection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-1"],
+    });
+    const shiftedSeatProjection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-2", "player-1"],
+    });
+    const oneSeatDescriptor = hydrateRefs(
+      oneSeatProjection.interactionsByRef,
+      oneSeatProjection.seats["player-1"]?.availableInteractionRefs,
+    ).find((descriptor) => descriptor.interactionId === "stageBlocked");
+    const shiftedSeatDescriptor = hydrateRefs(
+      shiftedSeatProjection.interactionsByRef,
+      shiftedSeatProjection.seats["player-1"]?.availableInteractionRefs,
+    ).find((descriptor) => descriptor.interactionId === "stageBlocked");
+
+    expect(oneSeatDescriptor).toBeDefined();
+    const inputDefaults = Object.fromEntries(
+      (oneSeatDescriptor?.inputs ?? []).flatMap((input) =>
+        input.defaultValue === undefined
+          ? []
+          : [[input.key, input.defaultValue] as const],
+      ),
+    );
+    expect(oneSeatDescriptor?.descriptorDigest).toBe(
+      nodeSha256Digest({
+        commitMode: oneSeatDescriptor?.commit.mode,
+        defaults: inputDefaults,
+        inputKeys: oneSeatDescriptor?.inputs.map((input) => input.key),
+        inputs: oneSeatDescriptor?.inputs.map((input) => ({
+          key: input.key,
+          kind: input.kind,
+          domain: input.domain,
+          defaultValue:
+            input.defaultValue === undefined ? null : input.defaultValue,
+        })),
+        interactionId: oneSeatDescriptor?.interactionId,
+        interactionKey: oneSeatDescriptor?.interactionKey,
+        stableIdentity: `${oneSeatDescriptor?.interactionKey}:${oneSeatDescriptor?.interactionId}`,
+      }),
+    );
+    expect(oneSeatDescriptor?.draftDigest).toBe(
+      nodeSha256Digest({
+        actorSeat: 0,
+        descriptorDigest: oneSeatDescriptor?.descriptorDigest,
+        emitted: false,
+        interactionId: oneSeatDescriptor?.interactionId,
+        interactionKey: oneSeatDescriptor?.interactionKey,
+        values: inputDefaults,
+      }),
+    );
+    expect(shiftedSeatDescriptor?.descriptorDigest).toBe(
+      oneSeatDescriptor?.descriptorDigest,
+    );
+    expect(shiftedSeatDescriptor?.draftDigest).not.toBe(
+      oneSeatDescriptor?.draftDigest,
+    );
+  });
+
   test("stage and step gating share descriptor and submit decisions", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({

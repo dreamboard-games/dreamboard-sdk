@@ -1041,6 +1041,7 @@ function HexGridImpl(
             return (
               <g
                 key={space.id}
+                {...state.browserAttributes}
                 transform={`translate(${pos.x}, ${pos.y})`}
                 role={isSelectable ? "button" : undefined}
                 className={clsx(isSelectable && "cursor-pointer")}
@@ -1140,6 +1141,7 @@ function HexGridImpl(
             return (
               <g
                 key={edge.id}
+                {...state.browserAttributes}
                 role={isSelectable ? "button" : undefined}
                 className={clsx(isSelectable && "cursor-pointer")}
                 onPointerEnter={() => setHoveredEdgeId(edge.id)}
@@ -1215,6 +1217,7 @@ function HexGridImpl(
             return (
               <g
                 key={vertex.id}
+                {...state.browserAttributes}
                 role={isSelectable ? "button" : undefined}
                 className={clsx(isSelectable && "cursor-pointer")}
                 onPointerEnter={() => setHoveredVertexId(vertex.id)}

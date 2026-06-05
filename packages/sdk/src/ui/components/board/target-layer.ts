@@ -9,6 +9,7 @@ export interface InteractiveTargetState {
   pending: boolean;
   conflict: boolean;
   unavailableReason?: string;
+  browserAttributes?: Record<string, string | boolean>;
   select?: () => unknown | Promise<unknown>;
 }
 

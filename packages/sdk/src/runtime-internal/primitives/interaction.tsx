@@ -52,6 +52,13 @@ import {
   type PrimitiveCommonProps,
 } from "./primitive-props.js";
 import {
+  createGameplayActuatorAttributes,
+  createGameplayInteractionRootAttributes,
+  type BrowserInteractionAttributeMap,
+  type GameplayActuatorAttributesInput,
+  type GameplayBrowserInteractionIntent,
+} from "../../browser-interaction/index.js";
+import {
   BoundInteractionForm,
   castInteractionDraft,
   castInteractionHandle,
@@ -90,6 +97,47 @@ function humanizeInteraction(value: string): string {
     .replace(/\s+/g, " ")
     .trim()
     .replace(/^./, (first: string) => first.toUpperCase());
+}
+
+const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";
+
+function gameplayActuatorAttributes({
+  descriptor,
+  inputKey,
+  intent,
+  candidateValue,
+  candidateState,
+  enabled,
+  actuatorKind,
+  actuatorId,
+}: {
+  descriptor: InteractionDescriptor;
+  inputKey?: string;
+  intent: GameplayBrowserInteractionIntent;
+  candidateValue?: unknown;
+  candidateState?: "selected" | "unselected" | "mixed";
+  enabled: boolean;
+  actuatorKind: GameplayActuatorAttributesInput["actuatorKind"];
+  actuatorId: string;
+}): BrowserInteractionAttributeMap {
+  return createGameplayActuatorAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    intent,
+    enabled,
+    actuatorKind,
+    actuatorId,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? { draftDigest: descriptor.draftDigest }
+      : {}),
+    ...(inputKey !== undefined ? { inputKey } : {}),
+    ...(candidateValue !== undefined ? { candidateValue } : {}),
+    ...(candidateState !== undefined ? { candidateState } : {}),
+  });
 }
 
 export function useInteractionPrimitiveContext(): InteractionContextValue {
@@ -155,9 +203,26 @@ function ResolvedInteractionRoot({
     () => ({ interaction, descriptor, handle }),
     [descriptor, handle, interaction],
   );
+  const available = isInteractionAvailable(descriptor);
+  const rootAttributes = createGameplayInteractionRootAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? { draftDigest: descriptor.draftDigest }
+      : {}),
+    readiness: available ? (handle.isReady ? "ready" : "blocked") : "unavailable",
+  });
   return (
     <InteractionContext.Provider value={value}>
-      {children}
+      {renderPrimitive("span", {
+        ...rootAttributes,
+        style: { display: "contents" },
+        children,
+      })}
     </InteractionContext.Provider>
   );
 }
@@ -447,6 +512,15 @@ export function InteractionTrigger({
   return renderPrimitive("button", {
     type: "button",
     ...props,
+    ...(descriptor
+      ? gameplayActuatorAttributes({
+          descriptor,
+          intent: "arm",
+          enabled: !isDisabled,
+          actuatorKind: "click",
+          actuatorId: "primitive-trigger",
+        })
+      : {}),
     disabled: isDisabled,
     "aria-disabled": isDisabled,
     "data-dreamboard-interaction-trigger": "",
@@ -604,6 +678,18 @@ export function InteractionSubmit({
   return renderPrimitive("button", {
     type: "button",
     ...props,
+    ...(descriptor
+      ? gameplayActuatorAttributes({
+          descriptor,
+          intent:
+            descriptor.inputs.length === 0 || hasExplicitParams
+              ? "invoke"
+              : "submit",
+          enabled: !isDisabled,
+          actuatorKind: "click",
+          actuatorId: "primitive-submit",
+        })
+      : {}),
     disabled: isDisabled,
     "aria-disabled": isDisabled,
     "data-dreamboard-interaction-submit": "",
@@ -653,6 +739,17 @@ export function InteractionInput({
   return renderPrimitive("input", {
     ...props,
     name,
+    ...(descriptor
+      ? gameplayActuatorAttributes({
+          descriptor,
+          inputKey: name,
+          intent: "fill",
+          candidateValue: value,
+          enabled: !isDisabled,
+          actuatorKind: "fill",
+          actuatorId: `primitive-input:${name}`,
+        })
+      : {}),
     disabled: isDisabled,
     "aria-disabled": isDisabled,
     "data-dreamboard-interaction-input": "",
@@ -850,6 +947,18 @@ export function InteractionCardInput<
     type: "button",
     ...props,
     children: renderedChildren,
+    ...(descriptor
+      ? gameplayActuatorAttributes({
+          descriptor,
+          inputKey: input,
+          intent: selection?.mode === "many" ? "toggle" : "select",
+          candidateValue: cardId,
+          candidateState: isSelected ? "selected" : "unselected",
+          enabled: !isDisabled,
+          actuatorKind: "click",
+          actuatorId: `primitive-card:${input}:${cardId ?? "missing"}`,
+        })
+      : {}),
     disabled: isDisabled,
     "aria-disabled": isDisabled,
     "aria-pressed": isSelected,

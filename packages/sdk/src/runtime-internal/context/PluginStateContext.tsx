@@ -10,6 +10,12 @@ import {
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
 import { useRuntimeContext } from "./RuntimeContext.js";
 import type { PluginRuntimeAPI } from "../runtime/createPluginRuntimeAPI.js";
+import {
+  BROWSER_INTERACTION_ATTRIBUTES,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+  GAMEPLAY_BROWSER_INTERACTION_SURFACE,
+} from "../../browser-interaction/index.js";
+import { semanticProjectionDigestForState } from "../utils/semantic-projection-digest.js";
 
 /**
  * React Context for providing plugin state from state-sync messages.
@@ -121,8 +127,43 @@ export function PluginStateProvider({
 
   return (
     <PluginStateContext.Provider value={state}>
+      <SemanticProjectionMarker state={state} />
       {children}
     </PluginStateContext.Provider>
+  );
+}
+
+const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";
+const BROWSER_PROJECTION_DIGEST_ATTRIBUTE = "data-dreamboard-projection-digest";
+
+export function RuntimeSemanticProjectionMarker() {
+  const state = usePluginState((snapshot) => snapshot);
+  return <SemanticProjectionMarker state={state} />;
+}
+
+export function SemanticProjectionMarker({
+  state,
+}: {
+  state: PluginStateSnapshot;
+}) {
+  const digest = semanticProjectionDigestForState(state);
+  if (!digest) {
+    return null;
+  }
+  return (
+    <span
+      aria-hidden="true"
+      style={{ display: "none" }}
+      {...{
+        [BROWSER_INTERACTION_ATTRIBUTES.protocol]:
+          DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+        [BROWSER_INTERACTION_ATTRIBUTES.surface]:
+          GAMEPLAY_BROWSER_INTERACTION_SURFACE,
+        [BROWSER_INTERACTION_ATTRIBUTES.scope]: GAMEPLAY_BROWSER_SCOPE_ID,
+        [BROWSER_INTERACTION_ATTRIBUTES.role]: "projection",
+        [BROWSER_PROJECTION_DIGEST_ATTRIBUTE]: digest,
+      }}
+    />
   );
 }
 

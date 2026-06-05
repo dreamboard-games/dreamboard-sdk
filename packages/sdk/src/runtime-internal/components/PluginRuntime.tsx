@@ -2,6 +2,7 @@ import React from "react";
 import { InteractionUiProvider } from "../context/InteractionDraftContext.js";
 import { RuntimeProvider } from "../context/RuntimeContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
+import { RuntimeSemanticProjectionMarker } from "../context/PluginStateContext.js";
 import { usePluginRuntime } from "../hooks/usePluginRuntime.js";
 import { GameSkeleton } from "../../ui.js";
 
@@ -97,6 +98,7 @@ function SessionScopedInteractionUiProvider({
   const { controllingPlayerId } = usePluginSession();
   return (
     <InteractionUiProvider key={controllingPlayerId ?? "__no_player__"}>
+      <RuntimeSemanticProjectionMarker />
       {children}
     </InteractionUiProvider>
   );

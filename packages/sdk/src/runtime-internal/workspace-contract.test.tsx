@@ -4,8 +4,11 @@ import { renderToString } from "react-dom/server";
 import { PluginRuntime } from "./components/PluginRuntime.js";
 import { createDreamboardUI } from "./ui-contract.js";
 import { createWorkspaceUIContract } from "./workspace-contract.js";
+import { Board } from "./primitives/board.js";
 import type { PluginRuntimeAPI } from "./runtime/createPluginRuntimeAPI.js";
 import type { PluginStateSnapshot } from "./types/plugin-state.js";
+import { interactionDraftDigestForValues } from "./utils/interaction-draft-digest.js";
+import { semanticProjectionDigestForState } from "./utils/semantic-projection-digest.js";
 
 const runtimeSingletonKey = "__dreamboardPluginRuntimeApi";
 
@@ -32,6 +35,8 @@ function makeSnapshot(): PluginStateSnapshot<
           interactionKey: "play.placeCard",
           interactionId: "placeCard",
           kind: "action",
+          descriptorDigest: "sha256:descriptor",
+          draftDigest: "sha256:draft",
           inputs: [
             {
               key: "cardId",
@@ -90,6 +95,8 @@ function makeSnapshot(): PluginStateSnapshot<
                 interactionKey: "play.placeCard",
                 interactionId: "placeCard",
                 kind: "action",
+                descriptorDigest: "sha256:descriptor",
+                draftDigest: "sha256:draft",
                 inputs: [
                   {
                     key: "cardId",
@@ -254,6 +261,267 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
   // input, so the SSR markup must reflect that through the children
   // callback rather than dropping the state argument silently.
   expect(html).toContain('data-card-eligible="true"');
+});
+
+test("generated interaction arms render semantic browser replay digests", () => {
+  const snapshot = makeSnapshot();
+  const submit = async () => undefined;
+  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
+    snapshot,
+    submit,
+  );
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+  }>({
+    uiContract,
+    formInputKeysForInteraction: (interaction) =>
+      interaction === "play.placeCard"
+        ? new Set(["cardId", "spaceId"])
+        : new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const placeCardForm = UI.Interaction.useForm("play.placeCard");
+
+  const html = renderToString(
+    createElement(
+      PluginRuntime,
+      null,
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(placeCardForm.Arm, null, "Place card"),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-dreamboard-browser-role="interaction"');
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:draft"');
+});
+
+test("UI root emits the semantic projection digest marker", () => {
+  const snapshot = makeSnapshot();
+  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
+    snapshot,
+    async () => undefined,
+  );
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const digest = semanticProjectionDigestForState(snapshot);
+
+  const html = renderToString(
+    createElement(
+      PluginRuntime,
+      null,
+      createElement(UI.Root as unknown as React.FC<{ children?: unknown }>),
+    ),
+  );
+
+  expect(digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+  expect(html).toContain('data-dreamboard-browser-role="projection"');
+  expect(html).toContain('data-dreamboard-browser-surface="gameplay"');
+  expect(html).toContain('data-dreamboard-browser-scope="runtime"');
+  expect(html).toContain(`data-dreamboard-projection-digest="${digest}"`);
+});
+
+test("semantic projection digest normalizes order-insensitive target domains", () => {
+  const digestFor = (targets: string[], dependentCases: unknown[]) => {
+    const snapshot = makeSnapshot();
+    const input = snapshot.gameplay.availableInteractions[0]?.inputs.find(
+      (candidate) => candidate.key === "spaceId",
+    );
+    if (!input) {
+      throw new Error("Missing spaceId input.");
+    }
+    const domain = input.domain as {
+      eligibleTargets: string[];
+      dependencies?: { mode: string; dependentCases: unknown[] };
+    };
+    domain.eligibleTargets = targets;
+    domain.dependencies = {
+      mode: "eager",
+      dependentCases,
+    };
+    return semanticProjectionDigestForState(snapshot);
+  };
+
+  const first = digestFor(
+    ["h-2-10", "h-2-2", "h-2-11"],
+    [
+      {
+        when: { stormSpaceId: "h-2-10" },
+        domain: {
+          type: "choice",
+          choices: [{ value: "none", label: "No eligible captain" }],
+        },
+      },
+      {
+        when: { stormSpaceId: "h-2-2" },
+        domain: {
+          type: "choice",
+          choices: [{ value: "player-2", label: "Player 2" }],
+        },
+      },
+    ],
+  );
+
+  expect(
+    digestFor(
+      ["h-2-2", "h-2-11", "h-2-10"],
+      [
+        {
+          when: { stormSpaceId: "h-2-2" },
+          domain: {
+            type: "choice",
+            choices: [{ value: "player-2", label: "Player 2" }],
+          },
+        },
+        {
+          when: { stormSpaceId: "h-2-10" },
+          domain: {
+            type: "choice",
+            choices: [{ value: "none", label: "No eligible captain" }],
+          },
+        },
+      ],
+    ),
+  ).toBe(first);
+});
+
+test("board targets render semantic browser replay select actuators", () => {
+  const snapshot = makeSnapshot();
+  snapshot.gameplay.availableInteractions = [
+    {
+      phaseName: "play",
+      interactionKey: "play.placeCard",
+      interactionId: "placeCard",
+      kind: "action",
+      descriptorDigest: "sha256:descriptor",
+      draftDigest: "sha256:draft",
+      inputs: [
+        {
+          key: "spaceId",
+          kind: "board-space",
+          domain: {
+            type: "boardTarget",
+            projection: "resolved",
+            targetKind: "space",
+            eligibleTargets: ["hex-a"],
+          },
+        },
+      ],
+      commit: { mode: "autoWhenReady" },
+      availability: { status: "available" },
+    },
+  ];
+  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
+    snapshot,
+    async () => undefined,
+  );
+
+  const html = renderToString(
+    createElement(
+      PluginRuntime,
+      null,
+      createElement(
+        Board.Root,
+        null,
+        createElement(Board.SpaceTarget, { value: "hex-a" }, "Hex A"),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain('data-dreamboard-browser-intent="select"');
+  expect(html).toContain('data-dreamboard-actuator-kind="click"');
+  expect(html).toContain('data-dreamboard-interaction-key="play.placeCard"');
+  expect(html).toContain('data-dreamboard-interaction-id="placeCard"');
+  expect(html).toContain('data-dreamboard-input-key="spaceId"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:draft"');
+  expect(html).toContain('data-dreamboard-candidate-state="unselected"');
+  expect(html).toContain("data-dreamboard-candidate-value=");
+});
+
+test("board target draft digests reflect live draft values", () => {
+  const descriptor = {
+    phaseName: "playerTurn",
+    interactionKey: "playerTurn.moveStorm",
+    interactionId: "moveStorm",
+    kind: "action",
+    descriptorDigest:
+      "sha256:842f2aedb8cb3e72e2239e9db8bcd26396a604c1c7293b4567819db201bea794",
+    draftDigest:
+      "sha256:57a4cda8a02d3f3650bb41b5958ec16390e17c7f6f6cec424456343a225a6b23",
+    inputs: [
+      {
+        key: "spaceId",
+        kind: "board-space",
+        domain: {
+          type: "boardTarget",
+          projection: "resolved",
+          targetKind: "space",
+          eligibleTargets: ["h-0-0"],
+        },
+      },
+      {
+        key: "stealFromPlayerId",
+        kind: "choice",
+        defaultValue: "none",
+        domain: {
+          type: "choice",
+          choices: [{ value: "none", label: "No eligible player" }],
+        },
+      },
+    ],
+    commit: { mode: "manual" },
+    availability: { status: "available" },
+  } as const;
+
+  expect(
+    interactionDraftDigestForValues(descriptor, {
+      stealFromPlayerId: "none",
+    }),
+  ).toBe(descriptor.draftDigest);
+  expect(
+    interactionDraftDigestForValues(descriptor, {
+      spaceId: "h-0-0",
+    }),
+  ).toBe(
+    "sha256:4fb255cc3c709db5ae0c0d25ee3c8a1a664332c8c67d2d4762c37d53d995a3ed",
+  );
 });
 
 test("generated hand renders selection summary through the renderSummary slot", () => {

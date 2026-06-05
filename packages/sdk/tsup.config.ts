@@ -21,6 +21,7 @@ export default defineConfig({
     "src/generated/workspace-contract.ts",
     "src/infrastructure/reducer-bundle-abi.ts",
     "src/infrastructure/workspace-codegen.ts",
+    "src/browser-interaction.ts",
   ],
   format: ["esm"],
   platform: "neutral",

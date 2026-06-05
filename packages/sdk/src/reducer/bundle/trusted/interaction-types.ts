@@ -54,6 +54,8 @@ type InteractionDescriptorBaseShape<
   interactionKey: `${PhaseName}.${InteractionId}`;
   interactionId: InteractionId;
   commit: InteractionCommitPolicyShape;
+  descriptorDigest?: string;
+  draftDigest?: string;
   zoneId?: ZoneId;
   zoneIds?: readonly ZoneId[];
   inputs: InteractionInputDescriptorShape[];

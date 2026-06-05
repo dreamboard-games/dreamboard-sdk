@@ -123,6 +123,12 @@
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
     },
+    "./browser-interaction": {
+      "bun": "./src/browser-interaction.ts",
+      "types": "./dist/browser-interaction.d.ts",
+      "import": "./dist/browser-interaction.js",
+      "default": "./dist/browser-interaction.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

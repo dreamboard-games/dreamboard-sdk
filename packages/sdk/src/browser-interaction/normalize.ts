@@ -1,0 +1,693 @@
+import {
+  BROWSER_INTERACTION_ACTUATOR_KINDS,
+  BROWSER_INTERACTION_ATTRIBUTES,
+  BROWSER_INTERACTION_CANDIDATE_STATES,
+  BROWSER_INTERACTION_READINESS_VALUES,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+  GAMEPLAY_BROWSER_INTERACTION_SURFACE,
+} from "./constants.js";
+import {
+  decodeCanonicalCandidateValue,
+  encodeCanonicalCandidateValue,
+} from "./canonical.js";
+import { createBrowserInteractionActuatorKey } from "./attributes.js";
+import { defaultBrowserInteractionRegistry } from "./registry.js";
+import type {
+  BrowserInteractionActuator,
+  BrowserInteractionActuatorKind,
+  BrowserInteractionCandidateState,
+  BrowserInteractionDiagnostic,
+  BrowserInteractionEntity,
+  BrowserInteractionRawRecord,
+  BrowserInteractionReadiness,
+  BrowserInteractionRegistry,
+  BrowserInteractionSemanticSurfaceSnapshot,
+  BrowserInteractionSnapshot,
+  BrowserInteractionSurface,
+  BrowserInteractionSurfaceSnapshot,
+} from "./types.js";
+
+interface PendingInteraction {
+  interactionKey: string;
+  interactionId: string;
+  descriptorDigest?: string;
+  draftDigest?: string;
+  readiness: BrowserInteractionReadiness;
+  rootSeen: boolean;
+  actuators: BrowserInteractionActuator[];
+  diagnostics: BrowserInteractionDiagnostic[];
+}
+
+interface PendingSemanticSurface {
+  kind: "semantic";
+  surface: BrowserInteractionSurface;
+  scopeId: string;
+  interactions: Map<string, PendingInteraction>;
+  diagnostics: BrowserInteractionDiagnostic[];
+}
+
+interface PendingUnknownSurface {
+  kind: "unknown";
+  surface: BrowserInteractionSurface;
+  scopeId: string;
+  diagnostics: BrowserInteractionDiagnostic[];
+}
+
+type PendingSurface = PendingSemanticSurface | PendingUnknownSurface;
+
+export interface NormalizeBrowserInteractionRecordsOptions {
+  readonly registry?: BrowserInteractionRegistry;
+}
+
+export function normalizeBrowserInteractionRecords(
+  records: readonly BrowserInteractionRawRecord[],
+  options: NormalizeBrowserInteractionRecordsOptions = {},
+): BrowserInteractionSnapshot {
+  const registry = options.registry ?? defaultBrowserInteractionRegistry;
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  const surfaces = new Map<string, PendingSurface>();
+
+  const getSurface = (
+    surface: string,
+    scopeId: string,
+  ): PendingSurface | null => {
+    const registered = registry.surfaces.get(surface);
+    const key = `${surface}\0${scopeId}`;
+    const existing = surfaces.get(key);
+    if (existing) return existing;
+    if (!registered) {
+      const diagnostic = diagnosticFor({
+        code: "unknown-surface",
+        message: `Unknown browser interaction surface '${surface}'.`,
+        surface,
+        scopeId,
+      });
+      diagnostics.push(diagnostic);
+      const pending: PendingUnknownSurface = {
+        kind: "unknown",
+        surface,
+        scopeId,
+        diagnostics: [diagnostic],
+      };
+      surfaces.set(key, pending);
+      return pending;
+    }
+    const pending: PendingSemanticSurface = {
+      kind: "semantic",
+      surface,
+      scopeId,
+      interactions: new Map(),
+      diagnostics: [],
+    };
+    surfaces.set(key, pending);
+    return pending;
+  };
+
+  for (const record of records) {
+    const attributes = record.attributes;
+    const protocol = text(attributes, BROWSER_INTERACTION_ATTRIBUTES.protocol);
+    const surface = text(attributes, BROWSER_INTERACTION_ATTRIBUTES.surface);
+    const scopeId = text(attributes, BROWSER_INTERACTION_ATTRIBUTES.scope);
+    const role = text(attributes, BROWSER_INTERACTION_ATTRIBUTES.role);
+
+    if (protocol !== DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION) {
+      diagnostics.push(
+        diagnosticFor({
+          code: "invalid-protocol",
+          message: `Expected browser interaction protocol ${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}.`,
+          surface,
+          scopeId,
+        }),
+      );
+      continue;
+    }
+    if (
+      !surface ||
+      !scopeId ||
+      (role !== "interaction" && role !== "actuator")
+    ) {
+      diagnostics.push(
+        diagnosticFor({
+          code: "invalid-record",
+          message:
+            "Browser interaction records require protocol, surface, scope and role.",
+          surface,
+          scopeId,
+        }),
+      );
+      continue;
+    }
+
+    const pendingSurface = getSurface(surface, scopeId);
+    if (!pendingSurface || pendingSurface.kind !== "semantic") {
+      continue;
+    }
+    const interactionKey = text(
+      attributes,
+      BROWSER_INTERACTION_ATTRIBUTES.interactionKey,
+    );
+    const interactionId = text(
+      attributes,
+      BROWSER_INTERACTION_ATTRIBUTES.interactionId,
+    );
+    if (!interactionKey || !interactionId) {
+      pushSurfaceDiagnostic(
+        pendingSurface,
+        diagnostics,
+        diagnosticFor({
+          code: "invalid-record",
+          message:
+            "Browser interaction records require interaction key and id.",
+          surface,
+          scopeId,
+        }),
+      );
+      continue;
+    }
+    const interaction = getInteraction(
+      pendingSurface,
+      interactionKey,
+      interactionId,
+    );
+
+    if (role === "interaction") {
+      interaction.rootSeen = true;
+      interaction.descriptorDigest = optionalText(
+        attributes,
+        BROWSER_INTERACTION_ATTRIBUTES.descriptorDigest,
+      );
+      interaction.draftDigest = optionalText(
+        attributes,
+        BROWSER_INTERACTION_ATTRIBUTES.draftDigest,
+      );
+      interaction.readiness = parseReadiness(
+        text(attributes, BROWSER_INTERACTION_ATTRIBUTES.readiness),
+      );
+      continue;
+    }
+
+    const actuator = parseGameplayActuator(attributes, {
+      surface,
+      scopeId,
+      interactionKey,
+      interactionId,
+    });
+    if (actuator.diagnostics.length > 0) {
+      interaction.diagnostics.push(...actuator.diagnostics);
+      diagnostics.push(...actuator.diagnostics);
+    }
+    const registered = registry.surfaces.get(surface);
+    if (registered && !registered.intents.includes(actuator.intent)) {
+      const diagnostic = diagnosticFor({
+        code: "unknown-intent",
+        message: `Unknown browser interaction intent '${actuator.intent}' for surface '${surface}'.`,
+        surface,
+        scopeId,
+        interactionKey,
+        intent: actuator.intent,
+        actuatorId: actuator.actuatorId,
+      });
+      interaction.diagnostics.push(diagnostic);
+      diagnostics.push(diagnostic);
+    }
+    interaction.actuators.push(actuator);
+  }
+
+  for (const surface of surfaces.values()) {
+    if (surface.kind !== "semantic") continue;
+    for (const interaction of surface.interactions.values()) {
+      if (interaction.rootSeen || interaction.actuators.length === 0) continue;
+      const diagnostic = diagnosticFor({
+        code: "orphan-actuator",
+        message:
+          "Browser interaction actuators require a rendered semantic root.",
+        surface: surface.surface,
+        scopeId: surface.scopeId,
+        interactionKey: interaction.interactionKey,
+      });
+      interaction.diagnostics.push(diagnostic);
+      diagnostics.push(diagnostic);
+    }
+  }
+
+  const snapshot: BrowserInteractionSnapshot = {
+    protocol: {
+      name: DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME,
+      version: DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+    },
+    surfaces: [...surfaces.values()].map(finalizeSurface).sort(compareSurface),
+    diagnostics: [],
+  };
+  const validationDiagnostics = validateBrowserInteractionSnapshot(snapshot);
+  return {
+    ...snapshot,
+    diagnostics: [...diagnostics, ...validationDiagnostics].sort(
+      compareDiagnostic,
+    ),
+  };
+}
+
+export function validateBrowserInteractionSnapshot(
+  snapshot: BrowserInteractionSnapshot,
+): readonly BrowserInteractionDiagnostic[] {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  for (const surface of snapshot.surfaces) {
+    if (!isSemanticSurfaceSnapshot(surface)) continue;
+    for (const interaction of surface.interactions) {
+      const enabledByKey = new Map<string, BrowserInteractionActuator[]>();
+      for (const actuator of interaction.actuators) {
+        if (!actuator.enabled) continue;
+        const key = actuatorIdentityKey({
+          surface: surface.surface,
+          scopeId: surface.scopeId,
+          interactionKey: interaction.interactionKey,
+          actuator,
+        });
+        const group = enabledByKey.get(key) ?? [];
+        group.push(actuator);
+        enabledByKey.set(key, group);
+      }
+      for (const [key, actuators] of enabledByKey) {
+        if (actuators.length > 1) {
+          diagnostics.push(
+            diagnosticFor({
+              code: "duplicate-enabled-actuator",
+              message: `Duplicate enabled actuator for '${key}'.`,
+              surface: surface.surface,
+              scopeId: surface.scopeId,
+              interactionKey: interaction.interactionKey,
+              intent: actuators[0]?.intent,
+              actuatorId: actuators[0]?.actuatorId,
+            }),
+          );
+        }
+      }
+      diagnostics.push(
+        ...diagnosticsForPreparationCycles(surface, interaction),
+      );
+    }
+  }
+  return diagnostics.sort(compareDiagnostic);
+}
+
+function parseGameplayActuator(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  context: {
+    surface: string;
+    scopeId: string;
+    interactionKey: string;
+    interactionId: string;
+  },
+): BrowserInteractionActuator {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  const intent = text(attributes, BROWSER_INTERACTION_ATTRIBUTES.intent);
+  const actuatorKind = parseActuatorKind(
+    text(attributes, BROWSER_INTERACTION_ATTRIBUTES.actuatorKind),
+  );
+  const inputKey = optionalText(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.inputKey,
+  );
+  const candidate = parseCandidate(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.candidateValue,
+    context,
+    intent,
+    diagnostics,
+  );
+  const candidateState = parseCandidateState(
+    optionalText(attributes, BROWSER_INTERACTION_ATTRIBUTES.candidateState),
+  );
+  const explicitId = optionalText(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.actuatorId,
+  );
+  const enabled = parseEnabled(
+    attributes[BROWSER_INTERACTION_ATTRIBUTES.enabled],
+  );
+  const actuatorId =
+    explicitId ??
+    createBrowserInteractionActuatorKey({
+      surface: context.surface,
+      scopeId: context.scopeId,
+      interactionKey: context.interactionKey,
+      intent,
+      inputKey,
+      candidateValueKey: candidate?.candidateValueKey,
+      actuatorKind,
+    });
+  const preparesIntent = optionalText(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.preparesIntent,
+  );
+  const preparesCandidate = parseCandidate(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.preparesCandidateValue,
+    context,
+    preparesIntent ?? intent,
+    diagnostics,
+  );
+  const prepares =
+    preparesIntent === undefined
+      ? undefined
+      : {
+          intent: preparesIntent,
+          inputKey: optionalText(
+            attributes,
+            BROWSER_INTERACTION_ATTRIBUTES.preparesInputKey,
+          ),
+          candidateValue: preparesCandidate?.candidateValue,
+          candidateValueKey: preparesCandidate?.candidateValueKey,
+          actuatorKind: parseOptionalActuatorKind(
+            optionalText(
+              attributes,
+              BROWSER_INTERACTION_ATTRIBUTES.preparesActuatorKind,
+            ),
+          ),
+        };
+
+  if (!intent) {
+    diagnostics.push(
+      diagnosticFor({
+        code: "invalid-record",
+        message: "Browser interaction actuator records require an intent.",
+        ...context,
+      }),
+    );
+  }
+
+  return {
+    actuatorId,
+    intent,
+    descriptorDigest: optionalText(
+      attributes,
+      BROWSER_INTERACTION_ATTRIBUTES.descriptorDigest,
+    ),
+    draftDigest: optionalText(
+      attributes,
+      BROWSER_INTERACTION_ATTRIBUTES.draftDigest,
+    ),
+    inputKey,
+    candidateValue: candidate?.candidateValue,
+    candidateValueKey: candidate?.candidateValueKey,
+    candidateState,
+    enabled,
+    actuatorKind,
+    prepares,
+    diagnostics: diagnostics.sort(compareDiagnostic),
+  };
+}
+
+function parseCandidate(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  attribute: string,
+  context: {
+    surface: string;
+    scopeId: string;
+    interactionKey: string;
+  },
+  intent: string,
+  diagnostics: BrowserInteractionDiagnostic[],
+) {
+  const encoded = optionalText(attributes, attribute);
+  if (encoded === undefined) return undefined;
+  try {
+    const candidateValue = decodeCanonicalCandidateValue(encoded);
+    return {
+      candidateValue,
+      candidateValueKey: encodeCanonicalCandidateValue(candidateValue),
+    };
+  } catch {
+    diagnostics.push(
+      diagnosticFor({
+        code: "invalid-candidate",
+        message: `Invalid canonical browser interaction candidate '${encoded}'.`,
+        ...context,
+        intent,
+      }),
+    );
+    return undefined;
+  }
+}
+
+function getInteraction(
+  surface: PendingSemanticSurface,
+  interactionKey: string,
+  interactionId: string,
+): PendingInteraction {
+  const existing = surface.interactions.get(interactionKey);
+  if (existing) return existing;
+  const next: PendingInteraction = {
+    interactionKey,
+    interactionId,
+    readiness: "ready",
+    rootSeen: false,
+    actuators: [],
+    diagnostics: [],
+  };
+  surface.interactions.set(interactionKey, next);
+  return next;
+}
+
+function finalizeSurface(
+  surface: PendingSurface,
+): BrowserInteractionSurfaceSnapshot {
+  if (surface.kind !== "semantic") {
+    return {
+      surface: surface.surface,
+      scopeId: surface.scopeId,
+      diagnostics: surface.diagnostics.sort(compareDiagnostic),
+    };
+  }
+  const interactions: BrowserInteractionEntity[] = [
+    ...surface.interactions.values(),
+  ]
+    .map((interaction) => ({
+      interactionKey: interaction.interactionKey,
+      interactionId: interaction.interactionId,
+      descriptorDigest: interaction.descriptorDigest,
+      draftDigest: interaction.draftDigest,
+      readiness: interaction.readiness,
+      actuators: interaction.actuators.sort(compareActuator),
+      diagnostics: interaction.diagnostics.sort(compareDiagnostic),
+    }))
+    .sort((a, b) => a.interactionKey.localeCompare(b.interactionKey));
+  return {
+    surface: surface.surface,
+    scopeId: surface.scopeId,
+    interactions,
+    diagnostics: surface.diagnostics.sort(compareDiagnostic),
+  };
+}
+
+function diagnosticsForPreparationCycles(
+  surface: BrowserInteractionSemanticSurfaceSnapshot,
+  interaction: BrowserInteractionEntity,
+): BrowserInteractionDiagnostic[] {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  const actuators = new Map<string, BrowserInteractionActuator>();
+  for (const actuator of interaction.actuators) {
+    actuators.set(
+      actuatorIdentityKey({
+        surface: surface.surface,
+        scopeId: surface.scopeId,
+        interactionKey: interaction.interactionKey,
+        actuator,
+      }),
+      actuator,
+    );
+  }
+  for (const actuator of interaction.actuators) {
+    const visited = new Set<string>();
+    let current: BrowserInteractionActuator | undefined = actuator;
+    while (current?.prepares) {
+      const key = actuatorIdentityKey({
+        surface: surface.surface,
+        scopeId: surface.scopeId,
+        interactionKey: interaction.interactionKey,
+        actuator: current,
+      });
+      if (visited.has(key)) {
+        diagnostics.push(
+          diagnosticFor({
+            code: "preparation-cycle",
+            message: `Preparation cycle detected for actuator '${current.actuatorId}'.`,
+            surface: surface.surface,
+            scopeId: surface.scopeId,
+            interactionKey: interaction.interactionKey,
+            intent: current.intent,
+            actuatorId: current.actuatorId,
+          }),
+        );
+        break;
+      }
+      visited.add(key);
+      current = actuators.get(
+        targetIdentityKey({
+          surface: surface.surface,
+          scopeId: surface.scopeId,
+          interactionKey: interaction.interactionKey,
+          target: current.prepares,
+        }),
+      );
+    }
+  }
+  return diagnostics;
+}
+
+export function actuatorIdentityKey(input: {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly actuator: Pick<
+    BrowserInteractionActuator,
+    "intent" | "inputKey" | "candidateValueKey" | "actuatorKind"
+  >;
+}): string {
+  return createBrowserInteractionActuatorKey({
+    surface: input.surface,
+    scopeId: input.scopeId,
+    interactionKey: input.interactionKey,
+    intent: input.actuator.intent,
+    inputKey: input.actuator.inputKey,
+    candidateValueKey: input.actuator.candidateValueKey,
+    actuatorKind: input.actuator.actuatorKind,
+  });
+}
+
+export function isGameplaySurfaceSnapshot(
+  surface: BrowserInteractionSurfaceSnapshot,
+): surface is BrowserInteractionSemanticSurfaceSnapshot<
+  typeof GAMEPLAY_BROWSER_INTERACTION_SURFACE
+> {
+  return surface.surface === GAMEPLAY_BROWSER_INTERACTION_SURFACE;
+}
+
+export function isSemanticSurfaceSnapshot(
+  surface: BrowserInteractionSurfaceSnapshot,
+): surface is BrowserInteractionSemanticSurfaceSnapshot {
+  return "interactions" in surface;
+}
+
+export function targetIdentityKey(input: {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly target: {
+    readonly intent: string;
+    readonly inputKey?: string;
+    readonly candidateValueKey?: string;
+    readonly actuatorKind?: BrowserInteractionActuatorKind;
+  };
+}): string {
+  return createBrowserInteractionActuatorKey({
+    surface: input.surface,
+    scopeId: input.scopeId,
+    interactionKey: input.interactionKey,
+    intent: input.target.intent,
+    inputKey: input.target.inputKey,
+    candidateValueKey: input.target.candidateValueKey,
+    actuatorKind: input.target.actuatorKind ?? "click",
+  });
+}
+
+function pushSurfaceDiagnostic(
+  surface: PendingSemanticSurface,
+  all: BrowserInteractionDiagnostic[],
+  diagnostic: BrowserInteractionDiagnostic,
+) {
+  surface.diagnostics.push(diagnostic);
+  all.push(diagnostic);
+}
+
+function diagnosticFor(
+  input: Omit<BrowserInteractionDiagnostic, "severity">,
+): BrowserInteractionDiagnostic {
+  return { severity: "error", ...input };
+}
+
+function text(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  key: string,
+): string {
+  const value = attributes[key];
+  if (typeof value === "boolean") return value ? "true" : "false";
+  return value ?? "";
+}
+
+function optionalText(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  key: string,
+): string | undefined {
+  const value = text(attributes, key);
+  return value === "" ? undefined : value;
+}
+
+function parseReadiness(value: string): BrowserInteractionReadiness {
+  return BROWSER_INTERACTION_READINESS_VALUES.includes(
+    value as BrowserInteractionReadiness,
+  )
+    ? (value as BrowserInteractionReadiness)
+    : "blocked";
+}
+
+function parseCandidateState(
+  value: string | undefined,
+): BrowserInteractionCandidateState | undefined {
+  return BROWSER_INTERACTION_CANDIDATE_STATES.includes(
+    value as BrowserInteractionCandidateState,
+  )
+    ? (value as BrowserInteractionCandidateState)
+    : undefined;
+}
+
+function parseActuatorKind(value: string): BrowserInteractionActuatorKind {
+  return parseOptionalActuatorKind(value) ?? "click";
+}
+
+function parseOptionalActuatorKind(
+  value: string | undefined,
+): BrowserInteractionActuatorKind | undefined {
+  return BROWSER_INTERACTION_ACTUATOR_KINDS.includes(
+    value as BrowserInteractionActuatorKind,
+  )
+    ? (value as BrowserInteractionActuatorKind)
+    : undefined;
+}
+
+function parseEnabled(value: string | boolean | null | undefined): boolean {
+  if (value === false || value === "false") return false;
+  return true;
+}
+
+function compareSurface(
+  a: BrowserInteractionSurfaceSnapshot,
+  b: BrowserInteractionSurfaceSnapshot,
+): number {
+  return (
+    a.surface.localeCompare(b.surface) || a.scopeId.localeCompare(b.scopeId)
+  );
+}
+
+function compareActuator(
+  a: BrowserInteractionActuator,
+  b: BrowserInteractionActuator,
+): number {
+  return a.actuatorId.localeCompare(b.actuatorId);
+}
+
+function compareDiagnostic(
+  a: BrowserInteractionDiagnostic,
+  b: BrowserInteractionDiagnostic,
+): number {
+  return (
+    a.code.localeCompare(b.code) ||
+    (a.surface ?? "").localeCompare(b.surface ?? "") ||
+    (a.scopeId ?? "").localeCompare(b.scopeId ?? "") ||
+    (a.interactionKey ?? "").localeCompare(b.interactionKey ?? "") ||
+    (a.intent ?? "").localeCompare(b.intent ?? "") ||
+    (a.actuatorId ?? "").localeCompare(b.actuatorId ?? "") ||
+    a.message.localeCompare(b.message)
+  );
+}

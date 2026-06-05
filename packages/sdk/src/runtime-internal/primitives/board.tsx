@@ -40,6 +40,11 @@ import { runInteractionAction } from "./interaction-submit.js";
 import { useGameActionError } from "./game.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
+import {
+  createGameplayActuatorAttributes,
+  type BrowserInteractionAttributeMap,
+} from "../../browser-interaction/index.js";
+import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
 
 type BoardContextValue = BoardInteractionsContext;
 
@@ -312,6 +317,7 @@ function UnambiguousBoardTarget({
   return renderPrimitive("button", {
     type: "button",
     ...props,
+    ...targetState.browserAttributes,
     children,
     disabled: isDisabled,
     "aria-disabled": isDisabled,
@@ -377,9 +383,20 @@ function ExplicitBoardTarget({
     (eligibleTargets ?? inputDescriptor.domain.eligibleTargets).includes(value);
   const isDisabled =
     disabled ?? (!isInteractionAvailable(descriptor) || !eligible);
+  const browserAttributes = inputKey
+    ? boardTargetBrowserAttributes({
+        descriptor,
+        inputKey,
+        targetKind: kind,
+        targetId: value,
+        enabled: !isDisabled,
+        draft,
+      })
+    : undefined;
   return renderPrimitive("button", {
     type: "button",
     ...props,
+    ...browserAttributes,
     children,
     disabled: isDisabled,
     "aria-disabled": isDisabled,
@@ -445,6 +462,52 @@ function resolveExtraInputs(
   return typeof extraInputs === "function"
     ? extraInputs(targetId)
     : (extraInputs ?? {});
+}
+
+const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";
+
+function boardTargetBrowserAttributes({
+  descriptor,
+  inputKey,
+  targetKind,
+  targetId,
+  enabled,
+  draft,
+}: {
+  descriptor: InteractionDescriptor;
+  inputKey: string;
+  targetKind: BoardTargetKind;
+  targetId: string;
+  enabled: boolean;
+  draft: Readonly<Record<string, unknown>>;
+}): BrowserInteractionAttributeMap {
+  return createGameplayActuatorAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    intent: "select",
+    enabled,
+    actuatorKind: "click",
+    actuatorId: `board:${targetKind}:${targetId}`,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? { draftDigest: interactionDraftDigestForValues(descriptor, draft) }
+      : {}),
+    inputKey,
+    candidateValue: targetId,
+    candidateState: isBoardTargetSelected(draft[inputKey], targetId)
+      ? "selected"
+      : "unselected",
+  });
+}
+
+function isBoardTargetSelected(value: unknown, targetId: string): boolean {
+  if (Array.isArray(value)) {
+    return value.some((item) => String(item) === targetId);
+  }
+  return value !== undefined && String(value) === targetId;
 }
 
 export const Board = {

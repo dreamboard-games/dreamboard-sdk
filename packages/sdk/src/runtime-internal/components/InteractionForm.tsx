@@ -20,6 +20,14 @@ import {
   useTheme,
   useThemeCssVars,
 } from "../../ui.js";
+import {
+  createGameplayActuatorAttributes,
+  createGameplayInteractionRootAttributes,
+  type GameplayActuatorAttributesInput,
+  type BrowserInteractionAttributeMap,
+  type BrowserInteractionCandidateState,
+  type GameplayBrowserInteractionIntent,
+} from "../../browser-interaction/index.js";
 import type {
   DraftValidation,
   InteractionHandle,
@@ -40,6 +48,7 @@ import {
   resolveInteractionInputs,
   toggleManyValue,
 } from "../utils/interaction-inputs.js";
+import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { useChromeSuppression, ThemedButton } from "../../ui.js";
 
@@ -163,6 +172,83 @@ export interface InteractionFormProps<
 }
 
 const EMPTY_FIELD_ERRORS: readonly string[] = [];
+const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";
+
+function gameplayInteractionRootAttributes({
+  descriptor,
+  draftValues,
+  ready,
+  available,
+}: {
+  descriptor: InteractionDescriptor;
+  draftValues?: Readonly<Record<string, unknown>>;
+  ready: boolean;
+  available: boolean;
+}): BrowserInteractionAttributeMap {
+  return createGameplayInteractionRootAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? {
+          draftDigest: interactionDraftDigestForValues(
+            descriptor,
+            draftValues ?? {},
+          ),
+        }
+      : {}),
+    readiness: available ? (ready ? "ready" : "blocked") : "unavailable",
+  });
+}
+
+function gameplayActuatorAttributes({
+  descriptor,
+  inputKey,
+  intent,
+  candidateValue,
+  candidateState,
+  draftValues,
+  enabled,
+  actuatorKind,
+  actuatorId,
+}: {
+  descriptor: InteractionDescriptor;
+  inputKey?: string;
+  intent: GameplayBrowserInteractionIntent;
+  candidateValue?: unknown;
+  candidateState?: BrowserInteractionCandidateState;
+  draftValues?: Readonly<Record<string, unknown>>;
+  enabled: boolean;
+  actuatorKind: GameplayActuatorAttributesInput["actuatorKind"];
+  actuatorId: string;
+}): BrowserInteractionAttributeMap {
+  return createGameplayActuatorAttributes({
+    scopeId: GAMEPLAY_BROWSER_SCOPE_ID,
+    interactionKey: descriptor.interactionKey,
+    interactionId: descriptor.interactionId,
+    intent,
+    enabled,
+    actuatorKind,
+    actuatorId,
+    ...(descriptor.descriptorDigest !== undefined
+      ? { descriptorDigest: descriptor.descriptorDigest }
+      : {}),
+    ...(descriptor.draftDigest !== undefined
+      ? {
+          draftDigest: interactionDraftDigestForValues(
+            descriptor,
+            draftValues ?? {},
+          ),
+        }
+      : {}),
+    ...(inputKey !== undefined ? { inputKey } : {}),
+    ...(candidateValue !== undefined ? { candidateValue } : {}),
+    ...(candidateState !== undefined ? { candidateState } : {}),
+  });
+}
 
 export function InteractionForm<
   Params extends InteractionParamsShape = InteractionParamsShape,
@@ -227,6 +313,28 @@ export function InteractionForm<
   ];
   const isDisabled = disabled || pending || !isInteractionAvailable(descriptor);
   const useAccordion = accordion && visibleInputs.length > 0;
+  const rootBrowserAttributes = gameplayInteractionRootAttributes({
+    descriptor,
+    draftValues: handle.values as Readonly<Record<string, unknown>>,
+    ready: handle.isReady,
+    available: !isDisabled,
+  });
+  const armBrowserAttributes = gameplayActuatorAttributes({
+    descriptor,
+    draftValues: handle.values as Readonly<Record<string, unknown>>,
+    intent: "arm",
+    enabled: !isDisabled,
+    actuatorKind: "click",
+    actuatorId: "arm",
+  });
+  const submitBrowserAttributes = gameplayActuatorAttributes({
+    descriptor,
+    draftValues: handle.values as Readonly<Record<string, unknown>>,
+    intent: visibleInputs.length === 0 ? "invoke" : "submit",
+    enabled: !isDisabled && handle.isReady,
+    actuatorKind: "click",
+    actuatorId: "submit",
+  });
 
   useEffect(() => {
     setAccordionOpen(defaultOpen);
@@ -391,6 +499,7 @@ export function InteractionForm<
                 size="sm"
                 disabled={isDisabled}
                 className="h-9 px-3 text-sm"
+                {...submitBrowserAttributes}
                 {...buttonProps}
               >
                 {pending
@@ -408,6 +517,7 @@ export function InteractionForm<
           size="sm"
           disabled={isDisabled}
           className="h-9 px-3 text-sm"
+          {...submitBrowserAttributes}
         >
           {pending ? "Submitting..." : (submitLabel ?? fallbackLabel)}
         </ThemedButton>
@@ -429,6 +539,7 @@ export function InteractionForm<
       data-interaction-id={descriptor.interactionId}
       onSubmit={(event) => void submit(event)}
       style={containerStyle}
+      {...rootBrowserAttributes}
     >
       {useAccordion ? (
         <AccordionPrimitive.Root
@@ -442,6 +553,7 @@ export function InteractionForm<
           <AccordionPrimitive.Item value="fields">
             <AccordionPrimitive.Header style={{ margin: 0 }}>
               <AccordionPrimitive.Trigger
+                {...armBrowserAttributes}
                 style={{
                   alignItems: "center",
                   appearance: "none",
@@ -543,6 +655,17 @@ function createInteractionInputSlot<
       kind === "card"
         ? { "data-dreamboard-interaction-card-slot": "" }
         : { "data-dreamboard-interaction-target-slot": "" };
+    const browserAttributes = gameplayActuatorAttributes({
+      descriptor,
+      draftValues: handle.values as Readonly<Record<string, unknown>>,
+      inputKey: input.key,
+      intent: selection?.mode === "many" ? "toggle" : "select",
+      candidateValue: targetValue,
+      candidateState: selected ? "selected" : "unselected",
+      enabled: !isDisabled,
+      actuatorKind: "click",
+      actuatorId: `${kind}:${input.key}:${targetValue}`,
+    });
     return (
       <button
         type="button"
@@ -556,6 +679,7 @@ function createInteractionInputSlot<
         data-selected={selected || undefined}
         data-disabled={isDisabled || undefined}
         {...dataAttribute}
+        {...browserAttributes}
         {...buttonProps}
         onClick={() => {
           if (isDisabled) return;
@@ -588,6 +712,17 @@ function createInteractionInputSlot<
     Default: ({ children }) => {
       const hasDefault = "defaultValue" in input;
       const isDisabled = disabled || !hasDefault;
+      const browserAttributes = gameplayActuatorAttributes({
+        descriptor,
+        draftValues: handle.values as Readonly<Record<string, unknown>>,
+        inputKey: input.key,
+        intent: "select",
+        candidateValue: input.defaultValue,
+        candidateState: "unselected",
+        enabled: !isDisabled,
+        actuatorKind: "click",
+        actuatorId: `default:${input.key}`,
+      });
       return (
         <button
           type="button"
@@ -596,6 +731,7 @@ function createInteractionInputSlot<
           data-dreamboard-interaction-default-slot=""
           data-input-name={input.key}
           data-disabled={isDisabled || undefined}
+          {...browserAttributes}
           onClick={() => {
             if (isDisabled) return;
             handle.setInput(input.key, input.defaultValue as Params[Key]);
@@ -869,6 +1005,8 @@ function ChoiceField<
   Params extends InteractionParamsShape,
   Key extends keyof Params & string,
 >({
+  descriptor,
+  handle,
   input,
   value,
   setValue,
@@ -903,15 +1041,29 @@ function ChoiceField<
         >
           {choices.map((choice) => {
             const selected = value === choice.value;
+            const isDisabled = disabled || choice.disabled;
             return (
               <ThemedButton
                 key={choiceRenderKey(choice)}
                 type="button"
                 variant={selected ? "primary" : "secondary"}
                 size="sm"
-                disabled={disabled || choice.disabled}
+                disabled={isDisabled}
                 aria-pressed={selected}
                 title={choice.disabledReason ?? choice.description}
+                {...gameplayActuatorAttributes({
+                  descriptor,
+                  draftValues: handle.values as Readonly<
+                    Record<string, unknown>
+                  >,
+                  inputKey: input.key,
+                  intent: "select",
+                  candidateValue: choice.value,
+                  candidateState: selected ? "selected" : "unselected",
+                  enabled: !isDisabled,
+                  actuatorKind: "click",
+                  actuatorId: `choice:${input.key}:${choiceRenderKey(choice)}`,
+                })}
                 onClick={() => setValue(choice.value as Params[Key])}
                 className="h-8 px-3 text-sm"
               >
@@ -937,7 +1089,20 @@ function ChoiceField<
           setValue(decodeChoiceSelectValue(next) as Params[Key])
         }
       >
-        <SelectTrigger id={controlId} size="sm" className="w-full bg-white">
+        <SelectTrigger
+          id={controlId}
+          size="sm"
+          className="w-full bg-white"
+          {...gameplayActuatorAttributes({
+            descriptor,
+            draftValues: handle.values as Readonly<Record<string, unknown>>,
+            inputKey: input.key,
+            intent: "reveal",
+            enabled: !disabled,
+            actuatorKind: "click",
+            actuatorId: `choice-reveal:${input.key}`,
+          })}
+        >
           <span data-slot="select-value">
             {selectedChoice ? (
               <ChoiceOptionLabel choice={selectedChoice} />
@@ -960,6 +1125,20 @@ function ChoiceField<
               value={choiceRenderKey(choice)}
               textValue={choice.label}
               disabled={choice.disabled}
+              {...gameplayActuatorAttributes({
+                descriptor,
+                draftValues: handle.values as Readonly<
+                  Record<string, unknown>
+                >,
+                inputKey: input.key,
+                intent: "select",
+                candidateValue: choice.value,
+                candidateState:
+                  value === choice.value ? "selected" : "unselected",
+                enabled: !disabled && !choice.disabled,
+                actuatorKind: "click",
+                actuatorId: `choice:${input.key}:${choiceRenderKey(choice)}`,
+              })}
             >
               <ChoiceOptionLabel choice={choice} />
             </SelectItem>
@@ -975,6 +1154,8 @@ function ChoiceListField<
   Params extends InteractionParamsShape,
   Key extends keyof Params & string,
 >({
+  descriptor,
+  handle,
   input,
   value,
   setValue,
@@ -1028,19 +1209,30 @@ function ChoiceListField<
         {(domain.choices ?? []).map((choice) => {
           const value = choice.value as string;
           const checked = selected.has(value);
+          const isDisabled =
+            disabled || choice.disabled || (!checked && selected.size >= max);
           return (
             <ThemedButton
               key={value}
               type="button"
               variant={checked ? "primary" : "secondary"}
               size="sm"
-              disabled={
-                disabled ||
-                choice.disabled ||
-                (!checked && selected.size >= max)
-              }
+              disabled={isDisabled}
               aria-pressed={checked}
               title={choice.disabledReason ?? choice.description}
+              {...gameplayActuatorAttributes({
+                descriptor,
+                draftValues: handle.values as Readonly<
+                  Record<string, unknown>
+                >,
+                inputKey: input.key,
+                intent: "toggle",
+                candidateValue: value,
+                candidateState: checked ? "selected" : "unselected",
+                enabled: !isDisabled,
+                actuatorKind: "click",
+                actuatorId: `choice-list:${input.key}:${value}`,
+              })}
               onClick={() => toggle(value)}
               className="h-8 px-3 text-sm"
             >
@@ -1057,6 +1249,8 @@ function ResourceMapField<
   Params extends InteractionParamsShape,
   Key extends keyof Params & string,
 >({
+  descriptor,
+  handle,
   input,
   value,
   setValue,
@@ -1123,6 +1317,18 @@ function ResourceMapField<
               <StepperButton
                 label={`Decrease ${resource.label ?? resource.resourceId}`}
                 disabled={disabled || amount <= min}
+                browserAttributes={gameplayActuatorAttributes({
+                  descriptor,
+                  draftValues: handle.values as Readonly<
+                    Record<string, unknown>
+                  >,
+                  inputKey: input.key,
+                  intent: "decrement",
+                  candidateValue: resource.resourceId,
+                  enabled: !(disabled || amount <= min),
+                  actuatorKind: "click",
+                  actuatorId: `resource-decrement:${input.key}:${resource.resourceId}`,
+                })}
                 onClick={() => update(resource.resourceId, -1, min, max)}
               >
                 -
@@ -1139,6 +1345,18 @@ function ResourceMapField<
               <StepperButton
                 label={`Increase ${resource.label ?? resource.resourceId}`}
                 disabled={disabled || amount >= max}
+                browserAttributes={gameplayActuatorAttributes({
+                  descriptor,
+                  draftValues: handle.values as Readonly<
+                    Record<string, unknown>
+                  >,
+                  inputKey: input.key,
+                  intent: "increment",
+                  candidateValue: resource.resourceId,
+                  enabled: !(disabled || amount >= max),
+                  actuatorKind: "click",
+                  actuatorId: `resource-increment:${input.key}:${resource.resourceId}`,
+                })}
                 onClick={() => update(resource.resourceId, 1, min, max)}
               >
                 +
@@ -1155,6 +1373,8 @@ function BoundedNumberField<
   Params extends InteractionParamsShape,
   Key extends keyof Params & string,
 >({
+  descriptor,
+  handle,
   input,
   value,
   setValue,
@@ -1190,6 +1410,16 @@ function BoundedNumberField<
         <StepperButton
           label={`Decrease ${input.key}`}
           disabled={disabled || current <= min}
+          browserAttributes={gameplayActuatorAttributes({
+            descriptor,
+            draftValues: handle.values as Readonly<Record<string, unknown>>,
+            inputKey: input.key,
+            intent: "decrement",
+            candidateValue: current - step,
+            enabled: !(disabled || current <= min),
+            actuatorKind: "click",
+            actuatorId: `bounded-decrement:${input.key}`,
+          })}
           onClick={() => update(current - step)}
         >
           -
@@ -1202,12 +1432,32 @@ function BoundedNumberField<
           step={step}
           value={current}
           disabled={disabled}
+          {...gameplayActuatorAttributes({
+            descriptor,
+            draftValues: handle.values as Readonly<Record<string, unknown>>,
+            inputKey: input.key,
+            intent: "fill",
+            candidateValue: current,
+            enabled: !disabled,
+            actuatorKind: "fill",
+            actuatorId: `bounded-fill:${input.key}`,
+          })}
           onChange={(event) => update(Number(event.target.value))}
           className="h-9 w-[8ch] px-2 text-center text-sm md:text-sm"
         />
         <StepperButton
           label={`Increase ${input.key}`}
           disabled={disabled || current >= max}
+          browserAttributes={gameplayActuatorAttributes({
+            descriptor,
+            draftValues: handle.values as Readonly<Record<string, unknown>>,
+            inputKey: input.key,
+            intent: "increment",
+            candidateValue: current + step,
+            enabled: !(disabled || current >= max),
+            actuatorKind: "click",
+            actuatorId: `bounded-increment:${input.key}`,
+          })}
           onClick={() => update(current + step)}
         >
           +
@@ -1259,11 +1509,13 @@ function targetSelectionLabel(domain: InputDomain): string {
 function StepperButton({
   label,
   disabled,
+  browserAttributes,
   onClick,
   children,
 }: {
   label: string;
   disabled: boolean;
+  browserAttributes?: BrowserInteractionAttributeMap;
   onClick: () => void;
   children: ReactNode;
 }) {
@@ -1274,6 +1526,7 @@ function StepperButton({
       size="sm"
       aria-label={label}
       disabled={disabled}
+      {...browserAttributes}
       onClick={onClick}
       className="h-8 w-8 text-sm"
     >

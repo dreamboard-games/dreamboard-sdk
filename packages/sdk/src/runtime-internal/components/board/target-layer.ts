@@ -1,4 +1,5 @@
 import type { BoardTargetKind } from "../../utils/interaction-inputs.js";
+import type { BrowserInteractionAttributeMap } from "../../../browser-interaction/index.js";
 
 export interface InteractiveTargetState {
   kind?: BoardTargetKind;
@@ -13,6 +14,7 @@ export interface InteractiveTargetState {
   conflict: boolean;
   conflictInteractionKeys?: readonly string[];
   unavailableReason?: string;
+  browserAttributes?: BrowserInteractionAttributeMap;
   select?: () => unknown | Promise<unknown>;
 }
 
