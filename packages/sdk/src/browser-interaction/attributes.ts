@@ -4,13 +4,21 @@ import {
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "./constants.js";
 import { encodeCanonicalCandidateValue } from "./canonical.js";
+import {
+  encodeBrowserInteractionEffect,
+  encodeBrowserInteractionEffectPattern,
+} from "./effects.js";
 import type {
   BrowserInteractionActuatorKind,
   BrowserInteractionCandidateState,
+  BrowserInteractionEffectPattern,
   BrowserInteractionIntent,
   BrowserInteractionPreparationTarget,
   BrowserInteractionReadiness,
+  BrowserInteractionSurfaceEffect,
   GameplayBrowserInteractionIntent,
+  GameplaySemanticEffect,
+  GameplaySemanticEffectPattern,
 } from "./types.js";
 
 export type BrowserInteractionAttributeMap = Record<string, string | boolean>;
@@ -39,6 +47,9 @@ export interface BrowserInteractionActuatorAttributesInput {
   readonly enabled?: boolean;
   readonly actuatorKind: BrowserInteractionActuatorKind;
   readonly actuatorId?: string;
+  readonly semanticEffects?: readonly BrowserInteractionSurfaceEffect[];
+  readonly acceptedEffectPatterns?: readonly BrowserInteractionEffectPattern[];
+  readonly preparationPatterns?: readonly BrowserInteractionEffectPattern[];
   readonly prepares?: BrowserInteractionPreparationTarget;
 }
 
@@ -102,6 +113,22 @@ export function createBrowserInteractionActuatorAttributes(
   if (input.candidateState) {
     attrs[BROWSER_INTERACTION_ATTRIBUTES.candidateState] = input.candidateState;
   }
+  if (input.semanticEffects && input.semanticEffects.length > 0) {
+    attrs[BROWSER_INTERACTION_ATTRIBUTES.semanticEffects] = JSON.stringify(
+      input.semanticEffects.map(encodeBrowserInteractionEffect),
+    );
+  }
+  if (input.acceptedEffectPatterns && input.acceptedEffectPatterns.length > 0) {
+    attrs[BROWSER_INTERACTION_ATTRIBUTES.acceptedEffectPatterns] =
+      JSON.stringify(
+        input.acceptedEffectPatterns.map(encodeBrowserInteractionEffectPattern),
+      );
+  }
+  if (input.preparationPatterns && input.preparationPatterns.length > 0) {
+    attrs[BROWSER_INTERACTION_ATTRIBUTES.preparationPatterns] = JSON.stringify(
+      input.preparationPatterns.map(encodeBrowserInteractionEffectPattern),
+    );
+  }
   if (input.prepares) {
     attrs[BROWSER_INTERACTION_ATTRIBUTES.preparesIntent] =
       input.prepares.intent;
@@ -131,9 +158,16 @@ export type GameplayInteractionRootAttributesInput = Omit<
 
 export type GameplayActuatorAttributesInput = Omit<
   BrowserInteractionActuatorAttributesInput,
-  "surface" | "intent"
+  | "surface"
+  | "intent"
+  | "semanticEffects"
+  | "acceptedEffectPatterns"
+  | "preparationPatterns"
 > & {
   readonly intent: GameplayBrowserInteractionIntent;
+  readonly semanticEffects?: readonly GameplaySemanticEffect[];
+  readonly acceptedEffectPatterns?: readonly GameplaySemanticEffectPattern[];
+  readonly preparationPatterns?: readonly GameplaySemanticEffectPattern[];
 };
 
 export function createGameplayInteractionRootAttributes(

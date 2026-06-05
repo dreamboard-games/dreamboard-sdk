@@ -9,11 +9,19 @@ import {
   createGameplayActuatorAttributes,
   createGameplayInteractionRootAttributes,
   defineBrowserInteractionSurface,
+  encodeBrowserInteractionEffect,
   encodeCanonicalCandidateValue,
+  gameplayCommitEffect,
+  gameplayInvokeEffect,
+  gameplaySetCandidateEffect,
+  gameplaySetScalarEffect,
   normalizeBrowserInteractionRecords,
+  resolveBrowserInteractionEffect,
   resolveBrowserInteractionIntent,
   validateBrowserInteractionSnapshot,
+  type BrowserInteractionEffectPattern,
   type BrowserInteractionRawRecord,
+  type BrowserInteractionSurfaceEffect,
 } from "./index.js";
 
 const interactionRoot = createGameplayInteractionRootAttributes({
@@ -289,6 +297,686 @@ describe("browser interaction protocol core", () => {
     }
   });
 
+  test("resolves a string candidate from a toggle semantic effect", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "targetPlayerIds",
+      candidateValue: "player-2",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "toggle",
+          inputKey: "targetPlayerIds",
+          candidateValue: "player-2",
+          candidateState: "unselected",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: true, match: "exact" });
+  });
+
+  test("resolves a boolean candidate from a select semantic effect", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "acceptTrade",
+      candidateValue: true,
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "select",
+          inputKey: "acceptTrade",
+          candidateValue: true,
+          candidateState: "unselected",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution.ok).toBe(true);
+    if (resolution.ok) {
+      expect(resolution.actuator.intent).toBe("select");
+    }
+  });
+
+  test("resolves manual commit from an invoke-like rendered control", () => {
+    const effect = gameplayCommitEffect();
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "invoke",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: true, match: "exact" });
+  });
+
+  test("resolves direct invoke with input context", () => {
+    const effect = gameplayInvokeEffect();
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "invoke",
+          inputKey: "action",
+          candidateValue: "counter",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution.ok).toBe(true);
+    if (resolution.ok) {
+      expect(resolution.actuator.inputKey).toBe("action");
+      expect(resolution.actuator.candidateValue).toBe("counter");
+    }
+  });
+
+  test("resolves scalar fill with the requested value instead of current value", () => {
+    const effect = gameplaySetScalarEffect({ inputKey: "amount", value: 7 });
+    const fillPattern: BrowserInteractionEffectPattern = {
+      kind: "match",
+      effectKind: "setScalar",
+      fields: { inputKey: "amount" },
+      scalar: { field: "value", min: 0, max: 10, integer: true },
+    };
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "fill",
+          inputKey: "amount",
+          candidateValue: 2,
+          actuatorKind: "fill",
+          acceptedEffectPatterns: [fillPattern],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({ ok: true, match: "accepted-pattern" });
+    if (resolution.ok) {
+      expect(resolution.effect).toEqual(effect);
+      expect(resolution.actuator.candidateValue).toBe(2);
+    }
+  });
+
+  test("prefers an exact scalar stepper effect over a matching fill capability", () => {
+    const effect = gameplaySetScalarEffect({ inputKey: "amount", value: 3 });
+    const fillPattern: BrowserInteractionEffectPattern = {
+      kind: "match",
+      effectKind: "setScalar",
+      fields: { inputKey: "amount" },
+      scalar: { field: "value", min: 0, max: 10, integer: true },
+    };
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "fill",
+          inputKey: "amount",
+          actuatorKind: "fill",
+          acceptedEffectPatterns: [fillPattern],
+        }),
+      ),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "increment",
+          inputKey: "amount",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({ ok: true, match: "exact" });
+    if (resolution.ok) {
+      expect(resolution.actuator.intent).toBe("increment");
+    }
+  });
+
+  test("fails closed on ambiguous scalar accepted-effect capabilities", () => {
+    const effect = gameplaySetScalarEffect({ inputKey: "amount", value: 3 });
+    const fillPattern: BrowserInteractionEffectPattern = {
+      kind: "match",
+      effectKind: "setScalar",
+      fields: { inputKey: "amount" },
+      scalar: { field: "value", min: 0, max: 10, integer: true },
+    };
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "fill",
+          inputKey: "amount",
+          actuatorKind: "fill",
+          actuatorId: "amount-fill",
+          acceptedEffectPatterns: [fillPattern],
+        }),
+      ),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "fill",
+          inputKey: "amount",
+          actuatorKind: "keyboard",
+          actuatorId: "amount-keyboard",
+          acceptedEffectPatterns: [fillPattern],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({ ok: false, code: "ambiguous" });
+    expect(
+      resolution.ok ? [] : resolution.diagnostics.map((item) => item.code),
+    ).toContain("duplicate-accepted-effect-pattern-match");
+  });
+
+  test("describes exact candidate preparation with a semantic pattern", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "choice",
+      candidateValue: "hidden",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "reveal",
+          inputKey: "choice",
+          actuatorKind: "click",
+          preparationPatterns: [{ kind: "exact", effect }],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({
+      ok: false,
+      code: "preparation-required",
+    });
+    expect(
+      resolution.ok ? undefined : resolution.preparation?.[0]?.intent,
+    ).toBe("reveal");
+  });
+
+  test("describes fan-out reveal preparation for one input", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "choice",
+      candidateValue: "any-candidate",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "reveal",
+          inputKey: "choice",
+          actuatorKind: "click",
+          preparationPatterns: [
+            {
+              kind: "match",
+              effectKind: "setCandidate",
+              fields: { inputKey: "choice" },
+            },
+          ],
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: false, code: "preparation-required" });
+  });
+
+  test("describes interaction-wide arm preparation", () => {
+    const effect = gameplaySetScalarEffect({ inputKey: "amount", value: 2 });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "arm",
+          actuatorKind: "click",
+          preparationPatterns: [
+            {
+              kind: "match",
+              effectKind: "setScalar",
+            },
+          ],
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: false, code: "preparation-required" });
+  });
+
+  test("describes host menu preparation with a registered generic surface", () => {
+    const hostEffect: BrowserInteractionSurfaceEffect = {
+      kind: "switchControlledPlayer",
+      inputKey: "playerId",
+      candidateValue: "player-2",
+    };
+    const registry = createBrowserInteractionRegistry([
+      defineBrowserInteractionSurface({
+        surface: "host",
+        intents: ["openMenu", "switchControlledPlayer"],
+        effectKinds: ["switchControlledPlayer"],
+      }),
+    ]);
+    const snapshot = normalizeBrowserInteractionRecords(
+      [
+        record(
+          createBrowserInteractionRootAttributes({
+            surface: "host",
+            scopeId: "session",
+            interactionKey: "host.switchControlledPlayer",
+            interactionId: "switchControlledPlayer",
+            readiness: "ready",
+          }),
+        ),
+        record(
+          createBrowserInteractionActuatorAttributes({
+            surface: "host",
+            scopeId: "session",
+            interactionKey: "host.switchControlledPlayer",
+            interactionId: "switchControlledPlayer",
+            intent: "openMenu",
+            actuatorKind: "click",
+            preparationPatterns: [
+              {
+                kind: "match",
+                effectKind: "switchControlledPlayer",
+                fields: { inputKey: "playerId" },
+              },
+            ],
+          }),
+        ),
+      ],
+      { registry },
+    );
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "host",
+        scopeId: "session",
+        interactionKey: "host.switchControlledPlayer",
+        effect: hostEffect,
+      }),
+    ).toMatchObject({ ok: false, code: "preparation-required" });
+  });
+
+  test("fails closed on duplicate exact effect actuators", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "targetPlayerIds",
+      candidateValue: "player-2",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "toggle",
+          inputKey: "targetPlayerIds",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+        }),
+      ),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "select",
+          inputKey: "targetPlayerIds",
+          actuatorKind: "keyboard",
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({ ok: false, code: "ambiguous" });
+    expect(
+      resolution.ok ? [] : resolution.diagnostics.map((item) => item.code),
+    ).toContain("duplicate-enabled-effect-actuator");
+  });
+
+  test("diagnoses overlapping preparation patterns", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "choice",
+      candidateValue: "hidden",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "toggle",
+          inputKey: "choice",
+          actuatorKind: "click",
+          semanticEffects: [effect],
+          enabled: false,
+        }),
+      ),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "reveal",
+          actuatorKind: "click",
+          actuatorId: "exact-reveal",
+          preparationPatterns: [{ kind: "exact", effect }],
+        }),
+      ),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "arm",
+          actuatorKind: "keyboard",
+          actuatorId: "wide-arm",
+          preparationPatterns: [
+            {
+              kind: "match",
+              effectKind: "setCandidate",
+              fields: { inputKey: "choice" },
+            },
+          ],
+        }),
+      ),
+    ]);
+
+    expect(snapshot.diagnostics.map((item) => item.code)).toContain(
+      "ambiguous-preparation-pattern",
+    );
+  });
+
+  test("detects semantic preparation cycles", () => {
+    const armEffect: BrowserInteractionSurfaceEffect = { kind: "arm" };
+    const revealEffect: BrowserInteractionSurfaceEffect = { kind: "reveal" };
+    const registry = createBrowserInteractionRegistry([
+      defineBrowserInteractionSurface({
+        surface: "generic",
+        intents: ["arm", "reveal"],
+        effectKinds: ["arm", "reveal"],
+      }),
+    ]);
+    const snapshot = normalizeBrowserInteractionRecords(
+      [
+        record(
+          createBrowserInteractionRootAttributes({
+            surface: "generic",
+            scopeId: "scope",
+            interactionKey: "generic.flow",
+            interactionId: "flow",
+            readiness: "ready",
+          }),
+        ),
+        record(
+          createBrowserInteractionActuatorAttributes({
+            surface: "generic",
+            scopeId: "scope",
+            interactionKey: "generic.flow",
+            interactionId: "flow",
+            intent: "arm",
+            actuatorKind: "click",
+            semanticEffects: [armEffect],
+            preparationPatterns: [{ kind: "exact", effect: revealEffect }],
+          }),
+        ),
+        record(
+          createBrowserInteractionActuatorAttributes({
+            surface: "generic",
+            scopeId: "scope",
+            interactionKey: "generic.flow",
+            interactionId: "flow",
+            intent: "reveal",
+            actuatorKind: "click",
+            semanticEffects: [revealEffect],
+            preparationPatterns: [{ kind: "exact", effect: armEffect }],
+          }),
+        ),
+      ],
+      { registry },
+    );
+
+    expect(snapshot.diagnostics.map((item) => item.code)).toContain(
+      "preparation-cycle",
+    );
+  });
+
+  test("fails closed on a disabled exact-effect actuator", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "targetPlayerIds",
+      candidateValue: "player-2",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "toggle",
+          inputKey: "targetPlayerIds",
+          actuatorKind: "click",
+          enabled: false,
+          semanticEffects: [effect],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserInteractionEffect(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({ ok: false, code: "unavailable" });
+    expect(
+      resolution.ok ? [] : resolution.diagnostics.map((item) => item.code),
+    ).toContain("disabled-effect-actuator");
+  });
+
+  test("normalizes effect ordering and canonical effect encoding", () => {
+    const effectA = gameplaySetCandidateEffect({
+      inputKey: "choice",
+      candidateValue: { z: 1, a: 2 },
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const effectB = gameplaySetScalarEffect({ inputKey: "amount", value: 3 });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "toggle",
+          inputKey: "choice",
+          actuatorKind: "click",
+          semanticEffects: [effectB, effectA],
+        }),
+      ),
+    ]);
+    const actuator = snapshot.surfaces
+      .flatMap((surface) =>
+        "interactions" in surface ? surface.interactions : [],
+      )
+      .flatMap((interaction) => interaction.actuators)[0];
+
+    expect(
+      actuator?.semanticEffects.map(encodeBrowserInteractionEffect),
+    ).toEqual(
+      [...(actuator?.semanticEffects ?? [])]
+        .map(encodeBrowserInteractionEffect)
+        .sort(),
+    );
+    expect(encodeBrowserInteractionEffect(effectA)).toContain('"a":2');
+  });
+
+  test("rejects intent-only records for effect resolution", () => {
+    const effect = gameplayCommitEffect();
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayActuatorAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          intent: "submit",
+          actuatorKind: "click",
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserInteractionEffect(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: false, code: "not-found" });
+  });
+
   test("normalizes and resolves a registered private host surface", () => {
     const registry = createBrowserInteractionRegistry([
       defineBrowserInteractionSurface({
@@ -339,9 +1027,9 @@ describe("browser interaction protocol core", () => {
     );
 
     expect(snapshot.diagnostics).toEqual([]);
-    expect(
-      browserInteractionSnapshotSchema.safeParse(snapshot).success,
-    ).toBe(true);
+    expect(browserInteractionSnapshotSchema.safeParse(snapshot).success).toBe(
+      true,
+    );
     expect(
       resolveBrowserInteractionIntent(snapshot, {
         surface: "host",

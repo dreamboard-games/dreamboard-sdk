@@ -19,6 +19,59 @@ const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
   ]),
 );
 
+export const browserInteractionEffectSchema = z
+  .object({
+    kind: z.string().min(1),
+  })
+  .catchall(jsonValueSchema);
+
+export const browserInteractionEffectPatternSchema = z.union([
+  z.object({
+    kind: z.literal("exact"),
+    effect: browserInteractionEffectSchema,
+  }),
+  z.object({
+    kind: z.literal("match"),
+    effectKind: z.string().min(1),
+    fields: z.record(z.string(), jsonValueSchema).optional(),
+    scalar: z
+      .object({
+        field: z.string().min(1),
+        min: z.number().finite().optional(),
+        max: z.number().finite().optional(),
+        integer: z.boolean().optional(),
+      })
+      .optional(),
+  }),
+]);
+
+export const gameplaySemanticEffectSchema = z.union([
+  z.object({
+    kind: z.literal("setCandidate"),
+    inputKey: z.string(),
+    candidateValue: jsonValueSchema,
+    beforeSelected: z.boolean(),
+    afterSelected: z.boolean(),
+  }),
+  z.object({
+    kind: z.literal("adjustResource"),
+    inputKey: z.string(),
+    resourceKey: jsonValueSchema,
+    delta: z.union([z.literal(-1), z.literal(1)]),
+  }),
+  z.object({
+    kind: z.literal("setScalar"),
+    inputKey: z.string(),
+    value: z.number().finite(),
+  }),
+  z.object({
+    kind: z.literal("commit"),
+  }),
+  z.object({
+    kind: z.literal("invoke"),
+  }),
+]);
+
 export const browserInteractionDiagnosticSchema = z.object({
   code: z.string(),
   severity: z.enum(["error", "warning"]),
@@ -39,6 +92,9 @@ export const browserInteractionActuatorSchema = z.object({
   candidateState: z.enum(BROWSER_INTERACTION_CANDIDATE_STATES).optional(),
   enabled: z.boolean(),
   actuatorKind: z.enum(BROWSER_INTERACTION_ACTUATOR_KINDS),
+  semanticEffects: z.array(browserInteractionEffectSchema),
+  acceptedEffectPatterns: z.array(browserInteractionEffectPatternSchema),
+  preparationPatterns: z.array(browserInteractionEffectPatternSchema),
   prepares: z
     .object({
       intent: z.string(),

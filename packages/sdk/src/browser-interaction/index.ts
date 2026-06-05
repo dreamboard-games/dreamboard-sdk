@@ -6,6 +6,7 @@ export {
   BROWSER_INTERACTION_RECORD_ROLES,
   DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME,
   DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+  GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS,
   GAMEPLAY_BROWSER_INTERACTION_INTENTS,
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "./constants.js";
@@ -15,6 +16,19 @@ export {
   encodeCanonicalCandidateValue,
   type CanonicalBrowserInteractionValue,
 } from "./canonical.js";
+export {
+  assertBrowserInteractionEffectPattern,
+  browserInteractionEffectPatternMatches,
+  decodeBrowserInteractionEffect,
+  decodeBrowserInteractionEffectPattern,
+  encodeBrowserInteractionEffect,
+  encodeBrowserInteractionEffectPattern,
+  gameplayAdjustResourceEffect,
+  gameplayCommitEffect,
+  gameplayInvokeEffect,
+  gameplaySetCandidateEffect,
+  gameplaySetScalarEffect,
+} from "./effects.js";
 export {
   createBrowserInteractionActuatorAttributes,
   createBrowserInteractionActuatorKey,
@@ -41,8 +55,13 @@ export {
   validateBrowserInteractionSnapshot,
   type NormalizeBrowserInteractionRecordsOptions,
 } from "./normalize.js";
-export { resolveBrowserInteractionIntent } from "./resolve.js";
 export {
+  resolveBrowserInteractionEffect,
+  resolveBrowserInteractionIntent,
+} from "./resolve.js";
+export {
+  browserInteractionEffectPatternSchema,
+  browserInteractionEffectSchema,
   browserGameplayInteractionSchema,
   browserGameplaySurfaceSnapshotSchema,
   browserInteractionActuatorSchema,
@@ -50,6 +69,7 @@ export {
   browserInteractionSnapshotSchema,
   browserSemanticSurfaceSnapshotSchema,
   browserUnknownSurfaceSnapshotSchema,
+  gameplaySemanticEffectSchema,
 } from "./schemas.js";
 export type {
   BrowserGameplayInteraction,
@@ -58,6 +78,11 @@ export type {
   BrowserInteractionActuatorKind,
   BrowserInteractionCandidateState,
   BrowserInteractionDiagnostic,
+  BrowserInteractionEffectPattern,
+  BrowserInteractionEffectRequest,
+  BrowserInteractionEffectResolution,
+  BrowserInteractionEffectResolutionFailure,
+  BrowserInteractionEffectResolutionSuccess,
   BrowserInteractionEntity,
   BrowserInteractionIntent,
   BrowserInteractionIntentRequest,
@@ -69,12 +94,18 @@ export type {
   BrowserInteractionResolution,
   BrowserInteractionResolutionFailure,
   BrowserInteractionResolutionSuccess,
+  BrowserInteractionScalarPattern,
   BrowserInteractionSemanticSurfaceSnapshot,
   BrowserInteractionSnapshot,
+  BrowserInteractionSurfaceEffect,
   BrowserInteractionSurface,
   BrowserInteractionSurfaceDefinition,
   BrowserInteractionSurfaceSnapshot,
   BrowserInteractionUnknownSurfaceSnapshot,
+  GameplayBrowserInteractionEffectKind,
+  GameplayBrowserInteractionEffectRequest,
   GameplayBrowserInteractionIntent,
   GameplayBrowserInteractionSurface,
+  GameplaySemanticEffect,
+  GameplaySemanticEffectPattern,
 } from "./types.js";

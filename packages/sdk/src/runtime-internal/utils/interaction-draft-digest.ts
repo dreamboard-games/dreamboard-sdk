@@ -8,30 +8,20 @@ type CanonicalJson =
   | CanonicalJson[]
   | { [key: string]: CanonicalJson };
 
-const MAX_INFERRED_ACTOR_SEAT = 16;
-
 export function interactionDraftDigestForValues(
   descriptor: InteractionDescriptor,
   values: Readonly<Record<string, unknown>>,
 ): string | undefined {
   if (
     descriptor.descriptorDigest === undefined ||
+    descriptor.actorSeat === undefined ||
     descriptor.draftDigest === undefined
   ) {
-    return descriptor.draftDigest;
+    return undefined;
   }
   const defaults = defaultsForDescriptor(descriptor);
-  const actorSeat = inferDraftDigestActorSeat({
-    descriptor,
-    descriptorDigest: descriptor.descriptorDigest,
-    defaults,
-    initialDraftDigest: descriptor.draftDigest,
-  });
-  if (actorSeat === null) {
-    return descriptor.draftDigest;
-  }
   return draftDigest({
-    actorSeat,
+    actorSeat: descriptor.actorSeat,
     descriptorDigest: descriptor.descriptorDigest,
     interactionId: descriptor.interactionId,
     interactionKey: descriptor.interactionKey,
@@ -40,33 +30,6 @@ export function interactionDraftDigestForValues(
       ...(toCanonicalJson(values) as Record<string, CanonicalJson>),
     },
   });
-}
-
-function inferDraftDigestActorSeat({
-  descriptor,
-  descriptorDigest,
-  defaults,
-  initialDraftDigest,
-}: {
-  descriptor: InteractionDescriptor;
-  descriptorDigest: string;
-  defaults: CanonicalJson;
-  initialDraftDigest: string;
-}): number | null {
-  for (let actorSeat = 0; actorSeat < MAX_INFERRED_ACTOR_SEAT; actorSeat += 1) {
-    if (
-      draftDigest({
-        actorSeat,
-        descriptorDigest,
-        interactionId: descriptor.interactionId,
-        interactionKey: descriptor.interactionKey,
-        values: defaults,
-      }) === initialDraftDigest
-    ) {
-      return actorSeat;
-    }
-  }
-  return null;
 }
 
 function draftDigest({
@@ -83,6 +46,7 @@ function draftDigest({
   values: CanonicalJson;
 }): string {
   return hashJson({
+    digestVersion: "interaction-draft@2",
     actorSeat,
     descriptorDigest,
     emitted: false,

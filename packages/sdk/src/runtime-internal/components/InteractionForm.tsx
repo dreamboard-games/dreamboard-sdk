@@ -50,6 +50,14 @@ import {
 } from "../utils/interaction-inputs.js";
 import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
+import {
+  gameplayCandidateMetadata,
+  gameplayPreparationPatternsForDescriptor,
+  gameplayResourceMetadata,
+  gameplayScalarFillMetadata,
+  gameplayScalarStepMetadata,
+  gameplaySubmitMetadata,
+} from "../utils/browser-interaction-effects.js";
 import { useChromeSuppression, ThemedButton } from "../../ui.js";
 
 export interface InteractionFieldRenderProps<
@@ -210,6 +218,9 @@ function gameplayActuatorAttributes({
   intent,
   candidateValue,
   candidateState,
+  semanticEffects,
+  acceptedEffectPatterns,
+  preparationPatterns,
   draftValues,
   enabled,
   actuatorKind,
@@ -220,6 +231,9 @@ function gameplayActuatorAttributes({
   intent: GameplayBrowserInteractionIntent;
   candidateValue?: unknown;
   candidateState?: BrowserInteractionCandidateState;
+  semanticEffects?: GameplayActuatorAttributesInput["semanticEffects"];
+  acceptedEffectPatterns?: GameplayActuatorAttributesInput["acceptedEffectPatterns"];
+  preparationPatterns?: GameplayActuatorAttributesInput["preparationPatterns"];
   draftValues?: Readonly<Record<string, unknown>>;
   enabled: boolean;
   actuatorKind: GameplayActuatorAttributesInput["actuatorKind"];
@@ -247,6 +261,9 @@ function gameplayActuatorAttributes({
     ...(inputKey !== undefined ? { inputKey } : {}),
     ...(candidateValue !== undefined ? { candidateValue } : {}),
     ...(candidateState !== undefined ? { candidateState } : {}),
+    ...(semanticEffects !== undefined ? { semanticEffects } : {}),
+    ...(acceptedEffectPatterns !== undefined ? { acceptedEffectPatterns } : {}),
+    ...(preparationPatterns !== undefined ? { preparationPatterns } : {}),
   });
 }
 
@@ -326,14 +343,20 @@ export function InteractionForm<
     enabled: !isDisabled,
     actuatorKind: "click",
     actuatorId: "arm",
+    preparationPatterns: gameplayPreparationPatternsForDescriptor(
+      descriptor,
+      handle.values as Readonly<Record<string, unknown>>,
+    ),
   });
+  const submitMetadata = gameplaySubmitMetadata({ descriptor });
   const submitBrowserAttributes = gameplayActuatorAttributes({
     descriptor,
     draftValues: handle.values as Readonly<Record<string, unknown>>,
-    intent: visibleInputs.length === 0 ? "invoke" : "submit",
+    intent: submitMetadata.intent,
     enabled: !isDisabled && handle.isReady,
     actuatorKind: "click",
     actuatorId: "submit",
+    semanticEffects: submitMetadata.semanticEffects,
   });
 
   useEffect(() => {
@@ -665,6 +688,13 @@ function createInteractionInputSlot<
       enabled: !isDisabled,
       actuatorKind: "click",
       actuatorId: `${kind}:${input.key}:${targetValue}`,
+      semanticEffects: gameplayCandidateMetadata({
+        descriptor,
+        draftValues: handle.values as Readonly<Record<string, unknown>>,
+        inputKey: input.key,
+        candidateValue: targetValue,
+        intent: selection?.mode === "many" ? "toggle" : "select",
+      }).semanticEffects,
     });
     return (
       <button
@@ -722,6 +752,15 @@ function createInteractionInputSlot<
         enabled: !isDisabled,
         actuatorKind: "click",
         actuatorId: `default:${input.key}`,
+        semanticEffects: hasDefault
+          ? gameplayCandidateMetadata({
+              descriptor,
+              draftValues: handle.values as Readonly<Record<string, unknown>>,
+              inputKey: input.key,
+              candidateValue: input.defaultValue,
+              intent: "select",
+            }).semanticEffects
+          : undefined,
       });
       return (
         <button
@@ -1063,6 +1102,15 @@ function ChoiceField<
                   enabled: !isDisabled,
                   actuatorKind: "click",
                   actuatorId: `choice:${input.key}:${choiceRenderKey(choice)}`,
+                  semanticEffects: gameplayCandidateMetadata({
+                    descriptor,
+                    draftValues: handle.values as Readonly<
+                      Record<string, unknown>
+                    >,
+                    inputKey: input.key,
+                    candidateValue: choice.value,
+                    intent: "select",
+                  }).semanticEffects,
                 })}
                 onClick={() => setValue(choice.value as Params[Key])}
                 className="h-8 px-3 text-sm"
@@ -1101,6 +1149,10 @@ function ChoiceField<
             enabled: !disabled,
             actuatorKind: "click",
             actuatorId: `choice-reveal:${input.key}`,
+            preparationPatterns: gameplayPreparationPatternsForDescriptor(
+              { inputs: [input] },
+              handle.values as Readonly<Record<string, unknown>>,
+            ),
           })}
         >
           <span data-slot="select-value">
@@ -1127,9 +1179,7 @@ function ChoiceField<
               disabled={choice.disabled}
               {...gameplayActuatorAttributes({
                 descriptor,
-                draftValues: handle.values as Readonly<
-                  Record<string, unknown>
-                >,
+                draftValues: handle.values as Readonly<Record<string, unknown>>,
                 inputKey: input.key,
                 intent: "select",
                 candidateValue: choice.value,
@@ -1138,6 +1188,15 @@ function ChoiceField<
                 enabled: !disabled && !choice.disabled,
                 actuatorKind: "click",
                 actuatorId: `choice:${input.key}:${choiceRenderKey(choice)}`,
+                semanticEffects: gameplayCandidateMetadata({
+                  descriptor,
+                  draftValues: handle.values as Readonly<
+                    Record<string, unknown>
+                  >,
+                  inputKey: input.key,
+                  candidateValue: choice.value,
+                  intent: "select",
+                }).semanticEffects,
               })}
             >
               <ChoiceOptionLabel choice={choice} />
@@ -1222,9 +1281,7 @@ function ChoiceListField<
               title={choice.disabledReason ?? choice.description}
               {...gameplayActuatorAttributes({
                 descriptor,
-                draftValues: handle.values as Readonly<
-                  Record<string, unknown>
-                >,
+                draftValues: handle.values as Readonly<Record<string, unknown>>,
                 inputKey: input.key,
                 intent: "toggle",
                 candidateValue: value,
@@ -1232,6 +1289,15 @@ function ChoiceListField<
                 enabled: !isDisabled,
                 actuatorKind: "click",
                 actuatorId: `choice-list:${input.key}:${value}`,
+                semanticEffects: gameplayCandidateMetadata({
+                  descriptor,
+                  draftValues: handle.values as Readonly<
+                    Record<string, unknown>
+                  >,
+                  inputKey: input.key,
+                  candidateValue: value,
+                  intent: "toggle",
+                }).semanticEffects,
               })}
               onClick={() => toggle(value)}
               className="h-8 px-3 text-sm"
@@ -1328,6 +1394,11 @@ function ResourceMapField<
                   enabled: !(disabled || amount <= min),
                   actuatorKind: "click",
                   actuatorId: `resource-decrement:${input.key}:${resource.resourceId}`,
+                  semanticEffects: gameplayResourceMetadata({
+                    inputKey: input.key,
+                    resourceKey: resource.resourceId,
+                    delta: -1,
+                  }).semanticEffects,
                 })}
                 onClick={() => update(resource.resourceId, -1, min, max)}
               >
@@ -1356,6 +1427,11 @@ function ResourceMapField<
                   enabled: !(disabled || amount >= max),
                   actuatorKind: "click",
                   actuatorId: `resource-increment:${input.key}:${resource.resourceId}`,
+                  semanticEffects: gameplayResourceMetadata({
+                    inputKey: input.key,
+                    resourceKey: resource.resourceId,
+                    delta: 1,
+                  }).semanticEffects,
                 })}
                 onClick={() => update(resource.resourceId, 1, min, max)}
               >
@@ -1415,10 +1491,13 @@ function BoundedNumberField<
             draftValues: handle.values as Readonly<Record<string, unknown>>,
             inputKey: input.key,
             intent: "decrement",
-            candidateValue: current - step,
             enabled: !(disabled || current <= min),
             actuatorKind: "click",
             actuatorId: `bounded-decrement:${input.key}`,
+            semanticEffects: gameplayScalarStepMetadata({
+              inputKey: input.key,
+              value: Math.max(min, Math.min(max, current - step)),
+            }).semanticEffects,
           })}
           onClick={() => update(current - step)}
         >
@@ -1437,10 +1516,13 @@ function BoundedNumberField<
             draftValues: handle.values as Readonly<Record<string, unknown>>,
             inputKey: input.key,
             intent: "fill",
-            candidateValue: current,
             enabled: !disabled,
             actuatorKind: "fill",
             actuatorId: `bounded-fill:${input.key}`,
+            acceptedEffectPatterns: gameplayScalarFillMetadata({
+              inputKey: input.key,
+              domain,
+            }).acceptedEffectPatterns,
           })}
           onChange={(event) => update(Number(event.target.value))}
           className="h-9 w-[8ch] px-2 text-center text-sm md:text-sm"
@@ -1453,10 +1535,13 @@ function BoundedNumberField<
             draftValues: handle.values as Readonly<Record<string, unknown>>,
             inputKey: input.key,
             intent: "increment",
-            candidateValue: current + step,
             enabled: !(disabled || current >= max),
             actuatorKind: "click",
             actuatorId: `bounded-increment:${input.key}`,
+            semanticEffects: gameplayScalarStepMetadata({
+              inputKey: input.key,
+              value: Math.max(min, Math.min(max, current + step)),
+            }).semanticEffects,
           })}
           onClick={() => update(current + step)}
         >

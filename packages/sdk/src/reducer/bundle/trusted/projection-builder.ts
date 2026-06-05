@@ -357,6 +357,7 @@ function descriptorWithBrowserReplayDigests(
   return {
     ...descriptor,
     descriptorDigest: descriptorDigestValue,
+    actorSeat,
     draftDigest:
       descriptor.draftDigest ??
       interactionDraftDigest({
@@ -399,6 +400,7 @@ function interactionDraftDigest({
   descriptorDigest: string;
 }): string {
   return hashJson({
+    digestVersion: "interaction-draft@2",
     actorSeat,
     descriptorDigest,
     emitted: false,

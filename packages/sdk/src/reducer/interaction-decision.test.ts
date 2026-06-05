@@ -593,6 +593,7 @@ describe("trusted interaction decision pipeline", () => {
     );
     expect(oneSeatDescriptor?.draftDigest).toBe(
       nodeSha256Digest({
+        digestVersion: "interaction-draft@2",
         actorSeat: 0,
         descriptorDigest: oneSeatDescriptor?.descriptorDigest,
         emitted: false,

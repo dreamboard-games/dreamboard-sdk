@@ -11,6 +11,13 @@ import {
   decodeCanonicalCandidateValue,
   encodeCanonicalCandidateValue,
 } from "./canonical.js";
+import {
+  browserInteractionEffectPatternMatches,
+  decodeBrowserInteractionEffect,
+  decodeBrowserInteractionEffectPattern,
+  encodeBrowserInteractionEffect,
+  encodeBrowserInteractionEffectPattern,
+} from "./effects.js";
 import { createBrowserInteractionActuatorKey } from "./attributes.js";
 import { defaultBrowserInteractionRegistry } from "./registry.js";
 import type {
@@ -18,12 +25,14 @@ import type {
   BrowserInteractionActuatorKind,
   BrowserInteractionCandidateState,
   BrowserInteractionDiagnostic,
+  BrowserInteractionEffectPattern,
   BrowserInteractionEntity,
   BrowserInteractionRawRecord,
   BrowserInteractionReadiness,
   BrowserInteractionRegistry,
   BrowserInteractionSemanticSurfaceSnapshot,
   BrowserInteractionSnapshot,
+  BrowserInteractionSurfaceEffect,
   BrowserInteractionSurface,
   BrowserInteractionSurfaceSnapshot,
 } from "./types.js";
@@ -211,6 +220,43 @@ export function normalizeBrowserInteractionRecords(
       interaction.diagnostics.push(diagnostic);
       diagnostics.push(diagnostic);
     }
+    if (registered?.effectKinds) {
+      for (const effect of actuator.semanticEffects) {
+        if (!registered.effectKinds.includes(effect.kind)) {
+          const diagnostic = diagnosticFor({
+            code: "unknown-surface-effect",
+            message: `Unknown browser interaction effect '${effect.kind}' for surface '${surface}'.`,
+            surface,
+            scopeId,
+            interactionKey,
+            intent: actuator.intent,
+            actuatorId: actuator.actuatorId,
+          });
+          interaction.diagnostics.push(diagnostic);
+          diagnostics.push(diagnostic);
+        }
+      }
+      for (const pattern of [
+        ...actuator.acceptedEffectPatterns,
+        ...actuator.preparationPatterns,
+      ]) {
+        const effectKind =
+          pattern.kind === "exact" ? pattern.effect.kind : pattern.effectKind;
+        if (!registered.effectKinds.includes(effectKind)) {
+          const diagnostic = diagnosticFor({
+            code: "unknown-surface-effect",
+            message: `Unknown browser interaction effect '${effectKind}' for surface '${surface}'.`,
+            surface,
+            scopeId,
+            interactionKey,
+            intent: actuator.intent,
+            actuatorId: actuator.actuatorId,
+          });
+          interaction.diagnostics.push(diagnostic);
+          diagnostics.push(diagnostic);
+        }
+      }
+    }
     interaction.actuators.push(actuator);
   }
 
@@ -285,10 +331,89 @@ export function validateBrowserInteractionSnapshot(
       }
       diagnostics.push(
         ...diagnosticsForPreparationCycles(surface, interaction),
+        ...diagnosticsForPreparationPatternAmbiguity(surface, interaction),
+        ...diagnosticsForInvalidAcceptedPatterns(surface, interaction),
+        ...diagnosticsForGameplayEffectCompatibility(surface, interaction),
       );
     }
   }
   return diagnostics.sort(compareDiagnostic);
+}
+
+function diagnosticsForInvalidAcceptedPatterns(
+  surface: BrowserInteractionSemanticSurfaceSnapshot,
+  interaction: BrowserInteractionEntity,
+): BrowserInteractionDiagnostic[] {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  for (const actuator of interaction.actuators) {
+    for (const pattern of actuator.acceptedEffectPatterns) {
+      if (
+        pattern.kind === "match" &&
+        Object.keys(pattern.fields ?? {}).length === 0 &&
+        pattern.scalar === undefined
+      ) {
+        diagnostics.push(
+          diagnosticFor({
+            code: "invalid-effect-pattern",
+            message:
+              "Accepted-effect match patterns must be bounded by fields or scalar constraints.",
+            surface: surface.surface,
+            scopeId: surface.scopeId,
+            interactionKey: interaction.interactionKey,
+            intent: actuator.intent,
+            actuatorId: actuator.actuatorId,
+          }),
+        );
+      }
+    }
+  }
+  return diagnostics;
+}
+
+function diagnosticsForGameplayEffectCompatibility(
+  surface: BrowserInteractionSemanticSurfaceSnapshot,
+  interaction: BrowserInteractionEntity,
+): BrowserInteractionDiagnostic[] {
+  if (surface.surface !== GAMEPLAY_BROWSER_INTERACTION_SURFACE) return [];
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  for (const actuator of interaction.actuators) {
+    for (const effect of actuator.semanticEffects) {
+      if (!gameplayIntentCanPerformEffect(actuator.intent, effect.kind)) {
+        diagnostics.push(
+          diagnosticFor({
+            code: "effect-intent-incompatibility",
+            message:
+              "Gameplay browser interaction intent is incompatible with its semantic effect.",
+            surface: surface.surface,
+            scopeId: surface.scopeId,
+            interactionKey: interaction.interactionKey,
+            intent: actuator.intent,
+            actuatorId: actuator.actuatorId,
+          }),
+        );
+      }
+    }
+  }
+  return diagnostics;
+}
+
+function gameplayIntentCanPerformEffect(intent: string, effectKind: string) {
+  switch (effectKind) {
+    case "setCandidate":
+      return intent === "select" || intent === "toggle";
+    case "adjustResource":
+      return intent === "increment" || intent === "decrement";
+    case "setScalar":
+      return (
+        intent === "fill" || intent === "increment" || intent === "decrement"
+      );
+    case "commit":
+      return intent === "submit" || intent === "invoke";
+    case "invoke":
+      return intent === "invoke" || intent === "select" || intent === "toggle";
+    default:
+      return true;
+  }
 }
 
 function parseGameplayActuator(
@@ -366,6 +491,27 @@ function parseGameplayActuator(
             ),
           ),
         };
+  const semanticEffects = parseEffectList(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.semanticEffects,
+    context,
+    intent,
+    diagnostics,
+  );
+  const acceptedEffectPatterns = parseEffectPatternList(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.acceptedEffectPatterns,
+    context,
+    intent,
+    diagnostics,
+  );
+  const preparationPatterns = parseEffectPatternList(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.preparationPatterns,
+    context,
+    intent,
+    diagnostics,
+  );
 
   if (!intent) {
     diagnostics.push(
@@ -394,9 +540,88 @@ function parseGameplayActuator(
     candidateState,
     enabled,
     actuatorKind,
+    semanticEffects,
+    acceptedEffectPatterns,
+    preparationPatterns,
     prepares,
     diagnostics: diagnostics.sort(compareDiagnostic),
   };
+}
+
+function parseEffectList(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  attribute: string,
+  context: {
+    surface: string;
+    scopeId: string;
+    interactionKey: string;
+  },
+  intent: string,
+  diagnostics: BrowserInteractionDiagnostic[],
+): BrowserInteractionSurfaceEffect[] {
+  const encodedList = optionalText(attributes, attribute);
+  if (encodedList === undefined) return [];
+  try {
+    const raw = JSON.parse(encodedList) as unknown;
+    if (!Array.isArray(raw) || raw.some((item) => typeof item !== "string")) {
+      throw new Error("Expected encoded effect array.");
+    }
+    return raw
+      .map((encoded) => decodeBrowserInteractionEffect(encoded))
+      .sort((a, b) =>
+        encodeBrowserInteractionEffect(a).localeCompare(
+          encodeBrowserInteractionEffect(b),
+        ),
+      );
+  } catch {
+    diagnostics.push(
+      diagnosticFor({
+        code: "invalid-effect-payload",
+        message: "Invalid browser interaction semantic effect payload.",
+        ...context,
+        intent,
+      }),
+    );
+    return [];
+  }
+}
+
+function parseEffectPatternList(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  attribute: string,
+  context: {
+    surface: string;
+    scopeId: string;
+    interactionKey: string;
+  },
+  intent: string,
+  diagnostics: BrowserInteractionDiagnostic[],
+): BrowserInteractionEffectPattern[] {
+  const encodedList = optionalText(attributes, attribute);
+  if (encodedList === undefined) return [];
+  try {
+    const raw = JSON.parse(encodedList) as unknown;
+    if (!Array.isArray(raw) || raw.some((item) => typeof item !== "string")) {
+      throw new Error("Expected encoded effect pattern array.");
+    }
+    return raw
+      .map((encoded) => decodeBrowserInteractionEffectPattern(encoded))
+      .sort((a, b) =>
+        encodeBrowserInteractionEffectPattern(a).localeCompare(
+          encodeBrowserInteractionEffectPattern(b),
+        ),
+      );
+  } catch {
+    diagnostics.push(
+      diagnosticFor({
+        code: "invalid-effect-pattern",
+        message: "Invalid browser interaction semantic effect pattern.",
+        ...context,
+        intent,
+      }),
+    );
+    return [];
+  }
 }
 
 function parseCandidate(
@@ -486,6 +711,9 @@ function diagnosticsForPreparationCycles(
   interaction: BrowserInteractionEntity,
 ): BrowserInteractionDiagnostic[] {
   const diagnostics: BrowserInteractionDiagnostic[] = [];
+  diagnostics.push(
+    ...diagnosticsForEffectPreparationCycles(surface, interaction),
+  );
   const actuators = new Map<string, BrowserInteractionActuator>();
   for (const actuator of interaction.actuators) {
     actuators.set(
@@ -531,6 +759,82 @@ function diagnosticsForPreparationCycles(
           target: current.prepares,
         }),
       );
+    }
+  }
+  return diagnostics;
+}
+
+function diagnosticsForEffectPreparationCycles(
+  surface: BrowserInteractionSemanticSurfaceSnapshot,
+  interaction: BrowserInteractionEntity,
+): BrowserInteractionDiagnostic[] {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  const actuatorKeys = new Map<BrowserInteractionActuator, string>();
+  interaction.actuators.forEach((actuator, index) => {
+    actuatorKeys.set(actuator, `${actuator.actuatorId}\0${index}`);
+  });
+  for (const actuator of interaction.actuators) {
+    const visited = new Set<string>();
+    let current: BrowserInteractionActuator | undefined = actuator;
+    while (current) {
+      const key = actuatorKeys.get(current);
+      if (!key) break;
+      if (visited.has(key)) {
+        diagnostics.push(
+          diagnosticFor({
+            code: "preparation-cycle",
+            message: `Semantic preparation cycle detected for actuator '${current.actuatorId}'.`,
+            surface: surface.surface,
+            scopeId: surface.scopeId,
+            interactionKey: interaction.interactionKey,
+            intent: current.intent,
+            actuatorId: current.actuatorId,
+          }),
+        );
+        break;
+      }
+      visited.add(key);
+      current = interaction.actuators.find((candidate) =>
+        current?.preparationPatterns.some((pattern) =>
+          candidate.semanticEffects.some((effect) =>
+            browserInteractionEffectPatternMatches(pattern, effect),
+          ),
+        ),
+      );
+    }
+  }
+  return diagnostics;
+}
+
+function diagnosticsForPreparationPatternAmbiguity(
+  surface: BrowserInteractionSemanticSurfaceSnapshot,
+  interaction: BrowserInteractionEntity,
+): BrowserInteractionDiagnostic[] {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  for (const target of interaction.actuators) {
+    for (const effect of target.semanticEffects) {
+      const matches = interaction.actuators.filter((actuator) =>
+        actuator.preparationPatterns.some((pattern) =>
+          browserInteractionEffectPatternMatches(pattern, effect),
+        ),
+      );
+      const uniqueActuatorIds = new Set(
+        matches.map((match) => match.actuatorId),
+      );
+      if (uniqueActuatorIds.size > 1) {
+        diagnostics.push(
+          diagnosticFor({
+            code: "ambiguous-preparation-pattern",
+            message:
+              "Multiple preparation patterns can prepare the same semantic effect.",
+            surface: surface.surface,
+            scopeId: surface.scopeId,
+            interactionKey: interaction.interactionKey,
+            intent: target.intent,
+            actuatorId: target.actuatorId,
+          }),
+        );
+      }
     }
   }
   return diagnostics;

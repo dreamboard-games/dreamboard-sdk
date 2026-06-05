@@ -34,6 +34,7 @@ import {
   isResolvedTargetDomain,
   isTargetDomain,
   isManyTargetSelectable,
+  resolveInputDomain,
 } from "../utils/interaction-inputs.js";
 import {
   getInteractionDraftReadiness,
@@ -45,6 +46,12 @@ import {
   interactionUnavailableReason,
   isInteractionAvailable,
 } from "../utils/interaction-status.js";
+import {
+  gameplayCandidateMetadata,
+  gameplayPreparationPatternsForDescriptor,
+  gameplayScalarFillMetadata,
+  gameplaySubmitMetadata,
+} from "../utils/browser-interaction-effects.js";
 import { interactionLabel } from "../utils/interaction-labels.js";
 import {
   composeEventHandlers,
@@ -107,6 +114,9 @@ function gameplayActuatorAttributes({
   intent,
   candidateValue,
   candidateState,
+  semanticEffects,
+  acceptedEffectPatterns,
+  preparationPatterns,
   enabled,
   actuatorKind,
   actuatorId,
@@ -116,6 +126,9 @@ function gameplayActuatorAttributes({
   intent: GameplayBrowserInteractionIntent;
   candidateValue?: unknown;
   candidateState?: "selected" | "unselected" | "mixed";
+  semanticEffects?: GameplayActuatorAttributesInput["semanticEffects"];
+  acceptedEffectPatterns?: GameplayActuatorAttributesInput["acceptedEffectPatterns"];
+  preparationPatterns?: GameplayActuatorAttributesInput["preparationPatterns"];
   enabled: boolean;
   actuatorKind: GameplayActuatorAttributesInput["actuatorKind"];
   actuatorId: string;
@@ -137,6 +150,9 @@ function gameplayActuatorAttributes({
     ...(inputKey !== undefined ? { inputKey } : {}),
     ...(candidateValue !== undefined ? { candidateValue } : {}),
     ...(candidateState !== undefined ? { candidateState } : {}),
+    ...(semanticEffects !== undefined ? { semanticEffects } : {}),
+    ...(acceptedEffectPatterns !== undefined ? { acceptedEffectPatterns } : {}),
+    ...(preparationPatterns !== undefined ? { preparationPatterns } : {}),
   });
 }
 
@@ -214,7 +230,11 @@ function ResolvedInteractionRoot({
     ...(descriptor.draftDigest !== undefined
       ? { draftDigest: descriptor.draftDigest }
       : {}),
-    readiness: available ? (handle.isReady ? "ready" : "blocked") : "unavailable",
+    readiness: available
+      ? handle.isReady
+        ? "ready"
+        : "blocked"
+      : "unavailable",
   });
   return (
     <InteractionContext.Provider value={value}>
@@ -519,6 +539,10 @@ export function InteractionTrigger({
           enabled: !isDisabled,
           actuatorKind: "click",
           actuatorId: "primitive-trigger",
+          preparationPatterns: gameplayPreparationPatternsForDescriptor(
+            descriptor,
+            (handle?.values ?? {}) as Readonly<Record<string, unknown>>,
+          ),
         })
       : {}),
     disabled: isDisabled,
@@ -669,6 +693,9 @@ export function InteractionSubmit({
   const gameActionError = useGameActionError();
   const isSubmitting = handle?.status === "submitting";
   const hasExplicitParams = params !== undefined;
+  const submitMetadata = descriptor
+    ? gameplaySubmitMetadata({ descriptor, explicitParams: hasExplicitParams })
+    : null;
   const available = isInteractionAvailable(descriptor);
   const isDisabled =
     disabled === true ||
@@ -681,13 +708,11 @@ export function InteractionSubmit({
     ...(descriptor
       ? gameplayActuatorAttributes({
           descriptor,
-          intent:
-            descriptor.inputs.length === 0 || hasExplicitParams
-              ? "invoke"
-              : "submit",
+          intent: submitMetadata?.intent ?? "submit",
           enabled: !isDisabled,
           actuatorKind: "click",
           actuatorId: "primitive-submit",
+          semanticEffects: submitMetadata?.semanticEffects,
         })
       : {}),
     disabled: isDisabled,
@@ -736,6 +761,21 @@ export function InteractionInput({
   const { descriptor, handle } = useInteractionPrimitiveContext();
   const value = handle?.draft[name];
   const isDisabled = disabled === true || !isInteractionAvailable(descriptor);
+  const inputDescriptor = descriptor ? inputByKey(descriptor, name) : undefined;
+  const resolvedInputDescriptor =
+    inputDescriptor && handle
+      ? resolveInputDomain(
+          inputDescriptor,
+          handle.values as Readonly<Record<string, unknown>>,
+        )
+      : undefined;
+  const scalarFillMetadata =
+    resolvedInputDescriptor?.domain.type === "boundedNumber"
+      ? gameplayScalarFillMetadata({
+          inputKey: name,
+          domain: resolvedInputDescriptor.domain,
+        })
+      : undefined;
   return renderPrimitive("input", {
     ...props,
     name,
@@ -744,10 +784,10 @@ export function InteractionInput({
           descriptor,
           inputKey: name,
           intent: "fill",
-          candidateValue: value,
           enabled: !isDisabled,
           actuatorKind: "fill",
           actuatorId: `primitive-input:${name}`,
+          acceptedEffectPatterns: scalarFillMetadata?.acceptedEffectPatterns,
         })
       : {}),
     disabled: isDisabled,
@@ -957,6 +997,16 @@ export function InteractionCardInput<
           enabled: !isDisabled,
           actuatorKind: "click",
           actuatorId: `primitive-card:${input}:${cardId ?? "missing"}`,
+          semanticEffects:
+            cardId !== undefined
+              ? gameplayCandidateMetadata({
+                  descriptor,
+                  draftValues: liveDraft,
+                  inputKey: input,
+                  candidateValue: cardId,
+                  intent: selection?.mode === "many" ? "toggle" : "select",
+                }).semanticEffects
+              : undefined,
         })
       : {}),
     disabled: isDisabled,

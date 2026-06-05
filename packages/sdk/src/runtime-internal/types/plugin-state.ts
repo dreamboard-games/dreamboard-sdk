@@ -390,6 +390,8 @@ interface InteractionDescriptorBase<Key extends string = string> {
   commit: InteractionCommitPolicy;
   /** Canonical descriptor digest used by browser replay/protocol tooling when projected by the host. */
   descriptorDigest?: string;
+  /** Explicit authoring/runtime actor seat used by browser replay draft digests. */
+  actorSeat?: number;
   /** Canonical draft digest used by browser replay/protocol tooling when projected by the host. */
   draftDigest?: string;
   /** Source zone id for zone-scoped interactions (e.g., cardInput). */

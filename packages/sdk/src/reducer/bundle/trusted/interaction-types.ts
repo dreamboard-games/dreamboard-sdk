@@ -55,6 +55,7 @@ type InteractionDescriptorBaseShape<
   interactionId: InteractionId;
   commit: InteractionCommitPolicyShape;
   descriptorDigest?: string;
+  actorSeat?: number;
   draftDigest?: string;
   zoneId?: ZoneId;
   zoneIds?: readonly ZoneId[];

@@ -45,6 +45,7 @@ import {
   type BrowserInteractionAttributeMap,
 } from "../../browser-interaction/index.js";
 import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
+import { gameplayCandidateMetadata } from "../utils/browser-interaction-effects.js";
 
 type BoardContextValue = BoardInteractionsContext;
 
@@ -500,6 +501,13 @@ function boardTargetBrowserAttributes({
     candidateState: isBoardTargetSelected(draft[inputKey], targetId)
       ? "selected"
       : "unselected",
+    semanticEffects: gameplayCandidateMetadata({
+      descriptor,
+      draftValues: draft,
+      inputKey,
+      candidateValue: targetId,
+      intent: "select",
+    }).semanticEffects,
   });
 }
 

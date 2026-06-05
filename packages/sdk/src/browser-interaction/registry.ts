@@ -1,4 +1,5 @@
 import {
+  GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS,
   GAMEPLAY_BROWSER_INTERACTION_INTENTS,
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "./constants.js";
@@ -31,6 +32,7 @@ export const gameplayBrowserInteractionSurface =
   defineBrowserInteractionSurface({
     surface: GAMEPLAY_BROWSER_INTERACTION_SURFACE,
     intents: GAMEPLAY_BROWSER_INTERACTION_INTENTS,
+    effectKinds: GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS,
   });
 
 export function createBrowserInteractionRegistry(
@@ -47,9 +49,14 @@ export function createBrowserInteractionRegistry(
     if (existing) {
       const existingIntents = existing.intents.join(",");
       const nextIntents = definition.intents.join(",");
-      if (existingIntents !== nextIntents) {
+      const existingEffectKinds = (existing.effectKinds ?? []).join(",");
+      const nextEffectKinds = (definition.effectKinds ?? []).join(",");
+      if (
+        existingIntents !== nextIntents ||
+        existingEffectKinds !== nextEffectKinds
+      ) {
         throw new Error(
-          `Browser interaction surface '${definition.surface}' is already registered with a different intent vocabulary.`,
+          `Browser interaction surface '${definition.surface}' is already registered with a different intent vocabulary or effect vocabulary.`,
         );
       }
       continue;

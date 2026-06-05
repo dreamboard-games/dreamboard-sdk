@@ -380,7 +380,7 @@ export function createIngressRuntimeCodec<
       return {
         domain: { ...state.domain },
         runtime: state.runtime,
-      } as RawReducerSessionState;
+      } as unknown as RawReducerSessionState;
     },
     parsePlayerId(rawPlayerId: string) {
       return safeParseOrThrow(playerIdSchema, rawPlayerId, "playerId");

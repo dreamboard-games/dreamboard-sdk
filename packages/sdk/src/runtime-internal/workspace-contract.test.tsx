@@ -2,9 +2,11 @@ import { afterEach, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { PluginRuntime } from "./components/PluginRuntime.js";
+import { InteractionForm } from "./components/InteractionForm.js";
 import { createDreamboardUI } from "./ui-contract.js";
 import { createWorkspaceUIContract } from "./workspace-contract.js";
 import { Board } from "./primitives/board.js";
+import type { InteractionHandle } from "./hooks/useInteractionHandle.js";
 import type { PluginRuntimeAPI } from "./runtime/createPluginRuntimeAPI.js";
 import type { PluginStateSnapshot } from "./types/plugin-state.js";
 import { interactionDraftDigestForValues } from "./utils/interaction-draft-digest.js";
@@ -36,6 +38,7 @@ function makeSnapshot(): PluginStateSnapshot<
           interactionId: "placeCard",
           kind: "action",
           descriptorDigest: "sha256:descriptor",
+          actorSeat: 0,
           draftDigest: "sha256:draft",
           inputs: [
             {
@@ -96,6 +99,7 @@ function makeSnapshot(): PluginStateSnapshot<
                 interactionId: "placeCard",
                 kind: "action",
                 descriptorDigest: "sha256:descriptor",
+                actorSeat: 0,
                 draftDigest: "sha256:draft",
                 inputs: [
                   {
@@ -310,7 +314,8 @@ test("generated interaction arms render semantic browser replay digests", () => 
   expect(html).toContain(
     'data-dreamboard-descriptor-digest="sha256:descriptor"',
   );
-  expect(html).toContain('data-dreamboard-draft-digest="sha256:draft"');
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:');
+  expect(html).toContain("data-dreamboard-preparation-patterns=");
 });
 
 test("UI root emits the semantic projection digest marker", () => {
@@ -427,6 +432,7 @@ test("board targets render semantic browser replay select actuators", () => {
       interactionId: "placeCard",
       kind: "action",
       descriptorDigest: "sha256:descriptor",
+      actorSeat: 0,
       draftDigest: "sha256:draft",
       inputs: [
         {
@@ -470,9 +476,84 @@ test("board targets render semantic browser replay select actuators", () => {
   expect(html).toContain(
     'data-dreamboard-descriptor-digest="sha256:descriptor"',
   );
-  expect(html).toContain('data-dreamboard-draft-digest="sha256:draft"');
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:');
   expect(html).toContain('data-dreamboard-candidate-state="unselected"');
   expect(html).toContain("data-dreamboard-candidate-value=");
+  expect(html).toContain("data-dreamboard-semantic-effects=");
+  expect(html).toContain("setCandidate");
+});
+
+test("default interaction form controls emit exact semantic effects and bounded fill patterns", () => {
+  const descriptor = {
+    phaseName: "play",
+    interactionKey: "play.configure",
+    interactionId: "configure",
+    kind: "action",
+    descriptorDigest: "sha256:descriptor",
+    actorSeat: 0,
+    draftDigest: "sha256:draft",
+    inputs: [
+      {
+        key: "mode",
+        kind: "choice",
+        domain: {
+          type: "choice",
+          choices: [
+            { value: "fast", label: "Fast" },
+            { value: "slow", label: "Slow" },
+          ],
+        },
+      },
+      {
+        key: "bid",
+        kind: "number",
+        domain: {
+          type: "boundedNumber",
+          min: 1,
+          max: 5,
+          step: 1,
+        },
+      },
+    ],
+    commit: { mode: "manual" },
+    availability: { status: "available" },
+  } as const;
+  const handle = {
+    descriptor,
+    commit: descriptor.commit,
+    submit: async () => undefined,
+    validate: async () => undefined,
+    validateDraft: () => ({
+      ok: true,
+      params: { mode: "fast", bid: 2 },
+      fieldErrors: {},
+      formErrors: [],
+      missing: [],
+    }),
+    validateDraftServer: async () => undefined,
+    submitDraft: async () => undefined,
+    available: true,
+    status: "open",
+    draft: { mode: "fast", bid: 2 },
+    values: { mode: "fast", bid: 2 },
+    setInput: () => undefined,
+    clearInput: () => undefined,
+    isReady: true,
+    isArmed: false,
+    arm: () => undefined,
+    disarm: () => undefined,
+  } satisfies InteractionHandle<Record<string, unknown>>;
+
+  const html = renderToString(
+    createElement(InteractionForm, { descriptor, handle, accordion: false }),
+  );
+
+  expect(html).toContain("data-dreamboard-semantic-effects=");
+  expect(html).toContain("setCandidate");
+  expect(html).toContain("setScalar");
+  expect(html).toContain("commit");
+  expect(html).toContain("data-dreamboard-accepted-effect-patterns=");
+  expect(html).not.toContain('data-dreamboard-candidate-value="2"');
 });
 
 test("board target draft digests reflect live draft values", () => {
@@ -483,8 +564,9 @@ test("board target draft digests reflect live draft values", () => {
     kind: "action",
     descriptorDigest:
       "sha256:842f2aedb8cb3e72e2239e9db8bcd26396a604c1c7293b4567819db201bea794",
+    actorSeat: 0,
     draftDigest:
-      "sha256:57a4cda8a02d3f3650bb41b5958ec16390e17c7f6f6cec424456343a225a6b23",
+      "sha256:40f0e338c62be1c29b502dcd949cff1297e61d9b3e13feaff5f3bd82a144b0f8",
     inputs: [
       {
         key: "spaceId",
@@ -520,7 +602,7 @@ test("board target draft digests reflect live draft values", () => {
       spaceId: "h-0-0",
     }),
   ).toBe(
-    "sha256:4fb255cc3c709db5ae0c0d25ee3c8a1a664332c8c67d2d4762c37d53d995a3ed",
+    "sha256:c50299355136b07c6dfaf14cf8f42b178e95f2addc9948ebd8ffe99dd45893de",
   );
 });
 

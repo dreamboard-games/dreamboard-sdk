@@ -35,6 +35,7 @@ import {
   type BrowserInteractionAttributeMap,
 } from "../../browser-interaction/index.js";
 import { interactionDraftDigestForValues } from "../utils/interaction-draft-digest.js";
+import { gameplayCandidateMetadata } from "../utils/browser-interaction-effects.js";
 
 export type BoardEligibleTargets = Readonly<
   Record<BoardTargetKind, ReadonlySet<string>>
@@ -393,14 +394,7 @@ export function useBoardInteractions<I extends string = string>(
         );
         if (!inputKey) return [];
         const input = inputByTarget(descriptor, targetKind, targetId, draft);
-        if (
-          input &&
-          !isTargetSelectable(
-            input,
-            draft,
-            targetId,
-          )
-        ) {
+        if (input && !isTargetSelectable(input, draft, targetId)) {
           return [];
         }
         const targets = eligibleTargetsForInput(descriptor, inputKey, draft);
@@ -685,6 +679,13 @@ function boardTargetBrowserAttributes({
     candidateState: isBoardTargetSelected(draft[inputKey], targetId)
       ? "selected"
       : "unselected",
+    semanticEffects: gameplayCandidateMetadata({
+      descriptor,
+      draftValues: draft,
+      inputKey,
+      candidateValue: targetId,
+      intent: "select",
+    }).semanticEffects,
   });
 }
 

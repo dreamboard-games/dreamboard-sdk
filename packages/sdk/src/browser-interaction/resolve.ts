@@ -1,5 +1,9 @@
 import { encodeCanonicalCandidateValue } from "./canonical.js";
 import {
+  browserInteractionEffectPatternMatches,
+  encodeBrowserInteractionEffect,
+} from "./effects.js";
+import {
   actuatorIdentityKey,
   isSemanticSurfaceSnapshot,
   targetIdentityKey,
@@ -8,11 +12,14 @@ import {
 import type {
   BrowserInteractionActuator,
   BrowserInteractionDiagnostic,
+  BrowserInteractionEffectRequest,
+  BrowserInteractionEffectResolution,
   BrowserInteractionEntity,
   BrowserInteractionIntentRequest,
   BrowserInteractionResolution,
   BrowserInteractionSemanticSurfaceSnapshot,
   BrowserInteractionSnapshot,
+  BrowserInteractionSurfaceEffect,
 } from "./types.js";
 
 export function resolveBrowserInteractionIntent(
@@ -142,6 +149,145 @@ export function resolveBrowserInteractionIntent(
   };
 }
 
+export function resolveBrowserInteractionEffect(
+  snapshot: BrowserInteractionSnapshot,
+  request: BrowserInteractionEffectRequest,
+): BrowserInteractionEffectResolution {
+  const snapshotDiagnostics = [
+    ...snapshot.diagnostics,
+    ...validateBrowserInteractionSnapshot(snapshot),
+  ];
+  if (
+    snapshotDiagnostics.some((diagnostic) => diagnostic.severity === "error")
+  ) {
+    return {
+      ok: false,
+      code: "invalid-snapshot",
+      diagnostics: snapshotDiagnostics,
+    };
+  }
+
+  const effectDiagnostics = validateEffectRequest(request.effect, request);
+  if (effectDiagnostics.length > 0) {
+    return {
+      ok: false,
+      code: "invalid-effect",
+      diagnostics: effectDiagnostics,
+    };
+  }
+
+  const surfaces = matchingSurfaces(snapshot, request);
+  const matches = collectInteractionMatches(surfaces, request);
+  const exactMatches = matches.filter((match) =>
+    match.actuator.semanticEffects.some(
+      (effect) =>
+        encodeBrowserInteractionEffect(effect) ===
+        encodeBrowserInteractionEffect(request.effect),
+    ),
+  );
+  const enabledExactMatches = exactMatches.filter(
+    (match) => match.actuator.enabled,
+  );
+  const actionableExactMatches =
+    request.allowDisabled === true ? exactMatches : enabledExactMatches;
+
+  if (actionableExactMatches.length === 1) {
+    const match = actionableExactMatches[0];
+    if (!match) throw new Error("unreachable browser effect match");
+    return effectSuccess(match, request.effect, "exact");
+  }
+
+  if (actionableExactMatches.length > 1) {
+    return effectAmbiguous(
+      actionableExactMatches,
+      "duplicate-enabled-effect-actuator",
+      "Browser interaction effect resolved to multiple exact actuators.",
+    );
+  }
+
+  if (exactMatches.length > 0 && enabledExactMatches.length === 0) {
+    return effectUnavailable(
+      request,
+      "disabled-effect-actuator",
+      "Browser interaction effect exists but has no enabled actuator.",
+    );
+  }
+
+  const acceptedMatches = matches.filter((match) =>
+    match.actuator.acceptedEffectPatterns.some((pattern) =>
+      browserInteractionEffectPatternMatches(pattern, request.effect),
+    ),
+  );
+  const enabledAcceptedMatches = acceptedMatches.filter(
+    (match) => match.actuator.enabled,
+  );
+  const actionableAcceptedMatches =
+    request.allowDisabled === true ? acceptedMatches : enabledAcceptedMatches;
+
+  if (actionableAcceptedMatches.length === 1) {
+    const match = actionableAcceptedMatches[0];
+    if (!match) throw new Error("unreachable browser accepted effect match");
+    return effectSuccess(match, request.effect, "accepted-pattern");
+  }
+
+  if (actionableAcceptedMatches.length > 1) {
+    return effectAmbiguous(
+      actionableAcceptedMatches,
+      "duplicate-accepted-effect-pattern-match",
+      "Browser interaction effect matched multiple accepted-effect patterns.",
+    );
+  }
+
+  if (acceptedMatches.length > 0 && enabledAcceptedMatches.length === 0) {
+    return effectUnavailable(
+      request,
+      "disabled-effect-actuator",
+      "Browser interaction effect pattern exists but has no enabled actuator.",
+    );
+  }
+
+  const preparation = findEffectPreparationChain(surfaces, request);
+  if (preparation.ok) {
+    return {
+      ok: false,
+      code: "preparation-required",
+      diagnostics: [
+        diagnosticFor({
+          code: "unavailable-actuator",
+          message:
+            "Requested browser interaction effect requires preparation before its actuator is available.",
+          surface: request.surface,
+          scopeId: request.scopeId,
+          interactionKey: request.interactionKey,
+        }),
+      ],
+      preparation: preparation.preparation,
+    };
+  }
+  if (preparation.diagnostics.length > 0) {
+    return {
+      ok: false,
+      code: "ambiguous",
+      diagnostics: preparation.diagnostics,
+    };
+  }
+
+  return {
+    ok: false,
+    code: "not-found",
+    diagnostics: [
+      diagnosticFor({
+        code: "missing-effect",
+        message:
+          "Browser interaction effect is not present in the current snapshot.",
+        surface: request.surface,
+        scopeId: request.scopeId,
+        interactionKey: request.interactionKey,
+      }),
+    ],
+  };
+}
+
 function actuatorMatchesRequest(
   actuator: BrowserInteractionActuator,
   request: BrowserInteractionIntentRequest,
@@ -251,6 +397,196 @@ function interactionMatchesRequest(
     (request.interactionId === undefined ||
       interaction.interactionId === request.interactionId)
   );
+}
+
+function matchingSurfaces(
+  snapshot: BrowserInteractionSnapshot,
+  request: Pick<BrowserInteractionEffectRequest, "surface" | "scopeId">,
+): BrowserInteractionSemanticSurfaceSnapshot[] {
+  return snapshot.surfaces.filter(
+    (surface): surface is BrowserInteractionSemanticSurfaceSnapshot =>
+      isSemanticSurfaceSnapshot(surface) &&
+      surface.surface === request.surface &&
+      (request.scopeId === undefined || surface.scopeId === request.scopeId),
+  );
+}
+
+function collectInteractionMatches(
+  surfaces: readonly BrowserInteractionSemanticSurfaceSnapshot[],
+  request: Pick<
+    BrowserInteractionEffectRequest,
+    "interactionKey" | "interactionId"
+  >,
+) {
+  return surfaces.flatMap((surface) =>
+    surface.interactions.flatMap((interaction) => {
+      if (
+        request.interactionKey !== undefined &&
+        interaction.interactionKey !== request.interactionKey
+      ) {
+        return [];
+      }
+      if (
+        request.interactionId !== undefined &&
+        interaction.interactionId !== request.interactionId
+      ) {
+        return [];
+      }
+      return interaction.actuators.map((actuator) => ({
+        surface,
+        interaction,
+        actuator,
+      }));
+    }),
+  );
+}
+
+function effectSuccess(
+  match: {
+    readonly surface: BrowserInteractionSemanticSurfaceSnapshot;
+    readonly interaction: BrowserInteractionEntity;
+    readonly actuator: BrowserInteractionActuator;
+  },
+  effect: BrowserInteractionSurfaceEffect,
+  kind: "exact" | "accepted-pattern",
+): BrowserInteractionEffectResolution {
+  return {
+    ok: true,
+    actuator: match.actuator,
+    surface: match.surface.surface,
+    scopeId: match.surface.scopeId,
+    interactionKey: match.interaction.interactionKey,
+    match: kind,
+    effect,
+    diagnostics: [],
+  };
+}
+
+function effectAmbiguous(
+  matches: readonly {
+    readonly surface: BrowserInteractionSemanticSurfaceSnapshot;
+    readonly interaction: BrowserInteractionEntity;
+    readonly actuator: BrowserInteractionActuator;
+  }[],
+  code:
+    | "duplicate-enabled-effect-actuator"
+    | "duplicate-accepted-effect-pattern-match",
+  message: string,
+): BrowserInteractionEffectResolution {
+  return {
+    ok: false,
+    code: "ambiguous",
+    diagnostics: matches.map((match) =>
+      diagnosticFor({
+        code,
+        message,
+        surface: match.surface.surface,
+        scopeId: match.surface.scopeId,
+        interactionKey: match.interaction.interactionKey,
+        intent: match.actuator.intent,
+        actuatorId: match.actuator.actuatorId,
+      }),
+    ),
+  };
+}
+
+function effectUnavailable(
+  request: BrowserInteractionEffectRequest,
+  code: "disabled-effect-actuator",
+  message: string,
+): BrowserInteractionEffectResolution {
+  return {
+    ok: false,
+    code: "unavailable",
+    diagnostics: [
+      diagnosticFor({
+        code,
+        message,
+        surface: request.surface,
+        scopeId: request.scopeId,
+        interactionKey: request.interactionKey,
+      }),
+    ],
+  };
+}
+
+function findEffectPreparationChain(
+  surfaces: readonly BrowserInteractionSemanticSurfaceSnapshot[],
+  request: BrowserInteractionEffectRequest,
+):
+  | {
+      readonly ok: true;
+      readonly preparation: readonly BrowserInteractionActuator[];
+    }
+  | {
+      readonly ok: false;
+      readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+    } {
+  const matches = collectInteractionMatches(surfaces, request).filter((match) =>
+    match.actuator.preparationPatterns.some((pattern) =>
+      browserInteractionEffectPatternMatches(pattern, request.effect),
+    ),
+  );
+  const enabledMatches = matches.filter((match) => match.actuator.enabled);
+  if (enabledMatches.length === 1) {
+    const match = enabledMatches[0];
+    if (!match) return { ok: false, diagnostics: [] };
+    return { ok: true, preparation: [match.actuator] };
+  }
+  if (enabledMatches.length > 1) {
+    return {
+      ok: false,
+      diagnostics: enabledMatches.map((match) =>
+        diagnosticFor({
+          code: "ambiguous-preparation-pattern",
+          message:
+            "Browser interaction effect resolved to multiple preparation actuators.",
+          surface: match.surface.surface,
+          scopeId: match.surface.scopeId,
+          interactionKey: match.interaction.interactionKey,
+          intent: match.actuator.intent,
+          actuatorId: match.actuator.actuatorId,
+        }),
+      ),
+    };
+  }
+  return { ok: false, diagnostics: [] };
+}
+
+function validateEffectRequest(
+  effect: BrowserInteractionSurfaceEffect,
+  request: Pick<
+    BrowserInteractionEffectRequest,
+    "surface" | "scopeId" | "interactionKey"
+  >,
+): readonly BrowserInteractionDiagnostic[] {
+  if (!effect || typeof effect.kind !== "string" || effect.kind.length === 0) {
+    return [
+      diagnosticFor({
+        code: "invalid-effect-payload",
+        message: "Browser interaction effect requires a string kind.",
+        surface: request.surface,
+        scopeId: request.scopeId,
+        interactionKey: request.interactionKey,
+      }),
+    ];
+  }
+  if (effect.kind === "setScalar") {
+    const value = effect.value;
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return [
+        diagnosticFor({
+          code: "invalid-scalar-argument",
+          message:
+            "setScalar browser interaction effects require a finite value.",
+          surface: request.surface,
+          scopeId: request.scopeId,
+          interactionKey: request.interactionKey,
+        }),
+      ];
+    }
+  }
+  return [];
 }
 
 function diagnosticFor(

@@ -1,7 +1,7 @@
 export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME =
   "dreamboard-browser-interaction" as const;
 
-export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION = "1.0.0" as const;
+export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION = "2.0.0" as const;
 
 export const BROWSER_INTERACTION_ATTRIBUTES = {
   protocol: "data-dreamboard-browser-protocol",
@@ -20,6 +20,9 @@ export const BROWSER_INTERACTION_ATTRIBUTES = {
   actuatorKind: "data-dreamboard-actuator-kind",
   enabled: "data-dreamboard-actuator-enabled",
   actuatorId: "data-dreamboard-actuator-id",
+  semanticEffects: "data-dreamboard-semantic-effects",
+  acceptedEffectPatterns: "data-dreamboard-accepted-effect-patterns",
+  preparationPatterns: "data-dreamboard-preparation-patterns",
   preparesIntent: "data-dreamboard-prepares-intent",
   preparesInputKey: "data-dreamboard-prepares-input-key",
   preparesCandidateValue: "data-dreamboard-prepares-candidate-value",
@@ -44,6 +47,14 @@ export const GAMEPLAY_BROWSER_INTERACTION_INTENTS = [
   "decrement",
   "fill",
   "submit",
+] as const;
+
+export const GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS = [
+  "setCandidate",
+  "adjustResource",
+  "setScalar",
+  "commit",
+  "invoke",
 ] as const;
 
 export const BROWSER_INTERACTION_READINESS_VALUES = [

@@ -3,6 +3,7 @@ import type {
   BROWSER_INTERACTION_CANDIDATE_STATES,
   BROWSER_INTERACTION_READINESS_VALUES,
   BROWSER_INTERACTION_RECORD_ROLES,
+  GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS,
   GAMEPLAY_BROWSER_INTERACTION_INTENTS,
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "./constants.js";
@@ -16,6 +17,8 @@ export type GameplayBrowserInteractionSurface =
   typeof GAMEPLAY_BROWSER_INTERACTION_SURFACE;
 export type GameplayBrowserInteractionIntent =
   (typeof GAMEPLAY_BROWSER_INTERACTION_INTENTS)[number];
+export type GameplayBrowserInteractionEffectKind =
+  (typeof GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS)[number];
 export type BrowserInteractionReadiness =
   (typeof BROWSER_INTERACTION_READINESS_VALUES)[number];
 export type BrowserInteractionCandidateState =
@@ -25,22 +28,92 @@ export type BrowserInteractionActuatorKind =
 
 export interface BrowserInteractionProtocolIdentity {
   readonly name: "dreamboard-browser-interaction";
-  readonly version: "1.0.0";
+  readonly version: "2.0.0";
 }
+
+export type BrowserInteractionSurfaceEffect = {
+  readonly kind: string;
+  readonly [key: string]: CanonicalBrowserInteractionValue;
+};
+
+export interface BrowserInteractionScalarPattern {
+  readonly field: string;
+  readonly min?: number;
+  readonly max?: number;
+  readonly integer?: boolean;
+}
+
+export type BrowserInteractionEffectPattern<
+  Effect extends BrowserInteractionSurfaceEffect =
+    BrowserInteractionSurfaceEffect,
+> =
+  | {
+      readonly kind: "exact";
+      readonly effect: Effect;
+    }
+  | {
+      readonly kind: "match";
+      readonly effectKind: Effect["kind"] & string;
+      readonly fields?: Readonly<
+        Record<string, CanonicalBrowserInteractionValue>
+      >;
+      readonly scalar?: BrowserInteractionScalarPattern;
+    };
+
+export type GameplaySemanticEffect =
+  | {
+      readonly kind: "setCandidate";
+      readonly inputKey: string;
+      readonly candidateValue: CanonicalBrowserInteractionValue;
+      readonly beforeSelected: boolean;
+      readonly afterSelected: boolean;
+    }
+  | {
+      readonly kind: "adjustResource";
+      readonly inputKey: string;
+      readonly resourceKey: CanonicalBrowserInteractionValue;
+      readonly delta: -1 | 1;
+    }
+  | {
+      readonly kind: "setScalar";
+      readonly inputKey: string;
+      readonly value: number;
+    }
+  | {
+      readonly kind: "commit";
+    }
+  | {
+      readonly kind: "invoke";
+    };
+
+export type GameplaySemanticEffectPattern =
+  BrowserInteractionEffectPattern<GameplaySemanticEffect>;
 
 export interface BrowserInteractionDiagnostic {
   readonly code:
     | "ambiguous-actuator"
+    | "ambiguous-effect-match"
+    | "ambiguous-preparation-pattern"
+    | "disabled-effect-actuator"
+    | "duplicate-accepted-effect-pattern-match"
     | "duplicate-enabled-actuator"
+    | "duplicate-enabled-effect-actuator"
+    | "effect-actuator-kind-incompatibility"
+    | "effect-intent-incompatibility"
     | "invalid-candidate"
+    | "invalid-effect-payload"
+    | "invalid-effect-pattern"
     | "invalid-protocol"
     | "invalid-record"
+    | "invalid-scalar-argument"
+    | "missing-effect"
     | "orphan-actuator"
     | "preparation-cycle"
     | "surface-intent-collision"
+    | "unknown-surface-effect"
     | "unknown-intent"
     | "unknown-surface"
-      | "unavailable-actuator";
+    | "unavailable-actuator";
   readonly severity: "error" | "warning";
   readonly message: string;
   readonly surface?: BrowserInteractionSurface;
@@ -75,6 +148,9 @@ export interface BrowserInteractionActuator {
   readonly candidateState?: BrowserInteractionCandidateState;
   readonly enabled: boolean;
   readonly actuatorKind: BrowserInteractionActuatorKind;
+  readonly semanticEffects: readonly BrowserInteractionSurfaceEffect[];
+  readonly acceptedEffectPatterns: readonly BrowserInteractionEffectPattern[];
+  readonly preparationPatterns: readonly BrowserInteractionEffectPattern[];
   readonly prepares?: BrowserInteractionPreparationTarget;
   readonly diagnostics: readonly BrowserInteractionDiagnostic[];
 }
@@ -132,9 +208,11 @@ export interface BrowserInteractionSnapshot {
 export interface BrowserInteractionSurfaceDefinition<
   Surface extends BrowserInteractionSurface = BrowserInteractionSurface,
   Intent extends BrowserInteractionIntent = BrowserInteractionIntent,
+  EffectKind extends string = string,
 > {
   readonly surface: Surface;
   readonly intents: readonly Intent[];
+  readonly effectKinds?: readonly EffectKind[];
 }
 
 export interface BrowserInteractionRegistry {
@@ -156,6 +234,21 @@ export interface BrowserInteractionIntentRequest {
   readonly actuatorKind?: BrowserInteractionActuatorKind;
   readonly allowDisabled?: boolean;
 }
+
+export interface BrowserInteractionEffectRequest<
+  Effect extends BrowserInteractionSurfaceEffect =
+    BrowserInteractionSurfaceEffect,
+> {
+  readonly surface: BrowserInteractionSurface;
+  readonly scopeId?: string;
+  readonly interactionKey?: string;
+  readonly interactionId?: string;
+  readonly effect: Effect;
+  readonly allowDisabled?: boolean;
+}
+
+export type GameplayBrowserInteractionEffectRequest =
+  BrowserInteractionEffectRequest<GameplaySemanticEffect>;
 
 export interface BrowserInteractionResolutionSuccess {
   readonly ok: true;
@@ -181,3 +274,31 @@ export interface BrowserInteractionResolutionFailure {
 export type BrowserInteractionResolution =
   | BrowserInteractionResolutionSuccess
   | BrowserInteractionResolutionFailure;
+
+export interface BrowserInteractionEffectResolutionSuccess {
+  readonly ok: true;
+  readonly actuator: BrowserInteractionActuator;
+  readonly surface: BrowserInteractionSurface;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly match: "exact" | "accepted-pattern";
+  readonly effect: BrowserInteractionSurfaceEffect;
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+
+export interface BrowserInteractionEffectResolutionFailure {
+  readonly ok: false;
+  readonly code:
+    | "ambiguous"
+    | "invalid-effect"
+    | "invalid-snapshot"
+    | "not-found"
+    | "preparation-required"
+    | "unavailable";
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+  readonly preparation?: readonly BrowserInteractionActuator[];
+}
+
+export type BrowserInteractionEffectResolution =
+  | BrowserInteractionEffectResolutionSuccess
+  | BrowserInteractionEffectResolutionFailure;
