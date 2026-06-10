@@ -197,6 +197,7 @@ describe("interaction input projection", () => {
     const originalWarn = console.warn;
     const warn = mock(() => {});
     console.warn = warn;
+    (globalThis as Record<string, unknown>)["__DREAMBOARD_AUTHORING_WARNINGS__"] = true;
     try {
       const inputs = defineInputs((input) => {
         const workerId = input.add(
@@ -242,6 +243,7 @@ describe("interaction input projection", () => {
       );
     } finally {
       console.warn = originalWarn;
+      delete (globalThis as Record<string, unknown>)["__DREAMBOARD_AUTHORING_WARNINGS__"];
     }
 
     expect(warn).toHaveBeenCalledTimes(1);
