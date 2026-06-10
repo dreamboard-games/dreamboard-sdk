@@ -22,7 +22,7 @@ export type ScaffoldingOwnership = {
 };
 
 export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
-  version: 26,
+  version: 27,
   allowedPaths: {
     rootFiles: [
       ".npmrc",
@@ -33,7 +33,7 @@ export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
       "manifest.tsconfig.json",
       "rule.md",
     ],
-    directoryPrefixes: ["app/", "ui/", "shared/", "test/"],
+    directoryPrefixes: ["app/", "manifest/", "ui/", "shared/", "test/"],
   },
   dynamic: {
     generatedFiles: [

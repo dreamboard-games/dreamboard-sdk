@@ -35,36 +35,40 @@ import {
   type BoardHexGridProps as BoardHexGridPropsGeneric,
   type BoardHexViewProps as BoardHexViewPropsGeneric,
   type BoardSpaceTargetProps as BoardSpaceTargetPropsGeneric,
-	  type ClientParamSchemaMap,
-	  type DreamboardUI,
-	  type GameMeState,
-	  type GamePlayersState,
-	  type GameRenderState,
-	  type GameTurnState,
-	  type ResourceCounterComponents,
-	  type TypedGame,
-	  type UIContract,
-	  type UIRootProps,
-	  type WorkspaceBoardSurfaceDescriptor,
-	  type WorkspaceBoardSurface,
-	  type WorkspaceBoardTargetInputSlot,
-	  type WorkspaceCardCollectionSurface,
-	  type WorkspaceCardCollectionSurfaceDescriptor,
-	  type WorkspaceCardInputSlot,
-	  type WorkspaceFormInputSlot,
-	  type WorkspaceHandSurfaceDescriptor,
-	  type WorkspaceHandSurface,
-	  type WorkspaceInteractionFormDescriptor,
-	  type WorkspaceInteractionSlotComponent,
-	  type WorkspaceInteractionFormsDescriptor,
-	  type WorkspacePileSurface,
-	  type WorkspacePileSurfaceDescriptor,
-	  type WorkspacePilesSurfaceDescriptor,
-	  type WorkspaceSurfaceSpec,
-	  type ZoneCardRenderItem,
-	  type ZoneListProps,
-	} from "@dreamboard-games/sdk/runtime/workspace-contract";
-import { type ButtonHTMLAttributes, type ReactElement, type ReactNode } from "react";
+  type ClientParamSchemaMap,
+  type DreamboardUI,
+  type GameMeState,
+  type GamePlayersState,
+  type GameRenderState,
+  type GameTurnState,
+  type ResourceCounterComponents,
+  type TypedGame,
+  type UIContract,
+  type UIRootProps,
+  type WorkspaceBoardSurfaceDescriptor,
+  type WorkspaceBoardSurface,
+  type WorkspaceBoardTargetInputSlot,
+  type WorkspaceCardCollectionSurface,
+  type WorkspaceCardCollectionSurfaceDescriptor,
+  type WorkspaceCardInputSlot,
+  type WorkspaceFormInputSlot,
+  type WorkspaceHandSurfaceDescriptor,
+  type WorkspaceHandSurface,
+  type WorkspaceInteractionFormDescriptor,
+  type WorkspaceInteractionSlotComponent,
+  type WorkspaceInteractionFormsDescriptor,
+  type WorkspacePileSurface,
+  type WorkspacePileSurfaceDescriptor,
+  type WorkspacePilesSurfaceDescriptor,
+  type WorkspaceSurfaceSpec,
+  type ZoneCardRenderItem,
+  type ZoneListProps,
+} from "@dreamboard-games/sdk/runtime/workspace-contract";
+import {
+  type ButtonHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import {
   boardHelpers,
   literals,
@@ -98,7 +102,7 @@ import {
  */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 type AssertNotAny<T> = IsAny<T> extends true
-  ? "SDK runtime types resolved to any — boundary degraded"
+  ? "sdk runtime types resolved to any — boundary degraded"
   : true;
 const _uiRuntimeBoundaryResolved: [
   AssertNotAny<InteractionDescriptor>,
@@ -1302,7 +1306,7 @@ function generateReducerDerivedSeed(): string {
 //
 // Uncomment the example below once you have something to derive.
 
-// import { defineDerived } from "../../reducer.js";
+// import { defineDerived } from "@dreamboard-games/sdk/reducer";
 // import type { GameContract } from "./game-contract";
 //
 // export const winnerOf = defineDerived<GameContract>()({

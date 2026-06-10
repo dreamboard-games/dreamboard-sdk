@@ -399,15 +399,15 @@ export function collectInteractionInputs<
 
 const concreteDependentChoiceDefaultWarnings = new Set<string>();
 
+// Trusted reducer bundles must stay free of host capabilities such as
+// `process`: gameplay executor artifact admission statically rejects bundles
+// that reference host globals. Authoring warnings are therefore opt-in via a
+// host-set global that dev/test harnesses enable.
+const AUTHORING_WARNINGS_FLAG = "__DREAMBOARD_AUTHORING_WARNINGS__";
+
 function shouldEmitAuthoringWarning(): boolean {
-  const env = (
-    globalThis as typeof globalThis & {
-      process?: { env?: Record<string, string | undefined> };
-    }
-  ).process?.env;
   return (
-    env?.NODE_ENV !== "production" &&
-    env?.DREAMBOARD_SUPPRESS_AUTHORING_WARNINGS !== "1"
+    (globalThis as Record<string, unknown>)[AUTHORING_WARNINGS_FLAG] === true
   );
 }
 

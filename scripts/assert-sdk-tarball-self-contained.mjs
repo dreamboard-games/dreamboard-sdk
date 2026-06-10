@@ -122,6 +122,47 @@ async function main() {
       );
     }
 
+    const danglingDeclarationImports = [];
+    for (const filePath of files) {
+      if (!filePath.endsWith(".d.ts")) {
+        continue;
+      }
+      const content = await readFile(filePath, "utf8");
+      // Skip comment lines so documentation snippets (e.g. `import App from
+      // './App';` in JSDoc examples) are not treated as module imports.
+      const codeLines = content
+        .split("\n")
+        .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+        .join("\n");
+      for (const match of codeLines.matchAll(
+        /(?:from|import\()\s*['"](\.\.?\/[^'"]+)['"]/g,
+      )) {
+        const specifier = match[1];
+        const resolvedBase = path.resolve(
+          path.dirname(filePath),
+          specifier.replace(/\.js$/, ""),
+        );
+        const candidates = [
+          `${resolvedBase}.d.ts`,
+          `${resolvedBase}.d.mts`,
+          path.join(resolvedBase, "index.d.ts"),
+        ];
+        const { existsSync } = await import("node:fs");
+        if (!candidates.some((candidate) => existsSync(candidate))) {
+          danglingDeclarationImports.push(
+            `${path.relative(packageDir, filePath)} -> ${specifier}`,
+          );
+        }
+      }
+    }
+    if (danglingDeclarationImports.length > 0) {
+      throw new Error(
+        `SDK tarball declarations import relative modules with no published .d.ts (type surface would degrade for consumers):\n${danglingDeclarationImports
+          .map((entry) => `  ${entry}`)
+          .join("\n")}`,
+      );
+    }
+
     console.log(
       `SDK tarball self-contained OK: scanned ${files.length} JS/CSS/declaration/metadata files`,
     );
