@@ -3,7 +3,7 @@ import {
   InteractionField as BaseInteractionField,
   type InteractionFormProps,
   type InteractionFieldProps as BaseInteractionFieldProps,
-} from "../../components/InteractionForm.js";
+} from "../../components/interaction-form/index.js";
 import type {
   InteractionHandle,
   InteractionParamsShape,
