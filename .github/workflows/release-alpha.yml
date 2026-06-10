@@ -23,7 +23,9 @@ jobs:
           cache: pnpm
           registry-url: https://registry.npmjs.org
       - run: pnpm install --frozen-lockfile
+      - run: pnpm publication:check
       - run: pnpm version:check
+      - run: pnpm --filter @dreamboard-games/reducer-contract generate:check
       - run: pnpm build
       - run: pnpm test
       - run: pnpm pack:dry-run

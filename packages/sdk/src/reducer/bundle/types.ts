@@ -14,7 +14,7 @@ import type {
   ViewMapOf,
 } from "../model";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
-import type { ReducerBundleContract } from "../../infrastructure/reducer-contract/bundle.js";
+import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract";
 
 type TrustedSessionState<Contract extends ReducerGameContractLike> =
   BaseGameSessionOfContract<Contract>;

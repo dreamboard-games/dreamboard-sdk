@@ -1,8 +1,10 @@
 import { createTrustedReducerBundle } from "./trusted-bundle";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
-import * as Builders from "../../generated/reducer-contract/builders";
-import { REDUCER_CONTRACT_VERSION } from "../../generated/reducer-contract/version";
-import * as Wire from "../../generated/reducer-contract/wire";
+import {
+  Builders,
+  REDUCER_CONTRACT_VERSION,
+  type Wire,
+} from "@dreamboard-games/reducer-contract";
 import type {
   ManifestContractOf,
   PhaseMapOf,
@@ -65,7 +67,7 @@ function routeInteraction(input: UntrustedRuntimeInput): {
 //
 // This module is the ONLY place in the SDK reducer that converts runtime
 // instructions into wire effects. It does so through
-// `@dreamboard-games/sdk/infrastructure/reducer-bundle-abi` (the single source of truth for
+// `@dreamboard-games/reducer-contract` (the single source of truth for
 // wire-effect construction) rather than hand-rolling the mapping locally —
 // hand-rolled mappings are how wire drift sneaks in (see the catan
 // rollDie regression).

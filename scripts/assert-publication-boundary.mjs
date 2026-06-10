@@ -14,13 +14,11 @@ const removedLeafPackageNames = new Set([
   "@dreamboard-games/ui-sdk",
   "@dreamboard-games/workspace-codegen",
 ]);
-const retiredSourcePackageDirs = [
-  "app-sdk",
-  "testing",
-  "ui-runtime",
-  "ui-sdk",
-  "workspace-codegen",
-];
+// `workspace-codegen` is intentionally absent: it exists again as a private
+// workspace package (packages/workspace-codegen). Its name stays in
+// `removedLeafPackageNames` above so the boundary check enforces it is
+// private and never published.
+const retiredSourcePackageDirs = ["app-sdk", "testing", "ui-runtime", "ui-sdk"];
 
 function fail(message) {
   throw new Error(`SDK publication boundary violation: ${message}`);

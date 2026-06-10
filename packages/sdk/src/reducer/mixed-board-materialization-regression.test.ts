@@ -1,9 +1,10 @@
 import { test, expect } from "bun:test";
-import type { GameTopologyManifest } from "../types/index.js";
+import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
 
 test("materializeManifestTable rejects player-scoped seed homes without ownerId", async () => {
-  const { materializeManifestTable } =
-    await import("../infrastructure/workspace-codegen.js");
+  const { materializeManifestTable } = await import(
+    "@dreamboard-games/workspace-codegen"
+  );
 
   const manifest = {
     players: {

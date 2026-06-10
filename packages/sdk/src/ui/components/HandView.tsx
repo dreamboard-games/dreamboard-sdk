@@ -33,7 +33,7 @@ import {
   type ReactNode,
 } from "react";
 import { clsx } from "clsx";
-import type { ViewCard } from "../../types/index.js";
+import type { ViewCard } from "@dreamboard-games/sdk-types";
 import type {
   CardIntent,
   InteractionVisualState,

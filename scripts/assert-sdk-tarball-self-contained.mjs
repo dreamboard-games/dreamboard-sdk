@@ -26,6 +26,8 @@ const scannedExtensions = new Set([
   ".js",
   ".json",
   ".mjs",
+  ".ts",
+  ".tsx",
 ]);
 
 function run(command, args, options = {}) {
@@ -86,10 +88,26 @@ async function main() {
     run("mkdir", ["-p", extractDir]);
     run("tar", ["-xzf", tarballPath, "-C", extractDir]);
 
-    const files = await collectFiles(path.join(extractDir, "package"));
+    const packageDir = path.join(extractDir, "package");
+    const topLevelEntries = await readdir(packageDir);
+    if (topLevelEntries.includes("src")) {
+      throw new Error(
+        "SDK tarball must not ship src/; only dist/ is published. " +
+          'Remove "src" from packages/sdk/package.json "files".',
+      );
+    }
+
+    const files = await collectFiles(packageDir);
     const violations = [];
     for (const filePath of files) {
-      const content = await readFile(filePath, "utf8");
+      let content = await readFile(filePath, "utf8");
+      if (path.relative(packageDir, filePath) === "package.json") {
+        // devDependencies are inert for consumers (never installed from a
+        // published tarball); private workspace devDeps are allowed there.
+        const manifest = JSON.parse(content);
+        delete manifest.devDependencies;
+        content = JSON.stringify(manifest);
+      }
       if (specifierPattern.test(content)) {
         violations.push(
           path.relative(path.join(extractDir, "package"), filePath),

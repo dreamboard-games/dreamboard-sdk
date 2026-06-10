@@ -1,5 +1,7 @@
-import type { ReducerBundleContract } from "../infrastructure/reducer-contract/bundle.js";
-import type * as Wire from "../generated/reducer-contract/wire.js";
+import type {
+  ReducerBundleContract,
+  Wire,
+} from "@dreamboard-games/reducer-contract";
 import type {
   InteractionDescriptor,
   PluginStateSnapshot,
