@@ -19,7 +19,7 @@ export {
   type CardDragSurfaceContextValue,
   type CardDropTargetViewProps,
   type DragPhase,
-} from "./CardDragSurface.js";
+} from "./card-drag/index.js";
 export type { HandInteractionPolicy } from "./hand-pointer-engine.js";
 export {
   HandDock,

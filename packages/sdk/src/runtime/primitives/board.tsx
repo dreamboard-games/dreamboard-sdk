@@ -35,7 +35,7 @@ import {
   composeEventHandlers,
   renderPrimitive,
   type PrimitiveCommonProps,
-} from "./primitive-props.js";
+} from "../../ui/primitives/primitive-props.js";
 import { runInteractionAction } from "./interaction-submit.js";
 import { useGameActionError } from "./game.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";

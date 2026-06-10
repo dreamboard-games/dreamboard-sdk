@@ -33,7 +33,7 @@ import {
   composeEventHandlers,
   renderPrimitive,
   type PrimitiveCommonProps,
-} from "../primitive-props.js";
+} from "../../../ui/primitives/primitive-props.js";
 import { gameplayActuatorAttributes } from "../../interactions/gameplay-attributes.js";
 import {
   useOptionalZonePrimitiveContext,

@@ -4,7 +4,7 @@ import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
 import { usePluginState } from "../context/PluginStateContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
-import { validationErrorFromUnknown } from "../errors/ValidationError.js";
+import { validationErrorFromUnknown } from "../../ui/errors/ValidationError.js";
 import type {
   InteractiveTargetLayer,
   InteractiveTargetState,
