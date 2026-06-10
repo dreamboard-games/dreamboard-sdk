@@ -4,30 +4,30 @@ import { clsx } from "clsx";
 import {
   ClientParamSchemaProvider,
   type ClientParamSchemaMap,
-} from "./context/ClientParamSchemaContext.js";
-import { usePluginState } from "./context/PluginStateContext.js";
+} from "../context/ClientParamSchemaContext.js";
+import { usePluginState } from "../context/PluginStateContext.js";
 import {
   createResourceCounter,
   type ResourceCounterComponents,
   type ResourceDisplayConfig,
-} from "../ui.js";
-import { CardFace, type ViewCard } from "../ui.js";
+} from "../../ui.js";
+import { CardFace, type ViewCard } from "../../ui.js";
 import {
   MobileHandTrayProvider,
   useRegisterMobileHand,
   type HandRole,
-} from "../ui/components.js";
-import { ToastProvider, useIsMobile } from "../ui.js";
+} from "../../ui/components.js";
+import { ToastProvider, useIsMobile } from "../../ui.js";
 import {
   createDreamboardUI,
   type DreamboardUI,
   type TypedGame,
   type UIContract,
-} from "./ui-contract.js";
+} from "../ui-contract.js";
 import {
   useResolvedCardTargetValue,
   useZoneCards,
-} from "./primitives/index.js";
+} from "../primitives/index.js";
 import {
   HandSurfaceView,
   HandStagingView,
@@ -35,15 +35,15 @@ import {
   type HandSelectionSummary,
   type HandSurfaceViewProps,
   type RuntimeDropTarget,
-} from "./primitives/hand-surface.js";
-import type { AuthoredCardIntent } from "./primitives/hand-intent-adapter.js";
+} from "../primitives/hand-surface.js";
+import type { AuthoredCardIntent } from "../primitives/hand-intent-adapter.js";
 import type {
   CardDropTargetVisualState,
   HandInteractionPolicy,
   HandLayoutKind,
   HandLayoutPolicy,
   InteractionVisualState,
-} from "../ui.js";
+} from "../../ui.js";
 import type {
   BoardHexGridProps,
   BoardHexViewProps,
@@ -59,14 +59,14 @@ import type {
   GameTurnState,
   UIRootProps,
   ZoneCardRenderItem,
-} from "./primitives/index.js";
-import type { BoardSpaceTargetProps } from "./primitives/board.js";
-import type { ZoneListProps } from "./primitives/zone.js";
-import type { PluginStateSnapshot } from "./types/plugin-state.js";
-import { isInteractionAvailable } from "./utils/interaction-status.js";
+} from "../primitives/index.js";
+import type { BoardSpaceTargetProps } from "../primitives/board.js";
+import type { ZoneListProps } from "../primitives/zone.js";
+import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import { isInteractionAvailable } from "../utils/interaction-status.js";
 
-export type { BoardSpaceTargetProps } from "./primitives/board.js";
-export type { HandRole } from "../ui/components.js";
+export type { BoardSpaceTargetProps } from "../primitives/board.js";
+export type { HandRole } from "../../ui/components.js";
 
 export type WorkspaceInteractionSlotComponent<Props = object> = (
   props: Props extends { children: unknown }

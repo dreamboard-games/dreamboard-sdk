@@ -21,7 +21,7 @@ export {
   PluginRuntime,
   type PluginRuntimeProps,
 } from "./components/PluginRuntime.js";
-export { createPluginRuntimeAPI } from "./runtime/createPluginRuntimeAPI.js";
+export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";
 export type * from "./hooks/usePluginRuntime.js";
 export type {

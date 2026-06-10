@@ -5,8 +5,8 @@ import { createRoot, type Root } from "react-dom/client";
 import { MobileHandTrayProvider, ToastProvider } from "../../ui.js";
 import { PluginRuntime } from "../components/PluginRuntime.js";
 import { createDreamboardUI } from "../ui-contract.js";
-import { createWorkspaceUIContract } from "../workspace-contract.js";
-import type { PluginRuntimeAPI } from "../runtime/createPluginRuntimeAPI.js";
+import { createWorkspaceUIContract } from "../workspace-contract/index.js";
+import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
 
 const runtimeSingletonKey = "__dreamboardPluginRuntimeApi";

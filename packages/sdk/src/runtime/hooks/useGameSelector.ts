@@ -2,7 +2,7 @@ import { useRef, useSyncExternalStore } from "react";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type { GameView } from "#dreamboard/ui-contract";
 import type { PluginStateSnapshot } from "../types/reducer-state.js";
-import type { PluginRuntimeAPI } from "../runtime/createPluginRuntimeAPI.js";
+import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 
 type EqualityFn<T> = (left: T, right: T) => boolean;
 

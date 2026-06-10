@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   createPluginRuntimeAPI,
   type PluginRuntimeAPI,
-} from "../runtime/createPluginRuntimeAPI.js";
+} from "../api/createPluginRuntimeAPI.js";
 
 export interface UsePluginRuntimeOptions {
   /**

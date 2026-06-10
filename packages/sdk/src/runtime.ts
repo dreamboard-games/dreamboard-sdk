@@ -2,9 +2,9 @@ import type {
   DreamboardUI as RuntimeDreamboardUI,
   TypedGame as RuntimeTypedGame,
   UIContract as RuntimeUIContract,
-} from "./runtime-internal/index.js";
+} from "./runtime/index.js";
 
-export { PluginRuntime } from "./runtime-internal/index.js";
+export { PluginRuntime } from "./runtime/index.js";
 
 export interface DreamboardUIRegister {}
 
@@ -31,7 +31,7 @@ export type TypedGame<
 export type {
   InteractionDescriptor,
   PluginRuntimeProps,
-} from "./runtime-internal/index.js";
+} from "./runtime/index.js";
 
 // Workspace contract surface. Generated game UIs import these from
 // `@dreamboard-games/sdk/runtime` (the `declare module` augmentation target
