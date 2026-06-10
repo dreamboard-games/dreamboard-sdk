@@ -142,7 +142,7 @@ export {
 export {
   assertCardAllowedInContainer,
   setActivePlayers,
-} from "./reducer/table-ops";
+} from "./reducer/table";
 export {
   createTableQueries,
   createStateQueries,

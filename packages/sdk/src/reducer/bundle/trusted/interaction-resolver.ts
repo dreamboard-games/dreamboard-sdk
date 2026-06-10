@@ -5,13 +5,13 @@ import type {
   ReducerValidationResult,
   ViewMapOf,
 } from "../../model";
+import { collectEligibleTargets } from "./collector-eligibility";
 import {
-  collectEligibleTargets,
   collectFirstCardZoneId,
   findCardInputKey,
   findCardInputKeyForZone,
-  parseInteractionParams,
-} from "./interaction-collectors";
+} from "./collector-introspection";
+import { parseInteractionParams } from "./collector-params";
 import { createInteractionAuthorization } from "./interaction-authorization";
 import { createInteractionDecisionResolver } from "./interaction-decision";
 import { createStageResolver } from "./stage-resolver";

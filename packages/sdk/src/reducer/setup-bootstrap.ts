@@ -5,7 +5,7 @@ import {
   ensureArray,
   getComponentsInContainer,
   getComponentsOnSpace,
-} from "./table-ops";
+} from "./table";
 import { nextRandomInt } from "./rng";
 import type {
   RuntimeComponentLocation,

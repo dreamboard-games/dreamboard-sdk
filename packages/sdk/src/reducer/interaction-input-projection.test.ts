@@ -8,7 +8,7 @@ import {
   defineInputs,
   formInput,
 } from "../reducer";
-import { collectInteractionInputs } from "./bundle/trusted/interaction-collectors";
+import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
 
 describe("interaction input projection", () => {
   test("rejects domainless form collectors instead of emitting opaque inputs", () => {
