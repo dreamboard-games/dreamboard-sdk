@@ -27,7 +27,7 @@ export {
   defaultFormInputs,
   hasDefaultInteractionFormFields,
   type InteractionFormProps,
-} from "./components/InteractionForm.js";
+} from "./components/interaction-form/index.js";
 export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export {
   PluginStateProvider,
