@@ -12,7 +12,7 @@ import { useRuntimeContext } from "../context/RuntimeContext.js";
 import {
   ValidationError,
   validationErrorFromUnknown,
-} from "../errors/ValidationError.js";
+} from "../../ui/errors/ValidationError.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import {
   applyInteractionInputDefaults,

@@ -4,7 +4,7 @@ import { interactionLabel } from "../../utils/interaction-labels.js";
 import {
   renderPrimitive,
   type PrimitiveCommonProps,
-} from "../primitive-props.js";
+} from "../../../ui/primitives/primitive-props.js";
 import {
   humanizeInteraction,
   useInteractionPrimitiveContext,

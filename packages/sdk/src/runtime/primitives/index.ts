@@ -142,7 +142,7 @@ export {
   renderPrimitive,
   type PrimitiveCommonProps,
   type PrimitiveDataAttributes,
-} from "./primitive-props.js";
+} from "../../ui/primitives/primitive-props.js";
 export {
   Dice,
   DiceRoot,

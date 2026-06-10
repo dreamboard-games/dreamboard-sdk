@@ -7,7 +7,7 @@ import type { InteractionKey } from "../../ui-contract.js";
 import {
   useDialogLifecycle,
   type DialogLifecycleState,
-} from "../dialog-lifecycle.js";
+} from "../../../ui/primitives/dialog-lifecycle.js";
 import { useInteractionPrimitiveContext } from "./context.js";
 
 export type InteractionDialogState = DialogLifecycleState;

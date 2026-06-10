@@ -10,7 +10,7 @@ import type { InteractionKey } from "../../ui-contract.js";
 import type { InteractionDescriptor } from "../../types/plugin-state.js";
 import { isTargetDomain } from "../../utils/interaction-inputs.js";
 import { isInteractionAvailable } from "../../utils/interaction-status.js";
-import { renderPrimitive } from "../primitive-props.js";
+import { renderPrimitive } from "../../../ui/primitives/primitive-props.js";
 import { createGameplayInteractionRootAttributes } from "../../../browser-interaction/index.js";
 import { GAMEPLAY_BROWSER_SCOPE_ID } from "../../interactions/gameplay-attributes.js";
 

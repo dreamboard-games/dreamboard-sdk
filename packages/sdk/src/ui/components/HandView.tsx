@@ -45,7 +45,7 @@ import type {
 import { useHandPresentation } from "../hooks/useHandPresentation.js";
 import { useHandCardPointer } from "../hooks/useHandCardPointer.js";
 import { useTheme } from "../theme/ThemeProvider.js";
-import { useCardDragSurface } from "./CardDragSurface.js";
+import { useCardDragSurface } from "./card-drag/index.js";
 import type { HandInteractionPolicy } from "./hand-pointer-engine.js";
 
 export type HandLayoutKind = HandPresentationMode | "stack";

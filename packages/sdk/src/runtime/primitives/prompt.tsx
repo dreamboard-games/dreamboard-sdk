@@ -27,7 +27,7 @@ import {
   composeEventHandlers,
   renderPrimitive,
   type PrimitiveCommonProps,
-} from "./primitive-props.js";
+} from "../../ui/primitives/primitive-props.js";
 import {
   submitInteractionParams,
   type InteractionSubmitCallbacks,
@@ -35,7 +35,7 @@ import {
 import {
   useDialogLifecycle,
   type DialogLifecycleState,
-} from "./dialog-lifecycle.js";
+} from "../../ui/primitives/dialog-lifecycle.js";
 import { useGameActionError } from "./game.js";
 
 export type PromptRootProps<Prompt extends string = PromptKey> =
