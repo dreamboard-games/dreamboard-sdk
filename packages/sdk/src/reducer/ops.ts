@@ -78,7 +78,7 @@ import {
   setPlayerResource as tableSetPlayerResource,
   spendPlayerResources as tableSpendPlayerResources,
   transferPlayerResources as tableTransferPlayerResources,
-} from "./table-ops";
+} from "./table";
 
 /**
  * Minimum shape required for any state targeted by reducer ops.

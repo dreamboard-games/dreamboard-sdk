@@ -9,7 +9,7 @@ import {
   cloneRuntimeTable,
   ensureArray,
   shufflePlayerZoneCards,
-} from "../../table-ops";
+} from "../../table";
 import {
   sampleDieValue,
   shuffleWithRng,

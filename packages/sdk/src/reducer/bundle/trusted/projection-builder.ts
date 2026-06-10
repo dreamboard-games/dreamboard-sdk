@@ -19,7 +19,7 @@ import {
   createProjectionContext,
   type ProjectionContext,
 } from "./projection-context";
-import { collectCardZoneIds } from "./interaction-collectors";
+import { collectCardZoneIds } from "./collector-introspection";
 import {
   isSimultaneousPhase,
   resolveSimultaneousActors,
