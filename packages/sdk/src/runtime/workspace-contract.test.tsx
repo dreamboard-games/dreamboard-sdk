@@ -2,7 +2,7 @@ import { afterEach, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { PluginRuntime } from "./components/PluginRuntime.js";
-import { InteractionForm } from "./components/InteractionForm.js";
+import { InteractionForm } from "./components/interaction-form/index.js";
 import { createDreamboardUI } from "./ui-contract.js";
 import { createWorkspaceUIContract } from "./workspace-contract/index.js";
 import { Board } from "./primitives/board.js";
