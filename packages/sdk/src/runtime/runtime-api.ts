@@ -1,5 +1,5 @@
-export * from "../runtime-internal/types/runtime-api.js";
+export * from "./types/runtime-api.js";
 export type {
   PluginStateSnapshot,
   ZoneHandlesSnapshot,
-} from "../runtime-internal/types/plugin-state.js";
+} from "./types/plugin-state.js";

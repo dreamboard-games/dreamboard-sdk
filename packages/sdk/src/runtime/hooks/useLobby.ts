@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type { LobbyState } from "../types/plugin-state.js";
-import type { PluginRuntimeAPI } from "../runtime/createPluginRuntimeAPI.js";
+import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 
 // Re-export LobbyState for convenience
 export type { LobbyState };

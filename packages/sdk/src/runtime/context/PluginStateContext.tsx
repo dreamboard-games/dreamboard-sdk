@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
 import { useRuntimeContext } from "./RuntimeContext.js";
-import type { PluginRuntimeAPI } from "../runtime/createPluginRuntimeAPI.js";
+import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import {
   BROWSER_INTERACTION_ATTRIBUTES,
   DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,

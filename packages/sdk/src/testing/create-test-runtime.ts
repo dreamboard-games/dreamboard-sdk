@@ -6,13 +6,13 @@ import type {
   InteractionDescriptor,
   PluginStateSnapshot,
   ZoneHandlesSnapshot,
-} from "../runtime-internal/reducer.js";
+} from "../runtime/reducer.js";
 import type {
   RuntimeAPI,
   SubmissionError,
   ValidationResult,
-} from "../runtime-internal/types/runtime-api.js";
-import type { PluginSessionState as RuntimePluginSessionState } from "../runtime-internal/types/runtime-api.js";
+} from "../runtime/types/runtime-api.js";
+import type { PluginSessionState as RuntimePluginSessionState } from "../runtime/types/runtime-api.js";
 
 type ReducerBundleLike = Pick<
   ReducerBundleContract,

@@ -1,4 +1,4 @@
-export { createWorkspaceUIContract } from "../runtime-internal/workspace-contract.js";
+export { createWorkspaceUIContract } from "./workspace-contract/index.js";
 export type { DreamboardUI, TypedGame, UIContract } from "../runtime.js";
 export type {
   BoardHexGridProps,
@@ -29,4 +29,4 @@ export type {
   WorkspaceSurfaceSpec,
   ZoneCardRenderItem,
   ZoneListProps,
-} from "../runtime-internal/workspace-contract.js";
+} from "./workspace-contract/index.js";
