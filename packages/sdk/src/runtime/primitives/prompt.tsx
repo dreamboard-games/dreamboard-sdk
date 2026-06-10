@@ -22,7 +22,7 @@ import {
   useInteractionPrimitiveContext,
   type InteractionPartProps,
   type InteractionRootProps,
-} from "./interaction.js";
+} from "./interaction/index.js";
 import {
   composeEventHandlers,
   renderPrimitive,

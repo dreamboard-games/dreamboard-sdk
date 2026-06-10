@@ -91,7 +91,7 @@ export {
   type InteractionSwitchProps,
   type InteractionSwitchRenderState,
   type InteractionTriggerProps,
-} from "./interaction.js";
+} from "./interaction/index.js";
 export {
   Phase,
   PhaseSwitch,
