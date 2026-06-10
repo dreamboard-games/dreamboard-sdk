@@ -1,130 +1,90 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.2.1-alpha.1",
+  "version": "0.3.0-alpha.0",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./package-set": {
-      "bun": "./src/package-set.ts",
       "types": "./dist/package-set.d.ts",
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
     },
     "./types": {
-      "bun": "./src/types.ts",
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
       "default": "./dist/types.js"
     },
     "./reducer": {
-      "bun": "./src/reducer.ts",
       "types": "./dist/reducer.d.ts",
       "import": "./dist/reducer.js",
       "default": "./dist/reducer.js"
     },
     "./ui": {
-      "bun": "./src/ui.ts",
       "types": "./dist/ui.d.ts",
       "import": "./dist/ui.js",
       "default": "./dist/ui.js"
     },
     "./ui/components": {
-      "bun": "./src/ui/components.ts",
       "types": "./dist/ui/components.d.ts",
       "import": "./dist/ui/components.js",
       "default": "./dist/ui/components.js"
     },
     "./ui/defaults": {
-      "bun": "./src/ui/defaults.ts",
       "types": "./dist/ui/defaults.d.ts",
       "import": "./dist/ui/defaults.js",
       "default": "./dist/ui/defaults.js"
     },
-    "./ui/types/player-state": {
-      "bun": "./src/ui/types/player-state.ts",
-      "types": "./dist/ui/types/player-state.d.ts",
-      "import": "./dist/ui/types/player-state.js",
-      "default": "./dist/ui/types/player-state.js"
+    "./ui/player-state": {
+      "types": "./dist/ui/player-state.d.ts",
+      "import": "./dist/ui/player-state.js",
+      "default": "./dist/ui/player-state.js"
     },
     "./ui/plugin-styles.css": {
       "default": "./dist/ui/plugin-styles.css"
     },
     "./runtime": {
-      "bun": "./src/runtime.ts",
       "types": "./dist/runtime.d.ts",
       "import": "./dist/runtime.js",
       "default": "./dist/runtime.js"
     },
     "./runtime/primitives": {
-      "bun": "./src/runtime/primitives.ts",
       "types": "./dist/runtime/primitives.d.ts",
       "import": "./dist/runtime/primitives.js",
       "default": "./dist/runtime/primitives.js"
     },
     "./runtime/workspace-contract": {
-      "bun": "./src/runtime/workspace-contract.ts",
       "types": "./dist/runtime/workspace-contract.d.ts",
       "import": "./dist/runtime/workspace-contract.js",
       "default": "./dist/runtime/workspace-contract.js"
     },
-    "./runtime/types/runtime-api": {
-      "bun": "./src/runtime/types/runtime-api.ts",
-      "types": "./dist/runtime/types/runtime-api.d.ts",
-      "import": "./dist/runtime/types/runtime-api.js",
-      "default": "./dist/runtime/types/runtime-api.js"
+    "./runtime/runtime-api": {
+      "types": "./dist/runtime/runtime-api.d.ts",
+      "import": "./dist/runtime/runtime-api.js",
+      "default": "./dist/runtime/runtime-api.js"
     },
-    "./generated/runtime": {
-      "bun": "./src/generated/runtime.ts",
-      "types": "./dist/generated/runtime.d.ts",
-      "import": "./dist/generated/runtime.js",
-      "default": "./dist/generated/runtime.js"
+    "./codegen": {
+      "types": "./dist/codegen.d.ts",
+      "import": "./dist/codegen.js",
+      "default": "./dist/codegen.js"
     },
-    "./generated/runtime-api": {
-      "bun": "./src/generated/runtime-api.ts",
-      "types": "./dist/generated/runtime-api.d.ts",
-      "import": "./dist/generated/runtime-api.js",
-      "default": "./dist/generated/runtime-api.js"
-    },
-    "./generated/runtime/primitives": {
-      "bun": "./src/generated/runtime/primitives.ts",
-      "types": "./dist/generated/runtime/primitives.d.ts",
-      "import": "./dist/generated/runtime/primitives.js",
-      "default": "./dist/generated/runtime/primitives.js"
-    },
-    "./generated/workspace-contract": {
-      "bun": "./src/generated/workspace-contract.ts",
-      "types": "./dist/generated/workspace-contract.d.ts",
-      "import": "./dist/generated/workspace-contract.js",
-      "default": "./dist/generated/workspace-contract.js"
-    },
-    "./infrastructure/reducer-bundle-abi": {
-      "bun": "./src/infrastructure/reducer-bundle-abi.ts",
-      "types": "./dist/infrastructure/reducer-bundle-abi.d.ts",
-      "import": "./dist/infrastructure/reducer-bundle-abi.js",
-      "default": "./dist/infrastructure/reducer-bundle-abi.js"
-    },
-    "./infrastructure/workspace-codegen": {
-      "bun": "./src/infrastructure/workspace-codegen.ts",
-      "types": "./dist/infrastructure/workspace-codegen.d.ts",
-      "import": "./dist/infrastructure/workspace-codegen.js",
-      "default": "./dist/infrastructure/workspace-codegen.js"
+    "./reducer-contract": {
+      "types": "./dist/reducer-contract.d.ts",
+      "import": "./dist/reducer-contract.js",
+      "default": "./dist/reducer-contract.js"
     },
     "./testing": {
-      "bun": "./src/testing.ts",
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
     },
     "./browser-interaction": {
-      "bun": "./src/browser-interaction.ts",
       "types": "./dist/browser-interaction.d.ts",
       "import": "./dist/browser-interaction.js",
       "default": "./dist/browser-interaction.js"
@@ -134,15 +94,7 @@
   "files": [
     "LICENSE.md",
     "dist",
-    "src",
     "README.md",
-    "!src/**/*.test.ts",
-    "!src/**/*.test.tsx",
-    "!src/**/__fixtures__/**",
-    "!src/**/*.stories.ts",
-    "!src/**/*.stories.tsx",
-    "!src/stories/**",
-    "!visual/**",
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
@@ -171,6 +123,9 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
+    "@dreamboard-games/reducer-contract": "workspace:*",
+    "@dreamboard-games/sdk-types": "workspace:*",
+    "@dreamboard-games/workspace-codegen": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
     "@types/node": "^24.5.2",
     "@types/react": "^19.0.0",

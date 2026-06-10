@@ -1,5 +1,5 @@
 import { z } from "zod";
-import * as ContractZod from "../../generated/reducer-contract/zod";
+import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { safeParseOrThrow } from "../parse-utils";
 import type {
   BaseGameSessionOfContract,

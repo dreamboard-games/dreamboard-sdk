@@ -32,3 +32,38 @@ export type {
   InteractionDescriptor,
   PluginRuntimeProps,
 } from "./runtime-internal/index.js";
+
+// Workspace contract surface. Generated game UIs import these from
+// `@dreamboard-games/sdk/runtime` (the `declare module` augmentation target
+// for `DreamboardUIRegister` lives on this subpath as well).
+export { createWorkspaceUIContract } from "./runtime/workspace-contract.js";
+export type {
+  BoardHexGridProps,
+  BoardHexViewProps,
+  BoardSpaceTargetProps,
+  ClientParamSchemaMap,
+  GameMeState,
+  GamePlayersState,
+  GameRenderState,
+  GameTurnState,
+  ResourceCounterComponents,
+  UIRootProps,
+  WorkspaceBoardSurface,
+  WorkspaceBoardSurfaceDescriptor,
+  WorkspaceBoardTargetInputSlot,
+  WorkspaceCardCollectionSurface,
+  WorkspaceCardCollectionSurfaceDescriptor,
+  WorkspaceCardInputSlot,
+  WorkspaceFormInputSlot,
+  WorkspaceHandSurface,
+  WorkspaceHandSurfaceDescriptor,
+  WorkspaceInteractionFormDescriptor,
+  WorkspaceInteractionFormsDescriptor,
+  WorkspaceInteractionSlotComponent,
+  WorkspacePileSurface,
+  WorkspacePileSurfaceDescriptor,
+  WorkspacePilesSurfaceDescriptor,
+  WorkspaceSurfaceSpec,
+  ZoneCardRenderItem,
+  ZoneListProps,
+} from "./runtime/workspace-contract.js";

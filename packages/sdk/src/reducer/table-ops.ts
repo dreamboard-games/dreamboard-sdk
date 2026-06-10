@@ -2,7 +2,7 @@ import type {
   CardCollection,
   ViewCard,
   ViewSlotOccupant,
-} from "../types/index.js";
+} from "@dreamboard-games/sdk-types";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,

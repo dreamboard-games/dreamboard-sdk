@@ -6,7 +6,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import type { ViewCard } from "../../types/index.js";
+import type { ViewCard } from "@dreamboard-games/sdk-types";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
 import { usePluginState } from "../context/PluginStateContext.js";
