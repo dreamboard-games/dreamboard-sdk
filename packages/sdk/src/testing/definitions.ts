@@ -1,4 +1,4 @@
-export type TestRunner = "reducer" | "embedded" | "browser";
+export type TestRunner = "reducer" | "remote" | "browser";
 
 export type InteractionDescriptorLike = {
   interactionId?: string;
