@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { assertPeerHygiene } from "./peer-hygiene-rules.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const sdkDir = path.join(root, "packages/sdk");
@@ -94,6 +95,26 @@ async function main() {
       throw new Error(
         "SDK tarball must not ship src/; only dist/ is published. " +
           'Remove "src" from packages/sdk/package.json "files".',
+      );
+    }
+
+    const packedManifestPath = path.join(packageDir, "package.json");
+    const packedManifest = JSON.parse(
+      await readFile(packedManifestPath, "utf8"),
+    );
+    assertPeerHygiene(packedManifest, "packed SDK package.json");
+
+    const packedCssPath = path.join(packageDir, "dist/ui/plugin-styles.css");
+    const packedCss = await readFile(packedCssPath, "utf8");
+    const uncompiledTailwindDirectives = [
+      '@import "tailwindcss"',
+      "@import 'tailwindcss'",
+      "@source",
+      "@apply",
+    ].filter((directive) => packedCss.includes(directive));
+    if (uncompiledTailwindDirectives.length > 0) {
+      throw new Error(
+        `SDK tarball ships uncompiled Tailwind directives in dist/ui/plugin-styles.css: ${uncompiledTailwindDirectives.join(", ")}`,
       );
     }
 

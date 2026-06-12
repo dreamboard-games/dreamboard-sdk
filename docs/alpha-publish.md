@@ -6,11 +6,11 @@ Use this checklist for the first manual alpha publish of
 ## Package
 
 - Package: `@dreamboard-games/sdk`
-- Current version: `0.2.0`
+- Current version: `0.3.0-alpha.1`
 - Dist-tag: `alpha`
 - Source directory: `packages/sdk`
 
-Publishing `0.2.0` with `--tag alpha` keeps it off the default `latest`
+Publishing `0.3.0-alpha.1` with `--tag alpha` keeps it off the default `latest`
 channel. If this exact version is later promoted, use `npm dist-tag add` rather
 than republishing.
 
@@ -24,6 +24,7 @@ This runs:
 
 - publication boundary guard;
 - fixed-version guard;
+- peer-hygiene guard;
 - build;
 - test;
 - pack dry-run;
@@ -52,7 +53,7 @@ repository for the manual publish path.
 
 ```sh
 npm view @dreamboard-games/sdk@alpha version dist-tags license repository.url --registry=https://registry.npmjs.org/
-npm view @dreamboard-games/sdk@0.2.0 version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
+npm view @dreamboard-games/sdk@0.3.0-alpha.1 version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
 ```
 
 Then prove a disposable install:
