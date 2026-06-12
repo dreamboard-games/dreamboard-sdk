@@ -1,4 +1,11 @@
 export { defineGameContract } from "./authoring/contract";
+export {
+  createContractAuthoring,
+  type BoundInputBuilders,
+  type ContractAuthoring,
+  type ContractWithPhases,
+  type PhaseAuthoring,
+} from "./authoring/contract-authoring";
 export { defineEffect } from "./authoring/effect";
 export { defineGame } from "./authoring/game";
 export {

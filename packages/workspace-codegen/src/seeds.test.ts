@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
-import { generateFrameworkFiles } from "./seeds.js";
+import { generateFrameworkFiles, generateSeedFiles } from "./seeds.js";
 
 const MINIMAL_MANIFEST = {
   players: {
@@ -20,4 +20,22 @@ test("generated UI contract does not export the retired browser demo automation 
 
   expect(uiContract).not.toContain("BROWSER_DEMO_AUTOMATION_");
   expect(uiContract).not.toContain("data-dreamboard-operation");
+});
+
+test("generated reducer seeds use bound authoring factories", () => {
+  const files = generateSeedFiles(MINIMAL_MANIFEST);
+
+  expect(files["app/authoring.ts"]).toContain("createContractAuthoring");
+  expect(files["app/game.ts"]).toContain("authoring.game({");
+  expect(files["app/phases/setup.ts"]).toContain("setup.define({");
+  expect(files["app/phases/setup.ts"]).toContain("setup.interaction({");
+
+  const appSeed = Object.entries(files)
+    .filter(([path]) => path.startsWith("app/"))
+    .map(([, content]) => content)
+    .join("\n");
+  expect(appSeed).not.toContain("defineInteraction<");
+  expect(appSeed).not.toContain("definePhase<");
+  expect(appSeed).not.toContain("defineStepPhase<");
+  expect(appSeed).not.toContain("ReducerGameDefinition<");
 });
