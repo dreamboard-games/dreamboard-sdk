@@ -1,6 +1,7 @@
 export {
   defineEffect,
   defineCardAction,
+  createContractAuthoring,
   defineGame,
   defineGameContract,
   defineInteraction,
@@ -13,7 +14,11 @@ export {
   defineView,
   type ReducerGameContract,
   type ReducerGameDefinition,
+  type BoundInputBuilders,
+  type ContractAuthoring,
+  type ContractWithPhases,
   type InitialStateCallbacks,
+  type PhaseAuthoring,
   type ReducerPhaseDefinition,
   type ReducerViewDefinition,
 } from "./reducer/authoring";

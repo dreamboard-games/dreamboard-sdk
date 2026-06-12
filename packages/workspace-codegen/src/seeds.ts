@@ -140,7 +140,7 @@ export type InteractionIdForPhase<Phase extends PhaseName> =
 
 /**
  * Client-facing params type for an interaction, inferred from its input
- * collectors. Engine-sampled collectors (e.g. \`rngInput.*\`) are omitted
+ * collectors. Engine-sampled collectors are omitted
  * — the trusted reducer bundle fills those fields during submit, so the
  * client never supplies them.
  */
@@ -1261,6 +1261,7 @@ Use this layout while the game is small:
 \`\`\`txt
 app/
   game-contract.ts
+  authoring.ts
   game.ts
   derived.ts
   reducer-support.ts
@@ -1273,7 +1274,7 @@ contents and split the implementation by game concept:
 
 \`\`\`txt
 app/phases/player-turn/
-  index.ts          # definePhase assembly only
+  index.ts          # bound phase assembly only
   state.ts          # phase-local constants and types
   inputs.ts         # shared input and presentation helpers
   build.ts          # build interactions
@@ -1283,7 +1284,7 @@ app/phases/player-turn/
 
 Split a phase when it has multiple action families, shared input helpers, card
 actions, or is roughly 250-300 lines. Keep \`index.ts\` as the assembly point
-that imports interactions and registers them with \`definePhase\`.
+that imports interactions and registers them with its bound phase object.
 
 Do not turn \`reducer-support.ts\` into a catch-all rule module. Keep it small
 for shared reducer plumbing; put real game rules under \`app/rules/*\` once
@@ -1353,17 +1354,24 @@ export type GameState = GameStateOf<GameContract>;
 `;
 }
 
-function generateReducerGameSeed(): string {
-  return `import { defineGame } from "@dreamboard-games/sdk/reducer";
+function generateReducerAuthoringSeed(): string {
+  return `import { createContractAuthoring } from "@dreamboard-games/sdk/reducer";
 import { gameContract } from "./game-contract";
+
+export const authoring = createContractAuthoring(gameContract);
+export const setup = authoring.phase("setup");
+`;
+}
+
+function generateReducerGameSeed(): string {
+  return `import { authoring } from "./authoring";
 import { phases } from "./phases";
 import setupProfiles from "./setup-profiles";
 
 // Keep this file as the defineGame assembly point. Put rules in phases,
 // projections in views/derived modules, and reusable domain helpers in
 // app/rules/* once reducer-support.ts is no longer small.
-export default defineGame({
-  contract: gameContract,
+export default authoring.game({
   initial: {
     public: ({ playerIds }) => ({
       currentPlayerId: playerIds[0] ?? null,
@@ -1413,13 +1421,7 @@ export function isFrameworkOwnedSetupProfilesSeed(
 }
 
 function generateSetupPhaseSeed(): string {
-  return `import { z } from "zod";
-import type { GameContract, GameState } from "../game-contract";
-import {
-  defineInteraction,
-  definePhase,
-  formInput,
-} from "@dreamboard-games/sdk/reducer";
+  return `import { setup } from "../authoring";
 import { edit } from "../reducer-support";
 
 const setupMoodChoices = [
@@ -1427,20 +1429,18 @@ const setupMoodChoices = [
   { value: "exploring", label: "Exploring" },
 ] as const;
 type SetupMood = (typeof setupMoodChoices)[number]["value"];
-const setupPhaseStateSchema = z.object({});
 
 // A single phase file is fine while the phase is small. When a phase grows
 // multiple action families, move it to app/phases/<phase>/index.ts and split
 // interactions into neighboring concept files.
-export const setup = definePhase<GameContract>()({
+export const setupPhase = setup.define({
   kind: "player",
-  state: setupPhaseStateSchema,
   initialState: () => ({}),
   actor: ({ state }) => state.publicState.currentPlayerId,
   interactions: {
-    submit: defineInteraction<GameContract, typeof setupPhaseStateSchema>()({
+    submit: setup.interaction({
       inputs: {
-        mood: formInput.choice<SetupMood, GameState>({
+        mood: setup.inputs.form.choice<SetupMood>({
           choices: setupMoodChoices,
           defaultValue: "ready",
         }),
@@ -1462,12 +1462,12 @@ export const setup = definePhase<GameContract>()({
 }
 
 function generatePhaseIndexSeed(): string {
-  return `import { setup } from "./setup";
+  return `import { setupPhase } from "./setup";
 import type { GameContract } from "../game-contract";
 import type { PhaseMapOf } from "@dreamboard-games/sdk/reducer";
 
 export const phases = {
-  setup,
+  setup: setupPhase,
 } satisfies PhaseMapOf<GameContract>;
 `;
 }
@@ -1682,6 +1682,7 @@ export function generateSeedFiles(
     "ui/ui-contract-typing-smoke.tsx":
       generateReducerUiContractTypingSmokeContent(),
     "app/game-contract.ts": generateReducerGameContractSeed(),
+    "app/authoring.ts": generateReducerAuthoringSeed(),
     "app/game.ts": generateReducerGameSeed(),
     "app/setup-profiles.ts": generateSetupProfilesSeed(manifest),
     "app/reducer-support.ts": generateReducerSupportSeed(),

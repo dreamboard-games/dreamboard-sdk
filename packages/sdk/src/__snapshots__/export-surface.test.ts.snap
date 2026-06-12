@@ -16,6 +16,7 @@ exports[`public export surface reducer export names are stable 1`] = `
   "choiceTarget",
   "cloneManifestDefault",
   "createClientParamSchemasByPhase",
+  "createContractAuthoring",
   "createDerivedResolver",
   "createManifestGameStateSchema",
   "createManifestRuntimeSchema",
