@@ -25,6 +25,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm publication:check
       - run: pnpm version:check
+      - run: pnpm peer-hygiene:check
       - run: pnpm --filter @dreamboard-games/reducer-contract generate:check
       - run: pnpm build
       - run: pnpm test
