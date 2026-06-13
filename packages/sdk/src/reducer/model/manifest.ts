@@ -139,6 +139,7 @@ export type StaticBoardsJsonEnvelope<
   formatVersion: 1;
   generatedBy: "@dreamboard-games/workspace-codegen";
   boards: StaticBoards<Table>;
+  initialTable: Table;
 };
 
 export type SetupOptionChoiceMetadata = {

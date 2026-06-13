@@ -990,6 +990,9 @@ test("generateManifestContractSources split runtime module executes generated ru
     generatedBy: "@dreamboard-games/workspace-codegen",
   });
   expect(staticEnvelope.boards.byId["hex-map"].layout).toBe("hex");
+  expect(staticEnvelope.initialTable.boards.byId["track-board"].layout).toBe(
+    "generic",
+  );
   expect(sources["shared/manifest-runtime.ts"]).toContain(
     'import staticBoardsData from "./manifest-static.json";',
   );
@@ -997,10 +1000,25 @@ test("generateManifestContractSources split runtime module executes generated ru
     "type StaticBoardsJsonEnvelope,",
   );
   expect(sources["shared/manifest-runtime.ts"]).toContain(
-    "export const staticBoards = (staticBoardsData as unknown as StaticBoardsJsonEnvelope<PublicTableState>).boards;",
+    'type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;',
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    'type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> &',
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    "const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;",
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    "export const staticBoards = manifestStaticData.boards;",
   );
   expect(sources["shared/manifest-runtime.ts"]).not.toContain(
     "export const staticBoards = {",
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    "const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);",
+  );
+  expect(sources["shared/manifest-runtime.ts"]).not.toContain(
+    "const baseInitialTable = {",
   );
 
   await withGeneratedSplitContractModule({

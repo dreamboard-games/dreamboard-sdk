@@ -5938,18 +5938,7 @@ export const defaults = {
 export const staticBoards = ${renderJsonConst(staticBoardsTemplate)};
 
 const baseInitialTable = ${renderJsonConst(initialTableTemplate)} as unknown as TableState;
-const baseDeckCardsByZoneId: Record<SharedZoneId, readonly CardId[]> = ${renderJsonConst(
-    Object.fromEntries(
-      sharedZoneIds.map((zoneId) => [
-        zoneId,
-        (
-          initialTableTemplate as {
-            decks: Record<string, readonly string[]>;
-          }
-        ).decks[zoneId] ?? [],
-      ]),
-    ),
-  )};
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
 export function createInitialTable(options: {
   playerIds?: readonly string[];
@@ -6224,11 +6213,11 @@ function renderManifestRuntimeSource(legacySource: string): string {
     )
     .replace(
       /export const staticBoards = ([\s\S]*?) as const;\n\nconst baseInitialTable = /,
-      "export const staticBoards = (staticBoardsData as unknown as StaticBoardsJsonEnvelope<PublicTableState>).boards;\n\nconst baseInitialTable = ",
+      'type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;\ntype GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {\n  boards: GeneratedStaticBoards;\n};\nconst manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;\nexport const staticBoards = manifestStaticData.boards;\n\nconst baseInitialTable = ',
     )
     .replace(
-      /const baseInitialTable = ([\s\S]*?) as const as unknown as TableState;\nconst baseDeckCardsByZoneId:/,
-      "const baseInitialTable = cloneManifestDefault<PublicTableState>($1);\nconst baseDeckCardsByZoneId:",
+      /const baseInitialTable = ([\s\S]*?) as const as unknown as TableState;\nconst baseDeckCardsByZoneId =/,
+      "const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);\nconst baseDeckCardsByZoneId =",
     )
     .replace(
       "staticBoards: staticBoards as unknown as StaticBoards<TableState>,",
@@ -6637,6 +6626,7 @@ export function generateManifestContractSources(
   });
   const staticBoardsEnvelope = createManifestStaticJsonEnvelope(
     createManifestStaticBoardsData(initialTableTemplate),
+    initialTableTemplate,
   );
   return {
     "shared/manifest-literals.ts": renderManifestLiteralsSource(legacySource),
