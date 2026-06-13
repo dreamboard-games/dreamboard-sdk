@@ -1,5 +1,8 @@
 # Phase 3: Topology Data Extraction From Generated TypeScript
 
+Status: closed on 2026-06-13. Closeout receipt:
+[`artifacts/phase-03-closeout-20260613.md`](artifacts/phase-03-closeout-20260613.md).
+
 ## Objective
 
 Stop emitting board topology **data** as TypeScript **code**. The
