@@ -6,6 +6,7 @@ import type {
 } from "./manifest";
 import type { z } from "zod";
 import type { SchemaLike } from "./table";
+import type { FrameworkErrorCode } from "./error-codes";
 
 export type TableOfState<State> = State extends { table: infer Table }
   ? Table
@@ -33,6 +34,11 @@ export type PlayerIdOfManifest<Manifest> = Manifest extends {
   ? Extract<PlayerId, string>
   : string;
 export type PlayerIdOfState<State> = PlayerIdOfTable<TableOfState<State>>;
+export type ErrorCodeOfContract<Contract> = Contract extends {
+  errors: infer Errors extends Record<string, string>;
+}
+  ? (keyof Errors & string) | FrameworkErrorCode
+  : string;
 /**
  * Manifest-declared resource id union for a runtime table.
  *

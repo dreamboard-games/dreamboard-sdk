@@ -15,21 +15,22 @@ import type {
 } from "../model";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
 import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract";
+import type { InteractionExplanation } from "./trusted/interaction-types";
+
+export type ReducerBundleOptions = {
+  diagnostics?: "verbose";
+};
 
 type TrustedSessionState<Contract extends ReducerGameContractLike> =
   BaseGameSessionOfContract<Contract>;
 
-type TrustedCombinedState<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-> = BaseGameStateOfContract<Contract> & {
-  runtime: TrustedSessionState<Contract>["runtime"];
-};
+type TrustedCombinedState<Contract extends ReducerGameContractLike> =
+  BaseGameStateOfContract<Contract> & {
+    runtime: TrustedSessionState<Contract>["runtime"];
+  };
 
-type TrustedPlayerId<
-  Contract extends ReducerGameContractLike,
-  _Definitions extends PhaseMapOf<Contract>,
-> = PlayerIdOfState<BaseGameStateOfContract<Contract>>;
+type TrustedPlayerId<Contract extends ReducerGameContractLike> =
+  PlayerIdOfState<BaseGameStateOfContract<Contract>>;
 
 export type TrustedReducerBundle<
   Contract extends ReducerGameContractLike,
@@ -38,7 +39,7 @@ export type TrustedReducerBundle<
 > = {
   initialize(input: {
     table: BaseGameStateOfContract<Contract>["table"];
-    playerIds: TrustedPlayerId<Contract, Definitions>[];
+    playerIds: TrustedPlayerId<Contract>[];
     rngSeed?: number | null;
     setup?: RuntimeSetupSelectionInput<ManifestContractOf<Contract>> | null;
   }): Promise<TrustedSessionState<Contract>>;
@@ -50,32 +51,37 @@ export type TrustedReducerBundle<
   }): Promise<TrustedSessionState<Contract>>;
   validateInput(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<ReducerValidationResult>;
+  explainInteraction(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+  }): InteractionExplanation;
   reduce(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<
     | ReducerReject
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
         instructions: RuntimeInstructionForState<
-          TrustedCombinedState<Contract, Definitions>
+          TrustedCombinedState<Contract>
         >[];
       }
   >;
   dispatch(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<
     | ReducerReject
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
         trace: DispatchTraceEntry<
-          TrustedCombinedState<Contract, Definitions>,
-          TrustedPlayerId<Contract, Definitions>
+          TrustedCombinedState<Contract>,
+          TrustedPlayerId<Contract>
         >[];
       }
   >;
@@ -86,7 +92,7 @@ export type TrustedReducerBundle<
   } | null;
   projectSeatsDynamic(input: {
     state: TrustedSessionState<Contract>;
-    playerIds: TrustedPlayerId<Contract, Definitions>[];
+    playerIds: TrustedPlayerId<Contract>[];
     viewId?: string;
     projectionMode?: "full" | "actionsOnly";
   }): {
@@ -111,7 +117,7 @@ export type TrustedReducerBundle<
   };
   projectSeatViewDynamic(input: {
     state: TrustedSessionState<Contract>;
-    playerId: TrustedPlayerId<Contract, Definitions>;
+    playerId: TrustedPlayerId<Contract>;
     viewId?: string;
   }): unknown;
 };
@@ -160,6 +166,10 @@ export type ReducerBundle = ReducerBundleContract & {
       >;
       interactionsByRef: Record<string, unknown>;
     };
+    explainInteraction(input: {
+      playerId: unknown;
+      interactionId: string;
+    }): InteractionExplanation;
     snapshot(): unknown;
     unsafeState(): unknown;
   };
@@ -168,4 +178,9 @@ export type ReducerBundle = ReducerBundleContract & {
     playerId: unknown;
     viewId?: string;
   }): unknown;
+  explainInteraction(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+  }): InteractionExplanation;
 };

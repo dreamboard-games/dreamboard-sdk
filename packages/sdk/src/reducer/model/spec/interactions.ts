@@ -17,11 +17,7 @@ import type {
   RuntimeHelpers,
   ValidationIssue,
 } from "./runtime-args";
-import type {
-  ClientParamsOf,
-  InputCollector,
-  ParamsOf,
-} from "./inputs";
+import type { ClientParamsOf, InputCollector, ParamsOf } from "./inputs";
 
 export type InteractionReduceInput<
   Collectors extends Record<string, InputCollector>,
@@ -35,8 +31,9 @@ export type InteractionValidateArgs<
   Collectors extends Record<string, InputCollector>,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
+  ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> & {
+  RuntimeHelpers<State, ErrorCode> & {
     state: State;
     input: InteractionReduceInput<Collectors, State>;
   };
@@ -45,7 +42,8 @@ export type InteractionReduceArgs<
   Collectors extends Record<string, InputCollector>,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
-> = InteractionValidateArgs<Collectors, State, Manifest> &
+  ErrorCode extends string = string,
+> = InteractionValidateArgs<Collectors, State, Manifest, ErrorCode> &
   MutationRuntimeHelpers;
 
 export type InteractionAvailabilityArgs<
@@ -57,9 +55,10 @@ export type InteractionAvailabilityArgs<
     input: { playerId: PlayerIdOfState<State> };
   };
 
-export type InteractionRuleValidationResult =
+export type InteractionRuleValidationResult<ErrorCode extends string = string> =
   | boolean
-  | ValidationIssue
+  | string
+  | ValidationIssue<ErrorCode>
   | null
   | undefined;
 
@@ -78,6 +77,7 @@ export type InteractionRule<
   Manifest extends ManifestContract<TableOfState<State>> = ManifestContract<
     TableOfState<State>
   >,
+  ErrorCode extends string = string,
 > = {
   /**
    * Stable rule id for diagnostics and tests. Rule ids are author-owned and
@@ -89,7 +89,7 @@ export type InteractionRule<
    * availability and submit-time validation unless `validate` returns a
    * specific ValidationIssue.
    */
-  errorCode: string;
+  errorCode: ErrorCode;
   message?: string;
   /**
    * Projection-time rule. Runs without submitted params, so UI descriptors can
@@ -104,8 +104,8 @@ export type InteractionRule<
    * ValidationIssue, null, or undefined.
    */
   validate?: BivariantCallback<
-    InteractionValidateArgs<Collectors, State, Manifest>,
-    InteractionRuleValidationResult
+    InteractionValidateArgs<Collectors, State, Manifest, ErrorCode>,
+    InteractionRuleValidationResult<ErrorCode>
   >;
 };
 
@@ -167,6 +167,7 @@ export type InteractionSpec<
   Manifest extends ManifestContract<TableOfState<State>> = ManifestContract<
     TableOfState<State>
   >,
+  ErrorCode extends string = string,
 > = {
   inputs: Collectors;
   paramsSchema?: SchemaLike<ClientParamsOf<Collectors>>;
@@ -208,14 +209,19 @@ export type InteractionSpec<
    * `actorsOnly` suppresses descriptors for seats that cannot act.
    */
   visibility?: "all" | "actorsOnly";
-  errorCodes?: readonly string[];
+  errorCodes?: readonly ErrorCode[];
   cost?: BivariantCallback<
-    InteractionValidateArgs<Collectors, State, Manifest>,
+    InteractionValidateArgs<Collectors, State, Manifest, ErrorCode>,
     Readonly<Record<string, number>>
   >;
-  rules?: readonly InteractionRule<NoInfer<Collectors>, State, Manifest>[];
+  rules?: readonly InteractionRule<
+    NoInfer<Collectors>,
+    State,
+    Manifest,
+    ErrorCode
+  >[];
   reduce: BivariantCallback<
-    InteractionReduceArgs<Collectors, State, Manifest>,
+    InteractionReduceArgs<Collectors, State, Manifest, ErrorCode>,
     ReducerResult<State>
   >;
 };
@@ -237,6 +243,7 @@ export type CardActionSpec<
   >,
   PlayFrom extends PlayerZoneIdOfManifest<Manifest> =
     PlayerZoneIdOfManifest<Manifest>,
+  ErrorCode extends string = string,
 > = {
   cardType: CardTypeOfState<State>;
   playFrom: PlayFrom;
@@ -253,12 +260,13 @@ export type CardActionSpec<
   commit?: InteractionCommitPolicyFor<Collectors>;
   actor?: ActorSelector<State, Manifest>;
   visibility?: "all" | "actorsOnly";
-  errorCodes?: readonly string[];
+  errorCodes?: readonly ErrorCode[];
   cost?: BivariantCallback<
     InteractionValidateArgs<
       Collectors & { cardId: InputCollector<SchemaLike<CardIdOfState<State>>> },
       State,
-      Manifest
+      Manifest,
+      ErrorCode
     >,
     Readonly<Record<string, number>>
   >;
@@ -269,22 +277,41 @@ export type CardActionSpec<
       }
     >,
     State,
-    Manifest
+    Manifest,
+    ErrorCode
   >[];
   reduce: BivariantCallback<
     InteractionReduceArgs<
       Collectors & { cardId: InputCollector<SchemaLike<CardIdOfState<State>>> },
       State,
-      Manifest
+      Manifest,
+      ErrorCode
     >,
     ReducerResult<State>
   >;
 };
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+type AnyInteractionRule = Omit<
+  InteractionRule<any, any, any, any>,
+  "available" | "validate"
+> & {
+  available?: BivariantCallback<any, boolean>;
+  validate?: BivariantCallback<any, InteractionRuleValidationResult<any>>;
+};
+
 export type AnyCardActionSpec<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
-> = CardActionSpec<Record<string, InputCollector>, State, Manifest>;
+> = Omit<
+  CardActionSpec<any, State, Manifest, any, any>,
+  "actor" | "cost" | "rules" | "reduce"
+> & {
+  actor?: BivariantCallback<any, any>;
+  cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
+  rules?: readonly AnyInteractionRule[];
+  reduce: BivariantCallback<any, ReducerResult<any>>;
+};
 
 export type CardActionMap<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
@@ -293,15 +320,24 @@ export type CardActionMap<
 
 /**
  * Type-safe erasure of {@link InteractionSpec} used by the runtime when it
- * stores heterogeneous interactions in a single map. The collectors generic
- * is erased to the structural upper bound (`Record<string, InputCollector>`)
- * so that lookups and metadata helpers can iterate collectors without
- * committing to a specific authoring-time shape.
+ * stores heterogeneous interactions in a single map. The collectors generic is
+ * intentionally erased with `any`: each authored interaction keeps a specific
+ * params shape, but phase registries need to store all of them together.
  */
 export type AnyInteractionSpec<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
-> = InteractionSpec<Record<string, InputCollector>, State, Manifest>;
+> = Omit<
+  InteractionSpec<any, State, Manifest, any>,
+  "actor" | "cost" | "rules" | "reduce" | "to"
+> & {
+  actor?: BivariantCallback<any, any>;
+  cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
+  rules?: readonly AnyInteractionRule[];
+  reduce: BivariantCallback<any, ReducerResult<any>>;
+  to?: BivariantCallback<any, any>;
+};
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export type InteractionMap<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },

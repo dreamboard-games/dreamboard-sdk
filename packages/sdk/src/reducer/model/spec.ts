@@ -33,6 +33,8 @@ export type {
   EffectContinuationCallable,
 } from "./spec/runtime-args";
 
+export { FrameworkErrorCodes, type FrameworkErrorCode } from "./error-codes";
+
 export type {
   EffectRollDieDefinition,
   EffectShuffleDefinition,
@@ -107,7 +109,4 @@ export type {
   PhaseDefinition,
 } from "./spec/phases";
 
-export type {
-  ViewDefinition,
-  StaticViewDefinition,
-} from "./spec/views";
+export type { ViewDefinition, StaticViewDefinition } from "./spec/views";

@@ -13,11 +13,18 @@ import type {
   ValidationResult,
 } from "../runtime/types/runtime-api.js";
 import type { PluginSessionState as RuntimePluginSessionState } from "../runtime/types/runtime-api.js";
+import type { InteractionExplanationLike } from "./definitions.js";
 
 type ReducerBundleLike = Pick<
   ReducerBundleContract,
   "projectSeatsDynamic" | "validateInput" | "dispatch"
->;
+> & {
+  explainInteraction?: (input: {
+    state: Wire.ReducerSessionState;
+    playerId: string;
+    interactionId: string;
+  }) => InteractionExplanationLike;
+};
 
 type DeepReadonly<T> = T extends (...args: readonly unknown[]) => unknown
   ? T
@@ -83,6 +90,7 @@ export type CreatedTestRuntime = {
     interactionId: string,
     params?: unknown,
   ): Promise<ValidationResult>;
+  explain(playerId: string, interactionId: string): InteractionExplanationLike;
   setControllingPlayer(playerId: string): void;
 };
 
@@ -176,7 +184,7 @@ function buildPluginSnapshot(options: {
   const seat = projection.seats?.[options.playerId];
   const zones = Object.fromEntries(
     Object.entries(
-      ((seat?.zones as Record<string, unknown> | undefined) ?? {}),
+      (seat?.zones as Record<string, unknown> | undefined) ?? {},
     ).map(([zoneId, zoneValue]) => {
       const zone = isWireZoneHandles(zoneValue) ? zoneValue : {};
       return [
@@ -238,7 +246,9 @@ export function createTestRuntime(
   let version = 0;
   let currentPlayerId = playerIds[0] ?? "";
   const stateListeners = new Set<(state: PluginStateSnapshot) => void>();
-  const sessionListeners = new Set<(state: RuntimePluginSessionState) => void>();
+  const sessionListeners = new Set<
+    (state: RuntimePluginSessionState) => void
+  >();
 
   const toReadySessionState = (
     snapshot: PluginStateSnapshot,
@@ -331,6 +341,22 @@ export function createTestRuntime(
     applyCurrentState();
   };
 
+  const explain = (
+    playerId: string,
+    interactionId: string,
+  ): InteractionExplanationLike => {
+    if (!options.bundle.explainInteraction) {
+      throw new Error(
+        "This reducer bundle does not expose explainInteraction().",
+      );
+    }
+    return options.bundle.explainInteraction({
+      state: currentState,
+      playerId,
+      interactionId,
+    });
+  };
+
   const setControllingPlayer = (playerId: string): void => {
     if (!playerIds.includes(playerId)) {
       throw new Error(`Unknown controlling player '${playerId}'.`);
@@ -378,6 +404,7 @@ export function createTestRuntime(
     },
     submit,
     validate,
+    explain,
     setControllingPlayer,
   };
 }

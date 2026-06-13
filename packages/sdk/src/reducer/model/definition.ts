@@ -53,10 +53,12 @@ export type ReducerGameContract<
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
+  Errors extends Record<string, string> | undefined = undefined,
 > = {
   manifest: Manifest;
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
+  errors?: Errors;
   /** Derived from `phases`; retained as an internal runtime convenience. */
   phaseNames: readonly string[];
 };
@@ -325,7 +327,7 @@ export type GameStateOf<Source> =
     infer _Views
   >
     ? ResolvedGameStateOf<Contract, Definitions>
-    : Source extends ReducerGameContract<any, any, any, any, any, any>
+    : Source extends ReducerGameContract<any, any, any, any, any, any, any>
       ? BaseGameStateOfContract<Source>
       : never;
 /* eslint-enable @typescript-eslint/no-explicit-any */

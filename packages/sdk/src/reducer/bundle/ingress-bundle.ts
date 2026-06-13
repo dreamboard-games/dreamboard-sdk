@@ -19,9 +19,8 @@ import type { DispatchTraceEntry } from "../core/types";
 import type {
   UntrustedReducerSessionState,
   UntrustedRuntimeInput,
-  UntrustedRuntimeTable,
 } from "../ingress/types";
-import type { ReducerBundle } from "./types";
+import type { ReducerBundle, ReducerBundleOptions } from "./types";
 
 /**
  * Pass the wire-validated `interaction` input through to the trusted
@@ -288,9 +287,10 @@ export function createReducerBundle<
   Views extends ViewMapOf<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  options: ReducerBundleOptions = {},
 ): ReducerBundle {
   type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
-  const trustedBundle = createTrustedReducerBundle(definition);
+  const trustedBundle = createTrustedReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   type Manifest = ManifestContractOf<Definition["contract"]>;
   type TrustedState = Awaited<ReturnType<typeof trustedBundle.initialize>>;
@@ -349,6 +349,13 @@ export function createReducerBundle<
       return trustedBundle.validateInput({
         state: parseTrustedState(state),
         input: routed as never,
+      });
+    },
+    explainInteraction({ state, playerId, interactionId }) {
+      return trustedBundle.explainInteraction({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
       });
     },
     async reduce({
@@ -477,6 +484,13 @@ export function createReducerBundle<
             state: requireState(),
             playerIds: parsedPlayerIds,
             viewId,
+          });
+        },
+        explainInteraction({ playerId, interactionId }) {
+          return trustedBundle.explainInteraction({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
           });
         },
         snapshot() {

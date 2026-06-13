@@ -1,4 +1,4 @@
-import type { TrustedReducerBundle } from "./types";
+import type { ReducerBundleOptions, TrustedReducerBundle } from "./types";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,
@@ -18,9 +18,10 @@ export function createTrustedReducerBundle<
   Views extends ViewMapOf<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  options: ReducerBundleOptions = {},
 ): TrustedReducerBundle<Contract, Definitions, Views> {
   const scope = createTrustedRuntimeScope(definition);
-  const interactions = createInteractionResolver(scope);
+  const interactions = createInteractionResolver(scope, options);
   const lifecycle = createLifecycleRunner(scope, interactions);
   const instructions = createTrustedInstructionRunner(
     scope,
@@ -51,6 +52,13 @@ export function createTrustedReducerBundle<
         scope.toCombinedState(state),
         input,
       );
+    },
+    explainInteraction({ state, playerId, interactionId }) {
+      return interactions.explainInteraction({
+        state: scope.toCombinedState(state),
+        playerId,
+        interactionId,
+      });
     },
     async reduce({ state, input }) {
       const combinedState = scope.toCombinedState(state);

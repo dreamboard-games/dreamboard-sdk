@@ -3,6 +3,7 @@ import type {
   BaseGameStateOfContract,
   ManifestContract,
   ManifestContractOf,
+  ErrorCodeOfContract,
   PhaseDefinition,
   RuntimeTableRecord,
   SchemaLike,
@@ -42,6 +43,9 @@ export type ContractState<Contract extends AnyReducerGameContract> =
 
 export type ContractManifest<Contract extends AnyReducerGameContract> =
   ManifestContractOf<Contract>;
+
+export type ContractErrorCode<Contract extends AnyReducerGameContract> =
+  ErrorCodeOfContract<Contract>;
 
 export type ScopedContractState<
   Contract extends AnyReducerGameContract,

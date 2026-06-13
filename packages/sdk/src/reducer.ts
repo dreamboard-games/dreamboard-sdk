@@ -22,7 +22,11 @@ export {
   type ReducerPhaseDefinition,
   type ReducerViewDefinition,
 } from "./reducer/authoring";
-export type { InteractionRule } from "./reducer/model";
+export type {
+  ErrorCodeOfContract,
+  InteractionRule,
+  ValidationIssue,
+} from "./reducer/model";
 export {
   boardInput,
   boardTarget,
@@ -65,6 +69,7 @@ export {
   type SparseMap,
 } from "./reducer/schema-helpers";
 export {
+  FrameworkErrorCodes,
   assumeManifestSchema,
   cloneManifestDefault,
   createManifestGameStateSchema,

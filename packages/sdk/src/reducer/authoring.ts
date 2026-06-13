@@ -28,6 +28,7 @@ export type {
 
 export type {
   GameStateOf,
+  ErrorCodeOfContract,
   InitialStateCallbacks,
   ManifestOf,
   PhaseMapOf,

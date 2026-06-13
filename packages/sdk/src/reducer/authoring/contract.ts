@@ -46,11 +46,30 @@ type ReducerGameContractInput<
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
+  Errors extends Record<string, string> | undefined = undefined,
 > = {
   manifest: Manifest;
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
+  errors?: Errors;
 };
+
+function validateErrorMap(errors: Record<string, string> | undefined): void {
+  if (!errors) return;
+  const codePattern = /^[A-Z][A-Z0-9_]*$/;
+  for (const [code, message] of Object.entries(errors)) {
+    if (!codePattern.test(code)) {
+      throw new Error(
+        `defineGameContract: error code '${code}' must use UPPER_SNAKE_CASE.`,
+      );
+    }
+    if (typeof message !== "string" || message.length === 0) {
+      throw new Error(
+        `defineGameContract: error code '${code}' must declare a non-empty default message.`,
+      );
+    }
+  }
+}
 
 export function defineGameContract<
   Table extends RuntimeTableRecord,
@@ -66,6 +85,7 @@ export function defineGameContract<
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   const Phases extends Record<string, SchemaLike<object>>,
+  const Errors extends Record<string, string> | undefined = undefined,
 >(
   definition: ReducerGameContractInput<
     Table,
@@ -73,7 +93,8 @@ export function defineGameContract<
     PublicSchema,
     PrivateSchema,
     HiddenSchema,
-    Phases
+    Phases,
+    Errors
   >,
 ): ReducerGameContract<
   Table,
@@ -81,9 +102,11 @@ export function defineGameContract<
   PublicSchema,
   PrivateSchema,
   HiddenSchema,
-  Phases
+  Phases,
+  Errors
 > & {
   readonly phases: Phases;
+  readonly errors: Errors;
   readonly phaseNames: readonly (keyof Phases & string)[];
   /**
    * Ergonomic shortcut to the manifest-backed Zod id schemas. Equivalent to
@@ -101,6 +124,7 @@ export function defineGameContract<
   validateStateSchemaIdBranding(definition.state.public, "public");
   validateStateSchemaIdBranding(definition.state.private, "private");
   validateStateSchemaIdBranding(definition.state.hidden, "hidden");
+  validateErrorMap(definition.errors);
   const phaseNames = Object.keys(definition.phases) as (keyof Phases &
     string)[];
   if (phaseNames.length === 0) {
@@ -134,6 +158,7 @@ export function defineGameContract<
     manifest: narrowedManifest,
     state: definition.state,
     phases: definition.phases,
+    errors: definition.errors,
     phaseNames,
     schemas: narrowedManifest.ids,
   } as ReducerGameContract<
@@ -142,9 +167,11 @@ export function defineGameContract<
     PublicSchema,
     PrivateSchema,
     HiddenSchema,
-    Phases
+    Phases,
+    Errors
   > & {
     readonly phases: Phases;
+    readonly errors: Errors;
     readonly phaseNames: readonly (keyof Phases & string)[];
     readonly schemas: ManifestIdSchemasOf<
       NarrowManifestPhaseNames<
