@@ -137,7 +137,7 @@ export type StaticBoardsJsonEnvelope<
   Table extends RuntimeTableRecord = RuntimeTableRecord,
 > = {
   formatVersion: 1;
-  generatedBy: "@dreamboard-games/workspace-codegen";
+  generatedBy: "@dreamboard-games/sdk/codegen";
   boards: StaticBoards<Table>;
   initialTable: Table;
 };
