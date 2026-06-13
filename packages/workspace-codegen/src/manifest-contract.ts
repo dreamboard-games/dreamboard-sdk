@@ -31,6 +31,11 @@ import type {
 } from "@dreamboard-games/sdk-types";
 import { resolveHexVertexGeometryKey } from "./hex-geometry.js";
 import {
+  createManifestStaticBoardsData,
+  createManifestStaticJsonEnvelope,
+  renderManifestStaticJsonSource,
+} from "./manifest-static.js";
+import {
   addStandardDecksIfNeeded,
   materializeCardSet,
 } from "./preset-card-sets.js";
@@ -4727,11 +4732,9 @@ function renderManifestContractSource(manifest: GameTopologyManifest): string {
       };
     }
   ).boards;
-  const staticBoardsTemplate = {
-    byId: initialTableBoards.byId,
-    hex: initialTableBoards.hex,
-    square: initialTableBoards.square,
-  };
+  const staticBoardsTemplate = createManifestStaticBoardsData({
+    boards: initialTableBoards,
+  });
   const sharedZoneIds = analysis.sharedZones.map((zone) => zone.id).sort();
   const playerZoneIds = analysis.playerZones.map((zone) => zone.id).sort();
   const zoneVisibilityById = Object.fromEntries(
@@ -6149,6 +6152,7 @@ export function generateManifestContractSource(
 export type GeneratedManifestContractSources = {
   "shared/manifest-literals.ts": string;
   "shared/manifest-types.ts": string;
+  "shared/manifest-static.json": string;
   "shared/manifest-runtime.ts": string;
   "shared/manifest-contract.ts": string;
 };
@@ -6196,7 +6200,7 @@ function renderManifestRuntimeSource(legacySource: string): string {
     .replace(generatedFileBanner, `${generatedFileBanner}\n// @ts-nocheck`)
     .replace(
       `} from "@dreamboard-games/sdk/reducer";\n\nconst unknownRecordSchema`,
-      `} from "@dreamboard-games/sdk/reducer";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
+      `} from "@dreamboard-games/sdk/reducer";\nimport staticBoardsData from "./manifest-static.json";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
     )
     .replaceAll(
       "literals.playerIds as unknown as readonly PlayerId[]",
@@ -6215,8 +6219,12 @@ function renderManifestRuntimeSource(legacySource: string): string {
       "handId: assumeManifestSchema<HandId>(handIdSchema),",
     )
     .replace(
+      "  type StaticBoards,\n",
+      "  type StaticBoards,\n  type StaticBoardsJsonEnvelope,\n",
+    )
+    .replace(
       /export const staticBoards = ([\s\S]*?) as const;\n\nconst baseInitialTable = /,
-      "export const staticBoards = $1 as const satisfies StaticBoards<PublicTableState>;\n\nconst baseInitialTable = ",
+      "export const staticBoards = (staticBoardsData as unknown as StaticBoardsJsonEnvelope<PublicTableState>).boards;\n\nconst baseInitialTable = ",
     )
     .replace(
       /const baseInitialTable = ([\s\S]*?) as const as unknown as TableState;\nconst baseDeckCardsByZoneId:/,
@@ -6622,9 +6630,19 @@ export function generateManifestContractSources(
   manifest: GameTopologyManifest,
 ): GeneratedManifestContractSources {
   const legacySource = renderManifestContractSource(manifest);
+  const initialTableTemplate = materializeManifestTable({
+    manifest,
+    playerIds: analyzeManifest(manifest).playerIds,
+    shuffleItems: <Value>(values: readonly Value[]) => [...values],
+  });
+  const staticBoardsEnvelope = createManifestStaticJsonEnvelope(
+    createManifestStaticBoardsData(initialTableTemplate),
+  );
   return {
     "shared/manifest-literals.ts": renderManifestLiteralsSource(legacySource),
     "shared/manifest-types.ts": renderManifestTypesSource(manifest),
+    "shared/manifest-static.json":
+      renderManifestStaticJsonSource(staticBoardsEnvelope),
     "shared/manifest-runtime.ts": renderManifestRuntimeSource(legacySource),
     "shared/manifest-contract.ts":
       renderManifestContractBarrelSource(legacySource),

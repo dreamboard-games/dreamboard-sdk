@@ -42,7 +42,7 @@ docs/reference/llms.txt        condensed index: one line per export
 
 Per-export emission format (deterministic, sorted):
 
-```markdown
+````markdown
 ## @dreamboard-games/sdk/reducer
 
 ### createContractAuthoring
@@ -50,12 +50,14 @@ Per-export emission format (deterministic, sorted):
 ```ts
 function createContractAuthoring<const Contract extends ContractWithPhases>(
   contract: Contract,
-): ContractAuthoring<Contract>
+): ContractAuthoring<Contract>;
 ```
+````
 
 Returns contract-bound authoring factories (`game`, `view`, `phase(name)`)
 so game code needs no type parameters. <first JSDoc paragraph>
-```
+
+````
 
 Emission rules:
 
@@ -79,7 +81,7 @@ Emission rules:
 "docs:generate": "node scripts/generate-agent-reference.mjs",
 "docs:check": "node scripts/generate-agent-reference.mjs --check",
 "check": "pnpm publication:check && pnpm version:check && node scripts/assert-peer-hygiene.mjs && pnpm build && pnpm docs:check && pnpm test && pnpm pack:dry-run"
-```
+````
 
 `--check` regenerates to a temp dir and diffs against the committed files —
 the `reducer-contract generate:check` pattern. A PR that changes the export
@@ -122,7 +124,7 @@ In the public `dreamboard-games/dreamboard` checkout (where skills live):
 
 ### 8E. Reference Content Curation
 
-Generation gets the facts right; curation keeps the *shape* agent-efficient.
+Generation gets the facts right; curation keeps the _shape_ agent-efficient.
 Two hand-written framing files are embedded at the top of `REFERENCE.md`
 (checked, not generated — kept under 100 lines total, content-reviewed
 against the budget):

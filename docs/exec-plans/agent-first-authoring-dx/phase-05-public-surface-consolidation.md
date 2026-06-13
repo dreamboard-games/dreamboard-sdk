@@ -22,7 +22,7 @@ release, following the 0.3.0 hard-cut precedent and its release-notes format.
 Why surface size is a first-order cost for the stated audience: an agent
 choosing between `CardIdOfManifest`, `CardIdOfTable`, `CardIdOfState`,
 `CardIdOfDeck`, and `CardIdOfHand` must understand the manifest→table→state
-layering — pure internal-model leakage. An agent that *guesses* a
+layering — pure internal-model leakage. An agent that _guesses_ a
 plausible-but-absent name (`CardIdOf<Game>`) burns a full edit-typecheck
 iteration. Every name on the facade is also a line in the generated reference
 (phase 8) competing for context-window budget.
@@ -55,13 +55,13 @@ grep -rhoE 'import (type )?\{[^}]*\} from "@dreamboard-games/sdk/reducer"' \
 
 Partition rule:
 
-- **Stays on `/reducer`**: every name observed in *authored* example files,
+- **Stays on `/reducer`**: every name observed in _authored_ example files,
   plus the authoring factories, input builders, transaction/query values,
   `PerPlayer` helpers, schema helpers, result types
   (`ReducerResult`, `ReducerAccept`, `ReducerReject`), `GameStateOf`,
   `TableQueriesOfState`, `ErrorCodeOfContract` (phase 2), and
   `createContractAuthoring` (phase 1).
-- **Moves to `/reducer/advanced`**: every name observed only in *generated*
+- **Moves to `/reducer/advanced`**: every name observed only in _generated_
   files or SDK-internal code — the `XOf*` extraction families,
   `Resolved*Location`, `Runtime*` structural types,
   manifest-schema plumbing (`assumeManifestSchema`,
@@ -133,11 +133,11 @@ list of `dist/reducer.d.ts`, snapshot-tested with a count assertion
 Reuse the 0.3.0 format — a complete old→new table:
 
 ```markdown
-| Moved name | Old subpath | New subpath |
-| --- | --- | --- |
-| `CardIdOfTable` (and the OfTable family) | `./reducer` | `./reducer/advanced` |
+| Moved name                                                    | Old subpath | New subpath          |
+| ------------------------------------------------------------- | ----------- | -------------------- |
+| `CardIdOfTable` (and the OfTable family)                      | `./reducer` | `./reducer/advanced` |
 | `ClientParamsOfInteractionOfDefinition` (OfDefinition family) | `./reducer` | `./reducer/advanced` |
-| ... every moved name, no "etc." ... | | |
+| ... every moved name, no "etc." ...                           |             |                      |
 ```
 
 Plus the action-required block for the CLI team: regenerate workspaces with

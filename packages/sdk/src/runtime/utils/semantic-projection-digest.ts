@@ -56,7 +56,10 @@ function semanticSeatProjection(
       canonicalizeSeatReference(playerId, playerToSeat),
     ),
     view: canonicalizeSemanticProjectionValue(state.view, playerToSeat),
-    zones: canonicalizeSemanticProjectionValue(gameplay.zones ?? {}, playerToSeat),
+    zones: canonicalizeSemanticProjectionValue(
+      gameplay.zones ?? {},
+      playerToSeat,
+    ),
     availableInteractions: gameplay.availableInteractions.map((descriptor) =>
       semanticInteractionDescriptor(descriptor, playerToSeat),
     ),
@@ -170,7 +173,10 @@ function canonicalizeSemanticProjectionProperty(
   value: unknown,
   playerToSeat: ReadonlyMap<string, number>,
 ): CanonicalJson {
-  const canonicalValue = canonicalizeSemanticProjectionValue(value, playerToSeat);
+  const canonicalValue = canonicalizeSemanticProjectionValue(
+    value,
+    playerToSeat,
+  );
   if (
     (key === "eligibleTargets" || key === "dependentCases") &&
     Array.isArray(canonicalValue)
@@ -286,7 +292,10 @@ function asRecord(value: unknown): Record<string, unknown> {
   return isRecord(value) ? value : {};
 }
 
-function stringField(record: Record<string, unknown>, key: string): string | null {
+function stringField(
+  record: Record<string, unknown>,
+  key: string,
+): string | null {
   const value = record[key];
   return typeof value === "string" && value.trim() ? value : null;
 }
@@ -353,8 +362,7 @@ function sha256Hex(input: string): string {
         rotateRight(words[index - 2]!, 17) ^
         rotateRight(words[index - 2]!, 19) ^
         (words[index - 2]! >>> 10);
-      words[index] =
-        (words[index - 16]! + s0 + words[index - 7]! + s1) >>> 0;
+      words[index] = (words[index - 16]! + s0 + words[index - 7]! + s1) >>> 0;
     }
 
     let a = h0;

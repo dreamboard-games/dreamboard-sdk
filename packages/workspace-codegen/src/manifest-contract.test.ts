@@ -540,6 +540,53 @@ async function expectGeneratedContractTypechecks(options: {
   }
 }
 
+async function expectGeneratedSplitContractTypechecks(options: {
+  tempPrefix: string;
+  manifest: GameTopologyManifest;
+  usageSource: string;
+}): Promise<void> {
+  const tempRoot = await createGeneratedContractTempRoot(options.tempPrefix);
+  const sources = generateManifestContractSources(options.manifest);
+
+  try {
+    for (const [relativePath, source] of Object.entries(sources)) {
+      await writeFile(path.join(tempRoot, path.basename(relativePath)), source);
+    }
+    const usagePath = path.join(tempRoot, "usage.ts");
+    await writeFile(usagePath, options.usageSource, "utf8");
+
+    const result = Bun.spawnSync({
+      cmd: [
+        tscBin,
+        "--noEmit",
+        "--strict",
+        "--target",
+        "ES2022",
+        "--module",
+        "ESNext",
+        "--moduleResolution",
+        "bundler",
+        "--resolveJsonModule",
+        "--skipLibCheck",
+        path.join(tempRoot, "manifest-contract.ts"),
+        usagePath,
+      ],
+      cwd: workspaceCodegenRoot,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    if (result.exitCode !== 0) {
+      const decoder = new TextDecoder();
+      throw new Error(
+        `Typecheck failed for generated split contract fixture\nstdout:\n${decoder.decode(result.stdout)}\nstderr:\n${decoder.decode(result.stderr)}`,
+      );
+    }
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+}
+
 async function withGeneratedContractModule<Result>(options: {
   tempPrefix: string;
   manifest: GameTopologyManifest;
@@ -935,6 +982,27 @@ test("generated createInitialTable keeps shared card homes aligned across decks,
 });
 
 test("generateManifestContractSources split runtime module executes generated runtime exports", async () => {
+  const sources = generateManifestContractSources(TEST_MANIFEST);
+  const staticEnvelope = JSON.parse(sources["shared/manifest-static.json"]);
+
+  expect(staticEnvelope).toMatchObject({
+    formatVersion: 1,
+    generatedBy: "@dreamboard-games/workspace-codegen",
+  });
+  expect(staticEnvelope.boards.byId["hex-map"].layout).toBe("hex");
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    'import staticBoardsData from "./manifest-static.json";',
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    "type StaticBoardsJsonEnvelope,",
+  );
+  expect(sources["shared/manifest-runtime.ts"]).toContain(
+    "export const staticBoards = (staticBoardsData as unknown as StaticBoardsJsonEnvelope<PublicTableState>).boards;",
+  );
+  expect(sources["shared/manifest-runtime.ts"]).not.toContain(
+    "export const staticBoards = {",
+  );
+
   await withGeneratedSplitContractModule({
     tempPrefix: ".tmp-split-runtime-contract-",
     manifest: TEST_MANIFEST,
@@ -996,6 +1064,33 @@ test("generateManifestContractSources split runtime module executes generated ru
   });
 });
 
+test("generateManifestContractSources preserves static board runtime values", async () => {
+  let legacyStaticBoards: Record<string, any> | undefined;
+  let legacyInitialTable: Record<string, any> | undefined;
+
+  await withGeneratedContractModule({
+    tempPrefix: ".tmp-static-board-legacy-contract-",
+    manifest: TEST_MANIFEST,
+    run: (module) => {
+      legacyStaticBoards = module.staticBoards;
+      legacyInitialTable = module.createInitialTable({
+        playerIds: ["player-1", "player-2"],
+      });
+    },
+  });
+
+  await withGeneratedSplitContractModule({
+    tempPrefix: ".tmp-static-board-split-contract-",
+    manifest: TEST_MANIFEST,
+    run: (module) => {
+      expect(module.staticBoards).toEqual(legacyStaticBoards);
+      expect(
+        module.createInitialTable({ playerIds: ["player-1", "player-2"] }),
+      ).toEqual(legacyInitialTable);
+    },
+  });
+});
+
 test("generateManifestContractSource exposes generated static board topology", async () => {
   await withGeneratedContractModule({
     tempPrefix: ".tmp-static-board-contract-",
@@ -1030,7 +1125,7 @@ test("generateManifestContractSource exposes generated static board topology", a
 });
 
 test("generateManifestContractSource typechecks static board topology ids", async () => {
-  await expectGeneratedContractTypechecks({
+  await expectGeneratedSplitContractTypechecks({
     tempPrefix: ".tmp-static-board-types-contract-",
     manifest: TEST_MANIFEST,
     usageSource: `import {

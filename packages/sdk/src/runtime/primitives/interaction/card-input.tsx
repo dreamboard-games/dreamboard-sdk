@@ -1,8 +1,4 @@
-import {
-  useCallback,
-  type ButtonHTMLAttributes,
-  type ReactNode,
-} from "react";
+import { useCallback, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useInteractionUiStore } from "../../context/InteractionDraftContext.js";
 import { usePluginState } from "../../context/PluginStateContext.js";
 import type { InteractionInputKey } from "../../ui-contract.js";

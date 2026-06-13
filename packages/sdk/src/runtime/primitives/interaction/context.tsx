@@ -1,9 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useMemo,
-  type ReactNode,
-} from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useInteractionHandle } from "../../hooks/useInteractionHandle.js";
 import { usePluginState } from "../../context/PluginStateContext.js";
 import type { InteractionKey } from "../../ui-contract.js";

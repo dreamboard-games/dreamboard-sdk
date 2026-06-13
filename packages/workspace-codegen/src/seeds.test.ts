@@ -39,3 +39,20 @@ test("generated reducer seeds use bound authoring factories", () => {
   expect(appSeed).not.toContain("defineStepPhase<");
   expect(appSeed).not.toContain("ReducerGameDefinition<");
 });
+
+test("generated framework tsconfigs admit manifest JSON artifacts", () => {
+  const files = generateFrameworkFiles(MINIMAL_MANIFEST);
+
+  expect(files["app/tsconfig.framework.json"]).toContain(
+    '"resolveJsonModule": true',
+  );
+  expect(files["app/tsconfig.framework.json"]).toContain(
+    '"../shared/manifest-*.json"',
+  );
+  expect(files["ui/tsconfig.framework.json"]).toContain(
+    '"resolveJsonModule": true',
+  );
+  expect(files["ui/tsconfig.framework.json"]).toContain(
+    '"../shared/**/*.json"',
+  );
+});

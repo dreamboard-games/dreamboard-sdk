@@ -242,4 +242,7 @@ export type {
   SquarePieceState,
   SquareVertexState,
 } from "../types/player-state.js";
-export type { CardCollection, ViewSlotOccupant } from "@dreamboard-games/sdk-types";
+export type {
+  CardCollection,
+  ViewSlotOccupant,
+} from "@dreamboard-games/sdk-types";

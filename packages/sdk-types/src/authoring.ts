@@ -790,12 +790,11 @@ type TypedPerPlayerZoneHomeSpec<Manifest extends GameTopologyManifest> = {
 };
 
 type TypedPlayerScopedComponentHomeSpec<Manifest extends GameTopologyManifest> =
-
-    | TypedPerPlayerZoneHomeSpec<Manifest>
-    | TypedPerPlayerSpaceHomeSpec<Manifest>
-    | TypedPerPlayerContainerHomeSpec<Manifest>
-    | TypedPerPlayerEdgeHomeSpec<Manifest>
-    | TypedPerPlayerVertexHomeSpec<Manifest>;
+  | TypedPerPlayerZoneHomeSpec<Manifest>
+  | TypedPerPlayerSpaceHomeSpec<Manifest>
+  | TypedPerPlayerContainerHomeSpec<Manifest>
+  | TypedPerPlayerEdgeHomeSpec<Manifest>
+  | TypedPerPlayerVertexHomeSpec<Manifest>;
 
 type TypedSharedComponentHomeSpec<Manifest extends GameTopologyManifest> =
   | { type: "detached" }

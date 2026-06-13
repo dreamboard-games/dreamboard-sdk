@@ -20,6 +20,10 @@ const specifierPattern = new RegExp(
     .map((specifier) => specifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|"),
 );
+const allowedMetadataReferencePatterns = [
+  /(\bgeneratedBy\s*:\s*)["@']@dreamboard-games\/workspace-codegen["@']/g,
+  /("generatedBy"\s*:\s*)"@dreamboard-games\/workspace-codegen"/g,
+];
 const scannedExtensions = new Set([
   ".css",
   ".cjs",
@@ -50,6 +54,13 @@ function shouldScan(filePath) {
     return true;
   }
   return scannedExtensions.has(path.extname(filePath));
+}
+
+function stripAllowedMetadataReferences(content) {
+  return allowedMetadataReferencePatterns.reduce(
+    (current, pattern) => current.replace(pattern, '$1"workspace-codegen"'),
+    content,
+  );
 }
 
 async function collectFiles(dir) {
@@ -129,6 +140,7 @@ async function main() {
         delete manifest.devDependencies;
         content = JSON.stringify(manifest);
       }
+      content = stripAllowedMetadataReferences(content);
       if (specifierPattern.test(content)) {
         violations.push(
           path.relative(path.join(extractDir, "package"), filePath),

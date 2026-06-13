@@ -7,24 +7,14 @@
     "declarationMap": true,
     "sourceMap": true,
     "jsx": "react-jsx",
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "baseUrl": "./src",
     "paths": {
-      "@dreamboard/manifest-contract": [
-        "./type-stubs/manifest-contract"
-      ],
-      "#dreamboard/ui-contract": [
-        "./type-stubs/ui-contract"
-      ]
+      "@dreamboard/manifest-contract": ["./type-stubs/manifest-contract"],
+      "#dreamboard/ui-contract": ["./type-stubs/ui-contract"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "dist",

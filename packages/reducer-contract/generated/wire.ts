@@ -7,94 +7,252 @@ export type ReducerContractVersion = string;
 
 export type EffectId = string;
 
-export type ContinuationToken = { "id": string; "data": JsonValue };
+export type ContinuationToken = { id: string; data: JsonValue };
 
 export type ContinuationMap = Record<string, ContinuationToken>;
 
-export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
-export type ReducerSetupSelection = { "profileId": string; "optionValues": Record<string, string | null> };
+export type ReducerSetupSelection = {
+  profileId: string;
+  optionValues: Record<string, string | null>;
+};
 
-export type RngState = { "seed": number | null; "cursor": number; "trace": Array<string> };
+export type RngState = {
+  seed: number | null;
+  cursor: number;
+  trace: Array<string>;
+};
 
-export type ReducerFlowState = { "currentPhase": string; "turn": number; "round": number; "activePlayers": Array<string> };
+export type ReducerFlowState = {
+  currentPhase: string;
+  turn: number;
+  round: number;
+  activePlayers: Array<string>;
+};
 
-export type RuntimeSimultaneousSubmission = { "interactionId": string; "params": JsonValue };
+export type RuntimeSimultaneousSubmission = {
+  interactionId: string;
+  params: JsonValue;
+};
 
-export type RuntimeSimultaneousCurrent = { "phaseName": string; "actors": Array<string>; "submissions": Record<string, RuntimeSimultaneousSubmission> };
+export type RuntimeSimultaneousCurrent = {
+  phaseName: string;
+  actors: Array<string>;
+  submissions: Record<string, RuntimeSimultaneousSubmission>;
+};
 
-export type RuntimeSimultaneousState = { "current": RuntimeSimultaneousCurrent | null };
+export type RuntimeSimultaneousState = {
+  current: RuntimeSimultaneousCurrent | null;
+};
 
-export type TransitionRecord = { "from": string; "to": string };
+export type TransitionRecord = { from: string; to: string };
 
-export type ReducerRuntimeState = { "rng": RngState; "setup": ReducerSetupSelection | null; "simultaneous": RuntimeSimultaneousState; "lastTransition": TransitionRecord | null };
+export type ReducerRuntimeState = {
+  rng: RngState;
+  setup: ReducerSetupSelection | null;
+  simultaneous: RuntimeSimultaneousState;
+  lastTransition: TransitionRecord | null;
+};
 
-export type ReducerDomainState = { "table": JsonValue; "publicState": JsonValue; "privateState": Record<string, JsonValue>; "hiddenState": JsonValue; "flow": ReducerFlowState; "phase": JsonValue };
+export type ReducerDomainState = {
+  table: JsonValue;
+  publicState: JsonValue;
+  privateState: Record<string, JsonValue>;
+  hiddenState: JsonValue;
+  flow: ReducerFlowState;
+  phase: JsonValue;
+};
 
-export type ReducerSessionState = { "domain": ReducerDomainState; "runtime": ReducerRuntimeState };
+export type ReducerSessionState = {
+  domain: ReducerDomainState;
+  runtime: ReducerRuntimeState;
+};
 
 export type GameInput = GameInputInteraction;
 
-export type GameInputInteraction = { "kind": "interaction"; "playerId": string; "interactionId": string; "params": JsonValue };
+export type GameInputInteraction = {
+  kind: "interaction";
+  playerId: string;
+  interactionId: string;
+  params: JsonValue;
+};
 
-export type Effect = EffectTransition | EffectRollDie | EffectShuffleSharedZone | EffectShufflePlayerZone;
+export type Effect =
+  | EffectTransition
+  | EffectRollDie
+  | EffectShuffleSharedZone
+  | EffectShufflePlayerZone;
 
-export type EffectTransition = { "effectId": EffectId; "type": "transition"; "to": string };
+export type EffectTransition = {
+  effectId: EffectId;
+  type: "transition";
+  to: string;
+};
 
-export type EffectRollDie = { "effectId": EffectId; "type": "rollDie"; "dieId": string };
+export type EffectRollDie = {
+  effectId: EffectId;
+  type: "rollDie";
+  dieId: string;
+};
 
-export type EffectShuffleSharedZone = { "effectId": EffectId; "type": "shuffleSharedZone"; "zoneId": string };
+export type EffectShuffleSharedZone = {
+  effectId: EffectId;
+  type: "shuffleSharedZone";
+  zoneId: string;
+};
 
-export type EffectShufflePlayerZone = { "effectId": EffectId; "type": "shufflePlayerZone"; "zoneId": string; "playerId": string };
+export type EffectShufflePlayerZone = {
+  effectId: EffectId;
+  type: "shufflePlayerZone";
+  zoneId: string;
+  playerId: string;
+};
 
-export type ReducerInputValidationResult = { "valid": boolean; "errorCode"?: string; "message"?: string };
+export type ReducerInputValidationResult = {
+  valid: boolean;
+  errorCode?: string;
+  message?: string;
+};
 
-export type InitializeRequest = { "table": JsonValue; "playerIds": Array<string>; "rngSeed"?: number | null; "setup"?: ReducerSetupSelection | null };
+export type InitializeRequest = {
+  table: JsonValue;
+  playerIds: Array<string>;
+  rngSeed?: number | null;
+  setup?: ReducerSetupSelection | null;
+};
 
-export type InitializePhaseRequest = { "state": ReducerSessionState; "to": string };
+export type InitializePhaseRequest = { state: ReducerSessionState; to: string };
 
-export type ValidateInputRequest = { "state": ReducerSessionState; "input": GameInput };
+export type ValidateInputRequest = {
+  state: ReducerSessionState;
+  input: GameInput;
+};
 
-export type ReduceRequest = { "state": ReducerSessionState; "input": GameInput };
+export type ReduceRequest = { state: ReducerSessionState; input: GameInput };
 
-export type DispatchRequest = { "state": ReducerSessionState; "input": GameInput };
+export type DispatchRequest = { state: ReducerSessionState; input: GameInput };
 
 export type ReduceResult = ReduceResultReject | ReduceResultAccept;
 
-export type ReduceResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
+export type ReduceResultReject = {
+  kind: "reject";
+  errorCode: string;
+  message?: string;
+};
 
-export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "effects": Array<Effect>; "continuations": ContinuationMap };
+export type ReduceResultAccept = {
+  kind: "accept";
+  state: ReducerSessionState;
+  effects: Array<Effect>;
+  continuations: ContinuationMap;
+};
 
-export type DispatchTrace = DispatchTraceAcceptedClientInput | DispatchTraceAppliedEffect | DispatchTraceRngConsumption;
+export type DispatchTrace =
+  | DispatchTraceAcceptedClientInput
+  | DispatchTraceAppliedEffect
+  | DispatchTraceRngConsumption;
 
-export type DispatchTraceAcceptedClientInput = { "kind": "acceptedClientInput"; "input": GameInput };
+export type DispatchTraceAcceptedClientInput = {
+  kind: "acceptedClientInput";
+  input: GameInput;
+};
 
-export type DispatchTraceAppliedEffect = { "kind": "appliedEffect"; "effect": Effect; "continuation"?: ContinuationToken };
+export type DispatchTraceAppliedEffect = {
+  kind: "appliedEffect";
+  effect: Effect;
+  continuation?: ContinuationToken;
+};
 
-export type DispatchTraceRngConsumption = { "kind": "rngConsumption"; "operation": string; "traceEntry": string };
+export type DispatchTraceRngConsumption = {
+  kind: "rngConsumption";
+  operation: string;
+  traceEntry: string;
+};
 
 export type DispatchResult = DispatchResultReject | DispatchResultAccept;
 
-export type DispatchResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
+export type DispatchResultReject = {
+  kind: "reject";
+  errorCode: string;
+  message?: string;
+};
 
-export type DispatchResultAccept = { "kind": "accept"; "state": ReducerSessionState; "trace": Array<DispatchTrace> };
+export type DispatchResultAccept = {
+  kind: "accept";
+  state: ReducerSessionState;
+  trace: Array<DispatchTrace>;
+};
 
-export type ReducerRuntimeLogEntry = ReducerRuntimeLogEntryAcceptedClientInput | ReducerRuntimeLogEntryAppliedEffect | ReducerRuntimeLogEntryRngConsumption | ReducerRuntimeLogEntryStateCommit;
+export type ReducerRuntimeLogEntry =
+  | ReducerRuntimeLogEntryAcceptedClientInput
+  | ReducerRuntimeLogEntryAppliedEffect
+  | ReducerRuntimeLogEntryRngConsumption
+  | ReducerRuntimeLogEntryStateCommit;
 
-export type ReducerRuntimeLogEntryAcceptedClientInput = { "kind": "acceptedClientInput"; "version": number; "input": GameInput };
+export type ReducerRuntimeLogEntryAcceptedClientInput = {
+  kind: "acceptedClientInput";
+  version: number;
+  input: GameInput;
+};
 
-export type ReducerRuntimeLogEntryAppliedEffect = { "kind": "appliedEffect"; "version": number; "effect": Effect; "continuation": ContinuationToken | null };
+export type ReducerRuntimeLogEntryAppliedEffect = {
+  kind: "appliedEffect";
+  version: number;
+  effect: Effect;
+  continuation: ContinuationToken | null;
+};
 
-export type ReducerRuntimeLogEntryRngConsumption = { "kind": "rngConsumption"; "version": number; "operation": string; "traceEntry": string };
+export type ReducerRuntimeLogEntryRngConsumption = {
+  kind: "rngConsumption";
+  version: number;
+  operation: string;
+  traceEntry: string;
+};
 
-export type ReducerRuntimeLogEntryStateCommit = { "kind": "stateCommit"; "version": number; "state": ReducerSessionState };
+export type ReducerRuntimeLogEntryStateCommit = {
+  kind: "stateCommit";
+  version: number;
+  state: ReducerSessionState;
+};
 
-export type SeatProjection = { "view"?: JsonValue; "availableInteractionRefs"?: JsonValue; "zones"?: JsonValue };
+export type SeatProjection = {
+  view?: JsonValue;
+  availableInteractionRefs?: JsonValue;
+  zones?: JsonValue;
+};
 
-export type SimultaneousPhaseProjection = { "phaseName": string; "interactionId": string; "actorIds": Array<string>; "sealedPlayerIds": Array<string>; "pendingPlayerIds": Array<string> };
+export type SimultaneousPhaseProjection = {
+  phaseName: string;
+  interactionId: string;
+  actorIds: Array<string>;
+  sealedPlayerIds: Array<string>;
+  pendingPlayerIds: Array<string>;
+};
 
-export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection> };
+export type SeatProjectionBundle = {
+  currentStage?: string | null;
+  stageSeats?: Array<string>;
+  simultaneousPhase?: SimultaneousPhaseProjection | null;
+  interactionsByRef?: JsonValue;
+  seats: Record<string, SeatProjection>;
+};
 
-export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "viewId"?: string; "projectionMode"?: "full" | "actionsOnly" | null };
+export type ProjectSeatsDynamicRequest = {
+  state: ReducerSessionState;
+  playerIds: Array<string>;
+  viewId?: string;
+  projectionMode?: "full" | "actionsOnly" | null;
+};
 
-export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manifestVersion": string };
+export type BoardStaticProjection = {
+  view: JsonValue;
+  hash: string;
+  manifestVersion: string;
+};

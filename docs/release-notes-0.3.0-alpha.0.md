@@ -1,10 +1,10 @@
 # @dreamboard-games/sdk 0.3.0-alpha.0 — hard-cut restructure
 
 This release is a **breaking restructure** of the SDK's public subpath surface
-and internal layout. Authoring API *names* are unchanged (`defineGame`,
+and internal layout. Authoring API _names_ are unchanged (`defineGame`,
 `definePhase`, `boardInput`, `createReducerBundle`, `PluginRuntime`,
 `createWorkspaceUIContract`, all `Workspace*` types, the primitives
-namespace, …) — only *import paths* moved.
+namespace, …) — only _import paths_ moved.
 
 Game projects generated against `< 0.3.0` keep working on their pinned SDK
 version. They break the moment they upgrade, until their workspace files are
@@ -23,22 +23,22 @@ version. They break the moment they upgrade, until their workspace files are
 
 ## Subpath map: old → new
 
-| Old subpath | New subpath |
-|---|---|
-| `.` | unchanged |
-| `./package-set` | unchanged |
-| `./types` | unchanged (now fronts `@dreamboard-games/sdk-types`, inlined at build) |
-| `./reducer` | unchanged |
-| `./ui`, `./ui/components`, `./ui/defaults`, `./ui/plugin-styles.css` | unchanged |
-| `./ui/types/player-state` | `./ui/player-state` |
-| `./testing` | unchanged |
-| `./browser-interaction` | unchanged |
-| `./generated/runtime` | merged into `./runtime` (absorbs `createWorkspaceUIContract` + workspace-contract type re-exports; `DreamboardUIRegister` augmentation target) |
-| `./generated/runtime/primitives` | merged into `./runtime/primitives` |
-| `./generated/workspace-contract` | merged into `./runtime/workspace-contract` |
-| `./runtime/types/runtime-api` + `./generated/runtime-api` | union → `./runtime/runtime-api` (adds `PluginStateSnapshot`, `ZoneHandlesSnapshot`) |
-| `./infrastructure/workspace-codegen` | `./codegen` |
-| `./infrastructure/reducer-bundle-abi` | `./reducer-contract` |
+| Old subpath                                                          | New subpath                                                                                                                                    |
+| -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.`                                                                  | unchanged                                                                                                                                      |
+| `./package-set`                                                      | unchanged                                                                                                                                      |
+| `./types`                                                            | unchanged (now fronts `@dreamboard-games/sdk-types`, inlined at build)                                                                         |
+| `./reducer`                                                          | unchanged                                                                                                                                      |
+| `./ui`, `./ui/components`, `./ui/defaults`, `./ui/plugin-styles.css` | unchanged                                                                                                                                      |
+| `./ui/types/player-state`                                            | `./ui/player-state`                                                                                                                            |
+| `./testing`                                                          | unchanged                                                                                                                                      |
+| `./browser-interaction`                                              | unchanged                                                                                                                                      |
+| `./generated/runtime`                                                | merged into `./runtime` (absorbs `createWorkspaceUIContract` + workspace-contract type re-exports; `DreamboardUIRegister` augmentation target) |
+| `./generated/runtime/primitives`                                     | merged into `./runtime/primitives`                                                                                                             |
+| `./generated/workspace-contract`                                     | merged into `./runtime/workspace-contract`                                                                                                     |
+| `./runtime/types/runtime-api` + `./generated/runtime-api`            | union → `./runtime/runtime-api` (adds `PluginStateSnapshot`, `ZoneHandlesSnapshot`)                                                            |
+| `./infrastructure/workspace-codegen`                                 | `./codegen`                                                                                                                                    |
+| `./infrastructure/reducer-bundle-abi`                                | `./reducer-contract`                                                                                                                           |
 
 17 subpaths total (16 JS + the CSS asset). Removed without replacement:
 none — every old entry has a target in the table.
