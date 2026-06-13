@@ -987,7 +987,7 @@ test("generateManifestContractSources split runtime module executes generated ru
 
   expect(staticEnvelope).toMatchObject({
     formatVersion: 1,
-    generatedBy: "@dreamboard-games/workspace-codegen",
+    generatedBy: "@dreamboard-games/sdk/codegen",
   });
   expect(staticEnvelope.boards.byId["hex-map"].layout).toBe("hex");
   expect(staticEnvelope.initialTable.boards.byId["track-board"].layout).toBe(

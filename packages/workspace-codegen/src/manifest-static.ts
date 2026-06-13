@@ -6,7 +6,7 @@ export type ManifestStaticBoardsData = {
 
 export type ManifestStaticJsonEnvelope = {
   formatVersion: 1;
-  generatedBy: "@dreamboard-games/workspace-codegen";
+  generatedBy: "@dreamboard-games/sdk/codegen";
   boards: ManifestStaticBoardsData;
   initialTable: unknown;
 };
@@ -35,7 +35,7 @@ export function createManifestStaticJsonEnvelope(
 ): ManifestStaticJsonEnvelope {
   return {
     formatVersion: 1,
-    generatedBy: "@dreamboard-games/workspace-codegen",
+    generatedBy: "@dreamboard-games/sdk/codegen",
     boards: staticBoards,
     initialTable,
   };

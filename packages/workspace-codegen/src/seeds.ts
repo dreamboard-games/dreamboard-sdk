@@ -1360,7 +1360,6 @@ function generateReducerAuthoringSeed(): string {
 import { gameContract } from "./game-contract";
 
 export const authoring = createContractAuthoring(gameContract);
-export const setup = authoring.phase("setup");
 `;
 }
 
@@ -1422,8 +1421,10 @@ export function isFrameworkOwnedSetupProfilesSeed(
 }
 
 function generateSetupPhaseSeed(): string {
-  return `import { setup } from "../authoring";
+  return `import { authoring } from "../authoring";
 import { edit } from "../reducer-support";
+
+const setup = authoring.phase("setup");
 
 const setupMoodChoices = [
   { value: "ready", label: "Ready" },
