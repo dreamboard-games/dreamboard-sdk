@@ -13,10 +13,7 @@ import {
   InteractionUnavailableMessage,
   InteractionValidationMessage,
 } from "./parts.js";
-import {
-  InteractionFieldPrimitive,
-  InteractionFormPrimitive,
-} from "./form.js";
+import { InteractionFieldPrimitive, InteractionFormPrimitive } from "./form.js";
 import { InteractionCardInput } from "./card-input.js";
 
 export {

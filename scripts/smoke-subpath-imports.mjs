@@ -38,7 +38,10 @@ const CSS_SUBPATH = "./ui/plugin-styles.css";
  * correctly has zero runtime exports, so the smoke only asserts that the
  * specifier resolves and evaluates.
  */
-const TYPE_ONLY_SUBPATHS = new Set(["./ui/player-state", "./runtime/runtime-api"]);
+const TYPE_ONLY_SUBPATHS = new Set([
+  "./ui/player-state",
+  "./runtime/runtime-api",
+]);
 
 async function main() {
   const receiptPath = path.join(
@@ -120,9 +123,13 @@ async function main() {
   const cssPath = path.join(sdkRoot, "dist", "ui", "plugin-styles.css");
   const cssStats = await stat(cssPath).catch(() => null);
   if (!cssStats || cssStats.size === 0) {
-    failures.push(`@dreamboard-games/sdk/${CSS_SUBPATH.slice(2)} (missing dist asset)`);
+    failures.push(
+      `@dreamboard-games/sdk/${CSS_SUBPATH.slice(2)} (missing dist asset)`,
+    );
   } else {
-    console.log(`@dreamboard-games/sdk/ui/plugin-styles.css -> ${cssStats.size} bytes`);
+    console.log(
+      `@dreamboard-games/sdk/ui/plugin-styles.css -> ${cssStats.size} bytes`,
+    );
   }
 
   if (failures.length > 0) {

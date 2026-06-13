@@ -1,8 +1,4 @@
-import type {
-  ButtonHTMLAttributes,
-  ReactElement,
-  ReactNode,
-} from "react";
+import type { ButtonHTMLAttributes, ReactElement, ReactNode } from "react";
 import type { ClientParamSchemaMap } from "../context/ClientParamSchemaContext.js";
 import type { HandRole } from "../../ui/components.js";
 import type { DreamboardUI, UIContract } from "../ui-contract.js";

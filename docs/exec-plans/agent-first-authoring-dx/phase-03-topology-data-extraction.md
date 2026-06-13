@@ -17,16 +17,16 @@ checking work.
 
 What the generated runtime actually contains (frontier-trails):
 
-| Section | Lines | Type-bearing? |
-| --- | --- | --- |
-| `literals` re-export, `ids`, id-type aliases | ~250 | yes — keep as TS |
-| zones/records/idGuards/setup tables | ~400 | yes — keep as TS |
-| Card/piece/die field schemas + `CardStateById` | ~2,300 | yes — keep as TS |
+| Section                                                           | Lines   | Type-bearing?                                                                                                |
+| ----------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| `literals` re-export, `ids`, id-type aliases                      | ~250    | yes — keep as TS                                                                                             |
+| zones/records/idGuards/setup tables                               | ~400    | yes — keep as TS                                                                                             |
+| Card/piece/die field schemas + `CardStateById`                    | ~2,300  | yes — keep as TS                                                                                             |
 | `staticBoards` literal (spaces/edges/vertices, coords, adjacency) | ~10,645 | **no** — keys are typed by id unions that already exist in `manifest-literals.ts`; the values are plain data |
-| `createInitialTable`, helpers, runtime schema | ~900 | yes — keep as TS |
+| `createInitialTable`, helpers, runtime schema                     | ~900    | yes — keep as TS                                                                                             |
 
 The id unions (`EdgeId`, `VertexId`, `SpaceId`, …) come from
-`manifest-literals.ts`, *not* from inference over the `staticBoards` literal.
+`manifest-literals.ts`, _not_ from inference over the `staticBoards` literal.
 Nothing in the type system requires the coordinate data to be a checked
 literal.
 
@@ -60,8 +60,16 @@ JSON emission requirements:
     "frontier": {
       "layout": "hex",
       "spaces": { "space:frontier:0,-2": { "q": 0, "r": -2, "fields": {} } },
-      "edges":  [ { "id": "edge:frontier:...", "spaceIds": ["..."], "fields": { "relaySlot": null } } ],
-      "vertices": [ { "id": "vertex:frontier:...", "spaceIds": ["..."], "fields": {} } ]
+      "edges": [
+        {
+          "id": "edge:frontier:...",
+          "spaceIds": ["..."],
+          "fields": { "relaySlot": null }
+        }
+      ],
+      "vertices": [
+        { "id": "vertex:frontier:...", "spaceIds": ["..."], "fields": {} }
+      ]
     }
   }
 }
@@ -76,7 +84,7 @@ structural value types, literal key/id types:
 // generated manifest-runtime.ts (replacing the 10.6k-line literal)
 import staticBoardsData from "./manifest-static.json";
 import type {
-  StaticBoards,            // existing SDK type, from ./reducer model
+  StaticBoards, // existing SDK type, from ./reducer model
 } from "@dreamboard-games/sdk/reducer";
 import type { EdgeId, SpaceId, VertexId } from "./manifest-literals";
 
@@ -89,10 +97,11 @@ export type FrontierStaticBoard = TiledStaticBoard<
   FrontierVertexFields
 >;
 
-export const staticBoards: { readonly frontier: FrontierStaticBoard } =
-  (staticBoardsData as StaticBoardsJsonEnvelope).boards as {
-    readonly frontier: FrontierStaticBoard;
-  };
+export const staticBoards: { readonly frontier: FrontierStaticBoard } = (
+  staticBoardsData as StaticBoardsJsonEnvelope
+).boards as {
+  readonly frontier: FrontierStaticBoard;
+};
 ```
 
 The cast is generated code asserting a fact the generator guarantees by
@@ -121,7 +130,9 @@ Cross-repo verification (private monorepo + public CLI):
   ```ts
   // fallback form: still TS, but explicitly widened — no literal-type checking
   import type { StaticBoardsJsonEnvelope } from "@dreamboard-games/sdk/reducer";
-  export const staticBoardsData: StaticBoardsJsonEnvelope = { /* data */ };
+  export const staticBoardsData: StaticBoardsJsonEnvelope = {
+    /* data */
+  };
   ```
 
   This keeps the LOC in the workspace but removes the type-checking weight
@@ -187,6 +198,6 @@ pattern that symlinks the built SDK):
   are the compatible choice across tsc + esbuild; do not use
   `with { type: "json" }` (Node-ESM import attributes) in generated output —
   tsup/esbuild and the workspace tsconfigs disagree on support.
-- The deep-equality fixture pins the *previous* emitter output; keep the
+- The deep-equality fixture pins the _previous_ emitter output; keep the
   fixture small (a 7-hex board, not the full 19-hex layout) to avoid checking
   in another 10k-line artifact.

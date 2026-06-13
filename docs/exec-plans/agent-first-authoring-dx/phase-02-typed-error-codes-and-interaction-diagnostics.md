@@ -47,8 +47,15 @@ phase names are today):
 // app/game-contract.ts
 export const gameContract = defineGameContract({
   manifest: manifestContract,
-  state: { public: publicStateSchema, private: privateStateSchema, hidden: hiddenStateSchema },
-  phases: { setup: setupPhaseStateSchema, playerTurn: playerTurnPhaseStateSchema, /* ... */ },
+  state: {
+    public: publicStateSchema,
+    private: privateStateSchema,
+    hidden: hiddenStateSchema,
+  },
+  phases: {
+    setup: setupPhaseStateSchema,
+    playerTurn: playerTurnPhaseStateSchema /* ... */,
+  },
   errors: {
     DICE_NOT_ROLLED: "Roll the dice before taking actions.",
     INSUFFICIENT_RESOURCES: "You cannot afford this action.",
@@ -106,8 +113,8 @@ rule's code and this message):
 
 ```ts
 export type InteractionRuleValidationResult<ErrorCode extends string = string> =
-  | boolean        // false => rule errorCode + rule/contract message
-  | string         // fail  => rule errorCode + this message          (NEW)
+  | boolean // false => rule errorCode + rule/contract message
+  | string // fail  => rule errorCode + this message          (NEW)
   | ValidationIssue<ErrorCode>
   | null
   | undefined;
@@ -139,8 +146,8 @@ type InteractionDecision =
   | { available: true }
   | {
       available: false;
-      code: string;          // contract or framework error code
-      ruleId?: string;       // author rule that failed, when applicable
+      code: string; // contract or framework error code
+      ruleId?: string; // author rule that failed, when applicable
       message?: string;
     };
 ```
@@ -153,7 +160,10 @@ switch (decision.code) {
   case FrameworkErrorCodes.NOT_YOUR_TURN:
     return { status: "notYourTurn", reason: decision.message ?? decision.code };
   case "INSUFFICIENT_RESOURCES":
-    return { status: "insufficientResources", reason: decision.message ?? decision.code };
+    return {
+      status: "insufficientResources",
+      reason: decision.message ?? decision.code,
+    };
   default:
     return { status: "blocked", reason: decision.message ?? decision.code };
 }
@@ -174,7 +184,12 @@ export type InteractionExplanation = {
   interactionId: string;
   phase: string;
   step: string | null;
-  availability: "available" | "notYourTurn" | "wrongPhase" | "wrongStep" | "blocked";
+  availability:
+    | "available"
+    | "notYourTurn"
+    | "wrongPhase"
+    | "wrongStep"
+    | "blocked";
   /** Rules evaluated at projection time, in declaration order. */
   rules: ReadonlyArray<{
     ruleId: string;
@@ -184,7 +199,11 @@ export type InteractionExplanation = {
   }>;
   actor: { required: readonly string[]; playerIsActor: boolean };
   /** Per-input eligible-target counts — catches "rule passes, zero targets". */
-  inputs: ReadonlyArray<{ key: string; kind: string; eligibleCount: number | "lazy" }>;
+  inputs: ReadonlyArray<{
+    key: string;
+    kind: string;
+    eligibleCount: number | "lazy";
+  }>;
 };
 ```
 
@@ -203,7 +222,7 @@ Exposure points:
    ```
 
    `create-expect-api.ts` gains a matcher that embeds the explanation in
-   failure output, so a failing scenario shows *which rule* failed without
+   failure output, so a failing scenario shows _which rule_ failed without
    any extra authoring:
 
    ```text

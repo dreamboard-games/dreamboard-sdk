@@ -788,22 +788,24 @@ function HexGridImpl(
   const board = resolveBoardProp<
     AnyHexBoardInput,
     HexGridProps<HexGridInputProps>
-  >(props, (inlineProps) =>
-    ("spaces" in inlineProps
-      ? {
-          id: "__hex-grid__",
-          orientation,
-          spaces: inlineProps.spaces,
-          edges: inlineProps.edges ?? [],
-          vertices: inlineProps.vertices ?? [],
-        }
-      : {
-          id: "__hex-grid__",
-          orientation,
-          tiles: inlineProps.tiles,
-          edges: inlineProps.edges ?? [],
-          vertices: inlineProps.vertices ?? [],
-        }) satisfies AnyHexBoardInput,
+  >(
+    props,
+    (inlineProps) =>
+      ("spaces" in inlineProps
+        ? {
+            id: "__hex-grid__",
+            orientation,
+            spaces: inlineProps.spaces,
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }
+        : {
+            id: "__hex-grid__",
+            orientation,
+            tiles: inlineProps.tiles,
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }) satisfies AnyHexBoardInput,
   );
   // Pan/zoom is only enabled on mobile devices when the prop is true
   const isMobile = useIsMobile();

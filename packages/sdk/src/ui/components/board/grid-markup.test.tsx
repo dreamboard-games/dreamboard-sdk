@@ -136,7 +136,13 @@ test("HexGrid flat-top orientation without interactive layers", () => {
         <polygon points={geometry.points({ inset: 4 })} data-tile={tile.id} />
       )}
       renderEdge={(edge, position) => (
-        <line x1={position.x1} y1={position.y1} x2={position.x2} y2={position.y2} data-edge={edge.id} />
+        <line
+          x1={position.x1}
+          y1={position.y1}
+          x2={position.x2}
+          y2={position.y2}
+          data-edge={edge.id}
+        />
       )}
       renderVertex={(vertex, position) => (
         <circle cx={position.x} cy={position.y} r={4} data-vertex={vertex.id} />

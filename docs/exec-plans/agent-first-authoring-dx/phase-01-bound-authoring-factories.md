@@ -26,8 +26,12 @@ export const buildTrail = defineInteraction<
   inputs: {
     edgeId: boardInput.edge<GameState, EdgeId>({ target: buildTrailTarget }),
   },
-  rules: [ /* ... */ ],
-  reduce({ state, input, accept, q }) { /* ... */ },
+  rules: [
+    /* ... */
+  ],
+  reduce({ state, input, accept, q }) {
+    /* ... */
+  },
 });
 ```
 
@@ -35,7 +39,7 @@ Failure modes this creates for agents:
 
 - The phase-state binding is positional and repeated per file. Passing
   `setupPhaseStateSchema` into a `playerTurn` interaction type-checks the
-  *definition* but binds the wrong `state.phase` shape — discovered only when
+  _definition_ but binds the wrong `state.phase` shape — discovered only when
   the phase map rejects it (or worse, when both schemas are structurally
   compatible and it never surfaces).
 - `defineGame` requires a manual annotation in practice
@@ -90,9 +94,9 @@ type ContractWithPhases = AnyReducerGameContract & {
   phases: Record<string, SchemaLike<object>>;
 };
 
-export function createContractAuthoring<const Contract extends ContractWithPhases>(
-  contract: Contract,
-): ContractAuthoring<Contract> {
+export function createContractAuthoring<
+  const Contract extends ContractWithPhases,
+>(contract: Contract): ContractAuthoring<Contract> {
   const phaseCache = new Map<string, unknown>();
   return {
     contract,
@@ -242,7 +246,7 @@ to a sub-union of ids — the bound builder's value type still accepts an
 explicit narrowing parameter:
 
 ```ts
-playerTurn.inputs.board.edge<RelayEdgeId>({ target: relayTarget })
+playerTurn.inputs.board.edge<RelayEdgeId>({ target: relayTarget });
 ```
 
 ### 1D. End-To-End Before/After (the handover demo)
@@ -265,7 +269,8 @@ export const buildTrail = playerTurn.interaction({
       id: "can-afford-trail",
       errorCode: "INSUFFICIENT_RESOURCES",
       message: "Need 1 timber + 1 clay.",
-      validate: ({ input, q }) => q.player.canAfford(input.playerId, COST_ROUTE),
+      validate: ({ input, q }) =>
+        q.player.canAfford(input.playerId, COST_ROUTE),
     },
   ],
   reduce({ state, input, accept }) {
@@ -283,7 +288,7 @@ export const buildTrail = playerTurn.interaction({
 ```
 
 (The rule simplification — `validate` returning `boolean` and the message
-living on the rule — is *already supported* by
+living on the rule — is _already supported_ by
 `InteractionRuleValidationResult`; phase 2 types the code, this phase updates
 the examples/docs style.)
 
@@ -296,7 +301,13 @@ import { playerView } from "./player-view";
 // ...
 
 const game = authoring.game({
-  initial: { public: ({ playerIds, setup }) => ({ /* ... */ }), private: () => ({}), hidden: () => ({}) },
+  initial: {
+    public: ({ playerIds, setup }) => ({
+      /* ... */
+    }),
+    private: () => ({}),
+    hidden: () => ({}),
+  },
   initialPhase: "setup",
   setupProfiles,
   phases,
@@ -315,11 +326,17 @@ export const playerTurnPhase = playerTurn.stepPhase({
   steps: ["roll", "discard", "storm", "main"],
   // `state:` is gone — injected from contract.phases.playerTurn
   initialState: () => ({ ...FRESH_TURN }),
-  enter({ state, accept, q }) { /* unchanged */ },
+  enter({ state, accept, q }) {
+    /* unchanged */
+  },
   actor: ({ state }) => state.flow.activePlayers,
   zones: [zones.charterHand],
-  cardActions: { /* unchanged */ },
-  interactions: { /* unchanged */ },
+  cardActions: {
+    /* unchanged */
+  },
+  interactions: {
+    /* unchanged */
+  },
 });
 ```
 
@@ -327,17 +344,23 @@ export const playerTurnPhase = playerTurn.stepPhase({
 
 The current example needs
 `const game: ReducerGameDefinition<GameContract, typeof phases, typeof views>`.
-Part of this phase is determining *why* (declaration-emit stability vs.
+Part of this phase is determining _why_ (declaration-emit stability vs.
 genuine inference failure) and making the bound form infer cleanly. Add a
 type-level test in `packages/sdk/src/reducer/` (pattern:
 `contract-id-branding.test.ts`):
 
 ```ts
 // authoring-inference.test.ts (type assertions, bun test)
-const game = authoring.game({ /* fixture definition */ });
+const game = authoring.game({
+  /* fixture definition */
+});
 type PhaseNames = PhaseNamesOfDefinition<typeof game>;
 type _AssertPhases = Expect<Equal<PhaseNames, "setup" | "playerTurn">>;
-type Params = ClientParamsOfInteractionOfDefinition<typeof game, "playerTurn", "buildTrail">;
+type Params = ClientParamsOfInteractionOfDefinition<
+  typeof game,
+  "playerTurn",
+  "buildTrail"
+>;
 type _AssertParams = Expect<Equal<Params, { edgeId: EdgeIdFixture }>>;
 ```
 

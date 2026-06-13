@@ -133,6 +133,14 @@ export type StaticBoards<Table extends RuntimeTableRecord> = Pick<
   "byId" | "hex" | "square"
 >;
 
+export type StaticBoardsJsonEnvelope<
+  Table extends RuntimeTableRecord = RuntimeTableRecord,
+> = {
+  formatVersion: 1;
+  generatedBy: "@dreamboard-games/workspace-codegen";
+  boards: StaticBoards<Table>;
+};
+
 export type SetupOptionChoiceMetadata = {
   id: string;
   label: string;

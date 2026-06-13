@@ -654,24 +654,26 @@ function SquareGridImpl(
   const board = resolveBoardProp<
     AnySquareBoardInput,
     SquareGridProps<SquareGridInputProps>
-  >(props, (inlineProps) =>
-    ("spaces" in inlineProps
-      ? {
-          id: "__square-grid__",
-          spaces: inlineProps.spaces,
-          pieces: inlineProps.pieces ?? [],
-          edges: inlineProps.edges ?? [],
-          vertices: inlineProps.vertices ?? [],
-        }
-      : {
-          id: "__square-grid__",
-          rows: inlineProps.rows ?? 0,
-          cols: inlineProps.cols ?? 0,
-          cells: inlineProps.cells,
-          pieces: inlineProps.pieces ?? [],
-          edges: inlineProps.edges ?? [],
-          vertices: inlineProps.vertices ?? [],
-        }) satisfies AnySquareBoardInput,
+  >(
+    props,
+    (inlineProps) =>
+      ("spaces" in inlineProps
+        ? {
+            id: "__square-grid__",
+            spaces: inlineProps.spaces,
+            pieces: inlineProps.pieces ?? [],
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }
+        : {
+            id: "__square-grid__",
+            rows: inlineProps.rows ?? 0,
+            cols: inlineProps.cols ?? 0,
+            cells: inlineProps.cells,
+            pieces: inlineProps.pieces ?? [],
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }) satisfies AnySquareBoardInput,
   );
 
   // Coordinate label margin

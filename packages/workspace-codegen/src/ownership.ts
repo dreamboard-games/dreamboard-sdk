@@ -22,7 +22,7 @@ export type ScaffoldingOwnership = {
 };
 
 export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
-  version: 28,
+  version: 29,
   allowedPaths: {
     rootFiles: [
       ".npmrc",
@@ -39,6 +39,7 @@ export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
     generatedFiles: [
       "shared/manifest-literals.ts",
       "shared/manifest-types.ts",
+      "shared/manifest-static.json",
       "shared/manifest-runtime.ts",
       "shared/manifest-contract.ts",
       "shared/generated/ui-contract.ts",

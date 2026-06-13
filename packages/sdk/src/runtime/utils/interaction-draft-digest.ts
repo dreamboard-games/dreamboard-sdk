@@ -173,12 +173,7 @@ function sha256Hex(input: string): string {
 
     for (let i = 0; i < 64; i += 1) {
       const t1 =
-        (h +
-          bigSigma1(e) +
-          ch(e, f, g) +
-          K[i] +
-          (words[i] ?? 0)) >>>
-        0;
+        (h + bigSigma1(e) + ch(e, f, g) + K[i] + (words[i] ?? 0)) >>> 0;
       const t2 = (bigSigma0(a) + maj(a, b, c)) >>> 0;
       h = g;
       g = f;

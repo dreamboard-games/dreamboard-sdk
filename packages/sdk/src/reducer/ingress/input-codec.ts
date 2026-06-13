@@ -14,5 +14,9 @@ export function createRuntimeInputParser<PlayerId extends string>(
   });
 
   return (rawInput: unknown) =>
-    safeParseOrThrow(rawRuntimeInputSchema, rawInput, "input") as RawRuntimeInput;
+    safeParseOrThrow(
+      rawRuntimeInputSchema,
+      rawInput,
+      "input",
+    ) as RawRuntimeInput;
 }

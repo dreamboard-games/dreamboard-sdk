@@ -35,12 +35,12 @@ Current implementation (`packages/sdk/src/reducer/transaction.ts`,
 
 Semantics that must be preserved vs. changed:
 
-| Guarantee | Today | After 4B |
-| --- | --- | --- |
-| The state passed to `edit(state)` is never mutated | yes | **yes** (unchanged — this is the safety property reducers rely on) |
-| `tx.state` after N ops reflects all N ops | yes | yes |
-| Two reads of `tx.state` at different times are independent snapshots | yes (each op produced a fresh clone) | **no — they alias the same draft** (the break) |
-| `accept(tx.state)` returns a state safe to retain | yes | yes (the draft is owned by the transaction; the transaction is single-use) |
+| Guarantee                                                            | Today                                | After 4B                                                                   |
+| -------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------- |
+| The state passed to `edit(state)` is never mutated                   | yes                                  | **yes** (unchanged — this is the safety property reducers rely on)         |
+| `tx.state` after N ops reflects all N ops                            | yes                                  | yes                                                                        |
+| Two reads of `tx.state` at different times are independent snapshots | yes (each op produced a fresh clone) | **no — they alias the same draft** (the break)                             |
+| `accept(tx.state)` returns a state safe to retain                    | yes                                  | yes (the draft is owned by the transaction; the transaction is single-use) |
 
 A repo-wide audit of all examples and SDK-internal call sites found the usage
 pattern is uniformly "apply ops, then `accept(tx.state)`"; no call site
@@ -128,16 +128,28 @@ export type ReducerOpsInternal<State> = {
 // reducer/transaction.ts (replacing the Proxy implementation)
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
->(initialState: State, ops = createReducerOps<State>()): ReducerTransaction<State> {
+>(
+  initialState: State,
+  ops = createReducerOps<State>(),
+): ReducerTransaction<State> {
   // The single clone. Non-table slices are shallow-copied; table is deep.
-  let draft: State = { ...initialState, table: cloneRuntimeTable(initialState.table) };
+  let draft: State = {
+    ...initialState,
+    table: cloneRuntimeTable(initialState.table),
+  };
   let queries: TableQueriesOfState<State> | null = null;
 
-  const invalidate = () => { queries = null; };
+  const invalidate = () => {
+    queries = null;
+  };
 
   const base = {
-    get state() { return draft; },
-    get q() { return (queries ??= createStateQueries(draft)); },
+    get state() {
+      return draft;
+    },
+    get q() {
+      return (queries ??= createStateQueries(draft));
+    },
     apply(op: Op<State>): State {
       // Pure-op escape hatch keeps pipe() composability: the op returns a
       // fresh state; adopt it as the new draft.
@@ -171,7 +183,7 @@ Notes:
 - `engine-instruction-resolver.ts` adopts the same discipline: one clone per
   drain, in-place cores per instruction.
 - Deep-freeze guard in tests: the 4A fixtures wrap input sessions in
-  `deepFreeze` in dev/test so any in-place core that touches the *input*
+  `deepFreeze` in dev/test so any in-place core that touches the _input_
   state (instead of the draft) throws immediately.
 
 #### Benchmark gate

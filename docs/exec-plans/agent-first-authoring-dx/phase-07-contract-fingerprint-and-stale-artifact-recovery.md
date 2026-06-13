@@ -23,7 +23,7 @@ today.
   mid-iteration produces a zod issue list pointing at state internals — true
   but useless. The actionable fact ("your contract changed after this state
   was created") is not surfaced.
-- The platform's direction is event-sourced sessions; for a *prototyping*
+- The platform's direction is event-sourced sessions; for a _prototyping_
   product the correct dev-loop policy is "detect mismatch, tell the author to
   regenerate/reset", not schema migration.
 
@@ -42,12 +42,12 @@ export type ContractFingerprint = {
   value: string;
   /** Inputs that fed the hash — for diff-style error messages. */
   parts: {
-    manifest: string;   // hash of canonical manifest literals + topology ids
+    manifest: string; // hash of canonical manifest literals + topology ids
     publicState: string;
     privateState: string;
     hiddenState: string;
     phases: Record<string, string>;
-    errors: string;     // phase-2 error map, "" when absent
+    errors: string; // phase-2 error map, "" when absent
   };
 };
 
@@ -60,13 +60,13 @@ Hashing rules:
 
 - Schemas serialize via zod 4's `z.toJSONSchema(schema, { unrepresentable: "any" })`
   → canonical JSON (sorted keys, no whitespace) → sha256. `unrepresentable: "any"`
-  keeps custom/refined schemas hashable: a refinement change is *not*
+  keeps custom/refined schemas hashable: a refinement change is _not_
   fingerprint-relevant (it cannot change the decoded shape), which is exactly
   the right sensitivity — the fingerprint tracks **shape**, not semantics.
 - The manifest part hashes `manifest.literals` (id tuples) — topology and
   component identity — not field metadata, so cosmetic manifest edits (labels)
   do not invalidate states whose shape is unaffected. Decision to confirm
-  with the team: if label edits *should* invalidate (safer, noisier), hash
+  with the team: if label edits _should_ invalidate (safer, noisier), hash
   the full manifest snapshot instead; default to literals-only.
 - The 16-hex truncation keeps artifacts readable; collision risk is
   irrelevant at this trust level (staleness detection, not security).
@@ -96,7 +96,12 @@ schemas hash equal.
    envelope field (wire-additive; `reducer-contract` schema bump):
 
    ```jsonc
-   { "meta": { "contractFingerprint": "cfp1:9f2ab348c1d07e55" }, "domain": { /* ... */ } }
+   {
+     "meta": { "contractFingerprint": "cfp1:9f2ab348c1d07e55" },
+     "domain": {
+       /* ... */
+     },
+   }
    ```
 
    The Kotlin backend treats `meta` as opaque (tolerant reader; no change).
@@ -110,8 +115,8 @@ export class StaleContractArtifactError extends Error {
   readonly code = "STALE_CONTRACT_ARTIFACT";
   readonly artifact: "base-states" | "session-state";
   readonly expected: string; // fingerprint of the live contract
-  readonly found: string;    // fingerprint stamped in the artifact
-  readonly remedy: string;   // exact command, see below
+  readonly found: string; // fingerprint stamped in the artifact
+  readonly remedy: string; // exact command, see below
 }
 ```
 
@@ -185,7 +190,7 @@ const runtime = createDreamboardTestRuntime({
   fingerprints populated) → decode legacy envelope without `meta` (ok).
 - `harness:contract` for the wire-additive `meta` field.
 - End-to-end (private monorepo): mutate frontier-trails'
-  `playerTurnPhaseStateSchema`, run `dreamboard test run` *without*
+  `playerTurnPhaseStateSchema`, run `dreamboard test run` _without_
   regenerating — assert the exact remedy message; regenerate; assert green.
 
 ## Acceptance Criteria
@@ -200,7 +205,7 @@ const runtime = createDreamboardTestRuntime({
 
 - **`z.toJSONSchema` coverage**: exotic schemas (lazy/recursive, custom
   codecs) may serialize lossily. `unrepresentable: "any"` makes them hash as
-  `any` — meaning some shape changes inside such schemas would *not* change
+  `any` — meaning some shape changes inside such schemas would _not_ change
   the fingerprint (false-negative staleness). Acceptable for v1; document it
   on `contractFingerprint`, and emit an `authoringWarning` (phase 6 sink)
   when a schema serializes with `any` placeholders so authors know the
