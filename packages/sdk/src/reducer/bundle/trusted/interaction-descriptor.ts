@@ -16,11 +16,13 @@ import {
   collectPromptOptions,
 } from "./collector-domains";
 import type {
+  InteractionDecision,
   InteractionAvailabilityShape,
   InteractionDescriptorShape,
   TrustedInteractionDescriptorShape,
   TrustedInteractionId,
 } from "./interaction-types";
+import { FrameworkErrorCodes } from "../../model";
 import type { ProjectionContext } from "./projection-context";
 import type {
   TrustedDomainState,
@@ -210,26 +212,36 @@ function enrichResourceInputPresentation(
   });
 }
 
-function interactionAvailabilityFromDecision(decision: {
-  available: boolean;
-  unavailableReason?: string;
-  missingResources?: Record<string, number>;
-}): InteractionAvailabilityShape {
+function interactionAvailabilityFromDecision(
+  decision: InteractionDecision,
+): InteractionAvailabilityShape {
   if (decision.available) return { status: "available" };
-  if (decision.unavailableReason === "Not your turn") {
-    return { status: "notYourTurn", reason: decision.unavailableReason };
+  switch (decision.code) {
+    case FrameworkErrorCodes.NOT_YOUR_TURN:
+      return {
+        status: "notYourTurn",
+        reason: decision.message ?? "Not your turn",
+      };
+    case "INSUFFICIENT_RESOURCES":
+      if (decision.missingResources) {
+        return {
+          status: "insufficientResources",
+          reason: decision.message ?? decision.code,
+          missingResources: { ...decision.missingResources },
+        };
+      }
+      return {
+        status: "blocked",
+        reason: decision.message ?? decision.code,
+        code: decision.code,
+      };
+    default:
+      return {
+        status: "blocked",
+        reason: decision.message ?? "Interaction unavailable",
+        code: decision.code,
+      };
   }
-  if (decision.unavailableReason === "INSUFFICIENT_RESOURCES") {
-    return {
-      status: "insufficientResources",
-      reason: decision.unavailableReason,
-      missingResources: { ...(decision.missingResources ?? {}) },
-    };
-  }
-  return {
-    status: "blocked",
-    reason: decision.unavailableReason ?? "Interaction unavailable",
-  };
 }
 
 export function buildInteractionDescriptor<
@@ -245,18 +257,14 @@ export function buildInteractionDescriptor<
     TrustedDomainState<Contract>,
     TrustedManifest<Contract>
   >,
-  decision: {
-    available: boolean;
-    unavailableReason?: string;
-    cost?: Record<string, number>;
-    missingResources?: Record<string, number>;
-  },
+  decision: InteractionDecision,
   options: {
     projection?: ProjectionContext<
       TrustedDomainState<Contract>,
       TrustedState<Contract>
     >;
     includeEligibleTargets?: boolean;
+    includeDiagnosticReasons?: boolean;
   } = {},
 ): TrustedInteractionDescriptorShape<Contract, Definitions, Views> {
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
@@ -276,7 +284,7 @@ export function buildInteractionDescriptor<
   const queries = options.projection?.q ?? createStateQueries(domainState);
   const derived = options.projection?.derived;
   const shouldMaterializeInputDomains =
-    decision.available || decision.unavailableReason !== "Not your turn";
+    decision.available || decision.code !== FrameworkErrorCodes.NOT_YOUR_TURN;
   const promptContext =
     metadata.kind === "prompt"
       ? {
@@ -323,6 +331,10 @@ export function buildInteractionDescriptor<
         }
       : undefined,
     availability: interactionAvailabilityFromDecision(decision),
+    reasons:
+      options.includeDiagnosticReasons && !decision.available && decision.ruleId
+        ? [{ ruleId: decision.ruleId, errorCode: decision.code }]
+        : undefined,
   };
   if (metadata.kind === "prompt") {
     return {

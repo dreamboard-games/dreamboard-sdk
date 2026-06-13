@@ -372,6 +372,11 @@ export interface InteractionInputDescriptor {
   defaultValue?: unknown;
 }
 
+export interface InteractionDiagnosticReason {
+  ruleId: string;
+  errorCode: string;
+}
+
 export type InteractionAvailability =
   | { status: "available" }
   | { status: "notYourTurn"; reason: string }
@@ -406,6 +411,8 @@ interface InteractionDescriptorBase<Key extends string = string> {
   currentResources?: Record<string, unknown>;
   /** Authoritative availability state for this descriptor. */
   availability: InteractionAvailability;
+  /** Optional verbose diagnostics for dev tooling; omitted from production projections. */
+  reasons?: readonly InteractionDiagnosticReason[];
 }
 
 export type ActionInteractionDescriptor<Key extends string = string> =

@@ -20,6 +20,30 @@ export type InteractionAvailabilityLike =
     }
   | { status: "blocked"; reason: string };
 
+export type InteractionExplanationLike = {
+  interactionId: string;
+  phase: string;
+  step: string | null;
+  availability:
+    | "available"
+    | "notYourTurn"
+    | "wrongPhase"
+    | "wrongStep"
+    | "blocked";
+  rules: ReadonlyArray<{
+    ruleId: string;
+    outcome: "passed" | "failed" | "notEvaluated";
+    errorCode?: string;
+    message?: string;
+  }>;
+  actor: { required: readonly string[]; playerIsActor: boolean };
+  inputs: ReadonlyArray<{
+    key: string;
+    kind: string;
+    eligibleCount: number | "lazy";
+  }>;
+};
+
 export type SnapshotMatcherHandler = (
   name: string | undefined,
   actual: unknown,
@@ -50,6 +74,7 @@ export type ExpectMatchers = {
     opts?: Partial<InteractionDescriptorLike>,
   ) => void;
   toBeGatedBy: (reason: string, opts?: { interactionId?: string }) => void;
+  toBeAvailable: (explanation?: InteractionExplanationLike) => void;
   toBeActiveFor: (playerId: string, opts?: { interactionId?: string }) => void;
   not: {
     toHaveInteraction: (interactionId: string) => void;
@@ -83,6 +108,10 @@ export interface SharedScenarioContext<
   state(): StateName;
   view(playerId: PlayerId): View;
   interactions(playerId: PlayerId): readonly Descriptor[];
+  explain(
+    playerId: PlayerId,
+    interactionId: string,
+  ): InteractionExplanationLike;
   expect: ExpectFn;
 }
 

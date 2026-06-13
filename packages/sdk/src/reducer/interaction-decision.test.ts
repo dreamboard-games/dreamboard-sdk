@@ -281,7 +281,7 @@ function hydrateCardRefs<T>(
   return hydrateRefs(projection.interactionsByRef, refs);
 }
 
-function makeBundle() {
+function makeBundle(options: { diagnostics?: "verbose" } = {}) {
   const contract = defineGameContract({
     manifest: buildManifest(),
     phases: { takeTurn: z.object({}) },
@@ -325,6 +325,20 @@ function makeBundle() {
             errorCode: "INSUFFICIENT_RESOURCES",
             message: "Not enough gold.",
           },
+  });
+  const stringGoldRule = defineInteractionRule<
+    typeof contract,
+    typeof phaseState
+  >()<{
+    amount: typeof ruleBidAmountInput;
+  }>({
+    id: "string-gold",
+    errorCode: "INSUFFICIENT_RESOURCES",
+    validate: ({ state, input }) =>
+      (perPlayerGet(state.table.resources, asPlayerId(input.playerId))?.gold ??
+        0) >= input.params.amount
+        ? null
+        : "Need that much gold.",
   });
   const answerTarget = choiceTarget
     .options([{ id: "yes", label: "Yes" }] as const)
@@ -415,6 +429,15 @@ function makeBundle() {
                 amount: ruleBidAmountInput,
               },
               rules: [enoughGoldRule],
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          ),
+          stringRuleBid: inMain(
+            defineInteraction<typeof contract, typeof phaseState>()({
+              inputs: {
+                amount: ruleBidAmountInput,
+              },
+              rules: [stringGoldRule],
               reduce: ({ state, accept }) => accept(state),
             }),
           ),
@@ -531,6 +554,7 @@ function makeBundle() {
               "chooseMode",
               "chooseResource",
               "ruleGatedBid",
+              "stringRuleBid",
             ],
             when: () => true,
           }),
@@ -539,7 +563,7 @@ function makeBundle() {
       }),
     },
   });
-  return createReducerBundle(game);
+  return createReducerBundle(game, options);
 }
 
 describe("trusted interaction decision pipeline", () => {
@@ -813,6 +837,99 @@ describe("trusted interaction decision pipeline", () => {
       valid: false,
       errorCode: "INSUFFICIENT_RESOURCES",
       message: "Not enough gold.",
+    });
+  });
+
+  test("rule validation may return a dynamic message string", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable({ player1Gold: 2 }),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    await expect(
+      bundle.validateInput({
+        state,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "stringRuleBid",
+          params: { amount: 3 },
+        },
+      }),
+    ).resolves.toMatchObject({
+      valid: false,
+      errorCode: "INSUFFICIENT_RESOURCES",
+      message: "Need that much gold.",
+    });
+  });
+
+  test("explainInteraction reports structured rule and input diagnostics", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    expect(
+      bundle.explainInteraction({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleGatedBid",
+      }),
+    ).toMatchObject({
+      interactionId: "ruleGatedBid",
+      phase: "takeTurn",
+      step: "main",
+      availability: "blocked",
+      actor: { required: [], playerIsActor: true },
+      rules: [
+        {
+          ruleId: "enough-gold",
+          outcome: "failed",
+          errorCode: "INSUFFICIENT_RESOURCES",
+          message: "Need 2 gold.",
+        },
+      ],
+      inputs: [
+        {
+          key: "amount",
+          kind: "form",
+          eligibleCount: 11,
+        },
+      ],
+    });
+  });
+
+  test("verbose diagnostics opt in to descriptor reasons", async () => {
+    const defaultBundle = makeBundle();
+    const verboseBundle = makeBundle({ diagnostics: "verbose" });
+    const defaultState = await defaultBundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const verboseState = await verboseBundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const defaultDescriptor = getAvailableInteractions(
+      defaultBundle,
+      defaultState,
+      "player-1",
+    ).find((descriptor) => descriptor.interactionId === "ruleGatedBid");
+    expect(defaultDescriptor?.reasons).toBeUndefined();
+    expect(
+      getAvailableInteractions(verboseBundle, verboseState, "player-1").find(
+        (descriptor) => descriptor.interactionId === "ruleGatedBid",
+      ),
+    ).toMatchObject({
+      reasons: [
+        {
+          ruleId: "enough-gold",
+          errorCode: "INSUFFICIENT_RESOURCES",
+        },
+      ],
     });
   });
 

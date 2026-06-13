@@ -4,6 +4,7 @@ import type {
   ExpectMatchers,
   InteractionDescriptorLike,
   RejectionExpectation,
+  InteractionExplanationLike,
   SnapshotMatcherHandler,
 } from "./definitions.js";
 
@@ -133,6 +134,26 @@ function assertLength(actual: unknown, expected: number): void {
   if (length !== expected) {
     throw new Error(`Expected length ${expected}, received ${length}.`);
   }
+}
+
+function formatInteractionExplanation(
+  explanation: InteractionExplanationLike | undefined,
+): string {
+  if (!explanation) {
+    return "";
+  }
+  const lines = [
+    `availability: ${explanation.availability}`,
+    ...explanation.rules.map((rule) => {
+      const code = rule.errorCode ? ` (${rule.errorCode})` : "";
+      const message = rule.message ? `: ${rule.message}` : "";
+      return `rule ${rule.ruleId} ${rule.outcome}${code}${message}`;
+    }),
+    ...explanation.inputs.map(
+      (input) => `input ${input.key} eligibleCount=${input.eligibleCount}`,
+    ),
+  ];
+  return `\n${lines.join("\n")}`;
 }
 
 function assertThrown(
@@ -305,6 +326,35 @@ export function createExpectApi(
           `Expected unavailable reason '${reason}', received '${
             actualReason ?? "undefined"
           }'.`,
+        );
+      }
+    },
+    toBeAvailable: (explanation) => {
+      const descriptor = Array.isArray(actual)
+        ? (() => {
+            if (!explanation?.interactionId) {
+              throw new Error(
+                "toBeAvailable on a descriptor array requires an explanation.",
+              );
+            }
+            return findInteraction(
+              asDescriptorList(actual),
+              explanation.interactionId,
+            );
+          })()
+        : (actual as InteractionDescriptorLike | null);
+      if (!descriptor) {
+        throw new Error(
+          `Expected interaction descriptor to exist.${formatInteractionExplanation(
+            explanation,
+          )}`,
+        );
+      }
+      if (descriptor.availability?.status !== "available") {
+        throw new Error(
+          `Expected interaction '${descriptor.interactionId ?? "unknown"}' to be available.${formatInteractionExplanation(
+            explanation,
+          )}`,
         );
       }
     },

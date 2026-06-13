@@ -3,7 +3,6 @@ import type {
   InputCollectorKind,
   InputDomainDescriptor,
   InteractionIdOfDefinition,
-  InteractionKind,
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerValidationResult,
@@ -45,6 +44,46 @@ export type InteractionAvailabilityShape =
     }
   | { status: "blocked"; reason: string; code?: string };
 
+export type InteractionDecision =
+  | { available: true; cost?: Record<string, number> }
+  | {
+      available: false;
+      code: string;
+      ruleId?: string;
+      message?: string;
+      cost?: Record<string, number>;
+      missingResources?: Record<string, number>;
+    };
+
+export type InteractionDiagnosticReasonShape = {
+  ruleId: string;
+  errorCode: string;
+};
+
+export type InteractionExplanation = {
+  interactionId: string;
+  phase: string;
+  step: string | null;
+  availability:
+    | "available"
+    | "notYourTurn"
+    | "wrongPhase"
+    | "wrongStep"
+    | "blocked";
+  rules: ReadonlyArray<{
+    ruleId: string;
+    outcome: "passed" | "failed" | "notEvaluated";
+    errorCode?: string;
+    message?: string;
+  }>;
+  actor: { required: readonly string[]; playerIsActor: boolean };
+  inputs: ReadonlyArray<{
+    key: string;
+    kind: string;
+    eligibleCount: number | "lazy";
+  }>;
+};
+
 type InteractionDescriptorBaseShape<
   PhaseName extends string = string,
   InteractionId extends string = string,
@@ -63,6 +102,7 @@ type InteractionDescriptorBaseShape<
   cost?: Record<string, number>;
   currentResources?: Record<string, number>;
   availability: InteractionAvailabilityShape;
+  reasons?: readonly InteractionDiagnosticReasonShape[];
 };
 
 export type ActionInteractionDescriptorShape<
@@ -121,11 +161,9 @@ export type InteractionActorAuthorization<PlayerId extends string> =
 
 export type ResolveDecisionMode = "descriptor" | "card" | "submit";
 
-export type ResolveDecisionInput<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = {
+export type InteractionDiagnosticsMode = "verbose" | undefined;
+
+export type ResolveDecisionInput<Contract extends ReducerGameContractLike> = {
   state: TrustedState<Contract>;
   playerId: TrustedPlayerId<Contract>;
   interactionId: string;

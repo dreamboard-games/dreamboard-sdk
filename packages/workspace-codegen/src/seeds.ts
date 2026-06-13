@@ -1347,6 +1347,7 @@ export const gameContract = defineGameContract({
   phases: {
     setup: z.object({}),
   },
+  errors: {},
 });
 
 export type GameContract = typeof gameContract;

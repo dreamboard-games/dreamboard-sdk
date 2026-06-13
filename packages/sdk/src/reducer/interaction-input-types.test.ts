@@ -12,6 +12,7 @@ import {
   many,
   pipe,
   type ClientParamsOfInteractionOfDefinition,
+  type GameStateOf,
   type InputKeysWithCollectorKindOfDefinition,
   type ReducerManifestContract,
   type RuntimeCardData,
@@ -193,6 +194,76 @@ describe("interaction input id types", () => {
       // @ts-expect-error arbitrary Zod schemas are not default-renderable inputs.
       formInput(z.string());
     }
+  });
+
+  test("contract-declared error maps type authored rule and reject codes", () => {
+    const contract = defineGameContract({
+      manifest: buildContract().manifest,
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: {
+        play: z.object({}),
+      },
+      errors: {
+        INSUFFICIENT_RESOURCES: "Cannot afford that action.",
+      },
+    });
+    const phaseState = z.object({});
+
+    const assertErrorCodeTypes = () => {
+      defineInteractionRule<typeof contract, typeof phaseState>()({
+        id: "known-code",
+        errorCode: "INSUFFICIENT_RESOURCES",
+        validate: () => ({
+          errorCode: "INSUFFICIENT_RESOURCES",
+        }),
+      });
+
+      defineInteractionRule<typeof contract, typeof phaseState>()({
+        id: "framework-code",
+        errorCode: "NOT_YOUR_TURN",
+      });
+
+      defineInteractionRule<typeof contract, typeof phaseState>()({
+        id: "typo-code",
+        // @ts-expect-error contracts with an errors map reject typo'd rule codes.
+        errorCode: "INSUFFICIENT_RESOURCE",
+      });
+
+      defineInteraction<typeof contract, typeof phaseState>()({
+        inputs: {},
+        rules: [
+          {
+            id: "typo-validation-code",
+            errorCode: "INSUFFICIENT_RESOURCES",
+            validate: () => ({
+              // @ts-expect-error ValidationIssue codes come from the contract error union.
+              errorCode: "INSUFFICIENT_RESOURCE",
+            }),
+          },
+        ],
+        reduce: ({ reject }) => {
+          // @ts-expect-error reject codes come from the contract error union.
+          return reject("INSUFFICIENT_RESOURCE");
+        },
+      });
+    };
+    expect(typeof assertErrorCodeTypes).toBe("function");
+
+    type State = GameStateOf<typeof contract>;
+    const assertStateExtraction = (state: State) => {
+      const publicState: object = state.publicState;
+      const phaseState: object = state.phase;
+      return { publicState, phaseState };
+    };
+    expect(typeof assertStateExtraction).toBe("function");
+
+    expect(contract.errors?.INSUFFICIENT_RESOURCES).toBe(
+      "Cannot afford that action.",
+    );
   });
 
   test("types playerId and form cardId from manifest schemas", () => {

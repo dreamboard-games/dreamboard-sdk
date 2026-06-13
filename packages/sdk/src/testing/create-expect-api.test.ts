@@ -208,6 +208,33 @@ describe("createExpectApi — descriptor matchers", () => {
     expect(() => expectFn(descriptors).toBeGatedBy("NOT_YOUR_TURN")).toThrow();
   });
 
+  test("toBeAvailable embeds explanation details in failure output", () => {
+    const descriptor = makeDescriptor({
+      interactionId: "buildCamp",
+      availability: { status: "blocked", reason: "Need wood." },
+    });
+    expect(() =>
+      expectFn(descriptor).toBeAvailable({
+        interactionId: "buildCamp",
+        phase: "playerTurn",
+        step: null,
+        availability: "blocked",
+        actor: { required: ["player-1"], playerIsActor: true },
+        rules: [
+          {
+            ruleId: "can-afford-camp",
+            outcome: "failed",
+            errorCode: "INSUFFICIENT_RESOURCES",
+            message: "Need wood.",
+          },
+        ],
+        inputs: [{ key: "vertexId", kind: "board-vertex", eligibleCount: 3 }],
+      }),
+    ).toThrow(
+      /rule can-afford-camp failed \(INSUFFICIENT_RESOURCES\): Need wood\./,
+    );
+  });
+
   test("toBeActiveFor asserts descriptor targets a player and is available", () => {
     const descriptor = makeDescriptor({
       interactionId: "placeThingCard",

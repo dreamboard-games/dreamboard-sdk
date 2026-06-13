@@ -22,6 +22,7 @@ import {
   type TrustedRuntimeScope,
   type TrustedState,
 } from "./runtime-scope";
+import type { InteractionDiagnosticsMode } from "./interaction-types";
 
 export type { InteractionDescriptorShape } from "./interaction-types";
 
@@ -29,7 +30,10 @@ export function createInteractionResolver<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
->(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
+>(
+  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
+  options: { diagnostics?: InteractionDiagnosticsMode } = {},
+) {
   type State = TrustedState<Contract>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
@@ -40,6 +44,7 @@ export function createInteractionResolver<
     scope,
     stages,
     authorization,
+    options,
   );
 
   function validateClientInput(
@@ -78,6 +83,7 @@ export function createInteractionResolver<
     collectEligibleTargets,
     collectFirstCardZoneId,
     evaluateInteractionCost: decisions.evaluateInteractionCost,
+    explainInteraction: decisions.explainInteraction,
     findCardInputKey,
     findCardInputKeyForZone,
     isActorAuthorized: authorization.isActorAuthorized,

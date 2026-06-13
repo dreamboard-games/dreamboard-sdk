@@ -53,6 +53,7 @@ import {
 } from "../inputs";
 import type {
   AnyReducerGameContract,
+  ContractErrorCode,
   ContractManifest,
   ContractState,
   InferPhaseState,
@@ -305,12 +306,14 @@ export type PhaseAuthoring<
     spec: InteractionSpec<
       Collectors,
       BoundPhaseState<Contract, PhaseStateSchema>,
-      BoundManifest<Contract>
+      BoundManifest<Contract>,
+      ContractErrorCode<Contract>
     >,
   ): InteractionSpec<
     Collectors,
     BoundPhaseState<Contract, PhaseStateSchema>,
-    BoundManifest<Contract>
+    BoundManifest<Contract>,
+    ContractErrorCode<Contract>
   >;
   cardAction<
     Collectors extends Record<string, InputCollector> = Record<string, never>,
@@ -321,13 +324,15 @@ export type PhaseAuthoring<
       Collectors,
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>,
-      PlayFrom
+      PlayFrom,
+      ContractErrorCode<Contract>
     >,
   ): CardActionSpec<
     Collectors,
     BoundPhaseState<Contract, PhaseStateSchema>,
     BoundManifest<Contract>,
-    PlayFrom
+    PlayFrom,
+    ContractErrorCode<Contract>
   >;
   rule<
     Collectors extends Record<string, InputCollector> = Record<
@@ -338,12 +343,14 @@ export type PhaseAuthoring<
     rule: InteractionRule<
       Collectors,
       BoundPhaseState<Contract, PhaseStateSchema>,
-      BoundManifest<Contract>
+      BoundManifest<Contract>,
+      ContractErrorCode<Contract>
     >,
   ): InteractionRule<
     Collectors,
     BoundPhaseState<Contract, PhaseStateSchema>,
-    BoundManifest<Contract>
+    BoundManifest<Contract>,
+    ContractErrorCode<Contract>
   >;
   define<
     SubmitCollectors extends Record<string, InputCollector> = Record<

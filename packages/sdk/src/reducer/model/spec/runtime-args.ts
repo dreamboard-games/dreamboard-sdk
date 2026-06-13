@@ -1,9 +1,5 @@
 import type { z } from "zod";
-import type {
-  AnySchema,
-  RuntimeTableRecord,
-  StringKeyOf,
-} from "../table";
+import type { AnySchema, RuntimeTableRecord, StringKeyOf } from "../table";
 import type { ManifestContract } from "../manifest";
 import type {
   PhaseNameOfState,
@@ -158,19 +154,20 @@ export type ActionContext<
   setup: SetupSelectionOfManifest<Manifest> | null;
 };
 
-export type ValidationIssue = {
-  errorCode: string;
+export type ValidationIssue<ErrorCode extends string = string> = {
+  errorCode: ErrorCode;
   message?: string;
 };
 
 export type RuntimeHelpers<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
+  ErrorCode extends string = string,
 > = {
   accept(
     state: State,
     instructions?: RuntimeInstructionForState<State>[],
   ): ReducerAccept<State>;
-  reject: (errorCode: string, message?: string) => ReducerReject;
+  reject: (errorCode: ErrorCode, message?: string) => ReducerReject;
   fx: ReducerFx<State>;
   ops: ReducerOps<State>;
   edit<DraftState extends State>(

@@ -2,6 +2,7 @@
 
 exports[`public export surface reducer export names are stable 1`] = `
 [
+  "FrameworkErrorCodes",
   "applySetupBootstrap",
   "asPlayerId",
   "assertCardAllowedInContainer",
