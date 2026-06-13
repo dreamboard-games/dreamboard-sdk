@@ -283,3 +283,33 @@ throwing; the dispatch layer maps uncaught throws to `INTERNAL_ERROR`.)
 - Verbose descriptor mode must never ship in production projections —
   enforce with a test asserting default-mode output contains no `reasons`
   key.
+
+## Closeout (2026-06-13)
+
+Phase 2 is complete across the SDK, public CLI/docs repo, and private example
+repo.
+
+- SDK: typed contract `errors` maps, typed `reject`, structured interaction
+  decisions, `explainInteraction`, verbose descriptor diagnostics, and
+  `toBeAvailable()` explanation output shipped in
+  `4c1a884 Implement typed interaction diagnostics`.
+- Public CLI/docs: generated testing context templates expose `ctx.explain`;
+  reducer/testing references and skill mirrors document typed error maps,
+  single-declaration rules, and interaction diagnostics in
+  `5e3ff66e Document typed interaction diagnostics`.
+- Private examples: all checked-in examples were repinned to
+  `@dreamboard-games/sdk@0.3.0-alpha.1-local.20260613T031513Z.6b402846dbed`,
+  regenerated, and migrated to contract-declared errors where they author
+  rule codes in `cc5190ac4 Migrate examples to typed interaction diagnostics`.
+
+Verification receipts:
+
+- `pnpm --filter @dreamboard-games/sdk typecheck`
+- `pnpm --filter @dreamboard-games/sdk test src/reducer/interaction-input-types.test.ts src/reducer/interaction-decision.test.ts src/testing/create-expect-api.test.ts src/export-surface.test.ts`
+- `pnpm --filter @dreamboard-games/workspace-codegen typecheck`
+- `pnpm --filter @dreamboard-games/workspace-codegen test`
+- `pnpm --dir apps/dreamboard-cli run typecheck`
+- `pnpm --dir apps/dreamboard-cli exec bun test src/services/project/static-scaffold.test.ts src/services/testing/reducer-native-test-harness.test.ts`
+- All example `typecheck` scripts, plus `typecheck:test` where present.
+- All example reducer scenarios via the source CLI and final local SDK:
+  95 passed, 0 failed.
