@@ -3,10 +3,9 @@
 exports[`public export surface reducer export names are stable 1`] = `
 [
   "FrameworkErrorCodes",
-  "applySetupBootstrap",
+  "StaleContractArtifactError",
   "asPlayerId",
   "assertCardAllowedInContainer",
-  "assumeManifestSchema",
   "boardInput",
   "boardRef",
   "boardRefKey",
@@ -15,21 +14,15 @@ exports[`public export surface reducer export names are stable 1`] = `
   "cardInput",
   "cardTarget",
   "choiceTarget",
-  "cloneManifestDefault",
-  "createClientParamSchemasByPhase",
+  "contractFingerprint",
   "createContractAuthoring",
   "createDerivedResolver",
-  "createManifestGameStateSchema",
-  "createManifestRuntimeSchema",
-  "createManifestStringLiteralSchema",
   "createReducerBundle",
   "createReducerEdit",
   "createReducerOps",
   "createReducerTransaction",
   "createStateQueries",
   "createTableQueries",
-  "dealToPlayerBoardContainer",
-  "dealToPlayerZone",
   "defineCardAction",
   "defineDerived",
   "defineEffect",
@@ -49,8 +42,9 @@ exports[`public export surface reducer export names are stable 1`] = `
   "isPerPlayerBoardRef",
   "isPlayerId",
   "isSharedBoardRef",
+  "isStaleContractArtifactError",
   "many",
-  "markManifestScopedSchema",
+  "noopDiagnosticsSink",
   "normalizeCommandParams",
   "parseBoardRefKey",
   "perPlayer",
@@ -67,15 +61,32 @@ exports[`public export surface reducer export names are stable 1`] = `
   "perPlayerValues",
   "pipe",
   "promptInput",
-  "resolveManifestPlayerIds",
   "rngInput",
-  "seedSharedBoardContainer",
-  "seedSharedBoardSpace",
   "setActivePlayers",
   "sharedBoardRef",
-  "shuffle",
   "sparseCounts",
   "sparseMap",
+]
+`;
+
+exports[`public export surface reducer/advanced export names are stable 1`] = `
+[
+  "FrameworkErrorCodes",
+  "applySetupBootstrap",
+  "assumeManifestSchema",
+  "cloneManifestDefault",
+  "createClientParamSchemasByPhase",
+  "createManifestGameStateSchema",
+  "createManifestRuntimeSchema",
+  "createManifestStringLiteralSchema",
+  "dealToPlayerBoardContainer",
+  "dealToPlayerZone",
+  "isManifestScopedSchema",
+  "markManifestScopedSchema",
+  "resolveManifestPlayerIds",
+  "seedSharedBoardContainer",
+  "seedSharedBoardSpace",
+  "shuffle",
 ]
 `;
 
@@ -320,10 +331,12 @@ exports[`public export surface types export names are stable 1`] = `
 
 exports[`public export surface testing export names are stable 1`] = `
 [
+  "StaleContractArtifactError",
   "createExpectApi",
   "createTestRuntime",
   "defineBase",
   "defineScenario",
+  "isStaleContractArtifactError",
 ]
 `;
 

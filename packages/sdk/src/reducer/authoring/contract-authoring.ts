@@ -533,10 +533,10 @@ function createPhaseAuthoring<
       ) as typeof spec,
     cardAction: (spec) =>
       defineCardAction<Contract, PhaseStateSchema>()(
-        spec as Parameters<
+        spec as unknown as Parameters<
           ReturnType<typeof defineCardAction<Contract, PhaseStateSchema>>
         >[0],
-      ) as typeof spec,
+      ) as unknown as typeof spec,
     rule: (rule) =>
       defineInteractionRule<Contract, PhaseStateSchema>()(
         rule as Parameters<

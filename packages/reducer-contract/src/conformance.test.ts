@@ -73,6 +73,40 @@ describe("JsonValueSchema", () => {
   });
 });
 
+describe("ReducerSessionState meta", () => {
+  test("accepts optional contract fingerprints on session envelopes", () => {
+    const fixture = FIXTURES.find(
+      (entry) => entry.name === "reducer-session-state",
+    );
+    if (!fixture) {
+      throw new Error("Missing reducer-session-state fixture");
+    }
+
+    const parsed = Zod.ReducerSessionStateSchema.parse({
+      meta: { contractFingerprint: "cfp1:9f2ab348c1d07e55" },
+      ...(fixture.value as Record<string, unknown>),
+    });
+
+    expect(parsed.meta?.contractFingerprint).toBe("cfp1:9f2ab348c1d07e55");
+  });
+
+  test("rejects malformed contract fingerprints", () => {
+    const fixture = FIXTURES.find(
+      (entry) => entry.name === "reducer-session-state",
+    );
+    if (!fixture) {
+      throw new Error("Missing reducer-session-state fixture");
+    }
+
+    expect(() =>
+      Zod.ReducerSessionStateSchema.parse({
+        meta: { contractFingerprint: "stale" },
+        ...(fixture.value as Record<string, unknown>),
+      }),
+    ).toThrow();
+  });
+});
+
 describe("generated builders produce wire-valid effects", () => {
   test("rollDie without continuation has NO __continuation and NO resume key", () => {
     const mint = Builders.createEffectIdMinter();

@@ -6,6 +6,11 @@ import { createReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type { TrustedRuntimeInput } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
+import { createReducerDiagnosticsEmitter } from "../../diagnostics";
+import type {
+  ReducerDiagnosticsEmitter,
+  ReducerDiagnosticsSink,
+} from "../../diagnostics";
 import type {
   ActionContext,
   AnyContinuationCallable,
@@ -22,6 +27,7 @@ import type {
   ReducerGameDefinition,
   StageSpec,
   TableQueriesOfState,
+  TerminalOutcome,
   ViewMapOf,
 } from "../../model";
 import {
@@ -37,11 +43,7 @@ import {
   buildRuntimeArgs as buildTrustedRuntimeArgs,
   fxForState as trustedFxForState,
 } from "./trusted-runtime-args";
-import {
-  normalizeResult,
-  rejectResult,
-  runtimeResultHelpers,
-} from "./trusted-runtime-result";
+import { rejectResult, runtimeResultHelpers } from "./trusted-runtime-result";
 import {
   toCombinedState as codecToCombinedState,
   toDomainState as codecToDomainState,
@@ -52,7 +54,8 @@ import {
   resolveTrustedSetupProfiles,
 } from "./trusted-setup-profiles";
 
-export { normalizeResult, rejectResult } from "./trusted-runtime-result";
+export { normalizeResult } from "./trusted-runtime-result";
+export { rejectResult };
 
 export type TrustedDefinition<
   Contract extends ReducerGameContractLike,
@@ -103,6 +106,20 @@ export interface TrustedRuntimeHelpers<
       RuntimeInstructionForState<TrustedDomainState<Contract>>
     >;
   };
+  endGame: (
+    state: TrustedDomainState<Contract>,
+    outcome: TerminalOutcome<TrustedPlayerId<Contract>>,
+    instructions?: Array<
+      RuntimeInstructionForState<TrustedDomainState<Contract>>
+    >,
+  ) => {
+    type: "accept";
+    state: TrustedDomainState<Contract>;
+    instructions: Array<
+      RuntimeInstructionForState<TrustedDomainState<Contract>>
+    >;
+    terminal: TerminalOutcome<TrustedPlayerId<Contract>>;
+  };
   reject: typeof rejectResult;
   ops: ReturnType<typeof createReducerOps<TrustedDomainState<Contract>>>;
   edit: ReturnType<typeof createReducerEdit<TrustedDomainState<Contract>>>;
@@ -114,6 +131,7 @@ export interface TrustedRuntimeScope<
   Views extends ViewMapOf<Contract>,
 > {
   definition: TrustedDefinition<Contract, Definitions, Views>;
+  diagnostics: ReducerDiagnosticsEmitter;
   registry: TrustedRuntimeRegistry<Contract, Definitions, Views>;
   phaseEntries: ReadonlyArray<
     readonly [
@@ -200,6 +218,7 @@ export function createTrustedRuntimeScope<
   Views extends ViewMapOf<Contract>,
 >(
   definition: TrustedDefinition<Contract, Definitions, Views>,
+  options: { diagnostics?: ReducerDiagnosticsSink } = {},
 ): TrustedRuntimeScope<Contract, Definitions, Views> {
   type DomainState = TrustedDomainState<Contract>;
   type SessionState = TrustedSessionState<Contract>;
@@ -310,6 +329,7 @@ export function createTrustedRuntimeScope<
 
   return {
     definition,
+    diagnostics: createReducerDiagnosticsEmitter(options.diagnostics),
     registry,
     phaseEntries,
     defaultInitialPhase,

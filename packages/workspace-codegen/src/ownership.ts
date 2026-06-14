@@ -22,7 +22,7 @@ export type ScaffoldingOwnership = {
 };
 
 export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
-  version: 29,
+  version: 30,
   allowedPaths: {
     rootFiles: [
       ".npmrc",

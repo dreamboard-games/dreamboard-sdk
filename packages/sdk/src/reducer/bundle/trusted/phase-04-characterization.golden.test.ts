@@ -9,8 +9,9 @@ import {
   defineInteraction,
   definePhase,
   defineView,
-  type RuntimeTableRecord,
+  type ReducerDiagnosticEvent,
 } from "../../../reducer";
+import type { RuntimeTableRecord } from "../../../reducer/advanced";
 import { asPlayerId, perPlayer } from "../../per-player";
 
 function digest(value: unknown): string {
@@ -363,5 +364,155 @@ describe("phase 4 trusted-bundle characterization", () => {
           }
         : result,
     ).toMatchSnapshot();
+  });
+
+  test("dispatch emits summarized diagnostics without leaking state", async () => {
+    const events: ReducerDiagnosticEvent[] = [];
+    const bundle = createReducerBundle(createCharacterizationGame(), {
+      diagnostics: {
+        event(event) {
+          events.push(event);
+        },
+      },
+    });
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+      rngSeed: 42,
+    });
+
+    const accepted = await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "rollTwice",
+        params: {},
+      },
+    });
+    const rejected = await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "rejectNow",
+        params: {},
+      },
+    });
+
+    expect(accepted.kind).toBe("accept");
+    expect(rejected.kind).toBe("reject");
+    expect(events).toEqual([
+      {
+        type: "submitReceived",
+        submissionId: "sub-1",
+        playerId: "player-1",
+        interactionId: "rollTwice",
+        phase: "play",
+      },
+      {
+        type: "submitAccepted",
+        submissionId: "sub-1",
+        trace: [
+          {
+            kind: "acceptedClientInput",
+            playerId: "player-1",
+            interactionId: "rollTwice",
+          },
+          { kind: "appliedInstruction", instruction: "engine.rollDie" },
+          expect.objectContaining({
+            kind: "rngConsumption",
+            operation: "rollDie",
+          }),
+          { kind: "appliedInstruction", instruction: "engine.rollDie" },
+          expect.objectContaining({
+            kind: "rngConsumption",
+            operation: "rollDie",
+          }),
+        ],
+      },
+      {
+        type: "submitReceived",
+        submissionId: "sub-2",
+        playerId: "player-1",
+        interactionId: "rejectNow",
+        phase: "play",
+      },
+      {
+        type: "submitRejected",
+        submissionId: "sub-2",
+        errorCode: "NOPE",
+        message: "Rejected by golden fixture.",
+      },
+    ]);
+    expect(JSON.stringify(events)).not.toContain("publicState");
+    expect(JSON.stringify(events)).not.toContain("hiddenState");
+    expect(JSON.stringify(events)).not.toContain("privateState");
+  });
+
+  test("diagnostics sink failures are disarmed without changing dispatch", async () => {
+    const events: ReducerDiagnosticEvent[] = [];
+    const bundle = createReducerBundle(createCharacterizationGame(), {
+      diagnostics: {
+        event(event) {
+          events.push(event);
+          if (event.type === "submitReceived") {
+            throw new Error("sink exploded");
+          }
+        },
+      },
+    });
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const result = await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "score",
+        params: {},
+      },
+    });
+
+    expect(result.kind).toBe("accept");
+    expect(events.map((event) => event.type)).toEqual([
+      "submitReceived",
+      "internalError",
+    ]);
+  });
+
+  test("phase transitions emit diagnostics events", async () => {
+    const events: ReducerDiagnosticEvent[] = [];
+    const bundle = createReducerBundle(createCharacterizationGame(), {
+      diagnostics: {
+        event(event) {
+          events.push(event);
+        },
+      },
+    });
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "finish",
+        params: {},
+      },
+    });
+
+    expect(events).toContainEqual({
+      type: "phaseTransition",
+      from: "play",
+      to: "done",
+      reason: "effect",
+    });
   });
 });

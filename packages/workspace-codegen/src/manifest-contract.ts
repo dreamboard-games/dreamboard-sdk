@@ -4908,22 +4908,29 @@ import {
 } from "@dreamboard-games/sdk/types";
 import {
   asPlayerId,
-  assumeManifestSchema,
   boardRef,
   boardRefKey,
   boardRefSchema,
-  cloneManifestDefault,
-  createManifestGameStateSchema,
-  createManifestRuntimeSchema,
-  createManifestStringLiteralSchema,
-  dealToPlayerBoardContainer as createDealToPlayerBoardContainerStep,
-  dealToPlayerZone as createDealToPlayerZoneStep,
   perPlayer,
   perPlayerEntries,
   perPlayerGet,
   perPlayerHas,
   perPlayerKeys,
   perPlayerSchema,
+  type BoardRef,
+  type PerPlayer,
+  type PerPlayerBoardRef,
+  type PlayerId,
+  type SharedBoardRef,
+} from "@dreamboard-games/sdk/reducer";
+import {
+  assumeManifestSchema,
+  cloneManifestDefault,
+  createManifestGameStateSchema,
+  createManifestRuntimeSchema,
+  createManifestStringLiteralSchema,
+  dealToPlayerBoardContainer as createDealToPlayerBoardContainerStep,
+  dealToPlayerZone as createDealToPlayerZoneStep,
   markManifestScopedSchema,
   resolveManifestPlayerIds,
   seedSharedBoardContainer as createSeedSharedBoardContainerStep,
@@ -4932,10 +4939,6 @@ import {
   type CardIdOfManifest,
   type DieIdOfManifest,
   type PieceIdOfManifest,
-  type BoardRef,
-  type PerPlayer,
-  type PerPlayerBoardRef,
-  type PlayerId,
   type ReducerManifestContract,
   type RuntimeCardData,
   type RuntimeCardVisibility,
@@ -4950,9 +4953,8 @@ import {
   type SetupBootstrapPerPlayerContainerTemplateRef,
   type SetupBootstrapStep,
   type SetupProfileDefinition,
-  type SharedBoardRef,
   type StaticBoards,
-} from "@dreamboard-games/sdk/reducer";
+} from "@dreamboard-games/sdk/reducer/advanced";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -6188,8 +6190,8 @@ function renderManifestRuntimeSource(legacySource: string): string {
   return withoutLiterals
     .replace(generatedFileBanner, `${generatedFileBanner}\n// @ts-nocheck`)
     .replace(
-      `} from "@dreamboard-games/sdk/reducer";\n\nconst unknownRecordSchema`,
-      `} from "@dreamboard-games/sdk/reducer";\nimport staticBoardsData from "./manifest-static.json";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
+      `} from "@dreamboard-games/sdk/reducer/advanced";\n\nconst unknownRecordSchema`,
+      `} from "@dreamboard-games/sdk/reducer/advanced";\nimport staticBoardsData from "./manifest-static.json";\nimport { literals } from "./manifest-literals";\nimport type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";\n\nconst unknownRecordSchema`,
     )
     .replaceAll(
       "literals.playerIds as unknown as readonly PlayerId[]",
@@ -6371,8 +6373,8 @@ function renderManifestTypesSource(manifest: GameTopologyManifest): string {
 
   return `${generatedFileBanner}
 
+import type { PerPlayer } from "@dreamboard-games/sdk/reducer";
 import type {
-  PerPlayer,
   RuntimeCardData,
   RuntimeCardVisibility,
   RuntimeComponentLocation,
@@ -6381,7 +6383,7 @@ import type {
   RuntimePieceData,
   RuntimeRecord,
   RuntimeTableRecord,
-} from "@dreamboard-games/sdk/reducer";
+} from "@dreamboard-games/sdk/reducer/advanced";
 import { literals } from "./manifest-literals";
 
 export type PlayerId = (typeof literals.playerIds)[number];

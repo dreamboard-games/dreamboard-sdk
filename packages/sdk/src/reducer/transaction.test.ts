@@ -4,8 +4,8 @@ import {
   createReducerOps,
   createStateQueries,
   perPlayer,
-  type RuntimeTableRecord,
 } from "../reducer";
+import type { RuntimeTableRecord } from "../reducer/advanced";
 import type { PlayerId } from "./per-player";
 import {
   getCloneRuntimeTableCallCount,

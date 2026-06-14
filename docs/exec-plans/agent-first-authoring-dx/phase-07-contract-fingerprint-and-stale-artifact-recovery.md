@@ -1,5 +1,8 @@
 # Phase 7: Contract Fingerprint And Stale-Artifact Recovery
 
+Status: closed on 2026-06-14. Closeout receipt:
+[`artifacts/phase-07-closeout-20260614.md`](artifacts/phase-07-closeout-20260614.md).
+
 ## Objective
 
 Agents iterate on state schemas constantly; today the cost of forgetting

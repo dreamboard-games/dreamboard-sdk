@@ -9,6 +9,7 @@ const jsSubpaths = [
   "@dreamboard-games/sdk/package-set",
   "@dreamboard-games/sdk/types",
   "@dreamboard-games/sdk/reducer",
+  "@dreamboard-games/sdk/reducer/advanced",
   "@dreamboard-games/sdk/ui",
   "@dreamboard-games/sdk/ui/components",
   "@dreamboard-games/sdk/ui/defaults",

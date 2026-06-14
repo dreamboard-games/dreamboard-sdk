@@ -12,4 +12,10 @@ export default [
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    files: ["packages/sdk/src/reducer/bundle/**/*.ts"],
+    rules: {
+      "no-console": "error",
+    },
+  },
 ];

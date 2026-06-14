@@ -130,8 +130,10 @@ function cartesianDependencyTuples(
 function withoutDependentProjection(
   domain: InputDomainDescriptor,
 ): InputDomainDescriptor {
-  const { dependencies: _dependencies, ...rest } =
-    domain as InputDomainDescriptor & { dependencies?: unknown };
+  const rest = { ...domain } as InputDomainDescriptor & {
+    dependencies?: unknown;
+  };
+  delete rest.dependencies;
   return rest as InputDomainDescriptor;
 }
 
@@ -385,6 +387,7 @@ export function collectInteractionInputs<
       domain,
       defaultValue,
       dependencyKeys,
+      options,
     });
     return [
       {
@@ -399,33 +402,23 @@ export function collectInteractionInputs<
 
 const concreteDependentChoiceDefaultWarnings = new Set<string>();
 
-// Trusted reducer bundles must stay free of host capabilities such as
-// `process`: gameplay executor artifact admission statically rejects bundles
-// that reference host globals. Authoring warnings are therefore opt-in via a
-// host-set global that dev/test harnesses enable.
-const AUTHORING_WARNINGS_FLAG = "__DREAMBOARD_AUTHORING_WARNINGS__";
-
-function shouldEmitAuthoringWarning(): boolean {
-  return (
-    (globalThis as Record<string, unknown>)[AUTHORING_WARNINGS_FLAG] === true
-  );
-}
-
 function warnConcreteDependentChoiceDefault({
   inputKey,
   collector,
   domain,
   defaultValue,
   dependencyKeys,
+  options,
 }: {
   inputKey: string;
   collector: InputCollector;
   domain: InputDomainDescriptor;
   defaultValue: unknown;
   dependencyKeys: ReadonlySet<string>;
+  options: CollectorProjectionOptions<CollectorState>;
 }): void {
   if (
-    !shouldEmitAuthoringWarning() ||
+    !options.diagnostics ||
     !dependencyKeys.has(inputKey) ||
     collector.kind !== "form" ||
     domain.type !== "choice" ||
@@ -440,11 +433,13 @@ function warnConcreteDependentChoiceDefault({
     return;
   }
   concreteDependentChoiceDefaultWarnings.add(warningKey);
-  console.warn(
-    `[dreamboard] Form choice input "${inputKey}" feeds another collector and defaulted to "${String(
+  options.diagnostics.event({
+    type: "authoringWarning",
+    code: "dependent-choice-concrete-default",
+    message: `Form choice input "${inputKey}" feeds another collector and defaulted to "${String(
       defaultValue,
     )}". Dependent choices that select the object an action applies to should usually use defaultValue: () => undefined so collection stays explicit.`,
-  );
+  });
 }
 
 export function collectPromptOptions(

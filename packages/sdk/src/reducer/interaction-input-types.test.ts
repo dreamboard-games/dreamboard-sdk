@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
-  createManifestStringLiteralSchema,
   defineCardAction,
   defineGame,
   defineGameContract,
@@ -11,15 +10,18 @@ import {
   formInput,
   many,
   pipe,
-  type ClientParamsOfInteractionOfDefinition,
   type GameStateOf,
+  type PlayerId,
+} from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type ClientParamsOfInteractionOfDefinition,
   type InputKeysWithCollectorKindOfDefinition,
   type ReducerManifestContract,
   type RuntimeCardData,
   type RuntimeRecord,
   type RuntimeTableRecord,
-  type PlayerId,
-} from "../reducer";
+} from "../reducer/advanced";
 
 type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";

@@ -32,63 +32,34 @@ export function createEffectIdMinter(): EffectIdMinter {
 }
 
 export type EffectBuilders = {
-  transition(
-    args: { to: string },
-    continuation?: Wire.ContinuationToken,
-  ): PendingEffect;
-  rollDie(
-    args: { dieId: string },
-    continuation?: Wire.ContinuationToken,
-  ): PendingEffect;
-  shuffleSharedZone(
-    args: { zoneId: string },
-    continuation?: Wire.ContinuationToken,
-  ): PendingEffect;
-  shufflePlayerZone(
-    args: { zoneId: string; playerId: string },
-    continuation?: Wire.ContinuationToken,
-  ): PendingEffect;
+  transition(args: { to: string }, continuation?: Wire.ContinuationToken): PendingEffect;
+  rollDie(args: { dieId: string }, continuation?: Wire.ContinuationToken): PendingEffect;
+  shuffleSharedZone(args: { zoneId: string }, continuation?: Wire.ContinuationToken): PendingEffect;
+  shufflePlayerZone(args: { zoneId: string; playerId: string }, continuation?: Wire.ContinuationToken): PendingEffect;
 };
 
 export function createEffectBuilders(mint: EffectIdMinter): EffectBuilders {
   return {
     transition(args, continuation) {
-      const effect = {
-        effectId: mint(),
-        type: "transition" as const,
-        to: args.to,
-      };
+      const effect = { effectId: mint(), type: "transition" as const, to: args.to };
       return continuation === undefined
         ? (effect as PendingEffect)
         : Object.assign(effect, { __continuation: continuation });
     },
     rollDie(args, continuation) {
-      const effect = {
-        effectId: mint(),
-        type: "rollDie" as const,
-        dieId: args.dieId,
-      };
+      const effect = { effectId: mint(), type: "rollDie" as const, dieId: args.dieId };
       return continuation === undefined
         ? (effect as PendingEffect)
         : Object.assign(effect, { __continuation: continuation });
     },
     shuffleSharedZone(args, continuation) {
-      const effect = {
-        effectId: mint(),
-        type: "shuffleSharedZone" as const,
-        zoneId: args.zoneId,
-      };
+      const effect = { effectId: mint(), type: "shuffleSharedZone" as const, zoneId: args.zoneId };
       return continuation === undefined
         ? (effect as PendingEffect)
         : Object.assign(effect, { __continuation: continuation });
     },
     shufflePlayerZone(args, continuation) {
-      const effect = {
-        effectId: mint(),
-        type: "shufflePlayerZone" as const,
-        zoneId: args.zoneId,
-        playerId: args.playerId,
-      };
+      const effect = { effectId: mint(), type: "shufflePlayerZone" as const, zoneId: args.zoneId, playerId: args.playerId };
       return continuation === undefined
         ? (effect as PendingEffect)
         : Object.assign(effect, { __continuation: continuation });
@@ -109,9 +80,7 @@ export function materializeAccept(pending: ReadonlyArray<PendingEffect>): {
   const effects: Wire.Effect[] = [];
   const continuations: Wire.ContinuationMap = {};
   for (const pe of pending) {
-    const { __continuation, ...effect } = pe as PendingEffect & {
-      __continuation?: Wire.ContinuationToken;
-    };
+    const { __continuation, ...effect } = pe as PendingEffect & { __continuation?: Wire.ContinuationToken };
     effects.push(effect as Wire.Effect);
     if (__continuation !== undefined) {
       continuations[(effect as Wire.Effect).effectId] = __continuation;

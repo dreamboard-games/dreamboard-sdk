@@ -11,9 +11,11 @@ import {
   defineStepPhase,
   defineView,
   rngInput,
+} from "../reducer";
+import {
   type InputCollector,
   type RuntimeTableRecord,
-} from "../reducer";
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 import {
   getCloneRuntimeTableCallCount,

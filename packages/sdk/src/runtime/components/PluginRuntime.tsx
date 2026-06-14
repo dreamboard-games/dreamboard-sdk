@@ -5,6 +5,7 @@ import { usePluginSession } from "../context/PluginSessionContext.js";
 import { RuntimeSemanticProjectionMarker } from "../context/PluginStateContext.js";
 import { usePluginRuntime } from "../hooks/usePluginRuntime.js";
 import { GameSkeleton } from "../../ui.js";
+import type { PluginRuntimeDiagnosticHandler } from "../api/createPluginRuntimeAPI.js";
 
 export interface PluginRuntimeProps {
   /** Child components to render after state sync has started */
@@ -18,6 +19,7 @@ export interface PluginRuntimeProps {
   loadingComponent?: React.ReactNode;
   /** Custom error component to show when initialization fails */
   errorComponent?: (error: string) => React.ReactNode;
+  onDiagnostic?: PluginRuntimeDiagnosticHandler;
 }
 
 /**
@@ -46,8 +48,12 @@ export function PluginRuntime({
   timeout = 10000,
   loadingComponent,
   errorComponent,
+  onDiagnostic,
 }: PluginRuntimeProps) {
-  const { runtime, isReady, waiting, error } = usePluginRuntime({ timeout });
+  const { runtime, isReady, waiting, error } = usePluginRuntime({
+    timeout,
+    onDiagnostic,
+  });
 
   if (error) {
     if (errorComponent) {

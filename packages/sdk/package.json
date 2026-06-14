@@ -26,6 +26,11 @@
       "import": "./dist/reducer.js",
       "default": "./dist/reducer.js"
     },
+    "./reducer/advanced": {
+      "types": "./dist/reducer/advanced.d.ts",
+      "import": "./dist/reducer/advanced.js",
+      "default": "./dist/reducer/advanced.js"
+    },
     "./ui": {
       "types": "./dist/ui.d.ts",
       "import": "./dist/ui.js",

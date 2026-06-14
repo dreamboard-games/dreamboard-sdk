@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
-  createManifestStringLiteralSchema,
   createReducerBundle,
   defineGame,
   defineGameContract,
@@ -11,8 +10,11 @@ import {
   formInput,
   many,
   pipe,
-  type RuntimeTableRecord,
 } from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type RuntimeTableRecord,
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 
 function hydrateRefs<T>(

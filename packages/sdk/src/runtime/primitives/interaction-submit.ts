@@ -2,6 +2,7 @@ import type {
   InteractionHandle,
   InteractionParamsShape,
 } from "../hooks/useInteractionHandle.js";
+import type { PluginRuntimeDiagnosticHandler } from "../api/createPluginRuntimeAPI.js";
 
 type UnhandledInteractionError = "throw" | "log" | "ignore";
 
@@ -9,6 +10,7 @@ interface RunInteractionActionOptions<Result> {
   onSuccess?: (result: Result) => void;
   onError?: (error: unknown) => void;
   unhandledError?: UnhandledInteractionError;
+  onDiagnostic?: PluginRuntimeDiagnosticHandler;
 }
 
 export interface InteractionSubmitCallbacks {
@@ -22,6 +24,7 @@ export async function runInteractionAction<Result>(
     onSuccess,
     onError,
     unhandledError = "throw",
+    onDiagnostic,
   }: RunInteractionActionOptions<Result> = {},
 ): Promise<void> {
   try {
@@ -33,7 +36,17 @@ export async function runInteractionAction<Result>(
       return;
     }
     if (unhandledError === "log") {
-      console.error(error);
+      const message = error instanceof Error ? error.message : String(error);
+      if (onDiagnostic) {
+        onDiagnostic({
+          type: "runtimeLog",
+          level: "error",
+          message,
+          details: [error],
+        });
+      } else {
+        console.error(error);
+      }
       return;
     }
     if (unhandledError === "ignore") {

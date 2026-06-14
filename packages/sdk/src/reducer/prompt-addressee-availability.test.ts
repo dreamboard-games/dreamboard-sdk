@@ -37,8 +37,8 @@ import {
   defineStepPhase,
   pipe,
   promptInput,
-  type RuntimeTableRecord,
 } from "../reducer";
+import type { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 
 function getAvailableInteractions(

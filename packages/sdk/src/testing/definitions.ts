@@ -1,3 +1,8 @@
+import type {
+  DispatchTraceSummaryEntry,
+  ReducerDiagnosticEvent,
+} from "../reducer/diagnostics.js";
+
 export type TestRunner = "reducer" | "remote" | "browser";
 
 export type InteractionDescriptorLike = {
@@ -112,6 +117,14 @@ export interface SharedScenarioContext<
     playerId: PlayerId,
     interactionId: string,
   ): InteractionExplanationLike;
+  diagnostics: {
+    readonly events: readonly ReducerDiagnosticEvent[];
+    readonly lastDispatch: {
+      submissionId: string;
+      trace: readonly DispatchTraceSummaryEntry[];
+    } | null;
+    clear(): void;
+  };
   expect: ExpectFn;
 }
 

@@ -1,5 +1,5 @@
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
-import type { ReducerReject, ReducerResult } from "../../model";
+import type { ReducerReject, ReducerResult, TerminalOutcome } from "../../model";
 
 export function acceptResult<State>(
   state: State,
@@ -9,6 +9,19 @@ export function acceptResult<State>(
     type: "accept" as const,
     state,
     instructions,
+  };
+}
+
+export function endGameResult<State, PlayerId extends string = string>(
+  state: State,
+  outcome: TerminalOutcome<PlayerId>,
+  instructions: Array<RuntimeInstructionForState<State>> = [],
+) {
+  return {
+    type: "accept" as const,
+    state,
+    instructions,
+    terminal: outcome,
   };
 }
 
@@ -35,5 +48,6 @@ export function normalizeResult<State>(
 
 export const runtimeResultHelpers = {
   accept: acceptResult,
+  endGame: endGameResult,
   reject: rejectResult,
 };

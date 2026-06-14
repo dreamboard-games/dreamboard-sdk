@@ -7,9 +7,14 @@ import type {
   InteractionExplanationLike,
   SnapshotMatcherHandler,
 } from "./definitions.js";
+import type { ReducerDiagnosticEvent } from "../reducer/diagnostics.js";
 
 type CreateExpectApiOptions = {
   matchSnapshot?: SnapshotMatcherHandler;
+  lastDiagnosticRejection?: () =>
+    | Extract<ReducerDiagnosticEvent, { type: "submitRejected" }>
+    | null
+    | undefined;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -76,6 +81,7 @@ function assertDescriptorMatches(
 function createSubmissionErrorMatcher(
   actual: unknown,
   expected: RejectionExpectation,
+  options: CreateExpectApiOptions,
 ): Promise<void> {
   const resolvePromise = (): Promise<unknown> => {
     if (typeof actual === "function") {
@@ -100,7 +106,7 @@ function createSubmissionErrorMatcher(
         throw new Error(
           `Expected rejection errorCode '${expected.errorCode}', received '${
             (error as Error & { errorCode?: string }).errorCode ?? "undefined"
-          }'.`,
+          }'.${formatLastDiagnosticRejection(options)}`,
         );
       }
       if (
@@ -108,7 +114,9 @@ function createSubmissionErrorMatcher(
         error.message !== expected.message
       ) {
         throw new Error(
-          `Expected rejection message '${expected.message}', received '${error.message}'.`,
+          `Expected rejection message '${expected.message}', received '${error.message}'.${formatLastDiagnosticRejection(
+            options,
+          )}`,
         );
       }
       if (
@@ -116,10 +124,22 @@ function createSubmissionErrorMatcher(
         !expected.message.test(error.message)
       ) {
         throw new Error(
-          `Expected rejection message '${error.message}' to match ${String(expected.message)}.`,
+          `Expected rejection message '${error.message}' to match ${String(
+            expected.message,
+          )}.${formatLastDiagnosticRejection(options)}`,
         );
       }
     });
+}
+
+function formatLastDiagnosticRejection(
+  options: CreateExpectApiOptions,
+): string {
+  const rejection = options.lastDiagnosticRejection?.();
+  if (!rejection) return "";
+  const rule = rejection.ruleId ? ` ruleId=${rejection.ruleId}` : "";
+  const message = rejection.message ? ` message=${rejection.message}` : "";
+  return `\nlast rejection: errorCode=${rejection.errorCode}${rule}${message}`;
 }
 
 function assertLength(actual: unknown, expected: number): void {
@@ -286,7 +306,8 @@ export function createExpectApi(
       }
       options.matchSnapshot(filename, actual);
     },
-    toRejectWith: (expected) => createSubmissionErrorMatcher(actual, expected),
+    toRejectWith: (expected) =>
+      createSubmissionErrorMatcher(actual, expected, options),
     toHaveInteraction: (interactionId, opts) => {
       const descriptors = asDescriptorList(actual);
       const descriptor = findInteraction(descriptors, interactionId);

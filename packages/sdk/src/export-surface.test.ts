@@ -7,9 +7,14 @@
  * package.json `exports` map while files move around.
  */
 import { describe, expect, test } from "bun:test";
+import { fileURLToPath } from "node:url";
+
+const packageRoot = fileURLToPath(new URL("..", import.meta.url));
+const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 const facades = {
   reducer: () => import("./reducer.js"),
+  "reducer/advanced": () => import("./reducer/advanced.js"),
   runtime: () => import("./runtime.js"),
   "runtime/primitives": () => import("./runtime/primitives.js"),
   "runtime/workspace-contract": () => import("./runtime/workspace-contract.js"),
@@ -26,4 +31,39 @@ describe("public export surface", () => {
       expect(Object.keys(module).sort()).toMatchSnapshot();
     });
   }
+
+  test("reducer facade stays within the agent-surface value budget", async () => {
+    const names = Object.keys(await import("./reducer.js")).sort();
+
+    expect(names.length).toBeLessThanOrEqual(80);
+    expect(names).not.toContain("createClientParamSchemasByPhase");
+    expect(names).not.toContain("createManifestRuntimeSchema");
+    expect(names).not.toContain("applySetupBootstrap");
+  });
+
+  test("reducer declaration surface keeps advanced types off the author facade", () => {
+    const result = Bun.spawnSync({
+      cmd: [
+        "node",
+        `${repoRoot}/scripts/list-dts-exports.mjs`,
+        `${packageRoot}/dist/reducer.d.ts`,
+      ],
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+
+    expect(result.exitCode).toBe(0);
+
+    const names = result.stdout
+      .toString()
+      .split("\n")
+      .map((name) => name.trim())
+      .filter(Boolean);
+
+    expect(names.length).toBeLessThanOrEqual(140);
+    expect(names).not.toContain("CardIdOfTable");
+    expect(names).not.toContain("ClientParamsOfInteractionOfDefinition");
+    expect(names).not.toContain("RuntimeCardData");
+    expect(names).not.toContain("ResolvedContainerLocation");
+  });
 });

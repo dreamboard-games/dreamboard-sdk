@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { usePendingInteractionKey } from "../../context/InteractionDraftContext.js";
 import { usePluginState } from "../../context/PluginStateContext.js";
+import { useRuntimeContext } from "../../context/RuntimeContext.js";
 import type { InteractionKey } from "../../ui-contract.js";
 import type { InteractionDescriptor } from "../../types/plugin-state.js";
+import type { PluginRuntimeAPI } from "../../api/createPluginRuntimeAPI.js";
 import { isInteractionAvailable } from "../../utils/interaction-status.js";
 import { InteractionRoot } from "./context.js";
 
@@ -78,10 +80,17 @@ export interface InteractionRoutesProps<
 
 const warnedInteractionRouteIssues = new Set<string>();
 
-function warnInteractionRouteIssue(message: string) {
+function warnInteractionRouteIssue(
+  message: string,
+  runtime?: PluginRuntimeAPI,
+) {
   if (warnedInteractionRouteIssues.has(message)) return;
   warnedInteractionRouteIssues.add(message);
-  console.warn(message);
+  if (runtime?.emitDiagnostic) {
+    runtime.emitDiagnostic({ type: "runtimeLog", level: "warn", message });
+  } else {
+    console.warn(message);
+  }
 }
 
 export function InteractionRoutes<Interaction extends string = InteractionKey>({
@@ -89,6 +98,7 @@ export function InteractionRoutes<Interaction extends string = InteractionKey>({
   fallback = null,
   includeUnavailable = false,
 }: InteractionRoutesProps<Interaction>) {
+  const runtime = useRuntimeContext() as PluginRuntimeAPI;
   const descriptors = usePluginState(
     (state) => state.gameplay.availableInteractions,
   );
@@ -103,6 +113,7 @@ export function InteractionRoutes<Interaction extends string = InteractionKey>({
       if (!route) {
         warnInteractionRouteIssue(
           `[dreamboard] Interaction.Routes is missing a collector route for "${descriptor.interactionKey}". Declare the interaction in routes so input collection stays explicit.`,
+          runtime,
         );
         return null;
       }
@@ -114,6 +125,7 @@ export function InteractionRoutes<Interaction extends string = InteractionKey>({
           `[dreamboard] Interaction.Routes route "${descriptor.interactionKey}" is missing collectors for: ${missingInputs.join(
             ", ",
           )}.`,
+          runtime,
         );
       }
       return descriptor;
