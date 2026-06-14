@@ -1,5 +1,8 @@
 # Phase 5: Public Surface Consolidation
 
+Status: closed on 2026-06-14. Closeout receipt:
+[`artifacts/phase-05-closeout-20260614.md`](artifacts/phase-05-closeout-20260614.md).
+
 ## Objective
 
 Shrink the documented authoring vocabulary. The `/reducer` facade currently

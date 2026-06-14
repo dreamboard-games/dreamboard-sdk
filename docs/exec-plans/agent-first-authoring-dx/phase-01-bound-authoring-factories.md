@@ -1,5 +1,8 @@
 # Phase 1: Contract-Bound Authoring Factories
 
+Status: closed by whole-plan closeout on 2026-06-15. See
+[`artifacts/plan-closeout-20260615.md`](artifacts/plan-closeout-20260615.md).
+
 ## Objective
 
 Make game code authorable with **zero type parameters and zero manual type
