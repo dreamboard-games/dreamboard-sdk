@@ -282,15 +282,29 @@ export function moveComponentToSpace<
   spaceId: SpaceId,
 ): Table {
   const nextTable = cloneRuntimeTable(table);
-  const position = getComponentsOnSpace(nextTable, boardId, spaceId).length;
-  removeComponentFromCurrentLocation(nextTable, componentId);
-  nextTable.componentLocations[componentId] = {
+  moveComponentToSpaceInPlace(nextTable, componentId, boardId, spaceId);
+  return nextTable;
+}
+
+export function moveComponentToSpaceInPlace<
+  Table extends RuntimeTableRecord,
+  ComponentId extends ComponentIdOfTable<Table>,
+  BoardId extends BoardIdOfTable<NoInfer<Table>>,
+  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
+>(
+  table: Table,
+  componentId: ComponentId,
+  boardId: BoardId,
+  spaceId: SpaceId,
+): void {
+  const position = getComponentsOnSpace(table, boardId, spaceId).length;
+  removeComponentFromCurrentLocation(table, componentId);
+  table.componentLocations[componentId] = {
     type: "OnSpace",
     boardId,
     spaceId,
     position,
   };
-  return nextTable;
 }
 
 export function moveComponentToContainer<
@@ -305,20 +319,30 @@ export function moveComponentToContainer<
   containerId: ContainerId,
 ): Table {
   const nextTable = cloneRuntimeTable(table);
-  assertCardAllowedInContainer(nextTable, boardId, containerId, componentId);
-  const position = getComponentsInContainer(
-    nextTable,
-    boardId,
-    containerId,
-  ).length;
-  removeComponentFromCurrentLocation(nextTable, componentId);
-  nextTable.componentLocations[componentId] = {
+  moveComponentToContainerInPlace(nextTable, componentId, boardId, containerId);
+  return nextTable;
+}
+
+export function moveComponentToContainerInPlace<
+  Table extends RuntimeTableRecord,
+  ComponentId extends ComponentIdOfTable<Table>,
+  BoardId extends BoardIdOfTable<NoInfer<Table>>,
+  ContainerId extends BoardContainerIdOfTable<NoInfer<Table>, BoardId>,
+>(
+  table: Table,
+  componentId: ComponentId,
+  boardId: BoardId,
+  containerId: ContainerId,
+): void {
+  assertCardAllowedInContainer(table, boardId, containerId, componentId);
+  const position = getComponentsInContainer(table, boardId, containerId).length;
+  removeComponentFromCurrentLocation(table, componentId);
+  table.componentLocations[componentId] = {
     type: "InContainer",
     boardId,
     containerId,
     position,
   };
-  return nextTable;
 }
 
 export function moveComponentToDetached<
@@ -326,9 +350,16 @@ export function moveComponentToDetached<
   ComponentId extends ComponentIdOfTable<Table>,
 >(table: Table, componentId: ComponentId): Table {
   const nextTable = cloneRuntimeTable(table);
-  removeComponentFromCurrentLocation(nextTable, componentId);
-  nextTable.componentLocations[componentId] = { type: "Detached" };
+  moveComponentToDetachedInPlace(nextTable, componentId);
   return nextTable;
+}
+
+export function moveComponentToDetachedInPlace<
+  Table extends RuntimeTableRecord,
+  ComponentId extends ComponentIdOfTable<Table>,
+>(table: Table, componentId: ComponentId): void {
+  removeComponentFromCurrentLocation(table, componentId);
+  table.componentLocations[componentId] = { type: "Detached" };
 }
 
 export function moveComponentToEdge<
@@ -343,16 +374,30 @@ export function moveComponentToEdge<
   edgeId: EdgeId,
 ): Table {
   const nextTable = cloneRuntimeTable(table);
-  getEdge(nextTable, boardId, edgeId);
-  const position = getComponentsOnEdge(nextTable, boardId, edgeId).length;
-  removeComponentFromCurrentLocation(nextTable, componentId);
-  nextTable.componentLocations[componentId] = {
+  moveComponentToEdgeInPlace(nextTable, componentId, boardId, edgeId);
+  return nextTable;
+}
+
+export function moveComponentToEdgeInPlace<
+  Table extends RuntimeTableRecord,
+  ComponentId extends ComponentIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
+  EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
+>(
+  table: Table,
+  componentId: ComponentId,
+  boardId: BoardId,
+  edgeId: EdgeId,
+): void {
+  getEdge(table, boardId, edgeId);
+  const position = getComponentsOnEdge(table, boardId, edgeId).length;
+  removeComponentFromCurrentLocation(table, componentId);
+  table.componentLocations[componentId] = {
     type: "OnEdge",
     boardId,
     edgeId,
     position,
   };
-  return nextTable;
 }
 
 export function moveComponentToVertex<
@@ -367,14 +412,28 @@ export function moveComponentToVertex<
   vertexId: VertexId,
 ): Table {
   const nextTable = cloneRuntimeTable(table);
-  getVertex(nextTable, boardId, vertexId);
-  const position = getComponentsOnVertex(nextTable, boardId, vertexId).length;
-  removeComponentFromCurrentLocation(nextTable, componentId);
-  nextTable.componentLocations[componentId] = {
+  moveComponentToVertexInPlace(nextTable, componentId, boardId, vertexId);
+  return nextTable;
+}
+
+export function moveComponentToVertexInPlace<
+  Table extends RuntimeTableRecord,
+  ComponentId extends ComponentIdOfTable<Table>,
+  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
+  VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
+>(
+  table: Table,
+  componentId: ComponentId,
+  boardId: BoardId,
+  vertexId: VertexId,
+): void {
+  getVertex(table, boardId, vertexId);
+  const position = getComponentsOnVertex(table, boardId, vertexId).length;
+  removeComponentFromCurrentLocation(table, componentId);
+  table.componentLocations[componentId] = {
     type: "OnVertex",
     boardId,
     vertexId,
     position,
   };
-  return nextTable;
 }

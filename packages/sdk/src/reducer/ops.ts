@@ -59,25 +59,42 @@ import {
 } from "./per-player";
 import {
   addCardToSharedZone as tableAddCardToSharedZone,
+  addCardToSharedZoneInPlace as tableAddCardToSharedZoneInPlace,
   addPlayerResources as tableAddPlayerResources,
+  addPlayerResourcesInPlace as tableAddPlayerResourcesInPlace,
   cloneRuntimeTable,
   dealCardsFromDeckToHand as tableDealCardsFromDeckToHand,
+  dealCardsFromDeckToHandInPlace as tableDealCardsFromDeckToHandInPlace,
   dealCardsBetweenPlayerZones as tableDealCardsBetweenPlayerZones,
+  dealCardsBetweenPlayerZonesInPlace as tableDealCardsBetweenPlayerZonesInPlace,
   moveCardBetweenPlayerZones as tableMoveCardBetweenPlayerZones,
+  moveCardBetweenPlayerZonesInPlace as tableMoveCardBetweenPlayerZonesInPlace,
   moveCardBetweenSharedZones as tableMoveCardBetweenSharedZones,
+  moveCardBetweenSharedZonesInPlace as tableMoveCardBetweenSharedZonesInPlace,
   moveCardFromPlayerZoneToSharedZone as tableMoveCardFromPlayerZoneToSharedZone,
+  moveCardFromPlayerZoneToSharedZoneInPlace as tableMoveCardFromPlayerZoneToSharedZoneInPlace,
   moveCardFromSharedZoneToPlayerZone as tableMoveCardFromSharedZoneToPlayerZone,
+  moveCardFromSharedZoneToPlayerZoneInPlace as tableMoveCardFromSharedZoneToPlayerZoneInPlace,
   moveComponentToContainer as tableMoveComponentToContainer,
+  moveComponentToContainerInPlace as tableMoveComponentToContainerInPlace,
   moveComponentToDetached as tableMoveComponentToDetached,
+  moveComponentToDetachedInPlace as tableMoveComponentToDetachedInPlace,
   moveComponentToEdge as tableMoveComponentToEdge,
+  moveComponentToEdgeInPlace as tableMoveComponentToEdgeInPlace,
   moveComponentToSpace as tableMoveComponentToSpace,
+  moveComponentToSpaceInPlace as tableMoveComponentToSpaceInPlace,
   moveComponentToVertex as tableMoveComponentToVertex,
+  moveComponentToVertexInPlace as tableMoveComponentToVertexInPlace,
   removeCardFromSharedZone as tableRemoveCardFromSharedZone,
+  removeCardFromSharedZoneInPlace as tableRemoveCardFromSharedZoneInPlace,
   setActivePlayers as stateSetActivePlayers,
   setPhaseState as stateSetPhaseState,
   setPlayerResource as tableSetPlayerResource,
+  setPlayerResourceInPlace as tableSetPlayerResourceInPlace,
   spendPlayerResources as tableSpendPlayerResources,
+  spendPlayerResourcesInPlace as tableSpendPlayerResourcesInPlace,
   transferPlayerResources as tableTransferPlayerResources,
+  transferPlayerResourcesInPlace as tableTransferPlayerResourcesInPlace,
 } from "./table";
 
 /**
@@ -427,6 +444,42 @@ export interface ReducerOps<State extends ReducerStateBase> {
   }): Op<State>;
 }
 
+export type ReducerOpsInternal<State extends ReducerStateBase> = {
+  [Key in keyof ReducerOps<State>]: ReducerOps<State>[Key] extends (
+    ...args: infer Args
+  ) => Op<State>
+    ? (state: State, ...args: Args) => State
+    : never;
+};
+
+const reducerOpsInternal = Symbol("dreamboard.reducerOpsInternal");
+
+type ReducerOpsWithInternal<State extends ReducerStateBase> =
+  ReducerOps<State> & {
+    [reducerOpsInternal]?: ReducerOpsInternal<State>;
+  };
+
+export function getReducerOpsInternal<State extends ReducerStateBase>(
+  ops: ReducerOps<State>,
+): ReducerOpsInternal<State> {
+  const attached = (ops as ReducerOpsWithInternal<State>)[reducerOpsInternal];
+  if (attached) {
+    return attached;
+  }
+
+  return Object.fromEntries(
+    Object.keys(ops).map((key) => [
+      key,
+      (state: State, ...args: readonly unknown[]) =>
+        (
+          ops[key as keyof ReducerOps<State>] as unknown as (
+            ...args: readonly unknown[]
+          ) => Op<State>
+        )(...args)(state),
+    ]),
+  ) as ReducerOpsInternal<State>;
+}
+
 // --- Internal helpers -----------------------------------------------
 
 type AnyTable = RuntimeTableRecord;
@@ -517,13 +570,29 @@ function rotatePlayerZoneTable(options: {
   position?: "top" | "bottom";
 }): RuntimeTableRecord {
   const nextTable = cloneRuntimeTable(options.table);
+  rotatePlayerZoneTableInPlace({
+    ...options,
+    table: nextTable,
+  });
+  return nextTable;
+}
+
+function rotatePlayerZoneTableInPlace(options: {
+  table: RuntimeTableRecord;
+  zoneId: string;
+  direction: "left" | "right";
+  players?: readonly string[];
+  cardIdsByPlayer?: Partial<Record<string, readonly string[]>>;
+  position?: "top" | "bottom";
+}): void {
+  const nextTable = options.table;
   const zoneId = options.zoneId;
   if (!nextTable.zones.perPlayer[zoneId] && !nextTable.hands[zoneId]) {
     throw new Error(`Player zone '${zoneId}' does not exist.`);
   }
   const players = [...(options.players ?? nextTable.playerOrder)];
   if (players.length === 0) {
-    return nextTable;
+    return;
   }
   const playerSet = new Set(nextTable.playerOrder);
   for (const playerId of players) {
@@ -595,8 +664,6 @@ function rotatePlayerZoneTable(options: {
       );
     }
   }
-
-  return nextTable;
 }
 
 /**
@@ -616,12 +683,26 @@ type TableMoveComponentToEdgeInternal = (
   edgeId: string,
 ) => RuntimeTableRecord;
 
+type TableMoveComponentToEdgeInPlaceInternal = (
+  table: RuntimeTableRecord,
+  componentId: string,
+  boardId: string,
+  edgeId: string,
+) => void;
+
 type TableMoveComponentToVertexInternal = (
   table: RuntimeTableRecord,
   componentId: string,
   boardId: string,
   vertexId: string,
 ) => RuntimeTableRecord;
+
+type TableMoveComponentToVertexInPlaceInternal = (
+  table: RuntimeTableRecord,
+  componentId: string,
+  boardId: string,
+  vertexId: string,
+) => void;
 
 type TableDealCardsFromDeckToHandInternal = (
   table: RuntimeTableRecord,
@@ -631,12 +712,26 @@ type TableDealCardsFromDeckToHandInternal = (
   count: number,
 ) => RuntimeTableRecord;
 
+type TableDealCardsFromDeckToHandInPlaceInternal = (
+  table: RuntimeTableRecord,
+  fromZoneId: string,
+  playerId: string,
+  toZoneId: string,
+  count: number,
+) => void;
+
 const moveComponentToEdgeInternal =
   tableMoveComponentToEdge as unknown as TableMoveComponentToEdgeInternal;
+const moveComponentToEdgeInPlaceInternal =
+  tableMoveComponentToEdgeInPlace as unknown as TableMoveComponentToEdgeInPlaceInternal;
 const moveComponentToVertexInternal =
   tableMoveComponentToVertex as unknown as TableMoveComponentToVertexInternal;
+const moveComponentToVertexInPlaceInternal =
+  tableMoveComponentToVertexInPlace as unknown as TableMoveComponentToVertexInPlaceInternal;
 const dealCardsFromDeckToHandInternal =
   tableDealCardsFromDeckToHand as unknown as TableDealCardsFromDeckToHandInternal;
+const dealCardsFromDeckToHandInPlaceInternal =
+  tableDealCardsFromDeckToHandInPlace as unknown as TableDealCardsFromDeckToHandInPlaceInternal;
 
 /**
  * Create the `ops.*` namespace specialised to a game state.
@@ -1030,5 +1125,355 @@ export function createReducerOps<
     },
   };
 
-  return impl as unknown as ReducerOps<State>;
+  const internal = {
+    setActivePlayers<S extends AnyState>(
+      state: S,
+      activePlayers: ReadonlyArray<string>,
+    ): S {
+      return stateSetActivePlayers(
+        state as unknown as never,
+        [...activePlayers] as never,
+      ) as unknown as S;
+    },
+    advanceActivePlayer<S extends AnyState>(state: S): S {
+      const table = (state as unknown as { table: RuntimeTableRecord }).table;
+      const order = table.playerOrder as ReadonlyArray<string>;
+      if (order.length === 0) return state;
+      const flow = (
+        state as unknown as { flow?: { activePlayers?: readonly string[] } }
+      ).flow;
+      const current = flow?.activePlayers?.[0];
+      const idx = current ? order.indexOf(current) : -1;
+      const nextIdx = idx < 0 ? 0 : (idx + 1) % order.length;
+      const nextId = order[nextIdx];
+      if (nextId === undefined) return state;
+      return stateSetActivePlayers(
+        state as unknown as never,
+        [nextId] as never,
+      ) as unknown as S;
+    },
+    patchPhaseState<S extends AnyState>(state: S, patch: unknown): S {
+      const prev = (state as unknown as { phase?: object }).phase ?? {};
+      const next = applyPatch(
+        prev as object,
+        patch as Partial<object> | ((prev: object) => object),
+      );
+      return stateSetPhaseState(
+        state as unknown as { phase: object },
+        next as object,
+      ) as unknown as S;
+    },
+    patchPublicState<S extends AnyState>(state: S, patch: unknown): S {
+      const prev =
+        (state as unknown as { publicState?: object }).publicState ?? {};
+      const next = applyPatch(
+        prev as object,
+        patch as Partial<object> | ((prev: object) => object),
+      );
+      return { ...state, publicState: next } as S;
+    },
+    patchHiddenState<S extends AnyState>(state: S, patch: unknown): S {
+      const prev =
+        (state as unknown as { hiddenState?: object }).hiddenState ?? {};
+      const next = applyPatch(
+        prev as object,
+        patch as Partial<object> | ((prev: object) => object),
+      );
+      return { ...state, hiddenState: next } as S;
+    },
+    patchPlayerPrivateState<S extends AnyState>(
+      state: S,
+      args: { playerId: string; patch: unknown },
+    ): S {
+      const privateByPlayer =
+        (state as unknown as { privateState?: Record<string, object> })
+          .privateState ?? {};
+      const prev = (privateByPlayer[args.playerId] ?? {}) as object;
+      const next = applyPatch(
+        prev,
+        args.patch as Partial<object> | ((prev: object) => object),
+      );
+      return {
+        ...state,
+        privateState: {
+          ...privateByPlayer,
+          [args.playerId]: next,
+        },
+      } as S;
+    },
+    addCardToSharedZone<S extends AnyState>(
+      state: S,
+      args: {
+        deckId: string;
+        cardId: string;
+        playedBy?: string | null;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      tableAddCardToSharedZoneInPlace(
+        state.table,
+        args.deckId,
+        args.cardId,
+        args.playedBy ?? null,
+        args.position ?? "bottom",
+      );
+      return state;
+    },
+    removeCardFromSharedZone<S extends AnyState>(
+      state: S,
+      args: { deckId: string; cardId: string },
+    ): S {
+      tableRemoveCardFromSharedZoneInPlace(
+        state.table,
+        args.deckId,
+        args.cardId,
+      );
+      return state;
+    },
+    moveCardBetweenSharedZones<S extends AnyState>(
+      state: S,
+      args: {
+        fromZoneId: string;
+        toZoneId: string;
+        cardId: string;
+        playedBy?: string | null;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      tableMoveCardBetweenSharedZonesInPlace({
+        table: state.table,
+        fromZoneId: args.fromZoneId,
+        toZoneId: args.toZoneId,
+        cardId: args.cardId,
+        playedBy: args.playedBy ?? null,
+        position: args.position ?? "bottom",
+      });
+      return state;
+    },
+    dealCardsBetweenPlayerZones<S extends AnyState>(
+      state: S,
+      args: {
+        playerId: string;
+        fromZoneId: string;
+        toZoneId: string;
+        count: number;
+      },
+    ): S {
+      tableDealCardsBetweenPlayerZonesInPlace({
+        table: state.table,
+        playerId: args.playerId,
+        fromZoneId: args.fromZoneId,
+        toZoneId: args.toZoneId,
+        count: args.count,
+      });
+      return state;
+    },
+    moveCardBetweenPlayerZones<S extends AnyState>(
+      state: S,
+      args: {
+        playerId: string;
+        fromZoneId: string;
+        toZoneId: string;
+        cardId: string;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      tableMoveCardBetweenPlayerZonesInPlace({
+        table: state.table,
+        playerId: args.playerId,
+        fromZoneId: args.fromZoneId,
+        toZoneId: args.toZoneId,
+        cardId: args.cardId,
+        position: args.position ?? "bottom",
+      });
+      return state;
+    },
+    moveCardFromPlayerZoneToSharedZone<S extends AnyState>(
+      state: S,
+      args: {
+        playerId: string;
+        fromZoneId: string;
+        toZoneId: string;
+        cardId: string;
+        playedBy?: string | null;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      tableMoveCardFromPlayerZoneToSharedZoneInPlace({
+        table: state.table,
+        playerId: args.playerId,
+        fromZoneId: args.fromZoneId,
+        toZoneId: args.toZoneId,
+        cardId: args.cardId,
+        playedBy: args.playedBy ?? null,
+        position: args.position ?? "bottom",
+      });
+      return state;
+    },
+    moveCardFromSharedZoneToPlayerZone<S extends AnyState>(
+      state: S,
+      args: {
+        playerId: string;
+        fromZoneId: string;
+        toZoneId: string;
+        cardId: string;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      tableMoveCardFromSharedZoneToPlayerZoneInPlace({
+        table: state.table,
+        playerId: args.playerId,
+        fromZoneId: args.fromZoneId,
+        toZoneId: args.toZoneId,
+        cardId: args.cardId,
+        position: args.position ?? "bottom",
+      });
+      return state;
+    },
+    dealCardsToPlayerZone<S extends AnyState>(
+      state: S,
+      args: {
+        fromZoneId: string;
+        playerId: string;
+        toZoneId: string;
+        count: number;
+      },
+    ): S {
+      dealCardsFromDeckToHandInPlaceInternal(
+        state.table,
+        args.fromZoneId,
+        args.playerId,
+        args.toZoneId,
+        args.count,
+      );
+      return state;
+    },
+    rotatePlayerZone<S extends AnyState>(
+      state: S,
+      args: {
+        zoneId: string;
+        direction: "left" | "right";
+        players?: readonly string[];
+        cardIdsByPlayer?: Partial<Record<string, readonly string[]>>;
+        position?: "top" | "bottom";
+      },
+    ): S {
+      rotatePlayerZoneTableInPlace({
+        table: state.table,
+        zoneId: args.zoneId,
+        direction: args.direction,
+        players: args.players,
+        cardIdsByPlayer: args.cardIdsByPlayer,
+        position: args.position ?? "bottom",
+      });
+      return state;
+    },
+    moveComponentToSpace<S extends AnyState>(
+      state: S,
+      args: { componentId: string; boardId: string; spaceId: string },
+    ): S {
+      tableMoveComponentToSpaceInPlace(
+        state.table,
+        args.componentId,
+        args.boardId,
+        args.spaceId,
+      );
+      return state;
+    },
+    moveComponentToContainer<S extends AnyState>(
+      state: S,
+      args: { componentId: string; boardId: string; containerId: string },
+    ): S {
+      tableMoveComponentToContainerInPlace(
+        state.table,
+        args.componentId,
+        args.boardId,
+        args.containerId,
+      );
+      return state;
+    },
+    moveComponentToEdge<S extends AnyState>(
+      state: S,
+      args: { componentId: string; boardId: string; edgeId: string },
+    ): S {
+      moveComponentToEdgeInPlaceInternal(
+        state.table,
+        args.componentId,
+        args.boardId,
+        args.edgeId,
+      );
+      return state;
+    },
+    moveComponentToVertex<S extends AnyState>(
+      state: S,
+      args: { componentId: string; boardId: string; vertexId: string },
+    ): S {
+      moveComponentToVertexInPlaceInternal(
+        state.table,
+        args.componentId,
+        args.boardId,
+        args.vertexId,
+      );
+      return state;
+    },
+    moveComponentToDetached<S extends AnyState>(
+      state: S,
+      args: { componentId: string },
+    ): S {
+      tableMoveComponentToDetachedInPlace(state.table, args.componentId);
+      return state;
+    },
+    addResources<S extends AnyState>(
+      state: S,
+      args: { playerId: string; amounts: Record<string, number | undefined> },
+    ): S {
+      tableAddPlayerResourcesInPlace(state.table, args.playerId, args.amounts);
+      return state;
+    },
+    spendResources<S extends AnyState>(
+      state: S,
+      args: { playerId: string; amounts: Record<string, number | undefined> },
+    ): S {
+      tableSpendPlayerResourcesInPlace(
+        state.table,
+        args.playerId,
+        args.amounts,
+      );
+      return state;
+    },
+    transferResources<S extends AnyState>(
+      state: S,
+      args: {
+        fromPlayerId: string;
+        toPlayerId: string;
+        amounts: Record<string, number | undefined>;
+      },
+    ): S {
+      tableTransferPlayerResourcesInPlace(
+        state.table,
+        args.fromPlayerId,
+        args.toPlayerId,
+        args.amounts,
+      );
+      return state;
+    },
+    setResource<S extends AnyState>(
+      state: S,
+      args: { playerId: string; resourceId: string; amount: number },
+    ): S {
+      tableSetPlayerResourceInPlace(
+        state.table,
+        args.playerId,
+        args.resourceId,
+        args.amount,
+      );
+      return state;
+    },
+  };
+
+  const ops = impl as unknown as ReducerOpsWithInternal<State>;
+  Object.defineProperty(ops, reducerOpsInternal, {
+    value: internal as unknown as ReducerOpsInternal<State>,
+  });
+  return ops;
 }

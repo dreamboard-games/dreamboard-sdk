@@ -7,6 +7,10 @@ import {
   type RuntimeTableRecord,
 } from "../reducer";
 import type { PlayerId } from "./per-player";
+import {
+  getCloneRuntimeTableCallCount,
+  resetCloneRuntimeTableCallCount,
+} from "./table/clone";
 
 type TestState = {
   table: RuntimeTableRecord;
@@ -128,7 +132,9 @@ function createState(): TestState {
         "card-c": { faceUp: false, visibleTo: ["player-2"] },
         "card-d": { faceUp: false, visibleTo: ["player-3"] },
       },
-      resources: perPlayer(players, () => ({})),
+      resources: perPlayer(players, (id) =>
+        id === player("player-1") ? { coins: 3 } : {},
+      ),
       boards: { byId: {} },
       slots: {},
     },
@@ -138,6 +144,22 @@ function createState(): TestState {
     hiddenState: {},
     privateState: {},
   };
+}
+
+function deepFreeze<T>(value: T): T {
+  if (
+    value === null ||
+    (typeof value !== "object" && typeof value !== "function") ||
+    Object.isFrozen(value)
+  ) {
+    return value;
+  }
+
+  Object.freeze(value);
+  for (const key of Reflect.ownKeys(value)) {
+    deepFreeze((value as Record<PropertyKey, unknown>)[key]);
+  }
+  return value;
 }
 
 describe("reducer transactions", () => {
@@ -197,6 +219,87 @@ describe("reducer transactions", () => {
       faceUp: false,
       visibleTo: ["player-2"],
     });
+  });
+
+  test("tx direct ops clone the table once and retain one draft state", () => {
+    const state = deepFreeze(createState());
+    resetCloneRuntimeTableCallCount();
+    const tx = createReducerEdit<TestState>()(state);
+
+    const afterAdd = tx.addResources({
+      playerId: player("player-1"),
+      amounts: { coins: 2 },
+    });
+    const afterSpend = tx.spendResources({
+      playerId: player("player-1"),
+      amounts: { coins: 1 },
+    });
+    const afterMove = tx.moveCardBetweenPlayerZones({
+      playerId: player("player-1"),
+      fromZoneId: "hand",
+      toZoneId: "played",
+      cardId: "card-a",
+    });
+
+    expect(afterAdd).toBe(afterSpend);
+    expect(afterSpend).toBe(afterMove);
+    expect(afterMove).toBe(tx.state);
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    expect(
+      createStateQueries(state).zone.playerCards(player("player-1"), "hand"),
+    ).toEqual(["card-a", "card-b"]);
+    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual([
+      "card-b",
+    ]);
+    expect(tx.q.player.resource(player("player-1"), "coins")).toBe(4);
+  });
+
+  test("tx.apply keeps pure-op escape hatch semantics", () => {
+    const state = createState();
+    const ops = createReducerOps<TestState>();
+    resetCloneRuntimeTableCallCount();
+    const tx = createReducerEdit<TestState>()(state);
+
+    const directDraft = tx.addResources({
+      playerId: player("player-1"),
+      amounts: { coins: 1 },
+    });
+    const appliedDraft = tx.apply(
+      ops.spendResources({
+        playerId: player("player-1"),
+        amounts: { coins: 1 },
+      }),
+    );
+
+    expect(appliedDraft).not.toBe(directDraft);
+    expect(appliedDraft).toBe(tx.state);
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    expect(tx.q.player.resource(player("player-1"), "coins")).toBe(3);
+  });
+
+  test("edit factories reuse the transaction method surface", () => {
+    const edit = createReducerEdit<TestState>();
+    const first = edit(createState());
+    const second = edit(createState());
+
+    expect(Object.getPrototypeOf(first)).toBe(Object.getPrototypeOf(second));
+    expect(first.spendResources).toBe(first.spendResources);
+    expect(second.spendResources).toBe(second.spendResources);
+    expect(first.spendResources).not.toBe(second.spendResources);
+
+    const { spendResources, apply } = first;
+    spendResources({
+      playerId: player("player-1"),
+      amounts: { coins: 1 },
+    });
+    apply((state) => ({
+      ...state,
+      publicState: { picked: "destructured" },
+    }));
+
+    expect(first.q.player.resource(player("player-1"), "coins")).toBe(2);
+    expect(first.state.publicState.picked).toBe("destructured");
+    expect(second.q.player.resource(player("player-1"), "coins")).toBe(3);
   });
 
   test("ops.rotatePlayerZone is available as a low-level op", () => {

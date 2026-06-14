@@ -135,19 +135,16 @@ export function getMissingResources<Table extends RuntimeTableRecord>(
   return missing;
 }
 
-function withPlayerResources<Table extends RuntimeTableRecord>(
+function writePlayerResources<Table extends RuntimeTableRecord>(
   table: Table,
   playerId: string,
   nextForPlayer: Record<string, number>,
-): Table {
-  return {
-    ...table,
-    resources: perPlayerSet(
-      table.resources as PerPlayer<RuntimeRecord>,
-      playerId as PlayerId,
-      nextForPlayer as RuntimeRecord,
-    ),
-  } as Table;
+): void {
+  table.resources = perPlayerSet(
+    table.resources as PerPlayer<RuntimeRecord>,
+    playerId as PlayerId,
+    nextForPlayer as RuntimeRecord,
+  ) as Table["resources"];
 }
 
 /**
@@ -160,6 +157,16 @@ export function addPlayerResources<Table extends RuntimeTableRecord>(
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): Table {
+  const nextTable = { ...table };
+  addPlayerResourcesInPlace(nextTable, playerId, amounts);
+  return nextTable;
+}
+
+export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
+  table: Table,
+  playerId: string,
+  amounts: Readonly<Record<string, number | undefined>>,
+): void {
   const prev = (perPlayerGet(
     table.resources as PerPlayer<RuntimeRecord>,
     playerId as PlayerId,
@@ -174,7 +181,7 @@ export function addPlayerResources<Table extends RuntimeTableRecord>(
     }
     next[resourceId] = (next[resourceId] ?? 0) + amount;
   });
-  return withPlayerResources(table, playerId, next);
+  writePlayerResources(table, playerId, next);
 }
 
 /**
@@ -187,6 +194,16 @@ export function spendPlayerResources<Table extends RuntimeTableRecord>(
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): Table {
+  const nextTable = { ...table };
+  spendPlayerResourcesInPlace(nextTable, playerId, amounts);
+  return nextTable;
+}
+
+export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
+  table: Table,
+  playerId: string,
+  amounts: Readonly<Record<string, number | undefined>>,
+): void {
   if (!canAffordResources(table, playerId, amounts)) {
     const missing = getMissingResources(table, playerId, amounts);
     throw new Error(
@@ -209,7 +226,7 @@ export function spendPlayerResources<Table extends RuntimeTableRecord>(
     }
     next[resourceId] = Math.max(0, (next[resourceId] ?? 0) - amount);
   });
-  return withPlayerResources(table, playerId, next);
+  writePlayerResources(table, playerId, next);
 }
 
 /**
@@ -223,8 +240,21 @@ export function transferPlayerResources<Table extends RuntimeTableRecord>(
   toPlayerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): Table {
-  const afterSpend = spendPlayerResources(table, fromPlayerId, amounts);
-  return addPlayerResources(afterSpend, toPlayerId, amounts);
+  const nextTable = { ...table };
+  transferPlayerResourcesInPlace(nextTable, fromPlayerId, toPlayerId, amounts);
+  return nextTable;
+}
+
+export function transferPlayerResourcesInPlace<
+  Table extends RuntimeTableRecord,
+>(
+  table: Table,
+  fromPlayerId: string,
+  toPlayerId: string,
+  amounts: Readonly<Record<string, number | undefined>>,
+): void {
+  spendPlayerResourcesInPlace(table, fromPlayerId, amounts);
+  addPlayerResourcesInPlace(table, toPlayerId, amounts);
 }
 
 /**
@@ -238,6 +268,17 @@ export function setPlayerResource<Table extends RuntimeTableRecord>(
   resourceId: string,
   amount: number,
 ): Table {
+  const nextTable = { ...table };
+  setPlayerResourceInPlace(nextTable, playerId, resourceId, amount);
+  return nextTable;
+}
+
+export function setPlayerResourceInPlace<Table extends RuntimeTableRecord>(
+  table: Table,
+  playerId: string,
+  resourceId: string,
+  amount: number,
+): void {
   if (!Number.isFinite(amount) || amount < 0) {
     throw new Error(
       `setPlayerResource: amount must be a non-negative finite number, got ${amount}.`,
@@ -247,7 +288,7 @@ export function setPlayerResource<Table extends RuntimeTableRecord>(
     table.resources as PerPlayer<RuntimeRecord>,
     playerId as PlayerId,
   ) ?? {}) as Record<string, number>;
-  return withPlayerResources(table, playerId, {
+  writePlayerResources(table, playerId, {
     ...prev,
     [resourceId]: amount,
   });

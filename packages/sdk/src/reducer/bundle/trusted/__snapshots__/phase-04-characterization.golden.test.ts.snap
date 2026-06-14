@@ -1,0 +1,90 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`phase 4 trusted-bundle characterization dispatch accept/reject outcomes stay golden 1`] = `
+{
+  "accepted": {
+    "kind": "accept",
+    "stateDigest": "1f42b6f6a7ee249681295b083c6f29c5221137d246e11cb8631d317a5981a088",
+    "traceKinds": [
+      "acceptedClientInput",
+    ],
+  },
+  "rejected": {
+    "errorCode": "NOPE",
+    "kind": "reject",
+    "message": "Rejected by golden fixture.",
+  },
+}
+`;
+
+exports[`phase 4 trusted-bundle characterization lifecycle transition and phase reset stay golden 1`] = `
+{
+  "lastTransition": {
+    "from": "play",
+    "to": "done",
+  },
+  "phase": "done",
+  "phaseState": {
+    "visits": 10,
+  },
+  "traceKinds": [
+    "acceptedClientInput",
+    "appliedEffect",
+  ],
+}
+`;
+
+exports[`phase 4 trusted-bundle characterization seat projection digest stays golden 1`] = `
+{
+  "digest": "af57ff39ec9cc3474d4348ea5893c58ab97ace1167b249a52a2d9c7809ee9db3",
+  "seats": {
+    "player-1": {
+      "availableInteractionRefs": [
+        "score:b9a6c67fd8f38287",
+        "rejectNow:489a5e50c0c51e22",
+        "finish:ad8eae039b009c0c",
+        "rollTwice:5af16be06e1ba6cb",
+      ],
+      "view": {
+        "phase": "play",
+        "playerId": "player-1",
+        "score": 0,
+        "visits": 1,
+      },
+      "zones": {},
+    },
+    "player-2": {
+      "availableInteractionRefs": [
+        "score:70033f632d4d9b3b",
+        "rejectNow:afca5ef4a5bb3525",
+        "finish:948936b3b0c25256",
+        "rollTwice:5046689bc9395460",
+      ],
+      "view": {
+        "phase": "play",
+        "playerId": "player-2",
+        "score": 0,
+        "visits": 1,
+      },
+      "zones": {},
+    },
+  },
+}
+`;
+
+exports[`phase 4 trusted-bundle characterization rng effect traces and state digest stay golden 1`] = `
+{
+  "rngTrace": [
+    "cursor=0;bound=6;value=2",
+    "cursor=1;bound=6;value=4",
+  ],
+  "stateDigest": "afedcb857c1e9d9cb390604f0f8fbc937a160fe21c592bff0107f195d9b13e89",
+  "traceKinds": [
+    "acceptedClientInput",
+    "appliedEffect",
+    "rngConsumption",
+    "appliedEffect",
+    "rngConsumption",
+  ],
+}
+`;

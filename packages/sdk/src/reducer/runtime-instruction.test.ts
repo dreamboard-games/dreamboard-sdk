@@ -73,6 +73,7 @@ describe("runtime instruction authoring", () => {
 describe("runtime instruction engine", () => {
   test("drains resolver-queued instructions before continuation inputs", () => {
     const visited: string[] = [];
+    let prepareCount = 0;
     const engine = createRuntimeInstructionEngine<
       { phase: string },
       "player-1",
@@ -126,6 +127,10 @@ describe("runtime instruction engine", () => {
           trace: [],
         };
       },
+      prepareInstructionState(state) {
+        prepareCount++;
+        return state;
+      },
     });
 
     const result = engine.dispatch(
@@ -139,6 +144,7 @@ describe("runtime instruction engine", () => {
     );
 
     expect(result.type).toBe("accept");
+    expect(prepareCount).toBe(1);
     expect(visited).toEqual([
       "interaction",
       "transition",
