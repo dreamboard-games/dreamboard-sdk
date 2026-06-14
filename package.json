@@ -10,7 +10,9 @@
   },
   "scripts": {
     "build": "turbo run build",
-    "check": "pnpm publication:check && pnpm version:check && pnpm peer-hygiene:check && pnpm build && pnpm test && pnpm pack:dry-run",
+    "check": "pnpm publication:check && pnpm version:check && pnpm peer-hygiene:check && pnpm build && pnpm docs:check && pnpm test && pnpm pack:dry-run",
+    "docs:check": "node scripts/generate-agent-reference.mjs --check",
+    "docs:generate": "node scripts/generate-agent-reference.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "turbo run lint",

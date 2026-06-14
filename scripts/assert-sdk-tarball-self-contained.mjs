@@ -108,6 +108,21 @@ async function main() {
           'Remove "src" from packages/sdk/package.json "files".',
       );
     }
+    if (!topLevelEntries.includes("REFERENCE.md")) {
+      throw new Error(
+        "SDK tarball must ship REFERENCE.md so pinned workspaces have offline API docs.",
+      );
+    }
+
+    const packedReference = await readFile(
+      path.join(packageDir, "REFERENCE.md"),
+      "utf8",
+    );
+    if (!packedReference.includes("# Dreamboard SDK Agent Reference")) {
+      throw new Error(
+        "Packed REFERENCE.md does not look like the agent reference.",
+      );
+    }
 
     const packedManifestPath = path.join(packageDir, "package.json");
     const packedManifest = JSON.parse(
