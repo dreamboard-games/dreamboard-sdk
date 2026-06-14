@@ -255,10 +255,20 @@ export type ReducerReject = {
   message?: string;
 };
 
+export type TerminalOutcome<
+  PlayerId extends string = string,
+  Score extends number = number,
+> = {
+  winnerPlayerId?: PlayerId;
+  finalScores?: Partial<Record<PlayerId, Score>>;
+  reason: string;
+};
+
 export type ReducerAccept<State> = {
   type: "accept";
   state: State;
   instructions?: RuntimeInstructionForState<State>[];
+  terminal?: TerminalOutcome<PlayerIdOfState<State>>;
 };
 
 export type ReducerResult<State> = ReducerAccept<State> | ReducerReject;

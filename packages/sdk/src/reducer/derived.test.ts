@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { RuntimeTableRecord } from "../reducer";
+import type { RuntimeTableRecord } from "../reducer/advanced";
 import {
   createDerivedResolver,
   defineDerived,

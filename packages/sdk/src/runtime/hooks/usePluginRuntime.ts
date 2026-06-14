@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   createPluginRuntimeAPI,
   type PluginRuntimeAPI,
+  type PluginRuntimeDiagnosticHandler,
 } from "../api/createPluginRuntimeAPI.js";
 
 export interface UsePluginRuntimeOptions {
@@ -10,6 +11,7 @@ export interface UsePluginRuntimeOptions {
    * @default 10000 (10 seconds)
    */
   timeout?: number;
+  onDiagnostic?: PluginRuntimeDiagnosticHandler;
 }
 
 export interface UsePluginRuntimeResult {
@@ -69,10 +71,12 @@ function hasProjectedView(
 export function usePluginRuntime(
   options: UsePluginRuntimeOptions = {},
 ): UsePluginRuntimeResult {
-  const { timeout = 10000 } = options;
+  const { timeout = 10000, onDiagnostic } = options;
 
   // Create runtime once and keep stable reference
-  const [runtime] = useState<PluginRuntimeAPI>(() => createPluginRuntimeAPI());
+  const [runtime] = useState<PluginRuntimeAPI>(() =>
+    createPluginRuntimeAPI({ onDiagnostic }),
+  );
   const [isReady, setIsReady] = useState(() => {
     const snapshot = runtime.getSnapshot?.();
     return hasProjectedView(snapshot);
@@ -83,6 +87,10 @@ export function usePluginRuntime(
   // render on its own.)
   const hasBeenReadyRef = useRef(false);
   if (isReady) hasBeenReadyRef.current = true;
+
+  useEffect(() => {
+    runtime.setDiagnosticHandler?.(onDiagnostic);
+  }, [runtime, onDiagnostic]);
 
   // Subscribe to state-sync and set isReady when the first snapshot arrives.
   useEffect(() => {

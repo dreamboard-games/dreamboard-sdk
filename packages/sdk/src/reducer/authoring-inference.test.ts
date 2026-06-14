@@ -2,15 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createContractAuthoring,
-  createManifestStringLiteralSchema,
   defineGameContract,
   defineInteraction,
   formInput,
   rngInput,
+} from "../reducer";
+import {
+  createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,
   type PhaseNamesOfDefinition,
   type RuntimeTableRecord,
-} from "../reducer";
+} from "../reducer/advanced";
 import { perPlayer } from "./per-player";
 
 type Equal<Left, Right> =

@@ -206,10 +206,25 @@
       "additionalProperties": false
     },
 
+    "ReducerSessionMeta": {
+      "description": "Optional SDK-owned metadata for stale-artifact detection. Hosts may persist and echo this object without interpreting it.",
+      "type": "object",
+      "properties": {
+        "contractFingerprint": {
+          "description": "Versioned SDK contract fingerprint for the manifest and decoded state shape that produced this session.",
+          "type": "string",
+          "pattern": "^cfp[0-9]+:[a-f0-9]{16}$"
+        }
+      },
+      "required": ["contractFingerprint"],
+      "additionalProperties": false
+    },
+
     "ReducerSessionState": {
       "description": "Canonical session snapshot exchanged across the JS reducer bundle, host runtime, and persistence boundary.",
       "type": "object",
       "properties": {
+        "meta": { "$ref": "#/$defs/ReducerSessionMeta" },
         "domain": { "$ref": "#/$defs/ReducerDomainState" },
         "runtime": { "$ref": "#/$defs/ReducerRuntimeState" }
       },
@@ -395,6 +410,7 @@
       "properties": {
         "kind": { "const": "accept" },
         "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/TerminalOutcome" },
         "effects": {
           "type": "array",
           "items": { "$ref": "#/$defs/Effect" }
@@ -471,12 +487,34 @@
       "properties": {
         "kind": { "const": "accept" },
         "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/TerminalOutcome" },
         "trace": {
           "type": "array",
           "items": { "$ref": "#/$defs/DispatchTrace" }
         }
       },
       "required": ["kind", "state", "trace"],
+      "additionalProperties": false
+    },
+
+    "TerminalOutcome": {
+      "description": "Reducer-declared authoritative game-end outcome. Absence means the transition is non-terminal.",
+      "type": "object",
+      "properties": {
+        "winnerPlayerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "finalScores": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" }
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["reason"],
       "additionalProperties": false
     },
 

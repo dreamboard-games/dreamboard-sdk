@@ -5,7 +5,6 @@ import {
   cardInput,
   cardTarget,
   choiceTarget,
-  createManifestStringLiteralSchema,
   createReducerBundle,
   defineCardAction,
   defineGame,
@@ -19,8 +18,11 @@ import {
   formInput,
   many,
   promptInput,
-  type RuntimeTableRecord,
 } from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type RuntimeTableRecord,
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer, perPlayerGet } from "../reducer/per-player";
 
 function buildManifest() {

@@ -2,13 +2,15 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createReducerBundle,
-  createManifestStringLiteralSchema,
   defineGame,
   defineGameContract,
   definePhase,
   defineStaticView,
-  type RuntimeTableRecord,
 } from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type RuntimeTableRecord,
+} from "../reducer/advanced";
 import { perPlayer } from "./per-player";
 
 function buildMinimalManifest() {

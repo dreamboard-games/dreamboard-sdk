@@ -40,6 +40,8 @@ import { runInteractionAction } from "./interaction-submit.js";
 import { useGameActionError } from "./game.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
+import { useRuntimeContext } from "../context/RuntimeContext.js";
+import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import {
   createGameplayActuatorAttributes,
   type BrowserInteractionAttributeMap,
@@ -56,19 +58,24 @@ function warnAmbiguousBoardTarget({
   kind,
   value,
   interactionKeys,
+  runtime,
 }: {
   kind: BoardTargetKind;
   value: string;
   interactionKeys: readonly string[];
+  runtime?: PluginRuntimeAPI;
 }): void {
   const key = `${kind}:${value}:${interactionKeys.join("|")}`;
   if (warnedAmbiguousBoardTargets.has(key)) return;
   warnedAmbiguousBoardTargets.add(key);
-  console.error(
-    `[dreamboard] Ambiguous Board.${kind} target "${value}" matched multiple available interactions: ${interactionKeys.join(
-      ", ",
-    )}. Declare the real initiating collector in Interaction.Routes (for example, a card or form input), arm one interaction before collecting this board target, or render an explicit Board.Target interaction prop.`,
-  );
+  const message = `[dreamboard] Ambiguous Board.${kind} target "${value}" matched multiple available interactions: ${interactionKeys.join(
+    ", ",
+  )}. Declare the real initiating collector in Interaction.Routes (for example, a card or form input), arm one interaction before collecting this board target, or render an explicit Board.Target interaction prop.`;
+  if (runtime?.emitDiagnostic) {
+    runtime.emitDiagnostic({ type: "runtimeLog", level: "error", message });
+  } else {
+    console.error(message);
+  }
 }
 
 export function useBoardPrimitiveContext(): BoardContextValue {
@@ -296,6 +303,7 @@ function UnambiguousBoardTarget({
   ...props
 }: Omit<BoardTargetProps, "interaction">) {
   const board = useBoardPrimitiveContext();
+  const runtime = useRuntimeContext() as PluginRuntimeAPI;
   const gameActionError = useGameActionError();
   const targetState = board.targetState(kind, value);
   const eligible = board.isEligible(value, kind);
@@ -306,6 +314,7 @@ function UnambiguousBoardTarget({
       kind,
       value,
       interactionKeys: conflictInteractionKeys,
+      runtime,
     });
   }
   const isDisabled = disabled ?? (!targetState.eligible || ambiguous);

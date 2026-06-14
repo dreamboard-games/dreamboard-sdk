@@ -142,6 +142,24 @@ describe("createExpectApi — rejection matcher", () => {
     expect(threw).toBe(true);
   });
 
+  test("toRejectWith appends the last diagnostic rejection", async () => {
+    const expectWithDiagnostics = createExpectApi({
+      lastDiagnosticRejection: () => ({
+        type: "submitRejected",
+        submissionId: "sub-1",
+        errorCode: "OTHER",
+        ruleId: "enough-gold",
+        message: "Need gold.",
+      }),
+    });
+
+    await expect(
+      expectWithDiagnostics(async () => {
+        throw makeError("OTHER");
+      }).toRejectWith({ errorCode: "EXPECTED" }),
+    ).rejects.toThrow(/last rejection: errorCode=OTHER ruleId=enough-gold/);
+  });
+
   test("toRejectWith supports regex messages", async () => {
     await expectFn(async () => {
       throw makeError("X", "boom happened");

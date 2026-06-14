@@ -6,6 +6,7 @@ export default defineConfig({
     "src/package-set.ts",
     "src/types.ts",
     "src/reducer.ts",
+    "src/reducer/advanced.ts",
     "src/ui.ts",
     "src/ui/components.ts",
     "src/ui/defaults.ts",

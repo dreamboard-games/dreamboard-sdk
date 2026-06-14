@@ -7,6 +7,7 @@ import type {
   TableOfState,
   TableQueriesOfState,
 } from "../../model";
+import type { ReducerDiagnosticsSink } from "../../diagnostics";
 import { interactionInputsOf } from "./collector-introspection";
 
 export type CollectorProjectionOptions<DomainState extends CollectorState> = {
@@ -15,6 +16,7 @@ export type CollectorProjectionOptions<DomainState extends CollectorState> = {
   readonly eligibleTargetCache?: Map<string, string[]>;
   readonly eligibleTargetCachePrefix?: string;
   readonly includeEligibleTargets?: boolean;
+  readonly diagnostics?: ReducerDiagnosticsSink;
 };
 
 export function collectEligibleTargets<

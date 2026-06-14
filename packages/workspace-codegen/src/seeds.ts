@@ -12,7 +12,7 @@ function generateUiContractContent(): string {
 import game from "../../app/game";
 import {
   createClientParamSchemasByPhase,
-} from "@dreamboard-games/sdk/reducer";
+} from "@dreamboard-games/sdk/reducer/advanced";
 import type {
   CardInputZoneIdsOfDefinition,
   ClientParamsOfInteractionOfDefinition,
@@ -24,7 +24,7 @@ import type {
   StageNamesOfDefinitionPhase,
   ViewNamesOfDefinition,
   ViewOfDefinition,
-} from "@dreamboard-games/sdk/reducer";
+} from "@dreamboard-games/sdk/reducer/advanced";
 import {
   type BoardSpaceIdOf,
   type InteractionVisualState,

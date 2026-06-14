@@ -1,16 +1,18 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
-  applySetupBootstrap,
-  createManifestStringLiteralSchema,
   createReducerBundle,
   defineGame,
   defineGameContract,
   defineInteraction,
   definePhase,
+} from "../reducer";
+import {
+  applySetupBootstrap,
+  createManifestStringLiteralSchema,
   type RuntimeTableRecord,
   type SetupBootstrapStep,
-} from "../reducer";
+} from "../reducer/advanced";
 import {
   perPlayer,
   perPlayerGet,

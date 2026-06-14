@@ -18,6 +18,7 @@ const JS_SUBPATHS = [
   "./package-set",
   "./types",
   "./reducer",
+  "./reducer/advanced",
   "./ui",
   "./ui/components",
   "./ui/defaults",

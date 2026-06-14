@@ -15,6 +15,7 @@ import type {
   ReducerReject,
   ReducerResult,
   ReducerRuntimeStateForState,
+  TerminalOutcome,
 } from "../runtime";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { TableQueriesOfState } from "../queries";
@@ -165,6 +166,11 @@ export type RuntimeHelpers<
 > = {
   accept(
     state: State,
+    instructions?: RuntimeInstructionForState<State>[],
+  ): ReducerAccept<State>;
+  endGame(
+    state: State,
+    outcome: TerminalOutcome<PlayerIdOfState<State>>,
     instructions?: RuntimeInstructionForState<State>[],
   ): ReducerAccept<State>;
   reject: (errorCode: ErrorCode, message?: string) => ReducerReject;

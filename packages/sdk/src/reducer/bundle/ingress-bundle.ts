@@ -142,6 +142,7 @@ function toWireReduceResult<State>(
         type: "accept";
         state: State;
         instructions?: InternalInstruction<State>[];
+        terminal?: Wire.TerminalOutcome;
       },
   serializeState: (state: State) => UntrustedReducerSessionState,
 ): Wire.ReduceResult {
@@ -163,6 +164,7 @@ function toWireReduceResult<State>(
   return {
     kind: "accept",
     state: serializeState(result.state),
+    ...(result.terminal ? { terminal: result.terminal } : {}),
     effects,
     continuations,
   };
@@ -175,6 +177,7 @@ function toWireDispatchResult<State, PlayerId extends string>(
         type: "accept";
         state: State;
         trace: DispatchTraceEntry<State, PlayerId>[];
+        terminal?: Wire.TerminalOutcome;
       },
   serializeState: (state: State) => UntrustedReducerSessionState,
 ): Wire.DispatchResult {
@@ -264,6 +267,7 @@ function toWireDispatchResult<State, PlayerId extends string>(
   return {
     kind: "accept",
     state: serializeState(result.state),
+    ...(result.terminal ? { terminal: result.terminal } : {}),
     trace,
   };
 }

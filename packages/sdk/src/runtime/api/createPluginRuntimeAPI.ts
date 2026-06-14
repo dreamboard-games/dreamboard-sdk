@@ -7,6 +7,28 @@ import type {
 } from "../types/runtime-api.js";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
 
+export type PluginRuntimeDiagnosticEvent =
+  | {
+      type: "runtimeLog";
+      level: "log" | "warn" | "error";
+      message: string;
+      details?: readonly unknown[];
+    }
+  | {
+      type: "internalError";
+      code: string;
+      message: string;
+      stack?: string;
+    };
+
+export type PluginRuntimeDiagnosticHandler = (
+  event: PluginRuntimeDiagnosticEvent,
+) => void;
+
+export type PluginRuntimeAPIOptions = {
+  onDiagnostic?: PluginRuntimeDiagnosticHandler;
+};
+
 /**
  * Message schemas from main app to plugin
  * We define them here to avoid circular dependencies with apps/web
@@ -122,6 +144,10 @@ export interface PluginRuntimeAPI extends RuntimeAPI {
    * ```
    */
   restoreHistory?: (entryId: string) => void;
+  setDiagnosticHandler?: (
+    handler: PluginRuntimeDiagnosticHandler | undefined,
+  ) => void;
+  emitDiagnostic?: (event: PluginRuntimeDiagnosticEvent) => void;
 }
 
 /**
@@ -171,13 +197,52 @@ type PluginRuntimeGlobal = typeof globalThis & {
  *
  * @returns PluginRuntimeAPI instance
  */
-export function createPluginRuntimeAPI(): PluginRuntimeAPI {
+export function createPluginRuntimeAPI(
+  options: PluginRuntimeAPIOptions = {},
+): PluginRuntimeAPI {
   const existingRuntime = (globalThis as PluginRuntimeGlobal)[
     PLUGIN_RUNTIME_SINGLETON_KEY
   ];
   if (existingRuntime) {
+    existingRuntime.setDiagnosticHandler?.(options.onDiagnostic);
     return existingRuntime;
   }
+  let onDiagnostic = options.onDiagnostic;
+
+  const emitDiagnostic = (event: PluginRuntimeDiagnosticEvent): void => {
+    if (onDiagnostic) {
+      try {
+        onDiagnostic(event);
+        return;
+      } catch {
+        // Fall through to console so callback failures stay visible.
+      }
+    }
+    switch (event.type) {
+      case "runtimeLog": {
+        const args = [event.message, ...(event.details ?? [])];
+        if (event.level === "warn") {
+          console.warn(...args);
+        } else if (event.level === "error") {
+          console.error(...args);
+        } else {
+          console.log(...args);
+        }
+        break;
+      }
+      case "internalError":
+        console.error(
+          `[Plugin RuntimeAPI] ${event.code}:`,
+          event.message,
+          event.stack ?? "",
+        );
+        break;
+      default: {
+        const _exhaustive: never = event;
+        return _exhaustive;
+      }
+    }
+  };
 
   // State-sync state
   let currentStateSnapshot: PluginStateSnapshot | null = null;
@@ -300,11 +365,12 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
     if (!parseResult.success) {
       // Only warn for messages that look like they're meant for us
       if (rawMessage?.type && typeof rawMessage.type === "string") {
-        // eslint-disable-next-line no-console
-        console.warn(
-          "[Plugin RuntimeAPI] Invalid message received:",
-          rawMessage.type,
-        );
+        emitDiagnostic({
+          type: "runtimeLog",
+          level: "warn",
+          message: "[Plugin RuntimeAPI] Invalid message received:",
+          details: [rawMessage.type],
+        });
       }
       return;
     }
@@ -313,8 +379,11 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
 
     switch (message.type) {
       case "init": {
-        // eslint-disable-next-line no-console
-        console.log("[Plugin RuntimeAPI] Received init message");
+        emitDiagnostic({
+          type: "runtimeLog",
+          level: "log",
+          message: "[Plugin RuntimeAPI] Received init message",
+        });
 
         sessionState.status = "ready";
         sessionState.sessionId = message.sessionId;
@@ -336,11 +405,12 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
 
       case "state-sync": {
         // Handle state-sync from host
-        // eslint-disable-next-line no-console
-        console.log(
-          "[Plugin RuntimeAPI] Received state-sync, syncId:",
-          message.syncId,
-        );
+        emitDiagnostic({
+          type: "runtimeLog",
+          level: "log",
+          message: "[Plugin RuntimeAPI] Received state-sync, syncId:",
+          details: [message.syncId],
+        });
 
         // Tier-0 perf: capture `t7_state_sync_received` wall-clock
         // timestamp up-front so the host can stitch it onto the
@@ -474,8 +544,12 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
 
   // Error handlers
   const sendErrorToParent = (message: string, code: string, stack?: string) => {
-    // eslint-disable-next-line no-console
-    console.error(`[Plugin RuntimeAPI] ${code}:`, message, stack || "");
+    emitDiagnostic({
+      type: "internalError",
+      code,
+      message,
+      ...(stack ? { stack } : {}),
+    });
     window.parent.postMessage(
       {
         type: "error",
@@ -506,8 +580,11 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
     sendErrorToParent(message, "UNHANDLED_REJECTION", stack);
   };
 
-  // eslint-disable-next-line no-console
-  console.log("[Plugin RuntimeAPI] ✅ Initialized (state-sync architecture)");
+  emitDiagnostic({
+    type: "runtimeLog",
+    level: "log",
+    message: "[Plugin RuntimeAPI] Initialized (state-sync architecture)",
+  });
 
   const runtime: PluginRuntimeAPI = {
     // State-sync methods
@@ -587,6 +664,11 @@ export function createPluginRuntimeAPI(): PluginRuntimeAPI {
     restoreHistory: (entryId: string) => {
       window.parent.postMessage({ type: "restore-history", entryId }, "*");
     },
+
+    setDiagnosticHandler: (handler) => {
+      onDiagnostic = handler;
+    },
+    emitDiagnostic,
 
     _subscribeToSessionState: (
       listener: (state: PluginSessionState) => void,

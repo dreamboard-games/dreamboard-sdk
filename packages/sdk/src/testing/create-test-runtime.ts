@@ -13,6 +13,11 @@ import type {
   ValidationResult,
 } from "../runtime/types/runtime-api.js";
 import type { PluginSessionState as RuntimePluginSessionState } from "../runtime/types/runtime-api.js";
+import type {
+  DispatchTraceSummaryEntry,
+  ReducerDiagnosticEvent,
+} from "../reducer/diagnostics.js";
+import { StaleContractArtifactError } from "../reducer/stale-contract-artifact-error.js";
 import type { InteractionExplanationLike } from "./definitions.js";
 
 type ReducerBundleLike = Pick<
@@ -46,6 +51,7 @@ type BaseStateArtifact = {
   snapshot: DeepReadonly<Wire.ReducerSessionState>;
   fingerprint: {
     players: number;
+    contractFingerprint?: string;
   };
 };
 
@@ -65,6 +71,8 @@ export type CreateTestRuntimeOptions = {
   userId?: string | null;
   gameId?: string;
   displayNameByPlayerId?: Record<string, string>;
+  contractFingerprint?: string;
+  expectedBaseStateFingerprint?: string;
 };
 
 export type CreatedTestRuntime = {
@@ -91,6 +99,14 @@ export type CreatedTestRuntime = {
     params?: unknown,
   ): Promise<ValidationResult>;
   explain(playerId: string, interactionId: string): InteractionExplanationLike;
+  diagnostics: {
+    readonly events: readonly ReducerDiagnosticEvent[];
+    readonly lastDispatch: {
+      submissionId: string;
+      trace: readonly DispatchTraceSummaryEntry[];
+    } | null;
+    clear(): void;
+  };
   setControllingPlayer(playerId: string): void;
 };
 
@@ -106,6 +122,52 @@ function createSubmissionError(
   error.name = "SubmissionError";
   error.errorCode = errorCode;
   return error;
+}
+
+function summarizeWireTrace(
+  trace: readonly unknown[] | undefined,
+): DispatchTraceSummaryEntry[] {
+  return (trace ?? []).flatMap((entry): DispatchTraceSummaryEntry[] => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const record = entry as Record<string, unknown>;
+    switch (record.kind) {
+      case "acceptedClientInput": {
+        const input =
+          typeof record.input === "object" && record.input !== null
+            ? (record.input as Record<string, unknown>)
+            : {};
+        return [
+          {
+            kind: "acceptedClientInput",
+            interactionId: String(input.interactionId ?? ""),
+            playerId: String(input.playerId ?? ""),
+          },
+        ];
+      }
+      case "appliedEffect": {
+        const effect =
+          typeof record.effect === "object" && record.effect !== null
+            ? (record.effect as Record<string, unknown>)
+            : {};
+        return [
+          {
+            kind: "appliedInstruction",
+            instruction: String(effect.kind ?? effect.type ?? "effect"),
+          },
+        ];
+      }
+      case "rngConsumption":
+        return [
+          {
+            kind: "rngConsumption",
+            operation: String(record.operation ?? ""),
+            traceEntry: String(record.traceEntry ?? ""),
+          },
+        ];
+      default:
+        return [];
+    }
+  });
 }
 
 function readFlowState(state: Wire.ReducerSessionState): {
@@ -234,6 +296,20 @@ export function createTestRuntime(
   if (!baseState) {
     throw new Error(`Unknown test base '${options.baseId}'.`);
   }
+  const expectedBaseStateFingerprint =
+    options.expectedBaseStateFingerprint ??
+    baseState.fingerprint.contractFingerprint;
+  if (
+    options.contractFingerprint &&
+    expectedBaseStateFingerprint &&
+    options.contractFingerprint !== expectedBaseStateFingerprint
+  ) {
+    throw new StaleContractArtifactError({
+      artifact: "base-states",
+      expected: options.contractFingerprint,
+      found: expectedBaseStateFingerprint,
+    });
+  }
 
   let currentState = cloneState(baseState.snapshot);
   const playerIds = resolvePlayerIds({
@@ -244,7 +320,13 @@ export function createTestRuntime(
   const sessionId = options.sessionId ?? "test-session";
 
   let version = 0;
+  let submissionCounter = 0;
   let currentPlayerId = playerIds[0] ?? "";
+  const diagnosticEvents: ReducerDiagnosticEvent[] = [];
+  let lastDispatch: {
+    submissionId: string;
+    trace: readonly DispatchTraceSummaryEntry[];
+  } | null = null;
   const stateListeners = new Set<(state: PluginStateSnapshot) => void>();
   const sessionListeners = new Set<
     (state: RuntimePluginSessionState) => void
@@ -321,8 +403,23 @@ export function createTestRuntime(
     interactionId: string,
     params: unknown = {},
   ): Promise<void> => {
+    submissionCounter += 1;
+    const submissionId = `sub-${submissionCounter}`;
+    diagnosticEvents.push({
+      type: "submitReceived",
+      submissionId,
+      playerId,
+      interactionId,
+      phase: readFlowState(currentState).currentPhase ?? "",
+    });
     const validation = await validate(playerId, interactionId, params);
     if (!validation.valid) {
+      diagnosticEvents.push({
+        type: "submitRejected",
+        submissionId,
+        errorCode: validation.errorCode ?? "invalid-action",
+        ...(validation.message ? { message: validation.message } : {}),
+      });
       throw createSubmissionError(validation.errorCode, validation.message);
     }
     const result = await options.bundle.dispatch({
@@ -335,8 +432,21 @@ export function createTestRuntime(
       },
     });
     if (result.kind === "reject") {
+      diagnosticEvents.push({
+        type: "submitRejected",
+        submissionId,
+        errorCode: result.errorCode,
+        ...(result.message ? { message: result.message } : {}),
+      });
       throw createSubmissionError(result.errorCode, result.message);
     }
+    const trace = summarizeWireTrace(result.trace);
+    lastDispatch = { submissionId, trace };
+    diagnosticEvents.push({
+      type: "submitAccepted",
+      submissionId,
+      trace,
+    });
     currentState = cloneState(result.state);
     applyCurrentState();
   };
@@ -405,6 +515,18 @@ export function createTestRuntime(
     submit,
     validate,
     explain,
+    diagnostics: {
+      get events() {
+        return diagnosticEvents;
+      },
+      get lastDispatch() {
+        return lastDispatch;
+      },
+      clear() {
+        diagnosticEvents.length = 0;
+        lastDispatch = null;
+      },
+    },
     setControllingPlayer,
   };
 }

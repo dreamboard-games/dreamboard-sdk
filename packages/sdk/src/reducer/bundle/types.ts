@@ -16,9 +16,19 @@ import type {
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
 import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract";
 import type { InteractionExplanation } from "./trusted/interaction-types";
+import type { ReducerDiagnosticsSink } from "../diagnostics";
+import type { InteractionDiagnosticsMode } from "./trusted/interaction-types";
 
 export type ReducerBundleOptions = {
-  diagnostics?: "verbose";
+  /**
+   * Host-owned reducer diagnostics sink. Events are summarized and must not
+   * contain reducer state.
+   *
+   * The legacy `"verbose"` value is retained as an additive alias for
+   * descriptorDiagnostics while existing callers migrate.
+   */
+  diagnostics?: ReducerDiagnosticsSink | InteractionDiagnosticsMode;
+  descriptorDiagnostics?: InteractionDiagnosticsMode;
 };
 
 type TrustedSessionState<Contract extends ReducerGameContractLike> =

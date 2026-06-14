@@ -310,6 +310,7 @@ export function buildInteractionDescriptor<
             interactionId,
           )}:${String(playerId)}`,
           includeEligibleTargets: options.includeEligibleTargets,
+          diagnostics: scope.diagnostics,
         }),
         scope.definition.contract.manifest,
       )
