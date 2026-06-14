@@ -1,5 +1,8 @@
 # Phase 6: Observability Capability
 
+Status: closed on 2026-06-14. Closeout receipt:
+[`artifacts/phase-06-closeout-20260614.md`](artifacts/phase-06-closeout-20260614.md).
+
 ## Objective
 
 Replace ad-hoc `console.*` calls and the `__DREAMBOARD_AUTHORING_WARNINGS__`

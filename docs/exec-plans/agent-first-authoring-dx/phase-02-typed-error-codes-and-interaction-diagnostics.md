@@ -1,5 +1,7 @@
 # Phase 2: Typed Error Codes And Interaction Diagnostics
 
+Status: closed on 2026-06-13. Closeout receipt is recorded inline below.
+
 ## Objective
 
 Make rejection and unavailability **self-describing and typo-proof**:

@@ -1,7 +1,7 @@
 # Agent-First Authoring DX And Runtime Consolidation
 
-Status: proposed implementation handoff after the SDK architecture review on
-2026-06-12.
+Status: source-closed on 2026-06-15. Closeout receipt:
+[`artifacts/plan-closeout-20260615.md`](artifacts/plan-closeout-20260615.md).
 
 Related plans and references:
 
@@ -84,6 +84,9 @@ windows and produce plausible-but-wrong API usage.
 | 6     | [Observability capability](phase-06-observability-capability.md)                                                 | No (host-additive)            | 0.3.x or 0.4.0   | benefits from 4A |
 | 7     | [Contract fingerprint and stale-artifact recovery](phase-07-contract-fingerprint-and-stale-artifact-recovery.md) | No (additive)                 | 0.3.x alpha      | —                |
 | 8     | [Generated agent reference and docs gates](phase-08-agent-reference-and-docs-gates.md)                           | No                            | after 5 settles  | 5                |
+
+There is no Phase 9 in this plan. Follow-up work after phase 8 is normal
+release/publication flow, not another implementation phase.
 
 Recommended execution order: **0 → 1 → 2 → 3 → 7 → (4A, 6) → 4B → 5 → 8.**
 Phase 4's revised performance evidence was accepted on 2026-06-14; Phase 5 may

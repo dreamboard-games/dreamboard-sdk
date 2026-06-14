@@ -1,5 +1,8 @@
 # Phase 4: Transaction Commit Model
 
+Status: closed by whole-plan closeout on 2026-06-15. Benchmark receipt:
+[`artifacts/phase-04-transaction-benchmark-20260613.md`](artifacts/phase-04-transaction-benchmark-20260613.md).
+
 ## Objective
 
 Two sub-phases, strictly ordered:

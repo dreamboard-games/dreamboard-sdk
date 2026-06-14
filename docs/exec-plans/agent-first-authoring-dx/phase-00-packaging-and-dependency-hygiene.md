@@ -1,5 +1,7 @@
 # Phase 0: Packaging And Dependency Hygiene
 
+Status: closed on 2026-06-12. Closeout receipt is recorded inline below.
+
 ## Objective
 
 Remove the packaging defects that can produce duplicate-React/zod copies in

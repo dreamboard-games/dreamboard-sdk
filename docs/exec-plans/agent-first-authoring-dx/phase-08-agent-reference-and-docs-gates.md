@@ -1,5 +1,8 @@
 # Phase 8: Generated Agent Reference And Docs Drift Gates
 
+Status: closed on 2026-06-14. Closeout receipt:
+[`artifacts/phase-08-closeout-20260614.md`](artifacts/phase-08-closeout-20260614.md).
+
 ## Objective
 
 For coding agents, the type system and the docs **are** the user interface —

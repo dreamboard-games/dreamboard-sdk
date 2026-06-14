@@ -7559,8 +7559,13 @@ _No JSDoc summary is available yet._
 ### TableOfManifest
 
 ```ts
-type TableOfManifest<Manifest> =
-  Manifest extends GeneratedManifestContractLike<infer Table> ? Table : never;
+type TableOfManifest<Manifest> = Manifest extends {
+  tableSchema: z.ZodType<infer Table extends RuntimeTableRecord>;
+}
+  ? Table
+  : Manifest extends GeneratedManifestContractLike<infer Table>
+    ? Table
+    : never;
 ```
 
 _No JSDoc summary is available yet._
