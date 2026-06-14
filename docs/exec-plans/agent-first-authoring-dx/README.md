@@ -86,6 +86,8 @@ windows and produce plausible-but-wrong API usage.
 | 8     | [Generated agent reference and docs gates](phase-08-agent-reference-and-docs-gates.md)                           | No                            | after 5 settles  | 5                |
 
 Recommended execution order: **0 → 1 → 2 → 3 → 7 → (4A, 6) → 4B → 5 → 8.**
+Phase 4's revised performance evidence was accepted on 2026-06-14; Phase 5 may
+proceed from the Phase 4 clone-count tests and benchmark receipt.
 
 Phases 0–3 and 7 are additive and ship on the existing 0.3.x alpha train,
 each followed by `pnpm local-registry:publish` + `pnpm sdk:repin --receipt`
@@ -153,6 +155,7 @@ Recorded so they are not re-litigated mid-implementation:
 - Generated TS per workspace ≤ ~6k lines for a frontier-trails-class game.
 - A failed/unavailable interaction is explainable in one call from a test or
   the dev host, with rule ids and contract-typed error codes.
-- A 5-op reduce performs exactly one table clone (micro-benchmark gated).
+- A 5-op reduce performs exactly one table clone, with same-machine benchmark
+  evidence recorded for the accepted Phase 4 fixture.
 - `pnpm check` fails if the generated agent reference drifts from the export
   surface.

@@ -6,6 +6,16 @@ import type {
 import type { PerPlayer } from "../per-player";
 import { perPlayerMap } from "../per-player";
 
+let cloneRuntimeTableCallCount = 0;
+
+export function resetCloneRuntimeTableCallCount(): void {
+  cloneRuntimeTableCallCount = 0;
+}
+
+export function getCloneRuntimeTableCallCount(): number {
+  return cloneRuntimeTableCallCount;
+}
+
 function cloneRuntimeBoardState(board: RuntimeBoardState): RuntimeBoardState {
   if (board.layout !== "generic") {
     return {
@@ -77,6 +87,7 @@ function cloneRuntimeBoardState(board: RuntimeBoardState): RuntimeBoardState {
 export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
   table: Table,
 ): Table {
+  cloneRuntimeTableCallCount += 1;
   return {
     ...table,
     zones: {

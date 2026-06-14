@@ -4,6 +4,7 @@ import type {
   TrustedRuntimeInput,
 } from "../core/types";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
+import type { TerminalOutcome } from "../model/runtime";
 
 export function createRuntimeInstructionEngine<
   State,
@@ -13,6 +14,7 @@ export function createRuntimeInstructionEngine<
   reduce,
   resolveInstruction,
   afterInput,
+  prepareInstructionState,
 }: {
   reduce: (
     state: State,
@@ -23,6 +25,7 @@ export function createRuntimeInstructionEngine<
         type: "accept";
         state: State;
         instructions?: RuntimeInstructionForState<State>[];
+        terminal?: TerminalOutcome<PlayerId>;
       };
   resolveInstruction: (
     state: State,
@@ -40,7 +43,11 @@ export function createRuntimeInstructionEngine<
     state: State;
     trace: DispatchTraceEntry<State, PlayerId, Input>[];
   };
+  prepareInstructionState?: (state: State) => State;
 }) {
+  const prepareForInstructionDrain = (state: State): State =>
+    prepareInstructionState ? prepareInstructionState(state) : state;
+
   function drainInstructions(
     state: State,
     instructionsToDrain: RuntimeInstructionForState<State>[],
@@ -50,6 +57,9 @@ export function createRuntimeInstructionEngine<
     const systemQueue: Input[] = [];
 
     while (instructionQueue.length > 0 || systemQueue.length > 0) {
+      if (instructionQueue.length > 0) {
+        workingState = prepareForInstructionDrain(workingState);
+      }
       while (instructionQueue.length > 0) {
         const instruction = instructionQueue.shift();
         if (instruction === undefined) break;
@@ -85,6 +95,7 @@ export function createRuntimeInstructionEngine<
   ): TrustedReducerDispatchResult<State, PlayerId> {
     let workingState = state;
     const pendingInputs: Input[] = [input];
+    let terminal: TerminalOutcome<PlayerId> | undefined;
     const trace: DispatchTraceEntry<State, PlayerId, Input>[] = [
       {
         type: "acceptedClientInput",
@@ -107,6 +118,7 @@ export function createRuntimeInstructionEngine<
       }
 
       workingState = result.state;
+      terminal ??= result.terminal;
 
       if (afterInput) {
         const afterInputResult = afterInput(workingState, pendingInput);
@@ -117,6 +129,9 @@ export function createRuntimeInstructionEngine<
       const instructionQueue = [...(result.instructions ?? [])];
       const continuationQueue: Input[] = [];
       while (instructionQueue.length > 0 || continuationQueue.length > 0) {
+        if (instructionQueue.length > 0) {
+          workingState = prepareForInstructionDrain(workingState);
+        }
         while (instructionQueue.length > 0) {
           const instruction = instructionQueue.shift();
           if (instruction === undefined) break;
@@ -145,6 +160,7 @@ export function createRuntimeInstructionEngine<
       type: "accept",
       state: workingState,
       trace,
+      ...(terminal ? { terminal } : {}),
     };
   }
 

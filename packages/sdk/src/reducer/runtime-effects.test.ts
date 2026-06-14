@@ -15,6 +15,10 @@ import {
   type RuntimeTableRecord,
 } from "../reducer";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
+import {
+  getCloneRuntimeTableCallCount,
+  resetCloneRuntimeTableCallCount,
+} from "./table/clone";
 
 function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
   const ids = playerIds.map((id) => asPlayerId(id));
@@ -898,6 +902,85 @@ describe("runtime-owned reducer effects", () => {
           !("resume" in entry.effect),
       ),
     ).toBe(true);
+  });
+
+  test("dispatch resolves multiple engine instructions with one table clone", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const fireAndForgetRollEffect = defineEffect<typeof contract>()({
+      type: "rollDie",
+      id: "fireAndForgetRoll",
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          effects: {
+            fireAndForgetRollEffect,
+          },
+          interactions: {
+            rollTwice: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ state, accept, fx }) {
+                return accept(state, [
+                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                ]);
+              },
+            }),
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+      rngSeed: 42,
+    });
+
+    resetCloneRuntimeTableCallCount();
+    const dispatched = await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "rollTwice",
+        params: {},
+      },
+    });
+
+    expect(dispatched.kind).toBe("accept");
+    if (dispatched.kind !== "accept") {
+      throw new Error("Expected rollTwice dispatch to be accepted.");
+    }
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    expect(dispatched.state.runtime?.rng?.cursor).toBe(2);
+    expect(
+      dispatched.trace.filter(
+        (entry) =>
+          entry.kind === "appliedEffect" && entry.effect.type === "rollDie",
+      ),
+    ).toHaveLength(2);
   });
 
   // Regression: presentation3/catan surfaced this via `POST .../inputs` with

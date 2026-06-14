@@ -2,6 +2,7 @@ import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { RuntimePayload } from "../../model";
 import { createRuntimeInstructionEngine } from "../../engine/runtime-instruction-engine";
+import { cloneRuntimeTable } from "../../table";
 import type {
   InputCollector,
   PhaseMapOf,
@@ -393,6 +394,39 @@ export function createTrustedInstructionRunner<
     }
   }
 
+  function resolveInstructionForDrain(
+    state: State,
+    instruction: RuntimeInstructionForState<State>,
+  ): {
+    state: State;
+    queuedInputs: ReducerInput[];
+    queuedInstructions: RuntimeInstructionForState<State>[];
+    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+  } {
+    switch (instruction.kind) {
+      case "flow.transition":
+        return flowInstructions.resolveTransition(state, instruction);
+      case "engine.rollDie":
+        return engineInstructions.resolveRollDieDraft(state, instruction);
+      case "engine.shuffleSharedZone":
+        return engineInstructions.resolveShuffleSharedZoneDraft(
+          state,
+          instruction,
+        );
+      case "engine.shufflePlayerZone":
+        return engineInstructions.resolveShufflePlayerZoneDraft(
+          state,
+          instruction,
+        );
+      default: {
+        const _exhaustive: never = instruction;
+        throw new Error(
+          `Unknown runtime instruction kind: ${(_exhaustive as { kind: string }).kind}`,
+        );
+      }
+    }
+  }
+
   const instructionEngine = createRuntimeInstructionEngine<
     State,
     PlayerId,
@@ -401,7 +435,13 @@ export function createTrustedInstructionRunner<
     reduce(state, input) {
       return reduceOnce(state, input);
     },
-    resolveInstruction,
+    resolveInstruction: resolveInstructionForDrain,
+    prepareInstructionState(state) {
+      return {
+        ...state,
+        table: cloneRuntimeTable(state.table),
+      };
+    },
   });
 
   return {
