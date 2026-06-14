@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type {
   BaseGameStateOfContract,
-  ManifestContract,
+  GeneratedManifestContractLike,
   ManifestContractOf,
   ErrorCodeOfContract,
   PhaseDefinition,
@@ -11,15 +11,8 @@ import type {
   ViewDefinition,
 } from "../model";
 
-/**
- * Structural upper bound for reducer game contracts accepted by the
- * authoring-level `define*` factories. The `manifest` slot admits any
- * contract-generated manifest shape (tables, players, decks, etc. vary per
- * contract); `state` is pinned to the base {@link StateDefinition} so the
- * authoring helpers can infer public/private/hidden schemas from it.
- */
 export type AnyReducerGameContract = {
-  manifest: ManifestContract<RuntimeTableRecord>;
+  manifest: GeneratedManifestContractLike<RuntimeTableRecord>;
   state: StateDefinition<
     SchemaLike<object>,
     SchemaLike<object>,

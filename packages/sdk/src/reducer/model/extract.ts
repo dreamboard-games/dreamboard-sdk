@@ -1,4 +1,4 @@
-import type { StringKeyOf } from "./table";
+import type { RuntimeTableRecord, StringKeyOf } from "./table";
 import type {
   GeneratedManifestContractLike,
   ManifestContract,
@@ -11,8 +11,13 @@ import type { FrameworkErrorCode } from "./error-codes";
 export type TableOfState<State> = State extends { table: infer Table }
   ? Table
   : never;
-export type TableOfManifest<Manifest> =
-  Manifest extends GeneratedManifestContractLike<infer Table> ? Table : never;
+export type TableOfManifest<Manifest> = Manifest extends {
+  tableSchema: z.ZodType<infer Table extends RuntimeTableRecord>;
+}
+  ? Table
+  : Manifest extends GeneratedManifestContractLike<infer Table>
+    ? Table
+    : never;
 export type PhaseNameOfState<State> = State extends {
   flow: { currentPhase: infer PhaseName };
 }

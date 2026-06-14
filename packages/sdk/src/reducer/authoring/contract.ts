@@ -23,7 +23,7 @@ import {
 type NarrowManifestPhaseNames<
   Manifest,
   PhaseNames extends readonly string[],
-> = Omit<Manifest, "literals" | "ids"> & {
+> = Manifest & {
   literals: Manifest extends { literals: infer L }
     ? Omit<L, "phaseNames"> & { phaseNames: PhaseNames }
     : { phaseNames: PhaseNames };
