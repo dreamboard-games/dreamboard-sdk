@@ -1,5 +1,4 @@
 import type {
-  AnyContinuationCallable,
   BaseGameStateOfContract,
   PhaseMapOf,
   PhaseNamesOfDefinition,
@@ -7,6 +6,7 @@ import type {
   ReducerGameDefinition,
   ViewMapOf,
 } from "../../model";
+import type { AnyContinuationCallable } from "../../model/spec/runtime-args";
 import {
   collectReducerDefinitionIndex,
   type ReducerDefinitionPhaseIndex,

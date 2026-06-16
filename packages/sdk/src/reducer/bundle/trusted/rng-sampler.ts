@@ -1,10 +1,10 @@
 import type {
   CollectorState,
   InputCollector,
-  RandomHelpers,
   RuntimeRngState,
   SchemaLike,
 } from "../../model";
+import type { RandomHelpers } from "../../model/spec/runtime-args";
 import { nextRandomInt } from "../../rng";
 
 export type RngConsumption = {

@@ -11,11 +11,11 @@ import type {
   PlayerIdOfState,
   RuntimeTableRecord,
   SchemaLike,
-  ScopedPhaseState,
   SetupSelectionOfManifest,
   StageMap,
   TableOfState,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractManifest,

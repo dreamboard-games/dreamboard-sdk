@@ -3,14 +3,16 @@ import type { DerivedResolver } from "../../derived";
 import { createReducerFx } from "../../effects";
 import { createStateQueries } from "../../table-queries";
 import type {
-  ActionContext,
   BaseGameStateOfContract,
   ManifestContractOf,
   PlayerIdOfState,
-  RandomHelpers,
   ReducerGameContractLike,
   TableQueriesOfState,
 } from "../../model";
+import type {
+  ActionContext,
+  RandomHelpers,
+} from "../../model/spec/runtime-args";
 import type { TrustedRuntimeHelpers, TrustedState } from "./runtime-scope";
 
 export function fxForState<Contract extends ReducerGameContractLike>() {

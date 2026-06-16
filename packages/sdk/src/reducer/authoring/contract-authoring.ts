@@ -17,7 +17,6 @@ import type {
   PlayerIdOfState,
   PlayerZoneIdOfManifest,
   SchemaLike,
-  ScopedPhaseState,
   SetupSelectionOfManifest,
   StageMap,
   StaticViewDefinition,
@@ -29,6 +28,7 @@ import type {
   ViewDefinition,
   ViewMapOf,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   BoardTargetBuilder,
   BoardTargetRule,

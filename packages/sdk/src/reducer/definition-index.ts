@@ -2,7 +2,6 @@ import { cardInput } from "./inputs/cardInput";
 import { cardTarget } from "./inputs/cardTarget";
 import type {
   AnyCardActionSpec,
-  AnyContinuationCallable,
   AnyInteractionSpec,
   BaseGameStateOfContract,
   EffectMap,
@@ -21,6 +20,7 @@ import type {
   PhaseZoneList,
   PlayerZoneIdOfManifest,
 } from "./model";
+import type { AnyContinuationCallable } from "./model/spec/runtime-args";
 
 export type ReducerIndexedPhase<Contract extends ReducerGameContractLike> =
   PhaseDefinition<

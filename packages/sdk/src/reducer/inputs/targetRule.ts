@@ -1,4 +1,5 @@
-import type { CollectorState, ValidationIssue } from "../model/spec";
+import type { CollectorState } from "../model/spec";
+import type { ValidationIssue } from "../model/spec/runtime-args";
 import type { PlayerIdOfState } from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
 

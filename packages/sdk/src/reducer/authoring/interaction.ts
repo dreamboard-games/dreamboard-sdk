@@ -4,8 +4,8 @@ import type {
   InteractionRule,
   InteractionSpec,
   PlayerZoneIdOfManifest,
-  ScopedPhaseState,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractErrorCode,

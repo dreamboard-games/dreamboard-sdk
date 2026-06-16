@@ -12,8 +12,6 @@ import type {
   ReducerDiagnosticsSink,
 } from "../../diagnostics";
 import type {
-  ActionContext,
-  AnyContinuationCallable,
   AnyInteractionSpec,
   BaseGameSessionOfContract,
   BaseGameStateOfContract,
@@ -22,7 +20,6 @@ import type {
   PhaseNamesOfDefinition,
   PlayerIdOfState,
   PlayerZoneIdOfManifest,
-  RandomHelpers,
   ReducerGameContractLike,
   ReducerGameDefinition,
   StageSpec,
@@ -30,6 +27,11 @@ import type {
   TerminalOutcome,
   ViewMapOf,
 } from "../../model";
+import type {
+  ActionContext,
+  AnyContinuationCallable,
+  RandomHelpers,
+} from "../../model/spec/runtime-args";
 import {
   collectTrustedRuntimeRegistry,
   type TrustedErasedPhase,

@@ -2,11 +2,11 @@ import type { z } from "zod";
 import type {
   ExactManifestContractOf,
   SchemaLike,
-  ScopedPhaseState,
   StageSpec,
   StaticViewDefinition,
   ViewDefinition,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractManifest,
