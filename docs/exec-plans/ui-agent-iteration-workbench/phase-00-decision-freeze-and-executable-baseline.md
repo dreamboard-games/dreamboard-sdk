@@ -1,6 +1,7 @@
 # Phase 00: Decision Freeze And Executable Baseline
 
-Status: proposed.
+Status: closed on 2026-06-16. Baseline receipt:
+`artifacts/phase-00-baseline.md`.
 
 ## Objective
 

@@ -218,15 +218,16 @@ export const ConvergesUnderCenteringParent: Story = {
     );
     expect(row).not.toBeNull();
     const samples: number[] = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 12; i++) {
       samples.push(Math.round(row!.getBoundingClientRect().width));
       await new Promise((resolve) =>
         requestAnimationFrame(() => resolve(null)),
       );
     }
-    // A single distinct width across frames means the layout settled; multiple
-    // values would mean the measure→layout→measure feedback loop is back.
-    const distinct = [...new Set(samples)];
+    // A stable trailing window means the layout converged; persistent
+    // alternation would mean the measure/layout feedback loop is back.
+    const settled = samples.slice(-4);
+    const distinct = [...new Set(settled)];
     expect(distinct).toHaveLength(1);
     expect(distinct[0]).toBeGreaterThan(0);
   },

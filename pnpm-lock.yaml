@@ -102,6 +102,9 @@ importers:
       "@happy-dom/global-registrator":
         specifier: ^20.9.0
         version: 20.9.0
+      "@playwright/test":
+        specifier: 1.60.0
+        version: 1.60.0
       "@storybook/addon-a11y":
         specifier: ^10.4.1
         version: 10.4.5(storybook@10.4.5(@testing-library/dom@10.4.1)(@types/react@19.2.15)(prettier@3.8.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
@@ -1838,6 +1841,14 @@ packages:
         integrity: sha512-SEeaJLb3qBNF/OaXnaR1NmmBbFYk1zC0ZH/52fATcRPLFg/p791YrcyFFy44Bo9sLaGuSuLp5Q6axbb/O+v/RA==,
       }
     engines: { node: ^14.18.0 || >=16.0.0 }
+
+  "@playwright/test@1.60.0":
+    resolution:
+      {
+        integrity: sha512-O71yZIbAh/PxDMNGns37GHBIfrVkEVyn+AXyIa5dOTfb4/xNvRWV+Vv/NMbNCtODB/pO7vLlF2OTmMVLhmr7Ag==,
+      }
+    engines: { node: ">=18" }
+    hasBin: true
 
   "@radix-ui/number@1.1.1":
     resolution:
@@ -8606,6 +8617,10 @@ snapshots:
     optional: true
 
   "@pkgr/core@0.3.6": {}
+
+  "@playwright/test@1.60.0":
+    dependencies:
+      playwright: 1.60.0
 
   "@radix-ui/number@1.1.1": {}
 
