@@ -32,6 +32,66 @@ export default meta;
 
 type Story = StoryObj;
 
+function MobileBottomSheetStory() {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="sb-stage" style={{ minHeight: "100vh" }}>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          <ThemedButton>Open sheet</ThemedButton>
+        </DrawerTrigger>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Pick a card</DrawerTitle>
+            <DrawerDescription>
+              Sheet chrome is presentational only — no commit semantics.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="sb-stage" style={{ padding: 16 }}>
+            <ActionButton label="Choose alpha" onClick={fn()} />
+            <ActionButton label="Choose beta" onClick={fn()} />
+          </div>
+          <DrawerFooter>
+            <ThemedButton variant="primary" onClick={() => setOpen(false)}>
+              Confirm
+            </ThemedButton>
+            <ThemedButton variant="ghost" onClick={() => setOpen(false)}>
+              Cancel
+            </ThemedButton>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
+    </div>
+  );
+}
+
+function DialogStandardStory() {
+  const [open, setOpen] = useState(true);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <ThemedButton>Open dialog</ThemedButton>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirm trade</DialogTitle>
+          <DialogDescription>
+            Trade two wood for one gem with the bank.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <ThemedButton variant="ghost" onClick={() => setOpen(false)}>
+            Cancel
+          </ThemedButton>
+          <ThemedButton variant="primary" onClick={() => setOpen(false)}>
+            Confirm
+          </ThemedButton>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export const CompactPanel: Story = {
   name: "ActionPanel — compact",
   render: () => (
@@ -106,66 +166,10 @@ export const MobileBottomSheet: Story = {
   globals: {
     viewport: { value: "phonePortrait" },
   },
-  render: () => {
-    const [open, setOpen] = useState(true);
-    return (
-      <div className="sb-stage" style={{ minHeight: "100vh" }}>
-        <Drawer open={open} onOpenChange={setOpen}>
-          <DrawerTrigger asChild>
-            <ThemedButton>Open sheet</ThemedButton>
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Pick a card</DrawerTitle>
-              <DrawerDescription>
-                Sheet chrome is presentational only — no commit semantics.
-              </DrawerDescription>
-            </DrawerHeader>
-            <div className="sb-stage" style={{ padding: 16 }}>
-              <ActionButton label="Choose alpha" onClick={fn()} />
-              <ActionButton label="Choose beta" onClick={fn()} />
-            </div>
-            <DrawerFooter>
-              <ThemedButton variant="primary" onClick={() => setOpen(false)}>
-                Confirm
-              </ThemedButton>
-              <ThemedButton variant="ghost" onClick={() => setOpen(false)}>
-                Cancel
-              </ThemedButton>
-            </DrawerFooter>
-          </DrawerContent>
-        </Drawer>
-      </div>
-    );
-  },
+  render: () => <MobileBottomSheetStory />,
 };
 
 export const DialogStandard: Story = {
   name: "Dialog — modal",
-  render: () => {
-    const [open, setOpen] = useState(true);
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <ThemedButton>Open dialog</ThemedButton>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirm trade</DialogTitle>
-            <DialogDescription>
-              Trade two wood for one gem with the bank.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <ThemedButton variant="ghost" onClick={() => setOpen(false)}>
-              Cancel
-            </ThemedButton>
-            <ThemedButton variant="primary" onClick={() => setOpen(false)}>
-              Confirm
-            </ThemedButton>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    );
-  },
+  render: () => <DialogStandardStory />,
 };

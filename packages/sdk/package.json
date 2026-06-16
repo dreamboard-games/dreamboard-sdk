@@ -107,7 +107,7 @@
   "scripts": {
     "build": "tsup && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint 'src/**/*.ts'",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
     "storybook:build": "storybook build -o storybook-static",
     "storybook:test": "concurrently -k -s first -n storybook,test \"http-server storybook-static -p 6006 -s --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",

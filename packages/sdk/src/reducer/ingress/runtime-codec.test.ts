@@ -321,11 +321,36 @@ describe("ingress runtime codec", () => {
         lastTransition: null,
       },
     });
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "takeAction",
+      } as never),
+    ).toThrow(/params/);
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "",
+        params: {},
+      }),
+    ).toThrow(/interactionId/);
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "takeAction",
+        params: {},
+        extra: true,
+      } as never),
+    ).toThrow(/Unrecognized key/);
     expect(
       codec.parseInput({
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
+        params: {},
       }),
     ).toEqual({
       kind: "interaction",

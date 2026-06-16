@@ -114,8 +114,16 @@ async function assertReleaseWorkflow() {
   if (/\bpnpm\s+-r\b/.test(workflow) && /\bpublish\b/.test(workflow)) {
     fail(`${relativePath} must not use recursive publish`);
   }
-  if (!workflow.includes("--filter @dreamboard-games/sdk publish")) {
-    fail(`${relativePath} must publish only ${publicPackageName}`);
+  const publishesSdkWorkspace = workflow.includes(
+    "--filter @dreamboard-games/sdk publish",
+  );
+  const publishesVerifiedTarball =
+    workflow.includes("npm publish package/*.tgz") &&
+    workflow.includes(`metadata.name !== "${publicPackageName}"`);
+  if (!publishesSdkWorkspace && !publishesVerifiedTarball) {
+    fail(
+      `${relativePath} must publish only ${publicPackageName} or its verified tarball artifact`,
+    );
   }
 }
 

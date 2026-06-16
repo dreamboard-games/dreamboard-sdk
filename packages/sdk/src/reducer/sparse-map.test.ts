@@ -143,6 +143,7 @@ describe("sparse map helpers", () => {
       },
     });
 
+    expect(contract.phaseNames).toEqual(["phase-1"]);
     expect(() =>
       defineInteraction<typeof contract>()({
         inputs: {

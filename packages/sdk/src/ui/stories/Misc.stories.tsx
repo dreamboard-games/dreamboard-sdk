@@ -14,6 +14,24 @@ export default meta;
 
 type Story = StoryObj;
 
+function ErrorBoundaryResetStory() {
+  const [crash, setCrash] = useState(true);
+  function MaybeBoom() {
+    if (crash) throw new Error("Boom");
+    return <p>Recovered.</p>;
+  }
+  return (
+    <div className="sb-stage">
+      <ThemedButton onClick={() => setCrash((c) => !c)}>
+        {crash ? "Recover" : "Crash again"}
+      </ThemedButton>
+      <ErrorBoundary key={String(crash)}>
+        <MaybeBoom />
+      </ErrorBoundary>
+    </div>
+  );
+}
+
 export const ToastNotifications: Story = {
   render: () => (
     <ToastProvider>
@@ -77,21 +95,5 @@ export const ErrorBoundaryFallback: Story = {
 
 export const ErrorBoundaryReset: Story = {
   name: "ErrorBoundary recovery",
-  render: () => {
-    const [crash, setCrash] = useState(true);
-    function MaybeBoom() {
-      if (crash) throw new Error("Boom");
-      return <p>Recovered.</p>;
-    }
-    return (
-      <div className="sb-stage">
-        <ThemedButton onClick={() => setCrash((c) => !c)}>
-          {crash ? "Recover" : "Crash again"}
-        </ThemedButton>
-        <ErrorBoundary key={String(crash)}>
-          <MaybeBoom />
-        </ErrorBoundary>
-      </div>
-    );
-  },
+  render: () => <ErrorBoundaryResetStory />,
 };

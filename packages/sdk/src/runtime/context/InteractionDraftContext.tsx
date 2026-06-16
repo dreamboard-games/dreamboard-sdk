@@ -7,6 +7,15 @@ type Draft = Readonly<Record<string, unknown>>;
 
 const EMPTY_DRAFT: Draft = Object.freeze({});
 
+function omitRecordKey<Value>(
+  record: Readonly<Record<string, Value>>,
+  key: string,
+): Readonly<Record<string, Value>> {
+  const next: Record<string, Value> = { ...record };
+  delete next[key];
+  return next;
+}
+
 interface DraftState {
   drafts: Readonly<Record<string, Draft>>;
   arms: Readonly<Record<string, string>>;
@@ -81,14 +90,12 @@ export function createInteractionUiStore(): InteractionUiStoreApi {
         const current = prev.drafts[interactionId];
         if (!current) return prev;
         if (key === undefined) {
-          const { [interactionId]: _omit, ...rest } = prev.drafts;
-          return { ...prev, drafts: rest };
+          return { ...prev, drafts: omitRecordKey(prev.drafts, interactionId) };
         }
         if (!(key in current)) return prev;
-        const { [key]: _omitKey, ...remainingKeys } = current;
+        const remainingKeys = omitRecordKey(current, key);
         if (Object.keys(remainingKeys).length === 0) {
-          const { [interactionId]: _omit, ...rest } = prev.drafts;
-          return { ...prev, drafts: rest };
+          return { ...prev, drafts: omitRecordKey(prev.drafts, interactionId) };
         }
         return {
           ...prev,
@@ -123,8 +130,7 @@ export function createInteractionUiStore(): InteractionUiStoreApi {
         const current = prev.arms[surface] ?? null;
         if (current === interactionId) return prev;
         if (interactionId === null) {
-          const { [surface]: _omit, ...rest } = prev.arms;
-          return { ...prev, arms: rest };
+          return { ...prev, arms: omitRecordKey(prev.arms, surface) };
         }
         return { ...prev, arms: { ...prev.arms, [surface]: interactionId } };
       });
@@ -172,8 +178,10 @@ export function createInteractionUiStore(): InteractionUiStoreApi {
         const current = prev.submitting[interactionId] === true;
         if (current === submitting) return prev;
         if (!submitting) {
-          const { [interactionId]: _omit, ...rest } = prev.submitting;
-          return { ...prev, submitting: rest };
+          return {
+            ...prev,
+            submitting: omitRecordKey(prev.submitting, interactionId),
+          };
         }
         return {
           ...prev,

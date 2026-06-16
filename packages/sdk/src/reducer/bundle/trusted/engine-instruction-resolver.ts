@@ -1,10 +1,6 @@
 import type { DispatchTraceEntry, TrustedRuntimeInput } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
-import type {
-  PhaseMapOf,
-  ReducerGameContractLike,
-  ViewMapOf,
-} from "../../model";
+import type { ReducerGameContractLike } from "../../model";
 import {
   cloneRuntimeTable,
   ensureArray,
@@ -48,8 +44,6 @@ function toRngTrace<
 
 export function createEngineInstructionResolver<
   Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
 >() {
   type State = TrustedState<Contract>;
   type PlayerId = TrustedPlayerId<Contract>;

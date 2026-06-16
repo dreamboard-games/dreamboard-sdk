@@ -19,6 +19,201 @@ import {
   syncPlayerZoneWithHand,
   syncSharedZoneWithDeck,
 } from "./internal";
+import { assertNonNegativeSafeInteger } from "./numeric";
+
+function sharedZoneCards<Table extends RuntimeTableRecord>(
+  table: Table,
+  zoneId: string,
+): string[] {
+  return [...ensureArray(table.zones.shared[zoneId] ?? table.decks[zoneId])];
+}
+
+function playerZoneCards<Table extends RuntimeTableRecord>(
+  table: Table,
+  zoneId: string,
+  playerId: string,
+): string[] {
+  return [
+    ...ensureArray(
+      ppRead(table.zones.perPlayer[zoneId] ?? table.hands[zoneId], playerId) as
+        | readonly string[]
+        | undefined,
+    ),
+  ];
+}
+
+function assertCardInSharedZone(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  cardId: string,
+): void {
+  if (!sharedZoneCards(table, zoneId).includes(cardId)) {
+    throw new Error(`Card '${cardId}' is not in shared zone '${zoneId}'.`);
+  }
+
+  const location = table.componentLocations[cardId];
+  if (location?.type !== "InDeck" || location.deckId !== zoneId) {
+    throw new Error(
+      `Card '${cardId}' has a location that disagrees with shared zone '${zoneId}'.`,
+    );
+  }
+}
+
+function assertCardInPlayerZone(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  playerId: string,
+  cardId: string,
+): void {
+  if (!playerZoneCards(table, zoneId, playerId).includes(cardId)) {
+    throw new Error(
+      `Card '${cardId}' is not in zone '${zoneId}' for player '${playerId}'.`,
+    );
+  }
+
+  const location = table.componentLocations[cardId];
+  if (
+    location?.type !== "InHand" ||
+    location.handId !== zoneId ||
+    location.playerId !== playerId
+  ) {
+    throw new Error(
+      `Card '${cardId}' has a location that disagrees with zone '${zoneId}' for player '${playerId}'.`,
+    );
+  }
+}
+
+function assertCardDetached(table: RuntimeTableRecord, cardId: string): void {
+  const location = table.componentLocations[cardId];
+  if (location?.type !== "Detached") {
+    throw new Error(`Card '${cardId}' must be detached before placement.`);
+  }
+}
+
+function assertCardAbsentFromSharedZone(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  cardId: string,
+): void {
+  if (sharedZoneCards(table, zoneId).includes(cardId)) {
+    throw new Error(`Card '${cardId}' is already in shared zone '${zoneId}'.`);
+  }
+}
+
+function assertCardAbsentFromPlayerZone(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  playerId: string,
+  cardId: string,
+): void {
+  if (playerZoneCards(table, zoneId, playerId).includes(cardId)) {
+    throw new Error(
+      `Card '${cardId}' is already in zone '${zoneId}' for player '${playerId}'.`,
+    );
+  }
+}
+
+function reindexSharedZoneCards(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  cardIds: readonly string[],
+  playedByForCard?: Readonly<Record<string, string | null>>,
+): void {
+  for (const [index, currentCardId] of cardIds.entries()) {
+    const existing = table.componentLocations[currentCardId];
+    table.componentLocations[currentCardId] = {
+      type: "InDeck",
+      deckId: zoneId,
+      playedBy:
+        playedByForCard?.[currentCardId] ??
+        (existing?.type === "InDeck" ? existing.playedBy : null),
+      position: index,
+    };
+  }
+}
+
+function reindexPlayerZoneCards(
+  table: RuntimeTableRecord,
+  zoneId: string,
+  playerId: string,
+  cardIds: readonly string[],
+): void {
+  for (const [index, currentCardId] of cardIds.entries()) {
+    table.componentLocations[currentCardId] = {
+      type: "InHand",
+      handId: zoneId,
+      playerId,
+      position: index,
+    };
+  }
+}
+
+function insertCard(
+  cardIds: readonly string[],
+  cardId: string,
+  position: "top" | "bottom" = "bottom",
+): string[] {
+  return position === "top" ? [cardId, ...cardIds] : [...cardIds, cardId];
+}
+
+function removeCard(cardIds: readonly string[], cardId: string): string[] {
+  return cardIds.filter((candidate) => candidate !== cardId);
+}
+
+function appendCardToSharedZoneCollectionInPlace<
+  Table extends RuntimeTableRecord,
+  DeckId extends DeckIdOfTable<Table>,
+>(
+  table: Table,
+  deckId: DeckId,
+  cardId: string,
+  playedBy: string | null,
+  position: "top" | "bottom" = "bottom",
+): void {
+  const nextCards = insertCard(
+    sharedZoneCards(table, deckId as string),
+    cardId,
+    position,
+  );
+  syncSharedZoneWithDeck(
+    table,
+    deckId,
+    nextCards as DeckCardsOfTable<Table, DeckId>,
+  );
+  reindexSharedZoneCards(table, deckId as string, nextCards, {
+    [cardId]: playedBy,
+  });
+}
+
+function removeCardFromSharedZoneCollectionInPlace<
+  Table extends RuntimeTableRecord,
+  DeckId extends DeckIdOfTable<Table>,
+>(table: Table, deckId: DeckId, cardId: string): void {
+  const remaining = removeCard(
+    sharedZoneCards(table, deckId as string),
+    cardId,
+  );
+  syncSharedZoneWithDeck(
+    table,
+    deckId,
+    remaining as DeckCardsOfTable<Table, DeckId>,
+  );
+  reindexSharedZoneCards(table, deckId as string, remaining);
+}
+
+function setPlayerZoneCardsInPlace<
+  Table extends RuntimeTableRecord,
+  ZoneId extends PlayerZoneIdOfTable<Table> | HandIdOfTable<Table>,
+  PlayerId extends PlayerIdOfTable<Table>,
+>(
+  table: Table,
+  zoneId: ZoneId,
+  playerId: PlayerId,
+  cardIds: readonly string[],
+): void {
+  syncPlayerZoneWithHand(table, zoneId, playerId, cardIds);
+  reindexPlayerZoneCards(table, zoneId as string, playerId as string, cardIds);
+}
 
 /**
  * Read or write a per-player zone's card list by mutating `table` in place.
@@ -84,35 +279,16 @@ export function appendToDeckInPlace<
     "addCardToSharedZone",
     "zoneId",
   );
-  const deckCards = [...ensureArray(table.decks[deckId])] as DeckCardsOfTable<
-    Table,
-    DeckId
-  >;
+  assertCardDetached(table, cardId as string);
+  assertCardAbsentFromSharedZone(table, deckId as string, cardId as string);
   assertCardAllowedInZone(table, deckId, cardId);
-  if (position === "top") {
-    deckCards.unshift(cardId);
-  } else {
-    deckCards.push(cardId);
-  }
-  syncSharedZoneWithDeck(table, deckId, deckCards);
-  for (const [index, currentCardId] of deckCards.entries()) {
-    if (currentCardId === cardId) {
-      table.componentLocations[currentCardId] = {
-        type: "InDeck",
-        deckId,
-        playedBy,
-        position: index,
-      };
-      continue;
-    }
-    const existing = table.componentLocations[currentCardId];
-    table.componentLocations[currentCardId] = {
-      type: "InDeck",
-      deckId,
-      playedBy: existing?.type === "InDeck" ? existing.playedBy : null,
-      position: index,
-    };
-  }
+  appendCardToSharedZoneCollectionInPlace(
+    table,
+    deckId,
+    cardId as string,
+    playedBy as string | null,
+    position,
+  );
   table.ownerOfCard[cardId] = playedBy;
   table.visibility[cardId] = {
     faceUp: true,
@@ -147,19 +323,9 @@ export function removeFromDeckInPlace<
     "removeCardFromSharedZone",
     "zoneId",
   );
-  const remaining = ensureArray(table.decks[deckId]).filter(
-    (candidate) => candidate !== cardId,
-  );
-  syncSharedZoneWithDeck(table, deckId, remaining);
-  for (const [index, currentCardId] of remaining.entries()) {
-    const currentLocation = table.componentLocations[currentCardId];
-    if (currentLocation?.type === "InDeck") {
-      table.componentLocations[currentCardId] = {
-        ...currentLocation,
-        position: index,
-      };
-    }
-  }
+  assertCardInSharedZone(table, deckId as string, cardId as string);
+  removeCardFromSharedZoneCollectionInPlace(table, deckId, cardId as string);
+  table.componentLocations[cardId as string] = { type: "Detached" };
 }
 
 function computeVisibilityForPlayerZone(
@@ -224,37 +390,47 @@ function moveFromHandToDeckInPlace<
     "moveCardFromPlayerZoneToSharedZone",
     "toZoneId",
   );
-  const currentHand = ensureArray(
-    ppRead(options.table.hands[options.handId], options.playerId as string) as
-      | readonly string[]
-      | undefined,
-  ).filter((candidate) => candidate !== options.cardId);
-  syncPlayerZoneWithHand(
+  assertCardInPlayerZone(
+    options.table,
+    options.handId as string,
+    options.playerId as string,
+    options.cardId as string,
+  );
+  assertCardAbsentFromSharedZone(
+    options.table,
+    options.deckId as string,
+    options.cardId as string,
+  );
+  assertCardAllowedInZone(
+    options.table,
+    options.deckId as string,
+    options.cardId as string,
+  );
+
+  const currentHand = playerZoneCards(
+    options.table,
+    options.handId as string,
+    options.playerId as string,
+  );
+  const nextHand = removeCard(currentHand, options.cardId as string);
+  setPlayerZoneCardsInPlace(
     options.table,
     options.handId,
     options.playerId,
-    currentHand,
+    nextHand,
   );
-  for (const [index, currentCardId] of currentHand.entries()) {
-    options.table.componentLocations[currentCardId as string] = {
-      type: "InHand",
-      handId: options.handId,
-      playerId: options.playerId,
-      position: index,
-    };
-  }
+  appendCardToSharedZoneCollectionInPlace(
+    options.table,
+    options.deckId,
+    options.cardId as string,
+    (options.playedBy ?? options.playerId) as string | null,
+    options.position ?? "bottom",
+  );
   options.table.ownerOfCard[options.cardId] =
     options.playedBy ?? options.playerId;
   options.table.visibility[options.cardId] = {
     faceUp: true,
   };
-  appendToDeckInPlace(
-    options.table,
-    options.deckId,
-    options.cardId,
-    options.playedBy ?? options.playerId,
-    options.position ?? "bottom",
-  );
 }
 
 export function moveCardFromPlayerZoneToSharedZone<
@@ -353,30 +529,73 @@ export function dealCardsBetweenPlayerZonesInPlace<
   toZoneId: ToZoneId;
   count: number;
 }): void {
-  let nextTable = options.table;
-  for (let i = 0; i < options.count; i += 1) {
-    const sourceCards = ensureArray(
-      ppRead(
-        nextTable.zones.perPlayer[options.fromZoneId] ??
-          nextTable.hands[options.fromZoneId],
-        options.playerId as string,
-      ) as readonly string[] | undefined,
+  assertNonNegativeSafeInteger(options.count, "Deal count");
+  if (options.count === 0) return;
+  assertZoneScope(
+    options.table,
+    options.fromZoneId as string,
+    "perPlayer",
+    "dealCardsBetweenPlayerZones",
+    "fromZoneId",
+  );
+  assertZoneScope(
+    options.table,
+    options.toZoneId as string,
+    "perPlayer",
+    "dealCardsBetweenPlayerZones",
+    "toZoneId",
+  );
+  if ((options.fromZoneId as string) === (options.toZoneId as string)) {
+    throw new Error("Deal source and destination must differ.");
+  }
+
+  const sourceCards = playerZoneCards(
+    options.table,
+    options.fromZoneId as string,
+    options.playerId as string,
+  );
+  const selectedCards = sourceCards.slice(0, options.count);
+  const destinationCards = playerZoneCards(
+    options.table,
+    options.toZoneId as string,
+    options.playerId as string,
+  );
+  for (const cardId of selectedCards) {
+    assertCardInPlayerZone(
+      options.table,
+      options.fromZoneId as string,
+      options.playerId as string,
+      cardId,
     );
-    const topCardId = sourceCards[0];
-    if (topCardId === undefined) {
-      break;
-    }
-    moveCardBetweenPlayerZonesInPlace({
-      table: nextTable,
-      playerId: options.playerId,
-      fromZoneId: options.fromZoneId,
-      toZoneId: options.toZoneId,
-      cardId: topCardId as CompatibleCardIdForTwoPlayerZones<
-        Table,
-        FromZoneId,
-        ToZoneId
-      >,
-    });
+    assertCardAbsentFromPlayerZone(
+      options.table,
+      options.toZoneId as string,
+      options.playerId as string,
+      cardId,
+    );
+    assertCardAllowedInZone(options.table, options.toZoneId as string, cardId);
+  }
+
+  const remainingSource = sourceCards.slice(selectedCards.length);
+  const nextDestination = [...destinationCards, ...selectedCards];
+  setPlayerZoneCardsInPlace(
+    options.table,
+    options.fromZoneId,
+    options.playerId,
+    remainingSource,
+  );
+  setPlayerZoneCardsInPlace(
+    options.table,
+    options.toZoneId,
+    options.playerId,
+    nextDestination,
+  );
+  for (const cardId of selectedCards) {
+    options.table.visibility[cardId] = computeVisibilityForPlayerZone(
+      options.table,
+      options.toZoneId as string,
+      options.playerId as string,
+    );
   }
 }
 
@@ -429,62 +648,44 @@ export function moveCardFromSharedZoneToPlayerZoneInPlace<
     "toZoneId",
   );
 
-  const sourceCards = ensureArray(
-    options.table.zones.shared[options.fromZoneId] ??
-      options.table.decks[options.fromZoneId],
+  assertCardInSharedZone(
+    options.table,
+    options.fromZoneId as string,
+    options.cardId as string,
   );
-  if (!sourceCards.includes(options.cardId as string)) {
-    throw new Error(
-      `Card '${String(options.cardId)}' is not in shared zone '${String(
-        options.fromZoneId,
-      )}'.`,
-    );
-  }
+  assertCardAbsentFromPlayerZone(
+    options.table,
+    options.toZoneId as string,
+    options.playerId as string,
+    options.cardId as string,
+  );
   assertCardAllowedInZone(
     options.table,
     options.toZoneId as string,
     options.cardId as string,
   );
 
-  const remainingSource = sourceCards.filter(
-    (candidate) => candidate !== options.cardId,
+  const destinationCards = playerZoneCards(
+    options.table,
+    options.toZoneId as string,
+    options.playerId as string,
   );
-  syncSharedZoneWithDeck(options.table, options.fromZoneId, remainingSource);
-  for (const [index, currentCardId] of remainingSource.entries()) {
-    const existing = options.table.componentLocations[currentCardId];
-    if (existing?.type === "InDeck") {
-      options.table.componentLocations[currentCardId] = {
-        ...existing,
-        position: index,
-      };
-    }
-  }
-
-  const destinationCards = ensureArray(
-    ppRead(
-      options.table.zones.perPlayer[options.toZoneId] ??
-        options.table.hands[options.toZoneId],
-      options.playerId as string,
-    ) as readonly string[] | undefined,
+  const nextDestination = insertCard(
+    destinationCards,
+    options.cardId as string,
+    options.position ?? "bottom",
   );
-  const nextDestination =
-    options.position === "top"
-      ? [options.cardId as string, ...destinationCards]
-      : [...destinationCards, options.cardId as string];
-  syncPlayerZoneWithHand(
+  removeCardFromSharedZoneCollectionInPlace(
+    options.table,
+    options.fromZoneId,
+    options.cardId as string,
+  );
+  setPlayerZoneCardsInPlace(
     options.table,
     options.toZoneId,
     options.playerId,
     nextDestination,
   );
-  for (const [index, currentCardId] of nextDestination.entries()) {
-    options.table.componentLocations[currentCardId] = {
-      type: "InHand",
-      handId: options.toZoneId as string,
-      playerId: options.playerId as string,
-      position: index,
-    };
-  }
   options.table.ownerOfCard[options.cardId as string] =
     options.playerId as string;
   options.table.visibility[options.cardId as string] =
@@ -550,70 +751,52 @@ export function moveCardBetweenPlayerZonesInPlace<
     "toZoneId",
   );
 
-  const sourceCards = ensureArray(
-    ppRead(
-      options.table.zones.perPlayer[options.fromZoneId] ??
-        options.table.hands[options.fromZoneId],
-      options.playerId as string,
-    ) as readonly string[] | undefined,
+  assertCardInPlayerZone(
+    options.table,
+    options.fromZoneId as string,
+    options.playerId as string,
+    options.cardId as string,
   );
-  if (!sourceCards.includes(options.cardId as string)) {
-    throw new Error(
-      `Card '${String(options.cardId)}' is not in zone '${String(
-        options.fromZoneId,
-      )}' for player '${String(options.playerId)}'.`,
-    );
-  }
+  assertCardAbsentFromPlayerZone(
+    options.table,
+    options.toZoneId as string,
+    options.playerId as string,
+    options.cardId as string,
+  );
   assertCardAllowedInZone(
     options.table,
     options.toZoneId as string,
     options.cardId as string,
   );
 
-  const remainingSource = sourceCards.filter(
-    (candidate) => candidate !== options.cardId,
+  const sourceCards = playerZoneCards(
+    options.table,
+    options.fromZoneId as string,
+    options.playerId as string,
   );
-  syncPlayerZoneWithHand(
+  const destinationCards = playerZoneCards(
+    options.table,
+    options.toZoneId as string,
+    options.playerId as string,
+  );
+  const remainingSource = removeCard(sourceCards, options.cardId as string);
+  const nextDestination = insertCard(
+    destinationCards,
+    options.cardId as string,
+    options.position ?? "bottom",
+  );
+  setPlayerZoneCardsInPlace(
     options.table,
     options.fromZoneId,
     options.playerId,
     remainingSource,
   );
-  for (const [index, currentCardId] of remainingSource.entries()) {
-    const existing = options.table.componentLocations[currentCardId];
-    if (existing?.type === "InHand") {
-      options.table.componentLocations[currentCardId] = {
-        ...existing,
-        position: index,
-      };
-    }
-  }
-
-  const destinationCards = ensureArray(
-    ppRead(
-      options.table.zones.perPlayer[options.toZoneId] ??
-        options.table.hands[options.toZoneId],
-      options.playerId as string,
-    ) as readonly string[] | undefined,
-  );
-  const nextDestination =
-    options.position === "top"
-      ? [options.cardId as string, ...destinationCards]
-      : [...destinationCards, options.cardId as string];
-  syncPlayerZoneWithHand(
+  setPlayerZoneCardsInPlace(
     options.table,
     options.toZoneId,
     options.playerId,
     nextDestination,
   );
-  for (const [index, currentCardId] of nextDestination.entries()) {
-    options.table.componentLocations[currentCardId] = {
-      type: "InHand",
-      handId: options.toZoneId as string,
-      playerId: options.playerId as string,
-      position: index,
-    };
-  }
   options.table.visibility[options.cardId as string] =
     computeVisibilityForPlayerZone(
       options.table,
@@ -654,14 +837,53 @@ export function moveCardBetweenSharedZonesInPlace<
   playedBy?: PlayerIdOfTable<Table> | null;
   position?: "top" | "bottom";
 }): void {
-  removeFromDeckInPlace(options.table, options.fromZoneId, options.cardId);
-  appendToDeckInPlace(
+  assertZoneScope(
+    options.table,
+    options.fromZoneId as string,
+    "shared",
+    "moveCardBetweenSharedZones",
+    "fromZoneId",
+  );
+  assertZoneScope(
+    options.table,
+    options.toZoneId as string,
+    "shared",
+    "moveCardBetweenSharedZones",
+    "toZoneId",
+  );
+  assertCardInSharedZone(
+    options.table,
+    options.fromZoneId as string,
+    options.cardId as string,
+  );
+  assertCardAbsentFromSharedZone(
+    options.table,
+    options.toZoneId as string,
+    options.cardId as string,
+  );
+  assertCardAllowedInZone(
+    options.table,
+    options.toZoneId as string,
+    options.cardId as string,
+  );
+
+  removeCardFromSharedZoneCollectionInPlace(
+    options.table,
+    options.fromZoneId,
+    options.cardId as string,
+  );
+  appendCardToSharedZoneCollectionInPlace(
     options.table,
     options.toZoneId,
-    options.cardId as DeckCardsOfTable<Table, ToZoneId>[number],
-    options.playedBy ?? null,
+    options.cardId as string,
+    (options.playedBy ?? null) as string | null,
     options.position ?? "bottom",
   );
+  options.table.ownerOfCard[options.cardId as string] =
+    options.playedBy ?? null;
+  options.table.visibility[options.cardId as string] = {
+    faceUp: true,
+  };
 }
 
 export function removeCardFromSharedZone<
@@ -753,52 +975,58 @@ export function dealCardsFromDeckToHandInPlace<
   toZoneId: HandId,
   count: number,
 ): void {
-  const publicHands = new Set(
-    Object.entries(table.handVisibility)
-      .filter(([, mode]) => mode === "all" || mode === "public")
-      .map(([handId]) => handId),
+  assertNonNegativeSafeInteger(count, "Deal count");
+  if (count === 0) return;
+  assertZoneScope(
+    table,
+    fromZoneId as string,
+    "shared",
+    "dealCardsFromDeckToHand",
+    "fromZoneId",
+  );
+  assertZoneScope(
+    table,
+    toZoneId as string,
+    "perPlayer",
+    "dealCardsFromDeckToHand",
+    "toZoneId",
   );
 
-  for (let index = 0; index < count; index += 1) {
-    const nextCard = ensureArray(table.decks[fromZoneId])[0];
-    if (!nextCard) {
-      break;
-    }
-    table.decks[fromZoneId] = ensureArray(table.decks[fromZoneId]).slice(
-      1,
-    ) as (typeof table.decks)[DeckId];
-    table.zones.shared[fromZoneId] = [
-      ...ensureArray(table.decks[fromZoneId]),
-    ] as (typeof table.zones.shared)[DeckId];
-    const prevHand = ppRead(table.hands[toZoneId], playerId as string) as
-      | readonly string[]
-      | undefined;
-    const nextHand = [...ensureArray(prevHand), nextCard];
-    assertCardAllowedInZone(table, toZoneId, nextCard);
-    table.hands[toZoneId] = ppWrite(
-      table.hands[toZoneId],
+  const sourceCards = sharedZoneCards(table, fromZoneId as string);
+  const selectedCards = sourceCards.slice(0, count);
+  const destinationCards = playerZoneCards(
+    table,
+    toZoneId as string,
+    playerId as string,
+  );
+
+  for (const cardId of selectedCards) {
+    assertCardInSharedZone(table, fromZoneId as string, cardId);
+    assertCardAbsentFromPlayerZone(
+      table,
+      toZoneId as string,
       playerId as string,
-      nextHand,
-    ) as (typeof table.hands)[HandId];
-    table.zones.perPlayer[toZoneId] = ppWrite(
-      table.zones.perPlayer[toZoneId],
+      cardId,
+    );
+    assertCardAllowedInZone(table, toZoneId as string, cardId);
+  }
+
+  const remainingSource = sourceCards.slice(selectedCards.length);
+  const nextHand = [...destinationCards, ...selectedCards];
+  syncSharedZoneWithDeck(
+    table,
+    fromZoneId,
+    remainingSource as DeckCardsOfTable<Table, DeckId>,
+  );
+  reindexSharedZoneCards(table, fromZoneId as string, remainingSource);
+  setPlayerZoneCardsInPlace(table, toZoneId, playerId, nextHand);
+
+  for (const cardId of selectedCards) {
+    table.ownerOfCard[cardId] = playerId;
+    table.visibility[cardId] = computeVisibilityForPlayerZone(
+      table,
+      toZoneId as string,
       playerId as string,
-      [...nextHand],
-    ) as (typeof table.zones.perPlayer)[HandId];
-    table.componentLocations[nextCard] = {
-      type: "InHand",
-      handId: toZoneId,
-      playerId,
-      position: nextHand.length - 1,
-    };
-    table.ownerOfCard[nextCard] = playerId;
-    table.visibility[nextCard] = publicHands.has(toZoneId as string)
-      ? {
-          faceUp: true,
-        }
-      : {
-          faceUp: false,
-          visibleTo: [playerId],
-        };
+    );
   }
 }

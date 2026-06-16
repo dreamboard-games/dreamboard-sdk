@@ -28,13 +28,13 @@ Phase 6 is source-closed in the SDK:
 
 SDK gates:
 
-| Command | Result |
-| --- | --- |
-| `pnpm --filter @dreamboard-games/sdk exec tsc --noEmit` | pass |
+| Command                                                                                                                                                                                             | Result         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| `pnpm --filter @dreamboard-games/sdk exec tsc --noEmit`                                                                                                                                             | pass           |
 | `bun test packages/sdk/src/reducer/bundle/trusted/phase-04-characterization.golden.test.ts packages/sdk/src/testing/create-test-runtime.test.ts packages/sdk/src/testing/create-expect-api.test.ts` | pass, 34 tests |
-| `bun test packages/sdk/src/export-surface.test.ts packages/sdk/src/facade-exports.test.ts` | pass, 31 tests |
-| `pnpm --filter @dreamboard-games/sdk exec eslint <Phase 6 touched files>` | pass |
-| `rg -n "__DREAMBOARD_AUTHORING_WARNINGS__|console\\." packages/sdk/src/reducer/bundle` | no matches |
+| `bun test packages/sdk/src/export-surface.test.ts packages/sdk/src/facade-exports.test.ts`                                                                                                          | pass, 31 tests |
+| `pnpm --filter @dreamboard-games/sdk exec eslint <Phase 6 touched files>`                                                                                                                           | pass           |
+| `rg -n "__DREAMBOARD_AUTHORING_WARNINGS__\|console\\." packages/sdk/src/reducer/bundle`                                                                                                             | no matches     |
 
 ## Notes
 

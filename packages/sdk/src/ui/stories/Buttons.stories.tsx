@@ -20,6 +20,61 @@ export default meta;
 
 type Story = StoryObj<ButtonStoryArgs>;
 
+function ActionButtonStatesStory() {
+  const [loading, setLoading] = useState(false);
+  return (
+    <div className="sb-stage">
+      <ActionButton
+        label="Primary action"
+        icon={Pickaxe}
+        onClick={() => {
+          setLoading(true);
+          setTimeout(() => setLoading(false), 800);
+        }}
+        loading={loading}
+      />
+      <ActionButton
+        label="Disabled"
+        icon={Sword}
+        available={false}
+        disabledReason="Not yet"
+        onClick={fn()}
+      />
+      <ActionButton
+        label="Secondary"
+        icon={Sword}
+        variant="secondary"
+        onClick={fn()}
+      />
+      <ActionButton
+        label="Danger"
+        icon={Sword}
+        variant="danger"
+        onClick={fn()}
+      />
+    </div>
+  );
+}
+
+function PrimaryActionDockStory() {
+  const [submitted, setSubmitted] = useState(false);
+  return (
+    <div className="sb-stage">
+      <PrimaryActionButton
+        label="Roll dice"
+        onAction={() => setSubmitted(true)}
+        submitted={submitted}
+      />
+      <PrimaryActionButton
+        label="Unavailable"
+        available={false}
+        unavailableReason="Wait for your turn"
+      />
+      <PrimaryActionButton label="Submitted result" submitted />
+    </div>
+  );
+}
+
 export const ThemedVariants: Story = {
   name: "ThemedButton variants",
   render: () => (
@@ -120,61 +175,10 @@ export const DisabledThemedButtonDoesNotInvoke: Story = {
 
 export const ActionButtonStates: Story = {
   name: "ActionButton states",
-  render: () => {
-    const [loading, setLoading] = useState(false);
-    return (
-      <div className="sb-stage">
-        <ActionButton
-          label="Primary action"
-          icon={Pickaxe}
-          onClick={() => {
-            setLoading(true);
-            setTimeout(() => setLoading(false), 800);
-          }}
-          loading={loading}
-        />
-        <ActionButton
-          label="Disabled"
-          icon={Sword}
-          available={false}
-          disabledReason="Not yet"
-          onClick={fn()}
-        />
-        <ActionButton
-          label="Secondary"
-          icon={Sword}
-          variant="secondary"
-          onClick={fn()}
-        />
-        <ActionButton
-          label="Danger"
-          icon={Sword}
-          variant="danger"
-          onClick={fn()}
-        />
-      </div>
-    );
-  },
+  render: () => <ActionButtonStatesStory />,
 };
 
 export const PrimaryActionDock: Story = {
   name: "Primary action — peripheral CTA",
-  render: () => {
-    const [submitted, setSubmitted] = useState(false);
-    return (
-      <div className="sb-stage">
-        <PrimaryActionButton
-          label="Roll dice"
-          onAction={() => setSubmitted(true)}
-          submitted={submitted}
-        />
-        <PrimaryActionButton
-          label="Unavailable"
-          available={false}
-          unavailableReason="Wait for your turn"
-        />
-        <PrimaryActionButton label="Submitted result" submitted />
-      </div>
-    );
-  },
+  render: () => <PrimaryActionDockStory />,
 };

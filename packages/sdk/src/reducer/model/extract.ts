@@ -659,23 +659,23 @@ export type PhaseStateMapOfContract<Contract> = {
 export type PublicSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
     infer PublicSchema,
-    infer _PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>,
+    SchemaLike<object>
   >
     ? PublicSchema
     : never;
 export type PrivateSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
+    SchemaLike<object>,
     infer PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>
   >
     ? PrivateSchema
     : never;
 export type HiddenSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
-    infer _PrivateSchema,
+    SchemaLike<object>,
+    SchemaLike<object>,
     infer HiddenSchema
   >
     ? HiddenSchema

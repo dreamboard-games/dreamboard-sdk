@@ -6,7 +6,9 @@ import type {
 
 export { PluginRuntime } from "./runtime/index.js";
 
-export interface DreamboardUIRegister {}
+export interface DreamboardUIRegister {
+  readonly __dreamboardUIRegister?: never;
+}
 
 export type UIContract = RuntimeUIContract;
 

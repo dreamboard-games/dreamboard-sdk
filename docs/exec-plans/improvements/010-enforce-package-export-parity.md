@@ -1,6 +1,6 @@
 # 010 Enforce Declaration/Runtime Export Parity
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P1
 - Risk: High
 - Effort: Medium

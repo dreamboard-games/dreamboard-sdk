@@ -1,6 +1,6 @@
 # 001 Establish Authoritative Verification
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: Medium
 - Effort: Medium
@@ -109,11 +109,18 @@ export default [
       "react-hooks": reactHooks,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/rules-of-hooks": "error",
     },
   },
 ];
 ```
+
+Source drift discovered during implementation: the current
+`eslint-plugin-react-hooks@7` recommended preset includes React Compiler rules
+that produce broad behavioral findings outside Phase 001. This phase registers
+the core hooks rules explicitly so TSX coverage and exhaustive-deps are enforced
+without implementing behavioral remediation phases 002-013.
 
 Resolve the existing unused declarations and stale disable comments. Do not
 weaken `no-unused-vars` or React hooks rules to make the gate pass.
@@ -135,6 +142,25 @@ docs/exec-plans/agent-first-authoring-dx/artifacts/phase-06-closeout-20260614.md
 docs/exec-plans/agent-first-authoring-dx/artifacts/phase-07-closeout-20260614.md
 packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.ts
 ```
+
+Source drift discovered during implementation: the current checkout also
+requires formatting-only fixes in `packages/workspace-codegen/src/ownership.ts`
+and `packages/workspace-codegen/src/ownership.test.ts`,
+`packages/sdk/src/reducer/ingress/runtime-payload.ts`, and
+`packages/workspace-codegen/src/manifest-contract.ts`,
+`packages/sdk/src/reducer/table/resource-ops.ts`, and
+`packages/sdk/src/runtime/plugin-protocol.ts`,
+`packages/sdk/src/reducer/table/card-mutations.ts`, and the concurrent
+`packages/sdk/src/runtime/hooks/useBoundInteractionHandle.ts`,
+`packages/workspace-codegen/src/manifest-validation.ts`,
+`scripts/assert-sdk-export-parity.mjs`, `scripts/smoke-packed-sdk.mjs`,
+`packages/sdk/src/browser-interaction/browser-interaction.test.ts`,
+`packages/sdk/src/runtime-json.test.ts`,
+`packages/sdk/src/runtime/api/createPluginRuntimeAPI.test.ts`, and
+`packages/workspace-codegen/src/manifest-contract.test.ts`, and
+`packages/sdk/src/reducer/ingress/runtime-codec.test.ts`, and
+`packages/sdk/src/reducer/table/card-mutations.test.ts`; the lockfile changes
+from adding `eslint-plugin-react-hooks` must also remain Prettier-formatted.
 
 ### 4. Make generation checks write only to a temporary output root
 

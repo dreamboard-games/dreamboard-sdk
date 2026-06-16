@@ -1,7 +1,8 @@
 export function toDomainState<State extends { runtime: unknown }, DomainState>(
   state: State,
 ): DomainState {
-  const { runtime: _runtime, ...domain } = state;
+  const domain = { ...state } as Omit<State, "runtime"> & { runtime?: unknown };
+  delete domain.runtime;
   attachPhaseAccessor(domain);
   return domain as DomainState;
 }

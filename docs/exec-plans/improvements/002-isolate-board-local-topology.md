@@ -1,6 +1,6 @@
 # 002 Isolate Board-Local Topology
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: High
 - Effort: Small

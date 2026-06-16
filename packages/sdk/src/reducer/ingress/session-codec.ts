@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { safeParseOrThrow } from "../parse-utils";
+import { runtimePayloadSchema } from "./runtime-payload";
 import type {
   BaseGameSessionOfContract,
   GameStateOf,
@@ -24,16 +25,6 @@ import type { IngressRuntimeCodec, RawReducerSessionState } from "./raw-types";
 import { createRuntimeInputParser } from "./input-codec";
 import { collectIngressPhaseSchemas } from "./phase-schemas";
 
-const runtimePayloadSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    z.array(runtimePayloadSchema),
-    z.record(z.string(), runtimePayloadSchema),
-  ]),
-);
 const runtimeRecordSchema = z.record(z.string(), runtimePayloadSchema);
 const perPlayerSchema = <Value extends z.ZodTypeAny>(valueSchema: Value) =>
   z
