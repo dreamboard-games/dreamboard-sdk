@@ -2500,16 +2500,16 @@ _No JSDoc summary is available yet._
 ### GameStateOf
 
 ```ts
-type GameStateOf<Source> =
-  Source extends ReducerGameDefinition<
-    infer Contract,
-    infer Definitions,
-    infer _Views
-  >
+type GameStateOf<Source> = Source extends {
+  contract: infer Contract extends ReducerGameContractLike;
+  phases: infer Definitions;
+}
+  ? Definitions extends PhaseMapOf<Contract>
     ? ResolvedGameStateOf<Contract, Definitions>
-    : Source extends ReducerGameContract<any, any, any, any, any, any, any>
-      ? BaseGameStateOfContract<Source>
-      : never;
+    : never
+  : Source extends ReducerGameContract<any, any, any, any, any, any, any>
+    ? BaseGameStateOfContract<Source>
+    : never;
 ```
 
 _No JSDoc summary is available yet._
@@ -3789,7 +3789,19 @@ _No JSDoc summary is available yet._
 ### CardInputZoneIdsOfDefinition
 
 ```ts
-type CardInputZoneIdsOfDefinition = ...;
+type CardInputZoneIdsOfDefinition<
+  Definition,
+  PhaseName extends PhaseNamesOfDefinition<Definition>,
+  InteractionId extends InteractionIdOfDefinitionPhase<Definition, PhaseName>,
+  Input extends string,
+> =
+  InteractionSpecByNameOfDefinitionPhase<
+    Definition,
+    PhaseName,
+    InteractionId
+  > extends infer Spec
+    ? CardInputZoneIdsOfInteractionDefinition<Spec, Input>
+    : never;
 ```
 
 _No JSDoc summary is available yet._
@@ -4102,7 +4114,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ContinuationResponseOf<Token> =
-  Token extends ContinuationToken<any, string, infer Response>
+  Token extends ContinuationToken<unknown, string, infer Response>
     ? Response
     : never;
 ```
@@ -4227,7 +4239,19 @@ _No JSDoc summary is available yet._
 ### DefaultedClientParamKeysOfInteractionOfDefinition
 
 ```ts
-type DefaultedClientParamKeysOfInteractionOfDefinition = ...;
+type DefaultedClientParamKeysOfInteractionOfDefinition<
+  Definition,
+  PhaseName extends PhaseNamesOfDefinition<Definition>,
+  InteractionId extends InteractionIdOfDefinitionPhase<Definition, PhaseName>,
+> =
+  InteractionSpecByNameOfDefinitionPhase<
+    Definition,
+    PhaseName,
+    InteractionId
+  > extends infer Spec
+    ? DefaultedClientCollectorKeys<CollectorsOfInteractionDefinition<Spec>> &
+        string
+    : never;
 ```
 
 _No JSDoc summary is available yet._
@@ -4494,16 +4518,16 @@ _No JSDoc summary is available yet._
 ### GameStateOf
 
 ```ts
-type GameStateOf<Source> =
-  Source extends ReducerGameDefinition<
-    infer Contract,
-    infer Definitions,
-    infer _Views
-  >
+type GameStateOf<Source> = Source extends {
+  contract: infer Contract extends ReducerGameContractLike;
+  phases: infer Definitions;
+}
+  ? Definitions extends PhaseMapOf<Contract>
     ? ResolvedGameStateOf<Contract, Definitions>
-    : Source extends ReducerGameContract<any, any, any, any, any, any, any>
-      ? BaseGameStateOfContract<Source>
-      : never;
+    : never
+  : Source extends ReducerGameContract<any, any, any, any, any, any, any>
+    ? BaseGameStateOfContract<Source>
+    : never;
 ```
 
 _No JSDoc summary is available yet._
@@ -4752,8 +4776,8 @@ _No JSDoc summary is available yet._
 ```ts
 type HiddenSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
-    infer _PrivateSchema,
+    SchemaLike<object>,
+    SchemaLike<object>,
     infer HiddenSchema
   >
     ? HiddenSchema
@@ -4914,7 +4938,19 @@ _No JSDoc summary is available yet._
 ### InputKeysWithCollectorKindOfDefinition
 
 ```ts
-type InputKeysWithCollectorKindOfDefinition = ...;
+type InputKeysWithCollectorKindOfDefinition<
+  Definition,
+  PhaseName extends PhaseNamesOfDefinition<Definition>,
+  InteractionId extends InteractionIdOfDefinitionPhase<Definition, PhaseName>,
+  Kind extends string,
+> =
+  InteractionSpecByNameOfDefinitionPhase<
+    Definition,
+    PhaseName,
+    InteractionId
+  > extends infer Spec
+    ? InputKeysWithCollectorKindOfInteractionDefinition<Spec, Kind>
+    : never;
 ```
 
 _No JSDoc summary is available yet._
@@ -5623,9 +5659,9 @@ _No JSDoc summary is available yet._
 ```ts
 type PrivateSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
+    SchemaLike<object>,
     infer PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>
   >
     ? PrivateSchema
     : never;
@@ -5690,8 +5726,8 @@ _No JSDoc summary is available yet._
 type PublicSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
     infer PublicSchema,
-    infer _PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>,
+    SchemaLike<object>
   >
     ? PublicSchema
     : never;
@@ -6514,7 +6550,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface RuntimeRecord {
-  [key: string]: RuntimePayload | undefined;
+  [key: string]: RuntimePayload;
 }
 ```
 
@@ -7907,11 +7943,9 @@ type ViewOfDefinition<
   Definition,
   ViewName extends ViewNamesOfDefinition<Definition>,
 > =
-  ViewDefinitionByName<Definition, ViewName> extends ViewDefinition<
-    infer _State,
-    infer _Manifest,
-    infer Projection
-  >
+  ViewDefinitionByName<Definition, ViewName> extends {
+    project: (...args: never[]) => infer Projection;
+  }
     ? Projection
     : never;
 ```
@@ -11787,19 +11821,6 @@ function useChromeSuppression(id: string, suppressed: boolean): void;
 
 _No JSDoc summary is available yet._
 
-### useHandLayout
-
-```ts
-function useHandLayout({
-  cardCount,
-  cardSize,
-  layout,
-  containerPadding,
-}: UseHandLayoutOptions): UseHandLayoutReturn;
-```
-
-Hook for managing hand layout calculations and interactions.
-
 ### UseHandLayoutOptions
 
 ```ts
@@ -11840,14 +11861,6 @@ function useMobileHandTrayActive(): boolean;
 ```
 
 Whether the mobile hand tray is currently presenting hands — i.e. the viewport is below the mobile breakpoint and at least one primary/auxiliary hand has registered. Authors can use this to drop redundant inline hand chrome (labels, framing) that the tray already provides, instead of guessing the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
-
-### usePanZoom
-
-```ts
-function usePanZoom(options?: UsePanZoomOptions): UsePanZoomReturn;
-```
-
-Hook for pan and zoom gestures on board components
 
 ### UsePanZoomOptions
 
@@ -15316,7 +15329,7 @@ _No JSDoc summary is available yet._
 ```ts
 function createWorkspaceUIContract<
   WorkspaceUI,
-  Contract extends UIContract$1,
+  Contract extends UIContract,
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
@@ -15339,7 +15352,9 @@ _No JSDoc summary is available yet._
 ### DreamboardUIRegister
 
 ```ts
-interface DreamboardUIRegister {}
+interface DreamboardUIRegister {
+  readonly __dreamboardUIRegister?: never;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -17913,14 +17928,6 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/runtime/workspace-contract
 
-### a
-
-```ts
-interface a { ... }
-```
-
-_No JSDoc summary is available yet._
-
 ### BoardHexGridProps
 
 ```ts
@@ -17983,7 +17990,7 @@ _No JSDoc summary is available yet._
 ```ts
 function createWorkspaceUIContract<
   WorkspaceUI,
-  Contract extends UIContract$1,
+  Contract extends UIContract,
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
@@ -17994,19 +18001,10 @@ function createWorkspaceUIContract<
 
 _No JSDoc summary is available yet._
 
-### D
-
-```ts
-interface DreamboardUIRegister {}
-```
-
-_No JSDoc summary is available yet._
-
 ### DreamboardUI
 
 ```ts
-type DreamboardUI<Contract extends UIContract = RegisteredUI> =
-  DreamboardUI$1<Contract>;
+interface DreamboardUI { ... }
 ```
 
 _No JSDoc summary is available yet._
@@ -18076,28 +18074,6 @@ interface GameTurnState<
 
 _No JSDoc summary is available yet._
 
-### P
-
-```ts
-function P({
-  children,
-  timeout,
-  loadingComponent,
-  errorComponent,
-  onDiagnostic,
-}: PluginRuntimeProps): react_jsx_runtime.JSX.Element;
-```
-
-PluginRuntime provides the RuntimeContext for plugin components.
-
-### R
-
-```ts
-type RegisteredUI = RegisteredUIContract;
-```
-
-_No JSDoc summary is available yet._
-
 ### ResourceCounterComponents
 
 ```ts
@@ -18116,11 +18092,16 @@ _No JSDoc summary is available yet._
 
 ```ts
 type TypedGame<
-  Contract extends UIContract,
+  _Contract extends UIContract,
   View = unknown,
-  Player extends string = string,
-  Phase extends string = string,
-> = TypedGame$1<Contract, View, Player, Phase>;
+  Player extends string = PlayerKey<_Contract>,
+  Phase extends string = PhaseKey<_Contract>,
+> = Omit<typeof Game, "Root"> & {
+  Root(props: GameRootProps<View, Player, Phase>): ReactElement;
+  Chrome(
+    props: GameChromeProps<View, Player, Phase, InteractionKey<_Contract>>,
+  ): ReactElement;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -18128,7 +18109,17 @@ _No JSDoc summary is available yet._
 ### UIContract
 
 ```ts
-type UIContract = UIContract$1;
+interface UIContract {
+  interactions?: UIContractBucket;
+  inputs?: UIContractBucket;
+  prompts?: UIContractBucket;
+  promptOptions?: UIContractBucket;
+  players?: UIContractBucket;
+  zones?: UIContractBucket;
+  cards?: UIContractBucket;
+  phases?: UIContractBucket;
+  boardTargets?: UIContractBucket;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -19196,7 +19187,13 @@ const browserInteractionEffectSchema: z.ZodObject<
     kind: z.ZodString;
   },
   z.core.$catchall<
-    z.ZodType<unknown, unknown, z.core.$ZodTypeInternals<unknown, unknown>>
+    z.ZodPreprocess<
+      z.ZodType<
+        RuntimeJson,
+        unknown,
+        z.core.$ZodTypeInternals<RuntimeJson, unknown>
+      >
+    >
   >
 >;
 ```

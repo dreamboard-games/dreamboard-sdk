@@ -42,7 +42,7 @@ type TestTable = Omit<
   resources: TestPerPlayer<RuntimeRecord>;
 };
 
-function testPerPlayer<Value>(_value: Value): TestPerPlayer<Value> {
+function testPerPlayer<Value>(): TestPerPlayer<Value> {
   return { __perPlayer: true, entries: [] };
 }
 
@@ -189,13 +189,14 @@ describe("interaction input id types", () => {
   test("does not expose raw form inputs for author-provided Zod schemas", () => {
     expect("raw" in formInput).toBe(false);
 
-    if (false) {
+    const assertRawFormInputsRejected = () => {
       // @ts-expect-error raw Zod schemas are not default-renderable inputs.
       formInput.raw(z.string());
 
       // @ts-expect-error arbitrary Zod schemas are not default-renderable inputs.
       formInput(z.string());
-    }
+    };
+    expect(typeof assertRawFormInputsRejected).toBe("function");
   });
 
   test("contract-declared error maps type authored rule and reject codes", () => {
@@ -254,6 +255,7 @@ describe("interaction input id types", () => {
       });
     };
     expect(typeof assertErrorCodeTypes).toBe("function");
+    expect(phaseState.parse({})).toEqual({});
 
     type State = GameStateOf<typeof contract>;
     const assertStateExtraction = (state: State) => {
@@ -312,6 +314,7 @@ describe("interaction input id types", () => {
     );
 
     expect(Object.keys(interaction.inputs)).toEqual(["cardId", "cardType"]);
+    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
   });
 
   test("state-bound formInput helpers type dynamic choice context", () => {
@@ -329,7 +332,7 @@ describe("interaction input id types", () => {
       defaultValue: [],
     });
 
-    if (false) {
+    const assertChoiceContextTypes = () => {
       input.choice({
         choices: ({ playerId }) => {
           const typedPlayerId: TestPlayerId = playerId;
@@ -338,9 +341,10 @@ describe("interaction input id types", () => {
         },
         defaultValue: "card-1",
       });
-    }
+    };
 
     expect(selectedCards.defaultValue).toEqual([]);
+    expect(typeof assertChoiceContextTypes).toBe("function");
   });
 
   test("types card action playerId and implicit cardId from manifest schemas", () => {
@@ -368,6 +372,8 @@ describe("interaction input id types", () => {
     });
 
     expect(action.cardType).toBe("action");
+    expect(contract.phaseNames).toEqual(["play"]);
+    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
   });
 
   test("types many collectors as readonly arrays of base input values", () => {
@@ -404,7 +410,7 @@ describe("interaction input id types", () => {
       },
     );
 
-    if (false) {
+    const assertManyCommitTypes = () => {
       defineInteraction<typeof contract, typeof phaseState>()({
         // @ts-expect-error many(...) inputs are explicit draft selections and cannot auto-submit.
         commit: { mode: "autoWhenReady" },
@@ -430,9 +436,11 @@ describe("interaction input id types", () => {
         },
         reduce: ({ state, accept }) => accept(state),
       });
-    }
+    };
 
     expect(Object.keys(interaction.inputs)).toEqual(["cardIds"]);
+    expect(typeof assertManyCommitTypes).toBe("function");
+    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
   });
 
   test("types simultaneous submit params with precise input keys", () => {
@@ -476,7 +484,7 @@ describe("interaction input id types", () => {
     const hasBroadKeys: HasBroadKeys = false;
     const params: SubmitParams = { cardIds: ["card-1", "card-2"] };
 
-    if (false) {
+    const assertSubmitParamTypes = () => {
       // @ts-expect-error simultaneous submit params should expose authored keys, not arbitrary strings.
       const badKey: SubmitKeys = "whatever";
       void badKey;
@@ -497,9 +505,11 @@ describe("interaction input id types", () => {
         },
         resolve: ({ state, accept }) => accept(state),
       });
-    }
+    };
 
     expect(Object.keys(play.submit?.inputs ?? {})).toEqual(["cardIds"]);
+    expect(game.phases.play).toBe(play);
+    expect(typeof assertSubmitParamTypes).toBe("function");
     void cardIds;
     void hasBroadKeys;
     void params;
@@ -547,7 +557,7 @@ describe("interaction input id types", () => {
       cardId: (slot) => slot.key,
     } satisfies PlannedFormInputs;
 
-    if (false) {
+    const assertGeneratedFormInputTypes = () => {
       // @ts-expect-error generated form inputs must include every key.
       const missing = {} satisfies PlannedFormInputs;
       void missing;
@@ -558,9 +568,11 @@ describe("interaction input id types", () => {
         spaceId: (slot: { key: "spaceId" }) => slot.key,
       } satisfies PlannedFormInputs;
       void extra;
-    }
+    };
 
     expect(Object.keys(play.interactions ?? {})).toEqual(["chooseCard"]);
+    expect(game.phases.play).toBe(play);
+    expect(typeof assertGeneratedFormInputTypes).toBe("function");
     void valid;
   });
 
@@ -581,11 +593,13 @@ describe("interaction input id types", () => {
             dependsOn: [spaceId],
             choices: ({ values }) => {
               const selectedSpace: "hex-a" = values.spaceId;
-              if (false) {
+              const assertDependencyValues = () => {
                 // @ts-expect-error undeclared sibling inputs are not visible.
-                values.cardId;
-              }
+                const cardId = values.cardId;
+                void cardId;
+              };
               void selectedSpace;
+              void assertDependencyValues;
               return [{ value: "player-1", label: "Player 1" }];
             },
             defaultValue: "player-1",
@@ -611,11 +625,13 @@ describe("interaction input id types", () => {
           count: 1,
         });
         const cardId: TestCardId = selected[0]!;
-        if (false) {
+        const assertEnterRuntimeShape = () => {
           // @ts-expect-error runtime rng is internal; authored mutation callbacks use random helpers.
-          runtime.rng;
-        }
+          const rng = runtime.rng;
+          void rng;
+        };
         void cardId;
+        void assertEnterRuntimeShape;
         return accept(state);
       },
       interactions: {
@@ -627,11 +643,13 @@ describe("interaction input id types", () => {
               count: 1,
             });
             const cardId: TestCardId = selected[0]!;
-            if (false) {
+            const assertReduceRuntimeShape = () => {
               // @ts-expect-error runtime rng is internal; authored reducers use random helpers.
-              runtime.rng;
-            }
+              const rng = runtime.rng;
+              void rng;
+            };
             void cardId;
+            void assertReduceRuntimeShape;
             return accept(state);
           },
         }),
@@ -639,5 +657,6 @@ describe("interaction input id types", () => {
     });
 
     expect(Object.keys(phase.interactions ?? {})).toEqual(["choose"]);
+    expect(contract.phaseNames).toEqual(["play"]);
   });
 });

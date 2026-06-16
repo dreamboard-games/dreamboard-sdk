@@ -1278,6 +1278,8 @@ describe("trusted interaction decision pipeline", () => {
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
 
+    expect(contract.phaseNames).toEqual(["takeTurn"]);
+    expect(phaseState.parse({})).toEqual({});
     expect(() =>
       defineInteraction<typeof contract, typeof phaseState>()({
         commit: { mode: "autoWhenReady" } as never,

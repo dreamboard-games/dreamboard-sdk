@@ -11,6 +11,7 @@ import type {
   GameTopologyManifest,
   PieceSeedSpec,
   PieceTypeSpec,
+  PropertySchema,
   SetupOptionSpec,
   ZoneSpec,
 } from "@dreamboard-games/sdk-types";
@@ -59,6 +60,65 @@ function collectDuplicateIdIssues(options: {
   return issues;
 }
 
+const PROTOTYPE_SENSITIVE_KEYS = new Set([
+  "__proto__",
+  "prototype",
+  "constructor",
+]);
+
+function validateRecordKey(
+  value: string | null | undefined,
+  path: string,
+): string[] {
+  if (!value || !PROTOTYPE_SENSITIVE_KEYS.has(value)) {
+    return [];
+  }
+  return [
+    `${path}: '${value}' is reserved and cannot be used as a generated record key.`,
+  ];
+}
+
+function collectKeyIssues(
+  entries: ReadonlyArray<{ value?: string | null; path: string }>,
+): string[] {
+  return entries.flatMap(({ value, path }) => validateRecordKey(value, path));
+}
+
+function toHandleKey(input: string): string {
+  if (!/[_-]/.test(input)) {
+    return input.charAt(0).toLowerCase() + input.slice(1);
+  }
+  const [first = "", ...rest] = input.split(/[_-]/g).filter(Boolean);
+  return [
+    first.toLowerCase(),
+    ...rest.map((part) => {
+      const lower = part.toLowerCase();
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }),
+  ].join("");
+}
+
+function collectHandleKeyCollisions(
+  values: readonly string[],
+  label: string,
+): string[] {
+  const idsByHandle = new Map<string, string[]>();
+  for (const value of values) {
+    const handle = toHandleKey(value);
+    idsByHandle.set(handle, [...(idsByHandle.get(handle) ?? []), value]);
+  }
+  return [...idsByHandle.entries()]
+    .filter(([, ids]) => ids.length > 1)
+    .map(
+      ([handle, ids]) =>
+        `${label} values ${ids.join(", ")} all generate handle '${handle}'.`,
+    );
+}
+
+function dedupeSorted(values: Iterable<string>): string[] {
+  return Array.from(new Set(values)).sort();
+}
+
 function renderCardInstanceIds(card: BoardCard): string[] {
   return card.count > 1
     ? Array.from(
@@ -66,6 +126,91 @@ function renderCardInstanceIds(card: BoardCard): string[] {
         (_, index) => `${card.type}-${index + 1}`,
       )
     : [card.type];
+}
+
+function collectPropertySchemaKeyIssues(
+  schema: PropertySchema | null | undefined,
+  path: string,
+): string[] {
+  if (!schema) {
+    return [];
+  }
+  const issues: string[] = [];
+  if (schema.type === "object") {
+    for (const [key, property] of Object.entries(schema.properties ?? {})) {
+      issues.push(
+        ...validateRecordKey(key, `${path}.properties.${key}`),
+        ...collectPropertySchemaKeyIssues(
+          property,
+          `${path}.properties.${key}`,
+        ),
+      );
+    }
+  }
+  if (schema.type === "array") {
+    issues.push(
+      ...collectPropertySchemaKeyIssues(schema.items, `${path}.items`),
+    );
+  }
+  if (schema.type === "record") {
+    issues.push(
+      ...collectPropertySchemaKeyIssues(schema.values, `${path}.values`),
+    );
+  }
+  return issues;
+}
+
+function collectObjectSchemaKeyIssues(
+  schema:
+    | {
+        properties?: Record<string, PropertySchema>;
+      }
+    | null
+    | undefined,
+  path: string,
+): string[] {
+  const issues: string[] = [];
+  for (const [key, property] of Object.entries(schema?.properties ?? {})) {
+    issues.push(
+      ...validateRecordKey(key, `${path}.properties.${key}`),
+      ...collectPropertySchemaKeyIssues(property, `${path}.properties.${key}`),
+    );
+  }
+  return issues;
+}
+
+function collectCardSchemaKeyIssues(
+  cardSet: GameTopologyManifest["cardSets"][number],
+  path: string,
+): string[] {
+  if (cardSet.type !== "manual") {
+    return [];
+  }
+  const schema = cardSet.cardSchema;
+  if ("variants" in schema) {
+    return [
+      ...Object.entries(schema.shared ?? {}).flatMap(([key, property]) => [
+        ...validateRecordKey(key, `${path}.cardSchema.shared.${key}`),
+        ...collectPropertySchemaKeyIssues(
+          property,
+          `${path}.cardSchema.shared.${key}`,
+        ),
+      ]),
+      ...Object.entries(schema.variants).flatMap(
+        ([variantKey, variantSchema]) => [
+          ...validateRecordKey(
+            variantKey,
+            `${path}.cardSchema.variants.${variantKey}`,
+          ),
+          ...collectObjectSchemaKeyIssues(
+            variantSchema,
+            `${path}.cardSchema.variants.${variantKey}`,
+          ),
+        ],
+      ),
+    ];
+  }
+  return collectObjectSchemaKeyIssues(schema, `${path}.cardSchema`);
 }
 
 function expandSeedIds<
@@ -311,10 +456,51 @@ function validatePlayerScopedSeedHomes(
   return issues;
 }
 
+function validateCardHomes(manifest: GameTopologyManifest): string[] {
+  const issues: string[] = [];
+  const boardScopeById = new Map(
+    (manifest.boards ?? []).map((board) => [board.id, board.scope] as const),
+  );
+  const zoneScopeById = new Map(
+    (manifest.zones ?? []).map((zone) => [zone.id, zone.scope] as const),
+  );
+
+  for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
+    if (cardSet.type !== "manual") {
+      continue;
+    }
+    for (const [cardIndex, card] of cardSet.cards.entries()) {
+      const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
+      if (
+        card.home?.type === "zone" &&
+        zoneScopeById.get(card.home.zoneId) === "perPlayer"
+      ) {
+        issues.push(
+          `${path}.zoneId: Card '${card.type}' cannot target per-player zone '${card.home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+        );
+      }
+      if (
+        homeTargetsBoard(card.home) &&
+        boardScopeById.get(card.home.boardId) === "perPlayer"
+      ) {
+        issues.push(
+          `${path}.boardId: Card '${card.type}' cannot target per-player board '${card.home.boardId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+        );
+      }
+    }
+  }
+
+  return issues;
+}
+
 function homeTargetsBoard(
-  home: PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
+  home:
+    | BoardCard["home"]
+    | PieceSeedSpec["home"]
+    | DieSeedSpec["home"]
+    | undefined,
 ): home is Extract<
-  NonNullable<PieceSeedSpec["home"] | DieSeedSpec["home"]>,
+  NonNullable<BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"]>,
   { type: "space" | "container" | "edge" | "vertex" }
 > {
   return (
@@ -649,11 +835,371 @@ function collectAmbiguousBoardTypeWarnings(
   return warnings;
 }
 
+function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
+  const issues: string[] = [];
+  const maxPlayers = manifest.players.maxPlayers;
+  const playerIds = Array.from(
+    { length: maxPlayers },
+    (_, index) => `player-${index + 1}`,
+  );
+
+  for (const [templateIndex, boardTemplate] of (
+    manifest.boardTemplates ?? []
+  ).entries()) {
+    const templatePath = `manifest.boardTemplates[${templateIndex}]`;
+    issues.push(
+      ...collectKeyIssues([
+        { value: boardTemplate.id, path: `${templatePath}.id` },
+        { value: boardTemplate.typeId, path: `${templatePath}.typeId` },
+      ]),
+      ...collectObjectSchemaKeyIssues(
+        boardTemplate.boardFieldsSchema,
+        `${templatePath}.boardFieldsSchema`,
+      ),
+      ...collectObjectSchemaKeyIssues(
+        boardTemplate.spaceFieldsSchema,
+        `${templatePath}.spaceFieldsSchema`,
+      ),
+    );
+
+    if (boardTemplate.layout !== "hex") {
+      issues.push(
+        ...collectObjectSchemaKeyIssues(
+          boardTemplate.relationFieldsSchema,
+          `${templatePath}.relationFieldsSchema`,
+        ),
+        ...collectObjectSchemaKeyIssues(
+          boardTemplate.containerFieldsSchema,
+          `${templatePath}.containerFieldsSchema`,
+        ),
+        ...collectKeyIssues([
+          ...(boardTemplate.containers ?? []).flatMap(
+            (container, containerIndex) => [
+              {
+                value: container.id,
+                path: `${templatePath}.containers[${containerIndex}].id`,
+              },
+              {
+                value:
+                  container.host.type === "space"
+                    ? container.host.spaceId
+                    : undefined,
+                path: `${templatePath}.containers[${containerIndex}].host.spaceId`,
+              },
+            ],
+          ),
+          ...(boardTemplate.relations ?? []).flatMap(
+            (relation, relationIndex) => [
+              {
+                value: relation.id,
+                path: `${templatePath}.relations[${relationIndex}].id`,
+              },
+              {
+                value: relation.typeId,
+                path: `${templatePath}.relations[${relationIndex}].typeId`,
+              },
+              {
+                value: relation.fromSpaceId,
+                path: `${templatePath}.relations[${relationIndex}].fromSpaceId`,
+              },
+              {
+                value: relation.toSpaceId,
+                path: `${templatePath}.relations[${relationIndex}].toSpaceId`,
+              },
+            ],
+          ),
+        ]),
+      );
+    }
+
+    if (boardTemplate.layout !== "generic") {
+      issues.push(
+        ...collectObjectSchemaKeyIssues(
+          boardTemplate.edgeFieldsSchema,
+          `${templatePath}.edgeFieldsSchema`,
+        ),
+        ...collectObjectSchemaKeyIssues(
+          boardTemplate.vertexFieldsSchema,
+          `${templatePath}.vertexFieldsSchema`,
+        ),
+        ...collectKeyIssues([
+          ...(boardTemplate.edges ?? []).map((edge, edgeIndex) => ({
+            value: edge.typeId,
+            path: `${templatePath}.edges[${edgeIndex}].typeId`,
+          })),
+          ...(boardTemplate.vertices ?? []).map((vertex, vertexIndex) => ({
+            value: vertex.typeId,
+            path: `${templatePath}.vertices[${vertexIndex}].typeId`,
+          })),
+        ]),
+      );
+    }
+
+    issues.push(
+      ...collectKeyIssues(
+        (boardTemplate.spaces ?? []).flatMap((space, spaceIndex) => [
+          {
+            value: space.id,
+            path: `${templatePath}.spaces[${spaceIndex}].id`,
+          },
+          {
+            value: space.typeId,
+            path: `${templatePath}.spaces[${spaceIndex}].typeId`,
+          },
+        ]),
+      ),
+    );
+  }
+
+  for (const [boardIndex, board] of (manifest.boards ?? []).entries()) {
+    const boardPath = `manifest.boards[${boardIndex}]`;
+    const runtimeBoardIds =
+      board.scope === "perPlayer"
+        ? playerIds.map((playerId) => `${board.id}:${playerId}`)
+        : [board.id];
+    issues.push(
+      ...collectKeyIssues([
+        { value: board.id, path: `${boardPath}.id` },
+        { value: board.typeId, path: `${boardPath}.typeId` },
+        { value: board.templateId, path: `${boardPath}.templateId` },
+        ...runtimeBoardIds.map((runtimeBoardId) => ({
+          value: runtimeBoardId,
+          path: `${boardPath}.runtimeBoardId`,
+        })),
+      ]),
+      ...collectObjectSchemaKeyIssues(
+        board.boardFieldsSchema,
+        `${boardPath}.boardFieldsSchema`,
+      ),
+      ...collectObjectSchemaKeyIssues(
+        board.spaceFieldsSchema,
+        `${boardPath}.spaceFieldsSchema`,
+      ),
+    );
+
+    if (board.layout !== "hex") {
+      issues.push(
+        ...collectObjectSchemaKeyIssues(
+          board.relationFieldsSchema,
+          `${boardPath}.relationFieldsSchema`,
+        ),
+        ...collectObjectSchemaKeyIssues(
+          board.containerFieldsSchema,
+          `${boardPath}.containerFieldsSchema`,
+        ),
+        ...collectKeyIssues([
+          ...(board.containers ?? []).flatMap((container, containerIndex) => [
+            {
+              value: container.id,
+              path: `${boardPath}.containers[${containerIndex}].id`,
+            },
+            {
+              value:
+                container.host.type === "space"
+                  ? container.host.spaceId
+                  : undefined,
+              path: `${boardPath}.containers[${containerIndex}].host.spaceId`,
+            },
+          ]),
+          ...(board.relations ?? []).flatMap((relation, relationIndex) => [
+            {
+              value: relation.id,
+              path: `${boardPath}.relations[${relationIndex}].id`,
+            },
+            {
+              value: relation.typeId,
+              path: `${boardPath}.relations[${relationIndex}].typeId`,
+            },
+            {
+              value: relation.fromSpaceId,
+              path: `${boardPath}.relations[${relationIndex}].fromSpaceId`,
+            },
+            {
+              value: relation.toSpaceId,
+              path: `${boardPath}.relations[${relationIndex}].toSpaceId`,
+            },
+          ]),
+        ]),
+      );
+    }
+
+    if (board.layout !== "generic") {
+      issues.push(
+        ...collectObjectSchemaKeyIssues(
+          board.edgeFieldsSchema,
+          `${boardPath}.edgeFieldsSchema`,
+        ),
+        ...collectObjectSchemaKeyIssues(
+          board.vertexFieldsSchema,
+          `${boardPath}.vertexFieldsSchema`,
+        ),
+        ...collectKeyIssues([
+          ...(board.edges ?? []).map((edge, edgeIndex) => ({
+            value: edge.typeId,
+            path: `${boardPath}.edges[${edgeIndex}].typeId`,
+          })),
+          ...(board.vertices ?? []).map((vertex, vertexIndex) => ({
+            value: vertex.typeId,
+            path: `${boardPath}.vertices[${vertexIndex}].typeId`,
+          })),
+        ]),
+      );
+    }
+
+    issues.push(
+      ...collectKeyIssues(
+        (board.spaces ?? []).flatMap((space, spaceIndex) => [
+          {
+            value: space.id,
+            path: `${boardPath}.spaces[${spaceIndex}].id`,
+          },
+          {
+            value: space.typeId,
+            path: `${boardPath}.spaces[${spaceIndex}].typeId`,
+          },
+        ]),
+      ),
+    );
+  }
+
+  return issues;
+}
+
+function collectManifestRecordKeyIssues(
+  manifest: GameTopologyManifest,
+): string[] {
+  const cardSets = manifest.cardSets;
+  const manualCards = cardSets.flatMap((cardSet, cardSetIndex) =>
+    cardSet.type === "manual"
+      ? cardSet.cards.flatMap((card, cardIndex) =>
+          renderCardInstanceIds(card).map((cardId) => ({
+            card,
+            cardId,
+            cardIndex,
+            cardSetIndex,
+          })),
+        )
+      : [],
+  );
+
+  return [
+    ...collectKeyIssues([
+      ...cardSets.map((cardSet, index) => ({
+        value: cardSet.id,
+        path: `manifest.cardSets[${index}].id`,
+      })),
+      ...manualCards.flatMap(({ card, cardId, cardIndex, cardSetIndex }) => [
+        {
+          value: card.type,
+          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].type`,
+        },
+        {
+          value: card.cardType,
+          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].cardType`,
+        },
+        {
+          value: cardId,
+          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].runtimeId`,
+        },
+      ]),
+      ...(manifest.zones ?? []).map((zone, index) => ({
+        value: zone.id,
+        path: `manifest.zones[${index}].id`,
+      })),
+      ...(manifest.resources ?? []).map((resource, index) => ({
+        value: resource.id,
+        path: `manifest.resources[${index}].id`,
+      })),
+      ...(manifest.pieceTypes ?? []).flatMap((pieceType, typeIndex) => [
+        {
+          value: pieceType.id,
+          path: `manifest.pieceTypes[${typeIndex}].id`,
+        },
+        ...(pieceType.slots ?? []).map((slot, slotIndex) => ({
+          value: slot.id,
+          path: `manifest.pieceTypes[${typeIndex}].slots[${slotIndex}].id`,
+        })),
+      ]),
+      ...(manifest.dieTypes ?? []).flatMap((dieType, typeIndex) => [
+        {
+          value: dieType.id,
+          path: `manifest.dieTypes[${typeIndex}].id`,
+        },
+        ...(dieType.slots ?? []).map((slot, slotIndex) => ({
+          value: slot.id,
+          path: `manifest.dieTypes[${typeIndex}].slots[${slotIndex}].id`,
+        })),
+      ]),
+      ...expandSeedIds(manifest.pieceSeeds ?? []).map((pieceId, index) => ({
+        value: pieceId,
+        path: `manifest.pieceSeeds[*][${index}]`,
+      })),
+      ...expandSeedIds(manifest.dieSeeds ?? []).map((dieId, index) => ({
+        value: dieId,
+        path: `manifest.dieSeeds[*][${index}]`,
+      })),
+      ...(manifest.setupOptions ?? []).flatMap((option, optionIndex) => [
+        {
+          value: option.id,
+          path: `manifest.setupOptions[${optionIndex}].id`,
+        },
+        ...(option.choices ?? []).map((choice, choiceIndex) => ({
+          value: choice.id,
+          path: `manifest.setupOptions[${optionIndex}].choices[${choiceIndex}].id`,
+        })),
+      ]),
+      ...(manifest.setupProfiles ?? []).flatMap((profile, profileIndex) => [
+        {
+          value: profile.id,
+          path: `manifest.setupProfiles[${profileIndex}].id`,
+        },
+        ...Object.entries(profile.optionValues ?? {}).flatMap(
+          ([optionId, choiceId]) => [
+            {
+              value: optionId,
+              path: `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}`,
+            },
+            {
+              value: choiceId,
+              path: `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}`,
+            },
+          ],
+        ),
+      ]),
+    ]),
+    ...cardSets.flatMap((cardSet, cardSetIndex) =>
+      collectCardSchemaKeyIssues(cardSet, `manifest.cardSets[${cardSetIndex}]`),
+    ),
+    ...(manifest.pieceTypes ?? []).flatMap((pieceType, typeIndex) =>
+      collectObjectSchemaKeyIssues(
+        pieceType.fieldsSchema,
+        `manifest.pieceTypes[${typeIndex}].fieldsSchema`,
+      ),
+    ),
+    ...(manifest.dieTypes ?? []).flatMap((dieType, typeIndex) =>
+      collectObjectSchemaKeyIssues(
+        dieType.fieldsSchema,
+        `manifest.dieTypes[${typeIndex}].fieldsSchema`,
+      ),
+    ),
+    ...collectBoardRecordKeyIssues(manifest),
+    ...collectHandleKeyCollisions(
+      dedupeSorted(manualCards.map(({ card }) => card.cardType ?? card.type)),
+      "Card type",
+    ),
+    ...collectHandleKeyCollisions(
+      dedupeSorted((manifest.zones ?? []).map((zone) => zone.id)),
+      "Zone",
+    ),
+  ];
+}
+
 export function validateManifestAuthoring(
   manifest: GameTopologyManifest,
 ): ManifestAuthoringValidationResult {
   const errors: string[] = [];
 
+  errors.push(...collectManifestRecordKeyIssues(manifest));
   errors.push(
     ...collectDuplicateIdIssues({
       entries: manifest.cardSets.map((cardSet, index) => ({
@@ -785,6 +1331,7 @@ export function validateManifestAuthoring(
   );
   errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
+  errors.push(...validateCardHomes(manifest));
   errors.push(...validateSetupProfileReferences(manifest));
   errors.push(...validateHexBoardVertexRefs(manifest));
 

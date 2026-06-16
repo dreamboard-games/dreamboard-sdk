@@ -72,9 +72,7 @@ function invokeEffect(
   );
 }
 
-export function createReducerFx<State extends FxState>(
-  _state: State,
-): ReducerFx<State> {
+export function createReducerFx<State extends FxState>(): ReducerFx<State> {
   const fx: ReducerFx<State> = {
     transition(to) {
       return { kind: "flow.transition", to } as ReturnType<

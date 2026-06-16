@@ -180,7 +180,7 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
         createElement(HandSurfaceView, {
           zone: hand.zone,
           cards: items,
-          renderCard: (card, state, _index) => children(card as Card, state),
+          renderCard: (card, state) => children(card as Card, state),
           layout,
           mobileInteraction,
           dropTargets: resolvedDropTargets,

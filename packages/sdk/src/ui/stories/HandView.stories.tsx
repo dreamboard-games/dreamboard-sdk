@@ -71,6 +71,64 @@ export default meta;
 
 type Story = StoryObj<typeof HandStage>;
 
+function InteractiveControlledHandView() {
+  const cards = useMemo(() => makeCards(5), []);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [lastIntent, setLastIntent] = useState<CardIntent | null>(null);
+  return (
+    <div className="sb-stage">
+      <HandView
+        cards={cards}
+        layout="fan"
+        stateForCard={(card) => ({
+          eligible: !selected || card.id === selected,
+          selected: card.id === selected,
+        })}
+        onCardIntent={(intent) => {
+          setLastIntent(intent);
+          if (intent.type === "activate") {
+            setSelected((cur) =>
+              cur === intent.cardId ? null : intent.cardId,
+            );
+          }
+        }}
+        renderCard={(card, state) => <CardFace card={card} {...state} />}
+      />
+      <pre data-testid="last-intent" style={{ fontSize: 12 }}>
+        {lastIntent ? JSON.stringify(lastIntent) : "—"}
+      </pre>
+    </div>
+  );
+}
+
+function ConvergesUnderCenteringParentStory() {
+  const cards = useMemo(() => makeCards(13), []);
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        width: 720,
+      }}
+    >
+      {/* A definite full-width wrapper so the fan cannot shrink-wrap its
+          centering parent to its own measured width (the loop trigger). */}
+      <div style={{ width: "100%", minWidth: 0 }}>
+        <HandView
+          cards={cards}
+          layout="fan"
+          cardSize="sm"
+          stateForCard={() => ({ eligible: true })}
+          renderCard={(card, state) => (
+            <CardFace card={card} {...state} size="sm" />
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
 export const Empty: Story = {
   args: { cardCount: 0 },
   render: (args) => (
@@ -140,35 +198,7 @@ export const InteractiveControlled: Story = {
       },
     },
   },
-  render: () => {
-    const cards = useMemo(() => makeCards(5), []);
-    const [selected, setSelected] = useState<string | null>(null);
-    const [lastIntent, setLastIntent] = useState<CardIntent | null>(null);
-    return (
-      <div className="sb-stage">
-        <HandView
-          cards={cards}
-          layout="fan"
-          stateForCard={(card) => ({
-            eligible: !selected || card.id === selected,
-            selected: card.id === selected,
-          })}
-          onCardIntent={(intent) => {
-            setLastIntent(intent);
-            if (intent.type === "activate") {
-              setSelected((cur) =>
-                cur === intent.cardId ? null : intent.cardId,
-              );
-            }
-          }}
-          renderCard={(card, state) => <CardFace card={card} {...state} />}
-        />
-        <pre data-testid="last-intent" style={{ fontSize: 12 }}>
-          {lastIntent ? JSON.stringify(lastIntent) : "—"}
-        </pre>
-      </div>
-    );
-  },
+  render: () => <InteractiveControlledHandView />,
 };
 
 export const ConvergesUnderCenteringParent: Story = {
@@ -181,33 +211,7 @@ export const ConvergesUnderCenteringParent: Story = {
       },
     },
   },
-  render: () => {
-    const cards = useMemo(() => makeCards(13), []);
-    return (
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: 720,
-        }}
-      >
-        {/* A definite full-width wrapper so the fan cannot shrink-wrap its
-            centering parent to its own measured width (the loop trigger). */}
-        <div style={{ width: "100%", minWidth: 0 }}>
-          <HandView
-            cards={cards}
-            layout="fan"
-            cardSize="sm"
-            stateForCard={() => ({ eligible: true })}
-            renderCard={(card, state) => (
-              <CardFace card={card} {...state} size="sm" />
-            )}
-          />
-        </div>
-      </div>
-    );
-  },
+  render: () => <ConvergesUnderCenteringParentStory />,
   play: async ({ canvasElement }) => {
     const row = canvasElement.querySelector<HTMLElement>(
       '[data-dreamboard-hand-view] [role="row"]',

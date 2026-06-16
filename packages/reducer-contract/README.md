@@ -18,5 +18,5 @@ import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract/b
 Public consumers should import the supported SDK facade instead:
 
 ```ts
-import type { ReducerWire } from "@dreamboard-games/sdk/infrastructure/reducer-bundle-abi";
+import type { ReducerWire } from "@dreamboard-games/sdk/reducer-contract";
 ```
