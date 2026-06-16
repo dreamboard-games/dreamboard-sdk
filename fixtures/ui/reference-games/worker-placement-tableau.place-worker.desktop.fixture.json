@@ -1,0 +1,378 @@
+{
+  "browserInteractionProtocol": "2.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "worker-placement-tableau.place-worker.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:7896b685d3e835a27883641f0717351411b0511052e54a1298348e31158de6d6",
+    "finalSemanticDigest": "sha256:c721d7a9fdfb9d96d8d4acd3f40ac9339110ab9201f005a3dacaf909b232fb4f",
+    "initialProjectionDigest": "sha256:a3b2a74e151e8286ecf0cfd01d01735b0a5df532be5c4cbd7a5e7812fb7f2a9f",
+    "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c"
+  },
+  "frames": [
+    {
+      "id": "initial",
+      "projectionDigest": "sha256:a3b2a74e151e8286ecf0cfd01d01735b0a5df532be5c4cbd7a5e7812fb7f2a9f",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "town-board"
+                  },
+                  "key": "choose-worker-target",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "place-worker:player-1",
+              "interactionKey": "place-worker",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "craft-order"
+                  },
+                  "key": "resource-form",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "allocate-resources:player-1",
+              "interactionKey": "allocate-resources",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "tableau-card"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "complete-order:player-1",
+              "interactionKey": "complete-order",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "worker-placement-tableau.place-worker.desktop",
+          "currentStage": "initial",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "worker-placement-tableau.place-worker.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 1,
+        "view": {
+          "displayName": "Worker Placement Tableau",
+          "frameId": "initial",
+          "publicState": {
+            "displayName": "Worker Placement Tableau",
+            "id": "worker-placement-tableau",
+            "interactions": [
+              {
+                "confirmation": "placement-dialog",
+                "id": "place-worker",
+                "input": "choose-worker-target",
+                "target": "town-board"
+              },
+              {
+                "id": "allocate-resources",
+                "input": "resource-form",
+                "target": "craft-order"
+              },
+              {
+                "id": "complete-order",
+                "input": "confirm",
+                "target": "tableau-card"
+              }
+            ],
+            "tableau": [
+              "kiln",
+              "loom",
+              "workbench"
+            ],
+            "workers": {
+              "available": 3,
+              "placed": []
+            }
+          },
+          "referenceGameId": "worker-placement-tableau",
+          "scenarioId": "worker-placement-tableau.place-worker.desktop"
+        }
+      }
+    },
+    {
+      "id": "submitted",
+      "projectionDigest": "sha256:7896b685d3e835a27883641f0717351411b0511052e54a1298348e31158de6d6",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "town-board"
+                  },
+                  "key": "choose-worker-target",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "place-worker:player-1",
+              "interactionKey": "place-worker",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "craft-order"
+                  },
+                  "key": "resource-form",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "allocate-resources:player-1",
+              "interactionKey": "allocate-resources",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "tableau-card"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "complete-order:player-1",
+              "interactionKey": "complete-order",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "worker-placement-tableau.place-worker.desktop",
+          "currentStage": "submitted",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "worker-placement-tableau.place-worker.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 2,
+        "view": {
+          "displayName": "Worker Placement Tableau",
+          "frameId": "submitted",
+          "publicState": {
+            "displayName": "Worker Placement Tableau",
+            "id": "worker-placement-tableau",
+            "interactions": [
+              {
+                "confirmation": "placement-dialog",
+                "id": "place-worker",
+                "input": "choose-worker-target",
+                "target": "town-board"
+              },
+              {
+                "id": "allocate-resources",
+                "input": "resource-form",
+                "target": "craft-order"
+              },
+              {
+                "id": "complete-order",
+                "input": "confirm",
+                "target": "tableau-card"
+              }
+            ],
+            "tableau": [
+              "kiln",
+              "loom",
+              "workbench"
+            ],
+            "workers": {
+              "available": 3,
+              "placed": []
+            }
+          },
+          "referenceGameId": "worker-placement-tableau",
+          "scenarioId": "worker-placement-tableau.place-worker.desktop"
+        }
+      }
+    }
+  ],
+  "gameId": "worker-placement-tableau",
+  "id": "worker-placement-tableau.place-worker.desktop",
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "submitted",
+        "projectionDigest": "sha256:7896b685d3e835a27883641f0717351411b0511052e54a1298348e31158de6d6",
+        "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c",
+        "visibleInteractionKeys": [
+          "place-worker",
+          "allocate-resources",
+          "complete-order"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "place-worker.invoke",
+        "interactionId": "place-worker:player-1",
+        "interactionKey": "place-worker",
+        "scopeId": "worker-placement-tableau",
+        "stepId": "worker-placement-tableau.place-worker.desktop.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:515b7c86925829ea9d01ed1f6a55aeb3cbf315b446ba9b96a2733f050f85f9f5",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "place-worker:player-1",
+        "interactionKey": "place-worker",
+        "scopeId": "worker-placement-tableau",
+        "surface": "gameplay"
+      },
+      "stepId": "worker-placement-tableau.place-worker.desktop.invoke"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
+    "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
+    "renderModuleDigest": "sha256:5e5cf4f37decece6c6b6e98f30b948d6816078f426f51fddca45e05386391a42",
+    "scenarioId": "worker-placement-tableau.place-worker.desktop",
+    "sourceDigest": "sha256:6527df795c44096b25d965a45a133a1473154ab1d2d5f6411c4fcd5ffb619f36",
+    "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
+  },
+  "tags": [
+    "confirmation-dialog",
+    "order-fulfillment",
+    "resource-allocation",
+    "resource-allocation-form",
+    "tableau-building",
+    "tableau-cards",
+    "worker-placement",
+    "worker-targets"
+  ],
+  "title": "Worker Placement Tableau: occupied worker targets become unavailable",
+  "transport": [
+    {
+      "fromFrameId": "initial",
+      "id": "worker-placement-tableau.place-worker.desktop.validate",
+      "operation": "validate",
+      "requestDigest": "sha256:515b7c86925829ea9d01ed1f6a55aeb3cbf315b446ba9b96a2733f050f85f9f5",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "initial"
+      }
+    },
+    {
+      "fromFrameId": "initial",
+      "id": "worker-placement-tableau.place-worker.desktop.submit",
+      "operation": "submit",
+      "requestDigest": "sha256:515b7c86925829ea9d01ed1f6a55aeb3cbf315b446ba9b96a2733f050f85f9f5",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "submitted"
+      }
+    }
+  ],
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

@@ -36,7 +36,7 @@ jobs:
       - name: Pack verified SDK tarball
         run: |
           mkdir -p "$RUNNER_TEMP/package"
-          pnpm --filter @dreamboard-games/sdk pack --pack-destination "$RUNNER_TEMP/package"
+          pnpm --dir packages/sdk pack --pack-destination "$RUNNER_TEMP/package"
           test "$(find "$RUNNER_TEMP/package" -name '*.tgz' | wc -l | tr -d ' ')" = "1"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -71,4 +71,5 @@ jobs:
           if (metadata.distTag !== "alpha") throw new Error(`Unexpected dist-tag: ${metadata.distTag}`);
           NODE
           test "$(find package -name '*.tgz' | wc -l | tr -d ' ')" = "1"
-          npm publish package/*.tgz --tag alpha --provenance
+          sdk_tarball="$(find package -name '*.tgz' -print -quit)"
+          npm publish "$sdk_tarball" --tag alpha --provenance

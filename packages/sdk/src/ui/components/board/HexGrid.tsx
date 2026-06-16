@@ -636,6 +636,18 @@ export function DefaultInteractiveEdge({
 // Hex Math Utilities
 // ============================================================================
 
+const SVG_POINT_PRECISION = 12;
+
+function formatSvgNumber(value: number): string {
+  const rounded =
+    Math.round(value * 10 ** SVG_POINT_PRECISION) / 10 ** SVG_POINT_PRECISION;
+  return `${Object.is(rounded, -0) ? 0 : rounded}`;
+}
+
+function formatSvgPoint(point: { x: number; y: number }): string {
+  return `${formatSvgNumber(point.x)},${formatSvgNumber(point.y)}`;
+}
+
 export const hexUtils = {
   /** Convert axial coordinates to pixel position. */
   axialToPixel(
@@ -699,7 +711,7 @@ export const hexUtils = {
     orientation: HexOrientation,
   ): string {
     const corners = this.getHexCorners(centerX, centerY, size, orientation);
-    return corners.map((c) => `${c.x},${c.y}`).join(" ");
+    return corners.map(formatSvgPoint).join(" ");
   },
 
   getEdgePosition(
@@ -845,9 +857,7 @@ function HexGridImpl(
           return hexUtils.getHexCorners(0, 0, radius, resolvedOrientation);
         };
         const points = (options?: { inset?: number }) =>
-          corners(options)
-            .map((corner) => `${corner.x},${corner.y}`)
-            .join(" ");
+          corners(options).map(formatSvgPoint).join(" ");
         const outer = corners();
         const xs = outer.map((corner) => corner.x);
         const ys = outer.map((corner) => corner.y);
