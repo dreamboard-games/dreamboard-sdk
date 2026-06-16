@@ -118,7 +118,8 @@ async function assertReleaseWorkflow() {
     "--filter @dreamboard-games/sdk publish",
   );
   const publishesVerifiedTarball =
-    workflow.includes("npm publish package/*.tgz") &&
+    workflow.includes("find package -name '*.tgz'") &&
+    workflow.includes('npm publish "$sdk_tarball"') &&
     workflow.includes(`metadata.name !== "${publicPackageName}"`);
   if (!publishesSdkWorkspace && !publishesVerifiedTarball) {
     fail(

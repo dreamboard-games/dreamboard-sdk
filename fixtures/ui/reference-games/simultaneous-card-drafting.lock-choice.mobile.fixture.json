@@ -1,0 +1,381 @@
+{
+  "browserInteractionProtocol": "2.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "simultaneous-card-drafting.lock-choice.mobile.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "phone",
+      "touch"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:5a83828958f8914d17a4f226b71e822cfe9b441c7e018dcb38557ad08e51538a",
+    "finalSemanticDigest": "sha256:9d91b57a91bfffdae34c92d9eff1d1390bf337c4269d4a340b43fef51f60a6d8",
+    "initialProjectionDigest": "sha256:2f9760c73e530bc3fa0ebca519d03a9c54fee3bb426e951913b458b3577f3ead",
+    "submissionDigest": "sha256:ae47c950ec90df25cdbff37567be6997850998560131f502e5c9b63ee4130d72"
+  },
+  "frames": [
+    {
+      "id": "initial",
+      "projectionDigest": "sha256:2f9760c73e530bc3fa0ebca519d03a9c54fee3bb426e951913b458b3577f3ead",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "private-hand"
+                  },
+                  "key": "select-one-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "choose-card:player-1",
+              "interactionKey": "choose-card",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "locked-choice"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "lock-choice:player-1",
+              "interactionKey": "lock-choice",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "pass-transition"
+                  },
+                  "key": "simultaneous-reveal",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "reveal-and-pass:player-1",
+              "interactionKey": "reveal-and-pass",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "simultaneous-card-drafting.lock-choice.mobile",
+          "currentStage": "initial",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "simultaneous-card-drafting.lock-choice.mobile.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 1,
+        "view": {
+          "displayName": "Simultaneous Card Drafting",
+          "frameId": "initial",
+          "publicState": {
+            "displayName": "Simultaneous Card Drafting",
+            "draftRound": {
+              "hand": [
+                "lantern",
+                "garden",
+                "bell",
+                "map"
+              ],
+              "lockedChoice": null,
+              "revealQueue": []
+            },
+            "id": "simultaneous-card-drafting",
+            "interactions": [
+              {
+                "id": "choose-card",
+                "input": "select-one-card",
+                "lockState": "pending",
+                "target": "private-hand"
+              },
+              {
+                "id": "lock-choice",
+                "input": "confirm",
+                "target": "locked-choice"
+              },
+              {
+                "id": "reveal-and-pass",
+                "input": "simultaneous-reveal",
+                "target": "pass-transition"
+              }
+            ]
+          },
+          "referenceGameId": "simultaneous-card-drafting",
+          "scenarioId": "simultaneous-card-drafting.lock-choice.mobile"
+        }
+      }
+    },
+    {
+      "id": "submitted",
+      "projectionDigest": "sha256:5a83828958f8914d17a4f226b71e822cfe9b441c7e018dcb38557ad08e51538a",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "private-hand"
+                  },
+                  "key": "select-one-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "choose-card:player-1",
+              "interactionKey": "choose-card",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "locked-choice"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "lock-choice:player-1",
+              "interactionKey": "lock-choice",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "pass-transition"
+                  },
+                  "key": "simultaneous-reveal",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "reveal-and-pass:player-1",
+              "interactionKey": "reveal-and-pass",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "simultaneous-card-drafting.lock-choice.mobile",
+          "currentStage": "submitted",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "simultaneous-card-drafting.lock-choice.mobile.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 2,
+        "view": {
+          "displayName": "Simultaneous Card Drafting",
+          "frameId": "submitted",
+          "publicState": {
+            "displayName": "Simultaneous Card Drafting",
+            "draftRound": {
+              "hand": [
+                "lantern",
+                "garden",
+                "bell",
+                "map"
+              ],
+              "lockedChoice": null,
+              "revealQueue": []
+            },
+            "id": "simultaneous-card-drafting",
+            "interactions": [
+              {
+                "id": "choose-card",
+                "input": "select-one-card",
+                "lockState": "pending",
+                "target": "private-hand"
+              },
+              {
+                "id": "lock-choice",
+                "input": "confirm",
+                "target": "locked-choice"
+              },
+              {
+                "id": "reveal-and-pass",
+                "input": "simultaneous-reveal",
+                "target": "pass-transition"
+              }
+            ]
+          },
+          "referenceGameId": "simultaneous-card-drafting",
+          "scenarioId": "simultaneous-card-drafting.lock-choice.mobile"
+        }
+      }
+    }
+  ],
+  "gameId": "simultaneous-card-drafting",
+  "id": "simultaneous-card-drafting.lock-choice.mobile",
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "submitted",
+        "projectionDigest": "sha256:5a83828958f8914d17a4f226b71e822cfe9b441c7e018dcb38557ad08e51538a",
+        "submissionDigest": "sha256:ae47c950ec90df25cdbff37567be6997850998560131f502e5c9b63ee4130d72",
+        "visibleInteractionKeys": [
+          "choose-card",
+          "lock-choice",
+          "reveal-and-pass"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "choose-card.invoke",
+        "interactionId": "choose-card:player-1",
+        "interactionKey": "choose-card",
+        "scopeId": "simultaneous-card-drafting",
+        "stepId": "simultaneous-card-drafting.lock-choice.mobile.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:a3ef9b919a4031f3cc162bcc492d4a32e953f420b5b0a4cdd7546fb12885451c",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "choose-card:player-1",
+        "interactionKey": "choose-card",
+        "scopeId": "simultaneous-card-drafting",
+        "surface": "gameplay"
+      },
+      "stepId": "simultaneous-card-drafting.lock-choice.mobile.invoke"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "reducerFingerprint": "sha256:2870b0cb5f567c19fbb0e97bce6d76c0404809a31e4d797357a482ffd0c1f664",
+    "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
+    "renderModuleDigest": "sha256:c25494ea683f624d5ed5fb6b93018e83f003a4e8a3d0c35769031232202a9936",
+    "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
+    "sourceDigest": "sha256:2210b71f27a090ff20ce59276f5198f470f9bb3952ede8f4d85bce654b97d2b2",
+    "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
+  },
+  "tags": [
+    "card-drafting",
+    "compact-mobile-hand",
+    "hand-passing",
+    "locked-choice",
+    "private-hand",
+    "reveal-pass-transition",
+    "set-collection",
+    "simultaneous-selection"
+  ],
+  "title": "Simultaneous Card Drafting: choice remains private until every player locks",
+  "transport": [
+    {
+      "fromFrameId": "initial",
+      "id": "simultaneous-card-drafting.lock-choice.mobile.validate",
+      "operation": "validate",
+      "requestDigest": "sha256:a3ef9b919a4031f3cc162bcc492d4a32e953f420b5b0a4cdd7546fb12885451c",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "initial"
+      }
+    },
+    {
+      "fromFrameId": "initial",
+      "id": "simultaneous-card-drafting.lock-choice.mobile.submit",
+      "operation": "submit",
+      "requestDigest": "sha256:a3ef9b919a4031f3cc162bcc492d4a32e953f420b5b0a4cdd7546fb12885451c",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "submitted"
+      }
+    }
+  ],
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

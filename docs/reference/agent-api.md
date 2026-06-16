@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.0";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.1";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.0";
+const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.1";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.0";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.1";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.0";
+const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.1";
 ```
 
 _No JSDoc summary is available yet._
@@ -18645,6 +18645,48 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/testing
 
+### assertDeterministicUIScenarioFixture
+
+```ts
+function assertDeterministicUIScenarioFixture(
+  first: UIScenarioFixture,
+  second: UIScenarioFixture,
+): void;
+```
+
+_No JSDoc summary is available yet._
+
+### assertSupportedBrowserInteractionProtocol
+
+```ts
+function assertSupportedBrowserInteractionProtocol(version: string): void;
+```
+
+_No JSDoc summary is available yet._
+
+### assertUIStepExpectationSatisfied
+
+```ts
+function assertUIStepExpectationSatisfied(
+  stepId: string,
+  expected: UIStepExpectation,
+  actual: UIStepExpectation,
+): void;
+```
+
+_No JSDoc summary is available yet._
+
+### assertUniqueReplayIdentity
+
+```ts
+function assertUniqueReplayIdentity(
+  step: Pick<PortableSemanticReplayStep, "stepId" | "expectedIdentity">,
+  candidates: readonly UIReplayIdentityCandidate[],
+): UIReplayIdentityCandidate;
+```
+
+_No JSDoc summary is available yet._
+
 ### BaseContext
 
 ```ts
@@ -18678,6 +18720,50 @@ interface BaseDefinition {
   extends?: string;
   setup: (ctx: BaseContext) => void | Promise<void>;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### canonicalizeUIFixtureJson
+
+```ts
+function canonicalizeUIFixtureJson(value: unknown): CanonicalJson;
+```
+
+_No JSDoc summary is available yet._
+
+### canonicalizeUIScenarioFixture
+
+```ts
+function canonicalizeUIScenarioFixture(
+  fixture: UIScenarioFixture,
+): UIScenarioFixture;
+```
+
+_No JSDoc summary is available yet._
+
+### canonicalUIFixtureJson
+
+```ts
+function canonicalUIFixtureJson(value: unknown): string;
+```
+
+_No JSDoc summary is available yet._
+
+### compileUIScenarioFixture
+
+```ts
+function compileUIScenarioFixture(
+  options: CompileUIScenarioFixtureOptions,
+): UIScenarioFixture;
+```
+
+_No JSDoc summary is available yet._
+
+### CompileUIScenarioFixtureOptions
+
+```ts
+interface CompileUIScenarioFixtureOptions { ... }
 ```
 
 _No JSDoc summary is available yet._
@@ -18752,6 +18838,30 @@ function defineScenario<
 
 _No JSDoc summary is available yet._
 
+### digestUIFixtureJson
+
+```ts
+function digestUIFixtureJson(value: unknown): string;
+```
+
+_No JSDoc summary is available yet._
+
+### digestUIFixtureRequest
+
+```ts
+function digestUIFixtureRequest(request: UIReplayRequest): string;
+```
+
+_No JSDoc summary is available yet._
+
+### digestUIScenarioFixture
+
+```ts
+function digestUIScenarioFixture(fixture: UIScenarioFixture): string;
+```
+
+_No JSDoc summary is available yet._
+
 ### ExpectFn
 
 ```ts
@@ -18816,12 +18926,56 @@ type InteractionExplanationLike = ...;
 
 _No JSDoc summary is available yet._
 
+### isSha256Digest
+
+```ts
+function isSha256Digest(value: string): boolean;
+```
+
+_No JSDoc summary is available yet._
+
 ### isStaleContractArtifactError
 
 ```ts
 function isStaleContractArtifactError(
   error: unknown,
 ): error is StaleContractArtifactError;
+```
+
+_No JSDoc summary is available yet._
+
+### parseUIScenarioFixture
+
+```ts
+function parseUIScenarioFixture(value: unknown): UIScenarioFixture;
+```
+
+_No JSDoc summary is available yet._
+
+### parseUIScenarioFixtureBundleIndex
+
+```ts
+function parseUIScenarioFixtureBundleIndex(
+  value: unknown,
+): UIScenarioFixtureBundleIndex;
+```
+
+_No JSDoc summary is available yet._
+
+### PortableSemanticReplayStep
+
+```ts
+type PortableSemanticReplayStep = z.infer<
+  typeof portableSemanticReplayStepSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### portableSemanticReplayStepSchema
+
+```ts
+declare const portableSemanticReplayStepSchema: ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -18841,6 +18995,14 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface ScenarioDefinition { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### serializeUIScenarioFixture
+
+```ts
+function serializeUIScenarioFixture(fixture: UIScenarioFixture): string;
 ```
 
 _No JSDoc summary is available yet._
@@ -18897,6 +19059,227 @@ _No JSDoc summary is available yet._
 
 ```ts
 type TestRunner = "reducer" | "remote" | "browser";
+```
+
+_No JSDoc summary is available yet._
+
+### UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION
+
+```ts
+const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 1;
+```
+
+_No JSDoc summary is available yet._
+
+### UI_SCENARIO_FIXTURE_SCHEMA_VERSION
+
+```ts
+const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 1;
+```
+
+_No JSDoc summary is available yet._
+
+### UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR
+
+```ts
+const UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR = 2;
+```
+
+_No JSDoc summary is available yet._
+
+### UIFixtureFrame
+
+```ts
+type UIFixtureFrame = Omit<z.infer<typeof uiFixtureFrameSchema>, "snapshot"> & {
+  readonly snapshot: PluginStateSnapshot$1;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### uiFixtureFrameSchema
+
+```ts
+declare const uiFixtureFrameSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### uiFixturePluginStateSnapshotSchema
+
+```ts
+declare const uiFixturePluginStateSnapshotSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIFixtureTransportExchange
+
+```ts
+type UIFixtureTransportExchange = z.infer<
+  typeof uiFixtureTransportExchangeSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiFixtureTransportExchangeSchema
+
+```ts
+declare const uiFixtureTransportExchangeSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIReplayExecution
+
+```ts
+type UIReplayExecution = z.infer<typeof uiReplayExecutionSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiReplayExecutionSchema
+
+```ts
+declare const uiReplayExecutionSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIReplayIdentityCandidate
+
+```ts
+type UIReplayIdentityCandidate = UIResolvedReplayIdentity;
+```
+
+_No JSDoc summary is available yet._
+
+### UIReplayRequest
+
+```ts
+type UIReplayRequest =
+  | BrowserInteractionIntentRequest
+  | BrowserInteractionEffectRequest;
+```
+
+_No JSDoc summary is available yet._
+
+### uiReplayRequestSchema
+
+```ts
+declare const uiReplayRequestSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIResolvedReplayIdentity
+
+```ts
+type UIResolvedReplayIdentity = z.infer<typeof uiResolvedReplayIdentitySchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiResolvedReplayIdentitySchema
+
+```ts
+const uiResolvedReplayIdentitySchema: z.ZodObject<
+  {
+    stepId: z.ZodString;
+    surface: z.ZodString;
+    scopeId: z.ZodString;
+    interactionKey: z.ZodString;
+    interactionId: z.ZodString;
+    actuatorId: z.ZodString;
+    descriptorDigest: z.ZodOptional<z.ZodString>;
+    draftDigest: z.ZodOptional<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioFixture
+
+```ts
+type UIScenarioFixture = Omit<
+  z.infer<typeof uiScenarioFixtureSchema>,
+  "frames" | "replay"
+> & {
+  readonly frames: readonly UIFixtureFrame[];
+  readonly replay: readonly UIScenarioReplayStep[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioFixtureBundleIndex
+
+```ts
+type UIScenarioFixtureBundleIndex = z.infer<
+  typeof uiScenarioFixtureBundleIndexSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiScenarioFixtureBundleIndexSchema
+
+```ts
+declare const uiScenarioFixtureBundleIndexSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### uiScenarioFixtureSchema
+
+```ts
+declare const uiScenarioFixtureSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioReplayStep
+
+```ts
+type UIScenarioReplayStep = z.infer<typeof uiScenarioReplayStepSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiScenarioReplayStepSchema
+
+```ts
+declare const uiScenarioReplayStepSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIStepExpectation
+
+```ts
+type UIStepExpectation = z.infer<typeof uiStepExpectationSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### uiStepExpectationSchema
+
+```ts
+declare const uiStepExpectationSchema: z.ZodObject<
+  {
+    frameId: z.ZodOptional<z.ZodString>;
+    projectionDigest: z.ZodOptional<z.ZodString>;
+    semanticDigest: z.ZodOptional<z.ZodString>;
+    draftDigest: z.ZodOptional<z.ZodString>;
+    submissionDigest: z.ZodOptional<z.ZodString>;
+    focusedInteractionKey: z.ZodOptional<z.ZodString>;
+    visibleInteractionKeys: z.ZodOptional<z.ZodArray<z.ZodString>>;
+  },
+  z.core.$strict
+>;
 ```
 
 _No JSDoc summary is available yet._

@@ -1,0 +1,388 @@
+{
+  "browserInteractionProtocol": "2.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "deck-building-market.buy-card.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:8db4de554f7a56dfd7f09aeef3163fb09b53797685ccd6e3e8663aa7d17b5f85",
+    "finalSemanticDigest": "sha256:051f24a344abd49161d6d16f10fe6321e8deebee68572807022ea5435e2f216b",
+    "initialProjectionDigest": "sha256:9948220625a74017c8dfe2349a8ef9d9a8645e4ae3b0346f911f4acd86c48ce1",
+    "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04"
+  },
+  "frames": [
+    {
+      "id": "initial",
+      "projectionDigest": "sha256:9948220625a74017c8dfe2349a8ef9d9a8645e4ae3b0346f911f4acd86c48ce1",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "market-row"
+                  },
+                  "key": "select-market-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "buy-card:player-1",
+              "interactionKey": "buy-card",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "action-panel"
+                  },
+                  "key": "choose-hand-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "play-hand-action:player-1",
+              "interactionKey": "play-hand-action",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "turn-summary"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "end-turn:player-1",
+              "interactionKey": "end-turn",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "deck-building-market.buy-card.desktop",
+          "currentStage": "initial",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "deck-building-market.buy-card.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 1,
+        "view": {
+          "displayName": "Deck Building Market",
+          "frameId": "initial",
+          "publicState": {
+            "displayName": "Deck Building Market",
+            "id": "deck-building-market",
+            "interactions": [
+              {
+                "costSource": "hand",
+                "id": "buy-card",
+                "input": "select-market-card",
+                "target": "market-row"
+              },
+              {
+                "id": "play-hand-action",
+                "input": "choose-hand-card",
+                "target": "action-panel"
+              },
+              {
+                "id": "end-turn",
+                "input": "confirm",
+                "target": "turn-summary"
+              }
+            ],
+            "zones": {
+              "discard": [],
+              "hand": [
+                "coin",
+                "coin",
+                "spark"
+              ],
+              "market": [
+                "map-maker",
+                "archive",
+                "guild-contact",
+                "courier"
+              ]
+            }
+          },
+          "referenceGameId": "deck-building-market",
+          "scenarioId": "deck-building-market.buy-card.desktop"
+        }
+      }
+    },
+    {
+      "id": "submitted",
+      "projectionDigest": "sha256:8db4de554f7a56dfd7f09aeef3163fb09b53797685ccd6e3e8663aa7d17b5f85",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "market-row"
+                  },
+                  "key": "select-market-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "buy-card:player-1",
+              "interactionKey": "buy-card",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "action-panel"
+                  },
+                  "key": "choose-hand-card",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "play-hand-action:player-1",
+              "interactionKey": "play-hand-action",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "turn-summary"
+                  },
+                  "key": "confirm",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "end-turn:player-1",
+              "interactionKey": "end-turn",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "deck-building-market.buy-card.desktop",
+          "currentStage": "submitted",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "deck-building-market.buy-card.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 2,
+        "view": {
+          "displayName": "Deck Building Market",
+          "frameId": "submitted",
+          "publicState": {
+            "displayName": "Deck Building Market",
+            "id": "deck-building-market",
+            "interactions": [
+              {
+                "costSource": "hand",
+                "id": "buy-card",
+                "input": "select-market-card",
+                "target": "market-row"
+              },
+              {
+                "id": "play-hand-action",
+                "input": "choose-hand-card",
+                "target": "action-panel"
+              },
+              {
+                "id": "end-turn",
+                "input": "confirm",
+                "target": "turn-summary"
+              }
+            ],
+            "zones": {
+              "discard": [],
+              "hand": [
+                "coin",
+                "coin",
+                "spark"
+              ],
+              "market": [
+                "map-maker",
+                "archive",
+                "guild-contact",
+                "courier"
+              ]
+            }
+          },
+          "referenceGameId": "deck-building-market",
+          "scenarioId": "deck-building-market.buy-card.desktop"
+        }
+      }
+    }
+  ],
+  "gameId": "deck-building-market",
+  "id": "deck-building-market.buy-card.desktop",
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "submitted",
+        "projectionDigest": "sha256:8db4de554f7a56dfd7f09aeef3163fb09b53797685ccd6e3e8663aa7d17b5f85",
+        "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04",
+        "visibleInteractionKeys": [
+          "buy-card",
+          "play-hand-action",
+          "end-turn"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "buy-card.invoke",
+        "interactionId": "buy-card:player-1",
+        "interactionKey": "buy-card",
+        "scopeId": "deck-building-market",
+        "stepId": "deck-building-market.buy-card.desktop.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:031b8561ae3eb95652844552ff5f6ebf1978008440ae3f75f442138558af5c51",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "buy-card:player-1",
+        "interactionKey": "buy-card",
+        "scopeId": "deck-building-market",
+        "surface": "gameplay"
+      },
+      "stepId": "deck-building-market.buy-card.desktop.invoke"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
+    "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
+    "renderModuleDigest": "sha256:8145f8878c9f654f5fd4715582f35834923c73f2b4440a03c4fcb20efce44219",
+    "scenarioId": "deck-building-market.buy-card.desktop",
+    "sourceDigest": "sha256:e65dbbb311108a322061db05d139eee033ad0bb30c235e67e4d41c5fa91b37c4",
+    "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
+  },
+  "tags": [
+    "deck-building",
+    "hand-actions",
+    "hand-management",
+    "market-row",
+    "market-row",
+    "purchase-selection",
+    "repeated-turn-state",
+    "turn-summary"
+  ],
+  "title": "Deck Building Market: market row exposes affordable and unavailable cards",
+  "transport": [
+    {
+      "fromFrameId": "initial",
+      "id": "deck-building-market.buy-card.desktop.validate",
+      "operation": "validate",
+      "requestDigest": "sha256:031b8561ae3eb95652844552ff5f6ebf1978008440ae3f75f442138558af5c51",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "initial"
+      }
+    },
+    {
+      "fromFrameId": "initial",
+      "id": "deck-building-market.buy-card.desktop.submit",
+      "operation": "submit",
+      "requestDigest": "sha256:031b8561ae3eb95652844552ff5f6ebf1978008440ae3f75f442138558af5c51",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "submitted"
+      }
+    }
+  ],
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

@@ -1,0 +1,341 @@
+{
+  "browserInteractionProtocol": "2.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "hex-network-trading.place-route.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:79ad7469859a9d18a48c176603d3a2330830b6648cb6e1c3ebf0395f2e789eb7",
+    "finalSemanticDigest": "sha256:7e0397fbb7feb1685f6738403bdbd17e8bfb20d856be93a1d169916543e09dd1",
+    "initialProjectionDigest": "sha256:189973d98f9e6c34885e8d1848bd196bd93004ef6d28f8c878bb462db0964a05",
+    "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1"
+  },
+  "frames": [
+    {
+      "id": "initial",
+      "projectionDigest": "sha256:189973d98f9e6c34885e8d1848bd196bd93004ef6d28f8c878bb462db0964a05",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "hex-board"
+                  },
+                  "key": "choose-edge",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "place-route:player-1",
+              "interactionKey": "place-route",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "trade-panel"
+                  },
+                  "key": "resource-exchange",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "offer-trade:player-1",
+              "interactionKey": "offer-trade",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "hex-network-trading.place-route.desktop",
+          "currentStage": "initial",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "hex-network-trading.place-route.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 1,
+        "view": {
+          "displayName": "Hex Network Trading",
+          "frameId": "initial",
+          "publicState": {
+            "board": {
+              "edges": [
+                "forest-1:ore-2",
+                "ore-2:river-3",
+                "river-3:market-4"
+              ],
+              "spaces": [
+                "forest-1",
+                "ore-2",
+                "river-3",
+                "market-4"
+              ],
+              "topology": "hex"
+            },
+            "displayName": "Hex Network Trading",
+            "id": "hex-network-trading",
+            "interactions": [
+              {
+                "confirmation": "route-cost",
+                "id": "place-route",
+                "input": "choose-edge",
+                "target": "hex-board"
+              },
+              {
+                "id": "offer-trade",
+                "input": "resource-exchange",
+                "target": "trade-panel"
+              }
+            ],
+            "resourceHand": {
+              "fiber": 1,
+              "grain": 0,
+              "lumber": 2,
+              "ore": 1
+            }
+          },
+          "referenceGameId": "hex-network-trading",
+          "scenarioId": "hex-network-trading.place-route.desktop"
+        }
+      }
+    },
+    {
+      "id": "submitted",
+      "projectionDigest": "sha256:79ad7469859a9d18a48c176603d3a2330830b6648cb6e1c3ebf0395f2e789eb7",
+      "snapshot": {
+        "gameplay": {
+          "activePlayers": [
+            "player-1"
+          ],
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "hex-board"
+                  },
+                  "key": "choose-edge",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "place-route:player-1",
+              "interactionKey": "place-route",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "context": {
+                "to": "player-1"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "trade-panel"
+                  },
+                  "key": "resource-exchange",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "offer-trade:player-1",
+              "interactionKey": "offer-trade",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "currentPhase": "hex-network-trading.place-route.desktop",
+          "currentStage": "submitted",
+          "simultaneousPhase": null,
+          "zones": {}
+        },
+        "history": null,
+        "lobby": null,
+        "notifications": [],
+        "session": {
+          "controllablePlayerIds": [
+            "player-1"
+          ],
+          "controllingPlayerId": "player-1",
+          "sessionId": "hex-network-trading.place-route.desktop.fixture-session",
+          "userId": "fixture-user"
+        },
+        "syncId": 2,
+        "view": {
+          "displayName": "Hex Network Trading",
+          "frameId": "submitted",
+          "publicState": {
+            "board": {
+              "edges": [
+                "forest-1:ore-2",
+                "ore-2:river-3",
+                "river-3:market-4"
+              ],
+              "spaces": [
+                "forest-1",
+                "ore-2",
+                "river-3",
+                "market-4"
+              ],
+              "topology": "hex"
+            },
+            "displayName": "Hex Network Trading",
+            "id": "hex-network-trading",
+            "interactions": [
+              {
+                "confirmation": "route-cost",
+                "id": "place-route",
+                "input": "choose-edge",
+                "target": "hex-board"
+              },
+              {
+                "id": "offer-trade",
+                "input": "resource-exchange",
+                "target": "trade-panel"
+              }
+            ],
+            "resourceHand": {
+              "fiber": 1,
+              "grain": 0,
+              "lumber": 2,
+              "ore": 1
+            }
+          },
+          "referenceGameId": "hex-network-trading",
+          "scenarioId": "hex-network-trading.place-route.desktop"
+        }
+      }
+    }
+  ],
+  "gameId": "hex-network-trading",
+  "id": "hex-network-trading.place-route.desktop",
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "submitted",
+        "projectionDigest": "sha256:79ad7469859a9d18a48c176603d3a2330830b6648cb6e1c3ebf0395f2e789eb7",
+        "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1",
+        "visibleInteractionKeys": [
+          "place-route",
+          "offer-trade"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "place-route.invoke",
+        "interactionId": "place-route:player-1",
+        "interactionKey": "place-route",
+        "scopeId": "hex-network-trading",
+        "stepId": "hex-network-trading.place-route.desktop.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:31f42fe222440b5c112ea2cff213be6a88e11874d5e32f1e28b1ccefbb2d8c5c",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "place-route:player-1",
+        "interactionKey": "place-route",
+        "scopeId": "hex-network-trading",
+        "surface": "gameplay"
+      },
+      "stepId": "hex-network-trading.place-route.desktop.invoke"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "reducerFingerprint": "sha256:a83bc26dee19a65121505f80dc73ae441d18b449cc9f4703a933ee43dd8c724d",
+    "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
+    "renderModuleDigest": "sha256:1fb960233e4493db35a6f6724838ff63c7a60e183f2709dfa6b0a89eda28f167",
+    "scenarioId": "hex-network-trading.place-route.desktop",
+    "sourceDigest": "sha256:944bd363df1d8319ced90c386ed3c7f4a2b4e339220a5fe3e31cff48600323fd",
+    "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
+  },
+  "tags": [
+    "hex-board-targets",
+    "hex-grid",
+    "placement-confirmation",
+    "resource-hand",
+    "resource-management",
+    "route-building",
+    "trade-controls",
+    "trading"
+  ],
+  "title": "Hex Network Trading: eligible hex edges are targetable",
+  "transport": [
+    {
+      "fromFrameId": "initial",
+      "id": "hex-network-trading.place-route.desktop.validate",
+      "operation": "validate",
+      "requestDigest": "sha256:31f42fe222440b5c112ea2cff213be6a88e11874d5e32f1e28b1ccefbb2d8c5c",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "initial"
+      }
+    },
+    {
+      "fromFrameId": "initial",
+      "id": "hex-network-trading.place-route.desktop.submit",
+      "operation": "submit",
+      "requestDigest": "sha256:31f42fe222440b5c112ea2cff213be6a88e11874d5e32f1e28b1ccefbb2d8c5c",
+      "response": {
+        "kind": "accepted",
+        "nextFrameId": "submitted"
+      }
+    }
+  ],
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

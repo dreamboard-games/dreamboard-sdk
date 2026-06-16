@@ -1,6 +1,17 @@
 # Phase 02: Portable UI Scenario Fixture Contract
 
-Status: proposed.
+Status: source-complete on 2026-06-17. Receipt:
+`artifacts/phase-02-fixture-contract.md`.
+
+The SDK repository now exports the portable fixture contract, deterministic
+reference-game fixture compiler, and committed fixture bundle. The sibling
+internal repository now composes browser-demo schema version `3.0.0` with a
+portable semantic replay representation, validates conversion from the legacy
+compiled recipe, and has a deterministic private internal-golden fixture lane.
+The internal package can import the SDK's named `PortableSemanticReplayStep`
+directly after the SDK package containing this phase is published and repinned;
+until then it validates the same portable shape through its private structural
+bridge.
 
 ## Objective
 

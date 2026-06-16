@@ -20,6 +20,7 @@ const AGENT_API_PATH = path.join(
 );
 const LLMS_PATH = path.join(REPO_ROOT, "docs", "reference", "llms.txt");
 const LLMS_BUDGET_BYTES = 32 * 1024;
+const LLMS_ENTRY_SUMMARY_BUDGET = 22;
 const SIGNATURE_BUDGET = 400;
 const LLMS_INCLUDED_SUBPATHS = new Set([
   ".",
@@ -396,7 +397,12 @@ function renderLlms(sections) {
       LLMS_NAMESPACE_BY_SUBPATH.get(section.subpath) ??
       section.subpath.replace(/^\.\//, "");
     for (const entry of section.exports) {
-      lines.push(`${namespace}.${entry.name} - ${clipText(entry.summary, 24)}`);
+      lines.push(
+        `${namespace}.${entry.name} - ${clipText(
+          entry.summary,
+          LLMS_ENTRY_SUMMARY_BUDGET,
+        )}`,
+      );
     }
   }
 
