@@ -1,0 +1,19 @@
+{
+  "name": "@dreamboard-reference/simultaneous-card-drafting",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node src/reference-game.mjs",
+    "test": "node scenarios/verify.mjs"
+  },
+  "dependencies": {
+    "@dreamboard-games/sdk": "0.2.0"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "files": [
+    "reference-game.json",
+    "scenarios",
+    "src"
+  ]
+}

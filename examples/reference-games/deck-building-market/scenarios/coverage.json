@@ -1,0 +1,21 @@
+{
+  "scenarioId": "deck-building-market.buy-card.desktop",
+  "mechanics": [
+    "deck-building",
+    "market-row",
+    "hand-management",
+    "repeated-turn-state"
+  ],
+  "uiPatterns": [
+    "market-row",
+    "purchase-selection",
+    "hand-actions",
+    "turn-summary"
+  ],
+  "assertions": [
+    "market row exposes affordable and unavailable cards",
+    "purchase selection stages cost from hand resources",
+    "hand actions remain available after a declined purchase",
+    "turn summary preserves repeated turn state"
+  ]
+}

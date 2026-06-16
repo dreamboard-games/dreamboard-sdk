@@ -1,6 +1,7 @@
 # Phase 01: Reference Game Ownership And Consumer Boundary
 
-Status: proposed.
+Status: closed on 2026-06-16. Migration receipt:
+`artifacts/phase-01-migration.md`.
 
 ## Objective
 
