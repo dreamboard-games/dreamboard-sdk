@@ -331,6 +331,7 @@ exports[`public export surface types export names are stable 1`] = `
 
 exports[`public export surface testing export names are stable 1`] = `
 [
+  "FixturePluginRuntime",
   "StaleContractArtifactError",
   "UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION",
   "UI_SCENARIO_FIXTURE_SCHEMA_VERSION",
@@ -343,13 +344,18 @@ exports[`public export surface testing export names are stable 1`] = `
   "canonicalizeUIFixtureJson",
   "canonicalizeUIScenarioFixture",
   "compileUIScenarioFixture",
+  "createDeterministicIdFactory",
   "createExpectApi",
+  "createFixtureRuntime",
   "createTestRuntime",
+  "defaultFixtureEnvironmentInit",
   "defineBase",
   "defineScenario",
   "digestUIFixtureJson",
   "digestUIFixtureRequest",
+  "digestUIFixtureTransportRequest",
   "digestUIScenarioFixture",
+  "fixtureEnvironmentInitFor",
   "isSha256Digest",
   "isStaleContractArtifactError",
   "parseUIScenarioFixture",

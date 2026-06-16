@@ -15448,6 +15448,14 @@ function PluginRuntime({
 
 PluginRuntime provides the RuntimeContext for plugin components.
 
+### PluginRuntimeAPI
+
+```ts
+interface PluginRuntimeAPI { ... }
+```
+
+Extended RuntimeAPI with plugin-specific methods for state-sync architecture.
+
 ### PluginRuntimeProps
 
 ```ts
@@ -18768,6 +18776,14 @@ interface CompileUIScenarioFixtureOptions { ... }
 
 _No JSDoc summary is available yet._
 
+### createDeterministicIdFactory
+
+```ts
+function createDeterministicIdFactory(seed: string): DeterministicIdFactory;
+```
+
+_No JSDoc summary is available yet._
+
 ### CreatedTestRuntime
 
 ```ts
@@ -18780,6 +18796,30 @@ _No JSDoc summary is available yet._
 
 ```ts
 function createExpectApi(options?: CreateExpectApiOptions): ExpectFn;
+```
+
+_No JSDoc summary is available yet._
+
+### createFixtureRuntime
+
+```ts
+function createFixtureRuntime(
+  options: CreateFixtureRuntimeOptions,
+): FixtureRuntimeHarness;
+```
+
+_No JSDoc summary is available yet._
+
+### CreateFixtureRuntimeOptions
+
+```ts
+interface CreateFixtureRuntimeOptions {
+  readonly fixture: UIScenarioFixture;
+  readonly strict?: boolean;
+  readonly latencyMs?: number;
+  readonly onEvent?: (event: FixtureRuntimeEvent) => void;
+  readonly nowMs?: () => number;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -18814,6 +18854,14 @@ type CreateTestRuntimeOptions = {
 
 _No JSDoc summary is available yet._
 
+### defaultFixtureEnvironmentInit
+
+```ts
+const defaultFixtureEnvironmentInit: FixtureEnvironmentInit;
+```
+
+_No JSDoc summary is available yet._
+
 ### defineBase
 
 ```ts
@@ -18838,6 +18886,14 @@ function defineScenario<
 
 _No JSDoc summary is available yet._
 
+### DeterministicIdFactory
+
+```ts
+type DeterministicIdFactory = () => string;
+```
+
+_No JSDoc summary is available yet._
+
 ### digestUIFixtureJson
 
 ```ts
@@ -18850,6 +18906,19 @@ _No JSDoc summary is available yet._
 
 ```ts
 function digestUIFixtureRequest(request: UIReplayRequest): string;
+```
+
+_No JSDoc summary is available yet._
+
+### digestUIFixtureTransportRequest
+
+```ts
+function digestUIFixtureTransportRequest(request: {
+  readonly operation: "validate" | "submit" | "refresh";
+  readonly playerId?: string;
+  readonly interactionId?: string;
+  readonly payload?: unknown;
+}): string;
 ```
 
 _No JSDoc summary is available yet._
@@ -18874,6 +18943,78 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ExpectMatchers = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### FixtureEnvironmentInit
+
+```ts
+interface FixtureEnvironmentInit {
+  readonly clockIso: string;
+  readonly randomSeed: string;
+  readonly locale: "en-US";
+  readonly timezone: "UTC";
+  readonly reducedMotion: true;
+  readonly network: "blocked";
+}
+```
+
+_No JSDoc summary is available yet._
+
+### fixtureEnvironmentInitFor
+
+```ts
+function fixtureEnvironmentInitFor(options: {
+  readonly clockIso: string;
+  readonly randomSeed: string;
+}): FixtureEnvironmentInit;
+```
+
+_No JSDoc summary is available yet._
+
+### FixturePluginRuntime
+
+```ts
+function FixturePluginRuntime({
+  harness,
+  children,
+}: {
+  harness: FixtureRuntimeHarness;
+  children: react__default.ReactNode;
+}): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### FixtureRuntimeEvent
+
+```ts
+interface FixtureRuntimeEvent {
+  readonly sequence: number;
+  readonly atMs: number;
+  readonly kind: "frame" | "validate" | "submit" | "refresh" | "diagnostic";
+  readonly requestDigest?: string;
+  readonly frameId?: string;
+  readonly projectionDigest?: string;
+  readonly result?: "accepted" | "rejected";
+}
+```
+
+_No JSDoc summary is available yet._
+
+### FixtureRuntimeHarness
+
+```ts
+interface FixtureRuntimeHarness {
+  readonly runtime: PluginRuntimeAPI;
+  readonly fixture: UIScenarioFixture;
+  reset(): void;
+  flush(): Promise<void>;
+  getCurrentFrameId(): string;
+  getEvents(): readonly FixtureRuntimeEvent[];
+  assertConsumed(): void;
+}
 ```
 
 _No JSDoc summary is available yet._

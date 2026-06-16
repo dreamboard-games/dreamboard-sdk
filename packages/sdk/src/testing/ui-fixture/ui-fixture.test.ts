@@ -5,14 +5,18 @@ import {
   assertDeterministicUIScenarioFixture,
   assertUniqueReplayIdentity,
   compileUIScenarioFixture,
+  createFixtureRuntime,
   digestUIFixtureJson,
   digestUIFixtureRequest,
+  digestUIFixtureTransportRequest,
   digestUIScenarioFixture,
   parseUIScenarioFixture,
   parseUIScenarioFixtureBundleIndex,
   serializeUIScenarioFixture,
   type UIScenarioFixture,
 } from "./index.js";
+
+const interactionId = "play-card:player-1";
 
 function snapshot(syncId: number): PluginStateSnapshot {
   return {
@@ -25,7 +29,7 @@ function snapshot(syncId: number): PluginStateSnapshot {
       availableInteractions: [
         {
           interactionKey: "play-card",
-          interactionId: "play-card:player-1",
+          interactionId,
           kind: "action",
           availability: { status: "available" },
           inputs: [],
@@ -51,9 +55,22 @@ function makeFixture(): UIScenarioFixture {
     surface: "dreamboard-gameplay",
     scopeId: "main",
     interactionKey: "play-card",
-    interactionId: "play-card:player-1",
+    interactionId,
     intent: "invoke",
   };
+  const requestDigest = digestUIFixtureRequest(resolve);
+  const validateDigest = digestUIFixtureTransportRequest({
+    operation: "validate",
+    playerId: "player-1",
+    interactionId,
+    payload: {},
+  });
+  const submitDigest = digestUIFixtureTransportRequest({
+    operation: "submit",
+    playerId: "player-1",
+    interactionId,
+    payload: {},
+  });
   const firstDigest = digestUIFixtureJson({
     frame: "initial",
     snapshot: snapshot(1),
@@ -97,17 +114,24 @@ function makeFixture(): UIScenarioFixture {
     ],
     transport: [
       {
+        id: "validate-pass-three",
+        fromFrameId: "initial",
+        operation: "validate",
+        requestDigest: validateDigest,
+        response: { kind: "accepted", nextFrameId: "initial" },
+      },
+      {
         id: "submit-pass-three",
         fromFrameId: "initial",
         operation: "submit",
-        requestDigest: digestUIFixtureRequest(resolve),
+        requestDigest: submitDigest,
         response: { kind: "accepted", nextFrameId: "submitted" },
       },
     ],
     replay: [
       {
         stepId: "commit-pass",
-        requestDigest: digestUIFixtureRequest(resolve),
+        requestDigest,
         resolve,
         execute: { kind: "activate" },
         expectedIdentity: {
@@ -115,7 +139,7 @@ function makeFixture(): UIScenarioFixture {
           surface: "dreamboard-gameplay",
           scopeId: "main",
           interactionKey: "play-card",
-          interactionId: "play-card:player-1",
+          interactionId,
           actuatorId: "commit",
         },
         expect: {
@@ -239,5 +263,151 @@ describe("UI scenario fixture contract", () => {
         { ...identity, actuatorId: "different" },
       ]),
     ).toThrow(/actuatorId/);
+  });
+
+  test("fixture runtime validates and submits through strict ordered transport", async () => {
+    const harness = createFixtureRuntime({
+      fixture: makeFixture(),
+      strict: true,
+    });
+    const states: number[] = [];
+    const unsubscribe = harness.runtime.subscribeToState((state) => {
+      states.push(state.syncId);
+    });
+
+    await expect(
+      harness.runtime.validateInteraction("player-1", "play-card:player-1", {}),
+    ).resolves.toEqual({ valid: true });
+    await expect(
+      harness.runtime.submitInteraction("player-1", "play-card:player-1", {}),
+    ).resolves.toBeUndefined();
+
+    unsubscribe();
+    harness.assertConsumed();
+    expect(harness.getCurrentFrameId()).toBe("submitted");
+    expect(states).toEqual([1, 2]);
+    expect(harness.getEvents().map((event) => event.kind)).toEqual([
+      "frame",
+      "validate",
+      "frame",
+      "submit",
+      "frame",
+    ]);
+  });
+
+  test("fixture runtime defers frame publication when latency is configured", async () => {
+    const harness = createFixtureRuntime({
+      fixture: makeFixture(),
+      latencyMs: 20,
+    });
+
+    const validate = harness.runtime.validateInteraction(
+      "player-1",
+      interactionId,
+      {},
+    );
+
+    expect(harness.getEvents().map((event) => event.kind)).toEqual([
+      "frame",
+      "validate",
+    ]);
+    await expect(validate).resolves.toEqual({ valid: true });
+    expect(harness.getEvents().map((event) => event.kind)).toEqual([
+      "frame",
+      "validate",
+      "frame",
+    ]);
+  });
+
+  test("fixture runtime returns rejected validation diagnostics", async () => {
+    const fixture = {
+      ...makeFixture(),
+      transport: [
+        {
+          id: "validate-pass-three",
+          fromFrameId: "initial",
+          operation: "validate" as const,
+          requestDigest: digestUIFixtureTransportRequest({
+            operation: "validate",
+            playerId: "player-1",
+            interactionId,
+            payload: {},
+          }),
+          response: {
+            kind: "rejected" as const,
+            diagnostics: [
+              {
+                code: "fixture-invalid-selection",
+                message: "Select exactly three cards.",
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const harness = createFixtureRuntime({ fixture });
+
+    await expect(
+      harness.runtime.validateInteraction("player-1", interactionId, {}),
+    ).resolves.toEqual({
+      valid: false,
+      errorCode: "fixture-invalid-selection",
+      message: "Select exactly three cards.",
+    });
+    harness.assertConsumed();
+    expect(harness.getCurrentFrameId()).toBe("initial");
+    expect(harness.getEvents().at(-1)?.result).toBe("rejected");
+  });
+
+  test("fixture runtime throws rejected submission diagnostics", async () => {
+    const fixture = {
+      ...makeFixture(),
+      transport: [
+        makeFixture().transport[0]!,
+        {
+          id: "submit-pass-three",
+          fromFrameId: "initial",
+          operation: "submit" as const,
+          requestDigest: digestUIFixtureTransportRequest({
+            operation: "submit",
+            playerId: "player-1",
+            interactionId,
+            payload: {},
+          }),
+          response: {
+            kind: "rejected" as const,
+            diagnostics: [
+              {
+                code: "fixture-submit-rejected",
+                message: "The authority rejected this submit.",
+              },
+            ],
+          },
+        },
+      ],
+    };
+    const harness = createFixtureRuntime({ fixture });
+
+    await harness.runtime.validateInteraction("player-1", interactionId, {});
+    await expect(
+      harness.runtime.submitInteraction("player-1", interactionId, {}),
+    ).rejects.toThrow("The authority rejected this submit.");
+    harness.assertConsumed();
+    expect(harness.getCurrentFrameId()).toBe("initial");
+    expect(harness.getEvents().at(-2)?.result).toBe("rejected");
+  });
+
+  test("fixture runtime fails closed for unexpected transport requests", async () => {
+    const harness = createFixtureRuntime({ fixture: makeFixture() });
+
+    await expect(
+      harness.runtime.submitInteraction("player-1", interactionId, {}),
+    ).rejects.toThrow(/operation/);
+  });
+
+  test("fixture runtime reports unconsumed transport exchanges", () => {
+    const harness = createFixtureRuntime({ fixture: makeFixture() });
+
+    expect(() => harness.assertConsumed()).toThrow(/consumed 0 of 2/);
   });
 });

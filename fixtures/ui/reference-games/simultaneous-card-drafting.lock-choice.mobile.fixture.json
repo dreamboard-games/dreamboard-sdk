@@ -338,7 +338,7 @@
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
     "renderModuleDigest": "sha256:c25494ea683f624d5ed5fb6b93018e83f003a4e8a3d0c35769031232202a9936",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:2210b71f27a090ff20ce59276f5198f470f9bb3952ede8f4d85bce654b97d2b2",
+    "sourceDigest": "sha256:639297c75b7830ecaeaf4681d97bd02111255b7234c357e6078859363041c2b8",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [
@@ -357,7 +357,7 @@
       "fromFrameId": "initial",
       "id": "simultaneous-card-drafting.lock-choice.mobile.validate",
       "operation": "validate",
-      "requestDigest": "sha256:a3ef9b919a4031f3cc162bcc492d4a32e953f420b5b0a4cdd7546fb12885451c",
+      "requestDigest": "sha256:1eef9ab837dba233046d41d513288a0755c7635e088ce9735b3eed250f2908aa",
       "response": {
         "kind": "accepted",
         "nextFrameId": "initial"
@@ -367,7 +367,7 @@
       "fromFrameId": "initial",
       "id": "simultaneous-card-drafting.lock-choice.mobile.submit",
       "operation": "submit",
-      "requestDigest": "sha256:a3ef9b919a4031f3cc162bcc492d4a32e953f420b5b0a4cdd7546fb12885451c",
+      "requestDigest": "sha256:383ad10efdeedfe295b3443657fa3bff84022b804ac0d746d0076dfac84bd86c",
       "response": {
         "kind": "accepted",
         "nextFrameId": "submitted"

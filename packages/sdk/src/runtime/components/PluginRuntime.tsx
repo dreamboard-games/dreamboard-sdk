@@ -1,11 +1,8 @@
 import React from "react";
-import { InteractionUiProvider } from "../context/InteractionDraftContext.js";
-import { RuntimeProvider } from "../context/RuntimeContext.js";
-import { usePluginSession } from "../context/PluginSessionContext.js";
-import { RuntimeSemanticProjectionMarker } from "../context/PluginStateContext.js";
 import { usePluginRuntime } from "../hooks/usePluginRuntime.js";
 import { GameSkeleton } from "../../ui.js";
 import type { PluginRuntimeDiagnosticHandler } from "../api/createPluginRuntimeAPI.js";
+import { PluginRuntimeBoundary } from "./PluginRuntimeBoundary.js";
 
 export interface PluginRuntimeProps {
   /** Child components to render after state sync has started */
@@ -88,24 +85,6 @@ export function PluginRuntime({
   }
 
   return (
-    <RuntimeProvider runtime={runtime}>
-      <SessionScopedInteractionUiProvider>
-        {children}
-      </SessionScopedInteractionUiProvider>
-    </RuntimeProvider>
-  );
-}
-
-function SessionScopedInteractionUiProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { controllingPlayerId } = usePluginSession();
-  return (
-    <InteractionUiProvider key={controllingPlayerId ?? "__no_player__"}>
-      <RuntimeSemanticProjectionMarker />
-      {children}
-    </InteractionUiProvider>
+    <PluginRuntimeBoundary runtime={runtime}>{children}</PluginRuntimeBoundary>
   );
 }

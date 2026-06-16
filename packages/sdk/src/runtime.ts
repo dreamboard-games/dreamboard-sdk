@@ -32,6 +32,7 @@ export type TypedGame<
 
 export type {
   InteractionDescriptor,
+  PluginRuntimeAPI,
   PluginRuntimeProps,
 } from "./runtime/index.js";
 

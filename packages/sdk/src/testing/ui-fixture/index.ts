@@ -4,10 +4,25 @@ export {
   canonicalizeUIScenarioFixture,
   digestUIFixtureJson,
   digestUIFixtureRequest,
+  digestUIFixtureTransportRequest,
   digestUIScenarioFixture,
   isSha256Digest,
   serializeUIScenarioFixture,
 } from "./canonical.js";
+export {
+  createFixtureRuntime,
+  type CreateFixtureRuntimeOptions,
+  type FixtureRuntimeEvent,
+  type FixtureRuntimeHarness,
+} from "./create-fixture-runtime.js";
+export { FixturePluginRuntime } from "./FixturePluginRuntime.js";
+export {
+  createDeterministicIdFactory,
+  defaultFixtureEnvironmentInit,
+  fixtureEnvironmentInitFor,
+  type DeterministicIdFactory,
+  type FixtureEnvironmentInit,
+} from "./deterministic-environment.js";
 export {
   assertDeterministicUIScenarioFixture,
   assertUIStepExpectationSatisfied,

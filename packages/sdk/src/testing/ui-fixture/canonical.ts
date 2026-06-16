@@ -64,6 +64,18 @@ export function digestUIFixtureRequest(request: UIReplayRequest): string {
   });
 }
 
+export function digestUIFixtureTransportRequest(request: {
+  readonly operation: "validate" | "submit" | "refresh";
+  readonly playerId?: string;
+  readonly interactionId?: string;
+  readonly payload?: unknown;
+}): string {
+  return digestUIFixtureJson({
+    digestVersion: "ui-fixture-transport-request@1",
+    request,
+  });
+}
+
 export function canonicalizeUIScenarioFixture(
   fixture: UIScenarioFixture,
 ): UIScenarioFixture {

@@ -335,7 +335,7 @@
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
     "renderModuleDigest": "sha256:5e5cf4f37decece6c6b6e98f30b948d6816078f426f51fddca45e05386391a42",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:6527df795c44096b25d965a45a133a1473154ab1d2d5f6411c4fcd5ffb619f36",
+    "sourceDigest": "sha256:ebf08c8374fc3faefc1d0351b68e1277e09d54daf9337624a74db5e691964185",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [
@@ -354,7 +354,7 @@
       "fromFrameId": "initial",
       "id": "worker-placement-tableau.place-worker.desktop.validate",
       "operation": "validate",
-      "requestDigest": "sha256:515b7c86925829ea9d01ed1f6a55aeb3cbf315b446ba9b96a2733f050f85f9f5",
+      "requestDigest": "sha256:53e8c099c78a0ef13563797224da45619b836280944364eaf7fb38142388aa90",
       "response": {
         "kind": "accepted",
         "nextFrameId": "initial"
@@ -364,7 +364,7 @@
       "fromFrameId": "initial",
       "id": "worker-placement-tableau.place-worker.desktop.submit",
       "operation": "submit",
-      "requestDigest": "sha256:515b7c86925829ea9d01ed1f6a55aeb3cbf315b446ba9b96a2733f050f85f9f5",
+      "requestDigest": "sha256:eb76d5ac34cfe0b5cf4f920b778f4956875103ca1c58cb43b1c23f8ac17ee4d0",
       "response": {
         "kind": "accepted",
         "nextFrameId": "submitted"

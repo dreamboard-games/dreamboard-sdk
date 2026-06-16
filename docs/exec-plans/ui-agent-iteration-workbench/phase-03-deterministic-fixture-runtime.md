@@ -1,6 +1,7 @@
 # Phase 03: Deterministic Fixture Runtime
 
-Status: proposed.
+Status: source-complete on 2026-06-17. Receipt:
+`artifacts/phase-03-runtime.md`.
 
 ## Objective
 

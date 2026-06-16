@@ -21,7 +21,9 @@ export {
   PluginRuntime,
   type PluginRuntimeProps,
 } from "./components/PluginRuntime.js";
+export { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
 export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
+export type { PluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";
 export type * from "./hooks/usePluginRuntime.js";
 export type {

@@ -39,6 +39,7 @@
     "ui:coverage:check": "node scripts/ui/assert-component-coverage.mjs",
     "ui:fixtures:compile": "pnpm --filter @dreamboard-games/sdk build && node scripts/ui-fixtures/compile-reference-fixtures.mjs",
     "ui:fixtures:check": "pnpm --filter @dreamboard-games/sdk build && node scripts/ui-fixtures/check-fixtures.mjs",
+    "ui:runtime:test": "pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/sdk test src/testing/ui-fixture && pnpm --filter @dreamboard-games/ui-workbench typecheck && pnpm --filter @dreamboard-games/ui-workbench test",
     "ui:check:baseline": "pnpm ui:coverage:check && pnpm ui:test:stories && pnpm ui:test:visual",
     "version:check": "node scripts/assert-fixed-version.mjs"
   },

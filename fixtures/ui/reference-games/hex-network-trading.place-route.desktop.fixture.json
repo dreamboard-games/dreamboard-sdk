@@ -298,7 +298,7 @@
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
     "renderModuleDigest": "sha256:1fb960233e4493db35a6f6724838ff63c7a60e183f2709dfa6b0a89eda28f167",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:944bd363df1d8319ced90c386ed3c7f4a2b4e339220a5fe3e31cff48600323fd",
+    "sourceDigest": "sha256:18b8389f93a3779e402a5ea6d0c783fae6af095d29bc457db07768bf18759d37",
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [
@@ -317,7 +317,7 @@
       "fromFrameId": "initial",
       "id": "hex-network-trading.place-route.desktop.validate",
       "operation": "validate",
-      "requestDigest": "sha256:31f42fe222440b5c112ea2cff213be6a88e11874d5e32f1e28b1ccefbb2d8c5c",
+      "requestDigest": "sha256:2a196f36656ab3b94b5249a9b13b61c6a809c59b298c0a88228376c0c656207e",
       "response": {
         "kind": "accepted",
         "nextFrameId": "initial"
@@ -327,7 +327,7 @@
       "fromFrameId": "initial",
       "id": "hex-network-trading.place-route.desktop.submit",
       "operation": "submit",
-      "requestDigest": "sha256:31f42fe222440b5c112ea2cff213be6a88e11874d5e32f1e28b1ccefbb2d8c5c",
+      "requestDigest": "sha256:44e6300bf15280344602402d77e8794af524138b0285869c9ac34561fe9c2cd6",
       "response": {
         "kind": "accepted",
         "nextFrameId": "submitted"

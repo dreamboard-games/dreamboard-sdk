@@ -25,6 +25,7 @@ import {
   createTestRuntime,
   digestUIFixtureJson,
   digestUIFixtureRequest,
+  digestUIFixtureTransportRequest,
   digestUIScenarioFixture,
   serializeUIScenarioFixture,
 } from "../../packages/sdk/dist/testing.js";
@@ -355,6 +356,18 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     intent: "invoke",
   };
   const requestDigest = digestUIFixtureRequest(resolve);
+  const validateDigest = digestUIFixtureTransportRequest({
+    operation: "validate",
+    playerId: "player-1",
+    interactionId: `${interaction.id}:player-1`,
+    payload: {},
+  });
+  const submitDigest = digestUIFixtureTransportRequest({
+    operation: "submit",
+    playerId: "player-1",
+    interactionId: `${interaction.id}:player-1`,
+    payload: {},
+  });
   const validation = await runtime.validate(
     "player-1",
     `${interaction.id}:player-1`,
@@ -430,14 +443,14 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
         id: `${fixtureId}.validate`,
         fromFrameId: "initial",
         operation: "validate",
-        requestDigest,
+        requestDigest: validateDigest,
         response: { kind: "accepted", nextFrameId: "initial" },
       },
       {
         id: `${fixtureId}.submit`,
         fromFrameId: "initial",
         operation: "submit",
-        requestDigest,
+        requestDigest: submitDigest,
         response: { kind: "accepted", nextFrameId: "submitted" },
       },
     ],

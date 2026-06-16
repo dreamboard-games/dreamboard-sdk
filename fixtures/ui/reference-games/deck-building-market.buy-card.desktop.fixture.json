@@ -345,7 +345,7 @@
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
     "renderModuleDigest": "sha256:8145f8878c9f654f5fd4715582f35834923c73f2b4440a03c4fcb20efce44219",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:e65dbbb311108a322061db05d139eee033ad0bb30c235e67e4d41c5fa91b37c4",
+    "sourceDigest": "sha256:8e0d6e5f752ccc036b6261b75730ec601950207e796a9daa2b8f56e5177ed52e",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [
@@ -364,7 +364,7 @@
       "fromFrameId": "initial",
       "id": "deck-building-market.buy-card.desktop.validate",
       "operation": "validate",
-      "requestDigest": "sha256:031b8561ae3eb95652844552ff5f6ebf1978008440ae3f75f442138558af5c51",
+      "requestDigest": "sha256:bc39d1b2cec41b01d3abca081c949917be42bf288f9a9eb1394996f55731265e",
       "response": {
         "kind": "accepted",
         "nextFrameId": "initial"
@@ -374,7 +374,7 @@
       "fromFrameId": "initial",
       "id": "deck-building-market.buy-card.desktop.submit",
       "operation": "submit",
-      "requestDigest": "sha256:031b8561ae3eb95652844552ff5f6ebf1978008440ae3f75f442138558af5c51",
+      "requestDigest": "sha256:3d6c567e6d0bc6778b5a4b709a80d6088a6397ec4afc13e7a44da569c34fe4bd",
       "response": {
         "kind": "accepted",
         "nextFrameId": "submitted"
