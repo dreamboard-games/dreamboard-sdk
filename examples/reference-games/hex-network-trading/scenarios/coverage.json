@@ -1,0 +1,16 @@
+{
+  "scenarioId": "hex-network-trading.place-route.desktop",
+  "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
+  "uiPatterns": [
+    "hex-board-targets",
+    "resource-hand",
+    "trade-controls",
+    "placement-confirmation"
+  ],
+  "assertions": [
+    "eligible hex edges are targetable",
+    "resource hand updates before confirmation",
+    "trade controls validate offered resources",
+    "route placement remains pending until confirmed"
+  ]
+}

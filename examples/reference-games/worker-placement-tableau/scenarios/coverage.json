@@ -1,0 +1,21 @@
+{
+  "scenarioId": "worker-placement-tableau.place-worker.desktop",
+  "mechanics": [
+    "worker-placement",
+    "resource-allocation",
+    "tableau-building",
+    "order-fulfillment"
+  ],
+  "uiPatterns": [
+    "worker-targets",
+    "tableau-cards",
+    "resource-allocation-form",
+    "confirmation-dialog"
+  ],
+  "assertions": [
+    "occupied worker targets become unavailable",
+    "resource allocation form preserves draft input",
+    "tableau cards show produced goods",
+    "placement dialog confirms or cancels atomically"
+  ]
+}

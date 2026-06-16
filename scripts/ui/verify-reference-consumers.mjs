@@ -1,0 +1,150 @@
+#!/usr/bin/env node
+import { spawnSync } from "node:child_process";
+import { cp, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import {
+  assertNoWorkspaceLink,
+  buildRoot,
+  expectedReferenceGameIds,
+  readJson,
+  referenceGamesRoot,
+  root,
+  sha256Directory,
+  sha256File,
+  writeJson,
+} from "./reference-games-lib.mjs";
+
+const sdkPackage = "@dreamboard-games/sdk";
+
+function run(command, args, options = {}) {
+  const result = spawnSync(command, args, {
+    cwd: root,
+    encoding: "utf8",
+    stdio: options.stdio ?? "pipe",
+    ...options,
+  });
+  if (result.status !== 0) {
+    throw new Error(
+      `${command} ${args.join(" ")} failed in ${options.cwd ?? root}\n${result.stdout ?? ""}${result.stderr ?? ""}`,
+    );
+  }
+  return result;
+}
+
+async function packSdk(tempRoot) {
+  run("pnpm", ["--filter", "@dreamboard-games/sdk", "build"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  const pack = run("npm", ["pack", "--json", "--pack-destination", tempRoot], {
+    cwd: path.join(root, "packages/sdk"),
+  });
+  const output = JSON.parse(pack.stdout);
+  const tarballName = output[0]?.filename;
+  if (!tarballName) {
+    throw new Error(`npm pack did not report a tarball\n${pack.stdout}`);
+  }
+  return {
+    tarballPath: path.join(tempRoot, tarballName),
+    tarballSha256: await sha256File(path.join(tempRoot, tarballName)),
+  };
+}
+
+async function rewriteSdkDependency(sandbox, tarballPath) {
+  const packagePath = path.join(sandbox, "package.json");
+  const packageJson = await readJson(packagePath);
+  packageJson.dependencies = {
+    ...packageJson.dependencies,
+    [sdkPackage]: `file:${tarballPath}`,
+  };
+  await writeJson(packagePath, packageJson);
+}
+
+function dependencyGraph(cwd) {
+  const result = run("pnpm", ["list", sdkPackage, "--json", "--depth", "0"], {
+    cwd,
+  });
+  return JSON.parse(result.stdout);
+}
+
+async function verifyGame(gameId, tempRoot, sdkTarballPath) {
+  const sourceDir = path.join(referenceGamesRoot, gameId);
+  const sandbox = path.join(tempRoot, "consumers", gameId);
+  await mkdir(path.dirname(sandbox), { recursive: true });
+  await cp(sourceDir, sandbox, {
+    recursive: true,
+    filter(source) {
+      const name = path.basename(source);
+      return name !== "node_modules" && name !== "dist";
+    },
+  });
+
+  await rewriteSdkDependency(sandbox, sdkTarballPath);
+  run(
+    "pnpm",
+    [
+      "install",
+      "--frozen-lockfile=false",
+      "--ignore-workspace",
+      "--config.shared-workspace-lockfile=false",
+    ],
+    {
+      cwd: sandbox,
+      stdio: "inherit",
+    },
+  );
+  run("pnpm", ["build"], { cwd: sandbox, stdio: "inherit" });
+  run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
+
+  const dependencyResolution = await assertNoWorkspaceLink(sandbox, sdkPackage);
+  const graph = dependencyGraph(sandbox);
+
+  return {
+    id: gameId,
+    packageSha256: await sha256File(path.join(sourceDir, "package.json")),
+    lockfileSha256: await sha256File(path.join(sourceDir, "pnpm-lock.yaml")),
+    sourceSha256: await sha256Directory(path.join(sourceDir, "src")),
+    scenarioSha256: await sha256Directory(path.join(sourceDir, "scenarios")),
+    build: "passed",
+    test: "passed",
+    dependencyResolution,
+    dependencyGraph: graph,
+  };
+}
+
+async function main() {
+  run("node", ["scripts/ui/check-reference-games.mjs"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+  const tempRoot = await mkdtemp(
+    path.join(tmpdir(), "dreamboard-reference-consumers-"),
+  );
+  try {
+    const { tarballPath, tarballSha256 } = await packSdk(tempRoot);
+    const games = [];
+    for (const gameId of expectedReferenceGameIds) {
+      games.push(await verifyGame(gameId, tempRoot, tarballPath));
+    }
+    const receipt = {
+      schemaVersion: 1,
+      checkedAt: new Date().toISOString(),
+      sdkTarballSha256: `sha256:${tarballSha256}`,
+      games,
+    };
+    await mkdir(buildRoot, { recursive: true });
+    await writeJson(
+      path.join(buildRoot, "packed-consumer-receipt.json"),
+      receipt,
+    );
+    console.log(JSON.stringify(receipt, null, 2));
+  } finally {
+    await rm(tempRoot, { recursive: true, force: true });
+  }
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

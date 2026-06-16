@@ -1,0 +1,21 @@
+{
+  "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
+  "mechanics": [
+    "simultaneous-selection",
+    "card-drafting",
+    "hand-passing",
+    "set-collection"
+  ],
+  "uiPatterns": [
+    "private-hand",
+    "locked-choice",
+    "reveal-pass-transition",
+    "compact-mobile-hand"
+  ],
+  "assertions": [
+    "choice remains private until every player locks",
+    "locked choice is shown as pending locally",
+    "reveal transition publishes selected cards together",
+    "compact mobile hand remains usable after pass"
+  ]
+}

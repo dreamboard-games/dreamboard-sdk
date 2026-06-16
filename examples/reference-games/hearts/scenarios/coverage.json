@@ -1,0 +1,20 @@
+{
+  "scenarioId": "hearts.pass-three.mobile",
+  "mechanics": [
+    "trick-taking",
+    "simultaneous-card-passing",
+    "hidden-information"
+  ],
+  "uiPatterns": [
+    "private-hand",
+    "multi-select",
+    "mobile-hand-actions",
+    "shared-trick-area"
+  ],
+  "assertions": [
+    "player hand remains private before pass reveal",
+    "three selected cards are staged before submission",
+    "mobile hand action confirms the pass",
+    "trick area shows only played public cards"
+  ]
+}
