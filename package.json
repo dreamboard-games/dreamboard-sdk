@@ -19,6 +19,8 @@
     "publication:check": "node scripts/assert-publication-boundary.mjs",
     "publish:alpha": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha",
     "publish:alpha:dry-run": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha --dry-run",
+    "storybook": "pnpm --filter @dreamboard-games/sdk storybook",
+    "storybook:build": "pnpm --filter @dreamboard-games/sdk storybook:build",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
     "version:check": "node scripts/assert-fixed-version.mjs"
