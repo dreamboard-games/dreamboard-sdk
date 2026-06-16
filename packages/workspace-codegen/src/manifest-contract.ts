@@ -2512,10 +2512,7 @@ export function materializeManifestTable(options: {
     },
   ) => {
     if (!home || home.type === "detached") {
-      componentLocations[cardId] = {
-        type: "Detached",
-        position: nextLocationPosition({ type: "Detached" }),
-      };
+      componentLocations[cardId] = { type: "Detached" };
       return;
     }
 

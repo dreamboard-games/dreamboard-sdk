@@ -1234,10 +1234,10 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     "slot-card",
     "holder-a",
   ]);
-  expect(table.componentLocations.omitted).toMatchObject({
+  expect(table.componentLocations.omitted).toEqual({
     type: "Detached",
   });
-  expect(table.componentLocations.detached).toMatchObject({
+  expect(table.componentLocations.detached).toEqual({
     type: "Detached",
   });
   expect(table.componentLocations["zone-card"]).toEqual({
