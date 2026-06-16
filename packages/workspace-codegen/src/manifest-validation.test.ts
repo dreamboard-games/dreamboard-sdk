@@ -348,6 +348,177 @@ test("validateManifestAuthoring accepts player-scoped seed homes with ownerId", 
   expect(validation.errors).toEqual([]);
 });
 
+test("validateManifestAuthoring rejects player-scoped card homes", () => {
+  const validation = validateManifestAuthoring({
+    ...BASE_MANIFEST,
+    cardSets: [
+      {
+        type: "manual",
+        id: "market",
+        name: "Market",
+        cardSchema: { properties: {} },
+        cards: [
+          {
+            type: "scout",
+            name: "Scout",
+            count: 1,
+            home: { type: "zone", zoneId: "player-hand" },
+            properties: {},
+          },
+          {
+            type: "camp",
+            name: "Camp",
+            count: 1,
+            home: {
+              type: "space",
+              boardId: "player-mat",
+              spaceId: "camp",
+            },
+            properties: {},
+          },
+        ],
+      },
+    ],
+    zones: [
+      {
+        id: "player-hand",
+        name: "Player Hand",
+        scope: "perPlayer",
+      },
+    ],
+    boards: [
+      {
+        id: "player-mat",
+        name: "Player Mat",
+        layout: "square",
+        scope: "perPlayer",
+        spaces: [{ id: "camp", row: 0, col: 0 }],
+        relations: [],
+        containers: [],
+        edges: [],
+        vertices: [],
+      },
+    ],
+  });
+
+  expect(validation.errors).toContain(
+    "manifest.cardSets[0].cards[0].home.zoneId: Card 'scout' cannot target per-player zone 'player-hand' because card inventory has no ownerId. Place it during reducer setup instead.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.cardSets[0].cards[1].home.boardId: Card 'camp' cannot target per-player board 'player-mat' because card inventory has no ownerId. Place it during reducer setup instead.",
+  );
+});
+
+test("validateManifestAuthoring rejects reserved record keys before generation", () => {
+  const validation = validateManifestAuthoring({
+    ...BASE_MANIFEST,
+    cardSets: [
+      {
+        type: "manual",
+        id: "unsafe-cards",
+        name: "Unsafe Cards",
+        cardSchema: {
+          properties: {
+            prototype: { type: "string" },
+            nested: {
+              type: "object",
+              properties: {
+                constructor: { type: "integer" },
+              },
+            },
+          },
+        },
+        cards: [
+          {
+            type: "__proto__",
+            name: "Unsafe Card",
+            count: 1,
+            properties: {},
+          },
+        ],
+      },
+    ],
+    zones: [
+      {
+        id: "prototype",
+        name: "Unsafe Zone",
+        scope: "shared",
+      },
+    ],
+    boards: [
+      {
+        id: "safe-board",
+        name: "Safe Board",
+        layout: "generic",
+        scope: "shared",
+        spaces: [{ id: "constructor" }],
+        relations: [],
+        containers: [],
+      },
+    ],
+    pieceTypes: [{ id: "worker", name: "Worker" }],
+    pieceSeeds: [{ id: "__proto__", typeId: "worker" }],
+    setupOptions: [
+      {
+        id: "__proto__",
+        name: "Unsafe Option",
+        choices: [{ id: "constructor", label: "Unsafe Choice" }],
+      },
+    ],
+  });
+
+  expect(validation.errors).toContain(
+    "manifest.cardSets[0].cards[0].type: '__proto__' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.pieceSeeds[*][0]: '__proto__' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.zones[0].id: 'prototype' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.boards[0].spaces[0].id: 'constructor' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.setupOptions[0].id: '__proto__' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.cardSets[0].cardSchema.properties.prototype: 'prototype' is reserved and cannot be used as a generated record key.",
+  );
+  expect(validation.errors).toContain(
+    "manifest.cardSets[0].cardSchema.properties.nested.properties.constructor: 'constructor' is reserved and cannot be used as a generated record key.",
+  );
+});
+
+test("validateManifestAuthoring rejects generated handle key collisions", () => {
+  const validation = validateManifestAuthoring({
+    ...BASE_MANIFEST,
+    cardSets: [
+      {
+        type: "manual",
+        id: "market",
+        name: "Market",
+        cardSchema: { properties: {} },
+        cards: [
+          { type: "foo-bar", name: "Foo Bar", count: 1, properties: {} },
+          { type: "foo_bar", name: "Foo Bar 2", count: 1, properties: {} },
+        ],
+      },
+    ],
+    zones: [
+      { id: "draw-zone", name: "Draw Zone", scope: "shared" },
+      { id: "draw_zone", name: "Draw Zone 2", scope: "shared" },
+    ],
+  });
+
+  expect(validation.errors).toContain(
+    "Card type values foo-bar, foo_bar all generate handle 'fooBar'.",
+  );
+  expect(validation.errors).toContain(
+    "Zone values draw-zone, draw_zone all generate handle 'drawZone'.",
+  );
+});
+
 test("validateManifestAuthoring warns when board-scoped category type ids are ambiguous across boards", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,

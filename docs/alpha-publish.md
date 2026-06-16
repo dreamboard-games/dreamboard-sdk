@@ -6,34 +6,63 @@ Use this checklist for the first manual alpha publish of
 ## Package
 
 - Package: `@dreamboard-games/sdk`
-- Current version: `0.3.0-alpha.1`
+- Current version:
+  `SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"`
 - Dist-tag: `alpha`
 - Source directory: `packages/sdk`
 
-Publishing `0.3.0-alpha.1` with `--tag alpha` keeps it off the default `latest`
-channel. If this exact version is later promoted, use `npm dist-tag add` rather
-than republishing.
+Publishing with `--tag alpha` keeps the package off the default `latest`
+channel. If a version is later promoted, use `npm dist-tag add` rather than
+republishing or deleting packages.
 
 ## Preflight
+
+```sh
+pnpm install --frozen-lockfile
+pnpm check
+SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
+case "$SDK_VERSION" in
+  *-alpha.*) ;;
+  *) echo "Version is not an alpha prerelease: $SDK_VERSION" >&2; exit 1 ;;
+esac
+```
+
+This runs:
+
+- formatting, linting, typechecking, and reducer-contract drift checks;
+- publication boundary, fixed-version, and peer-hygiene guards;
+- build, docs, tests, exact export parity, packed-consumer smoke, and pack
+  dry-run.
+
+For a local npm dry-run:
 
 ```sh
 pnpm publish:alpha:dry-run
 ```
 
-This runs:
+## Workflow Publish
 
-- publication boundary guard;
-- fixed-version guard;
-- peer-hygiene guard;
-- build;
-- test;
-- pack dry-run;
-- SDK tarball self-containment scan;
-- npm publish dry-run with `--tag alpha`.
+The preferred alpha path is the `release-alpha` GitHub Actions workflow. It
+uses npm Trusted Publishing, verifies with `pnpm check`, uploads the exact SDK
+tarball that passed verification, then publishes that artifact with provenance
+and the `alpha` dist-tag.
 
-## Manual Publish
+Before dispatching the workflow:
 
-Confirm the npm account and registry:
+```sh
+git status --short
+git rev-parse HEAD
+SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
+test "$(git tag --points-at HEAD | grep -c \"^sdk-v$SDK_VERSION$\")" != "0"
+npm view "@dreamboard-games/sdk@$SDK_VERSION" version --registry=https://registry.npmjs.org/ || true
+```
+
+Dispatch only from the intended clean SHA/tag pair.
+
+## Manual Fallback
+
+Manual publishing is a fallback if the workflow is unavailable. Confirm the npm
+account and registry:
 
 ```sh
 npm whoami --registry=https://registry.npmjs.org/
@@ -53,7 +82,9 @@ repository for the manual publish path.
 
 ```sh
 npm view @dreamboard-games/sdk@alpha version dist-tags license repository.url --registry=https://registry.npmjs.org/
-npm view @dreamboard-games/sdk@0.3.0-alpha.1 version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
+SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
+npm view "@dreamboard-games/sdk@$SDK_VERSION" version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
+npm view "@dreamboard-games/sdk" dist-tags --json --registry=https://registry.npmjs.org/
 ```
 
 Then prove a disposable install:
@@ -63,8 +94,11 @@ tmpdir="$(mktemp -d)"
 cd "$tmpdir"
 npm init -y
 npm install @dreamboard-games/sdk@alpha --registry=https://registry.npmjs.org/
-node -e 'import("@dreamboard-games/sdk/types").then(() => import("@dreamboard-games/sdk/reducer")).then(() => import("@dreamboard-games/sdk/testing")).then(() => console.log("sdk alpha imports ok"))'
+node -e 'Promise.all([import("@dreamboard-games/sdk"), import("@dreamboard-games/sdk/types"), import("@dreamboard-games/sdk/reducer"), import("@dreamboard-games/sdk/reducer-contract"), import("@dreamboard-games/sdk/testing"), import("@dreamboard-games/sdk/runtime"), import("@dreamboard-games/sdk/ui")]).then(() => console.log("sdk alpha imports ok"))'
 ```
+
+If rollback is needed, move the `alpha` dist-tag to the prior known-good
+version. Do not delete published package versions.
 
 ## Trusted Publishing Follow-Up
 
@@ -79,4 +113,6 @@ npm trust github @dreamboard-games/sdk \
   --allow-publish
 ```
 
-The workflow already requests GitHub OIDC with `id-token: write` and uses Node 24. Keep npm tokens out of repository secrets.
+The publish job requests GitHub OIDC with `id-token: write` and uses Node 24.
+The verification job has no OIDC permission. Keep npm tokens out of repository
+secrets.

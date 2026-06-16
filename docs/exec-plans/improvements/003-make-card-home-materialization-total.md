@@ -1,6 +1,6 @@
 # 003 Make Card-Home Materialization Total
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: High
 - Effort: Medium

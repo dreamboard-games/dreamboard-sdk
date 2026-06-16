@@ -15,7 +15,6 @@ import { normalizeResult } from "./runtime-scope";
 import { createMutableRandomHelpers } from "./rng-sampler";
 import type { createInteractionResolver } from "./interaction-resolver";
 import type {
-  TrustedDomainState,
   TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
@@ -38,7 +37,6 @@ export function createLifecycleRunner<
   scope: TrustedRuntimeScope<Contract, Definitions, Views>,
   interactions: InteractionResolverFor<Contract, Definitions, Views>,
 ) {
-  type DomainState = TrustedDomainState<Contract>;
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
   type Manifest = TrustedManifest<Contract>;

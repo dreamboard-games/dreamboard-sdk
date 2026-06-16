@@ -185,9 +185,7 @@ export interface TrustedRuntimeScope<
   continuationById(
     id: string,
   ): AnyContinuationCallable<TrustedDomainState<Contract>> | undefined;
-  fxForState(
-    state: TrustedState<Contract>,
-  ): ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
+  fxForState(): ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
   buildContext(
     state: TrustedState<Contract>,
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>>;
@@ -299,8 +297,8 @@ export function createTrustedRuntimeScope<
     edit: createReducerEdit<DomainState>(),
   };
 
-  function fxForState(state: State) {
-    return trustedFxForState<Contract>(state);
+  function fxForState() {
+    return trustedFxForState<Contract>();
   }
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {

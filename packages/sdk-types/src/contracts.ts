@@ -261,7 +261,9 @@ export type BoardCard = {
    */
   cardType?: string;
   /**
-   * Optional authored home for this card inventory. When omitted, cards start detached until reducer setup places them.
+   * Optional initial home. Omitted cards start Detached.
+   * Compatibility declarations such as allowedCardSetIds never imply placement.
+   * Player-scoped distribution belongs in reducer setup.
    */
   home?: ComponentHomeSpec;
   /**

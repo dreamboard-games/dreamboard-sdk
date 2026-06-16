@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { PlayerId } from "@dreamboard/manifest-contract";
 import type {
   RuntimeAPI,
@@ -6,6 +5,15 @@ import type {
   ValidationResult,
 } from "../types/runtime-api.js";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import {
+  HostToPluginEnvelopeSchema,
+  PluginInitEnvelopeSchema,
+  assertTransportEnvelopeWithinLimits,
+  createPluginEnvelope,
+  type HostToPluginPayload,
+  type PluginChannel,
+  type PluginToHostPayload,
+} from "../plugin-protocol.js";
 
 export type PluginRuntimeDiagnosticEvent =
   | {
@@ -28,67 +36,6 @@ export type PluginRuntimeDiagnosticHandler = (
 export type PluginRuntimeAPIOptions = {
   onDiagnostic?: PluginRuntimeDiagnosticHandler;
 };
-
-/**
- * Message schemas from main app to plugin
- * We define them here to avoid circular dependencies with apps/web
- */
-
-// Main → Plugin: Initialize plugin with session info
-const InitMessageSchema = z.object({
-  type: z.literal("init"),
-  sessionId: z.string(),
-  controllablePlayerIds: z.array(z.string()),
-  controllingPlayerId: z.string(),
-  userId: z.string().nullable(),
-});
-
-// Main → Plugin: Health check ping
-const PingMessageSchema = z.object({
-  type: z.literal("ping"),
-});
-
-// Main → Plugin: State sync - sends complete state snapshot
-const StateSyncMessageSchema = z.object({
-  type: z.literal("state-sync"),
-  syncId: z.number(),
-  state: z.custom<PluginStateSnapshot>((data: unknown) => {
-    return (
-      typeof data === "object" &&
-      data !== null &&
-      "session" in data &&
-      "notifications" in data
-    );
-  }),
-});
-
-// Main → Plugin: Validation result response
-const ValidateInteractionResultMessageSchema = z.object({
-  type: z.literal("validate-interaction-result"),
-  messageId: z.string(),
-  result: z.object({
-    valid: z.boolean(),
-    errorCode: z.string().nullable().optional(),
-    message: z.string().nullable().optional(),
-  }),
-});
-
-const SubmitResultMessageSchema = z.object({
-  type: z.literal("submit-result"),
-  messageId: z.string(),
-  accepted: z.boolean(),
-  errorCode: z.string().nullable().optional(),
-  message: z.string().nullable().optional(),
-});
-
-// Union of all messages from main → plugin
-const MainToPluginMessageSchema = z.discriminatedUnion("type", [
-  InitMessageSchema,
-  PingMessageSchema,
-  StateSyncMessageSchema,
-  ValidateInteractionResultMessageSchema,
-  SubmitResultMessageSchema,
-]);
 
 /**
  * Extended RuntimeAPI with plugin-specific methods for state-sync architecture.
@@ -144,6 +91,7 @@ export interface PluginRuntimeAPI extends RuntimeAPI {
    * ```
    */
   restoreHistory?: (entryId: string) => void;
+  markNotificationRead?: (notificationId: string) => void;
   setDiagnosticHandler?: (
     handler: PluginRuntimeDiagnosticHandler | undefined,
   ) => void;
@@ -208,6 +156,8 @@ export function createPluginRuntimeAPI(
     return existingRuntime;
   }
   let onDiagnostic = options.onDiagnostic;
+  let channel: PluginChannel | null = null;
+  let disconnected = false;
 
   const emitDiagnostic = (event: PluginRuntimeDiagnosticEvent): void => {
     if (onDiagnostic) {
@@ -274,6 +224,36 @@ export function createPluginRuntimeAPI(
   let submitIdCounter = 0;
 
   // Helper functions
+  const postToHost = (payload: PluginToHostPayload): void => {
+    if (channel === null || disconnected) {
+      throw new Error("Plugin runtime is not initialized.");
+    }
+    channel.hostWindow.postMessage(
+      createPluginEnvelope(payload, channel),
+      channel.hostOrigin,
+    );
+  };
+
+  const rejectPendingRequests = () => {
+    pendingValidations.forEach((resolve) => {
+      resolve({
+        valid: false,
+        errorCode: "runtime-disconnected",
+        message: "Plugin runtime disconnected",
+      });
+    });
+    pendingValidations.clear();
+    pendingSubmissions.forEach((pending) => {
+      pending.reject(
+        createSubmissionError(
+          "runtime-disconnected",
+          "Plugin runtime disconnected",
+        ),
+      );
+    });
+    pendingSubmissions.clear();
+  };
+
   const notifySessionStateChange = () => {
     sessionStateListeners.forEach((listener) => {
       try {
@@ -317,6 +297,15 @@ export function createPluginRuntimeAPI(
     clientActionId?: string;
   }): Promise<void> =>
     new Promise((resolve, reject) => {
+      if (channel === null || disconnected) {
+        reject(
+          createSubmissionError(
+            "runtime-not-initialized",
+            "Plugin runtime is not initialized.",
+          ),
+        );
+        return;
+      }
       const messageId = `submit-${++submitIdCounter}`;
       pendingSubmissions.set(messageId, { resolve, reject });
 
@@ -337,10 +326,20 @@ export function createPluginRuntimeAPI(
         }
       }
 
-      window.parent.postMessage(
-        { ...payload, messageId, clientSubmittedAtMs },
-        "*",
-      );
+      try {
+        postToHost({ ...payload, messageId, clientSubmittedAtMs });
+      } catch (error) {
+        pendingSubmissions.delete(messageId);
+        reject(
+          createSubmissionError(
+            "runtime-not-initialized",
+            error instanceof Error
+              ? error.message
+              : "Plugin runtime is not initialized.",
+          ),
+        );
+        return;
+      }
 
       setTimeout(() => {
         const pending = pendingSubmissions.get(messageId);
@@ -357,141 +356,181 @@ export function createPluginRuntimeAPI(
       }, 10000);
     });
 
+  const applyInitMessage = (
+    message: Extract<HostToPluginPayload, { type: "init" }>,
+  ) => {
+    emitDiagnostic({
+      type: "runtimeLog",
+      level: "log",
+      message: "[Plugin RuntimeAPI] Received init message",
+    });
+
+    sessionState.status = "ready";
+    sessionState.sessionId = message.sessionId;
+    sessionState.controllablePlayerIds =
+      message.controllablePlayerIds as PlayerId[];
+    sessionState.controllingPlayerId = message.controllingPlayerId as PlayerId;
+    sessionState.userId = message.userId;
+    notifySessionStateChange();
+
+    if (message.state) {
+      applyStateSyncMessage({
+        type: "state-sync",
+        syncId: message.state.syncId,
+        state: message.state,
+      });
+    }
+  };
+
+  const applyStateSyncMessage = (
+    message: Extract<HostToPluginPayload, { type: "state-sync" }>,
+  ) => {
+    emitDiagnostic({
+      type: "runtimeLog",
+      level: "log",
+      message: "[Plugin RuntimeAPI] Received state-sync, syncId:",
+      details: [message.syncId],
+    });
+
+    const clientReceivedAtMs = Date.now();
+    if (typeof performance !== "undefined") {
+      try {
+        performance.mark(
+          `dreamboard.t7_state_sync_received.sync-${message.syncId}`,
+          { detail: { syncId: message.syncId } },
+        );
+      } catch {
+        // performance.mark detail arg not supported; ignore
+      }
+    }
+
+    currentStateSnapshot = message.state;
+
+    if (message.state.session) {
+      sessionState.sessionId = message.state.session.sessionId;
+      sessionState.controllablePlayerIds =
+        message.state.session.controllablePlayerIds;
+      sessionState.controllingPlayerId =
+        message.state.session.controllingPlayerId;
+      sessionState.userId = message.state.session.userId;
+      sessionState.status = "ready";
+      notifySessionStateChange();
+    }
+
+    notifyStateListeners();
+
+    postToHost({
+      type: "state-ack",
+      syncId: message.syncId,
+      clientReceivedAtMs,
+    });
+
+    const schedulePostRender = () => {
+      const send = () => {
+        const clientRenderedAtMs = Date.now();
+        if (typeof performance !== "undefined") {
+          try {
+            performance.mark(
+              `dreamboard.t8_render_commit.sync-${message.syncId}`,
+              {
+                detail: { syncId: message.syncId },
+              },
+            );
+          } catch {
+            // ignore
+          }
+        }
+        if (!disconnected && channel !== null) {
+          postToHost({
+            type: "state-rendered",
+            syncId: message.syncId,
+            clientReceivedAtMs,
+            clientRenderedAtMs,
+          });
+        }
+      };
+      if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(send);
+      } else {
+        queueMicrotask(send);
+      }
+    };
+    queueMicrotask(schedulePostRender);
+  };
+
   // Message handler
   const handleMessage = (event: MessageEvent) => {
-    const rawMessage = event.data;
+    if (disconnected || event.source !== window.parent) {
+      return;
+    }
 
-    const parseResult = MainToPluginMessageSchema.safeParse(rawMessage);
-    if (!parseResult.success) {
-      // Only warn for messages that look like they're meant for us
-      if (rawMessage?.type && typeof rawMessage.type === "string") {
+    try {
+      assertTransportEnvelopeWithinLimits(event.data);
+    } catch (error) {
+      emitDiagnostic({
+        type: "runtimeLog",
+        level: "warn",
+        message: "[Plugin RuntimeAPI] Rejected oversized or non-JSON message:",
+        details: [error instanceof Error ? error.name : "unknown"],
+      });
+      return;
+    }
+
+    if (channel === null) {
+      const initResult = PluginInitEnvelopeSchema.safeParse(event.data);
+      if (!initResult.success) {
+        return;
+      }
+      channel = {
+        channelId: initResult.data.channelId,
+        hostOrigin: event.origin,
+        hostWindow: window.parent,
+      };
+      applyInitMessage(initResult.data.payload);
+      postToHost({ type: "ready" });
+      return;
+    }
+
+    if (
+      event.source !== channel.hostWindow ||
+      event.origin !== channel.hostOrigin
+    ) {
+      return;
+    }
+
+    const parseResult = HostToPluginEnvelopeSchema.safeParse(event.data);
+    if (
+      !parseResult.success ||
+      parseResult.data.channelId !== channel.channelId
+    ) {
+      const rawPayload = (event.data as { payload?: { type?: unknown } })
+        ?.payload;
+      if (typeof rawPayload?.type === "string") {
         emitDiagnostic({
           type: "runtimeLog",
           level: "warn",
           message: "[Plugin RuntimeAPI] Invalid message received:",
-          details: [rawMessage.type],
+          details: [rawPayload.type],
         });
       }
       return;
     }
 
-    const message = parseResult.data;
+    const message = parseResult.data.payload;
 
     switch (message.type) {
       case "init": {
-        emitDiagnostic({
-          type: "runtimeLog",
-          level: "log",
-          message: "[Plugin RuntimeAPI] Received init message",
-        });
-
-        sessionState.status = "ready";
-        sessionState.sessionId = message.sessionId;
-        sessionState.controllablePlayerIds =
-          message.controllablePlayerIds as PlayerId[];
-        sessionState.controllingPlayerId =
-          message.controllingPlayerId as PlayerId;
-        sessionState.userId = message.userId;
-
-        notifySessionStateChange();
-        window.parent.postMessage({ type: "ready" }, "*");
+        // A bound channel cannot be rebound by a second init envelope.
         break;
       }
 
       case "ping": {
-        window.parent.postMessage({ type: "pong" }, "*");
+        postToHost({ type: "pong" });
         break;
       }
 
       case "state-sync": {
-        // Handle state-sync from host
-        emitDiagnostic({
-          type: "runtimeLog",
-          level: "log",
-          message: "[Plugin RuntimeAPI] Received state-sync, syncId:",
-          details: [message.syncId],
-        });
-
-        // Tier-0 perf: capture `t7_state_sync_received` wall-clock
-        // timestamp up-front so the host can stitch it onto the
-        // perf HUD via the outgoing state-ack message.
-        const clientReceivedAtMs = Date.now();
-        if (typeof performance !== "undefined") {
-          try {
-            performance.mark(
-              `dreamboard.t7_state_sync_received.sync-${message.syncId}`,
-              { detail: { syncId: message.syncId } },
-            );
-          } catch {
-            // performance.mark detail arg not supported; ignore
-          }
-        }
-
-        currentStateSnapshot = message.state;
-
-        // Update session state from snapshot
-        if (message.state.session) {
-          sessionState.sessionId = message.state.session.sessionId;
-          sessionState.controllablePlayerIds =
-            message.state.session.controllablePlayerIds;
-          sessionState.controllingPlayerId =
-            message.state.session.controllingPlayerId;
-          sessionState.userId = message.state.session.userId;
-          sessionState.status = "ready";
-          notifySessionStateChange();
-        }
-
-        // Notify state listeners
-        notifyStateListeners();
-
-        // Send acknowledgment (carrying t7 timestamp for the host
-        // perf HUD; host ignores it when perf is disabled).
-        window.parent.postMessage(
-          {
-            type: "state-ack",
-            syncId: message.syncId,
-            clientReceivedAtMs,
-          },
-          "*",
-        );
-
-        // Tier-0 perf: after notifyStateListeners has kicked React's
-        // render, schedule a post-commit microtask + rAF chain so the
-        // paired `state-rendered` message lands close to when the
-        // plugin's DOM would have been painted. `queueMicrotask` is
-        // used first because most React listeners finish synchronously;
-        // `requestAnimationFrame` then bounces to the next paint tick.
-        const schedulePostRender = () => {
-          const send = () => {
-            const clientRenderedAtMs = Date.now();
-            if (typeof performance !== "undefined") {
-              try {
-                performance.mark(
-                  `dreamboard.t8_render_commit.sync-${message.syncId}`,
-                  { detail: { syncId: message.syncId } },
-                );
-              } catch {
-                // ignore
-              }
-            }
-            window.parent.postMessage(
-              {
-                type: "state-rendered",
-                syncId: message.syncId,
-                clientReceivedAtMs,
-                clientRenderedAtMs,
-              },
-              "*",
-            );
-          };
-          if (typeof requestAnimationFrame === "function") {
-            requestAnimationFrame(send);
-          } else {
-            queueMicrotask(send);
-          }
-        };
-        queueMicrotask(schedulePostRender);
-
+        applyStateSyncMessage(message);
         break;
       }
 
@@ -550,14 +589,13 @@ export function createPluginRuntimeAPI(
       message,
       ...(stack ? { stack } : {}),
     });
-    window.parent.postMessage(
-      {
+    if (channel !== null && !disconnected) {
+      postToHost({
         type: "error",
         message: stack ? `${message}\n${stack}` : message,
         code,
-      },
-      "*",
-    );
+      });
+    }
   };
 
   window.onerror = (message, source, lineno, colno, error) => {
@@ -607,19 +645,34 @@ export function createPluginRuntimeAPI(
 
     validateInteraction: async (playerId, interactionId, params) => {
       return new Promise((resolve) => {
+        if (channel === null || disconnected) {
+          resolve({
+            valid: false,
+            errorCode: "runtime-not-initialized",
+            message: "Plugin runtime is not initialized.",
+          });
+          return;
+        }
         const messageId = `validate-${++validationIdCounter}`;
         pendingValidations.set(messageId, resolve);
 
-        window.parent.postMessage(
-          {
+        try {
+          postToHost({
             type: "validate-interaction",
             playerId,
             interactionId,
             params,
             messageId,
-          },
-          "*",
-        );
+          });
+        } catch {
+          pendingValidations.delete(messageId);
+          resolve({
+            valid: false,
+            errorCode: "runtime-not-initialized",
+            message: "Plugin runtime is not initialized.",
+          });
+          return;
+        }
 
         // Timeout after 10 seconds to avoid hanging forever
         setTimeout(() => {
@@ -650,19 +703,24 @@ export function createPluginRuntimeAPI(
       window.removeEventListener("message", handleMessage);
       window.onerror = null;
       window.onunhandledrejection = null;
+      disconnected = true;
+      channel = null;
       sessionStateListeners.clear();
       stateListeners.clear();
-      pendingValidations.clear();
-      pendingSubmissions.clear();
+      rejectPendingRequests();
       currentStateSnapshot = null;
     },
 
     switchPlayer: (playerId: PlayerId) => {
-      window.parent.postMessage({ type: "switch-player", playerId }, "*");
+      postToHost({ type: "switch-player", playerId });
     },
 
     restoreHistory: (entryId: string) => {
-      window.parent.postMessage({ type: "restore-history", entryId }, "*");
+      postToHost({ type: "restore-history", entryId });
+    },
+
+    markNotificationRead: (notificationId: string) => {
+      postToHost({ type: "mark-notification-read", notificationId });
     },
 
     setDiagnosticHandler: (handler) => {

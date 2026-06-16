@@ -1,5 +1,9 @@
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
-import type { ReducerReject, ReducerResult, TerminalOutcome } from "../../model";
+import type {
+  ReducerReject,
+  ReducerResult,
+  TerminalOutcome,
+} from "../../model";
 
 export function acceptResult<State>(
   state: State,

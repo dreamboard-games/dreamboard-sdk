@@ -35,7 +35,7 @@ export type ContinuationToken<
 };
 
 export type ContinuationResponseOf<Token> =
-  Token extends ContinuationToken<any, string, infer Response>
+  Token extends ContinuationToken<unknown, string, infer Response>
     ? Response
     : never;
 

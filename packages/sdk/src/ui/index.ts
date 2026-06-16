@@ -56,8 +56,18 @@ export {
   type InteractionVisualState,
   type TargetIntent,
 } from "./types/visual-state.js";
-export type * from "./hooks/useHandLayout.js";
-export type * from "./hooks/usePanZoom.js";
+export type {
+  CardPositionProps,
+  CardSize,
+  HandLayout,
+  UseHandLayoutOptions,
+  UseHandLayoutReturn,
+} from "./hooks/useHandLayout.js";
+export type {
+  PanZoomTransform,
+  UsePanZoomOptions,
+  UsePanZoomReturn,
+} from "./hooks/usePanZoom.js";
 export {
   hexColor,
   isHexColor,

@@ -1,3 +1,5 @@
+import { parseBrowserAttributeJson } from "../runtime-json.js";
+
 export type CanonicalBrowserInteractionValue =
   | null
   | boolean
@@ -58,6 +60,7 @@ function canonicalizeValue(
 }
 
 export function encodeCanonicalCandidateValue(value: unknown): string {
+  parseBrowserAttributeJson(value);
   assertCanonicalValue(value);
   return JSON.stringify(canonicalizeValue(value));
 }
@@ -66,6 +69,7 @@ export function decodeCanonicalCandidateValue(
   encoded: string,
 ): CanonicalBrowserInteractionValue {
   const parsed = JSON.parse(encoded) as unknown;
+  parseBrowserAttributeJson(parsed);
   assertCanonicalValue(parsed);
   return canonicalizeValue(parsed);
 }

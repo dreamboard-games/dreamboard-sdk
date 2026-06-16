@@ -39,6 +39,7 @@ import {
   addStandardDecksIfNeeded,
   materializeCardSet,
 } from "./preset-card-sets.js";
+import { validateManifestAuthoring } from "./manifest-validation.js";
 
 interface AnalyzedGenericBoard {
   layout: "generic";
@@ -577,6 +578,10 @@ function sortedObject<Value>(
   return Object.fromEntries(
     Array.from(entries).sort(([left], [right]) => left.localeCompare(right)),
   );
+}
+
+function createRecord<Value>(): Record<string, Value> {
+  return Object.create(null) as Record<string, Value>;
 }
 
 function renderCardInstanceIds(card: BoardCard): string[] {
@@ -2407,16 +2412,22 @@ export function materializeManifestTable(options: {
   playerIds: readonly string[];
   shuffleItems: <Value>(values: readonly Value[]) => Value[];
 }): Record<string, unknown> {
+  const validation = validateManifestAuthoring(options.manifest);
+  if (validation.errors.length > 0) {
+    throw new Error(
+      `Cannot materialize invalid topology manifest:\n${validation.errors.join("\n")}`,
+    );
+  }
+
   const analysis = analyzeManifest(options.manifest);
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];
 
-  const cards: Record<string, Record<string, unknown>> = {};
-  const pieces: Record<string, Record<string, unknown>> = {};
-  const dice: Record<string, Record<string, unknown>> = {};
-  const componentLocations: Record<string, Record<string, unknown>> = {};
+  const cards = createRecord<Record<string, unknown>>();
+  const pieces = createRecord<Record<string, unknown>>();
+  const dice = createRecord<Record<string, unknown>>();
+  const componentLocations = createRecord<Record<string, unknown>>();
   const locationOrder = new Map<string, number>();
-  const cardIdsByCardSetId = new Map<string, string[]>();
 
   const boardAnalysisByBaseId = new Map(
     analysis.analyzedBoards.map((board) => [board.board.id, board] as const),
@@ -2458,7 +2469,6 @@ export function materializeManifestTable(options: {
     ...analysis.sharedZones.map((zone) => [zone.id, "shared"] as const),
     ...analysis.playerZones.map((zone) => [zone.id, "perPlayer"] as const),
   ]);
-  const nextDeckPositionByZoneId = new Map<string, number>();
 
   const resolveRuntimeBoardId = (
     boardBaseId: string,
@@ -2493,13 +2503,138 @@ export function materializeManifestTable(options: {
       .get(boardBaseId)
       ?.get(boardSpaceRefKey(spaceIds)) ?? boardSpaceRefKey(spaceIds);
 
-  for (const cardSet of manifest.cardSets) {
+  const assignCardHome = (
+    cardId: string,
+    home: BoardCard["home"] | undefined,
+    context: {
+      path: string;
+      label: string;
+    },
+  ) => {
+    if (!home || home.type === "detached") {
+      componentLocations[cardId] = {
+        type: "Detached",
+        position: nextLocationPosition({ type: "Detached" }),
+      };
+      return;
+    }
+
+    if (home.type === "slot") {
+      componentLocations[cardId] = {
+        type: "InSlot",
+        host: home.host,
+        slotId: home.slotId,
+        position: nextLocationPosition({
+          type: "InSlot",
+          host: home.host,
+          slotId: home.slotId,
+        }),
+      };
+      return;
+    }
+
+    if (home.type === "zone") {
+      if (zoneScopeById.get(home.zoneId) === "perPlayer") {
+        throw new Error(
+          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+        );
+      }
+      componentLocations[cardId] = {
+        type: "InDeck",
+        deckId: home.zoneId,
+        playedBy: null,
+        position: nextLocationPosition({
+          type: "InDeck",
+          deckId: home.zoneId,
+          playedBy: null,
+        }),
+      };
+      return;
+    }
+
+    if (home.type === "space") {
+      const boardId = resolveRuntimeBoardId(
+        home.boardId,
+        null,
+        `${context.path}.boardId: ${context.label}`,
+      );
+      componentLocations[cardId] = {
+        type: "OnSpace",
+        boardId,
+        spaceId: home.spaceId,
+        position: nextLocationPosition({
+          type: "OnSpace",
+          boardId,
+          spaceId: home.spaceId,
+        }),
+      };
+      return;
+    }
+
+    if (home.type === "container") {
+      const boardId = resolveRuntimeBoardId(
+        home.boardId,
+        null,
+        `${context.path}.boardId: ${context.label}`,
+      );
+      componentLocations[cardId] = {
+        type: "InContainer",
+        boardId,
+        containerId: home.containerId,
+        position: nextLocationPosition({
+          type: "InContainer",
+          boardId,
+          containerId: home.containerId,
+        }),
+      };
+      return;
+    }
+
+    if (home.type === "edge") {
+      const boardId = resolveRuntimeBoardId(
+        home.boardId,
+        null,
+        `${context.path}.boardId: ${context.label}`,
+      );
+      const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
+      componentLocations[cardId] = {
+        type: "OnEdge",
+        boardId,
+        edgeId,
+        position: nextLocationPosition({
+          type: "OnEdge",
+          boardId,
+          edgeId,
+        }),
+      };
+      return;
+    }
+
+    if (home.type === "vertex") {
+      const boardId = resolveRuntimeBoardId(
+        home.boardId,
+        null,
+        `${context.path}.boardId: ${context.label}`,
+      );
+      const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
+      componentLocations[cardId] = {
+        type: "OnVertex",
+        boardId,
+        vertexId,
+        position: nextLocationPosition({
+          type: "OnVertex",
+          boardId,
+          vertexId,
+        }),
+      };
+    }
+  };
+
+  for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
     const materializedCardSet = materializeCardSet(cardSet);
-    const cardIds: string[] = [];
-    for (const card of materializedCardSet.cards) {
+    for (const [cardIndex, card] of materializedCardSet.cards.entries()) {
       const cardInstanceIds = renderCardInstanceIds(card);
-      for (const cardId of cardInstanceIds) {
-        cardIds.push(cardId);
+      for (const [instanceIndex, cardId] of cardInstanceIds.entries()) {
         cards[cardId] = {
           id: cardId,
           cardSetId: materializedCardSet.id,
@@ -2515,45 +2650,23 @@ export function materializeManifestTable(options: {
             ...(card.properties ?? {}),
           },
         };
-        if (card.home?.type === "zone") {
-          const nextPosition =
-            nextDeckPositionByZoneId.get(card.home.zoneId) ?? 0;
-          nextDeckPositionByZoneId.set(card.home.zoneId, nextPosition + 1);
-          componentLocations[cardId] = {
-            type: "InDeck",
-            deckId: card.home.zoneId,
-            playedBy: null,
-            position: nextPosition,
-          };
-        } else if (card.home?.type === "detached") {
-          componentLocations[cardId] = {
-            type: "Detached",
-            position: nextLocationPosition({ type: "Detached" }),
-          };
-        }
+        assignCardHome(cardId, card.home, {
+          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`,
+          label: `Card '${card.type}' instance ${instanceIndex + 1}`,
+        });
       }
     }
-    cardIdsByCardSetId.set(materializedCardSet.id, cardIds);
   }
 
-  for (const zone of analysis.sharedZones) {
-    const primaryCardSetId = zone.allowedCardSetIds?.[0];
-    if (!primaryCardSetId) {
-      continue;
-    }
-    const shuffled = options.shuffleItems(
-      (cardIdsByCardSetId.get(primaryCardSetId) ?? []).filter(
-        (cardId) => componentLocations[cardId] === undefined,
-      ),
+  if (Object.keys(cards).length !== analysis.cardIds.length) {
+    throw new Error(
+      "Materialized card record cardinality drifted from analysis.",
     );
-    shuffled.forEach((cardId, index) => {
-      componentLocations[cardId] = {
-        type: "InDeck",
-        deckId: zone.id,
-        playedBy: null,
-        position: index,
-      };
-    });
+  }
+  if (Object.keys(componentLocations).length !== analysis.cardIds.length) {
+    throw new Error(
+      "Materialized card locations drifted from analysis before seed placement.",
+    );
   }
 
   const pieceTypesById = new Map(
@@ -2754,9 +2867,9 @@ export function materializeManifestTable(options: {
     }
   }
 
-  const boardStatesById: Record<string, Record<string, unknown>> = {};
-  const hexBoardStatesById: Record<string, Record<string, unknown>> = {};
-  const squareBoardStatesById: Record<string, Record<string, unknown>> = {};
+  const boardStatesById = createRecord<Record<string, unknown>>();
+  const hexBoardStatesById = createRecord<Record<string, unknown>>();
+  const squareBoardStatesById = createRecord<Record<string, unknown>>();
 
   for (const analyzedBoard of analysis.analyzedBoards) {
     const sharedBoardState = {
@@ -2776,44 +2889,42 @@ export function materializeManifestTable(options: {
 
     const buildSpaces = () =>
       Object.fromEntries(
-        analysis.spaceIds.map((spaceId) => {
-          const space = analyzedBoard.spaces.find(
-            (entry) => entry.id === spaceId,
-          );
+        analyzedBoard.spaces.map((space) => {
+          const spaceId = space.id;
           const baseSpaceState = {
             id: spaceId,
-            name: space && "name" in space ? (space.name ?? null) : null,
+            name: "name" in space ? (space.name ?? null) : null,
             typeId: space?.typeId ?? null,
             fields: {
               ...materializeObjectSchemaDefaults(
                 analyzedBoard.spaceFieldsSchema,
                 analysis,
               ),
-              ...(space?.fields ?? {}),
+              ...(space.fields ?? {}),
             },
-            zoneId: space && "zoneId" in space ? (space.zoneId ?? null) : null,
+            zoneId: "zoneId" in space ? (space.zoneId ?? null) : null,
           };
 
           if (analyzedBoard.layout === "hex") {
-            const hexSpace = space as HexSpaceSpec | undefined;
+            const hexSpace = space as HexSpaceSpec;
             return [
               spaceId,
               {
                 ...baseSpaceState,
-                q: hexSpace?.q ?? 0,
-                r: hexSpace?.r ?? 0,
+                q: hexSpace.q,
+                r: hexSpace.r,
               },
             ];
           }
 
           if (analyzedBoard.layout === "square") {
-            const squareSpace = space as SquareSpaceSpec | undefined;
+            const squareSpace = space as SquareSpaceSpec;
             return [
               spaceId,
               {
                 ...baseSpaceState,
-                row: squareSpace?.row ?? 0,
-                col: squareSpace?.col ?? 0,
+                row: squareSpace.row,
+                col: squareSpace.col,
               },
             ];
           }
@@ -2844,20 +2955,18 @@ export function materializeManifestTable(options: {
       analyzedBoard.layout === "hex"
         ? {}
         : Object.fromEntries(
-            analysis.boardContainerIds.map((containerId) => {
-              const container = analyzedBoard.containers.find(
-                (entry) => entry.id === containerId,
-              );
+            analyzedBoard.containers.map((container) => {
+              const containerId = container.id;
               return [
                 containerId,
                 {
                   id: containerId,
-                  name: container?.name ?? containerId,
+                  name: container.name ?? containerId,
                   host:
-                    container?.host.type === "space"
+                    container.host.type === "space"
                       ? { type: "space", spaceId: container.host.spaceId }
                       : { type: "board" },
-                  allowedCardSetIds: container?.allowedCardSetIds,
+                  allowedCardSetIds: container.allowedCardSetIds,
                   zoneId: `board:${runtimeBoardId}:container:${containerId}`,
                   fields: {
                     ...materializeObjectSchemaDefaults(
@@ -2865,7 +2974,7 @@ export function materializeManifestTable(options: {
                       analysis,
                       runtimeBoardId,
                     ),
-                    ...(container?.fields ?? {}),
+                    ...(container.fields ?? {}),
                   },
                 },
               ];
@@ -3764,6 +3873,21 @@ function renderGenericBoardStateSchema(
     board.board.scope === "perPlayer"
       ? runtimeBoardId.slice(board.board.id.length + 1)
       : null;
+  const containerEntries = board.containers
+    .map(
+      (container) => `${quote(container.id)}: z.object({
+        id: z.literal(${quote(container.id)}),
+        name: z.string(),
+        host: z.discriminatedUnion("type", [
+          z.object({ type: z.literal("board") }),
+          z.object({ type: z.literal("space"), spaceId: ids.spaceId }),
+        ]),
+        allowedCardSetIds: z.array(ids.cardSetId).optional(),
+        zoneId: z.string(),
+        fields: ${`${boardContainerFieldsTypeName(board.board.id)}Schema`},
+      })`,
+    )
+    .join(",\n      ");
   return `z.object({
     id: z.literal(${quote(runtimeBoardId)}),
     baseId: z.literal(${quote(board.board.id)}),
@@ -3810,20 +3934,9 @@ function renderGenericBoardStateSchema(
         fields: ${`${boardRelationFieldsTypeName(board.board.id)}Schema`},
       }),
     ),
-    containers: z.record(
-      ids.boardContainerId,
-      z.object({
-        id: ids.boardContainerId,
-        name: z.string(),
-        host: z.discriminatedUnion("type", [
-          z.object({ type: z.literal("board") }),
-          z.object({ type: z.literal("space"), spaceId: ids.spaceId }),
-        ]),
-        allowedCardSetIds: z.array(ids.cardSetId).optional(),
-        zoneId: z.string(),
-        fields: ${`${boardContainerFieldsTypeName(board.board.id)}Schema`},
-      }),
-    ),
+    containers: z.object({
+      ${containerEntries}
+    }),
   })`;
 }
 
@@ -3908,6 +4021,21 @@ function renderSquareBoardStateSchema(
     board.board.scope === "perPlayer"
       ? runtimeBoardId.slice(board.board.id.length + 1)
       : null;
+  const containerEntries = board.containers
+    .map(
+      (container) => `${quote(container.id)}: z.object({
+        id: z.literal(${quote(container.id)}),
+        name: z.string(),
+        host: z.discriminatedUnion("type", [
+          z.object({ type: z.literal("board") }),
+          z.object({ type: z.literal("space"), spaceId: ids.spaceId }),
+        ]),
+        allowedCardSetIds: z.array(ids.cardSetId).optional(),
+        zoneId: z.string(),
+        fields: ${`${boardContainerFieldsTypeName(board.board.id)}Schema`},
+      })`,
+    )
+    .join(",\n      ");
   return `z.object({
     id: z.literal(${quote(runtimeBoardId)}),
     baseId: z.literal(${quote(board.board.id)}),
@@ -3948,20 +4076,9 @@ function renderSquareBoardStateSchema(
         fields: ${`${boardRelationFieldsTypeName(board.board.id)}Schema`},
       }),
     ),
-    containers: z.record(
-      ids.boardContainerId,
-      z.object({
-        id: ids.boardContainerId,
-        name: z.string(),
-        host: z.discriminatedUnion("type", [
-          z.object({ type: z.literal("board") }),
-          z.object({ type: z.literal("space"), spaceId: ids.spaceId }),
-        ]),
-        allowedCardSetIds: z.array(ids.cardSetId).optional(),
-        zoneId: z.string(),
-        fields: ${`${boardContainerFieldsTypeName(board.board.id)}Schema`},
-      }),
-    ),
+    containers: z.object({
+      ${containerEntries}
+    }),
     edges: z.array(
       z.object({
         id: ids.edgeId,
@@ -5743,7 +5860,7 @@ const runtimeGenericBoardStateSchema = z.object({
   // JSON), and the inner id field narrows at parse time.
   spaces: z.record(z.string(), boardSpaceStateSchema),
   relations: z.array(boardRelationStateSchema),
-  containers: z.record(ids.boardContainerId, boardContainerStateSchema),
+  containers: z.record(z.string(), boardContainerStateSchema),
 });
 const hexEdgeStateSchema = z.object({
   id: ids.edgeId,
@@ -5784,7 +5901,7 @@ const runtimeSquareBoardStateSchema = runtimeGenericBoardStateSchema.extend({
   // T220: loose-keyed by string — see comment above.
   spaces: z.record(z.string(), squareSpaceStateSchema),
   relations: z.array(boardRelationStateSchema),
-  containers: z.record(ids.boardContainerId, boardContainerStateSchema),
+  containers: z.record(z.string(), boardContainerStateSchema),
   edges: z.array(hexEdgeStateSchema),
   vertices: z.array(squareVertexStateSchema),
 });

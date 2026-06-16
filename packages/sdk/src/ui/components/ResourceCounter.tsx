@@ -108,11 +108,7 @@ function renderResourceIcon(
       ...props,
     });
   }
-  const {
-    strokeWidth: _strokeWidth,
-    "aria-hidden": ariaHidden,
-    ...spanProps
-  } = props;
+  const { "aria-hidden": ariaHidden, ...spanProps } = props;
   return (
     <span
       aria-hidden={ariaHidden === undefined ? true : ariaHidden !== "false"}

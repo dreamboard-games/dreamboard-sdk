@@ -33,52 +33,54 @@ function isSurfaceDescriptor(
 }
 
 /**
- * Builds the surface-spec resolvers for one workspace contract. Note:
- * `resolveSurfaceDescriptor` deliberately calls `useInteractionFormSurface`
- * (and the other `use*` surface hooks) conditionally — this mirrors the
- * original single-file implementation exactly; do not "fix" the hook call
- * positions.
+ * Builds the surface-spec resolvers for one workspace contract.
  */
 export function createSurfaceResolvers({
   Board,
   Zone,
   useInteractionFormSurface,
 }: SurfaceResolverDeps) {
+  const boardSurface = Board.useSurface;
+  const zoneHandSurface = Zone.useHand;
+  const zonePileSurface = Zone.usePile;
+  const zoneCardCollectionSurface = Zone.useCardCollection;
+  const interactionFormSurface = useInteractionFormSurface;
+
   function resolveSurfaceDescriptor(
     name: string,
     descriptor: WorkspaceSurfaceDescriptor,
   ): unknown {
     switch (descriptor.kind) {
       case "board":
-        return Board.useSurface(name);
+        return boardSurface(name);
       case "hand":
-        return Zone.useHand(name, {
+        return zoneHandSurface(name, {
           zone: descriptor.zone,
           role: descriptor.role,
           label: descriptor.label,
           order: descriptor.order,
         });
       case "pile":
-        return Zone.usePile(name, { zone: descriptor.zone });
+        return zonePileSurface(name, { zone: descriptor.zone });
       case "piles":
         return Object.fromEntries(
           descriptor.zones.map((zone) => [
             zone,
-            Zone.usePile(String(zone), { zone }),
+            zonePileSurface(String(zone), { zone }),
           ]),
         );
       case "cardCollection":
-        return Zone.useCardCollection(name, {
+        return zoneCardCollectionSurface(name, {
           zones: descriptor.zones,
           mode: descriptor.mode,
         });
       case "form":
-        return useInteractionFormSurface(descriptor.interaction);
+        return interactionFormSurface(descriptor.interaction);
       case "forms":
         return Object.fromEntries(
           Object.entries(descriptor.interactions).map(([key, interaction]) => [
             key,
-            useInteractionFormSurface(interaction),
+            interactionFormSurface(interaction),
           ]),
         );
     }

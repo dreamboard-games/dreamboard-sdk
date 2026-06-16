@@ -40,6 +40,20 @@ function record(
 }
 
 describe("browser interaction protocol core", () => {
+  test("bounds candidate values before recursive canonicalization", () => {
+    let deep: unknown = "leaf";
+    for (let index = 0; index < 40; index += 1) {
+      deep = [deep];
+    }
+
+    expect(() => encodeCanonicalCandidateValue(deep)).toThrow(
+      "Browser interaction attribute exceeds the depth limit.",
+    );
+    expect(() => encodeCanonicalCandidateValue("x".repeat(65_537))).toThrow(
+      "Browser interaction attribute exceeds the string-byte limit.",
+    );
+  });
+
   test("normalizes equivalent semantic records to identical deterministic snapshots", () => {
     const toggleA = createGameplayActuatorAttributes({
       scopeId: "active-plugin",

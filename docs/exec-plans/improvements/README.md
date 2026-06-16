@@ -7,7 +7,7 @@
 
 ## Status
 
-- Status: Proposed
+- Status: Implemented
 - Planned at: `d84c620` (`Release SDK 0.4.0 alpha`)
 - Planned on: 2026-06-16
 - Target train: next `0.4.0-alpha.*`
@@ -74,11 +74,11 @@ Two phases require coordinated pull requests:
 
 - Phase 007:
   - this repository owns path classification and ownership versioning;
-  - `/Users/kevintang/code/dreamboard` owns filesystem containment in the
+  - `/Users/mac/code/dreamboard-cli` owns filesystem containment in the
     public CLI.
 - Phase 008:
   - this repository owns the plugin-side protocol implementation;
-  - `/Users/kevintang/code/internal` owns `ui-host-runtime` and preview-worker
+  - `/Users/mac/code/dreamboard` owns `ui-host-runtime` and preview-worker
     host implementations.
 
 Do not flatten either phase into a single pseudo-codebase. Each repository must

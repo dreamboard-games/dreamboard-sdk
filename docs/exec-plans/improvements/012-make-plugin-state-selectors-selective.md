@@ -1,6 +1,6 @@
 # 012 Make Plugin-State Selectors Selective
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P2
 - Risk: Medium
 - Effort: Medium

@@ -1,6 +1,6 @@
 # 004 Reject Unsafe Manifest Record Keys
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: High
 - Effort: Medium

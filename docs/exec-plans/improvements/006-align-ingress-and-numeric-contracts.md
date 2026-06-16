@@ -1,6 +1,6 @@
 # 006 Align Ingress and Numeric Mutation Contracts
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: High
 - Effort: Medium

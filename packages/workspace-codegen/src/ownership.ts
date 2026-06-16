@@ -22,7 +22,7 @@ export type ScaffoldingOwnership = {
 };
 
 export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
-  version: 30,
+  version: 31,
   allowedPaths: {
     rootFiles: [
       ".npmrc",
@@ -87,12 +87,38 @@ export const PRESERVED_USER_FILES = new Set(
   WORKSPACE_CODEGEN_OWNERSHIP.preservedUserFiles,
 );
 
-function normalizeProjectPath(filePath: string): string {
-  return filePath.replace(/^\.\//, "").replace(/^\/+/, "").replace(/\\/g, "/");
+const WINDOWS_DRIVE_PATH = /^[A-Za-z]:[\\/]/;
+const WINDOWS_UNC_PATH = /^(?:\\\\|\/\/)/;
+
+export const WORKSPACE_OWNERSHIP_VERSION = WORKSPACE_CODEGEN_OWNERSHIP.version;
+
+export function normalizeOwnedProjectPath(input: string): string | null {
+  if (
+    input.length === 0 ||
+    input.includes("\0") ||
+    input.startsWith("/") ||
+    WINDOWS_DRIVE_PATH.test(input) ||
+    WINDOWS_UNC_PATH.test(input)
+  ) {
+    return null;
+  }
+
+  const normalized = input.replace(/\\/g, "/");
+  const segments = normalized.split("/");
+  if (
+    segments.some(
+      (segment) => segment.length === 0 || segment === "." || segment === "..",
+    )
+  ) {
+    return null;
+  }
+
+  return segments.join("/");
 }
 
 export function isAllowedGamePath(filePath: string): boolean {
-  const path = normalizeProjectPath(filePath);
+  const path = normalizeOwnedProjectPath(filePath);
+  if (path === null) return false;
   if (WORKSPACE_CODEGEN_OWNERSHIP.allowedPaths.rootFiles.includes(path)) {
     return true;
   }
@@ -102,12 +128,14 @@ export function isAllowedGamePath(filePath: string): boolean {
 }
 
 export function isAuthoritativeGeneratedPath(filePath: string): boolean {
-  const path = normalizeProjectPath(filePath);
+  const path = normalizeOwnedProjectPath(filePath);
+  if (path === null) return false;
   return WORKSPACE_CODEGEN_OWNERSHIP.dynamic.generatedFiles.includes(path);
 }
 
 export function isDynamicSeedPath(filePath: string): boolean {
-  const path = normalizeProjectPath(filePath);
+  const path = normalizeOwnedProjectPath(filePath);
+  if (path === null) return false;
   if (WORKSPACE_CODEGEN_OWNERSHIP.dynamic.seedFiles.includes(path)) {
     return true;
   }
@@ -118,7 +146,8 @@ export function isDynamicSeedPath(filePath: string): boolean {
 }
 
 export function isCliStaticPath(filePath: string): boolean {
-  const path = normalizeProjectPath(filePath);
+  const path = normalizeOwnedProjectPath(filePath);
+  if (path === null) return false;
   if (WORKSPACE_CODEGEN_OWNERSHIP.cliStatic.exactFiles.includes(path)) {
     return true;
   }
@@ -128,6 +157,7 @@ export function isCliStaticPath(filePath: string): boolean {
 }
 
 export function isLibraryPath(filePath: string): boolean {
-  const path = normalizeProjectPath(filePath);
+  const path = normalizeOwnedProjectPath(filePath);
+  if (path === null) return false;
   return isAuthoritativeGeneratedPath(path);
 }

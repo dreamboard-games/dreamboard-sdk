@@ -289,7 +289,6 @@ export function GameChrome<
   const store = useInteractionUiStore();
   const pendingInteractionKey = usePendingInteractionKey();
   const draftSnapshot = useStore(store, (state) => state.drafts);
-  const armSnapshot = useStore(store, (state) => state.arms);
   const descriptor = usePluginState((state) =>
     pendingInteractionKey
       ? state.gameplay.availableInteractions.find(
@@ -301,7 +300,9 @@ export function GameChrome<
   const activeAction =
     useMemo<GameActiveActionState<Interaction> | null>(() => {
       if (!descriptor) return null;
-      const draft = store.getDraft(descriptor.interactionKey);
+      const draft =
+        draftSnapshot[descriptor.interactionKey] ??
+        store.getDraft(descriptor.interactionKey);
       const readiness = getInteractionDraftReadiness(descriptor, draft);
       const pendingInputKey =
         readiness.readyFrontier[0] ?? readiness.missingInputs[0] ?? null;
@@ -319,7 +320,7 @@ export function GameChrome<
         readyFrontier: readiness.readyFrontier,
         pendingInput: pendingInput ? pendingInputState(pendingInput) : null,
       };
-    }, [descriptor, draftSnapshot, armSnapshot, store]);
+    }, [descriptor, draftSnapshot, store]);
 
   const cancel = useMemo(
     () =>

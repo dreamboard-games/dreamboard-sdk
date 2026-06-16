@@ -505,9 +505,13 @@ function ZonePileProvider({
   // isn't in the current phase's projection scope (snapshot === null) is
   // treated as hidden — author should change the reducer projection rather
   // than inject ids in the UI.
-  const cards = snapshot?.cardIds ?? [];
-  const items = cards.map((cardId, index) =>
-    createZoneCardRenderItem(zone, snapshot, cardId, index),
+  const cards = useMemo(() => snapshot?.cardIds ?? [], [snapshot]);
+  const items = useMemo(
+    () =>
+      cards.map((cardId, index) =>
+        createZoneCardRenderItem(zone, snapshot, cardId, index),
+      ),
+    [cards, snapshot, zone],
   );
   const count = cards.length;
   const isHidden = snapshot === null;

@@ -174,7 +174,6 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
     cards: { "card-1": {} },
     phases: { play: {} },
   } as const;
-  const baseUI = createDreamboardUI(uiContract);
   const UI = createWorkspaceUIContract<{
     Root: ReturnType<typeof createDreamboardUI>["Root"];
     Game: ReturnType<typeof createDreamboardUI>["Game"];

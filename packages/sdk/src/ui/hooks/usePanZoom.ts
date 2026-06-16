@@ -201,7 +201,7 @@ export function usePanZoom(options: UsePanZoomOptions = {}): UsePanZoomReturn {
 
   useEffect(() => {
     updateTransform(initialZoom, initialPan);
-  }, [initialZoom, initialPan.x, initialPan.y, updateTransform]);
+  }, [initialZoom, initialPan, updateTransform]);
 
   // Programmatic setters
   const setZoom = useCallback(
@@ -243,8 +243,12 @@ export function usePanZoom(options: UsePanZoomOptions = {}): UsePanZoomReturn {
     // If bind returns void (shouldn't happen with our config), return empty object
     // Destructure to omit ref, avoiding type conflicts with SVG/HTML element refs
 
-    const { ref: _ref, ...propsWithoutRef } = (result ??
+    const resultWithMaybeRef = (result ??
       {}) as React.HTMLAttributes<Element> & { ref?: unknown };
+    const propsWithoutRef: React.HTMLAttributes<Element> = {
+      ...resultWithMaybeRef,
+    };
+    delete (propsWithoutRef as { ref?: unknown }).ref;
     return propsWithoutRef;
   }, [bind]);
 

@@ -1,7 +1,6 @@
 import type {
   AnyContinuationCallable,
   BaseGameStateOfContract,
-  ManifestContractOf,
   PhaseMapOf,
   PhaseNamesOfDefinition,
   ReducerGameContractLike,
@@ -40,14 +39,11 @@ export type TrustedContinuationRegistry<
   AnyContinuationCallable<BaseGameStateOfContract<Contract>>
 >;
 
-export interface TrustedPhaseRegistry<
+export type TrustedPhaseRegistry<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
-> extends Omit<
-  ReducerDefinitionPhaseIndex<Contract, Definitions, Views>,
-  "effects"
-> {}
+> = Omit<ReducerDefinitionPhaseIndex<Contract, Definitions, Views>, "effects">;
 
 export interface TrustedRuntimeRegistry<
   Contract extends ReducerGameContractLike,
@@ -97,7 +93,14 @@ export function collectTrustedRuntimeRegistry<
   >();
 
   for (const phaseIndex of index.phasesByName.values()) {
-    const { effects: _effects, ...trustedPhase } = phaseIndex;
+    const trustedPhase: TrustedPhaseRegistry<Contract, Definitions, Views> = {
+      phaseName: phaseIndex.phaseName,
+      phase: phaseIndex.phase,
+      interactions: phaseIndex.interactions,
+      stages: phaseIndex.stages,
+      zones: phaseIndex.zones,
+      cardActions: phaseIndex.cardActions,
+    };
     phasesByName.set(phaseIndex.phaseName, trustedPhase);
     for (const [, effect] of phaseIndex.effects) {
       effectsById.set(effect.id, { id: effect.id, type: effect.type });

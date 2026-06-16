@@ -4,7 +4,6 @@ import type {
   DieTypeSpec as ApiDieTypeSpec,
   GameTopologyManifest as ApiGameTopologyManifest,
   JsonValue,
-  PropertySchema,
 } from "./contracts.js";
 
 type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
@@ -201,7 +200,7 @@ type SlotIdForDieType<
   CurrentTypeId extends DieTypeId<Manifest>,
 > = SlotIdOf<DieTypeOf<Manifest, CurrentTypeId>>;
 
-type SingletonExplicitSeed<Seed> = Seed extends { id: infer _Id extends string }
+type SingletonExplicitSeed<Seed> = Seed extends { id: string }
   ? Seed extends { count: infer Count extends number }
     ? Count extends 1
       ? Seed

@@ -1,5 +1,10 @@
 import { z } from "zod";
 import {
+  BROWSER_ATTRIBUTE_JSON_LIMITS,
+  RuntimeJsonSchema,
+  assertJsonWithinLimits,
+} from "../runtime-json.js";
+import {
   BROWSER_INTERACTION_ACTUATOR_KINDS,
   BROWSER_INTERACTION_CANDIDATE_STATES,
   BROWSER_INTERACTION_READINESS_VALUES,
@@ -8,16 +13,15 @@ import {
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "./constants.js";
 
-const jsonValueSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([
-    z.null(),
-    z.boolean(),
-    z.number().finite(),
-    z.string(),
-    z.array(jsonValueSchema),
-    z.record(z.string(), jsonValueSchema),
-  ]),
-);
+const jsonValueSchema = z.preprocess((value) => {
+  if (value === undefined) return value;
+  assertJsonWithinLimits(
+    value,
+    BROWSER_ATTRIBUTE_JSON_LIMITS,
+    "Browser interaction attribute",
+  );
+  return value;
+}, RuntimeJsonSchema);
 
 export const browserInteractionEffectSchema = z
   .object({
