@@ -53,7 +53,7 @@ type FormInputDomainDescriptor =
   | ChoiceDomainDescriptor
   | ChoiceListDomainDescriptor;
 
-type DomainChoice<Value extends ChoiceValue, State extends CollectorState> = {
+type DomainChoice<Value extends ChoiceValue> = {
   value: Value;
   label: string;
   icon?: string;
@@ -86,21 +86,19 @@ type ResourceMapChoiceSource<State extends CollectorState> =
     };
 
 type DomainChoices<Value extends ChoiceValue, State extends CollectorState> =
-  | ReadonlyArray<DomainChoice<Value, State>>
+  | ReadonlyArray<DomainChoice<Value>>
   | ResourceMapChoiceSource<State>
-  | ((
-      context: DomainContext<State>,
-    ) => ReadonlyArray<DomainChoice<Value, State>>);
+  | ((context: DomainContext<State>) => ReadonlyArray<DomainChoice<Value>>);
 
 type DependentDomainChoices<
   Value extends ChoiceValue,
   State extends CollectorState,
   Dependencies extends readonly InputFieldRef<string, unknown>[],
 > =
-  | ReadonlyArray<DomainChoice<Value, State>>
+  | ReadonlyArray<DomainChoice<Value>>
   | ((
       context: DomainContext<State, DependencyValues<Dependencies>>,
-    ) => ReadonlyArray<DomainChoice<Value, State>>);
+    ) => ReadonlyArray<DomainChoice<Value>>);
 
 type ChoiceListDefaultValue<
   Value extends string,
@@ -110,7 +108,7 @@ type ChoiceListDefaultValue<
   | "all"
   | ((
       context: DomainContext<State> & {
-        choices: ReadonlyArray<DomainChoice<Value, State>>;
+        choices: ReadonlyArray<DomainChoice<Value>>;
       },
     ) => Value[]);
 
@@ -122,7 +120,7 @@ type ChoiceDefaultValue<
   | Value
   | ((
       context: DomainContext<State, Values> & {
-        choices: ReadonlyArray<DomainChoice<Value, State>>;
+        choices: ReadonlyArray<DomainChoice<Value>>;
       },
     ) => Value);
 
@@ -132,7 +130,7 @@ type ChoiceDefaultResolver<
   Values extends Readonly<Record<string, unknown>> = Record<string, never>,
 > = (
   context: DomainContext<State, Values> & {
-    choices: ReadonlyArray<DomainChoice<Value, State>>;
+    choices: ReadonlyArray<DomainChoice<Value>>;
   },
 ) => Value | undefined;
 
@@ -236,8 +234,8 @@ function assertChoiceDefaultInChoices(
   );
 }
 
-function choiceSchema<Value extends ChoiceValue, State extends CollectorState>(
-  choices: ReadonlyArray<DomainChoice<Value, State>>,
+function choiceSchema<Value extends ChoiceValue>(
+  choices: ReadonlyArray<DomainChoice<Value>>,
 ): SchemaLike<Value> {
   const values = choices.map((choice) => choice.value);
   const stringValues = values.filter(
@@ -789,8 +787,10 @@ function formInputForState<
   State extends CollectorState,
 >(): FormInputForState<State> {
   return Object.assign(
-    ((schema: ManifestFormInputSchema & SchemaLike<unknown>, options?: {}) =>
-      baseFormInput(schema, options as never)) as FormInputForState<State>,
+    ((
+      schema: ManifestFormInputSchema & SchemaLike<unknown>,
+      options?: object,
+    ) => baseFormInput(schema, options as never)) as FormInputForState<State>,
     {
       resourceMap: (
         options: ResourceMapInputOptions<State> & {

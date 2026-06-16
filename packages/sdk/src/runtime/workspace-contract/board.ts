@@ -15,7 +15,7 @@ export function createUseBoardSurface<Card>(
   ctx: WorkspaceContractContext<Card>,
 ) {
   const { baseUI, runtimeBoard } = ctx;
-  return function useBoardSurface(_name: string) {
+  return function useBoardSurface() {
     return {
       Root: ({ children }: { children?: ReactNode }) =>
         createElement(baseUI.Board.Root, { children }),

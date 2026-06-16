@@ -1,6 +1,6 @@
 # 005 Preserve Card-Location Invariants
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P0
 - Risk: High
 - Effort: Medium

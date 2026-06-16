@@ -67,7 +67,9 @@ import type { AnyHexBoardInput, BoardSpaceIdOf } from "../ui.js";
  * contract. The unregistered SDK keeps all public keys string-compatible so
  * package-local tests and generic consumers can still import ui-sdk directly.
  */
-export interface DreamboardUIRegister {}
+export interface DreamboardUIRegister {
+  readonly __dreamboardUIRegister?: never;
+}
 
 export type UIContractBucket = Record<string, unknown>;
 

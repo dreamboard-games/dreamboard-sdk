@@ -32,7 +32,7 @@ export function createProjectionContext<
     domainState: options.domainState,
     q,
     derived: createDerivedResolver(options.domainState, { q }),
-    fx: createReducerFx(options.combinedState),
+    fx: createReducerFx<FxState>(),
     eligibleTargets: new Map(),
     stageAllowlists: new Map(),
   };

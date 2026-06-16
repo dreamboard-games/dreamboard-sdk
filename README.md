@@ -20,14 +20,15 @@ pnpm version:check
 ## Development
 
 ```sh
-pnpm install
-pnpm build
-pnpm test
-pnpm pack:dry-run
+pnpm install --frozen-lockfile
+pnpm check
 ```
 
+`pnpm check` is the authoritative local and CI gate. It is expected to be
+read-only from a clean checkout.
+
 `@dreamboard-games/sdk` owns the supported authoring, generated runtime,
-testing and infrastructure ABI subpaths.
+testing, reducer-contract, browser-interaction, and UI subpaths.
 
 ## Local Registry
 
@@ -45,6 +46,7 @@ writes `.dreamboard-dev/local-registry/sdk-package-set.json`.
 Manual alpha dry-run:
 
 ```sh
+pnpm check
 pnpm publish:alpha:dry-run
 ```
 
@@ -59,7 +61,8 @@ This publishes only `@dreamboard-games/sdk` with the `alpha` npm dist-tag. See
 
 The `release-alpha` GitHub Actions workflow publishes the SDK package with
 provenance and the `alpha` npm dist-tag after npm Trusted Publishing is
-configured.
+configured. The workflow verifies the repository, packs one SDK tarball, and
+publishes that exact verified artifact.
 
 Before using it, configure npm Trusted Publishing for the SDK package:
 

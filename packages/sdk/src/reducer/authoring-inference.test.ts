@@ -4,8 +4,6 @@ import {
   createContractAuthoring,
   defineGameContract,
   defineInteraction,
-  formInput,
-  rngInput,
 } from "../reducer";
 import {
   createManifestStringLiteralSchema,
@@ -209,15 +207,18 @@ describe("createContractAuthoring", () => {
     });
 
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;
-    type _AssertPhases = Expect<Equal<PhaseNames, "setup" | "playerTurn">>;
     type Params = ClientParamsOfInteractionOfDefinition<
       typeof game,
       "playerTurn",
       "chooseMood"
     >;
-    type _AssertParams = Expect<Equal<Params, { mood: "ready" | "wait" }>>;
+    const typeAssertions = [true, true] satisfies [
+      Expect<Equal<PhaseNames, "setup" | "playerTurn">>,
+      Expect<Equal<Params, { mood: "ready" | "wait" }>>,
+    ];
 
     expect(game.contract).toBe(contract);
     expect(game.phases.playerTurn).toBe(playerTurnPhase);
+    expect(typeAssertions).toEqual([true, true]);
   });
 });

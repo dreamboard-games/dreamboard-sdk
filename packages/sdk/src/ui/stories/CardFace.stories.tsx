@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { useState } from "react";
-import { CardFace } from "../components/Card.js";
+import { CardFace, type CardFaceProps } from "../components/Card.js";
 import type { ViewCard } from "@dreamboard-games/sdk-types";
 
 const baseCard: ViewCard = {
@@ -44,6 +44,25 @@ const meta: Meta<typeof CardFace> = {
 export default meta;
 
 type Story = StoryObj<typeof CardFace>;
+
+function InteractiveControlledCardFace(args: CardFaceProps) {
+  const [selected, setSelected] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => setSelected((s) => !s)}
+      data-testid="select-toggle"
+      style={{
+        background: "transparent",
+        border: 0,
+        padding: 0,
+        cursor: "pointer",
+      }}
+    >
+      <CardFace {...args} selected={selected} eligible />
+    </button>
+  );
+}
 
 export const DefaultContent: Story = {};
 
@@ -105,24 +124,7 @@ export const InteractiveControlled: Story = {
       },
     },
   },
-  render: (args) => {
-    const [selected, setSelected] = useState(false);
-    return (
-      <button
-        type="button"
-        onClick={() => setSelected((s) => !s)}
-        data-testid="select-toggle"
-        style={{
-          background: "transparent",
-          border: 0,
-          padding: 0,
-          cursor: "pointer",
-        }}
-      >
-        <CardFace {...args} selected={selected} eligible />
-      </button>
-    );
-  },
+  render: (args) => <InteractiveControlledCardFace {...args} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const button = canvas.getByTestId("select-toggle");

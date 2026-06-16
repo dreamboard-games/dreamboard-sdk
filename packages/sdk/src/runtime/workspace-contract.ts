@@ -1,5 +1,5 @@
 export { createWorkspaceUIContract } from "./workspace-contract/index.js";
-export type { DreamboardUI, TypedGame, UIContract } from "../runtime.js";
+export type { DreamboardUI, TypedGame, UIContract } from "./ui-contract.js";
 export type {
   BoardHexGridProps,
   BoardHexViewProps,

@@ -1,19 +1,13 @@
-import { useRef, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type { GameView } from "#dreamboard/ui-contract";
 import type { PluginStateSnapshot } from "../types/reducer-state.js";
 import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
-
-type EqualityFn<T> = (left: T, right: T) => boolean;
-
-interface SelectorCache<T> {
-  rawView: GameView;
-  selected: T;
-}
-
-function defaultEquality<T>(left: T, right: T): boolean {
-  return Object.is(left, right);
-}
+import {
+  defaultRuntimeSnapshotEquality,
+  type EqualityFn,
+  useRuntimeSnapshotSelector,
+} from "./useRuntimeSnapshotSelector.js";
 
 function requireProjectedView(
   snapshot: PluginStateSnapshot | null | undefined,
@@ -36,70 +30,38 @@ function requireProjectedView(
  */
 export function useGameSelector<T>(
   selector: (state: GameView) => T,
-  equalityFn: EqualityFn<T> = defaultEquality,
+  equalityFn: EqualityFn<T> = defaultRuntimeSnapshotEquality,
 ): T {
   const runtime = useRuntimeContext() as PluginRuntimeAPI;
-  const selectorRef = useRef(selector);
-  const equalityRef = useRef(equalityFn);
-  const cacheRef = useRef<SelectorCache<T> | null>(null);
-
-  if (selectorRef.current !== selector || equalityRef.current !== equalityFn) {
-    selectorRef.current = selector;
-    equalityRef.current = equalityFn;
-    cacheRef.current = null;
-  }
-
   const message =
     "useGameSelector: Projected view not available. Ensure the reducer-native host payload is initialized.";
 
-  const getSelectedFromSnapshot = (
-    snapshot: PluginStateSnapshot | null | undefined,
-  ): T => {
-    const view = requireProjectedView(snapshot, message);
-    const cached = cacheRef.current;
-    if (cached && cached.rawView === view) {
-      return cached.selected;
-    }
-
-    const nextSelected = selectorRef.current(view);
-    if (cached && equalityRef.current(cached.selected, nextSelected)) {
-      cacheRef.current = {
-        rawView: view,
-        selected: cached.selected,
-      };
-      return cached.selected;
-    }
-
-    cacheRef.current = {
-      rawView: view,
-      selected: nextSelected,
-    };
-    return nextSelected;
-  };
-
-  const subscribe = (onStoreChange: () => void) => {
-    if (!runtime.subscribeToState) {
-      return () => {};
-    }
-
-    return runtime.subscribeToState((snapshot) => {
-      const previousCache = cacheRef.current;
-      const nextSelected = getSelectedFromSnapshot(
-        snapshot as PluginStateSnapshot,
-      );
-      if (
-        !previousCache ||
-        !equalityRef.current(previousCache.selected, nextSelected)
-      ) {
-        onStoreChange();
+  const storeApi = useMemo(() => {
+    const subscribe = (onStoreChange: () => void) => {
+      if (!runtime.subscribeToState) {
+        return () => {};
       }
-    });
-  };
 
-  const getSnapshot = () =>
-    getSelectedFromSnapshot(
-      (runtime.getSnapshot?.() ?? null) as PluginStateSnapshot | null,
-    );
+      return runtime.subscribeToState(() => {
+        onStoreChange();
+      });
+    };
 
-  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+    const getSnapshot = () =>
+      (runtime.getSnapshot?.() ?? null) as PluginStateSnapshot | null;
+
+    return {
+      subscribe,
+      getSnapshot,
+      getServerSnapshot: getSnapshot,
+    };
+  }, [runtime]);
+
+  return useRuntimeSnapshotSelector(
+    storeApi.subscribe,
+    storeApi.getSnapshot,
+    storeApi.getServerSnapshot,
+    (snapshot) => selector(requireProjectedView(snapshot, message)),
+    equalityFn,
+  );
 }

@@ -13,10 +13,8 @@ import type {
 } from "../../model";
 import type { TrustedRuntimeHelpers, TrustedState } from "./runtime-scope";
 
-export function fxForState<Contract extends ReducerGameContractLike>(
-  state: TrustedState<Contract>,
-) {
-  return createReducerFx<TrustedState<Contract>>(state);
+export function fxForState<Contract extends ReducerGameContractLike>() {
+  return createReducerFx<TrustedState<Contract>>();
 }
 
 export function buildContext<Contract extends ReducerGameContractLike>(
@@ -52,7 +50,8 @@ export function buildContext<Contract extends ReducerGameContractLike>(
 function publicRuntime<Runtime extends { rng?: unknown }>(
   runtime: Runtime,
 ): Omit<Runtime, "rng"> {
-  const { rng: _rng, ...rest } = runtime;
+  const rest = { ...runtime } as Omit<Runtime, "rng"> & { rng?: unknown };
+  delete rest.rng;
   return rest;
 }
 
@@ -87,7 +86,7 @@ export function buildRuntimeArgs<
   return {
     ...buildContext(state, manifest),
     ...helpers,
-    fx: options.fx ?? fxForState(state),
+    fx: options.fx ?? fxForState<Contract>(),
     q,
     derived: options.derived ?? createDerivedResolver(domainState, { q }),
     runtime: publicRuntime(state.runtime),

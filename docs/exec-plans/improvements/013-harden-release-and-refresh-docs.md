@@ -1,6 +1,6 @@
 # 013 Harden Release Automation and Refresh Docs
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P1
 - Risk: High
 - Effort: Medium
@@ -284,6 +284,15 @@ Store the receipt under the repository's established execution-plan artifact
 location if implementation governance requires it. Do not place generated
 receipts in this advisory `plans/` directory unless the team explicitly
 chooses that convention.
+
+This implementation records the coordinated receipts in the phase documents:
+
+- phase 007 records the public CLI containment commands run in
+  `/Users/mac/code/dreamboard-cli`;
+- phase 008 records the private host and preview-worker protocol commands run
+  in `/Users/mac/code/dreamboard`;
+- the SDK package and documentation gates are covered by the final `pnpm check`
+  receipt in this repository.
 
 ### 10. Run final clean-checkout verification
 

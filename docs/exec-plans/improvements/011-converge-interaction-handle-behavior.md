@@ -1,6 +1,6 @@
 # 011 Converge Interaction-Handle Behavior
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P1
 - Risk: Medium
 - Effort: Medium

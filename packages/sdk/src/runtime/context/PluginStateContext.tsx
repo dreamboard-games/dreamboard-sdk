@@ -2,8 +2,6 @@ import {
   default as React,
   createContext,
   useContext,
-  useState,
-  useEffect,
   useMemo,
   useSyncExternalStore,
 } from "react";
@@ -16,6 +14,11 @@ import {
   GAMEPLAY_BROWSER_INTERACTION_SURFACE,
 } from "../../browser-interaction/index.js";
 import { semanticProjectionDigestForState } from "../utils/semantic-projection-digest.js";
+import {
+  defaultRuntimeSnapshotEquality,
+  type EqualityFn,
+  useRuntimeSnapshotSelector,
+} from "../hooks/useRuntimeSnapshotSelector.js";
 
 /**
  * React Context for providing plugin state from state-sync messages.
@@ -98,26 +101,27 @@ export function PluginStateProvider({
   loadingComponent = <DefaultLoadingScreen />,
 }: PluginStateProviderProps) {
   const runtime = useRuntimeContext() as PluginRuntimeAPI;
-  const [state, setState] = useState<PluginStateSnapshot | null>(
-    () => runtime.getSnapshot?.() ?? null,
-  );
-
-  useEffect(() => {
-    // Get initial state if available
-    const initialState = runtime.getSnapshot?.();
-    if (initialState) {
-      setState(initialState);
-    }
-
-    // Subscribe to state changes
-    if (runtime.subscribeToState) {
-      return runtime.subscribeToState((newState) => {
-        setState(newState);
+  const storeApi = useMemo(() => {
+    const subscribe = (onStoreChange: () => void) => {
+      if (!runtime.subscribeToState) {
+        return () => {};
+      }
+      return runtime.subscribeToState(() => {
+        onStoreChange();
       });
-    }
-
-    return () => {};
+    };
+    const getSnapshot = () => runtime.getSnapshot?.() ?? null;
+    return {
+      subscribe,
+      getSnapshot,
+      getServerSnapshot: getSnapshot,
+    };
   }, [runtime]);
+  const state = useSyncExternalStore(
+    storeApi.subscribe,
+    storeApi.getSnapshot,
+    storeApi.getServerSnapshot,
+  );
 
   // Don't render children until state is available
   // In the new architecture, host guarantees state exists before rendering plugin
@@ -213,31 +217,45 @@ export function usePluginStateSnapshot(): PluginStateSnapshot {
  */
 export function usePluginState<T>(
   selector: (state: PluginStateSnapshot) => T,
+  equalityFn: EqualityFn<T> = defaultRuntimeSnapshotEquality,
 ): T {
   const runtime = useRuntimeContext() as PluginRuntimeAPI;
 
-  const subscribe = (onStoreChange: () => void) => {
-    if (!runtime.subscribeToState) {
-      return () => {};
-    }
-    return runtime.subscribeToState(() => {
-      onStoreChange();
-    });
-  };
+  const storeApi = useMemo(() => {
+    const subscribe = (onStoreChange: () => void) => {
+      if (!runtime.subscribeToState) {
+        return () => {};
+      }
+      return runtime.subscribeToState(() => {
+        onStoreChange();
+      });
+    };
 
-  const getSnapshot = () => {
-    const state = runtime.getSnapshot?.();
-    if (!state) {
-      throw new Error(
-        "usePluginState: No state available. " +
-          "Make sure you have wrapped your app with <PluginStateProvider>.",
-      );
-    }
-    return state;
-  };
+    const getSnapshot = () => {
+      const state = runtime.getSnapshot?.();
+      if (!state) {
+        throw new Error(
+          "usePluginState: No state available. " +
+            "Make sure you have wrapped your app with <PluginStateProvider>.",
+        );
+      }
+      return state;
+    };
 
-  const state = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
-  return useMemo(() => selector(state), [selector, state]);
+    return {
+      subscribe,
+      getSnapshot,
+      getServerSnapshot: getSnapshot,
+    };
+  }, [runtime]);
+
+  return useRuntimeSnapshotSelector(
+    storeApi.subscribe,
+    storeApi.getSnapshot,
+    storeApi.getServerSnapshot,
+    selector,
+    equalityFn,
+  );
 }
 
 /**

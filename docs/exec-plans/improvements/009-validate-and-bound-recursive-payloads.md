@@ -1,6 +1,6 @@
 # 009 Validate and Bound Recursive Payloads
 
-- Status: Proposed
+- Status: Implemented
 - Priority: P1
 - Risk: High
 - Effort: Large

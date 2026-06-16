@@ -6,6 +6,7 @@ import type {
 } from "../model";
 import type { PerPlayer, PlayerId } from "../per-player";
 import { perPlayerGet, perPlayerSet } from "../per-player";
+import { assertNonNegativeSafeInteger } from "./numeric";
 
 export function getPlayerOrder<Table extends RuntimeTableRecord>(
   table: Table,
@@ -38,12 +39,19 @@ export function getPlayerResourceAmount<Table extends RuntimeTableRecord>(
   );
   if (!playerResources) return 0;
   const value = (playerResources as Record<string, unknown>)[resourceId];
-  return typeof value === "number" ? value : 0;
+  if (value === undefined) return 0;
+  if (typeof value !== "number") {
+    throw new Error(
+      `Resource '${resourceId}' balance must be a non-negative safe integer.`,
+    );
+  }
+  assertNonNegativeSafeInteger(value, `Resource '${resourceId}' balance`);
+  return value;
 }
 
 /**
  * Sum of every resource amount for a player (e.g. "total cards in hand"
- * games). Skips `undefined` and non-number values.
+ * games). Skips omitted keys but rejects malformed stored balances.
  */
 export function getPlayerResourceTotal<Table extends RuntimeTableRecord>(
   table: Table,
@@ -57,7 +65,16 @@ export function getPlayerResourceTotal<Table extends RuntimeTableRecord>(
   let total = 0;
   for (const key of Object.keys(playerResources)) {
     const value = (playerResources as Record<string, unknown>)[key];
-    if (typeof value === "number") total += value;
+    if (value === undefined) continue;
+    if (typeof value !== "number") {
+      throw new Error(
+        `Resource '${key}' balance must be a non-negative safe integer.`,
+      );
+    }
+    assertNonNegativeSafeInteger(value, `Resource '${key}' balance`);
+    const nextTotal = total + value;
+    assertNonNegativeSafeInteger(nextTotal, "Resource total");
+    total = nextTotal;
   }
   return total;
 }
@@ -81,18 +98,25 @@ export function getNextPlayerInOrder<Table extends RuntimeTableRecord>(
 }
 
 /**
- * Iterate a resource-amounts record, skipping undefined / non-positive entries.
+ * Iterate a resource-amounts record, skipping undefined / zero entries.
  * Shared by the resource mutation helpers below.
  */
-function forEachResourceEntry(
+function resourceEntries(
   amounts: Readonly<Record<string, number | undefined>>,
-  visit: (resourceId: string, amount: number) => void,
-): void {
+): [resourceId: string, amount: number][] {
+  const entries: [string, number][] = [];
   for (const resourceId of Object.keys(amounts)) {
     const amount = amounts[resourceId];
-    if (typeof amount !== "number" || amount === 0) continue;
-    visit(resourceId, amount);
+    if (amount === undefined || amount === 0) continue;
+    if (typeof amount !== "number") {
+      throw new Error(
+        `Resource '${resourceId}' amount must be a non-negative safe integer.`,
+      );
+    }
+    assertNonNegativeSafeInteger(amount, `Resource '${resourceId}' amount`);
+    entries.push([resourceId, amount]);
   }
+  return entries;
 }
 
 /**
@@ -105,9 +129,7 @@ export function canAffordResources<Table extends RuntimeTableRecord>(
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): boolean {
-  for (const resourceId of Object.keys(amounts)) {
-    const required = amounts[resourceId];
-    if (typeof required !== "number" || required <= 0) continue;
+  for (const [resourceId, required] of resourceEntries(amounts)) {
     if (getPlayerResourceAmount(table, playerId, resourceId) < required) {
       return false;
     }
@@ -126,9 +148,7 @@ export function getMissingResources<Table extends RuntimeTableRecord>(
   amounts: Readonly<Record<string, number | undefined>>,
 ): Record<string, number> {
   const missing: Record<string, number> = {};
-  for (const resourceId of Object.keys(amounts)) {
-    const required = amounts[resourceId];
-    if (typeof required !== "number" || required <= 0) continue;
+  for (const [resourceId, required] of resourceEntries(amounts)) {
     const have = getPlayerResourceAmount(table, playerId, resourceId);
     if (have < required) missing[resourceId] = required - have;
   }
@@ -172,15 +192,15 @@ export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
     playerId as PlayerId,
   ) ?? {}) as Record<string, number>;
   const next: Record<string, number> = { ...prev };
-  forEachResourceEntry(amounts, (resourceId, amount) => {
-    if (amount < 0) {
-      throw new Error(
-        `addPlayerResources: negative amount for resource '${resourceId}'. ` +
-          `Use spendPlayerResources or transferPlayerResources instead.`,
-      );
-    }
-    next[resourceId] = (next[resourceId] ?? 0) + amount;
-  });
+  for (const [resourceId, amount] of resourceEntries(amounts)) {
+    const nextAmount =
+      getPlayerResourceAmount(table, playerId, resourceId) + amount;
+    assertNonNegativeSafeInteger(
+      nextAmount,
+      `Resource '${resourceId}' balance`,
+    );
+    next[resourceId] = nextAmount;
+  }
   writePlayerResources(table, playerId, next);
 }
 
@@ -204,6 +224,7 @@ export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): void {
+  const entries = resourceEntries(amounts);
   if (!canAffordResources(table, playerId, amounts)) {
     const missing = getMissingResources(table, playerId, amounts);
     throw new Error(
@@ -217,15 +238,15 @@ export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
     playerId as PlayerId,
   ) ?? {}) as Record<string, number>;
   const next: Record<string, number> = { ...prev };
-  forEachResourceEntry(amounts, (resourceId, amount) => {
-    if (amount < 0) {
-      throw new Error(
-        `spendPlayerResources: negative amount for resource '${resourceId}'. ` +
-          `Pass positive amounts — the op deducts them from the player.`,
-      );
-    }
-    next[resourceId] = Math.max(0, (next[resourceId] ?? 0) - amount);
-  });
+  for (const [resourceId, amount] of entries) {
+    const nextAmount =
+      getPlayerResourceAmount(table, playerId, resourceId) - amount;
+    assertNonNegativeSafeInteger(
+      nextAmount,
+      `Resource '${resourceId}' balance`,
+    );
+    next[resourceId] = nextAmount;
+  }
   writePlayerResources(table, playerId, next);
 }
 
@@ -253,8 +274,47 @@ export function transferPlayerResourcesInPlace<
   toPlayerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): void {
-  spendPlayerResourcesInPlace(table, fromPlayerId, amounts);
-  addPlayerResourcesInPlace(table, toPlayerId, amounts);
+  const entries = resourceEntries(amounts);
+  if (!canAffordResources(table, fromPlayerId, amounts)) {
+    const missing = getMissingResources(table, fromPlayerId, amounts);
+    throw new Error(
+      `spendPlayerResources: player '${fromPlayerId}' cannot afford ${JSON.stringify(
+        missing,
+      )}. Check canAfford in your validate step first.`,
+    );
+  }
+  if (fromPlayerId === toPlayerId) return;
+
+  const fromPrev = (perPlayerGet(
+    table.resources as PerPlayer<RuntimeRecord>,
+    fromPlayerId as PlayerId,
+  ) ?? {}) as Record<string, number>;
+  const toPrev = (perPlayerGet(
+    table.resources as PerPlayer<RuntimeRecord>,
+    toPlayerId as PlayerId,
+  ) ?? {}) as Record<string, number>;
+  const fromNext: Record<string, number> = { ...fromPrev };
+  const toNext: Record<string, number> = { ...toPrev };
+
+  for (const [resourceId, amount] of entries) {
+    const sourceBalance =
+      getPlayerResourceAmount(table, fromPlayerId, resourceId) - amount;
+    const destinationBalance =
+      getPlayerResourceAmount(table, toPlayerId, resourceId) + amount;
+    assertNonNegativeSafeInteger(
+      sourceBalance,
+      `Resource '${resourceId}' balance`,
+    );
+    assertNonNegativeSafeInteger(
+      destinationBalance,
+      `Resource '${resourceId}' balance`,
+    );
+    fromNext[resourceId] = sourceBalance;
+    toNext[resourceId] = destinationBalance;
+  }
+
+  writePlayerResources(table, fromPlayerId, fromNext);
+  writePlayerResources(table, toPlayerId, toNext);
 }
 
 /**
@@ -279,11 +339,7 @@ export function setPlayerResourceInPlace<Table extends RuntimeTableRecord>(
   resourceId: string,
   amount: number,
 ): void {
-  if (!Number.isFinite(amount) || amount < 0) {
-    throw new Error(
-      `setPlayerResource: amount must be a non-negative finite number, got ${amount}.`,
-    );
-  }
+  assertNonNegativeSafeInteger(amount, `Resource '${resourceId}' amount`);
   const prev = (perPlayerGet(
     table.resources as PerPlayer<RuntimeRecord>,
     playerId as PlayerId,

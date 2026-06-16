@@ -30,7 +30,6 @@ import {
   rejectResult,
   type TrustedDomainState,
   type TrustedInput,
-  type TrustedManifest,
   type TrustedPhaseName,
   type TrustedPlayerId,
   type TrustedRuntimeScope,
@@ -59,18 +58,13 @@ export function createTrustedInstructionRunner<
   lifecycle: LifecycleRunnerFor<Contract, Definitions, Views>,
 ) {
   type DomainState = TrustedDomainState<Contract>;
-  type Manifest = TrustedManifest<Contract>;
   type State = TrustedState<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 
   const flowInstructions = createFlowInstructionResolver(lifecycle);
-  const engineInstructions = createEngineInstructionResolver<
-    Contract,
-    Definitions,
-    Views
-  >();
+  const engineInstructions = createEngineInstructionResolver<Contract>();
 
   type RuntimeRngResult = { runtimeRng?: RuntimeRngState };
 

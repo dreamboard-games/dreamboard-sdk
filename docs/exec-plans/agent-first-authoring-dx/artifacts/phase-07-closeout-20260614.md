@@ -36,32 +36,32 @@ Phase 7 is source-closed across the SDK and public CLI source:
 
 SDK gates:
 
-| Command | Result |
-| --- | --- |
-| `bun test packages/sdk/src/reducer/contract-fingerprint.test.ts packages/sdk/src/reducer/ingress/runtime-codec.test.ts packages/sdk/src/testing/create-test-runtime.test.ts packages/sdk/src/export-surface.test.ts` | pass, 23 tests |
-| `bun test packages/reducer-contract/src/conformance.test.ts` | pass, 81 tests |
-| `pnpm --filter=@dreamboard-games/sdk typecheck` | pass |
-| `pnpm --filter=@dreamboard-games/reducer-contract generate:check` | pass |
-| `NPM_CONFIG_USERCONFIG=/Users/mac/code/dreamboard/.dreamboard-dev/local-aws-publish.npmrc SDK_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 pnpm local-registry:publish` | pass; published `@dreamboard-games/sdk@0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec` |
+| Command                                                                                                                                                                                                              | Result                                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `bun test packages/sdk/src/reducer/contract-fingerprint.test.ts packages/sdk/src/reducer/ingress/runtime-codec.test.ts packages/sdk/src/testing/create-test-runtime.test.ts packages/sdk/src/export-surface.test.ts` | pass, 23 tests                                                                            |
+| `bun test packages/reducer-contract/src/conformance.test.ts`                                                                                                                                                         | pass, 81 tests                                                                            |
+| `pnpm --filter=@dreamboard-games/sdk typecheck`                                                                                                                                                                      | pass                                                                                      |
+| `pnpm --filter=@dreamboard-games/reducer-contract generate:check`                                                                                                                                                    | pass                                                                                      |
+| `NPM_CONFIG_USERCONFIG=/Users/mac/code/dreamboard/.dreamboard-dev/local-aws-publish.npmrc SDK_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 pnpm local-registry:publish`                                                  | pass; published `@dreamboard-games/sdk@0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec` |
 
 Public CLI gates:
 
-| Command | Result |
-| --- | --- |
-| `pnpm --dir /Users/mac/code/dreamboard-cli --filter dreamboard-cli add @dreamboard-games/sdk@0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec` | pass |
-| `pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli run typecheck` | pass against installed published SDK snapshot |
-| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/commands/test.test.ts` | pass, 5 tests |
-| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/services/testing/reducer-native-test-harness.test.ts` | pass, 6 tests |
-| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/dev-host/dev-log-relay-plugin.test.ts` | pass, 7 tests |
+| Command                                                                                                                                         | Result                                        |
+| ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `pnpm --dir /Users/mac/code/dreamboard-cli --filter dreamboard-cli add @dreamboard-games/sdk@0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec` | pass                                          |
+| `pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli run typecheck`                                                                   | pass against installed published SDK snapshot |
+| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/commands/test.test.ts`                                                         | pass, 5 tests                                 |
+| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/services/testing/reducer-native-test-harness.test.ts`                          | pass, 6 tests                                 |
+| `bun test /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/dev-host/dev-log-relay-plugin.test.ts`                                         | pass, 7 tests                                 |
 
 Private monorepo repin gates:
 
-| Command | Result |
-| --- | --- |
-| `DREAMBOARD_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 pnpm sdk:repin --receipt` | pass; all SDK consumers pinned to `0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec` |
-| `bun /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/index.ts test generate` from `examples/published/frontier-trails` | pass; generated 5 base states for 24 scenarios |
-| `pnpm --dir /Users/mac/code/dreamboard/examples/published/frontier-trails typecheck` | pass |
-| `bun /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/index.ts test run` from `examples/published/frontier-trails` | pass; 24 scenarios |
+| Command                                                                                                                                                   | Result                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DREAMBOARD_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 pnpm sdk:repin --receipt`                                                                            | pass; all SDK consumers pinned to `0.3.0-alpha.1-local.20260614T104617Z.7984c37368ec`                                                            |
+| `bun /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/index.ts test generate` from `examples/published/frontier-trails`                             | pass; generated 5 base states for 24 scenarios                                                                                                   |
+| `pnpm --dir /Users/mac/code/dreamboard/examples/published/frontier-trails typecheck`                                                                      | pass                                                                                                                                             |
+| `bun /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/index.ts test run` from `examples/published/frontier-trails`                                  | pass; 24 scenarios                                                                                                                               |
 | temporary `playerTurnPhaseStateSchema` optional-field mutation followed by `bun /Users/mac/code/dreamboard-cli/apps/dreamboard-cli/src/index.ts test run` | expected failure; exit code `42`, `Base states were generated for contract ... Remedy: run \`dreamboard test generate\`, then re-run the tests.` |
 
 ## Notes
