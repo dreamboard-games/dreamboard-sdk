@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.3.0-alpha.1";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.0";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.3.0-alpha.1";
+const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.0";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.3.0-alpha.1";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.0";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.3.0-alpha.1";
+const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.0";
 ```
 
 _No JSDoc summary is available yet._
