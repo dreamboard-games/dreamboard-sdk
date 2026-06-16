@@ -47,7 +47,7 @@ export const VISUAL_BASELINES: ReadonlyArray<VisualBaseline> = [
     viewports: ["desktop"],
   },
   {
-    storyId: "hands-handview--thirteen-card-fan-compressed",
+    storyId: "hands-handview--thirteen-card-compressed-fan",
     viewports: ["desktop"],
   },
   {

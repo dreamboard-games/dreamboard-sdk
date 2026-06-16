@@ -12,9 +12,14 @@
  * `PLAYWRIGHT_UPDATE_SNAPSHOTS=1`.
  */
 
-import { defineConfig, devices } from "playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { defineConfig, devices } from "@playwright/test";
+
+import {
+  deterministicBrowserUse,
+  deterministicViewportProjects,
+} from "../test-support/deterministic-browser.js";
 
 const STORYBOOK_PORT = Number(process.env.STORYBOOK_PORT ?? 6006);
 const STORYBOOK_URL =
@@ -32,6 +37,8 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
+  snapshotPathTemplate:
+    "{testDir}/__screenshots__/{testFileName}/{projectName}/{arg}{ext}",
   expect: {
     toHaveScreenshot: {
       maxDiffPixelRatio: 0.005,
@@ -41,34 +48,22 @@ export default defineConfig({
   use: {
     baseURL: STORYBOOK_URL,
     trace: "retain-on-failure",
-    colorScheme: "light",
-    deviceScaleFactor: 1,
+    screenshot: "only-on-failure",
+    ...deterministicBrowserUse,
   },
-  projects: [
-    {
-      name: "desktop",
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1440, height: 900 },
-      },
+  projects: deterministicViewportProjects.map((project) => ({
+    name: project.name,
+    use: {
+      ...(project.name === "desktop"
+        ? devices["Desktop Chrome"]
+        : project.name === "phonePortrait"
+          ? devices["iPhone 13"]
+          : devices["iPad (gen 7)"]),
+      viewport: project.viewport,
+      hasTouch: "hasTouch" in project ? project.hasTouch : undefined,
+      isMobile: "isMobile" in project ? project.isMobile : undefined,
     },
-    {
-      name: "phonePortrait",
-      use: {
-        ...devices["iPhone 13"],
-        isMobile: true,
-        hasTouch: true,
-        viewport: { width: 390, height: 844 },
-      },
-    },
-    {
-      name: "tabletPortrait",
-      use: {
-        ...devices["iPad (gen 7)"],
-        viewport: { width: 820, height: 1180 },
-      },
-    },
-  ],
+  })),
   webServer: process.env.STORYBOOK_URL
     ? undefined
     : {

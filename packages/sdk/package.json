@@ -113,7 +113,7 @@
     "storybook:test": "concurrently -k -s first -n storybook,test \"http-server storybook-static -p 6006 -s --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",
     "storybook:test:visual": "playwright test --config .storybook/visual-runner.config.ts",
     "storybook:test:visual:update": "playwright test --config .storybook/visual-runner.config.ts --update-snapshots",
-    "test": "bun test"
+    "test": "bun test src"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
@@ -133,6 +133,7 @@
     "@dreamboard-games/sdk-types": "workspace:*",
     "@dreamboard-games/workspace-codegen": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
+    "@playwright/test": "1.60.0",
     "@storybook/addon-a11y": "^10.4.1",
     "@storybook/addon-themes": "^10.4.1",
     "@storybook/react-vite": "^10.4.1",
