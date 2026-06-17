@@ -1,24 +1,65 @@
 # Phase 03: Deterministic Fixture Runtime
 
-Status: source-complete on 2026-06-17. Receipt:
-`artifacts/phase-03-runtime.md`.
+Status: reopened on 2026-06-17 by the
+[Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
+`artifacts/phase-03-runtime.md` records the superseded fake-runtime
+implementation.
 
 ## Objective
 
-Run compiled UI fixtures through the same runtime providers, generated
-contracts, draft store, interaction adapters, and semantic projection marker
-used by production.
+Run compiled UI fixtures through the same transport-agnostic runtime client,
+runtime providers, generated contracts, draft store, interaction adapters, and
+semantic projection marker used by production.
 
-Replace only the host transport. The fixture runtime must validate each
-observable host exchange against the compiled scenario tape and emit the next
-projected frame.
+Replace only the browser host transport. An in-memory fixture host validates
+each observable command against the compiled protocol tape and emits version 3
+protocol frames to the real runtime client.
 
-## 03A. Extract one shared runtime shell
+## 03A. Extract one runtime client core
 
-`PluginRuntime` currently owns both host initialization and the provider tree.
-Extract an internal shell so production and fixture execution cannot drift.
+`createPluginRuntimeAPI` currently owns browser messaging, protocol state,
+commands, and subscriptions. Split it into a transport-agnostic
+`PluginRuntimeClient` and a browser postMessage transport.
 
-Target shape:
+```ts
+export interface PluginTransport {
+  start(onMessage: (message: HostToPluginEnvelope) => void): () => void;
+  send(message: PluginToHostPayload): void;
+}
+
+export function createPluginRuntimeClient(options: {
+  transport: PluginTransport;
+  idFactory?: RuntimeIdFactory;
+  clock?: RuntimeClock;
+}): PluginRuntimeClient;
+```
+
+The client owns:
+
+- strict version 3 protocol parsing;
+- immutable session state;
+- the current gameplay frame;
+- validation and submission request correlation;
+- delivery acknowledgments and render commits;
+- diagnostics and disconnect behavior.
+
+It does not read `window`, `parent`, `location`, `Date.now()`, or
+`crypto.randomUUID()` directly.
+
+The browser adapter owns:
+
+- channel negotiation;
+- source and origin validation;
+- envelope delivery over `window.postMessage`;
+- browser lifecycle cleanup.
+
+No runtime command accepts a caller-supplied player ID. The client derives
+perspective and revision basis from the current gameplay frame.
+
+## 03B. Keep one shared React shell
+
+`PluginRuntime` remains the public browser entry point. Extract an internal
+boundary so production and fixture execution share the same providers.
 
 ```tsx
 // packages/sdk/src/runtime/components/PluginRuntimeBoundary.tsx
@@ -26,148 +67,132 @@ export function PluginRuntimeBoundary({
   runtime,
   children,
 }: {
-  runtime: PluginRuntimeAPI;
+  runtime: PluginRuntimeClient;
   children: React.ReactNode;
 }) {
   return (
-    <RuntimeProvider runtime={runtime}>
-      <SessionScopedInteractionUiProvider>
-        {children}
-      </SessionScopedInteractionUiProvider>
-    </RuntimeProvider>
+    <RuntimeCommandProvider runtime={runtime}>
+      <PluginSessionProvider runtime={runtime}>
+        <PluginGameplayFrameProvider runtime={runtime}>
+          <InteractionUiProvider>{children}</InteractionUiProvider>
+        </PluginGameplayFrameProvider>
+      </PluginSessionProvider>
+    </RuntimeCommandProvider>
   );
 }
 ```
 
-Production `PluginRuntime` remains the public host-facing entry point:
+Production constructs the browser transport and the shared client:
 
 ```tsx
 export function PluginRuntime(props: PluginRuntimeProps) {
-  const state = usePluginRuntime({
-    timeout: props.timeout,
-    onDiagnostic: props.onDiagnostic,
-  });
-
-  if (!state.isReady) {
-    return renderRuntimeStatus(state, props);
-  }
+  const runtime = useMemo(() => {
+    const transport = createPostMessagePluginTransport({
+      timeout: props.timeout,
+      onDiagnostic: props.onDiagnostic,
+    });
+    return createPluginRuntimeClient({ transport });
+  }, [props.timeout, props.onDiagnostic]);
 
   return (
-    <PluginRuntimeBoundary runtime={state.runtime}>
+    <PluginRuntimeBoundary runtime={runtime}>
       {props.children}
     </PluginRuntimeBoundary>
   );
 }
 ```
 
-Export a fixture-specific wrapper only from
-`@dreamboard-games/sdk/testing`:
+Session and gameplay frame providers are separate. The runtime command context
+does not expose host-only history, notification, or perspective-switching
+commands.
 
-```tsx
-export function FixturePluginRuntime({
-  harness,
-  children,
-}: {
-  harness: FixtureRuntimeHarness;
-  children: React.ReactNode;
-}) {
-  return (
-    <PluginRuntimeBoundary runtime={harness.runtime}>
-      {children}
-    </PluginRuntimeBoundary>
-  );
-}
-```
+Do not add a raw runtime injection prop to authored game components. The
+boundary remains internal to the SDK and testing exports.
 
-Do not add a raw `runtime` injection prop to normal authored game code. The
-testing export is the deliberate boundary.
+## 03C. Implement a strict in-memory fixture host
 
-## 03B. Implement a strict fixture transport
-
-Create `createFixtureRuntime` in the testing export.
+Replace `createFixtureRuntime` with `createFixtureHostHarness`.
 
 ```ts
-export interface FixtureRuntimeEvent {
+export interface FixtureHostEvent {
   readonly sequence: number;
   readonly atMs: number;
-  readonly kind: "frame" | "validate" | "submit" | "refresh" | "diagnostic";
+  readonly kind:
+    | "frame-sent"
+    | "validate-received"
+    | "submit-received"
+    | "ack-received"
+    | "rendered-received"
+    | "diagnostic";
   readonly requestDigest?: string;
   readonly frameId?: string;
   readonly projectionDigest?: string;
   readonly result?: "accepted" | "rejected";
 }
 
-export interface FixtureRuntimeHarness {
-  readonly runtime: PluginRuntimeAPI;
-  readonly fixture: UIScenarioFixture;
+export interface FixtureHostHarness {
+  readonly transport: PluginTransport;
+  readonly tape: PluginProtocolTape;
   reset(): void;
   flush(): Promise<void>;
+  advanceHost(): Promise<void>;
   getCurrentFrameId(): string;
-  getEvents(): readonly FixtureRuntimeEvent[];
+  getEvents(): readonly FixtureHostEvent[];
   assertConsumed(): void;
 }
 
-export function createFixtureRuntime(options: {
-  fixture: UIScenarioFixture;
+export function createFixtureHostHarness(options: {
+  tape: PluginProtocolTape;
   strict?: boolean;
   latencyMs?: number;
-  onEvent?: (event: FixtureRuntimeEvent) => void;
-}): FixtureRuntimeHarness;
+  onEvent?: (event: FixtureHostEvent) => void;
+}): FixtureHostHarness;
 ```
 
-Core behavior:
+Core submission behavior:
 
 ```ts
-async function submitInteraction(
-  playerId: string,
-  interaction: string,
-  payload: unknown,
-): Promise<void> {
-  const requestDigest = digestTransportRequest({
-    operation: "submit",
-    playerId,
-    interaction,
-    payload,
-  });
-  const exchange = consumeExpectedExchange("submit", requestDigest);
+async function handleSubmit(command: SubmitInteractionCommand): Promise<void> {
+  const requestDigest = digestTransportRequest(command);
+  const exchange = consumeExpectedSubmit(command, requestDigest);
 
-  record({
-    kind: "submit",
-    requestDigest,
-    result: exchange.response.kind,
-  });
+  sendSubmitResult(command.requestId, exchange.response);
 
-  if (exchange.response.kind === "rejected") {
-    throw fixtureRejection(exchange.response.diagnostics);
+  if (exchange.response.kind === "accepted") {
+    await waitForConfiguredLatency();
+    await drainHostFrameSteps();
   }
-
-  await waitForConfiguredLatency();
-  publishFrame(exchange.response.nextFrameId);
 }
 ```
 
-The harness must implement the complete `PluginRuntimeAPI` surface needed by
-the real provider tree:
+Validation returns a result and never publishes a frame:
 
-- `getSessionState`;
-- session subscriptions;
-- `getSnapshot`;
-- state subscriptions;
-- `validateInteraction`;
-- `submitInteraction`;
-- `disconnect`;
-- `switchPlayer`;
-- diagnostics used by generated adapters.
+```ts
+function handleValidate(command: ValidateInteractionCommand): void {
+  const requestDigest = digestTransportRequest(command);
+  const exchange = consumeExpectedValidation(command, requestDigest);
+  sendValidationResult(command.requestId, exchange.response);
+}
+```
 
-Unsupported operations fail with a fixture-specific diagnostic. They must not
-silently succeed.
+The harness implements the host side of `PluginTransport`, not
+`PluginRuntimeClient`. Unsupported commands fail with a fixture-specific
+diagnostic. They must not silently succeed.
 
-## 03C. Preserve production runtime semantics
+The harness drains the leading `host.frame` step during initialization and
+drains post-submit host-frame steps only after the submit result has been sent.
+`advanceHost()` delivers an explicit independent host frame for scenarios such
+as another player's action or a timer. Validation itself never causes frame
+delivery.
+
+## 03D. Preserve production runtime semantics
 
 The fixture path must reuse:
 
-- `RuntimeProvider`;
-- `PluginSessionContext`;
+- `PluginRuntimeClient`;
+- strict version 3 protocol parsing;
+- `PluginRuntimeBoundary`;
+- session and gameplay frame providers;
 - `InteractionUiProvider`;
 - `RuntimeSemanticProjectionMarker`;
 - generated `UI.Root`;
@@ -178,16 +203,19 @@ The fixture path must reuse:
 
 Do not fork or copy any of these into `packages/ui-workbench`.
 
-The fixture runtime may own only:
+The fixture host may own only:
 
-- the current projected frame;
-- deterministic session metadata;
-- expected transport exchange cursor;
+- the compiled protocol tape;
+- ordered protocol-step cursor;
+- delivery sequence;
 - event transcript;
 - configurable simulated latency;
 - reset and assertion controls.
 
-## 03D. Install a deterministic browser environment
+It must not own a parallel session store, gameplay store, runtime API, or
+projection assembler.
+
+## 03E. Install a deterministic browser environment
 
 The Workbench must control every browser input that can alter observable
 output:
@@ -215,19 +243,21 @@ export interface FixtureEnvironmentInit {
 }
 ```
 
-Use an injected deterministic ID factory in fixture runtime code instead of
-depending on `Date.now()`, `Math.random()`, or `crypto.randomUUID()`.
+Inject the clock and ID factory into `PluginRuntimeClient`; do not patch
+production code paths or depend directly on `Date.now()`, `Math.random()`, or
+`crypto.randomUUID()`.
 
 The Workbench browser context should reject unexpected `fetch`, WebSocket, and
 EventSource requests. Loading local fixture modules, fonts, and Workbench
 assets remains allowed.
 
-## 03E. Load game UI modules against the current SDK candidate
+## 03F. Load game UI modules against the current SDK candidate
 
 Each compiled render module from Phase 02 externalizes:
 
 - `@dreamboard-games/sdk`;
 - `@dreamboard-games/sdk/*`;
+- `@dreamboard-games/plugin-runtime-contract`;
 - `react`;
 - `react-dom`.
 
@@ -257,7 +287,11 @@ Example mount:
 ```tsx
 const fixture = await loadUIScenarioFixture(scenario.fixtureUrl);
 const module = await loadUIScenarioRenderModule(scenario.renderModuleUrl);
-const harness = createFixtureRuntime({ fixture, strict: true });
+const harness = createFixtureHostHarness({
+  tape: fixture.protocol,
+  strict: true,
+});
+const runtime = createPluginRuntimeClient({ transport: harness.transport });
 
 assertContractFingerprint(
   module.uiContractFingerprint,
@@ -265,13 +299,13 @@ assertContractFingerprint(
 );
 
 root.render(
-  <FixturePluginRuntime harness={harness}>
+  <PluginRuntimeBoundary runtime={runtime}>
     <module.Root />
-  </FixturePluginRuntime>,
+  </PluginRuntimeBoundary>,
 );
 ```
 
-## 03F. Record runtime evidence
+## 03G. Record runtime evidence
 
 Expose a read-only test bridge from the Workbench page:
 
@@ -281,7 +315,7 @@ declare global {
     __dreamboardUIFixture?: {
       getScenarioId(): string;
       getFrameId(): string;
-      getRuntimeEvents(): readonly FixtureRuntimeEvent[];
+      getHostEvents(): readonly FixtureHostEvent[];
       getProjectionDigest(): string;
       reset(): Promise<void>;
       assertConsumed(): void;
@@ -296,32 +330,41 @@ the SDK or included in production game packages.
 The transcript must use canonical values and omit timestamps that are not
 derived from the fixture clock.
 
-## 03G. Test production and fixture shell parity
+## 03H. Test browser and fixture transport parity
 
-Add contract tests that mount the same generated UI tree twice:
+Run the same protocol contract suite against:
 
-1. with the production shell and an injected in-memory host message sequence;
-2. with `FixturePluginRuntime` and the compiled fixture.
+1. `createPostMessagePluginTransport` connected to an in-memory browser host;
+2. `createFixtureHostHarness`.
 
-Compare:
+Mount the same generated UI tree through `PluginRuntimeClient` for both and
+compare:
 
+- parsed session descriptor;
+- gameplay frame and frame revision;
 - rendered projection digest;
 - browser-interaction semantic snapshot;
 - initial draft digest;
-- session identity;
+- validation result with unchanged frame ID;
 - submit payload digest;
-- projected frame after submit.
+- projected frame after accepted submit;
+- explicit independent host-frame delivery;
+- acknowledgment and render-commit sequence.
 
-This is an SDK-level shell parity test, not the cross-repo real-host lane in
+This is an SDK-level transport parity test, not the cross-repo real-host lane in
 Phase 07.
 
 ## Expected files
 
 ```text
+packages/plugin-runtime-contract/src/**
+packages/sdk/src/runtime/core/create-plugin-runtime-client.ts
+packages/sdk/src/runtime/core/runtime-store.ts
+packages/sdk/src/runtime/browser/post-message-transport.ts
 packages/sdk/src/runtime/components/PluginRuntime.tsx
 packages/sdk/src/runtime/components/PluginRuntimeBoundary.tsx
-packages/sdk/src/testing/ui-fixture/create-fixture-runtime.ts
-packages/sdk/src/testing/ui-fixture/FixturePluginRuntime.tsx
+packages/sdk/src/runtime/context/PluginGameplayFrameContext.tsx
+packages/sdk/src/testing/ui-fixture/create-fixture-host-harness.ts
 packages/sdk/src/testing/ui-fixture/deterministic-environment.ts
 packages/sdk/src/testing/ui-fixture/*.test.tsx
 packages/ui-workbench/src/runtime/load-scenario.ts
@@ -331,6 +374,8 @@ packages/ui-workbench/src/runtime/test-bridge.ts
 ## Verification
 
 ```bash
+pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+pnpm --filter @dreamboard-games/plugin-runtime-contract test
 pnpm --filter @dreamboard-games/sdk typecheck
 pnpm --filter @dreamboard-games/sdk test
 pnpm ui:fixtures:check
@@ -341,30 +386,41 @@ Run every runtime test with:
 
 - zero simulated latency;
 - non-zero simulated latency;
-- accepted validation and submission;
-- rejected validation and submission;
-- incomplete exchange tape;
+- accepted validation with no frame transition;
+- rejected validation;
+- accepted submission with one frame transition;
+- rejected submission with no frame transition;
+- explicit independent host-frame transition;
+- incomplete protocol tape;
 - unexpected transport request;
+- stale frame basis;
+- protocol version mismatch;
 - contract fingerprint mismatch.
 
 ## Acceptance criteria
 
-- Production and fixture execution share one provider shell.
-- The fixture runtime implements the required `PluginRuntimeAPI` behavior and
-  fails closed on unexpected exchanges.
+- Production and fixture execution instantiate the same
+  `PluginRuntimeClient`.
+- Browser and fixture paths differ only in their `PluginTransport`
+  implementation.
+- The fixture host fails closed on unexpected or unconsumed protocol steps.
+- Accepted validation never changes the current frame.
+- Gameplay frames preserve `gameVersion`, `actionSetVersion`, and perspective.
 - Generated UI, draft handling, semantic markers, and adapters are production
   implementations.
 - A reference render module loads against both SDK source and a packed SDK.
-- Normal component iteration does not compile a source game.
 - Runtime transcripts and digests are deterministic across repeated runs.
-- No global runtime singleton is required by fixture tests.
+- `PluginStateSnapshot`, `createFixtureRuntime`, and fixture-only runtime state
+  stores are deleted.
 
 ## Risks and controls
 
-| Risk                                         | Control                                                     |
-| -------------------------------------------- | ----------------------------------------------------------- |
-| Fixture provider tree drifts from production | Extract one internal boundary used by both                  |
-| Compiled game module bundles an old SDK      | Externalize SDK imports and inspect bundle contents         |
-| Tape accepts the wrong request               | Canonical request digest and strict ordered consumption     |
-| Determinism patches leak into production     | Keep initialization and bridge in testing/Workbench exports |
-| Fixture runtime becomes a second authority   | It may replay only recorded projected frames and exchanges  |
+| Risk                                           | Control                                                                |
+| ---------------------------------------------- | ---------------------------------------------------------------------- |
+| Fixture behavior drifts from production client | Instantiate one runtime client with injected transports                |
+| Host and SDK parse different wire shapes       | Import strict schemas from `plugin-runtime-contract` in both repos     |
+| Validation accidentally mutates fixture state  | Encode validation as a distinct step with no frame reference           |
+| Delivery IDs are mistaken for game revisions   | Keep envelope `sequence` separate from frame revision fields           |
+| Compiled game module bundles an old SDK        | Externalize SDK, protocol contract, and React; inspect bundle contents |
+| Determinism hooks leak into production         | Inject clock and ID interfaces into the core                           |
+| Fixture host becomes a second authority        | Replay only compiled frames and command results                        |

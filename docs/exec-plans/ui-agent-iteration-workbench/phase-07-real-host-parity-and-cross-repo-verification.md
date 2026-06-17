@@ -1,6 +1,7 @@
 # Phase 07: Real-Host Parity And Cross-Repo Verification
 
-Status: proposed.
+Status: proposed. Amended on 2026-06-17 by the
+[Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
 
 ## Objective
 
@@ -20,6 +21,7 @@ export interface UIParityObservationV1 {
   readonly scenarioId: string;
   readonly fixtureDigest: string;
   readonly sdkCandidateDigest: string;
+  readonly pluginRuntimeProtocol: 3;
   readonly browserInteractionProtocol: string;
   readonly environment: {
     readonly project: string;
@@ -32,6 +34,9 @@ export interface UIParityObservationV1 {
     readonly actuatorId?: string;
     readonly descriptorDigest?: string;
     readonly draftDigest?: string;
+    readonly gameVersion: number;
+    readonly actionSetVersion: string;
+    readonly perspectivePlayerId: string | null;
     readonly projectionDigest: string;
     readonly semanticDigest: string;
     readonly submissionDigest?: string;
@@ -47,7 +52,8 @@ export interface UIParityObservationV1 {
 The parity comparator checks:
 
 - fixture and SDK candidate identity;
-- browser-interaction protocol;
+- plugin runtime and browser-interaction protocol versions;
+- exact gameplay frame revision and perspective;
 - exact replay-step identity;
 - preparation chain;
 - projection digest at every checkpoint;
@@ -57,6 +63,10 @@ The parity comparator checks:
 - final screenshot after documented host chrome masking.
 
 Do not compare internal network timing or host-only controls in this lane.
+
+Both paths must materialize `PluginGameplayFrame` through
+`@dreamboard-games/plugin-runtime-contract`. Parity code must not reconstruct a
+legacy `PluginStateSnapshot`.
 
 ## 07B. Reuse the internal semantic replay executor
 

@@ -1,6 +1,7 @@
 # UI Agent Iteration Workbench And Reference Games
 
-Status: proposed on 2026-06-16.
+Status: active. Phase 02 and Phase 03 were reopened on 2026-06-17 by the
+[Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
 
 ## Executive decision
 
@@ -58,14 +59,16 @@ flowchart LR
     IG["Selected internal game scenarios"]
   end
 
+  SR["Reducer scenario runner"]
+  PT["Plugin protocol tape compiler"]
   FC["UI fixture compiler"]
   FB["Versioned UI fixture bundles"]
 
   subgraph SDK["dreamboard-sdk"]
     SB["Storybook: pure component stories"]
     WB["UI Workbench: runtime-aware scenarios"]
-    RT["Real PluginRuntime and generated adapters"]
-    FT["Deterministic fixture transport"]
+    RT["Real PluginRuntimeClient and generated adapters"]
+    FT["In-memory fixture host transport"]
     BD["Semantic browser driver"]
     EV["Screenshots, semantic snapshots, transcripts, digests"]
   end
@@ -73,8 +76,10 @@ flowchart LR
   RH["Internal real host"]
   PC["Packed SDK consumer verification"]
 
-  RG --> FC
-  IG --> FC
+  RG --> SR
+  IG --> SR
+  SR --> PT
+  PT --> FC
   FC --> FB
   FB --> WB
   WB --> RT
@@ -87,9 +92,10 @@ flowchart LR
   PC --> WB
 ```
 
-The fixture boundary is projected plugin state, source identity, replay
-instructions, and expected observable digests. It must never serialize hidden
-canonical reducer state and pretend to be the authority.
+The fixture boundary is a versioned plugin protocol tape, source identity,
+browser replay instructions, and expected observable digests. Reducer state
+stays in the non-portable scenario trace. Host lobby, history, notifications,
+player switching, and transport bookkeeping never enter gameplay frames.
 
 ## Test surface boundaries
 
@@ -246,8 +252,8 @@ content digest. Edits flow one way.
 | ------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------- | ---------------------------------------------------------------------------------------------- |
 | [Phase 00](./phase-00-decision-freeze-and-executable-baseline.md)         | SDK UI and test tooling                                    | None                      | Freeze contracts, repair the current UI test baseline, and make visual coverage executable     |
 | [Phase 01](./phase-01-reference-game-ownership-and-consumer-boundary.md)  | SDK reference games, internal integration, rights reviewer | Phase 00 decisions        | Move public-safe reference source into the SDK with mechanic names and isolated consumer rules |
-| [Phase 02](./phase-02-portable-ui-scenario-fixture-contract.md)           | SDK runtime/testing and internal scenario tooling          | Phase 01 source ownership | Define and compile portable, versioned UI scenario fixtures                                    |
-| [Phase 03](./phase-03-deterministic-fixture-runtime.md)                   | SDK runtime                                                | Phase 02 schema           | Run fixtures through the real SDK runtime with deterministic host transport                    |
+| [Phase 02](./phase-02-portable-ui-scenario-fixture-contract.md)           | SDK runtime/testing and internal scenario tooling          | Phase 01 source ownership | Compile reducer traces into portable version 3 plugin protocol tapes and UI fixtures           |
+| [Phase 03](./phase-03-deterministic-fixture-runtime.md)                   | SDK runtime                                                | Phase 02 schema           | Run the real transport-injected SDK runtime client against an in-memory fixture host           |
 | [Phase 04](./phase-04-ui-workbench-and-agent-catalog.md)                  | SDK developer tooling                                      | Phases 02-03              | Deliver the agent-facing Workbench, scenario catalog, and evidence receipts                    |
 | [Phase 05](./phase-05-browser-gesture-visual-and-accessibility-matrix.md) | SDK UI/runtime and browser automation                      | Phase 04 Workbench        | Verify real desktop/mobile input, drag behavior, visuals, semantics, and accessibility         |
 | [Phase 06](./phase-06-ui-ergonomics-hard-cut-and-example-migration.md)    | SDK UI/codegen and reference game owners                   | Phase 05 confidence suite | Hard-cut the repeated game UI boilerplate and migrate every reference game                     |
@@ -277,6 +283,11 @@ and owner sign-off.
 7. Do not accept screenshot-only confidence for stateful interactions.
 8. Do not keep deprecated UI authoring APIs after every reference game and
    golden parity scenario has migrated.
+9. Do not use `PluginStateSnapshot` as a protocol, fixture, or React-store
+   boundary. Keep session metadata, gameplay frames, host chrome, and transport
+   sequencing separate.
+10. Do not implement a fixture-only `PluginRuntimeAPI`. Exercise the real
+    runtime client through an in-memory host transport.
 
 ## Out of scope
 

@@ -1,17 +1,15 @@
 # Phase 02: Portable UI Scenario Fixture Contract
 
-Status: source-complete on 2026-06-17. Receipt:
-`artifacts/phase-02-fixture-contract.md`.
+Status: reopened on 2026-06-17 by the
+[Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
+`artifacts/phase-02-fixture-contract.md` records the superseded version 1
+implementation.
 
-The SDK repository now exports the portable fixture contract, deterministic
-reference-game fixture compiler, and committed fixture bundle. The sibling
-internal repository now composes browser-demo schema version `3.0.0` with a
-portable semantic replay representation, validates conversion from the legacy
-compiled recipe, and has a deterministic private internal-golden fixture lane.
-The internal package can import the SDK's named `PortableSemanticReplayStep`
-directly after the SDK package containing this phase is published and repinned;
-until then it validates the same portable shape through its private structural
-bridge.
+The existing implementation proved deterministic serialization and portable
+semantic replay, but it serialized `PluginStateSnapshot` and compiled through
+`createTestRuntime`. Those two choices are no longer accepted completion
+evidence. Preserve the replay work and regenerate the fixture bundle after the
+runtime contract hard cut.
 
 ## Objective
 
@@ -19,21 +17,30 @@ Define a versioned, portable scenario format that captures the observable game
 state and host exchanges needed to run real generated UI without compiling the
 source game.
 
-The contract must reuse the existing browser-interaction protocol and runtime
-snapshot types. It must not invent selectors or serialize hidden authority
-state.
+The contract reuses the existing browser-interaction protocol and the
+standalone `@dreamboard-games/plugin-runtime-contract` frame schemas. It must
+not invent selectors, serialize hidden authority state, or include host chrome
+in gameplay frames.
 
-## 02A. Place the shared contract in the testing export
+## 02A. Separate runtime and fixture contracts
 
-Add the schema and canonicalization helpers to:
+Place plugin session, gameplay frame, wire protocol, projection materialization,
+and frame digest contracts in:
+
+```text
+packages/plugin-runtime-contract/
+```
+
+Place UI fixture composition, browser replay, and fixture canonicalization in:
 
 ```text
 packages/sdk/src/testing/ui-fixture/
 ```
 
-Export them from `@dreamboard-games/sdk/testing`. Keep the module serializable
-and free of React or browser dependencies so both the SDK and internal fixture
-compilers can use it.
+Export fixture APIs from `@dreamboard-games/sdk/testing`. Both packages remain
+serializable and free of React or browser dependencies. The internal host
+imports the runtime contract package; private fixture compilers may additionally
+import the SDK testing export.
 
 Suggested exports:
 
@@ -45,15 +52,17 @@ export {
   digestUIScenarioFixture,
   type UIScenarioFixture,
   type UIScenarioReplayStep,
-  type UIFixtureTransportExchange,
+  type PluginProtocolTape,
+  type UIFixtureProtocolStep,
 } from "./ui-fixture/index.js";
 ```
 
-## 02B. Model observable frames and transport exchanges
+## 02B. Model an ordered protocol tape
 
-A fixture stores projected plugin snapshots and the transport exchanges visible
-to the runtime. It never stores a reducer object, authority database row, or
-private state that the plugin could not receive.
+A fixture stores a plugin session descriptor once, revisioned gameplay frames,
+and ordered host/client protocol steps visible to the runtime. It never stores a
+reducer object, authority database row, host activity queue, or private state
+that the plugin could not receive.
 
 Example contract:
 
@@ -62,10 +71,15 @@ import type {
   BrowserInteractionEffectRequest,
   BrowserInteractionIntentRequest,
 } from "@dreamboard-games/sdk/browser-interaction";
-import type { PluginStateSnapshot } from "@dreamboard-games/sdk/runtime";
+import type {
+  PluginGameplayFrame,
+  PluginSessionDescriptor,
+  SubmissionResult,
+  ValidationResult,
+} from "@dreamboard-games/plugin-runtime-contract";
 
-export interface UIScenarioFixtureV1 {
-  readonly schemaVersion: 1;
+export interface UIScenarioFixtureV2 {
+  readonly schemaVersion: 2;
   readonly id: string;
   readonly title: string;
   readonly gameId: string;
@@ -94,8 +108,7 @@ export interface UIScenarioFixtureV1 {
       | "touch"
     )[];
   };
-  readonly frames: readonly UIFixtureFrame[];
-  readonly transport: readonly UIFixtureTransportExchange[];
+  readonly protocol: PluginProtocolTape;
   readonly replay: readonly UIScenarioReplayStep[];
   readonly expected: {
     readonly initialProjectionDigest: string;
@@ -107,28 +120,36 @@ export interface UIScenarioFixtureV1 {
 
 export interface UIFixtureFrame {
   readonly id: string;
-  readonly snapshot: PluginStateSnapshot;
+  readonly frame: PluginGameplayFrame;
   readonly projectionDigest: string;
 }
 
-export interface UIFixtureTransportExchange {
-  readonly id: string;
-  readonly fromFrameId: string;
-  readonly operation: "validate" | "submit" | "refresh";
-  readonly requestDigest: string;
-  readonly response:
-    | {
-        readonly kind: "accepted";
-        readonly nextFrameId: string;
-      }
-    | {
-        readonly kind: "rejected";
-        readonly diagnostics: readonly {
-          readonly code: string;
-          readonly message: string;
-        }[];
-      };
+export interface PluginProtocolTape {
+  readonly session: PluginSessionDescriptor;
+  readonly frames: readonly UIFixtureFrame[];
+  readonly steps: readonly UIFixtureProtocolStep[];
 }
+
+export type UIFixtureProtocolStep =
+  | {
+      readonly id: string;
+      readonly kind: "host.frame";
+      readonly frameId: string;
+    }
+  | {
+      readonly id: string;
+      readonly fromFrameId: string;
+      readonly kind: "client.validate";
+      readonly requestDigest: string;
+      readonly response: ValidationResult;
+    }
+  | {
+      readonly id: string;
+      readonly fromFrameId: string;
+      readonly kind: "client.submit";
+      readonly requestDigest: string;
+      readonly response: SubmissionResult;
+    };
 
 export type UIScenarioReplayStep =
   | {
@@ -170,9 +191,10 @@ export interface UIStepExpectation {
 
 `renderModule` points to a compiled browser ESM module containing the generated
 UI contract and the authored game UI tree required by the scenario. The module
-must externalize all `@dreamboard-games/sdk` imports. It must not bundle a copy
-of the SDK, React, or the runtime, otherwise component edits would not be
-visible in the Workbench.
+must externalize all `@dreamboard-games/sdk` and
+`@dreamboard-games/plugin-runtime-contract` imports. It must not bundle a copy
+of the SDK, protocol contract, React, or the runtime, otherwise component edits
+would not be visible in the Workbench.
 
 The module is built only in the fixture compilation lane. Normal component
 iteration consumes the committed or downloaded bundle and does not compile the
@@ -264,16 +286,44 @@ await compileUIScenarioFixture({
 });
 ```
 
-The compiler adapter is responsible for:
+The reducer scenario runner is responsible for:
 
 - starting from an existing reducer scenario;
-- producing the viewer-specific `PluginStateSnapshot`;
-- observing validation and submit exchanges;
-- recording all projected frames;
+- deterministic reducer validation and dispatch;
+- recording reducer states and raw seat projections in a non-portable trace;
+- distinguishing observational validation from state-changing submission;
+- assigning stable reducer frame and exchange IDs.
+
+The protocol tape compiler is responsible for:
+
+- materializing viewer-specific `PluginGameplayFrame` values through the shared
+  contract helper;
+- preserving `gameVersion` and `actionSetVersion`;
+- adding explicit fixture session/player metadata once;
+- recording validation results without a next frame;
+- recording submit results and subsequent host-frame emissions as separate
+  ordered steps;
+- canonicalizing and hashing the protocol tape.
+
+The UI fixture compiler is responsible for:
+
+- combining the protocol tape with render module identity and environment
+  controls;
 - reading the runtime browser-interaction snapshot;
 - resolving replay steps before writing them;
-- canonicalizing and hashing the output;
+- recording browser and semantic expectations;
+- canonicalizing and hashing the complete fixture;
 - rejecting non-deterministic output.
+
+The reducer runner and protocol tape compiler may not import
+`createTestRuntime`, `PluginRuntimeAPI`, React, or a browser transport. The UI
+fixture compiler exercises the real runtime client through the in-memory host
+defined in Phase 03; it does not execute reducers.
+
+Land the schema, reducer runner, and protocol tape compiler before Phase 03.
+Regenerate the final browser-enriched fixture bundle after the Phase 03
+in-memory host is available. Phase 02 and Phase 03 close together at that
+integration point.
 
 The compiler runs the same input twice and compares the complete canonical
 fixture bytes.
@@ -308,7 +358,7 @@ Then:
 - conversion tests compare the old compiled browser demo recipe with the new
   portable representation before the old generic fields are deleted.
 
-Fixture schema version `1` and internal browser demo schema version `3.0.0` are
+Fixture schema version `2` and internal browser demo schema version `3.0.0` are
 different contracts. Do not align their numbers artificially.
 
 ## 02F. Define the fixture bundle
@@ -317,9 +367,10 @@ Store fixtures in a bundle with an index:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "bundleId": "reference-games@f2e8c12",
   "sdkCommit": "f2e8c12",
+  "pluginRuntimeProtocol": 3,
   "browserInteractionProtocol": "2.0.0",
   "fixtures": [
     {
@@ -345,7 +396,7 @@ The parser must fail closed when:
 - the fixture schema version is unsupported;
 - the browser-interaction protocol major version is unsupported;
 - source or contract fingerprints are absent;
-- a referenced frame or transport exchange is missing;
+- a referenced frame or protocol step is missing;
 - a request digest does not match the runtime call;
 - a semantic request resolves ambiguously;
 - expected digests do not use the canonical algorithm;
@@ -358,7 +409,9 @@ Schema changes follow these rules:
   major fixture version;
 - browser-interaction protocol changes follow their own version and
   compatibility declaration;
-- compilers may read the previous major only during a bounded migration window;
+- migration tooling may read version `1` only until committed fixtures are
+  regenerated;
+- the final compiler and Workbench parser support version `2` only;
 - the Workbench reads committed fixtures and never upgrades them silently.
 
 ## Expected files
@@ -370,7 +423,11 @@ packages/sdk/src/testing/ui-fixture/index.ts
 packages/sdk/src/testing/ui-fixture/schema.ts
 packages/sdk/src/testing/ui-fixture/canonical.ts
 packages/sdk/src/testing/ui-fixture/compiler.ts
+packages/sdk/src/testing/ui-fixture/compile-plugin-protocol-tape.ts
 packages/sdk/src/testing/ui-fixture/*.test.ts
+packages/sdk/src/testing/reducer-scenario/create-reducer-scenario-runner.ts
+packages/sdk/src/testing/reducer-scenario/types.ts
+packages/plugin-runtime-contract/src/**
 scripts/ui-fixtures/compile-reference-fixtures.mjs
 scripts/ui-fixtures/check-fixtures.mjs
 fixtures/ui/reference-games/index.json
@@ -392,6 +449,8 @@ artifact store.
 ## Verification
 
 ```bash
+pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+pnpm --filter @dreamboard-games/plugin-runtime-contract test
 pnpm --filter @dreamboard-games/sdk typecheck
 pnpm --filter @dreamboard-games/sdk test
 pnpm ui:fixtures:compile
@@ -412,9 +471,14 @@ request digests, missing frames, and non-deterministic output.
 - `@dreamboard-games/sdk/testing` exposes one strict fixture schema and
   canonical digest implementation.
 - At least one fixture from each reference game compiles deterministically.
-- Every fixture render module externalizes the SDK and React dependencies.
-- Fixtures contain only projected snapshots and observable transport
-  exchanges.
+- Every fixture render module externalizes the SDK, plugin runtime contract,
+  and React dependencies.
+- Fixtures contain only plugin session metadata, gameplay frames, and
+  observable protocol steps.
+- Gameplay frames preserve authority `gameVersion` and `actionSetVersion`.
+- Accepted validation does not advance the fixture frame.
+- The fixture compiler does not import `createTestRuntime` or
+  `PluginStateSnapshot`.
 - Replay steps resolve through the existing browser-interaction protocol.
 - The UI fixture and internal browser demo schemas share one portable semantic
   replay-step contract.
@@ -425,10 +489,10 @@ request digests, missing frames, and non-deterministic output.
 
 ## Risks and controls
 
-| Risk                                                  | Control                                                              |
-| ----------------------------------------------------- | -------------------------------------------------------------------- |
-| Fixture becomes a frozen mock unrelated to production | Compile from real reducer scenarios and record real projected frames |
-| Schema leaks authority internals                      | Restrict to plugin snapshots and observable transport exchanges      |
-| Replay semantics diverge from browser demo automation | Import browser-interaction request types and canonical resolver      |
-| Fixture regeneration causes opaque churn              | Canonical JSON, stable seeds, content digests, and two-run check     |
-| Protocol extension is hidden in Workbench code        | Require browser-interaction version review for new gesture records   |
+| Risk                                                  | Control                                                                              |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Fixture becomes a frozen mock unrelated to production | Compile reducer traces and materialize frames through the production contract helper |
+| Schema leaks authority or host internals              | Serialize only session metadata, gameplay frames, and protocol steps                 |
+| Replay semantics diverge from browser demo automation | Import browser-interaction request types and canonical resolver                      |
+| Fixture regeneration causes opaque churn              | Canonical JSON, stable seeds, content digests, and two-run check                     |
+| Protocol extension is hidden in Workbench code        | Require protocol version review for changed frame, command, or gesture semantics     |
