@@ -2469,15 +2469,6 @@ export function materializeManifestTable(options: {
     ...analysis.sharedZones.map((zone) => [zone.id, "shared"] as const),
     ...analysis.playerZones.map((zone) => [zone.id, "perPlayer"] as const),
   ]);
-  const defaultSharedZoneByCardSetId = new Map<string, string>();
-  for (const zone of analysis.sharedZones) {
-    for (const cardSetId of zone.allowedCardSetIds ?? []) {
-      if (!defaultSharedZoneByCardSetId.has(cardSetId)) {
-        defaultSharedZoneByCardSetId.set(cardSetId, zone.id);
-      }
-    }
-  }
-
   const resolveRuntimeBoardId = (
     boardBaseId: string,
     ownerId: string | null | undefined,
@@ -2511,109 +2502,95 @@ export function materializeManifestTable(options: {
       .get(boardBaseId)
       ?.get(boardSpaceRefKey(spaceIds)) ?? boardSpaceRefKey(spaceIds);
 
-  const assignCardHome = (
-    cardId: string,
-    cardSetId: string,
-    home: BoardCard["home"] | undefined,
+  const materializeComponentLocation = (
+    home: NonNullable<BoardCard["home"]>,
     context: {
       path: string;
       label: string;
     },
-  ) => {
-    const defaultZoneId = defaultSharedZoneByCardSetId.get(cardSetId);
-    const resolvedHome =
-      home ??
-      (defaultZoneId
-        ? ({ type: "zone", zoneId: defaultZoneId } as const)
-        : undefined);
-
-    if (!resolvedHome || resolvedHome.type === "detached") {
-      componentLocations[cardId] = { type: "Detached" };
-      return;
+  ): Record<string, unknown> => {
+    if (home.type === "detached") {
+      return { type: "Detached" };
     }
 
-    if (resolvedHome.type === "slot") {
-      componentLocations[cardId] = {
+    if (home.type === "slot") {
+      return {
         type: "InSlot",
-        host: resolvedHome.host,
-        slotId: resolvedHome.slotId,
+        host: home.host,
+        slotId: home.slotId,
         position: nextLocationPosition({
           type: "InSlot",
-          host: resolvedHome.host,
-          slotId: resolvedHome.slotId,
+          host: home.host,
+          slotId: home.slotId,
         }),
       };
-      return;
     }
 
-    if (resolvedHome.type === "zone") {
-      if (zoneScopeById.get(resolvedHome.zoneId) === "perPlayer") {
+    if (home.type === "zone") {
+      if (zoneScopeById.get(home.zoneId) === "perPlayer") {
         throw new Error(
-          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${resolvedHome.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+          `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
         );
       }
-      componentLocations[cardId] = {
+      return {
         type: "InDeck",
-        deckId: resolvedHome.zoneId,
+        deckId: home.zoneId,
         playedBy: null,
         position: nextLocationPosition({
           type: "InDeck",
-          deckId: resolvedHome.zoneId,
+          deckId: home.zoneId,
           playedBy: null,
         }),
       };
-      return;
     }
 
-    if (resolvedHome.type === "space") {
+    if (home.type === "space") {
       const boardId = resolveRuntimeBoardId(
-        resolvedHome.boardId,
+        home.boardId,
         null,
         `${context.path}.boardId: ${context.label}`,
       );
-      componentLocations[cardId] = {
+      return {
         type: "OnSpace",
         boardId,
-        spaceId: resolvedHome.spaceId,
+        spaceId: home.spaceId,
         position: nextLocationPosition({
           type: "OnSpace",
           boardId,
-          spaceId: resolvedHome.spaceId,
+          spaceId: home.spaceId,
         }),
       };
-      return;
     }
 
-    if (resolvedHome.type === "container") {
+    if (home.type === "container") {
       const boardId = resolveRuntimeBoardId(
-        resolvedHome.boardId,
+        home.boardId,
         null,
         `${context.path}.boardId: ${context.label}`,
       );
-      componentLocations[cardId] = {
+      return {
         type: "InContainer",
         boardId,
-        containerId: resolvedHome.containerId,
+        containerId: home.containerId,
         position: nextLocationPosition({
           type: "InContainer",
           boardId,
-          containerId: resolvedHome.containerId,
+          containerId: home.containerId,
         }),
       };
-      return;
     }
 
-    if (resolvedHome.type === "edge") {
+    if (home.type === "edge") {
       const boardId = resolveRuntimeBoardId(
-        resolvedHome.boardId,
+        home.boardId,
         null,
         `${context.path}.boardId: ${context.label}`,
       );
       const edgeId = resolveBoardEdgeId(
-        resolvedHome.boardId,
-        resolvedHome.ref.spaces,
+        home.boardId,
+        home.ref.spaces,
       );
-      componentLocations[cardId] = {
+      return {
         type: "OnEdge",
         boardId,
         edgeId,
@@ -2623,20 +2600,19 @@ export function materializeManifestTable(options: {
           edgeId,
         }),
       };
-      return;
     }
 
-    if (resolvedHome.type === "vertex") {
+    if (home.type === "vertex") {
       const boardId = resolveRuntimeBoardId(
-        resolvedHome.boardId,
+        home.boardId,
         null,
         `${context.path}.boardId: ${context.label}`,
       );
       const vertexId = resolveBoardVertexId(
-        resolvedHome.boardId,
-        resolvedHome.ref.spaces,
+        home.boardId,
+        home.ref.spaces,
       );
-      componentLocations[cardId] = {
+      return {
         type: "OnVertex",
         boardId,
         vertexId,
@@ -2647,6 +2623,9 @@ export function materializeManifestTable(options: {
         }),
       };
     }
+
+    const exhaustive: never = home;
+    throw new Error(`Unsupported component home: ${JSON.stringify(exhaustive)}`);
   };
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
@@ -2669,8 +2648,13 @@ export function materializeManifestTable(options: {
             ...(card.properties ?? {}),
           },
         };
-        assignCardHome(cardId, materializedCardSet.id, card.home, {
-          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`,
+        const resolvedHome = card.home ?? materializedCardSet.defaultHome;
+        const path =
+          card.home === undefined
+            ? `manifest.cardSets[${cardSetIndex}].defaultHome`
+            : `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
+        componentLocations[cardId] = materializeComponentLocation(resolvedHome, {
+          path,
           label: `Card '${card.type}' instance ${instanceIndex + 1}`,
         });
       }

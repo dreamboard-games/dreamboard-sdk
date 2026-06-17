@@ -79,6 +79,11 @@
       "import": "./dist/codegen.js",
       "default": "./dist/codegen.js"
     },
+    "./authoring": {
+      "types": "./dist/authoring/index.d.ts",
+      "import": "./dist/authoring/index.js",
+      "default": "./dist/authoring/index.js"
+    },
     "./reducer-contract": {
       "types": "./dist/reducer-contract.d.ts",
       "import": "./dist/reducer-contract.js",
@@ -105,7 +110,7 @@
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "pnpm --dir ../.. --filter @dreamboard-games/plugin-runtime-contract build && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
+    "build": "pnpm --dir ../.. --filter @dreamboard-games/plugin-runtime-contract build && pnpm --dir ../.. authoring-metadata:generate && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
     "typecheck": "tsc --noEmit",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",

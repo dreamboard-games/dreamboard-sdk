@@ -7,6 +7,7 @@ defineTopologyManifest({
       type: "manual",
       id: "typed-cards",
       name: "Typed Cards",
+      defaultHome: { type: "detached" },
       cardSchema: {
         properties: {
           label: { type: "string" },
@@ -83,6 +84,7 @@ defineTopologyManifest({
       type: "manual",
       id: "missing-required-property",
       name: "Missing Required Property",
+      defaultHome: { type: "detached" },
       cardSchema: {
         properties: {
           coins: { type: "integer" },
@@ -140,6 +142,7 @@ defineTopologyManifest({
       type: "manual",
       id: "variant-cards",
       name: "Variant Cards",
+      defaultHome: { type: "detached" },
       cardSchema: {
         shared: {
           cost: { type: "integer" },
@@ -192,6 +195,7 @@ defineTopologyManifest({
       type: "manual",
       id: "defaulted-card-properties",
       name: "Defaulted Card Properties",
+      defaultHome: { type: "detached" },
       cardSchema: {
         shared: {
           cost: { type: "integer", optional: true, default: 0 },
@@ -234,6 +238,7 @@ defineTopologyManifest({
       type: "manual",
       id: "variant-missing-required-property",
       name: "Variant Missing Required Property",
+      defaultHome: { type: "detached" },
       cardSchema: {
         variants: {
           copper: {

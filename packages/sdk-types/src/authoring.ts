@@ -1137,7 +1137,8 @@ type TypedCardSet<
   cardSchema: infer CardSchema;
   cards: infer Cards extends readonly unknown[];
 }
-  ? Omit<CardSet, "cards"> & {
+  ? Omit<CardSet, "cards" | "defaultHome"> & {
+      defaultHome: TypedComponentHomeSpec<Manifest>;
       cards: ReadonlyArray<TypedCard<ArrayItem<Cards>, Manifest, CardSchema>>;
     }
   : CardSet;

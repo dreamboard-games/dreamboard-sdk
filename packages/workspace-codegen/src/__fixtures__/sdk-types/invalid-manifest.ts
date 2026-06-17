@@ -11,6 +11,7 @@ defineTopologyManifest({
       id: "main",
       name: "Main",
       type: "manual",
+      defaultHome: { type: "detached" },
       cardSchema: {
         type: "object",
         properties: {},

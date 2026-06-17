@@ -17,6 +17,7 @@ export default defineConfig({
     "src/runtime/workspace-contract.ts",
     "src/runtime/runtime-api.ts",
     "src/codegen.ts",
+    "src/authoring/index.ts",
     "src/reducer-contract.ts",
     "src/browser-interaction.ts",
   ],

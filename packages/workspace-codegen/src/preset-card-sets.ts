@@ -67,6 +67,7 @@ export function createStandard52CardDeck(): ManualCardSetDefinition {
     id: STANDARD_DECK_ID,
     name: "Standard 52-Card Deck",
     type: "manual",
+    defaultHome: { type: "detached" },
     cards,
     cardSchema: {
       properties: {

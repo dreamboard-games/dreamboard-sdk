@@ -164,6 +164,7 @@ test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids",
         id: "main",
         name: "Main",
         type: "manual",
+        defaultHome: { type: "detached" },
         cardSchema: {
           properties: {},
         },
@@ -356,6 +357,7 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
         type: "manual",
         id: "market",
         name: "Market",
+        defaultHome: { type: "detached" },
         cardSchema: { properties: {} },
         cards: [
           {
@@ -417,6 +419,7 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
         type: "manual",
         id: "unsafe-cards",
         name: "Unsafe Cards",
+        defaultHome: { type: "detached" },
         cardSchema: {
           properties: {
             prototype: { type: "string" },
@@ -498,6 +501,7 @@ test("validateManifestAuthoring rejects generated handle key collisions", () => 
         type: "manual",
         id: "market",
         name: "Market",
+        defaultHome: { type: "detached" },
         cardSchema: { properties: {} },
         cards: [
           { type: "foo-bar", name: "Foo Bar", count: 1, properties: {} },

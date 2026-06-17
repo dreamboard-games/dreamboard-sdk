@@ -261,9 +261,9 @@ export type BoardCard = {
    */
   cardType?: string;
   /**
-   * Optional initial home. Omitted cards start Detached.
-   * Compatibility declarations such as allowedCardSetIds never imply placement.
-   * Player-scoped distribution belongs in reducer setup.
+   * Optional per-card initial home. Omitted cards use their manual card set's
+   * defaultHome. Compatibility declarations such as allowedCardSetIds never
+   * imply placement. Player-scoped distribution belongs in reducer setup.
    */
   home?: ComponentHomeSpec;
   /**
@@ -295,6 +295,10 @@ export type ManualCardSetDefinition = {
    * Schema definition for authored card properties in this card set
    */
   cardSchema: CardPropertySchema;
+  /**
+   * Default initial home for cards that do not declare a per-card home.
+   */
+  defaultHome: ComponentHomeSpec;
   /**
    * List of authored cards in this card set
    */

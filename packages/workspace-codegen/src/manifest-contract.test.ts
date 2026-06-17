@@ -33,6 +33,7 @@ const TEST_MANIFEST: GameTopologyManifest = {
       type: "manual",
       id: "standard-deck",
       name: "Standard Deck",
+      defaultHome: { type: "zone", zoneId: "draw-deck" },
       cardSchema: {
         properties: {
           value: {
@@ -806,6 +807,7 @@ test("generateManifestContractSource emits shared home zone literals for card ty
         type: "manual",
         id: "market",
         name: "Market",
+        defaultHome: { type: "detached" },
         cardSchema: { properties: {} },
         cards: [
           {
@@ -910,6 +912,7 @@ test("generated createInitialTable keeps shared card homes aligned across decks,
           type: "manual",
           id: "market",
           name: "Market",
+          defaultHome: { type: "zone", zoneId: "shared-deck" },
           cardSchema: { properties: {} },
           cards: [
             {
@@ -1096,6 +1099,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
           type: "manual",
           id: "market",
           name: "Market",
+          defaultHome: { type: "zone", zoneId: "shared-deck" },
           cardSchema: { properties: {} },
           cards: [
             { type: "omitted", name: "Omitted", count: 1, properties: {} },
@@ -1290,6 +1294,7 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
         type: "manual",
         id: "unsafe",
         name: "Unsafe",
+        defaultHome: { type: "detached" },
         cardSchema: { properties: {} },
         cards: [
           {
@@ -1531,6 +1536,7 @@ test("generateManifestContractSource emits variant card property schemas", async
         type: "manual",
         id: "market-cards",
         name: "Market Cards",
+        defaultHome: { type: "detached" },
         cardSchema: {
           shared: {
             cost: { type: "integer", optional: true, default: 0 },

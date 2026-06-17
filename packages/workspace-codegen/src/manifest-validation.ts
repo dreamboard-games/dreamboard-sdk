@@ -343,6 +343,10 @@ function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
     if (cardSet.type !== "manual") {
       continue;
     }
+    validateHome(
+      cardSet.defaultHome,
+      `manifest.cardSets[${cardSetIndex}].defaultHome`,
+    );
     for (const [cardIndex, card] of cardSet.cards.entries()) {
       validateHome(
         card.home,
@@ -469,24 +473,43 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
     if (cardSet.type !== "manual") {
       continue;
     }
+    if (!cardSet.defaultHome) {
+      issues.push(
+        `manifest.cardSets[${cardSetIndex}].defaultHome: Manual card sets must declare defaultHome.`,
+      );
+      continue;
+    }
+    const validateCardHome = (
+      home: BoardCard["home"],
+      path: string,
+      label: string,
+    ) => {
+      if (
+        home?.type === "zone" &&
+        zoneScopeById.get(home.zoneId) === "perPlayer"
+      ) {
+        issues.push(
+          `${path}.zoneId: ${label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+        );
+      }
+      if (
+        homeTargetsBoard(home) &&
+        boardScopeById.get(home.boardId) === "perPlayer"
+      ) {
+        issues.push(
+          `${path}.boardId: ${label} cannot target per-player board '${home.boardId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
+        );
+      }
+    };
+
+    validateCardHome(
+      cardSet.defaultHome,
+      `manifest.cardSets[${cardSetIndex}].defaultHome`,
+      `Card set '${cardSet.id}' defaultHome`,
+    );
     for (const [cardIndex, card] of cardSet.cards.entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
-      if (
-        card.home?.type === "zone" &&
-        zoneScopeById.get(card.home.zoneId) === "perPlayer"
-      ) {
-        issues.push(
-          `${path}.zoneId: Card '${card.type}' cannot target per-player zone '${card.home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
-        );
-      }
-      if (
-        homeTargetsBoard(card.home) &&
-        boardScopeById.get(card.home.boardId) === "perPlayer"
-      ) {
-        issues.push(
-          `${path}.boardId: Card '${card.type}' cannot target per-player board '${card.home.boardId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
-        );
-      }
+      validateCardHome(card.home, path, `Card '${card.type}'`);
     }
   }
 
