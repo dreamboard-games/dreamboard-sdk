@@ -11,3 +11,5 @@ packages/ui-workbench/test-results/
 artifacts/ui-stories/
 artifacts/ui-visual/
 artifacts/ui-release-proof/
+artifacts/
+

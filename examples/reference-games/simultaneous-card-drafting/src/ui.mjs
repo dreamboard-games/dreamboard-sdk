@@ -7,4 +7,11 @@ export const Root = createReferenceGameRoot({
   interaction: "lock-choice",
   actionLabel: "Lock choice",
   summary: "Lock a private draft choice before reveal.",
+  mobile: true,
+  cards: [
+    { id: "lantern", name: "Lantern", properties: { subtitle: "Light" } },
+    { id: "garden", name: "Garden", properties: { subtitle: "Nature" } },
+    { id: "bell", name: "Bell", properties: { subtitle: "Sound" } },
+    { id: "map", name: "Map", properties: { subtitle: "Journey" } },
+  ],
 });

@@ -12,6 +12,7 @@ import {
   type PluginRuntimeClient,
   type PluginTransport,
 } from "@dreamboard-games/sdk/runtime";
+import type { UIScenarioReplayStep } from "@dreamboard-games/sdk/testing";
 
 export interface BrowserUIScenarioFixture {
   readonly schemaVersion: number;
@@ -37,21 +38,7 @@ export interface BrowserUIScenarioFixture {
   };
 }
 
-export interface BrowserUIReplayStep {
-  readonly stepId: string;
-  readonly resolve?: {
-    readonly interactionId?: string;
-  };
-  readonly expectedIdentity?: {
-    readonly interactionId?: string;
-  };
-  readonly expect: {
-    readonly frameId?: string;
-    readonly projectionDigest?: string;
-    readonly semanticDigest?: string;
-    readonly submissionDigest?: string;
-  };
-}
+export type BrowserUIReplayStep = UIScenarioReplayStep;
 
 export interface BrowserFixtureHostEvent {
   readonly sequence: number;
@@ -101,13 +88,15 @@ export async function loadBrowserUIScenario(options: {
     );
   }
   const fixture = (await fixtureResponse.json()) as BrowserUIScenarioFixture;
-  const module = (options.renderModuleLoader
-    ? await options.renderModuleLoader()
-    : await import(
-        /* @vite-ignore */ options.renderModuleUrl
-      )) as Partial<UIScenarioRenderModule>;
+  const module = (
+    options.renderModuleLoader
+      ? await options.renderModuleLoader()
+      : await import(/* @vite-ignore */ options.renderModuleUrl)
+  ) as Partial<UIScenarioRenderModule>;
   if (typeof module.Root !== "function") {
-    throw new Error(`Render module '${options.renderModuleUrl}' is missing Root.`);
+    throw new Error(
+      `Render module '${options.renderModuleUrl}' is missing Root.`,
+    );
   }
   if (module.uiContractFingerprint !== fixture.source.uiContractFingerprint) {
     throw new Error(
@@ -223,7 +212,10 @@ function createBrowserFixtureHostHarness(
       );
     }
     stepCursor += 1;
-    return step as Extract<PluginProtocolTape["steps"][number], { kind: typeof kind }>;
+    return step as Extract<
+      PluginProtocolTape["steps"][number],
+      { kind: typeof kind }
+    >;
   }
 
   async function handlePayload(payload: PluginToHostPayload) {

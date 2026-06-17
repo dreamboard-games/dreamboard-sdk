@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
+import { existsSync } from "node:fs";
 import {
   lstat,
   readFile,
@@ -110,6 +111,20 @@ export const commercialMarkDenylist = [
   "settlers of catan",
   "ticket to ride",
 ];
+
+export function repoCommandEnv(env = process.env) {
+  if (
+    !existsSync(path.join(root, ".git")) &&
+    existsSync(path.join(root, ".here"))
+  ) {
+    return {
+      ...env,
+      GIT_DIR: path.join(root, ".here"),
+      GIT_WORK_TREE: root,
+    };
+  }
+  return env;
+}
 
 export async function pathExists(target) {
   try {

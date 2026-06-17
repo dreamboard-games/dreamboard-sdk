@@ -2,7 +2,7 @@
 
 Date: 2026-06-17.
 
-Status: source-complete.
+Status: complete for the required Workbench foundation.
 
 ## Implemented
 
@@ -42,7 +42,7 @@ coverage as new reducer scenarios are compiled.
 
 ## Verification
 
-Commands run from `/Users/mac/code/dreamboard-sdk`:
+Commands run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 mise exec node@24 -- pnpm ui:catalog:generate

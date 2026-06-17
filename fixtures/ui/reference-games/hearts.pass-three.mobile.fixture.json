@@ -11,9 +11,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:98d92947bfd93ce03190ad85b2bf2687ae76026acb4ebbd6009190fb59e54324",
-    "finalSemanticDigest": "sha256:33b15f64670193875837e0760ce28b87c985bdcae26b18a205ae83c5a1514eec",
-    "initialProjectionDigest": "sha256:3da4fd8204a1a6ead0dbb3e365a1977e0db1d68a2832f2974d92c6a8f57bdf08",
+    "finalProjectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55",
+    "finalSemanticDigest": "sha256:c962a4e5f2f1c5a68b2db1256f9f1f2628bc5e32f43484d08f4ed18eadc68988",
+    "initialProjectionDigest": "sha256:5346cf26bc9791cf7299ba6e7cc849feffde1c274002e9f07cee519523d15ac0",
     "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c"
   },
   "gameId": "hearts",
@@ -23,7 +23,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:a8a19c7aec2b97a201e607dcb7b822e4e04e8f7fe54ea94b155377a0c60a22e8",
+          "actionSetVersion": "sha256:aa6578fe57716250f0af3b979272d490cfebd18e61aa7da58e9981404589ac03",
           "availableInteractions": [
             {
               "availability": {
@@ -32,7 +32,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:7b170ba3649956c93f49ee92a14fb275dc87f3e29289e0d23a6a970381a0ef04",
+              "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
               "inputs": [],
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
@@ -46,7 +46,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:04b8ad3cd9669ca72494dfa1e2b32cf1a7de0a37fe834e0c51f9d6d8e4ce4c42",
+              "descriptorDigest": "sha256:ebfe4b83520f734c2dc4a0028484a05aae21c0f063ef5207e6470631590f50cc",
               "inputs": [],
               "interactionId": "play-to-trick:player-1",
               "interactionKey": "play-to-trick",
@@ -73,11 +73,11 @@
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:3da4fd8204a1a6ead0dbb3e365a1977e0db1d68a2832f2974d92c6a8f57bdf08"
+        "projectionDigest": "sha256:5346cf26bc9791cf7299ba6e7cc849feffde1c274002e9f07cee519523d15ac0"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:a60518c9aa60f34857f42cd87e8dc9d398d3c40fbd2f9767b44d9d268c711a01",
+          "actionSetVersion": "sha256:5ea8ec3d92b28336f3154a9cbd18d2996fd6f84781d19b434a22dcec9aa79e68",
           "availableInteractions": [
             {
               "availability": {
@@ -86,7 +86,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:7b170ba3649956c93f49ee92a14fb275dc87f3e29289e0d23a6a970381a0ef04",
+              "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
               "inputs": [],
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
@@ -100,7 +100,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:04b8ad3cd9669ca72494dfa1e2b32cf1a7de0a37fe834e0c51f9d6d8e4ce4c42",
+              "descriptorDigest": "sha256:ebfe4b83520f734c2dc4a0028484a05aae21c0f063ef5207e6470631590f50cc",
               "inputs": [],
               "interactionId": "play-to-trick:player-1",
               "interactionKey": "play-to-trick",
@@ -127,7 +127,7 @@
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:98d92947bfd93ce03190ad85b2bf2687ae76026acb4ebbd6009190fb59e54324"
+        "projectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55"
       }
     ],
     "session": {
@@ -149,7 +149,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:f97a434e9fab9d6c3bbe6b86a4cf431df24d06018dc5712c5379d5e9bd33422e",
+        "requestDigest": "sha256:7ebeba1228bdd7b9866f5f08d1bddb21a82527880b8a8a13816155173aa120c1",
         "response": {
           "valid": true
         }
@@ -158,7 +158,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:b292551924b49565b96e7115997d51996e55676b821c647e3d401f5c30637ac2",
+        "requestDigest": "sha256:cc05e1c3dd5775ae279407f70650ae7f6375a9e13646a0743cf7dc5a75885276",
         "response": {
           "accepted": true
         }
@@ -177,17 +177,16 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:98d92947bfd93ce03190ad85b2bf2687ae76026acb4ebbd6009190fb59e54324",
-        "semanticDigest": "sha256:33b15f64670193875837e0760ce28b87c985bdcae26b18a205ae83c5a1514eec",
+        "projectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55",
+        "semanticDigest": "sha256:c962a4e5f2f1c5a68b2db1256f9f1f2628bc5e32f43484d08f4ed18eadc68988",
         "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
         "visibleInteractionKeys": [
-          "pass-three",
-          "play-to-trick"
+          "pass-three"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:7b170ba3649956c93f49ee92a14fb275dc87f3e29289e0d23a6a970381a0ef04",
+        "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
@@ -209,9 +208,9 @@
   "source": {
     "reducerFingerprint": "sha256:9b905cbe094b398ec1070bc8e6e8e6b09caa5cea86902ce17f3cef75f5dd958d",
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
-    "renderModuleDigest": "sha256:38fc48eda7f0e32f2bd738b3cefceaff40ff08d5723ed1633c8dfbfc0c71be0c",
+    "renderModuleDigest": "sha256:cb2a7a7aadd9abc8caf069f94aa70607bf78295f943a0ac0c92d739420d7c98b",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:a4d079686b3c465eb3f920ca37cf2055e6ce7467fc7dd38e1e6df537dac1fd5f",
+    "sourceDigest": "sha256:09b0093684b50f9b201b3fd3f728068fa114ef878576ae07ca61072c97120b4c",
     "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
   },
   "tags": [

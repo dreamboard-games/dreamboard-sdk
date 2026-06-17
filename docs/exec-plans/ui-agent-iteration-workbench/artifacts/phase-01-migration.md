@@ -72,11 +72,11 @@ Added root scripts:
   - per-reference-game packed packages
   - packed SDK tarball
 - Added internal repository lock:
-  `/Users/mac/code/dreamboard/examples/reference-bundle.lock.json`.
+  `/Users/kevintang/code/internal/examples/reference-bundle.lock.json`.
 - Added internal repository materializer:
-  `/Users/mac/code/dreamboard/scripts/reference-games/materialize-reference-bundle.mjs`.
+  `/Users/kevintang/code/internal/scripts/reference-games/materialize-reference-bundle.mjs`.
 - The materializer verifies the bundle digest and extracts only to
-  `/Users/mac/code/dreamboard/build/reference-games/sdk-reference-games`.
+  `/Users/kevintang/code/internal/build/reference-games/sdk-reference-games`.
   It does not create an editable committed source mirror.
 
 Final generated SDK bundle lock:
@@ -117,7 +117,7 @@ pnpm reference-games:bundle
 pnpm reference-games:bundle
 pnpm pack:dry-run
 pnpm format:check
-node scripts/reference-games/materialize-reference-bundle.mjs --bundle /Users/mac/code/dreamboard-sdk/build/reference-games/reference-games-bundle.tgz
+node scripts/reference-games/materialize-reference-bundle.mjs --bundle /Users/kevintang/code/dreamboard-sdk/build/reference-games/reference-games-bundle.tgz
 ```
 
 Results:

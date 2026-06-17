@@ -356,6 +356,7 @@ describe("UI scenario fixture contract", () => {
     expect(observation.browserInteractionProtocol).toBe(
       DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
     );
+    expect(observation.provenance).toEqual({ kind: "fixture-expectation" });
     expect(observation.checkpoints).toEqual([
       {
         stepId: "commit-pass",

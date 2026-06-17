@@ -1,9 +1,10 @@
 # Phase 02: Portable UI Scenario Fixture Contract
 
-Status: reopened on 2026-06-17 by the
+Status: complete on 2026-06-17 after the
 [Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
-`artifacts/phase-02-fixture-contract.md` records the superseded version 1
-implementation.
+`artifacts/phase-02-fixture-contract.md` records the original version 1
+implementation; the hard-cut amendment and
+`artifacts/plan-closeout.md` record the accepted version 2 boundary.
 
 The existing implementation proved deterministic serialization and portable
 semantic replay, but it serialized `PluginStateSnapshot` and compiled through

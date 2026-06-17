@@ -7,7 +7,7 @@ This guide is generated from the live UI scenario catalog and root command map.
 ## Command Tiers
 
 - PR fast gate: `node scripts/ui/run-ui-scenarios.mjs --changed`
-- Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test`
+- Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required`
 - Release proof: `node scripts/ui/create-ui-release-proof.mjs`
 - Focused Workbench route: `pnpm ui:workbench -- --scenario <scenario-id>`
 
@@ -15,37 +15,44 @@ This guide is generated from the live UI scenario catalog and root command map.
 
 Use `fixtures/ui/component-scenario-index.json` to map changed component files
 to scenario IDs. Shared runtime, theme, fixture, or browser-interaction changes
-fall back to the full Workbench suite.
+fall back to the required Workbench scenario set: Hearts mobile interaction,
+desktop card drag, and desktop runtime draft. Other checked-in scenarios remain
+available for focused follow-up coverage but do not block the foundation release.
 
-| Change                       | Minimum command                                                   |
-| ---------------------------- | ----------------------------------------------------------------- |
-| Pure color or spacing token  | `pnpm ui:test:changed --base origin/main`                         |
-| `HandView` behavior          | `pnpm ui:test --component HandView`                               |
-| Pointer/drag adapter         | `pnpm ui:test --capability touch-drag && pnpm ui:test:parity`     |
-| Runtime draft or submit      | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed` |
-| Browser-interaction protocol | Full `pnpm ui:check`, packed proof, and all golden parity         |
+| Change                       | Minimum command                                                        |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| Pure color or spacing token  | `pnpm ui:test:changed --base origin/main`                              |
+| `HandView` behavior          | `pnpm ui:test --component HandView`                                    |
+| Pointer/drag adapter         | `pnpm ui:test --capability pointer-drag`                               |
+| Runtime draft                | `pnpm ui:test --capability runtime-draft && pnpm ui:test:packed`       |
+| Runtime submit               | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed`      |
+| Browser-interaction protocol | Full `pnpm ui:check`, Hearts packed proof, and Hearts real-host parity |
 
 ## Components
 
-| Component          | Workbench scenarios                                                                                                                                                                                              | Capabilities                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
-| BoardTargetLayer   | `hex-network-trading.place-route.desktop`, `worker-placement-tableau.place-worker.desktop`                                                                                                                       | `desktop-drag`, `runtime-draft`, `runtime-submit`               |
-| ConfirmationDialog | `hex-network-trading.place-route.desktop`, `worker-placement-tableau.place-worker.desktop`                                                                                                                       | `desktop-drag`, `runtime-draft`, `runtime-submit`               |
-| HandView           | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`                                                  | `desktop-drag`, `runtime-draft`, `runtime-submit`, `touch-drag` |
-| InteractionForm    | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`, `worker-placement-tableau.place-worker.desktop` | `desktop-drag`, `runtime-draft`, `runtime-submit`, `touch-drag` |
-| MarketRow          | `deck-building-market.buy-card.desktop`                                                                                                                                                                          | `runtime-draft`, `runtime-submit`                               |
-| PluginRuntime      | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`, `worker-placement-tableau.place-worker.desktop` | `desktop-drag`, `runtime-draft`, `runtime-submit`, `touch-drag` |
-| ResourceControls   | `hex-network-trading.place-route.desktop`, `worker-placement-tableau.place-worker.desktop`                                                                                                                       | `desktop-drag`, `runtime-draft`, `runtime-submit`               |
+| Component          | Workbench scenarios                                                                                                                                                                                              | Capabilities                                               |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| CardDragSurface    | `hex-network-trading.place-route.desktop`                                                                                                                                                                        | `click`, `pointer-drag`, `runtime-submit`                  |
+| CardDropTargetView | `hex-network-trading.place-route.desktop`                                                                                                                                                                        | `click`, `pointer-drag`, `runtime-submit`                  |
+| CardFace           | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`                                                  | `click`, `pointer-drag`, `runtime-submit`                  |
+| CostDisplay        | `hex-network-trading.place-route.desktop`, `worker-placement-tableau.place-worker.desktop`                                                                                                                       | `click`, `pointer-drag`, `runtime-draft`, `runtime-submit` |
+| HandView           | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`                                                  | `click`, `pointer-drag`, `runtime-submit`                  |
+| InteractionInput   | `worker-placement-tableau.place-worker.desktop`                                                                                                                                                                  | `click`, `runtime-draft`, `runtime-submit`                 |
+| InteractionSubmit  | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`, `worker-placement-tableau.place-worker.desktop` | `click`, `pointer-drag`, `runtime-draft`, `runtime-submit` |
+| Panel              | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`, `worker-placement-tableau.place-worker.desktop` | `click`, `pointer-drag`, `runtime-draft`, `runtime-submit` |
+| PluginRuntime      | `deck-building-market.buy-card.desktop`, `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`, `simultaneous-card-drafting.lock-choice.mobile`, `worker-placement-tableau.place-worker.desktop` | `click`, `pointer-drag`, `runtime-draft`, `runtime-submit` |
+| ResourceCounter    | `hex-network-trading.place-route.desktop`, `worker-placement-tableau.place-worker.desktop`                                                                                                                       | `click`, `pointer-drag`, `runtime-draft`, `runtime-submit` |
+| SlotSystem         | `worker-placement-tableau.place-worker.desktop`                                                                                                                                                                  | `click`, `runtime-draft`, `runtime-submit`                 |
 
 ## Scenarios
 
-| Scenario                                        | Title                                                                       | Components                                                                                                   | Capabilities                                      |
-| ----------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| `deck-building-market.buy-card.desktop`         | Deck Building Market: market row exposes affordable and unavailable cards   | `HandView`, `InteractionForm`, `MarketRow`, `PluginRuntime`                                                  | `runtime-draft`, `runtime-submit`                 |
-| `hearts.pass-three.mobile`                      | Hearts: player hand remains private before pass reveal                      | `HandView`, `InteractionForm`, `PluginRuntime`                                                               | `runtime-draft`, `runtime-submit`, `touch-drag`   |
-| `hex-network-trading.place-route.desktop`       | Hex Network Trading: eligible hex edges are targetable                      | `BoardTargetLayer`, `ConfirmationDialog`, `HandView`, `InteractionForm`, `PluginRuntime`, `ResourceControls` | `desktop-drag`, `runtime-draft`, `runtime-submit` |
-| `simultaneous-card-drafting.lock-choice.mobile` | Simultaneous Card Drafting: choice remains private until every player locks | `HandView`, `InteractionForm`, `PluginRuntime`                                                               | `runtime-draft`, `runtime-submit`, `touch-drag`   |
-| `worker-placement-tableau.place-worker.desktop` | Worker Placement Tableau: occupied worker targets become unavailable        | `BoardTargetLayer`, `ConfirmationDialog`, `InteractionForm`, `PluginRuntime`, `ResourceControls`             | `runtime-draft`, `runtime-submit`                 |
+| Scenario                                        | Release role        | Title                                                                       | Components                                                                                                                                       | Capabilities                               |
+| ----------------------------------------------- | ------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| `deck-building-market.buy-card.desktop`         | Optional follow-up  | Deck Building Market: market row exposes affordable and unavailable cards   | `CardFace`, `HandView`, `InteractionSubmit`, `Panel`, `PluginRuntime`                                                                            | `click`, `runtime-submit`                  |
+| `hearts.pass-three.mobile`                      | Required foundation | Hearts: player hand remains private before pass reveal                      | `CardFace`, `HandView`, `InteractionSubmit`, `Panel`, `PluginRuntime`                                                                            | `click`, `runtime-submit`                  |
+| `hex-network-trading.place-route.desktop`       | Required foundation | Hex Network Trading: route card drags to an eligible edge before commit     | `CardDragSurface`, `CardDropTargetView`, `CardFace`, `CostDisplay`, `HandView`, `InteractionSubmit`, `Panel`, `PluginRuntime`, `ResourceCounter` | `click`, `pointer-drag`, `runtime-submit`  |
+| `simultaneous-card-drafting.lock-choice.mobile` | Optional follow-up  | Simultaneous Card Drafting: choice remains private until every player locks | `CardFace`, `HandView`, `InteractionSubmit`, `Panel`, `PluginRuntime`                                                                            | `click`, `runtime-submit`                  |
+| `worker-placement-tableau.place-worker.desktop` | Required foundation | Worker Placement Tableau: worker count draft persists until commit          | `CostDisplay`, `InteractionInput`, `InteractionSubmit`, `Panel`, `PluginRuntime`, `ResourceCounter`, `SlotSystem`                                | `click`, `runtime-draft`, `runtime-submit` |
 
 ## Evidence
 

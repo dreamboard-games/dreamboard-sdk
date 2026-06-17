@@ -11,9 +11,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:7a9703733d6a5390ae8bc092fdd1e77ab871333891801cca890b2770576a82b9",
-    "finalSemanticDigest": "sha256:f849168370a1925ff1934ec1cea048a6da2bd4af16c848d65b0c415f170baa83",
-    "initialProjectionDigest": "sha256:a63914f4a9154ec07d00bedfde02429468e3d154195d6b3988a87e10363c952d",
+    "finalProjectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df",
+    "finalSemanticDigest": "sha256:a529a7c4fe36c983535d6110a3bd6cf3adfb2c42dcdb540969bb3d008df12c49",
+    "initialProjectionDigest": "sha256:3be31df3b1e1ca8db9f5ab9ecc2946a960c9a390f8f00ddaccafb1c77e0af64f",
     "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c"
   },
   "gameId": "simultaneous-card-drafting",
@@ -23,7 +23,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:b6ae2c3018d56f1e8a2cd7a863f9e3573cc90f26aa638fd1d4adc40880507141",
+          "actionSetVersion": "sha256:1bc2ed7894ac67f70e9c9f008b3179e0f076268b5a2406863563c13e3abeb477",
           "availableInteractions": [
             {
               "availability": {
@@ -32,7 +32,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:1cf050bfd602e6e9435731d81bd1ec240be2e3b85b77f094a967dc4ced36f330",
+              "descriptorDigest": "sha256:e9e045ccaee9b67c031141014eb86a3e8434d91375bc9be0482248454e15ec48",
               "inputs": [],
               "interactionId": "choose-card:player-1",
               "interactionKey": "choose-card",
@@ -46,7 +46,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:3323332603866bcb2ebb44a0508917bea3540a40c2f10b6e5e3d7eab2c272d7b",
+              "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
               "inputs": [],
               "interactionId": "lock-choice:player-1",
               "interactionKey": "lock-choice",
@@ -60,7 +60,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:545378de6691811ce8bad3c34eab97519adfb15eb8d052b247acd5979fe451af",
+              "descriptorDigest": "sha256:7e97c9be793808a314ab64d11a610fb68a22bd0fc32ce58500ad20955f3e7fbe",
               "inputs": [],
               "interactionId": "reveal-and-pass:player-1",
               "interactionKey": "reveal-and-pass",
@@ -87,11 +87,11 @@
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:a63914f4a9154ec07d00bedfde02429468e3d154195d6b3988a87e10363c952d"
+        "projectionDigest": "sha256:3be31df3b1e1ca8db9f5ab9ecc2946a960c9a390f8f00ddaccafb1c77e0af64f"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:a44e4572704079c06998211d6466951b9d5ef2ed016fecfd3eb67c9be8c9d281",
+          "actionSetVersion": "sha256:1c3f96a2fe5de002cc6eb98ab2d605161b1f6b850e67664ce1fd66b4be101f79",
           "availableInteractions": [
             {
               "availability": {
@@ -100,7 +100,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:1cf050bfd602e6e9435731d81bd1ec240be2e3b85b77f094a967dc4ced36f330",
+              "descriptorDigest": "sha256:e9e045ccaee9b67c031141014eb86a3e8434d91375bc9be0482248454e15ec48",
               "inputs": [],
               "interactionId": "choose-card:player-1",
               "interactionKey": "choose-card",
@@ -114,7 +114,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:3323332603866bcb2ebb44a0508917bea3540a40c2f10b6e5e3d7eab2c272d7b",
+              "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
               "inputs": [],
               "interactionId": "lock-choice:player-1",
               "interactionKey": "lock-choice",
@@ -128,7 +128,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:545378de6691811ce8bad3c34eab97519adfb15eb8d052b247acd5979fe451af",
+              "descriptorDigest": "sha256:7e97c9be793808a314ab64d11a610fb68a22bd0fc32ce58500ad20955f3e7fbe",
               "inputs": [],
               "interactionId": "reveal-and-pass:player-1",
               "interactionKey": "reveal-and-pass",
@@ -155,7 +155,7 @@
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:7a9703733d6a5390ae8bc092fdd1e77ab871333891801cca890b2770576a82b9"
+        "projectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df"
       }
     ],
     "session": {
@@ -177,7 +177,7 @@
         "fromFrameId": "frame-1",
         "id": "simultaneous-card-drafting.lock-choice.mobile.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:3df87e1a90e33db3016059e449b4f7e8543c551b0031e3f4ac829291ea2a972c",
+        "requestDigest": "sha256:4498b8b9e1b262e9ec63114645112a8e7c103704aab4a3b3a23d9ba2c0910491",
         "response": {
           "valid": true
         }
@@ -186,7 +186,7 @@
         "fromFrameId": "frame-1",
         "id": "simultaneous-card-drafting.lock-choice.mobile.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:6e7424be52acdd10e869ca0ae8cb7a24388abbb7e43e75cb6ead9d9ed01ab1af",
+        "requestDigest": "sha256:d6f68571bce375d9c78bb518f39c3b5237f09153689038a01a669e7b7d48b168",
         "response": {
           "accepted": true
         }
@@ -205,18 +205,16 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:7a9703733d6a5390ae8bc092fdd1e77ab871333891801cca890b2770576a82b9",
-        "semanticDigest": "sha256:f849168370a1925ff1934ec1cea048a6da2bd4af16c848d65b0c415f170baa83",
+        "projectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df",
+        "semanticDigest": "sha256:a529a7c4fe36c983535d6110a3bd6cf3adfb2c42dcdb540969bb3d008df12c49",
         "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c",
         "visibleInteractionKeys": [
-          "choose-card",
-          "lock-choice",
-          "reveal-and-pass"
+          "lock-choice"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:3323332603866bcb2ebb44a0508917bea3540a40c2f10b6e5e3d7eab2c272d7b",
+        "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
         "interactionId": "lock-choice:player-1",
         "interactionKey": "lock-choice",
         "scopeId": "runtime",
@@ -238,9 +236,9 @@
   "source": {
     "reducerFingerprint": "sha256:2870b0cb5f567c19fbb0e97bce6d76c0404809a31e4d797357a482ffd0c1f664",
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-    "renderModuleDigest": "sha256:35b8544fb630e84737db26d760c61a0a72083f047b3b91a9a0b8727c3ea173b0",
+    "renderModuleDigest": "sha256:0269a87b19a64834b75ad16a3c063d480209ae2a0d039b0c6e1ff78e6b13c4a0",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:e959a6fffe51c7015c0ed9149d5e1a0241c48093ee831aee54815e898510b036",
+    "sourceDigest": "sha256:4f4c226b03a07d8bfc784f181ac7ba35a7092415a6c470a25268f2a8f86a4ff4",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [

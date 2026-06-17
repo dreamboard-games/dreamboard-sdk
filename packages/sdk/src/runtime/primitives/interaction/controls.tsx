@@ -81,6 +81,7 @@ export function InteractionSubmit({
   params,
   onSubmitSuccess,
   onSubmitError,
+  style,
   ...props
 }: InteractionSubmitProps) {
   const { descriptor, handle } = useInteractionPrimitiveContext();
@@ -122,6 +123,10 @@ export function InteractionSubmit({
     "data-input-count": descriptor?.inputs.length,
     "data-submitting": isSubmitting || undefined,
     "data-state": handle?.status ?? "unavailable",
+    style: {
+      minHeight: 44,
+      ...style,
+    },
     onClick: composeEventHandlers(onClick, () => {
       if (isDisabled || !handle) return;
       const resolvedParams = typeof params === "function" ? params() : params;

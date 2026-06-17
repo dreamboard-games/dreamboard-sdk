@@ -1,95 +1,104 @@
 {
   "schemaVersion": 2,
-  "bundleId": "reference-games@fd666d960d1b",
-  "sdkCommit": "fd666d960d1b",
+  "bundleId": "reference-games@0cb860ed738a",
+  "sdkCommit": "0cb860ed738a",
   "pluginRuntimeProtocol": 3,
   "browserInteractionProtocol": "3.0.0",
   "fixtures": [
     {
       "id": "deck-building-market.buy-card.desktop",
       "file": "deck-building-market.buy-card.desktop.fixture.json",
-      "sha256": "sha256:507b55aaa713c0cc838525a97d523924ff04b8e02b3d3b64dd1487b2e473617a",
+      "sha256": "sha256:cef9bde40102aac8ed7a136732dd77be2f55b87be42bd634526f05119b303574",
       "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "renderModuleSha256": "sha256:f447bb27501aaab86d18fb1064637f6887728294632a5504f563b5ac2c740054",
+      "renderModuleSha256": "sha256:da4a5b8c5df7c8ba735dc20e5c55534204b7101b07230f27cf125564c3ccca69",
       "components": [
+        "CardFace",
         "HandView",
-        "InteractionForm",
-        "MarketRow",
+        "InteractionSubmit",
+        "Panel",
         "PluginRuntime"
       ],
       "capabilities": [
-        "runtime-submit",
-        "runtime-draft"
+        "click",
+        "runtime-submit"
       ]
     },
     {
       "id": "hearts.pass-three.mobile",
       "file": "hearts.pass-three.mobile.fixture.json",
-      "sha256": "sha256:ebf3e0100dd87666e8960ee9694aab8be94ecc785358bd6b0c8adb5d0eaa3424",
+      "sha256": "sha256:6420ecccebf4f0c79d256218fe8ee6082f92aac62a0a36851c7429589917aa99",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "renderModuleSha256": "sha256:38fc48eda7f0e32f2bd738b3cefceaff40ff08d5723ed1633c8dfbfc0c71be0c",
+      "renderModuleSha256": "sha256:cb2a7a7aadd9abc8caf069f94aa70607bf78295f943a0ac0c92d739420d7c98b",
       "components": [
+        "CardFace",
         "HandView",
-        "InteractionForm",
+        "InteractionSubmit",
+        "Panel",
         "PluginRuntime"
       ],
       "capabilities": [
-        "touch-drag",
-        "runtime-draft",
+        "click",
         "runtime-submit"
       ]
     },
     {
       "id": "hex-network-trading.place-route.desktop",
       "file": "hex-network-trading.place-route.desktop.fixture.json",
-      "sha256": "sha256:97414f96aac2b70f4e19f9376f0ad15dcdd7b12152315bae84a31f997bc17678",
+      "sha256": "sha256:f151c1601aee77d933503b49448d68ba9a19bedbfaa3d746e8391544bb9e7ac3",
       "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "renderModuleSha256": "sha256:b0d712cff920fba70e2a69fef6d1de85be9da9f5a6aede37ea5eddd2599684a5",
+      "renderModuleSha256": "sha256:0dffee73f7b79d258e77e91b619876dbf404a80153d6e899055f6134459c57e9",
       "components": [
-        "BoardTargetLayer",
-        "ConfirmationDialog",
+        "CardDragSurface",
+        "CardDropTargetView",
+        "CardFace",
+        "CostDisplay",
         "HandView",
-        "InteractionForm",
+        "InteractionSubmit",
+        "Panel",
         "PluginRuntime",
-        "ResourceControls"
+        "ResourceCounter"
       ],
       "capabilities": [
-        "desktop-drag",
-        "runtime-draft",
+        "click",
+        "pointer-drag",
         "runtime-submit"
       ]
     },
     {
       "id": "simultaneous-card-drafting.lock-choice.mobile",
       "file": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
-      "sha256": "sha256:124401f392ca9e4be08526c518005782c7ba4284eada71244013f923223de158",
+      "sha256": "sha256:c729647659209644aa586debeca21fa65196ad899bd792629442e4ca172e8f97",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "renderModuleSha256": "sha256:35b8544fb630e84737db26d760c61a0a72083f047b3b91a9a0b8727c3ea173b0",
+      "renderModuleSha256": "sha256:0269a87b19a64834b75ad16a3c063d480209ae2a0d039b0c6e1ff78e6b13c4a0",
       "components": [
+        "CardFace",
         "HandView",
-        "InteractionForm",
+        "InteractionSubmit",
+        "Panel",
         "PluginRuntime"
       ],
       "capabilities": [
-        "touch-drag",
-        "runtime-draft",
+        "click",
         "runtime-submit"
       ]
     },
     {
       "id": "worker-placement-tableau.place-worker.desktop",
       "file": "worker-placement-tableau.place-worker.desktop.fixture.json",
-      "sha256": "sha256:33e04462a31b2274559eea5e0ac1b1e91616febd276cfeee0183eba064616243",
+      "sha256": "sha256:d75d0f7595ccbbf865679ec77e41a7ce1e9f9c93ab87f23499b869b452c4eedd",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "renderModuleSha256": "sha256:11767a3ce06883f6b5907fd3582d7ad07e8629e86bb6c366520ad1e9c02f04e5",
+      "renderModuleSha256": "sha256:f974fab08aa8538af91937618d115a72baa673626688dd24f4410e77be16fa72",
       "components": [
-        "BoardTargetLayer",
-        "ConfirmationDialog",
-        "InteractionForm",
+        "CostDisplay",
+        "InteractionInput",
+        "InteractionSubmit",
+        "Panel",
         "PluginRuntime",
-        "ResourceControls"
+        "ResourceCounter",
+        "SlotSystem"
       ],
       "capabilities": [
+        "click",
         "runtime-draft",
         "runtime-submit"
       ]

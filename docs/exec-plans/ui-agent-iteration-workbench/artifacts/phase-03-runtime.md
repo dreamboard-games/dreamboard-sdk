@@ -2,7 +2,7 @@
 
 Date: 2026-06-17.
 
-Status: source-complete.
+Status: complete.
 
 ## Implemented
 
@@ -43,7 +43,7 @@ and payload. Semantic replay steps keep their existing
 
 ## Verification
 
-Commands run from `/Users/mac/code/dreamboard-sdk`:
+Commands run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck

@@ -10,8 +10,9 @@ by the
 
 ## Objective
 
-Replay selected UI fixtures through the internal production-like host and prove
-that the Workbench predicts the same observable UI and interaction behavior.
+Replay Hearts through the internal production-like host and prove that an
+independently measured source Workbench observation predicts the packed host's
+observable UI and interaction behavior.
 
 This is a focused parity lane, not a replacement for the existing
 `pnpm verify:browser` full-stack proof or browser-demo performance lane.
@@ -172,25 +173,24 @@ setup and mutation remain internal-owned.
 
 Do not make the internal checkout a dependency of normal `pnpm ui:test`.
 
-## 07E. Start with a small golden parity set
+## 07E. Use Hearts as the required golden scenario
 
 Required golden scenarios:
 
-| Scenario                                        | Why it is golden                                      |
-| ----------------------------------------------- | ----------------------------------------------------- |
-| `hearts.pass-three.mobile`                      | Mobile hand, multi-select, commit, simultaneous state |
-| `deck-building-market.buy-card`                 | Market selection, cost state, repeated turn           |
-| `hex-network-trading.place-network`             | Board geometry and pointer target                     |
-| `worker-placement-tableau.place-worker`         | Target selection, form/dialog, resource validation    |
-| `simultaneous-card-drafting.choose-card.mobile` | Private simultaneous choice, lock, reveal/pass        |
+| Scenario                   | Why it is golden                                      |
+| -------------------------- | ----------------------------------------------------- |
+| `hearts.pass-three.mobile` | Mobile hand, multi-select, commit, simultaneous state |
 
 For each scenario, run:
 
-- Workbench source candidate;
-- Workbench packed candidate;
-- internal real host with the same packed candidate.
+- fixture expectation compiled from the portable contract;
+- source Workbench observation measured by Playwright;
+- internal real-host observation measured from the exact packed candidate.
 
-Source and packed Workbench observations must match before real-host comparison.
+All three files carry explicit provenance and distinct file digests. The source
+and real-host observations must each match the fixture expectation and each
+other. The internal contract lane must never copy an expectation into its
+observation directory.
 
 ## 07F. Normalize visual parity
 
@@ -251,7 +251,7 @@ Run focused parity on SDK pull requests when changes touch:
 - fixture schema/runtime;
 - a component used by a golden scenario.
 
-Run all golden parity scenarios:
+Run Hearts parity:
 
 - on the SDK main branch;
 - before alpha publication;
@@ -312,7 +312,8 @@ classified full-stack failure separately.
 - Failures identify the first divergent checkpoint and typed class.
 - Focused parity does not become a dependency of the normal local Workbench
   loop.
-- All golden scenarios pass before deprecated authoring APIs are deleted.
+- Hearts passes with distinct fixture, source Workbench, and packed real-host
+  observations before release proof is minted.
 
 ## Risks and controls
 

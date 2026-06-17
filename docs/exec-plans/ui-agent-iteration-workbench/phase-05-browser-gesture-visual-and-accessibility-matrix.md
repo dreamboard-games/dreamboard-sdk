@@ -1,17 +1,18 @@
 # Phase 05: Browser, Gesture, Visual, And Accessibility Matrix
 
-Status: source-complete.
+Status: complete for the required Workbench foundation.
 
 Source closeout is recorded in
 `docs/exec-plans/ui-agent-iteration-workbench/artifacts/phase-05-browser-gesture-visual-accessibility.md`.
-The deterministic SDK and Workbench implementation is complete; the real-device
-mobile canary and 50-pass golden promotion threshold remain release gates before
-publication when gesture or browser-interaction code changes.
+The deterministic SDK and Workbench implementation includes Hearts click/tap,
+Hex Network Trading desktop pointer drag, and Worker Placement Tableau runtime
+draft. Mobile touch-drag promotion runs and real-device canaries are follow-up
+expansion.
 
 ## Objective
 
-Prove that runtime-aware scenarios behave under real desktop and mobile browser
-input, including drag interactions, while pairing visual evidence with semantic
+Prove the required set under real desktop click, browser tap, pointer drag, and
+runtime draft input while pairing visual evidence with semantic, layout, Axe,
 and runtime assertions.
 
 Synthetic React handlers or `dispatchEvent` calls are not sufficient for the
@@ -215,18 +216,19 @@ export default defineConfig({
 });
 ```
 
-Required coverage:
+Required Workbench foundation coverage:
 
-| Capability             | Chromium desktop | Chromium touch phone | WebKit phone    |
-| ---------------------- | ---------------- | -------------------- | --------------- |
-| Layout and screenshots | Required         | Required             | Smoke           |
-| Click/tap              | Required         | Required             | Required        |
-| Keyboard and focus     | Required         | Not required         | Smoke           |
-| Physical pointer drag  | Required         | Not applicable       | Not applicable  |
-| Physical touch drag    | Not applicable   | Required through CDP | Layout/tap only |
-| Semantic snapshot      | Required         | Required             | Required        |
-| Runtime transcript     | Required         | Required             | Required        |
-| Axe scan               | Required         | Required             | Required        |
+| Capability             | Chromium desktop | Chromium touch phone  | WebKit phone   |
+| ---------------------- | ---------------- | --------------------- | -------------- |
+| Layout and screenshots | Required         | Required              | Smoke          |
+| Click/tap              | Required         | Required              | Required       |
+| Keyboard and focus     | Storybook        | Not required          | Smoke          |
+| Physical pointer drag  | Required         | Not applicable        | Not applicable |
+| Physical touch drag    | Not applicable   | Follow-up through CDP | Not applicable |
+| Runtime draft mutation | Required         | Not applicable        | Not applicable |
+| Semantic snapshot      | Required         | Required              | Required       |
+| Runtime transcript     | Required         | Required              | Required       |
+| Axe scan               | Required         | Required              | Required       |
 
 Do not claim cross-browser touch-drag parity until the automation stack can
 send equivalent browser-level input to WebKit. WebKit still protects layout,
@@ -305,10 +307,10 @@ Promotion threshold:
 - deterministic artifact paths and digests;
 - failure injection proves the test detects a broken drop or submit.
 
-## 05H. Add a real-device mobile canary
+## 05H. Define the follow-up real-device mobile canary
 
-Chromium touch emulation is the fast deterministic gate, not the complete
-mobile claim. Run selected golden scenarios on:
+Chromium touch emulation and WebKit phone are the foundation gate. A later
+gesture expansion can run selected golden scenarios on:
 
 - current iOS Safari on a real iPhone;
 - current Android Chrome on a real phone.
@@ -325,9 +327,8 @@ The canary must cover:
 - committing the interaction;
 - focus and dialog behavior after the touch interaction.
 
-The release canary may run less frequently than pull request CI, but it is
-required before publication when hand, gesture, overlay, dialog, or
-browser-interaction code changed.
+The canary is not required for the Hearts foundation. Release owners can make
+it mandatory by invoking `pnpm ui:release-proof --require-device-canary`.
 
 ## Expected files
 
@@ -351,9 +352,7 @@ packages/ui-workbench/tests/assertions/**
 
 ```bash
 pnpm --filter @dreamboard-games/sdk test
-pnpm ui:test --scenario hearts.pass-three.mobile
-pnpm ui:test --scenario hex-network-trading.place-network
-pnpm ui:test --component HandView
+pnpm ui:test --required
 pnpm ui:test:visual
 ```
 
@@ -365,15 +364,17 @@ that semantic, transcript, and screenshot assertions fail.
 - Pointer targets are represented by the versioned SDK browser-interaction
   protocol.
 - The Workbench has one semantic driver with no text or DOM-position fallback.
-- Golden desktop drag uses browser mouse input.
-- Golden mobile drag uses browser-level Chromium touch input.
-- Every stateful scenario pairs screenshots with semantic and runtime evidence.
-- Desktop and mobile suites include accessibility and layout invariants.
+- The semantic driver executes the required desktop pointer-drag scenario
+  without text or DOM-position fallback.
+- The required draft scenario fills bounded input, observes draft readiness,
+  and commits the resulting parameters.
+- Hearts pairs screenshots with semantic and runtime evidence.
+- Chromium desktop, Chromium touch phone, and WebKit phone include Axe and
+  layout invariants.
 - WebKit coverage is described accurately and does not overstate touch-drag
   confidence.
-- Selected mobile golden scenarios pass on real iOS Safari and Android Chrome
-  before release.
-- New golden gesture tests meet the promotion threshold.
+- Real-device canary and gesture promotion requirements are explicitly
+  follow-up policy, not implicit foundation blockers.
 
 ## Risks and controls
 

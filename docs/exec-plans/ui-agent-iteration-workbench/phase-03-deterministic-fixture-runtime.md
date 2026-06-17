@@ -1,6 +1,6 @@
 # Phase 03: Deterministic Fixture Runtime
 
-Status: source-complete on 2026-06-17 after the
+Status: complete on 2026-06-17 after the
 [Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
 `artifacts/phase-03-runtime.md` records the superseded fake-runtime
 implementation; the receipt below records the transport-client closeout.
@@ -477,7 +477,7 @@ The SDK-owned fixture and Workbench runtime path now closes the reopened Phase
   `subscribeToState`, `setControllingPlayer`, `controllablePlayerIds`, and
   `hostUserId`.
 
-Verification run from `/Users/mac/code/dreamboard-sdk`:
+Verification run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck

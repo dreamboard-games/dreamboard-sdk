@@ -39,11 +39,17 @@ export const scenarios = defineUIScenarios([
       "/fixtures/reference-games/modules/deck-building-market.buy-card.desktop.mjs",
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/deck-building-market.buy-card.desktop.mjs"),
-    components: ["HandView", "InteractionForm", "MarketRow", "PluginRuntime"],
-    capabilities: ["runtime-draft", "runtime-submit"],
+    components: [
+      "CardFace",
+      "HandView",
+      "InteractionSubmit",
+      "Panel",
+      "PluginRuntime",
+    ],
+    capabilities: ["click", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:b3d4b38044e4eed2c3ddcfec42dd814d505c80df0f84d2c2080685c37d520b46",
+      "sha256:0225c8224436f916b0d817309b3d866b541dbb948c2c47e58d4bc22cd9bca129",
   },
   {
     id: "hearts.pass-three.mobile",
@@ -55,15 +61,22 @@ export const scenarios = defineUIScenarios([
       "/fixtures/reference-games/modules/hearts.pass-three.mobile.mjs",
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/hearts.pass-three.mobile.mjs"),
-    components: ["HandView", "InteractionForm", "PluginRuntime"],
-    capabilities: ["runtime-draft", "runtime-submit", "touch-drag"],
+    components: [
+      "CardFace",
+      "HandView",
+      "InteractionSubmit",
+      "Panel",
+      "PluginRuntime",
+    ],
+    capabilities: ["click", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:a4d079686b3c465eb3f920ca37cf2055e6ce7467fc7dd38e1e6df537dac1fd5f",
+      "sha256:09b0093684b50f9b201b3fd3f728068fa114ef878576ae07ca61072c97120b4c",
   },
   {
     id: "hex-network-trading.place-route.desktop",
-    title: "Hex Network Trading: eligible hex edges are targetable",
+    title:
+      "Hex Network Trading: route card drags to an eligible edge before commit",
     gameId: "hex-network-trading",
     fixtureUrl:
       "/fixtures/reference-games/hex-network-trading.place-route.desktop.fixture.json",
@@ -72,17 +85,20 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/hex-network-trading.place-route.desktop.mjs"),
     components: [
-      "BoardTargetLayer",
-      "ConfirmationDialog",
+      "CardDragSurface",
+      "CardDropTargetView",
+      "CardFace",
+      "CostDisplay",
       "HandView",
-      "InteractionForm",
+      "InteractionSubmit",
+      "Panel",
       "PluginRuntime",
-      "ResourceControls",
+      "ResourceCounter",
     ],
-    capabilities: ["desktop-drag", "runtime-draft", "runtime-submit"],
+    capabilities: ["click", "pointer-drag", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:1302f74fd68f5509f4561b9572a79011050711e00bc300c47a451aeb4dc4b015",
+      "sha256:0a91d5823d255542dd9e722269e4aa4ea01a7221acd8154f368ef155981023a3",
   },
   {
     id: "simultaneous-card-drafting.lock-choice.mobile",
@@ -95,16 +111,21 @@ export const scenarios = defineUIScenarios([
       "/fixtures/reference-games/modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/simultaneous-card-drafting.lock-choice.mobile.mjs"),
-    components: ["HandView", "InteractionForm", "PluginRuntime"],
-    capabilities: ["runtime-draft", "runtime-submit", "touch-drag"],
+    components: [
+      "CardFace",
+      "HandView",
+      "InteractionSubmit",
+      "Panel",
+      "PluginRuntime",
+    ],
+    capabilities: ["click", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:e959a6fffe51c7015c0ed9149d5e1a0241c48093ee831aee54815e898510b036",
+      "sha256:4f4c226b03a07d8bfc784f181ac7ba35a7092415a6c470a25268f2a8f86a4ff4",
   },
   {
     id: "worker-placement-tableau.place-worker.desktop",
-    title:
-      "Worker Placement Tableau: occupied worker targets become unavailable",
+    title: "Worker Placement Tableau: worker count draft persists until commit",
     gameId: "worker-placement-tableau",
     fixtureUrl:
       "/fixtures/reference-games/worker-placement-tableau.place-worker.desktop.fixture.json",
@@ -113,15 +134,17 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/worker-placement-tableau.place-worker.desktop.mjs"),
     components: [
-      "BoardTargetLayer",
-      "ConfirmationDialog",
-      "InteractionForm",
+      "CostDisplay",
+      "InteractionInput",
+      "InteractionSubmit",
+      "Panel",
       "PluginRuntime",
-      "ResourceControls",
+      "ResourceCounter",
+      "SlotSystem",
     ],
-    capabilities: ["runtime-draft", "runtime-submit"],
+    capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:c7acf88958314496edcf739c80a1e927cee5583f2c08ebbf6fa77cdb90e982d3",
+      "sha256:88b880943b28ae481a3f61be8fdde9981b9fec2cf2913d076d81c6629dfc1a00",
   },
 ] satisfies readonly UIScenarioCatalogEntry[]);

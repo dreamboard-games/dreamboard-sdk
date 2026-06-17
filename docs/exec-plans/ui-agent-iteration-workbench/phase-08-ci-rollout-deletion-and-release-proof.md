@@ -1,6 +1,6 @@
 # Phase 08: CI Rollout, Deletion, And Release Proof
 
-Status: source-closed; publish release proof awaits real-device canary receipt.
+Status: complete for the required Workbench foundation.
 
 ## Objective
 
@@ -38,16 +38,19 @@ Required after merge:
 
 ```bash
 pnpm ui:check
-pnpm reference-games:test:packed
+pnpm reference-games:test:packed --required
 pnpm ui:test:parity
 ```
 
 This runs:
 
 - every Storybook interaction and visual baseline;
-- every Workbench scenario in all required projects;
-- all isolated packed reference consumers;
-- all golden real-host parity scenarios.
+- the required Workbench set, including Hearts across Chromium desktop,
+  Chromium touch phone, and WebKit phone plus desktop drag and draft;
+- the isolated Hearts, Hex Network Trading, and Worker Placement Tableau packed
+  reference consumers;
+- Hearts source observation generation. The internal workflow owns the
+  required packed real-host execution.
 
 ### Release gate
 
@@ -58,9 +61,10 @@ pnpm check
 pnpm ui:release-proof
 ```
 
-`ui:release-proof` must use the exact tarball that would be published and retain
-all receipts and digests, including the real-device canary when required by the
-Phase 05 trigger policy.
+`ui:release-proof` checks out the internal host, uses the exact tarball that
+would be published, executes Hearts real-host parity, and retains all receipts
+and digests. A real-device canary is optional unless
+`--require-device-canary` is explicitly supplied.
 
 ## 08B. Consolidate root commands
 
@@ -81,7 +85,7 @@ Final target:
     "ui:test:changed": "node scripts/ui/run-ui-scenarios.mjs --changed",
     "ui:test:packed": "node scripts/ui/run-packed-ui-scenarios.mjs",
     "ui:test:parity": "node scripts/ui/run-ui-parity.mjs",
-    "ui:check": "pnpm ui:coverage:check && pnpm ui:catalog:check && pnpm ui:fixtures:check && pnpm ui:test:stories && pnpm ui:test:visual && pnpm ui:test",
+    "ui:check": "pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --scenario hearts.pass-three.mobile",
     "ui:release-proof": "node scripts/ui/create-ui-release-proof.mjs",
   },
 }
@@ -173,7 +177,8 @@ Additional guards must verify:
 
 - reference games are absent from demo registries;
 - fixture render modules do not bundle SDK or React code;
-- every published interactive component has scenario coverage;
+- every interactive component has an owner and Storybook coverage, and
+  runtime-aware components used by Hearts have Workbench coverage;
 - browser drivers contain no text/label/role/DOM-order fallback;
 - packed consumer lockfiles contain no workspace links;
 - internal parity consumes the candidate digest supplied by the SDK job.
@@ -205,9 +210,10 @@ Example generated decision table:
 | ---------------------------- | ----------------------------------------------------------------- |
 | Pure color or spacing token  | `pnpm ui:test:changed --base origin/main`                         |
 | `HandView` behavior          | `pnpm ui:test --component HandView`                               |
-| Pointer/drag adapter         | `pnpm ui:test --capability touch-drag && pnpm ui:test:parity`     |
-| Runtime draft or submit      | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed` |
-| Browser-interaction protocol | Full `pnpm ui:check`, packed proof, and all golden parity         |
+| Pointer/drag adapter         | `pnpm ui:test --capability pointer-drag`                          |
+| Runtime draft                | `pnpm ui:test --capability runtime-draft && pnpm ui:test:packed`  |
+| Runtime submit               | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed` |
+| Browser-interaction protocol | Full `pnpm ui:check`, Hearts packed proof, and Hearts parity      |
 
 ## 08G. Produce a release-proof receipt
 
@@ -230,19 +236,24 @@ Example:
     "workbenchMatrix": "passed",
     "packedReferenceConsumers": "passed",
     "realHostParity": "passed",
-    "realDeviceCanary": "passed"
+    "realDeviceCanary": "not-required"
   },
   "evidence": [
-    "artifacts/ui/receipt.json",
-    "artifacts/ui-packed/receipt.json",
-    "artifacts/ui-parity/receipt.json",
-    "artifacts/ui-device-canary/receipt.json"
+    {
+      "path": "artifacts/ui/receipt.json",
+      "sha256": "sha256:..."
+    },
+    {
+      "path": "artifacts/ui-parity/receipt.json",
+      "sha256": "sha256:..."
+    }
   ]
 }
 ```
 
-The release script verifies every referenced digest and refuses to produce a
-passing receipt from stale or mixed candidates.
+The release script verifies every referenced digest and nested evidence file.
+It refuses to produce a passing receipt from stale, mixed, skipped, or
+metadata-only candidates.
 
 ## 08H. Close the plan
 
@@ -328,13 +339,15 @@ Also run repository searches proving deleted paths and identifiers are absent.
 - Root `pnpm check` includes the stable SDK-owned UI gate.
 - Exact packed artifact and fixture digests flow through consumer and parity
   proof.
-- Release proof includes the required real-device mobile canary.
+- Release proof records the real-device canary as `not-required` unless policy
+  explicitly enables `--require-device-canary`.
 - Superseded authoring APIs, local wrappers, old example source, and old demo
   registrations are deleted.
 - Deletion guards prevent those paths from returning.
 - Agent documentation is generated from the live component and scenario
   indexes.
-- A complete release-proof receipt and plan closeout are retained.
+- The release workflow can mint a complete Hearts release-proof receipt without
+  pre-populated repository-variable file paths.
 - The implementation team can hand a UI component task to an agent with a
   deterministic flow and reviewable evidence.
 

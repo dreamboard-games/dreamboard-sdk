@@ -2,33 +2,54 @@
 import { pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
 import path from "node:path";
+import { format } from "prettier";
 import {
   componentScenarioIndexPath,
   repoRelative,
   root,
   sortUnique,
-  writeGeneratedJson,
+  writeGeneratedText,
 } from "./scenario-catalog-lib.mjs";
 
 const componentOwnership = {
-  BoardTargetLayer: {
+  CardDragSurface: {
     sourceFiles: [
-      "packages/sdk/src/runtime/hooks/useBoardInteractions.ts",
-      "packages/sdk/src/runtime/primitives/board.tsx",
-      "packages/sdk/src/ui/components/board/target-layer.ts",
-      "packages/sdk/src/ui/stories/BoardTarget.stories.tsx",
+      "packages/sdk/src/ui/components/card-drag/CardDragSurface.tsx",
+      "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+      "packages/sdk/src/ui/stories/HandView.stories.tsx",
     ],
     storyIds: [
-      "board-targets--claimed-and-disabled",
-      "board-targets--eligible-targets",
+      "hands-handview--drag-to-target-surface-layout",
+      "hands-handview--drag-to-target-pointer-drop",
     ],
   },
-  ConfirmationDialog: {
+  CardDropTargetView: {
     sourceFiles: [
-      "packages/sdk/src/ui/internal/ui/dialog.tsx",
-      "packages/sdk/src/ui/stories/Panels.stories.tsx",
+      "packages/sdk/src/ui/components/card-drag/CardDropTargetView.tsx",
+      "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+      "packages/sdk/src/ui/stories/HandView.stories.tsx",
     ],
-    storyIds: ["panels--dialog-standard"],
+    storyIds: [
+      "hands-handview--drag-to-target-surface-layout",
+      "hands-handview--drag-to-target-pointer-drop",
+    ],
+  },
+  CardFace: {
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Card.tsx",
+      "packages/sdk/src/ui/stories/CardFace.stories.tsx",
+    ],
+    storyIds: [
+      "cards-cardface--default-content",
+      "cards-cardface--interactive-controlled",
+    ],
+  },
+  CostDisplay: {
+    sourceFiles: [
+      "packages/sdk/src/ui/components/CostDisplay.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: ["resource-status--cost"],
   },
   HandView: {
     sourceFiles: [
@@ -43,20 +64,25 @@ const componentOwnership = {
       "hands-handview--phone-portrait-thirteen",
     ],
   },
-  InteractionForm: {
+  InteractionSubmit: {
     sourceFiles: [
-      "packages/sdk/src/runtime/components/interaction-form/InteractionForm.tsx",
-      "packages/sdk/src/runtime/components/interaction-form/fields.tsx",
-      "packages/sdk/src/runtime/primitives/interaction/form.tsx",
-    ],
-    storyIds: ["panels--dialog-standard"],
-  },
-  MarketRow: {
-    sourceFiles: [
-      "examples/reference-games/deck-building-market/src/ui.mjs",
-      "examples/reference-games/shared/reference-ui.mjs",
+      "packages/sdk/src/runtime/primitives/interaction/controls.tsx",
     ],
     storyIds: [],
+  },
+  InteractionInput: {
+    sourceFiles: [
+      "packages/sdk/src/runtime/primitives/interaction/controls.tsx",
+      "packages/sdk/src/runtime/hooks/useBoundInteractionHandle.ts",
+    ],
+    storyIds: [],
+  },
+  Panel: {
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Panel.tsx",
+      "packages/sdk/src/ui/stories/Panels.stories.tsx",
+    ],
+    storyIds: ["panels--compound-panel"],
   },
   PluginRuntime: {
     sourceFiles: [
@@ -66,17 +92,24 @@ const componentOwnership = {
     ],
     storyIds: [],
   },
-  ResourceControls: {
+  ResourceCounter: {
     sourceFiles: [
-      "packages/sdk/src/ui/components/CostDisplay.tsx",
-      "examples/reference-games/shared/reference-ui.mjs",
       "packages/sdk/src/ui/components/ResourceCounter.tsx",
       "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
     ],
     storyIds: [
-      "resource-status--cost",
       "resource-status--resource-compact",
       "resource-status--resource-zero-hidden",
+    ],
+  },
+  SlotSystem: {
+    sourceFiles: [
+      "packages/sdk/src/ui/components/board/SlotSystem.tsx",
+      "packages/sdk/src/ui/stories/BoardTarget.stories.tsx",
+    ],
+    storyIds: [
+      "board-targets--claimed-and-disabled",
+      "board-targets--eligible-targets",
     ],
   },
 };
@@ -156,7 +189,11 @@ export async function generateComponentScenarioIndex({
     ],
   };
 
-  return writeGeneratedJson(componentScenarioIndexPath, index, { check });
+  return writeGeneratedText(
+    componentScenarioIndexPath,
+    await format(JSON.stringify(index), { parser: "json" }),
+    { check },
+  );
 }
 
 async function main() {

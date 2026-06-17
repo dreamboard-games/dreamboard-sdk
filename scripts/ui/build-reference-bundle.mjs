@@ -8,6 +8,7 @@ import {
   expectedReferenceGameIds,
   readJson,
   referenceGamesRoot,
+  repoCommandEnv,
   root,
   sha256Directory,
   sha256File,
@@ -18,6 +19,10 @@ import {
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? root,
+    env:
+      command === "git"
+        ? repoCommandEnv(options.env)
+        : (options.env ?? process.env),
     encoding: "utf8",
     stdio: options.stdio ?? "pipe",
   });

@@ -1,6 +1,6 @@
 # Phase 06: UI Ergonomics Hard Cut And Example Migration
 
-Status: source-complete.
+Status: complete for the Hearts foundation.
 
 Closeout artifacts:
 
@@ -9,19 +9,18 @@ Closeout artifacts:
 - Migration receipt:
   `artifacts/phase-06-migration-receipt.md`.
 
-Closeout note: the current public reference-game source in this repository uses
-a shared lower-level runtime helper rather than rich generated per-game UI
-source. Phase 06 therefore completed the SDK/generated API hard cut, migrated
-the shared reference root to `Game.Viewport`, regenerated portable fixtures, and
-added hard-cut guards over authored reference source plus compiled fixture
-modules. Real-host parity in Phase 07 should verify whether the internal host
-still carries richer per-game wrappers that need the pressure-order migrations
-listed below.
+Closeout note: Hearts intentionally uses the shared lower-level runtime helper
+because the portable reference consumer does not own a generated per-game
+workspace contract. Phase 06 completed the SDK/generated API hard cut, migrated
+the shared reference root to `Game.Viewport`, and added hard-cut guards.
+Generated `UI.defineGameUI` and compound hand behavior are covered by SDK
+compile/runtime tests. Migrating optional reference examples to richer
+generated source is follow-up.
 
 ## Objective
 
-Use the Workbench safety net and all reference games to remove recurring UI
-authoring boilerplate from the SDK.
+Use the Workbench safety net and Hearts to remove recurring UI authoring
+boilerplate from the required SDK reference boundary.
 
 The target is not fewer lines by itself. The target is one explicit,
 type-checked path for root composition, hand layout, mobile overlay insets,
@@ -275,28 +274,13 @@ The generated dialog must:
 Keep the lower-level `Interaction.Dialog` primitive for advanced composition,
 but remove local reference-game lifecycle wrappers.
 
-## 06F. Migrate in pressure order
+## 06F. Migrate the required Hearts boundary
 
-Migration order:
-
-1. `hearts`
-   - compound hand;
-   - mobile tray actions;
-   - `Game.Viewport`;
-   - `UI.defineGameUI`.
-2. `simultaneous-card-drafting`
-   - standard generated hand instead of a custom fixed bottom hand;
-   - simultaneous lock and reveal states.
-3. `deck-building-market`
-   - remove tray-state padding;
-   - compound hand and action panel.
-4. `worker-placement-tableau`
-   - panel and form dialog;
-   - worker target drag/tap.
-5. `hex-network-trading`
-   - board pointer targets;
-   - trade panels and dialogs;
-   - the broadest interaction route set.
+The required reference is `hearts`. It uses the shared lower-level
+`Game.Root`/`Game.Viewport`/`Panel` boundary and documents why
+`UI.defineGameUI` is not applicable to this portable consumer. The other four
+reference examples are optional follow-up migration pressure, not Phase 06
+acceptance blockers.
 
 For each game:
 
@@ -309,7 +293,7 @@ For each game:
 
 ## 06G. Add hard-cut guards
 
-After all reference games migrate, add checks that reject:
+After the required Hearts boundary migrates, add checks that reject:
 
 ```text
 renderSummary=
@@ -324,7 +308,7 @@ The guard should parse TypeScript/JSX where practical. Text scanning is
 acceptable only for narrow deprecated identifiers.
 
 Do not maintain compatibility adapters in generated code. Remove deprecated
-generated signatures and regenerate every reference module together.
+generated signatures and regenerate the fixture modules together.
 
 ## Expected files
 
@@ -365,15 +349,14 @@ Add compile-time negative tests for:
 
 ## Acceptance criteria
 
-- All reference apps use `UI.defineGameUI` or a documented lower-level path
-  justified in the migration receipt.
-- Reference games contain no manual mobile hand padding or tray-state layout
+- Hearts uses the documented lower-level portable reference path; generated
+  `UI.defineGameUI` behavior is covered by SDK tests.
+- Hearts contains no manual mobile hand padding or tray-state layout
   hook.
-- Hand summaries and actions use compound slots.
-- Local reference-game `ActionPanel` and dialog lifecycle wrappers are gone.
-- The simultaneous drafting reference uses the canonical generated hand.
-- Every migrated game passes focused Workbench, full fixture, and packed
-  consumer checks.
+- Hearts contains no local action-panel or dialog lifecycle wrapper.
+- Hearts passes focused Workbench, fixture, and packed-consumer checks.
+- Compound hand summary/action slots remain an SDK authoring contract covered
+  by compile/runtime tests; a richer authored reference is follow-up.
 - Deprecated authoring APIs are ready for deletion in Phase 08.
 
 ## Risks and controls

@@ -2,7 +2,7 @@
 
 Date: 2026-06-17.
 
-Status: source-complete.
+Status: complete for the Hearts foundation.
 
 ## Implemented
 
@@ -35,15 +35,15 @@ Status: source-complete.
 
 ## Reference Boundary
 
-All five current reference apps use a documented lower-level path through the
-shared `Game.Root`/`Game.Viewport` helper. They do not currently contain the
-rich generated `UI.defineGameUI` source shape shown in the Phase 06 plan. The
-SDK and generated-code surfaces are ready for that richer source; this receipt
-records the lower-level path as intentional for the current source snapshot.
+Hearts uses the documented lower-level path through the shared
+`Game.Root`/`Game.Viewport` helper because the portable reference consumer does
+not own a generated per-game workspace contract. `UI.defineGameUI` and compound
+hand slots are covered by SDK compile/runtime tests. The other examples are
+optional follow-up migration pressure.
 
 ## Verification
 
-Commands run from `/Users/mac/code/dreamboard-sdk`:
+Commands run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
@@ -77,9 +77,7 @@ Results:
 - Full Workbench UI scenario matrix passed and wrote
   `artifacts/ui/2026-06-17T07-13-03-236Z/receipt.json`.
 
-## Remaining Phase 07 Carry
+## Follow-Up
 
-- Real-host parity should confirm whether internal richer authored UI wrappers
-  still need the per-game migrations listed in the Phase 06 pressure order.
-- Phase 08 can remove any remaining public export for
-  `useMobileHandTrayActive` if no non-layout use case is retained.
+- Optional examples may later adopt richer generated workspace contracts.
+- Drag/draft examples may later exercise the compound hand slots in Workbench.

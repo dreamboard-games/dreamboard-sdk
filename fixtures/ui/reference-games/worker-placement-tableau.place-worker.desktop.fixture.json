@@ -10,9 +10,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
-    "finalSemanticDigest": "sha256:9892a9732f347b20233ef17f2ad82b0eeadf12b53353b640e187d9a02f7ccaf3",
-    "initialProjectionDigest": "sha256:db1e4c76bdd305f52cc24f8b4f26a8cab09542d47c671c97a611a52945490f50",
+    "finalProjectionDigest": "sha256:68eccbcb651cf71a04ce83403533bf2dbc8c2100d907b03dc62000a87bd164a4",
+    "finalSemanticDigest": "sha256:39d804a05b4ede6ea58c7373a0f956fc3c36a1572b46269bd5e656e1250dd5a2",
+    "initialProjectionDigest": "sha256:456c5e3e300a3fdc62e6e6fa84316d3a3982637719c126114729277878776902",
     "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c"
   },
   "gameId": "worker-placement-tableau",
@@ -22,7 +22,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:7c740c0788b08084c47873ca62ef2936826d569fa3e7272b4aae53a348e94a0e",
+          "actionSetVersion": "sha256:46dfd059c584ffeaa40b6fc48590d11e9a4d99083f03328d2c485f64e8ccf5bf",
           "availableInteractions": [
             {
               "availability": {
@@ -31,8 +31,19 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
-              "inputs": [],
+              "descriptorDigest": "sha256:bfdf47f32aa9d7d93bf4fa27639c821437740758d087b27c19e6122b9a9c3e40",
+              "inputs": [
+                {
+                  "domain": {
+                    "max": 3,
+                    "min": 1,
+                    "step": 1,
+                    "type": "boundedNumber"
+                  },
+                  "key": "workerCount",
+                  "kind": "boundedNumber"
+                }
+              ],
               "interactionId": "place-worker:player-1",
               "interactionKey": "place-worker",
               "kind": "action",
@@ -45,7 +56,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:787abc41d0f33cd48cbc6e8d632a5691c1764f8da4df29d911771d2e7fbf0d53",
+              "descriptorDigest": "sha256:5dbb4358703e30af55eccd3a4eeec04fc1caf42eb7275d61d7cdba3b4aba9fd4",
               "inputs": [],
               "interactionId": "allocate-resources:player-1",
               "interactionKey": "allocate-resources",
@@ -59,7 +70,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:a6e61c8cea535be6d233bfadd8db00e996edbed14cdfb57536fcd1db3427584e",
+              "descriptorDigest": "sha256:7990f8f3cd9aa4bbce9375044fd2c60d6a38832407fdda06826edb2acaec4750",
               "inputs": [],
               "interactionId": "complete-order:player-1",
               "interactionKey": "complete-order",
@@ -86,11 +97,11 @@
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:db1e4c76bdd305f52cc24f8b4f26a8cab09542d47c671c97a611a52945490f50"
+        "projectionDigest": "sha256:456c5e3e300a3fdc62e6e6fa84316d3a3982637719c126114729277878776902"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:6ba604eef3907f3c9aa022a468aa997d882993ecc6cf7ef7a66807f696e6858c",
+          "actionSetVersion": "sha256:db191304a30112619f095836e2406a80cfe98633502168bc0669283a7a5b5803",
           "availableInteractions": [
             {
               "availability": {
@@ -99,8 +110,19 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
-              "inputs": [],
+              "descriptorDigest": "sha256:bfdf47f32aa9d7d93bf4fa27639c821437740758d087b27c19e6122b9a9c3e40",
+              "inputs": [
+                {
+                  "domain": {
+                    "max": 3,
+                    "min": 1,
+                    "step": 1,
+                    "type": "boundedNumber"
+                  },
+                  "key": "workerCount",
+                  "kind": "boundedNumber"
+                }
+              ],
               "interactionId": "place-worker:player-1",
               "interactionKey": "place-worker",
               "kind": "action",
@@ -113,7 +135,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:787abc41d0f33cd48cbc6e8d632a5691c1764f8da4df29d911771d2e7fbf0d53",
+              "descriptorDigest": "sha256:5dbb4358703e30af55eccd3a4eeec04fc1caf42eb7275d61d7cdba3b4aba9fd4",
               "inputs": [],
               "interactionId": "allocate-resources:player-1",
               "interactionKey": "allocate-resources",
@@ -127,7 +149,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:a6e61c8cea535be6d233bfadd8db00e996edbed14cdfb57536fcd1db3427584e",
+              "descriptorDigest": "sha256:7990f8f3cd9aa4bbce9375044fd2c60d6a38832407fdda06826edb2acaec4750",
               "inputs": [],
               "interactionId": "complete-order:player-1",
               "interactionKey": "complete-order",
@@ -154,7 +176,7 @@
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb"
+        "projectionDigest": "sha256:68eccbcb651cf71a04ce83403533bf2dbc8c2100d907b03dc62000a87bd164a4"
       }
     ],
     "session": {
@@ -176,7 +198,7 @@
         "fromFrameId": "frame-1",
         "id": "worker-placement-tableau.place-worker.desktop.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:d94136b8590feb19e2303184b47487032398bfea68c27716c589c3adb86c858f",
+        "requestDigest": "sha256:4b072665c47d9aaf614fc4f03235bfc9dce84551fd6aa64ed2a933037153ae10",
         "response": {
           "valid": true
         }
@@ -185,7 +207,7 @@
         "fromFrameId": "frame-1",
         "id": "worker-placement-tableau.place-worker.desktop.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:8b20dad69c23ab2e50516e245c699e451a9d477bce089f1351a251dee916b176",
+        "requestDigest": "sha256:acb1dd7e01f7ac517299a27d1009a59e717935cea1ae80571f668df60a769746",
         "response": {
           "accepted": true
         }
@@ -200,46 +222,68 @@
   "replay": [
     {
       "execute": {
+        "kind": "fill",
+        "value": "2"
+      },
+      "expect": {
+        "visibleInteractionKeys": [
+          "place-worker"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-input:workerCount",
+        "descriptorDigest": "sha256:bfdf47f32aa9d7d93bf4fa27639c821437740758d087b27c19e6122b9a9c3e40",
+        "interactionId": "place-worker:player-1",
+        "interactionKey": "place-worker",
+        "scopeId": "runtime",
+        "stepId": "worker-placement-tableau.place-worker.desktop.draft",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:a0c787225be29c7fe682849844723f3fcbbf00c8e240506adc72639101100bf8",
+      "resolve": {
+        "effect": {
+          "inputKey": "workerCount",
+          "kind": "setScalar",
+          "value": 2
+        },
+        "interactionId": "place-worker:player-1",
+        "interactionKey": "place-worker",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "worker-placement-tableau.place-worker.desktop.draft"
+    },
+    {
+      "execute": {
         "kind": "activate"
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
-        "semanticDigest": "sha256:9892a9732f347b20233ef17f2ad82b0eeadf12b53353b640e187d9a02f7ccaf3",
+        "projectionDigest": "sha256:68eccbcb651cf71a04ce83403533bf2dbc8c2100d907b03dc62000a87bd164a4",
+        "semanticDigest": "sha256:39d804a05b4ede6ea58c7373a0f956fc3c36a1572b46269bd5e656e1250dd5a2",
         "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c",
         "visibleInteractionKeys": [
-          "place-worker",
-          "allocate-resources",
-          "complete-order"
+          "place-worker"
         ]
       },
-      "expectedIdentity": {
-        "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
-        "interactionId": "place-worker:player-1",
-        "interactionKey": "place-worker",
-        "scopeId": "runtime",
-        "stepId": "worker-placement-tableau.place-worker.desktop.invoke",
-        "surface": "gameplay"
-      },
-      "requestDigest": "sha256:e7ec52d9be969552c7f268d65c15583dc81b80ecf432072c3e3e3bfae39de46e",
+      "requestDigest": "sha256:72dd2966f6d6e36681f0333c1aca761505cf035cd31e287f81c5f7a538bffa5b",
       "resolve": {
-        "intent": "invoke",
+        "intent": "submit",
         "interactionId": "place-worker:player-1",
         "interactionKey": "place-worker",
         "scopeId": "runtime",
         "surface": "gameplay"
       },
-      "stepId": "worker-placement-tableau.place-worker.desktop.invoke"
+      "stepId": "worker-placement-tableau.place-worker.desktop.commit"
     }
   ],
   "schemaVersion": 2,
   "source": {
     "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-    "renderModuleDigest": "sha256:11767a3ce06883f6b5907fd3582d7ad07e8629e86bb6c366520ad1e9c02f04e5",
+    "renderModuleDigest": "sha256:f974fab08aa8538af91937618d115a72baa673626688dd24f4410e77be16fa72",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:c7acf88958314496edcf739c80a1e927cee5583f2c08ebbf6fa77cdb90e982d3",
+    "sourceDigest": "sha256:88b880943b28ae481a3f61be8fdde9981b9fec2cf2913d076d81c6629dfc1a00",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [
@@ -252,7 +296,7 @@
     "worker-placement",
     "worker-targets"
   ],
-  "title": "Worker Placement Tableau: occupied worker targets become unavailable",
+  "title": "Worker Placement Tableau: worker count draft persists until commit",
   "viewer": {
     "playerId": "player-1",
     "seatId": "player-1"

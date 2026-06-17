@@ -9,4 +9,7 @@ assert.ok(
   referenceGame.interactions.some((item) => item.id === "allocate-resources"),
 );
 assert.ok(coverage.uiPatterns.includes("confirmation-dialog"));
+assert.equal(coverage.replay.kind, "draft");
+assert.ok(coverage.replay.value >= coverage.replay.min);
+assert.ok(coverage.replay.value <= coverage.replay.max);
 console.log(`${referenceGame.id}: scenario coverage verified`);

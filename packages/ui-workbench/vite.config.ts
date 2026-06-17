@@ -70,7 +70,7 @@ export default defineConfig({
   build: {
     target: "esnext",
   },
-  esbuild: {
+  oxc: {
     target: "esnext",
   },
   resolve: {
@@ -97,6 +97,10 @@ export default defineConfig({
       {
         find: /^@dreamboard-games\/sdk\/runtime$/,
         replacement: path.join(workspaceRoot, "packages/sdk/dist/runtime.js"),
+      },
+      {
+        find: /^@dreamboard-games\/sdk\/ui$/,
+        replacement: path.join(workspaceRoot, "packages/sdk/dist/ui.js"),
       },
       {
         find: /^@dreamboard-games\/plugin-runtime-contract$/,

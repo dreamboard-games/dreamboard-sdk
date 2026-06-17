@@ -36,6 +36,14 @@ export interface UIParityObservationCheckpointV1 {
   readonly screenshot?: string;
 }
 
+export interface UIParityObservationProvenanceV1 {
+  readonly kind:
+    | "fixture-expectation"
+    | "source-workbench"
+    | "packed-real-host";
+  readonly evidence?: string;
+}
+
 export interface UIParityObservationV1 {
   readonly schemaVersion: 1;
   readonly scenarioId: string;
@@ -44,6 +52,7 @@ export interface UIParityObservationV1 {
   readonly pluginRuntimeProtocol: 3;
   readonly browserInteractionProtocol: string;
   readonly environment: UIParityObservationEnvironmentV1;
+  readonly provenance: UIParityObservationProvenanceV1;
   readonly checkpoints: readonly UIParityObservationCheckpointV1[];
   readonly diagnostics: readonly UIParityDiagnosticV1[];
 }
@@ -193,6 +202,9 @@ export function createUIParityObservationFromFixture({
     pluginRuntimeProtocol: fixture.pluginRuntimeProtocol,
     browserInteractionProtocol: fixture.browserInteractionProtocol,
     environment,
+    provenance: {
+      kind: "fixture-expectation",
+    },
     checkpoints,
     diagnostics,
   };
@@ -220,6 +232,20 @@ export function parseUIParityObservationV1(
   const viewport = assertRecord(environment.viewport, "environment.viewport");
   assertNumber(viewport.width, "environment.viewport.width");
   assertNumber(viewport.height, "environment.viewport.height");
+  const provenance = assertRecord(
+    observation.provenance,
+    "observation.provenance",
+  );
+  if (
+    provenance.kind !== "fixture-expectation" &&
+    provenance.kind !== "source-workbench" &&
+    provenance.kind !== "packed-real-host"
+  ) {
+    throw new Error(
+      "observation.provenance.kind must identify fixture, source Workbench, or packed real-host measurement.",
+    );
+  }
+  assertOptionalString(provenance.evidence, "observation.provenance.evidence");
   const checkpoints = assertArray(observation.checkpoints, "checkpoints");
   for (let index = 0; index < checkpoints.length; index += 1) {
     const checkpoint = assertRecord(

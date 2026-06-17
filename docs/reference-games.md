@@ -6,19 +6,22 @@ Reference games are SDK-owned packed consumers. They use exact SDK dependency
 versions, remain out of public demo galleries, and provide the fixture bundle
 consumed by the UI Workbench and parity proof.
 
-| Game                         | Display name               | Mechanics                                                                          | UI patterns                                                                          | Scenarios                                       |
-| ---------------------------- | -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
-| `hearts`                     | Hearts                     | `trick-taking`, `simultaneous-card-passing`, `hidden-information`                  | `private-hand`, `multi-select`, `mobile-hand-actions`, `shared-trick-area`           | `hearts.pass-three.mobile`                      |
-| `hex-network-trading`        | Hex Network Trading        | `hex-grid`, `route-building`, `resource-management`, `trading`                     | `hex-board-targets`, `resource-hand`, `trade-controls`, `placement-confirmation`     | `hex-network-trading.place-route.desktop`       |
-| `deck-building-market`       | Deck Building Market       | `deck-building`, `market-row`, `hand-management`, `repeated-turn-state`            | `market-row`, `purchase-selection`, `hand-actions`, `turn-summary`                   | `deck-building-market.buy-card.desktop`         |
-| `worker-placement-tableau`   | Worker Placement Tableau   | `worker-placement`, `resource-allocation`, `tableau-building`, `order-fulfillment` | `worker-targets`, `tableau-cards`, `resource-allocation-form`, `confirmation-dialog` | `worker-placement-tableau.place-worker.desktop` |
-| `simultaneous-card-drafting` | Simultaneous Card Drafting | `simultaneous-selection`, `card-drafting`, `hand-passing`, `set-collection`        | `private-hand`, `locked-choice`, `reveal-pass-transition`, `compact-mobile-hand`     | `simultaneous-card-drafting.lock-choice.mobile` |
+| Game                         | Release role        | Display name               | Mechanics                                                                          | UI patterns                                                                          | Scenarios                                       |
+| ---------------------------- | ------------------- | -------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------- |
+| `hearts`                     | Required foundation | Hearts                     | `trick-taking`, `simultaneous-card-passing`, `hidden-information`                  | `private-hand`, `multi-select`, `mobile-hand-actions`, `shared-trick-area`           | `hearts.pass-three.mobile`                      |
+| `hex-network-trading`        | Required foundation | Hex Network Trading        | `hex-grid`, `route-building`, `resource-management`, `trading`                     | `hex-board-targets`, `resource-hand`, `trade-controls`, `placement-confirmation`     | `hex-network-trading.place-route.desktop`       |
+| `deck-building-market`       | Optional follow-up  | Deck Building Market       | `deck-building`, `market-row`, `hand-management`, `repeated-turn-state`            | `market-row`, `purchase-selection`, `hand-actions`, `turn-summary`                   | `deck-building-market.buy-card.desktop`         |
+| `worker-placement-tableau`   | Required foundation | Worker Placement Tableau   | `worker-placement`, `resource-allocation`, `tableau-building`, `order-fulfillment` | `worker-targets`, `tableau-cards`, `resource-allocation-form`, `confirmation-dialog` | `worker-placement-tableau.place-worker.desktop` |
+| `simultaneous-card-drafting` | Optional follow-up  | Simultaneous Card Drafting | `simultaneous-selection`, `card-drafting`, `hand-passing`, `set-collection`        | `private-hand`, `locked-choice`, `reveal-pass-transition`, `compact-mobile-hand`     | `simultaneous-card-drafting.lock-choice.mobile` |
 
 ## Packed Verification
 
 Run `pnpm reference-games:check` for source validation and
-`pnpm reference-games:test:packed` for isolated packed-consumer proof. The
-packed proof must install the SDK tarball rather than workspace source links.
+`pnpm reference-games:test:packed --required` for the required isolated
+packed-consumer proof. The packed proof covers the Hearts, Hex Network Trading,
+and Worker Placement Tableau consumers and must install the SDK tarball rather
+than workspace source links. Other reference consumers are optional follow-up
+coverage.
 
 ## Fixture Bundle
 

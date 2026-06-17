@@ -26,6 +26,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
       - run: pnpm ui:coverage:check
       - run: pnpm ui:catalog:check
       - run: pnpm ui:fixtures:check
@@ -46,6 +47,7 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
       - run: pnpm ui:check
-      - run: pnpm reference-games:test:packed
+      - run: pnpm reference-games:test:packed --required
       - run: pnpm ui:test:parity

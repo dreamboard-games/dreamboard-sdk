@@ -17133,6 +17133,7 @@ function InteractionSubmit({
   params,
   onSubmitSuccess,
   onSubmitError,
+  style,
   ...props
 }: InteractionSubmitProps): react.ReactElement<
   unknown,

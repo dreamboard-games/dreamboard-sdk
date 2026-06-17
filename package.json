@@ -54,7 +54,7 @@
     "ui:hard-cut:check": "node scripts/ui/check-ui-hard-cut.mjs",
     "ui:runtime:test": "pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/sdk test src/testing/ui-fixture && pnpm --filter @dreamboard-games/ui-workbench typecheck && pnpm --filter @dreamboard-games/ui-workbench test:runtime",
     "ui:check:baseline": "pnpm ui:coverage:check && pnpm ui:catalog:check && pnpm ui:fixtures:check && pnpm ui:test:stories && pnpm ui:test:visual",
-    "ui:check": "pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test",
+    "ui:check": "pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required",
     "ui:release-proof": "node scripts/ui/create-ui-release-proof.mjs",
     "version:check": "node scripts/assert-fixed-version.mjs"
   },
@@ -67,11 +67,6 @@
     "turbo": "^2.6.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "esbuild": "0.28.1"
-    }
   },
   "repository": {
     "type": "git",

@@ -10,9 +10,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
-    "finalSemanticDigest": "sha256:a2a0f3ab5d40a02bf8d97fcbce8b007e2e9df44f5c5336080f576550ffa420de",
-    "initialProjectionDigest": "sha256:c068b58d757c8495061c1c124438c54cb9ed300f4785532512e90b0672873b3c",
+    "finalProjectionDigest": "sha256:71efe45ba6737c98c005ea79b20778f84d7462d2632d1b73ecb602072247ddd7",
+    "finalSemanticDigest": "sha256:806ed9f9b95d07fd3d7ed24c7b199b9e0df66b45c4385ef310ae4566fa6cf745",
+    "initialProjectionDigest": "sha256:d9a96d1d17314eafbfcb19242cf897c1dceaabf685bd7b8f8ccd213a6300f341",
     "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04"
   },
   "gameId": "deck-building-market",
@@ -22,7 +22,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:3ff09868a01afe164431fc7b620a77947c7ca6bf89679b5b29a6740086a8ce94",
+          "actionSetVersion": "sha256:17ba8ff7443a381e62239a3639f96c614fca7e42f0d604c0cc332b8d2a76dd7f",
           "availableInteractions": [
             {
               "availability": {
@@ -31,7 +31,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
+              "descriptorDigest": "sha256:6ee3e8abbfa4e8cce22e813b686897506e73d804bcb75e2d75e412448cc1cf37",
               "inputs": [],
               "interactionId": "buy-card:player-1",
               "interactionKey": "buy-card",
@@ -45,7 +45,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:5b9f1c81c20edc7d9e6baf117aa928dbd3ac2a57fef6ff8e08dc4a32cbaa4a13",
+              "descriptorDigest": "sha256:7c7223f6a858104e7d2c768ee5c0f12ca34f4aae44c741302e65d4bd4511d4c4",
               "inputs": [],
               "interactionId": "play-hand-action:player-1",
               "interactionKey": "play-hand-action",
@@ -59,7 +59,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:461a2902a46ee015a7659d300733dfce14087320f5d2ff5bd013157dba4a44f7",
+              "descriptorDigest": "sha256:43939808d128e45ee48ec7260c48ca49e558534932702d35a94a42904fb8fd7a",
               "inputs": [],
               "interactionId": "end-turn:player-1",
               "interactionKey": "end-turn",
@@ -86,11 +86,11 @@
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:c068b58d757c8495061c1c124438c54cb9ed300f4785532512e90b0672873b3c"
+        "projectionDigest": "sha256:d9a96d1d17314eafbfcb19242cf897c1dceaabf685bd7b8f8ccd213a6300f341"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:f62f1613725aa3e01ca8ecf7702819f4f44cb1115f70a61d88d9160b9330a383",
+          "actionSetVersion": "sha256:de9d0a5d8faf1eb5661a69c13de9efd407db978e463a138308f60b917b17a8e5",
           "availableInteractions": [
             {
               "availability": {
@@ -99,7 +99,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
+              "descriptorDigest": "sha256:6ee3e8abbfa4e8cce22e813b686897506e73d804bcb75e2d75e412448cc1cf37",
               "inputs": [],
               "interactionId": "buy-card:player-1",
               "interactionKey": "buy-card",
@@ -113,7 +113,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:5b9f1c81c20edc7d9e6baf117aa928dbd3ac2a57fef6ff8e08dc4a32cbaa4a13",
+              "descriptorDigest": "sha256:7c7223f6a858104e7d2c768ee5c0f12ca34f4aae44c741302e65d4bd4511d4c4",
               "inputs": [],
               "interactionId": "play-hand-action:player-1",
               "interactionKey": "play-hand-action",
@@ -127,7 +127,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:461a2902a46ee015a7659d300733dfce14087320f5d2ff5bd013157dba4a44f7",
+              "descriptorDigest": "sha256:43939808d128e45ee48ec7260c48ca49e558534932702d35a94a42904fb8fd7a",
               "inputs": [],
               "interactionId": "end-turn:player-1",
               "interactionKey": "end-turn",
@@ -154,7 +154,7 @@
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297"
+        "projectionDigest": "sha256:71efe45ba6737c98c005ea79b20778f84d7462d2632d1b73ecb602072247ddd7"
       }
     ],
     "session": {
@@ -176,7 +176,7 @@
         "fromFrameId": "frame-1",
         "id": "deck-building-market.buy-card.desktop.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:a45d03a1c546063ba09b6656ce1267e4d1a09ed92ed3a89d1dbd7ecccc672ea4",
+        "requestDigest": "sha256:5aec56e3f9f67a828b8014ec1382a11325da82dbfad86fe9cf2c75b57f7df9f6",
         "response": {
           "valid": true
         }
@@ -185,7 +185,7 @@
         "fromFrameId": "frame-1",
         "id": "deck-building-market.buy-card.desktop.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:ee2c18c839d2bb0f723ff8b3834be6234836ff85a3d2b582d30e90d3e3c9991e",
+        "requestDigest": "sha256:0bb8fcca5d9f709be23bf84bedc9ed09b7799462c81c18f6f359d7d152ac0477",
         "response": {
           "accepted": true
         }
@@ -204,18 +204,16 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
-        "semanticDigest": "sha256:a2a0f3ab5d40a02bf8d97fcbce8b007e2e9df44f5c5336080f576550ffa420de",
+        "projectionDigest": "sha256:71efe45ba6737c98c005ea79b20778f84d7462d2632d1b73ecb602072247ddd7",
+        "semanticDigest": "sha256:806ed9f9b95d07fd3d7ed24c7b199b9e0df66b45c4385ef310ae4566fa6cf745",
         "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04",
         "visibleInteractionKeys": [
-          "buy-card",
-          "play-hand-action",
-          "end-turn"
+          "buy-card"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
+        "descriptorDigest": "sha256:6ee3e8abbfa4e8cce22e813b686897506e73d804bcb75e2d75e412448cc1cf37",
         "interactionId": "buy-card:player-1",
         "interactionKey": "buy-card",
         "scopeId": "runtime",
@@ -237,9 +235,9 @@
   "source": {
     "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-    "renderModuleDigest": "sha256:f447bb27501aaab86d18fb1064637f6887728294632a5504f563b5ac2c740054",
+    "renderModuleDigest": "sha256:da4a5b8c5df7c8ba735dc20e5c55534204b7101b07230f27cf125564c3ccca69",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:b3d4b38044e4eed2c3ddcfec42dd814d505c80df0f84d2c2080685c37d520b46",
+    "sourceDigest": "sha256:0225c8224436f916b0d817309b3d866b541dbb948c2c47e58d4bc22cd9bca129",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

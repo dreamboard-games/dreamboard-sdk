@@ -2,8 +2,8 @@
 
 Date: 2026-06-17.
 
-Status: source-closed across SDK and internal repositories; publish release
-proof remains gated by the Phase 05 real-device canary receipt.
+Status: complete for the required Workbench foundation across SDK and internal
+repositories.
 
 ## Final Architecture And Ownership
 
@@ -21,31 +21,31 @@ proof remains gated by the Phase 05 real-device canary receipt.
 
 ## Phase Results
 
-| Phase | Result |
-| --- | --- |
-| 00 baseline | Accepted; baseline docs and inventory retained. |
-| 01 migration | Accepted; UI package migration path established. |
-| 02 fixture contract | Accepted; fixture contract and replay digest checks in place. |
-| 03 runtime | Accepted; runtime APIs and fixture tests pass. |
-| 04 Workbench | Accepted; Workbench routes and scenario catalog generated. |
-| 05 browser/visual/accessibility | Source accepted; real-device canary remains release-gate evidence. |
-| 06 ergonomics | Accepted; generated docs and SDK authoring surfaces simplified. |
-| 07 parity | Accepted; SDK source/packed parity and internal real-host parity passed. |
-| 08 CI/deletion/release proof | Source accepted; final publish receipt awaits real-device canary. |
+| Phase                           | Result                                                                  |
+| ------------------------------- | ----------------------------------------------------------------------- |
+| 00 baseline                     | Accepted; baseline docs and inventory retained.                         |
+| 01 migration                    | Accepted; UI package migration path established.                        |
+| 02 fixture contract             | Accepted; fixture contract and replay digest checks in place.           |
+| 03 runtime                      | Accepted; runtime APIs and fixture tests pass.                          |
+| 04 Workbench                    | Accepted; Workbench routes and scenario catalog generated.              |
+| 05 browser/visual/accessibility | Accepted for Hearts mobile, Hex desktop drag, and Worker desktop draft. |
+| 06 ergonomics                   | Accepted for the Hearts portable reference boundary.                    |
+| 07 parity                       | Accepted with distinct fixture, source, and packed real-host evidence.  |
+| 08 CI/deletion/release proof    | Accepted; release workflow executes internal parity directly.           |
 
 ## Ergonomics Metrics
 
 Phase 06 measured zero authored reference-game occurrences of the old manual
 nesting and wrapper patterns:
 
-| Pattern | Before | After |
-| --- | ---: | ---: |
-| Manual `UI.Root` + `Game.Root` + `Phase.Switch` reference nests | 0 | 0 |
-| Separate `Interaction.Routes` plus panels | 0 | 0 |
-| Reference-game `useMobileHandTrayActive` calls | 0 | 0 |
-| Reference-game `renderSummary` / `renderActions` calls | 0 | 0 |
-| Local reference-game `ActionPanel` / panel components | 0 | 0 |
-| Simultaneous drafting custom mobile hand bypass | 1 documented boundary | retained as fixture-source limitation |
+| Pattern                                                         |                Before |                                 After |
+| --------------------------------------------------------------- | --------------------: | ------------------------------------: |
+| Manual `UI.Root` + `Game.Root` + `Phase.Switch` reference nests |                     0 |                                     0 |
+| Separate `Interaction.Routes` plus panels                       |                     0 |                                     0 |
+| Reference-game `useMobileHandTrayActive` calls                  |                     0 |                                     0 |
+| Reference-game `renderSummary` / `renderActions` calls          |                     0 |                                     0 |
+| Local reference-game `ActionPanel` / panel components           |                     0 |                                     0 |
+| Simultaneous drafting custom mobile hand bypass                 | 1 documented boundary | retained as fixture-source limitation |
 
 Phase 08 removes the remaining SDK-side compatibility surfaces and guards them
 from returning.
@@ -55,30 +55,29 @@ from returning.
 SDK closeout receipts:
 
 - Storybook interactions:
-  `artifacts/ui-stories/2026-06-17T10-12-38-333Z/receipt.json`
+  `artifacts/ui-stories/2026-06-17T11-51-34-576Z/receipt.json`
 - Storybook visuals:
-  `artifacts/ui-visual/2026-06-17T10-12-54-551Z/receipt.json`
+  `artifacts/ui-visual/2026-06-17T11-51-55-838Z/receipt.json`
 - Workbench matrix:
-  `artifacts/ui/2026-06-17T10-13-10-776Z/receipt.json`
+  `artifacts/ui/2026-06-17T11-52-18-778Z/receipt.json`
 - Packed reference consumers:
   `build/reference-games/packed-consumer-receipt.json`
 - SDK parity:
-  `artifacts/ui-parity/phase-08-local/receipt.json`
+  `artifacts/ui-parity/2026-06-17T11-53-19-987Z/receipt.json`
+- Required drag/draft foundation release proof:
+  `artifacts/ui-release-proof/drag-draft-foundation/receipt.json`
 
-Internal closeout receipts:
-
-- Real-host parity:
-  `/Users/mac/code/dreamboard/build/verification/2026-06-17T10-14-23-675Z-1b4f3fd0/ui-parity/receipt.json`
-
-Observed local durations:
-
-- `pnpm ui:check`: passed in one aggregate run; Workbench matrix emitted
-  receipt `artifacts/ui/2026-06-17T10-13-10-776Z/receipt.json`.
-- Packed reference consumers: passed against SDK tarball
-  `sha256:db66abff32b931a43acf044d755fd41b168140b1d1dd5ef8cadf9e61f59a55a4`.
-- Internal real-host parity: passed in 4,964 ms.
+The final release proof used SDK tarball
+`sha256:a381c65755a65f0f9f6e4fbd8c12d42b2d2349137388f185c6c59d832312fd3f`.
+Its parity receipt retains the packed real-host observation at
+`artifacts/ui-parity/2026-06-17T11-53-19-987Z/internal/observations/hearts.pass-three.mobile.json`.
 
 No retry-only pass was accepted as release evidence.
+
+The final release-proof run passed every required gate. It retained measured
+Workbench evidence for Hearts mobile interaction, Hex physical desktop drag,
+and Worker runtime draft, plus distinct fixture-expectation, source-Workbench,
+and packed-real-host observations for `hearts.pass-three.mobile`.
 
 ## Deleted APIs And Paths
 
@@ -105,12 +104,12 @@ Internal deletions:
   remain as repository anchors.
 - Historical phase docs and receipts may still mention deleted names as
   migration history.
-- The real-device mobile canary is not produced by this local source run; it is
-  an external release-publish input.
+- Mobile touch-drag, additional scenario families, and the real-device mobile
+  canary remain optional follow-up coverage.
 
 ## Follow-Up
 
-- Run the Phase 05 real-device canary on real iOS Safari and Android Chrome,
-  then invoke `pnpm ui:release-proof --device-canary-receipt <receipt>`.
+- Expand mobile touch-drag and additional scenario families, and optionally
+  enable `pnpm ui:release-proof --require-device-canary`.
 - Continue the separate real-designer demo pipeline so product demo pages are
   populated by designer-owned games rather than editable published examples.

@@ -103,7 +103,58 @@ async function preparePackage(pkg, localVersion, tempRoot) {
     manifest[field] = rewriteDeps(manifest[field], localVersion);
   }
   await writeFile(packageJsonPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  if (pkg.name === "@dreamboard-games/sdk") {
+    await stampSdkAuthoringMetadata(outDir, manifest.version);
+  }
   return outDir;
+}
+
+async function stampSdkAuthoringMetadata(packageDir, packageVersion) {
+  const generatedSourcePath = path.join(
+    packageDir,
+    "src",
+    "authoring",
+    "generated-metadata.ts",
+  );
+  const source = await readFile(generatedSourcePath, "utf8");
+  await writeFile(
+    generatedSourcePath,
+    source.replace(
+      /sdkVersion:\s*"[^"]+"/,
+      `sdkVersion: ${JSON.stringify(packageVersion)}`,
+    ),
+  );
+
+  const distRoot = path.join(packageDir, "dist");
+  const queue = [distRoot];
+  let runtimeReplacementCount = 0;
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) continue;
+    for (const entry of await readdir(current, { withFileTypes: true })) {
+      const entryPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(entryPath);
+        continue;
+      }
+      if (!entry.isFile() || !/\.(js|map)$/.test(entry.name)) continue;
+      const content = await readFile(entryPath, "utf8");
+      if (!content.includes("sdkVersion")) continue;
+      const next = content.replace(
+        /sdkVersion:\s*"[^"]+"/g,
+        `sdkVersion: ${JSON.stringify(packageVersion)}`,
+      );
+      if (next !== content) {
+        await writeFile(entryPath, next);
+        if (entry.name.endsWith(".js")) runtimeReplacementCount += 1;
+      }
+    }
+  }
+  if (runtimeReplacementCount === 0) {
+    throw new Error(
+      "Local SDK staging could not stamp bundled authoring metadata.",
+    );
+  }
 }
 
 async function main() {

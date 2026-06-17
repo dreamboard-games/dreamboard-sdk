@@ -2,7 +2,7 @@
 
 Date: 2026-06-17.
 
-Status: source-complete.
+Status: complete for the required Workbench foundation.
 
 ## Implemented
 
@@ -28,12 +28,14 @@ Status: source-complete.
 - Added reusable Workbench layout/accessibility assertions for horizontal
   overflow, enabled actuator viewport containment, touch target sizing, overlap,
   dialog safe area, and basic accessibility invariants.
+- Enforced Axe in the Workbench and fixed `Interaction.Submit` to meet the
+  44px phone touch-target contract.
 - Kept WebKit gesture confidence scoped to layout/tap/accessibility smoke;
   WebKit does not run the touch-drag parity assertion.
 
 ## Verification
 
-Commands run from `/Users/mac/code/dreamboard-sdk`:
+Commands run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
@@ -46,7 +48,7 @@ mise exec node@24 -- pnpm ui:fixtures:compile
 mise exec node@24 -- pnpm ui:fixtures:check
 mise exec node@24 -- pnpm ui:catalog:generate
 mise exec node@24 -- pnpm ui:catalog:check
-mise exec node@24 -- pnpm ui:test --scenario hearts.pass-three.mobile
+mise exec node@24 -- pnpm ui:test --required
 mise exec node@24 -- pnpm exec prettier --check packages/sdk/src/browser-interaction packages/sdk/src/runtime/primitives/hand-surface.tsx packages/sdk/src/ui/components/card-drag/CardDropTargetView.tsx packages/sdk/src/testing/ui-fixture/schema.ts packages/sdk/src/testing/ui-fixture/ui-fixture.test.ts packages/ui-workbench/playwright.config.ts packages/ui-workbench/tests scripts/ui-fixtures/compile-reference-fixtures.mjs docs/exec-plans/ui-agent-iteration-workbench/phase-05-browser-gesture-visual-and-accessibility-matrix.md docs/exec-plans/ui-agent-iteration-workbench/artifacts/phase-05-browser-gesture-visual-accessibility.md
 ```
 
@@ -59,19 +61,19 @@ Results:
 - Chromium touch semantic driver tests passed, including CDP touch drag.
 - Fixture compile/check passed for 5 reference fixtures.
 - Catalog generation/check passed for 5 UI scenarios.
-- Full Workbench scenario command passed and wrote
-  `artifacts/ui/2026-06-17T06-34-49-645Z/receipt.json`.
-- The Workbench transcript for that receipt ran the full matrix: 17 passed and
-  1 skipped WebKit touch-drag parity test, matching the documented WebKit
-  boundary.
+- Required Workbench scenario command passed and wrote
+  `artifacts/ui/2026-06-17T11-52-18-778Z/receipt.json`.
+- The receipt contains passing measured evidence for Hearts on Chromium desktop,
+  Chromium touch phone, and WebKit phone; Hex Network Trading physical desktop
+  pointer drag; and Worker Placement Tableau runtime draft mutation.
+- The drag and draft scenarios each retain intermediate-state and committed-state
+  screenshots plus projection, semantic, and submission digests.
 
-## Boundaries
+## Foundation Boundary
 
-- The deterministic gate now covers Chromium desktop mouse drag and Chromium
-  mobile CDP touch drag. WebKit phone remains layout, tap, semantic snapshot,
-  and accessibility smoke only.
-- The real iOS Safari and Android Chrome canary was not run in this source
-  closeout and remains required before publication when hand, gesture, overlay,
-  dialog, or browser-interaction code changes.
-- The 50-pass promotion threshold for new golden gesture tests was not run in
-  this source closeout and remains a promotion requirement.
+- Hearts is required across Chromium desktop, Chromium touch phone, and WebKit
+  phone with measured click/tap, semantic, projection, submission, screenshot,
+  layout, touch-target, and Axe evidence.
+- Desktop pointer drag and runtime draft scenarios are required and passing.
+  Mobile touch-drag promotion and real iOS/Android canaries remain follow-up
+  expansion.

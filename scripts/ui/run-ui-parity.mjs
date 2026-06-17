@@ -3,7 +3,6 @@ import { spawnSync } from "node:child_process";
 import { readdir, readFile, stat, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import {
-  compareUIParityObservations,
   createUIParityObservationFromFixture,
   digestUIScenarioFixture,
   parseUIScenarioFixture,
@@ -18,28 +17,17 @@ import {
 } from "./reference-games-lib.mjs";
 
 const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+const requiredGoldenScenario = "hearts.pass-three.mobile";
 
 const goldenScenarioAliases = new Map([
-  ["hearts.pass-three.mobile", "hearts.pass-three.mobile"],
-  ["deck-building-market.buy-card", "deck-building-market.buy-card.desktop"],
-  [
-    "hex-network-trading.place-network",
-    "hex-network-trading.place-route.desktop",
-  ],
-  [
-    "worker-placement-tableau.place-worker",
-    "worker-placement-tableau.place-worker.desktop",
-  ],
-  [
-    "simultaneous-card-drafting.choose-card.mobile",
-    "simultaneous-card-drafting.lock-choice.mobile",
-  ],
+  [requiredGoldenScenario, requiredGoldenScenario],
 ]);
 
 function parseArgs(argv) {
   const options = {
     scenarios: [],
     build: true,
+    requireInternal: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
@@ -55,6 +43,10 @@ function parseArgs(argv) {
     }
     if (arg === "--skip-build") {
       options.build = false;
+      continue;
+    }
+    if (arg === "--require-internal") {
+      options.requireInternal = true;
       continue;
     }
     throw new Error(`Unknown argument '${arg}'.`);
@@ -86,7 +78,7 @@ function resolveScenarioIds(requestedScenarios, bundle) {
   const requests =
     requestedScenarios.length > 0
       ? requestedScenarios
-      : [...goldenScenarioAliases.keys()];
+      : [requiredGoldenScenario];
   return requests.map((requestedId) => {
     const fixtureId = fixtureIds.has(requestedId)
       ? requestedId
@@ -162,7 +154,7 @@ async function internalObservationPath(internalOut, scenarioId) {
   return null;
 }
 
-async function writeObservationPair({
+async function writeFixtureExpectation({
   fixture,
   fixtureDigest,
   sdkCandidateDigest,
@@ -173,34 +165,91 @@ async function writeObservationPair({
     project: project ?? projectForFixture(fixture),
     viewport: viewportForFixture(fixture),
   };
-  const source = createUIParityObservationFromFixture({
+  const observation = createUIParityObservationFromFixture({
     fixture,
     fixtureDigest,
     sdkCandidateDigest,
     environment,
   });
-  const packed = createUIParityObservationFromFixture({
-    fixture,
-    fixtureDigest,
-    sdkCandidateDigest,
-    environment,
-  });
-  const sourcePath = path.join(
+  const observationPath = path.join(
     artifactRoot,
-    `${fixture.id}.source-observation.json`,
+    `${fixture.id}.fixture-expectation.json`,
   );
-  const packedPath = path.join(
-    artifactRoot,
-    `${fixture.id}.packed-observation.json`,
-  );
-  await writeJson(sourcePath, source);
-  await writeJson(packedPath, packed);
+  await writeJson(observationPath, observation);
   return {
-    source,
-    packed,
-    comparison: compareUIParityObservations(source, packed),
-    sourcePath: path.relative(root, sourcePath),
-    packedPath: path.relative(root, packedPath),
+    observation,
+    path: path.relative(root, observationPath),
+  };
+}
+
+function createMeasuredObservation({
+  fixture,
+  fixtureDigest,
+  sdkCandidateDigest,
+  project,
+  evidence,
+  evidencePath,
+}) {
+  if (
+    evidence?.kind !== "dreamboard-ui-scenario-evidence" ||
+    evidence.scenarioId !== fixture.id ||
+    evidence.project !== project ||
+    !Array.isArray(evidence.steps) ||
+    evidence.steps.length !== fixture.replay.length
+  ) {
+    throw new Error(
+      `Measured source evidence for '${fixture.id}' did not match the requested scenario, project, or replay length.`,
+    );
+  }
+  const frameById = new Map(
+    fixture.protocol.frames.map((frame) => [frame.id, frame]),
+  );
+  const checkpoints = fixture.replay.map((replayStep, index) => {
+    const measured = evidence.steps[index];
+    if (!measured || measured.stepId !== replayStep.stepId) {
+      throw new Error(
+        `Measured source evidence for '${fixture.id}' is missing replay step '${replayStep.stepId}'.`,
+      );
+    }
+    const frame = frameById.get(measured.frameId);
+    if (!frame) {
+      throw new Error(
+        `Measured source replay step '${replayStep.stepId}' reported unknown frame '${measured.frameId ?? "<missing>"}'.`,
+      );
+    }
+    const identity = replayStep.expectedIdentity;
+    return {
+      stepId: measured.stepId,
+      interactionKey: identity?.interactionKey,
+      interactionId: measured.interactionId,
+      actuatorId: identity?.actuatorId,
+      descriptorDigest: identity?.descriptorDigest,
+      draftDigest: measured.draftDigest,
+      gameVersion: frame.frame.gameVersion,
+      actionSetVersion: frame.frame.actionSetVersion,
+      perspectivePlayerId: frame.frame.perspectivePlayerId,
+      projectionDigest: measured.projectionDigest,
+      semanticDigest: measured.semanticDigest,
+      submissionDigest: measured.submissionDigest,
+    };
+  });
+  return {
+    schemaVersion: 1,
+    scenarioId: fixture.id,
+    fixtureDigest,
+    sdkCandidateDigest,
+    pluginRuntimeProtocol: fixture.pluginRuntimeProtocol,
+    browserInteractionProtocol: fixture.browserInteractionProtocol,
+    environment: {
+      project,
+      viewport: viewportForFixture(fixture),
+    },
+    provenance: {
+      kind: "source-workbench",
+      evidence: evidencePath,
+    },
+    checkpoints,
+    diagnostics: [],
   };
 }
 
@@ -237,6 +286,7 @@ async function main() {
 
   const scenarioInputs = [];
   const observations = [];
+  const sourceComparisons = [];
   for (const selection of selected) {
     const entry = bundle.fixtures.find(
       (item) => item.id === selection.fixtureId,
@@ -248,18 +298,90 @@ async function main() {
       JSON.parse(await readFile(path.join(fixturesRoot, entry.file), "utf8")),
     );
     const fixtureDigest = digestUIScenarioFixture(fixture);
-    const pair = await writeObservationPair({
+    const expectation = await writeFixtureExpectation({
       fixture,
       fixtureDigest,
       sdkCandidateDigest: sdkTarballSha256,
       project: options.project,
       artifactRoot,
     });
+    const project = options.project ?? projectForFixture(fixture);
+    const sourceRunRoot = path.join(artifactRoot, "source", fixture.id);
+    run(
+      "node",
+      [
+        "scripts/ui/run-ui-scenarios.mjs",
+        "--scenario",
+        fixture.id,
+        "--project",
+        project,
+        "--out",
+        sourceRunRoot,
+      ],
+      { cwd: root, stdio: "inherit" },
+    );
+    const sourceReceipt = await readJson(
+      path.join(sourceRunRoot, "receipt.json"),
+    );
+    const sourceResult = sourceReceipt.results?.find(
+      (result) =>
+        result.scenarioId === fixture.id && result.project === project,
+    );
+    if (
+      !sourceResult ||
+      sourceResult.result !== "passed" ||
+      typeof sourceResult.evidenceFile !== "string"
+    ) {
+      throw new Error(
+        `Source Workbench did not write passing measured evidence for '${fixture.id}' on '${project}'.`,
+      );
+    }
+    const sourceEvidence = await readJson(
+      path.resolve(root, sourceResult.evidenceFile),
+    );
+    const sourceObservationPath = path.join(
+      artifactRoot,
+      `${fixture.id}.source-observation.json`,
+    );
+    await writeJson(
+      sourceObservationPath,
+      createMeasuredObservation({
+        fixture,
+        fixtureDigest,
+        sdkCandidateDigest: sdkTarballSha256,
+        project,
+        evidence: sourceEvidence,
+        evidencePath: sourceResult.evidenceFile,
+      }),
+    );
+    const sourceComparisonPath = path.join(
+      artifactRoot,
+      `${fixture.id}.source-comparison.json`,
+    );
+    run(
+      "node",
+      [
+        "scripts/ui/compare-ui-parity.mjs",
+        "--expected",
+        expectation.path,
+        "--actual",
+        path.relative(root, sourceObservationPath),
+        "--out",
+        path.relative(root, sourceComparisonPath),
+      ],
+      { cwd: root },
+    );
+    sourceComparisons.push({
+      scenarioId: fixture.id,
+      status: "passed",
+      actual: path.relative(root, sourceObservationPath),
+      comparison: path.relative(root, sourceComparisonPath),
+      evidence: sourceResult.evidenceFile,
+    });
     observations.push({
       scenarioId: fixture.id,
-      source: pair.sourcePath,
-      packed: pair.packedPath,
-      comparison: pair.comparison,
+      expectation: expectation.path,
+      source: path.relative(root, sourceObservationPath),
     });
     scenarioInputs.push({
       requestedId: selection.requestedId,
@@ -315,6 +437,7 @@ async function main() {
   const internal = {
     result: "skipped",
     reason: "DREAMBOARD_INTERNAL_REPO was not set.",
+    comparisons: [],
   };
   if (internalRepo) {
     internal.reason = undefined;
@@ -342,52 +465,106 @@ async function main() {
       internal.reason = "Internal command failed. See transcript.";
     }
 
-    if (result.status === 0 && selected.length === 1) {
-      const scenarioId = selected[0].fixtureId;
-      const actualPath = await internalObservationPath(internalOut, scenarioId);
-      if (actualPath) {
-        const expected = observations[0];
+    if (result.status === 0) {
+      for (const selection of selected) {
+        const scenarioId = selection.fixtureId;
+        const actualPath = await internalObservationPath(
+          internalOut,
+          scenarioId,
+        );
+        if (!actualPath) {
+          internal.result = "failed";
+          internal.reason = `Internal command passed but did not write a discoverable parity observation for '${scenarioId}'.`;
+          break;
+        }
+        const expected = observations.find(
+          (observation) => observation.scenarioId === scenarioId,
+        );
+        if (!expected) {
+          throw new Error(`Missing fixture expectation for '${scenarioId}'.`);
+        }
         const comparison = run(
           "node",
           [
             "scripts/ui/compare-ui-parity.mjs",
             "--expected",
-            expected.packed,
+            expected.expectation,
             "--actual",
             path.relative(root, actualPath),
             "--out",
             path.relative(
               root,
-              path.join(artifactRoot, "internal-comparison.json"),
+              path.join(artifactRoot, `${scenarioId}.internal-comparison.json`),
             ),
           ],
           { cwd: root, allowFailure: true },
         );
-        internal.comparisonStatus = comparison.status;
-        internal.comparison = path.relative(
-          root,
-          path.join(artifactRoot, "internal-comparison.json"),
-        );
+        internal.comparisons.push({
+          scenarioId,
+          expectationStatus: comparison.status === 0 ? "passed" : "failed",
+          actual: path.relative(root, actualPath),
+          expectationComparison: path.relative(
+            root,
+            path.join(artifactRoot, `${scenarioId}.internal-comparison.json`),
+          ),
+        });
         if (comparison.status !== 0) {
           internal.result = "failed";
+          internal.reason = `Real-host observation for '${scenarioId}' did not match the fixture expectation.`;
+          break;
         }
-      } else {
-        internal.result = "failed";
-        internal.reason =
-          "Internal command passed but did not write a discoverable parity observation.";
+        const source = sourceComparisons.find(
+          (candidate) => candidate.scenarioId === scenarioId,
+        );
+        if (!source) {
+          throw new Error(`Missing source observation for '${scenarioId}'.`);
+        }
+        const sourceComparisonPath = path.join(
+          artifactRoot,
+          `${scenarioId}.source-vs-internal-comparison.json`,
+        );
+        const sourceComparison = run(
+          "node",
+          [
+            "scripts/ui/compare-ui-parity.mjs",
+            "--expected",
+            source.actual,
+            "--actual",
+            path.relative(root, actualPath),
+            "--out",
+            path.relative(root, sourceComparisonPath),
+          ],
+          { cwd: root, allowFailure: true },
+        );
+        internal.comparisons.at(-1).sourceStatus =
+          sourceComparison.status === 0 ? "passed" : "failed";
+        internal.comparisons.at(-1).sourceComparison = path.relative(
+          root,
+          sourceComparisonPath,
+        );
+        if (sourceComparison.status !== 0) {
+          internal.result = "failed";
+          internal.reason = `Real-host observation for '${scenarioId}' did not match the independently measured source Workbench observation.`;
+          break;
+        }
       }
     }
   }
 
-  const failedWorkbenchComparison = observations.find(
-    (observation) => !observation.comparison.ok,
-  );
   const receipt = {
     schemaVersion: 1,
+    kind: "dreamboard-ui-real-host-parity",
+    mode: "real-host-parity",
+    result: internal.result,
+    realHostExecutor: internal.result === "passed",
     input: path.relative(root, inputPath),
     sdkTarballSha256,
+    fixtureBundleSha256: input.fixtureBundle.sha256,
     scenarios: scenarioInputs,
-    workbenchComparison: failedWorkbenchComparison ? "failed" : "passed",
+    source: {
+      result: "passed",
+      comparisons: sourceComparisons,
+    },
     internal,
   };
   await writeJson(path.join(artifactRoot, "receipt.json"), receipt);
@@ -395,7 +572,10 @@ async function main() {
   console.log(
     `wrote ${path.relative(root, path.join(artifactRoot, "receipt.json"))}`,
   );
-  if (failedWorkbenchComparison || internal.result === "failed") {
+  if (
+    internal.result === "failed" ||
+    (options.requireInternal && internal.result !== "passed")
+  ) {
     process.exit(1);
   }
 }

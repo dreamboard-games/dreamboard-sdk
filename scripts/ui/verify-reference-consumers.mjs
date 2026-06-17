@@ -14,6 +14,7 @@ import {
   sha256File,
   writeJson,
 } from "./reference-games-lib.mjs";
+import { requiredReferenceGameIds } from "./required-ui-scenarios.mjs";
 
 const sdkPackage = "@dreamboard-games/sdk";
 
@@ -31,12 +32,19 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--required") {
+      options.required = true;
+      continue;
+    }
     throw new Error(`Unknown argument '${arg}'.`);
   }
   return options;
 }
 
 function selectGameIds(options) {
+  if (options.required) {
+    return [...requiredReferenceGameIds];
+  }
   if (options.game) {
     if (!expectedReferenceGameIds.includes(options.game)) {
       throw new Error(

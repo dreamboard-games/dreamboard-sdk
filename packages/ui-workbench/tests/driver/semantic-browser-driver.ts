@@ -40,6 +40,17 @@ export interface WorkbenchSemanticReplayStep {
   readonly expect: UIStepExpectation;
 }
 
+export interface WorkbenchReplayStepEvidence {
+  readonly stepId: string;
+  readonly interactionId: string;
+  readonly frameId?: string;
+  readonly projectionDigest?: string;
+  readonly semanticDigest?: string;
+  readonly draftDigest?: string;
+  readonly submissionDigest?: string;
+  readonly visibleInteractionKeys: readonly string[];
+}
+
 interface ResolvedActuatorReference {
   readonly kind: "actuator";
   readonly surface: string;
@@ -95,8 +106,15 @@ export class SemanticResolutionError extends Error {
 export async function executeFixtureStep(
   page: Page,
   step: WorkbenchSemanticReplayStep,
-): Promise<void> {
+): Promise<WorkbenchReplayStepEvidence> {
   const source = await resolveReplayActuator(page, step);
+  if (step.expect.submissionDigest) {
+    await page.evaluate(
+      (interactionId) =>
+        window.__dreamboardUIFixture?.validateInteraction(interactionId),
+      source.interactionId,
+    );
+  }
 
   switch (step.execute.kind) {
     case "activate":
@@ -116,8 +134,42 @@ export async function executeFixtureStep(
     }
   }
 
+  await settleFixtureHost(page);
+  await waitForExpectedFixtureState(page, step);
   await waitForWorkbenchStablePage(page);
-  await assertStepExpectation(page, step);
+  return assertStepExpectation(page, step, source);
+}
+
+async function settleFixtureHost(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    const bridge = window.__dreamboardUIFixture;
+    if (!bridge) throw new Error("UI fixture test bridge is not installed.");
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+      await bridge.flush();
+      await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    }
+  });
+}
+
+async function waitForExpectedFixtureState(
+  page: Page,
+  step: WorkbenchSemanticReplayStep,
+): Promise<void> {
+  const frameId = step.expect.frameId;
+  const projectionDigest = step.expect.projectionDigest;
+  if (!frameId && !projectionDigest) return;
+  await page.waitForFunction(
+    (expected) => {
+      const bridge = window.__dreamboardUIFixture;
+      if (!bridge) return false;
+      return (
+        (!expected.frameId || bridge.getFrameId() === expected.frameId) &&
+        (!expected.projectionDigest ||
+          bridge.getProjectionDigest() === expected.projectionDigest)
+      );
+    },
+    { frameId, projectionDigest },
+  );
 }
 
 export async function readPageBrowserInteractionSnapshot(
@@ -353,6 +405,11 @@ async function activateResolvedActuator(
     await page.keyboard.press("Enter");
     return;
   }
+  const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
+  if (touchCapable) {
+    await locator.tap();
+    return;
+  }
   await locator.click();
 }
 
@@ -568,7 +625,8 @@ function interpolatePoints(from: Point, to: Point, steps: number): Point[] {
 async function assertStepExpectation(
   page: Page,
   step: WorkbenchSemanticReplayStep,
-): Promise<void> {
+  source: ResolvedActuatorReference,
+): Promise<WorkbenchReplayStepEvidence> {
   const expected = step.expect;
   const snapshot = await readPageBrowserInteractionSnapshot(page);
   const actual = await page.evaluate(() => {
@@ -595,23 +653,18 @@ async function assertStepExpectation(
   const actualValues = {
     ...actual,
     draftDigest: readCurrentDraftDigest(snapshot),
-    semanticDigest:
-      actual.scenarioId && actual.frameId && actual.projectionDigest
-        ? digestUIFixtureJson({
-            digestVersion: "ui-semantic@1",
-            fixtureId: actual.scenarioId,
-            frameId: actual.frameId,
-            projectionDigest: actual.projectionDigest,
-          })
-        : undefined,
-    submissionDigest:
-      actual.scenarioId && step.requestDigest
-        ? digestUIFixtureJson({
-            digestVersion: "ui-submission@1",
-            fixtureId: actual.scenarioId,
-            replay: [step.requestDigest],
-          })
-        : undefined,
+    semanticDigest: actual.scenarioId
+      ? digestUIFixtureJson({
+          digestVersion: "runtime-browser-interaction@2",
+          snapshot,
+        })
+      : undefined,
+    submissionDigest: actual.scenarioId
+      ? digestUIFixtureJson({
+          fixtureId: actual.scenarioId,
+          interactionId: source.interactionId,
+        })
+      : undefined,
     visibleInteractionKeys,
   };
 
@@ -640,6 +693,16 @@ async function assertStepExpectation(
       );
     }
   }
+  return {
+    stepId: step.stepId,
+    interactionId: source.interactionId,
+    frameId: actualValues.frameId,
+    projectionDigest: actualValues.projectionDigest,
+    semanticDigest: actualValues.semanticDigest,
+    draftDigest: actualValues.draftDigest,
+    submissionDigest: actualValues.submissionDigest,
+    visibleInteractionKeys,
+  };
 }
 
 function readCurrentDraftDigest(

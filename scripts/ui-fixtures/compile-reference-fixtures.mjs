@@ -15,9 +15,11 @@ import {
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { format } from "prettier";
 import {
   expectedReferenceGames,
   referenceGamesRoot,
+  repoCommandEnv,
   root,
   sha256File,
   writeJson,
@@ -35,7 +37,9 @@ import {
 } from "../../packages/sdk/dist/testing.js";
 import {
   readBrowserInteractionSnapshot,
+  resolveBrowserInteractionEffect,
   resolveBrowserInteractionIntent,
+  resolveBrowserPointerTarget,
 } from "../../packages/sdk/dist/browser-interaction.js";
 import { createPluginRuntimeClient } from "../../packages/sdk/dist/runtime.js";
 import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/plugin-runtime-contract/dist/index.js";
@@ -58,6 +62,10 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? root,
+    env:
+      command === "git"
+        ? repoCommandEnv(options.env)
+        : (options.env ?? process.env),
     encoding: "utf8",
     stdio: options.stdio ?? "pipe",
   });
@@ -73,56 +81,150 @@ function sha256Text(text) {
   return `sha256:${createHash("sha256").update(text).digest("hex")}`;
 }
 
-function primaryCapability(uiPatterns) {
-  if (uiPatterns.includes("mobile-hand-actions")) return "touch-drag";
-  if (uiPatterns.includes("compact-mobile-hand")) return "touch-drag";
-  if (uiPatterns.includes("hex-board-targets")) return "desktop-drag";
-  if (uiPatterns.includes("resource-allocation-form")) return "runtime-draft";
-  return "runtime-submit";
+const renderedComponentSelectors = {
+  CardDragSurface: "[data-dreamboard-card-drag-surface]",
+  CardDropTargetView: "[data-dreamboard-card-drop-target]",
+  CardFace: "[data-dreamboard-card-face]",
+  CostDisplay: '[role="list"][aria-label^="Cost:"]',
+  HandView: "[data-dreamboard-hand-view]",
+  InteractionInput: "[data-dreamboard-interaction-input]",
+  InteractionSubmit: "[data-dreamboard-interaction-submit]",
+  Panel: "[data-dreamboard-panel]",
+  PluginRuntime: '[data-dreamboard-browser-scope="runtime"]',
+  ResourceCounter: "[data-dreamboard-resource-counter]",
+  SlotSystem: ".slot-system",
+};
+
+function collectRenderedComponents(container) {
+  return Object.entries(renderedComponentSelectors)
+    .filter(([, selector]) => container.querySelector(selector))
+    .map(([component]) => component)
+    .sort();
 }
 
-function componentsFor(patterns) {
-  const components = new Set(["PluginRuntime", "InteractionForm"]);
-  for (const pattern of patterns) {
-    if (pattern.includes("hand")) components.add("HandView");
-    if (pattern.includes("market")) components.add("MarketRow");
-    if (pattern.includes("board") || pattern.includes("worker")) {
-      components.add("BoardTargetLayer");
-    }
-    if (pattern.includes("resource")) components.add("ResourceControls");
-    if (pattern.includes("dialog") || pattern.includes("confirmation")) {
-      components.add("ConfirmationDialog");
+function collectVisibleInteractionKeys(snapshot) {
+  return [
+    ...new Set(
+      snapshot.surfaces.flatMap((surface) =>
+        "interactions" in surface
+          ? surface.interactions.map(
+              (interaction) => interaction.interactionKey,
+            )
+          : [],
+      ),
+    ),
+  ].sort();
+}
+
+function capabilitiesForReplay(replay, viewportTags) {
+  const capabilities = new Set(["runtime-submit"]);
+  for (const step of replay) {
+    if (step.execute.kind === "activate") capabilities.add("click");
+    if (step.execute.kind === "fill") capabilities.add("runtime-draft");
+    if (step.execute.kind === "drag") {
+      capabilities.add(
+        viewportTags.includes("touch") ? "touch-drag" : "pointer-drag",
+      );
     }
   }
-  return [...components].sort();
+  return [...capabilities].sort();
 }
 
-function capabilitiesFor(patterns) {
-  return [
-    primaryCapability(patterns),
-    "runtime-draft",
-    "runtime-submit",
-  ].filter((value, index, values) => values.indexOf(value) === index);
+function scenarioReplay(coverage) {
+  return coverage.replay ?? { kind: "invoke" };
 }
 
-function buildInteractionDescriptors(referenceGame) {
-  return Object.fromEntries(
-    referenceGame.interactions.map((interaction) => [
-      interaction.id,
+function scenarioInputs(coverage) {
+  const replay = scenarioReplay(coverage);
+  if (replay.kind === "drag") {
+    return [
       {
+        key: replay.cardInputKey,
+        kind: "cardTarget",
+        domain: {
+          type: "cardTarget",
+          projection: "resolved",
+          zoneId: "hand",
+          eligibleTargets: [replay.cardId],
+          selection: { mode: "single" },
+        },
+      },
+      {
+        key: replay.destinationInputKey,
+        kind: "boardTarget",
+        domain: {
+          type: "boardTarget",
+          projection: "resolved",
+          targetKind: replay.destinationKind,
+          eligibleTargets: replay.eligibleDestinationIds,
+          selection: { mode: "single" },
+        },
+      },
+    ];
+  }
+  if (replay.kind === "draft") {
+    return [
+      {
+        key: replay.inputKey,
+        kind: "boundedNumber",
+        domain: {
+          type: "boundedNumber",
+          min: replay.min,
+          max: replay.max,
+          step: 1,
+        },
+      },
+    ];
+  }
+  return [];
+}
+
+function scenarioSubmissionParams(coverage) {
+  const replay = scenarioReplay(coverage);
+  if (replay.kind === "drag") {
+    return {
+      [replay.cardInputKey]: replay.cardId,
+      [replay.destinationInputKey]: replay.destinationId,
+    };
+  }
+  if (replay.kind === "draft") {
+    return { [replay.inputKey]: replay.value };
+  }
+  return {};
+}
+
+function buildInteractionDescriptors(referenceGame, coverage) {
+  const selectedInteraction = scenarioInteraction(referenceGame, coverage);
+  return Object.fromEntries(
+    referenceGame.interactions.map((interaction) => {
+      const inputs =
+        interaction.id === selectedInteraction.id
+          ? scenarioInputs(coverage)
+          : [];
+      const descriptor = {
         phaseName: "fixture",
         interactionKey: interaction.id,
         interactionId: `${interaction.id}:player-1`,
         kind: "action",
         availability: { status: "available" },
         commit: { mode: "manual" },
-        descriptorDigest: digestUIFixtureJson({
-          gameId: referenceGame.id,
-          interaction,
-        }),
-        inputs: [],
-      },
-    ]),
+        ...(inputs.some((input) => input.domain.zoneId === "hand")
+          ? { zoneId: "hand" }
+          : {}),
+        inputs,
+      };
+      return [
+        interaction.id,
+        {
+          ...descriptor,
+          descriptorDigest: digestUIFixtureJson({
+            gameId: referenceGame.id,
+            interaction,
+            descriptor,
+          }),
+        },
+      ];
+    }),
   );
 }
 
@@ -138,14 +240,43 @@ function scenarioInteraction(referenceGame, coverage) {
   return interaction;
 }
 
+function scenarioZones({ coverage, interaction }) {
+  const replay = scenarioReplay(coverage);
+  if (replay.kind !== "drag") return {};
+  const card = {
+    id: replay.cardId,
+    cardType: "route",
+    name: "Route",
+    properties: { subtitle: "Network link" },
+  };
+  return {
+    hand: {
+      cardIds: [replay.cardId],
+      cardViewsById: {
+        [replay.cardId]: JSON.stringify(card),
+      },
+      playableByCardId: {
+        [replay.cardId]: [interaction.id],
+      },
+    },
+  };
+}
+
 async function createReferenceProtocol({ referenceGame, coverage }) {
-  const interactionsByRef = buildInteractionDescriptors(referenceGame);
+  const interactionsByRef = buildInteractionDescriptors(
+    referenceGame,
+    coverage,
+  );
   const interaction = scenarioInteraction(referenceGame, coverage);
-  const input = {
+  const validationInput = {
     kind: "interaction",
     playerId: "player-1",
     interactionId: `${interaction.id}:player-1`,
     params: {},
+  };
+  const submissionInput = {
+    ...validationInput,
+    params: scenarioSubmissionParams(coverage),
   };
   const initialState = {
     domain: {
@@ -176,7 +307,10 @@ async function createReferenceProtocol({ referenceGame, coverage }) {
               availableInteractionRefs: referenceGame.interactions.map(
                 (candidate) => candidate.id,
               ),
-              zones: {},
+              zones: scenarioZones({
+                coverage,
+                interaction,
+              }),
             },
           ]),
         ),
@@ -242,12 +376,12 @@ async function createReferenceProtocol({ referenceGame, coverage }) {
     {
       id: `${coverage.scenarioId}.validate`,
       operation: "validate",
-      input,
+      input: validationInput,
     },
     {
       id: `${coverage.scenarioId}.submit`,
       operation: "submit",
-      input,
+      input: submissionInput,
     },
   ]);
   return compilePluginProtocolTape({
@@ -285,7 +419,10 @@ async function exerciseRenderedScenario({
   fixtureId,
   modulePath,
   protocol,
-  resolve,
+  sourceRequest,
+  targetRequest,
+  interactionId,
+  submissionParams,
 }) {
   const executionRoot = await mkdtemp(
     path.join(os.tmpdir(), "dreamboard-ui-render-module-"),
@@ -338,52 +475,51 @@ async function exerciseRenderedScenario({
     });
 
     const initialSnapshot = readBrowserInteractionSnapshot(container);
-    const resolution = resolveBrowserInteractionIntent(
-      initialSnapshot,
-      resolve,
-    );
+    const renderedComponents = collectRenderedComponents(container);
+    const resolution =
+      "effect" in sourceRequest
+        ? resolveBrowserInteractionEffect(initialSnapshot, sourceRequest)
+        : resolveBrowserInteractionIntent(initialSnapshot, sourceRequest);
     if (!resolution.ok) {
       throw new Error(
         `${fixtureId} semantic replay request did not resolve uniquely: ${resolution.code}`,
       );
     }
+    if (targetRequest) {
+      const targetResolution = resolveBrowserPointerTarget(
+        initialSnapshot,
+        targetRequest,
+      );
+      if (!targetResolution.ok) {
+        throw new Error(
+          `${fixtureId} semantic drag target did not resolve uniquely: ${targetResolution.code}`,
+        );
+      }
+    }
 
-    const validation = await runtime.validateInteraction(
-      resolve.interactionId,
-      {},
-    );
+    const validation = await runtime.validateInteraction(interactionId, {});
     if (!validation.valid) {
       throw new Error(
         `${fixtureId} runtime validation failed: ${validation.errorCode ?? "invalid"}`,
       );
     }
 
-    const actuator = [
-      ...container.querySelectorAll("[data-dreamboard-actuator-id]"),
-    ].find(
-      (element) =>
-        element.getAttribute("data-dreamboard-actuator-id") ===
-        resolution.actuator.actuatorId,
-    );
-    if (!(actuator instanceof HTMLElement)) {
-      throw new Error(
-        `${fixtureId} resolved actuator '${resolution.actuator.actuatorId}' was not rendered.`,
-      );
-    }
-
     await act(async () => {
-      actuator.click();
+      await runtime.submitInteraction(interactionId, submissionParams);
       await settleFixtureRuntime(harness);
     });
     harness.assertConsumed();
+    const finalSnapshot = readBrowserInteractionSnapshot(container);
 
     return {
       resolution,
       finalFrameId: harness.getCurrentFrameId(),
       finalSemanticDigest: digestUIFixtureJson({
         digestVersion: "runtime-browser-interaction@2",
-        snapshot: readBrowserInteractionSnapshot(container),
+        snapshot: finalSnapshot,
       }),
+      visibleInteractionKeys: collectVisibleInteractionKeys(finalSnapshot),
+      renderedComponents,
     };
   } finally {
     await act(async () => {
@@ -393,6 +529,142 @@ async function exerciseRenderedScenario({
     container.remove();
     await rm(executionRoot, { recursive: true, force: true });
   }
+}
+
+function replayRequests(coverage, interactionId) {
+  const base = {
+    surface: "gameplay",
+    scopeId: gameplayScopeId,
+    interactionKey: interactionId,
+    interactionId: `${interactionId}:player-1`,
+  };
+  const replay = scenarioReplay(coverage);
+  if (replay.kind === "drag") {
+    return {
+      sourceRequest: {
+        ...base,
+        effect: {
+          kind: "setCandidate",
+          inputKey: replay.cardInputKey,
+          candidateValue: replay.cardId,
+          beforeSelected: false,
+          afterSelected: true,
+        },
+      },
+      targetRequest: {
+        ...base,
+        effect: {
+          kind: "setCandidate",
+          inputKey: replay.destinationInputKey,
+          candidateValue: replay.destinationId,
+          beforeSelected: false,
+          afterSelected: true,
+        },
+      },
+    };
+  }
+  if (replay.kind === "draft") {
+    return {
+      sourceRequest: {
+        ...base,
+        effect: {
+          kind: "setScalar",
+          inputKey: replay.inputKey,
+          value: replay.value,
+        },
+      },
+    };
+  }
+  return {
+    sourceRequest: {
+      ...base,
+      intent: "invoke",
+    },
+  };
+}
+
+function expectedIdentity(stepId, interactionId, resolution) {
+  return {
+    stepId,
+    surface: "gameplay",
+    scopeId: gameplayScopeId,
+    interactionKey: resolution.interactionKey,
+    interactionId: `${interactionId}:player-1`,
+    actuatorId: resolution.actuator.actuatorId,
+    descriptorDigest: resolution.actuator.descriptorDigest,
+    draftDigest: resolution.actuator.draftDigest,
+  };
+}
+
+function buildReplay({
+  coverage,
+  interaction,
+  exercise,
+  finalFrame,
+  submissionDigest,
+  sourceRequest,
+  targetRequest,
+}) {
+  const replay = scenarioReplay(coverage);
+  const fixtureId = coverage.scenarioId;
+  const firstStepId =
+    replay.kind === "invoke"
+      ? `${fixtureId}.invoke`
+      : `${fixtureId}.${replay.kind}`;
+  const firstStep = {
+    stepId: firstStepId,
+    requestDigest: digestUIFixtureRequest(sourceRequest),
+    resolve: sourceRequest,
+    execute:
+      replay.kind === "drag"
+        ? { kind: "drag", target: targetRequest }
+        : replay.kind === "draft"
+          ? { kind: "fill", value: String(replay.value) }
+          : { kind: "activate" },
+    expectedIdentity: expectedIdentity(
+      firstStepId,
+      interaction.id,
+      exercise.resolution,
+    ),
+    expect:
+      replay.kind === "invoke"
+        ? {
+            frameId: finalFrame.id,
+            projectionDigest: finalFrame.projectionDigest,
+            semanticDigest: exercise.finalSemanticDigest,
+            submissionDigest,
+            visibleInteractionKeys: exercise.visibleInteractionKeys,
+          }
+        : {
+            visibleInteractionKeys: [interaction.id],
+          },
+  };
+  if (replay.kind === "invoke") return [firstStep];
+
+  const commitStepId = `${fixtureId}.commit`;
+  const commitRequest = {
+    surface: "gameplay",
+    scopeId: gameplayScopeId,
+    interactionKey: interaction.id,
+    interactionId: `${interaction.id}:player-1`,
+    intent: "submit",
+  };
+  return [
+    firstStep,
+    {
+      stepId: commitStepId,
+      requestDigest: digestUIFixtureRequest(commitRequest),
+      resolve: commitRequest,
+      execute: { kind: "activate" },
+      expect: {
+        frameId: finalFrame.id,
+        projectionDigest: finalFrame.projectionDigest,
+        semanticDigest: exercise.finalSemanticDigest,
+        submissionDigest,
+        visibleInteractionKeys: exercise.visibleInteractionKeys,
+      },
+    },
+  ];
 }
 
 async function compileGame({ game, outputRoot, sdkCommit }) {
@@ -412,10 +684,13 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     interactions: referenceGame.interactions,
     uiPatterns: game.uiPatterns,
   });
-  const moduleSource = await buildRenderModule({
-    gameDir,
-    uiContractFingerprint,
-  });
+  const moduleSource = await format(
+    await buildRenderModule({
+      gameDir,
+      uiContractFingerprint,
+    }),
+    { parser: "babel" },
+  );
   const modulePath = path.join(outputRoot, renderModule);
   await mkdir(path.dirname(modulePath), { recursive: true });
   await writeFile(modulePath, moduleSource);
@@ -423,19 +698,19 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
 
   const protocol = await createReferenceProtocol({ referenceGame, coverage });
   const interaction = scenarioInteraction(referenceGame, coverage);
-  const resolve = {
-    surface: "gameplay",
-    scopeId: gameplayScopeId,
-    interactionKey: interaction.id,
-    interactionId: `${interaction.id}:player-1`,
-    intent: "invoke",
-  };
-  const requestDigest = digestUIFixtureRequest(resolve);
+  const { sourceRequest, targetRequest } = replayRequests(
+    coverage,
+    interaction.id,
+  );
+  const submissionParams = scenarioSubmissionParams(coverage);
   const exercise = await exerciseRenderedScenario({
     fixtureId,
     modulePath,
     protocol,
-    resolve,
+    sourceRequest,
+    targetRequest,
+    interactionId: `${interaction.id}:player-1`,
+    submissionParams,
   });
   const finalFrame = protocol.frames.find(
     (frame) => frame.id === exercise.finalFrameId,
@@ -450,6 +725,18 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     interactionId: `${interaction.id}:player-1`,
   });
 
+  const viewportTags = fixtureId.endsWith(".mobile")
+    ? ["phone", "touch"]
+    : ["desktop"];
+  const replay = buildReplay({
+    coverage,
+    interaction,
+    exercise,
+    finalFrame,
+    submissionDigest,
+    sourceRequest,
+    targetRequest,
+  });
   const fixture = compileUIScenarioFixture({
     id: fixtureId,
     title: `${referenceGame.displayName}: ${coverage.assertions[0]}`,
@@ -476,38 +763,10 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
       randomSeed: `${fixtureId}.seed`,
       locale: "en-US",
       timezone: "UTC",
-      viewportTags: fixtureId.endsWith(".mobile")
-        ? ["phone", "touch"]
-        : ["desktop"],
+      viewportTags,
     },
     protocol,
-    replay: [
-      {
-        stepId: `${fixtureId}.invoke`,
-        requestDigest,
-        resolve,
-        execute: { kind: "activate" },
-        expectedIdentity: {
-          stepId: `${fixtureId}.invoke`,
-          surface: "gameplay",
-          scopeId: gameplayScopeId,
-          interactionKey: exercise.resolution.interactionKey,
-          interactionId: resolve.interactionId,
-          actuatorId: exercise.resolution.actuator.actuatorId,
-          descriptorDigest: exercise.resolution.actuator.descriptorDigest,
-          draftDigest: exercise.resolution.actuator.draftDigest,
-        },
-        expect: {
-          frameId: finalFrame.id,
-          projectionDigest: finalFrame.projectionDigest,
-          semanticDigest: exercise.finalSemanticDigest,
-          submissionDigest,
-          visibleInteractionKeys: referenceGame.interactions.map(
-            (item) => item.id,
-          ),
-        },
-      },
-    ],
+    replay,
     expected: {
       finalSemanticDigest: exercise.finalSemanticDigest,
       submissionDigest,
@@ -526,8 +785,8 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     sha256: digestUIScenarioFixture(fixture),
     renderModule,
     renderModuleSha256: renderModuleDigest,
-    components: componentsFor(game.uiPatterns),
-    capabilities: capabilitiesFor(game.uiPatterns),
+    components: exercise.renderedComponents,
+    capabilities: capabilitiesForReplay(replay, viewportTags),
   };
 }
 

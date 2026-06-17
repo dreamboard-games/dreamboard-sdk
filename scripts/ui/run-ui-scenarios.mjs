@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { root } from "./reference-games-lib.mjs";
+import { repoCommandEnv, root } from "./reference-games-lib.mjs";
+import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
 
 const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
 
@@ -15,11 +16,17 @@ function parseArgs(argv) {
       options.changed = true;
       continue;
     }
+    if (arg === "--required") {
+      options.required = true;
+      continue;
+    }
     if (
       arg === "--scenario" ||
       arg === "--component" ||
       arg === "--capability" ||
-      arg === "--base"
+      arg === "--base" ||
+      arg === "--project" ||
+      arg === "--out"
     ) {
       options[arg.slice(2)] = argv[index + 1];
       index += 1;
@@ -37,7 +44,10 @@ function digest(value) {
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? root,
-    env: { ...process.env, ...options.env },
+    env:
+      command === "git"
+        ? repoCommandEnv({ ...process.env, ...options.env })
+        : { ...process.env, ...options.env },
     encoding: "utf8",
     stdio: options.stdio ?? "pipe",
   });
@@ -74,6 +84,22 @@ async function changedFiles(baseRef) {
 }
 
 function selectScenarios({ options, fixtures, changed }) {
+  if (options.required) {
+    const ids = new Set(fixtures.map((entry) => entry.id));
+    const missing = requiredWorkbenchScenarioIds.filter((id) => !ids.has(id));
+    if (missing.length > 0) {
+      throw new Error(
+        `Required Workbench scenarios are missing from the fixture bundle: ${missing.join(", ")}`,
+      );
+    }
+    return {
+      reason: "required",
+      scenarioIds: [...requiredWorkbenchScenarioIds],
+      changedExports: [],
+      fullSuite: false,
+    };
+  }
+
   if (options.scenario) {
     const ids = fixtures.map((entry) => entry.id);
     if (!ids.includes(options.scenario)) {
@@ -183,7 +209,22 @@ function selectScenarios({ options, fixtures, changed }) {
   };
 }
 
-function projectsForScenario(fixture) {
+function projectsForScenario(fixture, requestedProject) {
+  const knownProjects = new Set([
+    "chromium-desktop",
+    "chromium-touch-phone",
+    "webkit-phone",
+  ]);
+  if (requestedProject) {
+    if (!knownProjects.has(requestedProject)) {
+      throw new Error(
+        `Unknown Playwright project '${requestedProject}'. Expected one of: ${[
+          ...knownProjects,
+        ].join(", ")}`,
+      );
+    }
+    return [requestedProject];
+  }
   const capabilities = new Set(fixture.source?.capabilities ?? []);
   const viewportTags = new Set(fixture.environment?.viewportTags ?? []);
   const projects = ["chromium-desktop"];
@@ -193,6 +234,7 @@ function projectsForScenario(fixture) {
     viewportTags.has("touch")
   ) {
     projects.push("chromium-touch-phone");
+    projects.push("webkit-phone");
   }
   return projects;
 }
@@ -209,7 +251,10 @@ async function main() {
     changed: files,
   });
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
-  const artifactRoot = path.join(root, "artifacts/ui", runId);
+  const artifactRoot = path.resolve(
+    root,
+    options.out ?? path.join("artifacts/ui", runId),
+  );
   await mkdir(path.join(artifactRoot, "semantic"), { recursive: true });
   await mkdir(path.join(artifactRoot, "screenshots"), { recursive: true });
   await mkdir(path.join(artifactRoot, "traces"), { recursive: true });
@@ -229,11 +274,16 @@ async function main() {
     const fixture = await readJson(
       path.join(fixturesRoot, `${scenarioId}.fixture.json`),
     );
-    for (const project of projectsForScenario(fixture)) {
+    for (const project of projectsForScenario(fixture, options.project)) {
       const transcriptFile = path.join(
         artifactRoot,
         "transcripts",
         `${scenarioId}.${project}.txt`,
+      );
+      const evidenceFile = path.join(
+        artifactRoot,
+        "semantic",
+        `${scenarioId}.${project}.json`,
       );
       const test = run(
         "pnpm",
@@ -241,25 +291,57 @@ async function main() {
           "--filter",
           "@dreamboard-games/ui-workbench",
           "test",
-          "--project",
-          project,
+          `--project=${project}`,
+          "tests/scenario.spec.ts",
         ],
         {
-          env: { UI_SCENARIO_ID: scenarioId },
+          env: {
+            UI_SCENARIO_ID: scenarioId,
+            UI_SCENARIO_EVIDENCE_PATH: evidenceFile,
+            UI_SCENARIO_SCREENSHOT_DIR: path.join(artifactRoot, "screenshots"),
+          },
         },
       );
       await writeFile(
         transcriptFile,
         `${test.stdout ?? ""}${test.stderr ?? ""}`,
       );
+      const evidence =
+        test.status === 0 ? await readJson(evidenceFile) : undefined;
+      if (test.status === 0 && !evidence) {
+        throw new Error(
+          `${scenarioId} ${project} passed without writing measured evidence.`,
+        );
+      }
+      if (
+        evidence &&
+        (evidence.scenarioId !== scenarioId || evidence.project !== project)
+      ) {
+        throw new Error(
+          `${scenarioId} ${project} wrote evidence for ${evidence.scenarioId} ${evidence.project}.`,
+        );
+      }
+      if (
+        evidence &&
+        (evidence.projectionDigest !== fixture.expected.finalProjectionDigest ||
+          evidence.semanticDigest !== fixture.expected.finalSemanticDigest ||
+          evidence.submissionDigest !== fixture.expected.submissionDigest)
+      ) {
+        throw new Error(
+          `${scenarioId} ${project} measured evidence did not match fixture expectations.`,
+        );
+      }
       results.push({
         scenarioId,
         project,
         result: test.status === 0 ? "passed" : "failed",
-        projectionDigest: fixture.expected.finalProjectionDigest,
-        semanticDigest: fixture.expected.finalSemanticDigest,
-        submissionDigest: fixture.expected.submissionDigest,
-        screenshotFiles: [],
+        projectionDigest: evidence?.projectionDigest,
+        semanticDigest: evidence?.semanticDigest,
+        submissionDigest: evidence?.submissionDigest,
+        screenshotFiles: (evidence?.screenshots ?? []).map((file) =>
+          path.relative(root, file),
+        ),
+        evidenceFile: path.relative(root, evidenceFile),
         transcriptFile: path.relative(root, transcriptFile),
       });
       if (test.status !== 0) {

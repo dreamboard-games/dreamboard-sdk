@@ -1,7 +1,9 @@
 # UI Agent Iteration Workbench And Reference Games
 
-Status: active. Phase 02 and Phase 03 were reopened on 2026-06-17 by the
-[Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
+Status: complete for the required Workbench foundation: Hearts mobile
+interaction, Hex Network Trading desktop drag, and Worker Placement Tableau
+desktop draft. Additional scenarios, mobile touch-drag, and physical-device
+canaries are follow-up expansion.
 
 ## Executive decision
 
@@ -14,6 +16,12 @@ the source games.
 Storybook remains the fast environment for pure presentational components. It
 does not become a game-runtime emulator.
 
+The required Workbench set is `hearts.pass-three.mobile`,
+`hex-network-trading.place-route.desktop`, and
+`worker-placement-tableau.place-worker.desktop`. Hearts remains the sole
+required real-host parity golden; the other checked-in examples remain optional
+coverage.
+
 Move the authoritative, public-safe reference game source into this repository
 under `examples/reference-games/`. Treat those games as isolated consumers of a
 packed SDK, not workspace packages and not public demos. Compile their real
@@ -21,9 +29,9 @@ reducer scenarios into portable UI fixture bundles consumed by the Workbench.
 The internal repository consumes an immutable export of the same reference
 games and fixtures for selected real-host parity checks.
 
-This is a hard-cut design. Once every reference game has migrated, delete the
-duplicated game UI wrappers and deprecated SDK authoring APIs instead of
-maintaining two permanent paths.
+This is a hard-cut design. Once the required Hearts boundary and SDK contract
+tests have migrated, delete duplicated UI wrappers and deprecated SDK authoring
+APIs instead of maintaining two permanent paths.
 
 ## Why this plan
 
@@ -153,7 +161,7 @@ The concrete flow is:
    command transcripts.
 8. The candidate SDK is packed and installed into an isolated consumer before
    release proof is accepted.
-9. CI replays a smaller golden set in the internal real host and compares
+9. CI replays the Hearts golden scenario in the internal real host and compares
    projection, actuator, draft, submission, and final semantic digests.
 10. The run writes an evidence receipt that another agent or reviewer can
     inspect without replaying the entire session.
@@ -255,9 +263,9 @@ content digest. Edits flow one way.
 | [Phase 02](./phase-02-portable-ui-scenario-fixture-contract.md)           | SDK runtime/testing and internal scenario tooling          | Phase 01 source ownership | Compile reducer traces into portable version 3 plugin protocol tapes and UI fixtures           |
 | [Phase 03](./phase-03-deterministic-fixture-runtime.md)                   | SDK runtime                                                | Phase 02 schema           | Run the real transport-injected SDK runtime client against an in-memory fixture host           |
 | [Phase 04](./phase-04-ui-workbench-and-agent-catalog.md)                  | SDK developer tooling                                      | Phases 02-03              | Deliver the agent-facing Workbench, scenario catalog, and evidence receipts                    |
-| [Phase 05](./phase-05-browser-gesture-visual-and-accessibility-matrix.md) | SDK UI/runtime and browser automation                      | Phase 04 Workbench        | Verify real desktop/mobile input, drag behavior, visuals, semantics, and accessibility         |
-| [Phase 06](./phase-06-ui-ergonomics-hard-cut-and-example-migration.md)    | SDK UI/codegen and reference game owners                   | Phase 05 confidence suite | Source-complete SDK/generated hard cut, shared reference root migration, and ergonomics guard  |
-| [Phase 07](./phase-07-real-host-parity-and-cross-repo-verification.md)    | Internal product harness with SDK support                  | Phases 05-06              | Replay golden fixtures in the internal host and compare observable contracts                   |
+| [Phase 05](./phase-05-browser-gesture-visual-and-accessibility-matrix.md) | SDK UI/runtime and browser automation                      | Phase 04 Workbench        | Verify Hearts desktop/mobile input, visuals, semantics, layout, and accessibility              |
+| [Phase 06](./phase-06-ui-ergonomics-hard-cut-and-example-migration.md)    | SDK UI/codegen and reference game owners                   | Phase 05 confidence suite | Complete SDK/generated hard cut and the shared Hearts reference boundary                       |
+| [Phase 07](./phase-07-real-host-parity-and-cross-repo-verification.md)    | Internal product harness with SDK support                  | Phases 05-06              | Replay Hearts in the packed internal host and compare independently measured contracts         |
 | [Phase 08](./phase-08-ci-rollout-deletion-and-release-proof.md)           | SDK release and internal host owners                       | Phase 07 parity           | Enforce CI tiers, remove obsolete paths, and prove the release artifact                        |
 
 Phase 00 through Phase 05 create confidence without changing the public UI
@@ -281,8 +289,8 @@ and owner sign-off.
 6. Do not infer generated bindings from React tree inspection. New convenience
    APIs remain explicit and type checked.
 7. Do not accept screenshot-only confidence for stateful interactions.
-8. Do not keep deprecated UI authoring APIs after every reference game and
-   golden parity scenario has migrated.
+8. Do not keep deprecated UI authoring APIs after the required Hearts boundary
+   and generated contract tests have migrated.
 9. Do not use `PluginStateSnapshot` as a protocol, fixture, or React-store
    boundary. Keep session metadata, gameplay frames, host chrome, and transport
    sequencing separate.
@@ -304,21 +312,24 @@ and owner sign-off.
 
 - An agent can modify a UI component and obtain representative desktop and
   mobile evidence without building a source game or running the internal stack.
-- Every exported interactive component maps to at least one executable
-  Workbench scenario and one owner.
-- Drag scenarios use physical input in Chromium desktop and a real touch-input
-  path in Chromium mobile emulation.
-- Selected mobile drag scenarios pass a release canary on real iOS Safari and
-  Android Chrome devices.
+- Every exported interactive component has an owner and Storybook coverage;
+  runtime-aware components used by the required set map to executable Workbench
+  scenarios.
+- Hearts uses physical mouse click and browser touch tap input. Hex Network
+  Trading performs a physical desktop card drag, and Worker Placement Tableau
+  mutates and commits a runtime draft.
+- Physical iOS Safari and Android Chrome canaries are optional follow-up
+  evidence and become required only when release policy explicitly enables
+  `--require-device-canary`.
 - Visual assertions are paired with semantic snapshots and runtime transcripts.
-- Reference games install only the packed candidate SDK and pass from their own
-  lockfiles.
-- The same golden fixture bundle replays in the Workbench and internal host with
-  matching observable digests.
+- Hearts installs only the packed candidate SDK and passes from its own
+  lockfile.
+- The Hearts fixture expectation, source Workbench observation, and packed
+  internal-host observation are independently materialized and match.
 - Reference games have mechanic-based IDs, reviewed provenance, and no demo
   gallery registration.
-- Repeated mobile inset, hand-slot, action-panel, dialog, and root-binding
-  boilerplate is removed from migrated games.
+- The required Hearts reference uses the shared `Game.Viewport`/`Panel`
+  boundary without game-specific mobile inset or lifecycle wrappers.
 - Deprecated UI authoring APIs and stale test paths are deleted.
 - `pnpm ui:check`, packed consumer verification, and the selected real-host
   parity lane are required release evidence.

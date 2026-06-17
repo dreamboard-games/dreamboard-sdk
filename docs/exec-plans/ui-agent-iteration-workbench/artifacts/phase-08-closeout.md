@@ -2,8 +2,7 @@
 
 Date: 2026-06-17.
 
-Status: source-closed; release publication remains gated on the real-device
-canary receipt required by Phase 05.
+Status: complete for the required Workbench foundation.
 
 ## Completed
 
@@ -29,7 +28,7 @@ canary receipt required by Phase 05.
 - Updated the private Workbench package dependency boundary so dist-aliased SDK
   runtime imports resolve their UI runtime dependencies under pnpm's strict
   linker.
-- Added the internal UI parity workflow in `/Users/mac/code/dreamboard` and
+- Added the internal UI parity workflow in the sibling internal repository and
   updated the internal protocol guard to require
   `dreamboard-browser-interaction@3.0.0`.
 - Deleted internal editable published examples and public demo assets for
@@ -42,7 +41,7 @@ canary receipt required by Phase 05.
 
 ## Verification
 
-SDK commands run from `/Users/mac/code/dreamboard-sdk`:
+SDK commands run from `/Users/kevintang/code/dreamboard-sdk`:
 
 ```bash
 pnpm install
@@ -54,9 +53,9 @@ pnpm ui:fixtures:check
 pnpm ui:storybook:build
 pnpm ui:test:stories
 pnpm ui:test:visual
-pnpm ui:test
+pnpm ui:test --required
 pnpm ui:check
-pnpm ui:test:packed
+pnpm reference-games:test:packed --required
 pnpm ui:test:parity --scenario hearts.pass-three.mobile --out artifacts/ui-parity/phase-08-local --skip-build
 node --check scripts/ui/check-ui-hard-cut.mjs
 node --check scripts/ui/create-ui-release-proof.mjs
@@ -76,33 +75,34 @@ Results:
 - Fixture check: passed for 5 UI fixtures.
 - Storybook static build: passed.
 - Storybook interaction receipt:
-  `artifacts/ui-stories/2026-06-17T10-12-38-333Z/receipt.json`.
+  `artifacts/ui-stories/2026-06-17T11-51-34-576Z/receipt.json`.
 - Storybook visual receipt:
-  `artifacts/ui-visual/2026-06-17T10-12-54-551Z/receipt.json`.
+  `artifacts/ui-visual/2026-06-17T11-51-55-838Z/receipt.json`.
 - Workbench matrix receipt:
-  `artifacts/ui/2026-06-17T10-13-10-776Z/receipt.json`.
+  `artifacts/ui/2026-06-17T11-52-18-778Z/receipt.json`.
 - Packed reference consumer receipt:
   `build/reference-games/packed-consumer-receipt.json`.
 - SDK parity receipt:
-  `artifacts/ui-parity/phase-08-local/receipt.json`.
+  `artifacts/ui-parity/2026-06-17T11-53-19-987Z/receipt.json`.
 - `pnpm ui:check`: passed end to end.
 
-Internal commands run from `/Users/mac/code/dreamboard`:
+Internal commands run from `/Users/kevintang/code/internal`:
 
 ```bash
 bun test packages/demo-gallery/src packages/browser-demo-scenario-contract/test packages/ui-host-runtime/src/screenshot/projection-to-gameplay-frame.test.ts packages/compiler-core/src/demo-games/package-demo-games.test.ts
 node --check scripts/ui-fixtures/compile-internal-fixtures.mjs
 node --check scripts/check-browser-demo-compiled-replay-hard-cut.mjs
 node scripts/check-browser-demo-compiled-replay-hard-cut.mjs
-DREAMBOARD_SDK_REPO=/Users/mac/code/dreamboard-sdk pnpm verify:ui-parity --input ../dreamboard-sdk/artifacts/ui-parity/phase-08-local/input.json
+DREAMBOARD_SDK_REPO=/Users/kevintang/code/dreamboard-sdk pnpm verify:ui-parity --input ../dreamboard-sdk/artifacts/ui-parity/phase-08-local/input.json
 ```
 
 Results:
 
 - Focused internal tests: passed, 45 tests.
 - Internal browser-demo compiled replay hard-cut guard: passed.
-- Internal real-host UI parity: passed, receipt
-  `/Users/mac/code/dreamboard/build/verification/2026-06-17T10-14-23-675Z-1b4f3fd0/ui-parity/receipt.json`.
+- Internal real-host UI parity: passed. The SDK parity receipt retains the
+  internal observation at
+  `artifacts/ui-parity/2026-06-17T11-53-19-987Z/internal/observations/hearts.pass-three.mobile.json`.
 
 Absence searches:
 
@@ -116,12 +116,17 @@ Absence searches:
 
 ## Release Proof Boundary
 
-`pnpm ui:release-proof` is wired into the alpha release workflow and verifies
-the tarball, reference bundle, Storybook receipts, Workbench matrix, packed
-consumers, parity, and browser interaction protocol. It intentionally refuses
-to produce a passing release receipt without
-`UI_DEVICE_CANARY_RECEIPT` or `--device-canary-receipt`.
+`pnpm ui:release-proof` verifies the tarball, reference bundle, Storybook
+receipts, the required Hearts, Hex drag, and Worker draft Workbench matrix,
+their packed reference consumers, and independently measured Hearts real-host
+parity. The alpha workflow checks out the internal host and executes parity
+directly; it does not depend on repository-variable paths to external receipts.
+A real-device canary is optional unless `--require-device-canary` is supplied.
 
-No real iOS Safari / Android Chrome canary receipt exists in this local run, so
-the release-publish receipt is not minted here. This is the only remaining
-external evidence item before publication.
+Verified foundation receipt:
+
+`artifacts/ui-release-proof/drag-draft-foundation/receipt.json`
+
+All required gates passed. The receipt records
+`realDeviceCanary: "not-required"` and
+`parityScenarios: ["hearts.pass-three.mobile"]`.

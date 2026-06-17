@@ -24,8 +24,9 @@ function currentFrame(loaded: LoadedBrowserUIScenario | null) {
   if (!loaded) return null;
   const frameId = loaded.harness.getCurrentFrameId();
   return (
-    loaded.fixture.protocol.frames.find((candidate) => candidate.id === frameId) ??
-    null
+    loaded.fixture.protocol.frames.find(
+      (candidate) => candidate.id === frameId,
+    ) ?? null
   );
 }
 
@@ -73,6 +74,8 @@ export function ScenarioPage({
         installUIFixtureTestBridge({
           scenarioId: entry.id,
           harness: nextLoaded.harness,
+          runtime: nextLoaded.runtime,
+          replay: nextLoaded.fixture.replay,
           enabled: testMode,
         });
         unsubscribeFrame = nextLoaded.runtime.subscribeFrame(() => {
@@ -122,7 +125,9 @@ export function ScenarioPage({
               ? step.resolve.interactionId
               : undefined;
         if (!interactionId) {
-          throw new Error(`Replay step '${step.stepId}' is missing interactionId.`);
+          throw new Error(
+            `Replay step '${step.stepId}' is missing interactionId.`,
+          );
         }
         const validation = await loaded.runtime.validateInteraction(
           interactionId,

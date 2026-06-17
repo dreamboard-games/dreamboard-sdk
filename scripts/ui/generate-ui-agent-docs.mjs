@@ -14,9 +14,15 @@ import {
   referenceGamesRoot,
   readJson,
 } from "./reference-games-lib.mjs";
+import {
+  requiredReferenceGameIds,
+  requiredWorkbenchScenarioIds,
+} from "./required-ui-scenarios.mjs";
 
 const uiAgentDocPath = path.join(root, "docs/ui-agent-iteration.md");
 const referenceGamesDocPath = path.join(root, "docs/reference-games.md");
+const requiredScenarioIds = new Set(requiredWorkbenchScenarioIds);
+const requiredGameIds = new Set(requiredReferenceGameIds);
 
 function table(headers, rows) {
   return [
@@ -38,17 +44,18 @@ async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
       "`pnpm ui:test:changed --base origin/main`",
     ],
     ["`HandView` behavior", "`pnpm ui:test --component HandView`"],
+    ["Pointer/drag adapter", "`pnpm ui:test --capability pointer-drag`"],
     [
-      "Pointer/drag adapter",
-      "`pnpm ui:test --capability touch-drag && pnpm ui:test:parity`",
+      "Runtime draft",
+      "`pnpm ui:test --capability runtime-draft && pnpm ui:test:packed`",
     ],
     [
-      "Runtime draft or submit",
+      "Runtime submit",
       "`pnpm ui:test --capability runtime-submit && pnpm ui:test:packed`",
     ],
     [
       "Browser-interaction protocol",
-      "Full `pnpm ui:check`, packed proof, and all golden parity",
+      "Full `pnpm ui:check`, Hearts packed proof, and Hearts real-host parity",
     ],
   ];
   const componentRows = Object.entries(componentIndex.components).map(
@@ -60,6 +67,9 @@ async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
   );
   const scenarioRows = scenarios.map((scenario) => [
     `\`${scenario.id}\``,
+    requiredScenarioIds.has(scenario.id)
+      ? "Required foundation"
+      : "Optional follow-up",
     scenario.title,
     formatList(scenario.components.map((component) => `\`${component}\``)),
     formatList(scenario.capabilities.map((capability) => `\`${capability}\``)),
@@ -83,7 +93,9 @@ This guide is generated from the live UI scenario catalog and root command map.
 
 Use \`fixtures/ui/component-scenario-index.json\` to map changed component files
 to scenario IDs. Shared runtime, theme, fixture, or browser-interaction changes
-fall back to the full Workbench suite.
+fall back to the required Workbench scenario set: Hearts mobile interaction,
+desktop card drag, and desktop runtime draft. Other checked-in scenarios remain
+available for focused follow-up coverage but do not block the foundation release.
 
 ${table(["Change", "Minimum command"], decisionRows)}
 
@@ -93,7 +105,7 @@ ${table(["Component", "Workbench scenarios", "Capabilities"], componentRows)}
 
 ## Scenarios
 
-${table(["Scenario", "Title", "Components", "Capabilities"], scenarioRows)}
+${table(["Scenario", "Release role", "Title", "Components", "Capabilities"], scenarioRows)}
 
 ## Evidence
 
@@ -116,6 +128,9 @@ async function renderReferenceGamesDoc({ scenarios }) {
     );
     rows.push([
       `\`${game.id}\``,
+      requiredGameIds.has(game.id)
+        ? "Required foundation"
+        : "Optional follow-up",
       game.displayName,
       formatList(manifest.mechanics.map((mechanic) => `\`${mechanic}\``)),
       formatList(manifest.uiPatterns.map((pattern) => `\`${pattern}\``)),
@@ -135,13 +150,16 @@ Reference games are SDK-owned packed consumers. They use exact SDK dependency
 versions, remain out of public demo galleries, and provide the fixture bundle
 consumed by the UI Workbench and parity proof.
 
-${table(["Game", "Display name", "Mechanics", "UI patterns", "Scenarios"], rows)}
+${table(["Game", "Release role", "Display name", "Mechanics", "UI patterns", "Scenarios"], rows)}
 
 ## Packed Verification
 
 Run \`pnpm reference-games:check\` for source validation and
-\`pnpm reference-games:test:packed\` for isolated packed-consumer proof. The
-packed proof must install the SDK tarball rather than workspace source links.
+\`pnpm reference-games:test:packed --required\` for the required isolated
+packed-consumer proof. The packed proof covers the Hearts, Hex Network Trading,
+and Worker Placement Tableau consumers and must install the SDK tarball rather
+than workspace source links. Other reference consumers are optional follow-up
+coverage.
 
 ## Fixture Bundle
 

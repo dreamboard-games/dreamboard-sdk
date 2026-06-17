@@ -8,9 +8,18 @@
     "placement-confirmation"
   ],
   "assertions": [
-    "eligible hex edges are targetable",
+    "route card drags to an eligible edge before commit",
     "resource hand updates before confirmation",
     "trade controls validate offered resources",
     "route placement remains pending until confirmed"
-  ]
+  ],
+  "replay": {
+    "kind": "drag",
+    "cardInputKey": "routeCardId",
+    "cardId": "route-card",
+    "destinationInputKey": "edgeId",
+    "destinationKind": "edge",
+    "destinationId": "forest-ore",
+    "eligibleDestinationIds": ["forest-ore", "ore-river"]
+  }
 }
