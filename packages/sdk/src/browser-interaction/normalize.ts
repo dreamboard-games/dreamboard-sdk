@@ -27,6 +27,7 @@ import type {
   BrowserInteractionDiagnostic,
   BrowserInteractionEffectPattern,
   BrowserInteractionEntity,
+  BrowserInteractionPointerTarget,
   BrowserInteractionRawRecord,
   BrowserInteractionReadiness,
   BrowserInteractionRegistry,
@@ -45,6 +46,7 @@ interface PendingInteraction {
   readiness: BrowserInteractionReadiness;
   rootSeen: boolean;
   actuators: BrowserInteractionActuator[];
+  pointerTargets: BrowserInteractionPointerTarget[];
   diagnostics: BrowserInteractionDiagnostic[];
 }
 
@@ -134,7 +136,9 @@ export function normalizeBrowserInteractionRecords(
     if (
       !surface ||
       !scopeId ||
-      (role !== "interaction" && role !== "actuator")
+      (role !== "interaction" &&
+        role !== "actuator" &&
+        role !== "pointer-target")
     ) {
       diagnostics.push(
         diagnosticFor({
@@ -193,6 +197,40 @@ export function normalizeBrowserInteractionRecords(
       interaction.readiness = parseReadiness(
         text(attributes, BROWSER_INTERACTION_ATTRIBUTES.readiness),
       );
+      continue;
+    }
+
+    if (role === "pointer-target") {
+      const pointerTarget = parseGameplayPointerTarget(attributes, {
+        surface,
+        scopeId,
+        interactionKey,
+        interactionId,
+      });
+      if (pointerTarget.diagnostics.length > 0) {
+        interaction.diagnostics.push(...pointerTarget.diagnostics);
+        diagnostics.push(...pointerTarget.diagnostics);
+      }
+      const registered = registry.surfaces.get(surface);
+      if (registered?.effectKinds) {
+        for (const pattern of pointerTarget.acceptedEffectPatterns) {
+          const effectKind =
+            pattern.kind === "exact" ? pattern.effect.kind : pattern.effectKind;
+          if (!registered.effectKinds.includes(effectKind)) {
+            const diagnostic = diagnosticFor({
+              code: "unknown-surface-effect",
+              message: `Unknown browser interaction effect '${effectKind}' for surface '${surface}'.`,
+              surface,
+              scopeId,
+              interactionKey,
+              targetId: pointerTarget.targetId,
+            });
+            interaction.diagnostics.push(diagnostic);
+            diagnostics.push(diagnostic);
+          }
+        }
+      }
+      interaction.pointerTargets.push(pointerTarget);
       continue;
     }
 
@@ -263,11 +301,17 @@ export function normalizeBrowserInteractionRecords(
   for (const surface of surfaces.values()) {
     if (surface.kind !== "semantic") continue;
     for (const interaction of surface.interactions.values()) {
-      if (interaction.rootSeen || interaction.actuators.length === 0) continue;
+      if (
+        interaction.rootSeen ||
+        (interaction.actuators.length === 0 &&
+          interaction.pointerTargets.length === 0)
+      ) {
+        continue;
+      }
       const diagnostic = diagnosticFor({
         code: "orphan-actuator",
         message:
-          "Browser interaction actuators require a rendered semantic root.",
+          "Browser interaction actuators and pointer targets require a rendered semantic root.",
         surface: surface.surface,
         scopeId: surface.scopeId,
         interactionKey: interaction.interactionKey,
@@ -302,6 +346,10 @@ export function validateBrowserInteractionSnapshot(
     if (!isSemanticSurfaceSnapshot(surface)) continue;
     for (const interaction of surface.interactions) {
       const enabledByKey = new Map<string, BrowserInteractionActuator[]>();
+      const enabledTargetsByKey = new Map<
+        string,
+        BrowserInteractionPointerTarget[]
+      >();
       for (const actuator of interaction.actuators) {
         if (!actuator.enabled) continue;
         const key = actuatorIdentityKey({
@@ -314,6 +362,18 @@ export function validateBrowserInteractionSnapshot(
         group.push(actuator);
         enabledByKey.set(key, group);
       }
+      for (const pointerTarget of interaction.pointerTargets) {
+        if (!pointerTarget.enabled) continue;
+        const key = pointerTargetIdentityKey({
+          surface: surface.surface,
+          scopeId: surface.scopeId,
+          interactionKey: interaction.interactionKey,
+          pointerTarget,
+        });
+        const group = enabledTargetsByKey.get(key) ?? [];
+        group.push(pointerTarget);
+        enabledTargetsByKey.set(key, group);
+      }
       for (const [key, actuators] of enabledByKey) {
         if (actuators.length > 1) {
           diagnostics.push(
@@ -325,6 +385,20 @@ export function validateBrowserInteractionSnapshot(
               interactionKey: interaction.interactionKey,
               intent: actuators[0]?.intent,
               actuatorId: actuators[0]?.actuatorId,
+            }),
+          );
+        }
+      }
+      for (const [key, pointerTargets] of enabledTargetsByKey) {
+        if (pointerTargets.length > 1) {
+          diagnostics.push(
+            diagnosticFor({
+              code: "duplicate-enabled-pointer-target",
+              message: `Duplicate enabled pointer target for '${key}'.`,
+              surface: surface.surface,
+              scopeId: surface.scopeId,
+              interactionKey: interaction.interactionKey,
+              targetId: pointerTargets[0]?.targetId,
             }),
           );
         }
@@ -345,8 +419,21 @@ function diagnosticsForInvalidAcceptedPatterns(
   interaction: BrowserInteractionEntity,
 ): BrowserInteractionDiagnostic[] {
   const diagnostics: BrowserInteractionDiagnostic[] = [];
-  for (const actuator of interaction.actuators) {
-    for (const pattern of actuator.acceptedEffectPatterns) {
+  for (const record of [
+    ...interaction.actuators.map((actuator) => ({
+      patterns: actuator.acceptedEffectPatterns,
+      intent: actuator.intent,
+      actuatorId: actuator.actuatorId,
+      targetId: undefined,
+    })),
+    ...interaction.pointerTargets.map((pointerTarget) => ({
+      patterns: pointerTarget.acceptedEffectPatterns,
+      intent: undefined,
+      actuatorId: undefined,
+      targetId: pointerTarget.targetId,
+    })),
+  ]) {
+    for (const pattern of record.patterns) {
       if (
         pattern.kind === "match" &&
         Object.keys(pattern.fields ?? {}).length === 0 &&
@@ -360,8 +447,9 @@ function diagnosticsForInvalidAcceptedPatterns(
             surface: surface.surface,
             scopeId: surface.scopeId,
             interactionKey: interaction.interactionKey,
-            intent: actuator.intent,
-            actuatorId: actuator.actuatorId,
+            intent: record.intent,
+            actuatorId: record.actuatorId,
+            targetId: record.targetId,
           }),
         );
       }
@@ -548,6 +636,54 @@ function parseGameplayActuator(
   };
 }
 
+function parseGameplayPointerTarget(
+  attributes: Readonly<Record<string, string | boolean | null | undefined>>,
+  context: {
+    surface: string;
+    scopeId: string;
+    interactionKey: string;
+    interactionId: string;
+  },
+): BrowserInteractionPointerTarget {
+  const diagnostics: BrowserInteractionDiagnostic[] = [];
+  const targetId = text(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.pointerTargetId,
+  );
+  const enabled = parseEnabled(
+    attributes[BROWSER_INTERACTION_ATTRIBUTES.pointerTargetEnabled],
+  );
+  const acceptedEffectPatterns = parseEffectPatternList(
+    attributes,
+    BROWSER_INTERACTION_ATTRIBUTES.acceptedEffectPatterns,
+    context,
+    "pointer-target",
+    diagnostics,
+  );
+
+  if (!targetId) {
+    diagnostics.push(
+      diagnosticFor({
+        code: "invalid-record",
+        message:
+          "Browser interaction pointer target records require a target id.",
+        ...context,
+      }),
+    );
+  }
+
+  return {
+    targetId,
+    descriptorDigest: optionalText(
+      attributes,
+      BROWSER_INTERACTION_ATTRIBUTES.descriptorDigest,
+    ),
+    enabled,
+    acceptedEffectPatterns,
+    diagnostics: diagnostics.sort(compareDiagnostic),
+  };
+}
+
 function parseEffectList(
   attributes: Readonly<Record<string, string | boolean | null | undefined>>,
   attribute: string,
@@ -669,6 +805,7 @@ function getInteraction(
     readiness: "ready",
     rootSeen: false,
     actuators: [],
+    pointerTargets: [],
     diagnostics: [],
   };
   surface.interactions.set(interactionKey, next);
@@ -695,6 +832,7 @@ function finalizeSurface(
       draftDigest: interaction.draftDigest,
       readiness: interaction.readiness,
       actuators: interaction.actuators.sort(compareActuator),
+      pointerTargets: interaction.pointerTargets.sort(comparePointerTarget),
       diagnostics: interaction.diagnostics.sort(compareDiagnostic),
     }))
     .sort((a, b) => a.interactionKey.localeCompare(b.interactionKey));
@@ -860,6 +998,22 @@ export function actuatorIdentityKey(input: {
   });
 }
 
+export function pointerTargetIdentityKey(input: {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly pointerTarget: Pick<BrowserInteractionPointerTarget, "targetId">;
+}): string {
+  return [
+    input.surface,
+    input.scopeId,
+    input.interactionKey,
+    input.pointerTarget.targetId,
+  ]
+    .map((part) => encodeURIComponent(part))
+    .join("|");
+}
+
 export function isGameplaySurfaceSnapshot(
   surface: BrowserInteractionSurfaceSnapshot,
 ): surface is BrowserInteractionSemanticSurfaceSnapshot<
@@ -979,6 +1133,13 @@ function compareActuator(
   b: BrowserInteractionActuator,
 ): number {
   return a.actuatorId.localeCompare(b.actuatorId);
+}
+
+function comparePointerTarget(
+  a: BrowserInteractionPointerTarget,
+  b: BrowserInteractionPointerTarget,
+): number {
+  return a.targetId.localeCompare(b.targetId);
 }
 
 function compareDiagnostic(

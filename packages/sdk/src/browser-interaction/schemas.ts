@@ -85,6 +85,7 @@ export const browserInteractionDiagnosticSchema = z.object({
   interactionKey: z.string().optional(),
   intent: z.string().optional(),
   actuatorId: z.string().optional(),
+  targetId: z.string().optional(),
 });
 
 export const browserInteractionActuatorSchema = z.object({
@@ -111,6 +112,14 @@ export const browserInteractionActuatorSchema = z.object({
   diagnostics: z.array(browserInteractionDiagnosticSchema),
 });
 
+export const browserInteractionPointerTargetSchema = z.object({
+  targetId: z.string(),
+  enabled: z.boolean(),
+  acceptedEffectPatterns: z.array(browserInteractionEffectPatternSchema),
+  descriptorDigest: z.string().optional(),
+  diagnostics: z.array(browserInteractionDiagnosticSchema),
+});
+
 export const browserGameplayInteractionSchema = z.object({
   interactionKey: z.string(),
   interactionId: z.string(),
@@ -118,6 +127,7 @@ export const browserGameplayInteractionSchema = z.object({
   draftDigest: z.string().optional(),
   readiness: z.enum(BROWSER_INTERACTION_READINESS_VALUES),
   actuators: z.array(browserInteractionActuatorSchema),
+  pointerTargets: z.array(browserInteractionPointerTargetSchema),
   diagnostics: z.array(browserInteractionDiagnosticSchema),
 });
 

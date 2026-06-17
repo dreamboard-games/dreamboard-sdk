@@ -16,6 +16,8 @@ import type {
   BrowserInteractionEffectResolution,
   BrowserInteractionEntity,
   BrowserInteractionIntentRequest,
+  BrowserInteractionPointerTarget,
+  BrowserInteractionPointerTargetResolution,
   BrowserInteractionResolution,
   BrowserInteractionSemanticSurfaceSnapshot,
   BrowserInteractionSnapshot,
@@ -288,6 +290,110 @@ export function resolveBrowserInteractionEffect(
   };
 }
 
+export function resolveBrowserPointerTarget(
+  snapshot: BrowserInteractionSnapshot,
+  request: BrowserInteractionEffectRequest,
+): BrowserInteractionPointerTargetResolution {
+  const snapshotDiagnostics = [
+    ...snapshot.diagnostics,
+    ...validateBrowserInteractionSnapshot(snapshot),
+  ];
+  if (
+    snapshotDiagnostics.some((diagnostic) => diagnostic.severity === "error")
+  ) {
+    return {
+      ok: false,
+      code: "invalid-snapshot",
+      diagnostics: snapshotDiagnostics,
+    };
+  }
+
+  const effectDiagnostics = validateEffectRequest(request.effect, request);
+  if (effectDiagnostics.length > 0) {
+    return {
+      ok: false,
+      code: "invalid-effect",
+      diagnostics: effectDiagnostics,
+    };
+  }
+
+  const surfaces = matchingSurfaces(snapshot, request);
+  const matches = collectPointerTargetMatches(surfaces, request).filter(
+    (match) =>
+      match.pointerTarget.acceptedEffectPatterns.some((pattern) =>
+        browserInteractionEffectPatternMatches(pattern, request.effect),
+      ),
+  );
+  const enabledMatches = matches.filter((match) => match.pointerTarget.enabled);
+  const actionableMatches =
+    request.allowDisabled === true ? matches : enabledMatches;
+
+  if (actionableMatches.length === 1) {
+    const match = actionableMatches[0];
+    if (!match) throw new Error("unreachable browser pointer target match");
+    return {
+      ok: true,
+      pointerTarget: match.pointerTarget,
+      surface: match.surface.surface,
+      scopeId: match.surface.scopeId,
+      interactionKey: match.interaction.interactionKey,
+      match: "accepted-pattern",
+      effect: request.effect,
+      diagnostics: [],
+    };
+  }
+
+  if (actionableMatches.length > 1) {
+    return {
+      ok: false,
+      code: "ambiguous",
+      diagnostics: actionableMatches.map((match) =>
+        diagnosticFor({
+          code: "ambiguous-pointer-target",
+          message:
+            "Browser interaction effect matched multiple pointer targets.",
+          surface: match.surface.surface,
+          scopeId: match.surface.scopeId,
+          interactionKey: match.interaction.interactionKey,
+          targetId: match.pointerTarget.targetId,
+        }),
+      ),
+    };
+  }
+
+  if (matches.length > 0 && enabledMatches.length === 0) {
+    return {
+      ok: false,
+      code: "unavailable",
+      diagnostics: [
+        diagnosticFor({
+          code: "disabled-pointer-target",
+          message:
+            "Browser interaction pointer target exists but is not enabled.",
+          surface: request.surface,
+          scopeId: request.scopeId,
+          interactionKey: request.interactionKey,
+        }),
+      ],
+    };
+  }
+
+  return {
+    ok: false,
+    code: "not-found",
+    diagnostics: [
+      diagnosticFor({
+        code: "missing-effect",
+        message:
+          "Browser interaction effect is not accepted by any pointer target.",
+        surface: request.surface,
+        scopeId: request.scopeId,
+        interactionKey: request.interactionKey,
+      }),
+    ],
+  };
+}
+
 function actuatorMatchesRequest(
   actuator: BrowserInteractionActuator,
   request: BrowserInteractionIntentRequest,
@@ -436,6 +542,36 @@ function collectInteractionMatches(
         surface,
         interaction,
         actuator,
+      }));
+    }),
+  );
+}
+
+function collectPointerTargetMatches(
+  surfaces: readonly BrowserInteractionSemanticSurfaceSnapshot[],
+  request: Pick<
+    BrowserInteractionEffectRequest,
+    "interactionKey" | "interactionId"
+  >,
+) {
+  return surfaces.flatMap((surface) =>
+    surface.interactions.flatMap((interaction) => {
+      if (
+        request.interactionKey !== undefined &&
+        interaction.interactionKey !== request.interactionKey
+      ) {
+        return [];
+      }
+      if (
+        request.interactionId !== undefined &&
+        interaction.interactionId !== request.interactionId
+      ) {
+        return [];
+      }
+      return interaction.pointerTargets.map((pointerTarget) => ({
+        surface,
+        interaction,
+        pointerTarget,
       }));
     }),
   );

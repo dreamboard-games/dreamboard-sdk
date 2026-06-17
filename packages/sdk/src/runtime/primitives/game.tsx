@@ -1,4 +1,11 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import type { PlayerId } from "@dreamboard/manifest-contract";
 import { useStore } from "zustand";
 import {
@@ -22,6 +29,7 @@ import {
   clearInteractionRoute,
   getInteractionDraftReadiness,
 } from "../utils/interaction-router.js";
+import { useOverlayInsets } from "../../ui/components.js";
 
 export type GamePlayer<PlayerIdValue extends string = PlayerId> = Omit<
   Player,
@@ -132,6 +140,10 @@ export interface GameChromeProps<
   ) => ReactNode;
 }
 
+export interface GameViewportProps extends HTMLAttributes<HTMLDivElement> {
+  children?: ReactNode;
+}
+
 type GameActionErrorHandler = (error: unknown) => void;
 
 const GameActionErrorContext = createContext<GameActionErrorHandler | null>(
@@ -208,12 +220,7 @@ function useGameRenderState<
           isCurrentPlayer: playerId === controllingPlayerId,
         };
       }),
-    [
-      activePlayers,
-      controllingPlayerId,
-      playersById,
-      turnOrder,
-    ],
+    [activePlayers, controllingPlayerId, playersById, turnOrder],
   );
 
   return {
@@ -338,6 +345,23 @@ export function GameChrome<
   );
 }
 
+export function GameViewport({ children, style, ...props }: GameViewportProps) {
+  const { bottom } = useOverlayInsets();
+  const viewportStyle = {
+    "--dreamboard-bottom-overlay-inset": `${bottom}px`,
+    "--dreamboard-safe-area-bottom": "env(safe-area-inset-bottom, 0px)",
+    minHeight: "100dvh",
+    paddingBottom:
+      "calc(var(--dreamboard-bottom-overlay-inset) + var(--dreamboard-safe-area-bottom))",
+    ...style,
+  } as CSSProperties;
+  return (
+    <div data-dreamboard-game-viewport="" {...props} style={viewportStyle}>
+      {children}
+    </div>
+  );
+}
+
 function pendingInputState(
   input: InteractionInputDescriptor,
 ): GamePendingInputState {
@@ -379,4 +403,5 @@ function humanizeInputKey(key: string): string {
 export const Game = {
   Root: GameRoot,
   Chrome: GameChrome,
+  Viewport: GameViewport,
 };

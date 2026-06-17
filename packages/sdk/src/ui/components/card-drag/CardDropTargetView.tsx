@@ -32,6 +32,8 @@ export interface CardDropTargetViewProps {
   order?: number;
   /** ARIA role override; defaults to `button`. */
   role?: string;
+  /** SDK browser-interaction protocol attributes for runtime drag targets. */
+  browserInteractionAttributes?: Record<string, string | boolean>;
 }
 
 export function CardDropTargetView({
@@ -43,6 +45,7 @@ export function CardDropTargetView({
   style,
   order,
   role = "button",
+  browserInteractionAttributes,
 }: CardDropTargetViewProps) {
   const surface = useCardDragSurface();
   const ref = useRef<HTMLDivElement | null>(null);
@@ -143,6 +146,7 @@ export function CardDropTargetView({
   return (
     <div
       ref={ref}
+      {...browserInteractionAttributes}
       data-dreamboard-card-drop-target=""
       data-target-id={targetId}
       data-keyboard-focused={keyboardFocused ? "true" : undefined}

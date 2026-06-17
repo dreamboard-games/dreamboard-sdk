@@ -1,6 +1,12 @@
 # Phase 05: Browser, Gesture, Visual, And Accessibility Matrix
 
-Status: proposed.
+Status: source-complete.
+
+Source closeout is recorded in
+`docs/exec-plans/ui-agent-iteration-workbench/artifacts/phase-05-browser-gesture-visual-accessibility.md`.
+The deterministic SDK and Workbench implementation is complete; the real-device
+mobile canary and 50-pass golden promotion threshold remain release gates before
+publication when gesture or browser-interaction code changes.
 
 ## Objective
 

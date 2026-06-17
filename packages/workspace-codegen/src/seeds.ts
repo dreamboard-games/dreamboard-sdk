@@ -36,6 +36,7 @@ import {
   type BoardHexViewProps as BoardHexViewPropsGeneric,
   type BoardSpaceTargetProps as BoardSpaceTargetPropsGeneric,
   type ClientParamSchemaMap,
+  type DefineGameUIConfig,
   type DreamboardUI,
   type GameMeState,
   type GamePlayersState,
@@ -55,6 +56,7 @@ import {
   type WorkspaceHandSurfaceDescriptor,
   type WorkspaceHandSurface,
   type WorkspaceInteractionFormDescriptor,
+  type WorkspaceInteractionFormDialogProps,
   type WorkspaceInteractionSlotComponent,
   type WorkspaceInteractionFormsDescriptor,
   type WorkspacePileSurface,
@@ -613,7 +615,7 @@ type InteractionInputSlotByCollectorKind<
 export type InteractionFormSurface<Key extends InteractionKey> = {
   readonly Root: InteractionSlotComponent;
   readonly Form: DreamboardUI<typeof uiContract>["Interaction"]["Form"];
-  readonly Dialog: DreamboardUI<typeof uiContract>["Interaction"]["Dialog"];
+  readonly Dialog: (props: WorkspaceInteractionFormDialogProps) => ReactElement | null;
   readonly State: DreamboardUI<typeof uiContract>["Interaction"]["State"];
   readonly Arm: DreamboardUI<typeof uiContract>["Interaction"]["Trigger"];
   readonly Submit: DreamboardUI<typeof uiContract>["Interaction"]["Submit"];
@@ -757,8 +759,9 @@ export type HandAuthoredTarget<
 
 /**
  * Summary projected from the live draft for a single hand. Authors render
- * counts and validity hints via \`renderSummary\` or mirror them to outside
- * state via \`onSelectionSummary\`.
+ * counts and validity hints through the compound \`hand.Summary\` and
+ * \`hand.Actions\` slots, or mirror them to outside state via
+ * \`onSelectionSummary\`.
  */
 export type HandSelectionSummary<Card extends string> = {
   readonly selectedCount: number;
@@ -805,35 +808,33 @@ export type HandSurfaceProps<
     intent: HandCardIntent<Card, HandAuthoredTarget<Card, Space, Edge, Vertex>>,
   ) => void;
   /**
-   * Render-safe slot for selection summary content. Fires during render
-   * with the latest projected summary so authors can compose count chrome
-   * (e.g. "3 of 5 selected") without owning effect timing. Use
-   * \`onSelectionSummary\` for analytics or external state mirrors that
-   * need an effect.
-   */
-  renderSummary?: (summary: HandSelectionSummary<Card>) => ReactNode;
-  /**
-   * Render-safe slot for the hand's commit/action chrome (e.g. a submit
-   * button for a many-select interaction). Receives the same live summary as
-   * \`renderSummary\`. Rendered below the hand inline on desktop and pinned as a
-   * sticky footer inside the mobile dock, so the action stays reachable while
-   * the hand is docked — prefer this over anchoring the action elsewhere on
-   * the board, where the dock would otherwise cover it.
-   */
-  renderActions?: (summary: HandSelectionSummary<Card>) => ReactNode;
-  /**
    * Optional selection summary observer. Invoked from a layout effect so
    * consumers may safely call \`setState\` in response.
    */
   onSelectionSummary?: (summary: HandSelectionSummary<Card>) => void;
 };
 
-type HandCardsComponent<
+type HandComponent<
   Card extends string,
   Space extends string,
   Edge extends string,
   Vertex extends string,
-> = InteractionSlotComponent<HandSurfaceProps<Card, Space, Edge, Vertex>>;
+> = InteractionSlotComponent<
+  Omit<HandSurfaceProps<Card, Space, Edge, Vertex>, "children"> & {
+    children: ReactNode;
+  }
+>;
+
+type HandCardsComponent = InteractionSlotComponent<{
+  children: (
+    card: WorkspaceZoneCard,
+    state: InteractionVisualState,
+  ) => ReactNode;
+}>;
+
+type HandSummaryComponent<Card extends string> = InteractionSlotComponent<{
+  children?: ReactNode | ((summary: HandSelectionSummary<Card>) => ReactNode);
+}>;
 
 /**
  * Always-visible staging surface for a many-select card collection (e.g. the
@@ -856,12 +857,15 @@ export type HandStagingProps = {
 type HandStagingComponent = InteractionSlotComponent<HandStagingProps>;
 
 export type HandSurface<Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[]> = {
-  readonly Hand: HandCardsComponent<
+  readonly Hand: HandComponent<
     CardId & string,
     SpaceId & string,
     EdgeId & string,
     VertexId & string
   >;
+  readonly Cards: HandCardsComponent;
+  readonly Summary: HandSummaryComponent<CardId & string>;
+  readonly Actions: HandSummaryComponent<CardId & string>;
   readonly Card: ZoneCardComponent;
   readonly Staging: HandStagingComponent;
   readonly slot: {
@@ -1144,6 +1148,21 @@ type WorkspaceUI = Omit<
 	  defineSurfaces<const Spec extends WorkspaceSurfaceSpec>(
 	    spec: Spec,
 	  ): () => WorkspaceSurfaceValue<Spec>;
+	  defineGameUI<Surfaces>(
+	    config: DefineGameUIConfig<GameRootState, Surfaces> & {
+	      useSurfaces: () => Surfaces;
+	      interactionRoutes?: (context: {
+	        game: GameRootState;
+	        surfaces: Surfaces;
+	      }) => InteractionRoutes;
+	      phases: {
+	        readonly [Phase in PhaseName]: (context: {
+	          game: GameRootState;
+	          surfaces: Surfaces;
+	        }) => ReactNode;
+	      };
+	    },
+	  ): (props: Omit<UIRootProps, "children">) => ReactElement;
 	  readonly Game: TypedGame<typeof uiContract, GameView, PlayerId, PhaseName>;
 	  readonly Interaction: Pick<DreamboardUI<typeof uiContract>["Interaction"], "State" | "Dialog"> & {
 	    useForm<Key extends InteractionKey>(interaction: Key): InteractionFormSurface<Key>;

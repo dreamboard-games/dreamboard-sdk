@@ -32,14 +32,18 @@ export {
 export {
   createBrowserInteractionActuatorAttributes,
   createBrowserInteractionActuatorKey,
+  createBrowserInteractionPointerTargetAttributes,
   createBrowserInteractionRootAttributes,
   createGameplayActuatorAttributes,
   createGameplayInteractionRootAttributes,
+  createGameplayPointerTargetAttributes,
   type BrowserInteractionActuatorAttributesInput,
   type BrowserInteractionAttributeMap,
+  type BrowserInteractionPointerTargetAttributesInput,
   type BrowserInteractionRootAttributesInput,
   type GameplayActuatorAttributesInput,
   type GameplayInteractionRootAttributesInput,
+  type GameplayPointerTargetAttributesInput,
 } from "./attributes.js";
 export {
   createBrowserInteractionRegistry,
@@ -51,6 +55,7 @@ export {
   actuatorIdentityKey,
   isSemanticSurfaceSnapshot,
   normalizeBrowserInteractionRecords,
+  pointerTargetIdentityKey,
   targetIdentityKey,
   validateBrowserInteractionSnapshot,
   type NormalizeBrowserInteractionRecordsOptions,
@@ -58,6 +63,7 @@ export {
 export {
   resolveBrowserInteractionEffect,
   resolveBrowserInteractionIntent,
+  resolveBrowserPointerTarget,
 } from "./resolve.js";
 export { readBrowserInteractionSnapshot } from "./dom.js";
 export {
@@ -67,6 +73,7 @@ export {
   browserGameplaySurfaceSnapshotSchema,
   browserInteractionActuatorSchema,
   browserInteractionDiagnosticSchema,
+  browserInteractionPointerTargetSchema,
   browserInteractionSnapshotSchema,
   browserSemanticSurfaceSnapshotSchema,
   browserUnknownSurfaceSnapshotSchema,
@@ -89,6 +96,10 @@ export type {
   BrowserInteractionIntentRequest,
   BrowserInteractionPreparationTarget,
   BrowserInteractionProtocolIdentity,
+  BrowserInteractionPointerTarget,
+  BrowserInteractionPointerTargetResolution,
+  BrowserInteractionPointerTargetResolutionFailure,
+  BrowserInteractionPointerTargetResolutionSuccess,
   BrowserInteractionRawRecord,
   BrowserInteractionReadiness,
   BrowserInteractionRegistry,

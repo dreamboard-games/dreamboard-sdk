@@ -1,5 +1,13 @@
 import type { ReactElement, ReactNode } from "react";
 import { createElement } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../ui/components.js";
 import type {
   InteractionDialogProps,
   InteractionFormPrimitiveProps,
@@ -13,6 +21,19 @@ import type {
   WorkspaceInteractionFormDescriptor,
   WorkspaceInteractionFormsDescriptor,
 } from "./types.js";
+
+export interface WorkspaceInteractionFormDialogProps extends Omit<
+  InteractionDialogProps,
+  "children"
+> {
+  title: ReactNode;
+  description?: ReactNode;
+  trigger?: ReactNode;
+  children: ReactNode;
+  contentClassName?: string;
+  overlayClassName?: string;
+  showCloseButton?: boolean;
+}
 
 /**
  * Builds the interaction-form surface pieces and the `Interaction` namespace
@@ -45,6 +66,51 @@ export function createInteractionForms<Card>(
     });
   }
 
+  function GeneratedFormDialog({
+    title,
+    description,
+    trigger,
+    children,
+    contentClassName,
+    overlayClassName,
+    showCloseButton,
+    defaultOpen,
+    onStateChange,
+  }: WorkspaceInteractionFormDialogProps) {
+    return createElement(baseUI.Interaction.Dialog, {
+      defaultOpen,
+      onStateChange,
+      children: (state) =>
+        createElement(
+          Dialog,
+          { open: state.open, onOpenChange: state.setOpen },
+          trigger
+            ? createElement(DialogTrigger, {
+                asChild: true,
+                children: trigger,
+              })
+            : null,
+          createElement(
+            DialogContent,
+            {
+              className: contentClassName,
+              overlayClassName,
+              showCloseButton,
+            },
+            createElement(
+              DialogHeader,
+              null,
+              createElement(DialogTitle, null, title),
+              description
+                ? createElement(DialogDescription, null, description)
+                : null,
+            ),
+            children,
+          ),
+        ),
+    });
+  }
+
   function useInteractionFormSurface(interaction: string) {
     const validInputs = options.formInputKeysForInteraction(interaction);
     const slot = Object.fromEntries(
@@ -61,10 +127,10 @@ export function createInteractionForms<Card>(
           interaction,
           createElement(baseUI.Interaction.Form, props),
         ),
-      Dialog: (props: InteractionDialogProps) =>
+      Dialog: (props: WorkspaceInteractionFormDialogProps) =>
         withInteractionRoot(
           interaction,
-          createElement(baseUI.Interaction.Dialog, props),
+          createElement(GeneratedFormDialog, props),
         ),
       State: (props: InteractionStateProps) =>
         withInteractionRoot(

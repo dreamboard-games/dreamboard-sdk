@@ -40,6 +40,7 @@ export {
   Game,
   GameChrome,
   GameRoot,
+  GameViewport,
   useGameActionError,
   type GameActiveActionState,
   type GameChromeProps,
@@ -52,6 +53,7 @@ export {
   type GameRenderState,
   type GameRootProps,
   type GameTurnState,
+  type GameViewportProps,
 } from "./game.js";
 export {
   Interaction,

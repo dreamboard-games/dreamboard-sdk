@@ -24,6 +24,12 @@ import { useShallow } from "zustand/shallow";
 import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import {
+  createGameplayPointerTargetAttributes,
+  type BrowserInteractionAttributeMap,
+  type GameplaySemanticEffectPattern,
+} from "../../browser-interaction/index.js";
+import {
+  decodeRuntimeDropTargetId,
   encodeRuntimeDropTargetKind,
   projectDraftCardState,
   selectedCardIdsForZone,
@@ -33,6 +39,7 @@ import {
   isResolvedTargetDomain,
   isTargetDomain,
   validateInteractionInputDomains,
+  resolveInputDomain,
 } from "../utils/interaction-inputs.js";
 import {
   useCardIntentAdapter,
@@ -232,8 +239,8 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
 
   const cardDescriptorIndex = useAuthoredPluginGameplayFrameSelector(
     (frame) => {
-    const snapshot = frame.zones[zone];
-    return snapshot?.playableByCardId ?? {};
+      const snapshot = frame.zones[zone];
+      return snapshot?.playableByCardId ?? {};
     },
   );
 
@@ -357,6 +364,21 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
     [route],
   );
 
+  const pointerTargetAttributesById = useMemo(() => {
+    const map = new Map<string, BrowserInteractionAttributeMap>();
+    for (const target of dropTargets ?? []) {
+      const attributes = pointerTargetAttributesForRuntimeDropTarget({
+        target,
+        availableInteractions,
+        drafts,
+      });
+      if (attributes) {
+        map.set(target.targetId, attributes);
+      }
+    }
+    return map;
+  }, [availableInteractions, drafts, dropTargets]);
+
   const handView = (
     <HandView
       cards={viewCards}
@@ -409,6 +431,9 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
       role={target.role}
       order={target.order}
       className={target.className}
+      browserInteractionAttributes={pointerTargetAttributesById.get(
+        target.targetId,
+      )}
       renderTarget={target.render}
     />
   ));
@@ -474,6 +499,67 @@ function manyCardSelectionForZone(
     }
   }
   return null;
+}
+
+function pointerTargetAttributesForRuntimeDropTarget({
+  target,
+  availableInteractions,
+  drafts,
+}: {
+  target: RuntimeDropTarget;
+  availableInteractions: readonly InteractionDescriptor[];
+  drafts: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
+}): BrowserInteractionAttributeMap | undefined {
+  const decoded = decodeRuntimeDropTargetId(target.targetId);
+  if (!decoded) return undefined;
+  for (const descriptor of availableInteractions) {
+    if (!isInteractionAvailable(descriptor)) continue;
+    const draft = drafts[descriptor.interactionKey] ?? {};
+    const acceptedEffectPatterns: GameplaySemanticEffectPattern[] = [];
+    for (const rawInput of descriptor.inputs) {
+      const input = resolveInputDomain(rawInput, draft);
+      if (decoded.mode === "input" && input.key !== decoded.inputKey) {
+        continue;
+      }
+      if (decoded.mode === "kind") {
+        if (
+          !isTargetDomain(input.domain) ||
+          (decoded.kind === "card" && input.domain.type !== "cardTarget") ||
+          (decoded.kind !== "card" &&
+            (input.domain.type !== "boardTarget" ||
+              input.domain.targetKind !== decoded.kind))
+        ) {
+          continue;
+        }
+      }
+      if (
+        isResolvedTargetDomain(input.domain) &&
+        !input.domain.eligibleTargets.includes(decoded.value)
+      ) {
+        continue;
+      }
+      acceptedEffectPatterns.push({
+        kind: "match",
+        effectKind: "setCandidate",
+        fields: { inputKey: input.key, candidateValue: decoded.value },
+      });
+    }
+    if (acceptedEffectPatterns.length === 0) continue;
+    return createGameplayPointerTargetAttributes({
+      scopeId: "runtime",
+      interactionKey: descriptor.interactionKey,
+      interactionId: descriptor.interactionId,
+      targetId: target.targetId,
+      enabled:
+        (target.visualState?.eligible ?? true) &&
+        !(target.visualState?.disabled ?? false),
+      ...(descriptor.descriptorDigest !== undefined
+        ? { descriptorDigest: descriptor.descriptorDigest }
+        : {}),
+      acceptedEffectPatterns,
+    });
+  }
+  return undefined;
 }
 
 /**

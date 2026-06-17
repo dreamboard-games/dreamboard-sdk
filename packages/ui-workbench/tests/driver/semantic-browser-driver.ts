@@ -1,0 +1,729 @@
+import type { Locator, Page } from "@playwright/test";
+import {
+  BROWSER_INTERACTION_ATTRIBUTES,
+  DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+  isSemanticSurfaceSnapshot,
+  normalizeBrowserInteractionRecords,
+  resolveBrowserInteractionEffect,
+  resolveBrowserInteractionIntent,
+  resolveBrowserPointerTarget,
+  validateBrowserInteractionSnapshot,
+  type BrowserInteractionActuator,
+  type BrowserInteractionDiagnostic,
+  type BrowserInteractionEffectRequest,
+  type BrowserInteractionEffectResolution,
+  type BrowserInteractionEffectResolutionSuccess,
+  type BrowserInteractionPointerTarget,
+  type BrowserInteractionPointerTargetResolution,
+  type BrowserInteractionResolution,
+  type BrowserInteractionResolutionSuccess,
+  type BrowserInteractionSnapshot,
+} from "@dreamboard-games/sdk/browser-interaction";
+import type {
+  UIReplayExecution,
+  UIReplayRequest,
+  UIResolvedReplayIdentity,
+  UIStepExpectation,
+} from "@dreamboard-games/sdk/testing";
+import { digestUIFixtureJson } from "@dreamboard-games/sdk/testing";
+
+type SuccessfulResolution =
+  | BrowserInteractionResolutionSuccess
+  | BrowserInteractionEffectResolutionSuccess;
+
+export interface WorkbenchSemanticReplayStep {
+  readonly stepId: string;
+  readonly requestDigest?: string;
+  readonly resolve: UIReplayRequest;
+  readonly execute: UIReplayExecution;
+  readonly expectedIdentity?: UIResolvedReplayIdentity;
+  readonly expect: UIStepExpectation;
+}
+
+interface ResolvedActuatorReference {
+  readonly kind: "actuator";
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly interactionId: string;
+  readonly actuator: BrowserInteractionActuator;
+}
+
+interface ResolvedPointerTargetReference {
+  readonly kind: "pointer-target";
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly interactionId: string;
+  readonly pointerTarget: BrowserInteractionPointerTarget;
+}
+
+type ResolvedDragTargetReference =
+  | ResolvedActuatorReference
+  | ResolvedPointerTargetReference;
+
+interface Point {
+  readonly x: number;
+  readonly y: number;
+}
+
+export class SemanticResolutionError extends Error {
+  readonly stepId: string;
+  readonly result:
+    | BrowserInteractionResolution
+    | BrowserInteractionEffectResolution
+    | BrowserInteractionPointerTargetResolution;
+
+  constructor(
+    stepId: string,
+    result:
+      | BrowserInteractionResolution
+      | BrowserInteractionEffectResolution
+      | BrowserInteractionPointerTargetResolution,
+  ) {
+    super(
+      `Replay step '${stepId}' semantic resolution failed with ${result.code}: ${formatDiagnostics(
+        result.diagnostics,
+      )}`,
+    );
+    this.name = "SemanticResolutionError";
+    this.stepId = stepId;
+    this.result = result;
+  }
+}
+
+export async function executeFixtureStep(
+  page: Page,
+  step: WorkbenchSemanticReplayStep,
+): Promise<void> {
+  const source = await resolveReplayActuator(page, step);
+
+  switch (step.execute.kind) {
+    case "activate":
+      await activateResolvedActuator(page, source);
+      break;
+    case "fill":
+      await fillResolvedActuator(page, source, step.execute.value);
+      break;
+    case "drag": {
+      const target = await resolveReplayTarget(page, step);
+      await dragResolvedActuator(page, source, target);
+      break;
+    }
+    default: {
+      const _exhaustive: never = step.execute;
+      return _exhaustive;
+    }
+  }
+
+  await waitForWorkbenchStablePage(page);
+  await assertStepExpectation(page, step);
+}
+
+export async function readPageBrowserInteractionSnapshot(
+  page: Page,
+): Promise<BrowserInteractionSnapshot> {
+  const records = await page.evaluate(
+    ({ attrs, version }) => {
+      const selector = [
+        `[${attrs.protocol}="${version}"][${attrs.role}="interaction"]`,
+        `[${attrs.protocol}="${version}"][${attrs.role}="actuator"]`,
+        `[${attrs.protocol}="${version}"][${attrs.role}="pointer-target"]`,
+      ].join(",");
+      return [...document.querySelectorAll(selector)].map((element) => ({
+        attributes: Object.fromEntries(
+          [...element.attributes].map((attribute) => [
+            attribute.name,
+            attribute.value,
+          ]),
+        ),
+      }));
+    },
+    {
+      attrs: BROWSER_INTERACTION_ATTRIBUTES,
+      version: DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+    },
+  );
+  return normalizeBrowserInteractionRecords(records);
+}
+
+export async function installDeterministicWorkbenchEnvironment(
+  page: Page,
+): Promise<void> {
+  await page.route("**/*", async (route) => {
+    const url = new URL(route.request().url());
+    const allowed =
+      url.protocol === "blob:" ||
+      url.protocol === "data:" ||
+      url.hostname === "127.0.0.1" ||
+      url.hostname === "localhost";
+    if (allowed) {
+      await route.continue();
+      return;
+    }
+    await route.abort("blockedbyclient");
+  });
+  await page.addInitScript(() => {
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  });
+}
+
+export async function waitForWorkbenchStablePage(page: Page): Promise<void> {
+  await page.evaluate(async () => {
+    await document.fonts?.ready;
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
+  });
+}
+
+async function resolveReplayActuator(
+  page: Page,
+  step: WorkbenchSemanticReplayStep,
+): Promise<ResolvedActuatorReference> {
+  let snapshot = await readPageBrowserInteractionSnapshot(page);
+  let resolution = resolveBrowserInteractionRequest(snapshot, step.resolve);
+
+  if (!resolution.ok && resolution.code === "preparation-required") {
+    for (const preparation of resolution.preparation ?? []) {
+      const prepared = findActuatorReference(snapshot, preparation);
+      await activateResolvedActuator(page, prepared);
+      await waitForWorkbenchStablePage(page);
+      snapshot = await readPageBrowserInteractionSnapshot(page);
+    }
+    resolution = resolveBrowserInteractionRequest(snapshot, step.resolve);
+  }
+
+  if (!resolution.ok) {
+    throw new SemanticResolutionError(step.stepId, resolution);
+  }
+
+  const reference = resolutionToActuatorReference(snapshot, resolution);
+  assertExpectedIdentity(step, reference);
+  return reference;
+}
+
+async function resolveReplayTarget(
+  page: Page,
+  step: WorkbenchSemanticReplayStep & {
+    readonly execute: Extract<UIReplayExecution, { readonly kind: "drag" }>;
+  },
+): Promise<ResolvedDragTargetReference> {
+  const snapshot = await readPageBrowserInteractionSnapshot(page);
+  const pointerTargetResolution = resolveBrowserPointerTarget(
+    snapshot,
+    step.execute.target,
+  );
+  if (pointerTargetResolution.ok) {
+    return pointerTargetResolutionToReference(
+      snapshot,
+      pointerTargetResolution,
+    );
+  }
+  if (pointerTargetResolution.code !== "not-found") {
+    throw new SemanticResolutionError(step.stepId, pointerTargetResolution);
+  }
+
+  const resolution = resolveBrowserInteractionEffect(
+    snapshot,
+    step.execute.target,
+  );
+  if (!resolution.ok) {
+    throw new SemanticResolutionError(step.stepId, resolution);
+  }
+  return resolutionToActuatorReference(snapshot, resolution);
+}
+
+function resolveBrowserInteractionRequest(
+  snapshot: BrowserInteractionSnapshot,
+  request: UIReplayRequest,
+): BrowserInteractionResolution | BrowserInteractionEffectResolution {
+  if (isEffectRequest(request)) {
+    return resolveBrowserInteractionEffect(snapshot, request);
+  }
+  return resolveBrowserInteractionIntent(snapshot, request);
+}
+
+function isEffectRequest(
+  request: UIReplayRequest,
+): request is BrowserInteractionEffectRequest {
+  return "effect" in request;
+}
+
+function resolutionToActuatorReference(
+  snapshot: BrowserInteractionSnapshot,
+  resolution: SuccessfulResolution,
+): ResolvedActuatorReference {
+  return findActuatorReference(snapshot, resolution.actuator, {
+    surface: resolution.surface,
+    scopeId: resolution.scopeId,
+    interactionKey: resolution.interactionKey,
+  });
+}
+
+function findActuatorReference(
+  snapshot: BrowserInteractionSnapshot,
+  actuator: BrowserInteractionActuator,
+  scope?: {
+    readonly surface: string;
+    readonly scopeId: string;
+    readonly interactionKey: string;
+  },
+): ResolvedActuatorReference {
+  const matches: ResolvedActuatorReference[] = [];
+  for (const surface of snapshot.surfaces) {
+    if (!isSemanticSurfaceSnapshot(surface)) continue;
+    if (scope && surface.surface !== scope.surface) continue;
+    if (scope && surface.scopeId !== scope.scopeId) continue;
+    for (const interaction of surface.interactions) {
+      if (scope && interaction.interactionKey !== scope.interactionKey) {
+        continue;
+      }
+      const found = interaction.actuators.find(
+        (candidate) =>
+          candidate.actuatorId === actuator.actuatorId &&
+          candidate.intent === actuator.intent &&
+          candidate.actuatorKind === actuator.actuatorKind &&
+          candidate.inputKey === actuator.inputKey &&
+          candidate.candidateValueKey === actuator.candidateValueKey,
+      );
+      if (!found) continue;
+      matches.push({
+        kind: "actuator",
+        surface: surface.surface,
+        scopeId: surface.scopeId,
+        interactionKey: interaction.interactionKey,
+        interactionId: interaction.interactionId,
+        actuator: found,
+      });
+    }
+  }
+  if (matches.length !== 1) {
+    throw new Error(
+      `Resolved actuator '${actuator.actuatorId}' mapped to ${matches.length} DOM semantic records; expected exactly one.`,
+    );
+  }
+  return matches[0]!;
+}
+
+function pointerTargetResolutionToReference(
+  snapshot: BrowserInteractionSnapshot,
+  resolution: Extract<BrowserInteractionPointerTargetResolution, { ok: true }>,
+): ResolvedPointerTargetReference {
+  const matches: ResolvedPointerTargetReference[] = [];
+  for (const surface of snapshot.surfaces) {
+    if (!isSemanticSurfaceSnapshot(surface)) continue;
+    if (surface.surface !== resolution.surface) continue;
+    if (surface.scopeId !== resolution.scopeId) continue;
+    for (const interaction of surface.interactions) {
+      if (interaction.interactionKey !== resolution.interactionKey) continue;
+      const found = interaction.pointerTargets.find(
+        (candidate) => candidate.targetId === resolution.pointerTarget.targetId,
+      );
+      if (!found) continue;
+      matches.push({
+        kind: "pointer-target",
+        surface: surface.surface,
+        scopeId: surface.scopeId,
+        interactionKey: interaction.interactionKey,
+        interactionId: interaction.interactionId,
+        pointerTarget: found,
+      });
+    }
+  }
+  if (matches.length !== 1) {
+    throw new Error(
+      `Resolved pointer target '${resolution.pointerTarget.targetId}' mapped to ${matches.length} DOM semantic records; expected exactly one.`,
+    );
+  }
+  return matches[0]!;
+}
+
+async function activateResolvedActuator(
+  page: Page,
+  reference: ResolvedActuatorReference,
+): Promise<void> {
+  const locator = await resolvedActuatorLocator(page, reference);
+  if (reference.actuator.actuatorKind === "keyboard") {
+    await locator.focus();
+    await page.keyboard.press("Enter");
+    return;
+  }
+  await locator.click();
+}
+
+async function fillResolvedActuator(
+  page: Page,
+  reference: ResolvedActuatorReference,
+  value: string,
+): Promise<void> {
+  const locator = await resolvedActuatorLocator(page, reference);
+  await locator.fill(value);
+}
+
+async function dragResolvedActuator(
+  page: Page,
+  source: ResolvedActuatorReference,
+  target: ResolvedDragTargetReference,
+): Promise<void> {
+  const sourcePoint = await centerPoint(
+    await resolvedActuatorLocator(page, source),
+  );
+  const targetPoint = await centerPoint(
+    await resolvedTargetLocator(page, target),
+  );
+  const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
+  if (!touchCapable) {
+    await mouseDrag(page, sourcePoint, targetPoint);
+    return;
+  }
+  const browserName = page.context().browser()?.browserType().name();
+  if (browserName !== "chromium") {
+    throw new Error(
+      `Browser-level touch drag is only implemented for Chromium, not ${browserName ?? "unknown"}.`,
+    );
+  }
+  await touchDrag(page, sourcePoint, targetPoint);
+}
+
+async function resolvedTargetLocator(
+  page: Page,
+  target: ResolvedDragTargetReference,
+): Promise<Locator> {
+  return target.kind === "actuator"
+    ? resolvedActuatorLocator(page, target)
+    : resolvedPointerTargetLocator(page, target);
+}
+
+async function resolvedActuatorLocator(
+  page: Page,
+  reference: ResolvedActuatorReference,
+): Promise<Locator> {
+  const baseSelector = [
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.protocol,
+      DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+    ),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.role, "actuator"),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.surface, reference.surface),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.scope, reference.scopeId),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.interactionKey,
+      reference.interactionKey,
+    ),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.interactionId,
+      reference.interactionId,
+    ),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.intent,
+      reference.actuator.intent,
+    ),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.actuatorKind,
+      reference.actuator.actuatorKind,
+    ),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.enabled,
+      reference.actuator.enabled ? "true" : "false",
+    ),
+    optionalAttrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.inputKey,
+      reference.actuator.inputKey,
+    ),
+    optionalAttrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.candidateValue,
+      reference.actuator.candidateValueKey,
+    ),
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join("");
+
+  const idSelector =
+    baseSelector +
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.actuatorId,
+      reference.actuator.actuatorId,
+    );
+  const idLocator = page.locator(idSelector);
+  if ((await idLocator.count()) === 1) {
+    return idLocator;
+  }
+
+  const locator = page.locator(baseSelector);
+  const count = await locator.count();
+  if (count !== 1) {
+    throw new Error(
+      `Resolved actuator '${reference.actuator.actuatorId}' matched ${count} elements with exact protocol attributes.`,
+    );
+  }
+  return locator;
+}
+
+async function resolvedPointerTargetLocator(
+  page: Page,
+  reference: ResolvedPointerTargetReference,
+): Promise<Locator> {
+  const attrs = BROWSER_INTERACTION_ATTRIBUTES as Record<
+    string,
+    string | undefined
+  >;
+  const pointerTargetId = attrs.pointerTargetId;
+  const pointerTargetEnabled = attrs.pointerTargetEnabled;
+  if (!pointerTargetId || !pointerTargetEnabled) {
+    throw new Error(
+      "The active SDK browser-interaction protocol has no pointer-target attributes.",
+    );
+  }
+  const selector = [
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.protocol,
+      DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+    ),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.role, "pointer-target"),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.surface, reference.surface),
+    attrEquals(BROWSER_INTERACTION_ATTRIBUTES.scope, reference.scopeId),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.interactionKey,
+      reference.interactionKey,
+    ),
+    attrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.interactionId,
+      reference.interactionId,
+    ),
+    attrEquals(pointerTargetId, reference.pointerTarget.targetId),
+    attrEquals(
+      pointerTargetEnabled,
+      reference.pointerTarget.enabled ? "true" : "false",
+    ),
+    optionalAttrEquals(
+      BROWSER_INTERACTION_ATTRIBUTES.descriptorDigest,
+      reference.pointerTarget.descriptorDigest,
+    ),
+  ]
+    .filter((part): part is string => Boolean(part))
+    .join("");
+  const locator = page.locator(selector);
+  const count = await locator.count();
+  if (count !== 1) {
+    throw new Error(
+      `Resolved pointer target '${reference.pointerTarget.targetId}' matched ${count} elements with exact protocol attributes.`,
+    );
+  }
+  return locator;
+}
+
+async function centerPoint(locator: Locator): Promise<Point> {
+  const box = await locator.boundingBox();
+  if (!box) {
+    throw new Error("Resolved semantic element is not visible.");
+  }
+  return {
+    x: box.x + box.width / 2,
+    y: box.y + box.height / 2,
+  };
+}
+
+async function mouseDrag(page: Page, from: Point, to: Point): Promise<void> {
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 12 });
+  await page.mouse.up();
+}
+
+async function touchDrag(page: Page, from: Point, to: Point): Promise<void> {
+  const cdp = await page.context().newCDPSession(page);
+  const path = interpolatePoints(from, to, 12);
+
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: from.x, y: from.y, id: 1 }],
+  });
+  for (const point of path) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: point.x, y: point.y, id: 1 }],
+    });
+  }
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+}
+
+function interpolatePoints(from: Point, to: Point, steps: number): Point[] {
+  return Array.from({ length: steps }, (_, index) => {
+    const progress = (index + 1) / steps;
+    return {
+      x: from.x + (to.x - from.x) * progress,
+      y: from.y + (to.y - from.y) * progress,
+    };
+  });
+}
+
+async function assertStepExpectation(
+  page: Page,
+  step: WorkbenchSemanticReplayStep,
+): Promise<void> {
+  const expected = step.expect;
+  const snapshot = await readPageBrowserInteractionSnapshot(page);
+  const actual = await page.evaluate(() => {
+    const bridge = window.__dreamboardUIFixture;
+    const activeElement = document.activeElement;
+    const focusedInteractionKey =
+      activeElement instanceof Element
+        ? (activeElement
+            .closest("[data-dreamboard-interaction-key]")
+            ?.getAttribute("data-dreamboard-interaction-key") ?? undefined)
+        : undefined;
+    return {
+      frameId: bridge?.getFrameId(),
+      projectionDigest: bridge?.getProjectionDigest(),
+      scenarioId: bridge?.getScenarioId(),
+      focusedInteractionKey,
+    };
+  });
+  const visibleInteractionKeys = snapshot.surfaces.flatMap((surface) =>
+    isSemanticSurfaceSnapshot(surface)
+      ? surface.interactions.map((interaction) => interaction.interactionKey)
+      : [],
+  );
+  const actualValues = {
+    ...actual,
+    draftDigest: readCurrentDraftDigest(snapshot),
+    semanticDigest:
+      actual.scenarioId && actual.frameId && actual.projectionDigest
+        ? digestUIFixtureJson({
+            digestVersion: "ui-semantic@1",
+            fixtureId: actual.scenarioId,
+            frameId: actual.frameId,
+            projectionDigest: actual.projectionDigest,
+          })
+        : undefined,
+    submissionDigest:
+      actual.scenarioId && step.requestDigest
+        ? digestUIFixtureJson({
+            digestVersion: "ui-submission@1",
+            fixtureId: actual.scenarioId,
+            replay: [step.requestDigest],
+          })
+        : undefined,
+    visibleInteractionKeys,
+  };
+
+  for (const key of [
+    "frameId",
+    "projectionDigest",
+    "semanticDigest",
+    "draftDigest",
+    "submissionDigest",
+    "focusedInteractionKey",
+  ] as const) {
+    if (expected[key] !== undefined && actualValues[key] !== expected[key]) {
+      throw new Error(
+        `Replay step '${step.stepId}' expected ${key} '${expected[key]}', received '${actualValues[key] ?? "<unavailable>"}'.`,
+      );
+    }
+  }
+  if (expected.visibleInteractionKeys) {
+    const visible = new Set(actualValues.visibleInteractionKeys);
+    const missing = expected.visibleInteractionKeys.filter(
+      (key) => !visible.has(key),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `Replay step '${step.stepId}' missing visible interactions: ${missing.join(", ")}.`,
+      );
+    }
+  }
+}
+
+function readCurrentDraftDigest(
+  snapshot: BrowserInteractionSnapshot,
+): string | undefined {
+  const digests = new Set<string>();
+  for (const surface of snapshot.surfaces) {
+    if (!isSemanticSurfaceSnapshot(surface)) continue;
+    for (const interaction of surface.interactions) {
+      if (interaction.draftDigest) digests.add(interaction.draftDigest);
+      for (const actuator of interaction.actuators) {
+        if (actuator.draftDigest) digests.add(actuator.draftDigest);
+      }
+    }
+  }
+  return digests.size === 1 ? [...digests][0] : undefined;
+}
+
+function assertExpectedIdentity(
+  step: WorkbenchSemanticReplayStep,
+  reference: ResolvedActuatorReference,
+): void {
+  const expected = step.expectedIdentity;
+  if (!expected) return;
+  const actual = {
+    stepId: step.stepId,
+    surface: reference.surface,
+    scopeId: reference.scopeId,
+    interactionKey: reference.interactionKey,
+    interactionId: reference.interactionId,
+    actuatorId: reference.actuator.actuatorId,
+    descriptorDigest: reference.actuator.descriptorDigest,
+    draftDigest: reference.actuator.draftDigest,
+  };
+  for (const key of [
+    "surface",
+    "scopeId",
+    "interactionKey",
+    "interactionId",
+    "actuatorId",
+    "descriptorDigest",
+    "draftDigest",
+  ] as const) {
+    if (expected[key] !== undefined && expected[key] !== actual[key]) {
+      throw new Error(
+        `Replay step '${step.stepId}' resolved ${key} '${String(
+          actual[key],
+        )}', expected '${expected[key]}'.`,
+      );
+    }
+  }
+}
+
+export function assertValidSemanticSnapshot(
+  snapshot: BrowserInteractionSnapshot,
+): void {
+  const diagnostics = [
+    ...snapshot.diagnostics,
+    ...validateBrowserInteractionSnapshot(snapshot),
+  ].filter((diagnostic) => diagnostic.severity === "error");
+  if (diagnostics.length > 0) {
+    throw new Error(
+      `Invalid semantic snapshot: ${formatDiagnostics(diagnostics)}`,
+    );
+  }
+}
+
+function formatDiagnostics(
+  diagnostics: readonly BrowserInteractionDiagnostic[],
+): string {
+  if (diagnostics.length === 0) return "no diagnostics";
+  return diagnostics
+    .map((diagnostic) => `${diagnostic.code} ${diagnostic.message}`)
+    .join("; ");
+}
+
+function attrEquals(attribute: string, value: string): string {
+  return `[${attribute}="${cssString(value)}"]`;
+}
+
+function optionalAttrEquals(attribute: string, value: string | undefined) {
+  return value === undefined ? undefined : attrEquals(attribute, value);
+}
+
+function cssString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}

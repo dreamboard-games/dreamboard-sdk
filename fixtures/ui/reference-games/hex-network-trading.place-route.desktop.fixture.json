@@ -1,5 +1,5 @@
 {
-  "browserInteractionProtocol": "2.0.0",
+  "browserInteractionProtocol": "3.0.0",
   "environment": {
     "clockIso": "2026-01-01T00:00:00.000Z",
     "locale": "en-US",
@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:eeb3f0c9e33683eef93f352df77f00f84ec207409686bb869f964d90833e6973",
-    "finalSemanticDigest": "sha256:e7fcd13580f0ae343cf98326cf0efbe00017a39a8524d175a997735b23228204",
+    "finalSemanticDigest": "sha256:9b89976963b179d6d516885a37cdff1cc440285e6fd7095fdd096518dab06ef1",
     "initialProjectionDigest": "sha256:a0e33f9313104b77d32785f075fd0cd66819223f29163590dee0e7ee0a9e349e",
     "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1"
   },
@@ -177,7 +177,7 @@
       "expect": {
         "frameId": "frame-2",
         "projectionDigest": "sha256:eeb3f0c9e33683eef93f352df77f00f84ec207409686bb869f964d90833e6973",
-        "semanticDigest": "sha256:e7fcd13580f0ae343cf98326cf0efbe00017a39a8524d175a997735b23228204",
+        "semanticDigest": "sha256:9b89976963b179d6d516885a37cdff1cc440285e6fd7095fdd096518dab06ef1",
         "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1",
         "visibleInteractionKeys": [
           "place-route",
@@ -208,9 +208,9 @@
   "source": {
     "reducerFingerprint": "sha256:a83bc26dee19a65121505f80dc73ae441d18b449cc9f4703a933ee43dd8c724d",
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-    "renderModuleDigest": "sha256:4a75242f7d62cd7206cbaf0cdfd1666cd97436b9fc6cb97fbec6406df3ad252c",
+    "renderModuleDigest": "sha256:b0d712cff920fba70e2a69fef6d1de85be9da9f5a6aede37ea5eddd2599684a5",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:f8515b2777a7c016a6c175a31a8e3e66a5419e855c74983d6fb6011e5f17dbf5",
+    "sourceDigest": "sha256:1302f74fd68f5509f4561b9572a79011050711e00bc300c47a451aeb4dc4b015",
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [

@@ -1,6 +1,22 @@
 # Phase 06: UI Ergonomics Hard Cut And Example Migration
 
-Status: proposed.
+Status: source-complete.
+
+Closeout artifacts:
+
+- Baseline:
+  `artifacts/phase-06-ergonomics-baseline.md`.
+- Migration receipt:
+  `artifacts/phase-06-migration-receipt.md`.
+
+Closeout note: the current public reference-game source in this repository uses
+a shared lower-level runtime helper rather than rich generated per-game UI
+source. Phase 06 therefore completed the SDK/generated API hard cut, migrated
+the shared reference root to `Game.Viewport`, regenerated portable fixtures, and
+added hard-cut guards over authored reference source plus compiled fixture
+modules. Real-host parity in Phase 07 should verify whether the internal host
+still carries richer per-game wrappers that need the pressure-order migrations
+listed below.
 
 ## Objective
 

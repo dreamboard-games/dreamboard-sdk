@@ -113,8 +113,22 @@ export type WorkspaceZoneStagingComponent<Card> =
     className?: string;
   }>;
 
+export type WorkspaceHandCardsComponent<Card> =
+  WorkspaceInteractionSlotComponent<{
+    children: (card: Card, state: unknown) => ReactNode;
+  }>;
+
+export type WorkspaceHandSummaryComponent = WorkspaceInteractionSlotComponent<{
+  children?: ReactNode | ((summary: unknown) => ReactNode);
+}>;
+
 export interface WorkspaceHandSurface<Zone extends string, Card> {
-  readonly Hand: WorkspaceZoneCardsComponent<Card>;
+  readonly Hand: WorkspaceInteractionSlotComponent<{
+    children: ReactNode;
+  }>;
+  readonly Cards: WorkspaceHandCardsComponent<Card>;
+  readonly Summary: WorkspaceHandSummaryComponent;
+  readonly Actions: WorkspaceHandSummaryComponent;
   readonly Card: WorkspaceZoneCardComponent<Card>;
   readonly Staging: WorkspaceZoneStagingComponent<Card>;
   readonly slot: {

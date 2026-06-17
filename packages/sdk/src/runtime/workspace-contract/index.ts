@@ -1,5 +1,5 @@
-import { createElement } from "react";
-import type { ReactNode } from "react";
+import { Fragment, createElement } from "react";
+import type { ComponentType, ReactNode } from "react";
 import {
   ClientParamSchemaProvider,
   type ClientParamSchemaMap,
@@ -42,6 +42,7 @@ import type {
 } from "./types.js";
 import { createBoardNamespace } from "./board.js";
 import { createInteractionForms } from "./forms.js";
+export type { WorkspaceInteractionFormDialogProps } from "./forms.js";
 import { createSurfaceResolvers } from "./surfaces.js";
 import { createZoneNamespace } from "./zones.js";
 
@@ -72,6 +73,24 @@ export type {
   WorkspaceContractOptions,
 } from "./types.js";
 
+export interface DefineGameUIConfig<GameState, Surfaces> {
+  useSurfaces: () => Surfaces;
+  interactionRoutes?: (context: {
+    game: GameState;
+    surfaces: Surfaces;
+  }) => Record<string, { collect: Record<string, unknown> }>;
+  phases: Record<
+    string,
+    (context: { game: GameState; surfaces: Surfaces }) => ReactNode
+  >;
+  renderInteractions?: (context: {
+    game: GameState;
+    surfaces: Surfaces;
+  }) => ReactNode;
+  fallback?: ReactNode | ((phase: string | null) => ReactNode);
+  includeUnavailableInteractions?: boolean | null;
+}
+
 export function createWorkspaceUIContract<
   WorkspaceUI,
   Contract extends UIContract,
@@ -85,6 +104,13 @@ export function createWorkspaceUIContract<
   const runtimeInteraction = baseUI.Interaction as RuntimeInteraction;
   const runtimeBoard = baseUI.Board as RuntimeBoard;
   const runtimeZone = baseUI.Zone as RuntimeZone<Card>;
+  const runtimeGameRoot = baseUI.Game.Root as ComponentType<{
+    children: (game: unknown) => ReactNode;
+  }>;
+  const runtimePhaseSwitch = baseUI.Phase.Switch as ComponentType<{
+    routes: Record<string, () => ReactNode>;
+    fallback?: ReactNode | ((phase: string | null) => ReactNode);
+  }>;
 
   const ctx: WorkspaceContractContext<Card> = {
     options,
@@ -136,6 +162,48 @@ export function createWorkspaceUIContract<
         }),
       }),
     defineSurfaces,
+    defineGameUI<GameState, Surfaces>({
+      useSurfaces,
+      interactionRoutes,
+      phases,
+      renderInteractions,
+      fallback,
+      includeUnavailableInteractions,
+    }: DefineGameUIConfig<GameState, Surfaces>) {
+      return function DefinedGameUI(props: Omit<UIRootProps, "children">) {
+        return createElement(UI.Root, {
+          ...props,
+          children: createElement(runtimeGameRoot, {
+            children: (rawGame: unknown) => {
+              const game = rawGame as GameState;
+              const surfaces = useSurfaces();
+              const phaseRoutes = Object.fromEntries(
+                Object.entries(phases).map(([phase, render]) => [
+                  phase,
+                  () => render({ game, surfaces }),
+                ]),
+              );
+              const routeMap = interactionRoutes?.({ game, surfaces });
+              return createElement(
+                Fragment,
+                null,
+                routeMap
+                  ? createElement(runtimeInteraction.Routes, {
+                      routes: routeMap,
+                      includeUnavailable: includeUnavailableInteractions,
+                    })
+                  : null,
+                createElement(runtimePhaseSwitch, {
+                  routes: phaseRoutes,
+                  fallback,
+                }),
+                renderInteractions?.({ game, surfaces }) ?? null,
+              );
+            },
+          }),
+        });
+      };
+    },
     Interaction,
     Board,
     Zone,

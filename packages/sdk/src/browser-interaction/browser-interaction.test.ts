@@ -8,6 +8,7 @@ import {
   createBrowserInteractionRootAttributes,
   createGameplayActuatorAttributes,
   createGameplayInteractionRootAttributes,
+  createGameplayPointerTargetAttributes,
   defineBrowserInteractionSurface,
   encodeBrowserInteractionEffect,
   encodeCanonicalCandidateValue,
@@ -18,6 +19,7 @@ import {
   normalizeBrowserInteractionRecords,
   resolveBrowserInteractionEffect,
   resolveBrowserInteractionIntent,
+  resolveBrowserPointerTarget,
   validateBrowserInteractionSnapshot,
   type BrowserInteractionEffectPattern,
   type BrowserInteractionRawRecord,
@@ -343,6 +345,97 @@ describe("browser interaction protocol core", () => {
         effect,
       }),
     ).toMatchObject({ ok: true, match: "exact" });
+  });
+
+  test("resolves one compatible pointer target by semantic effect", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "destination",
+      candidateValue: "staging",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayPointerTargetAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          targetId: "dreamboard:drop:input:destination:staging",
+          acceptedEffectPatterns: [
+            {
+              kind: "match",
+              effectKind: "setCandidate",
+              fields: {
+                inputKey: "destination",
+                candidateValue: "staging",
+              },
+            },
+          ],
+        }),
+      ),
+    ]);
+
+    const resolution = resolveBrowserPointerTarget(snapshot, {
+      surface: "gameplay",
+      scopeId: "active-plugin",
+      interactionKey: "playerTurn.offerTrade",
+      effect,
+    });
+
+    expect(resolution).toMatchObject({
+      ok: true,
+      match: "accepted-pattern",
+    });
+    if (resolution.ok) {
+      expect(resolution.pointerTarget.targetId).toBe(
+        "dreamboard:drop:input:destination:staging",
+      );
+    }
+  });
+
+  test("fails closed on ambiguous compatible pointer targets", () => {
+    const effect = gameplaySetCandidateEffect({
+      inputKey: "destination",
+      candidateValue: "staging",
+      beforeSelected: false,
+      afterSelected: true,
+    });
+    const targetPattern: BrowserInteractionEffectPattern = {
+      kind: "match",
+      effectKind: "setCandidate",
+      fields: { inputKey: "destination", candidateValue: "staging" },
+    };
+    const snapshot = normalizeBrowserInteractionRecords([
+      record(interactionRoot),
+      record(
+        createGameplayPointerTargetAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          targetId: "staging-a",
+          acceptedEffectPatterns: [targetPattern],
+        }),
+      ),
+      record(
+        createGameplayPointerTargetAttributes({
+          scopeId: "active-plugin",
+          interactionKey: "playerTurn.offerTrade",
+          interactionId: "offerTrade",
+          targetId: "staging-b",
+          acceptedEffectPatterns: [targetPattern],
+        }),
+      ),
+    ]);
+
+    expect(
+      resolveBrowserPointerTarget(snapshot, {
+        surface: "gameplay",
+        scopeId: "active-plugin",
+        interactionKey: "playerTurn.offerTrade",
+        effect,
+      }),
+    ).toMatchObject({ ok: false, code: "ambiguous" });
   });
 
   test("resolves a boolean candidate from a select semantic effect", () => {

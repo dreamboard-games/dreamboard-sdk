@@ -13,6 +13,7 @@ export function readBrowserInteractionSnapshot(
   const selector = [
     `[${protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"][${role}="interaction"]`,
     `[${protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"][${role}="actuator"]`,
+    `[${protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"][${role}="pointer-target"]`,
   ].join(",");
   const records = [...root.querySelectorAll(selector)].map((element) => ({
     attributes: Object.fromEntries(

@@ -97,8 +97,7 @@ export function createZoneCardComponent<Card>(
         children,
       });
     const match = useAuthoredPluginGameplayFrameSelector((frame) => {
-      const candidates =
-        frame.zones[zone]?.playableByCardId[cardId] ?? [];
+      const candidates = frame.zones[zone]?.playableByCardId[cardId] ?? [];
       for (const descriptor of candidates) {
         const input = descriptor.inputs.find(
           (candidateInput) =>
@@ -150,8 +149,13 @@ export function createZoneCardComponent<Card>(
  * `createWorkspaceUIContract` invocation.
  */
 export function createZoneNamespace<Card>(ctx: WorkspaceContractContext<Card>) {
-  const { createHandCardsComponent, createStagingComponent } =
-    createHandPieces(ctx);
+  const {
+    createHandCardsComponent,
+    createStagingComponent,
+    HandCardsSlot,
+    HandSummarySlot,
+    HandActionsSlot,
+  } = createHandPieces(ctx);
 
   return {
     hand<Zone extends string>(
@@ -186,6 +190,9 @@ export function createZoneNamespace<Card>(ctx: WorkspaceContractContext<Card>) {
       };
       return {
         Hand: createHandCardsComponent(handComponentOptions),
+        Cards: HandCardsSlot,
+        Summary: HandSummarySlot,
+        Actions: HandActionsSlot,
         Card: createZoneCardComponent(ctx),
         Staging: createStagingComponent(handComponentOptions),
         slot: { card: createCardInputSlot(ctx) },

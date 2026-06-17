@@ -4,6 +4,7 @@ import {
   BROWSER_INTERACTION_ATTRIBUTES,
   createGameplayActuatorAttributes,
   createGameplayInteractionRootAttributes,
+  createGameplayPointerTargetAttributes,
   readBrowserInteractionSnapshot,
 } from "./index.js";
 
@@ -41,6 +42,25 @@ test("reads only current-protocol interaction records from the DOM", () => {
   );
   interaction.append(actuator);
 
+  const pointerTarget = document.createElement("div");
+  setAttributes(
+    pointerTarget,
+    createGameplayPointerTargetAttributes({
+      scopeId: "runtime",
+      interactionKey: "turn.submit",
+      interactionId: "submit",
+      targetId: "drop-zone",
+      acceptedEffectPatterns: [
+        {
+          kind: "match",
+          effectKind: "setCandidate",
+          fields: { inputKey: "zone", candidateValue: "drop-zone" },
+        },
+      ],
+    }),
+  );
+  interaction.append(pointerTarget);
+
   const stale = document.createElement("button");
   setAttributes(stale, {
     ...createGameplayActuatorAttributes({
@@ -65,8 +85,12 @@ test("reads only current-protocol interaction records from the DOM", () => {
   }
   expect(surface.interactions).toHaveLength(1);
   expect(surface.interactions[0]?.actuators).toHaveLength(1);
+  expect(surface.interactions[0]?.pointerTargets).toHaveLength(1);
   expect(surface.interactions[0]?.actuators[0]?.actuatorId).toBe(
     "submit-button",
+  );
+  expect(surface.interactions[0]?.pointerTargets[0]?.targetId).toBe(
+    "drop-zone",
   );
 });
 

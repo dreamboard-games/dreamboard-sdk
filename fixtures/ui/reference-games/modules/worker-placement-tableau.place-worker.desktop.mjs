@@ -10,8 +10,9 @@ export function createReferenceGameRoot(config) {
   return function ReferenceGameRoot() {
     return React.createElement(Game.Root, null, (state) =>
       React.createElement(
-        "main",
+        Game.Viewport,
         {
+          className: "min-w-0",
           "data-reference-game": config.id,
           "data-reference-scenario": config.scenarioId,
           "data-plugin-runtime-protocol": DREAMBOARD_PLUGIN_PROTOCOL_VERSION,

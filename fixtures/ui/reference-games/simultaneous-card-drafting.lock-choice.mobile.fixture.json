@@ -1,5 +1,5 @@
 {
-  "browserInteractionProtocol": "2.0.0",
+  "browserInteractionProtocol": "3.0.0",
   "environment": {
     "clockIso": "2026-01-01T00:00:00.000Z",
     "locale": "en-US",
@@ -12,7 +12,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:7a9703733d6a5390ae8bc092fdd1e77ab871333891801cca890b2770576a82b9",
-    "finalSemanticDigest": "sha256:9928aeb67a977f100b3397827b2c2ab3fdd4f4e347298b4ba026454b131f9b4c",
+    "finalSemanticDigest": "sha256:f849168370a1925ff1934ec1cea048a6da2bd4af16c848d65b0c415f170baa83",
     "initialProjectionDigest": "sha256:a63914f4a9154ec07d00bedfde02429468e3d154195d6b3988a87e10363c952d",
     "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c"
   },
@@ -206,7 +206,7 @@
       "expect": {
         "frameId": "frame-2",
         "projectionDigest": "sha256:7a9703733d6a5390ae8bc092fdd1e77ab871333891801cca890b2770576a82b9",
-        "semanticDigest": "sha256:9928aeb67a977f100b3397827b2c2ab3fdd4f4e347298b4ba026454b131f9b4c",
+        "semanticDigest": "sha256:f849168370a1925ff1934ec1cea048a6da2bd4af16c848d65b0c415f170baa83",
         "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c",
         "visibleInteractionKeys": [
           "choose-card",
@@ -238,9 +238,9 @@
   "source": {
     "reducerFingerprint": "sha256:2870b0cb5f567c19fbb0e97bce6d76c0404809a31e4d797357a482ffd0c1f664",
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-    "renderModuleDigest": "sha256:f933ec2822998bed9b447aa89d6d457649e9a62e8142d195dc5abf68fbc118dd",
+    "renderModuleDigest": "sha256:35b8544fb630e84737db26d760c61a0a72083f047b3b91a9a0b8727c3ea173b0",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:5f4f2a54c215d79b95199d36f67fae6f0e6fce69a57fc23d53d4ad5aa24faee3",
+    "sourceDigest": "sha256:e959a6fffe51c7015c0ed9149d5e1a0241c48093ee831aee54815e898510b036",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [

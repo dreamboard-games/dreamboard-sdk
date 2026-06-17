@@ -1,5 +1,5 @@
 {
-  "browserInteractionProtocol": "2.0.0",
+  "browserInteractionProtocol": "3.0.0",
   "environment": {
     "clockIso": "2026-01-01T00:00:00.000Z",
     "locale": "en-US",
@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
-    "finalSemanticDigest": "sha256:9a2e4ddee1ec9cd2a79154b657e72d0402f8a6dbab7f263a052d41b43a236770",
+    "finalSemanticDigest": "sha256:9892a9732f347b20233ef17f2ad82b0eeadf12b53353b640e187d9a02f7ccaf3",
     "initialProjectionDigest": "sha256:db1e4c76bdd305f52cc24f8b4f26a8cab09542d47c671c97a611a52945490f50",
     "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c"
   },
@@ -205,7 +205,7 @@
       "expect": {
         "frameId": "frame-2",
         "projectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
-        "semanticDigest": "sha256:9a2e4ddee1ec9cd2a79154b657e72d0402f8a6dbab7f263a052d41b43a236770",
+        "semanticDigest": "sha256:9892a9732f347b20233ef17f2ad82b0eeadf12b53353b640e187d9a02f7ccaf3",
         "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c",
         "visibleInteractionKeys": [
           "place-worker",
@@ -237,9 +237,9 @@
   "source": {
     "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-    "renderModuleDigest": "sha256:b5ea554b4b60c5bd61468aa045d5ff503ba8e12784b7d730d0dd4518288870bc",
+    "renderModuleDigest": "sha256:11767a3ce06883f6b5907fd3582d7ad07e8629e86bb6c366520ad1e9c02f04e5",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:574d9fb7ff813615823441c6c97698a5778c60c49ae9dad7f3b049d8218e22ad",
+    "sourceDigest": "sha256:c7acf88958314496edcf739c80a1e927cee5583f2c08ebbf6fa77cdb90e982d3",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createElement, useMemo } from "react";
+import { Children, createElement, isValidElement, useMemo } from "react";
 import { clsx } from "clsx";
 import { useIsMobile } from "../../ui.js";
 import { useRegisterMobileHand } from "../../ui/components.js";
@@ -36,6 +36,44 @@ import type {
 export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
   const { baseUI } = ctx;
 
+  function HandCardsSlot({
+    children,
+  }: {
+    children: (card: Card, state: InteractionVisualState) => ReactNode;
+  }) {
+    void children;
+    return createElement("template", { "data-dreamboard-hand-cards-slot": "" });
+  }
+
+  function HandSummarySlot({
+    children,
+  }: {
+    children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+  }) {
+    void children;
+    return createElement("template", {
+      "data-dreamboard-hand-summary-slot": "",
+    });
+  }
+
+  function HandActionsSlot({
+    children,
+  }: {
+    children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+  }) {
+    void children;
+    return createElement("template", {
+      "data-dreamboard-hand-actions-slot": "",
+    });
+  }
+
+  function renderHandSlot(
+    slot: ReactNode | ((summary: HandSelectionSummary) => ReactNode),
+    summary: HandSelectionSummary,
+  ): ReactNode {
+    return typeof slot === "function" ? slot(summary) : slot;
+  }
+
   function createHandCardsComponent(options: WorkspaceHandComponentOptions) {
     return ({
       empty,
@@ -54,7 +92,9 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
       ...props
     }: {
       empty?: ReactNode;
-      children: (card: Card, state: InteractionVisualState) => ReactNode;
+      children:
+        | ReactNode
+        | ((card: Card, state: InteractionVisualState) => ReactNode);
       className?: string;
       layout?: HandLayoutKind | HandLayoutPolicy;
       mobileInteraction?: HandInteractionPolicy;
@@ -78,8 +118,28 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
       renderSummary?: (summary: HandSelectionSummary) => ReactNode;
       renderActions?: (summary: HandSelectionSummary) => ReactNode;
       onSelectionSummary?: (summary: HandSelectionSummary) => void;
-    } & Omit<ZoneListProps, "children" | "empty">) =>
-      createElement(baseUI.Zone.Root, {
+    } & Omit<ZoneListProps, "children" | "empty">) => {
+      const slots = collectHandSlots(children);
+      const renderCard =
+        typeof children === "function" ? children : slots.cards?.children;
+      if (!renderCard) {
+        throw new Error(
+          "Generated hand surfaces require exactly one <hand.Cards> slot.",
+        );
+      }
+      const summaryRenderer =
+        renderSummary ??
+        (slots.summary
+          ? (summary: HandSelectionSummary) =>
+              renderHandSlot(slots.summary!.children, summary)
+          : undefined);
+      const actionsRenderer =
+        renderActions ??
+        (slots.actions
+          ? (summary: HandSelectionSummary) =>
+              renderHandSlot(slots.actions!.children, summary)
+          : undefined);
+      return createElement(baseUI.Zone.Root, {
         zone: options.zone as never,
         // Fill the author's container instead of shrink-wrapping to the fan's
         // own measured width. Without a definite width here, a centering parent
@@ -93,7 +153,7 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
           hand: options,
           className,
           empty,
-          children,
+          children: renderCard,
           layout,
           mobileInteraction,
           cardSize,
@@ -101,11 +161,67 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
           dropTargets,
           renderDropTargets,
           onCardIntent,
-          renderSummary,
-          renderActions,
+          renderSummary: summaryRenderer,
+          renderActions: actionsRenderer,
           onSelectionSummary,
         }),
       });
+    };
+  }
+
+  function collectHandSlots(
+    children:
+      | ReactNode
+      | ((card: Card, state: InteractionVisualState) => ReactNode),
+  ): {
+    cards?: {
+      children: (card: Card, state: InteractionVisualState) => ReactNode;
+    };
+    summary?: {
+      children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+    };
+    actions?: {
+      children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+    };
+  } {
+    const slots: {
+      cards?: {
+        children: (card: Card, state: InteractionVisualState) => ReactNode;
+      };
+      summary?: {
+        children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+      };
+      actions?: {
+        children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+      };
+    } = {};
+    if (typeof children === "function") return slots;
+    for (const child of Children.toArray(children)) {
+      if (!isValidElement(child)) continue;
+      if (child.type === HandCardsSlot) {
+        if (slots.cards) {
+          throw new Error("Only one <hand.Cards> slot may be rendered.");
+        }
+        slots.cards = child.props as {
+          children: (card: Card, state: InteractionVisualState) => ReactNode;
+        };
+      } else if (child.type === HandSummarySlot) {
+        if (slots.summary) {
+          throw new Error("Only one <hand.Summary> slot may be rendered.");
+        }
+        slots.summary = child.props as {
+          children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+        };
+      } else if (child.type === HandActionsSlot) {
+        if (slots.actions) {
+          throw new Error("Only one <hand.Actions> slot may be rendered.");
+        }
+        slots.actions = child.props as {
+          children: ReactNode | ((summary: HandSelectionSummary) => ReactNode);
+        };
+      }
+    }
+    return slots;
   }
 
   function GeneratedHandCards({
@@ -302,5 +418,11 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
       });
   }
 
-  return { createHandCardsComponent, createStagingComponent };
+  return {
+    createHandCardsComponent,
+    createStagingComponent,
+    HandCardsSlot,
+    HandSummarySlot,
+    HandActionsSlot,
+  };
 }

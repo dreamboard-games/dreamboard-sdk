@@ -11,11 +11,11 @@
 import { useId, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronUp } from "lucide-react";
+import { Panel } from "./Panel.js";
 import { useTheme } from "../theme/ThemeProvider.js";
 import {
   chipStyle,
   intentForVariant,
-  surfaceStyle,
   type ButtonVariant,
 } from "../theme/derive.js";
 
@@ -55,142 +55,128 @@ export function ActionPanel({
       initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
       animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
       className={className}
-      data-dreamboard-action-panel=""
-      data-state={isExpanded ? "open" : "closed"}
-      data-collapsible={collapsible ? "true" : undefined}
-      style={{
-        ...surfaceStyle(theme, { tone: "card", radius: "hud" }),
-        boxShadow: theme.elevation.rest,
-        overflow: "hidden",
-      }}
-      role="region"
-      aria-label={title}
     >
-      <button
-        type="button"
-        onClick={() => collapsible && setIsExpanded(!isExpanded)}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        disabled={!collapsible}
-        aria-expanded={isExpanded}
-        aria-controls={contentId}
-        style={{
-          width: "100%",
-          padding: `${theme.space[3]} ${theme.space[4]}`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: theme.space[3],
-          borderBottom: isExpanded
-            ? `1px dashed ${theme.semantic.border.subtle}`
-            : "1px solid transparent",
-          background:
-            collapsible && isHovered
-              ? theme.semantic.surface.inset
-              : theme.semantic.surface.hud,
-          color: theme.semantic.text.primary,
-          fontFamily: theme.typography.fontFamily.body,
-          cursor: collapsible ? "pointer" : "default",
-          transition: `background ${theme.motion.duration.fast} ${theme.motion.easing.out}`,
-          // Reset native button look.
-          border: "none",
-          textAlign: "left",
-          appearance: "none",
-        }}
+      <Panel.Root
+        data-dreamboard-action-panel=""
+        data-state={isExpanded ? "open" : "closed"}
+        data-collapsible={collapsible ? "true" : undefined}
+        role="region"
+        aria-label={title}
       >
-        <div>
-          <h2
+        <button
+          type="button"
+          onClick={() => collapsible && setIsExpanded(!isExpanded)}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          disabled={!collapsible}
+          aria-expanded={isExpanded}
+          aria-controls={contentId}
+          style={{
+            width: "100%",
+            display: "block",
+            background:
+              collapsible && isHovered
+                ? theme.semantic.surface.inset
+                : "transparent",
+            color: theme.semantic.text.primary,
+            cursor: collapsible ? "pointer" : "default",
+            transition: `background ${theme.motion.duration.fast} ${theme.motion.easing.out}`,
+            border: "none",
+            textAlign: "left",
+            appearance: "none",
+            padding: 0,
+          }}
+        >
+          <Panel.Header
             style={{
-              margin: 0,
-              fontFamily: theme.typography.fontFamily.display,
-              fontSize: theme.typography.fontSize.xl,
-              fontWeight: theme.typography.fontWeight.bold,
-              color: theme.semantic.text.primary,
-              lineHeight: theme.typography.lineHeight.tight,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              gap: theme.space[3],
+              borderBottom: isExpanded
+                ? `1px dashed ${theme.semantic.border.subtle}`
+                : "1px solid transparent",
+              background: "transparent",
             }}
           >
-            {title}
-          </h2>
-          {stateLabel && (
-            <p
-              style={{
-                margin: 0,
-                marginTop: theme.space[1],
-                fontSize: theme.typography.fontSize.sm,
-                fontWeight: theme.typography.fontWeight.medium,
-                color: theme.semantic.text.muted,
-                display: "flex",
-                alignItems: "center",
-                gap: theme.space[2],
-              }}
-            >
-              <span
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: theme.radius.pill,
-                  background: theme.semantic.intent.primary.solid,
-                  border: `1px solid ${theme.semantic.intent.primary.border}`,
-                  display: "inline-block",
-                }}
-              />
-              Phase: {stateLabel}
-            </p>
-          )}
-        </div>
-        {collapsible && (
-          <motion.div
-            animate={
-              reducedMotion ? undefined : { rotate: isExpanded ? 0 : 180 }
-            }
-            transition={{ duration: 0.2 }}
-            style={{
-              padding: theme.space[1],
-              borderRadius: theme.radius.md,
-              border: `1px solid ${theme.semantic.border.default}`,
-              background: theme.semantic.surface.card,
-              color: theme.semantic.text.primary,
-              display: "inline-flex",
-            }}
-          >
-            <ChevronUp
-              size={20}
-              strokeWidth={2.5}
-              aria-hidden="true"
-              style={{ display: "block" }}
-            />
-          </motion.div>
-        )}
-      </button>
-
-      <AnimatePresence initial={false}>
-        {isExpanded && (
-          <motion.div
-            id={contentId}
-            initial={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            animate={
-              reducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }
-            }
-            exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-            style={{
-              overflow: "hidden",
-              background: theme.semantic.surface.card,
-            }}
-          >
-            <div
-              style={{
-                padding: theme.space[4],
-                display: "flex",
-                flexDirection: "column",
-                gap: theme.space[6],
-              }}
-            >
-              {children}
+            <div>
+              <Panel.Title style={{ fontSize: theme.typography.fontSize.xl }}>
+                {title}
+              </Panel.Title>
+              {stateLabel && (
+                <Panel.Description
+                  style={{
+                    marginTop: theme.space[1],
+                    fontWeight: theme.typography.fontWeight.medium,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: theme.space[2],
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: theme.radius.pill,
+                      background: theme.semantic.intent.primary.solid,
+                      border: `1px solid ${theme.semantic.intent.primary.border}`,
+                      display: "inline-block",
+                    }}
+                  />
+                  Phase: {stateLabel}
+                </Panel.Description>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {collapsible && (
+              <motion.span
+                animate={
+                  reducedMotion ? undefined : { rotate: isExpanded ? 0 : 180 }
+                }
+                transition={{ duration: 0.2 }}
+                style={{
+                  padding: theme.space[1],
+                  borderRadius: theme.radius.md,
+                  border: `1px solid ${theme.semantic.border.default}`,
+                  background: theme.semantic.surface.card,
+                  color: theme.semantic.text.primary,
+                  display: "inline-flex",
+                }}
+              >
+                <ChevronUp
+                  size={20}
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                  style={{ display: "block" }}
+                />
+              </motion.span>
+            )}
+          </Panel.Header>
+        </button>
+
+        <AnimatePresence initial={false}>
+          {isExpanded && (
+            <motion.div
+              id={contentId}
+              initial={
+                reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }
+              }
+              animate={
+                reducedMotion ? { opacity: 1 } : { height: "auto", opacity: 1 }
+              }
+              exit={reducedMotion ? { opacity: 0 } : { height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeInOut" }}
+              style={{
+                overflow: "hidden",
+                background: theme.semantic.surface.card,
+              }}
+            >
+              <Panel.Body style={{ gap: theme.space[6] }}>
+                {children}
+              </Panel.Body>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Panel.Root>
     </motion.div>
   );
 }

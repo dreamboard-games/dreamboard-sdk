@@ -49,7 +49,7 @@ const { createRoot } = sdkRequire("react-dom/client");
 const { GlobalRegistrator } = sdkRequire("@happy-dom/global-registrator");
 
 const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
-const browserInteractionProtocolVersion = "2.0.0";
+const browserInteractionProtocolVersion = "3.0.0";
 const gameplayScopeId = "runtime";
 
 GlobalRegistrator.register();
@@ -189,8 +189,7 @@ async function createReferenceProtocol({ referenceGame, coverage }) {
     async validateInput({ input: candidate }) {
       return candidate.kind === "interaction" &&
         Object.values(interactionsByRef).some(
-          (descriptor) =>
-            descriptor.interactionId === candidate.interactionId,
+          (descriptor) => descriptor.interactionId === candidate.interactionId,
         )
         ? { valid: true }
         : {
@@ -260,10 +259,7 @@ async function createReferenceProtocol({ referenceGame, coverage }) {
   });
 }
 
-async function buildRenderModule({
-  gameDir,
-  uiContractFingerprint,
-}) {
+async function buildRenderModule({ gameDir, uiContractFingerprint }) {
   const sharedSource = await readFile(
     path.join(referenceGamesRoot, "shared/reference-ui.mjs"),
     "utf8",
@@ -362,12 +358,13 @@ async function exerciseRenderedScenario({
       );
     }
 
-    const actuator = [...container.querySelectorAll("[data-dreamboard-actuator-id]")]
-      .find(
-        (element) =>
-          element.getAttribute("data-dreamboard-actuator-id") ===
-          resolution.actuator.actuatorId,
-      );
+    const actuator = [
+      ...container.querySelectorAll("[data-dreamboard-actuator-id]"),
+    ].find(
+      (element) =>
+        element.getAttribute("data-dreamboard-actuator-id") ===
+        resolution.actuator.actuatorId,
+    );
     if (!(actuator instanceof HTMLElement)) {
       throw new Error(
         `${fixtureId} resolved actuator '${resolution.actuator.actuatorId}' was not rendered.`,
@@ -575,13 +572,7 @@ async function hashOutputFiles(outputRoot) {
 
 async function compileAll(outputRoot) {
   await mkdir(path.join(outputRoot, "modules"), { recursive: true });
-  const sdkCommit = run("git", [
-    "--git-dir=.here",
-    "--work-tree=.",
-    "rev-parse",
-    "--short=12",
-    "HEAD",
-  ]);
+  const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
   const fixtures = [];
   for (const game of expectedReferenceGames) {
     fixtures.push(await compileGame({ game, outputRoot, sdkCommit }));

@@ -53,6 +53,17 @@ export interface BrowserInteractionActuatorAttributesInput {
   readonly prepares?: BrowserInteractionPreparationTarget;
 }
 
+export interface BrowserInteractionPointerTargetAttributesInput {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly interactionId: string;
+  readonly descriptorDigest?: string;
+  readonly targetId: string;
+  readonly enabled?: boolean;
+  readonly acceptedEffectPatterns: readonly BrowserInteractionEffectPattern[];
+}
+
 function baseGameplayAttributes(
   input: Pick<
     BrowserInteractionRootAttributesInput,
@@ -151,6 +162,29 @@ export function createBrowserInteractionActuatorAttributes(
   return attrs;
 }
 
+export function createBrowserInteractionPointerTargetAttributes(
+  input: BrowserInteractionPointerTargetAttributesInput,
+): BrowserInteractionAttributeMap {
+  const attrs: BrowserInteractionAttributeMap = {
+    ...baseGameplayAttributes(input),
+    [BROWSER_INTERACTION_ATTRIBUTES.role]: "pointer-target",
+    [BROWSER_INTERACTION_ATTRIBUTES.pointerTargetId]: input.targetId,
+    [BROWSER_INTERACTION_ATTRIBUTES.pointerTargetEnabled]:
+      input.enabled === false ? "false" : "true",
+  };
+  if (input.descriptorDigest) {
+    attrs[BROWSER_INTERACTION_ATTRIBUTES.descriptorDigest] =
+      input.descriptorDigest;
+  }
+  if (input.acceptedEffectPatterns.length > 0) {
+    attrs[BROWSER_INTERACTION_ATTRIBUTES.acceptedEffectPatterns] =
+      JSON.stringify(
+        input.acceptedEffectPatterns.map(encodeBrowserInteractionEffectPattern),
+      );
+  }
+  return attrs;
+}
+
 export type GameplayInteractionRootAttributesInput = Omit<
   BrowserInteractionRootAttributesInput,
   "surface"
@@ -170,6 +204,13 @@ export type GameplayActuatorAttributesInput = Omit<
   readonly preparationPatterns?: readonly GameplaySemanticEffectPattern[];
 };
 
+export type GameplayPointerTargetAttributesInput = Omit<
+  BrowserInteractionPointerTargetAttributesInput,
+  "surface" | "acceptedEffectPatterns"
+> & {
+  readonly acceptedEffectPatterns: readonly GameplaySemanticEffectPattern[];
+};
+
 export function createGameplayInteractionRootAttributes(
   input: GameplayInteractionRootAttributesInput,
 ): BrowserInteractionAttributeMap {
@@ -183,6 +224,15 @@ export function createGameplayActuatorAttributes(
   input: GameplayActuatorAttributesInput,
 ): BrowserInteractionAttributeMap {
   return createBrowserInteractionActuatorAttributes({
+    ...input,
+    surface: GAMEPLAY_BROWSER_INTERACTION_SURFACE,
+  });
+}
+
+export function createGameplayPointerTargetAttributes(
+  input: GameplayPointerTargetAttributesInput,
+): BrowserInteractionAttributeMap {
+  return createBrowserInteractionPointerTargetAttributes({
     ...input,
     surface: GAMEPLAY_BROWSER_INTERACTION_SURFACE,
   });

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Building, Route, Sword } from "lucide-react";
 import { ActionPanel, ActionGroup } from "../components/ActionPanel.js";
 import { ActionButton } from "../components/ActionButton.js";
+import { Panel } from "../components/Panel.js";
 import {
   Drawer,
   DrawerTrigger,
@@ -106,6 +107,31 @@ export const CompactPanel: Story = {
           />
         </ActionGroup>
       </ActionPanel>
+    </div>
+  ),
+};
+
+export const CompoundPanel: Story = {
+  name: "Panel — compound",
+  render: () => (
+    <div className="sb-stage" style={{ maxWidth: 360 }}>
+      <Panel.Root>
+        <Panel.Header>
+          <Panel.Title>Trade with bank</Panel.Title>
+          <Panel.Description>
+            Choose what you give and receive.
+          </Panel.Description>
+        </Panel.Header>
+        <Panel.Body>
+          <ActionGroup title="Offer">
+            <ActionButton label="Give two wood" onClick={fn()} />
+          </ActionGroup>
+        </Panel.Body>
+        <Panel.Actions>
+          <ThemedButton variant="ghost">Cancel</ThemedButton>
+          <ThemedButton variant="primary">Confirm trade</ThemedButton>
+        </Panel.Actions>
+      </Panel.Root>
     </div>
   ),
 };

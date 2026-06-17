@@ -104,13 +104,22 @@ async function checkDenylist({ gameId, gameDir, errors }) {
 
 async function checkDemoRegistryAbsence({ gameId, errors }) {
   const repoFiles = await walkFiles(root, {
-    excludeDirs: new Set([".git", ".turbo", "build", "dist", "node_modules"]),
+    excludeDirs: new Set([
+      ".git",
+      ".turbo",
+      "build",
+      "dist",
+      "node_modules",
+      "test-results",
+    ]),
   });
   const forbiddenSourcePath = `examples/reference-games/${gameId}`;
   const unexpectedFiles = [];
   for (const relative of repoFiles) {
     if (
       relative.startsWith("docs/exec-plans/ui-agent-iteration-workbench/") ||
+      relative === "fixtures/ui/component-scenario-index.json" ||
+      relative === "scripts/ui/generate-component-scenario-index.mjs" ||
       relative.startsWith("examples/reference-games/")
     ) {
       continue;
@@ -236,10 +245,14 @@ async function main() {
     fail([`missing ${path.relative(root, referenceGamesRoot)}`]);
   }
   const dirs = await listReferenceGameDirs();
-  const unexpected = dirs.filter(
+  const infrastructureDirs = new Set(["shared"]);
+  const gameDirs = dirs.filter((id) => !infrastructureDirs.has(id));
+  const unexpected = gameDirs.filter(
     (id) => !expectedReferenceGameIds.includes(id),
   );
-  const missing = expectedReferenceGameIds.filter((id) => !dirs.includes(id));
+  const missing = expectedReferenceGameIds.filter(
+    (id) => !gameDirs.includes(id),
+  );
   if (unexpected.length > 0) {
     errors.push(
       `unexpected reference game directories: ${unexpected.join(", ")}`,
@@ -248,13 +261,13 @@ async function main() {
   if (missing.length > 0) {
     errors.push(`missing reference game directories: ${missing.join(", ")}`);
   }
-  if (new Set(dirs).size !== dirs.length) {
+  if (new Set(gameDirs).size !== gameDirs.length) {
     errors.push("duplicated reference game IDs");
   }
 
   const receipts = [];
   for (const gameId of expectedReferenceGameIds) {
-    if (dirs.includes(gameId)) {
+    if (gameDirs.includes(gameId)) {
       const receipt = await validateGame(gameId, errors);
       if (receipt) {
         receipts.push(receipt);

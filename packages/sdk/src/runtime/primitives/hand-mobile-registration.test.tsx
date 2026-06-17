@@ -122,6 +122,8 @@ function buildHandHarness({ withActions }: { withActions?: boolean } = {}) {
 
   interface HandFacade {
     Hand: (props: { children?: unknown }) => unknown;
+    Cards: (props: { children: () => unknown }) => unknown;
+    Actions: (props: { children: () => unknown }) => unknown;
   }
   const useHandFacade = (
     UI as unknown as {
@@ -142,26 +144,33 @@ function buildHandHarness({ withActions }: { withActions?: boolean } = {}) {
     });
     return createElement(
       hand.Hand as unknown as React.FC<unknown>,
-      {
-        // No `layout` prop: the generated facade always renders the projected
-        // HandSurfaceView (fan on desktop / tray on mobile) now, so the default
-        // path is what we exercise here. The body renders a single card so the
-        // registered hand reports count 1.
-        children: () =>
-          createElement("span", { "data-marker": "card" }, "card-1"),
-        // The action slot must travel into the mobile dock so a hand's commit
-        // stays reachable while docked.
-        ...(withActions
-          ? {
-              renderActions: () =>
+      null,
+      createElement(
+        hand.Cards as unknown as React.FC<unknown>,
+        {
+          // No `layout` prop: the generated facade always renders the projected
+          // HandSurfaceView (fan on desktop / tray on mobile) now, so the default
+          // path is what we exercise here. The body renders a single card so the
+          // registered hand reports count 1.
+          children: () =>
+            createElement("span", { "data-marker": "card" }, "card-1"),
+        } as unknown,
+      ),
+      withActions
+        ? createElement(
+            hand.Actions as unknown as React.FC<unknown>,
+            {
+              // The action slot must travel into the mobile dock so a hand's
+              // commit stays reachable while docked.
+              children: () =>
                 createElement(
                   "button",
                   { type: "button", "data-marker": "hand-action" },
                   "Commit",
                 ),
-            }
-          : {}),
-      } as unknown,
+            } as unknown,
+          )
+        : null,
     );
   }
 
@@ -213,7 +222,7 @@ test("generated hand registers into the mobile tray after effects run", async ()
   await unmount(mounted);
 });
 
-test("renderActions content travels into the mobile dock", async () => {
+test("compound Actions content travels into the mobile dock", async () => {
   const runtime = mountRuntime();
   const { UI, HandHarness } = buildHandHarness({ withActions: true });
 

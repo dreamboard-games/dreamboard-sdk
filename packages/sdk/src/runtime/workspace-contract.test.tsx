@@ -177,7 +177,7 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
   }
   interface HandFacade {
     Hand: (props: {
-      children?: ((card: ZoneCard) => unknown) | unknown;
+      children?: unknown;
       layout?: unknown;
       mobileInteraction?: "direct-activate" | "drag-to-target";
       dropTargets?: ReadonlyArray<{
@@ -187,6 +187,9 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
         label: string;
         render: () => unknown;
       }>;
+    }) => unknown;
+    Cards: (props: {
+      children: (card: ZoneCard, state: { eligible?: boolean }) => unknown;
     }) => unknown;
   }
   const useHandFacade = (
@@ -217,12 +220,17 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
             render: () => createElement("div", { "data-marker": "drop-a" }),
           },
         ],
-        children: (card: ZoneCard, state: { eligible?: boolean }) =>
-          createElement("span", {
-            "data-card": card.id,
-            "data-card-eligible": state.eligible ? "true" : "false",
-          }),
       } as unknown,
+      createElement(
+        hand.Cards as unknown as React.FC<unknown>,
+        {
+          children: (card: ZoneCard, state: { eligible?: boolean }) =>
+            createElement("span", {
+              "data-card": card.id,
+              "data-card-eligible": state.eligible ? "true" : "false",
+            }),
+        } as unknown,
+      ),
     );
   }
 
@@ -249,6 +257,87 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
   // input, so the SSR markup must reflect that through the children
   // callback rather than dropping the state argument silently.
   expect(html).toContain('data-card-eligible="true"');
+});
+
+test("defineGameUI composes root, routes, active phase, and interaction UI", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    defineSurfaces: (spec: unknown) => () => { readonly marker: "surface" };
+    defineGameUI: (config: {
+      useSurfaces: () => { readonly marker: "surface" };
+      interactionRoutes: (context: {
+        game: { phase: string | null };
+        surfaces: { readonly marker: "surface" };
+      }) => Record<string, { collect: Record<string, unknown> }>;
+      phases: Record<
+        string,
+        (context: {
+          game: { phase: string | null };
+          surfaces: { readonly marker: "surface" };
+        }) => unknown
+      >;
+      renderInteractions: (context: {
+        game: { phase: string | null };
+        surfaces: { readonly marker: "surface" };
+      }) => unknown;
+    }) => React.FC<{ theme?: "tabletop" }>;
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  const useSurfaces = () => ({ marker: "surface" as const });
+  const Defined = UI.defineGameUI({
+    useSurfaces,
+    interactionRoutes: ({ surfaces }) => ({
+      "play.placeCard": {
+        collect: {
+          cardId: surfaces.marker,
+          spaceId: "space",
+        },
+      },
+    }),
+    phases: {
+      play: ({ game, surfaces }) =>
+        createElement("section", {
+          "data-marker": "phase",
+          "data-phase": game.phase,
+          "data-surface": surfaces.marker,
+        }),
+    },
+    renderInteractions: ({ surfaces }) =>
+      createElement("aside", {
+        "data-marker": "interactions",
+        "data-surface": surfaces.marker,
+      }),
+  });
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(Defined, { theme: "tabletop" }),
+    ),
+  );
+
+  expect(html).toContain("--db-color-");
+  expect(html).toContain('data-marker="phase"');
+  expect(html).toContain('data-phase="play"');
+  expect(html).toContain('data-marker="interactions"');
+  expect(html).toContain('data-surface="surface"');
 });
 
 test("generated interaction arms render semantic browser replay digests", () => {
@@ -583,7 +672,7 @@ test("board target draft digests reflect live draft values", () => {
   );
 });
 
-test("generated hand renders selection summary through the renderSummary slot", () => {
+test("generated hand renders selection summary through the compound Summary slot", () => {
   const snapshot = makeSnapshot();
   const runtime = makeRuntime(snapshot, async () => undefined);
 
@@ -615,9 +704,10 @@ test("generated hand renders selection summary through the renderSummary slot", 
     hasInvalidSelection: boolean;
   }
   interface HandFacade {
-    Hand: (props: {
-      children?: unknown;
-      renderSummary?: (summary: SummaryShape) => unknown;
+    Hand: (props: { children?: unknown }) => unknown;
+    Cards: (props: { children: (card: ZoneCard) => unknown }) => unknown;
+    Summary: (props: {
+      children: (summary: SummaryShape) => unknown;
     }) => unknown;
   }
   const useHandFacade = (
@@ -639,19 +729,28 @@ test("generated hand renders selection summary through the renderSummary slot", 
     });
     return createElement(
       hand.Hand as unknown as React.FC<unknown>,
-      {
-        renderSummary: (summary: SummaryShape) =>
-          createElement(
-            "span",
-            {
-              "data-marker": "summary",
-              "data-count": String(summary.selectedCount),
-            },
-            `${summary.selectedCount} selected`,
-          ),
-        children: (card: ZoneCard) =>
-          createElement("span", { "data-card": card.id }),
-      } as unknown,
+      null,
+      createElement(
+        hand.Cards as unknown as React.FC<unknown>,
+        {
+          children: (card: ZoneCard) =>
+            createElement("span", { "data-card": card.id }),
+        } as unknown,
+      ),
+      createElement(
+        hand.Summary as unknown as React.FC<unknown>,
+        {
+          children: (summary: SummaryShape) =>
+            createElement(
+              "span",
+              {
+                "data-marker": "summary",
+                "data-count": String(summary.selectedCount),
+              },
+              `${summary.selectedCount} selected`,
+            ),
+        } as unknown,
+      ),
     );
   }
 
@@ -668,7 +767,7 @@ test("generated hand renders selection summary through the renderSummary slot", 
   );
 
   // The generated facade composes the runtime hand-summary chrome and the
-  // author's renderSummary slot. With no draft mutations the count is 0
+  // author's compound Summary slot. With no draft mutations the count is 0
   // and `hasInvalidSelection` is false; both are exposed via stable
   // data attributes so authors can style around them.
   expect(html).toContain("data-dreamboard-runtime-hand-summary");

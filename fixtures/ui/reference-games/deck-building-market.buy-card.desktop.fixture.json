@@ -1,5 +1,5 @@
 {
-  "browserInteractionProtocol": "2.0.0",
+  "browserInteractionProtocol": "3.0.0",
   "environment": {
     "clockIso": "2026-01-01T00:00:00.000Z",
     "locale": "en-US",
@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
-    "finalSemanticDigest": "sha256:8a9d4ea51e7c302b04238efbca24b7b27fcd397c2f94a63a1e44bde313b76987",
+    "finalSemanticDigest": "sha256:a2a0f3ab5d40a02bf8d97fcbce8b007e2e9df44f5c5336080f576550ffa420de",
     "initialProjectionDigest": "sha256:c068b58d757c8495061c1c124438c54cb9ed300f4785532512e90b0672873b3c",
     "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04"
   },
@@ -205,7 +205,7 @@
       "expect": {
         "frameId": "frame-2",
         "projectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
-        "semanticDigest": "sha256:8a9d4ea51e7c302b04238efbca24b7b27fcd397c2f94a63a1e44bde313b76987",
+        "semanticDigest": "sha256:a2a0f3ab5d40a02bf8d97fcbce8b007e2e9df44f5c5336080f576550ffa420de",
         "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04",
         "visibleInteractionKeys": [
           "buy-card",
@@ -237,9 +237,9 @@
   "source": {
     "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-    "renderModuleDigest": "sha256:5e52c9c497064d4794eb9ff740ecd2596c958f7630f14e55945d23d2a7038d28",
+    "renderModuleDigest": "sha256:f447bb27501aaab86d18fb1064637f6887728294632a5504f563b5ac2c740054",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:c83e56a5296f48682722f5bdbc7ce651247bd6429835db6ce1dac30497bc14bf",
+    "sourceDigest": "sha256:b3d4b38044e4eed2c3ddcfec42dd814d505c80df0f84d2c2080685c37d520b46",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

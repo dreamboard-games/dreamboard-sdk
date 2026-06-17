@@ -1,7 +1,7 @@
 export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME =
   "dreamboard-browser-interaction" as const;
 
-export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION = "2.0.0" as const;
+export const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION = "3.0.0" as const;
 
 export const BROWSER_INTERACTION_ATTRIBUTES = {
   protocol: "data-dreamboard-browser-protocol",
@@ -20,6 +20,8 @@ export const BROWSER_INTERACTION_ATTRIBUTES = {
   actuatorKind: "data-dreamboard-actuator-kind",
   enabled: "data-dreamboard-actuator-enabled",
   actuatorId: "data-dreamboard-actuator-id",
+  pointerTargetId: "data-dreamboard-pointer-target-id",
+  pointerTargetEnabled: "data-dreamboard-pointer-target-enabled",
   semanticEffects: "data-dreamboard-semantic-effects",
   acceptedEffectPatterns: "data-dreamboard-accepted-effect-patterns",
   preparationPatterns: "data-dreamboard-preparation-patterns",
@@ -33,6 +35,7 @@ export const BROWSER_INTERACTION_ATTRIBUTES = {
 export const BROWSER_INTERACTION_RECORD_ROLES = [
   "interaction",
   "actuator",
+  "pointer-target",
 ] as const;
 
 export const GAMEPLAY_BROWSER_INTERACTION_SURFACE = "gameplay" as const;

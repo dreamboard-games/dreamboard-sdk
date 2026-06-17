@@ -1,5 +1,5 @@
 {
-  "browserInteractionProtocol": "2.0.0",
+  "browserInteractionProtocol": "3.0.0",
   "environment": {
     "clockIso": "2026-01-01T00:00:00.000Z",
     "locale": "en-US",
@@ -12,7 +12,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:98d92947bfd93ce03190ad85b2bf2687ae76026acb4ebbd6009190fb59e54324",
-    "finalSemanticDigest": "sha256:ed5bada7f718787b8378d2570623451b558b40a22dd2a0aed4a8190d3eb4b5f0",
+    "finalSemanticDigest": "sha256:33b15f64670193875837e0760ce28b87c985bdcae26b18a205ae83c5a1514eec",
     "initialProjectionDigest": "sha256:3da4fd8204a1a6ead0dbb3e365a1977e0db1d68a2832f2974d92c6a8f57bdf08",
     "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c"
   },
@@ -178,7 +178,7 @@
       "expect": {
         "frameId": "frame-2",
         "projectionDigest": "sha256:98d92947bfd93ce03190ad85b2bf2687ae76026acb4ebbd6009190fb59e54324",
-        "semanticDigest": "sha256:ed5bada7f718787b8378d2570623451b558b40a22dd2a0aed4a8190d3eb4b5f0",
+        "semanticDigest": "sha256:33b15f64670193875837e0760ce28b87c985bdcae26b18a205ae83c5a1514eec",
         "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
         "visibleInteractionKeys": [
           "pass-three",
@@ -209,9 +209,9 @@
   "source": {
     "reducerFingerprint": "sha256:9b905cbe094b398ec1070bc8e6e8e6b09caa5cea86902ce17f3cef75f5dd958d",
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
-    "renderModuleDigest": "sha256:aacab592a30bcd5fde50b9c0015f316937d2a723fe9bef72fa30bf9409774a28",
+    "renderModuleDigest": "sha256:38fc48eda7f0e32f2bd738b3cefceaff40ff08d5723ed1633c8dfbfc0c71be0c",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:bc9367c0e34671c09e2230bc6b76f2958f02ac5a92a3e96bfd347c375522e768",
+    "sourceDigest": "sha256:a4d079686b3c465eb3f920ca37cf2055e6ce7467fc7dd38e1e6df537dac1fd5f",
     "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
   },
   "tags": [

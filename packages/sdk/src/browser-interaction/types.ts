@@ -28,7 +28,7 @@ export type BrowserInteractionActuatorKind =
 
 export interface BrowserInteractionProtocolIdentity {
   readonly name: "dreamboard-browser-interaction";
-  readonly version: "2.0.0";
+  readonly version: "3.0.0";
 }
 
 export type BrowserInteractionSurfaceEffect = {
@@ -93,11 +93,14 @@ export interface BrowserInteractionDiagnostic {
   readonly code:
     | "ambiguous-actuator"
     | "ambiguous-effect-match"
+    | "ambiguous-pointer-target"
     | "ambiguous-preparation-pattern"
     | "disabled-effect-actuator"
+    | "disabled-pointer-target"
     | "duplicate-accepted-effect-pattern-match"
     | "duplicate-enabled-actuator"
     | "duplicate-enabled-effect-actuator"
+    | "duplicate-enabled-pointer-target"
     | "effect-actuator-kind-incompatibility"
     | "effect-intent-incompatibility"
     | "invalid-candidate"
@@ -108,6 +111,7 @@ export interface BrowserInteractionDiagnostic {
     | "invalid-scalar-argument"
     | "missing-effect"
     | "orphan-actuator"
+    | "orphan-pointer-target"
     | "preparation-cycle"
     | "surface-intent-collision"
     | "unknown-surface-effect"
@@ -121,6 +125,7 @@ export interface BrowserInteractionDiagnostic {
   readonly interactionKey?: string;
   readonly intent?: BrowserInteractionIntent;
   readonly actuatorId?: string;
+  readonly targetId?: string;
 }
 
 export interface BrowserInteractionRawRecord {
@@ -155,6 +160,14 @@ export interface BrowserInteractionActuator {
   readonly diagnostics: readonly BrowserInteractionDiagnostic[];
 }
 
+export interface BrowserInteractionPointerTarget {
+  readonly targetId: string;
+  readonly enabled: boolean;
+  readonly acceptedEffectPatterns: readonly BrowserInteractionEffectPattern[];
+  readonly descriptorDigest?: string;
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+
 export interface BrowserInteractionEntity {
   readonly interactionKey: string;
   readonly interactionId: string;
@@ -162,6 +175,7 @@ export interface BrowserInteractionEntity {
   readonly draftDigest?: string;
   readonly readiness: BrowserInteractionReadiness;
   readonly actuators: readonly BrowserInteractionActuator[];
+  readonly pointerTargets: readonly BrowserInteractionPointerTarget[];
   readonly diagnostics: readonly BrowserInteractionDiagnostic[];
 }
 
@@ -285,6 +299,32 @@ export interface BrowserInteractionEffectResolutionSuccess {
   readonly effect: BrowserInteractionSurfaceEffect;
   readonly diagnostics: readonly BrowserInteractionDiagnostic[];
 }
+
+export interface BrowserInteractionPointerTargetResolutionSuccess {
+  readonly ok: true;
+  readonly pointerTarget: BrowserInteractionPointerTarget;
+  readonly surface: BrowserInteractionSurface;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly match: "accepted-pattern";
+  readonly effect: BrowserInteractionSurfaceEffect;
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+
+export interface BrowserInteractionPointerTargetResolutionFailure {
+  readonly ok: false;
+  readonly code:
+    | "ambiguous"
+    | "invalid-effect"
+    | "invalid-snapshot"
+    | "not-found"
+    | "unavailable";
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+
+export type BrowserInteractionPointerTargetResolution =
+  | BrowserInteractionPointerTargetResolutionSuccess
+  | BrowserInteractionPointerTargetResolutionFailure;
 
 export interface BrowserInteractionEffectResolutionFailure {
   readonly ok: false;
