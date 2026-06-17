@@ -1235,7 +1235,10 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     "holder-a",
   ]);
   expect(table.componentLocations.omitted).toEqual({
-    type: "Detached",
+    type: "InDeck",
+    deckId: "shared-deck",
+    playedBy: null,
+    position: 0,
   });
   expect(table.componentLocations.detached).toEqual({
     type: "Detached",
@@ -1244,7 +1247,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     type: "InDeck",
     deckId: "shared-deck",
     playedBy: null,
-    position: 0,
+    position: 1,
   });
   expect(table.componentLocations["space-card"]).toMatchObject({
     type: "OnSpace",
@@ -1271,8 +1274,11 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     host: { kind: "piece", id: "holder-a" },
     slotId: "pocket",
   });
-  expect(table.zones.shared["shared-deck"]).toEqual(["zone-card"]);
-  expect(table.decks["shared-deck"]).toEqual(["zone-card"]);
+  expect(table.zones.shared["shared-deck"]).toEqual([
+    "omitted",
+    "zone-card",
+  ]);
+  expect(table.decks["shared-deck"]).toEqual(["omitted", "zone-card"]);
   expect(table.zones.shared["compatible-only"]).toEqual([]);
 });
 
@@ -1355,9 +1361,12 @@ test("generateManifestContractSources split runtime module executes generated ru
       });
 
       expect(table.playerOrder).toEqual(["player-1", "player-2"]);
-      expect(table.zones.shared["draw-deck"]).toEqual([]);
+      expect(table.zones.shared["draw-deck"]).toEqual(["CARD_A"]);
       expect(table.componentLocations["CARD_A"]).toMatchObject({
-        type: "Detached",
+        type: "InDeck",
+        deckId: "draw-deck",
+        playedBy: null,
+        position: 0,
       });
       expect(table.zones.perPlayer["main-hand"].entries).toEqual([
         ["player-1", []],
