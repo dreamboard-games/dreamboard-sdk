@@ -15468,14 +15468,6 @@ function PluginRuntime({
 
 PluginRuntime provides the RuntimeContext for plugin components.
 
-### PluginRuntimeAPI
-
-```ts
-interface PluginRuntimeAPI { ... }
-```
-
-Extended RuntimeAPI with plugin-specific methods for state-sync architecture.
-
 ### PluginRuntimeClient
 
 ```ts
@@ -16146,7 +16138,9 @@ Translate a raw SDK `CardIntent` into the author-facing `AuthoredCardIntent` sha
 ### descriptorsHaveDestinationInput
 
 ```ts
-function descriptorsHaveDestinationInput(state: PluginStateSnapshot): boolean;
+function descriptorsHaveDestinationInput(
+  state: PluginRuntimeProjection,
+): boolean;
 ```
 
 Determine whether any descriptor in the available list expects a board or card destination input alongside a card target. Used by generated facades to decide whether to mount a drag surface even before the author wires dropTargets.
@@ -18424,6 +18418,14 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/runtime/runtime-api
 
+### PluginRuntimeProjection
+
+```ts
+interface PluginRuntimeProjection { ... }
+```
+
+Runtime projection shape used by older selector-style SDK primitives.
+
 ### PluginSessionState
 
 ```ts
@@ -18432,14 +18434,6 @@ interface PluginSessionState { ... }
 
 Plugin session state
 
-### PluginStateSnapshot
-
-```ts
-interface PluginStateSnapshot { ... }
-```
-
-The complete state snapshot sent to the plugin via state-sync. This is the single source of truth for all reducer-native plugin state.
-
 ### RuntimeAPI
 
 ```ts
@@ -18447,6 +18441,34 @@ interface RuntimeAPI { ... }
 ```
 
 RuntimeAPI provides the interface between plugin code and the game runtime. This API is exposed to plugin iframes for subscribing to game events and submitting actions.
+
+### RuntimeDiagnosticEvent
+
+```ts
+type RuntimeDiagnosticEvent =
+  | {
+      type: "runtimeLog";
+      level: "log" | "warn" | "error";
+      message: string;
+      details?: readonly unknown[];
+    }
+  | {
+      type: "internalError";
+      code: string;
+      message: string;
+      stack?: string;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeDiagnosticHandler
+
+```ts
+type RuntimeDiagnosticHandler = (event: RuntimeDiagnosticEvent) => void;
+```
+
+_No JSDoc summary is available yet._
 
 ### SubmissionError
 

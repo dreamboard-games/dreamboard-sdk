@@ -1,7 +1,5 @@
-import { useMemo, useSyncExternalStore } from "react";
-import { useRuntimeContext } from "../context/RuntimeContext.js";
+import { useMemo } from "react";
 import type { LobbyState } from "../types/plugin-state.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import { useOptionalPluginSessionDescriptor } from "../context/PluginSessionContext.js";
 import type { HexColor } from "../../ui.js";
 
@@ -14,25 +12,7 @@ export type { LobbyState };
  */
 export function useLobbyState(): LobbyState | null {
   const sessionDescriptor = useOptionalPluginSessionDescriptor();
-  const runtime = useRuntimeContext() as PluginRuntimeAPI;
-  const legacyStore = useMemo(
-    () => ({
-      subscribe: (onStoreChange: () => void) =>
-        runtime.subscribeToState?.(() => {
-          onStoreChange();
-        }) ?? (() => {}),
-      getSnapshot: () => runtime.getSnapshot?.()?.lobby ?? null,
-      getServerSnapshot: () => runtime.getSnapshot?.()?.lobby ?? null,
-    }),
-    [runtime],
-  );
-  const legacyLobbyState = useSyncExternalStore(
-    legacyStore.subscribe,
-    legacyStore.getSnapshot,
-    legacyStore.getServerSnapshot,
-  );
-
-  const sessionLobbyState = useMemo<LobbyState | null>(() => {
+  return useMemo<LobbyState | null>(() => {
     if (!sessionDescriptor) {
       return null;
     }
@@ -46,18 +26,13 @@ export function useLobbyState(): LobbyState | null {
       hostUserId: "",
     };
   }, [sessionDescriptor]);
-
-  if (sessionLobbyState) {
-    return sessionLobbyState;
-  }
-  return legacyLobbyState;
 }
 
 /**
- * Hook to subscribe to lobby state updates.
- * Returns the latest lobby information from state-sync messages.
+ * Hook to read plugin-visible player roster metadata.
+ * Returns the latest lobby information from gameplay-frame messages.
  *
- * State is provided by PluginStateProvider from host's state-sync messages.
+ * State is provided by PluginStateProvider from host's gameplay-frame messages.
  * The host transforms raw SSE LOBBY_UPDATE messages into clean LobbyState objects.
  *
  * @returns Current lobby state (never null - throws if not available)

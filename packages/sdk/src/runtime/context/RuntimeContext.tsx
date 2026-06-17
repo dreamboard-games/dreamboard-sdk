@@ -46,7 +46,7 @@ export function useRuntimeContext(): RuntimeAPI {
  * @example
  * ```tsx
  * function PluginRoot() {
- *   const runtime = createPluginRuntimeAPI();
+ *   const runtime = createPluginRuntimeClient({ transport });
  *
  *   return (
  *     <RuntimeProvider runtime={runtime}>

@@ -2,7 +2,7 @@ import type {
   GameplaySnapshot,
   InteractionDescriptor,
   InteractionInputDescriptor,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
 } from "../types/plugin-state.js";
 
 type JsonValue =
@@ -19,7 +19,7 @@ export const AUTHORIZED_SEAT_PROJECTION_DIGEST_VERSION =
   "authorized-seat-projection@2";
 
 export function semanticProjectionDigestForState(
-  state: PluginStateSnapshot,
+  state: PluginRuntimeProjection,
 ): string | null {
   const actorPlayerId = state.session.controllingPlayerId;
   if (!actorPlayerId) {
@@ -33,7 +33,7 @@ export function semanticProjectionDigestForState(
 }
 
 function semanticSeatProjection(
-  state: PluginStateSnapshot,
+  state: PluginRuntimeProjection,
   gameplay: GameplaySnapshot,
   seatOrder: readonly string[],
 ): CanonicalJson {

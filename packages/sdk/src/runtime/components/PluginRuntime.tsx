@@ -1,31 +1,31 @@
 import React from "react";
 import { usePluginRuntime } from "../hooks/usePluginRuntime.js";
 import { GameSkeleton } from "../../ui.js";
-import type { PluginRuntimeDiagnosticHandler } from "../api/createPluginRuntimeAPI.js";
+import type { RuntimeDiagnosticHandler } from "../types/runtime-api.js";
 import { PluginRuntimeBoundary } from "./PluginRuntimeBoundary.js";
 
 export interface PluginRuntimeProps {
-  /** Child components to render after state sync has started */
+  /** Child components to render after gameplay frame has started */
   children: React.ReactNode;
   /**
-   * Timeout in milliseconds to wait for the first state-sync snapshot.
+   * Timeout in milliseconds to wait for the first gameplay-frame snapshot.
    * @default 10000 (10 seconds)
    */
   timeout?: number;
-  /** Custom loading component to show while waiting for state sync */
+  /** Custom loading component to show while waiting for gameplay frame */
   loadingComponent?: React.ReactNode;
   /** Custom error component to show when initialization fails */
   errorComponent?: (error: string) => React.ReactNode;
-  onDiagnostic?: PluginRuntimeDiagnosticHandler;
+  onDiagnostic?: RuntimeDiagnosticHandler;
 }
 
 /**
  * PluginRuntime provides the RuntimeContext for plugin components.
  *
  * This component:
- * - Creates a RuntimeAPI instance using the SDK-provided implementation
- * - Waits for the first reducer-native state-sync snapshot before rendering children
- * - Provides RuntimeAPI and session state to all child components
+ * - Creates a transport-backed runtime client
+ * - Waits for the first projected gameplay frame before rendering children
+ * - Provides runtime commands plus session/frame state to all child components
  *
  * @example
  * ```tsx

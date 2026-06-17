@@ -41,7 +41,7 @@ import { useGameActionError } from "./game.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
+import type { RuntimeAPI } from "../types/runtime-api.js";
 import {
   createGameplayActuatorAttributes,
   type BrowserInteractionAttributeMap,
@@ -63,7 +63,7 @@ function warnAmbiguousBoardTarget({
   kind: BoardTargetKind;
   value: string;
   interactionKeys: readonly string[];
-  runtime?: PluginRuntimeAPI;
+  runtime?: RuntimeAPI;
 }): void {
   const key = `${kind}:${value}:${interactionKeys.join("|")}`;
   if (warnedAmbiguousBoardTargets.has(key)) return;
@@ -303,7 +303,7 @@ function UnambiguousBoardTarget({
   ...props
 }: Omit<BoardTargetProps, "interaction">) {
   const board = useBoardPrimitiveContext();
-  const runtime = useRuntimeContext() as PluginRuntimeAPI;
+  const runtime = useRuntimeContext() as RuntimeAPI;
   const gameActionError = useGameActionError();
   const targetState = board.targetState(kind, value);
   const eligible = board.isEligible(value, kind);

@@ -183,7 +183,7 @@ test("top-level ui-sdk does not export internal coordination plumbing", () => {
     "shellSlotForSurface",
     "isGeneratedHexBoardInput",
     "isGeneratedSquareBoardInput",
-    "usePluginStateSnapshot",
+    "usePluginRuntimeProjection",
     "useHexGrid",
     "useSquareGrid",
   ]) {

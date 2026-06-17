@@ -1,6 +1,5 @@
 export {
   RuntimeContext,
-  RuntimeProvider,
   useRuntimeContext,
 } from "./context/RuntimeContext.js";
 export {
@@ -28,7 +27,6 @@ export {
   hasDefaultInteractionFormFields,
   type InteractionFormProps,
 } from "./components/interaction-form/index.js";
-export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export { createPluginRuntimeClient } from "./core/create-plugin-runtime-client.js";
 export { createPostMessagePluginTransport } from "./browser/post-message-transport.js";
 export type { PostMessagePluginTransportOptions } from "./browser/post-message-transport.js";
@@ -40,11 +38,9 @@ export type {
   RuntimeIdFactory,
 } from "./core/types.js";
 export {
-  PluginStateProvider,
   usePluginState,
 } from "./context/PluginStateContext.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";
-export type { PluginStateSnapshot } from "./types/plugin-state.js";
 export type {
   RuntimeAPI,
   SubmissionError,

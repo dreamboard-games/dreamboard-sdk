@@ -9,9 +9,8 @@ import {
   digestPluginGameplayFrame,
   type PluginGameplayFrame,
 } from "@dreamboard-games/plugin-runtime-contract";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import type { PluginRuntimeClient } from "../core/types.js";
-import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 import {
   BROWSER_INTERACTION_ATTRIBUTES,
   DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
@@ -103,45 +102,6 @@ export function PluginGameplayFrameProvider({
   );
 }
 
-export function PluginGameplayFrameCompatProvider({
-  runtime,
-  children,
-  loadingComponent = <DefaultLoadingScreen />,
-}: {
-  runtime: PluginRuntimeAPI;
-  children: React.ReactNode;
-  loadingComponent?: React.ReactNode;
-}) {
-  const storeApi = useMemo<PluginGameplayFrameStore>(
-    () => {
-      const deriveFrame = () => {
-        const snapshot = runtime.getSnapshot?.() ?? null;
-        return snapshot ? pluginGameplayFrameFromStateSnapshot(snapshot) : null;
-      };
-      let current = deriveFrame();
-      return {
-        subscribe: (onStoreChange) =>
-          runtime.subscribeToState?.(() => {
-            current = deriveFrame();
-            onStoreChange();
-          }) ?? (() => {}),
-        getSnapshot: () => current,
-        getServerSnapshot: () => current,
-      };
-    },
-    [runtime],
-  );
-
-  return (
-    <PluginGameplayFrameStoreProvider
-      store={storeApi}
-      loadingComponent={loadingComponent}
-    >
-      {children}
-    </PluginGameplayFrameStoreProvider>
-  );
-}
-
 function PluginGameplayFrameStoreProvider({
   store,
   children,
@@ -169,26 +129,6 @@ function PluginGameplayFrameStoreProvider({
       </PluginGameplayFrameContext.Provider>
     </PluginGameplayFrameStoreContext.Provider>
   );
-}
-
-export function pluginGameplayFrameFromStateSnapshot(
-  state: PluginStateSnapshot,
-): PluginGameplayFrame {
-  return {
-    gameVersion: state.syncId,
-    actionSetVersion: `legacy-state-sync:${state.syncId}`,
-    perspectivePlayerId: state.session.controllingPlayerId,
-    view: state.view,
-    flow: {
-      currentPhase: state.gameplay.currentPhase,
-      currentStage: state.gameplay.currentStage,
-      activePlayers: state.gameplay.activePlayers,
-      simultaneousPhase: state.gameplay.simultaneousPhase ?? null,
-    },
-    availableInteractions:
-      state.gameplay.availableInteractions as PluginGameplayFrame["availableInteractions"],
-    zones: state.gameplay.zones as PluginGameplayFrame["zones"],
-  };
 }
 
 export function usePluginGameplayFrame(): PluginGameplayFrame {
@@ -228,6 +168,27 @@ function requirePluginGameplayFrame(
     throw new Error("Plugin gameplay frame is not available.");
   }
   return frame;
+}
+
+export function pluginGameplayFrameFromProjection(
+  state: PluginRuntimeProjection,
+): PluginGameplayFrame {
+  return {
+    gameVersion: state.syncId,
+    actionSetVersion: `projection:${state.syncId}`,
+    perspectivePlayerId: state.session.controllingPlayerId,
+    view: state.view,
+    flow: {
+      currentPhase: state.gameplay.currentPhase,
+      currentStage: state.gameplay.currentStage,
+      activePlayers: state.gameplay.activePlayers,
+      simultaneousPhase:
+        state.gameplay.simultaneousPhase as PluginGameplayFrame["flow"]["simultaneousPhase"],
+    },
+    availableInteractions:
+      state.gameplay.availableInteractions as PluginGameplayFrame["availableInteractions"],
+    zones: state.gameplay.zones as PluginGameplayFrame["zones"],
+  };
 }
 
 const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";

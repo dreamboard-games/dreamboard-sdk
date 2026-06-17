@@ -20,6 +20,24 @@ export interface SubmissionError extends Error {
   errorCode?: string;
 }
 
+export type RuntimeDiagnosticEvent =
+  | {
+      type: "runtimeLog";
+      level: "log" | "warn" | "error";
+      message: string;
+      details?: readonly unknown[];
+    }
+  | {
+      type: "internalError";
+      code: string;
+      message: string;
+      stack?: string;
+    };
+
+export type RuntimeDiagnosticHandler = (
+  event: RuntimeDiagnosticEvent,
+) => void;
+
 /**
  * Plugin session state
  */
@@ -71,6 +89,11 @@ export interface RuntimeAPI {
     params: unknown,
   ) => Promise<void>;
 
+  emitDiagnostic?: (event: RuntimeDiagnosticEvent) => void;
+  setDiagnosticHandler?: (
+    handler: RuntimeDiagnosticHandler | undefined,
+  ) => void;
+
   /**
    * Get the current plugin session state.
    * Returns initialization status and session/player IDs.
@@ -92,5 +115,4 @@ export interface RuntimeAPI {
    * Should be called when the plugin is unmounting.
    */
   disconnect: () => void;
-
 }

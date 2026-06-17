@@ -2,7 +2,7 @@ import type { GameView, PhaseName } from "#dreamboard/ui-contract";
 import type {
   GameplayPromptOption,
   GameplaySnapshot as BaseGameplaySnapshot,
-  PluginStateSnapshot as BasePluginStateSnapshot,
+  PluginRuntimeProjection as BasePluginRuntimeProjection,
 } from "./plugin-state.js";
 
 type StageName = string;
@@ -14,8 +14,8 @@ export type GameplaySnapshot = BaseGameplaySnapshot<
   InteractionId
 >;
 
-export type PluginStateSnapshot = Omit<
-  BasePluginStateSnapshot<GameView, PhaseName, StageName, InteractionId>,
+export type PluginRuntimeProjection = Omit<
+  BasePluginRuntimeProjection<GameView, PhaseName, StageName, InteractionId>,
   "gameplay"
 > & {
   gameplay: GameplaySnapshot;

@@ -5,7 +5,7 @@ import { usePluginState } from "../context/PluginStateContext.js";
 import { CardFace, type ViewCard } from "../../ui.js";
 import type { InteractionCardInputRenderState } from "../primitives/index.js";
 import type { ZoneListProps } from "../primitives/zone.js";
-import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 import { createHandPieces } from "./hand.js";
 import { createCardInputSlot } from "./slots.js";
 import type {
@@ -97,7 +97,7 @@ export function createZoneCardComponent<Card>(
         size: "sm",
         children,
       });
-    const match = usePluginState((state: PluginStateSnapshot) => {
+    const match = usePluginState((state: PluginRuntimeProjection) => {
       const candidates =
         state.gameplay.zones[zone]?.playableByCardId[cardId] ?? [];
       for (const descriptor of candidates) {

@@ -1,24 +1,20 @@
-import { afterEach, expect, test } from "bun:test";
+import { expect, test } from "bun:test";
+import { digestPluginGameplayFrame } from "@dreamboard-games/plugin-runtime-contract";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
-import { PluginRuntime } from "./components/PluginRuntime.js";
+import { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
 import { InteractionForm } from "./components/interaction-form/index.js";
 import { createDreamboardUI } from "./ui-contract.js";
 import { createWorkspaceUIContract } from "./workspace-contract/index.js";
 import { Board } from "./primitives/board.js";
 import type { InteractionHandle } from "./hooks/useInteractionHandle.js";
-import type { PluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
-import type { PluginStateSnapshot } from "./types/plugin-state.js";
+import { pluginGameplayFrameFromProjection } from "./context/PluginGameplayFrameContext.js";
+import type { PluginRuntimeClient } from "./core/types.js";
+import type { PluginRuntimeProjection } from "./types/plugin-state.js";
 import { interactionDraftDigestForValues } from "./utils/interaction-draft-digest.js";
 import { semanticProjectionDigestForState } from "./utils/semantic-projection-digest.js";
 
-const runtimeSingletonKey = "__dreamboardPluginRuntimeApi";
-
-afterEach(() => {
-  delete (globalThis as Record<string, unknown>)[runtimeSingletonKey];
-});
-
-function makeSnapshot(): PluginStateSnapshot<
+function makeSnapshot(): PluginRuntimeProjection<
   { ok: true },
   "play",
   string,
@@ -139,33 +135,32 @@ function makeSnapshot(): PluginStateSnapshot<
 }
 
 function makeRuntime(
-  snapshot: PluginStateSnapshot,
+  snapshot: PluginRuntimeProjection,
   submit: (...args: unknown[]) => Promise<void>,
-): PluginRuntimeAPI {
+): PluginRuntimeClient {
   return {
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: submit as PluginRuntimeAPI["submitInteraction"],
-    getSessionState: () => ({
-      status: "ready",
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1"],
-      controllingPlayerId: "player-1",
-      userId: "user-1",
+    getSession: () => ({
+      sessionId: snapshot.session.sessionId ?? "session-1",
+      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
+        playerId,
+        displayName: playerId,
+      })),
     }),
+    subscribeSession: () => () => undefined,
+    getFrame: () => pluginGameplayFrameFromProjection(snapshot),
+    subscribeFrame: () => () => undefined,
+    validateInteraction: async () => ({ valid: true }),
+    submitInteraction: async (interactionId, params) => {
+      await submit(interactionId, params);
+    },
     disconnect: () => undefined,
-    getSnapshot: () => snapshot,
-    subscribeToState: () => () => undefined,
-    _subscribeToSessionState: () => () => undefined,
   };
 }
 
 test("generated hand renders typed drop targets with kind-encoded ids", () => {
   const snapshot = makeSnapshot();
   const submit = async () => undefined;
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
-    snapshot,
-    submit,
-  );
+  const runtime = makeRuntime(snapshot, submit);
 
   const uiContract = {
     interactions: { "play.placeCard": {} },
@@ -242,8 +237,8 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
 
   const html = renderToString(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -268,10 +263,7 @@ test("generated hand renders typed drop targets with kind-encoded ids", () => {
 test("generated interaction arms render semantic browser replay digests", () => {
   const snapshot = makeSnapshot();
   const submit = async () => undefined;
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
-    snapshot,
-    submit,
-  );
+  const runtime = makeRuntime(snapshot, submit);
 
   const uiContract = {
     interactions: { "play.placeCard": {} },
@@ -297,8 +289,8 @@ test("generated interaction arms render semantic browser replay digests", () => 
 
   const html = renderToString(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -318,10 +310,7 @@ test("generated interaction arms render semantic browser replay digests", () => 
 
 test("UI root emits the semantic projection digest marker", () => {
   const snapshot = makeSnapshot();
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
-    snapshot,
-    async () => undefined,
-  );
+  const runtime = makeRuntime(snapshot, async () => undefined);
 
   const uiContract = {
     interactions: { "play.placeCard": {} },
@@ -340,12 +329,12 @@ test("UI root emits the semantic projection digest marker", () => {
     cardIdFromZoneCard: (card: { id: string }) => card.id,
     zoneIdFromZoneCard: () => "hand",
   });
-  const digest = semanticProjectionDigestForState(snapshot);
+  const digest = digestPluginGameplayFrame(pluginGameplayFrameFromProjection(snapshot));
 
   const html = renderToString(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+      { runtime },
       createElement(UI.Root as unknown as React.FC<{ children?: unknown }>),
     ),
   );
@@ -448,15 +437,12 @@ test("board targets render semantic browser replay select actuators", () => {
       availability: { status: "available" },
     },
   ];
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
-    snapshot,
-    async () => undefined,
-  );
+  const runtime = makeRuntime(snapshot, async () => undefined);
 
   const html = renderToString(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+      { runtime },
       createElement(
         Board.Root,
         null,
@@ -606,10 +592,7 @@ test("board target draft digests reflect live draft values", () => {
 
 test("generated hand renders selection summary through the renderSummary slot", () => {
   const snapshot = makeSnapshot();
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = makeRuntime(
-    snapshot,
-    async () => undefined,
-  );
+  const runtime = makeRuntime(snapshot, async () => undefined);
 
   const uiContract = {
     interactions: { "play.placeCard": {} },
@@ -681,8 +664,8 @@ test("generated hand renders selection summary through the renderSummary slot", 
 
   const html = renderToString(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,

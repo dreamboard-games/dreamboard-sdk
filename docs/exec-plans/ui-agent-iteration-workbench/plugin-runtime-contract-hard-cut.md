@@ -1,8 +1,8 @@
 # Plugin Runtime Contract Hard Cut
 
-Status: accepted design amendment on 2026-06-17. This amendment reopens Phase
-02 and Phase 03 and blocks Phase 04 until the replacement contracts are in
-place.
+Status: closed on 2026-06-17. This amendment reopened Phase 02 and Phase 03,
+replaced the legacy runtime boundary, and completed the cross-repo deletion
+gate before Phase 04.
 
 ## Decision
 
@@ -705,13 +705,50 @@ mise exec node@24 -- pnpm --filter @dreamboard-games/ui-host-runtime build
 cd packages/ui-host-runtime && mise exec node@24 -- bun test src/plugin-bridge.test.ts src/plugin-session-gateway.test.ts src/screenshot/projection-to-snapshot.test.ts
 ```
 
-`mise exec node@24 -- pnpm --filter web build` was also run and reached the
-web typecheck, but it is currently blocked by an unrelated dirty-tree
-`apps/web/src/features/game-editor/store/gameSetupStore.ts` edit that assigns
-`defaultHome` on `ManualCardSetDefinition`.
+## Final deletion receipt: 2026-06-17
 
-Migration step 8 remains open. Remaining deletion work includes deleting the
-SDK/internal `PluginStateSnapshot` compatibility exports and screenshot/preview
-snapshot helpers, removing the internal `plugin-messages` compatibility module
-entirely, and making the final cross-repo deletion gate empty outside
-historical docs and migration receipts.
+Migration step 8 is complete across the SDK and internal host:
+
+- SDK runtime compatibility exports for `PluginStateSnapshot`,
+  `StateSyncMessage`, `createPluginRuntimeAPI`, `PluginRuntimeAPI`, and
+  `usePluginStateSnapshot` were deleted from live source and generated
+  reference docs;
+- SDK `PluginRuntimeBoundary` now requires a version `3`
+  `PluginRuntimeClient`, and the previous global runtime/snapshot tests now
+  mount explicit session/frame client harnesses;
+- internal `packages/ui-host-runtime` imports shared version `3` protocol
+  schemas directly from `@dreamboard-games/plugin-runtime-contract`, and the
+  local `plugin-messages.ts` compatibility module was deleted;
+- internal screenshot/dev/preview helpers now build and store
+  `PluginGameplayFrame` values instead of synthetic plugin snapshots;
+- `apps/preview-worker` now sends `runtime.init` and `gameplay.frame`
+  envelopes with protocol version `3` and waits for `runtime.ack`;
+- `apps/web` dev harness now loads screenshot projections as gameplay frames
+  and no longer imports or exports plugin message/snapshot compatibility types.
+
+Verification run for the final slice:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+cd packages/sdk && mise exec node@24 -- bun test src/runtime/browser src/runtime/core src/runtime/hooks src/runtime/primitives/hand-mobile-registration.test.tsx src/runtime/workspace-contract.test.tsx src/testing/ui-fixture src/export-surface.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk build
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
+mise exec node@24 -- pnpm docs:generate
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-host-runtime build
+cd packages/ui-host-runtime && mise exec node@24 -- bun test src/plugin-bridge.test.ts src/plugin-session-gateway.test.ts src/screenshot/projection-to-gameplay-frame.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard/preview-worker build
+mise exec node@24 -- pnpm --filter web build
+```
+
+Final deletion gates:
+
+```bash
+rg -n "PluginStateSnapshot|StateSyncMessage|state-sync" packages scripts examples -g '!**/node_modules/**' -g '!**/dist/**'
+rg -n "restoreHistory|markNotificationRead|switchPlayer" packages/sdk/src/runtime -g '!**/node_modules/**'
+rg -n "createFixtureRuntime|uiFixturePluginStateSnapshotSchema|createPluginRuntimeAPI|PluginRuntimeAPI|usePluginStateSnapshot" packages scripts examples docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**' -g '!**/dist/**'
+rg -n "PluginStateSnapshot|StateSyncMessage|state-sync|plugin-messages|createPluginRuntimeAPI|PluginRuntimeAPI|usePluginStateSnapshot|selectPluginSnapshot|projectionToSnapshot" packages/ui-host-runtime apps/preview-worker apps/web/src/features/dev-harness apps/web/src/features/game-session -g '!**/node_modules/**' -g '!**/dist/**'
+```
+
+All final deletion gates returned no live matches.

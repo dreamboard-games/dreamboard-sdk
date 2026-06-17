@@ -7,10 +7,8 @@ export {
   type UIContract,
   type ZoneKey,
 } from "./ui-contract.js";
-export { PluginStateProvider } from "./context/PluginStateContext.js";
 export {
   RuntimeContext,
-  RuntimeProvider,
   useRuntimeContext,
 } from "./context/RuntimeContext.js";
 export {
@@ -22,8 +20,6 @@ export {
   type PluginRuntimeProps,
 } from "./components/PluginRuntime.js";
 export { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
-export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
-export type { PluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export { createPluginRuntimeClient } from "./core/create-plugin-runtime-client.js";
 export { createPostMessagePluginTransport } from "./browser/post-message-transport.js";
 export type { PostMessagePluginTransportOptions } from "./browser/post-message-transport.js";
@@ -48,7 +44,6 @@ export type {
   InteractionContextOption,
   InteractionDescriptor,
   InputDomainDependencyCase,
-  PluginStateSnapshot,
   PromptInteractionDescriptor,
 } from "./types/plugin-state.js";
 export type * from "./types/runtime-api.js";

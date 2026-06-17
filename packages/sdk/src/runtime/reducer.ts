@@ -6,7 +6,7 @@ export {
 export type {
   GameplayPromptOption,
   GameplaySnapshot,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
 } from "./types/reducer-state.js";
 export type {
   InteractionDescriptor,

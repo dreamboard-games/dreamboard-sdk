@@ -13,7 +13,7 @@ import {
   visualStateForCard,
 } from "./card-intent-adapter.js";
 import { validateInteractionInputDomains } from "./interaction-inputs.js";
-import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 
 function makeStore(initial: Record<string, Record<string, unknown>> = {}) {
   const drafts: Record<string, Record<string, unknown>> = {
@@ -473,7 +473,7 @@ describe("applyCardIntent", () => {
       gameplay: {
         availableInteractions: [descriptor],
       },
-    } as unknown as PluginStateSnapshot;
+    } as unknown as PluginRuntimeProjection;
     const ids = selectedCardIdsForZone(store, "hand", state);
     expect(new Set(ids)).toEqual(new Set(["card-1", "card-2"]));
   });

@@ -4,7 +4,7 @@ import { usePluginState } from "../../context/PluginStateContext.js";
 import { useRuntimeContext } from "../../context/RuntimeContext.js";
 import type { InteractionKey } from "../../ui-contract.js";
 import type { InteractionDescriptor } from "../../types/plugin-state.js";
-import type { PluginRuntimeAPI } from "../../api/createPluginRuntimeAPI.js";
+import type { RuntimeAPI } from "../../types/runtime-api.js";
 import { isInteractionAvailable } from "../../utils/interaction-status.js";
 import { InteractionRoot } from "./context.js";
 
@@ -82,7 +82,7 @@ const warnedInteractionRouteIssues = new Set<string>();
 
 function warnInteractionRouteIssue(
   message: string,
-  runtime?: PluginRuntimeAPI,
+  runtime?: RuntimeAPI,
 ) {
   if (warnedInteractionRouteIssues.has(message)) return;
   warnedInteractionRouteIssues.add(message);
@@ -98,7 +98,7 @@ export function InteractionRoutes<Interaction extends string = InteractionKey>({
   fallback = null,
   includeUnavailable = false,
 }: InteractionRoutesProps<Interaction>) {
-  const runtime = useRuntimeContext() as PluginRuntimeAPI;
+  const runtime = useRuntimeContext() as RuntimeAPI;
   const descriptors = usePluginState(
     (state) => state.gameplay.availableInteractions,
   );

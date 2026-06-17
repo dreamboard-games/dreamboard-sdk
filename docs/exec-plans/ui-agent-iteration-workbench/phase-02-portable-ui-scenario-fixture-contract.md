@@ -528,7 +528,8 @@ mise exec node@24 -- node scripts/assert-sdk-tarball-self-contained.mjs
 mise exec node@24 -- pnpm docs:check
 ```
 
-Remaining work is intentionally Phase 03/internal-host scoped: replace the
-transitional fixture runtime adapter with the real `PluginRuntimeClient` and
-`createFixtureHostHarness`, migrate the internal browser-demo contract to share
-the portable replay-step type, and complete the hard-cut deletion gate.
+Follow-up hard-cut work is now recorded as closed in
+`plugin-runtime-contract-hard-cut.md`: the transitional runtime adapter was
+removed, fixtures and Workbench run through the real `PluginRuntimeClient` and
+`createFixtureHostHarness`, the internal host sends shared protocol version
+`3` frames, and the final SDK/internal deletion gates returned no live matches.

@@ -53,6 +53,29 @@ function pluginSessionStatesEqual(
   );
 }
 
+function pluginSessionDescriptorsEqual(
+  left: PluginSessionDescriptor | null,
+  right: PluginSessionDescriptor | null,
+): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  if (
+    left.sessionId !== right.sessionId ||
+    left.players.length !== right.players.length
+  ) {
+    return false;
+  }
+
+  return left.players.every((player, index) => {
+    const next = right.players[index];
+    return (
+      player.playerId === next?.playerId &&
+      player.displayName === next.displayName &&
+      player.color === next.color
+    );
+  });
+}
+
 export function PluginSessionProvider({
   runtime,
   children,
@@ -93,7 +116,7 @@ export function PluginSessionProvider({
         subscribe: (onStoreChange: () => void) => {
           const refresh = () => {
             const next = runtime.getSession();
-            if (current === next) {
+            if (pluginSessionDescriptorsEqual(current, next)) {
               return;
             }
             current = next;

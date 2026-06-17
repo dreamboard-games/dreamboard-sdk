@@ -5,7 +5,7 @@ import type { HexColor } from "../../ui.js";
  * Plugin State Types
  *
  * These types define the state structure that the host app sends to the plugin
- * via state-sync messages. The plugin uses these types to access pre-computed
+ * via gameplay-frame messages. The plugin uses these types to access pre-computed
  * game state without needing to parse raw SSE messages.
  */
 
@@ -470,11 +470,8 @@ export interface GameplaySnapshot<
   zones: Readonly<Record<string, ZoneHandlesSnapshot<InteractionType>>>;
 }
 
-/**
- * The complete state snapshot sent to the plugin via state-sync.
- * This is the single source of truth for all reducer-native plugin state.
- */
-export interface PluginStateSnapshot<
+/** Runtime projection shape used by older selector-style SDK primitives. */
+export interface PluginRuntimeProjection<
   View = unknown,
   PhaseType extends string = string,
   StageType extends string = string,
@@ -493,29 +490,5 @@ export interface PluginStateSnapshot<
   /** History state for host navigation (null if not host or history disabled) */
   history: HistoryState | null;
   /** Monotonic sync ID for acknowledgment tracking */
-  syncId: number;
-}
-
-// ============================================================================
-// State Sync Messages
-// ============================================================================
-
-/**
- * Message sent from host to plugin to sync state
- */
-export interface StateSyncMessage {
-  type: "state-sync";
-  /** Sync ID for acknowledgment tracking */
-  syncId: number;
-  /** Complete state snapshot */
-  state: PluginStateSnapshot;
-}
-
-/**
- * Message sent from plugin to host to acknowledge state receipt
- */
-export interface StateAckMessage {
-  type: "state-ack";
-  /** Echoes back the syncId that was received */
   syncId: number;
 }

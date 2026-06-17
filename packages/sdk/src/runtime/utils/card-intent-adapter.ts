@@ -1,7 +1,7 @@
 import type { InteractionUiStore } from "../context/InteractionDraftContext.js";
 import type {
   InteractionDescriptor,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
   ZoneHandlesSnapshot,
 } from "../types/plugin-state.js";
 import {
@@ -518,7 +518,7 @@ export function visualStateForCard(
 export function selectedCardIdsForZone(
   store: Pick<InteractionUiStore, "getDraft">,
   zone: string,
-  state: PluginStateSnapshot,
+  state: PluginRuntimeProjection,
 ): readonly string[] {
   const result = new Set<string>();
   for (const descriptor of state.gameplay.availableInteractions) {

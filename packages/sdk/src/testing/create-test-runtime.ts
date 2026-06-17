@@ -4,7 +4,7 @@ import type {
 } from "@dreamboard-games/reducer-contract";
 import type {
   InteractionDescriptor,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
   ZoneHandlesSnapshot,
 } from "../runtime/reducer.js";
 import type {
@@ -77,15 +77,15 @@ export type CreateTestRuntimeOptions = {
 
 export type CreatedTestRuntime = {
   runtime: RuntimeAPI & {
-    getSnapshot(): PluginStateSnapshot;
+    getSnapshot(): PluginRuntimeProjection;
     subscribeToState(
-      listener: (state: PluginStateSnapshot) => void,
+      listener: (state: PluginRuntimeProjection) => void,
     ): () => void;
     _subscribeToSessionState(
       listener: (state: RuntimePluginSessionState) => void,
     ): () => void;
   };
-  getSnapshot(): PluginStateSnapshot;
+  getSnapshot(): PluginRuntimeProjection;
   players(): readonly string[];
   seat(index: number): string;
   submit(
@@ -215,7 +215,7 @@ function buildPluginSnapshot(options: {
   version: number;
   expectedPhase: string | undefined;
   baseId: string;
-}): PluginStateSnapshot {
+}): PluginRuntimeProjection {
   const projection = options.bundle.projectSeatsDynamic({
     state: options.state,
     playerIds: [options.playerId],
@@ -265,7 +265,7 @@ function buildPluginSnapshot(options: {
   );
 
   return {
-    view: (seat?.view ?? null) as PluginStateSnapshot["view"],
+    view: (seat?.view ?? null) as PluginRuntimeProjection["view"],
     gameplay: {
       currentPhase: flow.currentPhase,
       currentStage: projection.currentStage ?? null,
@@ -327,19 +327,19 @@ export function createTestRuntime(
     submissionId: string;
     trace: readonly DispatchTraceSummaryEntry[];
   } | null = null;
-  const stateListeners = new Set<(state: PluginStateSnapshot) => void>();
+  const stateListeners = new Set<(state: PluginRuntimeProjection) => void>();
   const sessionListeners = new Set<
     (state: RuntimePluginSessionState) => void
   >();
 
   const toReadySessionState = (
-    snapshot: PluginStateSnapshot,
+    snapshot: PluginRuntimeProjection,
   ): RuntimePluginSessionState => ({
     ...snapshot.session,
     status: "ready",
   });
 
-  let lastPluginSnapshot: PluginStateSnapshot;
+  let lastPluginSnapshot: PluginRuntimeProjection;
   let lastSessionState: RuntimePluginSessionState;
 
   const applyCurrentState = (): void => {
@@ -482,8 +482,8 @@ export function createTestRuntime(
       submit(currentPlayerId, interactionId, params),
     getSessionState: (): RuntimePluginSessionState => lastSessionState,
     disconnect: () => undefined,
-    getSnapshot: (): PluginStateSnapshot => lastPluginSnapshot,
-    subscribeToState: (listener: (state: PluginStateSnapshot) => void) => {
+    getSnapshot: (): PluginRuntimeProjection => lastPluginSnapshot,
+    subscribeToState: (listener: (state: PluginRuntimeProjection) => void) => {
       stateListeners.add(listener);
       return () => {
         stateListeners.delete(listener);

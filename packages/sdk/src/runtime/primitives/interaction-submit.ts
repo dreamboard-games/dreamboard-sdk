@@ -2,7 +2,7 @@ import type {
   InteractionHandle,
   InteractionParamsShape,
 } from "../hooks/useInteractionHandle.js";
-import type { PluginRuntimeDiagnosticHandler } from "../api/createPluginRuntimeAPI.js";
+import type { RuntimeDiagnosticHandler } from "../types/runtime-api.js";
 
 type UnhandledInteractionError = "throw" | "log" | "ignore";
 
@@ -10,7 +10,7 @@ interface RunInteractionActionOptions<Result> {
   onSuccess?: (result: Result) => void;
   onError?: (error: unknown) => void;
   unhandledError?: UnhandledInteractionError;
-  onDiagnostic?: PluginRuntimeDiagnosticHandler;
+  onDiagnostic?: RuntimeDiagnosticHandler;
 }
 
 export interface InteractionSubmitCallbacks {

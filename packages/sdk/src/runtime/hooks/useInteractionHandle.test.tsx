@@ -4,11 +4,11 @@ import { createElement, useEffect } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
-import { pluginGameplayFrameFromStateSnapshot } from "../context/PluginGameplayFrameContext.js";
+import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type {
   InteractionDescriptor,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
 } from "../types/plugin-state.js";
 import { ValidationError } from "../../ui/errors/ValidationError.js";
 import { useInteractionByKey } from "./useInteractionByKey.js";
@@ -112,7 +112,7 @@ function makeSnapshot({
 }: {
   syncId: number;
   interactions?: readonly InteractionDescriptor[];
-}): PluginStateSnapshot {
+}): PluginRuntimeProjection {
   return {
     view: {},
     gameplay: {
@@ -145,9 +145,9 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
   return { promise, resolve };
 }
 
-function makeRuntime(initialSnapshot: PluginStateSnapshot) {
+function makeRuntime(initialSnapshot: PluginRuntimeProjection) {
   let snapshot = initialSnapshot;
-  let frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+  let frame = pluginGameplayFrameFromProjection(snapshot);
   const frameListeners = new Set<() => void>();
   const sessionListeners = new Set<() => void>();
   const submitCalls: Array<{ interactionId: string; params: unknown }> = [];
@@ -190,9 +190,9 @@ function makeRuntime(initialSnapshot: PluginStateSnapshot) {
     setSubmitImpl(impl: PluginRuntimeClient["submitInteraction"]) {
       submitImpl = impl;
     },
-    emit(nextSnapshot: PluginStateSnapshot) {
+    emit(nextSnapshot: PluginRuntimeProjection) {
       snapshot = nextSnapshot;
-      frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+      frame = pluginGameplayFrameFromProjection(snapshot);
       for (const listener of sessionListeners) {
         listener();
       }

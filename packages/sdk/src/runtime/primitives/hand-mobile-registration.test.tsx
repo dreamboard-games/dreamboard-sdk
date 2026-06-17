@@ -3,13 +3,12 @@ import { afterAll, afterEach, beforeAll, expect, test } from "bun:test";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MobileHandTrayProvider, ToastProvider } from "../../ui.js";
-import { PluginRuntime } from "../components/PluginRuntime.js";
+import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
+import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
+import type { PluginRuntimeClient } from "../core/types.js";
 import { createDreamboardUI } from "../ui-contract.js";
 import { createWorkspaceUIContract } from "../workspace-contract/index.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
-import type { PluginStateSnapshot } from "../types/plugin-state.js";
-
-const runtimeSingletonKey = "__dreamboardPluginRuntimeApi";
+import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 
 // Mobile-width viewport so useIsMobile() -> matchMedia reports mobile and the
 // provider mounts the tray. happy-dom is registered for this file only; the
@@ -24,10 +23,10 @@ afterAll(() => {
 });
 
 afterEach(() => {
-  delete (globalThis as Record<string, unknown>)[runtimeSingletonKey];
+  document.body.replaceChildren();
 });
 
-function snapshot(): PluginStateSnapshot<
+function snapshot(): PluginRuntimeProjection<
   { ok: true },
   "play",
   string,
@@ -73,22 +72,22 @@ function snapshot(): PluginStateSnapshot<
   };
 }
 
-function mountRuntime(): PluginRuntimeAPI {
+function mountRuntime(): PluginRuntimeClient {
   const snap = snapshot();
   return {
+    getSession: () => ({
+      sessionId: snap.session.sessionId ?? "session-1",
+      players: snap.session.controllablePlayerIds.map((playerId) => ({
+        playerId,
+        displayName: playerId,
+      })),
+    }),
+    subscribeSession: () => () => undefined,
+    getFrame: () => pluginGameplayFrameFromProjection(snap),
+    subscribeFrame: () => () => undefined,
     validateInteraction: async () => ({ valid: true }),
     submitInteraction: async () => undefined,
-    getSessionState: () => ({
-      status: "ready",
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1"],
-      controllingPlayerId: "player-1",
-      userId: "user-1",
-    }),
     disconnect: () => undefined,
-    getSnapshot: () => snap,
-    subscribeToState: () => () => undefined,
-    _subscribeToSessionState: () => () => undefined,
   };
 }
 
@@ -207,13 +206,13 @@ function buildHandHarness({ withActions }: { withActions?: boolean } = {}) {
 }
 
 test("generated hand registers into the mobile tray after effects run", async () => {
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = mountRuntime();
+  const runtime = mountRuntime();
   const { UI, HandHarness } = buildHandHarness();
 
   const mounted = await mountIntoDom(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+        { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -252,13 +251,13 @@ test("generated hand registers into the mobile tray after effects run", async ()
 });
 
 test("renderActions content travels into the mobile dock", async () => {
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = mountRuntime();
+  const runtime = mountRuntime();
   const { UI, HandHarness } = buildHandHarness({ withActions: true });
 
   const mounted = await mountIntoDom(
     createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+        { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -291,7 +290,7 @@ test("renderActions content travels into the mobile dock", async () => {
 });
 
 test("unmounting the generated hand deregisters it from the tray", async () => {
-  (globalThis as Record<string, unknown>)[runtimeSingletonKey] = mountRuntime();
+  const runtime = mountRuntime();
   const { UI, HandHarness } = buildHandHarness();
 
   const host = document.createElement("div");
@@ -300,8 +299,8 @@ test("unmounting the generated hand deregisters it from the tray", async () => {
 
   function App({ showHand }: { showHand: boolean }) {
     return createElement(
-      PluginRuntime,
-      null,
+      PluginRuntimeBoundary,
+        { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,

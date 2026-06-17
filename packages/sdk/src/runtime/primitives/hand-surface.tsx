@@ -41,7 +41,7 @@ import {
 } from "./hand-intent-adapter.js";
 import type {
   InteractionDescriptor,
-  PluginStateSnapshot,
+  PluginRuntimeProjection,
 } from "../types/plugin-state.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { createZoneCardRenderItem, type ZoneCardRenderItem } from "./zone.js";
@@ -190,7 +190,7 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
   );
   const selectedIds = usePluginState(
     useCallback(
-      (state: PluginStateSnapshot) =>
+      (state: PluginRuntimeProjection) =>
         selectedCardIdsForZone(interactionStore, zone, state),
       // drafts is part of the store snapshot — useStore handles re-render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -500,7 +500,7 @@ export function HandStagingView({
   );
   const stagedIds = usePluginState(
     useCallback(
-      (state: PluginStateSnapshot) =>
+      (state: PluginRuntimeProjection) =>
         selectedCardIdsForZone(interactionStore, zone, state),
       // drafts is part of the store snapshot — useStore handles re-render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -577,7 +577,7 @@ export function dropTargetIdFor(
  * dropTargets.
  */
 export function descriptorsHaveDestinationInput(
-  state: PluginStateSnapshot,
+  state: PluginRuntimeProjection,
 ): boolean {
   for (const descriptor of state.gameplay.availableInteractions) {
     const cardInputs = descriptor.inputs.filter(

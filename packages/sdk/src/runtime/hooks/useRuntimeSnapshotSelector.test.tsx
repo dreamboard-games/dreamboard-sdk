@@ -4,10 +4,10 @@ import { createElement } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
-import { pluginGameplayFrameFromStateSnapshot } from "../context/PluginGameplayFrameContext.js";
+import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
 import { usePluginState } from "../context/PluginStateContext.js";
 import type { PluginRuntimeClient } from "../core/types.js";
-import type { PluginStateSnapshot } from "../types/plugin-state.js";
+import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 import { useGameSelector } from "./useGameSelector.js";
 
 beforeAll(() => {
@@ -59,7 +59,7 @@ function makeSnapshot({
   controllingPlayerId?: string;
   phase?: string;
   score?: number;
-}): PluginStateSnapshot<TestView> {
+}): PluginRuntimeProjection<TestView> {
   return {
     view: { score },
     gameplay: {
@@ -92,9 +92,9 @@ function makeSnapshot({
   };
 }
 
-function makeRuntime(initialSnapshot: PluginStateSnapshot<TestView>) {
+function makeRuntime(initialSnapshot: PluginRuntimeProjection<TestView>) {
   let snapshot = initialSnapshot;
-  let frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+  let frame = pluginGameplayFrameFromProjection(snapshot);
   const frameListeners = new Set<() => void>();
   const sessionListeners = new Set<() => void>();
   const runtime: PluginRuntimeClient = {
@@ -124,9 +124,9 @@ function makeRuntime(initialSnapshot: PluginStateSnapshot<TestView>) {
   };
   return {
     runtime,
-    emit(nextSnapshot: PluginStateSnapshot<TestView>) {
+    emit(nextSnapshot: PluginRuntimeProjection<TestView>) {
       snapshot = nextSnapshot;
-      frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+      frame = pluginGameplayFrameFromProjection(snapshot);
       for (const listener of sessionListeners) {
         listener();
       }

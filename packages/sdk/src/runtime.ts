@@ -37,7 +37,6 @@ export type {
   PluginRuntimeClient,
   PluginRuntimeClientOptions,
   PluginTransport,
-  PluginRuntimeAPI,
   PluginRuntimeProps,
   PostMessagePluginTransportOptions,
   RuntimeClock,
