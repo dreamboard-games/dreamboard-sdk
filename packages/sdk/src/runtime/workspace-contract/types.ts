@@ -1,6 +1,7 @@
 import type { ButtonHTMLAttributes, ReactElement, ReactNode } from "react";
 import type { ClientParamSchemaMap } from "../context/ClientParamSchemaContext.js";
 import type { HandRole } from "../../ui/components.js";
+import type { InteractionVisualState } from "../../ui.js";
 import type { DreamboardUI, UIContract } from "../ui-contract.js";
 import type { InteractionCardInputRenderState } from "../primitives/index.js";
 import type { BoardSpaceTargetProps } from "../primitives/board.js";
@@ -124,7 +125,9 @@ export type WorkspaceHandSummaryComponent = WorkspaceInteractionSlotComponent<{
 
 export interface WorkspaceHandSurface<Zone extends string, Card> {
   readonly Hand: WorkspaceInteractionSlotComponent<{
-    children: ReactNode;
+    children:
+      | ReactNode
+      | ((card: Card, state: InteractionVisualState) => ReactNode);
   }>;
   readonly Cards: WorkspaceHandCardsComponent<Card>;
   readonly Summary: WorkspaceHandSummaryComponent;
