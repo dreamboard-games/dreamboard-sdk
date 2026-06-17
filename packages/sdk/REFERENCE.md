@@ -15324,6 +15324,16 @@ type ClientParamSchemaMap = Readonly<
 
 _No JSDoc summary is available yet._
 
+### createPluginRuntimeClient
+
+```ts
+function createPluginRuntimeClient(
+  options: PluginRuntimeClientOptions,
+): PluginRuntimeClient;
+```
+
+_No JSDoc summary is available yet._
+
 ### createWorkspaceUIContract
 
 ```ts
@@ -15456,10 +15466,50 @@ interface PluginRuntimeAPI { ... }
 
 Extended RuntimeAPI with plugin-specific methods for state-sync architecture.
 
+### PluginRuntimeClient
+
+```ts
+interface PluginRuntimeClient {
+  getSession(): T | null;
+  subscribeSession(listener: () => void): () => void;
+  getFrame(): B | null;
+  subscribeFrame(listener: () => void): () => void;
+  validateInteraction(interactionId: string, params: unknown): Promise<aa>;
+  submitInteraction(interactionId: string, params: unknown): Promise<void>;
+  disconnect(): void;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginRuntimeClientOptions
+
+```ts
+interface PluginRuntimeClientOptions {
+  transport: PluginTransport;
+  idFactory?: RuntimeIdFactory;
+  clock?: RuntimeClock;
+  requestTimeoutMs?: number;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### PluginRuntimeProps
 
 ```ts
 interface PluginRuntimeProps { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### PluginTransport
+
+```ts
+interface PluginTransport {
+  start(onMessage: (message: H) => void): () => void;
+  send(message: X): void;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -15481,6 +15531,26 @@ interface ResourceCounterComponents<Resource extends string = ResourceId> {
   Icon(props: ResourceIconProps): ReactNode;
   Count(props: ResourceCounterPartProps<Resource>): ReactElement;
   Label(props: ResourceCounterPartProps<Resource>): ReactElement;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeClock
+
+```ts
+interface RuntimeClock {
+  now(): number;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeIdFactory
+
+```ts
+interface RuntimeIdFactory {
+  nextId(prefix: string): string;
 }
 ```
 
@@ -18821,24 +18891,25 @@ function createExpectApi(options?: CreateExpectApiOptions): ExpectFn;
 
 _No JSDoc summary is available yet._
 
-### createFixtureRuntime
+### createFixtureHostHarness
 
 ```ts
-function createFixtureRuntime(
-  options: CreateFixtureRuntimeOptions,
-): FixtureRuntimeHarness;
+function createFixtureHostHarness(
+  options: CreateFixtureHostHarnessOptions,
+): FixtureHostHarness;
 ```
 
 _No JSDoc summary is available yet._
 
-### CreateFixtureRuntimeOptions
+### CreateFixtureHostHarnessOptions
 
 ```ts
-interface CreateFixtureRuntimeOptions {
-  readonly fixture: UIScenarioFixture;
+interface CreateFixtureHostHarnessOptions {
+  readonly tape: R;
   readonly strict?: boolean;
   readonly latencyMs?: number;
-  readonly onEvent?: (event: FixtureRuntimeEvent) => void;
+  readonly channelId?: string;
+  readonly onEvent?: (event: FixtureHostEvent) => void;
   readonly nowMs?: () => number;
 }
 ```
@@ -19032,27 +19103,19 @@ function fixtureEnvironmentInitFor(options: {
 
 _No JSDoc summary is available yet._
 
-### FixturePluginRuntime
+### FixtureHostEvent
 
 ```ts
-function FixturePluginRuntime({
-  harness,
-  children,
-}: {
-  harness: FixtureRuntimeHarness;
-  children: react__default.ReactNode;
-}): react_jsx_runtime.JSX.Element;
-```
-
-_No JSDoc summary is available yet._
-
-### FixtureRuntimeEvent
-
-```ts
-interface FixtureRuntimeEvent {
+interface FixtureHostEvent {
   readonly sequence: number;
   readonly atMs: number;
-  readonly kind: "frame" | "validate" | "submit" | "refresh" | "diagnostic";
+  readonly kind:
+    | "frame-sent"
+    | "validate-received"
+    | "submit-received"
+    | "ack-received"
+    | "ready-received"
+    | "diagnostic";
   readonly requestDigest?: string;
   readonly frameId?: string;
   readonly projectionDigest?: string;
@@ -19062,18 +19125,35 @@ interface FixtureRuntimeEvent {
 
 _No JSDoc summary is available yet._
 
-### FixtureRuntimeHarness
+### FixtureHostHarness
 
 ```ts
-interface FixtureRuntimeHarness {
-  readonly runtime: PluginRuntimeAPI;
-  readonly fixture: UIScenarioFixture;
+interface FixtureHostHarness {
+  readonly transport: PluginTransport;
+  readonly tape: R;
   reset(): void;
   flush(): Promise<void>;
+  advanceHost(): Promise<void>;
   getCurrentFrameId(): string;
-  getEvents(): readonly FixtureRuntimeEvent[];
+  getEvents(): readonly FixtureHostEvent[];
   assertConsumed(): void;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### FixturePluginRuntime
+
+```ts
+function FixturePluginRuntime({
+  harness,
+  runtime,
+  children,
+}: {
+  harness: FixtureHostHarness;
+  runtime?: PluginRuntimeClient;
+  children: react__default.ReactNode;
+}): react_jsx_runtime.JSX.Element;
 ```
 
 _No JSDoc summary is available yet._

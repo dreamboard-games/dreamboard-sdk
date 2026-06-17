@@ -93,6 +93,8 @@ exports[`public export surface reducer/advanced export names are stable 1`] = `
 exports[`public export surface runtime export names are stable 1`] = `
 [
   "PluginRuntime",
+  "createPluginRuntimeClient",
+  "createPostMessagePluginTransport",
   "createWorkspaceUIContract",
 ]
 `;
@@ -348,7 +350,7 @@ exports[`public export surface testing export names are stable 1`] = `
   "compileUIScenarioFixture",
   "createDeterministicIdFactory",
   "createExpectApi",
-  "createFixtureRuntime",
+  "createFixtureHostHarness",
   "createReducerScenarioRunner",
   "createTestRuntime",
   "defaultFixtureEnvironmentInit",

@@ -1,8 +1,12 @@
 import type React from "react";
 import {
-  createFixtureRuntime,
+  createPluginRuntimeClient,
+  type PluginRuntimeClient,
+} from "@dreamboard-games/sdk/runtime";
+import {
+  createFixtureHostHarness,
   parseUIScenarioFixture,
-  type FixtureRuntimeHarness,
+  type FixtureHostHarness,
   type UIScenarioFixture,
 } from "@dreamboard-games/sdk/testing";
 
@@ -25,7 +29,8 @@ export interface UIScenarioRenderModule {
 export interface LoadedUIScenario {
   readonly fixture: UIScenarioFixture;
   readonly module: UIScenarioRenderModule;
-  readonly harness: FixtureRuntimeHarness;
+  readonly harness: FixtureHostHarness;
+  readonly runtime: PluginRuntimeClient;
   readonly sdkCandidate: SDKCandidateMode;
 }
 
@@ -85,15 +90,17 @@ export async function loadUIScenario(options: {
     module.uiContractFingerprint,
     fixture.source.uiContractFingerprint,
   );
-  const harness = createFixtureRuntime({
-    fixture,
+  const harness = createFixtureHostHarness({
+    tape: fixture.protocol,
     strict: options.strict ?? true,
     latencyMs: options.latencyMs ?? 0,
   });
+  const runtime = createPluginRuntimeClient({ transport: harness.transport });
   return {
     fixture,
     module,
     harness,
+    runtime,
     sdkCandidate: options.sdkCandidate,
   };
 }

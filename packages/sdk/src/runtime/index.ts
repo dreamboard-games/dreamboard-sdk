@@ -24,6 +24,16 @@ export {
 export { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
 export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
 export type { PluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
+export { createPluginRuntimeClient } from "./core/create-plugin-runtime-client.js";
+export { createPostMessagePluginTransport } from "./browser/post-message-transport.js";
+export type { PostMessagePluginTransportOptions } from "./browser/post-message-transport.js";
+export type {
+  PluginRuntimeClient,
+  PluginRuntimeClientOptions,
+  PluginTransport,
+  RuntimeClock,
+  RuntimeIdFactory,
+} from "./core/types.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";
 export type * from "./hooks/usePluginRuntime.js";
 export type {

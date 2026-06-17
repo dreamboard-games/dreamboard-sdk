@@ -5,6 +5,8 @@ import type {
 } from "./runtime/index.js";
 
 export { PluginRuntime } from "./runtime/index.js";
+export { createPluginRuntimeClient } from "./runtime/index.js";
+export { createPostMessagePluginTransport } from "./runtime/index.js";
 
 export interface DreamboardUIRegister {
   readonly __dreamboardUIRegister?: never;
@@ -32,8 +34,14 @@ export type TypedGame<
 
 export type {
   InteractionDescriptor,
+  PluginRuntimeClient,
+  PluginRuntimeClientOptions,
+  PluginTransport,
   PluginRuntimeAPI,
   PluginRuntimeProps,
+  PostMessagePluginTransportOptions,
+  RuntimeClock,
+  RuntimeIdFactory,
 } from "./runtime/index.js";
 
 // Workspace contract surface. Generated game UIs import these from

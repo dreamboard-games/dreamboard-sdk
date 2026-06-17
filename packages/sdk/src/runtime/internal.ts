@@ -29,6 +29,16 @@ export {
   type InteractionFormProps,
 } from "./components/interaction-form/index.js";
 export { createPluginRuntimeAPI } from "./api/createPluginRuntimeAPI.js";
+export { createPluginRuntimeClient } from "./core/create-plugin-runtime-client.js";
+export { createPostMessagePluginTransport } from "./browser/post-message-transport.js";
+export type { PostMessagePluginTransportOptions } from "./browser/post-message-transport.js";
+export type {
+  PluginRuntimeClient,
+  PluginRuntimeClientOptions,
+  PluginTransport,
+  RuntimeClock,
+  RuntimeIdFactory,
+} from "./core/types.js";
 export {
   PluginStateProvider,
   usePluginActions,

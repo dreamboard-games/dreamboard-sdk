@@ -8,7 +8,7 @@ import {
   assertDeterministicUIScenarioFixture,
   assertUniqueReplayIdentity,
   compileUIScenarioFixture,
-  createFixtureRuntime,
+  createFixtureHostHarness,
   digestUIFixtureJson,
   digestUIFixtureRequest,
   digestUIFixtureTransportRequest,
@@ -19,6 +19,7 @@ import {
   type PluginProtocolTape,
   type UIScenarioFixture,
 } from "./index.js";
+import { createPluginRuntimeClient } from "../../runtime/index.js";
 
 const interactionId = "play-card:player-1";
 
@@ -209,15 +210,32 @@ describe("UI scenario fixture contract", () => {
     );
   });
 
-  test("fixture runtime does not advance frames after accepted validation", async () => {
-    const harness = createFixtureRuntime({ fixture: makeFixture() });
+  test("fixture host harness drives the real runtime client without frame advance on validation", async () => {
+    const fixture = makeFixture();
+    const harness = createFixtureHostHarness({ tape: fixture.protocol });
+    const runtime = createPluginRuntimeClient({
+      transport: harness.transport,
+      idFactory: {
+        nextId: (prefix) => `${prefix}-1`,
+      },
+    });
 
+    await harness.flush();
+    expect(runtime.getSession()?.sessionId).toBe("session-1");
     expect(harness.getCurrentFrameId()).toBe("initial");
-    await harness.runtime.validateInteraction("player-1", interactionId, {});
+    expect(runtime.getFrame()?.gameVersion).toBe(1);
+
+    const validation = await runtime.validateInteraction(interactionId, {});
+    expect(validation.valid).toBe(true);
     expect(harness.getCurrentFrameId()).toBe("initial");
-    await harness.runtime.submitInteraction("player-1", interactionId, {});
+    expect(runtime.getFrame()?.gameVersion).toBe(1);
+
+    await runtime.submitInteraction(interactionId, {});
+    await harness.flush();
     expect(harness.getCurrentFrameId()).toBe("submitted");
+    expect(runtime.getFrame()?.gameVersion).toBe(2);
     harness.assertConsumed();
+    runtime.disconnect();
   });
 
   test("rejects unsupported fixture schema versions and unknown top-level fields", () => {

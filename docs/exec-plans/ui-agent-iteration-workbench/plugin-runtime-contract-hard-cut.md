@@ -620,7 +620,31 @@ Migration steps 1-3 are implemented in the SDK repository:
 - reference fixtures were regenerated as fixture schema version `2` with plugin
   runtime protocol `3`.
 
-Steps 4-8 remain open. `createFixtureRuntime` is still a transitional adapter
-for the existing SDK React runtime surface; Phase 03 must replace it with
-`PluginRuntimeClient` plus `createFixtureHostHarness` before the deletion gate
-can pass.
+Migration steps 4-5 are implemented for the SDK and Workbench fixture path:
+
+- `PluginRuntimeClient` is extracted as a transport-agnostic version `3`
+  runtime core with session/frame stores, request correlation, actor-free
+  validation/submission methods, and delivery acknowledgments;
+- `createPostMessagePluginTransport` owns browser `window.postMessage`
+  binding, channel validation, and authenticated version `3` envelopes;
+- `createFixtureHostHarness` implements the in-memory host side of the same
+  transport contract and drains ordered `PluginProtocolTape` steps;
+- `packages/ui-workbench` now loads fixtures through
+  `createFixtureHostHarness` plus the real `PluginRuntimeClient`;
+- `createFixtureRuntime` and its fixture-only runtime implementation were
+  deleted from SDK testing exports.
+
+Verification run for this slice:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+cd packages/sdk && mise exec node@24 -- bun test src/runtime/browser src/testing/ui-fixture src/export-surface.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
+mise exec node@24 -- pnpm docs:generate
+```
+
+Steps 6-8 remain open. `PluginStateSnapshot`, protocol version `2`, and
+host-only plugin actions still exist in the legacy SDK runtime surface while
+React primitives are migrated to session/frame contexts and the internal
+`ui-host-runtime` is moved to the shared contract package.

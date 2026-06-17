@@ -1,12 +1,12 @@
 import type {
-  FixtureRuntimeEvent,
-  FixtureRuntimeHarness,
+  FixtureHostEvent,
+  FixtureHostHarness,
 } from "@dreamboard-games/sdk/testing";
 
 export interface UIFixtureTestBridge {
   getScenarioId(): string;
   getFrameId(): string;
-  getRuntimeEvents(): readonly FixtureRuntimeEvent[];
+  getRuntimeEvents(): readonly FixtureHostEvent[];
   getProjectionDigest(): string;
   reset(): Promise<void>;
   assertConsumed(): void;
@@ -20,7 +20,7 @@ declare global {
 
 export function installUIFixtureTestBridge(options: {
   readonly scenarioId: string;
-  readonly harness: FixtureRuntimeHarness;
+  readonly harness: FixtureHostHarness;
   readonly enabled: boolean;
 }): void {
   if (!options.enabled) {
@@ -32,7 +32,7 @@ export function installUIFixtureTestBridge(options: {
     getRuntimeEvents: () => options.harness.getEvents(),
     getProjectionDigest: () => {
       const frameId = options.harness.getCurrentFrameId();
-      const frame = options.harness.fixture.frames.find(
+      const frame = options.harness.tape.frames.find(
         (candidate) => candidate.id === frameId,
       );
       if (!frame) {

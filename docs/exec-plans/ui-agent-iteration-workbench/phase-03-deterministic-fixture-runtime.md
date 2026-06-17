@@ -413,6 +413,35 @@ Run every runtime test with:
 - `PluginStateSnapshot`, `createFixtureRuntime`, and fixture-only runtime state
   stores are deleted.
 
+## Implementation receipt: 2026-06-17
+
+SDK-side Phase 03 replacement work landed for the fixture and Workbench path:
+
+- added `PluginRuntimeClient` under `packages/sdk/src/runtime/core/` with a
+  transport-neutral version `3` protocol client;
+- added `createPostMessagePluginTransport` under
+  `packages/sdk/src/runtime/browser/`;
+- added `createFixtureHostHarness` under
+  `packages/sdk/src/testing/ui-fixture/`;
+- changed `FixturePluginRuntime` and `packages/ui-workbench` scenario loading
+  to use the real client plus in-memory host harness;
+- deleted the old `createFixtureRuntime` implementation and removed it from
+  testing exports.
+
+Verification run:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+cd packages/sdk && mise exec node@24 -- bun test src/runtime/browser src/testing/ui-fixture src/export-surface.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
+```
+
+Remaining work before Phase 03 and the hard cut fully close: migrate the
+existing React primitive/provider surface away from `PluginStateSnapshot` and
+actor-supplied command calls, then migrate the internal host to emit version
+`3` frames through `@dreamboard-games/plugin-runtime-contract`.
+
 ## Risks and controls
 
 | Risk                                           | Control                                                                |

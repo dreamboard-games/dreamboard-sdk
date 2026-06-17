@@ -11,11 +11,11 @@ export {
   serializeUIScenarioFixture,
 } from "./canonical.js";
 export {
-  createFixtureRuntime,
-  type CreateFixtureRuntimeOptions,
-  type FixtureRuntimeEvent,
-  type FixtureRuntimeHarness,
-} from "./create-fixture-runtime.js";
+  createFixtureHostHarness,
+  type CreateFixtureHostHarnessOptions,
+  type FixtureHostEvent,
+  type FixtureHostHarness,
+} from "./create-fixture-host-harness.js";
 export { FixturePluginRuntime } from "./FixturePluginRuntime.js";
 export {
   compilePluginProtocolTape,
