@@ -675,6 +675,43 @@ rg "PlayerRosterSwitchButton|restoreHistory|markNotificationRead|switchPlayer" p
 rg "validateInteraction\([^\n]*playerId|submitInteraction\([^\n]*playerId|validateInteraction\([^,]+,[^,]+,[^\n]+\)|submitInteraction\([^,]+,[^,]+,[^\n]+\)" packages/sdk/src docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**'
 ```
 
-Steps 7-8 remain open. `PluginStateSnapshot`, protocol version `2`, and
-compatibility adapters still exist until the internal `ui-host-runtime` imports
-the shared contract package and the final cross-repo deletion gate is empty.
+Migration step 7 is implemented for the internal host in
+`dreamboard-internal` on `next-phase`:
+
+- internal `packages/plugin-runtime-contract` mirrors the shared browser-free
+  protocol/frame/schema/materializer/digest package;
+- `packages/ui-host-runtime` imports the shared package for protocol version
+  `3` envelopes instead of maintaining handwritten payload schemas;
+- `PluginBridge` sends `runtime.init`, `gameplay.frame`,
+  `interaction.validation-result`, and `interaction.submit-result` payloads and
+  validates plugin commands through the shared schemas;
+- `PluginSessionGateway` consumes `PluginGameplayFrame` from the unified
+  session store, removes plugin handlers for host-owned player switching,
+  history restore, and notification reads, and maps `runtime.ack` envelope
+  sequence back to game versions for host acknowledgments;
+- `selectPluginGameplayFrame` materializes current gameplay frames through the
+  shared contract materializer while preserving the host-owned
+  `GameplayViewport.actionSetVersion`;
+- the game-session app adapter now passes gameplay frames into the gateway
+  instead of `PluginStateSnapshot`.
+
+Verification run for this slice:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract build
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-host-runtime build
+cd packages/ui-host-runtime && mise exec node@24 -- bun test src/plugin-bridge.test.ts src/plugin-session-gateway.test.ts src/screenshot/projection-to-snapshot.test.ts
+```
+
+`mise exec node@24 -- pnpm --filter web build` was also run and reached the
+web typecheck, but it is currently blocked by an unrelated dirty-tree
+`apps/web/src/features/game-editor/store/gameSetupStore.ts` edit that assigns
+`defaultHome` on `ManualCardSetDefinition`.
+
+Migration step 8 remains open. Remaining deletion work includes deleting the
+SDK/internal `PluginStateSnapshot` compatibility exports and screenshot/preview
+snapshot helpers, removing the internal `plugin-messages` compatibility module
+entirely, and making the final cross-repo deletion gate empty outside
+historical docs and migration receipts.
