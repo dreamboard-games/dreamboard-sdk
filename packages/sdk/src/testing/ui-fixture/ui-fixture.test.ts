@@ -652,7 +652,7 @@ describe("UI scenario fixture contract", () => {
     expect(() =>
       parseUIScenarioFixture({
         ...fixture,
-        browserInteractionProtocol: "2.0.0",
+        browserInteractionProtocol: "4.0.0",
       }),
     ).toThrow(/browserInteractionProtocol/);
   });

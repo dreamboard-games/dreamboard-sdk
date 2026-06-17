@@ -86,8 +86,6 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
       dropTargets,
       renderDropTargets,
       onCardIntent,
-      renderSummary,
-      renderActions,
       onSelectionSummary,
       ...props
     }: {
@@ -115,8 +113,6 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
       }>;
       renderDropTargets?: (children: ReactNode) => ReactNode;
       onCardIntent?: (intent: AuthoredCardIntent) => void;
-      renderSummary?: (summary: HandSelectionSummary) => ReactNode;
-      renderActions?: (summary: HandSelectionSummary) => ReactNode;
       onSelectionSummary?: (summary: HandSelectionSummary) => void;
     } & Omit<ZoneListProps, "children" | "empty">) => {
       const slots = collectHandSlots(children);
@@ -127,18 +123,14 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
           "Generated hand surfaces require exactly one <hand.Cards> slot.",
         );
       }
-      const summaryRenderer =
-        renderSummary ??
-        (slots.summary
-          ? (summary: HandSelectionSummary) =>
-              renderHandSlot(slots.summary!.children, summary)
-          : undefined);
-      const actionsRenderer =
-        renderActions ??
-        (slots.actions
-          ? (summary: HandSelectionSummary) =>
-              renderHandSlot(slots.actions!.children, summary)
-          : undefined);
+      const summaryRenderer = slots.summary
+        ? (summary: HandSelectionSummary) =>
+            renderHandSlot(slots.summary!.children, summary)
+        : undefined;
+      const actionsRenderer = slots.actions
+        ? (summary: HandSelectionSummary) =>
+            renderHandSlot(slots.actions!.children, summary)
+        : undefined;
       return createElement(baseUI.Zone.Root, {
         zone: options.zone as never,
         // Fill the author's container instead of shrink-wrapping to the fan's
@@ -161,8 +153,8 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
           dropTargets,
           renderDropTargets,
           onCardIntent,
-          renderSummary: summaryRenderer,
-          renderActions: actionsRenderer,
+          summarySlot: summaryRenderer,
+          actionsSlot: actionsRenderer,
           onSelectionSummary,
         }),
       });
@@ -237,8 +229,8 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
     dropTargets,
     renderDropTargets,
     onCardIntent,
-    renderSummary,
-    renderActions,
+    summarySlot,
+    actionsSlot,
     onSelectionSummary,
   }: {
     hand: WorkspaceHandComponentOptions;
@@ -264,8 +256,8 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
     }>;
     renderDropTargets?: (children: ReactNode) => ReactNode;
     onCardIntent?: (intent: AuthoredCardIntent) => void;
-    renderSummary?: (summary: HandSelectionSummary) => ReactNode;
-    renderActions?: (summary: HandSelectionSummary) => ReactNode;
+    summarySlot?: (summary: HandSelectionSummary) => ReactNode;
+    actionsSlot?: (summary: HandSelectionSummary) => ReactNode;
     onSelectionSummary?: (summary: HandSelectionSummary) => void;
   } & Omit<ZoneListProps, "children" | "empty">) {
     const isMobile = useIsMobile();
@@ -307,8 +299,8 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
           onIntentRouted: onCardIntent
             ? (intent) => onCardIntent(intent)
             : undefined,
-          renderSummary,
-          renderActions,
+          summarySlot,
+          actionsSlot,
           onSelectionSummary,
           className: handClassName,
         } satisfies HandSurfaceViewProps<(typeof items)[number]>),
@@ -324,9 +316,9 @@ export function createHandPieces<Card>(ctx: WorkspaceContractContext<Card>) {
         mobileInteraction,
         onCardIntent,
         onSelectionSummary,
-        renderActions,
+        actionsSlot,
         renderDropTargets,
-        renderSummary,
+        summarySlot,
         resolvedDropTargets,
       ],
     );

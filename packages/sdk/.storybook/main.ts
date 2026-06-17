@@ -15,6 +15,21 @@ const config: StorybookConfig = {
   },
   async viteFinal(viteConfig) {
     viteConfig.resolve = viteConfig.resolve ?? {};
+    viteConfig.build = {
+      ...(viteConfig.build ?? {}),
+      target: "esnext",
+    };
+    viteConfig.esbuild = {
+      ...(typeof viteConfig.esbuild === "object" ? viteConfig.esbuild : {}),
+      target: "esnext",
+    };
+    viteConfig.optimizeDeps = {
+      ...(viteConfig.optimizeDeps ?? {}),
+      esbuildOptions: {
+        ...(viteConfig.optimizeDeps?.esbuildOptions ?? {}),
+        target: "esnext",
+      },
+    };
     viteConfig.plugins = [...(viteConfig.plugins ?? []), tailwindcss()];
     viteConfig.resolve.dedupe = Array.from(
       new Set([...(viteConfig.resolve.dedupe ?? []), "react", "react-dom"]),

@@ -2,10 +2,9 @@
  * Collapsible panel for grouping game actions with state-based visibility.
  *
  * Visual styling is sourced entirely from the active {@link useTheme}.
- * The previous bespoke "wobbly notebook" treatment (`wobbly-border-lg` /
- * `hard-shadow-lg` / hardcoded `#fff9c4` / `#fdfbf7`) has been retired
- * in favour of `surfaceStyle` + `chipStyle` so the panel re-skins
- * uniformly when authors swap themes.
+ * The previous bespoke notebook treatment has been retired in favour of
+ * `surfaceStyle` + `chipStyle` so the panel re-skins uniformly when authors
+ * swap themes.
  */
 
 import { useId, useState, type ReactNode } from "react";

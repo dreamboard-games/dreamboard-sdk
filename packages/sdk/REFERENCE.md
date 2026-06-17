@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.3";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.5";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.3";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.5";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.3";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.5";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.3";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.5";
 ```
 
 _No JSDoc summary is available yet._
@@ -11981,14 +11981,6 @@ function useIsMobile(breakpoint?: number): boolean;
 
 Hook to detect if the user is on a mobile/small screen device
 
-### useMobileHandTrayActive
-
-```ts
-function useMobileHandTrayActive(): boolean;
-```
-
-Whether the mobile hand tray is currently presenting hands — i.e. the viewport is below the mobile breakpoint and at least one primary/auxiliary hand has registered. Authors can use this to drop redundant inline hand chrome (labels, framing) that the tray already provides, instead of guessing the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
-
 ### useOverlayInsets
 
 ```ts
@@ -14910,14 +14902,6 @@ function useChromeSuppression(id: string, suppressed: boolean): void;
 
 _No JSDoc summary is available yet._
 
-### useMobileHandTrayActive
-
-```ts
-function useMobileHandTrayActive(): boolean;
-```
-
-Whether the mobile hand tray is currently presenting hands — i.e. the viewport is below the mobile breakpoint and at least one primary/auxiliary hand has registered. Authors can use this to drop redundant inline hand chrome (labels, framing) that the tray already provides, instead of guessing the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
-
 ### useOverlayInsets
 
 ```ts
@@ -16797,8 +16781,8 @@ function HandSurfaceView<Card extends ZoneCardRenderItem>({
   ariaLabel,
   onIntentRouted,
   onSelectionSummary,
-  renderSummary,
-  renderActions,
+  summarySlot,
+  actionsSlot,
   className,
 }: HandSurfaceViewProps<Card>): react_jsx_runtime.JSX.Element;
 ```

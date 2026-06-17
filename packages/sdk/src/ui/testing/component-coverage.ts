@@ -58,7 +58,11 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
       "hands-handview--drag-to-target-pointer-drop",
     ],
     requiredCapabilities: ["pointer-drag", "touch-drag", "keyboard"],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: [
+      "hearts.pass-three.mobile",
+      "hex-network-trading.place-route.desktop",
+      "simultaneous-card-drafting.lock-choice.mobile",
+    ],
   },
   {
     exportName: "CardDropTargetView",
@@ -68,7 +72,10 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
       "hands-handview--drag-to-target-keyboard-drop",
     ],
     requiredCapabilities: ["pointer-drag", "keyboard", "runtime-draft"],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: [
+      "hex-network-trading.place-route.desktop",
+      "worker-placement-tableau.place-worker.desktop",
+    ],
   },
   {
     exportName: "CardFace",
@@ -98,7 +105,7 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
       "touch-drag",
       "responsive-layout",
     ],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: ["hearts.pass-three.mobile"],
   },
   {
     exportName: "HandView",
@@ -119,7 +126,12 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
       "runtime-draft",
       "runtime-submit",
     ],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: [
+      "deck-building-market.buy-card.desktop",
+      "hearts.pass-three.mobile",
+      "hex-network-trading.place-route.desktop",
+      "simultaneous-card-drafting.lock-choice.mobile",
+    ],
   },
   {
     exportName: "Input",
@@ -147,7 +159,13 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
     owner: "sdk-ui",
     storyIds: ["buttons--primary-action-dock"],
     requiredCapabilities: ["click", "keyboard", "runtime-submit"],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: [
+      "deck-building-market.buy-card.desktop",
+      "hearts.pass-three.mobile",
+      "hex-network-trading.place-route.desktop",
+      "simultaneous-card-drafting.lock-choice.mobile",
+      "worker-placement-tableau.place-worker.desktop",
+    ],
   },
   {
     exportName: "PrimaryButton",
@@ -178,7 +196,10 @@ export const COMPONENT_COVERAGE: readonly ComponentCoverage[] = [
     owner: "sdk-ui",
     storyIds: ["hand-stagingzone--removes-on-click"],
     requiredCapabilities: ["click", "keyboard", "runtime-draft"],
-    workbenchScenarioIds: [],
+    workbenchScenarioIds: [
+      "hex-network-trading.place-route.desktop",
+      "worker-placement-tableau.place-worker.desktop",
+    ],
   },
   {
     exportName: "ThemedButton",

@@ -183,6 +183,20 @@ function selectScenarios({ options, fixtures, changed }) {
   };
 }
 
+function projectsForScenario(fixture) {
+  const capabilities = new Set(fixture.source?.capabilities ?? []);
+  const viewportTags = new Set(fixture.environment?.viewportTags ?? []);
+  const projects = ["chromium-desktop"];
+  if (
+    capabilities.has("touch-drag") ||
+    viewportTags.has("phone") ||
+    viewportTags.has("touch")
+  ) {
+    projects.push("chromium-touch-phone");
+  }
+  return projects;
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const bundle = await readJson(path.join(fixturesRoot, "index.json"));
@@ -205,36 +219,54 @@ async function main() {
     `${JSON.stringify({ schemaVersion: 1, changedFiles: files, ...selection }, null, 2)}\n`,
   );
 
-  const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]).stdout.trim();
+  const sdkCommit = run("git", [
+    "rev-parse",
+    "--short=12",
+    "HEAD",
+  ]).stdout.trim();
   const results = [];
   for (const scenarioId of selection.scenarioIds) {
-    const transcriptFile = path.join(
-      artifactRoot,
-      "transcripts",
-      `${scenarioId}.txt`,
-    );
-    const test = run(
-      "pnpm",
-      ["--filter", "@dreamboard-games/ui-workbench", "test"],
-      {
-        env: { UI_SCENARIO_ID: scenarioId },
-      },
-    );
-    await writeFile(transcriptFile, `${test.stdout ?? ""}${test.stderr ?? ""}`);
     const fixture = await readJson(
       path.join(fixturesRoot, `${scenarioId}.fixture.json`),
     );
-    results.push({
-      scenarioId,
-      project: "chromium-desktop",
-      result: test.status === 0 ? "passed" : "failed",
-      projectionDigest: fixture.expected.finalProjectionDigest,
-      semanticDigest: fixture.expected.finalSemanticDigest,
-      submissionDigest: fixture.expected.submissionDigest,
-      screenshotFiles: [],
-      transcriptFile: path.relative(root, transcriptFile),
-    });
-    if (test.status !== 0) {
+    for (const project of projectsForScenario(fixture)) {
+      const transcriptFile = path.join(
+        artifactRoot,
+        "transcripts",
+        `${scenarioId}.${project}.txt`,
+      );
+      const test = run(
+        "pnpm",
+        [
+          "--filter",
+          "@dreamboard-games/ui-workbench",
+          "test",
+          "--project",
+          project,
+        ],
+        {
+          env: { UI_SCENARIO_ID: scenarioId },
+        },
+      );
+      await writeFile(
+        transcriptFile,
+        `${test.stdout ?? ""}${test.stderr ?? ""}`,
+      );
+      results.push({
+        scenarioId,
+        project,
+        result: test.status === 0 ? "passed" : "failed",
+        projectionDigest: fixture.expected.finalProjectionDigest,
+        semanticDigest: fixture.expected.finalSemanticDigest,
+        submissionDigest: fixture.expected.submissionDigest,
+        screenshotFiles: [],
+        transcriptFile: path.relative(root, transcriptFile),
+      });
+      if (test.status !== 0) {
+        break;
+      }
+    }
+    if (results.some((result) => result.result === "failed")) {
       break;
     }
   }
@@ -248,7 +280,7 @@ async function main() {
     },
     changedExports: selection.changedExports,
     selectedScenarios: selection.scenarioIds,
-    projects: ["chromium-desktop"],
+    projects: [...new Set(results.map((result) => result.project))].sort(),
     results,
   };
   await writeFile(

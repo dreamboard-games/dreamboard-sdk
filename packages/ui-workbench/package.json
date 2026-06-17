@@ -13,8 +13,21 @@
   "dependencies": {
     "@dreamboard-games/plugin-runtime-contract": "workspace:*",
     "@dreamboard-games/sdk": "workspace:*",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-label": "^2.1.6",
+    "@radix-ui/react-select": "^2.2.5",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "@use-gesture/react": "^10.3.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^11.15.0",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "vaul": "^1.1.2",
+    "zod": "4.4.3",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@playwright/test": "1.60.0",

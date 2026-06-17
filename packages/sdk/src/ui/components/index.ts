@@ -32,7 +32,6 @@ export {
 export {
   MobileHandTrayProvider,
   useRegisterMobileHand,
-  useMobileHandTrayActive,
   useOverlayInsets,
   useRegisterBottomOverlayInset,
   type HandRole,

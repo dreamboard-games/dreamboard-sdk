@@ -6,4 +6,8 @@ build
 storybook-static
 tsconfig.tsbuildinfo
 *.tgz
+packages/sdk/test-results/
 packages/ui-workbench/test-results/
+artifacts/ui-stories/
+artifacts/ui-visual/
+artifacts/ui-release-proof/

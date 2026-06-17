@@ -8,6 +8,10 @@ const sdkDir = path.join(root, "packages/sdk");
 const componentsIndexPath = path.join(sdkDir, "src/ui/components/index.ts");
 const coveragePath = path.join(sdkDir, "src/ui/testing/component-coverage.ts");
 const storiesDir = path.join(sdkDir, "src/ui/stories");
+const scenarioIndexPath = path.join(
+  root,
+  "fixtures/ui/component-scenario-index.json",
+);
 
 const knownCapabilities = new Set([
   "click",
@@ -115,6 +119,15 @@ async function collectCoverage() {
   return { coverage, interactiveExports };
 }
 
+async function collectScenarioIds() {
+  const index = JSON.parse(await readFile(scenarioIndexPath, "utf8"));
+  return new Set(
+    Object.values(index.components ?? {}).flatMap(
+      (entry) => entry.scenarioIds ?? [],
+    ),
+  );
+}
+
 async function collectComponentExports() {
   const text = await readFile(componentsIndexPath, "utf8");
   const source = readSource(text, componentsIndexPath);
@@ -220,6 +233,7 @@ function validateCoverage({
   coverage,
   interactiveExports,
   storyIds,
+  scenarioIds,
 }) {
   const failures = [];
   const componentExportSet = new Set(componentExports);
@@ -310,6 +324,24 @@ function validateCoverage({
         `${entry.exportName}: unknown stories ${format(unknownStories)}`,
       );
     }
+    const unknownScenarios = (entry.workbenchScenarioIds ?? []).filter(
+      (scenarioId) => !scenarioIds.has(scenarioId),
+    );
+    if (unknownScenarios.length > 0) {
+      failures.push(
+        `${entry.exportName}: unknown Workbench scenarios ${format(unknownScenarios)}`,
+      );
+    }
+    if (
+      entry.requiredCapabilities.some(
+        (capability) =>
+          capability.startsWith("runtime-") || capability === "touch-drag",
+      ) &&
+      (!Array.isArray(entry.workbenchScenarioIds) ||
+        entry.workbenchScenarioIds.length === 0)
+    ) {
+      failures.push(`${entry.exportName}: missing Workbench scenario coverage`);
+    }
   }
 
   if (failures.length > 0) {
@@ -320,31 +352,20 @@ function validateCoverage({
 async function main() {
   const componentExports = await collectComponentExports();
   const storyIds = await collectStoryIds();
+  const scenarioIds = await collectScenarioIds();
   const { coverage, interactiveExports } = await collectCoverage();
   validateCoverage({
     componentExports,
     coverage,
     interactiveExports,
     storyIds,
+    scenarioIds,
   });
-
-  const runtimeGaps = coverage.filter(
-    (entry) =>
-      entry.requiredCapabilities.some((capability) =>
-        capability.startsWith("runtime-"),
-      ) && entry.workbenchScenarioIds.length === 0,
-  );
 
   console.log(`OK component exports: ${componentExports.length}`);
   console.log(`OK discovered story IDs: ${storyIds.length}`);
+  console.log(`OK discovered Workbench scenario IDs: ${scenarioIds.size}`);
   console.log(`OK interactive component coverage entries: ${coverage.length}`);
-  if (runtimeGaps.length > 0) {
-    console.log(
-      `Runtime capability gaps awaiting Workbench coverage: ${runtimeGaps
-        .map((entry) => entry.exportName)
-        .join(", ")}`,
-    );
-  }
 }
 
 main().catch((error) => {

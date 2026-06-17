@@ -1,6 +1,6 @@
 # Phase 08: CI Rollout, Deletion, And Release Proof
 
-Status: proposed.
+Status: source-closed; publish release proof awaits real-device canary receipt.
 
 ## Objective
 

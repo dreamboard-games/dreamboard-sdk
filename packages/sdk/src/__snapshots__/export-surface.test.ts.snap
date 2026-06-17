@@ -322,7 +322,6 @@ exports[`public export surface ui export names are stable 1`] = `
   "useCardDragSurface",
   "useChromeSuppression",
   "useIsMobile",
-  "useMobileHandTrayActive",
   "useOverlayInsets",
   "useRegisterBottomOverlayInset",
   "useRegisterMobileHand",

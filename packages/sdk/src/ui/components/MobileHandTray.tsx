@@ -49,14 +49,6 @@ const OverlayInsetContext = createContext<OverlayInsetContextValue | null>(
   null,
 );
 
-// Kept separate from the registration context on purpose: this value changes
-// whenever the tray opens/closes or hands (de)register, whereas `registerHand`
-// must stay referentially stable so `useRegisterMobileHand`'s effect does not
-// re-run and thrash registrations.
-const MobileHandTrayStateContext = createContext<{ active: boolean }>({
-  active: false,
-});
-
 const ROLE_PRIORITY: Record<HandRole, number> = {
   task: 0,
   primary: 1,
@@ -161,22 +153,19 @@ export function MobileHandTrayProvider({ children }: { children: ReactNode }) {
   );
 
   const trayActive = isMobile && hands.length > 0;
-  const stateValue = useMemo(() => ({ active: trayActive }), [trayActive]);
 
   return (
     <MobileHandTrayContext.Provider value={value}>
       <OverlayInsetContext.Provider value={overlayValue}>
-        <MobileHandTrayStateContext.Provider value={stateValue}>
-          <div
-            data-dreamboard-mobile-hand-shell=""
-            data-mobile-hand-count={hands.length}
-            data-mobile-hand-tray-active={trayActive ? "true" : undefined}
-            style={{ minHeight: "100%" }}
-          >
-            {children}
-          </div>
-          {trayActive ? <MobileHandTray hands={hands} /> : null}
-        </MobileHandTrayStateContext.Provider>
+        <div
+          data-dreamboard-mobile-hand-shell=""
+          data-mobile-hand-count={hands.length}
+          data-mobile-hand-tray-active={trayActive ? "true" : undefined}
+          style={{ minHeight: "100%" }}
+        >
+          {children}
+        </div>
+        {trayActive ? <MobileHandTray hands={hands} /> : null}
       </OverlayInsetContext.Provider>
     </MobileHandTrayContext.Provider>
   );
@@ -190,17 +179,6 @@ export function useRegisterMobileHand(hand: MobileHandRegistration): void {
     );
   }
   useEffect(() => context.registerHand(hand), [context, hand]);
-}
-
-/**
- * Whether the mobile hand tray is currently presenting hands — i.e. the
- * viewport is below the mobile breakpoint and at least one primary/auxiliary
- * hand has registered. Authors can use this to drop redundant inline hand
- * chrome (labels, framing) that the tray already provides, instead of guessing
- * the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
- */
-export function useMobileHandTrayActive(): boolean {
-  return useContext(MobileHandTrayStateContext).active;
 }
 
 export function useOverlayInsets(): { bottom: number } {

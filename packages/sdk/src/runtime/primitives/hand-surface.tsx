@@ -94,29 +94,26 @@ export interface HandSurfaceViewProps<Card extends ZoneCardRenderItem> {
     index: number,
   ) => ReactNode;
   /**
-   * Render-safe slot for selection summary content. Fires during render
-   * with the latest projected summary so authors can compose count chrome
-   * (e.g. "3 of 5 selected") inline. The returned node is hoisted above
-   * the hand region. Use this for visible UI; use `onSelectionSummary`
-   * only for analytics or external state mirrors that need an effect.
+   * Render-safe slot for selection summary content. Fires during render with
+   * the latest projected summary so authors can compose count chrome inline.
+   * The returned node is hoisted above the hand region. Use this for visible
+   * UI; use `onSelectionSummary` only for analytics or external state mirrors
+   * that need an effect.
    */
-  renderSummary?: (summary: HandSelectionSummary) => ReactNode;
+  summarySlot?: (summary: HandSelectionSummary) => ReactNode;
   /**
    * Optional selection summary observer. Invoked from a layout effect so
-   * consumers may safely call `setState` in response. Use `renderSummary`
-   * for inline rendering instead — that path avoids effect-timing
-   * surprises.
+   * consumers may safely call `setState` in response. Use `summarySlot` for
+   * inline rendering instead — that path avoids effect-timing surprises.
    */
   onSelectionSummary?: (summary: HandSelectionSummary) => void;
   /**
-   * Render-safe slot for the hand's commit/action chrome (e.g. a submit
-   * button for a many-select interaction). Receives the same live summary as
-   * `renderSummary`. Rendered below the hand inline on desktop and pinned as a
-   * sticky footer inside the mobile dock, so the action stays reachable while
-   * the hand is docked. Use this instead of anchoring the action elsewhere on
-   * the board, where the dock would otherwise hide it.
+   * Render-safe slot for the hand's commit/action chrome. Receives the same
+   * live summary as `summarySlot`. Rendered below the hand inline on desktop
+   * and pinned as a sticky footer inside the mobile dock, so the action stays
+   * reachable while the hand is docked.
    */
-  renderActions?: (summary: HandSelectionSummary) => ReactNode;
+  actionsSlot?: (summary: HandSelectionSummary) => ReactNode;
   /** Layout policy forwarded to the SDK HandView. */
   layout?: HandLayoutKind | HandLayoutPolicy;
   /** Mobile interaction policy. Defaults to `direct-activate`. */
@@ -177,8 +174,8 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
   ariaLabel,
   onIntentRouted,
   onSelectionSummary,
-  renderSummary,
-  renderActions,
+  summarySlot,
+  actionsSlot,
   className,
 }: HandSurfaceViewProps<Card>) {
   const route = useCardIntentAdapter({ zone, onResult: onIntentRouted });
@@ -328,16 +325,16 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
   }, [draftCardProjection]);
 
   // Fire the summary observer from an effect so consumers can safely call
-  // setState in response. Rendering visible summary chrome should go
-  // through `renderSummary` instead.
+  // setState in response. Rendering visible summary chrome should go through
+  // `summarySlot` instead.
   const onSelectionSummaryRef = useRef(onSelectionSummary);
   onSelectionSummaryRef.current = onSelectionSummary;
   useEffect(() => {
     onSelectionSummaryRef.current?.(selectionSummary);
   }, [selectionSummary]);
 
-  const summaryContent = renderSummary ? renderSummary(selectionSummary) : null;
-  const actionsNode = renderActions ? renderActions(selectionSummary) : null;
+  const summaryContent = summarySlot ? summarySlot(selectionSummary) : null;
+  const actionsNode = actionsSlot ? actionsSlot(selectionSummary) : null;
   // Pinned as a sticky footer so the action stays reachable while the hand is
   // docked on mobile (cards scroll behind it); inline on desktop `sticky` is
   // inert and it simply sits below the hand. The opaque surface background

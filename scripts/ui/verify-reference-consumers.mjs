@@ -26,6 +26,11 @@ function parseArgs(argv) {
       index += 1;
       continue;
     }
+    if (arg === "--sdk-tarball") {
+      options.sdkTarball = path.resolve(root, argv[index + 1]);
+      index += 1;
+      continue;
+    }
     throw new Error(`Unknown argument '${arg}'.`);
   }
   return options;
@@ -86,6 +91,16 @@ async function packSdk(tempRoot) {
     tarballPath: path.join(tempRoot, tarballName),
     tarballSha256: await sha256File(path.join(tempRoot, tarballName)),
   };
+}
+
+async function resolveSdkTarball(options, tempRoot) {
+  if (options.sdkTarball) {
+    return {
+      tarballPath: options.sdkTarball,
+      tarballSha256: await sha256File(options.sdkTarball),
+    };
+  }
+  return packSdk(tempRoot);
 }
 
 async function rewriteSdkDependency(sandbox, tarballPath) {
@@ -161,7 +176,10 @@ async function main() {
     path.join(tmpdir(), "dreamboard-reference-consumers-"),
   );
   try {
-    const { tarballPath, tarballSha256 } = await packSdk(tempRoot);
+    const { tarballPath, tarballSha256 } = await resolveSdkTarball(
+      options,
+      tempRoot,
+    );
     const games = [];
     for (const gameId of gameIds) {
       games.push(await verifyGame(gameId, tempRoot, tarballPath));
