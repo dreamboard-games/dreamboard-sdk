@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test";
-import { digestPluginGameplayFrame } from "@dreamboard-games/plugin-runtime-contract";
+import {
+  digestPluginGameplayFrame,
+  type PluginGameplayFrame,
+  type PluginSessionDescriptor,
+} from "@dreamboard-games/plugin-runtime-contract";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
@@ -8,146 +12,133 @@ import { createDreamboardUI } from "./ui-contract.js";
 import { createWorkspaceUIContract } from "./workspace-contract/index.js";
 import { Board } from "./primitives/board.js";
 import type { InteractionHandle } from "./hooks/useInteractionHandle.js";
-import { pluginGameplayFrameFromProjection } from "./context/PluginGameplayFrameContext.js";
 import type { PluginRuntimeClient } from "./core/types.js";
-import type { PluginRuntimeProjection } from "./types/plugin-state.js";
 import { interactionDraftDigestForValues } from "./utils/interaction-draft-digest.js";
-import { semanticProjectionDigestForState } from "./utils/semantic-projection-digest.js";
+import { semanticProjectionDigestForFrame } from "./utils/semantic-projection-digest.js";
 
-function makeSnapshot(): PluginRuntimeProjection<
+const TEST_SESSION = {
+  sessionId: "session-1",
+  players: [{ playerId: "player-1", displayName: "Player One" }],
+} satisfies PluginSessionDescriptor;
+
+function makeSnapshot(): PluginGameplayFrame<
   { ok: true },
   "play",
   string,
   "play.placeCard"
 > {
   return {
+    gameVersion: 1,
+    actionSetVersion:
+      "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+    perspectivePlayerId: "player-1",
     view: { ok: true },
-    gameplay: {
+    flow: {
       currentPhase: "play",
       currentStage: null,
       activePlayers: ["player-1"],
       simultaneousPhase: null,
-      availableInteractions: [
-        {
-          phaseName: "play",
-          interactionKey: "play.placeCard",
-          interactionId: "placeCard",
-          kind: "action",
-          descriptorDigest: "sha256:descriptor",
-          actorSeat: 0,
-          draftDigest: "sha256:draft",
-          inputs: [
-            {
-              key: "cardId",
-              kind: "card",
-              domain: {
-                type: "cardTarget",
-                projection: "resolved",
-                eligibleTargets: ["card-1"],
-                zoneIds: ["hand"],
-              },
+    },
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "cardId",
+            kind: "card",
+            domain: {
+              type: "cardTarget",
+              projection: "resolved",
+              eligibleTargets: ["card-1"],
+              zoneIds: ["hand"],
             },
-            {
-              key: "spaceId",
-              kind: "board-space",
-              domain: {
-                type: "boardTarget",
-                projection: "resolved",
-                targetKind: "space",
-                eligibleTargets: ["hex-a"],
-                dependencies: {
-                  mode: "eager",
-                  dependentCases: [
-                    {
-                      when: { cardId: "card-1" },
-                      domain: {
-                        type: "boardTarget",
-                        projection: "resolved",
-                        targetKind: "space",
-                        eligibleTargets: ["hex-a"],
-                      },
-                    },
-                  ],
-                },
-              },
-            },
-          ],
-          commit: { mode: "autoWhenReady" },
-          availability: { status: "available" },
-        },
-      ],
-      zones: {
-        hand: {
-          cardIds: ["card-1"],
-          cardViewsById: {
-            "card-1": JSON.stringify({
-              id: "card-1",
-              cardType: "test-card",
-              name: "Test card",
-              properties: {},
-            }),
           },
-          playableByCardId: {
-            "card-1": [
-              {
-                phaseName: "play",
-                interactionKey: "play.placeCard",
-                interactionId: "placeCard",
-                kind: "action",
-                descriptorDigest: "sha256:descriptor",
-                actorSeat: 0,
-                draftDigest: "sha256:draft",
-                inputs: [
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["hex-a"],
+              dependencies: {
+                mode: "eager",
+                dependentCases: [
                   {
-                    key: "cardId",
-                    kind: "card",
+                    when: { cardId: "card-1" },
                     domain: {
-                      type: "cardTarget",
+                      type: "boardTarget",
                       projection: "resolved",
-                      eligibleTargets: ["card-1"],
-                      zoneIds: ["hand"],
+                      targetKind: "space",
+                      eligibleTargets: ["hex-a"],
                     },
                   },
                 ],
-                commit: { mode: "autoWhenReady" },
-                availability: { status: "available" },
               },
-            ],
+            },
           },
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+    zones: {
+      hand: {
+        cardIds: ["card-1"],
+        cardViewsById: {
+          "card-1": JSON.stringify({
+            id: "card-1",
+            cardType: "test-card",
+            name: "Test card",
+            properties: {},
+          }),
+        },
+        playableByCardId: {
+          "card-1": [
+            {
+              phaseName: "play",
+              interactionKey: "play.placeCard",
+              interactionId: "placeCard",
+              kind: "action",
+              descriptorDigest: "sha256:descriptor",
+              actorSeat: 0,
+              draftDigest: "sha256:draft",
+              inputs: [
+                {
+                  key: "cardId",
+                  kind: "card",
+                  domain: {
+                    type: "cardTarget",
+                    projection: "resolved",
+                    eligibleTargets: ["card-1"],
+                    zoneIds: ["hand"],
+                  },
+                },
+              ],
+              commit: { mode: "autoWhenReady" },
+              availability: { status: "available" },
+            },
+          ],
         },
       },
     },
-    lobby: {
-      seats: [{ playerId: "player-1", displayName: "Player One" }],
-      canStart: true,
-      hostUserId: "user-1",
-    },
-    notifications: [],
-    session: {
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1"],
-      controllingPlayerId: "player-1",
-      userId: "user-1",
-    },
-    history: null,
-    syncId: 1,
   };
 }
 
 function makeRuntime(
-  snapshot: PluginRuntimeProjection,
+  frame: PluginGameplayFrame,
   submit: (...args: unknown[]) => Promise<void>,
 ): PluginRuntimeClient {
   return {
-    getSession: () => ({
-      sessionId: snapshot.session.sessionId ?? "session-1",
-      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
-        playerId,
-        displayName: playerId,
-      })),
-    }),
+    getSession: () => TEST_SESSION,
     subscribeSession: () => () => undefined,
-    getFrame: () => pluginGameplayFrameFromProjection(snapshot),
+    getFrame: () => frame,
     subscribeFrame: () => () => undefined,
     validateInteraction: async () => ({ valid: true }),
     submitInteraction: async (interactionId, params) => {
@@ -329,7 +320,7 @@ test("UI root emits the semantic projection digest marker", () => {
     cardIdFromZoneCard: (card: { id: string }) => card.id,
     zoneIdFromZoneCard: () => "hand",
   });
-  const digest = digestPluginGameplayFrame(pluginGameplayFrameFromProjection(snapshot));
+  const digest = digestPluginGameplayFrame(snapshot);
 
   const html = renderToString(
     createElement(
@@ -349,7 +340,7 @@ test("UI root emits the semantic projection digest marker", () => {
 test("semantic projection digest normalizes order-insensitive target domains", () => {
   const digestFor = (targets: string[], dependentCases: unknown[]) => {
     const snapshot = makeSnapshot();
-    const input = snapshot.gameplay.availableInteractions[0]?.inputs.find(
+    const input = snapshot.availableInteractions[0]?.inputs.find(
       (candidate) => candidate.key === "spaceId",
     );
     if (!input) {
@@ -364,7 +355,7 @@ test("semantic projection digest normalizes order-insensitive target domains", (
       mode: "eager",
       dependentCases,
     };
-    return semanticProjectionDigestForState(snapshot);
+    return semanticProjectionDigestForFrame(snapshot, TEST_SESSION);
   };
 
   const first = digestFor(
@@ -411,32 +402,34 @@ test("semantic projection digest normalizes order-insensitive target domains", (
 });
 
 test("board targets render semantic browser replay select actuators", () => {
-  const snapshot = makeSnapshot();
-  snapshot.gameplay.availableInteractions = [
-    {
-      phaseName: "play",
-      interactionKey: "play.placeCard",
-      interactionId: "placeCard",
-      kind: "action",
-      descriptorDigest: "sha256:descriptor",
-      actorSeat: 0,
-      draftDigest: "sha256:draft",
-      inputs: [
-        {
-          key: "spaceId",
-          kind: "board-space",
-          domain: {
-            type: "boardTarget",
-            projection: "resolved",
-            targetKind: "space",
-            eligibleTargets: ["hex-a"],
+  const snapshot = {
+    ...makeSnapshot(),
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["hex-a"],
+            },
           },
-        },
-      ],
-      commit: { mode: "autoWhenReady" },
-      availability: { status: "available" },
-    },
-  ];
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+  } satisfies PluginGameplayFrame;
   const runtime = makeRuntime(snapshot, async () => undefined);
 
   const html = renderToString(

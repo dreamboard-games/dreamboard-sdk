@@ -4,11 +4,13 @@ import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MobileHandTrayProvider, ToastProvider } from "../../ui.js";
 import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
-import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
 import type { PluginRuntimeClient } from "../core/types.js";
+import {
+  makeTestGameplayFrame,
+  makeTestRuntimeHarness,
+} from "../test-runtime-harness.js";
 import { createDreamboardUI } from "../ui-contract.js";
 import { createWorkspaceUIContract } from "../workspace-contract/index.js";
-import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 
 // Mobile-width viewport so useIsMobile() -> matchMedia reports mobile and the
 // provider mounts the tray. happy-dom is registered for this file only; the
@@ -26,69 +28,30 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-function snapshot(): PluginRuntimeProjection<
-  { ok: true },
-  "play",
-  string,
-  "play.placeCard"
-> {
-  return {
+function frame() {
+  return makeTestGameplayFrame({
+    gameVersion: 1,
     view: { ok: true },
-    gameplay: {
-      currentPhase: "play",
-      currentStage: null,
-      activePlayers: ["player-1"],
-      simultaneousPhase: null,
-      availableInteractions: [],
-      zones: {
-        hand: {
-          cardIds: ["card-1"],
-          cardViewsById: {
-            "card-1": JSON.stringify({
-              id: "card-1",
-              cardType: "test-card",
-              name: "Test card",
-              properties: {},
-            }),
-          },
-          playableByCardId: {},
+    currentPhase: "play",
+    zones: {
+      hand: {
+        cardIds: ["card-1"],
+        cardViewsById: {
+          "card-1": JSON.stringify({
+            id: "card-1",
+            cardType: "test-card",
+            name: "Test card",
+            properties: {},
+          }),
         },
+        playableByCardId: {},
       },
     },
-    lobby: {
-      seats: [{ playerId: "player-1", displayName: "Player One" }],
-      canStart: true,
-      hostUserId: "user-1",
-    },
-    notifications: [],
-    session: {
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1"],
-      controllingPlayerId: "player-1",
-      userId: "user-1",
-    },
-    history: null,
-    syncId: 1,
-  };
+  });
 }
 
 function mountRuntime(): PluginRuntimeClient {
-  const snap = snapshot();
-  return {
-    getSession: () => ({
-      sessionId: snap.session.sessionId ?? "session-1",
-      players: snap.session.controllablePlayerIds.map((playerId) => ({
-        playerId,
-        displayName: playerId,
-      })),
-    }),
-    subscribeSession: () => () => undefined,
-    getFrame: () => pluginGameplayFrameFromProjection(snap),
-    subscribeFrame: () => () => undefined,
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: async () => undefined,
-    disconnect: () => undefined,
-  };
+  return makeTestRuntimeHarness(frame()).runtime;
 }
 
 interface MountedDom {
@@ -212,7 +175,7 @@ test("generated hand registers into the mobile tray after effects run", async ()
   const mounted = await mountIntoDom(
     createElement(
       PluginRuntimeBoundary,
-        { runtime },
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -257,7 +220,7 @@ test("renderActions content travels into the mobile dock", async () => {
   const mounted = await mountIntoDom(
     createElement(
       PluginRuntimeBoundary,
-        { runtime },
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,
@@ -300,7 +263,7 @@ test("unmounting the generated hand deregisters it from the tray", async () => {
   function App({ showHand }: { showHand: boolean }) {
     return createElement(
       PluginRuntimeBoundary,
-        { runtime },
+      { runtime },
       createElement(
         UI.Root as unknown as React.FC<{ children?: unknown }>,
         null,

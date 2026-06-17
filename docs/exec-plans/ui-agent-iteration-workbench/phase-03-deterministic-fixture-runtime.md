@@ -1,9 +1,9 @@
 # Phase 03: Deterministic Fixture Runtime
 
-Status: reopened on 2026-06-17 by the
+Status: source-complete on 2026-06-17 after the
 [Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
 `artifacts/phase-03-runtime.md` records the superseded fake-runtime
-implementation.
+implementation; the receipt below records the transport-client closeout.
 
 ## Objective
 
@@ -437,10 +437,82 @@ mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
 mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
 ```
 
-Remaining work before Phase 03 and the hard cut fully close: migrate the
-existing React primitive/provider surface away from `PluginStateSnapshot` and
-actor-supplied command calls, then migrate the internal host to emit version
-`3` frames through `@dreamboard-games/plugin-runtime-contract`.
+## Closeout update: 2026-06-17
+
+The SDK-owned fixture and Workbench runtime path now closes the reopened Phase
+03 scope:
+
+- fixture host protocol handler failures are captured and rethrown by
+  `flush()`/`assertConsumed()` instead of being hidden behind runtime request
+  timeouts;
+- fixture initialization drains exactly the leading `host.frame`, while
+  `advanceHost()` now delivers independent host-frame transitions;
+- SDK fixture tests cover digest mismatch, wrong step kind, exhausted protocol
+  tape, stale frame basis, rejected validation, rejected submit, independent
+  host-frame delivery, and direct fixture transport versus browser
+  `postMessage` transport parity;
+- Workbench scenario loading derives runtime clock, request IDs, and harness
+  transcript timestamps from the fixture environment;
+- the Workbench test bridge exposes `getHostEvents()` as the Phase 03 evidence
+  API, with the older `getRuntimeEvents()` retained as a temporary alias;
+- `PluginRuntimeProjection`, `PluginStateContext`, `GameUIProvider`, and the
+  reducer-state compatibility file have been removed from the SDK runtime
+  source surface;
+- reducer/component tests now build direct `PluginGameplayFrame` and
+  `PluginSessionDescriptor` fixtures instead of projection-store snapshots;
+- `createTestRuntime` returns direct plugin frames and session descriptors,
+  without `getSnapshot()`, `subscribeToState()`, or `setControllingPlayer()`;
+- `packages/sdk-types` no longer advertises `controllablePlayerIds` on host
+  gameplay views;
+- hard-cut scans are clean for `PluginStateSnapshot`, `StateSyncMessage`,
+  `state-sync`, `plugin-messages`, `createPluginRuntimeAPI`,
+  `PluginRuntimeAPI`, `usePluginStateSnapshot`,
+  `uiFixturePluginStateSnapshotSchema`, and `createFixtureRuntime` across
+  live package/script/example/reference surfaces;
+- fixture/workbench sources do not import `createTestRuntime` or
+  `PluginRuntimeProjection`;
+- live SDK/Workbench/source type surfaces are clean for
+  `PluginRuntimeProjection`, `PluginStateContext`, `GameUIProvider`,
+  `reducer-state`, `usePluginState`, `semanticProjectionDigestForState`,
+  `subscribeToState`, `setControllingPlayer`, `controllablePlayerIds`, and
+  `hostUserId`.
+
+Verification run from `/Users/mac/code/dreamboard-sdk`:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk-types typecheck
+mise exec node@24 -- bun test src/runtime/hooks/useRuntimeSnapshotSelector.test.tsx src/runtime/hooks/useInteractionHandle.test.tsx src/runtime/primitives/hand-mobile-registration.test.tsx src/runtime/workspace-contract.test.tsx src/testing/create-test-runtime.test.ts src/ui/index.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk test
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm ui:runtime:test
+rg -n "createFixtureRuntime|uiFixturePluginStateSnapshotSchema|createPluginRuntimeAPI|PluginRuntimeAPI|usePluginStateSnapshot|PluginStateSnapshot|StateSyncMessage|state-sync|plugin-messages" packages scripts examples docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**' -g '!**/dist/**'
+rg -n "createTestRuntime|PluginRuntimeProjection" packages/sdk/src/testing/ui-fixture packages/ui-workbench/src -S
+rg -n "PluginStateContext|PluginStateProvider|usePluginState\b|GameUIProvider|game-ui-provider|types/reducer-state|PluginRuntimeProjection|pluginGameplayFrameFromProjection|semanticProjectionDigestForState|setControllingPlayer|subscribeToState|controllablePlayerIds|hostUserId" packages/sdk/src packages/ui-workbench/src packages/sdk-types/src scripts examples -g '!**/node_modules/**' -g '!**/dist/**' -S
+```
+
+Results:
+
+- `@dreamboard-games/plugin-runtime-contract` typecheck: passed.
+- `@dreamboard-games/plugin-runtime-contract` test: passed, 5 tests.
+- `@dreamboard-games/sdk` typecheck: passed.
+- `@dreamboard-games/sdk-types` typecheck: passed.
+- Focused runtime/export tests: passed, 39 tests.
+- `@dreamboard-games/sdk` test: passed, 526 tests.
+- `docs:check`: passed, generated files clean.
+- `ui:fixtures:check`: passed, checked 5 UI fixtures.
+- `ui:runtime:test`: passed; rebuilt the SDK, ran 526 SDK tests, typechecked
+  Workbench, and ran 2 Workbench tests.
+- Hard-cut scans returned no matches for the SDK-owned live source surfaces
+  listed above.
+
+Notes:
+
+- Internal real-host emission of version `3` frames is tracked by the
+  cross-repo real-host parity work in Phase 07.
 
 ## Risks and controls
 

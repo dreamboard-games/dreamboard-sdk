@@ -6,6 +6,7 @@ import type {
 export interface UIFixtureTestBridge {
   getScenarioId(): string;
   getFrameId(): string;
+  getHostEvents(): readonly FixtureHostEvent[];
   getRuntimeEvents(): readonly FixtureHostEvent[];
   getProjectionDigest(): string;
   reset(): Promise<void>;
@@ -29,6 +30,7 @@ export function installUIFixtureTestBridge(options: {
   window.__dreamboardUIFixture = {
     getScenarioId: () => options.scenarioId,
     getFrameId: () => options.harness.getCurrentFrameId(),
+    getHostEvents: () => options.harness.getEvents(),
     getRuntimeEvents: () => options.harness.getEvents(),
     getProjectionDigest: () => {
       const frameId = options.harness.getCurrentFrameId();

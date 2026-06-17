@@ -1,18 +1,25 @@
 import { useMemo } from "react";
-import type { LobbyState } from "../types/plugin-state.js";
 import { useOptionalPluginSessionDescriptor } from "../context/PluginSessionContext.js";
 import type { HexColor } from "../../ui.js";
 
-// Re-export LobbyState for convenience
-export type { LobbyState };
+export interface PluginLobbySeat {
+  playerId: string;
+  displayName: string;
+  playerColor?: HexColor;
+}
+
+export interface PluginLobbyState {
+  seats: PluginLobbySeat[];
+  canStart: boolean;
+}
 
 /**
- * Subscribes to lobby updates from the plugin runtime snapshot when present.
- * Returns `null` until the host provides lobby state (SSR/tests/minimal runtimes).
+ * Reads plugin-visible player roster metadata from the runtime session
+ * descriptor. Host-only lobby controls remain outside the plugin iframe.
  */
-export function useLobbyState(): LobbyState | null {
+export function useLobbyState(): PluginLobbyState | null {
   const sessionDescriptor = useOptionalPluginSessionDescriptor();
-  return useMemo<LobbyState | null>(() => {
+  return useMemo<PluginLobbyState | null>(() => {
     if (!sessionDescriptor) {
       return null;
     }
@@ -23,17 +30,13 @@ export function useLobbyState(): LobbyState | null {
         playerColor: player.color as HexColor | undefined,
       })),
       canStart: sessionDescriptor.players.length > 0,
-      hostUserId: "",
     };
   }, [sessionDescriptor]);
 }
 
 /**
  * Hook to read plugin-visible player roster metadata.
- * Returns the latest lobby information from gameplay-frame messages.
- *
- * State is provided by PluginStateProvider from host's gameplay-frame messages.
- * The host transforms raw SSE LOBBY_UPDATE messages into clean LobbyState objects.
+ * Returns the latest plugin-visible roster information.
  *
  * @returns Current lobby state (never null - throws if not available)
  * @throws Error if lobby state is not available
@@ -47,7 +50,7 @@ export function useLobbyState(): LobbyState | null {
  * }
  * ```
  */
-export function useLobby(): LobbyState {
+export function useLobby(): PluginLobbyState {
   const lobbyState = useLobbyState();
   if (lobbyState === null) {
     throw new Error(

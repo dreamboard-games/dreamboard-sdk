@@ -12,7 +12,6 @@ import {
 import type { PluginRuntimeClient } from "../core/types.js";
 import type {
   InteractionDescriptor,
-  PluginRuntimeProjection,
   ZoneHandlesSnapshot,
 } from "../types/plugin-state.js";
 import {
@@ -80,21 +79,18 @@ export function PluginGameplayFrameProvider({
   children,
   loadingComponent = <DefaultLoadingScreen />,
 }: PluginGameplayFrameProviderProps) {
-  const storeApi = useMemo<PluginGameplayFrameStore>(
-    () => {
-      let current = runtime.getFrame();
-      return {
-        subscribe: (onStoreChange) =>
-          runtime.subscribeFrame(() => {
-            current = runtime.getFrame();
-            onStoreChange();
-          }),
-        getSnapshot: () => current,
-        getServerSnapshot: () => current,
-      };
-    },
-    [runtime],
-  );
+  const storeApi = useMemo<PluginGameplayFrameStore>(() => {
+    let current = runtime.getFrame();
+    return {
+      subscribe: (onStoreChange) =>
+        runtime.subscribeFrame(() => {
+          current = runtime.getFrame();
+          onStoreChange();
+        }),
+      getSnapshot: () => current,
+      getServerSnapshot: () => current,
+    };
+  }, [runtime]);
 
   return (
     <PluginGameplayFrameStoreProvider
@@ -190,27 +186,6 @@ function requirePluginGameplayFrame(
     throw new Error("Plugin gameplay frame is not available.");
   }
   return frame;
-}
-
-export function pluginGameplayFrameFromProjection(
-  state: PluginRuntimeProjection,
-): PluginGameplayFrame {
-  return {
-    gameVersion: state.syncId,
-    actionSetVersion: `projection:${state.syncId}`,
-    perspectivePlayerId: state.session.controllingPlayerId,
-    view: state.view,
-    flow: {
-      currentPhase: state.gameplay.currentPhase,
-      currentStage: state.gameplay.currentStage,
-      activePlayers: state.gameplay.activePlayers,
-      simultaneousPhase:
-        state.gameplay.simultaneousPhase as PluginGameplayFrame["flow"]["simultaneousPhase"],
-    },
-    availableInteractions:
-      state.gameplay.availableInteractions as PluginGameplayFrame["availableInteractions"],
-    zones: state.gameplay.zones as PluginGameplayFrame["zones"],
-  };
 }
 
 const GAMEPLAY_BROWSER_SCOPE_ID = "runtime";

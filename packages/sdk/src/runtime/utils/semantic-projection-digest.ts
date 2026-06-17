@@ -1,9 +1,9 @@
 import type {
-  GameplaySnapshot,
   InteractionDescriptor,
   InteractionInputDescriptor,
-  PluginRuntimeProjection,
-} from "../types/plugin-state.js";
+  PluginGameplayFrame,
+  PluginSessionDescriptor,
+} from "@dreamboard-games/plugin-runtime-contract";
 
 type JsonValue =
   | null
@@ -18,29 +18,29 @@ type CanonicalJson = JsonValue;
 export const AUTHORIZED_SEAT_PROJECTION_DIGEST_VERSION =
   "authorized-seat-projection@2";
 
-export function semanticProjectionDigestForState(
-  state: PluginRuntimeProjection,
+export function semanticProjectionDigestForFrame(
+  frame: PluginGameplayFrame,
+  session: PluginSessionDescriptor,
 ): string | null {
-  const actorPlayerId = state.session.controllingPlayerId;
+  const actorPlayerId = frame.perspectivePlayerId;
   if (!actorPlayerId) {
     return null;
   }
-  const seatOrder = state.lobby?.seats.map((seat) => seat.playerId) ?? [];
+  const seatOrder = session.players.map((player) => player.playerId);
   if (!seatOrder.includes(actorPlayerId)) {
     return null;
   }
-  return hashJson(semanticSeatProjection(state, state.gameplay, seatOrder));
+  return hashJson(semanticSeatProjection(frame, seatOrder));
 }
 
 function semanticSeatProjection(
-  state: PluginRuntimeProjection,
-  gameplay: GameplaySnapshot,
+  frame: PluginGameplayFrame,
   seatOrder: readonly string[],
 ): CanonicalJson {
   const playerToSeat = new Map(
     seatOrder.map((playerId, index) => [playerId, index] as const),
   );
-  const actorPlayerId = state.session.controllingPlayerId;
+  const actorPlayerId = frame.perspectivePlayerId;
   const actorSeat = actorPlayerId ? playerToSeat.get(actorPlayerId) : undefined;
   if (actorSeat === undefined) {
     throw new Error(
@@ -51,16 +51,13 @@ function semanticSeatProjection(
   return {
     digestVersion: AUTHORIZED_SEAT_PROJECTION_DIGEST_VERSION,
     actorSeat,
-    currentStage: gameplay.currentStage ?? null,
-    stageSeats: gameplay.activePlayers.map((playerId) =>
+    currentStage: frame.flow.currentStage ?? null,
+    stageSeats: frame.flow.activePlayers.map((playerId) =>
       canonicalizeSeatReference(playerId, playerToSeat),
     ),
-    view: canonicalizeSemanticProjectionValue(state.view, playerToSeat),
-    zones: canonicalizeSemanticProjectionValue(
-      gameplay.zones ?? {},
-      playerToSeat,
-    ),
-    availableInteractions: gameplay.availableInteractions.map((descriptor) =>
+    view: canonicalizeSemanticProjectionValue(frame.view, playerToSeat),
+    zones: canonicalizeSemanticProjectionValue(frame.zones ?? {}, playerToSeat),
+    availableInteractions: frame.availableInteractions.map((descriptor) =>
       semanticInteractionDescriptor(descriptor, playerToSeat),
     ),
   };

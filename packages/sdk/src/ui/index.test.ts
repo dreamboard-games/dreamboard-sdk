@@ -73,7 +73,6 @@ test("top-level ui-sdk exports the headless scaffold support surface", () => {
     "usePluginActions",
     "usePluginRuntime",
     "usePluginSession",
-    "usePluginState",
     "useRuntimeContext",
     "useSeatInbox",
     "useSquareBoard",
@@ -183,7 +182,6 @@ test("top-level ui-sdk does not export internal coordination plumbing", () => {
     "shellSlotForSurface",
     "isGeneratedHexBoardInput",
     "isGeneratedSquareBoardInput",
-    "usePluginRuntimeProjection",
     "useHexGrid",
     "useSquareGrid",
   ]) {

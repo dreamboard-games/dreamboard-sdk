@@ -4,10 +4,12 @@ import { createElement } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
-import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
-import type { PluginRuntimeClient } from "../core/types.js";
-import type { PluginRuntimeProjection } from "../types/plugin-state.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
+import { usePluginSession } from "../context/PluginSessionContext.js";
+import {
+  makeTestGameplayFrame,
+  makeTestRuntimeHarness,
+} from "../test-runtime-harness.js";
 import { useGameSelector } from "./useGameSelector.js";
 
 beforeAll(() => {
@@ -50,91 +52,22 @@ type TestView = {
 };
 
 function makeSnapshot({
-  syncId,
+  gameVersion,
   controllingPlayerId = "player-1",
   phase = "play",
   score = 0,
 }: {
-  syncId: number;
+  gameVersion: number;
   controllingPlayerId?: string;
   phase?: string;
   score?: number;
-}): PluginRuntimeProjection<TestView> {
-  return {
+}) {
+  return makeTestGameplayFrame<TestView>({
+    gameVersion,
     view: { score },
-    gameplay: {
-      currentPhase: phase,
-      currentStage: null,
-      activePlayers: ["player-1"],
-      simultaneousPhase: null,
-      availableInteractions: [],
-      zones: {},
-    },
-    lobby: null,
-    notifications: [
-      {
-        id: `n-${syncId}`,
-        type: "STATE_CHANGED",
-        payload: { type: "STATE_CHANGED", newState: `sync-${syncId}` },
-        timestamp: syncId,
-        read: false,
-      },
-    ],
-    session: {
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1", "player-2"],
-      controllingPlayerId,
-      userId: "user-1",
-      status: "ready",
-    },
-    history: null,
-    syncId,
-  };
-}
-
-function makeRuntime(initialSnapshot: PluginRuntimeProjection<TestView>) {
-  let snapshot = initialSnapshot;
-  let frame = pluginGameplayFrameFromProjection(snapshot);
-  const frameListeners = new Set<() => void>();
-  const sessionListeners = new Set<() => void>();
-  const runtime: PluginRuntimeClient = {
-    getSession: () => ({
-      sessionId: snapshot.session.sessionId ?? "session-1",
-      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
-        playerId,
-        displayName: playerId,
-      })),
-    }),
-    subscribeSession: (listener) => {
-      sessionListeners.add(listener);
-      return () => {
-        sessionListeners.delete(listener);
-      };
-    },
-    getFrame: () => frame,
-    subscribeFrame: (listener) => {
-      frameListeners.add(listener);
-      return () => {
-        frameListeners.delete(listener);
-      };
-    },
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: async () => undefined,
-    disconnect: () => undefined,
-  };
-  return {
-    runtime,
-    emit(nextSnapshot: PluginRuntimeProjection<TestView>) {
-      snapshot = nextSnapshot;
-      frame = pluginGameplayFrameFromProjection(snapshot);
-      for (const listener of sessionListeners) {
-        listener();
-      }
-      for (const listener of frameListeners) {
-        listener();
-      }
-    },
-  };
+    perspectivePlayerId: controllingPlayerId,
+    currentPhase: phase,
+  });
 }
 
 function shallowEqualRecord(
@@ -147,14 +80,20 @@ function shallowEqualRecord(
   return leftKeys.every((key) => Object.is(left[key], right[key]));
 }
 
-test("usePluginState skips rerenders when a primitive selection is unchanged", async () => {
-  const harness = makeRuntime(makeSnapshot({ syncId: 1 }));
+test("usePluginSession skips rerenders when perspective is unchanged", async () => {
+  const harness = makeTestRuntimeHarness(makeSnapshot({ gameVersion: 1 }), {
+    session: {
+      sessionId: "session-1",
+      players: [
+        { playerId: "player-1", displayName: "Player One" },
+        { playerId: "player-2", displayName: "Player Two" },
+      ],
+    },
+  });
   let renders = 0;
 
   function SelectedPlayer() {
-    const playerId = usePluginState(
-      (state) => state.session.controllingPlayerId,
-    );
+    const playerId = usePluginSession().controllingPlayerId;
     renders += 1;
     return createElement("span", null, playerId);
   }
@@ -170,15 +109,15 @@ test("usePluginState skips rerenders when a primitive selection is unchanged", a
   expect(renders).toBe(1);
 
   await act(async () => {
-    for (let syncId = 2; syncId <= 101; syncId += 1) {
-      harness.emit(makeSnapshot({ syncId }));
+    for (let gameVersion = 2; gameVersion <= 101; gameVersion += 1) {
+      harness.emit(makeSnapshot({ gameVersion }));
     }
   });
   expect(renders).toBe(1);
 
   await act(async () => {
     harness.emit(
-      makeSnapshot({ syncId: 102, controllingPlayerId: "player-2" }),
+      makeSnapshot({ gameVersion: 102, controllingPlayerId: "player-2" }),
     );
   });
   expect(renders).toBe(2);
@@ -186,20 +125,22 @@ test("usePluginState skips rerenders when a primitive selection is unchanged", a
   await unmount(mounted);
 });
 
-test("usePluginState applies explicit equality for allocated selections", async () => {
-  const harness = makeRuntime(makeSnapshot({ syncId: 1 }));
+test("usePluginGameplayFrameSelector applies explicit equality for allocated selections", async () => {
+  const harness = makeTestRuntimeHarness(makeSnapshot({ gameVersion: 1 }));
   let objectIsRenders = 0;
   let shallowRenders = 0;
 
   function ObjectIsSelection() {
-    usePluginState((state) => ({ phase: state.gameplay.currentPhase }));
+    usePluginGameplayFrameSelector((frame) => ({
+      phase: frame.flow.currentPhase,
+    }));
     objectIsRenders += 1;
     return null;
   }
 
   function ShallowSelection() {
-    usePluginState(
-      (state) => ({ phase: state.gameplay.currentPhase }),
+    usePluginGameplayFrameSelector(
+      (frame) => ({ phase: frame.flow.currentPhase }),
       shallowEqualRecord,
     );
     shallowRenders += 1;
@@ -219,13 +160,13 @@ test("usePluginState applies explicit equality for allocated selections", async 
   expect(shallowRenders).toBe(1);
 
   await act(async () => {
-    harness.emit(makeSnapshot({ syncId: 2 }));
+    harness.emit(makeSnapshot({ gameVersion: 2 }));
   });
   expect(objectIsRenders).toBe(2);
   expect(shallowRenders).toBe(1);
 
   await act(async () => {
-    harness.emit(makeSnapshot({ syncId: 3, phase: "score" }));
+    harness.emit(makeSnapshot({ gameVersion: 3, phase: "score" }));
   });
   expect(objectIsRenders).toBe(3);
   expect(shallowRenders).toBe(2);
@@ -233,15 +174,18 @@ test("usePluginState applies explicit equality for allocated selections", async 
   await unmount(mounted);
 });
 
-test("usePluginState applies a changed selector on the next render", async () => {
-  const harness = makeRuntime(makeSnapshot({ syncId: 1, phase: "play" }));
+test("usePluginGameplayFrameSelector applies a changed selector on the next render", async () => {
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, phase: "play" }),
+  );
   let selected: string | null = null;
 
   function SelectedValue({ mode }: { mode: "player" | "phase" }) {
-    selected = usePluginState((state) =>
+    const session = usePluginSession();
+    selected = usePluginGameplayFrameSelector((frame) =>
       mode === "player"
-        ? (state.session.controllingPlayerId ?? "none")
-        : state.gameplay.currentPhase,
+        ? (session.controllingPlayerId ?? "none")
+        : frame.flow.currentPhase,
     );
     return createElement("span", null, selected);
   }
@@ -275,7 +219,9 @@ test("usePluginState applies a changed selector on the next render", async () =>
 });
 
 test("useGameSelector shares selective subscription behavior", async () => {
-  const harness = makeRuntime(makeSnapshot({ syncId: 1, score: 7 }));
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, score: 7 }),
+  );
   let renders = 0;
   let score = 0;
 
@@ -297,14 +243,14 @@ test("useGameSelector shares selective subscription behavior", async () => {
   expect(score).toBe(7);
 
   await act(async () => {
-    for (let syncId = 2; syncId <= 101; syncId += 1) {
-      harness.emit(makeSnapshot({ syncId, score: 7 }));
+    for (let gameVersion = 2; gameVersion <= 101; gameVersion += 1) {
+      harness.emit(makeSnapshot({ gameVersion, score: 7 }));
     }
   });
   expect(renders).toBe(1);
 
   await act(async () => {
-    harness.emit(makeSnapshot({ syncId: 102, score: 8 }));
+    harness.emit(makeSnapshot({ gameVersion: 102, score: 8 }));
   });
   expect(renders).toBe(2);
   expect(score).toBe(8);

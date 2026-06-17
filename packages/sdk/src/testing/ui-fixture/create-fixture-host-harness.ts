@@ -63,6 +63,8 @@ export function createFixtureHostHarness(
   let stepCursor = 0;
   let currentFrameId: string | null = null;
   let onMessage: ((message: HostToPluginEnvelope) => void) | null = null;
+  let firstFixtureError: Error | null = null;
+  const pendingHandlers = new Set<Promise<void>>();
 
   const record = (event: Omit<FixtureHostEvent, "sequence" | "atMs">) => {
     const entry = {
@@ -80,6 +82,25 @@ export function createFixtureHostHarness(
     error.name = "FixtureHostHarnessError";
     Object.assign(error, { errorCode: code });
     return error;
+  };
+
+  const rememberFixtureError = (error: unknown) => {
+    if (firstFixtureError) {
+      return;
+    }
+    firstFixtureError =
+      error instanceof Error
+        ? error
+        : createFixtureError(
+            "fixture-unknown-error",
+            "Fixture host failed with an unknown error.",
+          );
+  };
+
+  const throwFixtureError = () => {
+    if (firstFixtureError) {
+      throw firstFixtureError;
+    }
   };
 
   const sendHostPayload = (payload: HostToPluginEnvelope["payload"]) => {
@@ -131,6 +152,18 @@ export function createFixtureHostHarness(
       stepCursor += 1;
       publishFrame(step.frameId);
     }
+  };
+
+  const drainOneHostFrame = () => {
+    if (options.tape.steps[stepCursor]?.kind !== "host.frame") {
+      return;
+    }
+    const step = options.tape.steps[stepCursor] as Extract<
+      PluginProtocolTape["steps"][number],
+      { kind: "host.frame" }
+    >;
+    stepCursor += 1;
+    publishFrame(step.frameId);
   };
 
   const waitForConfiguredLatency = async () => {
@@ -224,6 +257,17 @@ export function createFixtureHostHarness(
   };
 
   const handleClientPayload = (payload: PluginToHostPayload) => {
+    const trackHandler = (promise: Promise<void>) => {
+      pendingHandlers.add(promise);
+      promise
+        .catch((error) => {
+          rememberFixtureError(error);
+        })
+        .finally(() => {
+          pendingHandlers.delete(promise);
+        });
+    };
+
     switch (payload.type) {
       case "runtime.ready":
         record({ kind: "ready-received" });
@@ -232,10 +276,10 @@ export function createFixtureHostHarness(
         record({ kind: "ack-received" });
         break;
       case "interaction.validate":
-        void handleValidate(payload);
+        trackHandler(handleValidate(payload));
         break;
       case "interaction.submit":
-        void handleSubmit(payload);
+        trackHandler(handleSubmit(payload));
         break;
       case "runtime.error":
         record({ kind: "diagnostic" });
@@ -252,7 +296,7 @@ export function createFixtureHostHarness(
       onMessage = nextOnMessage;
       queueMicrotask(() => {
         sendInit();
-        drainHostFrames();
+        drainOneHostFrame();
       });
       return () => {
         onMessage = null;
@@ -271,19 +315,26 @@ export function createFixtureHostHarness(
       envelopeSequence = 0;
       stepCursor = 0;
       currentFrameId = null;
+      firstFixtureError = null;
+      pendingHandlers.clear();
       events.length = 0;
       if (onMessage) {
         sendInit();
-        drainHostFrames();
+        drainOneHostFrame();
       }
     },
     async flush() {
       await waitForConfiguredLatency();
       await Promise.resolve();
+      while (pendingHandlers.size > 0) {
+        await Promise.allSettled([...pendingHandlers]);
+      }
+      throwFixtureError();
     },
     async advanceHost() {
       await waitForConfiguredLatency();
       drainHostFrames();
+      throwFixtureError();
     },
     getCurrentFrameId() {
       if (!currentFrameId) {
@@ -298,6 +349,7 @@ export function createFixtureHostHarness(
       return events.map((event) => ({ ...event }));
     },
     assertConsumed() {
+      throwFixtureError();
       if (stepCursor !== options.tape.steps.length) {
         throw createFixtureError(
           "fixture-unconsumed-protocol-steps",

@@ -1491,10 +1491,6 @@ export type HostPlayerGameplayView = {
    * Player ID currently selected for rendering and input.
    */
   perspectivePlayerId: string;
-  /**
-   * Player IDs included in this normalized projection envelope.
-   */
-  controllablePlayerIds: Array<string>;
   shared: HostGameplaySharedView;
   /**
    * Deduplicated interaction descriptor registry keyed by stable descriptor ref.

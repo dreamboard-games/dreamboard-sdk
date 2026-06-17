@@ -4,12 +4,12 @@ import { createElement, useEffect } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
-import { pluginGameplayFrameFromProjection } from "../context/PluginGameplayFrameContext.js";
 import type { PluginRuntimeClient } from "../core/types.js";
-import type {
-  InteractionDescriptor,
-  PluginRuntimeProjection,
-} from "../types/plugin-state.js";
+import type { InteractionDescriptor } from "../types/plugin-state.js";
+import {
+  makeTestGameplayFrame,
+  makeTestRuntimeHarness,
+} from "../test-runtime-harness.js";
 import { ValidationError } from "../../ui/errors/ValidationError.js";
 import { useInteractionByKey } from "./useInteractionByKey.js";
 import {
@@ -107,34 +107,18 @@ function dependencyDescriptor(): InteractionDescriptor {
 }
 
 function makeSnapshot({
-  syncId,
+  gameVersion,
   interactions = [],
 }: {
-  syncId: number;
+  gameVersion: number;
   interactions?: readonly InteractionDescriptor[];
-}): PluginRuntimeProjection {
-  return {
+}) {
+  return makeTestGameplayFrame({
+    gameVersion,
     view: {},
-    gameplay: {
-      currentPhase: "play",
-      currentStage: null,
-      activePlayers: ["player-1"],
-      simultaneousPhase: null,
-      availableInteractions: interactions,
-      zones: {},
-    },
-    lobby: null,
-    notifications: [],
-    session: {
-      sessionId: "session-1",
-      controllablePlayerIds: ["player-1"],
-      controllingPlayerId: "player-1",
-      userId: "user-1",
-      status: "ready",
-    },
-    history: null,
-    syncId,
-  };
+    currentPhase: "play",
+    availableInteractions: interactions,
+  });
 }
 
 function deferred(): { promise: Promise<void>; resolve: () => void } {
@@ -145,64 +129,6 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
   return { promise, resolve };
 }
 
-function makeRuntime(initialSnapshot: PluginRuntimeProjection) {
-  let snapshot = initialSnapshot;
-  let frame = pluginGameplayFrameFromProjection(snapshot);
-  const frameListeners = new Set<() => void>();
-  const sessionListeners = new Set<() => void>();
-  const submitCalls: Array<{ interactionId: string; params: unknown }> = [];
-  let submitImpl: PluginRuntimeClient["submitInteraction"] = async (
-    interactionId,
-    params,
-  ) => {
-    submitCalls.push({ interactionId, params });
-  };
-
-  const runtime: PluginRuntimeClient = {
-    getSession: () => ({
-      sessionId: snapshot.session.sessionId ?? "session-1",
-      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
-        playerId,
-        displayName: playerId,
-      })),
-    }),
-    subscribeSession: (listener) => {
-      sessionListeners.add(listener);
-      return () => {
-        sessionListeners.delete(listener);
-      };
-    },
-    getFrame: () => frame,
-    subscribeFrame: (listener) => {
-      frameListeners.add(listener);
-      return () => {
-        frameListeners.delete(listener);
-      };
-    },
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: (...args) => submitImpl(...args),
-    disconnect: () => undefined,
-  };
-
-  return {
-    runtime,
-    submitCalls,
-    setSubmitImpl(impl: PluginRuntimeClient["submitInteraction"]) {
-      submitImpl = impl;
-    },
-    emit(nextSnapshot: PluginRuntimeProjection) {
-      snapshot = nextSnapshot;
-      frame = pluginGameplayFrameFromProjection(snapshot);
-      for (const listener of sessionListeners) {
-        listener();
-      }
-      for (const listener of frameListeners) {
-        listener();
-      }
-    },
-  };
-}
-
 function RuntimeHarness({
   runtime,
   children,
@@ -210,17 +136,13 @@ function RuntimeHarness({
   runtime: PluginRuntimeClient;
   children: React.ReactNode;
 }) {
-  return createElement(
-    PluginRuntimeBoundary,
-    { runtime },
-    children,
-  );
+  return createElement(PluginRuntimeBoundary, { runtime }, children);
 }
 
 test("descriptor and key handles share one atomic submission claim", async () => {
   const interaction = descriptor();
-  const harness = makeRuntime(
-    makeSnapshot({ syncId: 1, interactions: [interaction] }),
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, interactions: [interaction] }),
   );
   const pendingSubmit = deferred();
   harness.setSubmitImpl(async (interactionId, params) => {
@@ -283,7 +205,7 @@ test("descriptor and key handles share one atomic submission claim", async () =>
 
 test("key handles resolve null to a descriptor without changing hook order", async () => {
   const interaction = descriptor();
-  const harness = makeRuntime(makeSnapshot({ syncId: 1 }));
+  const harness = makeTestRuntimeHarness(makeSnapshot({ gameVersion: 1 }));
   let keyHandle: InteractionHandle | null = null;
 
   function KeyHandle({
@@ -313,13 +235,13 @@ test("key handles resolve null to a descriptor without changing hook order", asy
   expect(keyHandle).toBeNull();
 
   await act(async () => {
-    harness.emit(makeSnapshot({ syncId: 2, interactions: [interaction] }));
+    harness.emit(makeSnapshot({ gameVersion: 2, interactions: [interaction] }));
   });
 
   expect(keyHandle?.descriptor.interactionKey).toBe(interaction.interactionKey);
 
   await act(async () => {
-    harness.emit(makeSnapshot({ syncId: 3 }));
+    harness.emit(makeSnapshot({ gameVersion: 3 }));
   });
 
   expect(keyHandle).toBeNull();
@@ -329,8 +251,8 @@ test("key handles resolve null to a descriptor without changing hook order", asy
 
 test("key and descriptor handles share canonical dependent draft clearing", async () => {
   const interaction = dependencyDescriptor();
-  const harness = makeRuntime(
-    makeSnapshot({ syncId: 1, interactions: [interaction] }),
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, interactions: [interaction] }),
   );
   let descriptorHandle: InteractionHandle<Record<string, unknown>> | null =
     null;

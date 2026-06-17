@@ -2,11 +2,14 @@ import type {
   ReducerBundleContract,
   Wire,
 } from "@dreamboard-games/reducer-contract";
-import type {
-  InteractionDescriptor,
-  ZoneHandlesSnapshot,
-} from "../runtime/reducer.js";
-import type { PluginRuntimeProjection } from "../runtime/types/reducer-state.js";
+import type { InteractionDescriptor } from "../runtime/reducer.js";
+import {
+  computePluginActionSetVersion,
+  type InteractionDescriptor as ContractInteractionDescriptor,
+  type ZoneHandlesSnapshot as ContractZoneHandlesSnapshot,
+  type PluginGameplayFrame,
+  type PluginSessionDescriptor,
+} from "@dreamboard-games/plugin-runtime-contract";
 import type {
   RuntimeAPI,
   SubmissionError,
@@ -76,16 +79,9 @@ export type CreateTestRuntimeOptions = {
 };
 
 export type CreatedTestRuntime = {
-  runtime: RuntimeAPI & {
-    getSnapshot(): PluginRuntimeProjection;
-    subscribeToState(
-      listener: (state: PluginRuntimeProjection) => void,
-    ): () => void;
-    _subscribeToSessionState(
-      listener: (state: RuntimePluginSessionState) => void,
-    ): () => void;
-  };
-  getSnapshot(): PluginRuntimeProjection;
+  runtime: RuntimeAPI;
+  getFrame(): PluginGameplayFrame;
+  getSessionDescriptor(): PluginSessionDescriptor;
   players(): readonly string[];
   seat(index: number): string;
   submit(
@@ -107,7 +103,6 @@ export type CreatedTestRuntime = {
     } | null;
     clear(): void;
   };
-  setControllingPlayer(playerId: string): void;
 };
 
 function cloneState<T>(value: T): DeepMutable<T> {
@@ -205,17 +200,14 @@ function isWireZoneHandles(value: unknown): value is WireZoneHandles {
   return typeof value === "object" && value !== null;
 }
 
-function buildPluginSnapshot(options: {
+function buildPluginFrame(options: {
   state: Wire.ReducerSessionState;
   bundle: ReducerBundleLike;
   playerId: string;
-  playerIds: readonly string[];
-  userId: string | null;
-  sessionId: string;
   version: number;
   expectedPhase: string | undefined;
   baseId: string;
-}): PluginRuntimeProjection {
+}): PluginGameplayFrame {
   const projection = options.bundle.projectSeatsDynamic({
     state: options.state,
     playerIds: [options.playerId],
@@ -236,12 +228,12 @@ function buildPluginSnapshot(options: {
       | undefined) ?? {};
   const hydrateRefs = (
     refs: readonly string[] | undefined,
-  ): InteractionDescriptor[] =>
+  ): ContractInteractionDescriptor[] =>
     (refs ?? [])
       .map((ref) => interactionsByRef[ref])
       .filter((descriptor): descriptor is InteractionDescriptor =>
         Boolean(descriptor),
-      );
+      ) as ContractInteractionDescriptor[];
 
   const seat = projection.seats?.[options.playerId];
   const zones = Object.fromEntries(
@@ -259,33 +251,30 @@ function buildPluginSnapshot(options: {
               ([cardId, refs]) => [cardId, hydrateRefs(refs)],
             ),
           ),
-        } satisfies ZoneHandlesSnapshot,
+        } satisfies ContractZoneHandlesSnapshot,
       ];
     }),
-  );
+  ) as PluginGameplayFrame["zones"];
 
+  const availableInteractions = hydrateRefs(
+    seat?.availableInteractionRefs as readonly string[] | undefined,
+  );
   return {
-    view: (seat?.view ?? null) as PluginRuntimeProjection["view"],
-    gameplay: {
+    gameVersion: options.version,
+    actionSetVersion: computePluginActionSetVersion({
+      gameVersion: options.version,
+      availableInteractions,
+    }),
+    perspectivePlayerId: options.playerId || null,
+    view: seat?.view ?? null,
+    flow: {
       currentPhase: flow.currentPhase,
       currentStage: projection.currentStage ?? null,
       activePlayers: flow.activePlayers,
       simultaneousPhase: projection.simultaneousPhase ?? null,
-      availableInteractions: hydrateRefs(
-        seat?.availableInteractionRefs as readonly string[] | undefined,
-      ),
-      zones,
     },
-    lobby: null,
-    notifications: [],
-    session: {
-      sessionId: options.sessionId,
-      controllablePlayerIds: [...options.playerIds],
-      controllingPlayerId: options.playerId || null,
-      userId: options.userId,
-    },
-    history: null,
-    syncId: options.version,
+    availableInteractions,
+    zones,
   };
 }
 
@@ -316,8 +305,14 @@ export function createTestRuntime(
     baseState,
     explicitPlayerIds: options.playerIds,
   });
-  const userId = options.userId ?? "test-user";
   const sessionId = options.sessionId ?? "test-session";
+  const sessionDescriptor: PluginSessionDescriptor = {
+    sessionId,
+    players: playerIds.map((playerId) => ({
+      playerId,
+      displayName: options.displayNameByPlayerId?.[playerId] ?? playerId,
+    })),
+  };
 
   let version = 0;
   let submissionCounter = 0;
@@ -327,51 +322,28 @@ export function createTestRuntime(
     submissionId: string;
     trace: readonly DispatchTraceSummaryEntry[];
   } | null = null;
-  const stateListeners = new Set<(state: PluginRuntimeProjection) => void>();
-  const sessionListeners = new Set<
-    (state: RuntimePluginSessionState) => void
-  >();
-
   const toReadySessionState = (
-    snapshot: PluginRuntimeProjection,
+    frame: PluginGameplayFrame,
   ): RuntimePluginSessionState => ({
     status: "ready",
-    sessionId: snapshot.session.sessionId,
-    controllingPlayerId: snapshot.session.controllingPlayerId,
+    sessionId,
+    controllingPlayerId: frame.perspectivePlayerId,
   });
 
-  let lastPluginSnapshot: PluginRuntimeProjection;
+  let lastPluginFrame: PluginGameplayFrame;
   let lastSessionState: RuntimePluginSessionState;
 
   const applyCurrentState = (): void => {
-    const previousSession = lastSessionState;
     version += 1;
-    lastPluginSnapshot = buildPluginSnapshot({
+    lastPluginFrame = buildPluginFrame({
       state: currentState,
       bundle: options.bundle,
       playerId: currentPlayerId,
-      playerIds,
-      userId,
-      sessionId,
       version,
       expectedPhase: version === 1 ? options.phase : undefined,
       baseId: options.baseId,
     });
-    lastSessionState = toReadySessionState(lastPluginSnapshot);
-
-    for (const listener of stateListeners) {
-      listener(lastPluginSnapshot);
-    }
-
-    if (
-      !previousSession ||
-      previousSession.controllingPlayerId !==
-        lastSessionState.controllingPlayerId
-    ) {
-      for (const listener of sessionListeners) {
-        listener(lastSessionState);
-      }
-    }
+    lastSessionState = toReadySessionState(lastPluginFrame);
   };
 
   applyCurrentState();
@@ -466,14 +438,6 @@ export function createTestRuntime(
     });
   };
 
-  const setControllingPlayer = (playerId: string): void => {
-    if (!playerIds.includes(playerId)) {
-      throw new Error(`Unknown controlling player '${playerId}'.`);
-    }
-    currentPlayerId = playerId;
-    applyCurrentState();
-  };
-
   const runtime = {
     validateInteraction: (interactionId: string, params?: unknown) =>
       validate(currentPlayerId, interactionId, params),
@@ -481,26 +445,12 @@ export function createTestRuntime(
       submit(currentPlayerId, interactionId, params),
     getSessionState: (): RuntimePluginSessionState => lastSessionState,
     disconnect: () => undefined,
-    getSnapshot: (): PluginRuntimeProjection => lastPluginSnapshot,
-    subscribeToState: (listener: (state: PluginRuntimeProjection) => void) => {
-      stateListeners.add(listener);
-      return () => {
-        stateListeners.delete(listener);
-      };
-    },
-    _subscribeToSessionState: (
-      listener: (state: RuntimePluginSessionState) => void,
-    ) => {
-      sessionListeners.add(listener);
-      return () => {
-        sessionListeners.delete(listener);
-      };
-    },
   };
 
   return {
     runtime,
-    getSnapshot: () => lastPluginSnapshot,
+    getFrame: () => lastPluginFrame,
+    getSessionDescriptor: () => sessionDescriptor,
     players: () => [...playerIds],
     seat: (index: number) => {
       if (!Number.isInteger(index) || index < 0 || index >= playerIds.length) {
@@ -525,6 +475,5 @@ export function createTestRuntime(
         lastDispatch = null;
       },
     },
-    setControllingPlayer,
   };
 }

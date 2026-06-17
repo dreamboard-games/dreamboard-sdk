@@ -4,6 +4,7 @@ import {
   type PluginRuntimeClient,
 } from "@dreamboard-games/sdk/runtime";
 import {
+  createDeterministicIdFactory,
   createFixtureHostHarness,
   parseUIScenarioFixture,
   type FixtureHostHarness,
@@ -32,6 +33,11 @@ export interface LoadedUIScenario {
   readonly harness: FixtureHostHarness;
   readonly runtime: PluginRuntimeClient;
   readonly sdkCandidate: SDKCandidateMode;
+}
+
+export interface CreatedUIScenarioRuntime {
+  readonly harness: FixtureHostHarness;
+  readonly runtime: PluginRuntimeClient;
 }
 
 export async function loadUIScenarioFixture(
@@ -90,17 +96,50 @@ export async function loadUIScenario(options: {
     module.uiContractFingerprint,
     fixture.source.uiContractFingerprint,
   );
-  const harness = createFixtureHostHarness({
-    tape: fixture.protocol,
-    strict: options.strict ?? true,
-    latencyMs: options.latencyMs ?? 0,
+  const { harness, runtime } = createUIScenarioRuntime({
+    fixture,
+    strict: options.strict,
+    latencyMs: options.latencyMs,
   });
-  const runtime = createPluginRuntimeClient({ transport: harness.transport });
   return {
     fixture,
     module,
     harness,
     runtime,
     sdkCandidate: options.sdkCandidate,
+  };
+}
+
+export function createUIScenarioRuntime(options: {
+  readonly fixture: UIScenarioFixture;
+  readonly strict?: boolean;
+  readonly latencyMs?: number;
+}): CreatedUIScenarioRuntime {
+  const clockMs = Date.parse(options.fixture.environment.clockIso);
+  if (!Number.isFinite(clockMs)) {
+    throw new Error(
+      `UI scenario fixture '${options.fixture.id}' has an invalid clockIso '${options.fixture.environment.clockIso}'.`,
+    );
+  }
+  const nextDeterministicId = createDeterministicIdFactory(
+    `${options.fixture.id}:${options.fixture.environment.randomSeed}`,
+  );
+  const clock = { now: () => clockMs };
+  const harness = createFixtureHostHarness({
+    tape: options.fixture.protocol,
+    strict: options.strict ?? true,
+    latencyMs: options.latencyMs ?? 0,
+    nowMs: clock.now,
+  });
+  const runtime = createPluginRuntimeClient({
+    transport: harness.transport,
+    clock,
+    idFactory: {
+      nextId: (prefix) => `${prefix}-${nextDeterministicId()}`,
+    },
+  });
+  return {
+    harness,
+    runtime,
   };
 }
