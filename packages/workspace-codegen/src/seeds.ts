@@ -821,7 +821,12 @@ type HandComponent<
   Vertex extends string,
 > = InteractionSlotComponent<
   Omit<HandSurfaceProps<Card, Space, Edge, Vertex>, "children"> & {
-    children: ReactNode;
+    children:
+      | ReactNode
+      | ((
+          card: WorkspaceZoneCard,
+          state: InteractionVisualState,
+        ) => ReactNode);
   }
 >;
 
