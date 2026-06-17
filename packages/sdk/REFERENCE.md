@@ -15334,6 +15334,16 @@ function createPluginRuntimeClient(
 
 _No JSDoc summary is available yet._
 
+### createPostMessagePluginTransport
+
+```ts
+function createPostMessagePluginTransport(
+  options?: PostMessagePluginTransportOptions,
+): PluginTransport;
+```
+
+_No JSDoc summary is available yet._
+
 ### createWorkspaceUIContract
 
 ```ts
@@ -15509,6 +15519,18 @@ _No JSDoc summary is available yet._
 interface PluginTransport {
   start(onMessage: (message: H) => void): () => void;
   send(message: X): void;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PostMessagePluginTransportOptions
+
+```ts
+interface PostMessagePluginTransportOptions {
+  readonly targetWindow?: Window;
+  readonly parentWindow?: Window;
+  readonly onInvalidMessage?: (reason: string, value: unknown) => void;
 }
 ```
 
@@ -17155,34 +17177,6 @@ function PlayerRosterScore({
   unknown,
   string | react.JSXElementConstructor<any>
 > | null;
-```
-
-_No JSDoc summary is available yet._
-
-### PlayerRosterSwitchButton
-
-```ts
-function PlayerRosterSwitchButton({
-  player,
-  disabled,
-  onClick,
-  ...props
-}: PlayerRosterSwitchButtonProps): ReactElement<
-  unknown,
-  string | react.JSXElementConstructor<any>
->;
-```
-
-_No JSDoc summary is available yet._
-
-### PlayerRosterSwitchButtonProps
-
-```ts
-type PlayerRosterSwitchButtonProps = Omit<PrimitiveCommonProps, "children"> &
-  ButtonHTMLAttributes<HTMLButtonElement> & {
-    player: PlayerRosterEntry;
-    children?: ReactNode;
-  };
 ```
 
 _No JSDoc summary is available yet._

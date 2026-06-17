@@ -151,10 +151,10 @@ describe("createPluginRuntimeAPI authenticated message protocol", () => {
     const runtime = createPluginRuntimeAPI();
 
     await expect(
-      runtime.submitInteraction("player-1", "act", {}),
+      runtime.submitInteraction("act", {}),
     ).rejects.toThrow("Plugin runtime is not initialized");
     await expect(
-      runtime.validateInteraction("player-1", "act", {}),
+      runtime.validateInteraction("act", {}),
     ).resolves.toMatchObject({ errorCode: "runtime-not-initialized" });
 
     dispatchHostMessage(
@@ -167,15 +167,20 @@ describe("createPluginRuntimeAPI authenticated message protocol", () => {
       }),
     );
 
-    runtime.markNotificationRead?.("notification-1");
+    const validation = runtime.validateInteraction("act", {});
 
-    expect(lastMessage(outbound)).toEqual({
-      targetOrigin: HOST_ORIGIN,
-      message: envelope({
-        type: "mark-notification-read",
-        notificationId: "notification-1",
+    const sent = lastMessage(outbound).message as {
+      payload: { messageId: string; type: string };
+    };
+    expect(sent.payload.type).toBe("validate-interaction");
+    dispatchHostMessage(
+      envelope({
+        type: "validate-interaction-result",
+        messageId: sent.payload.messageId,
+        result: { valid: true },
       }),
-    });
+    );
+    await expect(validation).resolves.toMatchObject({ valid: true });
   });
 
   test("forged submit result cannot settle an in-flight submission", async () => {
@@ -193,7 +198,7 @@ describe("createPluginRuntimeAPI authenticated message protocol", () => {
 
     let settled = false;
     const submit = runtime
-      .submitInteraction("player-1", "act", { ok: true })
+      .submitInteraction("act", { ok: true })
       .then(() => {
         settled = true;
       });

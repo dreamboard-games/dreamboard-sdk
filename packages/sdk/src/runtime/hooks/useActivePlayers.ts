@@ -1,5 +1,5 @@
 import type { PlayerId } from "@dreamboard/manifest-contract";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 
 /**
  * Returns the list of players the engine currently considers active, as
@@ -15,7 +15,7 @@ import { usePluginState } from "../context/PluginStateContext.js";
  * always in lock-step with server-authoritative state.
  */
 export function useActivePlayers(): readonly PlayerId[] {
-  return usePluginState((state) => {
+  return usePluginGameplayFrameSelector((frame) => {
     // During a `simultaneousPlayer` phase the engine reports
     // `flow.activePlayers` as `[]` (there is no single turn) and tracks
     // per-seat progress in `simultaneousPhase` instead. Surface the seats that
@@ -24,10 +24,10 @@ export function useActivePlayers(): readonly PlayerId[] {
     // `isActive` would be false for everyone mid-simultaneous-phase. Both
     // branches return references owned by the snapshot, so the selector stays
     // referentially stable for `useSyncExternalStore`.
-    const simultaneous = state.gameplay.simultaneousPhase;
+    const simultaneous = frame.flow.simultaneousPhase;
     if (simultaneous && simultaneous.pendingPlayerIds.length > 0) {
       return simultaneous.pendingPlayerIds;
     }
-    return state.gameplay.activePlayers;
+    return frame.flow.activePlayers;
   });
 }

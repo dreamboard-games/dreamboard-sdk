@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import type {
   InteractionHandle,
@@ -40,8 +40,9 @@ export function useInteractionByKey<
 >(
   interactionKey: Key | null | undefined,
 ): InteractionHandle<Params, DefaultedKeys> | null {
-  const descriptors = usePluginState(
-    (state) => state.gameplay.availableInteractions ?? [],
+  const descriptors = usePluginGameplayFrameSelector(
+    (frame) =>
+      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const descriptor = useMemo<InteractionDescriptor | null>(() => {

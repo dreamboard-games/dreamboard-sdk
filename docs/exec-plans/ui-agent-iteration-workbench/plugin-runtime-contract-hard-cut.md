@@ -644,7 +644,37 @@ mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
 mise exec node@24 -- pnpm docs:generate
 ```
 
-Steps 6-8 remain open. `PluginStateSnapshot`, protocol version `2`, and
-host-only plugin actions still exist in the legacy SDK runtime surface while
-React primitives are migrated to session/frame contexts and the internal
-`ui-host-runtime` is moved to the shared contract package.
+Migration step 6 is implemented for the SDK authored runtime surface:
+
+- `PluginRuntimeBoundary` mounts version `3` `PluginRuntimeClient` instances
+  through `PluginSessionProvider` and `PluginGameplayFrameProvider`, while the
+  legacy `PluginRuntimeAPI` path is isolated behind a compatibility frame
+  provider;
+- generated hooks and primitives read gameplay flow, interactions, zones,
+  lobby/player summaries, and reducer view data from plugin session/frame
+  contexts instead of the public `PluginStateSnapshot` aggregate;
+- `RuntimeAPI.validateInteraction` and `RuntimeAPI.submitInteraction` are
+  actor-free author commands that derive the controlling player from session
+  state;
+- SDK-authored UI no longer exports `usePluginActions`,
+  `PlayerRoster.SwitchButton`, `PlayerRosterSwitchButton`, or plugin-to-host
+  payloads for `restore-history`, `mark-notification-read`, and
+  `switch-player`;
+- session/frame external-store providers cache derived snapshots so hosts and
+  tests are not required to preserve object identity for every projected read.
+
+Verification run for this slice:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+cd packages/sdk && mise exec node@24 -- bun test src/runtime/api/createPluginRuntimeAPI.test.ts src/runtime/hooks src/runtime/primitives/hand-mobile-registration.test.tsx src/runtime/workspace-contract.test.tsx src/testing/ui-fixture src/export-surface.test.ts
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk build
+mise exec node@24 -- pnpm docs:generate
+mise exec node@24 -- pnpm docs:check
+rg "PlayerRosterSwitchButton|restoreHistory|markNotificationRead|switchPlayer" packages/sdk/src docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**'
+rg "validateInteraction\([^\n]*playerId|submitInteraction\([^\n]*playerId|validateInteraction\([^,]+,[^,]+,[^\n]+\)|submitInteraction\([^,]+,[^,]+,[^\n]+\)" packages/sdk/src docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**'
+```
+
+Steps 7-8 remain open. `PluginStateSnapshot`, protocol version `2`, and
+compatibility adapters still exist until the internal `ui-host-runtime` imports
+the shared contract package and the final cross-repo deletion gate is empty.

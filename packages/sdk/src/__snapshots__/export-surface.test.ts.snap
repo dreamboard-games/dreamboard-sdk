@@ -141,7 +141,6 @@ exports[`public export surface runtime/primitives export names are stable 1`] = 
   "PlayerRosterName",
   "PlayerRosterRoot",
   "PlayerRosterScore",
-  "PlayerRosterSwitchButton",
   "Prompt",
   "PromptDialog",
   "PromptInbox",

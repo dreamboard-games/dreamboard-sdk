@@ -1,8 +1,12 @@
 import { useMemo } from "react";
 import type { PlayerId } from "@dreamboard/manifest-contract";
-import { usePluginSession } from "../context/PluginSessionContext.js";
+import {
+  useOptionalPluginSessionDescriptor,
+  usePluginSession,
+} from "../context/PluginSessionContext.js";
 import { useLobby } from "./useLobby.js";
 import type { Player } from "../../ui/types/player-state.js";
+import type { HexColor } from "../../ui.js";
 
 // Re-export for consumers
 export type { Player } from "../../ui/types/player-state.js";
@@ -16,6 +20,7 @@ export type { Player } from "../../ui/types/player-state.js";
  */
 export function useMe(): Player {
   const { controllingPlayerId } = usePluginSession();
+  const sessionDescriptor = useOptionalPluginSessionDescriptor();
   const lobby = useLobby();
 
   return useMemo(() => {
@@ -25,10 +30,16 @@ export function useMe(): Player {
       );
     }
 
-    if (!lobby) {
-      throw new Error(
-        "useMe: Lobby state not available. Ensure component is rendered during lobby or game phase.",
-      );
+    const player = sessionDescriptor?.players.find(
+      (candidate) => candidate.playerId === controllingPlayerId,
+    );
+    if (player) {
+      return {
+        playerId: player.playerId as PlayerId,
+        name: player.displayName,
+        isHost: false,
+        color: player.color as HexColor | undefined,
+      };
     }
 
     const seat = lobby.seats.find((s) => s.playerId === controllingPlayerId);
@@ -44,5 +55,5 @@ export function useMe(): Player {
       isHost: seat.isHost,
       color: seat.playerColor,
     };
-  }, [controllingPlayerId, lobby]);
+  }, [controllingPlayerId, lobby, sessionDescriptor]);
 }

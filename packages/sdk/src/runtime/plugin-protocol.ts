@@ -414,9 +414,6 @@ export type PluginToHostPayload =
       messageId: string;
       clientSubmittedAtMs: number;
     }
-  | { type: "switch-player"; playerId: string }
-  | { type: "restore-history"; entryId: string }
-  | { type: "mark-notification-read"; notificationId: string }
   | { type: "error"; message: string; code: string };
 
 export type PluginChannel = {

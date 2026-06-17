@@ -47,13 +47,11 @@ export interface RuntimeAPI {
    * response schema (`z.enum([...])`, `z.string()`, `z.number()`, ...)
    * while ordinary collectors pass an object.
    *
-   * @param playerId - ID of the player performing the interaction
    * @param interactionId - Identifier of the interaction
    * @param params - Interaction-specific payload
    * @returns Promise that resolves with validation result
    */
   validateInteraction: (
-    playerId: PlayerId,
     interactionId: string,
     params: unknown,
   ) => Promise<ValidationResult>;
@@ -63,14 +61,12 @@ export interface RuntimeAPI {
    * is the single submission verb for every interaction kind — authors
    * do not split between "action" and "prompt response" calls.
    *
-   * @param playerId - ID of the player performing the interaction
    * @param interactionId - Identifier of the interaction
    * @param params - Interaction-specific payload (see
    *   {@link validateInteraction} for the `unknown` typing rationale)
    * @throws SubmissionError if submission is rejected by the authority.
    */
   submitInteraction: (
-    playerId: PlayerId,
     interactionId: string,
     params: unknown,
   ) => Promise<void>;
@@ -97,18 +93,4 @@ export interface RuntimeAPI {
    */
   disconnect: () => void;
 
-  /**
-   * Request to switch to a different player.
-   * Only works if the user controls multiple seats.
-   * The parent window will handle the switch and update the session state.
-   *
-   * @param playerId - ID of the player to switch to
-   *
-   * @example
-   * ```typescript
-   * // Switch to player-2
-   * runtime.switchPlayer?.('player-2');
-   * ```
-   */
-  switchPlayer?: (playerId: PlayerId) => void;
 }

@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type { LobbyState } from "../types/plugin-state.js";
 import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
+import { useOptionalPluginSessionDescriptor } from "../context/PluginSessionContext.js";
+import type { HexColor } from "../../ui.js";
 
 // Re-export LobbyState for convenience
 export type { LobbyState };
@@ -11,37 +13,44 @@ export type { LobbyState };
  * Returns `null` until the host provides lobby state (SSR/tests/minimal runtimes).
  */
 export function useLobbyState(): LobbyState | null {
+  const sessionDescriptor = useOptionalPluginSessionDescriptor();
   const runtime = useRuntimeContext() as PluginRuntimeAPI;
-
-  const getStateFromSnapshot = (): LobbyState | null => {
-    if (!runtime.getSnapshot) return null;
-    const snapshot = runtime.getSnapshot();
-    if (!snapshot?.lobby) return null;
-    return snapshot.lobby;
-  };
-
-  const [lobbyState, setLobbyState] = useState<LobbyState | null>(
-    getStateFromSnapshot,
+  const legacyStore = useMemo(
+    () => ({
+      subscribe: (onStoreChange: () => void) =>
+        runtime.subscribeToState?.(() => {
+          onStoreChange();
+        }) ?? (() => {}),
+      getSnapshot: () => runtime.getSnapshot?.()?.lobby ?? null,
+      getServerSnapshot: () => runtime.getSnapshot?.()?.lobby ?? null,
+    }),
+    [runtime],
+  );
+  const legacyLobbyState = useSyncExternalStore(
+    legacyStore.subscribe,
+    legacyStore.getSnapshot,
+    legacyStore.getServerSnapshot,
   );
 
-  useEffect(() => {
-    if (!runtime.subscribeToState) {
-      return;
+  const sessionLobbyState = useMemo<LobbyState | null>(() => {
+    if (!sessionDescriptor) {
+      return null;
     }
+    return {
+      seats: sessionDescriptor.players.map((player) => ({
+        playerId: player.playerId,
+        displayName: player.displayName,
+        playerColor: player.color as HexColor | undefined,
+      })),
+      canStart: sessionDescriptor.players.length > 0,
+      hostUserId: "",
+    };
+  }, [sessionDescriptor]);
 
-    const initialState = runtime.getSnapshot?.();
-    if (initialState?.lobby) {
-      setLobbyState(initialState.lobby);
-    }
-
-    return runtime.subscribeToState((snapshot) => {
-      if (snapshot.lobby) {
-        setLobbyState(snapshot.lobby);
-      }
-    });
-  }, [runtime]);
-
-  return lobbyState;
+  if (sessionLobbyState) {
+    return sessionLobbyState;
+  }
+  return legacyLobbyState;
 }
 
 /**

@@ -107,14 +107,12 @@ export {
   PlayerRosterName,
   PlayerRosterRoot,
   PlayerRosterScore,
-  PlayerRosterSwitchButton,
   type PlayerRosterBadge,
   type PlayerRosterComponents,
   type PlayerRosterEntry,
   type PlayerRosterListProps,
   type PlayerRosterPartProps,
   type PlayerRosterRootProps,
-  type PlayerRosterSwitchButtonProps,
 } from "./player-roster.js";
 export {
   Prompt,

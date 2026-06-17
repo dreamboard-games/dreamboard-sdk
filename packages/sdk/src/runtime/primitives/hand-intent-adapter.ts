@@ -118,7 +118,6 @@ export function useCardIntentAdapter({
           zoneSnapshot,
           submit: async (descriptor, params) => {
             await runtime.submitInteraction(
-              controllingPlayerId,
               descriptor.interactionId,
               params,
             );

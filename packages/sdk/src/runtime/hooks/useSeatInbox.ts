@@ -1,4 +1,4 @@
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import {
   eligibleTargetsByBoardKind,
@@ -26,8 +26,9 @@ export interface SeatInbox {
  * from the trusted bundle — clients MUST NOT recompute availability.
  */
 export function useSeatInbox(): SeatInbox {
-  const interactions = usePluginState(
-    (s) => s.gameplay.availableInteractions ?? [],
+  const interactions = usePluginGameplayFrameSelector(
+    (frame) =>
+      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const bySurface: Record<string, InteractionDescriptor[]> = {};

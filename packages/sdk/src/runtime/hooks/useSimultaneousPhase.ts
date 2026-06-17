@@ -1,4 +1,4 @@
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import type { SimultaneousPhaseSnapshot } from "../types/plugin-state.js";
 
 /**
@@ -6,5 +6,8 @@ import type { SimultaneousPhaseSnapshot } from "../types/plugin-state.js";
  * phase, or null when no simultaneous submission barrier is active.
  */
 export function useSimultaneousPhase(): SimultaneousPhaseSnapshot | null {
-  return usePluginState((state) => state.gameplay.simultaneousPhase ?? null);
+  return usePluginGameplayFrameSelector(
+    (frame) =>
+      (frame.flow.simultaneousPhase ?? null) as SimultaneousPhaseSnapshot | null,
+  );
 }

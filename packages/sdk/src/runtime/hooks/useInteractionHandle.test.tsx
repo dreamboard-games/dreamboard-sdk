@@ -3,9 +3,9 @@ import { afterAll, afterEach, beforeAll, expect, test } from "bun:test";
 import { createElement, useEffect } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { InteractionUiProvider } from "../context/InteractionDraftContext.js";
-import { RuntimeProvider } from "../context/RuntimeContext.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
+import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
+import { pluginGameplayFrameFromStateSnapshot } from "../context/PluginGameplayFrameContext.js";
+import type { PluginRuntimeClient } from "../core/types.js";
 import type {
   InteractionDescriptor,
   PluginStateSnapshot,
@@ -147,42 +147,57 @@ function deferred(): { promise: Promise<void>; resolve: () => void } {
 
 function makeRuntime(initialSnapshot: PluginStateSnapshot) {
   let snapshot = initialSnapshot;
-  const listeners = new Set<(state: PluginStateSnapshot) => void>();
+  let frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+  const frameListeners = new Set<() => void>();
+  const sessionListeners = new Set<() => void>();
   const submitCalls: Array<{ interactionId: string; params: unknown }> = [];
-  let submitImpl: PluginRuntimeAPI["submitInteraction"] = async (
-    _playerId,
+  let submitImpl: PluginRuntimeClient["submitInteraction"] = async (
     interactionId,
     params,
   ) => {
     submitCalls.push({ interactionId, params });
   };
 
-  const runtime: PluginRuntimeAPI = {
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: (...args) => submitImpl(...args),
-    getSessionState: () => snapshot.session,
-    disconnect: () => undefined,
-    switchPlayer: () => undefined,
-    getSnapshot: () => snapshot,
-    subscribeToState: (listener) => {
-      listeners.add(listener);
+  const runtime: PluginRuntimeClient = {
+    getSession: () => ({
+      sessionId: snapshot.session.sessionId ?? "session-1",
+      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
+        playerId,
+        displayName: playerId,
+      })),
+    }),
+    subscribeSession: (listener) => {
+      sessionListeners.add(listener);
       return () => {
-        listeners.delete(listener);
+        sessionListeners.delete(listener);
       };
     },
-    _subscribeToSessionState: () => () => undefined,
+    getFrame: () => frame,
+    subscribeFrame: (listener) => {
+      frameListeners.add(listener);
+      return () => {
+        frameListeners.delete(listener);
+      };
+    },
+    validateInteraction: async () => ({ valid: true }),
+    submitInteraction: (...args) => submitImpl(...args),
+    disconnect: () => undefined,
   };
 
   return {
     runtime,
     submitCalls,
-    setSubmitImpl(impl: PluginRuntimeAPI["submitInteraction"]) {
+    setSubmitImpl(impl: PluginRuntimeClient["submitInteraction"]) {
       submitImpl = impl;
     },
     emit(nextSnapshot: PluginStateSnapshot) {
       snapshot = nextSnapshot;
-      for (const listener of listeners) {
-        listener(snapshot);
+      frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+      for (const listener of sessionListeners) {
+        listener();
+      }
+      for (const listener of frameListeners) {
+        listener();
       }
     },
   };
@@ -192,13 +207,13 @@ function RuntimeHarness({
   runtime,
   children,
 }: {
-  runtime: PluginRuntimeAPI;
+  runtime: PluginRuntimeClient;
   children: React.ReactNode;
 }) {
   return createElement(
-    RuntimeProvider,
+    PluginRuntimeBoundary,
     { runtime },
-    createElement(InteractionUiProvider, null, children),
+    children,
   );
 }
 
@@ -208,7 +223,7 @@ test("descriptor and key handles share one atomic submission claim", async () =>
     makeSnapshot({ syncId: 1, interactions: [interaction] }),
   );
   const pendingSubmit = deferred();
-  harness.setSubmitImpl(async (_playerId, interactionId, params) => {
+  harness.setSubmitImpl(async (interactionId, params) => {
     harness.submitCalls.push({ interactionId, params });
     await pendingSubmit.promise;
   });

@@ -1,23 +1,20 @@
-import { useMemo } from "react";
-import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type { GameView } from "#dreamboard/ui-contract";
-import type { PluginStateSnapshot } from "../types/reducer-state.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
+import type { PluginGameplayFrame } from "@dreamboard-games/plugin-runtime-contract";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import {
   defaultRuntimeSnapshotEquality,
   type EqualityFn,
-  useRuntimeSnapshotSelector,
 } from "./useRuntimeSnapshotSelector.js";
 
 function requireProjectedView(
-  snapshot: PluginStateSnapshot | null | undefined,
+  frame: PluginGameplayFrame | null | undefined,
   message: string,
 ): GameView {
-  const view = snapshot?.view;
+  const view = frame?.view;
   if (view === null || typeof view === "undefined") {
     throw new Error(message);
   }
-  return view;
+  return view as GameView;
 }
 
 /**
@@ -32,36 +29,11 @@ export function useGameSelector<T>(
   selector: (state: GameView) => T,
   equalityFn: EqualityFn<T> = defaultRuntimeSnapshotEquality,
 ): T {
-  const runtime = useRuntimeContext() as PluginRuntimeAPI;
   const message =
     "useGameSelector: Projected view not available. Ensure the reducer-native host payload is initialized.";
 
-  const storeApi = useMemo(() => {
-    const subscribe = (onStoreChange: () => void) => {
-      if (!runtime.subscribeToState) {
-        return () => {};
-      }
-
-      return runtime.subscribeToState(() => {
-        onStoreChange();
-      });
-    };
-
-    const getSnapshot = () =>
-      (runtime.getSnapshot?.() ?? null) as PluginStateSnapshot | null;
-
-    return {
-      subscribe,
-      getSnapshot,
-      getServerSnapshot: getSnapshot,
-    };
-  }, [runtime]);
-
-  return useRuntimeSnapshotSelector(
-    storeApi.subscribe,
-    storeApi.getSnapshot,
-    storeApi.getServerSnapshot,
-    (snapshot) => selector(requireProjectedView(snapshot, message)),
+  return usePluginGameplayFrameSelector(
+    (frame) => selector(requireProjectedView(frame, message)),
     equalityFn,
   );
 }

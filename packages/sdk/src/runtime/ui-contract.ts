@@ -40,7 +40,6 @@ import {
   type PlayerRosterListProps,
   type PlayerRosterPartProps,
   type PlayerRosterRootProps,
-  type PlayerRosterSwitchButtonProps,
   type PromptDialogProps,
   type PromptInboxItemsProps,
   type PromptOptionRenderItem,
@@ -355,24 +354,14 @@ type TypedPlayerRosterPartProps<Player extends string> = Omit<
   player: TypedPlayerRosterEntry<Player>;
 };
 
-type TypedPlayerRosterSwitchButtonProps<Player extends string> = Omit<
-  PlayerRosterSwitchButtonProps,
-  "player"
-> & {
-  player: TypedPlayerRosterEntry<Player>;
-};
-
 export type TypedPlayerRoster<Contract extends UIContract> = Omit<
   PlayerRosterComponents,
-  "Root" | "List" | "SwitchButton" | "Name" | "Score" | "Badges"
+  "Root" | "List" | "Name" | "Score" | "Badges"
 > & {
   Root(
     props: TypedPlayerRosterRootProps<PlayerKey<Contract>>,
   ): ReactElement | null;
   List(props: TypedPlayerRosterListProps<PlayerKey<Contract>>): ReactElement;
-  SwitchButton(
-    props: TypedPlayerRosterSwitchButtonProps<PlayerKey<Contract>>,
-  ): ReactElement;
   Name(props: TypedPlayerRosterPartProps<PlayerKey<Contract>>): ReactElement;
   Score(
     props: TypedPlayerRosterPartProps<PlayerKey<Contract>>,

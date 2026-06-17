@@ -428,7 +428,6 @@ export function ZoneCardAction<Card extends string = string>({
           }
           try {
             await runtime.submitInteraction(
-              controllingPlayerId,
               descriptor.interactionId,
               params,
             );

@@ -86,7 +86,6 @@ function mountRuntime(): PluginRuntimeAPI {
       userId: "user-1",
     }),
     disconnect: () => undefined,
-    switchPlayer: () => undefined,
     getSnapshot: () => snap,
     subscribeToState: () => () => undefined,
     _subscribeToSessionState: () => () => undefined,

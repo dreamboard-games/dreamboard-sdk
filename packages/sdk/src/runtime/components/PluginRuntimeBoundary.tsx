@@ -1,8 +1,15 @@
 import React, { useMemo } from "react";
 import { InteractionUiProvider } from "../context/InteractionDraftContext.js";
-import { usePluginSession } from "../context/PluginSessionContext.js";
+import {
+  PluginSessionProvider,
+  usePluginSession,
+} from "../context/PluginSessionContext.js";
+import {
+  PluginGameplayFrameCompatProvider,
+  PluginGameplayFrameProvider,
+} from "../context/PluginGameplayFrameContext.js";
 import { PluginStateProvider } from "../context/PluginStateContext.js";
-import { RuntimeProvider } from "../context/RuntimeContext.js";
+import { RuntimeContext, RuntimeProvider } from "../context/RuntimeContext.js";
 import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
@@ -54,19 +61,21 @@ function sessionStateFromClient(runtime: PluginRuntimeClient): PluginSessionStat
 function createCompatRuntimeAPI(runtime: PluginRuntimeClient): PluginRuntimeAPI {
   const stateListeners = new Set<(state: PluginStateSnapshot) => void>();
   const sessionListeners = new Set<(state: PluginSessionState) => void>();
+  let currentSnapshot = snapshotFromClient(runtime);
+  let currentSessionState = sessionStateFromClient(runtime);
   const notifyState = () => {
-    const snapshot = snapshotFromClient(runtime);
-    if (!snapshot) {
+    currentSnapshot = snapshotFromClient(runtime);
+    if (!currentSnapshot) {
       return;
     }
     for (const listener of stateListeners) {
-      listener(snapshot);
+      listener(currentSnapshot);
     }
   };
   const notifySession = () => {
-    const session = sessionStateFromClient(runtime);
+    currentSessionState = sessionStateFromClient(runtime);
     for (const listener of sessionListeners) {
-      listener(session);
+      listener(currentSessionState);
     }
   };
   const unsubscribeFrame = runtime.subscribeFrame(() => {
@@ -78,29 +87,24 @@ function createCompatRuntimeAPI(runtime: PluginRuntimeClient): PluginRuntimeAPI 
   });
 
   return {
-    getSnapshot: () => snapshotFromClient(runtime),
+    getSnapshot: () => currentSnapshot,
     subscribeToState: (listener) => {
       stateListeners.add(listener);
-      const snapshot = snapshotFromClient(runtime);
-      if (snapshot) {
-        listener(snapshot);
-      }
       return () => {
         stateListeners.delete(listener);
       };
     },
     _subscribeToSessionState: (listener) => {
       sessionListeners.add(listener);
-      listener(sessionStateFromClient(runtime));
       return () => {
         sessionListeners.delete(listener);
       };
     },
-    validateInteraction: (_playerId, interactionId, params) =>
+    validateInteraction: (interactionId, params) =>
       runtime.validateInteraction(interactionId, params),
-    submitInteraction: (_playerId, interactionId, params) =>
+    submitInteraction: (interactionId, params) =>
       runtime.submitInteraction(interactionId, params),
-    getSessionState: () => sessionStateFromClient(runtime),
+    getSessionState: () => currentSessionState,
     disconnect: () => {
       unsubscribeFrame();
       unsubscribeSession();
@@ -124,13 +128,31 @@ export function PluginRuntimeBoundary({
     () => (isPluginRuntimeClient(runtime) ? createCompatRuntimeAPI(runtime) : runtime),
     [runtime],
   );
+  if (isPluginRuntimeClient(runtime)) {
+    return (
+      <RuntimeContext.Provider value={runtimeApi}>
+        <PluginSessionProvider runtime={runtime}>
+          <PluginGameplayFrameProvider runtime={runtime}>
+            <PluginStateProvider>
+              <SessionScopedInteractionUiProvider>
+                {children}
+              </SessionScopedInteractionUiProvider>
+            </PluginStateProvider>
+          </PluginGameplayFrameProvider>
+        </PluginSessionProvider>
+      </RuntimeContext.Provider>
+    );
+  }
+
   return (
     <RuntimeProvider runtime={runtimeApi}>
-      <PluginStateProvider>
-        <SessionScopedInteractionUiProvider>
-          {children}
-        </SessionScopedInteractionUiProvider>
-      </PluginStateProvider>
+      <PluginGameplayFrameCompatProvider runtime={runtimeApi}>
+        <PluginStateProvider>
+          <SessionScopedInteractionUiProvider>
+            {children}
+          </SessionScopedInteractionUiProvider>
+        </PluginStateProvider>
+      </PluginGameplayFrameCompatProvider>
     </RuntimeProvider>
   );
 }

@@ -476,13 +476,12 @@ export function createTestRuntime(
   };
 
   const runtime = {
-    validateInteraction: validate,
-    submitInteraction: submit,
+    validateInteraction: (interactionId: string, params?: unknown) =>
+      validate(currentPlayerId, interactionId, params),
+    submitInteraction: (interactionId: string, params?: unknown) =>
+      submit(currentPlayerId, interactionId, params),
     getSessionState: (): RuntimePluginSessionState => lastSessionState,
     disconnect: () => undefined,
-    switchPlayer: (playerId: string) => {
-      setControllingPlayer(playerId);
-    },
     getSnapshot: (): PluginStateSnapshot => lastPluginSnapshot,
     subscribeToState: (listener: (state: PluginStateSnapshot) => void) => {
       stateListeners.add(listener);

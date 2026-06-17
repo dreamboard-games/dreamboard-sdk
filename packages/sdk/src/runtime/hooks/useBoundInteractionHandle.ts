@@ -6,7 +6,7 @@ import {
   useInteractionUiStore,
 } from "../context/InteractionDraftContext.js";
 import { useClientParamSchema } from "../context/ClientParamSchemaContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import {
@@ -53,8 +53,8 @@ export function useBoundInteractionHandle<
   const { controllingPlayerId } = usePluginSession();
   const store = useInteractionUiStore();
   const autoSubmitSignatureRef = useRef<string | null>(null);
-  const simultaneousPhase = usePluginState(
-    (state) => state.gameplay.simultaneousPhase,
+  const simultaneousPhase = usePluginGameplayFrameSelector(
+    (frame) => frame.flow.simultaneousPhase,
   );
 
   const interactionId = descriptor?.interactionId ?? "";
@@ -114,13 +114,6 @@ export function useBoundInteractionHandle<
     return descriptor;
   }, [descriptor]);
 
-  const requirePlayer = useCallback(() => {
-    if (!controllingPlayerId) {
-      throw new Error("useInteractionHandle: no controlling player available");
-    }
-    return controllingPlayerId;
-  }, [controllingPlayerId]);
-
   const submit = useCallback(
     async (params?: Params) => {
       const activeDescriptor = requireDescriptor();
@@ -144,7 +137,6 @@ export function useBoundInteractionHandle<
       ) as Params;
       try {
         await runtime.submitInteraction(
-          requirePlayer(),
           activeDescriptor.interactionId,
           finalParams as Record<string, unknown>,
         );
@@ -155,7 +147,7 @@ export function useBoundInteractionHandle<
         store.setSubmitting(activeDescriptor.interactionKey, false);
       }
     },
-    [requireDescriptor, status, store, values, runtime, requirePlayer],
+    [requireDescriptor, status, store, values, runtime],
   );
 
   const validate = useCallback(
@@ -166,7 +158,6 @@ export function useBoundInteractionHandle<
         params ?? values,
       ) as Params;
       const result = await runtime.validateInteraction(
-        requirePlayer(),
         activeDescriptor.interactionId,
         finalParams as Record<string, unknown>,
       );
@@ -174,7 +165,7 @@ export function useBoundInteractionHandle<
         throw new ValidationError(result.errorCode, result.message);
       }
     },
-    [requireDescriptor, values, runtime, requirePlayer],
+    [requireDescriptor, values, runtime],
   );
 
   const validateDraft = useCallback((): DraftValidation<Params> => {

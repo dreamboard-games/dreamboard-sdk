@@ -19,7 +19,7 @@ export const RuntimeContext = createContext<RuntimeAPI | null>(null);
  * function MyPluginComponent() {
  *   const runtime = useRuntimeContext();
  *   return (
- *     <button onClick={() => runtime.submitInteraction("player-1", "pass", {})}>
+ *     <button onClick={() => runtime.submitInteraction("pass", {})}>
  *       Pass
  *     </button>
  *   );

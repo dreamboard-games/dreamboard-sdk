@@ -1,4 +1,15 @@
-import { createContext, useContext } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
+import type {
+  PluginPlayerSummary,
+  PluginSessionDescriptor,
+} from "@dreamboard-games/plugin-runtime-contract";
+import type { PluginRuntimeClient } from "../core/types.js";
 import type { PluginSessionState } from "../types/runtime-api";
 
 /**
@@ -8,6 +19,130 @@ import type { PluginSessionState } from "../types/runtime-api";
 export const PluginSessionContext = createContext<PluginSessionState | null>(
   null,
 );
+const PluginSessionDescriptorContext =
+  createContext<PluginSessionDescriptor | null>(null);
+
+function sessionStateFromClient(runtime: PluginRuntimeClient): PluginSessionState {
+  const session = runtime.getSession();
+  const frame = runtime.getFrame();
+  return {
+    status: session ? "ready" : "loading",
+    sessionId: session?.sessionId ?? null,
+    controllablePlayerIds: session?.players.map((player) => player.playerId) ?? [],
+    controllingPlayerId: frame?.perspectivePlayerId ?? null,
+    userId: null,
+  };
+}
+
+function pluginSessionStatesEqual(
+  left: PluginSessionState,
+  right: PluginSessionState,
+): boolean {
+  if (
+    left.status !== right.status ||
+    left.sessionId !== right.sessionId ||
+    left.controllingPlayerId !== right.controllingPlayerId ||
+    left.userId !== right.userId ||
+    left.controllablePlayerIds.length !== right.controllablePlayerIds.length
+  ) {
+    return false;
+  }
+
+  return left.controllablePlayerIds.every(
+    (playerId, index) => playerId === right.controllablePlayerIds[index],
+  );
+}
+
+export function PluginSessionProvider({
+  runtime,
+  children,
+}: {
+  runtime: PluginRuntimeClient;
+  children: ReactNode;
+}) {
+  const sessionStore = useMemo(
+    () => {
+      let current = sessionStateFromClient(runtime);
+      return {
+        subscribe: (onStoreChange: () => void) => {
+          const refresh = () => {
+            const next = sessionStateFromClient(runtime);
+            if (pluginSessionStatesEqual(current, next)) {
+              return;
+            }
+            current = next;
+            onStoreChange();
+          };
+          const unsubscribeSession = runtime.subscribeSession(refresh);
+          const unsubscribeFrame = runtime.subscribeFrame(refresh);
+          return () => {
+            unsubscribeFrame();
+            unsubscribeSession();
+          };
+        },
+        getSnapshot: () => current,
+        getServerSnapshot: () => current,
+      };
+    },
+    [runtime],
+  );
+  const descriptorStore = useMemo(
+    () => {
+      let current = runtime.getSession();
+      return {
+        subscribe: (onStoreChange: () => void) => {
+          const refresh = () => {
+            const next = runtime.getSession();
+            if (current === next) {
+              return;
+            }
+            current = next;
+            onStoreChange();
+          };
+          const unsubscribeSession = runtime.subscribeSession(refresh);
+          return () => {
+            unsubscribeSession();
+          };
+        },
+        getSnapshot: () => current,
+        getServerSnapshot: () => current,
+      };
+    },
+    [runtime],
+  );
+  const sessionState = useSyncExternalStore(
+    sessionStore.subscribe,
+    sessionStore.getSnapshot,
+    sessionStore.getServerSnapshot,
+  );
+  const sessionDescriptor = useSyncExternalStore(
+    descriptorStore.subscribe,
+    descriptorStore.getSnapshot,
+    descriptorStore.getServerSnapshot,
+  );
+
+  return (
+    <PluginSessionContext.Provider value={sessionState}>
+      <PluginSessionDescriptorContext.Provider value={sessionDescriptor}>
+        {children}
+      </PluginSessionDescriptorContext.Provider>
+    </PluginSessionContext.Provider>
+  );
+}
+
+export function PluginSessionDescriptorProvider({
+  descriptor,
+  children,
+}: {
+  descriptor: PluginSessionDescriptor | null;
+  children: ReactNode;
+}) {
+  return (
+    <PluginSessionDescriptorContext.Provider value={descriptor}>
+      {children}
+    </PluginSessionDescriptorContext.Provider>
+  );
+}
 
 /**
  * Hook to access plugin session metadata.
@@ -44,4 +179,24 @@ export function usePluginSession(): PluginSessionState {
   }
 
   return context;
+}
+
+export function useOptionalPluginSessionDescriptor():
+  | PluginSessionDescriptor
+  | null {
+  return useContext(PluginSessionDescriptorContext);
+}
+
+export function usePluginSessionDescriptor(): PluginSessionDescriptor {
+  const descriptor = useOptionalPluginSessionDescriptor();
+  if (!descriptor) {
+    throw new Error(
+      "usePluginSessionDescriptor must be used within PluginSessionProvider.",
+    );
+  }
+  return descriptor;
+}
+
+export function usePluginPlayers(): readonly PluginPlayerSummary[] {
+  return usePluginSessionDescriptor().players;
 }

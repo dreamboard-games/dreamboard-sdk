@@ -3,9 +3,10 @@ import { afterAll, afterEach, beforeAll, expect, test } from "bun:test";
 import { createElement } from "react";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { RuntimeProvider } from "../context/RuntimeContext.js";
+import { PluginRuntimeBoundary } from "../components/PluginRuntimeBoundary.js";
+import { pluginGameplayFrameFromStateSnapshot } from "../context/PluginGameplayFrameContext.js";
 import { usePluginState } from "../context/PluginStateContext.js";
-import type { PluginRuntimeAPI } from "../api/createPluginRuntimeAPI.js";
+import type { PluginRuntimeClient } from "../core/types.js";
 import type { PluginStateSnapshot } from "../types/plugin-state.js";
 import { useGameSelector } from "./useGameSelector.js";
 
@@ -93,30 +94,44 @@ function makeSnapshot({
 
 function makeRuntime(initialSnapshot: PluginStateSnapshot<TestView>) {
   let snapshot = initialSnapshot;
-  const listeners = new Set<(state: PluginStateSnapshot<TestView>) => void>();
-  const runtime: PluginRuntimeAPI = {
-    validateInteraction: async () => ({ valid: true }),
-    submitInteraction: async () => undefined,
-    getSessionState: () => snapshot.session,
-    disconnect: () => undefined,
-    switchPlayer: () => undefined,
-    getSnapshot: () => snapshot,
-    subscribeToState: (listener) => {
-      listeners.add(listener as (state: PluginStateSnapshot<TestView>) => void);
+  let frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+  const frameListeners = new Set<() => void>();
+  const sessionListeners = new Set<() => void>();
+  const runtime: PluginRuntimeClient = {
+    getSession: () => ({
+      sessionId: snapshot.session.sessionId ?? "session-1",
+      players: snapshot.session.controllablePlayerIds.map((playerId) => ({
+        playerId,
+        displayName: playerId,
+      })),
+    }),
+    subscribeSession: (listener) => {
+      sessionListeners.add(listener);
       return () => {
-        listeners.delete(
-          listener as (state: PluginStateSnapshot<TestView>) => void,
-        );
+        sessionListeners.delete(listener);
       };
     },
-    _subscribeToSessionState: () => () => undefined,
+    getFrame: () => frame,
+    subscribeFrame: (listener) => {
+      frameListeners.add(listener);
+      return () => {
+        frameListeners.delete(listener);
+      };
+    },
+    validateInteraction: async () => ({ valid: true }),
+    submitInteraction: async () => undefined,
+    disconnect: () => undefined,
   };
   return {
     runtime,
     emit(nextSnapshot: PluginStateSnapshot<TestView>) {
       snapshot = nextSnapshot;
-      for (const listener of listeners) {
-        listener(snapshot);
+      frame = pluginGameplayFrameFromStateSnapshot(snapshot);
+      for (const listener of sessionListeners) {
+        listener();
+      }
+      for (const listener of frameListeners) {
+        listener();
       }
     },
   };
@@ -146,7 +161,7 @@ test("usePluginState skips rerenders when a primitive selection is unchanged", a
 
   const mounted = await mountIntoDom(
     createElement(
-      RuntimeProvider,
+      PluginRuntimeBoundary,
       { runtime: harness.runtime },
       createElement(SelectedPlayer),
     ),
@@ -193,7 +208,7 @@ test("usePluginState applies explicit equality for allocated selections", async 
 
   const mounted = await mountIntoDom(
     createElement(
-      RuntimeProvider,
+      PluginRuntimeBoundary,
       { runtime: harness.runtime },
       createElement(ObjectIsSelection),
       createElement(ShallowSelection),
@@ -237,7 +252,7 @@ test("usePluginState applies a changed selector on the next render", async () =>
   await act(async () => {
     root.render(
       createElement(
-        RuntimeProvider,
+        PluginRuntimeBoundary,
         { runtime: harness.runtime },
         createElement(SelectedValue, { mode: "player" }),
       ),
@@ -248,7 +263,7 @@ test("usePluginState applies a changed selector on the next render", async () =>
   await act(async () => {
     root.render(
       createElement(
-        RuntimeProvider,
+        PluginRuntimeBoundary,
         { runtime: harness.runtime },
         createElement(SelectedValue, { mode: "phase" }),
       ),
@@ -272,7 +287,7 @@ test("useGameSelector shares selective subscription behavior", async () => {
 
   const mounted = await mountIntoDom(
     createElement(
-      RuntimeProvider,
+      PluginRuntimeBoundary,
       { runtime: harness.runtime },
       createElement(SelectedScore),
     ),

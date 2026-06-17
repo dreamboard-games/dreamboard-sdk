@@ -78,20 +78,6 @@ export interface PluginRuntimeAPI extends RuntimeAPI {
     listener: (state: PluginSessionState) => void,
   ) => () => void;
 
-  /**
-   * Request to restore game state to a previous history entry.
-   * Only works if the user is the host.
-   *
-   * @param entryId - ID of the history entry to restore to
-   *
-   * @example
-   * ```typescript
-   * // Restore to a previous state
-   * runtime.restoreHistory?.('entry-abc-123');
-   * ```
-   */
-  restoreHistory?: (entryId: string) => void;
-  markNotificationRead?: (notificationId: string) => void;
   setDiagnosticHandler?: (
     handler: PluginRuntimeDiagnosticHandler | undefined,
   ) => void;
@@ -643,7 +629,7 @@ export function createPluginRuntimeAPI(
       };
     },
 
-    validateInteraction: async (playerId, interactionId, params) => {
+    validateInteraction: async (interactionId, params) => {
       return new Promise((resolve) => {
         if (channel === null || disconnected) {
           resolve({
@@ -659,7 +645,7 @@ export function createPluginRuntimeAPI(
         try {
           postToHost({
             type: "validate-interaction",
-            playerId,
+            playerId: sessionState.controllingPlayerId ?? "",
             interactionId,
             params,
             messageId,
@@ -688,10 +674,10 @@ export function createPluginRuntimeAPI(
       });
     },
 
-    submitInteraction: async (playerId, interactionId, params) =>
+    submitInteraction: async (interactionId, params) =>
       submitViaParent({
         type: "interaction",
-        playerId,
+        playerId: sessionState.controllingPlayerId ?? "",
         interactionId,
         params,
         clientActionId: mintClientActionId(),
@@ -709,18 +695,6 @@ export function createPluginRuntimeAPI(
       stateListeners.clear();
       rejectPendingRequests();
       currentStateSnapshot = null;
-    },
-
-    switchPlayer: (playerId: PlayerId) => {
-      postToHost({ type: "switch-player", playerId });
-    },
-
-    restoreHistory: (entryId: string) => {
-      postToHost({ type: "restore-history", entryId });
-    },
-
-    markNotificationRead: (notificationId: string) => {
-      postToHost({ type: "mark-notification-read", notificationId });
     },
 
     setDiagnosticHandler: (handler) => {

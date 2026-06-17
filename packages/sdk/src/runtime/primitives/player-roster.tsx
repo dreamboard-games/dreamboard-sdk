@@ -3,7 +3,6 @@ import {
   Fragment,
   useContext,
   useMemo,
-  type ButtonHTMLAttributes,
   type HTMLAttributes,
   type ReactElement,
   type ReactNode,
@@ -12,10 +11,8 @@ import type { PlayerId } from "@dreamboard/manifest-contract";
 import { useActivePlayers } from "../hooks/useActivePlayers.js";
 import { usePlayerInfo } from "../hooks/usePlayerInfo.js";
 import { usePlayerTurnOrder } from "../hooks/usePlayerTurnOrder.js";
-import { usePluginActions } from "../context/PluginStateContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
 import {
-  composeEventHandlers,
   renderPrimitive,
   type PrimitiveCommonProps,
 } from "../../ui/primitives/primitive-props.js";
@@ -189,42 +186,6 @@ export function PlayerRosterEmpty({ children }: { children?: ReactNode }) {
   return <>{children}</>;
 }
 
-export type PlayerRosterSwitchButtonProps = Omit<
-  PrimitiveCommonProps,
-  "children"
-> &
-  ButtonHTMLAttributes<HTMLButtonElement> & {
-    player: PlayerRosterEntry;
-    children?: ReactNode;
-  };
-
-export function PlayerRosterSwitchButton({
-  player,
-  disabled,
-  onClick,
-  ...props
-}: PlayerRosterSwitchButtonProps) {
-  const { switchPlayer } = usePluginActions();
-  const isDisabled = disabled === true || !player.canSwitchToPlayer;
-  return renderPrimitive("button", {
-    type: "button",
-    ...props,
-    disabled: isDisabled,
-    "aria-current": player.isCurrentPlayer ? "true" : undefined,
-    "aria-disabled": isDisabled,
-    "data-dreamboard-player-roster-switch": "",
-    "data-player-id": player.playerId,
-    "data-active": player.isActive || undefined,
-    "data-current": player.isCurrentPlayer || undefined,
-    "data-controllable": player.isControllable || undefined,
-    "data-switchable": player.canSwitchToPlayer || undefined,
-    "data-disabled": isDisabled || undefined,
-    onClick: composeEventHandlers(onClick, () => {
-      if (!isDisabled) switchPlayer(player.playerId);
-    }),
-  });
-}
-
 export type PlayerRosterPartProps = PrimitiveCommonProps &
   HTMLAttributes<HTMLElement> & {
     player: PlayerRosterEntry;
@@ -234,7 +195,6 @@ export interface PlayerRosterComponents {
   Root(props: PlayerRosterRootProps): ReactElement | null;
   List(props: PlayerRosterListProps): ReactElement;
   Empty(props: { children?: ReactNode }): ReactElement | null;
-  SwitchButton(props: PlayerRosterSwitchButtonProps): ReactElement;
   Name(props: PlayerRosterPartProps): ReactElement;
   Score(props: PlayerRosterPartProps): ReactElement | null;
   Badges(props: PlayerRosterPartProps): ReactElement | null;
@@ -295,7 +255,6 @@ export const PlayerRoster: PlayerRosterComponents = {
   Root: PlayerRosterRoot,
   List: PlayerRosterList,
   Empty: PlayerRosterEmpty,
-  SwitchButton: PlayerRosterSwitchButton,
   Name: PlayerRosterName,
   Score: PlayerRosterScore,
   Badges: PlayerRosterBadges,

@@ -153,7 +153,6 @@ function makeRuntime(
       userId: "user-1",
     }),
     disconnect: () => undefined,
-    switchPlayer: () => undefined,
     getSnapshot: () => snapshot,
     subscribeToState: () => () => undefined,
     _subscribeToSessionState: () => () => undefined,

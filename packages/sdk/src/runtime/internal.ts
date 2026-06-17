@@ -41,7 +41,6 @@ export type {
 } from "./core/types.js";
 export {
   PluginStateProvider,
-  usePluginActions,
   usePluginState,
 } from "./context/PluginStateContext.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";

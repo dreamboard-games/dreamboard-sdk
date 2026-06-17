@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useStore } from "zustand";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import { validationErrorFromUnknown } from "../../ui/errors/ValidationError.js";
 import type {
@@ -232,8 +232,9 @@ export function useBoardInteractions<I extends string = string>(
   );
   const armedBySurface = store.getState().arms ?? subscribedArmedBySurface;
   const drafts = store.getState().drafts ?? subscribedDrafts;
-  const descriptors = usePluginState(
-    (state) => state.gameplay.availableInteractions ?? [],
+  const descriptors = usePluginGameplayFrameSelector(
+    (frame) =>
+      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const targetKindSet = useMemo(
@@ -349,7 +350,6 @@ export function useBoardInteractions<I extends string = string>(
       }
       try {
         await runtime.submitInteraction(
-          controllingPlayerId,
           descriptor.interactionId,
           submitParams as Record<string, unknown>,
         );
