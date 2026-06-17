@@ -22,6 +22,19 @@ const LLMS_PATH = path.join(REPO_ROOT, "docs", "reference", "llms.txt");
 const LLMS_BUDGET_BYTES = 32 * 1024;
 const LLMS_ENTRY_SUMMARY_BUDGET = 18;
 const SIGNATURE_BUDGET = 400;
+const LLMS_OMITTED_EXPORTS = new Set([
+  "testing.pluginProtocolTapeSchema",
+  "testing.portableSemanticReplayStepSchema",
+  "testing.uiFixtureFrameSchema",
+  "testing.uiFixtureProtocolStepSchema",
+  "testing.uiReplayExecutionSchema",
+  "testing.uiReplayRequestSchema",
+  "testing.uiResolvedReplayIdentitySchema",
+  "testing.uiScenarioFixtureBundleIndexSchema",
+  "testing.uiScenarioFixtureSchema",
+  "testing.uiScenarioReplayStepSchema",
+  "testing.uiStepExpectationSchema",
+]);
 const LLMS_INCLUDED_SUBPATHS = new Set([
   ".",
   "./package-set",
@@ -397,11 +410,10 @@ function renderLlms(sections) {
       LLMS_NAMESPACE_BY_SUBPATH.get(section.subpath) ??
       section.subpath.replace(/^\.\//, "");
     for (const entry of section.exports) {
+      const key = `${namespace}.${entry.name}`;
+      if (LLMS_OMITTED_EXPORTS.has(key)) continue;
       lines.push(
-        `${namespace}.${entry.name} - ${clipText(
-          entry.summary,
-          LLMS_ENTRY_SUMMARY_BUDGET,
-        )}`,
+        `${key} - ${clipText(entry.summary, LLMS_ENTRY_SUMMARY_BUDGET)}`,
       );
     }
   }

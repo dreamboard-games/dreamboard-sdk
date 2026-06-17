@@ -17,6 +17,43 @@ import {
 
 const sdkPackage = "@dreamboard-games/sdk";
 
+function parseArgs(argv) {
+  const options = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--scenario" || arg === "--game") {
+      options[arg.slice(2)] = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown argument '${arg}'.`);
+  }
+  return options;
+}
+
+function selectGameIds(options) {
+  if (options.game) {
+    if (!expectedReferenceGameIds.includes(options.game)) {
+      throw new Error(
+        `Unknown reference game '${options.game}'. Expected one of: ${expectedReferenceGameIds.join(", ")}`,
+      );
+    }
+    return [options.game];
+  }
+  if (options.scenario) {
+    const gameId = expectedReferenceGameIds.find(
+      (id) => options.scenario === id || options.scenario.startsWith(`${id}.`),
+    );
+    if (!gameId) {
+      throw new Error(
+        `Scenario '${options.scenario}' does not match a reference game prefix. Expected one of: ${expectedReferenceGameIds.join(", ")}`,
+      );
+    }
+    return [gameId];
+  }
+  return expectedReferenceGameIds;
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: root,
@@ -114,6 +151,8 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
 }
 
 async function main() {
+  const options = parseArgs(process.argv.slice(2));
+  const gameIds = selectGameIds(options);
   run("node", ["scripts/ui/check-reference-games.mjs"], {
     cwd: root,
     stdio: "inherit",
@@ -124,7 +163,7 @@ async function main() {
   try {
     const { tarballPath, tarballSha256 } = await packSdk(tempRoot);
     const games = [];
-    for (const gameId of expectedReferenceGameIds) {
+    for (const gameId of gameIds) {
       games.push(await verifyGame(gameId, tempRoot, tarballPath));
     }
     const receipt = {

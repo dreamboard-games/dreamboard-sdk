@@ -13,7 +13,9 @@ import {
   assertDeterministicUIScenarioFixture,
   assertUniqueReplayIdentity,
   compileUIScenarioFixture,
+  compareUIParityObservations,
   createFixtureHostHarness,
+  createUIParityObservationFromFixture,
   digestUIFixtureJson,
   digestUIFixtureRequest,
   digestUIFixtureTransportRequest,
@@ -333,6 +335,78 @@ describe("UI scenario fixture contract", () => {
       "host.frame",
     ]);
     expect(digestUIScenarioFixture(parsed)).toMatch(/^sha256:[a-f0-9]{64}$/);
+  });
+
+  test("creates the phase 7 parity observation contract from a fixture", () => {
+    const fixture = makeFixture();
+    const observation = createUIParityObservationFromFixture({
+      fixture,
+      sdkCandidateDigest: "sha256:".concat("1".repeat(64)),
+      environment: {
+        project: "chromium-touch-phone",
+        viewport: { width: 390, height: 844 },
+      },
+    });
+
+    expect(observation.schemaVersion).toBe(1);
+    expect(observation.scenarioId).toBe("hearts.pass-three.mobile");
+    expect(observation.pluginRuntimeProtocol).toBe(
+      DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+    );
+    expect(observation.browserInteractionProtocol).toBe(
+      DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+    );
+    expect(observation.checkpoints).toEqual([
+      {
+        stepId: "commit-pass",
+        interactionKey: "play-card",
+        interactionId,
+        actuatorId: "commit",
+        draftDigest: undefined,
+        descriptorDigest: undefined,
+        gameVersion: 2,
+        actionSetVersion: "sha256:".concat("2".padStart(64, "0")),
+        perspectivePlayerId: "player-1",
+        projectionDigest: fixture.protocol.frames[1]!.projectionDigest,
+        semanticDigest: fixture.expected.finalSemanticDigest,
+        submissionDigest: fixture.expected.submissionDigest,
+        screenshot: undefined,
+      },
+    ]);
+  });
+
+  test("classifies the first divergent parity checkpoint", () => {
+    const fixture = makeFixture();
+    const expected = createUIParityObservationFromFixture({
+      fixture,
+      sdkCandidateDigest: "sha256:".concat("1".repeat(64)),
+      environment: {
+        project: "chromium-touch-phone",
+        viewport: { width: 390, height: 844 },
+      },
+    });
+    const actual = {
+      ...expected,
+      checkpoints: [
+        {
+          ...expected.checkpoints[0]!,
+          semanticDigest: "sha256:".concat("2".repeat(64)),
+        },
+      ],
+    };
+
+    expect(compareUIParityObservations(expected, actual)).toEqual({
+      ok: false,
+      failure: {
+        code: "semantic-snapshot-mismatch",
+        message: "semantic-snapshot-mismatch at checkpoints[0].semanticDigest",
+        path: "checkpoints[0].semanticDigest",
+        expected: expected.checkpoints[0]!.semanticDigest,
+        actual: "sha256:".concat("2".repeat(64)),
+        checkpointIndex: 0,
+        stepId: "commit-pass",
+      },
+    });
   });
 
   test("canonical fixture bytes are deterministic", () => {

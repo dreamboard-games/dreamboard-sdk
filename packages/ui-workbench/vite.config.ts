@@ -67,6 +67,12 @@ function fixtureAssetPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [fixtureAssetPlugin()],
+  build: {
+    target: "esnext",
+  },
+  esbuild: {
+    target: "esnext",
+  },
   resolve: {
     alias: [
       {

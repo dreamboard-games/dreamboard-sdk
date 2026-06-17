@@ -1,6 +1,11 @@
 # Phase 07: Real-Host Parity And Cross-Repo Verification
 
-Status: proposed. Amended on 2026-06-17 by the
+Status: Completed on 2026-06-17. The SDK-owned observation/comparison contract,
+packed-candidate wrapper, and internal cross-repo `verify:ui-parity` lane are
+implemented. The internal lane now replays the packed SDK fixture through a
+real dev-host `PluginIframe` + `PluginSessionGateway` surface and records
+`realHostExecutor: true` for `hearts.pass-three.mobile`. Amended on 2026-06-17
+by the
 [Plugin Runtime Contract Hard Cut](./plugin-runtime-contract-hard-cut.md).
 
 ## Objective

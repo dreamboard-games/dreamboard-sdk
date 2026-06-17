@@ -8355,6 +8355,7 @@ function CardDropTargetView({
   style,
   order,
   role,
+  browserInteractionAttributes,
 }: CardDropTargetViewProps): react_jsx_runtime.JSX.Element;
 ```
 
@@ -10601,6 +10602,149 @@ function normalizeSquareBoardInput<TBoard extends AnySquareBoardInput>(
 
 _No JSDoc summary is available yet._
 
+### Panel
+
+```ts
+const Panel: {
+  Root: typeof PanelRoot;
+  Header: typeof PanelHeader;
+  Title: typeof PanelTitle;
+  Description: typeof PanelDescription;
+  Body: typeof PanelBody;
+  Actions: typeof PanelActions;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### PanelActions
+
+```ts
+function PanelActions({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelBody
+
+```ts
+function PanelBody({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelDescription
+
+```ts
+function PanelDescription({
+  className,
+  style,
+  children,
+  ...props
+}: PanelDescriptionProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelDescriptionProps
+
+```ts
+interface PanelDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelHeader
+
+```ts
+function PanelHeader({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelPartProps
+
+```ts
+interface PanelPartProps extends HTMLAttributes<HTMLDivElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelRoot
+
+```ts
+function PanelRoot({
+  tone,
+  className,
+  children,
+  style,
+  ...props
+}: PanelRootProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelRootProps
+
+```ts
+interface PanelRootProps extends HTMLAttributes<HTMLDivElement> {
+  tone?: PanelTone;
+  children: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTitle
+
+```ts
+function PanelTitle({
+  className,
+  style,
+  children,
+  ...props
+}: PanelTitleProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTitleProps
+
+```ts
+interface PanelTitleProps extends HTMLAttributes<HTMLHeadingElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTone
+
+```ts
+type PanelTone = "card" | "hud" | "inset";
+```
+
+_No JSDoc summary is available yet._
+
 ### PanZoomTransform
 
 ```ts
@@ -11845,6 +11989,14 @@ function useMobileHandTrayActive(): boolean;
 
 Whether the mobile hand tray is currently presenting hands — i.e. the viewport is below the mobile breakpoint and at least one primary/auxiliary hand has registered. Authors can use this to drop redundant inline hand chrome (labels, framing) that the tray already provides, instead of guessing the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
 
+### useOverlayInsets
+
+```ts
+function useOverlayInsets(): { bottom: number };
+```
+
+_No JSDoc summary is available yet._
+
 ### UsePanZoomOptions
 
 ```ts
@@ -11857,6 +12009,14 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface UsePanZoomReturn { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### useRegisterBottomOverlayInset
+
+```ts
+function useRegisterBottomOverlayInset(id: string, height: number): void;
 ```
 
 _No JSDoc summary is available yet._
@@ -12223,6 +12383,7 @@ function CardDropTargetView({
   style,
   order,
   role,
+  browserInteractionAttributes,
 }: CardDropTargetViewProps): react_jsx_runtime.JSX.Element;
 ```
 
@@ -13834,6 +13995,149 @@ interface NetworkPiece {
 
 _No JSDoc summary is available yet._
 
+### Panel
+
+```ts
+const Panel: {
+  Root: typeof PanelRoot;
+  Header: typeof PanelHeader;
+  Title: typeof PanelTitle;
+  Description: typeof PanelDescription;
+  Body: typeof PanelBody;
+  Actions: typeof PanelActions;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### PanelActions
+
+```ts
+function PanelActions({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelBody
+
+```ts
+function PanelBody({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelDescription
+
+```ts
+function PanelDescription({
+  className,
+  style,
+  children,
+  ...props
+}: PanelDescriptionProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelDescriptionProps
+
+```ts
+interface PanelDescriptionProps extends HTMLAttributes<HTMLParagraphElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelHeader
+
+```ts
+function PanelHeader({
+  className,
+  style,
+  children,
+  ...props
+}: PanelPartProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelPartProps
+
+```ts
+interface PanelPartProps extends HTMLAttributes<HTMLDivElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelRoot
+
+```ts
+function PanelRoot({
+  tone,
+  className,
+  children,
+  style,
+  ...props
+}: PanelRootProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelRootProps
+
+```ts
+interface PanelRootProps extends HTMLAttributes<HTMLDivElement> {
+  tone?: PanelTone;
+  children: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTitle
+
+```ts
+function PanelTitle({
+  className,
+  style,
+  children,
+  ...props
+}: PanelTitleProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTitleProps
+
+```ts
+interface PanelTitleProps extends HTMLAttributes<HTMLHeadingElement> {
+  children?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PanelTone
+
+```ts
+type PanelTone = "card" | "hud" | "inset";
+```
+
+_No JSDoc summary is available yet._
+
 ### PhaseIndicator
 
 ```ts
@@ -14613,6 +14917,22 @@ function useMobileHandTrayActive(): boolean;
 ```
 
 Whether the mobile hand tray is currently presenting hands — i.e. the viewport is below the mobile breakpoint and at least one primary/auxiliary hand has registered. Authors can use this to drop redundant inline hand chrome (labels, framing) that the tray already provides, instead of guessing the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
+
+### useOverlayInsets
+
+```ts
+function useOverlayInsets(): { bottom: number };
+```
+
+_No JSDoc summary is available yet._
+
+### useRegisterBottomOverlayInset
+
+```ts
+function useRegisterBottomOverlayInset(id: string, height: number): void;
+```
+
+_No JSDoc summary is available yet._
 
 ### useRegisterMobileHand
 
@@ -15450,6 +15770,20 @@ function PluginRuntime({
 
 PluginRuntime provides the RuntimeContext for plugin components.
 
+### PluginRuntimeBoundary
+
+```ts
+function PluginRuntimeBoundary({
+  runtime,
+  children,
+}: {
+  runtime: PluginRuntimeClient;
+  children: react__default.ReactNode;
+}): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
 ### PluginRuntimeClient
 
 ```ts
@@ -15655,14 +15989,7 @@ _No JSDoc summary is available yet._
 ### WorkspaceHandSurface
 
 ```ts
-interface WorkspaceHandSurface<Zone extends string, Card> {
-  readonly Hand: WorkspaceZoneCardsComponent<Card>;
-  readonly Card: WorkspaceZoneCardComponent<Card>;
-  readonly Staging: WorkspaceZoneStagingComponent<Card>;
-  readonly slot: {
-    readonly card: WorkspaceCardInputSlot<Zone>;
-  };
-}
+interface WorkspaceHandSurface { ... }
 ```
 
 _No JSDoc summary is available yet._
@@ -16225,6 +16552,7 @@ Convenience helper for builders of generated hand surfaces. Encodes a typed targ
 const Game: {
   Root: typeof GameRoot;
   Chrome: typeof GameChrome;
+  Viewport: typeof GameViewport;
 };
 ```
 
@@ -16426,6 +16754,28 @@ interface GameTurnState<
   currentPlayerId: PlayerIdValue | null;
   order: readonly PlayerIdValue[];
   isMine: boolean;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GameViewport
+
+```ts
+function GameViewport({
+  children,
+  style,
+  ...props
+}: GameViewportProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### GameViewportProps
+
+```ts
+interface GameViewportProps extends HTMLAttributes<HTMLDivElement> {
+  children?: ReactNode;
 }
 ```
 
@@ -18249,14 +18599,7 @@ _No JSDoc summary is available yet._
 ### WorkspaceHandSurface
 
 ```ts
-interface WorkspaceHandSurface<Zone extends string, Card> {
-  readonly Hand: WorkspaceZoneCardsComponent<Card>;
-  readonly Card: WorkspaceZoneCardComponent<Card>;
-  readonly Staging: WorkspaceZoneStagingComponent<Card>;
-  readonly slot: {
-    readonly card: WorkspaceCardInputSlot<Zone>;
-  };
-}
+interface WorkspaceHandSurface { ... }
 ```
 
 _No JSDoc summary is available yet._
@@ -18995,6 +19338,17 @@ function canonicalUIFixtureJson(value: unknown): string;
 
 _No JSDoc summary is available yet._
 
+### compareUIParityObservations
+
+```ts
+function compareUIParityObservations(
+  expected: UIParityObservationV1,
+  actual: UIParityObservationV1,
+): UIParityComparisonResult;
+```
+
+_No JSDoc summary is available yet._
+
 ### compilePluginProtocolTape
 
 ```ts
@@ -19135,6 +19489,21 @@ type CreateTestRuntimeOptions = {
   contractFingerprint?: string;
   expectedBaseStateFingerprint?: string;
 };
+```
+
+_No JSDoc summary is available yet._
+
+### createUIParityObservationFromFixture
+
+```ts
+function createUIParityObservationFromFixture({
+  fixture,
+  sdkCandidateDigest,
+  environment,
+  fixtureDigest,
+  screenshotsByStepId,
+  diagnostics,
+}: CreateUIParityObservationFromFixtureOptions): UIParityObservationV1;
 ```
 
 _No JSDoc summary is available yet._
@@ -19387,6 +19756,14 @@ _No JSDoc summary is available yet._
 function isStaleContractArtifactError(
   error: unknown,
 ): error is StaleContractArtifactError;
+```
+
+_No JSDoc summary is available yet._
+
+### parseUIParityObservationV1
+
+```ts
+function parseUIParityObservationV1(value: unknown): UIParityObservationV1;
 ```
 
 _No JSDoc summary is available yet._
@@ -19658,7 +20035,7 @@ _No JSDoc summary is available yet._
 ### UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR
 
 ```ts
-const UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR = 2;
+const UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR = 3;
 ```
 
 _No JSDoc summary is available yet._
@@ -19935,7 +20312,11 @@ _No JSDoc summary is available yet._
 ### BROWSER_INTERACTION_RECORD_ROLES
 
 ```ts
-const BROWSER_INTERACTION_RECORD_ROLES: readonly ["interaction", "actuator"];
+const BROWSER_INTERACTION_RECORD_ROLES: readonly [
+  "interaction",
+  "actuator",
+  "pointer-target",
+];
 ```
 
 _No JSDoc summary is available yet._
@@ -20048,6 +20429,7 @@ declare const browserInteractionDiagnosticSchema: z.ZodObject<
     interactionKey: z.ZodOptional<z.ZodString>;
     intent: z.ZodOptional<z.ZodString>;
     actuatorId: z.ZodOptional<z.ZodString>;
+    targetId: z.ZodOptional<z.ZodString>;
   },
   z.core.$strip
 >;
@@ -20161,15 +20543,7 @@ _No JSDoc summary is available yet._
 ### BrowserInteractionEntity
 
 ```ts
-interface BrowserInteractionEntity {
-  readonly interactionKey: string;
-  readonly interactionId: string;
-  readonly descriptorDigest?: string;
-  readonly draftDigest?: string;
-  readonly readiness: BrowserInteractionReadiness;
-  readonly actuators: readonly BrowserInteractionActuator[];
-  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
-}
+interface BrowserInteractionEntity { ... }
 ```
 
 _No JSDoc summary is available yet._
@@ -20186,6 +20560,80 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface BrowserInteractionIntentRequest { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### BrowserInteractionPointerTarget
+
+```ts
+interface BrowserInteractionPointerTarget {
+  readonly targetId: string;
+  readonly enabled: boolean;
+  readonly acceptedEffectPatterns: readonly BrowserInteractionEffectPattern[];
+  readonly descriptorDigest?: string;
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### BrowserInteractionPointerTargetAttributesInput
+
+```ts
+interface BrowserInteractionPointerTargetAttributesInput {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly interactionId: string;
+  readonly descriptorDigest?: string;
+  readonly targetId: string;
+  readonly enabled?: boolean;
+  readonly acceptedEffectPatterns: readonly BrowserInteractionEffectPattern[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### BrowserInteractionPointerTargetResolution
+
+```ts
+type BrowserInteractionPointerTargetResolution =
+  | BrowserInteractionPointerTargetResolutionSuccess
+  | BrowserInteractionPointerTargetResolutionFailure;
+```
+
+_No JSDoc summary is available yet._
+
+### BrowserInteractionPointerTargetResolutionFailure
+
+```ts
+interface BrowserInteractionPointerTargetResolutionFailure {
+  readonly ok: false;
+  readonly code:
+    | "ambiguous"
+    | "invalid-effect"
+    | "invalid-snapshot"
+    | "not-found"
+    | "unavailable";
+  readonly diagnostics: readonly BrowserInteractionDiagnostic[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### BrowserInteractionPointerTargetResolutionSuccess
+
+```ts
+interface BrowserInteractionPointerTargetResolutionSuccess { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### browserInteractionPointerTargetSchema
+
+```ts
+declare const browserInteractionPointerTargetSchema: ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -20209,7 +20657,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface BrowserInteractionProtocolIdentity {
   readonly name: "dreamboard-browser-interaction";
-  readonly version: "2.0.0";
+  readonly version: "3.0.0";
 }
 ```
 
@@ -20481,6 +20929,16 @@ function createBrowserInteractionActuatorKey(input: {
 
 _No JSDoc summary is available yet._
 
+### createBrowserInteractionPointerTargetAttributes
+
+```ts
+function createBrowserInteractionPointerTargetAttributes(
+  input: BrowserInteractionPointerTargetAttributesInput,
+): BrowserInteractionAttributeMap;
+```
+
+_No JSDoc summary is available yet._
+
 ### createBrowserInteractionRegistry
 
 ```ts
@@ -20516,6 +20974,16 @@ _No JSDoc summary is available yet._
 ```ts
 function createGameplayInteractionRootAttributes(
   input: GameplayInteractionRootAttributesInput,
+): BrowserInteractionAttributeMap;
+```
+
+_No JSDoc summary is available yet._
+
+### createGameplayPointerTargetAttributes
+
+```ts
+function createGameplayPointerTargetAttributes(
+  input: GameplayPointerTargetAttributesInput,
 ): BrowserInteractionAttributeMap;
 ```
 
@@ -20583,7 +21051,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION
 
 ```ts
-const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION: "2.0.0";
+const DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION: "3.0.0";
 ```
 
 _No JSDoc summary is available yet._
@@ -20759,6 +21227,19 @@ function gameplayInvokeEffect(): GameplaySemanticEffect;
 
 _No JSDoc summary is available yet._
 
+### GameplayPointerTargetAttributesInput
+
+```ts
+type GameplayPointerTargetAttributesInput = Omit<
+  BrowserInteractionPointerTargetAttributesInput,
+  "surface" | "acceptedEffectPatterns"
+> & {
+  readonly acceptedEffectPatterns: readonly GameplaySemanticEffectPattern[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### GameplaySemanticEffect
 
 ```ts
@@ -20839,6 +21320,19 @@ interface NormalizeBrowserInteractionRecordsOptions {
 
 _No JSDoc summary is available yet._
 
+### pointerTargetIdentityKey
+
+```ts
+function pointerTargetIdentityKey(input: {
+  readonly surface: string;
+  readonly scopeId: string;
+  readonly interactionKey: string;
+  readonly pointerTarget: Pick<BrowserInteractionPointerTarget, "targetId">;
+}): string;
+```
+
+_No JSDoc summary is available yet._
+
 ### readBrowserInteractionSnapshot
 
 ```ts
@@ -20867,6 +21361,17 @@ function resolveBrowserInteractionIntent(
   snapshot: BrowserInteractionSnapshot,
   request: BrowserInteractionIntentRequest,
 ): BrowserInteractionResolution;
+```
+
+_No JSDoc summary is available yet._
+
+### resolveBrowserPointerTarget
+
+```ts
+function resolveBrowserPointerTarget(
+  snapshot: BrowserInteractionSnapshot,
+  request: BrowserInteractionEffectRequest,
+): BrowserInteractionPointerTargetResolution;
 ```
 
 _No JSDoc summary is available yet._

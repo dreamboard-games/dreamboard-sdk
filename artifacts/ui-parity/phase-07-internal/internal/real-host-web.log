@@ -1,0 +1,18 @@
+
+> web@0.0.0 dev:harness /Users/mac/code/dreamboard/apps/web
+> bun run scripts/dev.ts --harness-auth -- --host 127.0.0.1 --port 50163 --strictPort
+
+🧪 Harness auth mode: auto-signing into local harness user
+
+  VITE v5.4.21  ready in 235 ms
+
+  ➜  Local:   http://127.0.0.1:50163/
+
+✅ Dreamboard dev servers ready
+   Web: http://127.0.0.1:50163/
+   Agent activity viewer: disabled
+
+6:53:25 PM [vite] http proxy error: /api/auth/me
+AggregateError [ECONNREFUSED]: 
+    at internalConnectMultiple (node:net:1193:18)
+    at afterConnectMultiple (node:net:1783:7)

@@ -95,6 +95,7 @@
       "default": "./dist/testing.js"
     },
     "./browser-interaction": {
+      "bun": "./src/browser-interaction.ts",
       "types": "./dist/browser-interaction.d.ts",
       "import": "./dist/browser-interaction.js",
       "default": "./dist/browser-interaction.js"
@@ -154,7 +155,6 @@
     "eslint": "^9.39.0",
     "framer-motion": "^11.15.0",
     "http-server": "^14.1.1",
-    "playwright": "1.60.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "storybook": "^10.4.1",

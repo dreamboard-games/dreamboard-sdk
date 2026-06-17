@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "input": "artifacts/ui-parity/phase-07-local/input.json",
+  "sdkTarballSha256": "sha256:552402e913765dad5df0b175edd755dad9be73d166c25b3f093a578f4c85d689",
+  "scenarios": [
+    {
+      "requestedId": "hearts.pass-three.mobile",
+      "id": "hearts.pass-three.mobile",
+      "sourceScenarioId": "hearts.pass-three.mobile",
+      "file": "fixtures/ui/reference-games/hearts.pass-three.mobile.fixture.json",
+      "fixtureDigest": "sha256:ebf3e0100dd87666e8960ee9694aab8be94ecc785358bd6b0c8adb5d0eaa3424",
+      "aliased": false
+    }
+  ],
+  "workbenchComparison": "passed",
+  "internal": {
+    "result": "skipped",
+    "reason": "DREAMBOARD_INTERNAL_REPO was not set."
+  }
+}
