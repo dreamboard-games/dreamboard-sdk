@@ -1,4 +1,3 @@
-import type * as Wire from "@dreamboard-games/reducer-contract/wire";
 import {
   BoardStaticProjectionSchema,
   InteractionDescriptorSchema,
@@ -10,6 +9,8 @@ import type {
   InteractionDescriptor,
   PlayerId,
   PluginGameplayFrame,
+  ReducerBoardStaticProjection,
+  ReducerSeatProjectionBundle,
   ZoneHandlesSnapshot,
 } from "./frame.js";
 import type { RuntimeJson } from "./json.js";
@@ -17,8 +18,8 @@ import type { RuntimeJson } from "./json.js";
 export interface MaterializePluginGameplayFrameInput {
   readonly currentPhase: string | null;
   readonly activePlayers: readonly PlayerId[];
-  readonly dynamicProjection: Wire.SeatProjectionBundle;
-  readonly staticProjection?: Wire.BoardStaticProjection | null;
+  readonly dynamicProjection: ReducerSeatProjectionBundle;
+  readonly staticProjection?: ReducerBoardStaticProjection | null;
   readonly perspectivePlayerId: PlayerId | null;
   readonly gameVersion: number;
   readonly actionSetVersion: string;
@@ -29,13 +30,13 @@ export function materializePluginGameplayFrame(
 ): PluginGameplayFrame {
   const dynamicProjection = SeatProjectionBundleSchema.parse(
     input.dynamicProjection,
-  ) as Wire.SeatProjectionBundle;
+  ) as ReducerSeatProjectionBundle;
   const staticProjection =
     input.staticProjection == null
       ? null
       : (BoardStaticProjectionSchema.parse(
           input.staticProjection,
-        ) as Wire.BoardStaticProjection);
+        ) as ReducerBoardStaticProjection);
 
   const registry = parseInteractionRegistry(
     dynamicProjection.interactionsByRef,
@@ -75,7 +76,7 @@ export function materializePluginGameplayFrame(
 }
 
 function parseInteractionRegistry(
-  value: Wire.SeatProjectionBundle["interactionsByRef"],
+  value: ReducerSeatProjectionBundle["interactionsByRef"],
 ): Record<string, InteractionDescriptor> {
   if (value == null) return {};
   if (!isRecord(value)) {
@@ -165,7 +166,7 @@ function hydrateInteractionRefs(
 }
 
 function composeProjectionView(
-  staticProjection: Wire.BoardStaticProjection | null,
+  staticProjection: ReducerBoardStaticProjection | null,
   dynamicView: unknown,
 ): RuntimeJson | null {
   const normalizedDynamicView =

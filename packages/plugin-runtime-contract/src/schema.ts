@@ -1,13 +1,9 @@
 import { z } from "zod";
 import {
-  BoardStaticProjectionSchema,
-  SeatProjectionBundleSchema,
-} from "@dreamboard-games/reducer-contract/zod";
-import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "./protocol.js";
-import { RuntimeJsonSchema } from "./json.js";
+import type { RuntimeJson } from "./json.js";
 import type {
   InteractionDescriptor,
   PluginGameplayFrame,
@@ -23,8 +19,43 @@ import type {
   ValidationResult,
 } from "./protocol.js";
 
-export { BoardStaticProjectionSchema, SeatProjectionBundleSchema };
-export { RuntimeJsonSchema };
+export const RuntimeJsonSchema: z.ZodType<RuntimeJson> = z.lazy(() =>
+  z.union([
+    z.null(),
+    z.boolean(),
+    z.number().finite(),
+    z.string(),
+    z.array(RuntimeJsonSchema),
+    z.record(z.string(), RuntimeJsonSchema),
+  ]),
+);
+
+export const BoardStaticProjectionSchema = z
+  .object({
+    view: RuntimeJsonSchema,
+    hash: z.string().optional(),
+    manifestVersion: z.string().optional(),
+  })
+  .strict();
+
+export const SeatProjectionBundleSchema = z
+  .object({
+    currentStage: z.string().nullable().optional(),
+    stageSeats: z.array(z.string()).optional(),
+    simultaneousPhase: z.unknown().nullable().optional(),
+    interactionsByRef: z.record(z.string(), z.unknown()).optional(),
+    seats: z.record(
+      z.string(),
+      z
+        .object({
+          view: z.unknown().optional(),
+          availableInteractionRefs: z.array(z.string()).optional(),
+          zones: z.unknown().optional(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 
 export const PlayerIdSchema = z.string().min(1);
 

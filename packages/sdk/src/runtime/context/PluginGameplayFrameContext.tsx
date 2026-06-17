@@ -10,7 +10,11 @@ import {
   type PluginGameplayFrame,
 } from "@dreamboard-games/plugin-runtime-contract";
 import type { PluginRuntimeClient } from "../core/types.js";
-import type { PluginRuntimeProjection } from "../types/plugin-state.js";
+import type {
+  InteractionDescriptor,
+  PluginRuntimeProjection,
+  ZoneHandlesSnapshot,
+} from "../types/plugin-state.js";
 import {
   BROWSER_INTERACTION_ATTRIBUTES,
   DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
@@ -157,6 +161,24 @@ export function usePluginGameplayFrameSelector<T>(
     store.getSnapshot,
     store.getServerSnapshot,
     (frame) => selector(requirePluginGameplayFrame(frame)),
+    equalityFn,
+  );
+}
+
+type AuthoredPluginGameplayFrame = Omit<
+  PluginGameplayFrame,
+  "availableInteractions" | "zones"
+> & {
+  readonly availableInteractions: readonly InteractionDescriptor[];
+  readonly zones: Readonly<Record<string, ZoneHandlesSnapshot>>;
+};
+
+export function useAuthoredPluginGameplayFrameSelector<T>(
+  selector: (frame: AuthoredPluginGameplayFrame) => T,
+  equalityFn: EqualityFn<T> = defaultRuntimeSnapshotEquality,
+): T {
+  return usePluginGameplayFrameSelector(
+    (frame) => selector(frame as unknown as AuthoredPluginGameplayFrame),
     equalityFn,
   );
 }

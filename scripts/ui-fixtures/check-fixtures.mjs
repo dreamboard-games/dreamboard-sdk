@@ -36,7 +36,10 @@ function assertRenderModuleExternalized(relativePath, source) {
   if (!source.includes('from "react"')) {
     throw new Error(`${relativePath} must externalize React with an import.`);
   }
-  if (!source.includes('from "@dreamboard-games/sdk/runtime"')) {
+  if (
+    !source.includes('from "@dreamboard-games/sdk/runtime"') &&
+    !source.includes('from "@dreamboard-games/sdk/runtime/primitives"')
+  ) {
     throw new Error(
       `${relativePath} must externalize the SDK runtime with an import.`,
     );

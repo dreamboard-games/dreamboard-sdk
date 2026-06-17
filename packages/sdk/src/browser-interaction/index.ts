@@ -59,6 +59,7 @@ export {
   resolveBrowserInteractionEffect,
   resolveBrowserInteractionIntent,
 } from "./resolve.js";
+export { readBrowserInteractionSnapshot } from "./dom.js";
 export {
   browserInteractionEffectPatternSchema,
   browserInteractionEffectSchema,

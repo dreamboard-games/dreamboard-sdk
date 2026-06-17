@@ -752,3 +752,47 @@ rg -n "PluginStateSnapshot|StateSyncMessage|state-sync|plugin-messages|createPlu
 ```
 
 All final deletion gates returned no live matches.
+
+## Remaining-gap closure receipt: 2026-06-17
+
+The final cross-repository contract gaps are closed:
+
+- Node and Deno gameplay executors now use
+  `computePluginActionSetVersion` from the shared contract; the previous
+  executor-specific hashes were deleted;
+- canonical action hashing omits optional `undefined` object fields while
+  rejecting non-JSON array values, matching compiler-emitted reducer
+  descriptors without weakening the JSON contract;
+- the Deno runner is built and launched as a product bundle alongside the Node
+  runner, and both representative and exact compiler-emitted product tests
+  pass;
+- the contract package is browser-free and standalone, with projection ingress
+  fields parsed at runtime instead of importing reducer-contract types;
+- the internal contract copy is an explicitly generated mirror with pinned
+  per-file SHA-256 digests and a mandatory `source:check` build gate;
+- SDK authored primitives select directly from plugin gameplay frames, legacy
+  player-control fields are absent from the session contract, and
+  `PluginRuntimeProjection` is no longer exported in public SDK reference
+  surfaces;
+- internal and SDK contract source trees are byte-identical, and internal
+  private fixtures use the same `UIScenarioFixture` version `2` contract.
+
+Final verification:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract build
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk build
+mise exec node@24 -- pnpm docs:generate
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm exports:check
+cd /Users/kevintang/code/internal
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract source:check
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-host-runtime build
+cd packages/ui-host-runtime && mise exec node@24 -- bun test src/plugin-bridge.test.ts src/plugin-session-gateway.test.ts src/screenshot/projection-to-gameplay-frame.test.ts
+cd /Users/kevintang/code/internal
+mise exec node@24 -- pnpm --filter @dreamboard/gameplay-executor build
+mise exec node@24 -- pnpm --filter @dreamboard/gameplay-executor exec bun test test/deno-product-bundle.test.ts
+```

@@ -1,6 +1,6 @@
 import { useCallback, type ButtonHTMLAttributes, type ReactNode } from "react";
 import { useInteractionUiStore } from "../../context/InteractionDraftContext.js";
-import { usePluginState } from "../../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../../context/PluginGameplayFrameContext.js";
 import type { InteractionInputKey } from "../../ui-contract.js";
 import type {
   InteractionDescriptor,
@@ -80,12 +80,12 @@ export function InteractionCardInput<
   const zoneContext = useOptionalZonePrimitiveContext();
   const cardId = zoneCard?.cardId ?? unsafeCardId;
   const validationZone = zoneCard?.zone ?? zoneContext?.zone;
-  const zoneSnapshot = usePluginState((state) =>
-    validationZone ? state.gameplay.zones[validationZone] : undefined,
+  const zoneSnapshot = useAuthoredPluginGameplayFrameSelector((frame) =>
+    validationZone ? frame.zones[validationZone] : undefined,
   );
-  const cardDescriptor = usePluginState((state) => {
+  const cardDescriptor = useAuthoredPluginGameplayFrameSelector((frame) => {
     if (!cardId || !validationZone) return undefined;
-    return state.gameplay.zones[validationZone]?.playableByCardId[cardId]?.find(
+    return frame.zones[validationZone]?.playableByCardId[cardId]?.find(
       (candidate) =>
         candidate.interactionKey === descriptor?.interactionKey &&
         candidate.inputs.some((candidateInput) => candidateInput.key === input),

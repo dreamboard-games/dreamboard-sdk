@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/schema.ts"],
+  entry: ["src/index.ts", "src/schema.ts", "src/digest.ts"],
   format: ["esm"],
   platform: "neutral",
   target: "es2022",
@@ -9,5 +9,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: false,
-  external: ["zod", "@dreamboard-games/reducer-contract"],
+  external: ["zod"],
 });

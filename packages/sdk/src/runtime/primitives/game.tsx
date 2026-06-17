@@ -5,7 +5,7 @@ import {
   useInteractionUiStore,
   usePendingInteractionKey,
 } from "../context/InteractionDraftContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
 import { useActivePlayers } from "../hooks/useActivePlayers.js";
 import { useGameView } from "../hooks/useGameView.js";
@@ -35,7 +35,6 @@ export type GamePlayerEntry<PlayerIdValue extends string = PlayerId> =
     index: number;
     isActive: boolean;
     isCurrentPlayer: boolean;
-    isControllable: boolean;
   };
 
 export interface GamePlayersState<PlayerIdValue extends string = PlayerId> {
@@ -49,7 +48,6 @@ export interface GamePlayersState<PlayerIdValue extends string = PlayerId> {
 export interface GameMeState<PlayerIdValue extends string = PlayerId> {
   playerId: PlayerIdValue | null;
   player: GamePlayer<PlayerIdValue> | null;
-  controllablePlayerIds: readonly PlayerIdValue[];
   canAct: boolean;
 }
 
@@ -167,10 +165,12 @@ function useGameRenderState<
   const turnOrder = usePlayerTurnOrder().map(
     (playerId) => playerId as PlayerIdValue,
   );
-  const phase = usePluginState(
-    (state) => state.gameplay.currentPhase,
+  const phase = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.flow.currentPhase,
   ) as PhaseValue | null;
-  const stage = usePluginState((state) => state.gameplay.currentStage);
+  const stage = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.flow.currentStage,
+  );
 
   const playersById = useMemo(() => {
     const next = new Map<PlayerIdValue, GamePlayer<PlayerIdValue>>();
@@ -188,9 +188,6 @@ function useGameRenderState<
     session.controllingPlayerId == null
       ? null
       : (session.controllingPlayerId as PlayerIdValue);
-  const controllablePlayerIds = session.controllablePlayerIds.map(
-    (playerId) => playerId as PlayerIdValue,
-  );
   const currentPlayerId = activePlayers[0] ?? turnOrder[0] ?? null;
   const currentPlayer = currentPlayerId
     ? (playersById.get(currentPlayerId) ?? fallbackPlayer(currentPlayerId))
@@ -209,12 +206,10 @@ function useGameRenderState<
           index,
           isActive: activePlayers.includes(playerId),
           isCurrentPlayer: playerId === controllingPlayerId,
-          isControllable: controllablePlayerIds.includes(playerId),
         };
       }),
     [
       activePlayers,
-      controllablePlayerIds,
       controllingPlayerId,
       playersById,
       turnOrder,
@@ -229,7 +224,6 @@ function useGameRenderState<
     me: {
       playerId: controllingPlayerId,
       player: mePlayer,
-      controllablePlayerIds,
       canAct:
         controllingPlayerId != null &&
         activePlayers.includes(controllingPlayerId),
@@ -289,9 +283,9 @@ export function GameChrome<
   const store = useInteractionUiStore();
   const pendingInteractionKey = usePendingInteractionKey();
   const draftSnapshot = useStore(store, (state) => state.drafts);
-  const descriptor = usePluginState((state) =>
+  const descriptor = useAuthoredPluginGameplayFrameSelector((frame) =>
     pendingInteractionKey
-      ? state.gameplay.availableInteractions.find(
+      ? frame.availableInteractions.find(
           (candidate) => candidate.interactionKey === pendingInteractionKey,
         )
       : undefined,

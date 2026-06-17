@@ -10,9 +10,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:62c656c1e6e2ca3af2aca78ae91c1b8a7c3e5baa4746750532959be932053824",
-    "finalSemanticDigest": "sha256:c721d7a9fdfb9d96d8d4acd3f40ac9339110ab9201f005a3dacaf909b232fb4f",
-    "initialProjectionDigest": "sha256:ef8ebd64f265f4626429ac5ffd1ac7d26b8a23a79b2263b1722acf8a91b90749",
+    "finalProjectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
+    "finalSemanticDigest": "sha256:9a2e4ddee1ec9cd2a79154b657e72d0402f8a6dbab7f263a052d41b43a236770",
+    "initialProjectionDigest": "sha256:db1e4c76bdd305f52cc24f8b4f26a8cab09542d47c671c97a611a52945490f50",
     "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c"
   },
   "gameId": "worker-placement-tableau",
@@ -22,7 +22,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:6631b4347f90d7b6808b5b172bbc18f69185374b4aeded2004320af096909e7b",
+          "actionSetVersion": "sha256:7c740c0788b08084c47873ca62ef2936826d569fa3e7272b4aae53a348e94a0e",
           "availableInteractions": [
             {
               "availability": {
@@ -31,16 +31,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "town-board",
-                    "type": "reference-target"
-                  },
-                  "key": "choose-worker-target",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
+              "inputs": [],
               "interactionId": "place-worker:player-1",
               "interactionKey": "place-worker",
               "kind": "action",
@@ -53,16 +45,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "craft-order",
-                    "type": "reference-target"
-                  },
-                  "key": "resource-form",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:787abc41d0f33cd48cbc6e8d632a5691c1764f8da4df29d911771d2e7fbf0d53",
+              "inputs": [],
               "interactionId": "allocate-resources:player-1",
               "interactionKey": "allocate-resources",
               "kind": "action",
@@ -75,16 +59,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "tableau-card",
-                    "type": "reference-target"
-                  },
-                  "key": "confirm",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:a6e61c8cea535be6d233bfadd8db00e996edbed14cdfb57536fcd1db3427584e",
+              "inputs": [],
               "interactionId": "complete-order:player-1",
               "interactionKey": "complete-order",
               "kind": "action",
@@ -96,56 +72,25 @@
               "player-1"
             ],
             "currentPhase": "worker-placement-tableau.place-worker.desktop",
-            "currentStage": "initial",
+            "currentStage": "worker-placement-tableau.place-worker.desktop",
             "simultaneousPhase": null
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
           "view": {
             "displayName": "Worker Placement Tableau",
-            "frameId": "initial",
-            "publicState": {
-              "displayName": "Worker Placement Tableau",
-              "id": "worker-placement-tableau",
-              "interactions": [
-                {
-                  "confirmation": "placement-dialog",
-                  "id": "place-worker",
-                  "input": "choose-worker-target",
-                  "target": "town-board"
-                },
-                {
-                  "id": "allocate-resources",
-                  "input": "resource-form",
-                  "target": "craft-order"
-                },
-                {
-                  "id": "complete-order",
-                  "input": "confirm",
-                  "target": "tableau-card"
-                }
-              ],
-              "tableau": [
-                "kiln",
-                "loom",
-                "workbench"
-              ],
-              "workers": {
-                "available": 3,
-                "placed": []
-              }
-            },
             "referenceGameId": "worker-placement-tableau",
-            "scenarioId": "worker-placement-tableau.place-worker.desktop"
+            "scenarioId": "worker-placement-tableau.place-worker.desktop",
+            "submittedInteractionId": null
           },
           "zones": {}
         },
-        "id": "initial",
-        "projectionDigest": "sha256:ef8ebd64f265f4626429ac5ffd1ac7d26b8a23a79b2263b1722acf8a91b90749"
+        "id": "frame-1",
+        "projectionDigest": "sha256:db1e4c76bdd305f52cc24f8b4f26a8cab09542d47c671c97a611a52945490f50"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:2ca75554cc01066b881d832e53e6c38dce4507ca6bb856b3e39f3c69edbc2d73",
+          "actionSetVersion": "sha256:6ba604eef3907f3c9aa022a468aa997d882993ecc6cf7ef7a66807f696e6858c",
           "availableInteractions": [
             {
               "availability": {
@@ -154,16 +99,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "town-board",
-                    "type": "reference-target"
-                  },
-                  "key": "choose-worker-target",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
+              "inputs": [],
               "interactionId": "place-worker:player-1",
               "interactionKey": "place-worker",
               "kind": "action",
@@ -176,16 +113,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "craft-order",
-                    "type": "reference-target"
-                  },
-                  "key": "resource-form",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:787abc41d0f33cd48cbc6e8d632a5691c1764f8da4df29d911771d2e7fbf0d53",
+              "inputs": [],
               "interactionId": "allocate-resources:player-1",
               "interactionKey": "allocate-resources",
               "kind": "action",
@@ -198,16 +127,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "tableau-card",
-                    "type": "reference-target"
-                  },
-                  "key": "confirm",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:a6e61c8cea535be6d233bfadd8db00e996edbed14cdfb57536fcd1db3427584e",
+              "inputs": [],
               "interactionId": "complete-order:player-1",
               "interactionKey": "complete-order",
               "kind": "action",
@@ -218,53 +139,22 @@
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "worker-placement-tableau.place-worker.desktop",
-            "currentStage": "submitted",
+            "currentPhase": "worker-placement-tableau.place-worker.desktop.submitted",
+            "currentStage": "worker-placement-tableau.place-worker.desktop.submitted",
             "simultaneousPhase": null
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
           "view": {
             "displayName": "Worker Placement Tableau",
-            "frameId": "submitted",
-            "publicState": {
-              "displayName": "Worker Placement Tableau",
-              "id": "worker-placement-tableau",
-              "interactions": [
-                {
-                  "confirmation": "placement-dialog",
-                  "id": "place-worker",
-                  "input": "choose-worker-target",
-                  "target": "town-board"
-                },
-                {
-                  "id": "allocate-resources",
-                  "input": "resource-form",
-                  "target": "craft-order"
-                },
-                {
-                  "id": "complete-order",
-                  "input": "confirm",
-                  "target": "tableau-card"
-                }
-              ],
-              "tableau": [
-                "kiln",
-                "loom",
-                "workbench"
-              ],
-              "workers": {
-                "available": 3,
-                "placed": []
-              }
-            },
             "referenceGameId": "worker-placement-tableau",
-            "scenarioId": "worker-placement-tableau.place-worker.desktop"
+            "scenarioId": "worker-placement-tableau.place-worker.desktop",
+            "submittedInteractionId": "place-worker:player-1"
           },
           "zones": {}
         },
-        "id": "submitted",
-        "projectionDigest": "sha256:62c656c1e6e2ca3af2aca78ae91c1b8a7c3e5baa4746750532959be932053824"
+        "id": "frame-2",
+        "projectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb"
       }
     ],
     "session": {
@@ -278,30 +168,30 @@
     },
     "steps": [
       {
-        "frameId": "initial",
-        "id": "initial.host-frame",
+        "frameId": "frame-1",
+        "id": "frame-1.host-frame",
         "kind": "host.frame"
       },
       {
-        "fromFrameId": "initial",
+        "fromFrameId": "frame-1",
         "id": "worker-placement-tableau.place-worker.desktop.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:e062c1415fa6923dde7b79f4311cf7f8eaa390a64b13fd373e149cd9cac08461",
+        "requestDigest": "sha256:d94136b8590feb19e2303184b47487032398bfea68c27716c589c3adb86c858f",
         "response": {
           "valid": true
         }
       },
       {
-        "fromFrameId": "initial",
+        "fromFrameId": "frame-1",
         "id": "worker-placement-tableau.place-worker.desktop.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:da702aeaf75515c081196d6dcf99374ae3917966bbdd95f0003a62d11c953044",
+        "requestDigest": "sha256:8b20dad69c23ab2e50516e245c699e451a9d477bce089f1351a251dee916b176",
         "response": {
           "accepted": true
         }
       },
       {
-        "frameId": "submitted",
+        "frameId": "frame-2",
         "id": "worker-placement-tableau.place-worker.desktop.submit.host-frame",
         "kind": "host.frame"
       }
@@ -313,8 +203,9 @@
         "kind": "activate"
       },
       "expect": {
-        "frameId": "submitted",
-        "projectionDigest": "sha256:62c656c1e6e2ca3af2aca78ae91c1b8a7c3e5baa4746750532959be932053824",
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:23d2ab75ae73769b46cf4581b6ac1316fdd20aa3159a398555944acfaa2d14fb",
+        "semanticDigest": "sha256:9a2e4ddee1ec9cd2a79154b657e72d0402f8a6dbab7f263a052d41b43a236770",
         "submissionDigest": "sha256:cfd4c891e41d65d721f93438b878be1acd5be1c459fd4b08b41ef3ad40a5ca5c",
         "visibleInteractionKeys": [
           "place-worker",
@@ -323,19 +214,20 @@
         ]
       },
       "expectedIdentity": {
-        "actuatorId": "place-worker.invoke",
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:6ea01051dfd2bb3e4eb550a03daf7debe2d2da7dde1139f10c710f053e66c94d",
         "interactionId": "place-worker:player-1",
         "interactionKey": "place-worker",
-        "scopeId": "worker-placement-tableau",
+        "scopeId": "runtime",
         "stepId": "worker-placement-tableau.place-worker.desktop.invoke",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:e46116770161f4e4cf4f632bb10bfaedd9c8681a28c96824cde8f453489bc165",
+      "requestDigest": "sha256:e7ec52d9be969552c7f268d65c15583dc81b80ecf432072c3e3e3bfae39de46e",
       "resolve": {
         "intent": "invoke",
         "interactionId": "place-worker:player-1",
         "interactionKey": "place-worker",
-        "scopeId": "worker-placement-tableau",
+        "scopeId": "runtime",
         "surface": "gameplay"
       },
       "stepId": "worker-placement-tableau.place-worker.desktop.invoke"
@@ -345,9 +237,9 @@
   "source": {
     "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-    "renderModuleDigest": "sha256:64ba01064e758c65ea14760cf90489d8ad8923ffb6cc13a3eb34c45564ae89d0",
+    "renderModuleDigest": "sha256:b5ea554b4b60c5bd61468aa045d5ff503ba8e12784b7d730d0dd4518288870bc",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:db0e1e5315138f5bd3fd95a9723fe4767c458b6911193078c0850f8c678de4a4",
+    "sourceDigest": "sha256:574d9fb7ff813615823441c6c97698a5778c60c49ae9dad7f3b049d8218e22ad",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [

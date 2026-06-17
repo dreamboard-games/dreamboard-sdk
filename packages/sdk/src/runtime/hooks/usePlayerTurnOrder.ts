@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import type { PlayerId } from "@dreamboard/manifest-contract";
-import { useOptionalPluginSessionDescriptor } from "../context/PluginSessionContext.js";
-import { useLobby } from "./useLobby.js";
+import { usePluginSessionDescriptor } from "../context/PluginSessionContext.js";
 
 /**
  * Returns the player ids in turn order, as provided by the lobby seat
@@ -16,15 +15,12 @@ import { useLobby } from "./useLobby.js";
  * belongs to the engine and the SDK, not to game-specific projections.
  */
 export function usePlayerTurnOrder(): readonly PlayerId[] {
-  const sessionDescriptor = useOptionalPluginSessionDescriptor();
-  const lobby = useLobby();
-  return useMemo(() => {
-    if (sessionDescriptor) {
-      return sessionDescriptor.players.map(
+  const sessionDescriptor = usePluginSessionDescriptor();
+  return useMemo(
+    () =>
+      sessionDescriptor.players.map(
         (player) => player.playerId as PlayerId,
-      );
-    }
-    if (!lobby) return [];
-    return lobby.seats.map((seat) => seat.playerId as PlayerId);
-  }, [lobby, sessionDescriptor]);
+      ),
+    [sessionDescriptor],
+  );
 }

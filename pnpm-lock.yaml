@@ -34,9 +34,6 @@ importers:
 
   packages/plugin-runtime-contract:
     dependencies:
-      "@dreamboard-games/reducer-contract":
-        specifier: workspace:*
-        version: link:../reducer-contract
       zod:
         specifier: 4.4.3
         version: 4.4.3

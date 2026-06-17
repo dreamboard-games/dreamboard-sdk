@@ -15368,7 +15368,6 @@ _No JSDoc summary is available yet._
 interface GameMeState<PlayerIdValue extends string = PlayerId> {
   playerId: PlayerIdValue | null;
   player: GamePlayer<PlayerIdValue> | null;
-  controllablePlayerIds: readonly PlayerIdValue[];
   canAct: boolean;
 }
 ```
@@ -15455,11 +15454,11 @@ PluginRuntime provides the RuntimeContext for plugin components.
 
 ```ts
 interface PluginRuntimeClient {
-  getSession(): T | null;
+  getSession(): v | null;
   subscribeSession(listener: () => void): () => void;
-  getFrame(): B | null;
+  getFrame(): o | null;
   subscribeFrame(listener: () => void): () => void;
-  validateInteraction(interactionId: string, params: unknown): Promise<aa>;
+  validateInteraction(interactionId: string, params: unknown): Promise<G>;
   submitInteraction(interactionId: string, params: unknown): Promise<void>;
   disconnect(): void;
 }
@@ -15493,7 +15492,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface PluginTransport {
   start(onMessage: (message: H) => void): () => void;
-  send(message: X): void;
+  send(message: x): void;
 }
 ```
 
@@ -16122,7 +16121,7 @@ Translate a raw SDK `CardIntent` into the author-facing `AuthoredCardIntent` sha
 
 ```ts
 function descriptorsHaveDestinationInput(
-  state: PluginRuntimeProjection,
+  availableInteractions: readonly InteractionDescriptor[],
 ): boolean;
 ```
 
@@ -16299,7 +16298,6 @@ _No JSDoc summary is available yet._
 interface GameMeState<PlayerIdValue extends string = PlayerId> {
   playerId: PlayerIdValue | null;
   player: GamePlayer<PlayerIdValue> | null;
-  controllablePlayerIds: readonly PlayerIdValue[];
   canAct: boolean;
 }
 ```
@@ -16340,7 +16338,6 @@ type GamePlayerEntry<PlayerIdValue extends string = PlayerId> =
     index: number;
     isActive: boolean;
     isCurrentPlayer: boolean;
-    isControllable: boolean;
   };
 ```
 
@@ -17057,8 +17054,6 @@ interface PlayerRosterEntry {
   index: number;
   isActive: boolean;
   isCurrentPlayer: boolean;
-  isControllable: boolean;
-  canSwitchToPlayer: boolean;
   score?: number;
   scoreLabel?: string;
   badges: readonly PlayerRosterBadge[];
@@ -18064,7 +18059,6 @@ _No JSDoc summary is available yet._
 interface GameMeState<PlayerIdValue extends string = PlayerId> {
   playerId: PlayerIdValue | null;
   player: GamePlayer<PlayerIdValue> | null;
-  controllablePlayerIds: readonly PlayerIdValue[];
   canAct: boolean;
 }
 ```
@@ -18401,18 +18395,17 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/runtime/runtime-api
 
-### PluginRuntimeProjection
-
-```ts
-interface PluginRuntimeProjection { ... }
-```
-
-Runtime projection shape used by older selector-style SDK primitives.
-
 ### PluginSessionState
 
 ```ts
-interface PluginSessionState { ... }
+interface PluginSessionState {
+  /** Session initialization status */
+  status: "loading" | "ready";
+  /** Current session ID (null if not initialized) */
+  sessionId: string | null;
+  /** The player perspective represented by the current gameplay frame */
+  controllingPlayerId: PlayerId | null;
+}
 ```
 
 Plugin session state
@@ -19017,7 +19010,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface CompilePluginProtocolTapeOptions {
   readonly trace: ReducerScenarioTrace;
-  readonly session: T;
+  readonly session: v;
 }
 ```
 
@@ -19079,7 +19072,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface CreateFixtureHostHarnessOptions {
-  readonly tape: R;
+  readonly tape: u;
   readonly strict?: boolean;
   readonly latencyMs?: number;
   readonly channelId?: string;
@@ -19304,7 +19297,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface FixtureHostHarness {
   readonly transport: PluginTransport;
-  readonly tape: R;
+  readonly tape: u;
   reset(): void;
   flush(): Promise<void>;
   advanceHost(): Promise<void>;
@@ -19419,11 +19412,7 @@ _No JSDoc summary is available yet._
 ### PluginProtocolTape
 
 ```ts
-type PluginProtocolTape = {
-  readonly session: T;
-  readonly frames: readonly UIFixtureFrame[];
-  readonly steps: readonly UIFixtureProtocolStep[];
-};
+type PluginProtocolTape = u;
 ```
 
 _No JSDoc summary is available yet._
@@ -19431,7 +19420,11 @@ _No JSDoc summary is available yet._
 ### pluginProtocolTapeSchema
 
 ```ts
-declare const pluginProtocolTapeSchema: ...;
+const pluginProtocolTapeSchema: z.ZodType<
+  u,
+  unknown,
+  z.core.$ZodTypeInternals<u, unknown>
+>;
 ```
 
 _No JSDoc summary is available yet._
@@ -19673,9 +19666,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureFrame
 
 ```ts
-type UIFixtureFrame = Omit<z.infer<typeof uiFixtureFrameSchema>, "frame"> & {
-  readonly frame: B;
-};
+type UIFixtureFrame = s;
 ```
 
 _No JSDoc summary is available yet._
@@ -19687,9 +19678,9 @@ const uiFixtureFrameSchema: z.ZodObject<
   {
     id: z.ZodString;
     frame: z.ZodType<
-      B<unknown, string, string, string>,
+      o<unknown, string, string, string>,
       unknown,
-      z.core.$ZodTypeInternals<B<unknown, string, string, string>, unknown>
+      z.core.$ZodTypeInternals<o<unknown, string, string, string>, unknown>
     >;
     projectionDigest: z.ZodString;
   },
@@ -19702,7 +19693,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureProtocolStep
 
 ```ts
-type UIFixtureProtocolStep = ...;
+type UIFixtureProtocolStep = t;
 ```
 
 _No JSDoc summary is available yet._
@@ -20844,6 +20835,16 @@ _No JSDoc summary is available yet._
 interface NormalizeBrowserInteractionRecordsOptions {
   readonly registry?: BrowserInteractionRegistry;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### readBrowserInteractionSnapshot
+
+```ts
+function readBrowserInteractionSnapshot(
+  root: ParentNode,
+): BrowserInteractionSnapshot;
 ```
 
 _No JSDoc summary is available yet._

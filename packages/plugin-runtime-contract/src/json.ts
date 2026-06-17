@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 export type RuntimeJson =
   | null
   | boolean
@@ -16,19 +14,9 @@ export type CanonicalJson =
   | CanonicalJson[]
   | { [key: string]: CanonicalJson };
 
-export const RuntimeJsonSchema: z.ZodType<RuntimeJson> = z.lazy(() =>
-  z.union([
-    z.null(),
-    z.boolean(),
-    z.number().finite(),
-    z.string(),
-    z.array(RuntimeJsonSchema),
-    z.record(z.string(), RuntimeJsonSchema),
-  ]),
-);
-
 export function canonicalizePluginRuntimeJson(value: unknown): CanonicalJson {
-  return canonicalizeJson(RuntimeJsonSchema.parse(value));
+  assertRuntimeJson(value);
+  return canonicalizeJson(value);
 }
 
 export function encodeCanonicalPluginRuntimeJson(value: unknown): string {
@@ -62,6 +50,35 @@ function canonicalizeJson(value: RuntimeJson): CanonicalJson {
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([key, item]) => [key, canonicalizeJson(item)]),
   );
+}
+
+function assertRuntimeJson(value: unknown): asserts value is RuntimeJson {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new Error("runtime JSON contains a non-finite number");
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach(assertRuntimeJson);
+    return;
+  }
+  if (typeof value === "object") {
+    Object.values(value).forEach((item) => {
+      if (item !== undefined) {
+        assertRuntimeJson(item);
+      }
+    });
+    return;
+  }
+  throw new Error(`runtime JSON contains unsupported ${typeof value} value`);
 }
 
 const SHA256_K = [

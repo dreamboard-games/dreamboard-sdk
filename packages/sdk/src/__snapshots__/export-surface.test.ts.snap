@@ -428,6 +428,7 @@ exports[`public export surface browser-interaction export names are stable 1`] =
   "gameplaySetScalarEffect",
   "isSemanticSurfaceSnapshot",
   "normalizeBrowserInteractionRecords",
+  "readBrowserInteractionSnapshot",
   "resolveBrowserInteractionEffect",
   "resolveBrowserInteractionIntent",
   "targetIdentityKey",

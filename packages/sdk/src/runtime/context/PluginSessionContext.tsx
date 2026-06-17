@@ -28,9 +28,7 @@ function sessionStateFromClient(runtime: PluginRuntimeClient): PluginSessionStat
   return {
     status: session ? "ready" : "loading",
     sessionId: session?.sessionId ?? null,
-    controllablePlayerIds: session?.players.map((player) => player.playerId) ?? [],
     controllingPlayerId: frame?.perspectivePlayerId ?? null,
-    userId: null,
   };
 }
 
@@ -41,16 +39,11 @@ function pluginSessionStatesEqual(
   if (
     left.status !== right.status ||
     left.sessionId !== right.sessionId ||
-    left.controllingPlayerId !== right.controllingPlayerId ||
-    left.userId !== right.userId ||
-    left.controllablePlayerIds.length !== right.controllablePlayerIds.length
+    left.controllingPlayerId !== right.controllingPlayerId
   ) {
     return false;
   }
-
-  return left.controllablePlayerIds.every(
-    (playerId, index) => playerId === right.controllablePlayerIds[index],
-  );
+  return true;
 }
 
 function pluginSessionDescriptorsEqual(
@@ -171,12 +164,12 @@ export function PluginSessionDescriptorProvider({
  * Hook to access plugin session metadata.
  * Returns session initialization status and IDs.
  *
- * @returns Plugin session state with status, sessionId, controllablePlayerIds, and controllingPlayerId
+ * @returns Plugin session state with status, sessionId, and controllingPlayerId
  *
  * @example
  * ```tsx
  * function MyPluginComponent() {
- *   const { status, sessionId, controllablePlayerIds, controllingPlayerId } = usePluginSession();
+ *   const { status, sessionId, controllingPlayerId } = usePluginSession();
  *
  *   if (status === "loading") {
  *     return <div>Initializing...</div>;
@@ -185,8 +178,7 @@ export function PluginSessionDescriptorProvider({
  *   return (
  *     <div>
  *       <p>Session: {sessionId}</p>
- *       <p>Can control: {controllablePlayerIds.join(", ")}</p>
- *       <p>Currently controlling: {controllingPlayerId}</p>
+ *       <p>Current perspective: {controllingPlayerId}</p>
  *     </div>
  *   );
  * }

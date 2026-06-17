@@ -6,6 +6,7 @@ import {
   PluginGameplayFrameSchema,
   computePluginActionSetVersion,
   digestPluginGameplayFrame,
+  encodeCanonicalPluginRuntimeJson,
   materializePluginGameplayFrame,
   type InteractionDescriptor,
   type PluginProtocolEnvelope,
@@ -194,5 +195,17 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     expect(first).toBe(second);
     expect(first).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(nextVersion).not.toBe(first);
+  });
+
+  test("canonical JSON omits undefined object fields but rejects undefined arrays", () => {
+    expect(
+      encodeCanonicalPluginRuntimeJson({
+        action: "claim",
+        optional: undefined,
+      }),
+    ).toBe('{"action":"claim"}');
+    expect(() => encodeCanonicalPluginRuntimeJson([undefined])).toThrow(
+      "runtime JSON contains unsupported undefined value",
+    );
   });
 });

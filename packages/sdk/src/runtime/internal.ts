@@ -37,9 +37,6 @@ export type {
   RuntimeClock,
   RuntimeIdFactory,
 } from "./core/types.js";
-export {
-  usePluginState,
-} from "./context/PluginStateContext.js";
 export { usePluginRuntime } from "./hooks/usePluginRuntime.js";
 export type {
   RuntimeAPI,

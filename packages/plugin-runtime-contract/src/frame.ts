@@ -1,4 +1,3 @@
-import type * as Wire from "@dreamboard-games/reducer-contract/wire";
 import type { RuntimeJson } from "./json.js";
 
 export type PlayerId = string;
@@ -176,5 +175,25 @@ export interface PluginGameplayFrame<
   readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
 }
 
-export type ReducerSeatProjectionBundle = Wire.SeatProjectionBundle;
-export type ReducerBoardStaticProjection = Wire.BoardStaticProjection;
+export interface ReducerSeatProjectionBundle {
+  readonly currentStage?: string | null;
+  readonly stageSeats?: readonly string[];
+  readonly simultaneousPhase?: SimultaneousPhaseSnapshot | null;
+  readonly interactionsByRef?: unknown;
+  readonly seats: Readonly<
+    Record<
+      string,
+      {
+        readonly view?: unknown;
+        readonly availableInteractionRefs?: unknown;
+        readonly zones?: unknown;
+      }
+    >
+  >;
+}
+
+export interface ReducerBoardStaticProjection {
+  readonly view: RuntimeJson;
+  readonly hash?: string;
+  readonly manifestVersion?: string;
+}

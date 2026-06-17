@@ -12,14 +12,12 @@ import { RuntimeJsonSchema } from "../../runtime-json.js";
 import { digestUIFixtureRequest, isSha256Digest } from "./canonical.js";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION,
-  PluginGameplayFrameSchema as pluginGameplayFrameSchema,
-  PluginSessionDescriptorSchema as pluginSessionDescriptorSchema,
-  SubmissionResultSchema as submissionResultSchema,
-  ValidationResultSchema as validationResultSchema,
-  type PluginGameplayFrame,
-  type PluginSessionDescriptor,
-  type SubmissionResult,
-  type ValidationResult,
+  PluginProtocolFrameSchema,
+  PluginProtocolStepSchema,
+  PluginProtocolTapeSchema,
+  type PluginProtocolFrame,
+  type PluginProtocolStep,
+  type PluginProtocolTape as RuntimePluginProtocolTape,
 } from "@dreamboard-games/plugin-runtime-contract";
 
 export const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 2;
@@ -45,49 +43,12 @@ const environmentSchema = z
   })
   .strict();
 
-export const uiFixtureFrameSchema = z
-  .object({
-    id: nonEmptyStringSchema,
-    frame: pluginGameplayFrameSchema,
-    projectionDigest: digestSchema,
-  })
-  .strict();
-
-export const uiFixtureProtocolStepSchema = z.union([
-  z
-    .object({
-      id: nonEmptyStringSchema,
-      kind: z.literal("host.frame"),
-      frameId: nonEmptyStringSchema,
-    })
-    .strict(),
-  z
-    .object({
-      id: nonEmptyStringSchema,
-      kind: z.literal("client.validate"),
-      fromFrameId: nonEmptyStringSchema,
-      requestDigest: digestSchema,
-      response: validationResultSchema,
-    })
-    .strict(),
-  z
-    .object({
-      id: nonEmptyStringSchema,
-      kind: z.literal("client.submit"),
-      fromFrameId: nonEmptyStringSchema,
-      requestDigest: digestSchema,
-      response: submissionResultSchema,
-    })
-    .strict(),
-]);
-
-export const pluginProtocolTapeSchema = z
-  .object({
-    session: pluginSessionDescriptorSchema,
-    frames: z.array(uiFixtureFrameSchema).min(1),
-    steps: z.array(uiFixtureProtocolStepSchema),
-  })
-  .strict();
+export const uiFixtureFrameSchema = PluginProtocolFrameSchema;
+export const uiFixtureProtocolStepSchema = PluginProtocolStepSchema;
+export const pluginProtocolTapeSchema = PluginProtocolTapeSchema.refine(
+  (tape) => tape.frames.length > 0,
+  "UI fixture protocol tapes require at least one gameplay frame.",
+);
 
 const browserInteractionIntentRequestSchema = z
   .object({
@@ -265,37 +226,9 @@ export type PortableSemanticReplayStep = z.infer<
   typeof portableSemanticReplayStepSchema
 >;
 export type UIScenarioReplayStep = z.infer<typeof uiScenarioReplayStepSchema>;
-export type UIFixtureFrame = Omit<
-  z.infer<typeof uiFixtureFrameSchema>,
-  "frame"
-> & {
-  readonly frame: PluginGameplayFrame;
-};
-export type UIFixtureProtocolStep =
-  | {
-      readonly id: string;
-      readonly kind: "host.frame";
-      readonly frameId: string;
-    }
-  | {
-      readonly id: string;
-      readonly kind: "client.validate";
-      readonly fromFrameId: string;
-      readonly requestDigest: string;
-      readonly response: ValidationResult;
-    }
-  | {
-      readonly id: string;
-      readonly kind: "client.submit";
-      readonly fromFrameId: string;
-      readonly requestDigest: string;
-      readonly response: SubmissionResult;
-    };
-export type PluginProtocolTape = {
-  readonly session: PluginSessionDescriptor;
-  readonly frames: readonly UIFixtureFrame[];
-  readonly steps: readonly UIFixtureProtocolStep[];
-};
+export type UIFixtureFrame = PluginProtocolFrame;
+export type UIFixtureProtocolStep = PluginProtocolStep;
+export type PluginProtocolTape = RuntimePluginProtocolTape;
 export type UIScenarioFixture = Omit<
   z.infer<typeof uiScenarioFixtureSchema>,
   "protocol" | "replay"

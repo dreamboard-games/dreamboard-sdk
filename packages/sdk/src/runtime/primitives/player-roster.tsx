@@ -32,8 +32,6 @@ export interface PlayerRosterEntry {
   index: number;
   isActive: boolean;
   isCurrentPlayer: boolean;
-  isControllable: boolean;
-  canSwitchToPlayer: boolean;
   score?: number;
   scoreLabel?: string;
   badges: readonly PlayerRosterBadge[];
@@ -91,7 +89,7 @@ export function PlayerRosterRoot({
   const playerInfo = usePlayerInfo();
   const activePlayers = useActivePlayers();
   const turnOrder = usePlayerTurnOrder();
-  const { controllingPlayerId, controllablePlayerIds } = usePluginSession();
+  const { controllingPlayerId } = usePluginSession();
 
   const players = useMemo<readonly PlayerRosterEntry[]>(() => {
     const orderedPlayerIds =
@@ -106,7 +104,6 @@ export function PlayerRosterRoot({
       .map((playerId, index): PlayerRosterEntry => {
         const player = playerInfo.get(playerId);
         const isCurrentPlayer = playerId === controllingPlayerId;
-        const isControllable = controllablePlayerIds.includes(playerId);
         const resolvedScoreLabel =
           typeof scoreLabel === "function" ? scoreLabel(playerId) : scoreLabel;
 
@@ -117,11 +114,6 @@ export function PlayerRosterRoot({
           index,
           isActive: activePlayers.includes(playerId),
           isCurrentPlayer,
-          isControllable,
-          canSwitchToPlayer:
-            controllablePlayerIds.length > 1 &&
-            isControllable &&
-            !isCurrentPlayer,
           score: score?.(playerId),
           scoreLabel: resolvedScoreLabel,
           badges: projectBadges(badges, playerId),
@@ -136,7 +128,6 @@ export function PlayerRosterRoot({
   }, [
     activePlayers,
     badges,
-    controllablePlayerIds,
     controllingPlayerId,
     include,
     metadata,

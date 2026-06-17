@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from "react";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import type { PhaseKey } from "../ui-contract.js";
 
 export type PhaseRouteMap<Phase extends string = PhaseKey> = {
@@ -31,7 +31,9 @@ export function PhaseSwitch<Phase extends string = PhaseKey>({
   routes,
   fallback,
 }: PhaseSwitchProps<Phase>): ReactElement | null {
-  const phase = usePluginState((state) => state.gameplay.currentPhase);
+  const phase = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.flow.currentPhase,
+  );
   if (phase && hasRoute(routes, phase)) {
     return <>{routes[phase]()}</>;
   }

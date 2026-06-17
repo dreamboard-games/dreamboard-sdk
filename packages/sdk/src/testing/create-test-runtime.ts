@@ -4,9 +4,9 @@ import type {
 } from "@dreamboard-games/reducer-contract";
 import type {
   InteractionDescriptor,
-  PluginRuntimeProjection,
   ZoneHandlesSnapshot,
 } from "../runtime/reducer.js";
+import type { PluginRuntimeProjection } from "../runtime/types/reducer-state.js";
 import type {
   RuntimeAPI,
   SubmissionError,
@@ -335,8 +335,9 @@ export function createTestRuntime(
   const toReadySessionState = (
     snapshot: PluginRuntimeProjection,
   ): RuntimePluginSessionState => ({
-    ...snapshot.session,
     status: "ready",
+    sessionId: snapshot.session.sessionId,
+    controllingPlayerId: snapshot.session.controllingPlayerId,
   });
 
   let lastPluginSnapshot: PluginRuntimeProjection;
@@ -365,9 +366,7 @@ export function createTestRuntime(
     if (
       !previousSession ||
       previousSession.controllingPlayerId !==
-        lastSessionState.controllingPlayerId ||
-      previousSession.controllablePlayerIds.join("\0") !==
-        lastSessionState.controllablePlayerIds.join("\0")
+        lastSessionState.controllingPlayerId
     ) {
       for (const listener of sessionListeners) {
         listener(lastSessionState);

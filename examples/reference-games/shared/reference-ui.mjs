@@ -47,15 +47,3 @@ export function createReferenceGameRoot(config) {
     );
   };
 }
-
-
-export const Root = createReferenceGameRoot({
-  id: "hearts",
-  scenarioId: "hearts.pass-three.mobile",
-  displayName: "Hearts",
-  interaction: "pass-three",
-  actionLabel: "Pass three cards",
-  summary: "Select and pass three private cards.",
-});
-
-export const uiContractFingerprint = "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a";

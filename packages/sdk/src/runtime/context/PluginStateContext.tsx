@@ -57,9 +57,11 @@ function projectionFromFrame(
     notifications: [],
     session: {
       sessionId: session.sessionId,
-      controllablePlayerIds: session.controllablePlayerIds,
+      controllablePlayerIds: frame.perspectivePlayerId
+        ? [frame.perspectivePlayerId]
+        : [],
       controllingPlayerId: session.controllingPlayerId,
-      userId: session.userId,
+      userId: null,
     },
     history: null,
     syncId: frame.gameVersion,

@@ -1,16 +1,16 @@
 {
   "schemaVersion": 2,
-  "bundleId": "reference-games@87e0e7a5b392",
-  "sdkCommit": "87e0e7a5b392",
+  "bundleId": "reference-games@96f5380ebd90",
+  "sdkCommit": "96f5380ebd90",
   "pluginRuntimeProtocol": 3,
   "browserInteractionProtocol": "2.0.0",
   "fixtures": [
     {
       "id": "deck-building-market.buy-card.desktop",
       "file": "deck-building-market.buy-card.desktop.fixture.json",
-      "sha256": "sha256:a79b896c992429f52395105954bd9ca3fada1d3d72f92f01ec8b414942133b95",
+      "sha256": "sha256:c5594aadddb86e3f499d2524c430c1c976e689c1e1f23037456ca69a6780841e",
       "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "renderModuleSha256": "sha256:fd80817178fa0aabdac547f23b468b1e9182d9a28ae70de904672ce61bd76129",
+      "renderModuleSha256": "sha256:5e52c9c497064d4794eb9ff740ecd2596c958f7630f14e55945d23d2a7038d28",
       "components": [
         "HandView",
         "InteractionForm",
@@ -25,9 +25,9 @@
     {
       "id": "hearts.pass-three.mobile",
       "file": "hearts.pass-three.mobile.fixture.json",
-      "sha256": "sha256:de0ce2b67d6aa74605832bed0b0d35684833d189bc64e54f29dc40895983d9d5",
+      "sha256": "sha256:78d4033c547ffc258b04ab13ef117058301520ddf31516ed4505471f1cea9d77",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "renderModuleSha256": "sha256:a34c7d0ae6b90737b997fe6871c48a83902576d37af5a5ed5b710a8cdeb09fa0",
+      "renderModuleSha256": "sha256:aacab592a30bcd5fde50b9c0015f316937d2a723fe9bef72fa30bf9409774a28",
       "components": [
         "HandView",
         "InteractionForm",
@@ -42,9 +42,9 @@
     {
       "id": "hex-network-trading.place-route.desktop",
       "file": "hex-network-trading.place-route.desktop.fixture.json",
-      "sha256": "sha256:52affeb2da5b45e606450a818c569c0b325caa797f73b8c3df3c75db6d74fc3e",
+      "sha256": "sha256:5a01ba967a0bcc67c0930de0d7dad740fcfb732078a234aab0ae617a8d69a27d",
       "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "renderModuleSha256": "sha256:dc0c5319427e69072213dfb87be1b8847e5d4b691ca3cab4608d8d65ea2d7680",
+      "renderModuleSha256": "sha256:4a75242f7d62cd7206cbaf0cdfd1666cd97436b9fc6cb97fbec6406df3ad252c",
       "components": [
         "BoardTargetLayer",
         "ConfirmationDialog",
@@ -62,9 +62,9 @@
     {
       "id": "simultaneous-card-drafting.lock-choice.mobile",
       "file": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
-      "sha256": "sha256:4743cc93adcaecadcfe38c23916d530aa6d35018071d06fec27d91aadc9f8c57",
+      "sha256": "sha256:39dacaece51ca2fe8bf42f6751839b37280af3c728663f4681848b5e908f95fa",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "renderModuleSha256": "sha256:a1d133db3b1a104744b9d4f4405b42174a710765315e1d674e12dea57fb7a01d",
+      "renderModuleSha256": "sha256:f933ec2822998bed9b447aa89d6d457649e9a62e8142d195dc5abf68fbc118dd",
       "components": [
         "HandView",
         "InteractionForm",
@@ -79,9 +79,9 @@
     {
       "id": "worker-placement-tableau.place-worker.desktop",
       "file": "worker-placement-tableau.place-worker.desktop.fixture.json",
-      "sha256": "sha256:2802300e2ee9fdcaed6b25221f48e2af20d03704b871e167aa1f9880b2f86985",
+      "sha256": "sha256:32db05a16a5f7fc8f8f63fda0946088315748e97775e0f6ff3db950f0d654050",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "renderModuleSha256": "sha256:64ba01064e758c65ea14760cf90489d8ad8923ffb6cc13a3eb34c45564ae89d0",
+      "renderModuleSha256": "sha256:b5ea554b4b60c5bd61468aa045d5ff503ba8e12784b7d730d0dd4518288870bc",
       "components": [
         "BoardTargetLayer",
         "ConfirmationDialog",

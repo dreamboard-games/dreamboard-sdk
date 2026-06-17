@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 import { useInteractionHandle } from "../../hooks/useInteractionHandle.js";
-import { usePluginState } from "../../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../../context/PluginGameplayFrameContext.js";
 import type { InteractionKey } from "../../ui-contract.js";
 import type { InteractionDescriptor } from "../../types/plugin-state.js";
 import { isTargetDomain } from "../../utils/interaction-inputs.js";
@@ -60,8 +60,8 @@ export function useResolvedCardTargetValue(): unknown {
 }
 
 function useInteractionDescriptor(interaction: string) {
-  return usePluginState((state) =>
-    state.gameplay.availableInteractions.find(
+  return useAuthoredPluginGameplayFrameSelector((frame) =>
+    frame.availableInteractions.find(
       (descriptor) =>
         descriptor.interactionKey === interaction ||
         descriptor.interactionId === interaction,

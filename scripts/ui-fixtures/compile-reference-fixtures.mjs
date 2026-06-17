@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
 import {
   cp,
   mkdir,
@@ -8,11 +9,12 @@ import {
   readFile,
   readdir,
   rm,
+  symlink,
   writeFile,
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import prettier from "prettier";
+import { pathToFileURL } from "node:url";
 import {
   expectedReferenceGames,
   referenceGamesRoot,
@@ -21,23 +23,37 @@ import {
   writeJson,
 } from "../ui/reference-games-lib.mjs";
 import {
+  FixturePluginRuntime,
+  compilePluginProtocolTape,
   compileUIScenarioFixture,
+  createFixtureHostHarness,
+  createReducerScenarioRunner,
   digestUIFixtureJson,
   digestUIFixtureRequest,
-  digestUIFixtureTransportRequest,
   digestUIScenarioFixture,
   serializeUIScenarioFixture,
 } from "../../packages/sdk/dist/testing.js";
-import { resolveBrowserInteractionIntent } from "../../packages/sdk/dist/browser-interaction.js";
 import {
-  DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-  computePluginActionSetVersion,
-  materializePluginGameplayFrame,
-} from "../../packages/plugin-runtime-contract/dist/index.js";
+  readBrowserInteractionSnapshot,
+  resolveBrowserInteractionIntent,
+} from "../../packages/sdk/dist/browser-interaction.js";
+import { createPluginRuntimeClient } from "../../packages/sdk/dist/runtime.js";
+import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/plugin-runtime-contract/dist/index.js";
+
+const sdkRequire = createRequire(
+  new URL("../../packages/sdk/package.json", import.meta.url),
+);
+const React = sdkRequire("react");
+const { act } = React;
+const { createRoot } = sdkRequire("react-dom/client");
+const { GlobalRegistrator } = sdkRequire("@happy-dom/global-registrator");
 
 const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
-const modulesRoot = path.join(fixturesRoot, "modules");
 const browserInteractionProtocolVersion = "2.0.0";
+const gameplayScopeId = "runtime";
+
+GlobalRegistrator.register();
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -100,274 +116,286 @@ function buildInteractionDescriptors(referenceGame) {
         kind: "action",
         availability: { status: "available" },
         commit: { mode: "manual" },
-        inputs: [
-          {
-            key: interaction.input,
-            kind: "semantic",
-            domain: {
-              type: "reference-target",
-              target: interaction.target ?? interaction.input,
-            },
-          },
-        ],
+        descriptorDigest: digestUIFixtureJson({
+          gameId: referenceGame.id,
+          interaction,
+        }),
+        inputs: [],
       },
     ]),
   );
 }
 
-function buildProjection({
-  referenceGame,
-  coverage,
-  frameId,
-  interactionsByRef,
-}) {
-  return {
-    currentStage: frameId,
-    stageSeats: ["player-1"],
-    simultaneousPhase: null,
-    seats: {
-      "player-1": {
-        view: {
-          referenceGameId: referenceGame.id,
-          displayName: referenceGame.displayName,
-          scenarioId: coverage.scenarioId,
-          frameId,
-          publicState: Object.fromEntries(
-            Object.entries(referenceGame).filter(
-              ([key]) =>
-                ![
-                  "coverage",
-                  "initialPrivateHand",
-                  "sdkPackageSetVersion",
-                ].includes(key),
-            ),
-          ),
-        },
-        availableInteractionRefs: referenceGame.interactions.map(
-          (interaction) => interaction.id,
-        ),
-        zones: {},
-      },
-    },
-    interactionsByRef,
-  };
-}
-
-function validateReferenceInput({ interactionsByRef, input }) {
-  if (
-    input.kind !== "interaction" ||
-    typeof input.interactionId !== "string" ||
-    !Object.values(interactionsByRef).some(
-      (descriptor) => descriptor.interactionId === input.interactionId,
-    )
-  ) {
-    return {
-      valid: false,
-      errorCode: "UNKNOWN_INTERACTION",
-      message: "Unknown fixture interaction.",
-    };
+function scenarioInteraction(referenceGame, coverage) {
+  const interaction = referenceGame.interactions.find((candidate) =>
+    coverage.scenarioId.includes(candidate.id),
+  );
+  if (!interaction) {
+    throw new Error(
+      `${coverage.scenarioId} does not identify a reference-game interaction.`,
+    );
   }
-  return { valid: true };
+  return interaction;
 }
 
-function materializeReferenceFrame({
-  referenceGame,
-  coverage,
-  frameId,
-  gameVersion,
-  interactionsByRef,
-}) {
-  const dynamicProjection = buildProjection({
-    referenceGame,
-    coverage,
-    frameId,
-    interactionsByRef,
-  });
-  const firstPass = materializePluginGameplayFrame({
-    currentPhase: coverage.scenarioId,
-    activePlayers: ["player-1"],
-    dynamicProjection,
-    staticProjection: null,
-    perspectivePlayerId: "player-1",
-    gameVersion,
-    actionSetVersion: "pending",
-  });
-  const actionSetVersion = computePluginActionSetVersion({
-    gameVersion,
-    availableInteractions: firstPass.availableInteractions,
-  });
-  return {
-    frame: materializePluginGameplayFrame({
-      currentPhase: coverage.scenarioId,
-      activePlayers: ["player-1"],
-      dynamicProjection,
-      staticProjection: null,
-      perspectivePlayerId: "player-1",
-      gameVersion,
-      actionSetVersion,
-    }),
-    projectionDigest: digestUIFixtureJson({
-      digestVersion: "reference-ui-projection@2",
-      frameId,
-      dynamicProjection,
-      gameVersion,
-      actionSetVersion,
-    }),
-  };
-}
-
-function createReferenceProtocol({ referenceGame, coverage }) {
+async function createReferenceProtocol({ referenceGame, coverage }) {
   const interactionsByRef = buildInteractionDescriptors(referenceGame);
-  const initial = materializeReferenceFrame({
-    referenceGame,
-    coverage,
-    frameId: "initial",
-    gameVersion: 1,
-    interactionsByRef,
-  });
-  const submitted = materializeReferenceFrame({
-    referenceGame,
-    coverage,
-    frameId: "submitted",
-    gameVersion: 2,
-    interactionsByRef,
-  });
-  const interaction = referenceGame.interactions[0];
+  const interaction = scenarioInteraction(referenceGame, coverage);
   const input = {
     kind: "interaction",
     playerId: "player-1",
     interactionId: `${interaction.id}:player-1`,
     params: {},
   };
-  const validation = validateReferenceInput({ interactionsByRef, input });
-  if (!validation.valid) {
-    throw new Error(
-      `${coverage.scenarioId} validation failed before fixture submit: ${validation.errorCode ?? "invalid"}`,
-    );
-  }
-  const basis = {
-    gameVersion: initial.frame.gameVersion,
-    actionSetVersion: initial.frame.actionSetVersion,
-    perspectivePlayerId: initial.frame.perspectivePlayerId,
+  const initialState = {
+    domain: {
+      flow: {
+        currentPhase: coverage.scenarioId,
+        activePlayers: ["player-1"],
+      },
+      publicState: {
+        referenceGameId: referenceGame.id,
+        displayName: referenceGame.displayName,
+        scenarioId: coverage.scenarioId,
+        submittedInteractionId: null,
+      },
+    },
+    runtime: {},
   };
-  return {
+  const bundle = {
+    projectSeatsDynamic({ state, playerIds }) {
+      return {
+        currentStage: state.domain.flow.currentPhase,
+        stageSeats: [...playerIds],
+        simultaneousPhase: null,
+        seats: Object.fromEntries(
+          playerIds.map((playerId) => [
+            playerId,
+            {
+              view: state.domain.publicState,
+              availableInteractionRefs: referenceGame.interactions.map(
+                (candidate) => candidate.id,
+              ),
+              zones: {},
+            },
+          ]),
+        ),
+        interactionsByRef,
+      };
+    },
+    projectStatic() {
+      return null;
+    },
+    async validateInput({ input: candidate }) {
+      return candidate.kind === "interaction" &&
+        Object.values(interactionsByRef).some(
+          (descriptor) =>
+            descriptor.interactionId === candidate.interactionId,
+        )
+        ? { valid: true }
+        : {
+            valid: false,
+            errorCode: "UNKNOWN_INTERACTION",
+            message: "Unknown reference-game interaction.",
+          };
+    },
+    async dispatch({ state, input: candidate }) {
+      const validation = await this.validateInput({
+        state,
+        input: candidate,
+      });
+      if (!validation.valid) {
+        return {
+          kind: "reject",
+          errorCode: validation.errorCode,
+          message: validation.message,
+        };
+      }
+      return {
+        kind: "accept",
+        state: {
+          ...state,
+          domain: {
+            ...state.domain,
+            flow: {
+              currentPhase: `${coverage.scenarioId}.submitted`,
+              activePlayers: ["player-1"],
+            },
+            publicState: {
+              ...state.domain.publicState,
+              submittedInteractionId: candidate.interactionId,
+            },
+          },
+        },
+        trace: [],
+      };
+    },
+  };
+  const runner = createReducerScenarioRunner({
+    scenarioId: coverage.scenarioId,
+    gameId: referenceGame.id,
+    initialState,
+    bundle,
+    viewer: { seatId: "player-1", playerId: "player-1" },
+    playerIds: ["player-1"],
+  });
+  const trace = await runner.run([
+    {
+      id: `${coverage.scenarioId}.validate`,
+      operation: "validate",
+      input,
+    },
+    {
+      id: `${coverage.scenarioId}.submit`,
+      operation: "submit",
+      input,
+    },
+  ]);
+  return compilePluginProtocolTape({
+    trace,
     session: {
       sessionId: `${coverage.scenarioId}.fixture-session`,
       players: [{ playerId: "player-1", displayName: "Player 1" }],
     },
-    frames: [
-      { id: "initial", ...initial },
-      { id: "submitted", ...submitted },
-    ],
-    steps: [
-      {
-        id: "initial.host-frame",
-        kind: "host.frame",
-        frameId: "initial",
-      },
-      {
-        id: `${coverage.scenarioId}.validate`,
-        kind: "client.validate",
-        fromFrameId: "initial",
-        requestDigest: digestUIFixtureTransportRequest({
-          operation: "validate",
-          basis,
-          interactionId: input.interactionId,
-          payload: input.params,
-        }),
-        response: validation,
-      },
-      {
-        id: `${coverage.scenarioId}.submit`,
-        kind: "client.submit",
-        fromFrameId: "initial",
-        requestDigest: digestUIFixtureTransportRequest({
-          operation: "submit",
-          basis,
-          interactionId: input.interactionId,
-          payload: input.params,
-        }),
-        response: { accepted: true },
-      },
-      {
-        id: `${coverage.scenarioId}.submit.host-frame`,
-        kind: "host.frame",
-        frameId: "submitted",
-      },
-    ],
-  };
+  });
 }
 
-function browserInteractionSnapshotFor(referenceGame) {
-  const interactions = referenceGame.interactions.map((interaction) => ({
-    interactionKey: interaction.id,
-    interactionId: `${interaction.id}:player-1`,
-    descriptorDigest: digestUIFixtureJson({
-      interactionKey: interaction.id,
-      interactionId: `${interaction.id}:player-1`,
-      input: interaction.input,
-      target: interaction.target,
-    }),
-    draftDigest: digestUIFixtureJson({
-      interactionKey: interaction.id,
-      input: interaction.input,
-      state: "initial",
-    }),
-    readiness: "ready",
-    actuators: [
-      {
-        actuatorId: `${interaction.id}.invoke`,
-        intent: "invoke",
-        enabled: true,
-        actuatorKind: "click",
-        semanticEffects: [{ kind: "invoke" }],
-        acceptedEffectPatterns: [],
-        preparationPatterns: [],
-        diagnostics: [],
-      },
-    ],
-    diagnostics: [],
-  }));
-  return {
-    protocol: {
-      name: "dreamboard-browser-interaction",
-      version: browserInteractionProtocolVersion,
-    },
-    surfaces: [
-      {
-        surface: "gameplay",
-        scopeId: referenceGame.id,
-        interactions,
-        diagnostics: [],
-      },
-    ],
-    diagnostics: [],
-  };
-}
-
-async function renderModuleSource({
-  referenceGame,
-  fixtureId,
+async function buildRenderModule({
+  gameDir,
   uiContractFingerprint,
 }) {
-  return prettier.format(
-    `import React from "react";
-import { PluginRuntime } from "@dreamboard-games/sdk/runtime";
-import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "@dreamboard-games/plugin-runtime-contract";
-
-export const uiContractFingerprint = ${JSON.stringify(uiContractFingerprint)};
-
-export function Root() {
-  return React.createElement("section", {
-    "data-dreamboard-ui-fixture": ${JSON.stringify(fixtureId)},
-    "data-dreamboard-reference-game": ${JSON.stringify(referenceGame.id)},
-    "data-dreamboard-plugin-protocol": DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-    "data-dreamboard-runtime": PluginRuntime ? "external-sdk-runtime" : "missing-runtime"
-  }, ${JSON.stringify(referenceGame.displayName)});
-}
-`,
-    { parser: "babel" },
+  const sharedSource = await readFile(
+    path.join(referenceGamesRoot, "shared/reference-ui.mjs"),
+    "utf8",
   );
+  const source = await readFile(path.join(gameDir, "src/ui.mjs"), "utf8");
+  return `${sharedSource}
+${source.replace(
+  /import \{ createReferenceGameRoot \} from "\.\.\/\.\.\/shared\/reference-ui\.mjs";\n/,
+  "",
+)}
+export const uiContractFingerprint = ${JSON.stringify(uiContractFingerprint)};
+`;
+}
+
+async function settleFixtureRuntime(harness) {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    await harness.flush();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+}
+
+async function exerciseRenderedScenario({
+  fixtureId,
+  modulePath,
+  protocol,
+  resolve,
+}) {
+  const executionRoot = await mkdtemp(
+    path.join(os.tmpdir(), "dreamboard-ui-render-module-"),
+  );
+  const executableModulePath = path.join(
+    executionRoot,
+    path.basename(modulePath),
+  );
+  await cp(modulePath, executableModulePath);
+  await mkdir(path.join(executionRoot, "node_modules/@dreamboard-games"), {
+    recursive: true,
+  });
+  await symlink(
+    path.join(root, "packages/sdk"),
+    path.join(executionRoot, "node_modules/@dreamboard-games/sdk"),
+    "dir",
+  );
+  await symlink(
+    path.join(root, "packages/plugin-runtime-contract"),
+    path.join(
+      executionRoot,
+      "node_modules/@dreamboard-games/plugin-runtime-contract",
+    ),
+    "dir",
+  );
+  await symlink(
+    path.dirname(sdkRequire.resolve("react/package.json")),
+    path.join(executionRoot, "node_modules/react"),
+    "dir",
+  );
+  const module = await import(
+    `${pathToFileURL(executableModulePath).href}?fixture=${encodeURIComponent(fixtureId)}`
+  );
+  const harness = createFixtureHostHarness({ tape: protocol });
+  const runtime = createPluginRuntimeClient({ transport: harness.transport });
+  const container = document.createElement("div");
+  document.body.append(container);
+  const renderRoot = createRoot(container);
+
+  try {
+    await act(async () => {
+      renderRoot.render(
+        React.createElement(
+          FixturePluginRuntime,
+          { harness, runtime },
+          React.createElement(module.Root),
+        ),
+      );
+      await settleFixtureRuntime(harness);
+    });
+
+    const initialSnapshot = readBrowserInteractionSnapshot(container);
+    const resolution = resolveBrowserInteractionIntent(
+      initialSnapshot,
+      resolve,
+    );
+    if (!resolution.ok) {
+      throw new Error(
+        `${fixtureId} semantic replay request did not resolve uniquely: ${resolution.code}`,
+      );
+    }
+
+    const validation = await runtime.validateInteraction(
+      resolve.interactionId,
+      {},
+    );
+    if (!validation.valid) {
+      throw new Error(
+        `${fixtureId} runtime validation failed: ${validation.errorCode ?? "invalid"}`,
+      );
+    }
+
+    const actuator = [...container.querySelectorAll("[data-dreamboard-actuator-id]")]
+      .find(
+        (element) =>
+          element.getAttribute("data-dreamboard-actuator-id") ===
+          resolution.actuator.actuatorId,
+      );
+    if (!(actuator instanceof HTMLElement)) {
+      throw new Error(
+        `${fixtureId} resolved actuator '${resolution.actuator.actuatorId}' was not rendered.`,
+      );
+    }
+
+    await act(async () => {
+      actuator.click();
+      await settleFixtureRuntime(harness);
+    });
+    harness.assertConsumed();
+
+    return {
+      resolution,
+      finalFrameId: harness.getCurrentFrameId(),
+      finalSemanticDigest: digestUIFixtureJson({
+        digestVersion: "runtime-browser-interaction@2",
+        snapshot: readBrowserInteractionSnapshot(container),
+      }),
+    };
+  } finally {
+    await act(async () => {
+      renderRoot.unmount();
+    });
+    runtime.disconnect();
+    container.remove();
+    await rm(executionRoot, { recursive: true, force: true });
+  }
 }
 
 async function compileGame({ game, outputRoot, sdkCommit }) {
@@ -387,9 +415,8 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     interactions: referenceGame.interactions,
     uiPatterns: game.uiPatterns,
   });
-  const moduleSource = await renderModuleSource({
-    referenceGame,
-    fixtureId,
+  const moduleSource = await buildRenderModule({
+    gameDir,
     uiContractFingerprint,
   });
   const modulePath = path.join(outputRoot, renderModule);
@@ -397,27 +424,34 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   await writeFile(modulePath, moduleSource);
   const renderModuleDigest = sha256Text(moduleSource);
 
-  const protocol = createReferenceProtocol({ referenceGame, coverage });
-  const interaction = referenceGame.interactions[0];
+  const protocol = await createReferenceProtocol({ referenceGame, coverage });
+  const interaction = scenarioInteraction(referenceGame, coverage);
   const resolve = {
     surface: "gameplay",
-    scopeId: game.id,
+    scopeId: gameplayScopeId,
     interactionKey: interaction.id,
     interactionId: `${interaction.id}:player-1`,
     intent: "invoke",
   };
   const requestDigest = digestUIFixtureRequest(resolve);
-  const browserSnapshot = browserInteractionSnapshotFor(referenceGame);
-  const resolution = resolveBrowserInteractionIntent(browserSnapshot, resolve);
-  if (!resolution.ok) {
+  const exercise = await exerciseRenderedScenario({
+    fixtureId,
+    modulePath,
+    protocol,
+    resolve,
+  });
+  const finalFrame = protocol.frames.find(
+    (frame) => frame.id === exercise.finalFrameId,
+  );
+  if (!finalFrame) {
     throw new Error(
-      `${fixtureId} semantic replay request did not resolve uniquely: ${resolution.code}`,
+      `${fixtureId} did not produce runtime frame '${exercise.finalFrameId}'.`,
     );
   }
-  const finalFrame = protocol.frames.find((frame) => frame.id === "submitted");
-  if (!finalFrame) {
-    throw new Error(`${fixtureId} did not produce a submitted frame.`);
-  }
+  const submissionDigest = digestUIFixtureJson({
+    fixtureId,
+    interactionId: `${interaction.id}:player-1`,
+  });
 
   const fixture = compileUIScenarioFixture({
     id: fixtureId,
@@ -459,20 +493,18 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
         expectedIdentity: {
           stepId: `${fixtureId}.invoke`,
           surface: "gameplay",
-          scopeId: game.id,
-          interactionKey: resolution.interactionKey,
+          scopeId: gameplayScopeId,
+          interactionKey: exercise.resolution.interactionKey,
           interactionId: resolve.interactionId,
-          actuatorId: resolution.actuator.actuatorId,
-          descriptorDigest: resolution.actuator.descriptorDigest,
-          draftDigest: resolution.actuator.draftDigest,
+          actuatorId: exercise.resolution.actuator.actuatorId,
+          descriptorDigest: exercise.resolution.actuator.descriptorDigest,
+          draftDigest: exercise.resolution.actuator.draftDigest,
         },
         expect: {
-          frameId: "submitted",
+          frameId: finalFrame.id,
           projectionDigest: finalFrame.projectionDigest,
-          submissionDigest: digestUIFixtureJson({
-            fixtureId,
-            interactionId: `${interaction.id}:player-1`,
-          }),
+          semanticDigest: exercise.finalSemanticDigest,
+          submissionDigest,
           visibleInteractionKeys: referenceGame.interactions.map(
             (item) => item.id,
           ),
@@ -480,15 +512,8 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
       },
     ],
     expected: {
-      finalSemanticDigest: digestUIFixtureJson({
-        digestVersion: "reference-ui-semantic@1",
-        scenarioId: coverage.scenarioId,
-        assertions: coverage.assertions,
-      }),
-      submissionDigest: digestUIFixtureJson({
-        fixtureId,
-        interactionId: `${interaction.id}:player-1`,
-      }),
+      finalSemanticDigest: exercise.finalSemanticDigest,
+      submissionDigest,
     },
   });
 
@@ -550,7 +575,13 @@ async function hashOutputFiles(outputRoot) {
 
 async function compileAll(outputRoot) {
   await mkdir(path.join(outputRoot, "modules"), { recursive: true });
-  const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
+  const sdkCommit = run("git", [
+    "--git-dir=.here",
+    "--work-tree=.",
+    "rev-parse",
+    "--short=12",
+    "HEAD",
+  ]);
   const fixtures = [];
   for (const game of expectedReferenceGames) {
     fixtures.push(await compileGame({ game, outputRoot, sdkCommit }));

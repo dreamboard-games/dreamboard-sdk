@@ -21,7 +21,7 @@ import {
 } from "../../ui.js";
 import { useStore } from "zustand";
 import { useShallow } from "zustand/shallow";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import {
   encodeRuntimeDropTargetKind,
@@ -39,10 +39,7 @@ import {
   type AuthoredCardIntent,
   type RuntimeCardIntentResult,
 } from "./hand-intent-adapter.js";
-import type {
-  InteractionDescriptor,
-  PluginRuntimeProjection,
-} from "../types/plugin-state.js";
+import type { InteractionDescriptor } from "../types/plugin-state.js";
 import { isInteractionAvailable } from "../utils/interaction-status.js";
 import { createZoneCardRenderItem, type ZoneCardRenderItem } from "./zone.js";
 
@@ -185,13 +182,17 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
     interactionStore,
     useShallow((state) => state.drafts),
   );
-  const availableInteractions = usePluginState(
-    (state) => state.gameplay.availableInteractions,
+  const availableInteractions = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.availableInteractions,
   );
-  const selectedIds = usePluginState(
+  const selectedIds = useAuthoredPluginGameplayFrameSelector(
     useCallback(
-      (state: PluginRuntimeProjection) =>
-        selectedCardIdsForZone(interactionStore, zone, state),
+      (frame) =>
+        selectedCardIdsForZone(
+          interactionStore,
+          zone,
+          frame.availableInteractions,
+        ),
       // drafts is part of the store snapshot — useStore handles re-render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [interactionStore, zone, drafts],
@@ -229,10 +230,12 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
     return index;
   }, [visibleCards]);
 
-  const cardDescriptorIndex = usePluginState((state) => {
-    const snapshot = state.gameplay.zones[zone];
+  const cardDescriptorIndex = useAuthoredPluginGameplayFrameSelector(
+    (frame) => {
+    const snapshot = frame.zones[zone];
     return snapshot?.playableByCardId ?? {};
-  });
+    },
+  );
 
   /**
    * Pre-compute, for each candidate descriptor in this zone, the set of
@@ -498,20 +501,24 @@ export function HandStagingView({
     interactionStore,
     useShallow((state) => state.drafts),
   );
-  const stagedIds = usePluginState(
+  const stagedIds = useAuthoredPluginGameplayFrameSelector(
     useCallback(
-      (state: PluginRuntimeProjection) =>
-        selectedCardIdsForZone(interactionStore, zone, state),
+      (frame) =>
+        selectedCardIdsForZone(
+          interactionStore,
+          zone,
+          frame.availableInteractions,
+        ),
       // drafts is part of the store snapshot — useStore handles re-render.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       [interactionStore, zone, drafts],
     ),
   );
-  const zoneSnapshot = usePluginState(
-    (state) => state.gameplay.zones[zone] ?? null,
+  const zoneSnapshot = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.zones[zone] ?? null,
   );
-  const availableInteractions = usePluginState(
-    (state) => state.gameplay.availableInteractions,
+  const availableInteractions = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.availableInteractions,
   );
 
   const cards = useMemo(
@@ -577,9 +584,9 @@ export function dropTargetIdFor(
  * dropTargets.
  */
 export function descriptorsHaveDestinationInput(
-  state: PluginRuntimeProjection,
+  availableInteractions: readonly InteractionDescriptor[],
 ): boolean {
-  for (const descriptor of state.gameplay.availableInteractions) {
+  for (const descriptor of availableInteractions) {
     const cardInputs = descriptor.inputs.filter(
       (input) =>
         isTargetDomain(input.domain) && input.domain.type === "cardTarget",

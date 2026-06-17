@@ -1,10 +1,9 @@
 import { useMemo } from "react";
 import type { PlayerId } from "@dreamboard/manifest-contract";
 import {
-  useOptionalPluginSessionDescriptor,
+  usePluginSessionDescriptor,
   usePluginSession,
 } from "../context/PluginSessionContext.js";
-import { useLobby } from "./useLobby.js";
 import type { Player } from "../../ui/types/player-state.js";
 import type { HexColor } from "../../ui.js";
 
@@ -20,8 +19,7 @@ export type { Player } from "../../ui/types/player-state.js";
  */
 export function useMe(): Player {
   const { controllingPlayerId } = usePluginSession();
-  const sessionDescriptor = useOptionalPluginSessionDescriptor();
-  const lobby = useLobby();
+  const sessionDescriptor = usePluginSessionDescriptor();
 
   return useMemo(() => {
     if (!controllingPlayerId) {
@@ -30,7 +28,7 @@ export function useMe(): Player {
       );
     }
 
-    const player = sessionDescriptor?.players.find(
+    const player = sessionDescriptor.players.find(
       (candidate) => candidate.playerId === controllingPlayerId,
     );
     if (player) {
@@ -42,18 +40,8 @@ export function useMe(): Player {
       };
     }
 
-    const seat = lobby.seats.find((s) => s.playerId === controllingPlayerId);
-    if (!seat) {
-      throw new Error(
-        `useMe: Player ${controllingPlayerId} not found in lobby seats. This should not happen.`,
-      );
-    }
-
-    return {
-      playerId: seat.playerId as PlayerId,
-      name: seat.displayName,
-      isHost: seat.isHost,
-      color: seat.playerColor,
-    };
-  }, [controllingPlayerId, lobby, sessionDescriptor]);
+    throw new Error(
+      `useMe: Player ${controllingPlayerId} not found in the plugin session descriptor.`,
+    );
+  }, [controllingPlayerId, sessionDescriptor]);
 }

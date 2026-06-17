@@ -12,7 +12,7 @@ const pluginContractDist = path.join(
 await mkdir(sdkDist, { recursive: true });
 
 const declarationChunks = (await readdir(pluginContractDist)).filter(
-  (fileName) => /^schema-.*\.d\.ts$/.test(fileName),
+  (fileName) => /^[a-z0-9-]+-[A-Za-z0-9_-]+\.d\.ts$/.test(fileName),
 );
 const sdkReducerContractChunk = (await readdir(sdkDist)).find((fileName) =>
   /^index\.d-.*\.d\.ts$/.test(fileName),

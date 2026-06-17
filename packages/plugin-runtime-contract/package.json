@@ -1,7 +1,7 @@
 {
   "name": "@dreamboard-games/plugin-runtime-contract",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Browser-free plugin runtime frame, protocol, schema, and digest contract for Dreamboard game plugins.",
   "type": "module",
   "main": "./dist/index.js",
@@ -16,6 +16,11 @@
       "types": "./dist/schema.d.ts",
       "import": "./dist/schema.js",
       "default": "./dist/schema.js"
+    },
+    "./digest": {
+      "types": "./dist/digest.d.ts",
+      "import": "./dist/digest.js",
+      "default": "./dist/digest.js"
     },
     "./package.json": "./package.json"
   },
@@ -32,7 +37,6 @@
     "!tsconfig.tsbuildinfo"
   ],
   "dependencies": {
-    "@dreamboard-games/reducer-contract": "workspace:*",
     "zod": "4.4.3"
   },
   "devDependencies": {

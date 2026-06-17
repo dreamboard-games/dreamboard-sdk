@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { CardIntent } from "../../ui.js";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import {
   applyCardIntent,
@@ -85,11 +85,11 @@ export function useCardIntentAdapter({
   const store = useInteractionUiStore();
   const { controllingPlayerId } = usePluginSession();
   const runtime = useRuntimeContext();
-  const zoneSnapshot = usePluginState(
-    (state) => state.gameplay.zones[zone] ?? null,
+  const zoneSnapshot = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.zones[zone] ?? null,
   );
-  const availableInteractions = usePluginState(
-    (state) => state.gameplay.availableInteractions,
+  const availableInteractions = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.availableInteractions,
   );
 
   return useCallback(

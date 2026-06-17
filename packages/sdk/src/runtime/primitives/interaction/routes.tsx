@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { usePendingInteractionKey } from "../../context/InteractionDraftContext.js";
-import { usePluginState } from "../../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../../context/PluginGameplayFrameContext.js";
 import { useRuntimeContext } from "../../context/RuntimeContext.js";
 import type { InteractionKey } from "../../ui-contract.js";
 import type { InteractionDescriptor } from "../../types/plugin-state.js";
@@ -46,8 +46,8 @@ export function InteractionSwitch<Interaction extends string = InteractionKey>({
   fallback = null,
 }: InteractionSwitchProps<Interaction>) {
   const pendingInteractionKey = usePendingInteractionKey();
-  const descriptors = usePluginState(
-    (state) => state.gameplay.availableInteractions,
+  const descriptors = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.availableInteractions,
   );
   const routedInteraction = interaction ?? pendingInteractionKey;
   const descriptor = routedInteraction
@@ -99,8 +99,8 @@ export function InteractionRoutes<Interaction extends string = InteractionKey>({
   includeUnavailable = false,
 }: InteractionRoutesProps<Interaction>) {
   const runtime = useRuntimeContext() as RuntimeAPI;
-  const descriptors = usePluginState(
-    (state) => state.gameplay.availableInteractions,
+  const descriptors = useAuthoredPluginGameplayFrameSelector(
+    (frame) => frame.availableInteractions,
   );
   if (descriptors.length === 0) return <>{fallback}</>;
   const routedDescriptors = descriptors

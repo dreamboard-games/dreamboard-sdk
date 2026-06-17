@@ -6,7 +6,6 @@ export {
 export type {
   GameplayPromptOption,
   GameplaySnapshot,
-  PluginRuntimeProjection,
 } from "./types/reducer-state.js";
 export type {
   InteractionDescriptor,
@@ -14,7 +13,6 @@ export type {
   InteractionContextOption,
   ZoneHandlesSnapshot,
 } from "./types/plugin-state.js";
-export type { LobbyState } from "./hooks/useLobby.js";
 export type { Player } from "./hooks/useMe.js";
 export type { SeatInbox } from "./hooks/useSeatInbox.js";
 export type {

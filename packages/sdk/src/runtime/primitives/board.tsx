@@ -20,7 +20,7 @@ import {
   type BoardSelectionResult,
   type BoardTargetLayerOptions,
 } from "../hooks/useBoardInteractions.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import type { BoardTargetKey } from "../ui-contract.js";
 import {
@@ -237,9 +237,9 @@ export function BoardTarget<Target extends string = BoardTargetKey>({
   input,
   ...props
 }: BoardTargetProps<Target>) {
-  const descriptor = usePluginState((state) =>
+  const descriptor = useAuthoredPluginGameplayFrameSelector((frame) =>
     interaction
-      ? state.gameplay.availableInteractions.find(
+      ? frame.availableInteractions.find(
           (candidate) =>
             candidate.interactionKey === interaction ||
             candidate.interactionId === interaction,

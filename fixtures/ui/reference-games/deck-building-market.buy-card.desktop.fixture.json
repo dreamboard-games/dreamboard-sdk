@@ -10,9 +10,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:558fbb1c40fce916d9f6287350631a53c458e690970299aebe1de965a72024cc",
-    "finalSemanticDigest": "sha256:051f24a344abd49161d6d16f10fe6321e8deebee68572807022ea5435e2f216b",
-    "initialProjectionDigest": "sha256:d57ce91acd7880ca399293c22aa29cc7929932e1586d98d626be328a6943ca29",
+    "finalProjectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
+    "finalSemanticDigest": "sha256:8a9d4ea51e7c302b04238efbca24b7b27fcd397c2f94a63a1e44bde313b76987",
+    "initialProjectionDigest": "sha256:c068b58d757c8495061c1c124438c54cb9ed300f4785532512e90b0672873b3c",
     "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04"
   },
   "gameId": "deck-building-market",
@@ -22,7 +22,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:4a3c7058a42e3dab76c2c3c5837fd32a64c19150a54754188c03b5dd78d61f8f",
+          "actionSetVersion": "sha256:3ff09868a01afe164431fc7b620a77947c7ca6bf89679b5b29a6740086a8ce94",
           "availableInteractions": [
             {
               "availability": {
@@ -31,16 +31,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "market-row",
-                    "type": "reference-target"
-                  },
-                  "key": "select-market-card",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
+              "inputs": [],
               "interactionId": "buy-card:player-1",
               "interactionKey": "buy-card",
               "kind": "action",
@@ -53,16 +45,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "action-panel",
-                    "type": "reference-target"
-                  },
-                  "key": "choose-hand-card",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:5b9f1c81c20edc7d9e6baf117aa928dbd3ac2a57fef6ff8e08dc4a32cbaa4a13",
+              "inputs": [],
               "interactionId": "play-hand-action:player-1",
               "interactionKey": "play-hand-action",
               "kind": "action",
@@ -75,16 +59,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "turn-summary",
-                    "type": "reference-target"
-                  },
-                  "key": "confirm",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:461a2902a46ee015a7659d300733dfce14087320f5d2ff5bd013157dba4a44f7",
+              "inputs": [],
               "interactionId": "end-turn:player-1",
               "interactionKey": "end-turn",
               "kind": "action",
@@ -96,61 +72,25 @@
               "player-1"
             ],
             "currentPhase": "deck-building-market.buy-card.desktop",
-            "currentStage": "initial",
+            "currentStage": "deck-building-market.buy-card.desktop",
             "simultaneousPhase": null
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
           "view": {
             "displayName": "Deck Building Market",
-            "frameId": "initial",
-            "publicState": {
-              "displayName": "Deck Building Market",
-              "id": "deck-building-market",
-              "interactions": [
-                {
-                  "costSource": "hand",
-                  "id": "buy-card",
-                  "input": "select-market-card",
-                  "target": "market-row"
-                },
-                {
-                  "id": "play-hand-action",
-                  "input": "choose-hand-card",
-                  "target": "action-panel"
-                },
-                {
-                  "id": "end-turn",
-                  "input": "confirm",
-                  "target": "turn-summary"
-                }
-              ],
-              "zones": {
-                "discard": [],
-                "hand": [
-                  "coin",
-                  "coin",
-                  "spark"
-                ],
-                "market": [
-                  "map-maker",
-                  "archive",
-                  "guild-contact",
-                  "courier"
-                ]
-              }
-            },
             "referenceGameId": "deck-building-market",
-            "scenarioId": "deck-building-market.buy-card.desktop"
+            "scenarioId": "deck-building-market.buy-card.desktop",
+            "submittedInteractionId": null
           },
           "zones": {}
         },
-        "id": "initial",
-        "projectionDigest": "sha256:d57ce91acd7880ca399293c22aa29cc7929932e1586d98d626be328a6943ca29"
+        "id": "frame-1",
+        "projectionDigest": "sha256:c068b58d757c8495061c1c124438c54cb9ed300f4785532512e90b0672873b3c"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:1f979b02dfe3ffd18aefddf469d8e506fb12d907fb3c328bcf729ec2b8c48c66",
+          "actionSetVersion": "sha256:f62f1613725aa3e01ca8ecf7702819f4f44cb1115f70a61d88d9160b9330a383",
           "availableInteractions": [
             {
               "availability": {
@@ -159,16 +99,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "market-row",
-                    "type": "reference-target"
-                  },
-                  "key": "select-market-card",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
+              "inputs": [],
               "interactionId": "buy-card:player-1",
               "interactionKey": "buy-card",
               "kind": "action",
@@ -181,16 +113,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "action-panel",
-                    "type": "reference-target"
-                  },
-                  "key": "choose-hand-card",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:5b9f1c81c20edc7d9e6baf117aa928dbd3ac2a57fef6ff8e08dc4a32cbaa4a13",
+              "inputs": [],
               "interactionId": "play-hand-action:player-1",
               "interactionKey": "play-hand-action",
               "kind": "action",
@@ -203,16 +127,8 @@
               "commit": {
                 "mode": "manual"
               },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "turn-summary",
-                    "type": "reference-target"
-                  },
-                  "key": "confirm",
-                  "kind": "semantic"
-                }
-              ],
+              "descriptorDigest": "sha256:461a2902a46ee015a7659d300733dfce14087320f5d2ff5bd013157dba4a44f7",
+              "inputs": [],
               "interactionId": "end-turn:player-1",
               "interactionKey": "end-turn",
               "kind": "action",
@@ -223,58 +139,22 @@
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "deck-building-market.buy-card.desktop",
-            "currentStage": "submitted",
+            "currentPhase": "deck-building-market.buy-card.desktop.submitted",
+            "currentStage": "deck-building-market.buy-card.desktop.submitted",
             "simultaneousPhase": null
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
           "view": {
             "displayName": "Deck Building Market",
-            "frameId": "submitted",
-            "publicState": {
-              "displayName": "Deck Building Market",
-              "id": "deck-building-market",
-              "interactions": [
-                {
-                  "costSource": "hand",
-                  "id": "buy-card",
-                  "input": "select-market-card",
-                  "target": "market-row"
-                },
-                {
-                  "id": "play-hand-action",
-                  "input": "choose-hand-card",
-                  "target": "action-panel"
-                },
-                {
-                  "id": "end-turn",
-                  "input": "confirm",
-                  "target": "turn-summary"
-                }
-              ],
-              "zones": {
-                "discard": [],
-                "hand": [
-                  "coin",
-                  "coin",
-                  "spark"
-                ],
-                "market": [
-                  "map-maker",
-                  "archive",
-                  "guild-contact",
-                  "courier"
-                ]
-              }
-            },
             "referenceGameId": "deck-building-market",
-            "scenarioId": "deck-building-market.buy-card.desktop"
+            "scenarioId": "deck-building-market.buy-card.desktop",
+            "submittedInteractionId": "buy-card:player-1"
           },
           "zones": {}
         },
-        "id": "submitted",
-        "projectionDigest": "sha256:558fbb1c40fce916d9f6287350631a53c458e690970299aebe1de965a72024cc"
+        "id": "frame-2",
+        "projectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297"
       }
     ],
     "session": {
@@ -288,30 +168,30 @@
     },
     "steps": [
       {
-        "frameId": "initial",
-        "id": "initial.host-frame",
+        "frameId": "frame-1",
+        "id": "frame-1.host-frame",
         "kind": "host.frame"
       },
       {
-        "fromFrameId": "initial",
+        "fromFrameId": "frame-1",
         "id": "deck-building-market.buy-card.desktop.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:228470f32f8347ade035327ae8de93051ef2dbb878d54114f0982d432aeaedfb",
+        "requestDigest": "sha256:a45d03a1c546063ba09b6656ce1267e4d1a09ed92ed3a89d1dbd7ecccc672ea4",
         "response": {
           "valid": true
         }
       },
       {
-        "fromFrameId": "initial",
+        "fromFrameId": "frame-1",
         "id": "deck-building-market.buy-card.desktop.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:9271509b2cb966aeb8d276b8de3bd0fe1379da613fba66818bba214de7cf9d13",
+        "requestDigest": "sha256:ee2c18c839d2bb0f723ff8b3834be6234836ff85a3d2b582d30e90d3e3c9991e",
         "response": {
           "accepted": true
         }
       },
       {
-        "frameId": "submitted",
+        "frameId": "frame-2",
         "id": "deck-building-market.buy-card.desktop.submit.host-frame",
         "kind": "host.frame"
       }
@@ -323,8 +203,9 @@
         "kind": "activate"
       },
       "expect": {
-        "frameId": "submitted",
-        "projectionDigest": "sha256:558fbb1c40fce916d9f6287350631a53c458e690970299aebe1de965a72024cc",
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:68bb5b990a89762c93bfc9928e770565790536d5b015bec10bef687f88385297",
+        "semanticDigest": "sha256:8a9d4ea51e7c302b04238efbca24b7b27fcd397c2f94a63a1e44bde313b76987",
         "submissionDigest": "sha256:b248e3e4fe0269bf2c212000fa9459a53f9155eda7ae328d658f03b5ea53ac04",
         "visibleInteractionKeys": [
           "buy-card",
@@ -333,19 +214,20 @@
         ]
       },
       "expectedIdentity": {
-        "actuatorId": "buy-card.invoke",
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:aa9f5572cad86ba14b3345c3b905297d089d77b9f47b8d79cba2c4f783fd6665",
         "interactionId": "buy-card:player-1",
         "interactionKey": "buy-card",
-        "scopeId": "deck-building-market",
+        "scopeId": "runtime",
         "stepId": "deck-building-market.buy-card.desktop.invoke",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:924e1c47ed665ad4a951f46c5b9d587db5589ce7cca7e4d0bdb3793920fb6ccc",
+      "requestDigest": "sha256:2b3c21c978318c17c5d8f24d479090dcd3ff715d0fa903dae2b46e7d1faa82ea",
       "resolve": {
         "intent": "invoke",
         "interactionId": "buy-card:player-1",
         "interactionKey": "buy-card",
-        "scopeId": "deck-building-market",
+        "scopeId": "runtime",
         "surface": "gameplay"
       },
       "stepId": "deck-building-market.buy-card.desktop.invoke"
@@ -355,9 +237,9 @@
   "source": {
     "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-    "renderModuleDigest": "sha256:fd80817178fa0aabdac547f23b468b1e9182d9a28ae70de904672ce61bd76129",
+    "renderModuleDigest": "sha256:5e52c9c497064d4794eb9ff740ecd2596c958f7630f14e55945d23d2a7038d28",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:adbb188e3f8466439bac562d81916e7fdb09998c7db407684a7b2db89238caca",
+    "sourceDigest": "sha256:c83e56a5296f48682722f5bdbc7ce651247bd6429835db6ce1dac30497bc14bf",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

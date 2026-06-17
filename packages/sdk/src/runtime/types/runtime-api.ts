@@ -46,12 +46,8 @@ export interface PluginSessionState {
   status: "loading" | "ready";
   /** Current session ID (null if not initialized) */
   sessionId: string | null;
-  /** Player IDs that this user can control (immutable after game starts) */
-  controllablePlayerIds: PlayerId[];
-  /** The currently selected player ID that the user is controlling */
+  /** The player perspective represented by the current gameplay frame */
   controllingPlayerId: PlayerId | null;
-  /** User ID of the controller (null if not initialized) */
-  userId: string | null;
 }
 
 /**

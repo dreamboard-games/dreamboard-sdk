@@ -533,3 +533,34 @@ Follow-up hard-cut work is now recorded as closed in
 removed, fixtures and Workbench run through the real `PluginRuntimeClient` and
 `createFixtureHostHarness`, the internal host sends shared protocol version
 `3` frames, and the final SDK/internal deletion gates returned no live matches.
+
+## Remaining-gap closure receipt: 2026-06-17
+
+The final fixture portability gaps are closed:
+
+- reference fixtures now compile reducer traces, mount the authored React UI in
+  `happy-dom`, read the rendered browser-interaction attributes, resolve and
+  activate the semantic actuator, and consume the real runtime protocol tape;
+- `readBrowserInteractionSnapshot` is a public browser-interaction helper with
+  focused DOM filtering coverage;
+- every reference game provides an authored fixture render module, and all five
+  generated bundles pass deterministic two-run compilation;
+- the internal private compiler now emits and validates the same strict
+  `UIScenarioFixture` schema version `2` and bundle index version `2`;
+- fixture protocol frame and step schemas are direct aliases of the shared
+  plugin runtime contract instead of an SDK-maintained duplicate.
+
+Final verification:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk build
+cd packages/sdk && mise exec node@24 -- bun test src/browser-interaction src/testing/ui-fixture src/runtime src/export-surface.test.ts
+mise exec node@24 -- node scripts/ui-fixtures/compile-reference-fixtures.mjs
+mise exec node@24 -- node scripts/ui-fixtures/check-fixtures.mjs
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
+cd /Users/kevintang/code/internal
+mise exec node@24 -- node scripts/ui-fixtures/compile-internal-fixtures.mjs
+mise exec node@24 -- node scripts/ui-fixtures/check-internal-fixtures.mjs
+```

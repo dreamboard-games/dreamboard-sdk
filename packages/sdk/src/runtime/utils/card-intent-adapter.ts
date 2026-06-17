@@ -1,7 +1,6 @@
 import type { InteractionUiStore } from "../context/InteractionDraftContext.js";
 import type {
   InteractionDescriptor,
-  PluginRuntimeProjection,
   ZoneHandlesSnapshot,
 } from "../types/plugin-state.js";
 import {
@@ -518,10 +517,10 @@ export function visualStateForCard(
 export function selectedCardIdsForZone(
   store: Pick<InteractionUiStore, "getDraft">,
   zone: string,
-  state: PluginRuntimeProjection,
+  availableInteractions: readonly InteractionDescriptor[],
 ): readonly string[] {
   const result = new Set<string>();
-  for (const descriptor of state.gameplay.availableInteractions) {
+  for (const descriptor of availableInteractions) {
     const cardInput = descriptor.inputs.find((input) => {
       if (!isTargetDomain(input.domain)) return false;
       if (input.domain.type !== "cardTarget") return false;

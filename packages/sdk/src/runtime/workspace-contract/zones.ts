@@ -1,11 +1,10 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { Fragment as ReactFragment, createElement } from "react";
 import { clsx } from "clsx";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { CardFace, type ViewCard } from "../../ui.js";
 import type { InteractionCardInputRenderState } from "../primitives/index.js";
 import type { ZoneListProps } from "../primitives/zone.js";
-import type { PluginRuntimeProjection } from "../types/plugin-state.js";
 import { createHandPieces } from "./hand.js";
 import { createCardInputSlot } from "./slots.js";
 import type {
@@ -97,9 +96,9 @@ export function createZoneCardComponent<Card>(
         size: "sm",
         children,
       });
-    const match = usePluginState((state: PluginRuntimeProjection) => {
+    const match = useAuthoredPluginGameplayFrameSelector((frame) => {
       const candidates =
-        state.gameplay.zones[zone]?.playableByCardId[cardId] ?? [];
+        frame.zones[zone]?.playableByCardId[cardId] ?? [];
       for (const descriptor of candidates) {
         const input = descriptor.inputs.find(
           (candidateInput) =>

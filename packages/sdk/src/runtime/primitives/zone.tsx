@@ -9,7 +9,7 @@ import {
 import type { ViewCard } from "@dreamboard-games/sdk-types";
 import { useInteractionUiStore } from "../context/InteractionDraftContext.js";
 import { usePluginSession } from "../context/PluginSessionContext.js";
-import { usePluginState } from "../context/PluginStateContext.js";
+import { useAuthoredPluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import { useRuntimeContext } from "../context/RuntimeContext.js";
 import type {
   InteractionDescriptor,
@@ -140,7 +140,8 @@ export function ZoneRoot<Zone extends string = ZoneKey>({
   ...props
 }: ZoneRootProps<Zone>) {
   const snapshot =
-    usePluginState((state) => state.gameplay.zones[zone]) ?? null;
+    useAuthoredPluginGameplayFrameSelector((frame) => frame.zones[zone]) ??
+    null;
   const value = useMemo<ZoneContextValue>(
     () => ({ zone, snapshot }),
     [snapshot, zone],

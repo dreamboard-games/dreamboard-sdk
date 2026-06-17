@@ -21,10 +21,7 @@ function runtimeApiFromClient(runtime: PluginRuntimeClient): RuntimeAPI {
       return {
         status: session ? "ready" : "loading",
         sessionId: session?.sessionId ?? null,
-        controllablePlayerIds:
-          session?.players.map((player) => player.playerId) ?? [],
         controllingPlayerId: frame?.perspectivePlayerId ?? null,
-        userId: null,
       };
     },
     disconnect: () => runtime.disconnect(),
