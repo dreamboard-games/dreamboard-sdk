@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.1";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.3";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.1";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.3";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.1";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.3";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.1";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.3";
 ```
 
 _No JSDoc summary is available yet._
@@ -18395,6 +18395,14 @@ function createWorkspaceUIContract<
 
 _No JSDoc summary is available yet._
 
+### DefineGameUIConfig
+
+```ts
+interface DefineGameUIConfig { ... }
+```
+
+_No JSDoc summary is available yet._
+
 ### DreamboardUI
 
 ```ts
@@ -18626,6 +18634,25 @@ interface WorkspaceInteractionFormDescriptor<
 > {
   readonly kind: "form";
   readonly interaction: Interaction;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### WorkspaceInteractionFormDialogProps
+
+```ts
+interface WorkspaceInteractionFormDialogProps extends Omit<
+  InteractionDialogProps,
+  "children"
+> {
+  title: ReactNode;
+  description?: ReactNode;
+  trigger?: ReactNode;
+  children: ReactNode;
+  contentClassName?: string;
+  overlayClassName?: string;
+  showCloseButton?: boolean;
 }
 ```
 
