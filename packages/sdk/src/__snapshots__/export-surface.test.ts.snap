@@ -93,6 +93,7 @@ exports[`public export surface reducer/advanced export names are stable 1`] = `
 exports[`public export surface runtime export names are stable 1`] = `
 [
   "PluginRuntime",
+  "PluginRuntimeBoundary",
   "createPluginRuntimeClient",
   "createPostMessagePluginTransport",
   "createWorkspaceUIContract",

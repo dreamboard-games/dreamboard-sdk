@@ -5,6 +5,7 @@ import type {
 } from "./runtime/index.js";
 
 export { PluginRuntime } from "./runtime/index.js";
+export { PluginRuntimeBoundary } from "./runtime/index.js";
 export { createPluginRuntimeClient } from "./runtime/index.js";
 export { createPostMessagePluginTransport } from "./runtime/index.js";
 

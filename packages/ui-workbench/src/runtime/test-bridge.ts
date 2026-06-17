@@ -1,13 +1,13 @@
 import type {
-  FixtureHostEvent,
-  FixtureHostHarness,
-} from "@dreamboard-games/sdk/testing";
+  BrowserFixtureHostEvent,
+  BrowserFixtureHostHarness,
+} from "./browser-fixture-runtime.js";
 
 export interface UIFixtureTestBridge {
   getScenarioId(): string;
   getFrameId(): string;
-  getHostEvents(): readonly FixtureHostEvent[];
-  getRuntimeEvents(): readonly FixtureHostEvent[];
+  getHostEvents(): readonly BrowserFixtureHostEvent[];
+  getRuntimeEvents(): readonly BrowserFixtureHostEvent[];
   getProjectionDigest(): string;
   reset(): Promise<void>;
   assertConsumed(): void;
@@ -21,7 +21,7 @@ declare global {
 
 export function installUIFixtureTestBridge(options: {
   readonly scenarioId: string;
-  readonly harness: FixtureHostHarness;
+  readonly harness: BrowserFixtureHostHarness;
   readonly enabled: boolean;
 }): void {
   if (!options.enabled) {

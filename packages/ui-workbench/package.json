@@ -4,17 +4,23 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build",
     "typecheck": "tsc --noEmit",
-    "test": "bun test src"
+    "test": "playwright test",
+    "test:runtime": "bun test src"
   },
   "dependencies": {
+    "@dreamboard-games/plugin-runtime-contract": "workspace:*",
     "@dreamboard-games/sdk": "workspace:*",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@playwright/test": "1.60.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^5.4.10"
   }
 }
