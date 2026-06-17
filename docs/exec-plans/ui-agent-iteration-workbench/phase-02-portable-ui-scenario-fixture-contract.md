@@ -496,3 +496,39 @@ request digests, missing frames, and non-deterministic output.
 | Replay semantics diverge from browser demo automation | Import browser-interaction request types and canonical resolver                      |
 | Fixture regeneration causes opaque churn              | Canonical JSON, stable seeds, content digests, and two-run check                     |
 | Protocol extension is hidden in Workbench code        | Require protocol version review for changed frame, command, or gesture semantics     |
+
+## Implementation receipt: 2026-06-17
+
+SDK-side Phase 02 replacement work landed in this repository:
+
+- added `@dreamboard-games/plugin-runtime-contract` with protocol version `3`,
+  plugin session/frame schemas, projection materialization, and action-set
+  hashing;
+- replaced the UI fixture schema with schema version `2`, `PluginProtocolTape`,
+  `PluginGameplayFrame`, and strict bundle parsing;
+- added reducer scenario trace contracts and a trace-to-protocol-tape compiler;
+- regenerated all five reference-game fixtures with protocol tape frames and
+  explicit host/client steps;
+- removed `createTestRuntime` from reference fixture compilation;
+- updated render-module checks so React, the SDK runtime, and the plugin
+  runtime contract are externalized.
+
+Verification run:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
+cd packages/sdk && mise exec node@24 -- bun test src/testing/ui-fixture src/export-surface.test.ts
+mise exec node@24 -- pnpm ui:fixtures:compile
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm exports:check
+mise exec node@24 -- pnpm pack:consumer-check
+mise exec node@24 -- node scripts/assert-sdk-tarball-self-contained.mjs
+mise exec node@24 -- pnpm docs:check
+```
+
+Remaining work is intentionally Phase 03/internal-host scoped: replace the
+transitional fixture runtime adapter with the real `PluginRuntimeClient` and
+`createFixtureHostHarness`, migrate the internal browser-demo contract to share
+the portable replay-step type, and complete the hard-cut deletion gate.

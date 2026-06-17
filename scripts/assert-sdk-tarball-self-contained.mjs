@@ -8,6 +8,7 @@ const root = path.resolve(import.meta.dirname, "..");
 const sdkDir = path.join(root, "packages/sdk");
 const removedLeafSpecifiers = [
   "@dreamboard-games/app-sdk",
+  "@dreamboard-games/plugin-runtime-contract",
   "@dreamboard-games/reducer-contract",
   "@dreamboard-games/sdk-types",
   "@dreamboard-games/testing",
@@ -151,8 +152,10 @@ async function main() {
       if (path.relative(packageDir, filePath) === "package.json") {
         // devDependencies are inert for consumers (never installed from a
         // published tarball); private workspace devDeps are allowed there.
+        // npm also ignores package scripts for tarball dependency resolution.
         const manifest = JSON.parse(content);
         delete manifest.devDependencies;
+        delete manifest.scripts;
         content = JSON.stringify(manifest);
       }
       content = stripAllowedMetadataReferences(content);

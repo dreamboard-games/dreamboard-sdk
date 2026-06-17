@@ -9,12 +9,24 @@ import type {
   BrowserInteractionIntentRequest,
 } from "../../browser-interaction/index.js";
 import { RuntimeJsonSchema } from "../../runtime-json.js";
-import type { PluginStateSnapshot } from "../../runtime/index.js";
 import { digestUIFixtureRequest, isSha256Digest } from "./canonical.js";
+import {
+  DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION,
+  PluginGameplayFrameSchema as pluginGameplayFrameSchema,
+  PluginSessionDescriptorSchema as pluginSessionDescriptorSchema,
+  SubmissionResultSchema as submissionResultSchema,
+  ValidationResultSchema as validationResultSchema,
+  type PluginGameplayFrame,
+  type PluginSessionDescriptor,
+  type SubmissionResult,
+  type ValidationResult,
+} from "@dreamboard-games/plugin-runtime-contract";
 
-export const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 1;
-export const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 1;
+export const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 2;
+export const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 2;
 export const UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR = 2;
+export const UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL =
+  PLUGIN_RUNTIME_PROTOCOL_VERSION;
 
 const digestSchema = z.string().refine(isSha256Digest, {
   message: "Expected a sha256:<64 lowercase hex> digest.",
@@ -33,73 +45,47 @@ const environmentSchema = z
   })
   .strict();
 
-const pluginSessionSchema = z
-  .object({
-    sessionId: nonEmptyStringSchema,
-    controllablePlayerIds: z.array(nonEmptyStringSchema),
-    controllingPlayerId: nonEmptyStringSchema.nullable(),
-    userId: nonEmptyStringSchema.nullable(),
-  })
-  .catchall(jsonSchema);
-
-const gameplaySnapshotSchema = z
-  .object({
-    currentPhase: nonEmptyStringSchema.nullable(),
-    currentStage: nonEmptyStringSchema.nullable(),
-    activePlayers: z.array(nonEmptyStringSchema),
-    simultaneousPhase: jsonSchema.nullable().optional(),
-    availableInteractions: z.array(jsonSchema),
-    zones: z.record(z.string(), jsonSchema),
-  })
-  .catchall(jsonSchema);
-
-export const uiFixturePluginStateSnapshotSchema = z
-  .object({
-    view: jsonSchema.nullable(),
-    gameplay: gameplaySnapshotSchema,
-    lobby: jsonSchema.nullable(),
-    notifications: z.array(jsonSchema),
-    session: pluginSessionSchema,
-    history: jsonSchema.nullable(),
-    syncId: z.number().int().nonnegative(),
-  })
-  .strict();
-
 export const uiFixtureFrameSchema = z
   .object({
     id: nonEmptyStringSchema,
-    snapshot: uiFixturePluginStateSnapshotSchema,
+    frame: pluginGameplayFrameSchema,
     projectionDigest: digestSchema,
   })
   .strict();
 
-export const uiFixtureTransportExchangeSchema = z
+export const uiFixtureProtocolStepSchema = z.union([
+  z
+    .object({
+      id: nonEmptyStringSchema,
+      kind: z.literal("host.frame"),
+      frameId: nonEmptyStringSchema,
+    })
+    .strict(),
+  z
+    .object({
+      id: nonEmptyStringSchema,
+      kind: z.literal("client.validate"),
+      fromFrameId: nonEmptyStringSchema,
+      requestDigest: digestSchema,
+      response: validationResultSchema,
+    })
+    .strict(),
+  z
+    .object({
+      id: nonEmptyStringSchema,
+      kind: z.literal("client.submit"),
+      fromFrameId: nonEmptyStringSchema,
+      requestDigest: digestSchema,
+      response: submissionResultSchema,
+    })
+    .strict(),
+]);
+
+export const pluginProtocolTapeSchema = z
   .object({
-    id: nonEmptyStringSchema,
-    fromFrameId: nonEmptyStringSchema,
-    operation: z.enum(["validate", "submit", "refresh"]),
-    requestDigest: digestSchema,
-    response: z.union([
-      z
-        .object({
-          kind: z.literal("accepted"),
-          nextFrameId: nonEmptyStringSchema,
-        })
-        .strict(),
-      z
-        .object({
-          kind: z.literal("rejected"),
-          diagnostics: z.array(
-            z
-              .object({
-                code: nonEmptyStringSchema,
-                message: nonEmptyStringSchema,
-              })
-              .strict(),
-          ),
-        })
-        .strict(),
-    ]),
+    session: pluginSessionDescriptorSchema,
+    frames: z.array(uiFixtureFrameSchema).min(1),
+    steps: z.array(uiFixtureProtocolStepSchema),
   })
   .strict();
 
@@ -207,6 +193,7 @@ export const uiScenarioFixtureSchema = z
     browserInteractionProtocol: z.literal(
       DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
     ),
+    pluginRuntimeProtocol: z.literal(PLUGIN_RUNTIME_PROTOCOL_VERSION),
     id: nonEmptyStringSchema,
     title: nonEmptyStringSchema,
     gameId: nonEmptyStringSchema,
@@ -228,8 +215,7 @@ export const uiScenarioFixtureSchema = z
       })
       .strict(),
     environment: environmentSchema,
-    frames: z.array(uiFixtureFrameSchema).min(1),
-    transport: z.array(uiFixtureTransportExchangeSchema),
+    protocol: pluginProtocolTapeSchema,
     replay: z.array(uiScenarioReplayStepSchema),
     expected: z
       .object({
@@ -247,6 +233,7 @@ export const uiScenarioFixtureBundleIndexSchema = z
     schemaVersion: z.literal(UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION),
     bundleId: nonEmptyStringSchema,
     sdkCommit: nonEmptyStringSchema,
+    pluginRuntimeProtocol: z.literal(PLUGIN_RUNTIME_PROTOCOL_VERSION),
     browserInteractionProtocol: z.literal(
       DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
     ),
@@ -280,18 +267,40 @@ export type PortableSemanticReplayStep = z.infer<
 export type UIScenarioReplayStep = z.infer<typeof uiScenarioReplayStepSchema>;
 export type UIFixtureFrame = Omit<
   z.infer<typeof uiFixtureFrameSchema>,
-  "snapshot"
+  "frame"
 > & {
-  readonly snapshot: PluginStateSnapshot;
+  readonly frame: PluginGameplayFrame;
 };
-export type UIFixtureTransportExchange = z.infer<
-  typeof uiFixtureTransportExchangeSchema
->;
+export type UIFixtureProtocolStep =
+  | {
+      readonly id: string;
+      readonly kind: "host.frame";
+      readonly frameId: string;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "client.validate";
+      readonly fromFrameId: string;
+      readonly requestDigest: string;
+      readonly response: ValidationResult;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "client.submit";
+      readonly fromFrameId: string;
+      readonly requestDigest: string;
+      readonly response: SubmissionResult;
+    };
+export type PluginProtocolTape = {
+  readonly session: PluginSessionDescriptor;
+  readonly frames: readonly UIFixtureFrame[];
+  readonly steps: readonly UIFixtureProtocolStep[];
+};
 export type UIScenarioFixture = Omit<
   z.infer<typeof uiScenarioFixtureSchema>,
-  "frames" | "replay"
+  "protocol" | "replay"
 > & {
-  readonly frames: readonly UIFixtureFrame[];
+  readonly protocol: PluginProtocolTape;
   readonly replay: readonly UIScenarioReplayStep[];
 };
 export type UIScenarioFixtureBundleIndex = z.infer<
@@ -335,25 +344,31 @@ export function assertSupportedBrowserInteractionProtocol(
 function validateUIScenarioFixtureReferences(fixture: UIScenarioFixture): void {
   assertSupportedBrowserInteractionProtocol(fixture.browserInteractionProtocol);
   const frameIds = new Set<string>();
-  for (const frame of fixture.frames) {
+  const stepIds = new Set<string>();
+
+  for (const frame of fixture.protocol.frames) {
     if (frameIds.has(frame.id)) {
       throw new Error(`Duplicate fixture frame id '${frame.id}'.`);
     }
     frameIds.add(frame.id);
   }
 
-  for (const exchange of fixture.transport) {
-    if (!frameIds.has(exchange.fromFrameId)) {
-      throw new Error(
-        `Transport exchange '${exchange.id}' references missing fromFrameId '${exchange.fromFrameId}'.`,
-      );
+  for (const step of fixture.protocol.steps) {
+    if (stepIds.has(step.id)) {
+      throw new Error(`Duplicate protocol step id '${step.id}'.`);
     }
-    if (
-      exchange.response.kind === "accepted" &&
-      !frameIds.has(exchange.response.nextFrameId)
-    ) {
+    stepIds.add(step.id);
+    if (step.kind === "host.frame") {
+      if (!frameIds.has(step.frameId)) {
+        throw new Error(
+          `Protocol step '${step.id}' references missing frameId '${step.frameId}'.`,
+        );
+      }
+      continue;
+    }
+    if (!frameIds.has(step.fromFrameId)) {
       throw new Error(
-        `Transport exchange '${exchange.id}' references missing nextFrameId '${exchange.response.nextFrameId}'.`,
+        `Protocol step '${step.id}' references missing fromFrameId '${step.fromFrameId}'.`,
       );
     }
   }

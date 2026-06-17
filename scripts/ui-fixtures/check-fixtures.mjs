@@ -41,6 +41,11 @@ function assertRenderModuleExternalized(relativePath, source) {
       `${relativePath} must externalize the SDK runtime with an import.`,
     );
   }
+  if (!source.includes('from "@dreamboard-games/plugin-runtime-contract"')) {
+    throw new Error(
+      `${relativePath} must externalize the plugin runtime contract with an import.`,
+    );
+  }
 }
 
 async function main() {

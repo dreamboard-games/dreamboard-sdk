@@ -605,3 +605,22 @@ Additional invariants:
   client and the version 3 protocol.
 - Existing Phase 02 and Phase 03 receipts remain historical records of the
   superseded implementation, not completion evidence for the amended plan.
+
+## SDK implementation receipt: 2026-06-17
+
+Migration steps 1-3 are implemented in the SDK repository:
+
+- `@dreamboard-games/plugin-runtime-contract` owns protocol schemas, plugin
+  frame/session contracts, projection materialization, canonical JSON/digests,
+  and action-set hashing;
+- `ReducerScenarioRunner` records reducer-owned traces without importing React,
+  runtime, fixture, or browser modules;
+- `compilePluginProtocolTape` converts reducer traces into session metadata,
+  gameplay frames, and ordered protocol steps;
+- reference fixtures were regenerated as fixture schema version `2` with plugin
+  runtime protocol `3`.
+
+Steps 4-8 remain open. `createFixtureRuntime` is still a transitional adapter
+for the existing SDK React runtime surface; Phase 03 must replace it with
+`PluginRuntimeClient` plus `createFixtureHostHarness` before the deletion gate
+can pass.

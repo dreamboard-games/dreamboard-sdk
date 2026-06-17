@@ -18758,6 +18758,27 @@ function canonicalUIFixtureJson(value: unknown): string;
 
 _No JSDoc summary is available yet._
 
+### compilePluginProtocolTape
+
+```ts
+function compilePluginProtocolTape(
+  options: CompilePluginProtocolTapeOptions,
+): PluginProtocolTape;
+```
+
+_No JSDoc summary is available yet._
+
+### CompilePluginProtocolTapeOptions
+
+```ts
+interface CompilePluginProtocolTapeOptions {
+  readonly trace: ReducerScenarioTrace;
+  readonly session: T;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### compileUIScenarioFixture
 
 ```ts
@@ -18819,6 +18840,32 @@ interface CreateFixtureRuntimeOptions {
   readonly latencyMs?: number;
   readonly onEvent?: (event: FixtureRuntimeEvent) => void;
   readonly nowMs?: () => number;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### createReducerScenarioRunner
+
+```ts
+function createReducerScenarioRunner(
+  options: CreateReducerScenarioRunnerOptions,
+): ReducerScenarioRunner;
+```
+
+_No JSDoc summary is available yet._
+
+### CreateReducerScenarioRunnerOptions
+
+```ts
+interface CreateReducerScenarioRunnerOptions {
+  readonly scenarioId: string;
+  readonly gameId: string;
+  readonly initialState: wire.ReducerSessionState;
+  readonly bundle: ReducerScenarioBundle;
+  readonly viewer: ReducerScenarioViewer;
+  readonly playerIds: readonly string[];
+  readonly initialGameVersion?: number;
 }
 ```
 
@@ -18894,6 +18941,14 @@ type DeterministicIdFactory = () => string;
 
 _No JSDoc summary is available yet._
 
+### digestPluginProtocolTape
+
+```ts
+function digestPluginProtocolTape(tape: PluginProtocolTape): string;
+```
+
+_No JSDoc summary is available yet._
+
 ### digestUIFixtureJson
 
 ```ts
@@ -18914,8 +18969,12 @@ _No JSDoc summary is available yet._
 
 ```ts
 function digestUIFixtureTransportRequest(request: {
-  readonly operation: "validate" | "submit" | "refresh";
-  readonly playerId?: string;
+  readonly operation: "validate" | "submit";
+  readonly basis?: {
+    readonly gameVersion: number;
+    readonly actionSetVersion: string;
+    readonly perspectivePlayerId: string | null;
+  };
   readonly interactionId?: string;
   readonly payload?: unknown;
 }): string;
@@ -19103,6 +19162,26 @@ function parseUIScenarioFixtureBundleIndex(
 
 _No JSDoc summary is available yet._
 
+### PluginProtocolTape
+
+```ts
+type PluginProtocolTape = {
+  readonly session: T;
+  readonly frames: readonly UIFixtureFrame[];
+  readonly steps: readonly UIFixtureProtocolStep[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### pluginProtocolTapeSchema
+
+```ts
+declare const pluginProtocolTapeSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
 ### PortableSemanticReplayStep
 
 ```ts
@@ -19117,6 +19196,107 @@ _No JSDoc summary is available yet._
 
 ```ts
 declare const portableSemanticReplayStepSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioBundle
+
+```ts
+type ReducerScenarioBundle = Pick<
+  ReducerBundleContract,
+  "projectSeatsDynamic" | "validateInput" | "dispatch" | "projectStatic"
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioDiagnostic
+
+```ts
+interface ReducerScenarioDiagnostic {
+  readonly code: string;
+  readonly message: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioExchange
+
+```ts
+type ReducerScenarioExchange = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioFrame
+
+```ts
+interface ReducerScenarioFrame {
+  readonly id: string;
+  readonly reducerState: wire.ReducerSessionState;
+  readonly dynamicProjection: wire.SeatProjectionBundle;
+  readonly staticProjection?: wire.BoardStaticProjection | null;
+  readonly gameVersion: number;
+  readonly actionSetVersion: string;
+  readonly projectionDigest: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioOperation
+
+```ts
+type ReducerScenarioOperation =
+  | {
+      readonly id: string;
+      readonly operation: "validate";
+      readonly input: wire.GameInput;
+    }
+  | {
+      readonly id: string;
+      readonly operation: "submit";
+      readonly input: wire.GameInput;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioRunner
+
+```ts
+interface ReducerScenarioRunner {
+  run(
+    operations: readonly ReducerScenarioOperation[],
+  ): Promise<ReducerScenarioTrace>;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioTrace
+
+```ts
+interface ReducerScenarioTrace {
+  readonly scenarioId: string;
+  readonly gameId: string;
+  readonly viewer: ReducerScenarioViewer;
+  readonly frames: readonly ReducerScenarioFrame[];
+  readonly exchanges: readonly ReducerScenarioExchange[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerScenarioViewer
+
+```ts
+interface ReducerScenarioViewer {
+  readonly seatId: string;
+  readonly playerId: string;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -19207,7 +19387,15 @@ _No JSDoc summary is available yet._
 ### UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION
 
 ```ts
-const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 1;
+const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 2;
+```
+
+_No JSDoc summary is available yet._
+
+### UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL
+
+```ts
+const UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL: 3;
 ```
 
 _No JSDoc summary is available yet._
@@ -19215,7 +19403,7 @@ _No JSDoc summary is available yet._
 ### UI_SCENARIO_FIXTURE_SCHEMA_VERSION
 
 ```ts
-const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 1;
+const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 2;
 ```
 
 _No JSDoc summary is available yet._
@@ -19231,8 +19419,8 @@ _No JSDoc summary is available yet._
 ### UIFixtureFrame
 
 ```ts
-type UIFixtureFrame = Omit<z.infer<typeof uiFixtureFrameSchema>, "snapshot"> & {
-  readonly snapshot: PluginStateSnapshot$1;
+type UIFixtureFrame = Omit<z.infer<typeof uiFixtureFrameSchema>, "frame"> & {
+  readonly frame: B;
 };
 ```
 
@@ -19241,33 +19429,34 @@ _No JSDoc summary is available yet._
 ### uiFixtureFrameSchema
 
 ```ts
-declare const uiFixtureFrameSchema: ...;
-```
-
-_No JSDoc summary is available yet._
-
-### uiFixturePluginStateSnapshotSchema
-
-```ts
-declare const uiFixturePluginStateSnapshotSchema: ...;
-```
-
-_No JSDoc summary is available yet._
-
-### UIFixtureTransportExchange
-
-```ts
-type UIFixtureTransportExchange = z.infer<
-  typeof uiFixtureTransportExchangeSchema
+const uiFixtureFrameSchema: z.ZodObject<
+  {
+    id: z.ZodString;
+    frame: z.ZodType<
+      B<unknown, string, string, string>,
+      unknown,
+      z.core.$ZodTypeInternals<B<unknown, string, string, string>, unknown>
+    >;
+    projectionDigest: z.ZodString;
+  },
+  z.core.$strict
 >;
 ```
 
 _No JSDoc summary is available yet._
 
-### uiFixtureTransportExchangeSchema
+### UIFixtureProtocolStep
 
 ```ts
-declare const uiFixtureTransportExchangeSchema: ...;
+type UIFixtureProtocolStep = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### uiFixtureProtocolStepSchema
+
+```ts
+declare const uiFixtureProtocolStepSchema: ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -19347,9 +19536,9 @@ _No JSDoc summary is available yet._
 ```ts
 type UIScenarioFixture = Omit<
   z.infer<typeof uiScenarioFixtureSchema>,
-  "frames" | "replay"
+  "protocol" | "replay"
 > & {
-  readonly frames: readonly UIFixtureFrame[];
+  readonly protocol: PluginProtocolTape;
   readonly replay: readonly UIScenarioReplayStep[];
 };
 ```

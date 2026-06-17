@@ -11,227 +11,247 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:024c6e00dabb252d6b1cc8155c67e444dcfe96825194c131ba1c648d92623c5e",
+    "finalProjectionDigest": "sha256:2123c7f8568c134a65e146c35d257b06c5c5d9f85b0da5c9a079a8a9a7ba152c",
     "finalSemanticDigest": "sha256:c127a81010594c95467f5b1d75bda28b87a0bde87446f09471e53c4bcd7f2564",
-    "initialProjectionDigest": "sha256:2da86fa1871b6760ad3315fe9df1ed4c4d99b99bf861a660af3a8c76947266b7",
+    "initialProjectionDigest": "sha256:56cba750ad5a77686eca721594937d3d90b6719309eaf6a3fa6e1acd78e726d9",
     "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c"
   },
-  "frames": [
-    {
-      "id": "initial",
-      "projectionDigest": "sha256:2da86fa1871b6760ad3315fe9df1ed4c4d99b99bf861a660af3a8c76947266b7",
-      "snapshot": {
-        "gameplay": {
-          "activePlayers": [
-            "player-1"
-          ],
-          "availableInteractions": [
-            {
-              "availability": {
-                "status": "available"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "context": {
-                "to": "player-1"
-              },
-              "inputs": [
-                {
-                  "domain": {},
-                  "key": "select-three-cards",
-                  "kind": "semantic"
-                }
-              ],
-              "interactionId": "pass-three:player-1",
-              "interactionKey": "pass-three",
-              "kind": "action",
-              "phaseName": "fixture"
-            },
-            {
-              "availability": {
-                "status": "available"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "context": {
-                "to": "player-1"
-              },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "shared-trick-area"
-                  },
-                  "key": "choose-card-following-suit",
-                  "kind": "semantic"
-                }
-              ],
-              "interactionId": "play-to-trick:player-1",
-              "interactionKey": "play-to-trick",
-              "kind": "action",
-              "phaseName": "fixture"
-            }
-          ],
-          "currentPhase": "hearts.pass-three.mobile",
-          "currentStage": "initial",
-          "simultaneousPhase": null,
-          "zones": {}
-        },
-        "history": null,
-        "lobby": null,
-        "notifications": [],
-        "session": {
-          "controllablePlayerIds": [
-            "player-1"
-          ],
-          "controllingPlayerId": "player-1",
-          "sessionId": "hearts.pass-three.mobile.fixture-session",
-          "userId": "fixture-user"
-        },
-        "syncId": 1,
-        "view": {
-          "displayName": "Hearts",
-          "frameId": "initial",
-          "publicState": {
-            "displayName": "Hearts",
-            "id": "hearts",
-            "interactions": [
-              {
-                "actor": "south",
-                "id": "pass-three",
-                "input": "select-three-cards",
-                "mobileAction": "confirm-pass",
-                "visibility": "private-hand"
-              },
-              {
-                "actor": "south",
-                "id": "play-to-trick",
-                "input": "choose-card-following-suit",
-                "target": "shared-trick-area"
-              }
-            ],
-            "players": [
-              "north",
-              "east",
-              "south",
-              "west"
-            ]
-          },
-          "referenceGameId": "hearts",
-          "scenarioId": "hearts.pass-three.mobile"
-        }
-      }
-    },
-    {
-      "id": "submitted",
-      "projectionDigest": "sha256:024c6e00dabb252d6b1cc8155c67e444dcfe96825194c131ba1c648d92623c5e",
-      "snapshot": {
-        "gameplay": {
-          "activePlayers": [
-            "player-1"
-          ],
-          "availableInteractions": [
-            {
-              "availability": {
-                "status": "available"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "context": {
-                "to": "player-1"
-              },
-              "inputs": [
-                {
-                  "domain": {},
-                  "key": "select-three-cards",
-                  "kind": "semantic"
-                }
-              ],
-              "interactionId": "pass-three:player-1",
-              "interactionKey": "pass-three",
-              "kind": "action",
-              "phaseName": "fixture"
-            },
-            {
-              "availability": {
-                "status": "available"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "context": {
-                "to": "player-1"
-              },
-              "inputs": [
-                {
-                  "domain": {
-                    "target": "shared-trick-area"
-                  },
-                  "key": "choose-card-following-suit",
-                  "kind": "semantic"
-                }
-              ],
-              "interactionId": "play-to-trick:player-1",
-              "interactionKey": "play-to-trick",
-              "kind": "action",
-              "phaseName": "fixture"
-            }
-          ],
-          "currentPhase": "hearts.pass-three.mobile",
-          "currentStage": "submitted",
-          "simultaneousPhase": null,
-          "zones": {}
-        },
-        "history": null,
-        "lobby": null,
-        "notifications": [],
-        "session": {
-          "controllablePlayerIds": [
-            "player-1"
-          ],
-          "controllingPlayerId": "player-1",
-          "sessionId": "hearts.pass-three.mobile.fixture-session",
-          "userId": "fixture-user"
-        },
-        "syncId": 2,
-        "view": {
-          "displayName": "Hearts",
-          "frameId": "submitted",
-          "publicState": {
-            "displayName": "Hearts",
-            "id": "hearts",
-            "interactions": [
-              {
-                "actor": "south",
-                "id": "pass-three",
-                "input": "select-three-cards",
-                "mobileAction": "confirm-pass",
-                "visibility": "private-hand"
-              },
-              {
-                "actor": "south",
-                "id": "play-to-trick",
-                "input": "choose-card-following-suit",
-                "target": "shared-trick-area"
-              }
-            ],
-            "players": [
-              "north",
-              "east",
-              "south",
-              "west"
-            ]
-          },
-          "referenceGameId": "hearts",
-          "scenarioId": "hearts.pass-three.mobile"
-        }
-      }
-    }
-  ],
   "gameId": "hearts",
   "id": "hearts.pass-three.mobile",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:51616717cf4f6eff3e02afc52e5ea623f9425bcf71deb3db407cb8d7f6601ced",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "select-three-cards",
+                    "type": "reference-target"
+                  },
+                  "key": "select-three-cards",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "pass-three:player-1",
+              "interactionKey": "pass-three",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "shared-trick-area",
+                    "type": "reference-target"
+                  },
+                  "key": "choose-card-following-suit",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "play-to-trick:player-1",
+              "interactionKey": "play-to-trick",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "hearts.pass-three.mobile",
+            "currentStage": "initial",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "displayName": "Hearts",
+            "frameId": "initial",
+            "publicState": {
+              "displayName": "Hearts",
+              "id": "hearts",
+              "interactions": [
+                {
+                  "actor": "south",
+                  "id": "pass-three",
+                  "input": "select-three-cards",
+                  "mobileAction": "confirm-pass",
+                  "visibility": "private-hand"
+                },
+                {
+                  "actor": "south",
+                  "id": "play-to-trick",
+                  "input": "choose-card-following-suit",
+                  "target": "shared-trick-area"
+                }
+              ],
+              "players": [
+                "north",
+                "east",
+                "south",
+                "west"
+              ]
+            },
+            "referenceGameId": "hearts",
+            "scenarioId": "hearts.pass-three.mobile"
+          },
+          "zones": {}
+        },
+        "id": "initial",
+        "projectionDigest": "sha256:56cba750ad5a77686eca721594937d3d90b6719309eaf6a3fa6e1acd78e726d9"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:22bc572a53eefbd1cd2385aeeaa4f60fb51e762309f609a3b34996c22797e497",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "select-three-cards",
+                    "type": "reference-target"
+                  },
+                  "key": "select-three-cards",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "pass-three:player-1",
+              "interactionKey": "pass-three",
+              "kind": "action",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "inputs": [
+                {
+                  "domain": {
+                    "target": "shared-trick-area",
+                    "type": "reference-target"
+                  },
+                  "key": "choose-card-following-suit",
+                  "kind": "semantic"
+                }
+              ],
+              "interactionId": "play-to-trick:player-1",
+              "interactionKey": "play-to-trick",
+              "kind": "action",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "hearts.pass-three.mobile",
+            "currentStage": "submitted",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "displayName": "Hearts",
+            "frameId": "submitted",
+            "publicState": {
+              "displayName": "Hearts",
+              "id": "hearts",
+              "interactions": [
+                {
+                  "actor": "south",
+                  "id": "pass-three",
+                  "input": "select-three-cards",
+                  "mobileAction": "confirm-pass",
+                  "visibility": "private-hand"
+                },
+                {
+                  "actor": "south",
+                  "id": "play-to-trick",
+                  "input": "choose-card-following-suit",
+                  "target": "shared-trick-area"
+                }
+              ],
+              "players": [
+                "north",
+                "east",
+                "south",
+                "west"
+              ]
+            },
+            "referenceGameId": "hearts",
+            "scenarioId": "hearts.pass-three.mobile"
+          },
+          "zones": {}
+        },
+        "id": "submitted",
+        "projectionDigest": "sha256:2123c7f8568c134a65e146c35d257b06c5c5d9f85b0da5c9a079a8a9a7ba152c"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "hearts.pass-three.mobile.fixture-session"
+    },
+    "steps": [
+      {
+        "frameId": "initial",
+        "id": "initial.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "initial",
+        "id": "hearts.pass-three.mobile.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:a45152e0378bda7b698f353f9af24884c3de7616ecb147a687b16fa3a4d537f0",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "initial",
+        "id": "hearts.pass-three.mobile.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:ecf8a06d3a6bb364ba4f05c405434d0ce5f8ac81949001f1bfcd799099b84d39",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "submitted",
+        "id": "hearts.pass-three.mobile.submit.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
   "replay": [
     {
       "execute": {
@@ -239,7 +259,7 @@
       },
       "expect": {
         "frameId": "submitted",
-        "projectionDigest": "sha256:024c6e00dabb252d6b1cc8155c67e444dcfe96825194c131ba1c648d92623c5e",
+        "projectionDigest": "sha256:2123c7f8568c134a65e146c35d257b06c5c5d9f85b0da5c9a079a8a9a7ba152c",
         "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
         "visibleInteractionKeys": [
           "pass-three",
@@ -254,7 +274,7 @@
         "stepId": "hearts.pass-three.mobile.invoke",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:c9a6545131b61b62b364c0c08826cbc59d34ccf7e577ed50c9f1fa59280f0fb8",
+      "requestDigest": "sha256:5c3de2c2323c853f535d78926ceed061131f4694853dc3aa5751c96becb49d45",
       "resolve": {
         "intent": "invoke",
         "interactionId": "pass-three:player-1",
@@ -265,13 +285,13 @@
       "stepId": "hearts.pass-three.mobile.invoke"
     }
   ],
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": {
     "reducerFingerprint": "sha256:9b905cbe094b398ec1070bc8e6e8e6b09caa5cea86902ce17f3cef75f5dd958d",
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
-    "renderModuleDigest": "sha256:38738961f73caa2e030e4f15dfb26b4eedf06439f560bf14a4b78f516f67e312",
+    "renderModuleDigest": "sha256:a34c7d0ae6b90737b997fe6871c48a83902576d37af5a5ed5b710a8cdeb09fa0",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:ecfe9bbdfb27453571fe0d68b2a012620a8bbe2a01af159e94b054592b068b7b",
+    "sourceDigest": "sha256:929a2a4ee906e0bfee2096d1df4ce18edf986eb10837cab3012db021550727cf",
     "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
   },
   "tags": [
@@ -284,28 +304,6 @@
     "trick-taking"
   ],
   "title": "Hearts: player hand remains private before pass reveal",
-  "transport": [
-    {
-      "fromFrameId": "initial",
-      "id": "hearts.pass-three.mobile.validate",
-      "operation": "validate",
-      "requestDigest": "sha256:fbf3b4f7c64ea6cc31cf3143a4b92c5edce6d9fe3322f573570c3b1028e8dbc8",
-      "response": {
-        "kind": "accepted",
-        "nextFrameId": "initial"
-      }
-    },
-    {
-      "fromFrameId": "initial",
-      "id": "hearts.pass-three.mobile.submit",
-      "operation": "submit",
-      "requestDigest": "sha256:2b4f8aef97e561e8af68831195830ad4eb5f0f73f10600708a9d3acbcde78691",
-      "response": {
-        "kind": "accepted",
-        "nextFrameId": "submitted"
-      }
-    }
-  ],
   "viewer": {
     "playerId": "player-1",
     "seatId": "player-1"

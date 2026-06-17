@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
-import type { UIReplayRequest, UIScenarioFixture } from "./schema.js";
+import type {
+  PluginProtocolTape,
+  UIReplayRequest,
+  UIScenarioFixture,
+} from "./schema.js";
 
 type CanonicalJson =
   | null
@@ -59,20 +63,31 @@ export function digestUIFixtureJson(value: unknown): string {
 
 export function digestUIFixtureRequest(request: UIReplayRequest): string {
   return digestUIFixtureJson({
-    digestVersion: "ui-replay-request@1",
+    digestVersion: "ui-replay-request@2",
     request,
   });
 }
 
 export function digestUIFixtureTransportRequest(request: {
-  readonly operation: "validate" | "submit" | "refresh";
-  readonly playerId?: string;
+  readonly operation: "validate" | "submit";
+  readonly basis?: {
+    readonly gameVersion: number;
+    readonly actionSetVersion: string;
+    readonly perspectivePlayerId: string | null;
+  };
   readonly interactionId?: string;
   readonly payload?: unknown;
 }): string {
   return digestUIFixtureJson({
-    digestVersion: "ui-fixture-transport-request@1",
+    digestVersion: "ui-fixture-runtime-command@2",
     request,
+  });
+}
+
+export function digestPluginProtocolTape(tape: PluginProtocolTape): string {
+  return digestUIFixtureJson({
+    digestVersion: "plugin-protocol-tape@2",
+    tape,
   });
 }
 

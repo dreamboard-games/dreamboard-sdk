@@ -30,10 +30,12 @@ export default defineConfig({
   dts: {
     resolve: [
       /^@dreamboard-games\/(sdk-types|reducer-contract|workspace-codegen)(\/.*)?$/,
+      /^@dreamboard-games\/plugin-runtime-contract(\/.*)?$/,
     ],
   },
   noExternal: [
     /^@dreamboard-games\/(sdk-types|reducer-contract|workspace-codegen)(\/|$)/,
+    /^@dreamboard-games\/plugin-runtime-contract(\/|$)/,
   ],
   clean: true,
   sourcemap: true,

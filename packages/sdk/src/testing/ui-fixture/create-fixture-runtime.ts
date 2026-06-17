@@ -11,7 +11,8 @@ import type {
 } from "../../runtime/types/runtime-api.js";
 import { digestUIFixtureTransportRequest } from "./canonical.js";
 import type {
-  UIFixtureTransportExchange,
+  UIFixtureFrame,
+  UIFixtureProtocolStep,
   UIScenarioFixture,
 } from "./schema.js";
 
@@ -49,17 +50,19 @@ export function createFixtureRuntime(
   const fixture = options.fixture;
   const strict = options.strict ?? true;
   const latencyMs = options.latencyMs ?? 0;
-  const frameById = new Map(fixture.frames.map((frame) => [frame.id, frame]));
   const stateListeners = new Set<(state: PluginStateSnapshot) => void>();
   const sessionListeners = new Set<(state: PluginSessionState) => void>();
   const events: FixtureRuntimeEvent[] = [];
   let sequence = 0;
-  let exchangeCursor = 0;
+  let stepCursor = 0;
   let disconnected = false;
   let diagnosticHandler:
     | ((event: PluginRuntimeDiagnosticEvent) => void)
     | undefined;
-  let currentFrame = fixture.frames[0];
+  const frameById = new Map(
+    fixture.protocol.frames.map((frame) => [frame.id, frame]),
+  );
+  let currentFrame = fixture.protocol.frames[0];
 
   if (!currentFrame) {
     throw new Error(`UI fixture '${fixture.id}' does not contain frames.`);
@@ -95,15 +98,33 @@ export function createFixtureRuntime(
     return error;
   };
 
-  const sessionFromFrame = (
-    frame: typeof currentFrame,
-  ): PluginSessionState => ({
+  const sessionFromFrame = (frame: UIFixtureFrame): PluginSessionState => ({
     status: "ready",
-    sessionId: frame.snapshot.session.sessionId,
-    controllablePlayerIds: [...frame.snapshot.session.controllablePlayerIds],
-    controllingPlayerId: frame.snapshot.session.controllingPlayerId,
-    userId: frame.snapshot.session.userId,
+    sessionId: fixture.protocol.session.sessionId,
+    controllablePlayerIds: fixture.protocol.session.players.map(
+      (player) => player.playerId,
+    ),
+    controllingPlayerId: frame.frame.perspectivePlayerId,
+    userId: null,
   });
+
+  const snapshotFromFrame = (frame: UIFixtureFrame): PluginStateSnapshot =>
+    ({
+      view: frame.frame.view,
+      gameplay: {
+        currentPhase: frame.frame.flow.currentPhase,
+        currentStage: frame.frame.flow.currentStage,
+        activePlayers: [...frame.frame.flow.activePlayers],
+        simultaneousPhase: frame.frame.flow.simultaneousPhase,
+        availableInteractions: frame.frame.availableInteractions,
+        zones: frame.frame.zones,
+      },
+      lobby: null,
+      notifications: [],
+      session: sessionFromFrame(frame),
+      history: null,
+      syncId: frame.frame.gameVersion,
+    }) as unknown as PluginStateSnapshot;
 
   const publishFrame = (frameId: string) => {
     const nextFrame = frameById.get(frameId);
@@ -119,8 +140,9 @@ export function createFixtureRuntime(
       frameId: nextFrame.id,
       projectionDigest: nextFrame.projectionDigest,
     });
+    const snapshot = snapshotFromFrame(nextFrame);
     for (const listener of stateListeners) {
-      listener(nextFrame.snapshot);
+      listener(snapshot);
     }
     const session = sessionFromFrame(nextFrame);
     for (const listener of sessionListeners) {
@@ -136,65 +158,75 @@ export function createFixtureRuntime(
     await new Promise<void>((resolve) => setTimeout(resolve, latencyMs));
   };
 
-  const consumeExpectedExchange = (
-    operation: UIFixtureTransportExchange["operation"],
+  const consumeExpectedStep = <
+    Kind extends "client.validate" | "client.submit",
+  >(
+    kind: Kind,
     requestDigest: string,
-  ): UIFixtureTransportExchange => {
-    const exchange = fixture.transport[exchangeCursor];
-    if (!exchange) {
+  ): Extract<UIFixtureProtocolStep, { kind: Kind }> => {
+    const step = fixture.protocol.steps[stepCursor];
+    if (!step) {
       throw createFixtureError(
-        "fixture-exchange-exhausted",
-        `UI fixture '${fixture.id}' has no remaining transport exchange for ${operation}.`,
+        "fixture-protocol-exhausted",
+        `UI fixture '${fixture.id}' has no remaining protocol step for ${kind}.`,
       );
     }
-    if (exchange.operation !== operation) {
+    if (step.kind !== kind) {
       throw createFixtureError(
-        "fixture-exchange-operation-mismatch",
-        `Expected transport operation '${exchange.operation}' but received '${operation}'.`,
+        "fixture-protocol-step-mismatch",
+        `Expected protocol step '${step.kind}' but received '${kind}'.`,
       );
     }
-    if (exchange.fromFrameId !== currentFrame.id) {
+    if (step.fromFrameId !== currentFrame.id) {
       throw createFixtureError(
-        "fixture-exchange-frame-mismatch",
-        `Expected transport from frame '${exchange.fromFrameId}' but current frame is '${currentFrame.id}'.`,
+        "fixture-protocol-frame-mismatch",
+        `Expected protocol from frame '${step.fromFrameId}' but current frame is '${currentFrame.id}'.`,
       );
     }
-    if (exchange.requestDigest !== requestDigest) {
+    if (step.requestDigest !== requestDigest) {
       const mode = strict ? "strict" : "compatible";
       throw createFixtureError(
-        "fixture-exchange-digest-mismatch",
-        `${mode} fixture transport digest mismatch for ${operation}: expected ${exchange.requestDigest}, received ${requestDigest}.`,
+        "fixture-protocol-digest-mismatch",
+        `${mode} fixture protocol digest mismatch for ${kind}: expected ${step.requestDigest}, received ${requestDigest}.`,
       );
     }
-    exchangeCursor += 1;
-    return exchange;
+    stepCursor += 1;
+    return step as Extract<UIFixtureProtocolStep, { kind: Kind }>;
   };
 
   const toValidationResult = (
-    exchange: UIFixtureTransportExchange,
+    step: Extract<UIFixtureProtocolStep, { kind: "client.validate" }>,
   ): ValidationResult => {
-    if (exchange.response.kind === "accepted") {
-      return { valid: true };
-    }
-    const diagnostic = exchange.response.diagnostics[0];
-    return {
-      valid: false,
-      errorCode: diagnostic?.code ?? "fixture-rejected",
-      message: diagnostic?.message ?? "Fixture transport rejected validation.",
-    };
+    return step.response;
   };
 
   const rejectSubmission = (
     response: Extract<
-      UIFixtureTransportExchange["response"],
-      { kind: "rejected" }
+      Extract<UIFixtureProtocolStep, { kind: "client.submit" }>["response"],
+      { accepted: false }
     >,
   ): SubmissionError => {
-    const diagnostic = response.diagnostics[0];
     return createFixtureError(
-      diagnostic?.code ?? "fixture-rejected",
-      diagnostic?.message ?? "Fixture transport rejected submission.",
+      response.errorCode,
+      response.message ?? "Fixture protocol rejected submission.",
     );
+  };
+
+  const commandBasis = () => ({
+    gameVersion: currentFrame.frame.gameVersion,
+    actionSetVersion: currentFrame.frame.actionSetVersion,
+    perspectivePlayerId: currentFrame.frame.perspectivePlayerId,
+  });
+
+  const drainHostFrames = () => {
+    while (fixture.protocol.steps[stepCursor]?.kind === "host.frame") {
+      const step = fixture.protocol.steps[stepCursor] as Extract<
+        UIFixtureProtocolStep,
+        { kind: "host.frame" }
+      >;
+      stepCursor += 1;
+      publishFrame(step.frameId);
+    }
   };
 
   const runtime: PluginRuntimeAPI = {
@@ -205,7 +237,7 @@ export function createFixtureRuntime(
         sessionListeners.delete(listener);
       };
     },
-    getSnapshot: () => currentFrame.snapshot,
+    getSnapshot: () => snapshotFromFrame(currentFrame),
     subscribeToState: (listener) => {
       stateListeners.add(listener);
       return () => {
@@ -222,21 +254,19 @@ export function createFixtureRuntime(
       }
       const requestDigest = digestUIFixtureTransportRequest({
         operation: "validate",
-        playerId,
+        basis: commandBasis(),
         interactionId,
         payload,
       });
-      const exchange = consumeExpectedExchange("validate", requestDigest);
-      const result = toValidationResult(exchange);
+      void playerId;
+      const step = consumeExpectedStep("client.validate", requestDigest);
+      const result = toValidationResult(step);
       record({
         kind: "validate",
         requestDigest,
         result: result.valid ? "accepted" : "rejected",
       });
       await waitForConfiguredLatency();
-      if (exchange.response.kind === "accepted") {
-        publishFrame(exchange.response.nextFrameId);
-      }
       return result;
     },
     submitInteraction: async (playerId, interactionId, payload) => {
@@ -248,21 +278,22 @@ export function createFixtureRuntime(
       }
       const requestDigest = digestUIFixtureTransportRequest({
         operation: "submit",
-        playerId,
+        basis: commandBasis(),
         interactionId,
         payload,
       });
-      const exchange = consumeExpectedExchange("submit", requestDigest);
+      void playerId;
+      const step = consumeExpectedStep("client.submit", requestDigest);
       record({
         kind: "submit",
         requestDigest,
-        result: exchange.response.kind,
+        result: step.response.accepted ? "accepted" : "rejected",
       });
-      if (exchange.response.kind === "rejected") {
-        throw rejectSubmission(exchange.response);
+      if (!step.response.accepted) {
+        throw rejectSubmission(step.response);
       }
       await waitForConfiguredLatency();
-      publishFrame(exchange.response.nextFrameId);
+      drainHostFrames();
     },
     disconnect: () => {
       disconnected = true;
@@ -271,7 +302,7 @@ export function createFixtureRuntime(
     },
     switchPlayer: (playerId: PlayerId) => {
       if (
-        !currentFrame.snapshot.session.controllablePlayerIds.includes(playerId)
+        !sessionFromFrame(currentFrame).controllablePlayerIds.includes(playerId)
       ) {
         throw createFixtureError(
           "fixture-unsupported-player-switch",
@@ -305,12 +336,12 @@ export function createFixtureRuntime(
     runtime,
     fixture,
     reset() {
-      exchangeCursor = 0;
+      stepCursor = 0;
       disconnected = false;
-      currentFrame = fixture.frames[0]!;
+      currentFrame = fixture.protocol.frames[0]!;
       events.length = 0;
       sequence = 0;
-      publishFrame(currentFrame.id);
+      drainHostFrames();
     },
     async flush() {
       await waitForConfiguredLatency();
@@ -322,20 +353,16 @@ export function createFixtureRuntime(
       return events.map((event) => ({ ...event }));
     },
     assertConsumed() {
-      if (exchangeCursor !== fixture.transport.length) {
+      if (stepCursor !== fixture.protocol.steps.length) {
         throw createFixtureError(
-          "fixture-unconsumed-exchanges",
-          `UI fixture '${fixture.id}' consumed ${exchangeCursor} of ${fixture.transport.length} transport exchange(s).`,
+          "fixture-unconsumed-protocol-steps",
+          `UI fixture '${fixture.id}' consumed ${stepCursor} of ${fixture.protocol.steps.length} protocol step(s).`,
         );
       }
     },
   };
 
-  record({
-    kind: "frame",
-    frameId: currentFrame.id,
-    projectionDigest: currentFrame.projectionDigest,
-  });
+  drainHostFrames();
 
   return harness;
 }

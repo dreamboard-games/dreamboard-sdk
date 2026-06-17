@@ -1,5 +1,6 @@
 import React from "react";
 import { PluginRuntime } from "@dreamboard-games/sdk/runtime";
+import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "@dreamboard-games/plugin-runtime-contract";
 
 export const uiContractFingerprint =
   "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e";
@@ -10,6 +11,7 @@ export function Root() {
     {
       "data-dreamboard-ui-fixture": "deck-building-market.buy-card.desktop",
       "data-dreamboard-reference-game": "deck-building-market",
+      "data-dreamboard-plugin-protocol": DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
       "data-dreamboard-runtime": PluginRuntime
         ? "external-sdk-runtime"
         : "missing-runtime",

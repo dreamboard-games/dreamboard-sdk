@@ -5,6 +5,7 @@ export {
   digestUIFixtureJson,
   digestUIFixtureRequest,
   digestUIFixtureTransportRequest,
+  digestPluginProtocolTape,
   digestUIScenarioFixture,
   isSha256Digest,
   serializeUIScenarioFixture,
@@ -16,6 +17,10 @@ export {
   type FixtureRuntimeHarness,
 } from "./create-fixture-runtime.js";
 export { FixturePluginRuntime } from "./FixturePluginRuntime.js";
+export {
+  compilePluginProtocolTape,
+  type CompilePluginProtocolTapeOptions,
+} from "./compile-plugin-protocol-tape.js";
 export {
   createDeterministicIdFactory,
   defaultFixtureEnvironmentInit,
@@ -33,15 +38,16 @@ export {
 } from "./compiler.js";
 export {
   UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION,
+  UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL,
   UI_SCENARIO_FIXTURE_SCHEMA_VERSION,
   UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR,
   assertSupportedBrowserInteractionProtocol,
   parseUIScenarioFixture,
   parseUIScenarioFixtureBundleIndex,
+  pluginProtocolTapeSchema,
   portableSemanticReplayStepSchema,
   uiFixtureFrameSchema,
-  uiFixturePluginStateSnapshotSchema,
-  uiFixtureTransportExchangeSchema,
+  uiFixtureProtocolStepSchema,
   uiReplayExecutionSchema,
   uiReplayRequestSchema,
   uiResolvedReplayIdentitySchema,
@@ -49,9 +55,10 @@ export {
   uiScenarioFixtureSchema,
   uiScenarioReplayStepSchema,
   uiStepExpectationSchema,
+  type PluginProtocolTape,
   type PortableSemanticReplayStep,
   type UIFixtureFrame,
-  type UIFixtureTransportExchange,
+  type UIFixtureProtocolStep,
   type UIReplayExecution,
   type UIReplayRequest,
   type UIResolvedReplayIdentity,

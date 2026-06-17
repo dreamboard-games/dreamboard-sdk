@@ -7,11 +7,13 @@ const packagesDir = path.join(root, "packages");
 const publicPackageName = "@dreamboard-games/sdk";
 const removedLeafPackageNames = new Set([
   "@dreamboard-games/app-sdk",
+  "@dreamboard-games/plugin-runtime-contract",
   "@dreamboard-games/reducer-contract",
   "@dreamboard-games/sdk-types",
   "@dreamboard-games/testing",
   "@dreamboard-games/ui-runtime",
   "@dreamboard-games/ui-sdk",
+  "@dreamboard-games/ui-workbench",
   "@dreamboard-games/workspace-codegen",
 ]);
 // `workspace-codegen` is intentionally absent: it exists again as a private

@@ -4,11 +4,11 @@ import {
   serializeUIScenarioFixture,
 } from "./canonical.js";
 import { DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION } from "../../browser-interaction/index.js";
+import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION } from "@dreamboard-games/plugin-runtime-contract";
 import {
   parseUIScenarioFixture,
   type PortableSemanticReplayStep,
-  type UIFixtureFrame,
-  type UIFixtureTransportExchange,
+  type PluginProtocolTape,
   type UIResolvedReplayIdentity,
   type UIScenarioFixture,
   type UIScenarioReplayStep,
@@ -23,8 +23,7 @@ export interface CompileUIScenarioFixtureOptions {
   readonly source: UIScenarioFixture["source"];
   readonly viewer: UIScenarioFixture["viewer"];
   readonly environment: UIScenarioFixture["environment"];
-  readonly frames: readonly UIFixtureFrame[];
-  readonly transport?: readonly UIFixtureTransportExchange[];
+  readonly protocol: PluginProtocolTape;
   readonly replay?: readonly UIScenarioReplayStep[];
   readonly expected?: Partial<UIScenarioFixture["expected"]>;
 }
@@ -34,10 +33,12 @@ export type UIReplayIdentityCandidate = UIResolvedReplayIdentity;
 export function compileUIScenarioFixture(
   options: CompileUIScenarioFixtureOptions,
 ): UIScenarioFixture {
-  const firstFrame = options.frames[0];
-  const finalFrame = options.frames[options.frames.length - 1];
+  const firstFrame = options.protocol.frames[0];
+  const finalFrame = lastPublishedFrame(options.protocol);
   if (!firstFrame || !finalFrame) {
-    throw new Error("compileUIScenarioFixture requires at least one frame.");
+    throw new Error(
+      "compileUIScenarioFixture requires at least one protocol frame.",
+    );
   }
 
   const replay = options.replay ?? [];
@@ -61,9 +62,10 @@ export function compileUIScenarioFixture(
 
   return parseUIScenarioFixture(
     canonicalizeUIScenarioFixture({
-      schemaVersion: 1,
+      schemaVersion: 2,
       browserInteractionProtocol:
         DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
+      pluginRuntimeProtocol: PLUGIN_RUNTIME_PROTOCOL_VERSION,
       id: options.id,
       title: options.title,
       gameId: options.gameId,
@@ -71,8 +73,7 @@ export function compileUIScenarioFixture(
       source: options.source,
       viewer: options.viewer,
       environment: options.environment,
-      frames: options.frames,
-      transport: [...(options.transport ?? [])],
+      protocol: options.protocol,
       replay,
       expected: {
         initialProjectionDigest:
@@ -86,6 +87,19 @@ export function compileUIScenarioFixture(
       },
     }),
   );
+}
+
+function lastPublishedFrame(
+  protocol: PluginProtocolTape,
+): PluginProtocolTape["frames"][number] | undefined {
+  const frameById = new Map(protocol.frames.map((frame) => [frame.id, frame]));
+  for (let index = protocol.steps.length - 1; index >= 0; index -= 1) {
+    const step = protocol.steps[index];
+    if (step?.kind === "host.frame") {
+      return frameById.get(step.frameId);
+    }
+  }
+  return protocol.frames[protocol.frames.length - 1];
 }
 
 export function assertDeterministicUIScenarioFixture(

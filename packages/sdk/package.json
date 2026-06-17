@@ -105,7 +105,7 @@
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
+    "build": "pnpm --dir ../.. --filter @dreamboard-games/plugin-runtime-contract build && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
     "typecheck": "tsc --noEmit",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
@@ -130,6 +130,7 @@
   },
   "devDependencies": {
     "@dreamboard-games/reducer-contract": "workspace:*",
+    "@dreamboard-games/plugin-runtime-contract": "workspace:*",
     "@dreamboard-games/sdk-types": "workspace:*",
     "@dreamboard-games/workspace-codegen": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
