@@ -13,6 +13,7 @@
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm generate:check && pnpm publication:check && pnpm version:check && pnpm peer-hygiene:check && pnpm build && pnpm exports:check && pnpm pack:consumer-check && pnpm docs:check && pnpm test && pnpm pack:dry-run",
     "authoring-metadata:generate": "node scripts/generate-authoring-metadata.mjs",
     "authoring-metadata:check": "node scripts/generate-authoring-metadata.mjs --check",
+    "authoring:candidate": "node scripts/build-authoring-candidate.mjs",
     "docs:check": "node scripts/generate-agent-reference.mjs --check",
     "docs:generate": "node scripts/generate-agent-reference.mjs",
     "format": "prettier --write .",

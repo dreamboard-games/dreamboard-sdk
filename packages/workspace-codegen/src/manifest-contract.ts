@@ -2475,6 +2475,11 @@ export function materializeManifestTable(options: {
     context?: string,
   ) => {
     const analyzedBoard = boardAnalysisByBaseId.get(boardBaseId);
+    if (!analyzedBoard) {
+      throw new Error(
+        `${context ?? "Component home"}.boardId: Unknown board '${boardBaseId}'.`,
+      );
+    }
     if (analyzedBoard?.board.scope === "perPlayer") {
       if (!ownerId) {
         throw new Error(
@@ -2489,18 +2494,32 @@ export function materializeManifestTable(options: {
   const resolveBoardEdgeId = (
     boardBaseId: string,
     spaceIds: readonly string[],
-  ) =>
-    edgeIdByBoardBaseIdAndSpaces
+  ) => {
+    const edgeId = edgeIdByBoardBaseIdAndSpaces
       .get(boardBaseId)
-      ?.get(boardSpaceRefKey(spaceIds)) ?? boardSpaceRefKey(spaceIds);
+      ?.get(boardSpaceRefKey(spaceIds));
+    if (!edgeId) {
+      throw new Error(
+        `Unknown edge on board '${boardBaseId}' for spaces [${spaceIds.join(", ")}].`,
+      );
+    }
+    return edgeId;
+  };
 
   const resolveBoardVertexId = (
     boardBaseId: string,
     spaceIds: readonly string[],
-  ) =>
-    vertexIdByBoardBaseIdAndSpaces
+  ) => {
+    const vertexId = vertexIdByBoardBaseIdAndSpaces
       .get(boardBaseId)
-      ?.get(boardSpaceRefKey(spaceIds)) ?? boardSpaceRefKey(spaceIds);
+      ?.get(boardSpaceRefKey(spaceIds));
+    if (!vertexId) {
+      throw new Error(
+        `Unknown vertex on board '${boardBaseId}' for spaces [${spaceIds.join(", ")}].`,
+      );
+    }
+    return vertexId;
+  };
 
   const materializeComponentLocation = (
     home: NonNullable<BoardCard["home"]>,
@@ -2527,7 +2546,13 @@ export function materializeManifestTable(options: {
     }
 
     if (home.type === "zone") {
-      if (zoneScopeById.get(home.zoneId) === "perPlayer") {
+      const zoneScope = zoneScopeById.get(home.zoneId);
+      if (!zoneScope) {
+        throw new Error(
+          `${context.path}.zoneId: ${context.label} targets unknown zone '${home.zoneId}'.`,
+        );
+      }
+      if (zoneScope === "perPlayer") {
         throw new Error(
           `${context.path}.zoneId: ${context.label} cannot target per-player zone '${home.zoneId}' because card inventory has no ownerId. Place it during reducer setup instead.`,
         );
@@ -2550,6 +2575,13 @@ export function materializeManifestTable(options: {
         null,
         `${context.path}.boardId: ${context.label}`,
       );
+      if (
+        !analysis.spaceIdsByBoardId.get(home.boardId)?.includes(home.spaceId)
+      ) {
+        throw new Error(
+          `${context.path}.spaceId: ${context.label} targets unknown space '${home.spaceId}' on board '${home.boardId}'.`,
+        );
+      }
       return {
         type: "OnSpace",
         boardId,
@@ -2568,6 +2600,15 @@ export function materializeManifestTable(options: {
         null,
         `${context.path}.boardId: ${context.label}`,
       );
+      if (
+        !analysis.containerIdsByBoardId
+          .get(home.boardId)
+          ?.includes(home.containerId)
+      ) {
+        throw new Error(
+          `${context.path}.containerId: ${context.label} targets unknown container '${home.containerId}' on board '${home.boardId}'.`,
+        );
+      }
       return {
         type: "InContainer",
         boardId,
@@ -2586,10 +2627,7 @@ export function materializeManifestTable(options: {
         null,
         `${context.path}.boardId: ${context.label}`,
       );
-      const edgeId = resolveBoardEdgeId(
-        home.boardId,
-        home.ref.spaces,
-      );
+      const edgeId = resolveBoardEdgeId(home.boardId, home.ref.spaces);
       return {
         type: "OnEdge",
         boardId,
@@ -2608,10 +2646,7 @@ export function materializeManifestTable(options: {
         null,
         `${context.path}.boardId: ${context.label}`,
       );
-      const vertexId = resolveBoardVertexId(
-        home.boardId,
-        home.ref.spaces,
-      );
+      const vertexId = resolveBoardVertexId(home.boardId, home.ref.spaces);
       return {
         type: "OnVertex",
         boardId,
@@ -2625,7 +2660,9 @@ export function materializeManifestTable(options: {
     }
 
     const exhaustive: never = home;
-    throw new Error(`Unsupported component home: ${JSON.stringify(exhaustive)}`);
+    throw new Error(
+      `Unsupported component home: ${JSON.stringify(exhaustive)}`,
+    );
   };
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
@@ -2653,10 +2690,13 @@ export function materializeManifestTable(options: {
           card.home === undefined
             ? `manifest.cardSets[${cardSetIndex}].defaultHome`
             : `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
-        componentLocations[cardId] = materializeComponentLocation(resolvedHome, {
-          path,
-          label: `Card '${card.type}' instance ${instanceIndex + 1}`,
-        });
+        componentLocations[cardId] = materializeComponentLocation(
+          resolvedHome,
+          {
+            path,
+            label: `Card '${card.type}' instance ${instanceIndex + 1}`,
+          },
+        );
       }
     }
   }

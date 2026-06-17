@@ -1,5 +1,6 @@
 export {
   GENERATED_WORKSPACE_PATHS,
+  GENERATED_WORKSPACE_PATH_PATTERNS,
   MANIFEST_CONFORMANCE_CASES,
   diagnosticCodesForValidationErrors,
   generateTestArtifacts,
@@ -14,5 +15,6 @@ export type {
   GenerateTestArtifactsInputV1,
   GeneratedArtifactV1,
   GeneratedAuthoringMetadataV1,
+  GeneratedPathPatternV1,
   ProjectAuthoringAdapterV1,
 } from "./types.js";

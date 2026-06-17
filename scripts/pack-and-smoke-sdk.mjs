@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -22,9 +22,13 @@ function run(command, args, options = {}) {
 }
 
 async function main() {
-  const tempRoot = await mkdtemp(
-    path.join(tmpdir(), "dreamboard-sdk-pack-smoke-"),
-  );
+  const retainedRoot = process.env.AUTHORING_CANDIDATE_DIR
+    ? path.resolve(process.env.AUTHORING_CANDIDATE_DIR)
+    : null;
+  const tempRoot =
+    retainedRoot ??
+    (await mkdtemp(path.join(tmpdir(), "dreamboard-sdk-pack-smoke-")));
+  await mkdir(tempRoot, { recursive: true });
   try {
     const pack = run(
       "npm",
@@ -41,9 +45,22 @@ async function main() {
     run("node", ["scripts/smoke-packed-sdk.mjs", tarballPath], {
       cwd: root,
       stdio: "inherit",
+      env: {
+        ...process.env,
+        ...(retainedRoot
+          ? {
+              AUTHORING_SMOKE_RECEIPT: path.join(
+                retainedRoot,
+                "sdk-authoring-candidate-receipt.json",
+              ),
+            }
+          : {}),
+      },
     });
   } finally {
-    await rm(tempRoot, { recursive: true, force: true });
+    if (!retainedRoot) {
+      await rm(tempRoot, { recursive: true, force: true });
+    }
   }
 }
 

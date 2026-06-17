@@ -470,12 +470,11 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
   );
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
-    if (cardSet.type !== "manual") {
-      continue;
-    }
     if (!cardSet.defaultHome) {
       issues.push(
-        `manifest.cardSets[${cardSetIndex}].defaultHome: Manual card sets must declare defaultHome.`,
+        `manifest.cardSets[${cardSetIndex}].defaultHome: ${
+          cardSet.type === "manual" ? "Manual" : "Preset"
+        } card sets must declare defaultHome.`,
       );
       continue;
     }
@@ -507,7 +506,10 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
       `manifest.cardSets[${cardSetIndex}].defaultHome`,
       `Card set '${cardSet.id}' defaultHome`,
     );
-    for (const [cardIndex, card] of cardSet.cards.entries()) {
+    for (const [cardIndex, card] of (cardSet.type === "manual"
+      ? cardSet.cards
+      : []
+    ).entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
       validateCardHome(card.home, path, `Card '${card.type}'`);
     }

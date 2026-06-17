@@ -3,7 +3,6 @@ import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
   PluginToHostPayload,
-  SubmissionResult,
   ValidationResult,
 } from "@dreamboard-games/plugin-runtime-contract";
 

@@ -1,4 +1,7 @@
-import type { GameTopologyManifest, JsonValue } from "@dreamboard-games/sdk-types";
+import type {
+  GameTopologyManifest,
+  JsonValue,
+} from "@dreamboard-games/sdk-types";
 
 export type GeneratedAuthoringMetadataV1 = {
   sdkVersion: string;
@@ -20,6 +23,11 @@ export type GeneratedArtifactV1 = {
   contentSha256: string;
 };
 
+export type GeneratedPathPatternV1 = {
+  prefix: string;
+  suffix: string;
+};
+
 export type GenerateTestArtifactsInputV1 = {
   manifest: GameTopologyManifest;
 };
@@ -28,14 +36,23 @@ export type AuthoringManifestConformanceCaseV1 = {
   id: string;
   manifest: JsonValue;
   expected:
-    | { valid: true; materializedSha256: string }
-    | { valid: false; diagnosticCodes: readonly string[] };
+    | {
+        valid: true;
+        transportValid: true;
+        materializedSha256: string;
+      }
+    | {
+        valid: false;
+        transportValid: boolean;
+        diagnosticCodes: readonly string[];
+      };
 };
 
 export type ProjectAuthoringAdapterV1 = {
   protocolVersion: 1;
   metadata: GeneratedAuthoringMetadataV1;
   generatedPaths: readonly string[];
+  generatedPathPatterns: readonly GeneratedPathPatternV1[];
   manifestConformanceCases: readonly AuthoringManifestConformanceCaseV1[];
   validateManifest(manifest: unknown): AuthoringValidationResultV1;
   materializeManifest(manifest: unknown): JsonValue;

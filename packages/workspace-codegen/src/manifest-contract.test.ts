@@ -1278,10 +1278,7 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
     host: { kind: "piece", id: "holder-a" },
     slotId: "pocket",
   });
-  expect(table.zones.shared["shared-deck"]).toEqual([
-    "omitted",
-    "zone-card",
-  ]);
+  expect(table.zones.shared["shared-deck"]).toEqual(["omitted", "zone-card"]);
   expect(table.decks["shared-deck"]).toEqual(["omitted", "zone-card"]);
   expect(table.zones.shared["compatible-only"]).toEqual([]);
 });
@@ -2113,6 +2110,7 @@ test("generateManifestContractSource typechecks preset standard deck contracts",
           id: "playing-cards",
           presetId: "standard_52_deck",
           name: "Standard 52-Card Deck",
+          defaultHome: { type: "detached" },
         },
       ],
       zones: [],

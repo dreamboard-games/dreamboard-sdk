@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.1";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.1";
 ```
 
 _No JSDoc summary is available yet._
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION = "0.4.0-alpha.1";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.1";
 ```
 
 _No JSDoc summary is available yet._
@@ -1270,24 +1270,7 @@ Supported player-count metadata for the game
 ### PresetCardSetDefinition
 
 ```ts
-type PresetCardSetDefinition = {
-  /**
-   * Unique local identifier for the authored card set
-   */
-  id: string;
-  /**
-   * Built-in preset card-set selector
-   */
-  presetId: string;
-  /**
-   * Display name of the card set
-   */
-  name: string;
-  /**
-   * Type of card set source
-   */
-  type: "preset";
-};
+type PresetCardSetDefinition = ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -18679,6 +18662,181 @@ _No JSDoc summary is available yet._
 
 ```ts
 const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership;
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/authoring
+
+### AuthoringManifestConformanceCaseV1
+
+```ts
+type AuthoringManifestConformanceCaseV1 = {
+  id: string;
+  manifest: JsonValue;
+  expected:
+    | {
+        valid: true;
+        transportValid: true;
+        materializedSha256: string;
+      }
+    | {
+        valid: false;
+        transportValid: boolean;
+        diagnosticCodes: readonly string[];
+      };
+};
+```
+
+_No JSDoc summary is available yet._
+
+### AuthoringValidationResultV1
+
+```ts
+type AuthoringValidationResultV1 = {
+  valid: boolean;
+  errors: readonly string[];
+  warnings: readonly string[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### diagnosticCodesForValidationErrors
+
+```ts
+function diagnosticCodesForValidationErrors(
+  errors: readonly string[],
+): readonly string[];
+```
+
+_No JSDoc summary is available yet._
+
+### GENERATED_WORKSPACE_PATH_PATTERNS
+
+```ts
+const GENERATED_WORKSPACE_PATH_PATTERNS: {
+  prefix: string;
+  suffix: string;
+}[];
+```
+
+_No JSDoc summary is available yet._
+
+### GENERATED_WORKSPACE_PATHS
+
+```ts
+const GENERATED_WORKSPACE_PATHS: readonly [
+  ...string[],
+  "test/generated/base-state.json",
+];
+```
+
+_No JSDoc summary is available yet._
+
+### GeneratedArtifactV1
+
+```ts
+type GeneratedArtifactV1 = {
+  path: string;
+  ownership: "authoritative" | "seed" | "derived-test";
+  content: string;
+  contentSha256: string;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GeneratedAuthoringMetadataV1
+
+```ts
+type GeneratedAuthoringMetadataV1 = {
+  sdkVersion: string;
+  codegenVersion: string;
+  manifestSchemaVersion: number;
+  generatedArtifactSchemaVersion: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GeneratedPathPatternV1
+
+```ts
+type GeneratedPathPatternV1 = {
+  prefix: string;
+  suffix: string;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### generateTestArtifacts
+
+```ts
+function generateTestArtifacts(
+  input: GenerateTestArtifactsInputV1,
+): readonly GeneratedArtifactV1[];
+```
+
+_No JSDoc summary is available yet._
+
+### GenerateTestArtifactsInputV1
+
+```ts
+type GenerateTestArtifactsInputV1 = {
+  manifest: GameTopologyManifest;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### generateWorkspaceArtifacts
+
+```ts
+function generateWorkspaceArtifacts(
+  manifest: unknown,
+): readonly GeneratedArtifactV1[];
+```
+
+_No JSDoc summary is available yet._
+
+### MANIFEST_CONFORMANCE_CASES
+
+```ts
+const MANIFEST_CONFORMANCE_CASES: readonly AuthoringManifestConformanceCaseV1[];
+```
+
+_No JSDoc summary is available yet._
+
+### materializeManifest
+
+```ts
+function materializeManifest(manifest: unknown): JsonValue;
+```
+
+_No JSDoc summary is available yet._
+
+### projectAuthoringAdapter
+
+```ts
+const projectAuthoringAdapter: ProjectAuthoringAdapterV1;
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectAuthoringAdapterV1
+
+```ts
+type ProjectAuthoringAdapterV1 = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### validateManifest
+
+```ts
+function validateManifest(manifest: unknown): AuthoringValidationResultV1;
 ```
 
 _No JSDoc summary is available yet._

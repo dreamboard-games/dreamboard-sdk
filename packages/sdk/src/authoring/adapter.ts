@@ -1,8 +1,12 @@
 import { createHash } from "node:crypto";
-import type { GameTopologyManifest, JsonValue } from "@dreamboard-games/sdk-types";
+import type {
+  GameTopologyManifest,
+  JsonValue,
+} from "@dreamboard-games/sdk-types";
 import {
   AUTHORITATIVE_GENERATED_FILES,
   SEED_FILES,
+  SEED_FILE_PATTERNS,
   generateAuthoritativeFiles,
   generateSeedFiles,
   materializeManifestTable,
@@ -23,6 +27,9 @@ import type {
 const PLAYER_IDS = ["player-1", "player-2"] as const;
 
 function stableJson(value: unknown): string {
+  if (value === undefined) {
+    return "null";
+  }
   if (value === null || typeof value !== "object") {
     return JSON.stringify(value);
   }
@@ -30,6 +37,7 @@ function stableJson(value: unknown): string {
     return `[${value.map((item) => stableJson(item)).join(",")}]`;
   }
   return `{${Object.entries(value as Record<string, unknown>)
+    .filter(([, entry]) => entry !== undefined)
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, entry]) => `${JSON.stringify(key)}:${stableJson(entry)}`)
     .join(",")}}`;
@@ -55,7 +63,9 @@ function normalizeArtifact(
     path.length === 0 ||
     path.startsWith("/") ||
     path.includes("\\") ||
-    path.split("/").some((segment) => !segment || segment === "." || segment === "..")
+    path
+      .split("/")
+      .some((segment) => !segment || segment === "." || segment === "..")
   ) {
     throw new Error(`Generated artifact path '${path}' is not normalized.`);
   }
@@ -82,11 +92,15 @@ function validateNoDuplicateArtifactPaths(
   const seen = new Set<string>();
   for (const artifact of artifacts) {
     if (seen.has(artifact.path)) {
-      throw new Error(`Generated artifact path '${artifact.path}' was emitted twice.`);
+      throw new Error(
+        `Generated artifact path '${artifact.path}' was emitted twice.`,
+      );
     }
     seen.add(artifact.path);
     if (artifact.contentSha256 !== sha256(artifact.content)) {
-      throw new Error(`Generated artifact '${artifact.path}' has a stale hash.`);
+      throw new Error(
+        `Generated artifact '${artifact.path}' has a stale hash.`,
+      );
     }
   }
 }
@@ -95,10 +109,19 @@ export function validateManifest(
   manifest: unknown,
 ): AuthoringValidationResultV1 {
   try {
-    const result = validateManifestAuthoring(assertManifest(manifest));
+    const gameManifest = assertManifest(manifest);
+    const result = validateManifestAuthoring(gameManifest);
+    const errors = [...result.errors];
+    if (errors.length === 0) {
+      try {
+        materializeManifest(gameManifest);
+      } catch (error) {
+        errors.push(error instanceof Error ? error.message : String(error));
+      }
+    }
     return {
-      valid: result.errors.length === 0,
-      errors: result.errors,
+      valid: errors.length === 0,
+      errors,
       warnings: result.warnings,
     };
   } catch (error) {
@@ -128,7 +151,7 @@ export function generateWorkspaceArtifacts(
       "authoritative",
     ),
     ...normalizeArtifacts(generateSeedFiles(gameManifest), "seed"),
-  ];
+  ].sort((left, right) => left.path.localeCompare(right.path));
   validateNoDuplicateArtifactPaths(artifacts);
   return artifacts;
 }
@@ -149,19 +172,18 @@ export function generateTestArtifacts(
 export const GENERATED_WORKSPACE_PATHS = [
   ...AUTHORITATIVE_GENERATED_FILES,
   ...SEED_FILES,
+  "test/generated/base-state.json",
 ] as const;
 
-export const MANIFEST_CONFORMANCE_CASES = createManifestConformanceCases({
-  materializeManifest,
-  sha256,
-  stableJson,
-  validateManifest,
-});
+export const GENERATED_WORKSPACE_PATH_PATTERNS = SEED_FILE_PATTERNS;
+
+export const MANIFEST_CONFORMANCE_CASES = createManifestConformanceCases();
 
 export const projectAuthoringAdapter: ProjectAuthoringAdapterV1 = {
   protocolVersion: 1,
   metadata: GENERATED_AUTHORING_METADATA,
   generatedPaths: GENERATED_WORKSPACE_PATHS,
+  generatedPathPatterns: GENERATED_WORKSPACE_PATH_PATTERNS,
   manifestConformanceCases: MANIFEST_CONFORMANCE_CASES,
   validateManifest,
   materializeManifest,

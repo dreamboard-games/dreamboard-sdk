@@ -1,5 +1,6 @@
 import type {
   BoardCard,
+  ComponentHomeSpec,
   GameTopologyManifest,
   ManualCardSetDefinition,
   ObjectSchema,
@@ -27,7 +28,9 @@ function createStringPropertySchema(description: string): PropertySchema {
   };
 }
 
-export function createStandard52CardDeck(): ManualCardSetDefinition {
+export function createStandard52CardDeck(
+  defaultHome: ComponentHomeSpec = { type: "detached" },
+): ManualCardSetDefinition {
   const suits = ["SPADES", "HEARTS", "CLUBS", "DIAMONDS"];
   const ranks = [
     "3",
@@ -67,7 +70,7 @@ export function createStandard52CardDeck(): ManualCardSetDefinition {
     id: STANDARD_DECK_ID,
     name: "Standard 52-Card Deck",
     type: "manual",
-    defaultHome: { type: "detached" },
+    defaultHome,
     cards,
     cardSchema: {
       properties: {
@@ -89,7 +92,7 @@ export function addStandardDecksIfNeeded(
     cardSets: manifest.cardSets.map((cardSet) =>
       cardSet.type === "preset" && cardSet.presetId === STANDARD_DECK_ID
         ? {
-            ...createStandard52CardDeck(),
+            ...createStandard52CardDeck(cardSet.defaultHome),
             id: cardSet.id,
             name: cardSet.name,
           }
@@ -105,7 +108,7 @@ export function materializePresetCardSet(
     throw new Error(`Unsupported preset deck: ${presetCardSet.presetId}`);
   }
 
-  const standardDeck = createStandard52CardDeck();
+  const standardDeck = createStandard52CardDeck(presetCardSet.defaultHome);
   return {
     ...standardDeck,
     id: presetCardSet.id,
