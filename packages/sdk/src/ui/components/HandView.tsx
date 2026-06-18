@@ -22,7 +22,7 @@
  *   that does not commit. Drop emits an opaque `drop` intent.
  *
  * Layout, gesture, scroll arbitration and tray presentation are documented in
- * `docs/references/ui-sdk-mobile-hand-and-card-interactions.md`.
+ * `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md`.
  */
 
 import {

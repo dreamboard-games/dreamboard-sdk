@@ -57,8 +57,8 @@ Update:
 
 - `AGENTS.md`;
 - `docs/architecture/ui-test-surfaces.md`;
-- `docs/references/ui-iteration-loops.md`;
-- `docs/references/ui-workbench-behavioral-proof.md`.
+- `docs/reference/ui-iteration-loops.md`;
+- `docs/reference/ui-workbench-behavioral-proof.md`.
 
 Regenerate:
 
