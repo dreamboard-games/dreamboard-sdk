@@ -275,7 +275,7 @@ export type RequiredInteractionInputKey<Key extends InteractionKey> =
   RequiredInteractionInputKeysOf<Key>;
 
 type InteractionSlotComponent<Props = object> = (
-  props: Props extends { children: unknown }
+  props: Props extends { children?: unknown }
     ? Props
     : Props & { children?: ReactNode },
 ) => ReactElement | null;

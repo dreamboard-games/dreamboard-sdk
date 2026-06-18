@@ -238,7 +238,7 @@
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
     "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:779b69c43946c8e2ba78c2d311be3d811b4981b23028148de8949e9ef9b56681",
+    "sourceDigest": "sha256:fe56f1d21628e059cc2a0e42999e1fa2458e203172fa1ccfe9aae8c3d54533aa",
     "sourceFiles": [
       "examples/reference-games/simultaneous-card-drafting/scenarios/coverage.json",
       "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",

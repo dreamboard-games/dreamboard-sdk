@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.zones-staging.desktop",
-    "sourceDigest": "sha256:e08e653f52a74df175e18bcba8da4a5a87b960d52dabf0696183726b117672fc",
+    "sourceDigest": "sha256:d3a309a37862d05bd5b31c20b617cc27a88acee70ee2adf75f2225890a83d28c",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

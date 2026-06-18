@@ -51,11 +51,11 @@ export function HeartsInteractionRoutes({
           ) : null
         }
       </setupForm.State>
-      {/* The passing submit renders inside the hand summary instead of here
-          (built as `passAction` in game-ui.tsx, passed to HandRow's
-          renderSummary). On mobile the SDK lifts the hand into a modal drawer,
+      {/* The passing submit renders inside the hand action slot instead of here
+          (built as `passAction` in game-ui.tsx, passed to HandRow). On mobile
+          the SDK lifts the hand into a modal drawer,
           so a felt-anchored button would sit behind the drawer scrim and be
-          untappable — keeping it in the hand summary puts it inside the drawer
+          untappable — keeping it in the hand action slot puts it inside the drawer
           with the selected cards. */}
       <playingSubmitForm.State unavailable={null}>
         {(state) =>

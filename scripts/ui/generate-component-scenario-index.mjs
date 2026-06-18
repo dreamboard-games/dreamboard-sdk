@@ -160,22 +160,6 @@ function buildContractIndex({ contracts, entries }) {
   );
 }
 
-function buildLegacyComponentIndex(contracts) {
-  return Object.fromEntries(
-    Object.entries(contracts)
-      .filter(([, contract]) => contract.kind === "component")
-      .map(([contractId, contract]) => [
-        contractId,
-        {
-          sourceFiles: contract.sourceFiles,
-          storyIds: contract.storyIds,
-          scenarioIds: contract.scenarioIds,
-          capabilities: contract.capabilities,
-        },
-      ]),
-  );
-}
-
 export async function generateComponentScenarioIndex({
   check = false,
   entries,
@@ -193,7 +177,6 @@ export async function generateComponentScenarioIndex({
     schemaVersion: 2,
     contracts: contractIndex,
     scenarios: buildScenarioIndex(entries),
-    components: buildLegacyComponentIndex(contractIndex),
     sharedFallbacks,
   };
 

@@ -36,6 +36,19 @@ function formatList(values) {
   return values.length > 0 ? values.join(", ") : "none";
 }
 
+function componentContractRows(componentIndex) {
+  return Object.values(componentIndex.contracts ?? {})
+    .filter((entry) => entry.kind === "component")
+    .sort((left, right) => left.id.localeCompare(right.id))
+    .map((entry) => [
+      entry.id,
+      formatList((entry.scenarioIds ?? []).map((id) => `\`${id}\``)),
+      formatList(
+        (entry.capabilities ?? []).map((capability) => `\`${capability}\``),
+      ),
+    ]);
+}
+
 async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
   const packageJson = await readJson(path.join(root, "package.json"));
   const decisionRows = [
@@ -54,17 +67,15 @@ async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
       "`pnpm ui:test --capability runtime-submit && pnpm ui:test:packed`",
     ],
     [
+      "Composed runtime visuals",
+      "`pnpm ui:test:runtime-visual` (`pnpm ui:test:runtime-visual:update` to accept intentional changes)",
+    ],
+    [
       "Browser-interaction protocol",
       "Full `pnpm ui:check`, Hearts packed proof, and Hearts real-host parity",
     ],
   ];
-  const componentRows = Object.entries(componentIndex.components).map(
-    ([component, entry]) => [
-      component,
-      formatList(entry.scenarioIds.map((id) => `\`${id}\``)),
-      formatList(entry.capabilities.map((capability) => `\`${capability}\``)),
-    ],
-  );
+  const componentRows = componentContractRows(componentIndex);
   const scenarioRows = scenarios.map((scenario) => [
     `\`${scenario.id}\``,
     requiredScenarioIds.has(scenario.id)
@@ -86,6 +97,7 @@ This guide is generated from the live UI scenario catalog and root command map.
 
 - PR fast gate: \`${packageJson.scripts["ui:test:changed"]}\`
 - Main full gate: \`${packageJson.scripts["ui:check"]}\`
+- Runtime visual gate: \`${packageJson.scripts["ui:test:runtime-visual"]}\`
 - Release proof: \`${packageJson.scripts["ui:release-proof"]}\`
 - Focused Workbench route: \`pnpm ui:workbench -- --scenario <scenario-id>\`
 
@@ -112,6 +124,9 @@ ${table(["Scenario", "Release role", "Title", "Components", "Capabilities"], sce
 Workbench receipts record semantic, projection, draft, and submission digests
 under \`artifacts/ui/<run-id>/receipt.json\`. Storybook interaction and visual
 receipts are written under \`artifacts/ui-stories\` and \`artifacts/ui-visual\`.
+Workbench runtime visual baselines live beside
+\`packages/ui-workbench/tests/runtime-visual.spec.ts\` and are updated only by
+\`pnpm ui:test:runtime-visual:update\`.
 Packed verification writes \`build/reference-games/packed-consumer-receipt.json\`,
 and release proof writes \`artifacts/ui-release-proof/<run-id>/receipt.json\`.
 Attach the relevant receipt paths and any parity receipt to handoff notes.

@@ -469,7 +469,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.buy-card.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "fixtureDigest": "sha256:8a21e4ae11c0b5f0089033ba595e0e2b0dc55d88823bee7df470ecd2240e09b6",
+      "fixtureDigest": "sha256:3d7a60707184355bcbb48c444d33c19784d1a127dc46ef0adf7bfb56068364c6",
       "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9"
     },
     "hearts.pass-three.mobile": {
@@ -494,7 +494,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.pass-three.mobile.fixture.json",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "fixtureDigest": "sha256:79991440dffd7e10ef25f3e5083c71ffba1f1d518d00ed4baae6280d944a9840",
+      "fixtureDigest": "sha256:9537295c35371460b46e373b3de13ec271912041eec9862dddd4c2034134bc47",
       "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff"
     },
     "hex-network-trading.place-route.desktop": {
@@ -523,7 +523,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.place-route.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "fixtureDigest": "sha256:cf05ee1c1c46abb5a02cb2c76072dbd9e9256a24d1db307acc31762a7d29365e",
+      "fixtureDigest": "sha256:ed6b7e6d5ab05c329116cc93e50fcc23299cd6fa85624b959f2b1c01b12f8136",
       "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36"
     },
     "simultaneous-card-drafting.lock-choice.mobile": {
@@ -548,7 +548,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "fixtureDigest": "sha256:f2468d34eee858525e178705b6fd1c6672d196745a403dce27a56b35a9a35181",
+      "fixtureDigest": "sha256:7995a75006a0797ffb9f482a6efabd11ecad827e37b5c289bf8dd9f1ca581cf9",
       "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148"
     },
     "ui-scenarios.boards-slot.desktop": {
@@ -566,7 +566,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-      "fixtureDigest": "sha256:94522a7d470f91817862f7e362f238af34ac66ff83312f95c5ee2f7c0999b982",
+      "fixtureDigest": "sha256:8858fe5676f3deb8178000e7c0d8dcfa86ff10f5a0080dd20ed4af669d569bda",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.cards-hand.desktop": {
@@ -590,7 +590,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-      "fixtureDigest": "sha256:a31da89a7f4a4b1f3edf0640dae3c599c8105712d5a29a84c7e6ba72cf3ade69",
+      "fixtureDigest": "sha256:51c09bfe7f61b489a19a4c945ee724259c0d510241d56e73b4654b7c410ab1bc",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.dice-result.desktop": {
@@ -608,7 +608,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
-      "fixtureDigest": "sha256:d75c7d7527745b2a6f8d90f823e75edc49e6a89e53c396b60c5e889c742e9b66",
+      "fixtureDigest": "sha256:32ad12e6577c3576aa8a42932dee012ae3b2b5d97fddd9d159fa3f6f052074e3",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.game-shell.desktop": {
@@ -626,7 +626,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
-      "fixtureDigest": "sha256:6f15db65940ff0e63232edcd10925375fc2daefe7c6124257a708970d9064e2f",
+      "fixtureDigest": "sha256:7c8f95e91e96bceec322ca2394bd6ac9bae11cb98334e101974fa41f3eb5d879",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.prompts-choice.desktop": {
@@ -650,7 +650,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
-      "fixtureDigest": "sha256:d37e65d0ff0f3926690441595a90dfe4f079375bcd281cdb3a7b77140b03dea8",
+      "fixtureDigest": "sha256:804e416b6f7e70c0ff2aa5d13737048c8641d8eff0a07d72c3e6b3dd356256b5",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.resources-cost.desktop": {
@@ -668,7 +668,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
-      "fixtureDigest": "sha256:5d56c8c5688953f1e44fcd21a749be9f39b07de6de30b7cad4027cc9eeac23f6",
+      "fixtureDigest": "sha256:81f8fc8e57141f8ff1fdc10d588e0fee30a6e51063da4d495e2d45a5af2317d1",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "ui-scenarios.zones-staging.desktop": {
@@ -686,7 +686,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
-      "fixtureDigest": "sha256:7dbe0c5220441e826c103f222a1a8c1f2f884e4ab8f632479705f60341b7072d",
+      "fixtureDigest": "sha256:c0dcb737d0e66b17eb0ab16e68b87a6483cf124c5475bf848d145e4de02762a8",
       "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "worker-placement-tableau.place-worker.desktop": {
@@ -713,279 +713,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "fixtureDigest": "sha256:08ba039fdc5c58427f1fc61b4608ebe9b757c99627f4702e9431fc6a1829af93",
+      "fixtureDigest": "sha256:285b145dc689886089063ef09953d6dbbd854a515538c86274e5d806a79d9388",
       "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a"
-    }
-  },
-  "components": {
-    "ActionButton": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/ActionButton.tsx",
-        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
-      ],
-      "storyIds": ["buttons--action-button-states", "panels--compact-panel"],
-      "scenarioIds": [],
-      "capabilities": []
-    },
-    "ActionPanel": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/ActionPanel.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--compact-panel", "panels--focus-order"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "CardDragSurface": {
-      "sourceFiles": [
-        "packages/sdk/src/runtime/primitives/hand-surface.tsx",
-        "packages/sdk/src/ui/components/card-drag/CardDragSurface.tsx",
-        "packages/sdk/src/ui/stories/HandView.stories.tsx"
-      ],
-      "storyIds": [
-        "hands-handview--drag-to-target-pointer-drop",
-        "hands-handview--drag-to-target-surface-layout"
-      ],
-      "scenarioIds": ["hex-network-trading.place-route.desktop"],
-      "capabilities": ["click", "pointer-drag", "runtime-submit"]
-    },
-    "CardDropTargetView": {
-      "sourceFiles": [
-        "packages/sdk/src/runtime/primitives/hand-surface.tsx",
-        "packages/sdk/src/ui/components/card-drag/CardDropTargetView.tsx",
-        "packages/sdk/src/ui/stories/HandView.stories.tsx"
-      ],
-      "storyIds": [
-        "hands-handview--drag-to-target-keyboard-drop",
-        "hands-handview--drag-to-target-surface-layout"
-      ],
-      "scenarioIds": ["hex-network-trading.place-route.desktop"],
-      "capabilities": ["click", "pointer-drag", "runtime-submit"]
-    },
-    "CardFace": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/Card.tsx",
-        "packages/sdk/src/ui/stories/CardFace.stories.tsx"
-      ],
-      "storyIds": [
-        "cards-cardface--default-content",
-        "cards-cardface--interactive-controlled",
-        "cards-cardface--state-attributes-present"
-      ],
-      "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.cards-hand.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    "CostDisplay": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/CostDisplay.tsx",
-        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
-      ],
-      "storyIds": ["resource-status--cost"],
-      "scenarioIds": [
-        "hex-network-trading.place-route.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    "Dialog": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/internal/ui/dialog.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--dialog-standard"],
-      "scenarioIds": ["ui-scenarios.dice-result.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "Drawer": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/Drawer.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--mobile-bottom-sheet"],
-      "scenarioIds": [],
-      "capabilities": []
-    },
-    "HandView": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/HandView.tsx",
-        "packages/sdk/src/ui/components/hand-layout-math.ts",
-        "packages/sdk/src/ui/components/hand-pointer-engine.ts",
-        "packages/sdk/src/ui/stories/HandView.stories.tsx"
-      ],
-      "storyIds": [
-        "hands-handview--drag-to-target-selection-staging",
-        "hands-handview--five-card-fan",
-        "hands-handview--keyboard-emits-activate",
-        "hands-handview--phone-portrait-thirteen",
-        "hands-handview--tap-emits-activate"
-      ],
-      "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.cards-hand.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    "Input": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/internal/ui/input.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--dialog-standard"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "MoreActions": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/MoreActions.tsx",
-        "packages/sdk/src/ui/stories/Misc.stories.tsx"
-      ],
-      "storyIds": ["misc--toast-notifications"],
-      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "Panel": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/Panel.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--compound-panel"],
-      "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.cards-hand.desktop",
-        "ui-scenarios.dice-result.desktop",
-        "ui-scenarios.game-shell.desktop",
-        "ui-scenarios.prompts-choice.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "ui-scenarios.zones-staging.desktop",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    "PrimaryActionButton": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/PrimaryActionButton.tsx",
-        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
-      ],
-      "storyIds": ["buttons--primary-action-dock"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "PrimaryButton": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/PrimaryButton.tsx",
-        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
-      ],
-      "storyIds": ["buttons--themed-variants"],
-      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "ResourceCounter": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/ResourceCounter.tsx",
-        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
-      ],
-      "storyIds": [
-        "resource-status--resource-compact",
-        "resource-status--resource-zero-hidden"
-      ],
-      "scenarioIds": [
-        "hex-network-trading.place-route.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    "Select": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/internal/ui/select.tsx",
-        "packages/sdk/src/ui/stories/Panels.stories.tsx"
-      ],
-      "storyIds": ["panels--dialog-standard"],
-      "scenarioIds": [],
-      "capabilities": []
-    },
-    "SlotSystem": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/board/SlotSystem.tsx",
-        "packages/sdk/src/ui/stories/BoardTarget.stories.tsx"
-      ],
-      "storyIds": [
-        "board-targets--claimed-and-disabled",
-        "board-targets--eligible-targets"
-      ],
-      "scenarioIds": [
-        "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.zones-staging.desktop",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
-      "capabilities": ["click", "runtime-draft", "runtime-submit"]
-    },
-    "StagingZone": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/StagingZone.tsx",
-        "packages/sdk/src/ui/stories/StagingZone.stories.tsx"
-      ],
-      "storyIds": ["hand-stagingzone--removes-on-click"],
-      "scenarioIds": [
-        "ui-scenarios.cards-hand.desktop",
-        "ui-scenarios.zones-staging.desktop"
-      ],
-      "capabilities": ["click", "runtime-submit"]
-    },
-    "ThemedButton": {
-      "sourceFiles": [
-        "packages/sdk/src/ui/components/ThemedButton.tsx",
-        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
-      ],
-      "storyIds": [
-        "buttons--disabled-themed-button-does-not-invoke",
-        "buttons--themed-button-invokes-on-click",
-        "buttons--themed-variants"
-      ],
-      "scenarioIds": [
-        "ui-scenarios.dice-result.desktop",
-        "ui-scenarios.game-shell.desktop"
-      ],
-      "capabilities": ["click", "runtime-submit"]
     }
   },
   "sharedFallbacks": [

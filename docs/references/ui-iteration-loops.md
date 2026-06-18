@@ -7,10 +7,11 @@ proof that the framework matches a real `dreamboard` host.
 
 ## Two surfaces, split by what they prove
 
-| Surface       | Command                          | Proves                                                           | Sees the SDK as               | Speed              |
-| ------------- | -------------------------------- | ---------------------------------------------------------------- | ----------------------------- | ------------------ |
-| **Storybook** | `pnpm ui:storybook`              | _Presentation_ — pixels, layout, focus/hover, motion, a11y       | **source** (`packages/sdk`)   | HMR, instant       |
-| **Workbench** | `pnpm ui:workbench --scenario X` | _Behavior_ — semantics, actuator identity, projection/submission | **build** (`dist`) by default | rebuild, then live |
+| Surface            | Command                          | Proves                                                           | Sees the SDK as               | Speed              |
+| ------------------ | -------------------------------- | ---------------------------------------------------------------- | ----------------------------- | ------------------ |
+| **Storybook**      | `pnpm ui:storybook`              | _Presentation_ — pixels, layout, focus/hover, motion, a11y       | **source** (`packages/sdk`)   | HMR, instant       |
+| **Workbench**      | `pnpm ui:workbench --scenario X` | _Behavior_ — semantics, actuator identity, projection/submission | **build** (`dist`) by default | rebuild, then live |
+| **Runtime visual** | `pnpm ui:test:runtime-visual`    | _Stable composed states_ — selected runtime screenshots          | **build** (`dist`)            | explicit snapshots |
 
 - **Build presentation in Storybook.** It reads SDK source, so component edits
   hot-reload with no rebuild. This is where "pretty, accessible, responsive"
@@ -22,6 +23,10 @@ proof that the framework matches a real `dreamboard` host.
   replays a `PluginProtocolTape` _compiled from the reference game's actual
   reducer_. Use [`fixtures/ui/component-scenario-index.json`](../../fixtures/ui/component-scenario-index.json)
   to map a changed component to its scenarios.
+- **Keep runtime visual baselines small.** They cover a few representative
+  composed states that semantic digests cannot review visually: selected mobile
+  cards, board targeting, route placement, worker placement, and prompt
+  validation. Update them only with `pnpm ui:test:runtime-visual:update`.
 
 Mental model: **Storybook proves pixels, the Workbench proves behavior, and the
 theme motion-gate (below) is the membrane between them.**
@@ -97,6 +102,13 @@ independently, which is what makes agreement meaningful. The boundary of this
 proof is the **reference games**: parity holds for the patterns they cover, so
 their breadth is the real lever on confidence.
 
+## Backend-free command shape
+
+The normal SDK UI loop does not need a backend. Protocol scenarios cover
+primitive contracts directly from authored fixture tapes. Reference-game
+scenarios replay reducer-produced protocol tapes through the fixture transport.
+Use real-host parity only when proving the private product host integration.
+
 ## Command quick reference
 
 | Goal                              | Command                                                   |
@@ -106,6 +118,8 @@ their breadth is the real lever on confidence.
 | Behavior loop (source SDK, HMR)   | `pnpm ui:workbench:src --scenario <id>`                   |
 | Focused behavior check            | `pnpm ui:test --component <name>` / `--capability <name>` |
 | Visual regression (motion)        | `pnpm ui:test:visual`                                     |
+| Runtime visual baselines          | `pnpm ui:test:runtime-visual`                             |
+| Update runtime visual baselines   | `pnpm ui:test:runtime-visual:update`                      |
 | Changed-only gate                 | `pnpm ui:test:changed --base origin/main`                 |
 | Real-host parity proof            | `pnpm ui:test:parity --require-internal`                  |
 

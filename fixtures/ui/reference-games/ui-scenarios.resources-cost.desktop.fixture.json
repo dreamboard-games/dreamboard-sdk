@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.resources-cost.desktop",
-    "sourceDigest": "sha256:aeafc2ee13ac7dd958cef347af8959d72499f4b39ebc2c8db92f4bb162aa1ded",
+    "sourceDigest": "sha256:699daf5be7a2055667ac9713a705251488ec2297d2a9b73474e7e50205e3bb4b",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

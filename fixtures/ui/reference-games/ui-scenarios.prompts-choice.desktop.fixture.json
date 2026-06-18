@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.prompts-choice.desktop",
-    "sourceDigest": "sha256:662958aa1576b681a1636f14fd6fe4e7d417495c0cd81d0f218144c4cb42331f",
+    "sourceDigest": "sha256:86b5f7355f7dd9f7c28335eea175e82bf21b33bb8392a59c599af8e1a1809c96",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.dice-result.desktop",
-    "sourceDigest": "sha256:75adc299100b2b3627b37cca30efc576bcfec30165d17c52ba2c01c6581719de",
+    "sourceDigest": "sha256:16d3c9039aa99896d3f6606adbfc3f385c2ccc8d7a1ba063d339f5b415092602",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

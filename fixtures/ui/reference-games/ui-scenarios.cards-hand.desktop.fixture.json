@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.cards-hand.desktop",
-    "sourceDigest": "sha256:f110615db7ed8ec6de4b0f9c0b20938419134e6bce3f2427918d4d8e08c3dc88",
+    "sourceDigest": "sha256:9433c787ba1e3bef3b376509eea4c20692d9442eaefb68d15a13edb616bfea1c",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

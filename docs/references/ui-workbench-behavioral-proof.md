@@ -15,6 +15,9 @@ physical browser actions, flush the host, and compare measured digests.
   physical browser action a user would perform.
 - Expected projection, semantic, draft, and submission digests should be
   independently measured from the same path the browser replay uses.
+- Runtime visual baselines may block on screenshots for a small set of stable
+  composed states. They complement replay evidence; they do not replace
+  semantic, projection, draft, or submission digest checks.
 
 ## Card Selection Scenarios
 
@@ -68,3 +71,20 @@ before changing digests:
 
 The Workbench is most valuable when it catches these differences before they
 become product UI bugs.
+
+## Runtime Visual Baselines
+
+Use `pnpm ui:test:runtime-visual` when a change affects composed runtime layout
+that a semantic digest cannot judge visually. The baseline set is intentionally
+small and pinned to stable projects:
+
+- Hearts phone layout after three cards are selected;
+- Hex route placement after the route draft interaction;
+- Worker placement after the form draft interaction;
+- one prompt validation composition;
+- one board targeting composition.
+
+Update snapshots only with `pnpm ui:test:runtime-visual:update`. If a visual
+baseline fails, keep the replay receipt separate from the screenshot review:
+the replay tells you whether behavior still matches the fixture, while the
+baseline tells you whether the composed runtime surface still looks intentional.

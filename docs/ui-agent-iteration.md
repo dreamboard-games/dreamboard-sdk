@@ -8,6 +8,7 @@ This guide is generated from the live UI scenario catalog and root command map.
 
 - PR fast gate: `node scripts/ui/run-ui-scenarios.mjs --changed`
 - Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required`
+- Runtime visual gate: `pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/ui-workbench test tests/runtime-visual.spec.ts`
 - Release proof: `node scripts/ui/create-ui-release-proof.mjs`
 - Focused Workbench route: `pnpm ui:workbench -- --scenario <scenario-id>`
 
@@ -19,14 +20,15 @@ fall back to the required Workbench scenario set: Hearts mobile interaction,
 desktop card drag, and desktop runtime draft. Other checked-in scenarios remain
 available for focused follow-up coverage but do not block the foundation release.
 
-| Change                       | Minimum command                                                        |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| Pure color or spacing token  | `pnpm ui:test:changed --base origin/main`                              |
-| `HandView` behavior          | `pnpm ui:test --component HandView`                                    |
-| Pointer/drag adapter         | `pnpm ui:test --capability pointer-drag`                               |
-| Runtime draft                | `pnpm ui:test --capability runtime-draft && pnpm ui:test:packed`       |
-| Runtime submit               | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed`      |
-| Browser-interaction protocol | Full `pnpm ui:check`, Hearts packed proof, and Hearts real-host parity |
+| Change                       | Minimum command                                                                                    |
+| ---------------------------- | -------------------------------------------------------------------------------------------------- |
+| Pure color or spacing token  | `pnpm ui:test:changed --base origin/main`                                                          |
+| `HandView` behavior          | `pnpm ui:test --component HandView`                                                                |
+| Pointer/drag adapter         | `pnpm ui:test --capability pointer-drag`                                                           |
+| Runtime draft                | `pnpm ui:test --capability runtime-draft && pnpm ui:test:packed`                                   |
+| Runtime submit               | `pnpm ui:test --capability runtime-submit && pnpm ui:test:packed`                                  |
+| Composed runtime visuals     | `pnpm ui:test:runtime-visual` (`pnpm ui:test:runtime-visual:update` to accept intentional changes) |
+| Browser-interaction protocol | Full `pnpm ui:check`, Hearts packed proof, and Hearts real-host parity                             |
 
 ## Components
 
@@ -74,6 +76,9 @@ available for focused follow-up coverage but do not block the foundation release
 Workbench receipts record semantic, projection, draft, and submission digests
 under `artifacts/ui/<run-id>/receipt.json`. Storybook interaction and visual
 receipts are written under `artifacts/ui-stories` and `artifacts/ui-visual`.
+Workbench runtime visual baselines live beside
+`packages/ui-workbench/tests/runtime-visual.spec.ts` and are updated only by
+`pnpm ui:test:runtime-visual:update`.
 Packed verification writes `build/reference-games/packed-consumer-receipt.json`,
 and release proof writes `artifacts/ui-release-proof/<run-id>/receipt.json`.
 Attach the relevant receipt paths and any parity receipt to handoff notes.

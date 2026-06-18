@@ -11,7 +11,15 @@ const reducerScenario = createReferenceReducerScenario({
 export const scenario = defineUIScenario({
   id: coverage.scenarioId,
   title: `${referenceGame.displayName}: ${coverage.assertions[0]}`,
-  contracts: [],
+  contracts: [
+    "CostDisplay",
+    "InteractionInput",
+    "InteractionSubmit",
+    "Panel",
+    "PluginRuntime",
+    "ResourceCounter",
+    "SlotSystem",
+  ],
   capabilities: [],
   sourceFiles: [
     "examples/reference-games/worker-placement-tableau/scenarios/coverage.json",

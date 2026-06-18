@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.game-shell.desktop",
-    "sourceDigest": "sha256:72b4decea4559656290ed75ee11b9986e9799e70a587e0622fbbc2af11affe84",
+    "sourceDigest": "sha256:48b8100ad7503693345f7a32039f10db73300b1b355142d489b611c8c2322e84",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

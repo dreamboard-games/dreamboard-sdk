@@ -58,6 +58,9 @@ detect stale generated output.
    to representative scenarios.
 2. Use `pnpm ui:storybook` for isolated presentation and local component state.
    Use `pnpm ui:workbench --scenario <scenario-id>` for runtime-generated UI.
+   The normal loop is backend-free: protocol scenarios exercise primitive
+   contracts, and reference-game scenarios replay real reducer output through
+   the fixture transport.
 3. Rebuild `@dreamboard-games/sdk` before inspecting Workbench changes because
    the Workbench consumes SDK build output. For a no-rebuild dev inner loop, use
    `pnpm ui:workbench:src` to resolve the SDK from source (dev server only; every
@@ -65,7 +68,10 @@ detect stale generated output.
 4. Run the narrowest focused check, such as
    `pnpm ui:test --component <name>` or
    `pnpm ui:test --scenario <scenario-id>`.
-5. Run `pnpm ui:test:changed --base <ref>` and the relevant aggregate gate
+5. Use `pnpm ui:test:runtime-visual` for the small blocking runtime screenshot
+   baseline set. Update those baselines only through
+   `pnpm ui:test:runtime-visual:update`.
+6. Run `pnpm ui:test:changed --base <ref>` and the relevant aggregate gate
    before handoff. Preserve the generated evidence receipt.
 
 See `docs/references/ui-iteration-loops.md` for the two-loop model (Storybook
@@ -107,6 +113,7 @@ pnpm ui:catalog:check
 pnpm ui:fixtures:check
 pnpm ui:runtime:test
 pnpm ui:test
+pnpm ui:test:runtime-visual
 pnpm ui:hard-cut:check
 pnpm docs:check
 ```

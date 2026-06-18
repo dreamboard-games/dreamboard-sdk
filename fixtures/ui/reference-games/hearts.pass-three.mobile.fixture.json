@@ -789,7 +789,7 @@
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
     "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:afedf8607e113ddd4b73c8f9a8c901168a80c2b1096b8eaef3f0246aad167d82",
+    "sourceDigest": "sha256:9c15ba67c9b91907a31d2a503ca10aaef2ef51ae40540a282f74cc231d13d123",
     "sourceFiles": [
       "examples/reference-games/hearts/scenarios/coverage.json",
       "examples/reference-games/hearts/src/reference-game.mjs",

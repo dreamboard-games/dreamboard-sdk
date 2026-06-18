@@ -11,7 +11,17 @@ const reducerScenario = createReferenceReducerScenario({
 export const scenario = defineUIScenario({
   id: coverage.scenarioId,
   title: `${referenceGame.displayName}: ${coverage.assertions[0]}`,
-  contracts: [],
+  contracts: [
+    "CardDragSurface",
+    "CardDropTargetView",
+    "CardFace",
+    "CostDisplay",
+    "HandView",
+    "InteractionSubmit",
+    "Panel",
+    "PluginRuntime",
+    "ResourceCounter",
+  ],
   capabilities: [],
   sourceFiles: [
     "examples/reference-games/hex-network-trading/scenarios/coverage.json",

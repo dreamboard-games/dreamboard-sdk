@@ -11,7 +11,13 @@ const reducerScenario = createReferenceReducerScenario({
 export const scenario = defineUIScenario({
   id: coverage.scenarioId,
   title: `${referenceGame.displayName}: ${coverage.assertions[0]}`,
-  contracts: [],
+  contracts: [
+    "CardFace",
+    "HandView",
+    "InteractionSubmit",
+    "Panel",
+    "PluginRuntime",
+  ],
   capabilities: [],
   sourceFiles: [
     "examples/reference-games/hearts/scenarios/coverage.json",

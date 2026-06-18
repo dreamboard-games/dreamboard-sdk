@@ -283,7 +283,7 @@
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
     "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:4c2889c4570c8c8951bdd7babdea3455b0037e7618100cd18c6395890c57f0ec",
+    "sourceDigest": "sha256:baebcd0bbf42293cde4ea240bae30dc41168d686f60ced24346210c8955fee7c",
     "sourceFiles": [
       "examples/reference-games/worker-placement-tableau/scenarios/coverage.json",
       "examples/reference-games/worker-placement-tableau/src/reference-game.mjs",

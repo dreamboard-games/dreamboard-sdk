@@ -6,14 +6,15 @@ The SDK owns multiple UI verification surfaces. Each surface has one canonical
 responsibility so Storybook, the future UI Workbench, reducer tests, and real
 host parity do not become overlapping partial emulators.
 
-| Concern                        | Canonical owner                             |
-| ------------------------------ | ------------------------------------------- |
-| Pure presentational states     | Storybook                                   |
-| Runtime-generated UI scenarios | UI Workbench                                |
-| Reducer correctness            | Game reducer scenario tests                 |
-| Browser semantic resolution    | `@dreamboard-games/sdk/browser-interaction` |
-| Packed package correctness     | Isolated consumer verifier                  |
-| Production host parity         | Internal repository                         |
+| Concern                       | Canonical owner                             |
+| ----------------------------- | ------------------------------------------- |
+| Pure presentational states    | Storybook                                   |
+| Runtime-generated UI behavior | UI Workbench protocol scenarios             |
+| Stable runtime compositions   | UI Workbench runtime visual baselines       |
+| Reducer correctness           | Game reducer scenario tests                 |
+| Browser semantic resolution   | `@dreamboard-games/sdk/browser-interaction` |
+| Packed package correctness    | Isolated consumer verifier                  |
+| Production host parity        | Internal repository                         |
 
 ## Boundaries
 
@@ -23,9 +24,16 @@ It must not mount `PluginRuntime`, generated `UI.Root`, host transports, or
 fixture replay code.
 
 The UI Workbench is the canonical SDK-owned surface for runtime-generated UI
-scenarios. It will mount the real runtime and generated adapters against
-portable fixture bundles, but it must not compile source games during normal
-component iteration.
+behavior. It mounts the real runtime and generated adapters against portable
+fixture bundles, but it must not compile source games during normal component
+iteration. Protocol scenarios are the behavioral authority: they resolve
+semantic requests, perform physical browser actions, and compare measured
+digests.
+
+Runtime visual baselines are a small Workbench lane for stable composed states
+that screenshots can judge better than semantic digests. They are intentionally
+not exhaustive, and baseline updates must use the explicit update command rather
+than the normal behavior proof command.
 
 Game reducer scenario tests remain the canonical source for reducer authority.
 The Workbench may consume projected state and replay instructions, but it must
@@ -51,3 +59,4 @@ maintaining divergent editable copies.
 - Do not put hidden canonical reducer state in fixture files.
 - Do not use source-only SDK imports from consumer fixtures.
 - Do not build a second replay language in the Workbench.
+- Do not treat screenshots as a substitute for replay evidence.

@@ -176,7 +176,7 @@
     "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.boards-slot.desktop",
-    "sourceDigest": "sha256:7986a5ed6e7981bf0433508feed6c98bf48376a9df47e9b0b3b303d1bfde685c",
+    "sourceDigest": "sha256:ff224546ea824dbb4d80f0e732e8e2025c2d8bfdd4ee60ea9b3ca5e1ecea7666",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

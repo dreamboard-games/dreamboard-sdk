@@ -37,27 +37,6 @@ function sha256Text(text) {
   return `sha256:${createHash("sha256").update(text).digest("hex")}`;
 }
 
-const renderedComponentSelectors = {
-  CardDragSurface: "[data-dreamboard-card-drag-surface]",
-  CardDropTargetView: "[data-dreamboard-card-drop-target]",
-  CardFace: "[data-dreamboard-card-face]",
-  CostDisplay: '[role="list"][aria-label^="Cost:"]',
-  HandView: "[data-dreamboard-hand-view]",
-  InteractionInput: "[data-dreamboard-interaction-input]",
-  InteractionSubmit: "[data-dreamboard-interaction-submit]",
-  Panel: "[data-dreamboard-panel]",
-  PluginRuntime: '[data-dreamboard-browser-scope="runtime"]',
-  ResourceCounter: "[data-dreamboard-resource-counter]",
-  SlotSystem: ".slot-system",
-};
-
-function collectRenderedComponents(container) {
-  return Object.entries(renderedComponentSelectors)
-    .filter(([, selector]) => container.querySelector(selector))
-    .map(([component]) => component)
-    .sort();
-}
-
 function collectVisibleInteractionKeys(snapshot) {
   return [
     ...new Set(
@@ -131,7 +110,6 @@ async function exerciseRenderedScenario({
       await settleFixtureRuntime(harness);
     });
 
-    const renderedComponents = collectRenderedComponents(container);
     const resolutions = [];
     for (const sourceStep of sourceSteps) {
       const sourceRequest = sourceStep.request;
@@ -234,7 +212,6 @@ async function exerciseRenderedScenario({
         snapshot: finalSnapshot,
       }),
       visibleInteractionKeys: collectVisibleInteractionKeys(finalSnapshot),
-      renderedComponents,
     };
   } finally {
     await act(async () => {
@@ -385,10 +362,7 @@ export async function compileScenarioModule({
     sha256: digestUIScenarioFixture(fixture),
     renderModule,
     renderModuleSha256: renderModuleDigest,
-    components:
-      authority.exercise.renderedComponents.length > 0
-        ? authority.exercise.renderedComponents
-        : [...scenario.contracts],
+    components: [...scenario.contracts],
     capabilities: authority.capabilitiesForReplay(
       authority.replaySteps,
       viewportTags,
