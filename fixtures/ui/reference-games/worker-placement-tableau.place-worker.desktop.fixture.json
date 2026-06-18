@@ -279,11 +279,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
+    "reducerFingerprint": "sha256:88fb5c5944990e0a176cc6d0bd55f6a3f06d9ce27294cd057ab008ad2955fa13",
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
     "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:8c21b4e72daa474e09d64ce4abbe0afaf1f1c569ddad8b9f0e7f2f82b81aecf9",
+    "sourceDigest": "sha256:531701d236bad3d6aa20840a5ce495063bcde30849ff699e640c9b0bda338ba8",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [

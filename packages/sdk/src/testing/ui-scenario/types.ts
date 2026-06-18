@@ -16,10 +16,13 @@ export interface ProtocolUIScenarioAuthority {
 
 export interface ReducerUIScenarioAuthority {
   readonly kind: "reducer";
-  readonly gameId: string;
+  readonly referenceGame: unknown;
+  readonly coverage: unknown;
   readonly bundle: unknown;
   readonly initialState: unknown;
   readonly viewer: unknown;
+  readonly playerIds?: readonly string[];
+  readonly operations: readonly unknown[];
 }
 
 export type UIScenarioAuthority =

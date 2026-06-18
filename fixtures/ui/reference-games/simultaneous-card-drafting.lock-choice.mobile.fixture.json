@@ -234,11 +234,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:2870b0cb5f567c19fbb0e97bce6d76c0404809a31e4d797357a482ffd0c1f664",
+    "reducerFingerprint": "sha256:26f78f793197c798286fb1adad30a6a43cc88c80891d87ffb62cbe34dec8992d",
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
     "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:9e460cb9c0d0f6ceff7e00f222900daae0cefd67495fd301ee711b44c1f45c5a",
+    "sourceDigest": "sha256:f604bdb45315b17353ca47d387e7793b1ba92477d015982ee8bacf05d3409f47",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [

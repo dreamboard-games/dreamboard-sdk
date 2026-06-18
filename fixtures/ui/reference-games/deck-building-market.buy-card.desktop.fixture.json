@@ -233,18 +233,17 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
+    "reducerFingerprint": "sha256:5879319d44da8bf463c55f69b5d763a63b3ac4ab426f722dbe9e027419b9f01e",
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
     "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:7b1f55d1dbfa1db9a58598bb5c671c5f289a20ff653d0ce2eacdf595ff2b4230",
+    "sourceDigest": "sha256:500c8917406cdcc015772a2212fab614e94d548ede06fd7423eefe52abaeb932",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [
     "deck-building",
     "hand-actions",
     "hand-management",
-    "market-row",
     "market-row",
     "purchase-selection",
     "repeated-turn-state",

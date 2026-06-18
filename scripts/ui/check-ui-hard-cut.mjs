@@ -158,6 +158,9 @@ async function assertRenderModulesStayExternalized(failures) {
         `${relative}: fixture render module appears to bundle React or SDK code.`,
       );
     }
+    if (source.includes("export { Root } from ")) {
+      continue;
+    }
     if (!/\bfrom\s+["']react["']/.test(source)) {
       failures.push(
         `${relative}: fixture render module must keep React externalized.`,

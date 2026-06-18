@@ -19269,6 +19269,14 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/testing
 
+### activate
+
+```ts
+function activate(options: ReplayStepOptions): UIScenarioReplayStep;
+```
+
+_No JSDoc summary is available yet._
+
 ### assertDeterministicUIScenarioFixture
 
 ```ts
@@ -19276,6 +19284,17 @@ function assertDeterministicUIScenarioFixture(
   first: UIScenarioFixture,
   second: UIScenarioFixture,
 ): void;
+```
+
+_No JSDoc summary is available yet._
+
+### assertStep
+
+```ts
+function assertStep(
+  stepId: string,
+  expect: UIStepExpectation,
+): UIScenarioReplayStep;
 ```
 
 _No JSDoc summary is available yet._
@@ -19576,6 +19595,16 @@ function defineScenario<
 
 _No JSDoc summary is available yet._
 
+### defineUIScenario
+
+```ts
+function defineUIScenario<const TScenario extends UIScenarioDefinition>(
+  scenario: TScenario,
+): Readonly<TScenario>;
+```
+
+_No JSDoc summary is available yet._
+
 ### DeterministicIdFactory
 
 ```ts
@@ -19633,6 +19662,14 @@ function digestUIScenarioFixture(fixture: UIScenarioFixture): string;
 
 _No JSDoc summary is available yet._
 
+### drag
+
+```ts
+function drag(options: DragReplayStepOptions): UIScenarioReplayStep;
+```
+
+_No JSDoc summary is available yet._
+
 ### ExpectFn
 
 ```ts
@@ -19645,6 +19682,14 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ExpectMatchers = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### fill
+
+```ts
+function fill(options: FillReplayStepOptions): UIScenarioReplayStep;
 ```
 
 _No JSDoc summary is available yet._
@@ -19860,6 +19905,25 @@ declare const portableSemanticReplayStepSchema: ...;
 
 _No JSDoc summary is available yet._
 
+### press
+
+```ts
+function press(options: ReplayStepOptions): UIScenarioReplayStep;
+```
+
+_No JSDoc summary is available yet._
+
+### ProtocolUIScenarioAuthority
+
+```ts
+interface ProtocolUIScenarioAuthority {
+  readonly kind: "protocol";
+  readonly tape: PluginProtocolTape;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### ReducerScenarioBundle
 
 ```ts
@@ -19961,6 +20025,23 @@ interface ReducerScenarioViewer {
 
 _No JSDoc summary is available yet._
 
+### ReducerUIScenarioAuthority
+
+```ts
+interface ReducerUIScenarioAuthority {
+  readonly kind: "reducer";
+  readonly referenceGame: unknown;
+  readonly coverage: unknown;
+  readonly bundle: unknown;
+  readonly initialState: unknown;
+  readonly viewer: unknown;
+  readonly playerIds?: readonly string[];
+  readonly operations: readonly unknown[];
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### RejectionExpectation
 
 ```ts
@@ -20032,6 +20113,14 @@ _No JSDoc summary is available yet._
 
 ```ts
 type StaleContractArtifactKind = "base-states" | "session-state";
+```
+
+_No JSDoc summary is available yet._
+
+### submit
+
+```ts
+function submit(options: ReplayStepOptions): UIScenarioReplayStep;
 ```
 
 _No JSDoc summary is available yet._
@@ -20185,6 +20274,53 @@ const uiResolvedReplayIdentitySchema: z.ZodObject<
   },
   z.core.$strict
 >;
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioAuthority
+
+```ts
+type UIScenarioAuthority =
+  | ProtocolUIScenarioAuthority
+  | ReducerUIScenarioAuthority;
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioAuthorityKind
+
+```ts
+type UIScenarioAuthorityKind = "protocol" | "reducer";
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioDefinition
+
+```ts
+interface UIScenarioDefinition {
+  readonly id: string;
+  readonly title?: string;
+  readonly contracts: readonly string[];
+  readonly capabilities: readonly string[];
+  readonly sourceFiles: readonly string[];
+  readonly environment?: UIScenarioEnvironmentDefinition;
+  readonly authority: UIScenarioAuthority;
+  readonly replay: readonly UIScenarioReplayStep[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIScenarioEnvironmentDefinition
+
+```ts
+interface UIScenarioEnvironmentDefinition {
+  readonly viewport?: "desktop" | "tablet" | "phone";
+  readonly browsers?: readonly ("chromium" | "webkit")[];
+  readonly input?: readonly ("mouse" | "touch" | "keyboard")[];
+}
 ```
 
 _No JSDoc summary is available yet._

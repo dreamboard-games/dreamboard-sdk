@@ -1,6 +1,6 @@
 # Phase 01: Generic Scenario Compiler
 
-Status: In Progress
+Status: Complete
 
 Depends on: Phase 00
 
@@ -145,6 +145,17 @@ kind, invalid modules, and deterministic output.
   of `compile-reference-fixtures.mjs` into `scripts/ui-fixtures/authority/`.
 - Regenerated fixtures, the scenario index, and the Workbench catalog from the
   split reducer-authority path.
+- Moved generic fixture construction into `scripts/ui-fixtures/compile-scenario.mjs`
+  so the reference fixture compiler only coordinates discovery, determinism,
+  and bundle output.
+- Added the protocol-authority adapter and loader validation for protocol
+  scenario modules.
+- Moved reference-game reducer bundle, initial state, viewer, and operation
+  ownership into tracked reference-game source via
+  `examples/reference-games/shared/reference-reducer.mjs`; reducer authority now
+  executes the scenario-supplied bundle through `createReducerScenarioRunner`.
+- Added focused authority tests for protocol authority, reducer authority, and
+  invalid out-of-root scenario module loading.
 
 Verification:
 
@@ -152,20 +163,30 @@ Verification:
 pnpm ui:fixtures:compile
 pnpm ui:fixtures:check
 pnpm ui:catalog:generate
+pnpm ui:catalog:check
+node --test scripts/ui-fixtures/authority/authority.test.mjs
 pnpm --filter @dreamboard-games/sdk typecheck
-pnpm --filter @dreamboard-games/sdk exec bun test src/export-surface.test.ts --update-snapshots
+pnpm --filter @dreamboard-games/sdk exec bun test src/export-surface.test.ts
 pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-scenario/replay-builders.test.ts
+pnpm ui:runtime:test
+pnpm ui:test --scenario hearts.pass-three.mobile
+pnpm ui:test --scenario hex-network-trading.place-route.desktop
+pnpm ui:test --scenario worker-placement-tableau.place-worker.desktop
 ```
 
-Remaining:
+Receipts:
 
-- Move replay/reducer data fully out of legacy `coverage.json` files.
-- Add protocol authority support.
-- Move replay-kind planning out of reducer authority once the shared replay
-  planner lands.
+- `artifacts/ui/2026-06-18T07-47-03-822Z/receipt.json`
+- `artifacts/ui/2026-06-18T07-47-14-002Z/receipt.json`
+- `artifacts/ui/2026-06-18T07-47-22-036Z/receipt.json`
 
 ## Deferred
 
+- first protocol-authoritative primitive scenarios;
+- shared replay planner that removes replay-kind planning from reducer
+  authority;
+- moving remaining replay/reducer fixture data fully out of legacy
+  `coverage.json` files;
 - exact package-tarball execution;
 - cross-repository parity;
 - operation and artifact provenance receipts;

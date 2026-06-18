@@ -1,7 +1,6 @@
 import {
   compilePluginProtocolTape,
   createReducerScenarioRunner,
-  digestUIFixtureJson,
   digestUIFixtureRequest,
 } from "../../../packages/sdk/dist/testing.js";
 
@@ -11,71 +10,6 @@ const defaultPlayerIds = ["player-1"];
 
 function scenarioReplay(coverage) {
   return coverage.replay ?? { kind: "invoke" };
-}
-
-function scenarioInputs(coverage) {
-  const replay = scenarioReplay(coverage);
-  if (replay.kind === "multi-select") {
-    return [
-      {
-        key: replay.inputKey,
-        kind: "cardTarget",
-        domain: {
-          type: "cardTarget",
-          projection: "resolved",
-          zoneId: "hand",
-          eligibleTargets: replay.eligibleCardIds,
-          selection: {
-            mode: "many",
-            min: replay.min,
-            max: replay.max,
-            distinct: true,
-          },
-        },
-      },
-    ];
-  }
-  if (replay.kind === "drag") {
-    return [
-      {
-        key: replay.cardInputKey,
-        kind: "cardTarget",
-        domain: {
-          type: "cardTarget",
-          projection: "resolved",
-          zoneId: "hand",
-          eligibleTargets: [replay.cardId],
-          selection: { mode: "single" },
-        },
-      },
-      {
-        key: replay.destinationInputKey,
-        kind: "boardTarget",
-        domain: {
-          type: "boardTarget",
-          projection: "resolved",
-          targetKind: replay.destinationKind,
-          eligibleTargets: replay.eligibleDestinationIds,
-          selection: { mode: "single" },
-        },
-      },
-    ];
-  }
-  if (replay.kind === "draft") {
-    return [
-      {
-        key: replay.inputKey,
-        kind: "boundedNumber",
-        domain: {
-          type: "boundedNumber",
-          min: replay.min,
-          max: replay.max,
-          step: 1,
-        },
-      },
-    ];
-  }
-  return [];
 }
 
 function scenarioSubmissionParams(coverage) {
@@ -105,88 +39,6 @@ function scenarioInteraction(referenceGame, coverage) {
     );
   }
   return interaction;
-}
-
-function scenarioZones({ coverage, interaction }) {
-  const replay = scenarioReplay(coverage);
-  if (replay.kind === "multi-select") {
-    const cardViewsById = Object.fromEntries(
-      replay.eligibleCardIds.map((cardId) => [
-        cardId,
-        JSON.stringify({
-          id: cardId,
-          cardType: "playing-card",
-          name: cardId
-            .split("-")
-            .map((part) => part[0].toUpperCase() + part.slice(1))
-            .join(" "),
-          properties: {},
-        }),
-      ]),
-    );
-    return {
-      hand: {
-        cardIds: replay.eligibleCardIds,
-        cardViewsById,
-        playableByCardId: Object.fromEntries(
-          replay.eligibleCardIds.map((cardId) => [cardId, [interaction.id]]),
-        ),
-      },
-    };
-  }
-  if (replay.kind !== "drag") return {};
-  const card = {
-    id: replay.cardId,
-    cardType: "route",
-    name: "Route",
-    properties: { subtitle: "Network link" },
-  };
-  return {
-    hand: {
-      cardIds: [replay.cardId],
-      cardViewsById: {
-        [replay.cardId]: JSON.stringify(card),
-      },
-      playableByCardId: {
-        [replay.cardId]: [interaction.id],
-      },
-    },
-  };
-}
-
-function buildInteractionDescriptors(referenceGame, coverage) {
-  const selectedInteraction = scenarioInteraction(referenceGame, coverage);
-  return Object.fromEntries(
-    referenceGame.interactions.map((interaction) => {
-      const inputs =
-        interaction.id === selectedInteraction.id
-          ? scenarioInputs(coverage)
-          : [];
-      const descriptor = {
-        phaseName: "fixture",
-        interactionKey: interaction.id,
-        interactionId: `${interaction.id}:player-1`,
-        kind: "action",
-        availability: { status: "available" },
-        commit: { mode: "manual" },
-        ...(inputs.some((input) => input.domain.zoneId === "hand")
-          ? { zoneId: "hand" }
-          : {}),
-        inputs,
-      };
-      return [
-        interaction.id,
-        {
-          ...descriptor,
-          descriptorDigest: digestUIFixtureJson({
-            gameId: referenceGame.id,
-            interaction,
-            descriptor,
-          }),
-        },
-      ];
-    }),
-  );
 }
 
 function buildSourcePlan(coverage, interactionId) {
@@ -391,110 +243,11 @@ function capabilitiesForReplay(replaySteps, viewportTags, coverage) {
 }
 
 export async function executeReducerAuthority(scenario) {
-  const { referenceGame, coverage } = scenario.authority;
+  const { bundle, coverage, initialState, operations, referenceGame } =
+    scenario.authority;
   const viewer = scenario.authority.viewer ?? defaultViewer;
   const playerIds = scenario.authority.playerIds ?? defaultPlayerIds;
-  const interactionsByRef = buildInteractionDescriptors(
-    referenceGame,
-    coverage,
-  );
   const interaction = scenarioInteraction(referenceGame, coverage);
-  const validationInput = {
-    kind: "interaction",
-    playerId: viewer.playerId,
-    interactionId: `${interaction.id}:${viewer.playerId}`,
-    params: {},
-  };
-  const submissionInput = {
-    ...validationInput,
-    params: scenarioSubmissionParams(coverage),
-  };
-  const initialState = {
-    domain: {
-      flow: {
-        currentPhase: coverage.scenarioId,
-        activePlayers: [viewer.playerId],
-      },
-      publicState: {
-        referenceGameId: referenceGame.id,
-        displayName: referenceGame.displayName,
-        scenarioId: coverage.scenarioId,
-        submittedInteractionId: null,
-      },
-    },
-    runtime: {},
-  };
-  const bundle = {
-    projectSeatsDynamic({ state }) {
-      return {
-        currentStage: state.domain.flow.currentPhase,
-        stageSeats: [...playerIds],
-        simultaneousPhase: null,
-        seats: Object.fromEntries(
-          playerIds.map((playerId) => [
-            playerId,
-            {
-              view: state.domain.publicState,
-              availableInteractionRefs: referenceGame.interactions.map(
-                (candidate) => candidate.id,
-              ),
-              zones: scenarioZones({
-                coverage,
-                interaction,
-              }),
-            },
-          ]),
-        ),
-        interactionsByRef,
-      };
-    },
-    projectStatic() {
-      return null;
-    },
-    async validateInput({ input: candidate }) {
-      return candidate.kind === "interaction" &&
-        Object.values(interactionsByRef).some(
-          (descriptor) => descriptor.interactionId === candidate.interactionId,
-        )
-        ? { valid: true }
-        : {
-            valid: false,
-            errorCode: "UNKNOWN_INTERACTION",
-            message: "Unknown reference-game interaction.",
-          };
-    },
-    async dispatch({ state, input: candidate }) {
-      const validation = await this.validateInput({
-        state,
-        input: candidate,
-      });
-      if (!validation.valid) {
-        return {
-          kind: "reject",
-          errorCode: validation.errorCode,
-          message: validation.message,
-        };
-      }
-      return {
-        kind: "accept",
-        state: {
-          ...state,
-          domain: {
-            ...state.domain,
-            flow: {
-              currentPhase: `${coverage.scenarioId}.submitted`,
-              activePlayers: [viewer.playerId],
-            },
-            publicState: {
-              ...state.domain.publicState,
-              submittedInteractionId: candidate.interactionId,
-            },
-          },
-        },
-        trace: [],
-      };
-    },
-  };
   const runner = createReducerScenarioRunner({
     scenarioId: coverage.scenarioId,
     gameId: referenceGame.id,
@@ -503,18 +256,7 @@ export async function executeReducerAuthority(scenario) {
     viewer,
     playerIds,
   });
-  const trace = await runner.run([
-    {
-      id: `${coverage.scenarioId}.validate`,
-      operation: "validate",
-      input: validationInput,
-    },
-    {
-      id: `${coverage.scenarioId}.submit`,
-      operation: "submit",
-      input: submissionInput,
-    },
-  ]);
+  const trace = await runner.run(operations);
   const protocol = compilePluginProtocolTape({
     trace,
     session: {

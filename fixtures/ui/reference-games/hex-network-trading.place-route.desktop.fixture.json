@@ -429,11 +429,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:a83bc26dee19a65121505f80dc73ae441d18b449cc9f4703a933ee43dd8c724d",
+    "reducerFingerprint": "sha256:73da07807feeb933b90f9ea05cfb25882ebcf4254b94bb60530f5574bcc5526d",
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
     "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:6805216c21971f43d93bd12b43a9cd5d42bb05686eed05357afd7f3a698f235f",
+    "sourceDigest": "sha256:435a581b0d4e1ffc592271a102fbba9f44f85654f568eded4782553e57772f3d",
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [

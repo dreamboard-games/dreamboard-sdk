@@ -23,6 +23,19 @@ const LLMS_BUDGET_BYTES = 32 * 1024;
 const LLMS_ENTRY_SUMMARY_BUDGET = 18;
 const SIGNATURE_BUDGET = 400;
 const LLMS_OMITTED_EXPORTS = new Set([
+  "testing.activate",
+  "testing.assertStep",
+  "testing.defineUIScenario",
+  "testing.drag",
+  "testing.fill",
+  "testing.press",
+  "testing.ProtocolUIScenarioAuthority",
+  "testing.ReducerUIScenarioAuthority",
+  "testing.submit",
+  "testing.UIScenarioAuthority",
+  "testing.UIScenarioAuthorityKind",
+  "testing.UIScenarioDefinition",
+  "testing.UIScenarioEnvironmentDefinition",
   "testing.pluginProtocolTapeSchema",
   "testing.portableSemanticReplayStepSchema",
   "testing.uiFixtureFrameSchema",
