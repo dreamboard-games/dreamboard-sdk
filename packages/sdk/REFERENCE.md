@@ -16765,6 +16765,30 @@ interface GameViewportProps extends HTMLAttributes<HTMLDivElement> {
 
 _No JSDoc summary is available yet._
 
+### HandStagingView
+
+```ts
+function HandStagingView({
+  zone,
+  renderCard,
+  renderEmptySlot,
+  label,
+  cardSize,
+  ariaLabel,
+  className,
+}: HandStagingViewProps): react_jsx_runtime.JSX.Element | null;
+```
+
+Dreamboard-aware staging surface for a many-select card collection (e.g. the cards you've chosen to pass). Projects the live draft into a fixed, always-visible row of slots (empty placeholders until something is staged); tapping a staged card routes an `activate` intent, which toggles it back out of the collection so it returns to the hand. Adds no draft logic — the presentational layout/theming lives in the SDK `StagingZone`.
+
+### HandStagingViewProps
+
+```ts
+interface HandStagingViewProps { ... }
+```
+
+_No JSDoc summary is available yet._
+
 ### HandSurfaceView
 
 ```ts

@@ -59,15 +59,21 @@ detect stale generated output.
 2. Use `pnpm ui:storybook` for isolated presentation and local component state.
    Use `pnpm ui:workbench --scenario <scenario-id>` for runtime-generated UI.
 3. Rebuild `@dreamboard-games/sdk` before inspecting Workbench changes because
-   the Workbench consumes SDK build output.
+   the Workbench consumes SDK build output. For a no-rebuild dev inner loop, use
+   `pnpm ui:workbench:src` to resolve the SDK from source (dev server only; every
+   `vite build` and the proof path still consume `dist`).
 4. Run the narrowest focused check, such as
    `pnpm ui:test --component <name>` or
    `pnpm ui:test --scenario <scenario-id>`.
 5. Run `pnpm ui:test:changed --base <ref>` and the relevant aggregate gate
    before handoff. Preserve the generated evidence receipt.
 
+See `docs/references/ui-iteration-loops.md` for the two-loop model (Storybook
+proves pixels, Workbench proves behavior) and the motion-gate rule.
 See `docs/ui-agent-iteration.md` for generated command selection and
 `docs/exec-plans/ui-agent-iteration-workbench/README.md` for the full workflow.
+See `docs/references/ui-workbench-behavioral-proof.md` for Workbench replay
+lessons about semantic evidence, mobile card targets, and screenshot limits.
 
 ## UI Evidence Invariants
 

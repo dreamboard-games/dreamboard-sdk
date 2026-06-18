@@ -10,7 +10,11 @@ function parseArgs(argv) {
   const options = {};
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
-    if (arg === "--scenario" || arg === "--component" || arg === "--capability") {
+    if (
+      arg === "--scenario" ||
+      arg === "--component" ||
+      arg === "--capability"
+    ) {
       options[arg.slice(2)] = argv[index + 1];
       index += 1;
       continue;
@@ -35,7 +39,9 @@ function closeMatches(value, candidates) {
 }
 
 async function loadFixtureIndex() {
-  return JSON.parse(await readFile(path.join(fixturesRoot, "index.json"), "utf8"));
+  return JSON.parse(
+    await readFile(path.join(fixturesRoot, "index.json"), "utf8"),
+  );
 }
 
 function routeFor(options, fixtures) {

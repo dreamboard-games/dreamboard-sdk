@@ -281,9 +281,9 @@
   "source": {
     "reducerFingerprint": "sha256:8f544265335353b2c91c9cafda871a9d9f9cc60daba6c6b5a8835a1359612936",
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-    "renderModuleDigest": "sha256:f974fab08aa8538af91937618d115a72baa673626688dd24f4410e77be16fa72",
+    "renderModuleDigest": "sha256:4ddd8123042863f672f231e3a682bf1d43778b10d2bd464ea4c0ac0d67c4a433",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:88b880943b28ae481a3f61be8fdde9981b9fec2cf2913d076d81c6629dfc1a00",
+    "sourceDigest": "sha256:d306dfc055f8d535ac35bcdb1d8159c3599d957cd3b3f0010b72627181f7a378",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [

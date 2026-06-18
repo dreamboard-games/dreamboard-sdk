@@ -34,9 +34,7 @@ export type RuntimeDiagnosticEvent =
       stack?: string;
     };
 
-export type RuntimeDiagnosticHandler = (
-  event: RuntimeDiagnosticEvent,
-) => void;
+export type RuntimeDiagnosticHandler = (event: RuntimeDiagnosticEvent) => void;
 
 /**
  * Plugin session state
@@ -80,10 +78,7 @@ export interface RuntimeAPI {
    *   {@link validateInteraction} for the `unknown` typing rationale)
    * @throws SubmissionError if submission is rejected by the authority.
    */
-  submitInteraction: (
-    interactionId: string,
-    params: unknown,
-  ) => Promise<void>;
+  submitInteraction: (interactionId: string, params: unknown) => Promise<void>;
 
   emitDiagnostic?: (event: RuntimeDiagnosticEvent) => void;
   setDiagnosticHandler?: (

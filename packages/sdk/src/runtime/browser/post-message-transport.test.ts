@@ -97,7 +97,8 @@ describe("createPostMessagePluginTransport", () => {
         type: "gameplay.frame",
         frame: {
           gameVersion: 1,
-          actionSetVersion: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          actionSetVersion:
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           perspectivePlayerId: "player-1",
           view: null,
           flow: {
@@ -122,10 +123,16 @@ describe("createPostMessagePluginTransport", () => {
         },
       }),
     );
-    dispatchHostMessage({ ...envelope({ type: "runtime.init", session: {
-      sessionId: "session-2",
-      players: [],
-    } }), channelId: "other" });
+    dispatchHostMessage({
+      ...envelope({
+        type: "runtime.init",
+        session: {
+          sessionId: "session-2",
+          players: [],
+        },
+      }),
+      channelId: "other",
+    });
 
     expect(received).toHaveLength(1);
     expect(invalid).toContain("channel-mismatch");

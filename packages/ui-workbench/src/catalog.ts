@@ -49,7 +49,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:0225c8224436f916b0d817309b3d866b541dbb948c2c47e58d4bc22cd9bca129",
+      "sha256:2f98aaa3d8502061bdf0eb7e4918426bdb8de1da4ad122a76bb9d1cf9a36c739",
   },
   {
     id: "hearts.pass-three.mobile",
@@ -68,10 +68,10 @@ export const scenarios = defineUIScenarios([
       "Panel",
       "PluginRuntime",
     ],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:09b0093684b50f9b201b3fd3f728068fa114ef878576ae07ca61072c97120b4c",
+      "sha256:fb3ba95616cb1d0b84f3e880272333f23cb34d0f35db79b07e6df13a4f66f5b4",
   },
   {
     id: "hex-network-trading.place-route.desktop",
@@ -98,7 +98,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "pointer-drag", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:0a91d5823d255542dd9e722269e4aa4ea01a7221acd8154f368ef155981023a3",
+      "sha256:26c41961e21a7e05d91241d4e292cb2d836ae27b2b48ab8f15be502509e7e02d",
   },
   {
     id: "simultaneous-card-drafting.lock-choice.mobile",
@@ -121,7 +121,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:4f4c226b03a07d8bfc784f181ac7ba35a7092415a6c470a25268f2a8f86a4ff4",
+      "sha256:ea89aef32a98520a048c14d1c0cb1d4240ac6c557eed3ff6b52082dfefd52ed4",
   },
   {
     id: "worker-placement-tableau.place-worker.desktop",
@@ -145,6 +145,6 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:88b880943b28ae481a3f61be8fdde9981b9fec2cf2913d076d81c6629dfc1a00",
+      "sha256:d306dfc055f8d535ac35bcdb1d8159c3599d957cd3b3f0010b72627181f7a378",
   },
 ] satisfies readonly UIScenarioCatalogEntry[]);

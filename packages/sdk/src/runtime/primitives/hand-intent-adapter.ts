@@ -117,10 +117,7 @@ export function useCardIntentAdapter({
           availableInteractions,
           zoneSnapshot,
           submit: async (descriptor, params) => {
-            await runtime.submitInteraction(
-              descriptor.interactionId,
-              params,
-            );
+            await runtime.submitInteraction(descriptor.interactionId, params);
           },
         },
         intent.type === "drop"

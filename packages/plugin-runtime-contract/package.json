@@ -1,7 +1,7 @@
 {
   "name": "@dreamboard-games/plugin-runtime-contract",
   "version": "0.1.0",
-  "private": false,
+  "private": true,
   "description": "Browser-free plugin runtime frame, protocol, schema, and digest contract for Dreamboard game plugins.",
   "type": "module",
   "main": "./dist/index.js",

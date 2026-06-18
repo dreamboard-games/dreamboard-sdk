@@ -234,7 +234,8 @@ export function useBoardInteractions<I extends string = string>(
   const drafts = store.getState().drafts ?? subscribedDrafts;
   const descriptors = usePluginGameplayFrameSelector(
     (frame) =>
-      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
+      (frame.availableInteractions ??
+        []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const targetKindSet = useMemo(

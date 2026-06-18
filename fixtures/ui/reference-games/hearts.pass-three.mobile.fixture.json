@@ -11,9 +11,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55",
-    "finalSemanticDigest": "sha256:c962a4e5f2f1c5a68b2db1256f9f1f2628bc5e32f43484d08f4ed18eadc68988",
-    "initialProjectionDigest": "sha256:5346cf26bc9791cf7299ba6e7cc849feffde1c274002e9f07cee519523d15ac0",
+    "finalProjectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8",
+    "finalSemanticDigest": "sha256:87bd01a0eb057b0b8c9c474dc85ca4a51abe1973fe1be5d2744a9f9234987f82",
+    "initialProjectionDigest": "sha256:4a1f309f11ebce428d5956f583d69c85d5c88429d90261cd6eab771312ba0665",
     "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c"
   },
   "gameId": "hearts",
@@ -23,7 +23,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:aa6578fe57716250f0af3b979272d490cfebd18e61aa7da58e9981404589ac03",
+          "actionSetVersion": "sha256:e3528eeacb659a8823aab97facf0e28afd26dd5a1b4919df68abdc0c8d0fd0cc",
           "availableInteractions": [
             {
               "availability": {
@@ -32,12 +32,36 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
-              "inputs": [],
+              "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+              "inputs": [
+                {
+                  "domain": {
+                    "eligibleTargets": [
+                      "two-clubs",
+                      "queen-spades",
+                      "ace-hearts",
+                      "seven-diamonds",
+                      "ten-clubs"
+                    ],
+                    "projection": "resolved",
+                    "selection": {
+                      "distinct": true,
+                      "max": 3,
+                      "min": 3,
+                      "mode": "many"
+                    },
+                    "type": "cardTarget",
+                    "zoneId": "hand"
+                  },
+                  "key": "cardIds",
+                  "kind": "cardTarget"
+                }
+              ],
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
               "kind": "action",
-              "phaseName": "fixture"
+              "phaseName": "fixture",
+              "zoneId": "hand"
             },
             {
               "availability": {
@@ -70,14 +94,233 @@
             "scenarioId": "hearts.pass-three.mobile",
             "submittedInteractionId": null
           },
-          "zones": {}
+          "zones": {
+            "hand": {
+              "cardIds": [
+                "two-clubs",
+                "queen-spades",
+                "ace-hearts",
+                "seven-diamonds",
+                "ten-clubs"
+              ],
+              "cardViewsById": {
+                "ace-hearts": "{\"id\":\"ace-hearts\",\"cardType\":\"playing-card\",\"name\":\"Ace Hearts\",\"properties\":{}}",
+                "queen-spades": "{\"id\":\"queen-spades\",\"cardType\":\"playing-card\",\"name\":\"Queen Spades\",\"properties\":{}}",
+                "seven-diamonds": "{\"id\":\"seven-diamonds\",\"cardType\":\"playing-card\",\"name\":\"Seven Diamonds\",\"properties\":{}}",
+                "ten-clubs": "{\"id\":\"ten-clubs\",\"cardType\":\"playing-card\",\"name\":\"Ten Clubs\",\"properties\":{}}",
+                "two-clubs": "{\"id\":\"two-clubs\",\"cardType\":\"playing-card\",\"name\":\"Two Clubs\",\"properties\":{}}"
+              },
+              "playableByCardId": {
+                "ace-hearts": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "queen-spades": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "seven-diamonds": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "ten-clubs": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "two-clubs": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ]
+              }
+            }
+          }
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:5346cf26bc9791cf7299ba6e7cc849feffde1c274002e9f07cee519523d15ac0"
+        "projectionDigest": "sha256:4a1f309f11ebce428d5956f583d69c85d5c88429d90261cd6eab771312ba0665"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:5ea8ec3d92b28336f3154a9cbd18d2996fd6f84781d19b434a22dcec9aa79e68",
+          "actionSetVersion": "sha256:4a77a4d1d020680b6c1894fff246b6777d7838a3bedf9fca9fd6a959f6b704cb",
           "availableInteractions": [
             {
               "availability": {
@@ -86,12 +329,36 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
-              "inputs": [],
+              "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+              "inputs": [
+                {
+                  "domain": {
+                    "eligibleTargets": [
+                      "two-clubs",
+                      "queen-spades",
+                      "ace-hearts",
+                      "seven-diamonds",
+                      "ten-clubs"
+                    ],
+                    "projection": "resolved",
+                    "selection": {
+                      "distinct": true,
+                      "max": 3,
+                      "min": 3,
+                      "mode": "many"
+                    },
+                    "type": "cardTarget",
+                    "zoneId": "hand"
+                  },
+                  "key": "cardIds",
+                  "kind": "cardTarget"
+                }
+              ],
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
               "kind": "action",
-              "phaseName": "fixture"
+              "phaseName": "fixture",
+              "zoneId": "hand"
             },
             {
               "availability": {
@@ -124,10 +391,229 @@
             "scenarioId": "hearts.pass-three.mobile",
             "submittedInteractionId": "pass-three:player-1"
           },
-          "zones": {}
+          "zones": {
+            "hand": {
+              "cardIds": [
+                "two-clubs",
+                "queen-spades",
+                "ace-hearts",
+                "seven-diamonds",
+                "ten-clubs"
+              ],
+              "cardViewsById": {
+                "ace-hearts": "{\"id\":\"ace-hearts\",\"cardType\":\"playing-card\",\"name\":\"Ace Hearts\",\"properties\":{}}",
+                "queen-spades": "{\"id\":\"queen-spades\",\"cardType\":\"playing-card\",\"name\":\"Queen Spades\",\"properties\":{}}",
+                "seven-diamonds": "{\"id\":\"seven-diamonds\",\"cardType\":\"playing-card\",\"name\":\"Seven Diamonds\",\"properties\":{}}",
+                "ten-clubs": "{\"id\":\"ten-clubs\",\"cardType\":\"playing-card\",\"name\":\"Ten Clubs\",\"properties\":{}}",
+                "two-clubs": "{\"id\":\"two-clubs\",\"cardType\":\"playing-card\",\"name\":\"Two Clubs\",\"properties\":{}}"
+              },
+              "playableByCardId": {
+                "ace-hearts": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "queen-spades": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "seven-diamonds": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "ten-clubs": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ],
+                "two-clubs": [
+                  {
+                    "availability": {
+                      "status": "available"
+                    },
+                    "commit": {
+                      "mode": "manual"
+                    },
+                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "inputs": [
+                      {
+                        "domain": {
+                          "eligibleTargets": [
+                            "two-clubs",
+                            "queen-spades",
+                            "ace-hearts",
+                            "seven-diamonds",
+                            "ten-clubs"
+                          ],
+                          "projection": "resolved",
+                          "selection": {
+                            "distinct": true,
+                            "max": 3,
+                            "min": 3,
+                            "mode": "many"
+                          },
+                          "type": "cardTarget",
+                          "zoneId": "hand"
+                        },
+                        "key": "cardIds",
+                        "kind": "cardTarget"
+                      }
+                    ],
+                    "interactionId": "pass-three:player-1",
+                    "interactionKey": "pass-three",
+                    "kind": "action",
+                    "phaseName": "fixture",
+                    "zoneId": "hand"
+                  }
+                ]
+              }
+            }
+          }
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55"
+        "projectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8"
       }
     ],
     "session": {
@@ -149,7 +635,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:7ebeba1228bdd7b9866f5f08d1bddb21a82527880b8a8a13816155173aa120c1",
+        "requestDigest": "sha256:4da3926d248adc5125494643fb26aa65c7c90778a4597c0cd0d28fa9c6f006ab",
         "response": {
           "valid": true
         }
@@ -158,7 +644,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:cc05e1c3dd5775ae279407f70650ae7f6375a9e13646a0743cf7dc5a75885276",
+        "requestDigest": "sha256:45082419e69da42a04f441bf206249f6e7d6eeeb05937046c08800a49bca954d",
         "response": {
           "accepted": true
         }
@@ -176,41 +662,134 @@
         "kind": "activate"
       },
       "expect": {
-        "frameId": "frame-2",
-        "projectionDigest": "sha256:565ed95096d0e6c073c530be2b171cc12c40a233e3190b2bb9b0ff16f08aac55",
-        "semanticDigest": "sha256:c962a4e5f2f1c5a68b2db1256f9f1f2628bc5e32f43484d08f4ed18eadc68988",
-        "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
         "visibleInteractionKeys": [
           "pass-three"
         ]
       },
       "expectedIdentity": {
-        "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:294c9022081727188f2800b11eff22f2b10787e677f72c7d8e1d4e5d43a34954",
+        "actuatorId": "primitive-card:cardIds:two-clubs",
+        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
-        "stepId": "hearts.pass-three.mobile.invoke",
+        "stepId": "hearts.pass-three.mobile.select-01",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:b8681810981c0123c0229563cd88ea2c5aad99ed80432cd419d1f574ba72633e",
+      "requestDigest": "sha256:99e0f8318a9e52a9788528ff47e140033f4e27c028e3ee637624938a33ac8349",
       "resolve": {
-        "intent": "invoke",
+        "effect": {
+          "afterSelected": true,
+          "beforeSelected": false,
+          "candidateValue": "two-clubs",
+          "inputKey": "cardIds",
+          "kind": "setCandidate"
+        },
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
         "surface": "gameplay"
       },
-      "stepId": "hearts.pass-three.mobile.invoke"
+      "stepId": "hearts.pass-three.mobile.select-01"
+    },
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "visibleInteractionKeys": [
+          "pass-three"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-card:cardIds:queen-spades",
+        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "stepId": "hearts.pass-three.mobile.select-02",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:e5aa9cca186a6761ce90d9de33db95ec7a6b1f4b9544336abbe5babbf676fa0d",
+      "resolve": {
+        "effect": {
+          "afterSelected": true,
+          "beforeSelected": false,
+          "candidateValue": "queen-spades",
+          "inputKey": "cardIds",
+          "kind": "setCandidate"
+        },
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "hearts.pass-three.mobile.select-02"
+    },
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "visibleInteractionKeys": [
+          "pass-three"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-card:cardIds:ace-hearts",
+        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "stepId": "hearts.pass-three.mobile.select-03",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:e28921c1aa8d3b904c7dd4915acdb824cbd218279ec1f9539ea5db1d575735aa",
+      "resolve": {
+        "effect": {
+          "afterSelected": true,
+          "beforeSelected": false,
+          "candidateValue": "ace-hearts",
+          "inputKey": "cardIds",
+          "kind": "setCandidate"
+        },
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "hearts.pass-three.mobile.select-03"
+    },
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8",
+        "semanticDigest": "sha256:87bd01a0eb057b0b8c9c474dc85ca4a51abe1973fe1be5d2744a9f9234987f82",
+        "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
+        "visibleInteractionKeys": [
+          "pass-three"
+        ]
+      },
+      "requestDigest": "sha256:4765bb5bed212ef9cbf1916aafe6645581e600c05b109b7d3354ca462f335afc",
+      "resolve": {
+        "intent": "submit",
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "hearts.pass-three.mobile.commit"
     }
   ],
   "schemaVersion": 2,
   "source": {
     "reducerFingerprint": "sha256:9b905cbe094b398ec1070bc8e6e8e6b09caa5cea86902ce17f3cef75f5dd958d",
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
-    "renderModuleDigest": "sha256:cb2a7a7aadd9abc8caf069f94aa70607bf78295f943a0ac0c92d739420d7c98b",
+    "renderModuleDigest": "sha256:fa302f7fcbfe7c925d94f02404d17f098924b55ecb0fc42f7db48dc18dd23306",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:09b0093684b50f9b201b3fd3f728068fa114ef878576ae07ca61072c97120b4c",
+    "sourceDigest": "sha256:fb3ba95616cb1d0b84f3e880272333f23cb34d0f35db79b07e6df13a4f66f5b4",
     "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
   },
   "tags": [

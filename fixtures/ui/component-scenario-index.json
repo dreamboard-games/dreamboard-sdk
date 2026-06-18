@@ -42,7 +42,12 @@
         "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile"
       ],
-      "capabilities": ["click", "pointer-drag", "runtime-submit"]
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
     },
     "CostDisplay": {
       "sourceFiles": [
@@ -79,7 +84,12 @@
         "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile"
       ],
-      "capabilities": ["click", "pointer-drag", "runtime-submit"]
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
     },
     "InteractionInput": {
       "sourceFiles": [

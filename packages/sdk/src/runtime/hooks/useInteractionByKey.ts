@@ -42,7 +42,8 @@ export function useInteractionByKey<
 ): InteractionHandle<Params, DefaultedKeys> | null {
   const descriptors = usePluginGameplayFrameSelector(
     (frame) =>
-      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
+      (frame.availableInteractions ??
+        []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const descriptor = useMemo<InteractionDescriptor | null>(() => {

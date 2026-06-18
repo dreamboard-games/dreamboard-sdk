@@ -9,12 +9,12 @@ import {
   DialogTrigger,
 } from "../../ui/components.js";
 import type {
-  InteractionDialogProps,
   InteractionFormPrimitiveProps,
   InteractionStateProps,
   InteractionSubmitProps,
   InteractionTriggerProps,
 } from "../primitives/index.js";
+import type { InteractionDialogProps } from "../primitives/interaction/dialog.js";
 import { createFormInputSlot } from "./slots.js";
 import type {
   WorkspaceContractContext,

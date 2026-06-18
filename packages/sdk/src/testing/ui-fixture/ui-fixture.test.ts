@@ -222,9 +222,11 @@ async function settleFixtureHarness(
 function eventTranscript(
   harness: ReturnType<typeof createFixtureHostHarness>,
 ): TransportRuntimeExercise["events"] {
-  return harness
-    .getEvents()
-    .map(({ sequence: _sequence, atMs: _atMs, ...event }) => event);
+  return harness.getEvents().map(({ sequence, atMs, ...event }) => {
+    void sequence;
+    void atMs;
+    return event;
+  });
 }
 
 async function exerciseRuntime(options: {

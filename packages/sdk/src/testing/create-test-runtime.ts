@@ -316,7 +316,7 @@ export function createTestRuntime(
 
   let version = 0;
   let submissionCounter = 0;
-  let currentPlayerId = playerIds[0] ?? "";
+  const currentPlayerId = playerIds[0] ?? "";
   const diagnosticEvents: ReducerDiagnosticEvent[] = [];
   let lastDispatch: {
     submissionId: string;

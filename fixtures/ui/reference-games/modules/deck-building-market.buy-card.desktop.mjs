@@ -1,6 +1,7 @@
 import React from "react";
 import {
   Game,
+  HandStagingView,
   HandSurfaceView,
   Interaction,
   PlayerRoster,
@@ -20,6 +21,82 @@ import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "@dreamboard-games/plugin-run
 
 function renderCards(config) {
   if (!config.cards?.length) return null;
+  if (config.interactionMode === "select") {
+    return React.createElement(
+      Interaction.Root,
+      { interaction: config.interaction },
+      React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(HandStagingView, {
+          zone: "hand",
+          cardSize: "sm",
+          label: `${config.displayName} selected cards`,
+          ariaLabel: `${config.displayName} selected cards`,
+          renderEmptySlot: (index) =>
+            React.createElement(
+              "span",
+              {
+                style: {
+                  color: "var(--muted-foreground, #666)",
+                  fontSize: 12,
+                },
+              },
+              `Pick ${index + 1}`,
+            ),
+          renderCard: (card) =>
+            React.createElement(CardFace, {
+              card,
+              size: "sm",
+              selected: true,
+            }),
+        }),
+        React.createElement(HandSurfaceView, {
+          zone: "hand",
+          cards: config.cards,
+          layout: "strip",
+          mobileInteraction: "direct-activate",
+          cardSize: "sm",
+          ariaLabel: `${config.displayName} selectable cards`,
+          summarySlot: (summary) =>
+            React.createElement(
+              "p",
+              {
+                style: {
+                  margin: "0 0 8px",
+                  textAlign: "center",
+                },
+              },
+              `Selected ${summary.selectedCount}/${config.selectionCount}`,
+            ),
+          renderCard: (card, state) => {
+            const { distinctlyEligible: _distinctlyEligible, ...cardState } =
+              state;
+            return React.createElement(
+              Interaction.CardInput,
+              {
+                input: config.cardInputKey,
+                unsafeCardId: card.id,
+                "aria-label": `Select ${card.name}`,
+                onPointerDown: (event) => event.stopPropagation(),
+                onPointerUp: (event) => event.stopPropagation(),
+                onPointerCancel: (event) => event.stopPropagation(),
+                onClick: (event) => event.stopPropagation(),
+                onKeyDown: (event) => event.stopPropagation(),
+              },
+              React.createElement(CardFace, {
+                card,
+                size: "sm",
+                ...cardState,
+              }),
+            );
+          },
+          actionsSlot: () =>
+            React.createElement(Interaction.Submit, null, config.actionLabel),
+        }),
+      ),
+    );
+  }
   if (config.interactionMode === "drag") {
     return React.createElement(
       Interaction.Root,
@@ -227,7 +304,8 @@ export function createReferenceGameRoot(config) {
               renderDraftInteraction(config),
             ),
             config.interactionMode === "drag" ||
-              config.interactionMode === "draft"
+              config.interactionMode === "draft" ||
+              config.interactionMode === "select"
               ? null
               : React.createElement(
                   Panel.Actions,

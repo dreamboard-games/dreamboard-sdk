@@ -43,6 +43,7 @@
     "ui:fixtures:compile": "pnpm --filter @dreamboard-games/sdk build && node scripts/ui-fixtures/compile-reference-fixtures.mjs",
     "ui:fixtures:check": "pnpm --filter @dreamboard-games/sdk build && node scripts/ui-fixtures/check-fixtures.mjs",
     "ui:workbench": "node scripts/ui/open-ui-workbench.mjs",
+    "ui:workbench:src": "DREAMBOARD_WORKBENCH_SDK=source node scripts/ui/open-ui-workbench.mjs",
     "ui:workbench:dev": "pnpm --filter @dreamboard-games/ui-workbench dev",
     "ui:workbench:build": "pnpm --filter @dreamboard-games/ui-workbench build",
     "ui:catalog:generate": "node scripts/ui/generate-scenario-catalog.mjs",

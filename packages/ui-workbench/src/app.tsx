@@ -29,7 +29,11 @@ function navigate(path: string) {
   window.dispatchEvent(new PopStateEvent("popstate"));
 }
 
-function CatalogPage({ route }: { readonly route: ReturnType<typeof currentRoute> }) {
+function CatalogPage({
+  route,
+}: {
+  readonly route: ReturnType<typeof currentRoute>;
+}) {
   const [game, setGame] = useState(route.game);
   const [component, setComponent] = useState(route.component);
   const [capability, setCapability] = useState(route.capability);
@@ -59,21 +63,25 @@ function CatalogPage({ route }: { readonly route: ReturnType<typeof currentRoute
   );
 
   return (
-    <main className="workbench catalog-view" data-dreamboard-workbench="catalog">
+    <main
+      className="workbench catalog-view"
+      data-dreamboard-workbench="catalog"
+    >
       <header className="catalog-header">
         <div>
           <p>Dreamboard SDK</p>
           <h1>UI Workbench</h1>
         </div>
-        <a href="/scenario/hearts.pass-three.mobile?mode=test">
-          Test route
-        </a>
+        <a href="/scenario/hearts.pass-three.mobile?mode=test">Test route</a>
       </header>
 
       <section className="filters" aria-label="Scenario filters">
         <label>
           Game
-          <select value={game} onChange={(event) => setGame(event.target.value)}>
+          <select
+            value={game}
+            onChange={(event) => setGame(event.target.value)}
+          >
             <option value="">All games</option>
             {games.map((value) => (
               <option key={value} value={value}>
@@ -169,7 +177,9 @@ function App() {
   }, []);
 
   if (route.scenarioId) {
-    const entry = scenarios.find((candidate) => candidate.id === route.scenarioId);
+    const entry = scenarios.find(
+      (candidate) => candidate.id === route.scenarioId,
+    );
     if (!entry) {
       return (
         <main className="workbench error-state">

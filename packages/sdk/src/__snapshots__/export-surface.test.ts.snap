@@ -118,6 +118,7 @@ exports[`public export surface runtime/primitives export names are stable 1`] = 
   "GameChrome",
   "GameRoot",
   "GameViewport",
+  "HandStagingView",
   "HandSurfaceView",
   "Interaction",
   "InteractionCardInput",

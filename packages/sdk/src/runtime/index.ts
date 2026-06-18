@@ -7,10 +7,7 @@ export {
   type UIContract,
   type ZoneKey,
 } from "./ui-contract.js";
-export {
-  RuntimeContext,
-  useRuntimeContext,
-} from "./context/RuntimeContext.js";
+export { RuntimeContext, useRuntimeContext } from "./context/RuntimeContext.js";
 export {
   type ClientParamSchema,
   type ClientParamSchemaMap,

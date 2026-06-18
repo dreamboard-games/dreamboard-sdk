@@ -1,8 +1,10 @@
 export { UI, UIRoot, type UIRootProps } from "./ui.js";
 export {
   HandSurfaceView,
+  HandStagingView,
   dropTargetIdFor,
   descriptorsHaveDestinationInput,
+  type HandStagingViewProps,
   type HandSurfaceViewProps,
   type RuntimeDropTarget,
 } from "./hand-surface.js";

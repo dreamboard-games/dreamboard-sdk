@@ -14,7 +14,8 @@ export function FixturePluginRuntime({
   children: React.ReactNode;
 }) {
   const fixtureRuntime = useMemo(
-    () => runtime ?? createPluginRuntimeClient({ transport: harness.transport }),
+    () =>
+      runtime ?? createPluginRuntimeClient({ transport: harness.transport }),
     [harness.transport, runtime],
   );
   return (

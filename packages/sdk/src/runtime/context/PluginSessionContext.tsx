@@ -22,7 +22,9 @@ export const PluginSessionContext = createContext<PluginSessionState | null>(
 const PluginSessionDescriptorContext =
   createContext<PluginSessionDescriptor | null>(null);
 
-function sessionStateFromClient(runtime: PluginRuntimeClient): PluginSessionState {
+function sessionStateFromClient(
+  runtime: PluginRuntimeClient,
+): PluginSessionState {
   const session = runtime.getSession();
   const frame = runtime.getFrame();
   return {
@@ -76,56 +78,50 @@ export function PluginSessionProvider({
   runtime: PluginRuntimeClient;
   children: ReactNode;
 }) {
-  const sessionStore = useMemo(
-    () => {
-      let current = sessionStateFromClient(runtime);
-      return {
-        subscribe: (onStoreChange: () => void) => {
-          const refresh = () => {
-            const next = sessionStateFromClient(runtime);
-            if (pluginSessionStatesEqual(current, next)) {
-              return;
-            }
-            current = next;
-            onStoreChange();
-          };
-          const unsubscribeSession = runtime.subscribeSession(refresh);
-          const unsubscribeFrame = runtime.subscribeFrame(refresh);
-          return () => {
-            unsubscribeFrame();
-            unsubscribeSession();
-          };
-        },
-        getSnapshot: () => current,
-        getServerSnapshot: () => current,
-      };
-    },
-    [runtime],
-  );
-  const descriptorStore = useMemo(
-    () => {
-      let current = runtime.getSession();
-      return {
-        subscribe: (onStoreChange: () => void) => {
-          const refresh = () => {
-            const next = runtime.getSession();
-            if (pluginSessionDescriptorsEqual(current, next)) {
-              return;
-            }
-            current = next;
-            onStoreChange();
-          };
-          const unsubscribeSession = runtime.subscribeSession(refresh);
-          return () => {
-            unsubscribeSession();
-          };
-        },
-        getSnapshot: () => current,
-        getServerSnapshot: () => current,
-      };
-    },
-    [runtime],
-  );
+  const sessionStore = useMemo(() => {
+    let current = sessionStateFromClient(runtime);
+    return {
+      subscribe: (onStoreChange: () => void) => {
+        const refresh = () => {
+          const next = sessionStateFromClient(runtime);
+          if (pluginSessionStatesEqual(current, next)) {
+            return;
+          }
+          current = next;
+          onStoreChange();
+        };
+        const unsubscribeSession = runtime.subscribeSession(refresh);
+        const unsubscribeFrame = runtime.subscribeFrame(refresh);
+        return () => {
+          unsubscribeFrame();
+          unsubscribeSession();
+        };
+      },
+      getSnapshot: () => current,
+      getServerSnapshot: () => current,
+    };
+  }, [runtime]);
+  const descriptorStore = useMemo(() => {
+    let current = runtime.getSession();
+    return {
+      subscribe: (onStoreChange: () => void) => {
+        const refresh = () => {
+          const next = runtime.getSession();
+          if (pluginSessionDescriptorsEqual(current, next)) {
+            return;
+          }
+          current = next;
+          onStoreChange();
+        };
+        const unsubscribeSession = runtime.subscribeSession(refresh);
+        return () => {
+          unsubscribeSession();
+        };
+      },
+      getSnapshot: () => current,
+      getServerSnapshot: () => current,
+    };
+  }, [runtime]);
   const sessionState = useSyncExternalStore(
     sessionStore.subscribe,
     sessionStore.getSnapshot,
@@ -196,9 +192,7 @@ export function usePluginSession(): PluginSessionState {
   return context;
 }
 
-export function useOptionalPluginSessionDescriptor():
-  | PluginSessionDescriptor
-  | null {
+export function useOptionalPluginSessionDescriptor(): PluginSessionDescriptor | null {
   return useContext(PluginSessionDescriptorContext);
 }
 

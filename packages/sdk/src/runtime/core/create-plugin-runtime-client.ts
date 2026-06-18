@@ -70,7 +70,10 @@ export function createPluginRuntimeClient(
   let stopTransport: (() => void) | undefined;
   const sessionListeners = new Set<() => void>();
   const frameListeners = new Set<() => void>();
-  const pendingValidations = new Map<string, (result: ValidationResult) => void>();
+  const pendingValidations = new Map<
+    string,
+    (result: ValidationResult) => void
+  >();
   const pendingSubmissions = new Map<
     string,
     {
@@ -119,7 +122,10 @@ export function createPluginRuntimeClient(
     }
     const parseResult = HostToPluginEnvelopeSchema.safeParse(rawMessage);
     if (!parseResult.success) {
-      sendRuntimeError("Invalid host-to-plugin protocol envelope.", "invalid-envelope");
+      sendRuntimeError(
+        "Invalid host-to-plugin protocol envelope.",
+        "invalid-envelope",
+      );
       return;
     }
     const message = parseResult.data;

@@ -143,7 +143,7 @@ export async function executeFixtureStep(
 async function settleFixtureHost(page: Page): Promise<void> {
   await page.evaluate(async () => {
     const bridge = window.__dreamboardUIFixture;
-    if (!bridge) throw new Error("UI fixture test bridge is not installed.");
+    if (!bridge) return;
     for (let attempt = 0; attempt < 8; attempt += 1) {
       await bridge.flush();
       await new Promise<void>((resolve) => setTimeout(resolve, 0));

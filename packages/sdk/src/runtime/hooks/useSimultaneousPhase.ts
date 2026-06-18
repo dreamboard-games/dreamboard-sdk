@@ -8,6 +8,7 @@ import type { SimultaneousPhaseSnapshot } from "../types/plugin-state.js";
 export function useSimultaneousPhase(): SimultaneousPhaseSnapshot | null {
   return usePluginGameplayFrameSelector(
     (frame) =>
-      (frame.flow.simultaneousPhase ?? null) as SimultaneousPhaseSnapshot | null,
+      (frame.flow.simultaneousPhase ??
+        null) as SimultaneousPhaseSnapshot | null,
   );
 }

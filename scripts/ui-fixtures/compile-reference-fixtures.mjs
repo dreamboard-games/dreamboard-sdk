@@ -116,8 +116,11 @@ function collectVisibleInteractionKeys(snapshot) {
   ].sort();
 }
 
-function capabilitiesForReplay(replay, viewportTags) {
+function capabilitiesForReplay(replay, viewportTags, replayKind) {
   const capabilities = new Set(["runtime-submit"]);
+  if (replayKind === "multi-select") {
+    capabilities.add("runtime-draft");
+  }
   for (const step of replay) {
     if (step.execute.kind === "activate") capabilities.add("click");
     if (step.execute.kind === "fill") capabilities.add("runtime-draft");
@@ -136,6 +139,26 @@ function scenarioReplay(coverage) {
 
 function scenarioInputs(coverage) {
   const replay = scenarioReplay(coverage);
+  if (replay.kind === "multi-select") {
+    return [
+      {
+        key: replay.inputKey,
+        kind: "cardTarget",
+        domain: {
+          type: "cardTarget",
+          projection: "resolved",
+          zoneId: "hand",
+          eligibleTargets: replay.eligibleCardIds,
+          selection: {
+            mode: "many",
+            min: replay.min,
+            max: replay.max,
+            distinct: true,
+          },
+        },
+      },
+    ];
+  }
   if (replay.kind === "drag") {
     return [
       {
@@ -181,6 +204,9 @@ function scenarioInputs(coverage) {
 
 function scenarioSubmissionParams(coverage) {
   const replay = scenarioReplay(coverage);
+  if (replay.kind === "multi-select") {
+    return { [replay.inputKey]: replay.cardIds };
+  }
   if (replay.kind === "drag") {
     return {
       [replay.cardInputKey]: replay.cardId,
@@ -242,6 +268,31 @@ function scenarioInteraction(referenceGame, coverage) {
 
 function scenarioZones({ coverage, interaction }) {
   const replay = scenarioReplay(coverage);
+  if (replay.kind === "multi-select") {
+    const cardViewsById = Object.fromEntries(
+      replay.eligibleCardIds.map((cardId) => [
+        cardId,
+        JSON.stringify({
+          id: cardId,
+          cardType: "playing-card",
+          name: cardId
+            .split("-")
+            .map((part) => part[0].toUpperCase() + part.slice(1))
+            .join(" "),
+          properties: {},
+        }),
+      ]),
+    );
+    return {
+      hand: {
+        cardIds: replay.eligibleCardIds,
+        cardViewsById,
+        playableByCardId: Object.fromEntries(
+          replay.eligibleCardIds.map((cardId) => [cardId, [interaction.id]]),
+        ),
+      },
+    };
+  }
   if (replay.kind !== "drag") return {};
   const card = {
     id: replay.cardId,
@@ -419,9 +470,10 @@ async function exerciseRenderedScenario({
   fixtureId,
   modulePath,
   protocol,
-  sourceRequest,
+  sourceRequests,
   targetRequest,
   interactionId,
+  replayKind,
   submissionParams,
 }) {
   const executionRoot = await mkdtemp(
@@ -474,20 +526,43 @@ async function exerciseRenderedScenario({
       await settleFixtureRuntime(harness);
     });
 
-    const initialSnapshot = readBrowserInteractionSnapshot(container);
     const renderedComponents = collectRenderedComponents(container);
-    const resolution =
-      "effect" in sourceRequest
-        ? resolveBrowserInteractionEffect(initialSnapshot, sourceRequest)
-        : resolveBrowserInteractionIntent(initialSnapshot, sourceRequest);
-    if (!resolution.ok) {
-      throw new Error(
-        `${fixtureId} semantic replay request did not resolve uniquely: ${resolution.code}`,
-      );
+    const resolutions = [];
+    for (const sourceRequest of sourceRequests) {
+      const snapshot = readBrowserInteractionSnapshot(container);
+      const resolution =
+        "effect" in sourceRequest
+          ? resolveBrowserInteractionEffect(snapshot, sourceRequest)
+          : resolveBrowserInteractionIntent(snapshot, sourceRequest);
+      if (!resolution.ok) {
+        throw new Error(
+          `${fixtureId} semantic replay request did not resolve uniquely: ${resolution.code}`,
+        );
+      }
+      resolutions.push(resolution);
+      if (replayKind === "multi-select") {
+        const actuator = [...container.querySelectorAll("button")].find(
+          (candidate) =>
+            candidate.getAttribute("data-dreamboard-actuator-id") ===
+              resolution.actuator.actuatorId &&
+            candidate.getAttribute("data-dreamboard-actuator-enabled") ===
+              "true",
+        );
+        if (!actuator) {
+          throw new Error(
+            `${fixtureId} could not find enabled actuator '${resolution.actuator.actuatorId}'.`,
+          );
+        }
+        await act(async () => {
+          actuator.click();
+          await settleFixtureRuntime(harness);
+        });
+      }
     }
     if (targetRequest) {
+      const targetSnapshot = readBrowserInteractionSnapshot(container);
       const targetResolution = resolveBrowserPointerTarget(
-        initialSnapshot,
+        targetSnapshot,
         targetRequest,
       );
       if (!targetResolution.ok) {
@@ -505,14 +580,48 @@ async function exerciseRenderedScenario({
     }
 
     await act(async () => {
-      await runtime.submitInteraction(interactionId, submissionParams);
+      if (replayKind === "multi-select") {
+        const snapshot = readBrowserInteractionSnapshot(container);
+        const submitRequest = {
+          ...sourceRequests[0],
+          intent: "submit",
+        };
+        delete submitRequest.effect;
+        const submitResolution = resolveBrowserInteractionIntent(
+          snapshot,
+          submitRequest,
+        );
+        if (!submitResolution.ok) {
+          throw new Error(
+            `${fixtureId} semantic submit request did not resolve uniquely: ${submitResolution.code}`,
+          );
+        }
+        const actuator = [...container.querySelectorAll("button")].find(
+          (candidate) =>
+            candidate.getAttribute("data-dreamboard-actuator-id") ===
+              submitResolution.actuator.actuatorId &&
+            candidate.getAttribute("data-dreamboard-browser-intent") ===
+              submitResolution.actuator.intent &&
+            candidate.getAttribute("data-dreamboard-actuator-enabled") ===
+              "true",
+        );
+        if (!actuator) {
+          throw new Error(
+            `${fixtureId} could not find enabled submit actuator '${submitResolution.actuator.actuatorId}'.`,
+          );
+        }
+        actuator.click();
+      } else {
+        await runtime.submitInteraction(interactionId, submissionParams);
+      }
       await settleFixtureRuntime(harness);
     });
     harness.assertConsumed();
     const finalSnapshot = readBrowserInteractionSnapshot(container);
 
     return {
-      resolution,
+      resolution: resolutions[0],
+      resolutions,
       finalFrameId: harness.getCurrentFrameId(),
       finalSemanticDigest: digestUIFixtureJson({
         digestVersion: "runtime-browser-interaction@2",
@@ -539,18 +648,34 @@ function replayRequests(coverage, interactionId) {
     interactionId: `${interactionId}:player-1`,
   };
   const replay = scenarioReplay(coverage);
-  if (replay.kind === "drag") {
+  if (replay.kind === "multi-select") {
     return {
-      sourceRequest: {
+      sourceRequests: replay.cardIds.map((cardId) => ({
         ...base,
         effect: {
           kind: "setCandidate",
-          inputKey: replay.cardInputKey,
-          candidateValue: replay.cardId,
+          inputKey: replay.inputKey,
+          candidateValue: cardId,
           beforeSelected: false,
           afterSelected: true,
         },
-      },
+      })),
+    };
+  }
+  if (replay.kind === "drag") {
+    return {
+      sourceRequests: [
+        {
+          ...base,
+          effect: {
+            kind: "setCandidate",
+            inputKey: replay.cardInputKey,
+            candidateValue: replay.cardId,
+            beforeSelected: false,
+            afterSelected: true,
+          },
+        },
+      ],
       targetRequest: {
         ...base,
         effect: {
@@ -565,21 +690,25 @@ function replayRequests(coverage, interactionId) {
   }
   if (replay.kind === "draft") {
     return {
-      sourceRequest: {
-        ...base,
-        effect: {
-          kind: "setScalar",
-          inputKey: replay.inputKey,
-          value: replay.value,
+      sourceRequests: [
+        {
+          ...base,
+          effect: {
+            kind: "setScalar",
+            inputKey: replay.inputKey,
+            value: replay.value,
+          },
         },
-      },
+      ],
     };
   }
   return {
-    sourceRequest: {
-      ...base,
-      intent: "invoke",
-    },
+    sourceRequests: [
+      {
+        ...base,
+        intent: "invoke",
+      },
+    ],
   };
 }
 
@@ -602,44 +731,48 @@ function buildReplay({
   exercise,
   finalFrame,
   submissionDigest,
-  sourceRequest,
+  sourceRequests,
   targetRequest,
 }) {
   const replay = scenarioReplay(coverage);
   const fixtureId = coverage.scenarioId;
-  const firstStepId =
-    replay.kind === "invoke"
-      ? `${fixtureId}.invoke`
-      : `${fixtureId}.${replay.kind}`;
-  const firstStep = {
-    stepId: firstStepId,
-    requestDigest: digestUIFixtureRequest(sourceRequest),
-    resolve: sourceRequest,
-    execute:
-      replay.kind === "drag"
-        ? { kind: "drag", target: targetRequest }
-        : replay.kind === "draft"
-          ? { kind: "fill", value: String(replay.value) }
-          : { kind: "activate" },
-    expectedIdentity: expectedIdentity(
-      firstStepId,
-      interaction.id,
-      exercise.resolution,
-    ),
-    expect:
+  const firstSteps = sourceRequests.map((sourceRequest, index) => {
+    const stepId =
       replay.kind === "invoke"
-        ? {
-            frameId: finalFrame.id,
-            projectionDigest: finalFrame.projectionDigest,
-            semanticDigest: exercise.finalSemanticDigest,
-            submissionDigest,
-            visibleInteractionKeys: exercise.visibleInteractionKeys,
-          }
-        : {
-            visibleInteractionKeys: [interaction.id],
-          },
-  };
-  if (replay.kind === "invoke") return [firstStep];
+        ? `${fixtureId}.invoke`
+        : replay.kind === "multi-select"
+          ? `${fixtureId}.select-${String(index + 1).padStart(2, "0")}`
+          : `${fixtureId}.${replay.kind}`;
+    return {
+      stepId,
+      requestDigest: digestUIFixtureRequest(sourceRequest),
+      resolve: sourceRequest,
+      execute:
+        replay.kind === "drag"
+          ? { kind: "drag", target: targetRequest }
+          : replay.kind === "draft"
+            ? { kind: "fill", value: String(replay.value) }
+            : { kind: "activate" },
+      expectedIdentity: expectedIdentity(
+        stepId,
+        interaction.id,
+        exercise.resolutions[index],
+      ),
+      expect:
+        replay.kind === "invoke"
+          ? {
+              frameId: finalFrame.id,
+              projectionDigest: finalFrame.projectionDigest,
+              semanticDigest: exercise.finalSemanticDigest,
+              submissionDigest,
+              visibleInteractionKeys: exercise.visibleInteractionKeys,
+            }
+          : {
+              visibleInteractionKeys: [interaction.id],
+            },
+    };
+  });
+  if (replay.kind === "invoke") return firstSteps;
 
   const commitStepId = `${fixtureId}.commit`;
   const commitRequest = {
@@ -650,7 +783,7 @@ function buildReplay({
     intent: "submit",
   };
   return [
-    firstStep,
+    ...firstSteps,
     {
       stepId: commitStepId,
       requestDigest: digestUIFixtureRequest(commitRequest),
@@ -698,18 +831,23 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
 
   const protocol = await createReferenceProtocol({ referenceGame, coverage });
   const interaction = scenarioInteraction(referenceGame, coverage);
-  const { sourceRequest, targetRequest } = replayRequests(
+  const replay = scenarioReplay(coverage);
+  const { sourceRequests, targetRequest } = replayRequests(
     coverage,
     interaction.id,
   );
+  if (sourceRequests.length === 0) {
+    throw new Error(`${fixtureId} replay did not produce any source request.`);
+  }
   const submissionParams = scenarioSubmissionParams(coverage);
   const exercise = await exerciseRenderedScenario({
     fixtureId,
     modulePath,
     protocol,
-    sourceRequest,
+    sourceRequests,
     targetRequest,
     interactionId: `${interaction.id}:player-1`,
+    replayKind: replay.kind,
     submissionParams,
   });
   const finalFrame = protocol.frames.find(
@@ -728,13 +866,13 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   const viewportTags = fixtureId.endsWith(".mobile")
     ? ["phone", "touch"]
     : ["desktop"];
-  const replay = buildReplay({
+  const replaySteps = buildReplay({
     coverage,
     interaction,
     exercise,
     finalFrame,
     submissionDigest,
-    sourceRequest,
+    sourceRequests,
     targetRequest,
   });
   const fixture = compileUIScenarioFixture({
@@ -766,7 +904,7 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
       viewportTags,
     },
     protocol,
-    replay,
+    replay: replaySteps,
     expected: {
       finalSemanticDigest: exercise.finalSemanticDigest,
       submissionDigest,
@@ -786,7 +924,7 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
     renderModule,
     renderModuleSha256: renderModuleDigest,
     components: exercise.renderedComponents,
-    capabilities: capabilitiesForReplay(replay, viewportTags),
+    capabilities: capabilitiesForReplay(replaySteps, viewportTags, replay.kind),
   };
 }
 

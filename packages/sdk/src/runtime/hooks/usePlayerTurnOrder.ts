@@ -18,9 +18,7 @@ export function usePlayerTurnOrder(): readonly PlayerId[] {
   const sessionDescriptor = usePluginSessionDescriptor();
   return useMemo(
     () =>
-      sessionDescriptor.players.map(
-        (player) => player.playerId as PlayerId,
-      ),
+      sessionDescriptor.players.map((player) => player.playerId as PlayerId),
     [sessionDescriptor],
   );
 }

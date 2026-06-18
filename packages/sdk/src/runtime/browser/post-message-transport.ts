@@ -18,13 +18,11 @@ export function createPostMessagePluginTransport(
 ): PluginTransport {
   const targetWindow = options.targetWindow ?? window;
   const parentWindow = options.parentWindow ?? targetWindow.parent;
-  let channel:
-    | {
-        readonly channelId: string;
-        readonly hostOrigin: string;
-        readonly hostWindow: Window;
-      }
-    | null = null;
+  let channel: {
+    readonly channelId: string;
+    readonly hostOrigin: string;
+    readonly hostWindow: Window;
+  } | null = null;
   let outboundSequence = 0;
 
   return {

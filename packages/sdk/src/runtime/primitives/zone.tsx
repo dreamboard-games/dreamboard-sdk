@@ -428,10 +428,7 @@ export function ZoneCardAction<Card extends string = string>({
             };
           }
           try {
-            await runtime.submitInteraction(
-              descriptor.interactionId,
-              params,
-            );
+            await runtime.submitInteraction(descriptor.interactionId, params);
             clearInteractionRoute(store, descriptor);
             return {
               status: "submitted",

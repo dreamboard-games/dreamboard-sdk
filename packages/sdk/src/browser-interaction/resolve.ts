@@ -16,7 +16,6 @@ import type {
   BrowserInteractionEffectResolution,
   BrowserInteractionEntity,
   BrowserInteractionIntentRequest,
-  BrowserInteractionPointerTarget,
   BrowserInteractionPointerTargetResolution,
   BrowserInteractionResolution,
   BrowserInteractionSemanticSurfaceSnapshot,

@@ -16,5 +16,19 @@
     "three selected cards are staged before submission",
     "mobile hand action confirms the pass",
     "trick area shows only played public cards"
-  ]
+  ],
+  "replay": {
+    "kind": "multi-select",
+    "inputKey": "cardIds",
+    "cardIds": ["two-clubs", "queen-spades", "ace-hearts"],
+    "eligibleCardIds": [
+      "two-clubs",
+      "queen-spades",
+      "ace-hearts",
+      "seven-diamonds",
+      "ten-clubs"
+    ],
+    "min": 3,
+    "max": 3
+  }
 }

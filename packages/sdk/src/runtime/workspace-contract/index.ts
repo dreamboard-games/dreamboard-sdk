@@ -170,36 +170,40 @@ export function createWorkspaceUIContract<
       fallback,
       includeUnavailableInteractions,
     }: DefineGameUIConfig<GameState, Surfaces>) {
+      function DefinedGameUIFrame({ game }: { game: GameState }) {
+        const surfaces = useSurfaces();
+        const phaseRoutes = Object.fromEntries(
+          Object.entries(phases).map(([phase, render]) => [
+            phase,
+            () => render({ game, surfaces }),
+          ]),
+        );
+        const routeMap = interactionRoutes?.({ game, surfaces });
+        return createElement(
+          Fragment,
+          null,
+          routeMap
+            ? createElement(runtimeInteraction.Routes, {
+                routes: routeMap,
+                includeUnavailable: includeUnavailableInteractions,
+              })
+            : null,
+          createElement(runtimePhaseSwitch, {
+            routes: phaseRoutes,
+            fallback,
+          }),
+          renderInteractions?.({ game, surfaces }) ?? null,
+        );
+      }
+
       return function DefinedGameUI(props: Omit<UIRootProps, "children">) {
         return createElement(UI.Root, {
           ...props,
           children: createElement(runtimeGameRoot, {
-            children: (rawGame: unknown) => {
-              const game = rawGame as GameState;
-              const surfaces = useSurfaces();
-              const phaseRoutes = Object.fromEntries(
-                Object.entries(phases).map(([phase, render]) => [
-                  phase,
-                  () => render({ game, surfaces }),
-                ]),
-              );
-              const routeMap = interactionRoutes?.({ game, surfaces });
-              return createElement(
-                Fragment,
-                null,
-                routeMap
-                  ? createElement(runtimeInteraction.Routes, {
-                      routes: routeMap,
-                      includeUnavailable: includeUnavailableInteractions,
-                    })
-                  : null,
-                createElement(runtimePhaseSwitch, {
-                  routes: phaseRoutes,
-                  fallback,
-                }),
-                renderInteractions?.({ game, surfaces }) ?? null,
-              );
-            },
+            children: (rawGame: unknown) =>
+              createElement(DefinedGameUIFrame, {
+                game: rawGame as GameState,
+              }),
           }),
         });
       };

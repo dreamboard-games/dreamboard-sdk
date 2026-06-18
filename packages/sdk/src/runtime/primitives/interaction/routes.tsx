@@ -80,10 +80,7 @@ export interface InteractionRoutesProps<
 
 const warnedInteractionRouteIssues = new Set<string>();
 
-function warnInteractionRouteIssue(
-  message: string,
-  runtime?: RuntimeAPI,
-) {
+function warnInteractionRouteIssue(message: string, runtime?: RuntimeAPI) {
   if (warnedInteractionRouteIssues.has(message)) return;
   warnedInteractionRouteIssues.add(message);
   if (runtime?.emitDiagnostic) {

@@ -28,7 +28,8 @@ export interface SeatInbox {
 export function useSeatInbox(): SeatInbox {
   const interactions = usePluginGameplayFrameSelector(
     (frame) =>
-      (frame.availableInteractions ?? []) as ReadonlyArray<InteractionDescriptor>,
+      (frame.availableInteractions ??
+        []) as ReadonlyArray<InteractionDescriptor>,
   );
 
   const bySurface: Record<string, InteractionDescriptor[]> = {};
