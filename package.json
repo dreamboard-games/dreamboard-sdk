@@ -29,6 +29,7 @@
     "reference-games:bundle": "node scripts/ui/build-reference-bundle.mjs",
     "reference-games:check": "node scripts/ui/check-reference-games.mjs",
     "reference-games:test:packed": "node scripts/ui/verify-reference-consumers.mjs",
+    "reference-games:verify-publishable": "node scripts/ui/verify-publishable-reference-games.mjs",
     "publish:alpha": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha",
     "publish:alpha:dry-run": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha --dry-run",
     "storybook": "pnpm --filter @dreamboard-games/sdk storybook",
