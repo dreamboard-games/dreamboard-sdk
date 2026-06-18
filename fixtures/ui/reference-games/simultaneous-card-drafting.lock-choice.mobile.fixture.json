@@ -238,7 +238,7 @@
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
     "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:86baeadef989ab3e9ac0b6f266c9f8aa4531c5ade8f8015516f57ace8f6fdbdb",
+    "sourceDigest": "sha256:9e460cb9c0d0f6ceff7e00f222900daae0cefd67495fd301ee711b44c1f45c5a",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [

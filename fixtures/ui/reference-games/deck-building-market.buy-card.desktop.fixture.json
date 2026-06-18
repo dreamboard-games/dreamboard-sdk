@@ -237,7 +237,7 @@
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
     "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:948a270e4414749cd46501bc8ef6f454de88abf1dc8492df2f2cc521ea061af1",
+    "sourceDigest": "sha256:7b1f55d1dbfa1db9a58598bb5c671c5f289a20ff653d0ce2eacdf595ff2b4230",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

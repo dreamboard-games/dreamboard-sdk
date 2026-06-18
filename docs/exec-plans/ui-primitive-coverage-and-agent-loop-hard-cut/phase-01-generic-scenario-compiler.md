@@ -141,12 +141,17 @@ kind, invalid modules, and deterministic output.
   path.
 - Preserved the fixture schema while keeping each scenario module's reducer
   authority backed by the current coverage/replay metadata as an interim step.
+- Split reducer-authority protocol, replay-plan, and capability derivation out
+  of `compile-reference-fixtures.mjs` into `scripts/ui-fixtures/authority/`.
+- Regenerated fixtures, the scenario index, and the Workbench catalog from the
+  split reducer-authority path.
 
 Verification:
 
 ```sh
 pnpm ui:fixtures:compile
 pnpm ui:fixtures:check
+pnpm ui:catalog:generate
 pnpm --filter @dreamboard-games/sdk typecheck
 pnpm --filter @dreamboard-games/sdk exec bun test src/export-surface.test.ts --update-snapshots
 pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-scenario/replay-builders.test.ts
@@ -155,9 +160,9 @@ pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-scenario/replay
 Remaining:
 
 - Move replay/reducer data fully out of legacy `coverage.json` files.
-- Add protocol authority support and split reducer authority helpers out of the
-  compiler.
-- Remove replay-kind branches from `compile-reference-fixtures.mjs`.
+- Add protocol authority support.
+- Move replay-kind planning out of reducer authority once the shared replay
+  planner lands.
 
 ## Deferred
 
