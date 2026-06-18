@@ -1,6 +1,6 @@
 # Phase 04: Visual Loop, Cleanup, And Docs
 
-Status: In Progress
+Status: Complete
 
 Depends on: Phases 00 through 03
 
@@ -121,6 +121,93 @@ gone.
 - The normal agent loop is documented in AGENTS and generated docs.
 - Focused iteration does not require a backend.
 - Existing full UI checks pass.
+
+## Completion notes
+
+- Added `packages/ui-workbench/tests/runtime-visual.spec.ts` with five blocking
+  Workbench baselines: Hearts selected phone hand, Hex route draft, Worker
+  placement form draft, prompt validation, and board slot targeting.
+- Added explicit runtime visual commands and included the normal check path in
+  `ui:check:baseline`.
+- Removed the legacy generated `components` index and the DOM selector based
+  fixture ownership map. Scenario modules now declare their contracts directly,
+  and generated fixtures/catalog/docs consume the typed contract index.
+- Updated AGENTS, architecture docs, iteration-loop docs, behavioral-proof docs,
+  and generated UI/reference docs to describe the backend-free Storybook,
+  Workbench, protocol-scenario, reducer-scenario, focused-test, and runtime
+  visual loops.
+- Repository search confirms no remaining `componentOwnership`,
+  `renderedComponentSelectors`, legacy `componentIndex.components`,
+  source-rewriting, or `new Function` fixture-loading paths. Remaining
+  `validateInteraction` and `submitInteraction` calls are compile-time/test
+  evidence paths; the interactive Replay button uses the shared replay adapter.
+
+Verification:
+
+```sh
+pnpm docs:generate
+pnpm ui:catalog:check
+pnpm docs:check
+pnpm ui:fixtures:check
+pnpm ui:coverage:check
+pnpm ui:runtime:test
+pnpm ui:test:runtime-visual
+pnpm ui:test --required
+pnpm ui:hard-cut:check
+git diff --check
+node --test scripts/ui-fixtures/authority/authority.test.mjs scripts/ui/component-scenario-index-lib.test.mjs
+```
+
+## Progress notes
+
+Completed:
+
+- Added the runtime visual baseline lane and explicit update command:
+  `pnpm ui:test:runtime-visual` and `pnpm ui:test:runtime-visual:update`.
+- Added five pinned Workbench runtime visual baselines:
+  `hearts.pass-three.mobile`, `hex-network-trading.place-route.desktop`,
+  `worker-placement-tableau.place-worker.desktop`,
+  `ui-scenarios.prompts-choice.desktop`, and
+  `ui-scenarios.boards-slot.desktop`.
+- Removed the generated legacy `components` index from
+  `fixtures/ui/component-scenario-index.json`; consumers now read typed
+  `contracts`.
+- Removed DOM selector based fixture component ownership inference from the
+  fixture compiler. Reference-game scenarios now declare their component
+  contracts directly, matching protocol scenarios.
+- Updated AGENTS and UI loop/proof docs to describe the backend-free normal loop,
+  Storybook versus Workbench responsibilities, and the explicit runtime visual
+  baseline lane.
+
+Verification:
+
+```sh
+pnpm ui:test:runtime-visual
+pnpm ui:coverage:check
+pnpm ui:catalog:check
+pnpm ui:fixtures:check
+pnpm ui:runtime:test
+pnpm ui:test
+pnpm ui:hard-cut:check
+pnpm docs:check
+```
+
+Receipt:
+
+- `artifacts/ui/2026-06-18T08-36-49-926Z/receipt.json`
+
+Remaining:
+
+- The cleanup items for deleting synthetic reference reducer creation and
+  replay-kind keyed reducer-authority branches still need tracked real reducer
+  scenario authority. The checked-in reference-game source currently contains
+  metadata and UI, but no real reducer implementations to migrate to. Replacing
+  the synthetic helper with protocol tapes would remove the helper by weakening
+  the authority, so this remains open until real reducer source is checked in or
+  the phase scope is changed.
+- Direct runtime validation remains in fixture materialization and the Playwright
+  proof adapter where it is used to preserve protocol-order evidence. Direct
+  interactive Workbench Replay validation/submission was removed in Phase 03.
 
 ## Not required for completion
 

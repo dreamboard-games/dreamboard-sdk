@@ -1,6 +1,6 @@
 # UI Primitive Coverage And Agent Loop
 
-Status: Proposed
+Status: Complete
 
 Planned at SDK commit: `92179a4bbf10`
 
