@@ -5,6 +5,15 @@ import {
 } from "./runtime/test-bridge.js";
 import type { UIScenarioCatalogEntry } from "./catalog.js";
 import { JsonPanel } from "./inspectors/JsonPanel.js";
+import { createInPageReplayAdapter } from "./replay/in-page-adapter.js";
+import {
+  ReplayStepExecutionError,
+  runReplaySequence,
+} from "./replay/replay-runner.js";
+import type {
+  ReplayStepDiagnostics,
+  WorkbenchSemanticReplayStep,
+} from "./replay/replay-plan.js";
 import {
   BrowserFixtureRuntime,
   loadBrowserUIScenario,
@@ -31,7 +40,11 @@ function currentFrame(loaded: LoadedBrowserUIScenario | null) {
 }
 
 function replaySteps(loaded: LoadedBrowserUIScenario | null) {
-  return loaded?.fixture.replay.filter((step) => "resolve" in step) ?? [];
+  return (
+    loaded?.fixture.replay.filter(
+      (step): step is WorkbenchSemanticReplayStep => "resolve" in step,
+    ) ?? []
+  );
 }
 
 export function ScenarioPage({
@@ -50,6 +63,9 @@ export function ScenarioPage({
     initialViewport(entry),
   );
   const [revision, setRevision] = useState(0);
+  const [replayDiagnostics, setReplayDiagnostics] = useState<
+    readonly ReplayStepDiagnostics[]
+  >([]);
 
   useEffect(() => {
     let active = true;
@@ -57,6 +73,7 @@ export function ScenarioPage({
     setStatus("loading");
     setError(null);
     setLoaded(null);
+    setReplayDiagnostics([]);
 
     loadBrowserUIScenario({
       fixtureUrl: entry.fixtureUrl,
@@ -107,6 +124,7 @@ export function ScenarioPage({
   async function resetScenario() {
     if (!loaded) return;
     setStatus("loading");
+    setReplayDiagnostics([]);
     loaded.harness.reset();
     await loaded.harness.flush();
     setRevision((value) => value + 1);
@@ -117,35 +135,36 @@ export function ScenarioPage({
     if (!loaded || replay.length === 0) return;
     setStatus("loading");
     try {
-      for (const step of replay) {
-        const interactionId =
-          "expectedIdentity" in step && step.expectedIdentity
-            ? step.expectedIdentity.interactionId
-            : step.resolve && "interactionId" in step.resolve
-              ? step.resolve.interactionId
-              : undefined;
-        if (!interactionId) {
-          throw new Error(
-            `Replay step '${step.stepId}' is missing interactionId.`,
-          );
-        }
-        const validation = await loaded.runtime.validateInteraction(
-          interactionId,
-          {},
-        );
-        if (!validation.valid) {
-          throw new Error(
-            validation.message ??
-              `Replay step '${step.stepId}' validation failed.`,
-          );
-        }
-        await loaded.runtime.submitInteraction(interactionId, {});
-        await loaded.harness.flush();
-      }
+      const evidence = await runReplaySequence(
+        createInPageReplayAdapter({ harness: loaded.harness }),
+        replay,
+      );
+      setReplayDiagnostics(evidence.map((step) => step.diagnostics));
       setRevision((value) => value + 1);
       setStatus("complete");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
+      const message = cause instanceof Error ? cause.message : String(cause);
+      if (cause instanceof ReplayStepExecutionError) {
+        setReplayDiagnostics((previous) => [
+          ...previous,
+          cause.diagnostics,
+        ]);
+      } else {
+        const firstStep = replay[0];
+        if (firstStep) {
+          setReplayDiagnostics((previous) => [
+            ...previous,
+            {
+              stepId: firstStep.stepId,
+              request: firstStep.resolve,
+              requestDigest: firstStep.requestDigest,
+              expectedSemanticDigest: firstStep.expect.semanticDigest,
+              firstFailure: message,
+            },
+          ]);
+        }
+      }
+      setError(message);
       setStatus("failed");
     }
   }
@@ -225,6 +244,7 @@ export function ScenarioPage({
                   projectionDigest: frame?.projectionDigest ?? null,
                   expected: loaded?.fixture.expected ?? null,
                   replay: loaded?.fixture.replay ?? [],
+                  replayDiagnostics,
                 }}
               />
             )}

@@ -1,6 +1,6 @@
 # Phase 03: Fast Runner And Unified Replay
 
-Status: In Progress
+Status: Complete
 
 Depends on: Phases 00 and 01
 
@@ -143,7 +143,7 @@ stable selection order, and each replay execution kind.
 - Existing semantic, digest, Axe, and submission assertions still pass.
 - Failure output identifies the first divergent replay step.
 
-## Progress notes
+## Completion notes
 
 - Focused and changed-only command selection now uses the generated component
   scenario index and supports explain output.
@@ -151,21 +151,45 @@ stable selection order, and each replay execution kind.
   Workbench Playwright suite once for the selected set.
 - The Workbench scenario spec fans out from that matrix and keeps per-scenario
   evidence files, screenshots, and digest assertions.
+- `packages/ui-workbench/src/replay/` owns the shared semantic replay planner,
+  runner, and in-page adapter. The Workbench Replay button now uses that adapter
+  and does not call runtime validation or submission methods directly.
+- `packages/ui-workbench/tests/driver/playwright-adapter.ts` owns the physical
+  browser action adapter. Automated evidence still performs fixture validation
+  when a replay step expects a submission digest, preserving protocol-order
+  proof without putting direct validation into the in-page Replay path.
+- Replay diagnostics now carry the failed step, request, actuator identity,
+  expected and measured digest state, validation/submission state, and first
+  failure into both Workbench inspector data and Playwright failure output.
 
 Verification:
 
 ```sh
 node --test scripts/ui/component-scenario-index-lib.test.mjs
-pnpm ui:test:changed --base HEAD --explain
+pnpm ui:test:changed --base origin/main --explain
+pnpm --filter @dreamboard-games/ui-workbench typecheck
+pnpm --filter @dreamboard-games/ui-workbench test:runtime
+pnpm ui:runtime:test
+pnpm ui:test
+pnpm ui:test:changed --base HEAD~1
+pnpm ui:test --scenario ui-scenarios.cards-hand.desktop
 pnpm ui:test --scenario hearts.pass-three.mobile --project chromium-touch-phone
+pnpm ui:test --component CardDragSurface
+pnpm ui:hard-cut:check
+pnpm docs:check
 ```
 
-Remaining:
+Receipts:
 
-- Extract the shared semantic replay planner.
-- Replace direct in-page Replay runtime submission calls with the shared replay
-  adapter.
-- Broaden verification to the full required Workbench matrix.
+- `artifacts/ui/2026-06-18T08-21-00-768Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-21-03-722Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-22-13-634Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-22-30-507Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-25-47-073Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-25-50-010Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-27-03-981Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-27-12-923Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-28-47-675Z/receipt.json`
 
 ## Deferred
 
