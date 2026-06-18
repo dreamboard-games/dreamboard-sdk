@@ -6,7 +6,6 @@ import {
   cp,
   mkdir,
   mkdtemp,
-  readFile,
   readdir,
   rm,
   symlink,
@@ -17,13 +16,14 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { format } from "prettier";
 import {
-  expectedReferenceGames,
   referenceGamesRoot,
   repoCommandEnv,
   root,
   sha256File,
   writeJson,
 } from "../ui/reference-games-lib.mjs";
+import { discoverReferenceGameScenarioModules } from "./discover-scenarios.mjs";
+import { loadScenarioModule } from "./load-scenario-module.mjs";
 import {
   FixturePluginRuntime,
   compilePluginProtocolTape,
@@ -816,15 +816,18 @@ function buildReplay({
   ];
 }
 
-async function compileGame({ game, outputRoot, sdkCommit }) {
-  const gameDir = path.join(referenceGamesRoot, game.id);
-  const coverage = await readFile(
-    path.join(gameDir, "scenarios/coverage.json"),
-    "utf8",
-  ).then(JSON.parse);
-  const referenceGame = await loadReferenceGameSource({
-    gameDir,
-  });
+async function compileScenarioModule({
+  game,
+  gameDir,
+  scenario,
+  outputRoot,
+  sdkCommit,
+}) {
+  if (scenario.authority.kind !== "reducer") {
+    throw new Error(`${scenario.id} protocol authority is not supported yet.`);
+  }
+  const coverage = scenario.authority.coverage;
+  const referenceGame = scenario.authority.referenceGame;
   const fixtureId = coverage.scenarioId;
   const renderModule = `modules/${fixtureId}.mjs`;
   const publishedModulePath = path.join(fixturesRoot, renderModule);
@@ -909,6 +912,7 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
       sourceDigest: digestUIFixtureJson({
         referenceGame,
         coverage,
+        scenarioSourceFiles: scenario.sourceFiles,
         sdkCommit,
       }),
     },
@@ -945,15 +949,6 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   };
 }
 
-async function loadReferenceGameSource({ gameDir }) {
-  const sourcePath = path.join(gameDir, "src/reference-game.mjs");
-  const module = await import(pathToFileURL(sourcePath).href);
-  if (!module.referenceGame) {
-    throw new Error(`${sourcePath} must export referenceGame.`);
-  }
-  return module.referenceGame;
-}
-
 async function hashOutputFiles(outputRoot) {
   const files = [];
   async function visit(dir) {
@@ -976,8 +971,17 @@ async function compileAll(outputRoot) {
   await mkdir(path.join(outputRoot, "modules"), { recursive: true });
   const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
   const fixtures = [];
-  for (const game of expectedReferenceGames) {
-    fixtures.push(await compileGame({ game, outputRoot, sdkCommit }));
+  const modules = await discoverReferenceGameScenarioModules();
+  for (const entry of modules) {
+    fixtures.push(
+      await compileScenarioModule({
+        game: entry.game,
+        gameDir: entry.gameDir,
+        scenario: await loadScenarioModule(entry.modulePath),
+        outputRoot,
+        sdkCommit,
+      }),
+    );
   }
   await writeJson(path.join(outputRoot, "index.json"), {
     schemaVersion: 2,
@@ -987,6 +991,7 @@ async function compileAll(outputRoot) {
     browserInteractionProtocol: browserInteractionProtocolVersion,
     fixtures: fixtures.sort((left, right) => left.id.localeCompare(right.id)),
   });
+  return fixtures.length;
 }
 
 async function main() {
@@ -996,8 +1001,9 @@ async function main() {
   const first = path.join(tmpRoot, "first");
   const second = path.join(tmpRoot, "second");
   try {
+    let fixtureCount = 0;
     await withTemporaryNodeModuleLinks(async () => {
-      await compileAll(first);
+      fixtureCount = await compileAll(first);
       await compileAll(second);
     });
     const firstHashes = JSON.stringify(await hashOutputFiles(first));
@@ -1009,7 +1015,7 @@ async function main() {
     await rm(fixturesRoot, { recursive: true, force: true });
     await mkdir(fixturesRoot, { recursive: true });
     await cp(first, fixturesRoot, { recursive: true });
-    console.log(`compiled ${expectedReferenceGames.length} UI fixtures`);
+    console.log(`compiled ${fixtureCount} UI fixtures`);
   } finally {
     await rm(tmpRoot, { recursive: true, force: true });
   }

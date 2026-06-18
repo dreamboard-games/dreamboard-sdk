@@ -136,8 +136,11 @@ kind, invalid modules, and deterministic output.
   ESM.
 - Regenerated render modules as small ESM forwarders to the reference UI source
   instead of bundling copied source into each fixture module.
-- Preserved the fixture schema while keeping the current `coverage.json`
-  authoring path as an interim step.
+- Added reference-game scenario modules under `src/scenarios/*.scenario.mjs` and
+  made fixture compilation discover and load those modules as the authoring
+  path.
+- Preserved the fixture schema while keeping each scenario module's reducer
+  authority backed by the current coverage/replay metadata as an interim step.
 
 Verification:
 
@@ -151,9 +154,9 @@ pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-scenario/replay
 
 Remaining:
 
-- Move `coverage.json` replay/reducer data into scenario modules.
-- Add generic discovery, module loading, and protocol/reducer authority adapter
-  files.
+- Move replay/reducer data fully out of legacy `coverage.json` files.
+- Add protocol authority support and split reducer authority helpers out of the
+  compiler.
 - Remove replay-kind branches from `compile-reference-fixtures.mjs`.
 
 ## Deferred

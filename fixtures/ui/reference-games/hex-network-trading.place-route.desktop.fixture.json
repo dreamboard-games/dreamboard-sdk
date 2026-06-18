@@ -433,7 +433,7 @@
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
     "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:80d7c38fca432972e5ca299e2c3ad83cdbafc6f4764729b58aeea5818a667a57",
+    "sourceDigest": "sha256:7d57a733992faf5f8aafe7a606b5dde02dcb02a4dbe0a48438e14944e97a897d",
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [

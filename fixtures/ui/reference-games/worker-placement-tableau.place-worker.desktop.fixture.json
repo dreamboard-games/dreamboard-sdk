@@ -283,7 +283,7 @@
     "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
     "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a",
     "scenarioId": "worker-placement-tableau.place-worker.desktop",
-    "sourceDigest": "sha256:b2001ea35c6c32a1ed65d502747db6cc1ce7027ccb696cfa9c8f098fe2454f43",
+    "sourceDigest": "sha256:29119491ffcea034be4d28a9231e090315aa1529648bb130ab25c12fd17313a6",
     "uiContractFingerprint": "sha256:7ead99900f9c41b0e5e8c1e9a0d06223712524b492e96f690dffacb0cfda0d2d"
   },
   "tags": [
