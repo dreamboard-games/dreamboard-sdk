@@ -1,0 +1,38 @@
+{
+  "name": "@dreamboard/example-hearts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dreamboard dev",
+    "typecheck": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json",
+    "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
+    "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
+    "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
+    "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
+    "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx",
+    "test:smoke": "bun test test/wave-2-smoke.test.ts"
+  },
+  "dependencies": {
+    "@dreamboard-games/sdk": "0.4.0-alpha.5",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.12",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "csstype": "^3.1.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "pnpm": {
+    "overrides": {
+      "zod": "4.4.3",
+      "react": "19.2.6",
+      "react-dom": "19.2.6"
+    }
+  }
+}

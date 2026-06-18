@@ -1,0 +1,237 @@
+{
+  "currentStage": "passing",
+  "stageSeats": ["player-1", "player-2", "player-3", "player-4"],
+  "view": {
+    "currentPhase": "passing",
+    "roundNumber": 1,
+    "hand": [
+      {
+        "id": "spades-6",
+        "cardType": "spades-6",
+        "name": "6 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "6"
+        }
+      },
+      {
+        "id": "diamonds-3",
+        "cardType": "diamonds-3",
+        "name": "3 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "3"
+        }
+      },
+      {
+        "id": "spades-J",
+        "cardType": "spades-J",
+        "name": "J of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "J"
+        }
+      },
+      {
+        "id": "spades-9",
+        "cardType": "spades-9",
+        "name": "9 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "9"
+        }
+      },
+      {
+        "id": "diamonds-7",
+        "cardType": "diamonds-7",
+        "name": "7 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "7"
+        }
+      },
+      {
+        "id": "hearts-Q",
+        "cardType": "hearts-Q",
+        "name": "Q of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "Q"
+        }
+      },
+      {
+        "id": "clubs-A",
+        "cardType": "clubs-A",
+        "name": "A of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "A"
+        }
+      },
+      {
+        "id": "hearts-4",
+        "cardType": "hearts-4",
+        "name": "4 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "4"
+        }
+      },
+      {
+        "id": "clubs-J",
+        "cardType": "clubs-J",
+        "name": "J of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "J"
+        }
+      },
+      {
+        "id": "spades-3",
+        "cardType": "spades-3",
+        "name": "3 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "3"
+        }
+      },
+      {
+        "id": "spades-A",
+        "cardType": "spades-A",
+        "name": "A of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "A"
+        }
+      },
+      {
+        "id": "clubs-9",
+        "cardType": "clubs-9",
+        "name": "9 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "9"
+        }
+      },
+      {
+        "id": "clubs-10",
+        "cardType": "clubs-10",
+        "name": "10 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "10"
+        }
+      }
+    ],
+    "handCount": 13,
+    "currentTrick": [],
+    "heartsBroken": false,
+    "isFirstTrick": true,
+    "tricksWonByPlayer": {},
+    "pointsThisHand": {},
+    "totalPointsByPlayer": {},
+    "moonShooter": null,
+    "activePlayers": []
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "passing",
+      "interactionKey": "passing.submit",
+      "interactionId": "submit",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": [
+              "spades-6",
+              "diamonds-3",
+              "spades-J",
+              "spades-9",
+              "diamonds-7",
+              "hearts-Q",
+              "clubs-A",
+              "hearts-4",
+              "clubs-J",
+              "spades-3",
+              "spades-A",
+              "clubs-9",
+              "clubs-10"
+            ],
+            "selection": {
+              "mode": "many",
+              "min": 3,
+              "max": 3,
+              "distinct": true
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:decfdf91ebf5bf04ae1158b5c2a301f0851388d4deba3a391820b9b0aa317a1c",
+      "actorSeat": 2,
+      "draftDigest": "sha256:56e71722c9dde11f25066f627a04589be9ca0a3bd30a32ee7f989855bac93bdf"
+    }
+  ],
+  "zones": {
+    "hand": {
+      "cardIds": [
+        "spades-6",
+        "diamonds-3",
+        "spades-J",
+        "spades-9",
+        "diamonds-7",
+        "hearts-Q",
+        "clubs-A",
+        "hearts-4",
+        "clubs-J",
+        "spades-3",
+        "spades-A",
+        "clubs-9",
+        "clubs-10"
+      ],
+      "cardViewsById": {
+        "spades-6": "{\"id\":\"spades-6\",\"cardType\":\"spades-6\",\"name\":\"6 of spades\",\"properties\":{\"suit\":\"spades\",\"rank\":\"6\"}}",
+        "diamonds-3": "{\"id\":\"diamonds-3\",\"cardType\":\"diamonds-3\",\"name\":\"3 of diamonds\",\"properties\":{\"suit\":\"diamonds\",\"rank\":\"3\"}}",
+        "spades-J": "{\"id\":\"spades-J\",\"cardType\":\"spades-J\",\"name\":\"J of spades\",\"properties\":{\"suit\":\"spades\",\"rank\":\"J\"}}",
+        "spades-9": "{\"id\":\"spades-9\",\"cardType\":\"spades-9\",\"name\":\"9 of spades\",\"properties\":{\"suit\":\"spades\",\"rank\":\"9\"}}",
+        "diamonds-7": "{\"id\":\"diamonds-7\",\"cardType\":\"diamonds-7\",\"name\":\"7 of diamonds\",\"properties\":{\"suit\":\"diamonds\",\"rank\":\"7\"}}",
+        "hearts-Q": "{\"id\":\"hearts-Q\",\"cardType\":\"hearts-Q\",\"name\":\"Q of hearts\",\"properties\":{\"suit\":\"hearts\",\"rank\":\"Q\"}}",
+        "clubs-A": "{\"id\":\"clubs-A\",\"cardType\":\"clubs-A\",\"name\":\"A of clubs\",\"properties\":{\"suit\":\"clubs\",\"rank\":\"A\"}}",
+        "hearts-4": "{\"id\":\"hearts-4\",\"cardType\":\"hearts-4\",\"name\":\"4 of hearts\",\"properties\":{\"suit\":\"hearts\",\"rank\":\"4\"}}",
+        "clubs-J": "{\"id\":\"clubs-J\",\"cardType\":\"clubs-J\",\"name\":\"J of clubs\",\"properties\":{\"suit\":\"clubs\",\"rank\":\"J\"}}",
+        "spades-3": "{\"id\":\"spades-3\",\"cardType\":\"spades-3\",\"name\":\"3 of spades\",\"properties\":{\"suit\":\"spades\",\"rank\":\"3\"}}",
+        "spades-A": "{\"id\":\"spades-A\",\"cardType\":\"spades-A\",\"name\":\"A of spades\",\"properties\":{\"suit\":\"spades\",\"rank\":\"A\"}}",
+        "clubs-9": "{\"id\":\"clubs-9\",\"cardType\":\"clubs-9\",\"name\":\"9 of clubs\",\"properties\":{\"suit\":\"clubs\",\"rank\":\"9\"}}",
+        "clubs-10": "{\"id\":\"clubs-10\",\"cardType\":\"clubs-10\",\"name\":\"10 of clubs\",\"properties\":{\"suit\":\"clubs\",\"rank\":\"10\"}}"
+      },
+      "playableByCardId": {
+        "spades-6": ["submit:5da27a5b5b7e1f47"],
+        "diamonds-3": ["submit:5da27a5b5b7e1f47"],
+        "spades-J": ["submit:5da27a5b5b7e1f47"],
+        "spades-9": ["submit:5da27a5b5b7e1f47"],
+        "diamonds-7": ["submit:5da27a5b5b7e1f47"],
+        "hearts-Q": ["submit:5da27a5b5b7e1f47"],
+        "clubs-A": ["submit:5da27a5b5b7e1f47"],
+        "hearts-4": ["submit:5da27a5b5b7e1f47"],
+        "clubs-J": ["submit:5da27a5b5b7e1f47"],
+        "spades-3": ["submit:5da27a5b5b7e1f47"],
+        "spades-A": ["submit:5da27a5b5b7e1f47"],
+        "clubs-9": ["submit:5da27a5b5b7e1f47"],
+        "clubs-10": ["submit:5da27a5b5b7e1f47"]
+      }
+    }
+  }
+}

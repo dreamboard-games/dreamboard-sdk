@@ -2,7 +2,52 @@
   "schemaVersion": 1,
   "id": "hearts",
   "displayName": "Hearts",
-  "publishToDemoGallery": false,
+  "publishToDemoGallery": true,
+  "demoRelease": {
+    "slug": "hearts",
+    "name": "Hearts",
+    "description": "A four-player trick-taking card game with passing, hidden hands, and point avoidance.",
+    "overview": "Pass three cards, follow suit when possible, and avoid taking hearts or the queen of spades.",
+    "creator": "Dreamboard",
+    "minPlayers": 4,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 20,
+    "playTimeMaxMinutes": 40,
+    "difficulty": 2,
+    "mechanics": [
+      "trick-taking",
+      "simultaneous-card-passing",
+      "hidden-information"
+    ],
+    "categories": ["card-game", "classic"],
+    "heroImageUrl": "/demos/hearts/desktop.png",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 4,
+    "sourcePath": "hearts/demo-workspace",
+    "screenshot": {
+      "projection": "hearts/demo-workspace/ui/index.tsx",
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "trick-taking",
     "simultaneous-card-passing",

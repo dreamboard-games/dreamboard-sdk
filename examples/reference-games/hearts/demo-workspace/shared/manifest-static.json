@@ -1,0 +1,1282 @@
+{
+  "formatVersion": 1,
+  "generatedBy": "@dreamboard-games/sdk/codegen",
+  "boards": {
+    "byId": {},
+    "hex": {},
+    "square": {}
+  },
+  "initialTable": {
+    "playerOrder": [
+      "player-1",
+      "player-2",
+      "player-3",
+      "player-4"
+    ],
+    "zones": {
+      "shared": {
+        "draw-pile": [
+          "clubs-2",
+          "clubs-3",
+          "clubs-4",
+          "clubs-5",
+          "clubs-6",
+          "clubs-7",
+          "clubs-8",
+          "clubs-9",
+          "clubs-10",
+          "clubs-J",
+          "clubs-Q",
+          "clubs-K",
+          "clubs-A",
+          "diamonds-2",
+          "diamonds-3",
+          "diamonds-4",
+          "diamonds-5",
+          "diamonds-6",
+          "diamonds-7",
+          "diamonds-8",
+          "diamonds-9",
+          "diamonds-10",
+          "diamonds-J",
+          "diamonds-Q",
+          "diamonds-K",
+          "diamonds-A",
+          "spades-2",
+          "spades-3",
+          "spades-4",
+          "spades-5",
+          "spades-6",
+          "spades-7",
+          "spades-8",
+          "spades-9",
+          "spades-10",
+          "spades-J",
+          "spades-Q",
+          "spades-K",
+          "spades-A",
+          "hearts-2",
+          "hearts-3",
+          "hearts-4",
+          "hearts-5",
+          "hearts-6",
+          "hearts-7",
+          "hearts-8",
+          "hearts-9",
+          "hearts-10",
+          "hearts-J",
+          "hearts-Q",
+          "hearts-K",
+          "hearts-A"
+        ],
+        "current-trick": [],
+        "discard": []
+      },
+      "perPlayer": {
+        "hand": {
+          "__perPlayer": true,
+          "entries": [
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ],
+            [
+              "player-3",
+              []
+            ],
+            [
+              "player-4",
+              []
+            ]
+          ]
+        }
+      },
+      "visibility": {
+        "draw-pile": "hidden",
+        "hand": "ownerOnly",
+        "current-trick": "public",
+        "discard": "public"
+      },
+      "cardSetIdsByZoneId": {
+        "current-trick": [
+          "playing-cards"
+        ],
+        "discard": [
+          "playing-cards"
+        ],
+        "draw-pile": [
+          "playing-cards"
+        ],
+        "hand": [
+          "playing-cards"
+        ]
+      }
+    },
+    "decks": {
+      "draw-pile": [
+        "clubs-2",
+        "clubs-3",
+        "clubs-4",
+        "clubs-5",
+        "clubs-6",
+        "clubs-7",
+        "clubs-8",
+        "clubs-9",
+        "clubs-10",
+        "clubs-J",
+        "clubs-Q",
+        "clubs-K",
+        "clubs-A",
+        "diamonds-2",
+        "diamonds-3",
+        "diamonds-4",
+        "diamonds-5",
+        "diamonds-6",
+        "diamonds-7",
+        "diamonds-8",
+        "diamonds-9",
+        "diamonds-10",
+        "diamonds-J",
+        "diamonds-Q",
+        "diamonds-K",
+        "diamonds-A",
+        "spades-2",
+        "spades-3",
+        "spades-4",
+        "spades-5",
+        "spades-6",
+        "spades-7",
+        "spades-8",
+        "spades-9",
+        "spades-10",
+        "spades-J",
+        "spades-Q",
+        "spades-K",
+        "spades-A",
+        "hearts-2",
+        "hearts-3",
+        "hearts-4",
+        "hearts-5",
+        "hearts-6",
+        "hearts-7",
+        "hearts-8",
+        "hearts-9",
+        "hearts-10",
+        "hearts-J",
+        "hearts-Q",
+        "hearts-K",
+        "hearts-A"
+      ],
+      "current-trick": [],
+      "discard": []
+    },
+    "hands": {
+      "hand": {
+        "__perPlayer": true,
+        "entries": [
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ],
+          [
+            "player-3",
+            []
+          ],
+          [
+            "player-4",
+            []
+          ]
+        ]
+      }
+    },
+    "handVisibility": {
+      "hand": "ownerOnly"
+    },
+    "cards": {
+      "clubs-2": {
+        "id": "clubs-2",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-2",
+        "name": "2 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "2"
+        }
+      },
+      "clubs-3": {
+        "id": "clubs-3",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-3",
+        "name": "3 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "3"
+        }
+      },
+      "clubs-4": {
+        "id": "clubs-4",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-4",
+        "name": "4 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "4"
+        }
+      },
+      "clubs-5": {
+        "id": "clubs-5",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-5",
+        "name": "5 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "5"
+        }
+      },
+      "clubs-6": {
+        "id": "clubs-6",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-6",
+        "name": "6 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "6"
+        }
+      },
+      "clubs-7": {
+        "id": "clubs-7",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-7",
+        "name": "7 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "7"
+        }
+      },
+      "clubs-8": {
+        "id": "clubs-8",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-8",
+        "name": "8 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "8"
+        }
+      },
+      "clubs-9": {
+        "id": "clubs-9",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-9",
+        "name": "9 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "9"
+        }
+      },
+      "clubs-10": {
+        "id": "clubs-10",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-10",
+        "name": "10 of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "10"
+        }
+      },
+      "clubs-J": {
+        "id": "clubs-J",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-J",
+        "name": "J of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "J"
+        }
+      },
+      "clubs-Q": {
+        "id": "clubs-Q",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-Q",
+        "name": "Q of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "Q"
+        }
+      },
+      "clubs-K": {
+        "id": "clubs-K",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-K",
+        "name": "K of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "K"
+        }
+      },
+      "clubs-A": {
+        "id": "clubs-A",
+        "cardSetId": "playing-cards",
+        "cardType": "clubs-A",
+        "name": "A of clubs",
+        "properties": {
+          "suit": "clubs",
+          "rank": "A"
+        }
+      },
+      "diamonds-2": {
+        "id": "diamonds-2",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-2",
+        "name": "2 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "2"
+        }
+      },
+      "diamonds-3": {
+        "id": "diamonds-3",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-3",
+        "name": "3 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "3"
+        }
+      },
+      "diamonds-4": {
+        "id": "diamonds-4",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-4",
+        "name": "4 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "4"
+        }
+      },
+      "diamonds-5": {
+        "id": "diamonds-5",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-5",
+        "name": "5 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "5"
+        }
+      },
+      "diamonds-6": {
+        "id": "diamonds-6",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-6",
+        "name": "6 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "6"
+        }
+      },
+      "diamonds-7": {
+        "id": "diamonds-7",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-7",
+        "name": "7 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "7"
+        }
+      },
+      "diamonds-8": {
+        "id": "diamonds-8",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-8",
+        "name": "8 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "8"
+        }
+      },
+      "diamonds-9": {
+        "id": "diamonds-9",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-9",
+        "name": "9 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "9"
+        }
+      },
+      "diamonds-10": {
+        "id": "diamonds-10",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-10",
+        "name": "10 of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "10"
+        }
+      },
+      "diamonds-J": {
+        "id": "diamonds-J",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-J",
+        "name": "J of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "J"
+        }
+      },
+      "diamonds-Q": {
+        "id": "diamonds-Q",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-Q",
+        "name": "Q of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "Q"
+        }
+      },
+      "diamonds-K": {
+        "id": "diamonds-K",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-K",
+        "name": "K of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "K"
+        }
+      },
+      "diamonds-A": {
+        "id": "diamonds-A",
+        "cardSetId": "playing-cards",
+        "cardType": "diamonds-A",
+        "name": "A of diamonds",
+        "properties": {
+          "suit": "diamonds",
+          "rank": "A"
+        }
+      },
+      "spades-2": {
+        "id": "spades-2",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-2",
+        "name": "2 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "2"
+        }
+      },
+      "spades-3": {
+        "id": "spades-3",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-3",
+        "name": "3 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "3"
+        }
+      },
+      "spades-4": {
+        "id": "spades-4",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-4",
+        "name": "4 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "4"
+        }
+      },
+      "spades-5": {
+        "id": "spades-5",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-5",
+        "name": "5 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "5"
+        }
+      },
+      "spades-6": {
+        "id": "spades-6",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-6",
+        "name": "6 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "6"
+        }
+      },
+      "spades-7": {
+        "id": "spades-7",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-7",
+        "name": "7 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "7"
+        }
+      },
+      "spades-8": {
+        "id": "spades-8",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-8",
+        "name": "8 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "8"
+        }
+      },
+      "spades-9": {
+        "id": "spades-9",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-9",
+        "name": "9 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "9"
+        }
+      },
+      "spades-10": {
+        "id": "spades-10",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-10",
+        "name": "10 of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "10"
+        }
+      },
+      "spades-J": {
+        "id": "spades-J",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-J",
+        "name": "J of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "J"
+        }
+      },
+      "spades-Q": {
+        "id": "spades-Q",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-Q",
+        "name": "Q of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "Q"
+        }
+      },
+      "spades-K": {
+        "id": "spades-K",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-K",
+        "name": "K of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "K"
+        }
+      },
+      "spades-A": {
+        "id": "spades-A",
+        "cardSetId": "playing-cards",
+        "cardType": "spades-A",
+        "name": "A of spades",
+        "properties": {
+          "suit": "spades",
+          "rank": "A"
+        }
+      },
+      "hearts-2": {
+        "id": "hearts-2",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-2",
+        "name": "2 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "2"
+        }
+      },
+      "hearts-3": {
+        "id": "hearts-3",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-3",
+        "name": "3 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "3"
+        }
+      },
+      "hearts-4": {
+        "id": "hearts-4",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-4",
+        "name": "4 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "4"
+        }
+      },
+      "hearts-5": {
+        "id": "hearts-5",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-5",
+        "name": "5 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "5"
+        }
+      },
+      "hearts-6": {
+        "id": "hearts-6",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-6",
+        "name": "6 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "6"
+        }
+      },
+      "hearts-7": {
+        "id": "hearts-7",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-7",
+        "name": "7 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "7"
+        }
+      },
+      "hearts-8": {
+        "id": "hearts-8",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-8",
+        "name": "8 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "8"
+        }
+      },
+      "hearts-9": {
+        "id": "hearts-9",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-9",
+        "name": "9 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "9"
+        }
+      },
+      "hearts-10": {
+        "id": "hearts-10",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-10",
+        "name": "10 of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "10"
+        }
+      },
+      "hearts-J": {
+        "id": "hearts-J",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-J",
+        "name": "J of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "J"
+        }
+      },
+      "hearts-Q": {
+        "id": "hearts-Q",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-Q",
+        "name": "Q of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "Q"
+        }
+      },
+      "hearts-K": {
+        "id": "hearts-K",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-K",
+        "name": "K of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "K"
+        }
+      },
+      "hearts-A": {
+        "id": "hearts-A",
+        "cardSetId": "playing-cards",
+        "cardType": "hearts-A",
+        "name": "A of hearts",
+        "properties": {
+          "suit": "hearts",
+          "rank": "A"
+        }
+      }
+    },
+    "pieces": {},
+    "componentLocations": {
+      "clubs-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 0
+      },
+      "clubs-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 1
+      },
+      "clubs-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 2
+      },
+      "clubs-5": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 3
+      },
+      "clubs-6": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 4
+      },
+      "clubs-7": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 5
+      },
+      "clubs-8": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 6
+      },
+      "clubs-9": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 7
+      },
+      "clubs-10": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 8
+      },
+      "clubs-J": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 9
+      },
+      "clubs-Q": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 10
+      },
+      "clubs-K": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 11
+      },
+      "clubs-A": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 12
+      },
+      "diamonds-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 13
+      },
+      "diamonds-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 14
+      },
+      "diamonds-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 15
+      },
+      "diamonds-5": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 16
+      },
+      "diamonds-6": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 17
+      },
+      "diamonds-7": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 18
+      },
+      "diamonds-8": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 19
+      },
+      "diamonds-9": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 20
+      },
+      "diamonds-10": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 21
+      },
+      "diamonds-J": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 22
+      },
+      "diamonds-Q": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 23
+      },
+      "diamonds-K": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 24
+      },
+      "diamonds-A": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 25
+      },
+      "spades-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 26
+      },
+      "spades-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 27
+      },
+      "spades-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 28
+      },
+      "spades-5": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 29
+      },
+      "spades-6": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 30
+      },
+      "spades-7": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 31
+      },
+      "spades-8": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 32
+      },
+      "spades-9": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 33
+      },
+      "spades-10": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 34
+      },
+      "spades-J": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 35
+      },
+      "spades-Q": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 36
+      },
+      "spades-K": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 37
+      },
+      "spades-A": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 38
+      },
+      "hearts-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 39
+      },
+      "hearts-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 40
+      },
+      "hearts-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 41
+      },
+      "hearts-5": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 42
+      },
+      "hearts-6": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 43
+      },
+      "hearts-7": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 44
+      },
+      "hearts-8": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 45
+      },
+      "hearts-9": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 46
+      },
+      "hearts-10": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 47
+      },
+      "hearts-J": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 48
+      },
+      "hearts-Q": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 49
+      },
+      "hearts-K": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 50
+      },
+      "hearts-A": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 51
+      }
+    },
+    "ownerOfCard": {
+      "clubs-2": null,
+      "clubs-3": null,
+      "clubs-4": null,
+      "clubs-5": null,
+      "clubs-6": null,
+      "clubs-7": null,
+      "clubs-8": null,
+      "clubs-9": null,
+      "clubs-10": null,
+      "clubs-J": null,
+      "clubs-Q": null,
+      "clubs-K": null,
+      "clubs-A": null,
+      "diamonds-2": null,
+      "diamonds-3": null,
+      "diamonds-4": null,
+      "diamonds-5": null,
+      "diamonds-6": null,
+      "diamonds-7": null,
+      "diamonds-8": null,
+      "diamonds-9": null,
+      "diamonds-10": null,
+      "diamonds-J": null,
+      "diamonds-Q": null,
+      "diamonds-K": null,
+      "diamonds-A": null,
+      "spades-2": null,
+      "spades-3": null,
+      "spades-4": null,
+      "spades-5": null,
+      "spades-6": null,
+      "spades-7": null,
+      "spades-8": null,
+      "spades-9": null,
+      "spades-10": null,
+      "spades-J": null,
+      "spades-Q": null,
+      "spades-K": null,
+      "spades-A": null,
+      "hearts-2": null,
+      "hearts-3": null,
+      "hearts-4": null,
+      "hearts-5": null,
+      "hearts-6": null,
+      "hearts-7": null,
+      "hearts-8": null,
+      "hearts-9": null,
+      "hearts-10": null,
+      "hearts-J": null,
+      "hearts-Q": null,
+      "hearts-K": null,
+      "hearts-A": null
+    },
+    "visibility": {
+      "clubs-2": {
+        "faceUp": true
+      },
+      "clubs-3": {
+        "faceUp": true
+      },
+      "clubs-4": {
+        "faceUp": true
+      },
+      "clubs-5": {
+        "faceUp": true
+      },
+      "clubs-6": {
+        "faceUp": true
+      },
+      "clubs-7": {
+        "faceUp": true
+      },
+      "clubs-8": {
+        "faceUp": true
+      },
+      "clubs-9": {
+        "faceUp": true
+      },
+      "clubs-10": {
+        "faceUp": true
+      },
+      "clubs-J": {
+        "faceUp": true
+      },
+      "clubs-Q": {
+        "faceUp": true
+      },
+      "clubs-K": {
+        "faceUp": true
+      },
+      "clubs-A": {
+        "faceUp": true
+      },
+      "diamonds-2": {
+        "faceUp": true
+      },
+      "diamonds-3": {
+        "faceUp": true
+      },
+      "diamonds-4": {
+        "faceUp": true
+      },
+      "diamonds-5": {
+        "faceUp": true
+      },
+      "diamonds-6": {
+        "faceUp": true
+      },
+      "diamonds-7": {
+        "faceUp": true
+      },
+      "diamonds-8": {
+        "faceUp": true
+      },
+      "diamonds-9": {
+        "faceUp": true
+      },
+      "diamonds-10": {
+        "faceUp": true
+      },
+      "diamonds-J": {
+        "faceUp": true
+      },
+      "diamonds-Q": {
+        "faceUp": true
+      },
+      "diamonds-K": {
+        "faceUp": true
+      },
+      "diamonds-A": {
+        "faceUp": true
+      },
+      "spades-2": {
+        "faceUp": true
+      },
+      "spades-3": {
+        "faceUp": true
+      },
+      "spades-4": {
+        "faceUp": true
+      },
+      "spades-5": {
+        "faceUp": true
+      },
+      "spades-6": {
+        "faceUp": true
+      },
+      "spades-7": {
+        "faceUp": true
+      },
+      "spades-8": {
+        "faceUp": true
+      },
+      "spades-9": {
+        "faceUp": true
+      },
+      "spades-10": {
+        "faceUp": true
+      },
+      "spades-J": {
+        "faceUp": true
+      },
+      "spades-Q": {
+        "faceUp": true
+      },
+      "spades-K": {
+        "faceUp": true
+      },
+      "spades-A": {
+        "faceUp": true
+      },
+      "hearts-2": {
+        "faceUp": true
+      },
+      "hearts-3": {
+        "faceUp": true
+      },
+      "hearts-4": {
+        "faceUp": true
+      },
+      "hearts-5": {
+        "faceUp": true
+      },
+      "hearts-6": {
+        "faceUp": true
+      },
+      "hearts-7": {
+        "faceUp": true
+      },
+      "hearts-8": {
+        "faceUp": true
+      },
+      "hearts-9": {
+        "faceUp": true
+      },
+      "hearts-10": {
+        "faceUp": true
+      },
+      "hearts-J": {
+        "faceUp": true
+      },
+      "hearts-Q": {
+        "faceUp": true
+      },
+      "hearts-K": {
+        "faceUp": true
+      },
+      "hearts-A": {
+        "faceUp": true
+      }
+    },
+    "resources": {
+      "__perPlayer": true,
+      "entries": [
+        [
+          "player-1",
+          {}
+        ],
+        [
+          "player-2",
+          {}
+        ],
+        [
+          "player-3",
+          {}
+        ],
+        [
+          "player-4",
+          {}
+        ]
+      ]
+    },
+    "boards": {
+      "byId": {},
+      "hex": {},
+      "square": {},
+      "network": {},
+      "track": {}
+    },
+    "dice": {}
+  }
+}
