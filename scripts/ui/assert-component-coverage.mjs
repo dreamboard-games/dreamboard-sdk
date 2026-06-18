@@ -2,6 +2,10 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import ts from "typescript";
+import {
+  collectUIContracts,
+  knownContractCapabilities,
+} from "./ui-contracts-lib.mjs";
 
 const root = path.resolve(import.meta.dirname, "../..");
 const sdkDir = path.join(root, "packages/sdk");
@@ -12,16 +16,6 @@ const scenarioIndexPath = path.join(
   root,
   "fixtures/ui/component-scenario-index.json",
 );
-
-const knownCapabilities = new Set([
-  "click",
-  "keyboard",
-  "pointer-drag",
-  "touch-drag",
-  "responsive-layout",
-  "runtime-draft",
-  "runtime-submit",
-]);
 
 function fail(message) {
   throw new Error(`Component coverage validation failed:\n\n${message}`);
@@ -109,23 +103,31 @@ function findVariable(source, name) {
 async function collectCoverage() {
   const text = await readFile(coveragePath, "utf8");
   const source = readSource(text, coveragePath);
-  const coverage = literalToValue(findVariable(source, "COMPONENT_COVERAGE"));
   const interactiveExports = literalToValue(
     findVariable(source, "EXPORTED_INTERACTIVE_COMPONENTS"),
   );
-  if (!Array.isArray(coverage) || !Array.isArray(interactiveExports)) {
-    fail(`Could not read coverage arrays from ${coveragePath}`);
+  if (!Array.isArray(interactiveExports)) {
+    fail(`Could not read EXPORTED_INTERACTIVE_COMPONENTS from ${coveragePath}`);
   }
+  const contracts = await collectUIContracts();
+  const coverage = contracts
+    .filter(
+      (contract) =>
+        contract.publicExport &&
+        interactiveExports.includes(contract.publicExport),
+    )
+    .map((contract) => ({
+      exportName: contract.publicExport,
+      owner: contract.owner,
+      storyIds: contract.storyIds ?? [],
+      requiredCapabilities: contract.requiredCapabilities ?? [],
+    }));
   return { coverage, interactiveExports };
 }
 
-async function collectScenarioIds() {
+async function collectScenarioIndex() {
   const index = JSON.parse(await readFile(scenarioIndexPath, "utf8"));
-  return new Set(
-    Object.values(index.components ?? {}).flatMap(
-      (entry) => entry.scenarioIds ?? [],
-    ),
-  );
+  return index;
 }
 
 async function collectComponentExports() {
@@ -233,14 +235,16 @@ function validateCoverage({
   coverage,
   interactiveExports,
   storyIds,
-  scenarioIds,
+  scenarioIndex,
 }) {
   const failures = [];
+  const warnings = [];
   const componentExportSet = new Set(componentExports);
   const coverageNames = coverage.map((entry) => entry.exportName);
   const coverageNameSet = new Set(coverageNames);
   const interactiveExportSet = new Set(interactiveExports);
   const storyIdSet = new Set(storyIds);
+  const scenarioIds = new Set(Object.keys(scenarioIndex.scenarios ?? {}));
 
   const duplicateCoverageNames = sortUnique(
     coverageNames.filter(
@@ -309,7 +313,7 @@ function validateCoverage({
       failures.push(`${entry.exportName}: missing capability tags`);
     }
     const unknownCapabilities = (entry.requiredCapabilities ?? []).filter(
-      (capability) => !knownCapabilities.has(capability),
+      (capability) => !knownContractCapabilities.has(capability),
     );
     if (unknownCapabilities.length > 0) {
       failures.push(
@@ -324,7 +328,12 @@ function validateCoverage({
         `${entry.exportName}: unknown stories ${format(unknownStories)}`,
       );
     }
-    const unknownScenarios = (entry.workbenchScenarioIds ?? []).filter(
+    const indexedContract = scenarioIndex.contracts?.[entry.exportName];
+    if (!indexedContract) {
+      failures.push(`${entry.exportName}: missing generated index contract`);
+    }
+    const indexedCoverage = indexedContract?.scenarioIds ?? [];
+    const unknownScenarios = indexedCoverage.filter(
       (scenarioId) => !scenarioIds.has(scenarioId),
     );
     if (unknownScenarios.length > 0) {
@@ -337,34 +346,40 @@ function validateCoverage({
         (capability) =>
           capability.startsWith("runtime-") || capability === "touch-drag",
       ) &&
-      (!Array.isArray(entry.workbenchScenarioIds) ||
-        entry.workbenchScenarioIds.length === 0)
+      indexedCoverage.length === 0
     ) {
-      failures.push(`${entry.exportName}: missing Workbench scenario coverage`);
+      warnings.push(`${entry.exportName}: missing Workbench scenario coverage`);
     }
   }
 
   if (failures.length > 0) {
     fail(failures.join("\n"));
   }
+  for (const warning of warnings) {
+    console.warn(`WARN ${warning}`);
+  }
 }
 
 async function main() {
   const componentExports = await collectComponentExports();
   const storyIds = await collectStoryIds();
-  const scenarioIds = await collectScenarioIds();
+  const scenarioIndex = await collectScenarioIndex();
   const { coverage, interactiveExports } = await collectCoverage();
   validateCoverage({
     componentExports,
     coverage,
     interactiveExports,
     storyIds,
-    scenarioIds,
+    scenarioIndex,
   });
 
   console.log(`OK component exports: ${componentExports.length}`);
   console.log(`OK discovered story IDs: ${storyIds.length}`);
-  console.log(`OK discovered Workbench scenario IDs: ${scenarioIds.size}`);
+  console.log(
+    `OK discovered Workbench scenario IDs: ${
+      Object.keys(scenarioIndex.scenarios ?? {}).length
+    }`,
+  );
   console.log(`OK interactive component coverage entries: ${coverage.length}`);
 }
 

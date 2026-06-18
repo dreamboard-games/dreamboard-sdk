@@ -3,6 +3,13 @@ import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  readComponentScenarioIndex,
+  scenarioById,
+  scenariosForCapability,
+  scenariosForContract,
+  selectScenariosForSourceFiles,
+} from "./component-scenario-index-lib.mjs";
 import { repoCommandEnv, root } from "./reference-games-lib.mjs";
 import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
 
@@ -18,6 +25,10 @@ function parseArgs(argv) {
     }
     if (arg === "--required") {
       options.required = true;
+      continue;
+    }
+    if (arg === "--explain") {
+      options.explain = true;
       continue;
     }
     if (
@@ -83,7 +94,7 @@ async function changedFiles(baseRef) {
     .filter(Boolean);
 }
 
-function selectScenarios({ options, fixtures, changed }) {
+function selectScenarios({ options, fixtures, index, changed }) {
   if (options.required) {
     const ids = new Set(fixtures.map((entry) => entry.id));
     const missing = requiredWorkbenchScenarioIds.filter((id) => !ids.has(id));
@@ -101,7 +112,7 @@ function selectScenarios({ options, fixtures, changed }) {
   }
 
   if (options.scenario) {
-    const ids = fixtures.map((entry) => entry.id);
+    const ids = Object.keys(index.scenarios ?? {});
     if (!ids.includes(options.scenario)) {
       throw new Error(
         `Unknown scenario '${options.scenario}'. Close matches: ${closeMatches(
@@ -119,9 +130,7 @@ function selectScenarios({ options, fixtures, changed }) {
   }
 
   if (options.component) {
-    const components = [
-      ...new Set(fixtures.flatMap((entry) => entry.components ?? [])),
-    ].sort();
+    const components = Object.keys(index.contracts ?? {}).sort();
     if (!components.includes(options.component)) {
       throw new Error(
         `Unknown component '${options.component}'. Close matches: ${closeMatches(
@@ -132,9 +141,7 @@ function selectScenarios({ options, fixtures, changed }) {
     }
     return {
       reason: "component",
-      scenarioIds: fixtures
-        .filter((entry) => entry.components?.includes(options.component))
-        .map((entry) => entry.id),
+      scenarioIds: scenariosForContract(index, options.component),
       changedExports: [options.component],
       fullSuite: false,
     };
@@ -142,7 +149,11 @@ function selectScenarios({ options, fixtures, changed }) {
 
   if (options.capability) {
     const capabilities = [
-      ...new Set(fixtures.flatMap((entry) => entry.capabilities ?? [])),
+      ...new Set(
+        Object.values(index.scenarios ?? {}).flatMap(
+          (entry) => entry.capabilities ?? [],
+        ),
+      ),
     ].sort();
     if (!capabilities.includes(options.capability)) {
       throw new Error(
@@ -154,50 +165,23 @@ function selectScenarios({ options, fixtures, changed }) {
     }
     return {
       reason: "capability",
-      scenarioIds: fixtures
-        .filter((entry) => entry.capabilities?.includes(options.capability))
-        .map((entry) => entry.id),
+      scenarioIds: scenariosForCapability(index, options.capability),
       changedExports: [],
       fullSuite: false,
     };
   }
 
   if (options.changed) {
-    const sharedChange = changed.some(
-      (file) =>
-        file.includes("packages/sdk/src/ui/theme/") ||
-        file.includes("packages/sdk/src/ui/plugin-styles.css") ||
-        file.includes("packages/sdk/src/runtime/") ||
-        file.includes("packages/sdk/src/testing/ui-fixture/"),
-    );
-    const changedExports = [
-      ...new Set(
-        fixtures.flatMap((entry) =>
-          (entry.components ?? []).filter((component) =>
-            changed.some((file) => file.includes(`${component}.`)),
-          ),
-        ),
-      ),
-    ].sort();
-    if (sharedChange || changedExports.length === 0) {
-      return {
-        reason: sharedChange ? "shared-change" : "unmapped-change",
-        scenarioIds: fixtures.map((entry) => entry.id),
-        changedExports,
-        fullSuite: true,
-      };
-    }
+    const selected = selectScenariosForSourceFiles(index, changed);
     return {
-      reason: "changed-exports",
-      scenarioIds: fixtures
-        .filter((entry) =>
-          (entry.components ?? []).some((component) =>
-            changedExports.includes(component),
-          ),
-        )
-        .map((entry) => entry.id),
-      changedExports,
+      reason:
+        selected.scenarioIds.length > 0
+          ? "changed-source-ownership"
+          : "no-ui-change",
+      scenarioIds: selected.scenarioIds,
+      changedExports: selected.contractIds,
       fullSuite: false,
+      reasons: selected.reasons,
     };
   }
 
@@ -242,14 +226,24 @@ function projectsForScenario(fixture, requestedProject) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const bundle = await readJson(path.join(fixturesRoot, "index.json"));
+  const index = await readComponentScenarioIndex();
   const files = options.changed
     ? await changedFiles(options.base ?? "origin/main")
     : [];
   const selection = selectScenarios({
     options,
     fixtures: bundle.fixtures,
+    index,
     changed: files,
   });
+  if (options.explain) {
+    console.log(JSON.stringify({ changedFiles: files, ...selection }, null, 2));
+    return;
+  }
+  if (selection.scenarioIds.length === 0) {
+    console.log("No UI Workbench scenarios selected.");
+    return;
+  }
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   const artifactRoot = path.resolve(
     root,
@@ -271,6 +265,9 @@ async function main() {
   ]).stdout.trim();
   const results = [];
   for (const scenarioId of selection.scenarioIds) {
+    if (!scenarioById(index, scenarioId)) {
+      throw new Error(`Unknown selected scenario '${scenarioId}'.`);
+    }
     const fixture = await readJson(
       path.join(fixturesRoot, `${scenarioId}.fixture.json`),
     );

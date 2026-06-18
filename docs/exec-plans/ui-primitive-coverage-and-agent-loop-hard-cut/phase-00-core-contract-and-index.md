@@ -1,6 +1,18 @@
 # Phase 00: Core Contract And Generated Index
 
-Status: Proposed
+Status: Complete
+
+Completed during the Phase 00 implementation commit.
+
+Completed verification:
+
+- `node --test scripts/ui/component-scenario-index-lib.test.mjs`
+- `pnpm ui:coverage:check`
+- `pnpm ui:catalog:check`
+- `pnpm ui:fixtures:check`
+
+Coverage check currently reports non-blocking uncovered-contract warnings for
+`Drawer`, `PrimaryActionButton`, and `StagingZone`.
 
 ## Objective
 
@@ -117,6 +129,30 @@ and scenario selection.
 - Catalog generation and coverage checks read the same index.
 - Changed-only selection can use explicit source ownership.
 - Uncovered contracts are visible without blocking framework development.
+
+## Completion notes
+
+- Added typed UI contract and UI scenario definition helpers.
+- Moved component, primitive, source, story, and required-capability ownership
+  into the UI contract registry.
+- Extended `fixtures/ui/component-scenario-index.json` to schema v2 with
+  `contracts`, `scenarios`, compatibility `components`, and `sharedFallbacks`.
+- Moved component, capability, scenario, and changed-source selection onto the
+  generated index.
+- Coverage check now warns for uncovered runtime contracts instead of blocking
+  the framework cut.
+
+Verification:
+
+```sh
+pnpm ui:catalog:generate
+pnpm ui:catalog:check
+pnpm ui:coverage:check
+pnpm ui:fixtures:check
+pnpm --filter @dreamboard-games/sdk typecheck
+node --test scripts/ui/component-scenario-index-lib.test.mjs
+pnpm ui:test:changed --base origin/main --explain
+```
 
 ## Deferred
 

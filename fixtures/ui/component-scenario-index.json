@@ -1,6 +1,566 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "contracts": {
+    "ActionButton": {
+      "id": "ActionButton",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "ActionButton",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ActionButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": ["buttons--action-button-states", "panels--compact-panel"],
+      "requiredCapabilities": ["click", "keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "ActionPanel": {
+      "id": "ActionPanel",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "ActionPanel",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ActionPanel.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--compact-panel", "panels--focus-order"],
+      "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "CardDragSurface": {
+      "id": "CardDragSurface",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "CardDragSurface",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+        "packages/sdk/src/ui/components/card-drag/CardDragSurface.tsx",
+        "packages/sdk/src/ui/stories/HandView.stories.tsx"
+      ],
+      "storyIds": [
+        "hands-handview--drag-to-target-pointer-drop",
+        "hands-handview--drag-to-target-surface-layout"
+      ],
+      "requiredCapabilities": ["keyboard", "pointer-drag", "touch-drag"],
+      "scenarioIds": ["hex-network-trading.place-route.desktop"],
+      "capabilities": ["click", "pointer-drag", "runtime-submit"]
+    },
+    "CardDropTargetView": {
+      "id": "CardDropTargetView",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "CardDropTargetView",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+        "packages/sdk/src/ui/components/card-drag/CardDropTargetView.tsx",
+        "packages/sdk/src/ui/stories/HandView.stories.tsx"
+      ],
+      "storyIds": [
+        "hands-handview--drag-to-target-keyboard-drop",
+        "hands-handview--drag-to-target-surface-layout"
+      ],
+      "requiredCapabilities": ["keyboard", "pointer-drag", "runtime-draft"],
+      "scenarioIds": ["hex-network-trading.place-route.desktop"],
+      "capabilities": ["click", "pointer-drag", "runtime-submit"]
+    },
+    "CardFace": {
+      "id": "CardFace",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "CardFace",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/Card.tsx",
+        "packages/sdk/src/ui/stories/CardFace.stories.tsx"
+      ],
+      "storyIds": [
+        "cards-cardface--default-content",
+        "cards-cardface--interactive-controlled",
+        "cards-cardface--state-attributes-present"
+      ],
+      "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
+      "scenarioIds": [
+        "deck-building-market.buy-card.desktop",
+        "hearts.pass-three.mobile",
+        "hex-network-trading.place-route.desktop",
+        "simultaneous-card-drafting.lock-choice.mobile"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "CostDisplay": {
+      "id": "CostDisplay",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "CostDisplay",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/CostDisplay.tsx",
+        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
+      ],
+      "storyIds": ["resource-status--cost"],
+      "requiredCapabilities": ["responsive-layout"],
+      "scenarioIds": [
+        "hex-network-trading.place-route.desktop",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "Dialog": {
+      "id": "Dialog",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "Dialog",
+      "sourceFiles": [
+        "packages/sdk/src/ui/internal/ui/dialog.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--dialog-standard"],
+      "requiredCapabilities": ["click", "keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "Drawer": {
+      "id": "Drawer",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "Drawer",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/Drawer.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--mobile-bottom-sheet"],
+      "requiredCapabilities": [
+        "click",
+        "keyboard",
+        "responsive-layout",
+        "touch-drag"
+      ],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "HandView": {
+      "id": "HandView",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "HandView",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/HandView.tsx",
+        "packages/sdk/src/ui/components/hand-layout-math.ts",
+        "packages/sdk/src/ui/components/hand-pointer-engine.ts",
+        "packages/sdk/src/ui/stories/HandView.stories.tsx"
+      ],
+      "storyIds": [
+        "hands-handview--drag-to-target-selection-staging",
+        "hands-handview--five-card-fan",
+        "hands-handview--keyboard-emits-activate",
+        "hands-handview--phone-portrait-thirteen",
+        "hands-handview--tap-emits-activate"
+      ],
+      "requiredCapabilities": [
+        "click",
+        "keyboard",
+        "pointer-drag",
+        "responsive-layout",
+        "runtime-draft",
+        "runtime-submit",
+        "touch-drag"
+      ],
+      "scenarioIds": [
+        "deck-building-market.buy-card.desktop",
+        "hearts.pass-three.mobile",
+        "hex-network-trading.place-route.desktop",
+        "simultaneous-card-drafting.lock-choice.mobile"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "Input": {
+      "id": "Input",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "Input",
+      "sourceFiles": [
+        "packages/sdk/src/ui/internal/ui/input.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--dialog-standard"],
+      "requiredCapabilities": ["keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "InteractionInput": {
+      "id": "InteractionInput",
+      "kind": "primitive",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/hooks/useBoundInteractionHandle.ts",
+        "packages/sdk/src/runtime/primitives/interaction/controls.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["keyboard", "runtime-draft"],
+      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
+      "capabilities": ["click", "runtime-draft", "runtime-submit"]
+    },
+    "InteractionSubmit": {
+      "id": "InteractionSubmit",
+      "kind": "primitive",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/interaction/controls.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
+      "scenarioIds": [
+        "deck-building-market.buy-card.desktop",
+        "hearts.pass-three.mobile",
+        "hex-network-trading.place-route.desktop",
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "MoreActions": {
+      "id": "MoreActions",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "MoreActions",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/MoreActions.tsx",
+        "packages/sdk/src/ui/stories/Misc.stories.tsx"
+      ],
+      "storyIds": ["misc--toast-notifications"],
+      "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "Panel": {
+      "id": "Panel",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "Panel",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/Panel.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--compound-panel"],
+      "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
+      "scenarioIds": [
+        "deck-building-market.buy-card.desktop",
+        "hearts.pass-three.mobile",
+        "hex-network-trading.place-route.desktop",
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "PluginRuntime": {
+      "id": "PluginRuntime",
+      "kind": "runtime",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/components/PluginRuntime.tsx",
+        "packages/sdk/src/runtime/components/PluginRuntimeBoundary.tsx",
+        "packages/sdk/src/runtime/core/create-plugin-runtime-client.ts"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["runtime-draft", "runtime-submit"],
+      "scenarioIds": [
+        "deck-building-market.buy-card.desktop",
+        "hearts.pass-three.mobile",
+        "hex-network-trading.place-route.desktop",
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "PrimaryActionButton": {
+      "id": "PrimaryActionButton",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "PrimaryActionButton",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/PrimaryActionButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": ["buttons--primary-action-dock"],
+      "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "PrimaryButton": {
+      "id": "PrimaryButton",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "PrimaryButton",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/PrimaryButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": ["buttons--themed-variants"],
+      "requiredCapabilities": ["click", "keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "ResourceCounter": {
+      "id": "ResourceCounter",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "ResourceCounter",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ResourceCounter.tsx",
+        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
+      ],
+      "storyIds": [
+        "resource-status--resource-compact",
+        "resource-status--resource-zero-hidden"
+      ],
+      "requiredCapabilities": ["responsive-layout"],
+      "scenarioIds": [
+        "hex-network-trading.place-route.desktop",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "click",
+        "pointer-drag",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "Select": {
+      "id": "Select",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "Select",
+      "sourceFiles": [
+        "packages/sdk/src/ui/internal/ui/select.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--dialog-standard"],
+      "requiredCapabilities": ["click", "keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "SlotSystem": {
+      "id": "SlotSystem",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "SlotSystem",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/board/SlotSystem.tsx",
+        "packages/sdk/src/ui/stories/BoardTarget.stories.tsx"
+      ],
+      "storyIds": [
+        "board-targets--claimed-and-disabled",
+        "board-targets--eligible-targets"
+      ],
+      "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
+      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
+      "capabilities": ["click", "runtime-draft", "runtime-submit"]
+    },
+    "StagingZone": {
+      "id": "StagingZone",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "StagingZone",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/StagingZone.tsx",
+        "packages/sdk/src/ui/stories/StagingZone.stories.tsx"
+      ],
+      "storyIds": ["hand-stagingzone--removes-on-click"],
+      "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "ThemedButton": {
+      "id": "ThemedButton",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "publicExport": "ThemedButton",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ThemedButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": [
+        "buttons--disabled-themed-button-does-not-invoke",
+        "buttons--themed-button-invokes-on-click",
+        "buttons--themed-variants"
+      ],
+      "requiredCapabilities": ["click", "keyboard"],
+      "scenarioIds": [],
+      "capabilities": []
+    }
+  },
+  "scenarios": {
+    "deck-building-market.buy-card.desktop": {
+      "id": "deck-building-market.buy-card.desktop",
+      "title": "Deck Building Market: market row exposes affordable and unavailable cards",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/scenarios/coverage.json",
+        "examples/reference-games/deck-building-market/src/reference-game.mjs",
+        "examples/reference-games/deck-building-market/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardFace",
+        "HandView",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "deck-building-market.buy-card.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
+      "fixtureDigest": "sha256:537127ab5ad7e9157beffc58f00b409616f6fad8d5ba18838ef57b8e4789a5fe",
+      "renderModuleDigest": "sha256:660c1b429df746c86a9e2b2e756a4c3ca9d3f934e553cc3ad2d59ecbcdcedc27"
+    },
+    "hearts.pass-three.mobile": {
+      "id": "hearts.pass-three.mobile",
+      "title": "Hearts: player hand remains private before pass reveal",
+      "gameId": "hearts",
+      "sourceFiles": [
+        "examples/reference-games/hearts/scenarios/coverage.json",
+        "examples/reference-games/hearts/src/reference-game.mjs",
+        "examples/reference-games/hearts/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardFace",
+        "HandView",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["click", "runtime-draft", "runtime-submit"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hearts.pass-three.mobile.fixture.json",
+      "renderModule": "modules/hearts.pass-three.mobile.mjs",
+      "fixtureDigest": "sha256:4b762cb3d8b2a9f4bc60e979dd6a48ef7951080cd654924f9850c1a62e8f29a5",
+      "renderModuleDigest": "sha256:fa302f7fcbfe7c925d94f02404d17f098924b55ecb0fc42f7db48dc18dd23306"
+    },
+    "hex-network-trading.place-route.desktop": {
+      "id": "hex-network-trading.place-route.desktop",
+      "title": "Hex Network Trading: route card drags to an eligible edge before commit",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/scenarios/coverage.json",
+        "examples/reference-games/hex-network-trading/src/reference-game.mjs",
+        "examples/reference-games/hex-network-trading/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardDragSurface",
+        "CardDropTargetView",
+        "CardFace",
+        "CostDisplay",
+        "HandView",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime",
+        "ResourceCounter"
+      ],
+      "capabilities": ["click", "pointer-drag", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hex-network-trading.place-route.desktop.fixture.json",
+      "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
+      "fixtureDigest": "sha256:6d61fc10e7dcb6739595272f2a7730c75c8b536f12224f222d5f3f22bb47c388",
+      "renderModuleDigest": "sha256:0708efc1c35cb6d805daa279574155e1785cfd1f49a849de2c63c288fec03662"
+    },
+    "simultaneous-card-drafting.lock-choice.mobile": {
+      "id": "simultaneous-card-drafting.lock-choice.mobile",
+      "title": "Simultaneous Card Drafting: choice remains private until every player locks",
+      "gameId": "simultaneous-card-drafting",
+      "sourceFiles": [
+        "examples/reference-games/simultaneous-card-drafting/scenarios/coverage.json",
+        "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
+        "examples/reference-games/simultaneous-card-drafting/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardFace",
+        "HandView",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
+      "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
+      "fixtureDigest": "sha256:d563b13b0d402804665b37d98b76ff2a87e71d988b3178226cb655a1990c62ac",
+      "renderModuleDigest": "sha256:c90ce38194a2957fc4d3b91a2d043fe55ec70ef17ed1d12f6e1f0383e6d13ba6"
+    },
+    "worker-placement-tableau.place-worker.desktop": {
+      "id": "worker-placement-tableau.place-worker.desktop",
+      "title": "Worker Placement Tableau: worker count draft persists until commit",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/scenarios/coverage.json",
+        "examples/reference-games/worker-placement-tableau/src/reference-game.mjs",
+        "examples/reference-games/worker-placement-tableau/src/ui.mjs"
+      ],
+      "contracts": [
+        "CostDisplay",
+        "InteractionInput",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime",
+        "ResourceCounter",
+        "SlotSystem"
+      ],
+      "capabilities": ["click", "runtime-draft", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
+      "fixtureDigest": "sha256:4c1de36685eb5b1ee99a448b9ce57f3a9ac252f77baef09ca6fbb059621f6dc9",
+      "renderModuleDigest": "sha256:4ddd8123042863f672f231e3a682bf1d43778b10d2bd464ea4c0ac0d67c4a433"
+    }
+  },
   "components": {
+    "ActionButton": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ActionButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": ["buttons--action-button-states", "panels--compact-panel"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "ActionPanel": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ActionPanel.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--compact-panel", "panels--focus-order"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
     "CardDragSurface": {
       "sourceFiles": [
         "packages/sdk/src/runtime/primitives/hand-surface.tsx",
@@ -21,7 +581,7 @@
         "packages/sdk/src/ui/stories/HandView.stories.tsx"
       ],
       "storyIds": [
-        "hands-handview--drag-to-target-pointer-drop",
+        "hands-handview--drag-to-target-keyboard-drop",
         "hands-handview--drag-to-target-surface-layout"
       ],
       "scenarioIds": ["hex-network-trading.place-route.desktop"],
@@ -34,7 +594,8 @@
       ],
       "storyIds": [
         "cards-cardface--default-content",
-        "cards-cardface--interactive-controlled"
+        "cards-cardface--interactive-controlled",
+        "cards-cardface--state-attributes-present"
       ],
       "scenarioIds": [
         "deck-building-market.buy-card.desktop",
@@ -66,6 +627,24 @@
         "runtime-submit"
       ]
     },
+    "Dialog": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/internal/ui/dialog.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--dialog-standard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "Drawer": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/Drawer.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--mobile-bottom-sheet"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
     "HandView": {
       "sourceFiles": [
         "packages/sdk/src/ui/components/HandView.tsx",
@@ -76,7 +655,9 @@
       "storyIds": [
         "hands-handview--drag-to-target-selection-staging",
         "hands-handview--five-card-fan",
-        "hands-handview--phone-portrait-thirteen"
+        "hands-handview--keyboard-emits-activate",
+        "hands-handview--phone-portrait-thirteen",
+        "hands-handview--tap-emits-activate"
       ],
       "scenarioIds": [
         "deck-building-market.buy-card.desktop",
@@ -91,33 +672,23 @@
         "runtime-submit"
       ]
     },
-    "InteractionInput": {
+    "Input": {
       "sourceFiles": [
-        "packages/sdk/src/runtime/hooks/useBoundInteractionHandle.ts",
-        "packages/sdk/src/runtime/primitives/interaction/controls.tsx"
+        "packages/sdk/src/ui/internal/ui/input.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
       ],
-      "storyIds": [],
-      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
-      "capabilities": ["click", "runtime-draft", "runtime-submit"]
+      "storyIds": ["panels--dialog-standard"],
+      "scenarioIds": [],
+      "capabilities": []
     },
-    "InteractionSubmit": {
+    "MoreActions": {
       "sourceFiles": [
-        "packages/sdk/src/runtime/primitives/interaction/controls.tsx"
+        "packages/sdk/src/ui/components/MoreActions.tsx",
+        "packages/sdk/src/ui/stories/Misc.stories.tsx"
       ],
-      "storyIds": [],
-      "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "storyIds": ["misc--toast-notifications"],
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Panel": {
       "sourceFiles": [
@@ -139,26 +710,23 @@
         "runtime-submit"
       ]
     },
-    "PluginRuntime": {
+    "PrimaryActionButton": {
       "sourceFiles": [
-        "packages/sdk/src/runtime/components/PluginRuntime.tsx",
-        "packages/sdk/src/runtime/components/PluginRuntimeBoundary.tsx",
-        "packages/sdk/src/runtime/core/create-plugin-runtime-client.ts"
+        "packages/sdk/src/ui/components/PrimaryActionButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
       ],
-      "storyIds": [],
-      "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "worker-placement-tableau.place-worker.desktop"
+      "storyIds": ["buttons--primary-action-dock"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "PrimaryButton": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/PrimaryButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
       ],
-      "capabilities": [
-        "click",
-        "pointer-drag",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "storyIds": ["buttons--themed-variants"],
+      "scenarioIds": [],
+      "capabilities": []
     },
     "ResourceCounter": {
       "sourceFiles": [
@@ -180,6 +748,15 @@
         "runtime-submit"
       ]
     },
+    "Select": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/internal/ui/select.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
+      ],
+      "storyIds": ["panels--dialog-standard"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
     "SlotSystem": {
       "sourceFiles": [
         "packages/sdk/src/ui/components/board/SlotSystem.tsx",
@@ -191,12 +768,36 @@
       ],
       "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
       "capabilities": ["click", "runtime-draft", "runtime-submit"]
+    },
+    "StagingZone": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/StagingZone.tsx",
+        "packages/sdk/src/ui/stories/StagingZone.stories.tsx"
+      ],
+      "storyIds": ["hand-stagingzone--removes-on-click"],
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "ThemedButton": {
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/ThemedButton.tsx",
+        "packages/sdk/src/ui/stories/Buttons.stories.tsx"
+      ],
+      "storyIds": [
+        "buttons--disabled-themed-button-does-not-invoke",
+        "buttons--themed-button-invokes-on-click",
+        "buttons--themed-variants"
+      ],
+      "scenarioIds": [],
+      "capabilities": []
     }
   },
   "sharedFallbacks": [
     "packages/sdk/src/browser-interaction.ts",
+    "packages/sdk/src/browser-interaction/**",
     "packages/sdk/src/runtime/**",
     "packages/sdk/src/testing/ui-fixture/**",
+    "packages/sdk/src/testing/ui-scenario/**",
     "packages/sdk/src/ui/plugin-styles.css",
     "packages/sdk/src/ui/theme/**",
     "packages/ui-workbench/src/runtime/**"

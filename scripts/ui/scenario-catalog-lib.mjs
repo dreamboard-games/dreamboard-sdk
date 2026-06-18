@@ -239,17 +239,32 @@ export async function collectValidatedScenarioCatalog() {
       id: entry.id,
       title: fixture.title,
       gameId: fixture.gameId,
+      sourceFiles: sortUnique([
+        `examples/reference-games/${fixture.gameId}/scenarios/coverage.json`,
+        `examples/reference-games/${fixture.gameId}/src/reference-game.mjs`,
+        `examples/reference-games/${fixture.gameId}/src/ui.mjs`,
+      ]),
       fixtureUrl: `/fixtures/reference-games/${entry.file}`,
       renderModuleUrl: `/fixtures/reference-games/${entry.renderModule}`,
       components: sortUnique(entry.components ?? []),
       capabilities,
       viewportTags: sortUnique(fixture.environment?.viewportTags ?? []),
+      replayStepKinds: sortUnique(
+        (fixture.replay ?? []).map((step) => step.kind ?? step.execute?.kind),
+      ),
+      replayStepCount: (fixture.replay ?? []).length,
+      replayExpectationKeys: sortUnique(
+        (fixture.replay ?? []).flatMap((step) =>
+          Object.keys(step.expect ?? {}),
+        ),
+      ),
       sourceDigest: fixture.source?.sourceDigest,
       fixtureFile: entry.file,
       renderModule: entry.renderModule,
       fixtureDigest,
       renderModuleDigest: renderDigest,
       uiContractFingerprint: fixture.source?.uiContractFingerprint,
+      replay: fixture.replay ?? [],
     });
   }
 
