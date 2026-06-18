@@ -440,8 +440,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.buy-card.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "fixtureDigest": "sha256:537127ab5ad7e9157beffc58f00b409616f6fad8d5ba18838ef57b8e4789a5fe",
-      "renderModuleDigest": "sha256:660c1b429df746c86a9e2b2e756a4c3ca9d3f934e553cc3ad2d59ecbcdcedc27"
+      "fixtureDigest": "sha256:891a4a5c66f402fa75852c6f141e6b7fc2a4267db270b31ec9bf5ddcf4943670",
+      "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9"
     },
     "hearts.pass-three.mobile": {
       "id": "hearts.pass-three.mobile",
@@ -463,8 +463,8 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.pass-three.mobile.fixture.json",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "fixtureDigest": "sha256:4b762cb3d8b2a9f4bc60e979dd6a48ef7951080cd654924f9850c1a62e8f29a5",
-      "renderModuleDigest": "sha256:fa302f7fcbfe7c925d94f02404d17f098924b55ecb0fc42f7db48dc18dd23306"
+      "fixtureDigest": "sha256:b994ff54d8184df349d6a65e754590e6c4e931dca7f06655c033fc6103d035a4",
+      "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff"
     },
     "hex-network-trading.place-route.desktop": {
       "id": "hex-network-trading.place-route.desktop",
@@ -490,8 +490,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.place-route.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "fixtureDigest": "sha256:6d61fc10e7dcb6739595272f2a7730c75c8b536f12224f222d5f3f22bb47c388",
-      "renderModuleDigest": "sha256:0708efc1c35cb6d805daa279574155e1785cfd1f49a849de2c63c288fec03662"
+      "fixtureDigest": "sha256:910a94ae8ca68bb660c1fe69951bf4944933609c3e8e27e1efbe63370e839e73",
+      "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36"
     },
     "simultaneous-card-drafting.lock-choice.mobile": {
       "id": "simultaneous-card-drafting.lock-choice.mobile",
@@ -513,8 +513,8 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "fixtureDigest": "sha256:d563b13b0d402804665b37d98b76ff2a87e71d988b3178226cb655a1990c62ac",
-      "renderModuleDigest": "sha256:c90ce38194a2957fc4d3b91a2d043fe55ec70ef17ed1d12f6e1f0383e6d13ba6"
+      "fixtureDigest": "sha256:57cec04edef5292738a808b03c889d7a1eb1fa9c0f36c045a5139e2099703e0e",
+      "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148"
     },
     "worker-placement-tableau.place-worker.desktop": {
       "id": "worker-placement-tableau.place-worker.desktop",
@@ -538,8 +538,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "fixtureDigest": "sha256:4c1de36685eb5b1ee99a448b9ce57f3a9ac252f77baef09ca6fbb059621f6dc9",
-      "renderModuleDigest": "sha256:4ddd8123042863f672f231e3a682bf1d43778b10d2bd464ea4c0ac0d67c4a433"
+      "fixtureDigest": "sha256:58740426c45252139abc2480560e03cba037fb3dfa202a4c4102150beca4e5c5",
+      "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a"
     }
   },
   "components": {

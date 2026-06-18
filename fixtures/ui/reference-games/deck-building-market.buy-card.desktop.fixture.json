@@ -235,9 +235,9 @@
   "source": {
     "reducerFingerprint": "sha256:2df5403b88f86db6197249e559890caba6af26c1cc114acc9d0630eeee133f83",
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-    "renderModuleDigest": "sha256:660c1b429df746c86a9e2b2e756a4c3ca9d3f934e553cc3ad2d59ecbcdcedc27",
+    "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:2f98aaa3d8502061bdf0eb7e4918426bdb8de1da4ad122a76bb9d1cf9a36c739",
+    "sourceDigest": "sha256:9cadf38b4917bbefa54718e1a3852fea1990067c3e4436a41b3ba7d311ae90dd",
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

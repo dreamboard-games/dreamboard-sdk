@@ -236,9 +236,9 @@
   "source": {
     "reducerFingerprint": "sha256:2870b0cb5f567c19fbb0e97bce6d76c0404809a31e4d797357a482ffd0c1f664",
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-    "renderModuleDigest": "sha256:c90ce38194a2957fc4d3b91a2d043fe55ec70ef17ed1d12f6e1f0383e6d13ba6",
+    "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:ea89aef32a98520a048c14d1c0cb1d4240ac6c557eed3ff6b52082dfefd52ed4",
+    "sourceDigest": "sha256:83248d154f60b5fe0a89810096c2baa80b37afac1eabdbea9b6d18ea5b27d423",
     "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
   },
   "tags": [

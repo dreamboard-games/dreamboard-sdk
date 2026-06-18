@@ -1,6 +1,6 @@
 # Phase 01: Generic Scenario Compiler
 
-Status: Proposed
+Status: In Progress
 
 Depends on: Phase 00
 
@@ -126,6 +126,35 @@ kind, invalid modules, and deterministic output.
 - The compiler contains no game-specific or replay-shape branches.
 - Scenario modules load without source rewriting or `new Function`.
 - Multiple scenarios per example are supported.
+
+## Progress notes
+
+- Added typed replay-step builders that return the existing portable replay
+  contract values.
+- Removed source string rewriting and `new Function` from reference-game source
+  loading; the fixture compiler now imports reference game source through normal
+  ESM.
+- Regenerated render modules as small ESM forwarders to the reference UI source
+  instead of bundling copied source into each fixture module.
+- Preserved the fixture schema while keeping the current `coverage.json`
+  authoring path as an interim step.
+
+Verification:
+
+```sh
+pnpm ui:fixtures:compile
+pnpm ui:fixtures:check
+pnpm --filter @dreamboard-games/sdk typecheck
+pnpm --filter @dreamboard-games/sdk exec bun test src/export-surface.test.ts --update-snapshots
+pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-scenario/replay-builders.test.ts
+```
+
+Remaining:
+
+- Move `coverage.json` replay/reducer data into scenario modules.
+- Add generic discovery, module loading, and protocol/reducer authority adapter
+  files.
+- Remove replay-kind branches from `compile-reference-fixtures.mjs`.
 
 ## Deferred
 

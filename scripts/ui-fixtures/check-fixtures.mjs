@@ -33,6 +33,12 @@ function assertRenderModuleExternalized(relativePath, source) {
       throw new Error(`${relativePath} appears to bundle ${token}`);
     }
   }
+  if (!source.includes("export const uiContractFingerprint")) {
+    throw new Error(`${relativePath} is missing uiContractFingerprint.`);
+  }
+  if (source.includes("export { Root } from ")) {
+    return;
+  }
   if (!source.includes('from "react"')) {
     throw new Error(`${relativePath} must externalize React with an import.`);
   }

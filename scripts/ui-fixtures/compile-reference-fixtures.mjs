@@ -59,6 +59,45 @@ const gameplayScopeId = "runtime";
 GlobalRegistrator.register();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
+async function withTemporaryNodeModuleLinks(callback) {
+  const links = [
+    {
+      link: path.join(root, "node_modules/@dreamboard-games/sdk"),
+      target: path.join(root, "packages/sdk"),
+    },
+    {
+      link: path.join(
+        root,
+        "node_modules/@dreamboard-games/plugin-runtime-contract",
+      ),
+      target: path.join(root, "packages/plugin-runtime-contract"),
+    },
+    {
+      link: path.join(root, "node_modules/react"),
+      target: path.dirname(sdkRequire.resolve("react/package.json")),
+    },
+  ];
+  const created = [];
+  for (const item of links) {
+    try {
+      await mkdir(path.dirname(item.link), { recursive: true });
+      await symlink(item.target, item.link, "dir");
+      created.push(item.link);
+    } catch (error) {
+      if (error?.code !== "EEXIST") {
+        throw error;
+      }
+    }
+  }
+  try {
+    return await callback();
+  } finally {
+    await Promise.all(
+      created.reverse().map((link) => rm(link, { force: true })),
+    );
+  }
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: options.cwd ?? root,
@@ -444,17 +483,24 @@ async function createReferenceProtocol({ referenceGame, coverage }) {
   });
 }
 
-async function buildRenderModule({ gameDir, uiContractFingerprint }) {
-  const sharedSource = await readFile(
-    path.join(referenceGamesRoot, "shared/reference-ui.mjs"),
-    "utf8",
+function toModuleSpecifier(fromFile, toFile) {
+  const relative = path
+    .relative(path.dirname(fromFile), toFile)
+    .split(path.sep)
+    .join("/");
+  return relative.startsWith(".") ? relative : `./${relative}`;
+}
+
+async function buildRenderModule({
+  gameDir,
+  modulePath,
+  uiContractFingerprint,
+}) {
+  const sourceModule = toModuleSpecifier(
+    modulePath,
+    path.join(gameDir, "src/ui.mjs"),
   );
-  const source = await readFile(path.join(gameDir, "src/ui.mjs"), "utf8");
-  return `${sharedSource}
-${source.replace(
-  /import \{ createReferenceGameRoot \} from "\.\.\/\.\.\/shared\/reference-ui\.mjs";\n/,
-  "",
-)}
+  return `export { Root } from ${JSON.stringify(sourceModule)};
 export const uiContractFingerprint = ${JSON.stringify(uiContractFingerprint)};
 `;
 }
@@ -468,7 +514,7 @@ async function settleFixtureRuntime(harness) {
 
 async function exerciseRenderedScenario({
   fixtureId,
-  modulePath,
+  sourceModulePath,
   protocol,
   sourceRequests,
   targetRequest,
@@ -476,37 +522,8 @@ async function exerciseRenderedScenario({
   replayKind,
   submissionParams,
 }) {
-  const executionRoot = await mkdtemp(
-    path.join(os.tmpdir(), "dreamboard-ui-render-module-"),
-  );
-  const executableModulePath = path.join(
-    executionRoot,
-    path.basename(modulePath),
-  );
-  await cp(modulePath, executableModulePath);
-  await mkdir(path.join(executionRoot, "node_modules/@dreamboard-games"), {
-    recursive: true,
-  });
-  await symlink(
-    path.join(root, "packages/sdk"),
-    path.join(executionRoot, "node_modules/@dreamboard-games/sdk"),
-    "dir",
-  );
-  await symlink(
-    path.join(root, "packages/plugin-runtime-contract"),
-    path.join(
-      executionRoot,
-      "node_modules/@dreamboard-games/plugin-runtime-contract",
-    ),
-    "dir",
-  );
-  await symlink(
-    path.dirname(sdkRequire.resolve("react/package.json")),
-    path.join(executionRoot, "node_modules/react"),
-    "dir",
-  );
   const module = await import(
-    `${pathToFileURL(executableModulePath).href}?fixture=${encodeURIComponent(fixtureId)}`
+    `${pathToFileURL(sourceModulePath).href}?fixture=${encodeURIComponent(fixtureId)}`
   );
   const harness = createFixtureHostHarness({ tape: protocol });
   const runtime = createPluginRuntimeClient({ transport: harness.transport });
@@ -636,7 +653,6 @@ async function exerciseRenderedScenario({
     });
     runtime.disconnect();
     container.remove();
-    await rm(executionRoot, { recursive: true, force: true });
   }
 }
 
@@ -808,23 +824,24 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   ).then(JSON.parse);
   const referenceGame = await loadReferenceGameSource({
     gameDir,
-    coverage,
   });
   const fixtureId = coverage.scenarioId;
   const renderModule = `modules/${fixtureId}.mjs`;
+  const publishedModulePath = path.join(fixturesRoot, renderModule);
   const uiContractFingerprint = digestUIFixtureJson({
     gameId: game.id,
     interactions: referenceGame.interactions,
     uiPatterns: game.uiPatterns,
   });
+  const modulePath = path.join(outputRoot, renderModule);
   const moduleSource = await format(
     await buildRenderModule({
       gameDir,
+      modulePath: publishedModulePath,
       uiContractFingerprint,
     }),
     { parser: "babel" },
   );
-  const modulePath = path.join(outputRoot, renderModule);
   await mkdir(path.dirname(modulePath), { recursive: true });
   await writeFile(modulePath, moduleSource);
   const renderModuleDigest = sha256Text(moduleSource);
@@ -842,7 +859,7 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   const submissionParams = scenarioSubmissionParams(coverage);
   const exercise = await exerciseRenderedScenario({
     fixtureId,
-    modulePath,
+    sourceModulePath: path.join(gameDir, "src/ui.mjs"),
     protocol,
     sourceRequests,
     targetRequest,
@@ -928,25 +945,13 @@ async function compileGame({ game, outputRoot, sdkCommit }) {
   };
 }
 
-async function loadReferenceGameSource({ gameDir, coverage }) {
+async function loadReferenceGameSource({ gameDir }) {
   const sourcePath = path.join(gameDir, "src/reference-game.mjs");
-  const source = await readFile(sourcePath, "utf8");
-  const body = source
-    .replace(
-      /import \{ DREAMBOARD_SDK_PACKAGE_SET \} from "@dreamboard-games\/sdk\/package-set";\n/,
-      'const DREAMBOARD_SDK_PACKAGE_SET = { sdkVersion: "fixture-compiler" };\n',
-    )
-    .replace(
-      /import coverage from "\.\.\/scenarios\/coverage\.json" with \{ type: "json" \};\n/,
-      `const coverage = ${JSON.stringify(coverage)};\n`,
-    )
-    .replace("export const referenceGame =", "const referenceGame =")
-    .replace(
-      /\nif \(import\.meta\.url === `file:\/\/\$\{process\.argv\[1\]\}`\) \{[\s\S]*$/,
-      "",
-    );
-  const factory = new Function("process", `${body}\nreturn referenceGame;`);
-  return factory({ argv: [] });
+  const module = await import(pathToFileURL(sourcePath).href);
+  if (!module.referenceGame) {
+    throw new Error(`${sourcePath} must export referenceGame.`);
+  }
+  return module.referenceGame;
 }
 
 async function hashOutputFiles(outputRoot) {
@@ -991,8 +996,10 @@ async function main() {
   const first = path.join(tmpRoot, "first");
   const second = path.join(tmpRoot, "second");
   try {
-    await compileAll(first);
-    await compileAll(second);
+    await withTemporaryNodeModuleLinks(async () => {
+      await compileAll(first);
+      await compileAll(second);
+    });
     const firstHashes = JSON.stringify(await hashOutputFiles(first));
     const secondHashes = JSON.stringify(await hashOutputFiles(second));
     if (firstHashes !== secondHashes) {

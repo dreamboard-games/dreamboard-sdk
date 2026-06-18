@@ -431,9 +431,9 @@
   "source": {
     "reducerFingerprint": "sha256:a83bc26dee19a65121505f80dc73ae441d18b449cc9f4703a933ee43dd8c724d",
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-    "renderModuleDigest": "sha256:0708efc1c35cb6d805daa279574155e1785cfd1f49a849de2c63c288fec03662",
+    "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:26c41961e21a7e05d91241d4e292cb2d836ae27b2b48ab8f15be502509e7e02d",
+    "sourceDigest": "sha256:80d7c38fca432972e5ca299e2c3ad83cdbafc6f4764729b58aeea5818a667a57",
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [

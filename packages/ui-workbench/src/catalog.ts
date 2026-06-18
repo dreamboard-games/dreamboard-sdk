@@ -49,7 +49,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:2f98aaa3d8502061bdf0eb7e4918426bdb8de1da4ad122a76bb9d1cf9a36c739",
+      "sha256:9cadf38b4917bbefa54718e1a3852fea1990067c3e4436a41b3ba7d311ae90dd",
   },
   {
     id: "hearts.pass-three.mobile",
@@ -71,7 +71,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:fb3ba95616cb1d0b84f3e880272333f23cb34d0f35db79b07e6df13a4f66f5b4",
+      "sha256:1f8bffb80f969be18a3eed4496360d9e224c397c60163415deb1cccfa4364976",
   },
   {
     id: "hex-network-trading.place-route.desktop",
@@ -98,7 +98,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "pointer-drag", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:26c41961e21a7e05d91241d4e292cb2d836ae27b2b48ab8f15be502509e7e02d",
+      "sha256:80d7c38fca432972e5ca299e2c3ad83cdbafc6f4764729b58aeea5818a667a57",
   },
   {
     id: "simultaneous-card-drafting.lock-choice.mobile",
@@ -121,7 +121,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:ea89aef32a98520a048c14d1c0cb1d4240ac6c557eed3ff6b52082dfefd52ed4",
+      "sha256:83248d154f60b5fe0a89810096c2baa80b37afac1eabdbea9b6d18ea5b27d423",
   },
   {
     id: "worker-placement-tableau.place-worker.desktop",
@@ -145,6 +145,6 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:d306dfc055f8d535ac35bcdb1d8159c3599d957cd3b3f0010b72627181f7a378",
+      "sha256:b2001ea35c6c32a1ed65d502747db6cc1ce7027ccb696cfa9c8f098fe2454f43",
   },
 ] satisfies readonly UIScenarioCatalogEntry[]);
