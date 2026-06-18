@@ -11,7 +11,7 @@ import {
   writeJson,
 } from "../ui/reference-games-lib.mjs";
 import { compileScenarioModule } from "./compile-scenario.mjs";
-import { discoverReferenceGameScenarioModules } from "./discover-scenarios.mjs";
+import { discoverAllScenarioModules } from "./discover-scenarios.mjs";
 import { loadScenarioModule } from "./load-scenario-module.mjs";
 import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/plugin-runtime-contract/dist/index.js";
 
@@ -104,7 +104,7 @@ async function compileAll(outputRoot) {
   await mkdir(path.join(outputRoot, "modules"), { recursive: true });
   const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
   const fixtures = [];
-  const modules = await discoverReferenceGameScenarioModules();
+  const modules = await discoverAllScenarioModules();
   for (const entry of modules) {
     fixtures.push(
       await compileScenarioModule({

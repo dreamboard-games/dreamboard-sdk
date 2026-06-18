@@ -1,0 +1,197 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "ui-scenarios.resources-cost.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:034c7a2be1d3b7d963ce3a5c17c66f832f5a55c7aa2742fd2c2e7e4f36ad6b1f",
+    "finalSemanticDigest": "sha256:375167a807a7fd8cdf00ca35eca7df6f11cd13650e00cae91cad5b6127828488",
+    "initialProjectionDigest": "sha256:a0cd8cf66b4f004ec253854632be77d23e60bce44ecd372c4612fc0426817db1",
+    "submissionDigest": "sha256:1cb8c374ece1c7c2c071039e2ff8a3ce6c83ce6b0f49a142d6fcb40492437e27"
+  },
+  "gameId": "ui-scenarios",
+  "id": "ui-scenarios.resources-cost.desktop",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:b1a5b2bba2e9cb6b53e860ff712a72d5504305ed0f13af4ffb85717432d6f309",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:485fe4947711c179ce679e1e728b24b64a04b812e9f27a7bb3968caa528bd274",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "pay",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Current resources and a payable cost.",
+            "family": "resources",
+            "phase": "pay",
+            "scenarioId": "ui-scenarios.resources-cost.desktop",
+            "submitted": false,
+            "title": "Resources and costs"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.resources-cost.desktop.initial",
+        "projectionDigest": "sha256:a0cd8cf66b4f004ec253854632be77d23e60bce44ecd372c4612fc0426817db1"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:07e5c3bb234276793e22dfcec11aabbc60958af1b2c4692943311bafd4ddff86",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:485fe4947711c179ce679e1e728b24b64a04b812e9f27a7bb3968caa528bd274",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "pay",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Current resources and a payable cost.",
+            "family": "resources",
+            "phase": "pay",
+            "scenarioId": "ui-scenarios.resources-cost.desktop",
+            "submitted": true,
+            "title": "Resources and costs"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.resources-cost.desktop.submitted",
+        "projectionDigest": "sha256:034c7a2be1d3b7d963ce3a5c17c66f832f5a55c7aa2742fd2c2e7e4f36ad6b1f"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "ui-scenarios.resources-cost.desktop.session"
+    },
+    "steps": [
+      {
+        "frameId": "ui-scenarios.resources-cost.desktop.initial",
+        "id": "ui-scenarios.resources-cost.desktop.initial.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "ui-scenarios.resources-cost.desktop.initial",
+        "id": "ui-scenarios.resources-cost.desktop.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:3877461c4ef70a317a50a2f43631068f997e67a075d74c28668f785a221616ae",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "ui-scenarios.resources-cost.desktop.initial",
+        "id": "ui-scenarios.resources-cost.desktop.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:b6e4c6e307582feb05e3a22f6d2479b024c29e26e8b002b1e482d3eeebdcaf1d",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "ui-scenarios.resources-cost.desktop.submitted",
+        "id": "ui-scenarios.resources-cost.desktop.submitted.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "ui-scenarios.resources-cost.desktop.submitted",
+        "projectionDigest": "sha256:034c7a2be1d3b7d963ce3a5c17c66f832f5a55c7aa2742fd2c2e7e4f36ad6b1f",
+        "semanticDigest": "sha256:375167a807a7fd8cdf00ca35eca7df6f11cd13650e00cae91cad5b6127828488",
+        "submissionDigest": "sha256:1cb8c374ece1c7c2c071039e2ff8a3ce6c83ce6b0f49a142d6fcb40492437e27",
+        "visibleInteractionKeys": [
+          "inspect"
+        ]
+      },
+      "requestDigest": "sha256:ab1d60628c5a665afcf83c0e0ebaa9f0bb42aabafcc17a537ee8b990ea308982",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "inspect:player-1",
+        "interactionKey": "inspect",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "ui-scenarios.resources-cost.desktop.submit"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
+    "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
+    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "scenarioId": "ui-scenarios.resources-cost.desktop",
+    "sourceDigest": "sha256:aeafc2ee13ac7dd958cef347af8959d72499f4b39ebc2c8db92f4bb162aa1ded",
+    "sourceFiles": [
+      "examples/ui-scenarios/package.json",
+      "examples/ui-scenarios/src/scenario-helper.mjs",
+      "examples/ui-scenarios/src/ui.mjs",
+      "examples/ui-scenarios/src/resources/affordability.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:97044fe969a8a46c6ca098412ad9572d23a13977964d048039ac77f771143105"
+  },
+  "tags": [
+    "protocol-authority",
+    "ui-primitives"
+  ],
+  "title": "Resources and costs: affordability",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

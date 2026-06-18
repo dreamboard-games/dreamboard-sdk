@@ -237,7 +237,14 @@
     "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
     "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9",
     "scenarioId": "deck-building-market.buy-card.desktop",
-    "sourceDigest": "sha256:500c8917406cdcc015772a2212fab614e94d548ede06fd7423eefe52abaeb932",
+    "sourceDigest": "sha256:7d1ecf2f7bea622c4c64a9fbc4dee9694a4211a7f83684f16fe5f6b7c007e0ac",
+    "sourceFiles": [
+      "examples/reference-games/deck-building-market/scenarios/coverage.json",
+      "examples/reference-games/deck-building-market/src/reference-game.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs",
+      "examples/reference-games/shared/reference-ui.mjs",
+      "examples/reference-games/deck-building-market/src/scenarios/buy-card.scenario.mjs"
+    ],
     "uiContractFingerprint": "sha256:c7145ddd3d6e31a6abb5846426b5450dcfad2f4494b9e96a814c2637bb25d05e"
   },
   "tags": [

@@ -433,7 +433,14 @@
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
     "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:435a581b0d4e1ffc592271a102fbba9f44f85654f568eded4782553e57772f3d",
+    "sourceDigest": "sha256:e5771cabe36af5f35112ab85c0e3cec58f43aa7794b045b78337ce14f99e9e36",
+    "sourceFiles": [
+      "examples/reference-games/hex-network-trading/scenarios/coverage.json",
+      "examples/reference-games/hex-network-trading/src/reference-game.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs",
+      "examples/reference-games/shared/reference-ui.mjs",
+      "examples/reference-games/hex-network-trading/src/scenarios/place-route.scenario.mjs"
+    ],
     "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
   },
   "tags": [

@@ -1,0 +1,197 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "ui-scenarios.zones-staging.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:06136b5a1bc290f6c06325c6851a90fc4ef7903cfb95e053df42296bcb748b94",
+    "finalSemanticDigest": "sha256:5995680b7da3c5b984b171172f2da4a2008b9a207be6fe628386afee93521434",
+    "initialProjectionDigest": "sha256:6ed987165996d35f5b0299db74831b7dc4398336e7cfdba63d68364337cb6d35",
+    "submissionDigest": "sha256:c4d22e11b3d442cbfb614170e18d32b5343b7147df6d48a63ccd42ee73b92a9c"
+  },
+  "gameId": "ui-scenarios",
+  "id": "ui-scenarios.zones-staging.desktop",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:42d359cfd6c73ecb9bf5678ece5f722e623f5c4fa7b268e4f91fa2cfb9262381",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:f170571b8872a4d532eab0096f6ecadd352ef20c6b07c9f5f1e2aec238480c0f",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "stage",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "A staged transfer between list, pile, and staging zones.",
+            "family": "zones",
+            "phase": "stage",
+            "scenarioId": "ui-scenarios.zones-staging.desktop",
+            "submitted": false,
+            "title": "Zones and collections"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.zones-staging.desktop.initial",
+        "projectionDigest": "sha256:6ed987165996d35f5b0299db74831b7dc4398336e7cfdba63d68364337cb6d35"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:145db1c5ed8ad1b73430a15bcc2e8447d9b111f522ceb7f857ceb0a7cdafa1a9",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:f170571b8872a4d532eab0096f6ecadd352ef20c6b07c9f5f1e2aec238480c0f",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "stage",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "A staged transfer between list, pile, and staging zones.",
+            "family": "zones",
+            "phase": "stage",
+            "scenarioId": "ui-scenarios.zones-staging.desktop",
+            "submitted": true,
+            "title": "Zones and collections"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.zones-staging.desktop.submitted",
+        "projectionDigest": "sha256:06136b5a1bc290f6c06325c6851a90fc4ef7903cfb95e053df42296bcb748b94"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "ui-scenarios.zones-staging.desktop.session"
+    },
+    "steps": [
+      {
+        "frameId": "ui-scenarios.zones-staging.desktop.initial",
+        "id": "ui-scenarios.zones-staging.desktop.initial.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "ui-scenarios.zones-staging.desktop.initial",
+        "id": "ui-scenarios.zones-staging.desktop.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:5276b714385ed056e1b4dd46383b9b0593d1216555ee95fbb68d99617f2bdbc7",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "ui-scenarios.zones-staging.desktop.initial",
+        "id": "ui-scenarios.zones-staging.desktop.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:506bcd3adbd7eed3538c63fe3806ff732f6514170107a393906992082d9b6205",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "ui-scenarios.zones-staging.desktop.submitted",
+        "id": "ui-scenarios.zones-staging.desktop.submitted.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "ui-scenarios.zones-staging.desktop.submitted",
+        "projectionDigest": "sha256:06136b5a1bc290f6c06325c6851a90fc4ef7903cfb95e053df42296bcb748b94",
+        "semanticDigest": "sha256:5995680b7da3c5b984b171172f2da4a2008b9a207be6fe628386afee93521434",
+        "submissionDigest": "sha256:c4d22e11b3d442cbfb614170e18d32b5343b7147df6d48a63ccd42ee73b92a9c",
+        "visibleInteractionKeys": [
+          "inspect"
+        ]
+      },
+      "requestDigest": "sha256:ab1d60628c5a665afcf83c0e0ebaa9f0bb42aabafcc17a537ee8b990ea308982",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "inspect:player-1",
+        "interactionKey": "inspect",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "ui-scenarios.zones-staging.desktop.submit"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
+    "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
+    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "scenarioId": "ui-scenarios.zones-staging.desktop",
+    "sourceDigest": "sha256:e08e653f52a74df175e18bcba8da4a5a87b960d52dabf0696183726b117672fc",
+    "sourceFiles": [
+      "examples/ui-scenarios/package.json",
+      "examples/ui-scenarios/src/scenario-helper.mjs",
+      "examples/ui-scenarios/src/ui.mjs",
+      "examples/ui-scenarios/src/zones/staging-transfer.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:97044fe969a8a46c6ca098412ad9572d23a13977964d048039ac77f771143105"
+  },
+  "tags": [
+    "protocol-authority",
+    "ui-primitives"
+  ],
+  "title": "Zones and collections: staging transfer",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

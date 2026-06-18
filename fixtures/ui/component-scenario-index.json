@@ -26,8 +26,8 @@
       ],
       "storyIds": ["panels--compact-panel", "panels--focus-order"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "CardDragSurface": {
       "id": "CardDragSurface",
@@ -84,7 +84,8 @@
         "deck-building-market.buy-card.desktop",
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile"
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "click",
@@ -106,6 +107,7 @@
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [
         "hex-network-trading.place-route.desktop",
+        "ui-scenarios.resources-cost.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -126,8 +128,8 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.dice-result.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "Drawer": {
       "id": "Drawer",
@@ -179,7 +181,8 @@
         "deck-building-market.buy-card.desktop",
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile"
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "click",
@@ -199,8 +202,8 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "InteractionInput": {
       "id": "InteractionInput",
@@ -249,8 +252,8 @@
       ],
       "storyIds": ["misc--toast-notifications"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "Panel": {
       "id": "Panel",
@@ -268,6 +271,13 @@
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop",
+        "ui-scenarios.prompts-choice.desktop",
+        "ui-scenarios.resources-cost.desktop",
+        "ui-scenarios.zones-staging.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -293,6 +303,12 @@
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.prompts-choice.desktop",
+        "ui-scenarios.resources-cost.desktop",
+        "ui-scenarios.zones-staging.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -313,8 +329,8 @@
       ],
       "storyIds": ["buttons--primary-action-dock"],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "PrimaryButton": {
       "id": "PrimaryButton",
@@ -327,8 +343,8 @@
       ],
       "storyIds": ["buttons--themed-variants"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "ResourceCounter": {
       "id": "ResourceCounter",
@@ -346,6 +362,7 @@
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [
         "hex-network-trading.place-route.desktop",
+        "ui-scenarios.resources-cost.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -383,7 +400,11 @@
         "board-targets--eligible-targets"
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
+      "scenarioIds": [
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.zones-staging.desktop",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
       "capabilities": ["click", "runtime-draft", "runtime-submit"]
     },
     "StagingZone": {
@@ -397,8 +418,11 @@
       ],
       "storyIds": ["hand-stagingzone--removes-on-click"],
       "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.zones-staging.desktop"
+      ],
+      "capabilities": ["click", "runtime-submit"]
     },
     "ThemedButton": {
       "id": "ThemedButton",
@@ -415,8 +439,11 @@
         "buttons--themed-variants"
       ],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop"
+      ],
+      "capabilities": ["click", "runtime-submit"]
     }
   },
   "scenarios": {
@@ -427,7 +454,9 @@
       "sourceFiles": [
         "examples/reference-games/deck-building-market/scenarios/coverage.json",
         "examples/reference-games/deck-building-market/src/reference-game.mjs",
-        "examples/reference-games/deck-building-market/src/ui.mjs"
+        "examples/reference-games/deck-building-market/src/scenarios/buy-card.scenario.mjs",
+        "examples/reference-games/shared/reference-reducer.mjs",
+        "examples/reference-games/shared/reference-ui.mjs"
       ],
       "contracts": [
         "CardFace",
@@ -440,7 +469,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.buy-card.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "fixtureDigest": "sha256:c975221bdf7e0185fb0def3017d36e869bb1f5857fa88cb759f3094782605978",
+      "fixtureDigest": "sha256:8a21e4ae11c0b5f0089033ba595e0e2b0dc55d88823bee7df470ecd2240e09b6",
       "renderModuleDigest": "sha256:2729a8d803366ef72f2fc9c85954d9f70f31c0f197f882cda5cddb99de626ac9"
     },
     "hearts.pass-three.mobile": {
@@ -450,7 +479,9 @@
       "sourceFiles": [
         "examples/reference-games/hearts/scenarios/coverage.json",
         "examples/reference-games/hearts/src/reference-game.mjs",
-        "examples/reference-games/hearts/src/ui.mjs"
+        "examples/reference-games/hearts/src/scenarios/pass-three.scenario.mjs",
+        "examples/reference-games/shared/reference-reducer.mjs",
+        "examples/reference-games/shared/reference-ui.mjs"
       ],
       "contracts": [
         "CardFace",
@@ -463,7 +494,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.pass-three.mobile.fixture.json",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "fixtureDigest": "sha256:43106aa0cd16700b1d2fb75fd2c60427a0628fe612975ad155898c644ca9d936",
+      "fixtureDigest": "sha256:79991440dffd7e10ef25f3e5083c71ffba1f1d518d00ed4baae6280d944a9840",
       "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff"
     },
     "hex-network-trading.place-route.desktop": {
@@ -473,7 +504,9 @@
       "sourceFiles": [
         "examples/reference-games/hex-network-trading/scenarios/coverage.json",
         "examples/reference-games/hex-network-trading/src/reference-game.mjs",
-        "examples/reference-games/hex-network-trading/src/ui.mjs"
+        "examples/reference-games/hex-network-trading/src/scenarios/place-route.scenario.mjs",
+        "examples/reference-games/shared/reference-reducer.mjs",
+        "examples/reference-games/shared/reference-ui.mjs"
       ],
       "contracts": [
         "CardDragSurface",
@@ -490,7 +523,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.place-route.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "fixtureDigest": "sha256:169e3f1080def8a362272868a5cc0e10a7e86b2e89b912de5255284347ed4573",
+      "fixtureDigest": "sha256:cf05ee1c1c46abb5a02cb2c76072dbd9e9256a24d1db307acc31762a7d29365e",
       "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36"
     },
     "simultaneous-card-drafting.lock-choice.mobile": {
@@ -498,9 +531,11 @@
       "title": "Simultaneous Card Drafting: choice remains private until every player locks",
       "gameId": "simultaneous-card-drafting",
       "sourceFiles": [
+        "examples/reference-games/shared/reference-reducer.mjs",
+        "examples/reference-games/shared/reference-ui.mjs",
         "examples/reference-games/simultaneous-card-drafting/scenarios/coverage.json",
         "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
-        "examples/reference-games/simultaneous-card-drafting/src/ui.mjs"
+        "examples/reference-games/simultaneous-card-drafting/src/scenarios/lock-choice.scenario.mjs"
       ],
       "contracts": [
         "CardFace",
@@ -513,17 +548,157 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "fixtureDigest": "sha256:ef2b82d72de575c19f03624fbc60eec5820a1db52bd3ae81ec2dc986f2fab6b0",
+      "fixtureDigest": "sha256:f2468d34eee858525e178705b6fd1c6672d196745a403dce27a56b35a9a35181",
       "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148"
+    },
+    "ui-scenarios.boards-slot.desktop": {
+      "id": "ui-scenarios.boards-slot.desktop",
+      "title": "Boards: slot targeting",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/boards/slot-targeting.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["Panel", "PluginRuntime", "SlotSystem"],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
+      "fixtureDigest": "sha256:94522a7d470f91817862f7e362f238af34ac66ff83312f95c5ee2f7c0999b982",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.cards-hand.desktop": {
+      "id": "ui-scenarios.cards-hand.desktop",
+      "title": "Cards and hands: selection and hidden state",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/cards/hand-selection.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardFace",
+        "HandView",
+        "Panel",
+        "PluginRuntime",
+        "StagingZone"
+      ],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
+      "fixtureDigest": "sha256:a31da89a7f4a4b1f3edf0640dae3c599c8105712d5a29a84c7e6ba72cf3ade69",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.dice-result.desktop": {
+      "id": "ui-scenarios.dice-result.desktop",
+      "title": "Dice: result state",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/dice/result-state.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["Dialog", "Panel", "PluginRuntime", "ThemedButton"],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
+      "fixtureDigest": "sha256:d75c7d7527745b2a6f8d90f823e75edc49e6a89e53c396b60c5e889c742e9b66",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.game-shell.desktop": {
+      "id": "ui-scenarios.game-shell.desktop",
+      "title": "Game shell: phase, roster, and terminal outcome",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/game-shell/phase-roster-terminal.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["MoreActions", "Panel", "PrimaryButton", "ThemedButton"],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
+      "fixtureDigest": "sha256:6f15db65940ff0e63232edcd10925375fc2daefe7c6124257a708970d9064e2f",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.prompts-choice.desktop": {
+      "id": "ui-scenarios.prompts-choice.desktop",
+      "title": "Prompts: choice validation",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/prompts/choice-validation.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": [
+        "ActionPanel",
+        "Input",
+        "Panel",
+        "PluginRuntime",
+        "PrimaryActionButton"
+      ],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
+      "fixtureDigest": "sha256:d37e65d0ff0f3926690441595a90dfe4f079375bcd281cdb3a7b77140b03dea8",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.resources-cost.desktop": {
+      "id": "ui-scenarios.resources-cost.desktop",
+      "title": "Resources and costs: affordability",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/resources/affordability.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["CostDisplay", "Panel", "PluginRuntime", "ResourceCounter"],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
+      "fixtureDigest": "sha256:5d56c8c5688953f1e44fcd21a749be9f39b07de6de30b7cad4027cc9eeac23f6",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+    },
+    "ui-scenarios.zones-staging.desktop": {
+      "id": "ui-scenarios.zones-staging.desktop",
+      "title": "Zones and collections: staging transfer",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs",
+        "examples/ui-scenarios/src/zones/staging-transfer.scenario.mjs"
+      ],
+      "contracts": ["Panel", "PluginRuntime", "SlotSystem", "StagingZone"],
+      "capabilities": ["click", "runtime-submit"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
+      "fixtureDigest": "sha256:7dbe0c5220441e826c103f222a1a8c1f2f884e4ab8f632479705f60341b7072d",
+      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
     },
     "worker-placement-tableau.place-worker.desktop": {
       "id": "worker-placement-tableau.place-worker.desktop",
       "title": "Worker Placement Tableau: worker count draft persists until commit",
       "gameId": "worker-placement-tableau",
       "sourceFiles": [
+        "examples/reference-games/shared/reference-reducer.mjs",
+        "examples/reference-games/shared/reference-ui.mjs",
         "examples/reference-games/worker-placement-tableau/scenarios/coverage.json",
         "examples/reference-games/worker-placement-tableau/src/reference-game.mjs",
-        "examples/reference-games/worker-placement-tableau/src/ui.mjs"
+        "examples/reference-games/worker-placement-tableau/src/scenarios/place-worker.scenario.mjs"
       ],
       "contracts": [
         "CostDisplay",
@@ -538,7 +713,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "fixtureDigest": "sha256:47fa99257b4761b68caf9bc0cac64c08a7bd9bda55a9ecce81c67d64423b726b",
+      "fixtureDigest": "sha256:08ba039fdc5c58427f1fc61b4608ebe9b757c99627f4702e9431fc6a1829af93",
       "renderModuleDigest": "sha256:1c70a445c6a919b63c88c6db8fbb00e6386ef410156e613949cb2e450e8ba49a"
     }
   },
@@ -558,8 +733,8 @@
         "packages/sdk/src/ui/stories/Panels.stories.tsx"
       ],
       "storyIds": ["panels--compact-panel", "panels--focus-order"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "CardDragSurface": {
       "sourceFiles": [
@@ -601,7 +776,8 @@
         "deck-building-market.buy-card.desktop",
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile"
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "click",
@@ -618,6 +794,7 @@
       "storyIds": ["resource-status--cost"],
       "scenarioIds": [
         "hex-network-trading.place-route.desktop",
+        "ui-scenarios.resources-cost.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -633,8 +810,8 @@
         "packages/sdk/src/ui/stories/Panels.stories.tsx"
       ],
       "storyIds": ["panels--dialog-standard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.dice-result.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "Drawer": {
       "sourceFiles": [
@@ -663,7 +840,8 @@
         "deck-building-market.buy-card.desktop",
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile"
+        "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "click",
@@ -678,8 +856,8 @@
         "packages/sdk/src/ui/stories/Panels.stories.tsx"
       ],
       "storyIds": ["panels--dialog-standard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "MoreActions": {
       "sourceFiles": [
@@ -687,8 +865,8 @@
         "packages/sdk/src/ui/stories/Misc.stories.tsx"
       ],
       "storyIds": ["misc--toast-notifications"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "Panel": {
       "sourceFiles": [
@@ -701,6 +879,13 @@
         "hearts.pass-three.mobile",
         "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop",
+        "ui-scenarios.prompts-choice.desktop",
+        "ui-scenarios.resources-cost.desktop",
+        "ui-scenarios.zones-staging.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -716,8 +901,8 @@
         "packages/sdk/src/ui/stories/Buttons.stories.tsx"
       ],
       "storyIds": ["buttons--primary-action-dock"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "PrimaryButton": {
       "sourceFiles": [
@@ -725,8 +910,8 @@
         "packages/sdk/src/ui/stories/Buttons.stories.tsx"
       ],
       "storyIds": ["buttons--themed-variants"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": ["click", "runtime-submit"]
     },
     "ResourceCounter": {
       "sourceFiles": [
@@ -739,6 +924,7 @@
       ],
       "scenarioIds": [
         "hex-network-trading.place-route.desktop",
+        "ui-scenarios.resources-cost.desktop",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
@@ -766,7 +952,11 @@
         "board-targets--claimed-and-disabled",
         "board-targets--eligible-targets"
       ],
-      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
+      "scenarioIds": [
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.zones-staging.desktop",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
       "capabilities": ["click", "runtime-draft", "runtime-submit"]
     },
     "StagingZone": {
@@ -775,8 +965,11 @@
         "packages/sdk/src/ui/stories/StagingZone.stories.tsx"
       ],
       "storyIds": ["hand-stagingzone--removes-on-click"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.zones-staging.desktop"
+      ],
+      "capabilities": ["click", "runtime-submit"]
     },
     "ThemedButton": {
       "sourceFiles": [
@@ -788,8 +981,11 @@
         "buttons--themed-button-invokes-on-click",
         "buttons--themed-variants"
       ],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop"
+      ],
+      "capabilities": ["click", "runtime-submit"]
     }
   },
   "sharedFallbacks": [

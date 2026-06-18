@@ -49,7 +49,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:500c8917406cdcc015772a2212fab614e94d548ede06fd7423eefe52abaeb932",
+      "sha256:7d1ecf2f7bea622c4c64a9fbc4dee9694a4211a7f83684f16fe5f6b7c007e0ac",
   },
   {
     id: "hearts.pass-three.mobile",
@@ -71,7 +71,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:43e665fbad806131ddffb4fa78f852a2956fc02bb697b554549b46b9216be4b4",
+      "sha256:afedf8607e113ddd4b73c8f9a8c901168a80c2b1096b8eaef3f0246aad167d82",
   },
   {
     id: "hex-network-trading.place-route.desktop",
@@ -98,7 +98,7 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "pointer-drag", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:435a581b0d4e1ffc592271a102fbba9f44f85654f568eded4782553e57772f3d",
+      "sha256:e5771cabe36af5f35112ab85c0e3cec58f43aa7794b045b78337ce14f99e9e36",
   },
   {
     id: "simultaneous-card-drafting.lock-choice.mobile",
@@ -121,7 +121,131 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-submit"],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:f604bdb45315b17353ca47d387e7793b1ba92477d015982ee8bacf05d3409f47",
+      "sha256:779b69c43946c8e2ba78c2d311be3d811b4981b23028148de8949e9ef9b56681",
+  },
+  {
+    id: "ui-scenarios.boards-slot.desktop",
+    title: "Boards: slot targeting",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.boards-slot.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.boards-slot.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.boards-slot.desktop.mjs"),
+    components: ["Panel", "PluginRuntime", "SlotSystem"],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:7986a5ed6e7981bf0433508feed6c98bf48376a9df47e9b0b3b303d1bfde685c",
+  },
+  {
+    id: "ui-scenarios.cards-hand.desktop",
+    title: "Cards and hands: selection and hidden state",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.cards-hand.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.cards-hand.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.cards-hand.desktop.mjs"),
+    components: [
+      "CardFace",
+      "HandView",
+      "Panel",
+      "PluginRuntime",
+      "StagingZone",
+    ],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:f110615db7ed8ec6de4b0f9c0b20938419134e6bce3f2427918d4d8e08c3dc88",
+  },
+  {
+    id: "ui-scenarios.dice-result.desktop",
+    title: "Dice: result state",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.dice-result.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.dice-result.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.dice-result.desktop.mjs"),
+    components: ["Dialog", "Panel", "PluginRuntime", "ThemedButton"],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:75adc299100b2b3627b37cca30efc576bcfec30165d17c52ba2c01c6581719de",
+  },
+  {
+    id: "ui-scenarios.game-shell.desktop",
+    title: "Game shell: phase, roster, and terminal outcome",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.game-shell.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.game-shell.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.game-shell.desktop.mjs"),
+    components: ["MoreActions", "Panel", "PrimaryButton", "ThemedButton"],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:72b4decea4559656290ed75ee11b9986e9799e70a587e0622fbbc2af11affe84",
+  },
+  {
+    id: "ui-scenarios.prompts-choice.desktop",
+    title: "Prompts: choice validation",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.prompts-choice.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.prompts-choice.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.prompts-choice.desktop.mjs"),
+    components: [
+      "ActionPanel",
+      "Input",
+      "Panel",
+      "PluginRuntime",
+      "PrimaryActionButton",
+    ],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:662958aa1576b681a1636f14fd6fe4e7d417495c0cd81d0f218144c4cb42331f",
+  },
+  {
+    id: "ui-scenarios.resources-cost.desktop",
+    title: "Resources and costs: affordability",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.resources-cost.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.resources-cost.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.resources-cost.desktop.mjs"),
+    components: ["CostDisplay", "Panel", "PluginRuntime", "ResourceCounter"],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:aeafc2ee13ac7dd958cef347af8959d72499f4b39ebc2c8db92f4bb162aa1ded",
+  },
+  {
+    id: "ui-scenarios.zones-staging.desktop",
+    title: "Zones and collections: staging transfer",
+    gameId: "ui-scenarios",
+    fixtureUrl:
+      "/fixtures/reference-games/ui-scenarios.zones-staging.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/ui-scenarios.zones-staging.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/ui-scenarios.zones-staging.desktop.mjs"),
+    components: ["Panel", "PluginRuntime", "SlotSystem", "StagingZone"],
+    capabilities: ["click", "runtime-submit"],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:e08e653f52a74df175e18bcba8da4a5a87b960d52dabf0696183726b117672fc",
   },
   {
     id: "worker-placement-tableau.place-worker.desktop",
@@ -145,6 +269,6 @@ export const scenarios = defineUIScenarios([
     capabilities: ["click", "runtime-draft", "runtime-submit"],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:531701d236bad3d6aa20840a5ce495063bcde30849ff699e640c9b0bda338ba8",
+      "sha256:4c2889c4570c8c8951bdd7babdea3455b0037e7618100cd18c6395890c57f0ec",
   },
 ] satisfies readonly UIScenarioCatalogEntry[]);

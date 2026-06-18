@@ -3,7 +3,12 @@ import { pathToFileURL } from "node:url";
 import { referenceGamesRoot, root } from "../ui/reference-games-lib.mjs";
 
 const examplesRoot = path.resolve(referenceGamesRoot);
-const allowedSourceRoots = [examplesRoot, path.join(root, "packages/sdk/src")];
+const uiScenariosRoot = path.join(root, "examples/ui-scenarios");
+const allowedSourceRoots = [
+  examplesRoot,
+  uiScenariosRoot,
+  path.join(root, "packages/sdk/src"),
+];
 
 function isWithin(child, parent) {
   const relative = path.relative(parent, child);
@@ -114,8 +119,13 @@ function validateScenarioDefinition(scenario, modulePath) {
 
 export async function loadScenarioModule(modulePath) {
   const absolutePath = path.resolve(modulePath);
-  if (!isWithin(absolutePath, examplesRoot)) {
-    throw new Error(`${modulePath} is outside ${examplesRoot}.`);
+  if (
+    !isWithin(absolutePath, examplesRoot) &&
+    !isWithin(absolutePath, uiScenariosRoot)
+  ) {
+    throw new Error(
+      `${modulePath} is outside ${examplesRoot} and ${uiScenariosRoot}.`,
+    );
   }
   const module = await import(
     `${pathToFileURL(absolutePath).href}?scenario=${Date.now()}`

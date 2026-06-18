@@ -1,6 +1,8 @@
 # Phase 02: Primitive And Archetype Scenarios
 
-Status: Proposed
+Status: Complete
+
+Completed during the Phase 02 implementation commit.
 
 Depends on: Phases 00 and 01
 
@@ -121,6 +123,54 @@ pnpm ui:test
 - Workbench owns runtime behavior and semantic interaction.
 - The coverage report shows gaps without requiring immediate exhaustive
   closure.
+
+## Completion notes
+
+- Added protocol-authoritative primitive scenarios under `examples/ui-scenarios`
+  for cards/hands, zones/staging, prompts, dice, resources/costs, boards, and
+  game shell coverage.
+- Extended fixture discovery to load both reference-game scenario modules and
+  `examples/ui-scenarios/src/**/*.scenario.mjs`.
+- Added fixture `source.sourceFiles` metadata so primitive scenarios can own
+  source paths outside `examples/reference-games`.
+- Updated catalog/index generation to include the new primitive scenarios and
+  contract coverage.
+- Preserved reducer-authoritative reference-game scenarios for Hearts, worker
+  placement, Hex, deck builder, and simultaneous draft.
+- Captured measured Chromium desktop semantic digests for the primitive
+  scenario helper and fail fixture compilation when a new primitive scenario has
+  no measured digest baseline.
+
+Verification:
+
+```sh
+pnpm ui:fixtures:compile
+pnpm ui:catalog:generate
+pnpm docs:generate
+pnpm ui:fixtures:check
+pnpm ui:catalog:check
+pnpm docs:check
+pnpm --filter @dreamboard-games/sdk typecheck
+pnpm ui:test --scenario ui-scenarios.cards-hand.desktop
+pnpm ui:runtime:test
+pnpm ui:test
+pnpm ui:coverage:check
+pnpm ui:test:changed --base origin/main
+```
+
+Receipts:
+
+- `artifacts/ui/2026-06-18T08-08-39-720Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-09-08-423Z/receipt.json`
+- `artifacts/ui/2026-06-18T08-09-36-414Z/receipt.json`
+
+Known caveats:
+
+- `pnpm ui:coverage:check` still reports the non-blocking `Drawer` Workbench
+  coverage warning.
+- `pnpm ui:hard-cut:check` is blocked by unrelated untracked files under
+  `examples/reference-games/hearts/demo-workspace/` that still contain
+  `renderSummary` and `renderActions`.
 
 ## Deferred
 

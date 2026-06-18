@@ -355,6 +355,7 @@ export async function compileScenarioModule({
         authority: scenario.authority.kind,
         sdkCommit,
       }),
+      sourceFiles: [...scenario.sourceFiles],
     },
     viewer: authority.viewer,
     environment: {
@@ -384,7 +385,10 @@ export async function compileScenarioModule({
     sha256: digestUIScenarioFixture(fixture),
     renderModule,
     renderModuleSha256: renderModuleDigest,
-    components: authority.exercise.renderedComponents,
+    components:
+      authority.exercise.renderedComponents.length > 0
+        ? authority.exercise.renderedComponents
+        : [...scenario.contracts],
     capabilities: authority.capabilitiesForReplay(
       authority.replaySteps,
       viewportTags,

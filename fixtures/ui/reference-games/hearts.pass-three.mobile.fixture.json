@@ -789,7 +789,14 @@
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
     "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:43e665fbad806131ddffb4fa78f852a2956fc02bb697b554549b46b9216be4b4",
+    "sourceDigest": "sha256:afedf8607e113ddd4b73c8f9a8c901168a80c2b1096b8eaef3f0246aad167d82",
+    "sourceFiles": [
+      "examples/reference-games/hearts/scenarios/coverage.json",
+      "examples/reference-games/hearts/src/reference-game.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs",
+      "examples/reference-games/shared/reference-ui.mjs",
+      "examples/reference-games/hearts/src/scenarios/pass-three.scenario.mjs"
+    ],
     "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
   },
   "tags": [

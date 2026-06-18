@@ -239,11 +239,13 @@ export async function collectValidatedScenarioCatalog() {
       id: entry.id,
       title: fixture.title,
       gameId: fixture.gameId,
-      sourceFiles: sortUnique([
-        `examples/reference-games/${fixture.gameId}/scenarios/coverage.json`,
-        `examples/reference-games/${fixture.gameId}/src/reference-game.mjs`,
-        `examples/reference-games/${fixture.gameId}/src/ui.mjs`,
-      ]),
+      sourceFiles: sortUnique(
+        fixture.source?.sourceFiles ?? [
+          `examples/reference-games/${fixture.gameId}/scenarios/coverage.json`,
+          `examples/reference-games/${fixture.gameId}/src/reference-game.mjs`,
+          `examples/reference-games/${fixture.gameId}/src/ui.mjs`,
+        ],
+      ),
       fixtureUrl: `/fixtures/reference-games/${entry.file}`,
       renderModuleUrl: `/fixtures/reference-games/${entry.renderModule}`,
       components: sortUnique(entry.components ?? []),

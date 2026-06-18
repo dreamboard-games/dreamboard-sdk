@@ -167,6 +167,7 @@ export const uiScenarioFixtureSchema = z
         renderModule: nonEmptyStringSchema,
         renderModuleDigest: digestSchema,
         sourceDigest: digestSchema,
+        sourceFiles: z.array(nonEmptyStringSchema).optional(),
       })
       .strict(),
     viewer: z

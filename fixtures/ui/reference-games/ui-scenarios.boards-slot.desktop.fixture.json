@@ -1,0 +1,197 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "ui-scenarios.boards-slot.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:58c163d5cf88396dfd7d63855dcc2d348969528d24b0866c8393e736a40ef8b6",
+    "finalSemanticDigest": "sha256:e32dcc9c8992d5b795a6fa6b76f8720d29b8cb9149a83d4a9e7c64cdaad20f6a",
+    "initialProjectionDigest": "sha256:82bcc77792668f86ded79eafbb40e88eaaeaa0e37d988355fba10c9535912fcf",
+    "submissionDigest": "sha256:a507f088e0dcc6a575c9ad168181aa7e794672bda370bed29ed84afa4826cb70"
+  },
+  "gameId": "ui-scenarios",
+  "id": "ui-scenarios.boards-slot.desktop",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:bb62242434409652f5dbfde1aaac55b35c07d2700f7da46f3dea3678132623b7",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:383ce41ff6570bf498aadf2977773bb6904780a4df453a9e77615c7c601ff1de",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "target",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Slot-based board targets with occupied and available spaces.",
+            "family": "boards",
+            "phase": "target",
+            "scenarioId": "ui-scenarios.boards-slot.desktop",
+            "submitted": false,
+            "title": "Boards"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.boards-slot.desktop.initial",
+        "projectionDigest": "sha256:82bcc77792668f86ded79eafbb40e88eaaeaa0e37d988355fba10c9535912fcf"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:b0451ae2678bac2bbe635cb9035d3fe0f7dfcba4884eda2591f8a4362d703369",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:383ce41ff6570bf498aadf2977773bb6904780a4df453a9e77615c7c601ff1de",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "target",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Slot-based board targets with occupied and available spaces.",
+            "family": "boards",
+            "phase": "target",
+            "scenarioId": "ui-scenarios.boards-slot.desktop",
+            "submitted": true,
+            "title": "Boards"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.boards-slot.desktop.submitted",
+        "projectionDigest": "sha256:58c163d5cf88396dfd7d63855dcc2d348969528d24b0866c8393e736a40ef8b6"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "ui-scenarios.boards-slot.desktop.session"
+    },
+    "steps": [
+      {
+        "frameId": "ui-scenarios.boards-slot.desktop.initial",
+        "id": "ui-scenarios.boards-slot.desktop.initial.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "ui-scenarios.boards-slot.desktop.initial",
+        "id": "ui-scenarios.boards-slot.desktop.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:d816fe1ef75ff40b9e0d2f3dad712a73a6edd54f2a4b602437da8935e069b404",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "ui-scenarios.boards-slot.desktop.initial",
+        "id": "ui-scenarios.boards-slot.desktop.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:a6fbd3bedef7c6a58ac073864b680136bd55dc88e0df3c77b10a83cad47ce8d5",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "ui-scenarios.boards-slot.desktop.submitted",
+        "id": "ui-scenarios.boards-slot.desktop.submitted.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "ui-scenarios.boards-slot.desktop.submitted",
+        "projectionDigest": "sha256:58c163d5cf88396dfd7d63855dcc2d348969528d24b0866c8393e736a40ef8b6",
+        "semanticDigest": "sha256:e32dcc9c8992d5b795a6fa6b76f8720d29b8cb9149a83d4a9e7c64cdaad20f6a",
+        "submissionDigest": "sha256:a507f088e0dcc6a575c9ad168181aa7e794672bda370bed29ed84afa4826cb70",
+        "visibleInteractionKeys": [
+          "inspect"
+        ]
+      },
+      "requestDigest": "sha256:ab1d60628c5a665afcf83c0e0ebaa9f0bb42aabafcc17a537ee8b990ea308982",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "inspect:player-1",
+        "interactionKey": "inspect",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "ui-scenarios.boards-slot.desktop.submit"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
+    "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
+    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "scenarioId": "ui-scenarios.boards-slot.desktop",
+    "sourceDigest": "sha256:7986a5ed6e7981bf0433508feed6c98bf48376a9df47e9b0b3b303d1bfde685c",
+    "sourceFiles": [
+      "examples/ui-scenarios/package.json",
+      "examples/ui-scenarios/src/scenario-helper.mjs",
+      "examples/ui-scenarios/src/ui.mjs",
+      "examples/ui-scenarios/src/boards/slot-targeting.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:97044fe969a8a46c6ca098412ad9572d23a13977964d048039ac77f771143105"
+  },
+  "tags": [
+    "protocol-authority",
+    "ui-primitives"
+  ],
+  "title": "Boards: slot targeting",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

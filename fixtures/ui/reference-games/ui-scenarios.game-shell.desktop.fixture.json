@@ -1,0 +1,197 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "ui-scenarios.game-shell.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:2490d2319f8b6eab025d4825e1c88f1aac4bd87063cd1be418370c0b0d0350a4",
+    "finalSemanticDigest": "sha256:46204b9a117b7891555b33ef6ed7b8d0a2dfd258fe883a16e8a63ac93211519f",
+    "initialProjectionDigest": "sha256:673743b933d8f4786850396651a4a833b073501469f71c27f28aee2a723b4772",
+    "submissionDigest": "sha256:a35c1e2807e384bd888d08641543ca581cb71f90a32cda04f13a05708c8c08e7"
+  },
+  "gameId": "ui-scenarios",
+  "id": "ui-scenarios.game-shell.desktop",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:62679f1d2e740c220bb5fb77bb240ca6ced8ff4927745f65d23f26432490d10e",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:9263bd9f97bf68ce96afe5afa1bf8b40caa950668b2e4f76ede23c3cbcc8e73f",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "scoring",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Phase, roster, responsive viewport, and terminal outcome.",
+            "family": "game-shell",
+            "phase": "scoring",
+            "scenarioId": "ui-scenarios.game-shell.desktop",
+            "submitted": false,
+            "title": "Game shell"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.game-shell.desktop.initial",
+        "projectionDigest": "sha256:673743b933d8f4786850396651a4a833b073501469f71c27f28aee2a723b4772"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:8a79ea5c71e7c7335531a72b86d6f4f4ebe43981c43400c27eb91e997e69a2da",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:9263bd9f97bf68ce96afe5afa1bf8b40caa950668b2e4f76ede23c3cbcc8e73f",
+              "inputs": [],
+              "interactionId": "inspect:player-1",
+              "interactionKey": "inspect",
+              "kind": "action",
+              "phaseName": "inspect"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "scoring",
+            "currentStage": "inspect",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "perspectivePlayerId": "player-1",
+          "view": {
+            "description": "Phase, roster, responsive viewport, and terminal outcome.",
+            "family": "game-shell",
+            "phase": "scoring",
+            "scenarioId": "ui-scenarios.game-shell.desktop",
+            "submitted": true,
+            "title": "Game shell"
+          },
+          "zones": {}
+        },
+        "id": "ui-scenarios.game-shell.desktop.submitted",
+        "projectionDigest": "sha256:2490d2319f8b6eab025d4825e1c88f1aac4bd87063cd1be418370c0b0d0350a4"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "ui-scenarios.game-shell.desktop.session"
+    },
+    "steps": [
+      {
+        "frameId": "ui-scenarios.game-shell.desktop.initial",
+        "id": "ui-scenarios.game-shell.desktop.initial.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "ui-scenarios.game-shell.desktop.initial",
+        "id": "ui-scenarios.game-shell.desktop.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:8a6b515672b8ad62bb83e76d9e56d9d6a1bcda89786b78260a49af7e9f0f3078",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "ui-scenarios.game-shell.desktop.initial",
+        "id": "ui-scenarios.game-shell.desktop.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:f04ffd6eb7ced27dd071afcc6d354876517671819d54fd1d5693c8cc8d945e8f",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "ui-scenarios.game-shell.desktop.submitted",
+        "id": "ui-scenarios.game-shell.desktop.submitted.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "ui-scenarios.game-shell.desktop.submitted",
+        "projectionDigest": "sha256:2490d2319f8b6eab025d4825e1c88f1aac4bd87063cd1be418370c0b0d0350a4",
+        "semanticDigest": "sha256:46204b9a117b7891555b33ef6ed7b8d0a2dfd258fe883a16e8a63ac93211519f",
+        "submissionDigest": "sha256:a35c1e2807e384bd888d08641543ca581cb71f90a32cda04f13a05708c8c08e7",
+        "visibleInteractionKeys": [
+          "inspect"
+        ]
+      },
+      "requestDigest": "sha256:ab1d60628c5a665afcf83c0e0ebaa9f0bb42aabafcc17a537ee8b990ea308982",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "inspect:player-1",
+        "interactionKey": "inspect",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "ui-scenarios.game-shell.desktop.submit"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
+    "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
+    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "scenarioId": "ui-scenarios.game-shell.desktop",
+    "sourceDigest": "sha256:72b4decea4559656290ed75ee11b9986e9799e70a587e0622fbbc2af11affe84",
+    "sourceFiles": [
+      "examples/ui-scenarios/package.json",
+      "examples/ui-scenarios/src/scenario-helper.mjs",
+      "examples/ui-scenarios/src/ui.mjs",
+      "examples/ui-scenarios/src/game-shell/phase-roster-terminal.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:97044fe969a8a46c6ca098412ad9572d23a13977964d048039ac77f771143105"
+  },
+  "tags": [
+    "protocol-authority",
+    "ui-primitives"
+  ],
+  "title": "Game shell: phase, roster, and terminal outcome",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}
