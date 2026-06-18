@@ -1,0 +1,185 @@
+{
+  "currentStage": "drafting",
+  "stageSeats": ["player-1", "player-2", "player-3", "player-4", "player-5"],
+  "view": {
+    "currentPhase": "drafting",
+    "round": 1,
+    "hand": [
+      {
+        "id": "nigiri-salmon-5",
+        "cardType": "nigiri-salmon",
+        "name": "Salmon Nigiri",
+        "properties": {
+          "category": "nigiri",
+          "nigiriPoints": 2
+        }
+      },
+      {
+        "id": "tempura-11",
+        "cardType": "tempura",
+        "name": "Tempura",
+        "properties": {
+          "category": "tempura"
+        }
+      },
+      {
+        "id": "pudding-6",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      },
+      {
+        "id": "pudding-5",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      },
+      {
+        "id": "pudding-2",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      },
+      {
+        "id": "nigiri-squid-3",
+        "cardType": "nigiri-squid",
+        "name": "Squid Nigiri",
+        "properties": {
+          "category": "nigiri",
+          "nigiriPoints": 3
+        }
+      },
+      {
+        "id": "tempura-1",
+        "cardType": "tempura",
+        "name": "Tempura",
+        "properties": {
+          "category": "tempura"
+        }
+      }
+    ],
+    "handCount": 7,
+    "played": [],
+    "pudding": [],
+    "playedByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": [],
+      "player-5": []
+    },
+    "puddingByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": [],
+      "player-5": []
+    },
+    "totalScoreByPlayer": {},
+    "roundScoreByPlayer": {},
+    "puddingScoreByPlayer": {},
+    "winnerPlayerIds": [],
+    "canUseChopsticks": false
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "drafting",
+      "interactionKey": "drafting.submit",
+      "interactionId": "submit",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "useChopsticks",
+          "kind": "form",
+          "domain": {
+            "type": "choice",
+            "choices": [
+              {
+                "value": "no",
+                "label": "Pick one card"
+              },
+              {
+                "value": "yes",
+                "label": "Use chopsticks (pick two)"
+              }
+            ]
+          },
+          "defaultValue": "no"
+        },
+        {
+          "key": "cardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": [
+              "nigiri-salmon-5",
+              "tempura-11",
+              "pudding-6",
+              "pudding-5",
+              "pudding-2",
+              "nigiri-squid-3",
+              "tempura-1"
+            ],
+            "selection": {
+              "mode": "many",
+              "min": 1,
+              "max": 2,
+              "distinct": true
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:eb9a9f23cf5d19918dade5e12ff5c6241dc8b3b777527a81fcf00df4fca3a98d",
+      "actorSeat": 1,
+      "draftDigest": "sha256:077c773f848946d012336c187b247e2711d9f190a4726104238c50c26ef13e9b"
+    }
+  ],
+  "zones": {
+    "hand": {
+      "cardIds": [
+        "nigiri-salmon-5",
+        "tempura-11",
+        "pudding-6",
+        "pudding-5",
+        "pudding-2",
+        "nigiri-squid-3",
+        "tempura-1"
+      ],
+      "cardViewsById": {
+        "nigiri-salmon-5": "{\"id\":\"nigiri-salmon-5\",\"cardType\":\"nigiri-salmon\",\"name\":\"Salmon Nigiri\",\"properties\":{\"category\":\"nigiri\",\"nigiriPoints\":2}}",
+        "tempura-11": "{\"id\":\"tempura-11\",\"cardType\":\"tempura\",\"name\":\"Tempura\",\"properties\":{\"category\":\"tempura\"}}",
+        "pudding-6": "{\"id\":\"pudding-6\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}",
+        "pudding-5": "{\"id\":\"pudding-5\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}",
+        "pudding-2": "{\"id\":\"pudding-2\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}",
+        "nigiri-squid-3": "{\"id\":\"nigiri-squid-3\",\"cardType\":\"nigiri-squid\",\"name\":\"Squid Nigiri\",\"properties\":{\"category\":\"nigiri\",\"nigiriPoints\":3}}",
+        "tempura-1": "{\"id\":\"tempura-1\",\"cardType\":\"tempura\",\"name\":\"Tempura\",\"properties\":{\"category\":\"tempura\"}}"
+      },
+      "playableByCardId": {
+        "nigiri-salmon-5": ["submit:32e44f324ca3704c"],
+        "tempura-11": ["submit:32e44f324ca3704c"],
+        "pudding-6": ["submit:32e44f324ca3704c"],
+        "pudding-5": ["submit:32e44f324ca3704c"],
+        "pudding-2": ["submit:32e44f324ca3704c"],
+        "nigiri-squid-3": ["submit:32e44f324ca3704c"],
+        "tempura-1": ["submit:32e44f324ca3704c"]
+      }
+    }
+  }
+}

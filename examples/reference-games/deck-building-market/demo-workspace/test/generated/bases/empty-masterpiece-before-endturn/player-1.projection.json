@@ -1,0 +1,1377 @@
+{
+  "currentStage": "playerTurn",
+  "stageSeats": ["player-1"],
+  "view": {
+    "mode": "action",
+    "actionsLeft": 1,
+    "buysLeft": 1,
+    "coins": 0,
+    "pendingDraw": 0,
+    "pendingAction": null,
+    "turnNumber": 1,
+    "handCards": ["idea-1", "doodle-46", "doodle-20", "doodle-13", "idea-2"],
+    "inPlayCards": [],
+    "discardCards": [
+      "masterpiece-8",
+      "masterpiece-3",
+      "masterpiece-1",
+      "masterpiece-6"
+    ],
+    "deckCards": ["doodle-33", "idea-5", "doodle-55", "doodle-34", "doodle-6"],
+    "deckCount": 5,
+    "supplyCosts": {
+      "brainstorm": 4,
+      "concept": 5,
+      "critic": 5,
+      "doodle": 0,
+      "eraser": 2,
+      "gallery": 5,
+      "idea": 2,
+      "inkwork": 6,
+      "masterpiece": 0,
+      "open-mic": 5,
+      "sketch": 3,
+      "sketchpad": 2,
+      "smudge": 0,
+      "studio": 3,
+      "studio-visit": 3
+    },
+    "myVp": 27,
+    "vpTotals": {
+      "player-1": 27,
+      "player-2": 27
+    },
+    "gameOver": false,
+    "winnerPlayerId": null
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.endActionPhase",
+      "interactionId": "endActionPhase",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:efded44f03c8620ddb57f0f612967052dcfc558312078f1ebb28a95962dc551c",
+      "actorSeat": 0,
+      "draftDigest": "sha256:dc4adc6f9a6cf5456877f855f0fb433ade07e5092e13b631f0d4e0a00a6d2241"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.resolveEraser",
+      "interactionId": "resolveEraser",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "trashedCardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "lazy",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "dependencies": {
+              "mode": "lazy",
+              "dependsOn": [],
+              "resolver": {
+                "inputKey": "trashedCardIds"
+              }
+            },
+            "selection": {
+              "mode": "many",
+              "min": 0,
+              "max": 4
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:0fcbde5ee4ac43e74a1100b15a17e9bf5b6cec55fd37a91132ae232c36c10721",
+      "actorSeat": 0,
+      "draftDigest": "sha256:5f76d6f8de3627c3280aadbf7426996994933c3d0e27f36104025574a513e0df"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.resolveSketchpad",
+      "interactionId": "resolveSketchpad",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "discardedCardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "lazy",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "dependencies": {
+              "mode": "lazy",
+              "dependsOn": [],
+              "resolver": {
+                "inputKey": "discardedCardIds"
+              }
+            },
+            "selection": {
+              "mode": "many",
+              "min": 0
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:fc5eed28d1660ab254e77b38ff9bd666fe40435420571d7223389b68fcf845a3",
+      "actorSeat": 0,
+      "draftDigest": "sha256:d36de5da4040b1615059d80e4d974d4ecc7220c5dc96e9553adddcabc90ecdaf"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.resolveStudioVisit",
+      "interactionId": "resolveStudioVisit",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "supply-brainstorm",
+      "zoneIds": [
+        "supply-brainstorm",
+        "supply-studio",
+        "supply-gallery",
+        "supply-open-mic",
+        "supply-critic",
+        "supply-eraser",
+        "supply-sketchpad",
+        "supply-studio-visit",
+        "supply-doodle",
+        "supply-sketch",
+        "supply-inkwork",
+        "supply-idea",
+        "supply-concept",
+        "supply-masterpiece",
+        "supply-smudge"
+      ],
+      "inputs": [
+        {
+          "key": "gainCardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "lazy",
+            "targetKind": "card",
+            "zoneIds": [
+              "supply-brainstorm",
+              "supply-studio",
+              "supply-gallery",
+              "supply-open-mic",
+              "supply-critic",
+              "supply-eraser",
+              "supply-sketchpad",
+              "supply-studio-visit",
+              "supply-doodle",
+              "supply-sketch",
+              "supply-inkwork",
+              "supply-idea",
+              "supply-concept",
+              "supply-masterpiece",
+              "supply-smudge"
+            ],
+            "dependencies": {
+              "mode": "lazy",
+              "dependsOn": [],
+              "resolver": {
+                "inputKey": "gainCardId"
+              }
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:8615c67f84415aa85bda4b9864ea89f923226ff30d54306016467abc53fc7a80",
+      "actorSeat": 0,
+      "draftDigest": "sha256:12efaac5f11f38ec4af34bb828d0185c630e453d9dd1700732458891b24f2253"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playTreasure",
+      "interactionId": "playTreasure",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "lazy",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "dependencies": {
+              "mode": "lazy",
+              "dependsOn": [],
+              "resolver": {
+                "inputKey": "cardId"
+              }
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:967410025d3f1a1b047015b996b0989cdb2e4e0600aa19dea6b4986bb845dc90",
+      "actorSeat": 0,
+      "draftDigest": "sha256:7ece47d5fba9c9edbba94a7aba2c839de7443610368fe3efe01fe83f577f4d9b"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playAllTreasures",
+      "interactionId": "playAllTreasures",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:7be007d5163996700c0b72648609bbae5f70de574a95b045a7b508b5b3d2fa54",
+      "actorSeat": 0,
+      "draftDigest": "sha256:4a427e263cdc5f0521763c2e2aaedb11aa76013663ed77f809d9c1d954e31745"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.buyCard",
+      "interactionId": "buyCard",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "supply-brainstorm",
+      "zoneIds": [
+        "supply-brainstorm",
+        "supply-studio",
+        "supply-gallery",
+        "supply-open-mic",
+        "supply-critic",
+        "supply-eraser",
+        "supply-sketchpad",
+        "supply-studio-visit",
+        "supply-doodle",
+        "supply-sketch",
+        "supply-inkwork",
+        "supply-idea",
+        "supply-concept",
+        "supply-masterpiece",
+        "supply-smudge"
+      ],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "lazy",
+            "targetKind": "card",
+            "zoneIds": [
+              "supply-brainstorm",
+              "supply-studio",
+              "supply-gallery",
+              "supply-open-mic",
+              "supply-critic",
+              "supply-eraser",
+              "supply-sketchpad",
+              "supply-studio-visit",
+              "supply-doodle",
+              "supply-sketch",
+              "supply-inkwork",
+              "supply-idea",
+              "supply-concept",
+              "supply-masterpiece",
+              "supply-smudge"
+            ],
+            "dependencies": {
+              "mode": "lazy",
+              "dependsOn": [],
+              "resolver": {
+                "inputKey": "cardId"
+              }
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:ccb0faec25dfe6dd694dd2cd465e0c895610b4272f36726df509369354a512c7",
+      "actorSeat": 0,
+      "draftDigest": "sha256:6649ab8fc6d5987b421a35a965f46b2fea6f6d18cc39dfa7decc8385a815b4bd"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.endTurn",
+      "interactionId": "endTurn",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "blocked",
+        "reason": "Interaction not allowed in current step",
+        "code": "WRONG_STEP"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:30c46a92496d07f3a31713065b10c0151038620a587ada76da295cf6ea8c299b",
+      "actorSeat": 0,
+      "draftDigest": "sha256:866499186cbab20a4ad21250bec91e640029ff16519ec05ba37848a0f39a07ae"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.brainstorm",
+      "interactionId": "brainstorm",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:cb875689bbdbfd1733f43020495564b43d24160f3070215d70851335eea985da",
+      "actorSeat": 0,
+      "draftDigest": "sha256:4c88464b566f863186f0b25f2828182179166592255a9d138426a19b5bcd7f39"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.studio",
+      "interactionId": "studio",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:61d3750af8727b9ad5d4b31ad784b86f3e870362cfaefb03f9cda4742750e128",
+      "actorSeat": 0,
+      "draftDigest": "sha256:d19a222912eb56a4bcf43c6ed34a1efb39f98a48c11949d25f30058a21fec341"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.gallery",
+      "interactionId": "gallery",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:4ad36cee0e4bdaad6e5937f035f6356aea4c7f7cf97fe4006d3412c7b7d657cd",
+      "actorSeat": 0,
+      "draftDigest": "sha256:b3051f5b016819082fd020cef0be381960d0b7ec7ee37ea7a16af56dcfd22bb4"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.openMic",
+      "interactionId": "openMic",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:8452b3d63e6c2f9bfa6525f66bd49985b6f5e8fa5eab4877ace4e06200fbe330",
+      "actorSeat": 0,
+      "draftDigest": "sha256:052f67512fabc0690cb1be8d7d7868cb32a54c90c510aea08262c6dbcadcc397"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.critic",
+      "interactionId": "critic",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:ce5aa86022be2e4f0c519da53199cc17982ee81b09fb66b8292938f7edb16ff1",
+      "actorSeat": 0,
+      "draftDigest": "sha256:5e691e3199b1395840a71b74d4441754188f014122a1510d013ee678435020d0"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.eraser",
+      "interactionId": "eraser",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:8057f83a897882a85ed4e78b3fa8b767f27c06c1cfd225508633f9d88d89f2cd",
+      "actorSeat": 0,
+      "draftDigest": "sha256:4239266b7c57be667d89dab97a94147e911a4c1602401eb088128ed013189f37"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.sketchpad",
+      "interactionId": "sketchpad",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:b46ae502ed187cf760a22daaa36bfd8d7285a9479c3c1388969131c7e7aa92da",
+      "actorSeat": 0,
+      "draftDigest": "sha256:4ed3accc0686340aa624885da6d665cf15d6de252f42c0518376ec1f0fb40bfe"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.studioVisit",
+      "interactionId": "studioVisit",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "cardId",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": []
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:b42bcfd4a7014a71ceccbc6c7aa749bbd81fd622a5b36cc7a6699dc2910c450c",
+      "actorSeat": 0,
+      "draftDigest": "sha256:731efa002379746ab8da7a279bbcc2d6731b2b0b3b5b72ec702daa00f9a75a99"
+    }
+  ],
+  "zones": {
+    "hand": {
+      "cardIds": ["idea-1", "doodle-46", "doodle-20", "doodle-13", "idea-2"],
+      "cardViewsById": {
+        "idea-1": "{\"id\":\"idea-1\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
+        "doodle-46": "{\"id\":\"doodle-46\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-20": "{\"id\":\"doodle-20\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-13": "{\"id\":\"doodle-13\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "idea-2": "{\"id\":\"idea-2\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}"
+      },
+      "playableByCardId": {
+        "idea-1": [
+          "resolveEraser:88e6f7f2aedca361",
+          "resolveSketchpad:62e571059c68a608"
+        ],
+        "doodle-46": [
+          "resolveEraser:88e6f7f2aedca361",
+          "resolveSketchpad:62e571059c68a608",
+          "playTreasure:856b85f957a40c73"
+        ],
+        "doodle-20": [
+          "resolveEraser:88e6f7f2aedca361",
+          "resolveSketchpad:62e571059c68a608",
+          "playTreasure:856b85f957a40c73"
+        ],
+        "doodle-13": [
+          "resolveEraser:88e6f7f2aedca361",
+          "resolveSketchpad:62e571059c68a608",
+          "playTreasure:856b85f957a40c73"
+        ],
+        "idea-2": [
+          "resolveEraser:88e6f7f2aedca361",
+          "resolveSketchpad:62e571059c68a608"
+        ]
+      }
+    },
+    "deck": {
+      "cardIds": ["doodle-33", "idea-5", "doodle-55", "doodle-34", "doodle-6"],
+      "cardViewsById": {
+        "doodle-33": "{\"id\":\"doodle-33\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "idea-5": "{\"id\":\"idea-5\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
+        "doodle-55": "{\"id\":\"doodle-55\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-34": "{\"id\":\"doodle-34\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-6": "{\"id\":\"doodle-6\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}"
+      },
+      "playableByCardId": {
+        "doodle-33": [],
+        "idea-5": [],
+        "doodle-55": [],
+        "doodle-34": [],
+        "doodle-6": []
+      }
+    },
+    "discard": {
+      "cardIds": [
+        "masterpiece-8",
+        "masterpiece-3",
+        "masterpiece-1",
+        "masterpiece-6"
+      ],
+      "cardViewsById": {
+        "masterpiece-8": "{\"id\":\"masterpiece-8\",\"cardType\":\"masterpiece\",\"name\":\"Masterpiece\",\"properties\":{\"cost\":8,\"vp\":6}}",
+        "masterpiece-3": "{\"id\":\"masterpiece-3\",\"cardType\":\"masterpiece\",\"name\":\"Masterpiece\",\"properties\":{\"cost\":8,\"vp\":6}}",
+        "masterpiece-1": "{\"id\":\"masterpiece-1\",\"cardType\":\"masterpiece\",\"name\":\"Masterpiece\",\"properties\":{\"cost\":8,\"vp\":6}}",
+        "masterpiece-6": "{\"id\":\"masterpiece-6\",\"cardType\":\"masterpiece\",\"name\":\"Masterpiece\",\"properties\":{\"cost\":8,\"vp\":6}}"
+      },
+      "playableByCardId": {
+        "masterpiece-8": [],
+        "masterpiece-3": [],
+        "masterpiece-1": [],
+        "masterpiece-6": []
+      }
+    },
+    "supply-brainstorm": {
+      "cardIds": [
+        "brainstorm-3",
+        "brainstorm-6",
+        "brainstorm-5",
+        "brainstorm-4",
+        "brainstorm-2",
+        "brainstorm-1",
+        "brainstorm-7"
+      ],
+      "cardViewsById": {
+        "brainstorm-3": "{\"id\":\"brainstorm-3\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-6": "{\"id\":\"brainstorm-6\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-5": "{\"id\":\"brainstorm-5\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-4": "{\"id\":\"brainstorm-4\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-2": "{\"id\":\"brainstorm-2\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-1": "{\"id\":\"brainstorm-1\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}",
+        "brainstorm-7": "{\"id\":\"brainstorm-7\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}"
+      },
+      "playableByCardId": {
+        "brainstorm-3": ["resolveStudioVisit:0325dfbb8c2dab4a"],
+        "brainstorm-6": [],
+        "brainstorm-5": [],
+        "brainstorm-4": [],
+        "brainstorm-2": [],
+        "brainstorm-1": [],
+        "brainstorm-7": []
+      }
+    },
+    "supply-studio": {
+      "cardIds": [
+        "studio-3",
+        "studio-5",
+        "studio-4",
+        "studio-6",
+        "studio-2",
+        "studio-7",
+        "studio-1"
+      ],
+      "cardViewsById": {
+        "studio-3": "{\"id\":\"studio-3\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-5": "{\"id\":\"studio-5\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-4": "{\"id\":\"studio-4\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-6": "{\"id\":\"studio-6\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-2": "{\"id\":\"studio-2\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-7": "{\"id\":\"studio-7\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}",
+        "studio-1": "{\"id\":\"studio-1\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}"
+      },
+      "playableByCardId": {
+        "studio-3": ["resolveStudioVisit:5a8417c8266bc317"],
+        "studio-5": [],
+        "studio-4": [],
+        "studio-6": [],
+        "studio-2": [],
+        "studio-7": [],
+        "studio-1": []
+      }
+    },
+    "supply-gallery": {
+      "cardIds": [
+        "gallery-2",
+        "gallery-7",
+        "gallery-3",
+        "gallery-1",
+        "gallery-6",
+        "gallery-4",
+        "gallery-5"
+      ],
+      "cardViewsById": {
+        "gallery-2": "{\"id\":\"gallery-2\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-7": "{\"id\":\"gallery-7\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-3": "{\"id\":\"gallery-3\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-1": "{\"id\":\"gallery-1\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-6": "{\"id\":\"gallery-6\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-4": "{\"id\":\"gallery-4\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}",
+        "gallery-5": "{\"id\":\"gallery-5\",\"cardType\":\"gallery\",\"name\":\"Gallery\",\"properties\":{\"cost\":5}}"
+      },
+      "playableByCardId": {
+        "gallery-2": [],
+        "gallery-7": [],
+        "gallery-3": [],
+        "gallery-1": [],
+        "gallery-6": [],
+        "gallery-4": [],
+        "gallery-5": []
+      }
+    },
+    "supply-open-mic": {
+      "cardIds": [
+        "open-mic-3",
+        "open-mic-4",
+        "open-mic-1",
+        "open-mic-5",
+        "open-mic-2",
+        "open-mic-7",
+        "open-mic-6"
+      ],
+      "cardViewsById": {
+        "open-mic-3": "{\"id\":\"open-mic-3\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-4": "{\"id\":\"open-mic-4\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-1": "{\"id\":\"open-mic-1\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-5": "{\"id\":\"open-mic-5\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-2": "{\"id\":\"open-mic-2\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-7": "{\"id\":\"open-mic-7\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}",
+        "open-mic-6": "{\"id\":\"open-mic-6\",\"cardType\":\"open-mic\",\"name\":\"Open Mic\",\"properties\":{\"cost\":5}}"
+      },
+      "playableByCardId": {
+        "open-mic-3": [],
+        "open-mic-4": [],
+        "open-mic-1": [],
+        "open-mic-5": [],
+        "open-mic-2": [],
+        "open-mic-7": [],
+        "open-mic-6": []
+      }
+    },
+    "supply-critic": {
+      "cardIds": [
+        "critic-5",
+        "critic-1",
+        "critic-7",
+        "critic-6",
+        "critic-4",
+        "critic-3",
+        "critic-2"
+      ],
+      "cardViewsById": {
+        "critic-5": "{\"id\":\"critic-5\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-1": "{\"id\":\"critic-1\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-7": "{\"id\":\"critic-7\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-6": "{\"id\":\"critic-6\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-4": "{\"id\":\"critic-4\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-3": "{\"id\":\"critic-3\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}",
+        "critic-2": "{\"id\":\"critic-2\",\"cardType\":\"critic\",\"name\":\"Critic\",\"properties\":{\"cost\":5}}"
+      },
+      "playableByCardId": {
+        "critic-5": [],
+        "critic-1": [],
+        "critic-7": [],
+        "critic-6": [],
+        "critic-4": [],
+        "critic-3": [],
+        "critic-2": []
+      }
+    },
+    "supply-eraser": {
+      "cardIds": [
+        "eraser-6",
+        "eraser-2",
+        "eraser-5",
+        "eraser-7",
+        "eraser-3",
+        "eraser-1",
+        "eraser-4"
+      ],
+      "cardViewsById": {
+        "eraser-6": "{\"id\":\"eraser-6\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-2": "{\"id\":\"eraser-2\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-5": "{\"id\":\"eraser-5\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-7": "{\"id\":\"eraser-7\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-3": "{\"id\":\"eraser-3\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-1": "{\"id\":\"eraser-1\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}",
+        "eraser-4": "{\"id\":\"eraser-4\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}"
+      },
+      "playableByCardId": {
+        "eraser-6": ["resolveStudioVisit:0998a70420449799"],
+        "eraser-2": [],
+        "eraser-5": [],
+        "eraser-7": [],
+        "eraser-3": [],
+        "eraser-1": [],
+        "eraser-4": []
+      }
+    },
+    "supply-sketchpad": {
+      "cardIds": [
+        "sketchpad-5",
+        "sketchpad-4",
+        "sketchpad-3",
+        "sketchpad-6",
+        "sketchpad-1",
+        "sketchpad-7",
+        "sketchpad-2"
+      ],
+      "cardViewsById": {
+        "sketchpad-5": "{\"id\":\"sketchpad-5\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-4": "{\"id\":\"sketchpad-4\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-3": "{\"id\":\"sketchpad-3\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-6": "{\"id\":\"sketchpad-6\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-1": "{\"id\":\"sketchpad-1\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-7": "{\"id\":\"sketchpad-7\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}",
+        "sketchpad-2": "{\"id\":\"sketchpad-2\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}"
+      },
+      "playableByCardId": {
+        "sketchpad-5": ["resolveStudioVisit:7ec77783fc9822b6"],
+        "sketchpad-4": [],
+        "sketchpad-3": [],
+        "sketchpad-6": [],
+        "sketchpad-1": [],
+        "sketchpad-7": [],
+        "sketchpad-2": []
+      }
+    },
+    "supply-studio-visit": {
+      "cardIds": [
+        "studio-visit-1",
+        "studio-visit-7",
+        "studio-visit-5",
+        "studio-visit-6",
+        "studio-visit-4",
+        "studio-visit-3",
+        "studio-visit-2"
+      ],
+      "cardViewsById": {
+        "studio-visit-1": "{\"id\":\"studio-visit-1\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-7": "{\"id\":\"studio-visit-7\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-5": "{\"id\":\"studio-visit-5\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-6": "{\"id\":\"studio-visit-6\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-4": "{\"id\":\"studio-visit-4\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-3": "{\"id\":\"studio-visit-3\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}",
+        "studio-visit-2": "{\"id\":\"studio-visit-2\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}"
+      },
+      "playableByCardId": {
+        "studio-visit-1": ["resolveStudioVisit:1596b1767489b53d"],
+        "studio-visit-7": [],
+        "studio-visit-5": [],
+        "studio-visit-6": [],
+        "studio-visit-4": [],
+        "studio-visit-3": [],
+        "studio-visit-2": []
+      }
+    },
+    "supply-doodle": {
+      "cardIds": [
+        "doodle-10",
+        "doodle-26",
+        "doodle-58",
+        "doodle-21",
+        "doodle-57",
+        "doodle-44",
+        "doodle-56",
+        "doodle-31",
+        "doodle-19",
+        "doodle-11",
+        "doodle-27",
+        "doodle-49",
+        "doodle-24",
+        "doodle-28",
+        "doodle-53",
+        "doodle-7",
+        "doodle-16",
+        "doodle-9",
+        "doodle-8",
+        "doodle-22",
+        "doodle-35",
+        "doodle-3",
+        "doodle-48",
+        "doodle-30",
+        "doodle-43",
+        "doodle-41",
+        "doodle-12",
+        "doodle-5",
+        "doodle-25",
+        "doodle-37",
+        "doodle-18",
+        "doodle-51",
+        "doodle-54",
+        "doodle-42",
+        "doodle-36",
+        "doodle-17",
+        "doodle-29",
+        "doodle-23",
+        "doodle-59",
+        "doodle-2",
+        "doodle-1",
+        "doodle-32",
+        "doodle-4",
+        "doodle-50",
+        "doodle-39",
+        "doodle-14"
+      ],
+      "cardViewsById": {
+        "doodle-10": "{\"id\":\"doodle-10\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-26": "{\"id\":\"doodle-26\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-58": "{\"id\":\"doodle-58\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-21": "{\"id\":\"doodle-21\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-57": "{\"id\":\"doodle-57\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-44": "{\"id\":\"doodle-44\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-56": "{\"id\":\"doodle-56\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-31": "{\"id\":\"doodle-31\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-19": "{\"id\":\"doodle-19\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-11": "{\"id\":\"doodle-11\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-27": "{\"id\":\"doodle-27\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-49": "{\"id\":\"doodle-49\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-24": "{\"id\":\"doodle-24\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-28": "{\"id\":\"doodle-28\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-53": "{\"id\":\"doodle-53\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-7": "{\"id\":\"doodle-7\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-16": "{\"id\":\"doodle-16\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-9": "{\"id\":\"doodle-9\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-8": "{\"id\":\"doodle-8\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-22": "{\"id\":\"doodle-22\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-35": "{\"id\":\"doodle-35\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-3": "{\"id\":\"doodle-3\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-48": "{\"id\":\"doodle-48\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-30": "{\"id\":\"doodle-30\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-43": "{\"id\":\"doodle-43\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-41": "{\"id\":\"doodle-41\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-12": "{\"id\":\"doodle-12\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-5": "{\"id\":\"doodle-5\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-25": "{\"id\":\"doodle-25\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-37": "{\"id\":\"doodle-37\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-18": "{\"id\":\"doodle-18\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-51": "{\"id\":\"doodle-51\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-54": "{\"id\":\"doodle-54\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-42": "{\"id\":\"doodle-42\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-36": "{\"id\":\"doodle-36\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-17": "{\"id\":\"doodle-17\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-29": "{\"id\":\"doodle-29\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-23": "{\"id\":\"doodle-23\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-59": "{\"id\":\"doodle-59\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-2": "{\"id\":\"doodle-2\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-1": "{\"id\":\"doodle-1\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-32": "{\"id\":\"doodle-32\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-4": "{\"id\":\"doodle-4\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-50": "{\"id\":\"doodle-50\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-39": "{\"id\":\"doodle-39\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
+        "doodle-14": "{\"id\":\"doodle-14\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}"
+      },
+      "playableByCardId": {
+        "doodle-10": [
+          "resolveStudioVisit:23d3745d3d42956a",
+          "buyCard:b95035211aab8a72"
+        ],
+        "doodle-26": [],
+        "doodle-58": [],
+        "doodle-21": [],
+        "doodle-57": [],
+        "doodle-44": [],
+        "doodle-56": [],
+        "doodle-31": [],
+        "doodle-19": [],
+        "doodle-11": [],
+        "doodle-27": [],
+        "doodle-49": [],
+        "doodle-24": [],
+        "doodle-28": [],
+        "doodle-53": [],
+        "doodle-7": [],
+        "doodle-16": [],
+        "doodle-9": [],
+        "doodle-8": [],
+        "doodle-22": [],
+        "doodle-35": [],
+        "doodle-3": [],
+        "doodle-48": [],
+        "doodle-30": [],
+        "doodle-43": [],
+        "doodle-41": [],
+        "doodle-12": [],
+        "doodle-5": [],
+        "doodle-25": [],
+        "doodle-37": [],
+        "doodle-18": [],
+        "doodle-51": [],
+        "doodle-54": [],
+        "doodle-42": [],
+        "doodle-36": [],
+        "doodle-17": [],
+        "doodle-29": [],
+        "doodle-23": [],
+        "doodle-59": [],
+        "doodle-2": [],
+        "doodle-1": [],
+        "doodle-32": [],
+        "doodle-4": [],
+        "doodle-50": [],
+        "doodle-39": [],
+        "doodle-14": []
+      }
+    },
+    "supply-sketch": {
+      "cardIds": [
+        "sketch-28",
+        "sketch-11",
+        "sketch-10",
+        "sketch-24",
+        "sketch-31",
+        "sketch-35",
+        "sketch-23",
+        "sketch-34",
+        "sketch-15",
+        "sketch-8",
+        "sketch-18",
+        "sketch-9",
+        "sketch-14",
+        "sketch-32",
+        "sketch-13",
+        "sketch-38",
+        "sketch-33",
+        "sketch-22",
+        "sketch-16",
+        "sketch-26",
+        "sketch-25",
+        "sketch-17",
+        "sketch-36",
+        "sketch-1",
+        "sketch-37",
+        "sketch-6",
+        "sketch-40",
+        "sketch-7",
+        "sketch-30",
+        "sketch-39",
+        "sketch-19",
+        "sketch-2",
+        "sketch-21",
+        "sketch-12",
+        "sketch-3",
+        "sketch-27",
+        "sketch-5",
+        "sketch-4",
+        "sketch-20",
+        "sketch-29"
+      ],
+      "cardViewsById": {
+        "sketch-28": "{\"id\":\"sketch-28\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-11": "{\"id\":\"sketch-11\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-10": "{\"id\":\"sketch-10\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-24": "{\"id\":\"sketch-24\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-31": "{\"id\":\"sketch-31\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-35": "{\"id\":\"sketch-35\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-23": "{\"id\":\"sketch-23\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-34": "{\"id\":\"sketch-34\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-15": "{\"id\":\"sketch-15\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-8": "{\"id\":\"sketch-8\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-18": "{\"id\":\"sketch-18\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-9": "{\"id\":\"sketch-9\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-14": "{\"id\":\"sketch-14\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-32": "{\"id\":\"sketch-32\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-13": "{\"id\":\"sketch-13\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-38": "{\"id\":\"sketch-38\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-33": "{\"id\":\"sketch-33\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-22": "{\"id\":\"sketch-22\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-16": "{\"id\":\"sketch-16\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-26": "{\"id\":\"sketch-26\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-25": "{\"id\":\"sketch-25\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-17": "{\"id\":\"sketch-17\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-36": "{\"id\":\"sketch-36\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-1": "{\"id\":\"sketch-1\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-37": "{\"id\":\"sketch-37\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-6": "{\"id\":\"sketch-6\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-40": "{\"id\":\"sketch-40\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-7": "{\"id\":\"sketch-7\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-30": "{\"id\":\"sketch-30\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-39": "{\"id\":\"sketch-39\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-19": "{\"id\":\"sketch-19\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-2": "{\"id\":\"sketch-2\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-21": "{\"id\":\"sketch-21\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-12": "{\"id\":\"sketch-12\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-3": "{\"id\":\"sketch-3\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-27": "{\"id\":\"sketch-27\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-5": "{\"id\":\"sketch-5\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-4": "{\"id\":\"sketch-4\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-20": "{\"id\":\"sketch-20\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}",
+        "sketch-29": "{\"id\":\"sketch-29\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}"
+      },
+      "playableByCardId": {
+        "sketch-28": ["resolveStudioVisit:d98a60f02829d66d"],
+        "sketch-11": [],
+        "sketch-10": [],
+        "sketch-24": [],
+        "sketch-31": [],
+        "sketch-35": [],
+        "sketch-23": [],
+        "sketch-34": [],
+        "sketch-15": [],
+        "sketch-8": [],
+        "sketch-18": [],
+        "sketch-9": [],
+        "sketch-14": [],
+        "sketch-32": [],
+        "sketch-13": [],
+        "sketch-38": [],
+        "sketch-33": [],
+        "sketch-22": [],
+        "sketch-16": [],
+        "sketch-26": [],
+        "sketch-25": [],
+        "sketch-17": [],
+        "sketch-36": [],
+        "sketch-1": [],
+        "sketch-37": [],
+        "sketch-6": [],
+        "sketch-40": [],
+        "sketch-7": [],
+        "sketch-30": [],
+        "sketch-39": [],
+        "sketch-19": [],
+        "sketch-2": [],
+        "sketch-21": [],
+        "sketch-12": [],
+        "sketch-3": [],
+        "sketch-27": [],
+        "sketch-5": [],
+        "sketch-4": [],
+        "sketch-20": [],
+        "sketch-29": []
+      }
+    },
+    "supply-inkwork": {
+      "cardIds": [
+        "inkwork-5",
+        "inkwork-20",
+        "inkwork-7",
+        "inkwork-6",
+        "inkwork-3",
+        "inkwork-27",
+        "inkwork-4",
+        "inkwork-11",
+        "inkwork-22",
+        "inkwork-24",
+        "inkwork-25",
+        "inkwork-19",
+        "inkwork-1",
+        "inkwork-2",
+        "inkwork-28",
+        "inkwork-18",
+        "inkwork-13",
+        "inkwork-21",
+        "inkwork-30",
+        "inkwork-29",
+        "inkwork-9",
+        "inkwork-12",
+        "inkwork-23",
+        "inkwork-14",
+        "inkwork-17",
+        "inkwork-10",
+        "inkwork-8",
+        "inkwork-15",
+        "inkwork-16",
+        "inkwork-26"
+      ],
+      "cardViewsById": {
+        "inkwork-5": "{\"id\":\"inkwork-5\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-20": "{\"id\":\"inkwork-20\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-7": "{\"id\":\"inkwork-7\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-6": "{\"id\":\"inkwork-6\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-3": "{\"id\":\"inkwork-3\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-27": "{\"id\":\"inkwork-27\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-4": "{\"id\":\"inkwork-4\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-11": "{\"id\":\"inkwork-11\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-22": "{\"id\":\"inkwork-22\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-24": "{\"id\":\"inkwork-24\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-25": "{\"id\":\"inkwork-25\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-19": "{\"id\":\"inkwork-19\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-1": "{\"id\":\"inkwork-1\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-2": "{\"id\":\"inkwork-2\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-28": "{\"id\":\"inkwork-28\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-18": "{\"id\":\"inkwork-18\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-13": "{\"id\":\"inkwork-13\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-21": "{\"id\":\"inkwork-21\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-30": "{\"id\":\"inkwork-30\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-29": "{\"id\":\"inkwork-29\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-9": "{\"id\":\"inkwork-9\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-12": "{\"id\":\"inkwork-12\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-23": "{\"id\":\"inkwork-23\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-14": "{\"id\":\"inkwork-14\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-17": "{\"id\":\"inkwork-17\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-10": "{\"id\":\"inkwork-10\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-8": "{\"id\":\"inkwork-8\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-15": "{\"id\":\"inkwork-15\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-16": "{\"id\":\"inkwork-16\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}",
+        "inkwork-26": "{\"id\":\"inkwork-26\",\"cardType\":\"inkwork\",\"name\":\"Inkwork\",\"properties\":{\"cost\":6,\"coins\":3}}"
+      },
+      "playableByCardId": {
+        "inkwork-5": [],
+        "inkwork-20": [],
+        "inkwork-7": [],
+        "inkwork-6": [],
+        "inkwork-3": [],
+        "inkwork-27": [],
+        "inkwork-4": [],
+        "inkwork-11": [],
+        "inkwork-22": [],
+        "inkwork-24": [],
+        "inkwork-25": [],
+        "inkwork-19": [],
+        "inkwork-1": [],
+        "inkwork-2": [],
+        "inkwork-28": [],
+        "inkwork-18": [],
+        "inkwork-13": [],
+        "inkwork-21": [],
+        "inkwork-30": [],
+        "inkwork-29": [],
+        "inkwork-9": [],
+        "inkwork-12": [],
+        "inkwork-23": [],
+        "inkwork-14": [],
+        "inkwork-17": [],
+        "inkwork-10": [],
+        "inkwork-8": [],
+        "inkwork-15": [],
+        "inkwork-16": [],
+        "inkwork-26": []
+      }
+    },
+    "supply-idea": {
+      "cardIds": ["idea-6", "idea-8"],
+      "cardViewsById": {
+        "idea-6": "{\"id\":\"idea-6\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
+        "idea-8": "{\"id\":\"idea-8\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}"
+      },
+      "playableByCardId": {
+        "idea-6": ["resolveStudioVisit:f6c4035374e9c7f4"],
+        "idea-8": []
+      }
+    },
+    "supply-concept": {
+      "cardIds": [
+        "concept-4",
+        "concept-7",
+        "concept-6",
+        "concept-5",
+        "concept-3",
+        "concept-2",
+        "concept-1",
+        "concept-8"
+      ],
+      "cardViewsById": {
+        "concept-4": "{\"id\":\"concept-4\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-7": "{\"id\":\"concept-7\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-6": "{\"id\":\"concept-6\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-5": "{\"id\":\"concept-5\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-3": "{\"id\":\"concept-3\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-2": "{\"id\":\"concept-2\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-1": "{\"id\":\"concept-1\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}",
+        "concept-8": "{\"id\":\"concept-8\",\"cardType\":\"concept\",\"name\":\"Concept\",\"properties\":{\"cost\":5,\"vp\":3}}"
+      },
+      "playableByCardId": {
+        "concept-4": [],
+        "concept-7": [],
+        "concept-6": [],
+        "concept-5": [],
+        "concept-3": [],
+        "concept-2": [],
+        "concept-1": [],
+        "concept-8": []
+      }
+    },
+    "supply-masterpiece": {
+      "cardIds": [],
+      "cardViewsById": {},
+      "playableByCardId": {}
+    },
+    "supply-smudge": {
+      "cardIds": [
+        "smudge-7",
+        "smudge-1",
+        "smudge-9",
+        "smudge-10",
+        "smudge-8",
+        "smudge-3",
+        "smudge-4",
+        "smudge-6",
+        "smudge-5",
+        "smudge-2"
+      ],
+      "cardViewsById": {
+        "smudge-7": "{\"id\":\"smudge-7\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-1": "{\"id\":\"smudge-1\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-9": "{\"id\":\"smudge-9\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-10": "{\"id\":\"smudge-10\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-8": "{\"id\":\"smudge-8\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-3": "{\"id\":\"smudge-3\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-4": "{\"id\":\"smudge-4\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-6": "{\"id\":\"smudge-6\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-5": "{\"id\":\"smudge-5\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}",
+        "smudge-2": "{\"id\":\"smudge-2\",\"cardType\":\"smudge\",\"name\":\"Smudge\",\"properties\":{\"cost\":0,\"vp\":-1}}"
+      },
+      "playableByCardId": {
+        "smudge-7": [
+          "resolveStudioVisit:067ff07c8293f63e",
+          "buyCard:a6d9102d2627e386"
+        ],
+        "smudge-1": [],
+        "smudge-9": [],
+        "smudge-10": [],
+        "smudge-8": [],
+        "smudge-3": [],
+        "smudge-4": [],
+        "smudge-6": [],
+        "smudge-5": [],
+        "smudge-2": []
+      }
+    }
+  }
+}

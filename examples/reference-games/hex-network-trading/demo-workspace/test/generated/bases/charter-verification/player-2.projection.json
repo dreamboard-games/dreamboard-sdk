@@ -1,0 +1,577 @@
+{
+  "currentStage": "playerTurn",
+  "stageSeats": ["player-1"],
+  "view": {
+    "spaces": [
+      {
+        "id": "h-0-0",
+        "terrain": "grainField",
+        "numberToken": 11
+      },
+      {
+        "id": "h-1-0",
+        "terrain": "flaxMeadow",
+        "numberToken": 4
+      },
+      {
+        "id": "h-1-1",
+        "terrain": "timberGrove",
+        "numberToken": 6
+      },
+      {
+        "id": "h-1-2",
+        "terrain": "flaxMeadow",
+        "numberToken": 4
+      },
+      {
+        "id": "h-1-3",
+        "terrain": "grainField",
+        "numberToken": 6
+      },
+      {
+        "id": "h-1-4",
+        "terrain": "ironHills",
+        "numberToken": 8
+      },
+      {
+        "id": "h-1-5",
+        "terrain": "grainField",
+        "numberToken": 12
+      },
+      {
+        "id": "h-2-0",
+        "terrain": "clayPit",
+        "numberToken": 5
+      },
+      {
+        "id": "h-2-1",
+        "terrain": "timberGrove",
+        "numberToken": 5
+      },
+      {
+        "id": "h-2-10",
+        "terrain": "grainField",
+        "numberToken": 2
+      },
+      {
+        "id": "h-2-11",
+        "terrain": "clayPit",
+        "numberToken": 8
+      },
+      {
+        "id": "h-2-2",
+        "terrain": "ironHills",
+        "numberToken": 9
+      },
+      {
+        "id": "h-2-3",
+        "terrain": "ironHills",
+        "numberToken": 3
+      },
+      {
+        "id": "h-2-4",
+        "terrain": "flaxMeadow",
+        "numberToken": 11
+      },
+      {
+        "id": "h-2-5",
+        "terrain": "badlands",
+        "numberToken": null
+      },
+      {
+        "id": "h-2-6",
+        "terrain": "clayPit",
+        "numberToken": 10
+      },
+      {
+        "id": "h-2-7",
+        "terrain": "timberGrove",
+        "numberToken": 3
+      },
+      {
+        "id": "h-2-8",
+        "terrain": "timberGrove",
+        "numberToken": 9
+      },
+      {
+        "id": "h-2-9",
+        "terrain": "flaxMeadow",
+        "numberToken": 10
+      },
+      {
+        "id": "o-0",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-1",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-10",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-11",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-12",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-13",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-14",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-15",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-16",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-17",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-2",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-3",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-4",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-5",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-6",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-7",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-8",
+        "terrain": "borderland",
+        "numberToken": null
+      },
+      {
+        "id": "o-9",
+        "terrain": "borderland",
+        "numberToken": null
+      }
+    ],
+    "coloniesByVertexId": {
+      "hex-vertex:-8,7,1": {
+        "ownerId": "player-1",
+        "kind": "camp"
+      },
+      "hex-vertex:-4,2,2": {
+        "ownerId": "player-1",
+        "kind": "camp"
+      },
+      "hex-vertex:8,-1,-7": {
+        "ownerId": "player-2",
+        "kind": "camp"
+      },
+      "hex-vertex:4,-5,1": {
+        "ownerId": "player-2",
+        "kind": "camp"
+      },
+      "hex-vertex:-7,-1,8": {
+        "ownerId": "player-3",
+        "kind": "camp"
+      },
+      "hex-vertex:-8,4,4": {
+        "ownerId": "player-3",
+        "kind": "camp"
+      },
+      "hex-vertex:7,-8,1": {
+        "ownerId": "player-4",
+        "kind": "camp"
+      },
+      "hex-vertex:8,-4,-4": {
+        "ownerId": "player-4",
+        "kind": "camp"
+      }
+    },
+    "trailsByEdgeId": {
+      "hex-edge:-7,5,2::-8,7,1": {
+        "ownerId": "player-1"
+      },
+      "hex-edge:-2,1,1::-4,2,2": {
+        "ownerId": "player-1"
+      },
+      "hex-edge:7,-2,-5::8,-1,-7": {
+        "ownerId": "player-2"
+      },
+      "hex-edge:2,-4,2::4,-5,1": {
+        "ownerId": "player-2"
+      },
+      "hex-edge:-5,-2,7::-7,-1,8": {
+        "ownerId": "player-3"
+      },
+      "hex-edge:-7,2,5::-8,4,4": {
+        "ownerId": "player-3"
+      },
+      "hex-edge:5,-7,2::7,-8,1": {
+        "ownerId": "player-4"
+      },
+      "hex-edge:7,-2,-5::8,-4,-4": {
+        "ownerId": "player-4"
+      }
+    },
+    "portsByEdgeId": {
+      "hex-edge:2,5,-7::4,4,-8": "timber",
+      "hex-edge:4,4,-8::5,2,-7": "3:1",
+      "hex-edge:7,-2,-5::8,-4,-4": "grain",
+      "hex-edge:4,-8,4::5,-7,2": "3:1",
+      "hex-edge:1,-8,7::2,-7,5": "iron",
+      "hex-edge:-4,-4,8::-5,-2,7": "3:1",
+      "hex-edge:-7,2,5::-8,4,4": "clay",
+      "hex-edge:-5,7,-2::-7,8,-1": "cloth",
+      "hex-edge:-2,7,-5::-4,8,-4": "3:1"
+    },
+    "stormSpaceId": "h-2-5",
+    "diceRolled": false,
+    "diceValues": null,
+    "stormPending": false,
+    "discardPending": [],
+    "pendingTrade": null,
+    "charterCardBoughtThisTurn": false,
+    "charterCardPlayedThisTurn": false,
+    "setup": null,
+    "myResources": {
+      "clay": 0,
+      "cloth": 0,
+      "grain": 0,
+      "iron": 2,
+      "timber": 1
+    },
+    "myCharterCardIds": [],
+    "myCharterCardTypesById": {},
+    "myCharterCardCount": 0,
+    "myTotalInfluence": 2,
+    "myBankTradeRates": {
+      "clay": 4,
+      "grain": 4,
+      "timber": 4,
+      "iron": 4,
+      "cloth": 4
+    },
+    "myDiscardRequired": 0,
+    "amITargetedByTrade": false,
+    "myTradeResponse": "none",
+    "influenceByPlayerId": {
+      "player-1": 2,
+      "player-2": 2,
+      "player-3": 2,
+      "player-4": 2
+    },
+    "scoutsByPlayerId": {
+      "player-1": 0,
+      "player-2": 0,
+      "player-3": 0,
+      "player-4": 0
+    },
+    "winnerPlayerId": null,
+    "tradeNetworkOwner": null,
+    "tradeNetworkLength": 0,
+    "explorerGuildOwner": null,
+    "explorerGuildSize": 0
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.rollDice",
+      "interactionId": "rollDice",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:eee128f06cc164de15b40c087fec359181c6d9d7f47d0c9fa5785e67a6dc8182",
+      "actorSeat": 1,
+      "draftDigest": "sha256:c67ad528bcd79a33de075bb1cf510f632d3e82898f347af1f2512dc7a491d7c2"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.moveStorm",
+      "interactionId": "moveStorm",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:f7a48a94bc123ed848d46b4b19bfe50ee0e9d72fb7ee44640a935b53a4ec259c",
+      "actorSeat": 1,
+      "draftDigest": "sha256:ef31b27b174e1a6a13128fe3da976813ed1902566bd4c6d20a8a587e196c90f3"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.buildTrail",
+      "interactionId": "buildTrail",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:d971000c85fb6c0183bf5f34a2cf9e498edf3846e9e450df438b125ed7fe77d2",
+      "actorSeat": 1,
+      "draftDigest": "sha256:9835e4a06fa9c7e21f1b23164a136b16252b064f2fddbce21c1321fdad32c973"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.buildCamp",
+      "interactionId": "buildCamp",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:f2af814325cf5cacf1677f6c4fb0880b1f34c29d71c7b486dfd0558e0fc8f744",
+      "actorSeat": 1,
+      "draftDigest": "sha256:c8027e3c3fe03104c1836b1eac46c926025dea2c36230cdea227fbf4c9e07721"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.upgradeToTown",
+      "interactionId": "upgradeToTown",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:a0fd4734e4b5bb3f440ed6bfc71b2b4dfad23eea9ffcc0ae29ca691f610df680",
+      "actorSeat": 1,
+      "draftDigest": "sha256:849f24728633e2315d5c790301cf39dc5acae3bed39195329f2cf55538643288"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.buyCharterCard",
+      "interactionId": "buyCharterCard",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:995cd3512e8097ad02ee50e96293a1d55d092a1eb89860bc0201824aa4238df6",
+      "actorSeat": 1,
+      "draftDigest": "sha256:cd6484248a8f6dffaeda001412119871ce73de749b56ec0d5d873960a3c3d24d"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.tradeWithBank",
+      "interactionId": "tradeWithBank",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:ca62139de0abedc8400bd2afb40c7d1cdbdac8d2b453f257ab85c37df07adbe4",
+      "actorSeat": 1,
+      "draftDigest": "sha256:ea19bf4a16161f0b6bb8fa40448b35a329c2e11608f375586ba525a1c78acfbb"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.offerTrade",
+      "interactionId": "offerTrade",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:11ff6f7317981d6da3f32f21eb7f37dd6259a8d0f1aec646a146b0b852f37a2d",
+      "actorSeat": 1,
+      "draftDigest": "sha256:ee5ccfbb6b6cc3d9bac7f557f6f207aef7f15562be7d3a4d6e964c6bd3618c24"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.endTurn",
+      "interactionId": "endTurn",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:30c46a92496d07f3a31713065b10c0151038620a587ada76da295cf6ea8c299b",
+      "actorSeat": 1,
+      "draftDigest": "sha256:1d598dceffe77d56dbbe7ea693225748beee1bf0d15ad0a34d192b060f2ceab2"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playLandmark",
+      "interactionId": "playLandmark",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneId": "charter-hand",
+      "zoneIds": ["charter-hand"],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:649a4e4f594787053504ee9183a940c3ddcea89bffacc8bb310b1ea1001c0767",
+      "actorSeat": 1,
+      "draftDigest": "sha256:8ad5ca8b3c46ae5d10e841af9ab9fd4d1c511822b25d6d475c9722b6200e9c59"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playScout",
+      "interactionId": "playScout",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "charter-hand",
+      "zoneIds": ["charter-hand"],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:6b7ee67e2a1bb341087135e3f9216a17e7823a374c8a1cd7b3c8314916986930",
+      "actorSeat": 1,
+      "draftDigest": "sha256:f101dc179273839042d43e79b691bca030581bab128eee794dc8b5445a1519c4"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playSurveyGrant",
+      "interactionId": "playSurveyGrant",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "charter-hand",
+      "zoneIds": ["charter-hand"],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:bfca1689122439229cfe0d3d3e7840da749cc38a794f2efa82d2ec8f6bbdc191",
+      "actorSeat": 1,
+      "draftDigest": "sha256:456f2af9a6d43c80e9e97a201dfee98e9a4de95564da50a30baebb508cfe2d79"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playClaimMarker",
+      "interactionId": "playClaimMarker",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "charter-hand",
+      "zoneIds": ["charter-hand"],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:e2892b5ec0afb52dd36af37cfa89e47e8e5b37db62356c1932ae031147737f50",
+      "actorSeat": 1,
+      "draftDigest": "sha256:c849475b94cf52404baef75a16e9a004e52923a66f0b217cccc7a4560c118aa7"
+    },
+    {
+      "phaseName": "playerTurn",
+      "interactionKey": "playerTurn.playShortcut",
+      "interactionId": "playShortcut",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "charter-hand",
+      "zoneIds": ["charter-hand"],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:17e0299ba0ce9a8bb677dd12d0ae8ab7b80cffa51606dd60581a902b220055d7",
+      "actorSeat": 1,
+      "draftDigest": "sha256:ac2112bf804e3a9fc672556eacd0e2cc9db2980137844ca2f58b627a490550c9"
+    }
+  ],
+  "zones": {
+    "charter-hand": {
+      "cardIds": [],
+      "cardViewsById": {},
+      "playableByCardId": {}
+    }
+  }
+}

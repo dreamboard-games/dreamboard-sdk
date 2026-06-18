@@ -70,6 +70,8 @@ export interface UsePanZoomOptions {
   onTransformChange?: (transform: PanZoomTransform) => void;
 }
 
+const DEFAULT_INITIAL_PAN: PanZoomTransform["pan"] = { x: 0, y: 0 };
+
 /** Type for gesture bind function that returns props to spread on element
  * Note: We omit ref from the return type to avoid conflicts with explicit refs on elements.
  * The gesture library handles its own internal ref binding.
@@ -104,7 +106,7 @@ export function usePanZoom(options: UsePanZoomOptions = {}): UsePanZoomReturn {
     initialZoom = 1,
     minZoom = 0.5,
     maxZoom = 3,
-    initialPan = { x: 0, y: 0 },
+    initialPan = DEFAULT_INITIAL_PAN,
     mode = "viewbox",
     wheelSensitivity = 0.002,
     onTransformChange,
@@ -126,7 +128,9 @@ export function usePanZoom(options: UsePanZoomOptions = {}): UsePanZoomReturn {
     (newZoom: number, newPan: { x: number; y: number }) => {
       const clampedZoom = clampZoom(newZoom);
       setZoomState(clampedZoom);
-      setPanState(newPan);
+      setPanState((current) =>
+        current.x === newPan.x && current.y === newPan.y ? current : newPan,
+      );
       onTransformChange?.({ zoom: clampedZoom, pan: newPan });
     },
     [clampZoom, onTransformChange],
@@ -197,11 +201,11 @@ export function usePanZoom(options: UsePanZoomOptions = {}): UsePanZoomReturn {
   // Reset to initial values
   const resetTransform = useCallback(() => {
     updateTransform(initialZoom, initialPan);
-  }, [initialZoom, initialPan, updateTransform]);
+  }, [initialZoom, initialPan.x, initialPan.y, updateTransform]);
 
   useEffect(() => {
     updateTransform(initialZoom, initialPan);
-  }, [initialZoom, initialPan, updateTransform]);
+  }, [initialZoom, initialPan.x, initialPan.y, updateTransform]);
 
   // Programmatic setters
   const setZoom = useCallback(

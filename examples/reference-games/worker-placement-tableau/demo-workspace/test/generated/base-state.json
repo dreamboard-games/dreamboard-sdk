@@ -1,0 +1,4450 @@
+{
+  "boards": {
+    "byId": {
+      "action-board": {
+        "baseId": "action-board",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::0,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,4::1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["quarry", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["masons-lodge", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["trade-post", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["library", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,4::2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["training-hall", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,4::3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "action-board",
+        "layout": "square",
+        "playerId": null,
+        "relations": [],
+        "scope": "shared",
+        "spaces": {
+          "apothecary": {
+            "col": 2,
+            "fields": { "actionId": "apothecary", "poolKind": "variable" },
+            "id": "apothecary",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "forge": {
+            "col": 0,
+            "fields": { "actionId": "forge", "poolKind": "variable" },
+            "id": "forge",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "guild-hall": {
+            "col": 0,
+            "fields": { "actionId": "guild-hall", "poolKind": "fixed" },
+            "id": "guild-hall",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "library": {
+            "col": 1,
+            "fields": { "actionId": "library", "poolKind": "variable" },
+            "id": "library",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "lumberyard": {
+            "col": 0,
+            "fields": { "actionId": "lumberyard", "poolKind": "fixed" },
+            "id": "lumberyard",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "market": {
+            "col": 2,
+            "fields": { "actionId": "market", "poolKind": "fixed" },
+            "id": "market",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "masons-lodge": {
+            "col": 0,
+            "fields": { "actionId": "masons-lodge", "poolKind": "variable" },
+            "id": "masons-lodge",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "patrons-estate": {
+            "col": 2,
+            "fields": { "actionId": "patrons-estate", "poolKind": "variable" },
+            "id": "patrons-estate",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "quarry": {
+            "col": 1,
+            "fields": { "actionId": "quarry", "poolKind": "fixed" },
+            "id": "quarry",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "trade-post": {
+            "col": 1,
+            "fields": { "actionId": "trade-post", "poolKind": "variable" },
+            "id": "trade-post",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "training-hall": {
+            "col": 1,
+            "fields": { "actionId": "training-hall", "poolKind": "fixed" },
+            "id": "training-hall",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "workshop": {
+            "col": 2,
+            "fields": { "actionId": "workshop", "poolKind": "fixed" },
+            "id": "workshop",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          }
+        },
+        "templateId": "action-board-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard", "quarry", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "guild-hall",
+              "masons-lodge",
+              "trade-post",
+              "training-hall"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library", "masons-lodge", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry", "training-hall", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "patrons-estate",
+              "trade-post",
+              "training-hall",
+              "workshop"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "apothecary",
+              "library",
+              "patrons-estate",
+              "trade-post"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          }
+        ]
+      },
+      "wake-up-track": {
+        "baseId": "wake-up-track",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "wake-up-track",
+        "layout": "square",
+        "playerId": null,
+        "relations": [],
+        "scope": "shared",
+        "spaces": {
+          "wake-up-1": {
+            "col": 0,
+            "fields": {
+              "bonusKind": "none",
+              "slotIndex": 1,
+              "turnOrder": "first"
+            },
+            "id": "wake-up-1",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-2": {
+            "col": 1,
+            "fields": {
+              "bonusKind": "coin",
+              "slotIndex": 2,
+              "turnOrder": "first"
+            },
+            "id": "wake-up-2",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-3": {
+            "col": 2,
+            "fields": {
+              "bonusKind": "apprentice-card",
+              "slotIndex": 3,
+              "turnOrder": "second"
+            },
+            "id": "wake-up-3",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-4": {
+            "col": 3,
+            "fields": {
+              "bonusKind": "wood-stone",
+              "slotIndex": 4,
+              "turnOrder": "second"
+            },
+            "id": "wake-up-4",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          }
+        },
+        "templateId": "wake-up-track-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          }
+        ]
+      },
+      "workshop-mat:player-1": {
+        "baseId": "workshop-mat",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,1::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,2::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "workshop-mat:player-1",
+        "layout": "square",
+        "playerId": "player-1",
+        "relations": [],
+        "scope": "perPlayer",
+        "spaces": {
+          "cell-r0-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r0-c0",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r0-c1",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r0-c2",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r0-c3",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r1-c0",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r1-c1",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r1-c2",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r1-c3",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r2-c0",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r2-c1",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r2-c2",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r2-c3",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          }
+        },
+        "templateId": "workshop-mat-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c0",
+              "cell-r0-c1",
+              "cell-r1-c0",
+              "cell-r1-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c0",
+              "cell-r1-c1",
+              "cell-r2-c0",
+              "cell-r2-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c1",
+              "cell-r0-c2",
+              "cell-r1-c1",
+              "cell-r1-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c1",
+              "cell-r1-c2",
+              "cell-r2-c1",
+              "cell-r2-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c2",
+              "cell-r0-c3",
+              "cell-r1-c2",
+              "cell-r1-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c2",
+              "cell-r1-c3",
+              "cell-r2-c2",
+              "cell-r2-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ]
+      },
+      "workshop-mat:player-2": {
+        "baseId": "workshop-mat",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,1::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,2::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "workshop-mat:player-2",
+        "layout": "square",
+        "playerId": "player-2",
+        "relations": [],
+        "scope": "perPlayer",
+        "spaces": {
+          "cell-r0-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r0-c0",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r0-c1",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r0-c2",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r0-c3",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r1-c0",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r1-c1",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r1-c2",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r1-c3",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r2-c0",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r2-c1",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r2-c2",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r2-c3",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          }
+        },
+        "templateId": "workshop-mat-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c0",
+              "cell-r0-c1",
+              "cell-r1-c0",
+              "cell-r1-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c0",
+              "cell-r1-c1",
+              "cell-r2-c0",
+              "cell-r2-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c1",
+              "cell-r0-c2",
+              "cell-r1-c1",
+              "cell-r1-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c1",
+              "cell-r1-c2",
+              "cell-r2-c1",
+              "cell-r2-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c2",
+              "cell-r0-c3",
+              "cell-r1-c2",
+              "cell-r1-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c2",
+              "cell-r1-c3",
+              "cell-r2-c2",
+              "cell-r2-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ]
+      }
+    },
+    "hex": {},
+    "network": {},
+    "square": {
+      "action-board": {
+        "baseId": "action-board",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::0,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,4::1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["quarry", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["masons-lodge", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["trade-post", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["library", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,4::2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["training-hall", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,4::3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "action-board",
+        "layout": "square",
+        "playerId": null,
+        "relations": [],
+        "scope": "shared",
+        "spaces": {
+          "apothecary": {
+            "col": 2,
+            "fields": { "actionId": "apothecary", "poolKind": "variable" },
+            "id": "apothecary",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "forge": {
+            "col": 0,
+            "fields": { "actionId": "forge", "poolKind": "variable" },
+            "id": "forge",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "guild-hall": {
+            "col": 0,
+            "fields": { "actionId": "guild-hall", "poolKind": "fixed" },
+            "id": "guild-hall",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "library": {
+            "col": 1,
+            "fields": { "actionId": "library", "poolKind": "variable" },
+            "id": "library",
+            "name": null,
+            "row": 3,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "lumberyard": {
+            "col": 0,
+            "fields": { "actionId": "lumberyard", "poolKind": "fixed" },
+            "id": "lumberyard",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "market": {
+            "col": 2,
+            "fields": { "actionId": "market", "poolKind": "fixed" },
+            "id": "market",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "masons-lodge": {
+            "col": 0,
+            "fields": { "actionId": "masons-lodge", "poolKind": "variable" },
+            "id": "masons-lodge",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "patrons-estate": {
+            "col": 2,
+            "fields": { "actionId": "patrons-estate", "poolKind": "variable" },
+            "id": "patrons-estate",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "quarry": {
+            "col": 1,
+            "fields": { "actionId": "quarry", "poolKind": "fixed" },
+            "id": "quarry",
+            "name": null,
+            "row": 0,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "trade-post": {
+            "col": 1,
+            "fields": { "actionId": "trade-post", "poolKind": "variable" },
+            "id": "trade-post",
+            "name": null,
+            "row": 2,
+            "typeId": "variable",
+            "zoneId": null
+          },
+          "training-hall": {
+            "col": 1,
+            "fields": { "actionId": "training-hall", "poolKind": "fixed" },
+            "id": "training-hall",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          },
+          "workshop": {
+            "col": 2,
+            "fields": { "actionId": "workshop", "poolKind": "fixed" },
+            "id": "workshop",
+            "name": null,
+            "row": 1,
+            "typeId": "fixed",
+            "zoneId": null
+          }
+        },
+        "templateId": "action-board-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "masons-lodge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["lumberyard", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["guild-hall", "lumberyard", "quarry", "training-hall"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "guild-hall",
+              "masons-lodge",
+              "trade-post",
+              "training-hall"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library", "masons-lodge", "trade-post"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["forge", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "quarry", "training-hall", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "patrons-estate",
+              "trade-post",
+              "training-hall",
+              "workshop"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "apothecary",
+              "library",
+              "patrons-estate",
+              "trade-post"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "library"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["market", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["patrons-estate", "workshop"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary", "patrons-estate"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,4",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["apothecary"],
+            "typeId": null
+          }
+        ]
+      },
+      "wake-up-track": {
+        "baseId": "wake-up-track",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "wake-up-track",
+        "layout": "square",
+        "playerId": null,
+        "relations": [],
+        "scope": "shared",
+        "spaces": {
+          "wake-up-1": {
+            "col": 0,
+            "fields": {
+              "bonusKind": "none",
+              "slotIndex": 1,
+              "turnOrder": "first"
+            },
+            "id": "wake-up-1",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-2": {
+            "col": 1,
+            "fields": {
+              "bonusKind": "coin",
+              "slotIndex": 2,
+              "turnOrder": "first"
+            },
+            "id": "wake-up-2",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-3": {
+            "col": 2,
+            "fields": {
+              "bonusKind": "apprentice-card",
+              "slotIndex": 3,
+              "turnOrder": "second"
+            },
+            "id": "wake-up-3",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          },
+          "wake-up-4": {
+            "col": 3,
+            "fields": {
+              "bonusKind": "wood-stone",
+              "slotIndex": 4,
+              "turnOrder": "second"
+            },
+            "id": "wake-up-4",
+            "name": null,
+            "row": 0,
+            "typeId": "wake-up-slot",
+            "zoneId": null
+          }
+        },
+        "templateId": "wake-up-track-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-1", "wake-up-2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-2", "wake-up-3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-3", "wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["wake-up-4"],
+            "typeId": null
+          }
+        ]
+      },
+      "workshop-mat:player-1": {
+        "baseId": "workshop-mat",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,1::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,2::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "workshop-mat:player-1",
+        "layout": "square",
+        "playerId": "player-1",
+        "relations": [],
+        "scope": "perPlayer",
+        "spaces": {
+          "cell-r0-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r0-c0",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r0-c1",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r0-c2",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r0-c3",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r1-c0",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r1-c1",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r1-c2",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r1-c3",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r2-c0",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r2-c1",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r2-c2",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r2-c3",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          }
+        },
+        "templateId": "workshop-mat-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c0",
+              "cell-r0-c1",
+              "cell-r1-c0",
+              "cell-r1-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c0",
+              "cell-r1-c1",
+              "cell-r2-c0",
+              "cell-r2-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c1",
+              "cell-r0-c2",
+              "cell-r1-c1",
+              "cell-r1-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c1",
+              "cell-r1-c2",
+              "cell-r2-c1",
+              "cell-r2-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c2",
+              "cell-r0-c3",
+              "cell-r1-c2",
+              "cell-r1-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c2",
+              "cell-r1-c3",
+              "cell-r2-c2",
+              "cell-r2-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ]
+      },
+      "workshop-mat:player-2": {
+        "baseId": "workshop-mat",
+        "containers": {},
+        "edges": [
+          {
+            "fields": {},
+            "id": "square-edge:0,0::0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,0::1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,1::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,2::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:0,3::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,0::2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,1::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r1-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,2::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:1,3::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,0::3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c1", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,1::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r1-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,2::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:2,3::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,0::4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c2", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,1::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,2::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:3,3::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,0::4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,1::4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-edge:4,2::4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ],
+        "fields": {},
+        "id": "workshop-mat:player-2",
+        "layout": "square",
+        "playerId": "player-2",
+        "relations": [],
+        "scope": "perPlayer",
+        "spaces": {
+          "cell-r0-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r0-c0",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r0-c1",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r0-c2",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r0-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r0-c3",
+            "name": null,
+            "row": 0,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r1-c0",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r1-c1",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r1-c2",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r1-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r1-c3",
+            "name": null,
+            "row": 1,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c0": {
+            "col": 0,
+            "fields": {},
+            "id": "cell-r2-c0",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c1": {
+            "col": 1,
+            "fields": {},
+            "id": "cell-r2-c1",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c2": {
+            "col": 2,
+            "fields": {},
+            "id": "cell-r2-c2",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          },
+          "cell-r2-c3": {
+            "col": 3,
+            "fields": {},
+            "id": "cell-r2-c3",
+            "name": null,
+            "row": 2,
+            "typeId": "cell",
+            "zoneId": null
+          }
+        },
+        "templateId": "workshop-mat-template",
+        "typeId": null,
+        "vertices": [
+          {
+            "fields": {},
+            "id": "square-vertex:0,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r1-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c0", "cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:0,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c0", "cell-r0-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c0",
+              "cell-r0-c1",
+              "cell-r1-c0",
+              "cell-r1-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c0",
+              "cell-r1-c1",
+              "cell-r2-c0",
+              "cell-r2-c1"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:1,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c0", "cell-r2-c1"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c1", "cell-r0-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c1",
+              "cell-r0-c2",
+              "cell-r1-c1",
+              "cell-r1-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c1",
+              "cell-r1-c2",
+              "cell-r2-c1",
+              "cell-r2-c2"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:2,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c1", "cell-r2-c2"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c2", "cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r0-c2",
+              "cell-r0-c3",
+              "cell-r1-c2",
+              "cell-r1-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": [
+              "cell-r1-c2",
+              "cell-r1-c3",
+              "cell-r2-c2",
+              "cell-r2-c3"
+            ],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:3,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c2", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,0",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,1",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r0-c3", "cell-r1-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,2",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r1-c3", "cell-r2-c3"],
+            "typeId": null
+          },
+          {
+            "fields": {},
+            "id": "square-vertex:4,3",
+            "label": null,
+            "ownerId": null,
+            "spaceIds": ["cell-r2-c3"],
+            "typeId": null
+          }
+        ]
+      }
+    },
+    "track": {}
+  },
+  "cards": {
+    "apprentice-trial": {
+      "cardSetId": "order-cards",
+      "cardType": "apprentice-trial",
+      "id": "apprentice-trial",
+      "name": "Apprentice Trial",
+      "properties": {
+        "orderId": "apprentice-trial",
+        "rewardCoin": 2,
+        "rewardVP": 2
+      }
+    },
+    "architects-plan": {
+      "cardSetId": "order-cards",
+      "cardType": "architects-plan",
+      "id": "architects-plan",
+      "name": "Architect's Plan",
+      "properties": {
+        "orderId": "architects-plan",
+        "rewardCoin": 0,
+        "rewardVP": 6
+      }
+    },
+    "foreman": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "foreman",
+      "id": "foreman",
+      "name": "Foreman",
+      "properties": { "apprenticeId": "foreman", "lifecycle": "persistent" }
+    },
+    "forge-order": {
+      "cardSetId": "order-cards",
+      "cardType": "forge-order",
+      "id": "forge-order",
+      "name": "Forge Order",
+      "properties": { "orderId": "forge-order", "rewardCoin": 0, "rewardVP": 5 }
+    },
+    "furniture-commission": {
+      "cardSetId": "order-cards",
+      "cardType": "furniture-commission",
+      "id": "furniture-commission",
+      "name": "Furniture Commission",
+      "properties": {
+        "orderId": "furniture-commission",
+        "rewardCoin": 0,
+        "rewardVP": 3
+      }
+    },
+    "grand-atelier": {
+      "cardSetId": "order-cards",
+      "cardType": "grand-atelier",
+      "id": "grand-atelier",
+      "name": "Grand Atelier",
+      "properties": {
+        "orderId": "grand-atelier",
+        "rewardCoin": 0,
+        "rewardVP": 7
+      }
+    },
+    "guild-scholar": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "guild-scholar",
+      "id": "guild-scholar",
+      "name": "Guild Scholar",
+      "properties": {
+        "apprenticeId": "guild-scholar",
+        "lifecycle": "persistent"
+      }
+    },
+    "inspiration": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "inspiration",
+      "id": "inspiration",
+      "name": "Inspiration",
+      "properties": { "apprenticeId": "inspiration", "lifecycle": "oneShot" }
+    },
+    "lumber-stash": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "lumber-stash",
+      "id": "lumber-stash",
+      "name": "Lumber Stash",
+      "properties": { "apprenticeId": "lumber-stash", "lifecycle": "oneShot" }
+    },
+    "masters-display": {
+      "cardSetId": "order-cards",
+      "cardType": "masters-display",
+      "id": "masters-display",
+      "name": "Master's Display",
+      "properties": {
+        "orderId": "masters-display",
+        "rewardCoin": 2,
+        "rewardVP": 4
+      }
+    },
+    "mixed-set": {
+      "cardSetId": "order-cards",
+      "cardType": "mixed-set",
+      "id": "mixed-set",
+      "name": "Mixed Set",
+      "properties": { "orderId": "mixed-set", "rewardCoin": 1, "rewardVP": 3 }
+    },
+    "patrons-favor": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "patrons-favor",
+      "id": "patrons-favor",
+      "name": "Patron's Favor",
+      "properties": {
+        "apprenticeId": "patrons-favor",
+        "lifecycle": "persistent"
+      }
+    },
+    "quick-delivery": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "quick-delivery",
+      "id": "quick-delivery",
+      "name": "Quick Delivery",
+      "properties": { "apprenticeId": "quick-delivery", "lifecycle": "oneShot" }
+    },
+    "reassign": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "reassign",
+      "id": "reassign",
+      "name": "Reassign",
+      "properties": { "apprenticeId": "reassign", "lifecycle": "oneShot" }
+    },
+    "row-of-pride": {
+      "cardSetId": "order-cards",
+      "cardType": "row-of-pride",
+      "id": "row-of-pride",
+      "name": "Row of Pride",
+      "properties": {
+        "orderId": "row-of-pride",
+        "rewardCoin": 0,
+        "rewardVP": 5
+      }
+    },
+    "spare-hands": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "spare-hands",
+      "id": "spare-hands",
+      "name": "Spare Hands",
+      "properties": { "apprenticeId": "spare-hands", "lifecycle": "oneShot" }
+    },
+    "stone-cache": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "stone-cache",
+      "id": "stone-cache",
+      "name": "Stone Cache",
+      "properties": { "apprenticeId": "stone-cache", "lifecycle": "oneShot" }
+    },
+    "stone-sculpture": {
+      "cardSetId": "order-cards",
+      "cardType": "stone-sculpture",
+      "id": "stone-sculpture",
+      "name": "Stone Sculpture",
+      "properties": {
+        "orderId": "stone-sculpture",
+        "rewardCoin": 0,
+        "rewardVP": 3
+      }
+    },
+    "tireless-master": {
+      "cardSetId": "apprentice-cards",
+      "cardType": "tireless-master",
+      "id": "tireless-master",
+      "name": "Tireless Master",
+      "properties": {
+        "apprenticeId": "tireless-master",
+        "lifecycle": "persistent"
+      }
+    },
+    "weavers-request": {
+      "cardSetId": "order-cards",
+      "cardType": "weavers-request",
+      "id": "weavers-request",
+      "name": "Weaver's Request",
+      "properties": {
+        "orderId": "weavers-request",
+        "rewardCoin": 0,
+        "rewardVP": 4
+      }
+    }
+  },
+  "componentLocations": {
+    "apprentice-p1-1": { "type": "Detached" },
+    "apprentice-p1-2": { "type": "Detached" },
+    "apprentice-p1-3": { "type": "Detached" },
+    "apprentice-p1-4": { "type": "Detached" },
+    "apprentice-p2-1": { "type": "Detached" },
+    "apprentice-p2-2": { "type": "Detached" },
+    "apprentice-p2-3": { "type": "Detached" },
+    "apprentice-p2-4": { "type": "Detached" },
+    "apprentice-trial": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 5,
+      "type": "InDeck"
+    },
+    "architects-plan": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 7,
+      "type": "InDeck"
+    },
+    "foreman": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 6,
+      "type": "InDeck"
+    },
+    "forge-order": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 3,
+      "type": "InDeck"
+    },
+    "furniture-commission": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 0,
+      "type": "InDeck"
+    },
+    "grand-atelier": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 9,
+      "type": "InDeck"
+    },
+    "guild-scholar": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 8,
+      "type": "InDeck"
+    },
+    "inspiration": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 4,
+      "type": "InDeck"
+    },
+    "lumber-stash": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 1,
+      "type": "InDeck"
+    },
+    "master-p1": { "type": "Detached" },
+    "master-p2": { "type": "Detached" },
+    "masters-display": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 2,
+      "type": "InDeck"
+    },
+    "mixed-set": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 6,
+      "type": "InDeck"
+    },
+    "patrons-favor": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 9,
+      "type": "InDeck"
+    },
+    "quick-delivery": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 0,
+      "type": "InDeck"
+    },
+    "reassign": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 5,
+      "type": "InDeck"
+    },
+    "row-of-pride": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 8,
+      "type": "InDeck"
+    },
+    "spare-hands": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 3,
+      "type": "InDeck"
+    },
+    "stone-cache": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 2,
+      "type": "InDeck"
+    },
+    "stone-sculpture": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 1,
+      "type": "InDeck"
+    },
+    "tireless-master": {
+      "deckId": "apprentice-deck",
+      "playedBy": null,
+      "position": 7,
+      "type": "InDeck"
+    },
+    "weavers-request": {
+      "deckId": "order-deck",
+      "playedBy": null,
+      "position": 4,
+      "type": "InDeck"
+    }
+  },
+  "decks": {
+    "apprentice-deck": [
+      "quick-delivery",
+      "lumber-stash",
+      "stone-cache",
+      "spare-hands",
+      "inspiration",
+      "reassign",
+      "foreman",
+      "tireless-master",
+      "guild-scholar",
+      "patrons-favor"
+    ],
+    "apprentice-discard": [],
+    "order-deck": [
+      "furniture-commission",
+      "stone-sculpture",
+      "masters-display",
+      "forge-order",
+      "weavers-request",
+      "apprentice-trial",
+      "mixed-set",
+      "architects-plan",
+      "row-of-pride",
+      "grand-atelier"
+    ],
+    "order-discard": []
+  },
+  "dice": {},
+  "hands": {
+    "apprentice-hand": {
+      "__perPlayer": true,
+      "entries": [
+        ["player-1", []],
+        ["player-2", []]
+      ]
+    },
+    "apprentice-tableau": {
+      "__perPlayer": true,
+      "entries": [
+        ["player-1", []],
+        ["player-2", []]
+      ]
+    },
+    "order-hand": {
+      "__perPlayer": true,
+      "entries": [
+        ["player-1", []],
+        ["player-2", []]
+      ]
+    }
+  },
+  "handVisibility": {
+    "apprentice-hand": "ownerOnly",
+    "apprentice-tableau": "public",
+    "order-hand": "ownerOnly"
+  },
+  "ownerOfCard": {
+    "apprentice-trial": null,
+    "architects-plan": null,
+    "foreman": null,
+    "forge-order": null,
+    "furniture-commission": null,
+    "grand-atelier": null,
+    "guild-scholar": null,
+    "inspiration": null,
+    "lumber-stash": null,
+    "masters-display": null,
+    "mixed-set": null,
+    "patrons-favor": null,
+    "quick-delivery": null,
+    "reassign": null,
+    "row-of-pride": null,
+    "spare-hands": null,
+    "stone-cache": null,
+    "stone-sculpture": null,
+    "tireless-master": null,
+    "weavers-request": null
+  },
+  "pieces": {
+    "apprentice-p1-1": {
+      "componentType": "piece",
+      "id": "apprentice-p1-1",
+      "ownerId": "player-1",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p1-2": {
+      "componentType": "piece",
+      "id": "apprentice-p1-2",
+      "ownerId": "player-1",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p1-3": {
+      "componentType": "piece",
+      "id": "apprentice-p1-3",
+      "ownerId": "player-1",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p1-4": {
+      "componentType": "piece",
+      "id": "apprentice-p1-4",
+      "ownerId": "player-1",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p2-1": {
+      "componentType": "piece",
+      "id": "apprentice-p2-1",
+      "ownerId": "player-2",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p2-2": {
+      "componentType": "piece",
+      "id": "apprentice-p2-2",
+      "ownerId": "player-2",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p2-3": {
+      "componentType": "piece",
+      "id": "apprentice-p2-3",
+      "ownerId": "player-2",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "apprentice-p2-4": {
+      "componentType": "piece",
+      "id": "apprentice-p2-4",
+      "ownerId": "player-2",
+      "pieceName": "Apprentice",
+      "pieceTypeId": "apprentice",
+      "properties": {}
+    },
+    "master-p1": {
+      "componentType": "piece",
+      "id": "master-p1",
+      "ownerId": "player-1",
+      "pieceName": "Master",
+      "pieceTypeId": "master",
+      "properties": {}
+    },
+    "master-p2": {
+      "componentType": "piece",
+      "id": "master-p2",
+      "ownerId": "player-2",
+      "pieceName": "Master",
+      "pieceTypeId": "master",
+      "properties": {}
+    }
+  },
+  "playerOrder": ["player-1", "player-2"],
+  "resources": {
+    "__perPlayer": true,
+    "entries": [
+      ["player-1", { "coin": 0, "stone": 0, "wood": 0 }],
+      ["player-2", { "coin": 0, "stone": 0, "wood": 0 }]
+    ]
+  },
+  "visibility": {
+    "apprentice-trial": { "faceUp": true },
+    "architects-plan": { "faceUp": true },
+    "foreman": { "faceUp": true },
+    "forge-order": { "faceUp": true },
+    "furniture-commission": { "faceUp": true },
+    "grand-atelier": { "faceUp": true },
+    "guild-scholar": { "faceUp": true },
+    "inspiration": { "faceUp": true },
+    "lumber-stash": { "faceUp": true },
+    "masters-display": { "faceUp": true },
+    "mixed-set": { "faceUp": true },
+    "patrons-favor": { "faceUp": true },
+    "quick-delivery": { "faceUp": true },
+    "reassign": { "faceUp": true },
+    "row-of-pride": { "faceUp": true },
+    "spare-hands": { "faceUp": true },
+    "stone-cache": { "faceUp": true },
+    "stone-sculpture": { "faceUp": true },
+    "tireless-master": { "faceUp": true },
+    "weavers-request": { "faceUp": true }
+  },
+  "zones": {
+    "cardSetIdsByZoneId": {
+      "apprentice-deck": ["apprentice-cards"],
+      "apprentice-discard": ["apprentice-cards"],
+      "apprentice-hand": ["apprentice-cards"],
+      "apprentice-tableau": ["apprentice-cards"],
+      "order-deck": ["order-cards"],
+      "order-discard": ["order-cards"],
+      "order-hand": ["order-cards"]
+    },
+    "perPlayer": {
+      "apprentice-hand": {
+        "__perPlayer": true,
+        "entries": [
+          ["player-1", []],
+          ["player-2", []]
+        ]
+      },
+      "apprentice-tableau": {
+        "__perPlayer": true,
+        "entries": [
+          ["player-1", []],
+          ["player-2", []]
+        ]
+      },
+      "order-hand": {
+        "__perPlayer": true,
+        "entries": [
+          ["player-1", []],
+          ["player-2", []]
+        ]
+      }
+    },
+    "shared": {
+      "apprentice-deck": [
+        "quick-delivery",
+        "lumber-stash",
+        "stone-cache",
+        "spare-hands",
+        "inspiration",
+        "reassign",
+        "foreman",
+        "tireless-master",
+        "guild-scholar",
+        "patrons-favor"
+      ],
+      "apprentice-discard": [],
+      "order-deck": [
+        "furniture-commission",
+        "stone-sculpture",
+        "masters-display",
+        "forge-order",
+        "weavers-request",
+        "apprentice-trial",
+        "mixed-set",
+        "architects-plan",
+        "row-of-pride",
+        "grand-atelier"
+      ],
+      "order-discard": []
+    },
+    "visibility": {
+      "apprentice-deck": "hidden",
+      "apprentice-discard": "public",
+      "apprentice-hand": "ownerOnly",
+      "apprentice-tableau": "public",
+      "order-deck": "hidden",
+      "order-discard": "public",
+      "order-hand": "ownerOnly"
+    }
+  }
+}

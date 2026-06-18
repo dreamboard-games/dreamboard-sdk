@@ -1,0 +1,183 @@
+{
+  "currentStage": "drafting",
+  "stageSeats": ["player-1", "player-2", "player-3", "player-4", "player-5"],
+  "view": {
+    "currentPhase": "drafting",
+    "round": 1,
+    "hand": [
+      {
+        "id": "dumpling-6",
+        "cardType": "dumpling",
+        "name": "Dumpling",
+        "properties": {
+          "category": "dumpling"
+        }
+      },
+      {
+        "id": "dumpling-12",
+        "cardType": "dumpling",
+        "name": "Dumpling",
+        "properties": {
+          "category": "dumpling"
+        }
+      },
+      {
+        "id": "wasabi-6",
+        "cardType": "wasabi",
+        "name": "Wasabi",
+        "properties": {
+          "category": "wasabi"
+        }
+      },
+      {
+        "id": "sashimi-1",
+        "cardType": "sashimi",
+        "name": "Sashimi",
+        "properties": {
+          "category": "sashimi"
+        }
+      },
+      {
+        "id": "tempura-3",
+        "cardType": "tempura",
+        "name": "Tempura",
+        "properties": {
+          "category": "tempura"
+        }
+      },
+      {
+        "id": "pudding-4",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      },
+      {
+        "id": "pudding-3",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      }
+    ],
+    "handCount": 7,
+    "played": [],
+    "pudding": [],
+    "playedByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": [],
+      "player-5": []
+    },
+    "puddingByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": [],
+      "player-5": []
+    },
+    "totalScoreByPlayer": {},
+    "roundScoreByPlayer": {},
+    "puddingScoreByPlayer": {},
+    "winnerPlayerIds": [],
+    "canUseChopsticks": false
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "drafting",
+      "interactionKey": "drafting.submit",
+      "interactionId": "submit",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "useChopsticks",
+          "kind": "form",
+          "domain": {
+            "type": "choice",
+            "choices": [
+              {
+                "value": "no",
+                "label": "Pick one card"
+              },
+              {
+                "value": "yes",
+                "label": "Use chopsticks (pick two)"
+              }
+            ]
+          },
+          "defaultValue": "no"
+        },
+        {
+          "key": "cardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": [
+              "dumpling-6",
+              "dumpling-12",
+              "wasabi-6",
+              "sashimi-1",
+              "tempura-3",
+              "pudding-4",
+              "pudding-3"
+            ],
+            "selection": {
+              "mode": "many",
+              "min": 1,
+              "max": 2,
+              "distinct": true
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:b478ff8949f5443eb66fb023b785172b09084f8b6ea140cacd534f99d4b12f48",
+      "actorSeat": 0,
+      "draftDigest": "sha256:aaf6f459362526890667fe63cddf7539747fb2072b42a5f9da42af9c4c003360"
+    }
+  ],
+  "zones": {
+    "hand": {
+      "cardIds": [
+        "dumpling-6",
+        "dumpling-12",
+        "wasabi-6",
+        "sashimi-1",
+        "tempura-3",
+        "pudding-4",
+        "pudding-3"
+      ],
+      "cardViewsById": {
+        "dumpling-6": "{\"id\":\"dumpling-6\",\"cardType\":\"dumpling\",\"name\":\"Dumpling\",\"properties\":{\"category\":\"dumpling\"}}",
+        "dumpling-12": "{\"id\":\"dumpling-12\",\"cardType\":\"dumpling\",\"name\":\"Dumpling\",\"properties\":{\"category\":\"dumpling\"}}",
+        "wasabi-6": "{\"id\":\"wasabi-6\",\"cardType\":\"wasabi\",\"name\":\"Wasabi\",\"properties\":{\"category\":\"wasabi\"}}",
+        "sashimi-1": "{\"id\":\"sashimi-1\",\"cardType\":\"sashimi\",\"name\":\"Sashimi\",\"properties\":{\"category\":\"sashimi\"}}",
+        "tempura-3": "{\"id\":\"tempura-3\",\"cardType\":\"tempura\",\"name\":\"Tempura\",\"properties\":{\"category\":\"tempura\"}}",
+        "pudding-4": "{\"id\":\"pudding-4\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}",
+        "pudding-3": "{\"id\":\"pudding-3\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}"
+      },
+      "playableByCardId": {
+        "dumpling-6": ["submit:a1083ab46612eba1"],
+        "dumpling-12": ["submit:a1083ab46612eba1"],
+        "wasabi-6": ["submit:a1083ab46612eba1"],
+        "sashimi-1": ["submit:a1083ab46612eba1"],
+        "tempura-3": ["submit:a1083ab46612eba1"],
+        "pudding-4": ["submit:a1083ab46612eba1"],
+        "pudding-3": ["submit:a1083ab46612eba1"]
+      }
+    }
+  }
+}

@@ -84,6 +84,59 @@ function checkDependencies({ packageJson, gameId, errors }) {
   }
 }
 
+async function checkDemoRelease({ manifest, gameId, gameDir, errors }) {
+  if (typeof manifest.publishToDemoGallery !== "boolean") {
+    errors.push(`${gameId}: publishToDemoGallery must be a boolean`);
+    return;
+  }
+  if (!manifest.publishToDemoGallery) {
+    if (manifest.demoRelease !== undefined) {
+      errors.push(`${gameId}: demoRelease requires publishToDemoGallery true`);
+    }
+    return;
+  }
+
+  const demoRelease = manifest.demoRelease;
+  if (!demoRelease || typeof demoRelease !== "object") {
+    errors.push(`${gameId}: published demo requires demoRelease`);
+    return;
+  }
+
+  const expectedSourcePath = `${gameId}/demo-workspace`;
+  if (demoRelease.sourcePath !== expectedSourcePath) {
+    errors.push(
+      `${gameId}: demoRelease.sourcePath must be ${expectedSourcePath}`,
+    );
+  }
+  if (!(await pathExists(path.join(referenceGamesRoot, expectedSourcePath)))) {
+    errors.push(`${gameId}: missing ${expectedSourcePath}`);
+  }
+
+  if (demoRelease.slug !== gameId) {
+    errors.push(`${gameId}: demoRelease.slug must match game id`);
+  }
+  if (
+    typeof demoRelease.heroImageUrl !== "string" ||
+    !demoRelease.heroImageUrl.startsWith(`/demos/${gameId}/`)
+  ) {
+    errors.push(`${gameId}: demoRelease.heroImageUrl must be under /demos/${gameId}/`);
+  }
+  if (
+    demoRelease.screenshot?.projection !==
+    `${gameId}/demo-workspace/ui/index.tsx`
+  ) {
+    errors.push(
+      `${gameId}: demoRelease.screenshot.projection must target demo-workspace/ui/index.tsx`,
+    );
+  }
+  if (
+    typeof demoRelease.demoPlayerCount !== "number" ||
+    demoRelease.demoPlayerCount < 1
+  ) {
+    errors.push(`${gameId}: demoRelease.demoPlayerCount must be positive`);
+  }
+}
+
 async function checkDenylist({ gameId, gameDir, errors }) {
   const files = await walkFiles(gameDir, {
     excludeDirs: new Set(["node_modules", "dist"]),
@@ -118,7 +171,11 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
   for (const relative of repoFiles) {
     if (
       relative.startsWith("docs/exec-plans/ui-agent-iteration-workbench/") ||
+      relative.startsWith("docs/exec-plans/ui-primitive-coverage-and-agent-loop-hard-cut/") ||
+      relative.startsWith("fixtures/ui/reference-games/") ||
+      relative.startsWith("artifacts/ui/") ||
       relative === "fixtures/ui/component-scenario-index.json" ||
+      relative === "scripts/ui-fixtures/authority/authority.test.mjs" ||
       relative === "scripts/ui/generate-component-scenario-index.mjs" ||
       relative.startsWith("examples/reference-games/")
     ) {
@@ -187,9 +244,7 @@ async function validateGame(gameId, errors) {
       `${gameId}: manifest id mismatch ${JSON.stringify(manifest.id)}`,
     );
   }
-  if (manifest.publishToDemoGallery !== false) {
-    errors.push(`${gameId}: publishToDemoGallery must be false`);
-  }
+  await checkDemoRelease({ manifest, gameId, gameDir, errors });
   checkArraySubset({
     values: manifest.mechanics,
     allowed: knownMechanics,

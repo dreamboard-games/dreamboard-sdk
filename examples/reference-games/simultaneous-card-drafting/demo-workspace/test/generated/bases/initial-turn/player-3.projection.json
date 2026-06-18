@@ -1,0 +1,196 @@
+{
+  "currentStage": "drafting",
+  "stageSeats": ["player-1", "player-2", "player-3", "player-4"],
+  "view": {
+    "currentPhase": "drafting",
+    "round": 1,
+    "hand": [
+      {
+        "id": "sashimi-6",
+        "cardType": "sashimi",
+        "name": "Sashimi",
+        "properties": {
+          "category": "sashimi"
+        }
+      },
+      {
+        "id": "dumpling-9",
+        "cardType": "dumpling",
+        "name": "Dumpling",
+        "properties": {
+          "category": "dumpling"
+        }
+      },
+      {
+        "id": "tempura-2",
+        "cardType": "tempura",
+        "name": "Tempura",
+        "properties": {
+          "category": "tempura"
+        }
+      },
+      {
+        "id": "nigiri-squid-5",
+        "cardType": "nigiri-squid",
+        "name": "Squid Nigiri",
+        "properties": {
+          "category": "nigiri",
+          "nigiriPoints": 3
+        }
+      },
+      {
+        "id": "dumpling-5",
+        "cardType": "dumpling",
+        "name": "Dumpling",
+        "properties": {
+          "category": "dumpling"
+        }
+      },
+      {
+        "id": "pudding-3",
+        "cardType": "pudding",
+        "name": "Pudding",
+        "properties": {
+          "category": "pudding"
+        }
+      },
+      {
+        "id": "nigiri-salmon-7",
+        "cardType": "nigiri-salmon",
+        "name": "Salmon Nigiri",
+        "properties": {
+          "category": "nigiri",
+          "nigiriPoints": 2
+        }
+      },
+      {
+        "id": "maki-2-2",
+        "cardType": "maki-2",
+        "name": "Maki Roll (2)",
+        "properties": {
+          "category": "maki",
+          "makiIcons": 2
+        }
+      }
+    ],
+    "handCount": 8,
+    "played": [],
+    "pudding": [],
+    "playedByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": []
+    },
+    "puddingByPlayer": {
+      "player-1": [],
+      "player-2": [],
+      "player-3": [],
+      "player-4": []
+    },
+    "totalScoreByPlayer": {},
+    "roundScoreByPlayer": {},
+    "puddingScoreByPlayer": {},
+    "winnerPlayerIds": [],
+    "canUseChopsticks": false
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "drafting",
+      "interactionKey": "drafting.submit",
+      "interactionId": "submit",
+      "commit": {
+        "mode": "manual"
+      },
+      "zoneId": "hand",
+      "zoneIds": ["hand"],
+      "inputs": [
+        {
+          "key": "useChopsticks",
+          "kind": "form",
+          "domain": {
+            "type": "choice",
+            "choices": [
+              {
+                "value": "no",
+                "label": "Pick one card"
+              },
+              {
+                "value": "yes",
+                "label": "Use chopsticks (pick two)"
+              }
+            ]
+          },
+          "defaultValue": "no"
+        },
+        {
+          "key": "cardIds",
+          "kind": "card",
+          "domain": {
+            "type": "cardTarget",
+            "projection": "resolved",
+            "targetKind": "card",
+            "zoneIds": ["hand"],
+            "eligibleTargets": [
+              "sashimi-6",
+              "dumpling-9",
+              "tempura-2",
+              "nigiri-squid-5",
+              "dumpling-5",
+              "pudding-3",
+              "nigiri-salmon-7",
+              "maki-2-2"
+            ],
+            "selection": {
+              "mode": "many",
+              "min": 1,
+              "max": 2,
+              "distinct": true
+            }
+          }
+        }
+      ],
+      "availability": {
+        "status": "available"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:6a4edc29640ee1234f0a94e7c5d152cd834d755999defae48dc3f9101717885d",
+      "actorSeat": 2,
+      "draftDigest": "sha256:0654a685a8c7120a1363491ddb1f4b4756fd4412a31226b90f3c77ab2ecd420a"
+    }
+  ],
+  "zones": {
+    "hand": {
+      "cardIds": [
+        "sashimi-6",
+        "dumpling-9",
+        "tempura-2",
+        "nigiri-squid-5",
+        "dumpling-5",
+        "pudding-3",
+        "nigiri-salmon-7",
+        "maki-2-2"
+      ],
+      "cardViewsById": {
+        "sashimi-6": "{\"id\":\"sashimi-6\",\"cardType\":\"sashimi\",\"name\":\"Sashimi\",\"properties\":{\"category\":\"sashimi\"}}",
+        "dumpling-9": "{\"id\":\"dumpling-9\",\"cardType\":\"dumpling\",\"name\":\"Dumpling\",\"properties\":{\"category\":\"dumpling\"}}",
+        "tempura-2": "{\"id\":\"tempura-2\",\"cardType\":\"tempura\",\"name\":\"Tempura\",\"properties\":{\"category\":\"tempura\"}}",
+        "nigiri-squid-5": "{\"id\":\"nigiri-squid-5\",\"cardType\":\"nigiri-squid\",\"name\":\"Squid Nigiri\",\"properties\":{\"category\":\"nigiri\",\"nigiriPoints\":3}}",
+        "dumpling-5": "{\"id\":\"dumpling-5\",\"cardType\":\"dumpling\",\"name\":\"Dumpling\",\"properties\":{\"category\":\"dumpling\"}}",
+        "pudding-3": "{\"id\":\"pudding-3\",\"cardType\":\"pudding\",\"name\":\"Pudding\",\"properties\":{\"category\":\"pudding\"}}",
+        "nigiri-salmon-7": "{\"id\":\"nigiri-salmon-7\",\"cardType\":\"nigiri-salmon\",\"name\":\"Salmon Nigiri\",\"properties\":{\"category\":\"nigiri\",\"nigiriPoints\":2}}",
+        "maki-2-2": "{\"id\":\"maki-2-2\",\"cardType\":\"maki-2\",\"name\":\"Maki Roll (2)\",\"properties\":{\"category\":\"maki\",\"makiIcons\":2}}"
+      },
+      "playableByCardId": {
+        "sashimi-6": ["submit:c46b79af40dd13a8"],
+        "dumpling-9": ["submit:c46b79af40dd13a8"],
+        "tempura-2": ["submit:c46b79af40dd13a8"],
+        "nigiri-squid-5": ["submit:c46b79af40dd13a8"],
+        "dumpling-5": ["submit:c46b79af40dd13a8"],
+        "pudding-3": ["submit:c46b79af40dd13a8"],
+        "nigiri-salmon-7": ["submit:c46b79af40dd13a8"],
+        "maki-2-2": ["submit:c46b79af40dd13a8"]
+      }
+    }
+  }
+}

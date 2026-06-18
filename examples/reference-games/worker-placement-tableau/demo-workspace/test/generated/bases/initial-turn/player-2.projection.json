@@ -1,0 +1,119 @@
+{
+  "currentStage": "wakeup",
+  "stageSeats": ["player-1"],
+  "view": {
+    "seasonNumber": 1,
+    "enabledActionSpaces": [
+      "guild-hall",
+      "lumberyard",
+      "market",
+      "quarry",
+      "training-hall",
+      "workshop",
+      "library",
+      "patrons-estate",
+      "forge"
+    ],
+    "setupVariablePoolDraw": ["library", "patrons-estate", "forge"],
+    "turnOrderThisSeason": ["player-1", "player-2"],
+    "winnerPlayerId": null,
+    "finalVPByPlayerId": null,
+    "currentPhase": "wakeup",
+    "currentActorPlayerId": "player-1",
+    "wakeUpSelections": {},
+    "pendingCraftBy": null,
+    "pendingMarketChoiceBy": null,
+    "pendingTradeChoiceBy": null,
+    "pendingApothecaryChoiceBy": null,
+    "myPendingLibraryDraw": null,
+    "forgeActiveBy": null,
+    "matItemsByPlayerId": {
+      "player-1": {},
+      "player-2": {}
+    },
+    "workerLocationsByPlayerId": {
+      "player-1": {
+        "apprentice-p1-1": null,
+        "apprentice-p1-2": null,
+        "apprentice-p1-3": null,
+        "apprentice-p1-4": null,
+        "master-p1": null
+      },
+      "player-2": {
+        "apprentice-p2-1": null,
+        "apprentice-p2-2": null,
+        "apprentice-p2-3": null,
+        "apprentice-p2-4": null,
+        "master-p2": null
+      }
+    },
+    "playedPersistentApprenticesByPlayer": {
+      "player-1": [],
+      "player-2": []
+    },
+    "playerVP": {
+      "player-1": 0,
+      "player-2": 0
+    },
+    "playerVPByPlayerId": {
+      "player-1": 0,
+      "player-2": 0
+    },
+    "resourcesByPlayerId": {
+      "player-1": {
+        "coin": 2,
+        "stone": 0,
+        "wood": 1
+      },
+      "player-2": {
+        "coin": 2,
+        "stone": 0,
+        "wood": 1
+      }
+    },
+    "orderHandCountByPlayerId": {
+      "player-1": 1,
+      "player-2": 1
+    },
+    "apprenticeHandCountByPlayerId": {
+      "player-1": 1,
+      "player-2": 1
+    },
+    "apprenticeRosterSizeByPlayerId": {
+      "player-1": 2,
+      "player-2": 2
+    },
+    "pendingApprenticeBuysByPlayerId": {
+      "player-1": 0,
+      "player-2": 0
+    },
+    "myResources": {
+      "coin": 2,
+      "stone": 0,
+      "wood": 1
+    },
+    "myOrderHand": ["mixed-set"],
+    "myApprenticeHand": ["foreman"]
+  },
+  "availableInteractions": [
+    {
+      "phaseName": "wakeup",
+      "interactionKey": "wakeup.selectWakeUpSlot",
+      "interactionId": "selectWakeUpSlot",
+      "commit": {
+        "mode": "autoWhenReady"
+      },
+      "zoneIds": [],
+      "inputs": [],
+      "availability": {
+        "status": "notYourTurn",
+        "reason": "Not your turn"
+      },
+      "kind": "action",
+      "descriptorDigest": "sha256:4e91da153f8922e5a3d64e8deda61d5c99ffa7f746234d27f8a75a59d33a5afc",
+      "actorSeat": 1,
+      "draftDigest": "sha256:a3201641ee2ec8d2a02a9af54954b1aca8ad1ab39a7ede59612b299443ebf4aa"
+    }
+  ],
+  "zones": {}
+}
