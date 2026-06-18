@@ -35,7 +35,7 @@ Status: complete for the required Workbench foundation.
 
 ## Verification
 
-Commands run from `/Users/kevintang/code/dreamboard-sdk`:
+Commands run from `<sdk-checkout>`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck

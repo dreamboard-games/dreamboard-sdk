@@ -74,11 +74,11 @@ Two phases require coordinated pull requests:
 
 - Phase 007:
   - this repository owns path classification and ownership versioning;
-  - `/Users/mac/code/dreamboard-cli` owns filesystem containment in the
+  - `<public-cli-checkout>` owns filesystem containment in the
     public CLI.
 - Phase 008:
   - this repository owns the plugin-side protocol implementation;
-  - `/Users/mac/code/dreamboard` owns `ui-host-runtime` and preview-worker
+  - `<product-checkout>` owns `ui-host-runtime` and preview-worker
     host implementations.
 
 Do not flatten either phase into a single pseudo-codebase. Each repository must

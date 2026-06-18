@@ -561,7 +561,7 @@ mise exec node@24 -- node scripts/ui-fixtures/compile-reference-fixtures.mjs
 mise exec node@24 -- node scripts/ui-fixtures/check-fixtures.mjs
 mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench typecheck
 mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test
-cd /Users/kevintang/code/internal
+cd <private-product-checkout>
 mise exec node@24 -- node scripts/ui-fixtures/compile-internal-fixtures.mjs
 mise exec node@24 -- node scripts/ui-fixtures/check-internal-fixtures.mjs
 ```

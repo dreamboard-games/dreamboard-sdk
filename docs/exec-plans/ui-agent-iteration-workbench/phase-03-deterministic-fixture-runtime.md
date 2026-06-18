@@ -477,7 +477,7 @@ The SDK-owned fixture and Workbench runtime path now closes the reopened Phase
   `subscribeToState`, `setControllingPlayer`, `controllablePlayerIds`, and
   `hostUserId`.
 
-Verification run from `/Users/kevintang/code/dreamboard-sdk`:
+Verification run from `<sdk-checkout>`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract typecheck

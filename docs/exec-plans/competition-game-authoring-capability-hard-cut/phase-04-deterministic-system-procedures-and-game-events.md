@@ -293,9 +293,9 @@ Events must not be replayed as effects. Re-running the deterministic reducer
 produces them; committed storage preserves the historical output for reconnect
 and audit.
 
-## Internal Authority And Persistence
+## Private Product Authority And Persistence
 
-Extend the source gameplay-executor contract with `events`.
+Extend the private execution result contract with `events`.
 
 Authority behavior:
 
@@ -331,16 +331,16 @@ type PluginState = {
 
 `version + index` is the stable event key. Authors do not mint event IDs.
 
-Expected internal touchpoints:
+Expected private product touchpoints:
 
-- gameplay-executor OpenAPI source and generated clients;
-- `apps/gameplay-executor` result validation and runners;
-- `packages/engine-core` contract;
-- gameplay authority executor schemas;
+- execution API source and generated clients;
+- result validation and runners;
+- engine contract;
+- authority executor schemas;
 - gameplay commit repository and database types;
 - authority duplicate/stale/recovery tests;
 - player projection/notifier path;
-- `packages/ui-host-runtime` parsing and selectors; and
+- host runtime parsing and selectors; and
 - browser reconnect fixtures.
 
 ## UI Components

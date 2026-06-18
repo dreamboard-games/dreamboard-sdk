@@ -31,8 +31,8 @@ Final Phase 3 acceptance gates:
 
 | Command                                                                                                                                                                                                                  | Result | Receipt                                                                                                |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------ |
-| `DREAMBOARD_PUBLIC_REPO=/Users/mac/code/dreamboard-cli NPM_CONFIG_USERCONFIG=/Users/mac/code/dreamboard/.dreamboard-dev/local-aws-publish.npmrc pnpm verify:package`                                                     | pass   | `/Users/mac/code/dreamboard/build/verification/2026-06-13T09-05-09-076Z-babfe481/package/receipt.json` |
-| `DREAMBOARD_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 DREAMBOARD_PUBLIC_REPO=/Users/mac/code/dreamboard-cli NPM_CONFIG_USERCONFIG=/Users/mac/code/dreamboard/.dreamboard-dev/local-aws-publish.npmrc pnpm verify:browser` | pass   | `/Users/mac/code/dreamboard/build/verification/2026-06-13T09-10-56-670Z-207dd482/browser/receipt.json` |
+| `DREAMBOARD_PUBLIC_REPO=<public-cli-checkout> NPM_CONFIG_USERCONFIG=<product-checkout>/.dreamboard-dev/local-aws-publish.npmrc pnpm verify:package`                                                     | pass   | `<product-checkout>/build/verification/2026-06-13T09-05-09-076Z-babfe481/package/receipt.json` |
+| `DREAMBOARD_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 DREAMBOARD_PUBLIC_REPO=<public-cli-checkout> NPM_CONFIG_USERCONFIG=<product-checkout>/.dreamboard-dev/local-aws-publish.npmrc pnpm verify:browser` | pass   | `<product-checkout>/build/verification/2026-06-13T09-10-56-670Z-207dd482/browser/receipt.json` |
 
 Browser verification used the supported `DREAMBOARD_LOCAL_REGISTRY_URL`
 override so the lane consumed the live maintainer registry containing the final
@@ -40,7 +40,7 @@ local SDK snapshot, instead of copying stale private Verdaccio file storage.
 
 ## Frontier Trails Size Receipt
 
-Measured in `/Users/mac/code/dreamboard` after regeneration:
+Measured in `<product-checkout>` after regeneration:
 
 ```text
     4044 examples/published/frontier-trails/shared/manifest-runtime.ts

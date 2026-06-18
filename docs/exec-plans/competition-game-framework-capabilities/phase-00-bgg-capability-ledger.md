@@ -19,9 +19,7 @@ verified demand and coverage gaps.
 - `fixtures/ui/component-scenario-index.json`
 - `packages/sdk/src/ui/components/index.ts`
 - `packages/sdk-types/src/contracts.ts`
-- Internal Community Compass aggregate data from
-  `/Users/mac/code/internal/tools/community-compass/data/community-compass.sqlite`
-  when available
+- Private Community Compass aggregate data when available
 
 If the internal Community Compass database is unavailable, continue from the
 snapshot summarized in this plan and mark the evidence as stale in the phase

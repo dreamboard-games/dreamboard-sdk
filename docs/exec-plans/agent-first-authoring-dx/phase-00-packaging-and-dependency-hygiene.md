@@ -172,8 +172,7 @@ SDK repo:
 Private monorepo proof used an isolated worktree so the active private
 checkout could keep concurrent work untouched:
 
-- Worktree:
-  `/Users/mac/code/dreamboard-sdk-phase0-private-proof`
+- Worktree: isolated private proof checkout
 - Branch: `codex/sdk-phase0-private-proof`
 - Repin target:
   `@dreamboard-games/sdk@0.3.0-alpha.1-local.20260612T105332Z.58ce10356009`
@@ -193,7 +192,7 @@ Cross-repo proof:
   manifest has no runtime dependency entry for `react`, `react-dom`, `zod`, or
   `framer-motion`; each is provided by the consumer peer tree.
 - `pnpm verify:browser` passed with receipt
-  `/Users/mac/code/dreamboard-sdk-phase0-private-proof/build/verification/2026-06-12T11-00-52-158Z-f8becc75/browser/receipt.json`.
+  `2026-06-12T11-00-52-158Z-f8becc75/browser/receipt.json`.
 
 Clean-worktree verifier note: the first private `verify:browser` attempt
 timed out waiting for the compiler worker because the clean worktree had not

@@ -41,7 +41,7 @@ Status: complete for the required Workbench foundation.
 
 ## Verification
 
-SDK commands run from `/Users/kevintang/code/dreamboard-sdk`:
+SDK commands run from `<sdk-checkout>`:
 
 ```bash
 pnpm install
@@ -86,14 +86,14 @@ Results:
   `artifacts/ui-parity/2026-06-17T11-53-19-987Z/receipt.json`.
 - `pnpm ui:check`: passed end to end.
 
-Internal commands run from `/Users/kevintang/code/internal`:
+Internal commands run from `<private-product-checkout>`:
 
 ```bash
 bun test packages/demo-gallery/src packages/browser-demo-scenario-contract/test packages/ui-host-runtime/src/screenshot/projection-to-gameplay-frame.test.ts packages/compiler-core/src/demo-games/package-demo-games.test.ts
 node --check scripts/ui-fixtures/compile-internal-fixtures.mjs
 node --check scripts/check-browser-demo-compiled-replay-hard-cut.mjs
 node scripts/check-browser-demo-compiled-replay-hard-cut.mjs
-DREAMBOARD_SDK_REPO=/Users/kevintang/code/dreamboard-sdk pnpm verify:ui-parity --input ../dreamboard-sdk/artifacts/ui-parity/phase-08-local/input.json
+DREAMBOARD_SDK_REPO=<sdk-checkout> pnpm verify:ui-parity --input ../dreamboard-sdk/artifacts/ui-parity/phase-08-local/input.json
 ```
 
 Results:

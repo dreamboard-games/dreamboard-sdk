@@ -675,8 +675,7 @@ rg "PlayerRosterSwitchButton|restoreHistory|markNotificationRead|switchPlayer" p
 rg "validateInteraction\([^\n]*playerId|submitInteraction\([^\n]*playerId|validateInteraction\([^,]+,[^,]+,[^\n]+\)|submitInteraction\([^,]+,[^,]+,[^\n]+\)" packages/sdk/src docs/reference packages/sdk/REFERENCE.md -g '!**/node_modules/**'
 ```
 
-Migration step 7 is implemented for the internal host in
-`dreamboard-internal` on `next-phase`:
+Migration step 7 is implemented for the private product host on `next-phase`:
 
 - internal `packages/plugin-runtime-contract` mirrors the shared browser-free
   protocol/frame/schema/materializer/digest package;
@@ -788,11 +787,11 @@ mise exec node@24 -- pnpm --filter @dreamboard-games/sdk build
 mise exec node@24 -- pnpm docs:generate
 mise exec node@24 -- pnpm docs:check
 mise exec node@24 -- pnpm exports:check
-cd /Users/kevintang/code/internal
+cd <private-product-checkout>
 mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract source:check
 mise exec node@24 -- pnpm --filter @dreamboard-games/ui-host-runtime build
 cd packages/ui-host-runtime && mise exec node@24 -- bun test src/plugin-bridge.test.ts src/plugin-session-gateway.test.ts src/screenshot/projection-to-gameplay-frame.test.ts
-cd /Users/kevintang/code/internal
+cd <private-product-checkout>
 mise exec node@24 -- pnpm --filter @dreamboard/gameplay-executor build
 mise exec node@24 -- pnpm --filter @dreamboard/gameplay-executor exec bun test test/deno-product-bundle.test.ts
 ```

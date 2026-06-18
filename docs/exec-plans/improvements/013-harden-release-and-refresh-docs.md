@@ -288,9 +288,9 @@ chooses that convention.
 This implementation records the coordinated receipts in the phase documents:
 
 - phase 007 records the public CLI containment commands run in
-  `/Users/mac/code/dreamboard-cli`;
+  `<public-cli-checkout>`;
 - phase 008 records the private host and preview-worker protocol commands run
-  in `/Users/mac/code/dreamboard`;
+  in `<product-checkout>`;
 - the SDK package and documentation gates are covered by the final `pnpm check`
   receipt in this repository.
 

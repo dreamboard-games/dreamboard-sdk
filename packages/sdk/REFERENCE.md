@@ -16516,6 +16516,7 @@ _No JSDoc summary is available yet._
 interface PostMessagePluginTransportOptions {
   readonly targetWindow?: Window;
   readonly parentWindow?: Window;
+  readonly bundledSdkVersion?: string;
   readonly onInvalidMessage?: (reason: string, value: unknown) => void;
 }
 ```

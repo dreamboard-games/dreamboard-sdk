@@ -2,13 +2,13 @@
 
 Date: 2026-06-14
 
-Scope: private monorepo examples in `/Users/mac/code/dreamboard/examples`.
+Scope: private monorepo examples in `<product-checkout>/examples`.
 
 Command:
 
 ```bash
 grep -rhoE 'import (type )?\{[^}]*\} from "@dreamboard-games/sdk/reducer"' \
-  /Users/mac/code/dreamboard/examples --include='*.ts' --include='*.tsx' \
+  <product-checkout>/examples --include='*.ts' --include='*.tsx' \
   | tr ',' '\n' | sed 's/import.*{//; s/}.*//; s/type //; s/ //g' \
   | sort | uniq -c | sort -rn
 ```

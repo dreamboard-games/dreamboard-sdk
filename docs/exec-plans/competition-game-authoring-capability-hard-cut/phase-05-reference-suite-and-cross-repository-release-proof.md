@@ -109,9 +109,8 @@ Latest SDK receipts:
   `sha256:f42e3d0e5a8f17839cf10b519e13fc29a9b898410ee5a3ba72993c19ed3b96b8`.
 - Source-side parity preflight for the required Hearts real-host scenario:
   `artifacts/ui-parity/2026-06-18T15-25-28-502Z/receipt.json`; source
-  comparison passed, internal executor skipped because `DREAMBOARD_INTERNAL_REPO`
-  was not set.
-- Required Hearts real-host parity with internal executor:
+  comparison passed, private real-host executor skipped.
+- Required Hearts real-host parity with private real-host executor:
   `artifacts/ui-parity/2026-06-18T15-54-10-552Z/receipt.json`.
 - SDK release proof:
   `artifacts/ui-release-proof/2026-06-18T15-54-23-559Z/receipt.json`.
@@ -138,27 +137,22 @@ Internal evidence recorded in the retained Phase 05 receipt:
 - `pnpm verify:browser` passed in installed-release-set proof mode; and
 - `pnpm verify:package` and `pnpm verify:full` passed after publishing and
   adopting the CLI/dev-host `0.1.30-alpha.18` authoring release set.
-- Public Dreamboard docs and bundled skill source were updated in
-  `/Users/mac/code/dreamboard` to cover `Board.SquareGrid`, canonical
-  `GameOutcome`, reducer-owned availability/guidance, deterministic solo and
-  automa procedures, and the canonical concept/example chooser. The public
-  checkout has no `packages/agent-skills`; the skill currently ships through
-  the staged `@dreamboard-games/cli` package.
+- Public Dreamboard docs and bundled skill source were updated to cover
+  `Board.SquareGrid`, canonical `GameOutcome`, reducer-owned
+  availability/guidance, deterministic solo and automa procedures, and the
+  canonical concept/example chooser. The public checkout has no
+  `packages/agent-skills`; the skill currently ships through the staged
+  `@dreamboard-games/cli` package.
 - Deletion audit found no blocking SDK `packages/sdk` or reducer-contract
   source hit. Existing deck/hex/worker demo-workspace projections and tests
   were cut to canonical `outcome`, generated baselines were regenerated, and
-  the local reducer-native scenario suites passed. Internal live source was cut
-  from the old `TerminalOutcome` / `winnerPlayerId` / `finalScores` transport
-  through executor, authority, backend callback/persistence, private
-  contracts, and generated clients; focused executor/authority/contract/client
-  and backend compile checks passed. The installed-release-set stack lane passed
-  after the source cut, covering database migrations, backend startup,
-  authenticated workspace creation, compile/status, clone/sync/pull, durable
-  commit equality, and executor-loss retry. Package and full product proof
-  passed after the authoring release-set publication and repin. Focused terminal
-  callback/message, reconnect event-batch, host ended-event, and history-restore
-  regressions now pass, while broader packed reconnect/event-history E2E
-  verification remains a non-blocking follow-up.
+  the local reducer-native scenario suites passed. Private product live source
+  was cut from the old terminal transport to canonical `GameOutcome`; focused
+  private build/test lanes, installed-release-set stack proof, package proof,
+  and full product proof passed after the authoring release-set publication and
+  repin. Focused terminal callback/message, reconnect event-batch, host
+  ended-event, and history-restore regressions now pass, while broader packed
+  reconnect/event-history E2E verification remains a non-blocking follow-up.
 
 Phase 00 brief jobs cited:
 
@@ -322,15 +316,15 @@ Do not accept a workspace test as packaging proof.
 Publish the candidate SDK to local Verdaccio:
 
 ```bash
-cd /Users/kevintang/code/dreamboard-sdk
+cd <sdk-checkout>
 SDK_LOCAL_REGISTRY_URL=http://127.0.0.1:4873 \
   mise exec node@24 -- pnpm local-registry:publish
 ```
 
-Repin the internal monorepo:
+Repin the private product checkout:
 
 ```bash
-cd /Users/kevintang/code/internal
+cd <private-product-checkout>
 pnpm sdk:repin --receipt
 ```
 

@@ -314,13 +314,13 @@ Hard-cut changes:
 
 All reference games migrate in this phase.
 
-## Internal Contract Migration
+## Private Product Contract Migration
 
-Update source contracts first:
+Update private product source contracts first:
 
-- `packages/private-contracts/gameplay-executor-api/openapi.yaml`;
-- the owning internal gameplay/session OpenAPI schemas;
-- backend session-ended callback request;
+- gameplay execution result schemas;
+- gameplay/session API schemas;
+- session-ended callback request; and
 - public API contract if game-session results expose terminal data.
 
 Regenerate:
@@ -332,15 +332,13 @@ Regenerate:
 
 Then update:
 
-- `apps/gameplay-executor/src/validation/execution-result.ts`;
-- sandbox and Deno runner guards;
-- `packages/engine-core/.../ReducerContract.kt`;
-- gameplay authority local and remote executor schemas;
-- gameplay repository normalization;
-- terminal notifier;
-- backend callback controller;
-- backend session repository and row mappers;
-- `packages/ui-host-runtime/src/session-state-reducer.ts`;
+- executor validation and runner guards;
+- engine conformance;
+- local and remote executor schemas;
+- repository normalization;
+- terminal notification and callback handling;
+- session persistence and row mapping;
+- host runtime notification parsing;
 - API-client consumers; and
 - all focused tests and fixtures.
 

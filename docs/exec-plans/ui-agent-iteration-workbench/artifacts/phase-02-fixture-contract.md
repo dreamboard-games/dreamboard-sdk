@@ -27,10 +27,10 @@ version 2 plugin-runtime contract hard cut.
   replay step on each compiled replay recipe step and to validate the portable
   step against the legacy recipe conversion.
 - Added internal deterministic private fixture scripts:
-  - `/Users/kevintang/code/internal/scripts/ui-fixtures/compile-internal-fixtures.mjs`
-  - `/Users/kevintang/code/internal/scripts/ui-fixtures/check-internal-fixtures.mjs`
+  - `<private-product-checkout>/scripts/ui-fixtures/compile-internal-fixtures.mjs`
+  - `<private-product-checkout>/scripts/ui-fixtures/check-internal-fixtures.mjs`
 - Generated the private internal-golden bundle at
-  `/Users/kevintang/code/internal/fixtures/ui/internal-golden/`.
+  `<private-product-checkout>/fixtures/ui/internal-golden/`.
 
 The internal package can import the SDK's named `PortableSemanticReplayStep`
 directly after the SDK package containing this phase is published and repinned.
@@ -59,7 +59,7 @@ boundary.
 
 ## Internal Golden Bundle
 
-Bundle: `/Users/kevintang/code/internal/fixtures/ui/internal-golden/index.json`
+Bundle: `<private-product-checkout>/fixtures/ui/internal-golden/index.json`
 
 Fixture IDs:
 
@@ -72,7 +72,7 @@ steps derived from the compiled browser-demo recipe.
 
 ## Verification
 
-Commands run from `/Users/kevintang/code/dreamboard-sdk`:
+Commands run from `<sdk-checkout>`:
 
 ```bash
 mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck
@@ -93,7 +93,7 @@ Results:
 - `mise exec node@24 -- pnpm ui:fixtures:check`: passed, checked 5 UI
   fixtures.
 
-Commands run from `/Users/kevintang/code/internal`:
+Commands run from `<private-product-checkout>`:
 
 ```bash
 mise exec node@24 -- node scripts/ui-fixtures/compile-internal-fixtures.mjs
@@ -138,6 +138,6 @@ c25494ea683f624d5ed5fb6b93018e83f003a4e8a3d0c35769031232202a9936  fixtures/ui/re
 ## Internal Checksum Receipt
 
 ```text
-464cdd1cd91391613642609f8cf9610010d6518d5b3a8870e11c33922846a0e7  /Users/kevintang/code/internal/fixtures/ui/internal-golden/frontier-trails-trade-cancel.internal-golden.browser-demo-scenario.json
-29e10457377e5c7e8b6fc14524c2c028fcb0257ed6272baa4010868f22ef5800  /Users/kevintang/code/internal/fixtures/ui/internal-golden/index.json
+464cdd1cd91391613642609f8cf9610010d6518d5b3a8870e11c33922846a0e7  <private-product-checkout>/fixtures/ui/internal-golden/frontier-trails-trade-cancel.internal-golden.browser-demo-scenario.json
+29e10457377e5c7e8b6fc14524c2c028fcb0257ed6272baa4010868f22ef5800  <private-product-checkout>/fixtures/ui/internal-golden/index.json
 ```

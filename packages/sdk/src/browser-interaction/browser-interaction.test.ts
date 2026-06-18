@@ -1159,7 +1159,7 @@ describe("browser interaction protocol core", () => {
     expect(source).not.toContain("playwright");
     expect(source).not.toContain("tools/perf");
     expect(source).not.toContain("@dreamboard/");
-    expect(source).not.toContain("/Users/mac/code/dreamboard");
+    expect(source).not.toContain("/private/product/checkout");
   });
 });
 

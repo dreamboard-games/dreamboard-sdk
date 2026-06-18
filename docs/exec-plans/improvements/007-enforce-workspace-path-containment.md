@@ -21,7 +21,7 @@ backslashes, stripping `./`, and stripping a leading slash. That can transform
 an absolute or traversal-oriented input into a path that appears project
 relative.
 
-The public CLI in `/Users/mac/code/dreamboard-cli` duplicates normalization
+The public CLI in `<public-cli-checkout>` duplicates normalization
 and joins externally supplied relative paths to the workspace root in:
 
 - `apps/dreamboard-cli/src/services/project/local-files.ts`;
@@ -49,8 +49,8 @@ Both layers fail closed.
 Record both starting SHAs before editing:
 
 ```sh
-git -C /Users/mac/code/dreamboard-sdk rev-parse HEAD
-git -C /Users/mac/code/dreamboard-cli rev-parse HEAD
+git -C <sdk-checkout> rev-parse HEAD
+git -C <public-cli-checkout> rev-parse HEAD
 ```
 
 SDK branch:
@@ -68,7 +68,7 @@ Reject unsafe workspace ownership paths
 Public CLI branch:
 
 ```sh
-git -C /Users/mac/code/dreamboard-cli \
+git -C <public-cli-checkout> \
   switch -c codex/cli-hardening-007-path-containment
 ```
 
@@ -250,8 +250,8 @@ pnpm check
 CLI:
 
 ```sh
-pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli test
-pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli typecheck
+pnpm --dir <public-cli-checkout>/apps/dreamboard-cli test
+pnpm --dir <public-cli-checkout>/apps/dreamboard-cli typecheck
 ```
 
 CLI tests must use a temporary root and assert that write, remove, and upload
@@ -280,7 +280,7 @@ Implemented on 2026-06-16 across the SDK and public CLI boundaries:
 
 - SDK workspace ownership classification now rejects unsafe project path forms
   and uses ownership contract version 31.
-- Public CLI containment landed in `/Users/mac/code/dreamboard-cli` with
+- Public CLI containment landed in `<public-cli-checkout>` with
   `apps/dreamboard-cli/src/services/project/workspace-path.ts` as the shared
   filesystem boundary.
 - CLI writes, removals, generated workspace writes, scaffold copies, sync
@@ -290,12 +290,12 @@ Implemented on 2026-06-16 across the SDK and public CLI boundaries:
 Verified on 2026-06-16:
 
 ```sh
-pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli exec bun test \
+pnpm --dir <public-cli-checkout>/apps/dreamboard-cli exec bun test \
   src/services/project/workspace-path.test.ts \
   src/services/project/scaffold-ownership.test.ts \
   src/services/project/sync.test.ts \
   src/services/project/static-scaffold.test.ts
-pnpm --dir /Users/mac/code/dreamboard-cli/apps/dreamboard-cli exec \
+pnpm --dir <public-cli-checkout>/apps/dreamboard-cli exec \
   tsc -p tsconfig.json --noEmit
 ```
 

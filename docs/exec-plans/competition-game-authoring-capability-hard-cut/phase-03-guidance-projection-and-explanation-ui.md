@@ -359,12 +359,12 @@ SDK source:
 - fixture compiler and semantic projection digest;
 - reference-game authoring and tests.
 
-Internal source:
+Private product source:
 
-- the owning gameplay/plugin-frame OpenAPI or schema source;
-- generated API client and Kotlin types;
-- gameplay executor/authority projection pass-through if applicable;
-- `packages/ui-host-runtime` parsing and selectors;
+- owning gameplay/plugin-frame API or schema source;
+- generated API client and service types;
+- gameplay projection pass-through if applicable;
+- host runtime parsing and selectors;
 - browser host adapters; and
 - real-host parity fixtures.
 

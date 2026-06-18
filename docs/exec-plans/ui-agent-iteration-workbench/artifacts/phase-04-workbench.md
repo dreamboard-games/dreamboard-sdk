@@ -42,7 +42,7 @@ coverage as new reducer scenarios are compiled.
 
 ## Verification
 
-Commands run from `/Users/kevintang/code/dreamboard-sdk`:
+Commands run from `<sdk-checkout>`:
 
 ```bash
 mise exec node@24 -- pnpm ui:catalog:generate

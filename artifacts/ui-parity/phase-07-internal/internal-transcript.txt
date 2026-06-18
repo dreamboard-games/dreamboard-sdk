@@ -1,5 +1,0 @@
-
-> shadcn-ui-monorepo@0.0.1 verify:ui-parity /Users/mac/code/dreamboard
-> bun tools/product-harness/src/cli.ts ui-parity --input /Users/mac/code/dreamboard-sdk/artifacts/ui-parity/phase-07-internal/input.json --out /Users/mac/code/dreamboard-sdk/artifacts/ui-parity/phase-07-internal/internal
-
-ui-parity: passed (4178ms); receipt build/verification/2026-06-17T08-53-22-328Z-d40df10d/ui-parity/receipt.json

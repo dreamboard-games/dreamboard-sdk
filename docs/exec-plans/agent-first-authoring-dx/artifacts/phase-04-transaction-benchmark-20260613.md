@@ -10,7 +10,7 @@ pnpm --dir packages/sdk exec bun ./bench/transaction.bench.ts
 
 Baseline source:
 
-- Detached worktree: `/tmp/dreamboard-sdk-phase4-baseline`
+- Detached worktree: `<temporary-baseline-worktree>`
 - Ref: `HEAD` before the Phase 4 transaction patch (`84fa5d6`)
 - Benchmark file copied from the Phase 4 patch so both runs used the same
   Catan-class fixture.

@@ -27,7 +27,7 @@ binding through the public API.
 `PluginStateContext.tsx` has another direct wildcard send path.
 
 The private host in
-`/Users/mac/code/dreamboard/packages/ui-host-runtime` checks some source and
+`<product-checkout>/packages/ui-host-runtime` checks some source and
 origin properties, but `plugin-session-gateway.ts` still configures `"*"` as
 the target origin. Preview-worker has a separate wildcard implementation.
 
@@ -61,8 +61,8 @@ messages use the host origin captured during the handshake.
 Record starting SHAs:
 
 ```sh
-git -C /Users/mac/code/dreamboard-sdk rev-parse HEAD
-git -C /Users/mac/code/dreamboard rev-parse HEAD
+git -C <sdk-checkout> rev-parse HEAD
+git -C <product-checkout> rev-parse HEAD
 ```
 
 SDK branch and commit:
@@ -75,9 +75,9 @@ git commit -m "Authenticate plugin runtime messages"
 Private host branch and commit:
 
 ```sh
-git -C /Users/mac/code/dreamboard \
+git -C <product-checkout> \
   switch -c codex/plugin-host-hardening-008-channel
-git -C /Users/mac/code/dreamboard \
+git -C <product-checkout> \
   commit -m "Authenticate plugin host messages"
 ```
 
@@ -311,13 +311,13 @@ pnpm --filter @dreamboard-games/sdk test -- plugin
 pnpm --filter @dreamboard-games/sdk typecheck
 pnpm check
 
-pnpm --dir /Users/mac/code/dreamboard \
+pnpm --dir <product-checkout> \
   --filter @dreamboard-games/ui-host-runtime test
-pnpm --dir /Users/mac/code/dreamboard \
+pnpm --dir <product-checkout> \
   --filter @dreamboard-games/ui-host-runtime build
-pnpm --dir /Users/mac/code/dreamboard \
+pnpm --dir <product-checkout> \
   --filter @dreamboard/preview-worker test
-pnpm --dir /Users/mac/code/dreamboard \
+pnpm --dir <product-checkout> \
   --filter @dreamboard/preview-worker build
 ```
 
@@ -329,11 +329,11 @@ either pull request is marked ready.
 Implemented on 2026-06-16 across the SDK runtime and private host boundaries:
 
 - SDK runtime uses protocol version 2 envelopes with a per-session channel ID.
-- `/Users/mac/code/dreamboard/packages/ui-host-runtime` validates exact iframe
+- `<product-checkout>/packages/ui-host-runtime` validates exact iframe
   source, expected origin, protocol version, and active channel before dispatch.
 - Host-to-plugin messages use the exact iframe origin when available, with
   wildcard target origin reserved for authenticated opaque-origin iframes.
-- `/Users/mac/code/dreamboard/apps/preview-worker` uses the same authenticated
+- `<product-checkout>/apps/preview-worker` uses the same authenticated
   envelope protocol in its Playwright screenshot harness.
 
 Verified on 2026-06-16:

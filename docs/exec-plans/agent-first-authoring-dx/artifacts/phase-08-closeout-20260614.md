@@ -4,8 +4,8 @@ Date: 2026-06-14
 
 Scope:
 
-- SDK repo: `/Users/mac/code/dreamboard-sdk`
-- Public CLI/skills repo: `/Users/mac/code/dreamboard-cli`
+- SDK repo: `<sdk-checkout>`
+- Public CLI/skills repo: `<public-cli-checkout>`
 
 ## Result
 

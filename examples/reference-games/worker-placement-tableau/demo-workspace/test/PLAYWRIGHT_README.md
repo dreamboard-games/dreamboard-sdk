@@ -8,26 +8,26 @@ All four local services must be running:
 
 - **Backend** at `http://localhost:8080`
   ```bash
-  /Users/kevintang/code/exp/apps/backend/scripts/backend-local.sh start
+  <product-checkout>/apps/backend/scripts/backend-local.sh start
   ```
 - **Compiler** at `http://localhost:3001`
   ```bash
-  pnpm --dir /Users/kevintang/code/exp/apps/compiler-worker dev
+  pnpm --dir <product-checkout>/apps/compiler-worker dev
   ```
 - **Web (default)** at `http://localhost:5173`
   ```bash
-  bun --dir /Users/kevintang/code/exp/apps/web dev
+  bun --dir <product-checkout>/apps/web dev
   ```
 - **Web harness** at `http://localhost:5174` (this is the one e2e uses)
   ```bash
-  bun --dir /Users/kevintang/code/exp/apps/web dev:harness
+  bun --dir <product-checkout>/apps/web dev:harness
   ```
   The harness mode auto-signs into the local-harness user, so the `/_dev/play/:shortCode` route renders without the standard login redirect.
 
 You also need an authenticated CLI session:
 
 ```bash
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts login --env local
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts login --env local
 ```
 
 ## Bootstrap — provisioning a session
@@ -38,11 +38,11 @@ The artisans-guild source is checked into `examples/published/artisans-guild`. T
 # 1. Provision a fresh backend game (writes a real gameId to .dreamboard/project.json).
 cd /tmp
 rm -rf artisans-guild-e2e
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts new artisans-guild-e2e \
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts new artisans-guild-e2e \
   --description "Artisans guild T200 e2e session" --env local
 
 # 2. Replace the scaffold's source with the curated artisans-guild source.
-SRC=/Users/kevintang/code/exp/examples/published/artisans-guild
+SRC=<product-checkout>/examples/published/artisans-guild
 DST=/tmp/artisans-guild-e2e
 rm -rf $DST/app $DST/manifest.ts $DST/rule.md $DST/shared $DST/test $DST/ui $DST/manifest.tsconfig.json
 cp -R $SRC/app $SRC/shared $SRC/test $SRC/ui $DST/
@@ -50,15 +50,15 @@ cp $SRC/manifest.ts $SRC/manifest.tsconfig.json $SRC/rule.md $DST/
 cd $DST && bun install lucide-react
 
 # 3. Sync the source up to the backend.
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts sync --env local --force --yes
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts sync --env local --force --yes
 
 # 4. Compile.  ⚠️ CURRENTLY BLOCKED — see the evidence log §UI bugs / gaps.
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts compile --env local
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts compile --env local
 
 # 5. Start the dev host (or seed via a scenario for a deterministic state).
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts dev --env local
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts dev --env local
 # or:
-bun /Users/kevintang/code/exp/apps/dreamboard-cli/src/index.ts dev --env local \
+bun <product-checkout>/apps/dreamboard-cli/src/index.ts dev --env local \
   --from-scenario full-season-6-game-flow
 
 # The CLI prints the shortCode. Export it for playwright.
