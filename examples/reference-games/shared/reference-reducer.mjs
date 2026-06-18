@@ -69,6 +69,21 @@ function scenarioInputs(coverage) {
       },
     ];
   }
+  if (replay.kind === "board-space") {
+    return [
+      {
+        key: replay.inputKey,
+        kind: "boardTarget",
+        domain: {
+          type: "boardTarget",
+          projection: "resolved",
+          targetKind: "space",
+          eligibleTargets: replay.eligibleSpaceIds,
+          selection: { mode: "single" },
+        },
+      },
+    ];
+  }
   return [];
 }
 
@@ -86,13 +101,66 @@ function scenarioSubmissionParams(coverage) {
   if (replay.kind === "draft") {
     return { [replay.inputKey]: replay.value };
   }
+  if (replay.kind === "board-space") {
+    return { [replay.inputKey]: replay.spaceId };
+  }
   return {};
 }
 
+function humanizeProcedureId(id) {
+  return id
+    .split("-")
+    .map((part) => part[0].toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function scenarioProcedureIds(coverage) {
+  if (Array.isArray(coverage.systemEventProcedureIds)) {
+    return coverage.systemEventProcedureIds;
+  }
+  const scenarios = coverage.scenarios ?? {};
+  if (Array.isArray(scenarios.weather?.procedureIds)) {
+    return scenarios.weather.procedureIds;
+  }
+  if (Array.isArray(scenarios.claimHighest?.eventProcedureIds)) {
+    return scenarios.claimHighest.eventProcedureIds;
+  }
+  return [];
+}
+
+function scenarioSystemEvents(coverage) {
+  return scenarioProcedureIds(coverage).map((procedureId, index) => ({
+    kind: "systemAction",
+    procedureId,
+    title: humanizeProcedureId(procedureId),
+    summary: `${coverage.scenarioId} recorded ${procedureId}.`,
+    details: [{ label: "Scenario", value: coverage.scenarioId }],
+    version: 1,
+    index,
+  }));
+}
+
+function scenarioBranch(referenceGame, coverage) {
+  const key = coverage.scenarioKey;
+  if (typeof key === "string" && referenceGame.scenarios?.[key]) {
+    return {
+      key,
+      ...referenceGame.scenarios[key],
+    };
+  }
+  return null;
+}
+
 function scenarioInteraction(referenceGame, coverage) {
-  const interaction = referenceGame.interactions.find((candidate) =>
-    coverage.scenarioId.includes(candidate.id),
-  );
+  const explicitInteractionId =
+    coverage.interactionId ?? scenarioReplay(coverage).interactionId;
+  const interaction =
+    referenceGame.interactions.find(
+      (candidate) => candidate.id === explicitInteractionId,
+    ) ??
+    referenceGame.interactions.find((candidate) =>
+      coverage.scenarioId.includes(candidate.id),
+    );
   if (!interaction) {
     throw new Error(
       `${coverage.scenarioId} does not identify a reference-game interaction.`,
@@ -160,8 +228,23 @@ function buildInteractionDescriptors(referenceGame, coverage) {
         phaseName: "fixture",
         interactionKey: interaction.id,
         interactionId: `${interaction.id}:player-1`,
+        label:
+          interaction.label ??
+          interaction.id
+            .split("-")
+            .map((part) => part[0].toUpperCase() + part.slice(1))
+            .join(" "),
+        ...(interaction.help ? { help: interaction.help } : {}),
         kind: "action",
-        availability: { status: "available" },
+        availability: interaction.blockedReason
+          ? {
+              status: "blocked",
+              reason: interaction.blockedReason,
+              ...(interaction.blockedCode
+                ? { code: interaction.blockedCode }
+                : {}),
+            }
+          : { status: "available" },
         commit: { mode: "manual" },
         ...(inputs.some((input) => input.domain.zoneId === "hand")
           ? { zoneId: "hand" }
@@ -194,6 +277,11 @@ export function createReferenceReducerScenario({
     coverage,
   );
   const interaction = scenarioInteraction(referenceGame, coverage);
+  const branch = scenarioBranch(referenceGame, coverage);
+  const initialRecentEvents = scenarioSystemEvents({
+    ...coverage,
+    systemEventProcedureIds: coverage.initialSystemEventProcedureIds,
+  });
   const initialState = {
     domain: {
       flow: {
@@ -204,7 +292,9 @@ export function createReferenceReducerScenario({
         referenceGameId: referenceGame.id,
         displayName: referenceGame.displayName,
         scenarioId: coverage.scenarioId,
+        scenarioBranch: branch,
         submittedInteractionId: null,
+        recentEvents: initialRecentEvents,
       },
     },
     runtime: {},
@@ -241,6 +331,13 @@ export function createReferenceReducerScenario({
           currentStage: state.domain.flow.currentPhase,
           stageSeats: [...playerIds],
           simultaneousPhase: null,
+          guidance: referenceGame.guidance ?? {
+            phase: {
+              id: state.domain.flow.currentPhase,
+              label: referenceGame.displayName,
+            },
+          },
+          recentEvents: state.domain.publicState.recentEvents ?? [],
           seats: Object.fromEntries(
             playerIds.map((playerId) => [
               playerId,
@@ -300,6 +397,7 @@ export function createReferenceReducerScenario({
               publicState: {
                 ...state.domain.publicState,
                 submittedInteractionId: candidate.interactionId,
+                recentEvents: scenarioSystemEvents(coverage),
               },
             },
           },

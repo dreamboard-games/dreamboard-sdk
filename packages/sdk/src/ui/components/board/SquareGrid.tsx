@@ -870,7 +870,7 @@ function SquareGridImpl(
           targetKind="space"
           groupClassName="interactive-spaces"
           groupAriaLabel="Interactive spaces"
-          spreadBrowserAttributes={false}
+          browserAttributeOrder="after-transform"
           selectMode="layer-direct"
           hover={spaceHover}
           getTargetTransform={(space) =>
@@ -912,7 +912,7 @@ function SquareGridImpl(
           targetKind="edge"
           groupClassName="interactive-edges"
           groupAriaLabel="Interactive edges"
-          spreadBrowserAttributes={false}
+          browserAttributeOrder="after-transform"
           selectMode="layer-direct"
           hover={edgeHover}
           renderTargetContent={({ interactiveEdge: edge }, state) =>
@@ -951,7 +951,7 @@ function SquareGridImpl(
           targetKind="vertex"
           groupClassName="interactive-vertices"
           groupAriaLabel="Interactive vertices"
-          spreadBrowserAttributes={false}
+          browserAttributeOrder="after-transform"
           selectMode="layer-direct"
           hover={vertexHover}
           renderTargetContent={({ interactiveVertex: vertex }, state) =>

@@ -10,9 +10,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:fb39508d13217c61969fbc3fed53d6d3deecd9caf6a7aeeaf4bb2c789e52937b",
-    "finalSemanticDigest": "sha256:ddf34235db8ca3c9e517a33515c8accd6793f1fb2ce6195d63f7a06d29c1d555",
-    "initialProjectionDigest": "sha256:257816123116362c5ea688516f640d99fd4f4aa376324e3552b7ad62a14de0d5",
+    "finalProjectionDigest": "sha256:a1e3c450a00a2b0eb8682624478ddb24b92a153233750de5a58a42d2d7d158ed",
+    "finalSemanticDigest": "sha256:e4f33e58575bba3ceedab9d5a049d38be6be68ab5969e81b750d36212937f4f2",
+    "initialProjectionDigest": "sha256:c991454b9cccd0e217fb35296481b246137de3c204d921914429ee7144ad3571",
     "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1"
   },
   "gameId": "hex-network-trading",
@@ -22,7 +22,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:d5ff300cdc3e9a38d0e5a2fa4435a5fbc5f96e74028ef606db904ce922d268e5",
+          "actionSetVersion": "sha256:2772ecea3d3760ec2c86f3557c989ebd5ec172cb87bd316d26fdf69570da5313",
           "availableInteractions": [
             {
               "availability": {
@@ -31,7 +31,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:4ab2ce9113cacca686434f00ba97600b388c14d5e70ebe07fe2b9c1fe697b84d",
+              "descriptorDigest": "sha256:b45937a795a42f6708d4306731760550603410f453eed8b504dccfdc66270f95",
               "inputs": [
                 {
                   "domain": {
@@ -68,6 +68,7 @@
               "interactionId": "place-route:player-1",
               "interactionKey": "place-route",
               "kind": "action",
+              "label": "Place route",
               "phaseName": "fixture",
               "zoneId": "hand"
             },
@@ -78,11 +79,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:cbdb107672d262f761dcba524160386228612e2059689e6bf88771df4e4e0661",
+              "descriptorDigest": "sha256:7760402acef5037680aa01373e8951e5dd5e510880a62a7cf4e1b69c79ff69a4",
               "inputs": [],
               "interactionId": "offer-trade:player-1",
               "interactionKey": "offer-trade",
               "kind": "action",
+              "label": "Offer trade",
               "phaseName": "fixture"
             }
           ],
@@ -95,10 +97,21 @@
             "simultaneousPhase": null
           },
           "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "playerTurn",
+              "label": "Build a route",
+              "objective": "Connect high-value spaces while keeping enough resources for future routes.",
+              "summary": "Place route segments and trade resources to extend the network."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Hex Network Trading",
+            "recentEvents": [],
             "referenceGameId": "hex-network-trading",
+            "scenarioBranch": null,
             "scenarioId": "hex-network-trading.place-route.desktop",
             "submittedInteractionId": null
           },
@@ -119,7 +132,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:4ab2ce9113cacca686434f00ba97600b388c14d5e70ebe07fe2b9c1fe697b84d",
+                    "descriptorDigest": "sha256:b45937a795a42f6708d4306731760550603410f453eed8b504dccfdc66270f95",
                     "inputs": [
                       {
                         "domain": {
@@ -156,6 +169,7 @@
                     "interactionId": "place-route:player-1",
                     "interactionKey": "place-route",
                     "kind": "action",
+                    "label": "Place route",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -165,11 +179,11 @@
           }
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:257816123116362c5ea688516f640d99fd4f4aa376324e3552b7ad62a14de0d5"
+        "projectionDigest": "sha256:c991454b9cccd0e217fb35296481b246137de3c204d921914429ee7144ad3571"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:a7e5ed16eb439db2463f115ebdea84d3a0c43091f56de4c915a1e16bb426c7fd",
+          "actionSetVersion": "sha256:62dae5e767b6b070c04d366c548bf6a02b51ba69d0671a5cda2cdc2e72cb44ae",
           "availableInteractions": [
             {
               "availability": {
@@ -178,7 +192,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:4ab2ce9113cacca686434f00ba97600b388c14d5e70ebe07fe2b9c1fe697b84d",
+              "descriptorDigest": "sha256:b45937a795a42f6708d4306731760550603410f453eed8b504dccfdc66270f95",
               "inputs": [
                 {
                   "domain": {
@@ -215,6 +229,7 @@
               "interactionId": "place-route:player-1",
               "interactionKey": "place-route",
               "kind": "action",
+              "label": "Place route",
               "phaseName": "fixture",
               "zoneId": "hand"
             },
@@ -225,11 +240,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:cbdb107672d262f761dcba524160386228612e2059689e6bf88771df4e4e0661",
+              "descriptorDigest": "sha256:7760402acef5037680aa01373e8951e5dd5e510880a62a7cf4e1b69c79ff69a4",
               "inputs": [],
               "interactionId": "offer-trade:player-1",
               "interactionKey": "offer-trade",
               "kind": "action",
+              "label": "Offer trade",
               "phaseName": "fixture"
             }
           ],
@@ -242,10 +258,21 @@
             "simultaneousPhase": null
           },
           "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "playerTurn",
+              "label": "Build a route",
+              "objective": "Connect high-value spaces while keeping enough resources for future routes.",
+              "summary": "Place route segments and trade resources to extend the network."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Hex Network Trading",
+            "recentEvents": [],
             "referenceGameId": "hex-network-trading",
+            "scenarioBranch": null,
             "scenarioId": "hex-network-trading.place-route.desktop",
             "submittedInteractionId": "place-route:player-1"
           },
@@ -266,7 +293,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:4ab2ce9113cacca686434f00ba97600b388c14d5e70ebe07fe2b9c1fe697b84d",
+                    "descriptorDigest": "sha256:b45937a795a42f6708d4306731760550603410f453eed8b504dccfdc66270f95",
                     "inputs": [
                       {
                         "domain": {
@@ -303,6 +330,7 @@
                     "interactionId": "place-route:player-1",
                     "interactionKey": "place-route",
                     "kind": "action",
+                    "label": "Place route",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -312,7 +340,7 @@
           }
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:fb39508d13217c61969fbc3fed53d6d3deecd9caf6a7aeeaf4bb2c789e52937b"
+        "projectionDigest": "sha256:a1e3c450a00a2b0eb8682624478ddb24b92a153233750de5a58a42d2d7d158ed"
       }
     ],
     "session": {
@@ -334,7 +362,7 @@
         "fromFrameId": "frame-1",
         "id": "hex-network-trading.place-route.desktop.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:4eb5ead313b164b9e9554433a7277579db4edfec45d8164b56684a79f45b4a6b",
+        "requestDigest": "sha256:f55dbb28f53b97c89fae5451adb77de38ada7ec259e30150c8ce3bd01a38a17b",
         "response": {
           "valid": true
         }
@@ -343,7 +371,7 @@
         "fromFrameId": "frame-1",
         "id": "hex-network-trading.place-route.desktop.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:8c0c1a0f587d5d90aa12fa61ebab3c03e16455fb1fdadaef553a5cd6318a7fa8",
+        "requestDigest": "sha256:9dbba150ca9cf8dc527a2dd42d0933f2888d9fe4bf7ddb7586bfc0ddfc780cf9",
         "response": {
           "accepted": true
         }
@@ -380,7 +408,7 @@
       },
       "expectedIdentity": {
         "actuatorId": "primitive-card:routeCardId:route-card",
-        "descriptorDigest": "sha256:4ab2ce9113cacca686434f00ba97600b388c14d5e70ebe07fe2b9c1fe697b84d",
+        "descriptorDigest": "sha256:b45937a795a42f6708d4306731760550603410f453eed8b504dccfdc66270f95",
         "interactionId": "place-route:player-1",
         "interactionKey": "place-route",
         "scopeId": "runtime",
@@ -409,8 +437,8 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:fb39508d13217c61969fbc3fed53d6d3deecd9caf6a7aeeaf4bb2c789e52937b",
-        "semanticDigest": "sha256:ddf34235db8ca3c9e517a33515c8accd6793f1fb2ce6195d63f7a06d29c1d555",
+        "projectionDigest": "sha256:a1e3c450a00a2b0eb8682624478ddb24b92a153233750de5a58a42d2d7d158ed",
+        "semanticDigest": "sha256:e4f33e58575bba3ceedab9d5a049d38be6be68ab5969e81b750d36212937f4f2",
         "submissionDigest": "sha256:b3d5404e00adea3675ffbedf2b3b4ed68cc6b804e9577b206f57f28a4d2e14c1",
         "visibleInteractionKeys": [
           "place-route"
@@ -429,11 +457,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:73da07807feeb933b90f9ea05cfb25882ebcf4254b94bb60530f5574bcc5526d",
+    "reducerFingerprint": "sha256:e39f717a890d82ad712a69c91f0938e13b851c13a8e6af431259d255a5fac89f",
     "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-    "renderModuleDigest": "sha256:0e8550b01ade5006d4b4e4038c0cee96c82eb7ea568c462f240b60ad8eba8f36",
+    "renderModuleDigest": "sha256:6b108aebccc2aed469d086a46ca60e409c580c7bd78102240176be48e59d84d1",
     "scenarioId": "hex-network-trading.place-route.desktop",
-    "sourceDigest": "sha256:60fe78f1df3e8fef8c9c141399e656c3dc00f5c7775b4af05fcb38ff2b58cb9f",
+    "sourceDigest": "sha256:30050be67f29416921333f63e3357284e50f0cd108354b1dae20a222869882fc",
     "sourceFiles": [
       "examples/reference-games/hex-network-trading/scenarios/coverage.json",
       "examples/reference-games/hex-network-trading/src/reference-game.mjs",
@@ -441,7 +469,7 @@
       "examples/reference-games/shared/reference-ui.mjs",
       "examples/reference-games/hex-network-trading/src/scenarios/place-route.scenario.mjs"
     ],
-    "uiContractFingerprint": "sha256:34261b5e5baf50f3182af47fb98be647599a5b95a064cdf5b99140f53866428a"
+    "uiContractFingerprint": "sha256:568a4e396e30e89277c59e4327225902dafaa8af3523c2752b68ca9b100e02d3"
   },
   "tags": [
     "hex-board-targets",

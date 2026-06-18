@@ -72,9 +72,8 @@ export const setup = definePhase<GameContract>()({
       }
     }
 
-    return accept(
-      tx.state,
-      order.map((playerId, index) =>
+    return accept(tx.state, {
+      instructions: order.map((playerId, index) =>
         fx.effect(shuffleOpeningDeck, {
           playerId,
           zoneId: "deck",
@@ -84,6 +83,6 @@ export const setup = definePhase<GameContract>()({
           },
         }),
       ),
-    );
+    });
   },
 });

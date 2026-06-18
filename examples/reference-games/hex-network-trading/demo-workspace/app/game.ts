@@ -31,7 +31,7 @@ const game = authoring.game({
         ...boardSetup,
         scoutsDeployed,
         landmarkCards,
-        winnerPlayerId: null,
+        outcome: null,
       };
     },
     private: () => ({}),

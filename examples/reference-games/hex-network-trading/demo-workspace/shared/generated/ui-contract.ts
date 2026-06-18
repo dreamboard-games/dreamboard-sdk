@@ -4,9 +4,7 @@
  */
 
 import game from "../../app/game";
-import {
-  createClientParamSchemasByPhase,
-} from "@dreamboard-games/sdk/reducer/advanced";
+import { createClientParamSchemasByPhase } from "@dreamboard-games/sdk/reducer/advanced";
 import type {
   CardInputZoneIdsOfDefinition,
   ClientParamsOfInteractionOfDefinition,
@@ -97,9 +95,10 @@ import {
  * both entry points are covered.
  */
 type IsAny<T> = 0 extends 1 & T ? true : false;
-type AssertNotAny<T> = IsAny<T> extends true
-  ? "sdk runtime types resolved to any — boundary degraded"
-  : true;
+type AssertNotAny<T> =
+  IsAny<T> extends true
+    ? "sdk runtime types resolved to any — boundary degraded"
+    : true;
 const _uiRuntimeBoundaryResolved: [
   AssertNotAny<InteractionDescriptor>,
   AssertNotAny<ZoneCardRenderItem>,
@@ -113,17 +112,18 @@ export type InferView<Name extends ViewName> = ViewOfDefinition<
   GameDefinition,
   Name
 >;
-export type GameView = Extract<"player", ViewName> extends never
-  ? never
-  : InferView<Extract<"player", ViewName>>;
+export type GameView =
+  Extract<"player", ViewName> extends never
+    ? never
+    : InferView<Extract<"player", ViewName>>;
 
-	export type PhaseName = PhaseNamesOfDefinition<GameDefinition>;
-	export type GameRootState = GameRenderState<GameView, PlayerId, PhaseName>;
-	export type GamePlayers = GamePlayersState<PlayerId>;
-	export type GameMe = GameMeState<PlayerId>;
-	export type GameTurn = GameTurnState<PlayerId, PhaseName>;
+export type PhaseName = PhaseNamesOfDefinition<GameDefinition>;
+export type GameRootState = GameRenderState<GameView, PlayerId, PhaseName>;
+export type GamePlayers = GamePlayersState<PlayerId>;
+export type GameMe = GameMeState<PlayerId>;
+export type GameTurn = GameTurnState<PlayerId, PhaseName>;
 
-	// -------------------------------------------------------------------------
+// -------------------------------------------------------------------------
 // Interaction / Stage / Zone types (authored via defineInteraction/Stage/zones)
 // -------------------------------------------------------------------------
 
@@ -149,7 +149,11 @@ export type InteractionParams<
 export type InteractionDefaultedKeys<
   Phase extends PhaseName,
   Id extends InteractionIdForPhase<Phase>,
-> = DefaultedClientParamKeysOfInteractionOfDefinition<GameDefinition, Phase, Id>;
+> = DefaultedClientParamKeysOfInteractionOfDefinition<
+  GameDefinition,
+  Phase,
+  Id
+>;
 
 /** Phase-qualified interaction key for a specific phase. */
 export type InteractionKeyForPhase<Phase extends PhaseName> =
@@ -218,8 +222,10 @@ export type InteractionItem<Key extends InteractionKey> = {
  * Params shape for a phase-qualified interaction key. Drives strong typing
  * for component-first interaction state, forms, and submits.
  */
-export type InteractionParamsOf<Key extends InteractionKey> =
-  InteractionParams<PhaseOfInteractionKey<Key>, IdOfInteractionKey<Key>>;
+export type InteractionParamsOf<Key extends InteractionKey> = InteractionParams<
+  PhaseOfInteractionKey<Key>,
+  IdOfInteractionKey<Key>
+>;
 
 export type InteractionDefaultedKeysOf<Key extends InteractionKey> =
   InteractionDefaultedKeys<PhaseOfInteractionKey<Key>, IdOfInteractionKey<Key>>;
@@ -443,9 +449,10 @@ type BoardTileTargetInteractionInputKey<Key extends InteractionKey> =
 type InteractionDefaultSlotFor<
   Key extends InteractionKey,
   Input extends InteractionInputKeysOf<Key>,
-> = Input extends InteractionHandleDefaultedKeys<Key>
-  ? InteractionDefaultInputSlot
-  : object;
+> =
+  Input extends InteractionHandleDefaultedKeys<Key>
+    ? InteractionDefaultInputSlot
+    : object;
 
 export type InteractionInputSlot<
   Key extends InteractionKey,
@@ -500,30 +507,30 @@ type CardSurfaceInputSlot<Zones extends string> =
 type BoardSurfaceInputSlot<
   Kind extends "space" | "edge" | "vertex" | "tile",
   Target extends string = string,
-> =
-  InteractionValueInputSlot<unknown> &
-    InteractionBoardTargetInputSlot<Target> &
-    DreamboardSlotBrand<{
-      readonly kind: "board";
-      readonly targetKind: Kind;
-    }>;
+> = InteractionValueInputSlot<unknown> &
+  InteractionBoardTargetInputSlot<Target> &
+  DreamboardSlotBrand<{
+    readonly kind: "board";
+    readonly targetKind: Kind;
+  }>;
 
 type InteractionCollectorSlot<
   Key extends InteractionKey,
   Input extends InteractionInputKeysOf<Key>,
-> = Input extends CardTargetInteractionInputKey<Key>
-  ? CardSurfaceInputSlot<CardTargetZoneIds<Key, Input>>
-  : Input extends BoardSpaceTargetInteractionInputKey<Key>
-    ? BoardSurfaceInputSlot<"space", string>
-    : Input extends BoardEdgeTargetInteractionInputKey<Key>
-      ? BoardSurfaceInputSlot<"edge", string>
-      : Input extends BoardVertexTargetInteractionInputKey<Key>
-        ? BoardSurfaceInputSlot<"vertex", string>
-        : Input extends BoardTileTargetInteractionInputKey<Key>
-          ? BoardSurfaceInputSlot<"tile", string>
-          : Input extends FormInteractionInputKey<Key>
-            ? FormSurfaceInputSlot<Key, Input>
-            : never;
+> =
+  Input extends CardTargetInteractionInputKey<Key>
+    ? CardSurfaceInputSlot<CardTargetZoneIds<Key, Input>>
+    : Input extends BoardSpaceTargetInteractionInputKey<Key>
+      ? BoardSurfaceInputSlot<"space", string>
+      : Input extends BoardEdgeTargetInteractionInputKey<Key>
+        ? BoardSurfaceInputSlot<"edge", string>
+        : Input extends BoardVertexTargetInteractionInputKey<Key>
+          ? BoardSurfaceInputSlot<"vertex", string>
+          : Input extends BoardTileTargetInteractionInputKey<Key>
+            ? BoardSurfaceInputSlot<"tile", string>
+            : Input extends FormInteractionInputKey<Key>
+              ? FormSurfaceInputSlot<Key, Input>
+              : never;
 
 type InteractionKeysWithInput<Input extends InteractionInputKey> = {
   [Key in InteractionKey]: Input extends InteractionInputKeysOf<Key>
@@ -609,13 +616,16 @@ type InteractionInputSlotByCollectorKind<
 export type InteractionFormSurface<Key extends InteractionKey> = {
   readonly Root: InteractionSlotComponent;
   readonly Form: DreamboardUI<typeof uiContract>["Interaction"]["Form"];
-  readonly Dialog: (props: WorkspaceInteractionFormDialogProps) => ReactElement | null;
+  readonly Dialog: (
+    props: WorkspaceInteractionFormDialogProps,
+  ) => ReactElement | null;
   readonly State: DreamboardUI<typeof uiContract>["Interaction"]["State"];
   readonly Arm: DreamboardUI<typeof uiContract>["Interaction"]["Trigger"];
   readonly Submit: DreamboardUI<typeof uiContract>["Interaction"]["Submit"];
-  readonly Field: <Input extends FormInteractionInputKey<Key>>(
-    props: { input: Input; children?: ReactNode },
-  ) => ReactElement | null;
+  readonly Field: <Input extends FormInteractionInputKey<Key>>(props: {
+    input: Input;
+    children?: ReactNode;
+  }) => ReactElement | null;
   readonly slot: {
     readonly [Input in FormInteractionInputKey<Key>]: FormSurfaceInputSlot<
       Key,
@@ -631,14 +641,15 @@ type BoardSurfaceSpaceProps<Target extends string> = {
 
 export type BoardSurfaceBoardId = BoardBaseId & string;
 
-type BoardSurfaceRuntimeBoardId<Board extends BoardSurfaceBoardId> =
-  ReturnType<typeof boardHelpers.boardIdsForBase<Board>>[number] & string;
+type BoardSurfaceRuntimeBoardId<Board extends BoardSurfaceBoardId> = ReturnType<
+  typeof boardHelpers.boardIdsForBase<Board>
+>[number] &
+  string;
 
-type BoardSurfaceSpaceId<Board extends BoardSurfaceBoardId> =
-  ReturnType<
-    typeof boardHelpers.spaceIds<BoardSurfaceRuntimeBoardId<Board>>
-  >[number] &
-    string;
+type BoardSurfaceSpaceId<Board extends BoardSurfaceBoardId> = ReturnType<
+  typeof boardHelpers.spaceIds<BoardSurfaceRuntimeBoardId<Board>>
+>[number] &
+  string;
 
 type BoardSurfaceTiledBoardId<Board extends BoardSurfaceBoardId> = Extract<
   BoardSurfaceRuntimeBoardId<Board>,
@@ -655,16 +666,15 @@ type BoardSurfaceVertexId<Board extends BoardSurfaceBoardId> =
     ? Id & string
     : VertexId & string;
 
-export type BoardSurface<Board extends BoardSurfaceBoardId = BoardSurfaceBoardId> = {
+export type BoardSurface<
+  Board extends BoardSurfaceBoardId = BoardSurfaceBoardId,
+> = {
   readonly Root: InteractionSlotComponent;
   readonly Space: <Target extends BoardSurfaceSpaceId<Board>>(
     props: BoardSurfaceSpaceProps<Target>,
   ) => ReactElement;
   readonly slot: {
-    readonly space: BoardSurfaceInputSlot<
-      "space",
-      BoardSurfaceSpaceId<Board>
-    >;
+    readonly space: BoardSurfaceInputSlot<"space", BoardSurfaceSpaceId<Board>>;
     readonly playerSpace: BoardSurfaceInputSlot<
       "space",
       BoardSurfaceSpaceId<Board>
@@ -679,17 +689,17 @@ export type BoardSurface<Board extends BoardSurfaceBoardId = BoardSurfaceBoardId
 };
 
 type ZoneCardsComponent = InteractionSlotComponent<
-    Omit<ZoneListProps, "children" | "empty"> & {
-      empty?: ReactNode;
-      children: (card: WorkspaceZoneCard) => ReactNode;
-    }
-  >;
+  Omit<ZoneListProps, "children" | "empty"> & {
+    empty?: ReactNode;
+    children: (card: WorkspaceZoneCard) => ReactNode;
+  }
+>;
 
 type ZoneCardComponent = InteractionSlotComponent<
-    Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "value"> & {
-      card: WorkspaceZoneCard;
-    }
-  >;
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "type" | "value"> & {
+    card: WorkspaceZoneCard;
+  }
+>;
 
 /**
  * Generic SDK card-intent shape for typed hand emission. Authors do not
@@ -707,7 +717,12 @@ export type HandCardIntent<Card extends string, Target extends string> =
       source: "pointer" | "keyboard";
     };
 
-export type HandLayoutKindGen = "fan" | "compressed-fan" | "tray" | "strip" | "stack";
+export type HandLayoutKindGen =
+  | "fan"
+  | "compressed-fan"
+  | "tray"
+  | "strip"
+  | "stack";
 export type HandLayoutPolicyGen = {
   desktop?: HandLayoutKindGen;
   mobile?: HandLayoutKindGen;
@@ -850,7 +865,9 @@ export type HandStagingProps = {
 
 type HandStagingComponent = InteractionSlotComponent<HandStagingProps>;
 
-export type HandSurface<Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[]> = {
+export type HandSurface<
+  Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[],
+> = {
   readonly Hand: HandComponent<
     CardId & string,
     SpaceId & string,
@@ -867,12 +884,16 @@ export type HandSurface<Zones extends readonly WorkspaceZoneId[] = readonly Work
   };
 };
 
-export type PileSurface<Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[]> = {
+export type PileSurface<
+  Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[],
+> = {
   readonly Pile: ZoneCardsComponent;
   readonly Card: ZoneCardComponent;
 };
 
-export type CardCollectionSurface<Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[]> = {
+export type CardCollectionSurface<
+  Zones extends readonly WorkspaceZoneId[] = readonly WorkspaceZoneId[],
+> = {
   readonly Collection: ZoneCardsComponent;
   readonly Card: ZoneCardComponent;
   readonly slot: {
@@ -908,9 +929,7 @@ export type InteractionRoutesProps = {
 };
 
 export type ZeroInputInteractionKey = {
-  [K in InteractionKey]: InteractionInputKeysOf<K> extends never
-    ? K
-    : never;
+  [K in InteractionKey]: InteractionInputKeysOf<K> extends never ? K : never;
 }[InteractionKey];
 
 export type InputInteractionKey = Exclude<
@@ -999,7 +1018,8 @@ const hexStaticBoards = staticBoards.hex;
 export type HexBoardId = keyof typeof hexStaticBoards & string;
 
 /** Topology object for the named hex board, drawn from `staticBoards.hex`. */
-export type HexBoardTopology<Id extends HexBoardId> = (typeof hexStaticBoards)[Id];
+export type HexBoardTopology<Id extends HexBoardId> =
+  (typeof hexStaticBoards)[Id];
 
 /** Space id type for the named hex board. */
 export type HexBoardSpaceId<Id extends HexBoardId> = BoardSpaceIdOf<
@@ -1009,7 +1029,10 @@ export type HexBoardSpaceId<Id extends HexBoardId> = BoardSpaceIdOf<
 export type HexBoardViewProps<
   Id extends HexBoardId,
   TSpaceView extends { id: HexBoardSpaceId<Id> },
-> = Omit<BoardHexViewPropsGeneric<HexBoardTopology<Id>, TSpaceView>, "board"> & {
+> = Omit<
+  BoardHexViewPropsGeneric<HexBoardTopology<Id>, TSpaceView>,
+  "board"
+> & {
   board: Id;
 };
 
@@ -1035,16 +1058,21 @@ type WorkspaceBoard = {
   HexView<
     const Id extends HexBoardId,
     const TSpaceView extends { id: HexBoardSpaceId<Id> },
-  >(props: HexBoardViewProps<Id, TSpaceView>): ReactElement;
+  >(
+    props: HexBoardViewProps<Id, TSpaceView>,
+  ): ReactElement;
   HexGrid<
     const Id extends HexBoardId,
     const TSpaceView extends { id: HexBoardSpaceId<Id> },
-  >(props: HexBoardGridProps<Id, TSpaceView>): ReactElement;
+  >(
+    props: HexBoardGridProps<Id, TSpaceView>,
+  ): ReactElement;
 };
 
-type WorkspaceCardProperties = CardProperties extends Record<string, unknown>
-  ? CardProperties
-  : Record<string, unknown>;
+type WorkspaceCardProperties =
+  CardProperties extends Record<string, unknown>
+    ? CardProperties
+    : Record<string, unknown>;
 type WorkspaceZoneId = [ZoneId] extends [never] ? string : ZoneId;
 type WorkspaceCardId = [CardId] extends [never] ? string : CardId;
 type WorkspaceCardType = [CardType] extends [never] ? string : CardType;
@@ -1054,75 +1082,86 @@ type WorkspaceCardType = [CardType] extends [never] ? string : CardType;
 // strip cardType / properties from the hydrated branch, defeating the
 // discriminated-union narrowing the SDK contract promises. Distribute Omit
 // across the union so each branch keeps its own shape.
-type WorkspaceZoneCard = ZoneCardRenderItem<
-  WorkspaceCardId & string,
-  WorkspaceCardType & string,
-  WorkspaceCardProperties
-> extends infer Item
-  ? Item extends { zone: string }
-    ? Omit<Item, "zone"> & { zone: WorkspaceZoneId }
-    : never
-  : never;
+type WorkspaceZoneCard =
+  ZoneCardRenderItem<
+    WorkspaceCardId & string,
+    WorkspaceCardType & string,
+    WorkspaceCardProperties
+  > extends infer Item
+    ? Item extends { zone: string }
+      ? Omit<Item, "zone"> & { zone: WorkspaceZoneId }
+      : never
+    : never;
 
-	type HandRole = "primary" | "auxiliary" | "task";
+type HandRole = "primary" | "auxiliary" | "task";
 
-	type PilesSurfaceValue<Zones extends readonly CardZoneId[]> = {
-	  readonly [Zone in Zones[number]]: PileSurface<readonly [Zone]>;
-	};
+type PilesSurfaceValue<Zones extends readonly CardZoneId[]> = {
+  readonly [Zone in Zones[number]]: PileSurface<readonly [Zone]>;
+};
 
-	type InteractionFormsSurfaceValue<
-	  Forms extends Readonly<Record<string, InteractionKey>>,
-	> = {
-	  readonly [Key in keyof Forms]: Forms[Key] extends InteractionKey
-	    ? InteractionFormSurface<Forms[Key]>
-	    : never;
-	};
+type InteractionFormsSurfaceValue<
+  Forms extends Readonly<Record<string, InteractionKey>>,
+> = {
+  readonly [Key in keyof Forms]: Forms[Key] extends InteractionKey
+    ? InteractionFormSurface<Forms[Key]>
+    : never;
+};
 
-	type WorkspaceSurfaceValue<Spec> =
-	  Spec extends WorkspaceBoardSurfaceDescriptor<infer Board extends BoardSurfaceBoardId>
-	    ? BoardSurface<Board>
-	    : Spec extends WorkspaceHandSurfaceDescriptor<infer Zone extends PlayerCardZoneId>
-	    ? HandSurface<readonly [Zone]>
-	    : Spec extends WorkspacePileSurfaceDescriptor<infer Zone extends CardZoneId>
-	      ? PileSurface<readonly [Zone]>
-	      : Spec extends WorkspacePilesSurfaceDescriptor<
-	            infer Zones extends readonly CardZoneId[]
-	        >
-	        ? PilesSurfaceValue<Zones>
-	        : Spec extends WorkspaceCardCollectionSurfaceDescriptor<
-	              infer Zones extends readonly CardZoneId[]
-	          >
-	          ? CardCollectionSurface<Zones>
-	          : Spec extends WorkspaceInteractionFormDescriptor<
-	                infer Interaction extends InteractionKey
-	            >
-	            ? InteractionFormSurface<Interaction>
-	          : Spec extends WorkspaceInteractionFormsDescriptor<
-	                infer Forms extends Readonly<Record<string, InteractionKey>>
-	            >
-	            ? InteractionFormsSurfaceValue<Forms>
-	            : Spec extends WorkspaceSurfaceSpec
-	              ? { readonly [Key in keyof Spec]: WorkspaceSurfaceValue<Spec[Key]> }
-	              : never;
+type WorkspaceSurfaceValue<Spec> =
+  Spec extends WorkspaceBoardSurfaceDescriptor<
+    infer Board extends BoardSurfaceBoardId
+  >
+    ? BoardSurface<Board>
+    : Spec extends WorkspaceHandSurfaceDescriptor<
+          infer Zone extends PlayerCardZoneId
+        >
+      ? HandSurface<readonly [Zone]>
+      : Spec extends WorkspacePileSurfaceDescriptor<
+            infer Zone extends CardZoneId
+          >
+        ? PileSurface<readonly [Zone]>
+        : Spec extends WorkspacePilesSurfaceDescriptor<
+              infer Zones extends readonly CardZoneId[]
+            >
+          ? PilesSurfaceValue<Zones>
+          : Spec extends WorkspaceCardCollectionSurfaceDescriptor<
+                infer Zones extends readonly CardZoneId[]
+              >
+            ? CardCollectionSurface<Zones>
+            : Spec extends WorkspaceInteractionFormDescriptor<
+                  infer Interaction extends InteractionKey
+                >
+              ? InteractionFormSurface<Interaction>
+              : Spec extends WorkspaceInteractionFormsDescriptor<
+                    infer Forms extends Readonly<Record<string, InteractionKey>>
+                  >
+                ? InteractionFormsSurfaceValue<Forms>
+                : Spec extends WorkspaceSurfaceSpec
+                  ? {
+                      readonly [Key in keyof Spec]: WorkspaceSurfaceValue<
+                        Spec[Key]
+                      >;
+                    }
+                  : never;
 
-	type WorkspaceZone = {
-	  hand<const Zone extends PlayerCardZoneId>(
-	    zone: Zone,
-	    options: { role: HandRole; label: string; order?: number },
-	  ): WorkspaceHandSurfaceDescriptor<Zone>;
-	  pile<const Zone extends CardZoneId>(
-	    zone: Zone,
-	  ): WorkspacePileSurfaceDescriptor<Zone>;
-	  piles<const Zones extends readonly CardZoneId[]>(
-	    zones: Zones,
-	  ): WorkspacePilesSurfaceDescriptor<Zones>;
-	  collection<const Zones extends readonly CardZoneId[]>(
-	    zones: Zones,
-	    options?: { mode?: "all" | "top-card" },
-	  ): WorkspaceCardCollectionSurfaceDescriptor<Zones>;
-	  useHand<const Zone extends PlayerCardZoneId>(
-	    name: string,
-	    options: { zone: Zone; role: HandRole; label: string; order?: number },
+type WorkspaceZone = {
+  hand<const Zone extends PlayerCardZoneId>(
+    zone: Zone,
+    options: { role: HandRole; label: string; order?: number },
+  ): WorkspaceHandSurfaceDescriptor<Zone>;
+  pile<const Zone extends CardZoneId>(
+    zone: Zone,
+  ): WorkspacePileSurfaceDescriptor<Zone>;
+  piles<const Zones extends readonly CardZoneId[]>(
+    zones: Zones,
+  ): WorkspacePilesSurfaceDescriptor<Zones>;
+  collection<const Zones extends readonly CardZoneId[]>(
+    zones: Zones,
+    options?: { mode?: "all" | "top-card" },
+  ): WorkspaceCardCollectionSurfaceDescriptor<Zones>;
+  useHand<const Zone extends PlayerCardZoneId>(
+    name: string,
+    options: { zone: Zone; role: HandRole; label: string; order?: number },
   ): HandSurface<readonly [Zone]>;
   usePile<const Zone extends CardZoneId>(
     name: string,
@@ -1137,37 +1176,42 @@ type WorkspaceZoneCard = ZoneCardRenderItem<
 type WorkspaceUI = Omit<
   DreamboardUI<typeof uiContract>,
   "Root" | "Game" | "Interaction" | "Board" | "Zone" | "Prompt" | "PromptInbox"
-	> & {
-	  Root(props: UIRootProps): ReactElement;
-	  defineSurfaces<const Spec extends WorkspaceSurfaceSpec>(
-	    spec: Spec,
-	  ): () => WorkspaceSurfaceValue<Spec>;
-	  defineGameUI<Surfaces>(
-	    config: DefineGameUIConfig<GameRootState, Surfaces> & {
-	      useSurfaces: () => Surfaces;
-	      interactionRoutes?: (context: {
-	        game: GameRootState;
-	        surfaces: Surfaces;
-	      }) => InteractionRoutes;
-	      phases: {
-	        readonly [Phase in PhaseName]: (context: {
-	          game: GameRootState;
-	          surfaces: Surfaces;
-	        }) => ReactNode;
-	      };
-	    },
-	  ): (props: Omit<UIRootProps, "children">) => ReactElement;
-	  readonly Game: TypedGame<typeof uiContract, GameView, PlayerId, PhaseName>;
-	  readonly Interaction: Pick<DreamboardUI<typeof uiContract>["Interaction"], "State" | "Dialog"> & {
-	    useForm<Key extends InteractionKey>(interaction: Key): InteractionFormSurface<Key>;
-	    form<const Interaction extends InteractionKey>(
-	      interaction: Interaction,
-	    ): WorkspaceInteractionFormDescriptor<Interaction>;
-	    forms<const Interactions extends Readonly<Record<string, InteractionKey>>>(
-	      interactions: Interactions,
-	    ): WorkspaceInteractionFormsDescriptor<Interactions>;
-	    Routes(props: InteractionRoutesProps): ReactElement;
-	  };
+> & {
+  Root(props: UIRootProps): ReactElement;
+  defineSurfaces<const Spec extends WorkspaceSurfaceSpec>(
+    spec: Spec,
+  ): () => WorkspaceSurfaceValue<Spec>;
+  defineGameUI<Surfaces>(
+    config: DefineGameUIConfig<GameRootState, Surfaces> & {
+      useSurfaces: () => Surfaces;
+      interactionRoutes?: (context: {
+        game: GameRootState;
+        surfaces: Surfaces;
+      }) => InteractionRoutes;
+      phases: {
+        readonly [Phase in PhaseName]: (context: {
+          game: GameRootState;
+          surfaces: Surfaces;
+        }) => ReactNode;
+      };
+    },
+  ): (props: Omit<UIRootProps, "children">) => ReactElement;
+  readonly Game: TypedGame<typeof uiContract, GameView, PlayerId, PhaseName>;
+  readonly Interaction: Pick<
+    DreamboardUI<typeof uiContract>["Interaction"],
+    "State" | "Dialog"
+  > & {
+    useForm<Key extends InteractionKey>(
+      interaction: Key,
+    ): InteractionFormSurface<Key>;
+    form<const Interaction extends InteractionKey>(
+      interaction: Interaction,
+    ): WorkspaceInteractionFormDescriptor<Interaction>;
+    forms<const Interactions extends Readonly<Record<string, InteractionKey>>>(
+      interactions: Interactions,
+    ): WorkspaceInteractionFormsDescriptor<Interactions>;
+    Routes(props: InteractionRoutesProps): ReactElement;
+  };
   readonly Board: WorkspaceBoard;
   readonly Zone: WorkspaceZone;
   readonly ResourceCounter: ResourceCounterComponents<ResourceId>;
@@ -1175,12 +1219,22 @@ type WorkspaceUI = Omit<
 
 function formInputKeysForInteraction(interaction: string): Set<string> {
   const [phase, id] = interaction.split(".", 2);
-  const phaseSpec = phase ? (game.phases as Record<string, unknown>)[phase] : undefined;
-  const phaseRecord = phaseSpec as {
-    interactions?: Record<string, { inputs?: Record<string, { kind?: string }> }>;
-    cardActions?: Record<string, { inputs?: Record<string, { kind?: string }> }>;
-    submit?: { inputs?: Record<string, { kind?: string }> };
-  } | undefined;
+  const phaseSpec = phase
+    ? (game.phases as Record<string, unknown>)[phase]
+    : undefined;
+  const phaseRecord = phaseSpec as
+    | {
+        interactions?: Record<
+          string,
+          { inputs?: Record<string, { kind?: string }> }
+        >;
+        cardActions?: Record<
+          string,
+          { inputs?: Record<string, { kind?: string }> }
+        >;
+        submit?: { inputs?: Record<string, { kind?: string }> };
+      }
+    | undefined;
   const spec =
     (id ? phaseRecord?.interactions?.[id] : undefined) ??
     (id ? phaseRecord?.cardActions?.[id] : undefined) ??
@@ -1203,7 +1257,9 @@ export const UI = createWorkspaceUIContract<
   typeof hexStaticBoards
 >({
   uiContract,
-  clientParamSchemasByPhase: createClientParamSchemasByPhase(game) as ClientParamSchemaMap,
+  clientParamSchemasByPhase: createClientParamSchemasByPhase(
+    game,
+  ) as ClientParamSchemaMap,
   formInputKeysForInteraction,
   resourceIds: literals.resourceIds as readonly ResourceId[],
   resourcePresentationById: literals.resourcePresentationById as Partial<
@@ -1220,7 +1276,8 @@ export const Interaction = UI.Interaction;
 export const PlayerRoster: WorkspaceUI["PlayerRoster"] = UI.PlayerRoster;
 export const Dice: WorkspaceUI["Dice"] = UI.Dice;
 export const Phase = UI.Phase;
-export const ResourceCounter: WorkspaceUI["ResourceCounter"] = UI.ResourceCounter;
+export const ResourceCounter: WorkspaceUI["ResourceCounter"] =
+  UI.ResourceCounter;
 
 export const clientParamSchemasByPhase = createClientParamSchemasByPhase(
   game,

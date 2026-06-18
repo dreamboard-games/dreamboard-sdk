@@ -65,7 +65,7 @@ export const scoreHand = definePhase<GameContract>()({
         totalPointsByPlayer,
         moonShooter: shooter,
       });
-      return accept(tx.state, [fx.transition("gameOver")]);
+      return accept(tx.state, { instructions: [fx.transition("gameOver")] });
     }
 
     const discardCards = q.zone.sharedCards("discard") as readonly CardId[];
@@ -88,9 +88,11 @@ export const scoreHand = definePhase<GameContract>()({
       totalPointsByPlayer,
       moonShooter: shooter,
     });
-    return accept(tx.state, [
-      fx.effect(shuffleDrawPile, { zoneId: "draw-pile" }),
-      fx.transition("setup"),
-    ]);
+    return accept(tx.state, {
+      instructions: [
+        fx.effect(shuffleDrawPile, { zoneId: "draw-pile" }),
+        fx.transition("setup"),
+      ],
+    });
   },
 });

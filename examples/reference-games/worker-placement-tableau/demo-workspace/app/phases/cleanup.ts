@@ -106,8 +106,8 @@ export const cleanup = definePhase<GameContract>()({
       seasonNumber: seasonOverflow ? state.publicState.seasonNumber : newSeason,
     });
 
-    return accept(tx.state, [
-      fx.transition(seasonOverflow ? "scoring" : "wakeup"),
-    ]);
+    return accept(tx.state, {
+      instructions: [fx.transition(seasonOverflow ? "scoring" : "wakeup")],
+    });
   },
 });

@@ -47,16 +47,16 @@ You cannot use chopsticks on the same turn you first take them.
 Score cards in each player's play area. Puddings are **not** scored until the
 game ends.
 
-| Card | Points |
-| --- | --- |
-| **Egg nigiri** | 1 |
-| **Salmon nigiri** | 2 |
-| **Squid nigiri** | 3 |
-| **Wasabi** | Triples the value of the **next** nigiri you score this round (3×). Unused wasabi scores 0. |
-| **Tempura** | 5 per pair |
-| **Sashimi** | 10 per set of three |
-| **Dumpling** | 1 / 3 / 6 / 10 / 15 for 1 / 2 / 3 / 4 / 5+ dumplings |
-| **Maki rolls** | Most maki icons: 6 · Second most: 3 (see ties below) |
+| Card              | Points                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| **Egg nigiri**    | 1                                                                                           |
+| **Salmon nigiri** | 2                                                                                           |
+| **Squid nigiri**  | 3                                                                                           |
+| **Wasabi**        | Triples the value of the **next** nigiri you score this round (3×). Unused wasabi scores 0. |
+| **Tempura**       | 5 per pair                                                                                  |
+| **Sashimi**       | 10 per set of three                                                                         |
+| **Dumpling**      | 1 / 3 / 6 / 10 / 15 for 1 / 2 / 3 / 4 / 5+ dumplings                                        |
+| **Maki rolls**    | Most maki icons: 6 · Second most: 3 (see ties below)                                        |
 
 ### Maki ties
 

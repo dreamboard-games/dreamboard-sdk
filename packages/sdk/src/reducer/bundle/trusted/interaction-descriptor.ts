@@ -126,11 +126,23 @@ function deriveCommitPolicy(
 function projectInteractionMetadata(interaction: {
   inputs: Record<string, InputCollector>;
   commit?: InteractionDescriptorShape["commit"];
-}): Pick<InteractionDescriptorShape, "kind" | "commit"> {
+  presentation?: { label?: string; help?: string };
+  interactionId: string;
+}): Pick<InteractionDescriptorShape, "kind" | "commit" | "label" | "help"> {
+  const label = normalizePresentationText(interaction.presentation?.label);
+  const help = normalizePresentationText(interaction.presentation?.help);
   return {
     kind: deriveInteractionKind(interaction.inputs),
     commit: deriveCommitPolicy(interaction.inputs, interaction.commit),
+    label: label ?? humanizeInteractionId(interaction.interactionId),
+    help,
   };
+}
+
+function normalizePresentationText(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
 }
 
 function enrichResourceInputPresentation(
@@ -280,6 +292,7 @@ export function buildInteractionDescriptor<
   const metadata = projectInteractionMetadata({
     ...interaction,
     inputs: interactionInputs,
+    interactionId: String(interactionId),
   });
   const queries = options.projection?.q ?? createStateQueries(domainState);
   const derived = options.projection?.derived;
@@ -289,7 +302,7 @@ export function buildInteractionDescriptor<
     metadata.kind === "prompt"
       ? {
           to: playerId,
-          title: humanizeInteractionId(interactionId),
+          title: metadata.label,
           options: shouldMaterializeInputDomains
             ? collectPromptOptions(
                 { inputs: interactionInputs },
@@ -319,6 +332,8 @@ export function buildInteractionDescriptor<
     phaseName,
     interactionKey: `${phaseName}.${interactionId}`,
     interactionId,
+    label: metadata.label,
+    help: metadata.help,
     commit: metadata.commit,
     zoneId: collectFirstCardZoneId(interaction),
     zoneIds: collectCardZoneIds(interaction),

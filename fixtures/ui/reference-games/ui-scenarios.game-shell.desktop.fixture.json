@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:2490d2319f8b6eab025d4825e1c88f1aac4bd87063cd1be418370c0b0d0350a4",
-    "finalSemanticDigest": "sha256:46204b9a117b7891555b33ef6ed7b8d0a2dfd258fe883a16e8a63ac93211519f",
+    "finalSemanticDigest": "sha256:5eef31cb0727e2f13a3cd5a3e0fb9b6380e01fc61eacb4d1faeb861b864f364f",
     "initialProjectionDigest": "sha256:673743b933d8f4786850396651a4a833b073501469f71c27f28aee2a723b4772",
     "submissionDigest": "sha256:a35c1e2807e384bd888d08641543ca581cb71f90a32cda04f13a05708c8c08e7"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:9263bd9f97bf68ce96afe5afa1bf8b40caa950668b2e4f76ede23c3cbcc8e73f",
+              "descriptorDigest": "sha256:6d94e5ebb9036d20f4cb826c0f46bc0c9bec4b2578fd56f7a2c7fb51012a328d",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Phase, roster, responsive viewport, and terminal outcome.",
             "family": "game-shell",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:9263bd9f97bf68ce96afe5afa1bf8b40caa950668b2e4f76ede23c3cbcc8e73f",
+              "descriptorDigest": "sha256:6d94e5ebb9036d20f4cb826c0f46bc0c9bec4b2578fd56f7a2c7fb51012a328d",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Phase, roster, responsive viewport, and terminal outcome.",
             "family": "game-shell",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.game-shell.desktop.submitted",
         "projectionDigest": "sha256:2490d2319f8b6eab025d4825e1c88f1aac4bd87063cd1be418370c0b0d0350a4",
-        "semanticDigest": "sha256:46204b9a117b7891555b33ef6ed7b8d0a2dfd258fe883a16e8a63ac93211519f",
+        "semanticDigest": "sha256:5eef31cb0727e2f13a3cd5a3e0fb9b6380e01fc61eacb4d1faeb861b864f364f",
         "submissionDigest": "sha256:a35c1e2807e384bd888d08641543ca581cb71f90a32cda04f13a05708c8c08e7",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.game-shell.desktop",
-    "sourceDigest": "sha256:48b8100ad7503693345f7a32039f10db73300b1b355142d489b611c8c2322e84",
+    "sourceDigest": "sha256:ca877dea68a317389521268392b387eb303f273cba96783ff1adcac735d6d735",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

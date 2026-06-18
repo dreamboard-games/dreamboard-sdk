@@ -41,6 +41,9 @@ export default defineScenario({
     const v = view(seat0);
     expect(v.playerVP[seat0]).toBe(2);
     expect(v.playerVP[seat1]).toBe(0);
-    expect(v.winnerPlayerId).toBe(seat0);
+    expect(
+      v.outcome?.standings.find((standing) => standing.result === "win")
+        ?.playerId,
+    ).toBe(seat0);
   },
 });

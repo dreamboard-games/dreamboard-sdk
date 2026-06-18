@@ -24,6 +24,7 @@ export interface ReplayRunnerAdapter {
 
 export class ReplayStepExecutionError extends Error {
   readonly diagnostics: ReplayStepDiagnostics;
+  readonly cause: unknown;
 
   constructor(
     step: WorkbenchSemanticReplayStep,
@@ -34,6 +35,7 @@ export class ReplayStepExecutionError extends Error {
     super(`Replay step '${step.stepId}' failed: ${message}`);
     this.name = "ReplayStepExecutionError";
     this.diagnostics = diagnostics;
+    this.cause = cause;
   }
 }
 

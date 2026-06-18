@@ -138,4 +138,83 @@ describe("createPostMessagePluginTransport", () => {
     expect(invalid).toContain("channel-mismatch");
     stop();
   });
+
+  test("reports post-init invalid envelopes with the bundled SDK version", () => {
+    const invalid: string[] = [];
+    const transport = createPostMessagePluginTransport({
+      bundledSdkVersion: "sdk-test-version",
+      onInvalidMessage: (reason) => invalid.push(reason),
+    });
+    const received: HostToPluginEnvelope[] = [];
+    const stop = transport.start((message) => {
+      received.push(message);
+    });
+
+    dispatchHostMessage(
+      envelope({
+        type: "runtime.init",
+        session: {
+          sessionId: "session-1",
+          players: [{ playerId: "player-1", displayName: "Player 1" }],
+        },
+      }),
+    );
+    expect(received).toHaveLength(1);
+
+    dispatchHostMessage({
+      ...envelope({
+        type: "gameplay.frame",
+        frame: {
+          gameVersion: 1,
+          actionSetVersion: "test-action-set",
+          perspectivePlayerId: "player-1",
+          view: null,
+          flow: {
+            currentPhase: null,
+            currentStage: null,
+            activePlayers: [],
+            simultaneousPhase: null,
+          },
+          availableInteractions: [],
+          zones: {},
+        },
+      }),
+      payload: {
+        type: "gameplay.frame",
+        frame: {
+          gameVersion: 1,
+          actionSetVersion: "test-action-set",
+          perspectivePlayerId: "player-1",
+          view: null,
+          flow: {
+            currentPhase: null,
+            currentStage: null,
+            activePlayers: [],
+            simultaneousPhase: null,
+          },
+          availableInteractions: [],
+          zones: {},
+          unexpected: true,
+        },
+      },
+    });
+
+    expect(invalid).toContain("invalid-envelope");
+    expect(outbound).toHaveLength(1);
+    expect(outbound[0]?.targetOrigin).toBe(HOST_ORIGIN);
+    expect(outbound[0]?.message).toMatchObject({
+      protocol: DREAMBOARD_PLUGIN_PROTOCOL,
+      version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+      channelId: CHANNEL_ID,
+      sequence: 1,
+      payload: {
+        type: "runtime.error",
+        code: "host-runtime-protocol-mismatch",
+      },
+    });
+    expect(JSON.stringify(outbound[0]?.message)).toContain(
+      "sdk-test-version",
+    );
+    stop();
+  });
 });

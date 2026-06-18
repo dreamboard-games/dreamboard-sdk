@@ -32,14 +32,18 @@ export function GameUI({
     phase === "drafting"
       ? `Round ${view.round} - ${PHASE_LABELS[phase]}`
       : PHASE_LABELS[phase];
+  const winningPlayerIds =
+    view.outcome?.standings
+      .filter((standing) => standing.rank === 1)
+      .map((standing) => standing.playerId) ?? [];
   const tip =
     phase === "drafting"
       ? view.canUseChopsticks
         ? "Pick cards, or use chopsticks to take two."
         : "Choose one card to keep, then pass the rest left."
       : phase === "gameOver"
-        ? view.winnerPlayerIds.length > 0
-          ? `Winner: ${view.winnerPlayerIds.map((id) => players.byId.get(id)?.name ?? id).join(", ")}`
+        ? winningPlayerIds.length > 0
+          ? `Winner: ${winningPlayerIds.map((id) => players.byId.get(id)?.name ?? id).join(", ")}`
           : "Final scores are in."
         : waitingFor
           ? `Waiting for ${waitingFor}.`

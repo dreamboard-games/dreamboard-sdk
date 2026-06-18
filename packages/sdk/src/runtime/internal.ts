@@ -5,9 +5,12 @@ export {
   type TypedGame,
 } from "./ui-contract.js";
 export type {
+  BoardGridInteractionFilter,
   BoardHexGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   BoardSpaceTargetProps,
   BoardTargetProps,
   BoardEdgeTargetProps,

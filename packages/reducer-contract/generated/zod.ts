@@ -66,9 +66,25 @@ export const DispatchRequestSchema = z.object({ "state": ReducerSessionStateSche
 
 export const ReduceResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
 
-export const TerminalOutcomeSchema = z.object({ "winnerPlayerId": z.string().min(1).optional(), "finalScores": z.record(z.string(), z.number().int()).optional(), "reason": z.string().min(1) }).strict();
+export const GameOutcomeReasonSchema = z.object({ "code": z.string().min(1), "message": z.string().min(1).optional() }).strict();
 
-export const ReduceResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": TerminalOutcomeSchema.optional(), "effects": z.array(EffectSchema), "continuations": ContinuationMapSchema }).strict();
+export const OutcomeResultSchema = z.enum(["win", "draw", "loss", "eliminated"]);
+
+export const OutcomeScoreComponentSchema = z.object({ "id": z.string().min(1), "label": z.string().min(1), "value": z.number().finite() }).strict();
+
+export const OutcomeTieBreakSchema = z.object({ "id": z.string().min(1), "label": z.string().min(1), "value": z.union([z.number().finite(), z.string()]) }).strict();
+
+export const OutcomeStandingSchema = z.object({ "playerId": z.string().min(1), "rank": z.number().int().gte(1), "result": OutcomeResultSchema, "score": z.number().finite().optional(), "scoreBreakdown": z.array(OutcomeScoreComponentSchema).optional(), "tieBreaks": z.array(OutcomeTieBreakSchema).optional() }).strict();
+
+export const GameOutcomeSchema = z.object({ "reason": GameOutcomeReasonSchema, "standings": z.array(OutcomeStandingSchema).min(1) }).strict();
+
+export const GameEventDetailSchema = z.object({ "label": z.string().min(1), "value": z.union([z.string(), z.number().finite(), z.boolean()]) }).strict();
+
+export const SystemActionEventSchema = z.object({ "kind": z.literal("systemAction"), "procedureId": z.string().min(1), "title": z.string().min(1), "summary": z.string().min(1).optional(), "details": z.array(GameEventDetailSchema).max(16).optional() }).strict();
+
+export const GameEventSchema = z.discriminatedUnion("kind", [SystemActionEventSchema]);
+
+export const ReduceResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "effects": z.array(EffectSchema), "continuations": ContinuationMapSchema, "events": z.array(GameEventSchema).max(32) }).strict();
 
 export const ReduceResultSchema = z.discriminatedUnion("kind", [ReduceResultRejectSchema, ReduceResultAcceptSchema]);
 
@@ -82,7 +98,7 @@ export const DispatchTraceSchema = z.discriminatedUnion("kind", [DispatchTraceAc
 
 export const DispatchResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
 
-export const DispatchResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": TerminalOutcomeSchema.optional(), "trace": z.array(DispatchTraceSchema) }).strict();
+export const DispatchResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "trace": z.array(DispatchTraceSchema), "events": z.array(GameEventSchema).max(32) }).strict();
 
 export const DispatchResultSchema = z.discriminatedUnion("kind", [DispatchResultRejectSchema, DispatchResultAcceptSchema]);
 

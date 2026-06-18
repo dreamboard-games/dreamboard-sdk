@@ -83,6 +83,7 @@ test("protocol authority materializes protocol fixture inputs", async () => {
               },
               availableInteractions: [],
               zones: {},
+              recentEvents: [],
             },
           },
         ],
@@ -100,7 +101,11 @@ test("protocol authority materializes protocol fixture inputs", async () => {
   assert.equal(result.finalFrame.id, "initial");
   assert.equal(result.viewer.playerId, "player-1");
   assert.deepEqual(result.replaySteps, []);
-  assert.deepEqual(result.capabilitiesForReplay([], ["desktop"]), ["click"]);
+  assert.deepEqual(result.capabilitiesForReplay([], ["desktop"]), [
+    "accessibility-scan",
+    "click",
+    "reduced-motion",
+  ]);
 });
 
 test("reducer authority executes the reducer bundle supplied by a scenario module", async () => {

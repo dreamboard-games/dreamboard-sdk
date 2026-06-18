@@ -1,10 +1,93 @@
 # Phase 04: Deterministic System Procedures And Game Events
 
-Status: proposed.
+Status: SDK event-contract, UI, canonical solo/automa examples, generated
+catalog/docs, Workbench evidence, and packed consumer proof complete on
+2026-06-18. Internal persistence/host proof remains pending.
 
 Depends on Phases 00-03.
 
 Primary repositories: `dreamboard-sdk` and the internal monorepo.
+
+## Source Receipt: SDK Phase 04 Slice
+
+Completed in `dreamboard-sdk` on 2026-06-18:
+
+- Added bounded reducer `GameEvent`/`SystemActionEvent` types, the `gameEvent`
+  helper, and options-object `accept`/`endGame` result APIs with
+  `instructions` and `events`.
+- Updated reducer-contract source schema, generated TypeScript/Zod output, and
+  conformance fixtures so accepted reduce/dispatch results always materialize
+  `events: []`.
+- Threaded accepted reducer events through trusted and ingress bundle result
+  shapes while preserving readonly instruction/trace contracts.
+- Added strict event normalization tests covering bounded system-action events,
+  malformed event rejection, terminal outcome plus events, and canonical outcome
+  ranking.
+- Added `recentEvents` to the plugin runtime contract, materialized gameplay
+  frames, strict fixture frames, runtime snapshot types, and semantic projection
+  digests.
+- Added controlled `GameEventLog` and `SystemActionSummary` UI components,
+  exported from the public components surface, with passive event presentation
+  and no gameplay command affordances.
+- Added the `solo-countdown-puzzle` and `automa-river-rival` canonical examples
+  from `canonical-game-briefs.md`, including deterministic event replay,
+  no-opponent/no-fake-seat checks, README/scenario coverage, generated fixtures,
+  catalog entries, and generated reference docs.
+- Recompiled portable UI fixtures so every strict protocol frame carries
+  `recentEvents`; the required catalog now contains 16 scenarios and the
+  reference-game check validates all nine canonical examples.
+- Hardened docs and pack dry-run scripts so they build the SDK declaration/CSS
+  artifact before reading package `dist` outputs in aggregate checks.
+
+Verification run:
+
+```sh
+mise exec node@24 -- pnpm typecheck
+mise exec node@24 -- pnpm --filter @dreamboard-games/reducer-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk exec bun test src/testing/ui-fixture/ui-fixture.test.ts src/reducer/bundle/trusted/phase-04-characterization.golden.test.ts
+mise exec node@24 -- pnpm docs:generate
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm ui:fixtures:compile
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm ui:catalog:check
+mise exec node@24 -- pnpm ui:runtime:test
+mise exec node@24 -- pnpm ui:coverage:check
+mise exec node@24 -- pnpm ui:test:runtime-visual
+mise exec node@24 -- pnpm ui:hard-cut:check
+mise exec node@24 -- pnpm ui:test
+mise exec node@24 -- pnpm reference-games:check
+mise exec node@24 -- pnpm reference-games:test:packed --required
+mise exec node@24 -- pnpm pack:dry-run
+mise exec node@24 -- pnpm check
+```
+
+Latest receipts:
+
+- Full scenario replay: `artifacts/ui/2026-06-18T14-15-20-742Z/receipt.json`.
+- Aggregate required replay: `artifacts/ui/2026-06-18T14-24-07-482Z/receipt.json`.
+- Story baseline: `artifacts/ui-stories/2026-06-18T14-23-22-655Z/receipt.json`.
+- Visual baseline: `artifacts/ui-visual/2026-06-18T14-23-36-031Z/receipt.json`.
+- `reference-games:test:packed --required` SDK tarball:
+  `sha256:f747bd546abb6a922d95476b8aefd7215ac16f1ee444989ff8c5041df0fe1a83`.
+
+Remaining Phase 04 work:
+
+- Extend the internal executor/authority/persistence/host stack so committed
+  events survive duplicate delivery, persistence, reconnect, plugin projection,
+  and real-host gameplay proof.
+- Migrate internal consumers to the options-object reducer result shape and
+  remove any remaining internal positional instruction-result compatibility.
+
+Phase 00 brief jobs cited:
+
+- `solo-countdown-puzzle-01`: `advance countdown after each player action`,
+  `resolve deterministic environment procedure`, `explain automatic procedure
+events`.
+- `automa-river-rival-01`: `advance deterministic rival after human action`,
+  `record rival action in inspectable event log`, `score human and rival state
+without fake seats`.
+- `cooperative-threshold-01`: `advance dusk countdown`.
+- `dice-worker-scheduler-01`: `resolve cleanup after all dice placed`.
 
 ## Objective
 

@@ -29,7 +29,7 @@ export const scoreRound = definePhase<GameContract>()({
   kind: "auto",
   state: scoreRoundPhaseStateSchema,
   initialState: () => ({}),
-  enter({ state, accept, edit, fx, q }) {
+  enter({ state, accept, edit, endGame, fx, q }) {
     const playerIds = q.player.order();
     const roundScores = scoreRoundForAll(playerIds, q);
     const totalScoreByPlayer = addScores(
@@ -64,13 +64,40 @@ export const scoreRound = definePhase<GameContract>()({
         playerIds,
       );
       const winners = findWinners(finalTotals, playerIds);
+      const outcome = {
+        reason: { code: "THREE_ROUNDS_COMPLETE" },
+        standings: playerIds.map((playerId) => ({
+          playerId,
+          rank: winners.includes(playerId) ? 1 : 2,
+          result: winners.includes(playerId)
+            ? winners.length > 1
+              ? "draw"
+              : "win"
+            : "loss",
+          score: finalTotals[playerId] ?? 0,
+          scoreBreakdown: [
+            {
+              id: "card-score",
+              label: "Card score",
+              value: totalScoreByPlayer[playerId] ?? 0,
+            },
+            {
+              id: "pudding",
+              label: "Pudding",
+              value: puddingScores[playerId] ?? 0,
+            },
+          ],
+        })),
+      } as const;
 
       tx.patchPublicState({
         puddingScoreByPlayer: puddingScores,
         totalScoreByPlayer: finalTotals,
-        winnerPlayerIds: winners,
+        outcome,
       });
-      return accept(tx.state, [fx.transition("gameOver")]);
+      return endGame(tx.state, outcome, {
+        instructions: [fx.transition("gameOver")],
+      });
     }
 
     const handSize = handSizeForPlayerCount(playerIds.length);
@@ -87,6 +114,6 @@ export const scoreRound = definePhase<GameContract>()({
       round: round + 1,
       roundScoreByPlayer: {},
     });
-    return accept(tx.state, [fx.transition("drafting")]);
+    return accept(tx.state, { instructions: [fx.transition("drafting")] });
   },
 });

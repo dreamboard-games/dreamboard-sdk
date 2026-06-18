@@ -17,6 +17,7 @@ const claimDescriptor = {
   phaseName: "play",
   interactionKey: "claim",
   interactionId: "claim:player-1",
+  label: "Claim",
   commit: { mode: "manual" },
   inputs: [
     {
@@ -47,6 +48,7 @@ function baseFrame() {
       simultaneousPhase: null,
     },
     availableInteractions: [claimDescriptor],
+    recentEvents: [],
     zones: {
       hand: {
         cardIds: ["card-1"],
@@ -132,6 +134,28 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         currentStage: "play",
         stageSeats: ["player-1"],
         simultaneousPhase: null,
+        guidance: {
+          phase: {
+            id: "play",
+            label: "Play",
+            summary: "Claim a card.",
+          },
+          setup: {
+            profileId: "standard",
+            name: "Standard",
+            steps: [{ id: "shuffle", label: "Shuffle" }],
+          },
+        },
+        recentEvents: [
+          {
+            kind: "systemAction",
+            version: 8,
+            index: 0,
+            procedureId: "river-advance",
+            title: "The river advanced",
+            details: [{ label: "Revealed", value: "Storm" }],
+          },
+        ],
         interactionsByRef: {
           "claim-ref": claimDescriptor,
         },
@@ -162,6 +186,28 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       handSize: 1,
     });
     expect(frame.availableInteractions).toEqual([claimDescriptor]);
+    expect(frame.guidance).toEqual({
+      phase: {
+        id: "play",
+        label: "Play",
+        summary: "Claim a card.",
+      },
+      setup: {
+        profileId: "standard",
+        name: "Standard",
+        steps: [{ id: "shuffle", label: "Shuffle" }],
+      },
+    });
+    expect(frame.recentEvents).toEqual([
+      {
+        kind: "systemAction",
+        version: 8,
+        index: 0,
+        procedureId: "river-advance",
+        title: "The river advanced",
+        details: [{ label: "Revealed", value: "Storm" }],
+      },
+    ]);
     expect(frame.zones.hand?.playableByCardId["card-1"]).toEqual([
       claimDescriptor,
     ]);
@@ -174,6 +220,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       inputs: claimDescriptor.inputs,
       commit: { mode: "manual" },
       interactionId: "claim:player-1",
+      label: "Claim",
       interactionKey: "claim",
       phaseName: "play",
       kind: "action",

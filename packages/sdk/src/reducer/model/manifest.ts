@@ -160,6 +160,14 @@ export type SetupProfileMetadata = {
   name: string;
   description?: string | null;
   optionValues?: Record<string, string> | null;
+  guidance?: {
+    summary?: string | null;
+    steps: readonly {
+      id: string;
+      label: string;
+      description?: string | null;
+    }[];
+  } | null;
 };
 
 export type ReducerManifestContract<

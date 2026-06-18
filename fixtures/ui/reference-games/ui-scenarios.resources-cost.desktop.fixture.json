@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:034c7a2be1d3b7d963ce3a5c17c66f832f5a55c7aa2742fd2c2e7e4f36ad6b1f",
-    "finalSemanticDigest": "sha256:375167a807a7fd8cdf00ca35eca7df6f11cd13650e00cae91cad5b6127828488",
+    "finalSemanticDigest": "sha256:3cf166cb66b1caa9d43942a5c4d98ce95746b9081af691576c0d563533b6b2ff",
     "initialProjectionDigest": "sha256:a0cd8cf66b4f004ec253854632be77d23e60bce44ecd372c4612fc0426817db1",
     "submissionDigest": "sha256:1cb8c374ece1c7c2c071039e2ff8a3ce6c83ce6b0f49a142d6fcb40492437e27"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:485fe4947711c179ce679e1e728b24b64a04b812e9f27a7bb3968caa528bd274",
+              "descriptorDigest": "sha256:cb8a49d51c063fe8cba2420526ae71c759bf7f6e291d87f605cddb2cf83f070c",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Current resources and a payable cost.",
             "family": "resources",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:485fe4947711c179ce679e1e728b24b64a04b812e9f27a7bb3968caa528bd274",
+              "descriptorDigest": "sha256:cb8a49d51c063fe8cba2420526ae71c759bf7f6e291d87f605cddb2cf83f070c",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Current resources and a payable cost.",
             "family": "resources",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.resources-cost.desktop.submitted",
         "projectionDigest": "sha256:034c7a2be1d3b7d963ce3a5c17c66f832f5a55c7aa2742fd2c2e7e4f36ad6b1f",
-        "semanticDigest": "sha256:375167a807a7fd8cdf00ca35eca7df6f11cd13650e00cae91cad5b6127828488",
+        "semanticDigest": "sha256:3cf166cb66b1caa9d43942a5c4d98ce95746b9081af691576c0d563533b6b2ff",
         "submissionDigest": "sha256:1cb8c374ece1c7c2c071039e2ff8a3ce6c83ce6b0f49a142d6fcb40492437e27",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.resources-cost.desktop",
-    "sourceDigest": "sha256:699daf5be7a2055667ac9713a705251488ec2297d2a9b73474e7e50205e3bb4b",
+    "sourceDigest": "sha256:404e350c22feff087a0efa2bdf5dcc81b58a6eff44f0aa2d2bd05254e16d5b9b",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

@@ -82,6 +82,6 @@ export const endTurn = defineInteraction<GameContract, PlayerTurnPhaseState>()({
       ...prev,
       turnNumber: prev.turnNumber + 1,
     }));
-    return accept(tx.state, nextEffects);
+    return accept(tx.state, { instructions: nextEffects });
   },
 });

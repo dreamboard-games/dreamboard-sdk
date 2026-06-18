@@ -4,6 +4,7 @@ import {
   defineGameContract,
   sparseCounts,
   type ErrorCodeOfContract,
+  type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
 
@@ -89,9 +90,9 @@ export const publicStateSchema = z.object({
   // Per-player Renown charter cards (hidden until claimed). Persists across turns.
   landmarkCards: perPlayerCountSchema,
 
-  // Terminal winner. Null until `checkGameEnd` latches the derived winner at
-  // the hard end-of-turn lifecycle boundary.
-  winnerPlayerId: ids.playerId.nullable(),
+  // Terminal outcome. Null until `checkGameEnd` latches the derived standings
+  // at the hard end-of-turn lifecycle boundary.
+  outcome: z.custom<GameOutcome<string>>().nullable(),
 });
 
 // Trade offer held in `playerTurn` phase state while responses stream in.

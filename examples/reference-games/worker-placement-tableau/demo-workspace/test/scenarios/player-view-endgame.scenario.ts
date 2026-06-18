@@ -2,12 +2,12 @@ import { defineScenario } from "../testing-types";
 import { setPlayerResources } from "../scenario-helpers";
 
 // Endgame view shape: after scoring runs, finalVPByPlayerId is
-// populated AND winnerPlayerId is set. Action availability comes from
+// populated AND outcome standings are set. Action availability comes from
 // interaction descriptors, which are empty once the game reaches gameOver.
 export default defineScenario({
   id: "player-view-endgame",
   description:
-    "After scoring, view exposes finalVPByPlayerId and winnerPlayerId, with no gameOver actions.",
+    "After scoring, view exposes finalVPByPlayerId and outcome standings, with no gameOver actions.",
   from: "initial-turn",
   when: async ({ game, seat }) => {
     const seat0 = seat(0);
@@ -41,7 +41,10 @@ export default defineScenario({
     const v = view(seat0);
 
     // Endgame data is populated.
-    expect(v.winnerPlayerId).toBe(seat0);
+    expect(
+      v.outcome?.standings.find((standing) => standing.result === "win")
+        ?.playerId,
+    ).toBe(seat0);
     expect(v.finalVPByPlayerId === null).toBe(false);
     expect(v.finalVPByPlayerId?.[seat0]).toBe(7);
     expect(v.finalVPByPlayerId?.[seat1]).toBe(2);

@@ -174,7 +174,7 @@ export const craftAtWorkshop = defineInteraction<
         forgeActiveBy: null,
         passedPlayerIds: result.finalPassed,
       });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       pendingCraftBy: null,

@@ -93,10 +93,33 @@ export interface InteractionDiagnosticReason {
   readonly errorCode: string;
 }
 
+export interface SetupGuidanceStep {
+  readonly id: string;
+  readonly label: string;
+  readonly description?: string;
+}
+
+export interface GameGuidanceProjection {
+  readonly phase: {
+    readonly id: string;
+    readonly label: string;
+    readonly summary?: string;
+    readonly objective?: string;
+  };
+  readonly setup?: {
+    readonly profileId: string;
+    readonly name: string;
+    readonly summary?: string;
+    readonly steps: readonly SetupGuidanceStep[];
+  };
+}
+
 interface InteractionDescriptorBase<Interaction extends string = string> {
   readonly phaseName: string;
   readonly interactionKey: Interaction;
   readonly interactionId: string;
+  readonly label: string;
+  readonly help?: string;
   readonly zoneId?: string;
   readonly zoneIds?: readonly string[];
   readonly commit: InteractionCommitPolicy;
@@ -153,6 +176,26 @@ export interface SimultaneousPhaseSnapshot {
   readonly pendingPlayerIds: readonly PlayerId[];
 }
 
+export interface GameEventDetail {
+  readonly label: string;
+  readonly value: string | number | boolean;
+}
+
+export interface SystemActionEvent {
+  readonly kind: "systemAction";
+  readonly procedureId: string;
+  readonly title: string;
+  readonly summary?: string;
+  readonly details?: readonly GameEventDetail[];
+}
+
+export type GameEvent = SystemActionEvent;
+
+export type ProjectedGameEvent = GameEvent & {
+  readonly version: number;
+  readonly index: number;
+};
+
 export interface PluginGameplayFrame<
   View = unknown,
   Phase extends string = string,
@@ -172,6 +215,8 @@ export interface PluginGameplayFrame<
   readonly availableInteractions: ReadonlyArray<
     InteractionDescriptor<Interaction>
   >;
+  readonly guidance?: GameGuidanceProjection | null;
+  readonly recentEvents: readonly ProjectedGameEvent[];
   readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
 }
 
@@ -179,6 +224,8 @@ export interface ReducerSeatProjectionBundle {
   readonly currentStage?: string | null;
   readonly stageSeats?: readonly string[];
   readonly simultaneousPhase?: SimultaneousPhaseSnapshot | null;
+  readonly guidance?: GameGuidanceProjection | null;
+  readonly recentEvents?: readonly ProjectedGameEvent[];
   readonly interactionsByRef?: unknown;
   readonly seats: Readonly<
     Record<

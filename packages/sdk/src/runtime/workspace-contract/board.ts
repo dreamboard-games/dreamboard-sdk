@@ -3,6 +3,7 @@ import { createElement } from "react";
 import type {
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridProps,
 } from "../primitives/index.js";
 import type { BoardSpaceTargetProps } from "../primitives/board.js";
 import { createBoardTargetInputSlot } from "./slots.js";
@@ -66,6 +67,15 @@ export function createBoardNamespace<Card>(
           ...props,
           board: options.hexStaticBoards[boardId],
         } as BoardHexGridProps<never, never>,
+      ) as ReactElement;
+    },
+    SquareGrid({ board: boardId, ...props }: { board: string }) {
+      return createElement(
+        baseUI.Board.SquareGrid as never,
+        {
+          ...props,
+          board: options.squareStaticBoards?.[boardId],
+        } as BoardSquareGridProps<never>,
       ) as ReactElement;
     },
   };

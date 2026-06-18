@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:024078b78c94871dabcf49d64084f1a9c5290a4a5925cf7e144b01f4e1df00fd",
-    "finalSemanticDigest": "sha256:5514837becaaf6fd33823feaba7bed807fe43f9eb2244b36f0bc1ea071ab911a",
+    "finalSemanticDigest": "sha256:365a0fac0835530df450fc062070b9da0fb06a088ea9c9cfc3842a91cd8ba65b",
     "initialProjectionDigest": "sha256:e7cd51a6fb91d69b117002ecb82320f0627646db5f85390d6ae953f5d5038216",
     "submissionDigest": "sha256:45e2bd255c51dc35fc739541fdf4f45845439daa176a81e4b80bc1e4e1491f64"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:710b2eccabfa2264abe35f087766928868b3d27f449951e70b017c24ede9104b",
+              "descriptorDigest": "sha256:8311e8ce3d0a1e5973fb1c628fb9cebbb05616d241008ce3f20a6d7b30acfb2b",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Selectable cards, disabled affordances, and hidden state.",
             "family": "cards",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:710b2eccabfa2264abe35f087766928868b3d27f449951e70b017c24ede9104b",
+              "descriptorDigest": "sha256:8311e8ce3d0a1e5973fb1c628fb9cebbb05616d241008ce3f20a6d7b30acfb2b",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Selectable cards, disabled affordances, and hidden state.",
             "family": "cards",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.cards-hand.desktop.submitted",
         "projectionDigest": "sha256:024078b78c94871dabcf49d64084f1a9c5290a4a5925cf7e144b01f4e1df00fd",
-        "semanticDigest": "sha256:5514837becaaf6fd33823feaba7bed807fe43f9eb2244b36f0bc1ea071ab911a",
+        "semanticDigest": "sha256:365a0fac0835530df450fc062070b9da0fb06a088ea9c9cfc3842a91cd8ba65b",
         "submissionDigest": "sha256:45e2bd255c51dc35fc739541fdf4f45845439daa176a81e4b80bc1e4e1491f64",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.cards-hand.desktop",
-    "sourceDigest": "sha256:9433c787ba1e3bef3b376509eea4c20692d9442eaefb68d15a13edb616bfea1c",
+    "sourceDigest": "sha256:dd9cf989b6b9c5b0f05f5b2bcc77ae0142de9cbb2ca035c996eefaad5b2296ca",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

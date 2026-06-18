@@ -11,6 +11,7 @@ import {
   SemanticResolutionError,
   type WorkbenchSemanticReplayStep,
 } from "./semantic-browser-driver.js";
+import { ReplayStepExecutionError } from "../../src/replay/replay-runner.js";
 
 const surface = "gameplay";
 const scopeId = "runtime";
@@ -274,21 +275,29 @@ test("semantic driver reports typed resolution failures", async ({ page }) => {
     </main>
   `);
 
-  await expect(
-    executeFixtureStep(page, {
-      stepId: "missing-submit",
-      resolve: {
-        surface,
-        scopeId,
-        interactionKey,
-        interactionId,
-        intent: "submit",
-        actuatorKind: "click",
-      },
-      execute: { kind: "activate" },
-      expect: {},
-    }),
-  ).rejects.toThrow(SemanticResolutionError);
+  await expect(async () => {
+    try {
+      await executeFixtureStep(page, {
+        stepId: "missing-submit",
+        resolve: {
+          surface,
+          scopeId,
+          interactionKey,
+          interactionId,
+          intent: "submit",
+          actuatorKind: "click",
+        },
+        execute: { kind: "activate" },
+        expect: {},
+      });
+    } catch (cause) {
+      expect(cause).toBeInstanceOf(ReplayStepExecutionError);
+      expect((cause as ReplayStepExecutionError).cause).toBeInstanceOf(
+        SemanticResolutionError,
+      );
+      throw cause;
+    }
+  }).rejects.toThrow(ReplayStepExecutionError);
 });
 
 test("semantic snapshot reader normalizes current Workbench protocol records", async ({

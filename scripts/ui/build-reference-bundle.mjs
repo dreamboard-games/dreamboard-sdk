@@ -66,12 +66,28 @@ function writeOctal(buffer, value, offset, length) {
   buffer.write(`${octal}\0`, offset, length, "ascii");
 }
 
-function tarHeader({ name, size }) {
-  if (Buffer.byteLength(name) > 100) {
-    throw new Error(`Deterministic tar entry name is too long: ${name}`);
+function splitTarPath(name) {
+  if (Buffer.byteLength(name) <= 100) {
+    return { name, prefix: "" };
   }
+  const parts = name.split("/");
+  for (let index = parts.length - 1; index > 0; index -= 1) {
+    const entryName = parts.slice(index).join("/");
+    const prefix = parts.slice(0, index).join("/");
+    if (
+      Buffer.byteLength(entryName) <= 100 &&
+      Buffer.byteLength(prefix) <= 155
+    ) {
+      return { name: entryName, prefix };
+    }
+  }
+  throw new Error(`Deterministic tar entry name is too long: ${name}`);
+}
+
+function tarHeader({ name, size }) {
+  const tarPath = splitTarPath(name);
   const header = Buffer.alloc(512, 0);
-  writeString(header, name, 0, 100);
+  writeString(header, tarPath.name, 0, 100);
   writeOctal(header, 0o644, 100, 8);
   writeOctal(header, 0, 108, 8);
   writeOctal(header, 0, 116, 8);
@@ -81,6 +97,9 @@ function tarHeader({ name, size }) {
   writeString(header, "0", 156, 1);
   writeString(header, "ustar\0", 257, 6);
   writeString(header, "00", 263, 2);
+  if (tarPath.prefix) {
+    writeString(header, tarPath.prefix, 345, 155);
+  }
 
   let checksum = 0;
   for (const byte of header) {
@@ -96,16 +115,20 @@ async function collectBundleEntries() {
       baseDir: root,
       includeDir: path.join(root, "examples/reference-games"),
       prefix: "examples/reference-games",
+      excludeDirs: new Set(["node_modules", "dist"]),
     },
     {
       baseDir: buildRoot,
       includeDir: path.join(buildRoot, "packages"),
       prefix: "packages",
+      excludeDirs: new Set(),
     },
   ];
   const entries = [];
   for (const source of sources) {
-    const files = await walkFiles(source.includeDir);
+    const files = await walkFiles(source.includeDir, {
+      excludeDirs: source.excludeDirs,
+    });
     for (const relative of files) {
       const absolute = path.join(source.includeDir, relative);
       entries.push({

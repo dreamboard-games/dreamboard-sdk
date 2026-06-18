@@ -27,7 +27,7 @@ export default defineScenario({
 
     await expect(async () => {
       await game.submit(seat0, "fulfillOrder", { cardId: "grand-atelier" });
-    }).toRejectWith({ errorCode: "ORDER_REQUIREMENT_NOT_MET" });
+    }).toRejectWith({ errorCode: "NO_FULFILLABLE_ORDER" });
 
     // Add a 6th cell.
     await patchMatOccupancy(game, seat0, [["cell-r1-c2", "anvil"]]);

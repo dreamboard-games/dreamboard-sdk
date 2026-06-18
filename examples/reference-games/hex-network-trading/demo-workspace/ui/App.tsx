@@ -1,6 +1,6 @@
 import {
   DiceRoller,
-  GameEndDisplay,
+  OutcomeDialog,
   type ViewCard,
 } from "@dreamboard-games/sdk/ui";
 import type { ReactNode } from "react";
@@ -195,7 +195,7 @@ function FrontierLayout({
   const currentPlayerName = turn.currentPlayerId
     ? (players.byId.get(turn.currentPlayerId)?.name ?? turn.currentPlayerId)
     : undefined;
-  const titleSub = view.winnerPlayerId
+  const titleSub = view.outcome
     ? "Game over"
     : route.title({
         setupPlacedCamp,
@@ -330,15 +330,9 @@ function FrontierLayout({
         </section>
       </main>
 
-      <GameEndDisplay
-        isGameOver={!!view.winnerPlayerId}
-        scores={turn.order.map((playerId) => ({
-          playerId,
-          name: players.byId.get(playerId)?.name ?? playerId,
-          score: influenceByPlayer[playerId] ?? 0,
-          isWinner: playerId === view.winnerPlayerId,
-        }))}
-        winnerMessage="The frontier charter is settled."
+      <OutcomeDialog
+        outcome={view.outcome}
+        playerName={(playerId) => players.byId.get(playerId)?.name ?? playerId}
       />
     </>
   );

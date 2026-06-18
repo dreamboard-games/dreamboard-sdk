@@ -38,11 +38,73 @@ export const BoardStaticProjectionSchema = z
   })
   .strict();
 
+export const SetupGuidanceStepSchema = z
+  .object({
+    id: z.string().min(1),
+    label: z.string().min(1),
+    description: z.string().optional(),
+  })
+  .strict();
+
+export const GameGuidanceProjectionSchema = z
+  .object({
+    phase: z
+      .object({
+        id: z.string().min(1),
+        label: z.string().min(1),
+        summary: z.string().optional(),
+        objective: z.string().optional(),
+      })
+      .strict(),
+    setup: z
+      .object({
+        profileId: z.string().min(1),
+        name: z.string().min(1),
+        summary: z.string().optional(),
+        steps: z.array(SetupGuidanceStepSchema),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict();
+
+export const GameEventDetailSchema = z
+  .object({
+    label: z.string().min(1),
+    value: z.union([z.string(), z.number().finite(), z.boolean()]),
+  })
+  .strict();
+
+export const SystemActionEventSchema = z
+  .object({
+    kind: z.literal("systemAction"),
+    procedureId: z.string().min(1),
+    title: z.string().min(1),
+    summary: z.string().optional(),
+    details: z.array(GameEventDetailSchema).optional(),
+  })
+  .strict();
+
+export const GameEventSchema = z.discriminatedUnion("kind", [
+  SystemActionEventSchema,
+]);
+
+export const ProjectedGameEventSchema = GameEventSchema.and(
+  z
+    .object({
+      version: z.number().int().nonnegative(),
+      index: z.number().int().nonnegative(),
+    })
+    .strict(),
+);
+
 export const SeatProjectionBundleSchema = z
   .object({
     currentStage: z.string().nullable().optional(),
     stageSeats: z.array(z.string()).optional(),
     simultaneousPhase: z.unknown().nullable().optional(),
+    guidance: GameGuidanceProjectionSchema.nullable().optional(),
+    recentEvents: z.array(ProjectedGameEventSchema).optional(),
     interactionsByRef: z.record(z.string(), z.unknown()).optional(),
     seats: z.record(
       z.string(),
@@ -174,6 +236,8 @@ const InteractionBaseSchema = z
     phaseName: z.string().min(1),
     interactionKey: z.string().min(1),
     interactionId: z.string().min(1),
+    label: z.string().min(1),
+    help: z.string().optional(),
     zoneId: z.string().optional(),
     zoneIds: z.array(z.string()).optional(),
     commit: InteractionCommitPolicySchema,
@@ -259,6 +323,8 @@ export const PluginGameplayFrameSchema = z
       })
       .strict(),
     availableInteractions: z.array(InteractionDescriptorSchema),
+    guidance: GameGuidanceProjectionSchema.nullable().optional(),
+    recentEvents: z.array(ProjectedGameEventSchema),
     zones: z.record(z.string(), ZoneHandlesSnapshotSchema),
   })
   .strict() as unknown as z.ZodType<PluginGameplayFrame>;

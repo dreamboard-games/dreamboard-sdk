@@ -1,4 +1,4 @@
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { defineView, type GameOutcome } from "@dreamboard-games/sdk/reducer";
 import type {
   GameContract,
   PlayerTurnPhaseState,
@@ -105,7 +105,7 @@ export type PlayerView = {
   readonly scoutsByPlayerId: Partial<Record<PlayerId, number>>;
 
   // Derived ownership -----------------------------------------------------
-  readonly winnerPlayerId: PlayerId | null;
+  readonly outcome: GameOutcome<PlayerId> | null;
   readonly tradeNetworkOwner: PlayerId | null;
   readonly tradeNetworkLength: number;
   readonly explorerGuildOwner: PlayerId | null;
@@ -188,7 +188,7 @@ export const playerView = defineView<GameContract>()({
       myTradeResponse,
       influenceByPlayerId: publicVp,
       scoutsByPlayerId: state.publicState.scoutsDeployed,
-      winnerPlayerId: state.publicState.winnerPlayerId,
+      outcome: state.publicState.outcome,
       tradeNetworkOwner: lr.ownerPlayerId,
       tradeNetworkLength: lr.length,
       explorerGuildOwner: la.ownerPlayerId,

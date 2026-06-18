@@ -5,6 +5,15 @@ export const referenceGame = {
   id: "hearts",
   displayName: "Hearts",
   sdkPackageSetVersion: DREAMBOARD_SDK_PACKAGE_SET.sdkVersion,
+  guidance: {
+    phase: {
+      id: "passing",
+      label: "Pass cards",
+      summary: "Select three private cards to pass before trick play begins.",
+      objective:
+        "Reduce hand risk while preserving enough suit coverage for the first trick.",
+    },
+  },
   players: ["north", "east", "south", "west"],
   initialPrivateHand: [
     "two-clubs",
@@ -16,6 +25,7 @@ export const referenceGame = {
   interactions: [
     {
       id: "pass-three",
+      label: "Pass three",
       actor: "south",
       input: "select-three-cards",
       visibility: "private-hand",
@@ -23,6 +33,7 @@ export const referenceGame = {
     },
     {
       id: "play-to-trick",
+      label: "Play to trick",
       actor: "south",
       input: "choose-card-following-suit",
       target: "shared-trick-area",
@@ -31,7 +42,10 @@ export const referenceGame = {
   coverage,
 };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+  typeof process !== "undefined" &&
+  import.meta.url === `file://${process.argv[1]}`
+) {
   console.log(
     JSON.stringify({
       id: referenceGame.id,

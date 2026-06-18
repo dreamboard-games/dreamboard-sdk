@@ -87,9 +87,7 @@ export function FrontierTrailsBoard({
   const showInteractiveEdges = gameplayPhase !== "setup" || setupPlacedCamp;
 
   return (
-    <div
-      className="relative flex h-full min-h-0 w-full overflow-hidden rounded-2xl bg-[#fdfbf7] bg-[radial-gradient(rgba(45,45,45,0.15)_1px,transparent_1px)] bg-[length:24px_24px] shadow-[0_12px_30px_-14px_rgba(45,45,45,0.22),inset_0_0_0_1px_rgba(45,45,45,0.08)]"
-    >
+    <div className="relative flex h-full min-h-0 w-full overflow-hidden rounded-2xl bg-[#fdfbf7] bg-[radial-gradient(rgba(45,45,45,0.15)_1px,transparent_1px)] bg-[length:24px_24px] shadow-[0_12px_30px_-14px_rgba(45,45,45,0.22),inset_0_0_0_1px_rgba(45,45,45,0.08)]">
       <board.Root>
         <Board.HexGrid
           board={SECTOR}

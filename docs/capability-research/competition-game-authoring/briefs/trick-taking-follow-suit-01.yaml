@@ -1,0 +1,33 @@
+{
+  "id": "trick-taking-follow-suit-01",
+  "title": "Follow-suit trick round",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 3, "max": 4 },
+  "summary": "Players play one card to a trick, follow the led suit when able, and award the trick to the highest matching card.",
+  "authorJobs":
+    [
+      "deal private hands",
+      "play one legal card",
+      "award trick to winning card",
+    ],
+  "uiJobs":
+    [
+      "show private hand and public trick",
+      "disable off-suit cards when following suit is possible",
+      "show trick winner",
+    ],
+  "authorityJobs":
+    [
+      "reject off-suit plays when a matching suit exists",
+      "preserve hand secrecy",
+      "advance leader after trick award",
+    ],
+  "acceptance":
+    [
+      "uses existing hand and card action concepts",
+      "requires no new runtime capability",
+      "legal-card rejection is reducer-owned",
+    ],
+  "formatNotes":
+    { "compactMobile": true, "optionalPhysicalNotes": ["suited cards"] },
+}

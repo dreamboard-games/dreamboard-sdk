@@ -1,8 +1,71 @@
 # Phase 01: Square Board Interaction And Roll-And-Write Example
 
-Status: proposed.
+Status: source-complete on 2026-06-18.
 
 Depends on Phase 00.
+
+Phase 00 brief jobs cited:
+
+- `roll-and-write-scorecard-01`: `select one legal square`, `show why other
+squares are blocked`.
+- `shared-markable-map-01`: `select one unclaimed shared space`.
+
+Current source receipt:
+
+- Implemented `Board.SquareGrid` as the only new public runtime capability in
+  this phase.
+- Generalized the grid interaction filter and kept reducer input kinds,
+  browser effect kinds, internal transport contracts, sheet APIs, and
+  physical-format tooling unchanged.
+- Threaded `staticBoards.square` through generated workspace contracts with a
+  defaulted low-level square-board map.
+- Updated square-grid interactive layers to emit the existing semantic browser
+  actuator attributes; no new browser-effect protocol was introduced.
+- Added the `roll-and-write-scorecard` reference game with the Cloudline Survey
+  seeded round loop, legal-target reducer model, failed-survey fallback,
+  stale/invalid submission rejection, complete-game scoring, required scenario
+  registration, board-space fixture authority, and generated UI
+  fixture/catalog/docs surfaces for
+  `roll-and-write-scorecard.mark-cell.mobile`.
+- Focused checks passed:
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/sdk typecheck`
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/workspace-codegen typecheck`
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/workspace-codegen test src/seeds.test.ts`
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/sdk exec bun test src/runtime/workspace-contract.test.tsx src/testing/competition-characterization/phase-00-baseline.test.ts src/ui/components/board/grid-markup.test.tsx`
+  - `mise exec node@24 -- pnpm reference-games:check`
+  - `mise exec node@24 -- pnpm reference-games:bundle`
+  - `mise exec node@24 -- pnpm reference-games:test:packed --game roll-and-write-scorecard`
+  - `mise exec node@24 -- pnpm ui:catalog:check`
+  - `mise exec node@24 -- pnpm ui:fixtures:check`
+  - `mise exec node@24 -- pnpm docs:check`
+  - `mise exec node@24 -- pnpm ui:test --scenario roll-and-write-scorecard.mark-cell.mobile`
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test tests/scenario-keyboard.spec.ts`
+  - `mise exec node@24 -- pnpm --filter @dreamboard-games/ui-workbench test`
+  - `mise exec node@24 -- pnpm typecheck`
+  - `mise exec node@24 -- pnpm lint`
+  - `mise exec node@24 -- pnpm test`
+  - `mise exec node@24 -- pnpm exports:check`
+  - `mise exec node@24 -- pnpm pack:consumer-check`
+  - `mise exec node@24 -- pnpm build`
+  - `mise exec node@24 -- pnpm ui:runtime:test`
+  - `mise exec node@24 -- pnpm ui:test:runtime-visual`
+  - `mise exec node@24 -- pnpm reference-games:test:packed --required`
+  - `mise exec node@24 -- pnpm ui:check`
+  - `mise exec node@24 -- pnpm pack:dry-run`
+- UI receipt:
+  `artifacts/ui/2026-06-18T12-30-56-794Z/receipt.json`.
+- Story and visual receipts:
+  `artifacts/ui-stories/2026-06-18T12-30-11-353Z/receipt.json` and
+  `artifacts/ui-visual/2026-06-18T12-30-26-648Z/receipt.json`.
+- Packed required reference-game receipt:
+  `build/reference-games/packed-consumer-receipt.json` with SDK tarball
+  `sha256:285abb9eecd8334bd03d38230d3e1c5bd15aa33d42d79e3a25b38de50ad50689`.
+- `mise exec node@24 -- pnpm check` still stops at `format:check` because 53
+  existing reference/generated files outside this phase are not formatted
+  according to the current Prettier configuration.
+
+Remaining phase work: none. Phase 02 owns migration from the current terminal
+API shape to canonical `GameOutcome`.
 
 ## Objective
 

@@ -1,6 +1,8 @@
 {
   "currentStage": "setup",
-  "stageSeats": ["player-1"],
+  "stageSeats": [
+    "player-1"
+  ],
   "view": {
     "spaces": [
       {
@@ -250,7 +252,7 @@
       "player-3": 0,
       "player-4": 0
     },
-    "winnerPlayerId": null,
+    "outcome": null,
     "tradeNetworkOwner": null,
     "tradeNetworkLength": 0,
     "explorerGuildOwner": null,
@@ -261,6 +263,7 @@
       "phaseName": "setup",
       "interactionKey": "setup.placeSetupCamp",
       "interactionId": "placeSetupCamp",
+      "label": "Place Setup Camp",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -279,6 +282,7 @@
       "phaseName": "setup",
       "interactionKey": "setup.placeSetupTrail",
       "interactionId": "placeSetupTrail",
+      "label": "Place Setup Trail",
       "commit": {
         "mode": "autoWhenReady"
       },

@@ -61,6 +61,6 @@ export const passing = definePhase<GameContract>()({
       cardIdsByPlayer,
     });
 
-    return accept(tx.state, [fx.transition("playing")]);
+    return accept(tx.state, { instructions: [fx.transition("playing")] });
   },
 });

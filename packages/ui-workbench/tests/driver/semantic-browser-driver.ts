@@ -22,6 +22,7 @@ export async function executeFixtureStep(
 export async function installDeterministicWorkbenchEnvironment(
   page: Page,
 ): Promise<void> {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route("**/*", async (route) => {
     const url = new URL(route.request().url());
     const allowed =

@@ -255,20 +255,63 @@ export type ReducerReject = {
   message?: string;
 };
 
-export type TerminalOutcome<
-  PlayerId extends string = string,
-  Score extends number = number,
-> = {
-  winnerPlayerId?: PlayerId;
-  finalScores?: Partial<Record<PlayerId, Score>>;
-  reason: string;
+export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+
+export type OutcomeScoreComponent = {
+  id: string;
+  label: string;
+  value: number;
+};
+
+export type OutcomeTieBreak = {
+  id: string;
+  label: string;
+  value: number | string;
+};
+
+export type OutcomeStanding<PlayerId extends string = string> = {
+  playerId: PlayerId;
+  rank: number;
+  result: OutcomeResult;
+  score?: number;
+  scoreBreakdown?: readonly OutcomeScoreComponent[];
+  tieBreaks?: readonly OutcomeTieBreak[];
+};
+
+export type GameOutcome<PlayerId extends string = string> = {
+  reason: {
+    code: string;
+    message?: string;
+  };
+  standings: readonly OutcomeStanding<PlayerId>[];
+};
+
+export type GameEventDetail = {
+  label: string;
+  value: string | number | boolean;
+};
+
+export type SystemActionEvent = {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+};
+
+export type GameEvent = SystemActionEvent;
+
+export type ReducerAcceptOptions<State> = {
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
 };
 
 export type ReducerAccept<State> = {
   type: "accept";
   state: State;
-  instructions?: RuntimeInstructionForState<State>[];
-  terminal?: TerminalOutcome<PlayerIdOfState<State>>;
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
+  terminal?: GameOutcome<PlayerIdOfState<State>>;
 };
 
 export type ReducerResult<State> = ReducerAccept<State> | ReducerReject;

@@ -1522,6 +1522,10 @@ type SetupProfileSpec = {
   optionValues?: {
     [key: string]: string;
   };
+  guidance?: {
+    summary?: string;
+    steps?: ReadonlyArray<SetupGuidanceStep>;
+  };
 };
 ```
 
@@ -2480,6 +2484,49 @@ const FrameworkErrorCodes: {
 
 _No JSDoc summary is available yet._
 
+### gameEvent
+
+```ts
+const gameEvent: {
+  systemAction(event: Omit<SystemActionEvent, "kind">): SystemActionEvent;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameEvent
+
+```ts
+type GameEvent = SystemActionEvent;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventDetail
+
+```ts
+type GameEventDetail = {
+  label: string;
+  value: string | number | boolean;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameOutcome
+
+```ts
+type GameOutcome<PlayerId extends string = string> = {
+  reason: {
+    code: string;
+    message?: string;
+  };
+  standings: readonly OutcomeStanding<PlayerId>[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### GameStateOf
 
 ```ts
@@ -2634,6 +2681,53 @@ type Op<State> = <S extends State>(state: S) => S;
 ```
 
 A state-preserving transformation.
+
+### OutcomeResult
+
+```ts
+type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeScoreComponent
+
+```ts
+type OutcomeScoreComponent = {
+  id: string;
+  label: string;
+  value: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeStanding
+
+```ts
+type OutcomeStanding<PlayerId extends string = string> = {
+  playerId: PlayerId;
+  rank: number;
+  result: OutcomeResult;
+  score?: number;
+  scoreBreakdown?: readonly OutcomeScoreComponent[];
+  tieBreaks?: readonly OutcomeTieBreak[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeTieBreak
+
+```ts
+type OutcomeTieBreak = {
+  id: string;
+  label: string;
+  value: number | string;
+};
+```
+
+_No JSDoc summary is available yet._
 
 ### parseBoardRefKey
 
@@ -2875,8 +2969,20 @@ function promptInput<
 type ReducerAccept<State> = {
   type: "accept";
   state: State;
-  instructions?: RuntimeInstructionForState<State>[];
-  terminal?: TerminalOutcome<PlayerIdOfState<State>>;
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
+  terminal?: GameOutcome<PlayerIdOfState<State>>;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerAcceptOptions
+
+```ts
+type ReducerAcceptOptions<State> = {
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
 };
 ```
 
@@ -3157,6 +3263,20 @@ type StaleContractArtifactKind = "base-states" | "session-state";
 
 _No JSDoc summary is available yet._
 
+### SystemActionEvent
+
+```ts
+type SystemActionEvent = {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### TableQueries
 
 ```ts
@@ -3245,21 +3365,6 @@ type TargetRuleBuilder<
     predicate: TargetPredicate<State, Target>,
   ) => TargetRuleBuilder<State, Target, Rule>;
   readonly build: () => Rule;
-};
-```
-
-_No JSDoc summary is available yet._
-
-### TerminalOutcome
-
-```ts
-type TerminalOutcome<
-  PlayerId extends string = string,
-  Score extends number = number,
-> = {
-  winnerPlayerId?: PlayerId;
-  finalScores?: Partial<Record<PlayerId, Score>>;
-  reason: string;
 };
 ```
 
@@ -4498,6 +4603,39 @@ const FrameworkErrorCodes: {
 
 _No JSDoc summary is available yet._
 
+### GameEvent
+
+```ts
+type GameEvent = SystemActionEvent;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventDetail
+
+```ts
+type GameEventDetail = {
+  label: string;
+  value: string | number | boolean;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameOutcome
+
+```ts
+type GameOutcome<PlayerId extends string = string> = {
+  reason: {
+    code: string;
+    message?: string;
+  };
+  standings: readonly OutcomeStanding<PlayerId>[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### GameStateOf
 
 ```ts
@@ -5289,6 +5427,53 @@ type NonEmptyReadonlyArray<T> = readonly [T, ...T[]];
 
 _No JSDoc summary is available yet._
 
+### OutcomeResult
+
+```ts
+type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeScoreComponent
+
+```ts
+type OutcomeScoreComponent = {
+  id: string;
+  label: string;
+  value: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeStanding
+
+```ts
+type OutcomeStanding<PlayerId extends string = string> = {
+  playerId: PlayerId;
+  rank: number;
+  result: OutcomeResult;
+  score?: number;
+  scoreBreakdown?: readonly OutcomeScoreComponent[];
+  tieBreaks?: readonly OutcomeTieBreak[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeTieBreak
+
+```ts
+type OutcomeTieBreak = {
+  id: string;
+  label: string;
+  value: number | string;
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### ParamsOf
 
 ```ts
@@ -5749,8 +5934,20 @@ _No JSDoc summary is available yet._
 type ReducerAccept<State> = {
   type: "accept";
   state: State;
-  instructions?: RuntimeInstructionForState<State>[];
-  terminal?: TerminalOutcome<PlayerIdOfState<State>>;
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
+  terminal?: GameOutcome<PlayerIdOfState<State>>;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerAcceptOptions
+
+```ts
+type ReducerAcceptOptions<State> = {
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
 };
 ```
 
@@ -7060,6 +7257,14 @@ type SetupProfileMetadata = {
   name: string;
   description?: string | null;
   optionValues?: Record<string, string> | null;
+  guidance?: {
+    summary?: string | null;
+    steps: readonly {
+      id: string;
+      label: string;
+      description?: string | null;
+    }[];
+  } | null;
 };
 ```
 
@@ -7575,6 +7780,20 @@ type StringKeyOf<T> = Extract<keyof T, string>;
 
 _No JSDoc summary is available yet._
 
+### SystemActionEvent
+
+```ts
+type SystemActionEvent = {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### TableOfManifest
 
 ```ts
@@ -7625,21 +7844,6 @@ _No JSDoc summary is available yet._
 
 ```ts
 type TargetKind = "edge" | "vertex" | "space" | "tile" | "card";
-```
-
-_No JSDoc summary is available yet._
-
-### TerminalOutcome
-
-```ts
-type TerminalOutcome<
-  PlayerId extends string = string,
-  Score extends number = number,
-> = {
-  winnerPlayerId?: PlayerId;
-  finalScores?: Partial<Record<PlayerId, Score>>;
-  reason: string;
-};
 ```
 
 _No JSDoc summary is available yet._
@@ -8027,6 +8231,34 @@ interface ActionGroupProps {
   variant?: "default" | "warning" | "danger" | "success";
   children: ReactNode;
   className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ActionHelp
+
+```ts
+function ActionHelp({
+  label,
+  help,
+  unavailableReason,
+  className,
+  style,
+}: ActionHelpProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### ActionHelpProps
+
+```ts
+interface ActionHelpProps {
+  label: ReactNode;
+  help?: ReactNode;
+  unavailableReason?: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }
 ```
 
@@ -9652,32 +9884,29 @@ interface FoundationColor {
 
 Foundation palette. Components never read this directly; presets map these into {@link SemanticTokens }. Exposed so authors who write a full theme can compose without inventing their own palette type.
 
-### GameEndDisplay
+### GameEventLog
 
 ```ts
-function GameEndDisplay({
-  isGameOver,
-  scores,
-  winnerMessage,
-  showDetails,
-  onReturnToLobby,
+function GameEventLog({
+  events,
+  empty,
+  maxVisible,
   className,
-}: GameEndDisplayProps): react_jsx_runtime.JSX.Element | null;
+  style,
+}: GameEventLogProps): react_jsx_runtime.JSX.Element;
 ```
 
 _No JSDoc summary is available yet._
 
-### GameEndDisplayProps
+### GameEventLogProps
 
 ```ts
-interface GameEndDisplayProps {
-  isGameOver: boolean;
-  /** Sorted by rank */
-  scores: PlayerScore[];
-  winnerMessage?: string;
-  showDetails?: boolean;
-  onReturnToLobby?: () => void;
+interface GameEventLogProps {
+  events: readonly ProjectedGameEvent[];
+  empty?: ReactNode;
+  maxVisible?: number;
   className?: string;
+  style?: CSSProperties;
 }
 ```
 
@@ -9814,6 +10043,69 @@ function getThemePreset(id: ThemePresetId): Theme | undefined;
 ```
 
 Look up a registered preset by id. Returns `undefined` if missing.
+
+### GuidanceAction
+
+```ts
+interface GuidanceAction {
+  label: ReactNode;
+  help?: ReactNode;
+  unavailableReason?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePanel
+
+```ts
+function GuidancePanel({
+  phase,
+  actions,
+  className,
+  style,
+}: GuidancePanelProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePanelProps
+
+```ts
+interface GuidancePanelProps {
+  phase: GuidancePhase;
+  actions?: readonly GuidanceAction[];
+  className?: string;
+  style?: CSSProperties;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePhase
+
+```ts
+interface GuidancePhase {
+  id: string;
+  label: string;
+  summary?: ReactNode;
+  objective?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidanceSetupStep
+
+```ts
+interface GuidanceSetupStep {
+  id: string;
+  label: ReactNode;
+  description?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
 
 ### Hand
 
@@ -10602,6 +10894,32 @@ function normalizeSquareBoardInput<TBoard extends AnySquareBoardInput>(
 
 _No JSDoc summary is available yet._
 
+### OutcomeDialog
+
+```ts
+function OutcomeDialog<PlayerId extends string = string>({
+  outcome,
+  playerName,
+  onReturnToLobby,
+  className,
+}: OutcomeDialogProps<PlayerId>): react_jsx_runtime.JSX.Element | null;
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeDialogProps
+
+```ts
+interface OutcomeDialogProps<PlayerId extends string = string> {
+  outcome?: GameOutcome<PlayerId> | null;
+  playerName: (playerId: PlayerId) => ReactNode;
+  onReturnToLobby?: () => void;
+  className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### Panel
 
 ```ts
@@ -10923,20 +11241,6 @@ type PlayerId = string;
 
 _No JSDoc summary is available yet._
 
-### PlayerScore
-
-```ts
-interface PlayerScore {
-  playerId: string;
-  name: string;
-  score: number;
-  isWinner?: boolean;
-  details?: Record<string, number>;
-}
-```
-
-End-of-game winner display and scoreboard overlay.
-
 ### PrimaryActionAttention
 
 ```ts
@@ -11002,6 +11306,17 @@ interface PrimaryButtonProps
   /** Sizing token — defaults to `md`. */
   size?: ButtonSize$1;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectedGameEvent
+
+```ts
+type ProjectedGameEvent = GameEvent & {
+  version: number;
+  index: number;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -11296,6 +11611,45 @@ interface SemanticColor { ... }
 
 Semantic colors consumed by every component. These are the _only_ color tokens components should reference. Names describe role ("the surface a player card sits on"), not appearance ("light grey").
 
+### SetupChecklist
+
+```ts
+function SetupChecklist({
+  guidance,
+  completedStepIds,
+  className,
+  style,
+}: SetupChecklistProps): react_jsx_runtime.JSX.Element | null;
+```
+
+_No JSDoc summary is available yet._
+
+### SetupChecklistProps
+
+```ts
+interface SetupChecklistProps {
+  guidance?: SetupGuidance | null;
+  completedStepIds?: readonly string[];
+  className?: string;
+  style?: CSSProperties;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SetupGuidance
+
+```ts
+interface SetupGuidance {
+  profileId: string;
+  name: ReactNode;
+  summary?: ReactNode;
+  steps: readonly GuidanceSetupStep[];
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### SharedBoardRef
 
 ```ts
@@ -11525,6 +11879,32 @@ interface StagingZoneProps { ... }
 
 _No JSDoc summary is available yet._
 
+### StandingsTable
+
+```ts
+function StandingsTable<PlayerId extends string = string>({
+  rows,
+  playerName,
+  provisional,
+  className,
+}: StandingsTableProps<PlayerId>): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### StandingsTableProps
+
+```ts
+interface StandingsTableProps<PlayerId extends string = string> {
+  rows: readonly OutcomeStanding<PlayerId>[];
+  playerName: (playerId: PlayerId) => ReactNode;
+  provisional?: boolean;
+  className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### studioTheme
 
 ```ts
@@ -11547,6 +11927,44 @@ function surfaceStyle(
 ```
 
 Standard surface card (player card, action panel, hand drawer). The `tone` selects which `surface.*` slot to read; `interactive` adds the hover-elevation transition baseline.
+
+### SystemActionEvent
+
+```ts
+interface SystemActionEvent {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionSummary
+
+```ts
+function SystemActionSummary({
+  event,
+  className,
+  style,
+}: SystemActionSummaryProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionSummaryProps
+
+```ts
+interface SystemActionSummaryProps {
+  event: SystemActionEvent;
+  className?: string;
+  style?: CSSProperties;
+}
+```
+
+_No JSDoc summary is available yet._
 
 ### tabletopTheme
 
@@ -12259,6 +12677,34 @@ interface ActionGroupProps {
   variant?: "default" | "warning" | "danger" | "success";
   children: ReactNode;
   className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ActionHelp
+
+```ts
+function ActionHelp({
+  label,
+  help,
+  unavailableReason,
+  className,
+  style,
+}: ActionHelpProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### ActionHelpProps
+
+```ts
+interface ActionHelpProps {
+  label: ReactNode;
+  help?: ReactNode;
+  unavailableReason?: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }
 ```
 
@@ -13429,32 +13875,29 @@ interface ErrorBoundaryProps {
 
 _No JSDoc summary is available yet._
 
-### GameEndDisplay
+### GameEventLog
 
 ```ts
-function GameEndDisplay({
-  isGameOver,
-  scores,
-  winnerMessage,
-  showDetails,
-  onReturnToLobby,
+function GameEventLog({
+  events,
+  empty,
+  maxVisible,
   className,
-}: GameEndDisplayProps): react_jsx_runtime.JSX.Element | null;
+  style,
+}: GameEventLogProps): react_jsx_runtime.JSX.Element;
 ```
 
 _No JSDoc summary is available yet._
 
-### GameEndDisplayProps
+### GameEventLogProps
 
 ```ts
-interface GameEndDisplayProps {
-  isGameOver: boolean;
-  /** Sorted by rank */
-  scores: PlayerScore[];
-  winnerMessage?: string;
-  showDetails?: boolean;
-  onReturnToLobby?: () => void;
+interface GameEventLogProps {
+  events: readonly ProjectedGameEvent[];
+  empty?: ReactNode;
+  maxVisible?: number;
   className?: string;
+  style?: CSSProperties;
 }
 ```
 
@@ -13483,6 +13926,69 @@ interface GameSkeletonProps {
 ```
 
 GameSkeleton - Loading state component
+
+### GuidanceAction
+
+```ts
+interface GuidanceAction {
+  label: ReactNode;
+  help?: ReactNode;
+  unavailableReason?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePanel
+
+```ts
+function GuidancePanel({
+  phase,
+  actions,
+  className,
+  style,
+}: GuidancePanelProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePanelProps
+
+```ts
+interface GuidancePanelProps {
+  phase: GuidancePhase;
+  actions?: readonly GuidanceAction[];
+  className?: string;
+  style?: CSSProperties;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidancePhase
+
+```ts
+interface GuidancePhase {
+  id: string;
+  label: string;
+  summary?: ReactNode;
+  objective?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GuidanceSetupStep
+
+```ts
+interface GuidanceSetupStep {
+  id: string;
+  label: ReactNode;
+  description?: ReactNode;
+}
+```
+
+_No JSDoc summary is available yet._
 
 ### Hand
 
@@ -13987,6 +14493,32 @@ interface NetworkPiece {
 
 _No JSDoc summary is available yet._
 
+### OutcomeDialog
+
+```ts
+function OutcomeDialog<PlayerId extends string = string>({
+  outcome,
+  playerName,
+  onReturnToLobby,
+  className,
+}: OutcomeDialogProps<PlayerId>): react_jsx_runtime.JSX.Element | null;
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeDialogProps
+
+```ts
+interface OutcomeDialogProps<PlayerId extends string = string> {
+  outcome?: GameOutcome<PlayerId> | null;
+  playerName: (playerId: PlayerId) => ReactNode;
+  onReturnToLobby?: () => void;
+  className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### Panel
 
 ```ts
@@ -14198,20 +14730,6 @@ interface PlayAreaProps<CardData extends ViewCard = ViewCard> {
 
 _No JSDoc summary is available yet._
 
-### PlayerScore
-
-```ts
-interface PlayerScore {
-  playerId: string;
-  name: string;
-  score: number;
-  isWinner?: boolean;
-  details?: Record<string, number>;
-}
-```
-
-End-of-game winner display and scoreboard overlay.
-
 ### PrimaryActionAttention
 
 ```ts
@@ -14277,6 +14795,17 @@ interface PrimaryButtonProps
   /** Sizing token — defaults to `md`. */
   size?: ButtonSize$1;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectedGameEvent
+
+```ts
+type ProjectedGameEvent = GameEvent & {
+  version: number;
+  index: number;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -14538,6 +15067,45 @@ function SelectTrigger({
 
 _No JSDoc summary is available yet._
 
+### SetupChecklist
+
+```ts
+function SetupChecklist({
+  guidance,
+  completedStepIds,
+  className,
+  style,
+}: SetupChecklistProps): react_jsx_runtime.JSX.Element | null;
+```
+
+_No JSDoc summary is available yet._
+
+### SetupChecklistProps
+
+```ts
+interface SetupChecklistProps {
+  guidance?: SetupGuidance | null;
+  completedStepIds?: readonly string[];
+  className?: string;
+  style?: CSSProperties;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SetupGuidance
+
+```ts
+interface SetupGuidance {
+  profileId: string;
+  name: ReactNode;
+  summary?: ReactNode;
+  steps: readonly GuidanceSetupStep[];
+}
+```
+
+_No JSDoc summary is available yet._
+
 ### SlotDefinition
 
 ```ts
@@ -14701,6 +15269,70 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface StagingZoneProps { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### StandingsTable
+
+```ts
+function StandingsTable<PlayerId extends string = string>({
+  rows,
+  playerName,
+  provisional,
+  className,
+}: StandingsTableProps<PlayerId>): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### StandingsTableProps
+
+```ts
+interface StandingsTableProps<PlayerId extends string = string> {
+  rows: readonly OutcomeStanding<PlayerId>[];
+  playerName: (playerId: PlayerId) => ReactNode;
+  provisional?: boolean;
+  className?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionEvent
+
+```ts
+interface SystemActionEvent {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionSummary
+
+```ts
+function SystemActionSummary({
+  event,
+  className,
+  style,
+}: SystemActionSummaryProps): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionSummaryProps
+
+```ts
+interface SystemActionSummaryProps {
+  event: SystemActionEvent;
+  className?: string;
+  style?: CSSProperties;
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -15554,6 +16186,21 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/runtime
 
+### BoardGridInteractionFilter
+
+```ts
+type BoardGridInteractionFilter<Key extends string = string> =
+  | "auto"
+  | false
+  | {
+      edge?: readonly Key[];
+      vertex?: readonly Key[];
+      space?: readonly Key[];
+    };
+```
+
+_No JSDoc summary is available yet._
+
 ### BoardHexGridProps
 
 ```ts
@@ -15601,6 +16248,27 @@ type BoardSpaceTargetProps<Target extends string = BoardTargetKey> = Omit<
 
 _No JSDoc summary is available yet._
 
+### BoardSquareGridInteractionFilter
+
+```ts
+type BoardSquareGridInteractionFilter = BoardGridInteractionFilter<string>;
+```
+
+_No JSDoc summary is available yet._
+
+### BoardSquareGridProps
+
+```ts
+type BoardSquareGridProps<TBoard extends AnySquareBoardInput> = Omit<
+  SquareGridBoardProps<TBoard>,
+  "interactiveEdges" | "interactiveVertices" | "interactiveSpaces"
+> & {
+  interactions?: BoardSquareGridInteractionFilter;
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### ClientParamSchemaMap
 
 ```ts
@@ -15640,8 +16308,15 @@ function createWorkspaceUIContract<
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
+  SquareBoards extends Record<string, unknown> = Record<string, unknown>,
 >(
-  options: WorkspaceContractOptions<Contract, Resource, Card, HexBoards>,
+  options: WorkspaceContractOptions<
+    Contract,
+    Resource,
+    Card,
+    HexBoards,
+    SquareBoards
+  >,
 ): WorkspaceUI;
 ```
 
@@ -15661,6 +16336,25 @@ _No JSDoc summary is available yet._
 ```ts
 interface DreamboardUIRegister {
   readonly __dreamboardUIRegister?: never;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GameEvent
+
+```ts
+type GameEvent = SystemActionEvent;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventDetail
+
+```ts
+interface GameEventDetail {
+  label: string;
+  value: string | number | boolean;
 }
 ```
 
@@ -15772,11 +16466,11 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface PluginRuntimeClient {
-  getSession(): v | null;
+  getSession(): w | null;
   subscribeSession(listener: () => void): () => void;
-  getFrame(): o | null;
+  getFrame(): p | null;
   subscribeFrame(listener: () => void): () => void;
-  validateInteraction(interactionId: string, params: unknown): Promise<G>;
+  validateInteraction(interactionId: string, params: unknown): Promise<M>;
   submitInteraction(interactionId: string, params: unknown): Promise<void>;
   disconnect(): void;
 }
@@ -15810,7 +16504,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface PluginTransport {
   start(onMessage: (message: H) => void): () => void;
-  send(message: x): void;
+  send(message: y): void;
 }
 ```
 
@@ -15824,6 +16518,17 @@ interface PostMessagePluginTransportOptions {
   readonly parentWindow?: Window;
   readonly onInvalidMessage?: (reason: string, value: unknown) => void;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectedGameEvent
+
+```ts
+type ProjectedGameEvent = GameEvent & {
+  version: number;
+  index: number;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -15865,6 +16570,20 @@ _No JSDoc summary is available yet._
 ```ts
 interface RuntimeIdFactory {
   nextId(prefix: string): string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionEvent
+
+```ts
+interface SystemActionEvent {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
 }
 ```
 
@@ -16147,6 +16866,7 @@ const Board: {
   State: typeof BoardState;
   HexGrid: typeof BoardHexGrid;
   HexView: typeof BoardHexView;
+  SquareGrid: typeof BoardSquareGrid;
   Target: typeof BoardTarget;
   SpaceTarget: typeof BoardSpaceTarget;
   EdgeTarget: typeof BoardEdgeTarget;
@@ -16177,6 +16897,21 @@ type BoardEdgeTargetProps<Target extends string = BoardTargetKey> = Omit<
 
 _No JSDoc summary is available yet._
 
+### BoardGridInteractionFilter
+
+```ts
+type BoardGridInteractionFilter<Key extends string = string> =
+  | "auto"
+  | false
+  | {
+      edge?: readonly Key[];
+      vertex?: readonly Key[];
+      space?: readonly Key[];
+    };
+```
+
+_No JSDoc summary is available yet._
+
 ### BoardHexGrid
 
 ```ts
@@ -16196,14 +16931,7 @@ _No JSDoc summary is available yet._
 ### BoardHexGridInteractionFilter
 
 ```ts
-type BoardHexGridInteractionFilter =
-  | "auto"
-  | false
-  | {
-      edge?: readonly string[];
-      vertex?: readonly string[];
-      space?: readonly string[];
-    };
+type BoardHexGridInteractionFilter = BoardGridInteractionFilter<string>;
 ```
 
 _No JSDoc summary is available yet._
@@ -16311,6 +17039,39 @@ type BoardSpaceTargetProps<Target extends string = BoardTargetKey> = Omit<
   BoardTargetProps<Target>,
   "kind"
 >;
+```
+
+_No JSDoc summary is available yet._
+
+### BoardSquareGrid
+
+```ts
+function BoardSquareGrid<const TBoard extends AnySquareBoardInput>({
+  board,
+  interactions,
+  ...props
+}: BoardSquareGridProps<TBoard>): react_jsx_runtime.JSX.Element;
+```
+
+_No JSDoc summary is available yet._
+
+### BoardSquareGridInteractionFilter
+
+```ts
+type BoardSquareGridInteractionFilter = BoardGridInteractionFilter<string>;
+```
+
+_No JSDoc summary is available yet._
+
+### BoardSquareGridProps
+
+```ts
+type BoardSquareGridProps<TBoard extends AnySquareBoardInput> = Omit<
+  SquareGridBoardProps<TBoard>,
+  "interactiveEdges" | "interactiveVertices" | "interactiveSpaces"
+> & {
+  interactions?: BoardSquareGridInteractionFilter;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -18331,6 +19092,21 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/runtime/workspace-contract
 
+### BoardGridInteractionFilter
+
+```ts
+type BoardGridInteractionFilter<Key extends string = string> =
+  | "auto"
+  | false
+  | {
+      edge?: readonly Key[];
+      vertex?: readonly Key[];
+      space?: readonly Key[];
+    };
+```
+
+_No JSDoc summary is available yet._
+
 ### BoardHexGridProps
 
 ```ts
@@ -18378,6 +19154,27 @@ type BoardSpaceTargetProps<Target extends string = BoardTargetKey> = Omit<
 
 _No JSDoc summary is available yet._
 
+### BoardSquareGridInteractionFilter
+
+```ts
+type BoardSquareGridInteractionFilter = BoardGridInteractionFilter<string>;
+```
+
+_No JSDoc summary is available yet._
+
+### BoardSquareGridProps
+
+```ts
+type BoardSquareGridProps<TBoard extends AnySquareBoardInput> = Omit<
+  SquareGridBoardProps<TBoard>,
+  "interactiveEdges" | "interactiveVertices" | "interactiveSpaces"
+> & {
+  interactions?: BoardSquareGridInteractionFilter;
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### ClientParamSchemaMap
 
 ```ts
@@ -18397,8 +19194,15 @@ function createWorkspaceUIContract<
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
+  SquareBoards extends Record<string, unknown> = Record<string, unknown>,
 >(
-  options: WorkspaceContractOptions<Contract, Resource, Card, HexBoards>,
+  options: WorkspaceContractOptions<
+    Contract,
+    Resource,
+    Card,
+    HexBoards,
+    SquareBoards
+  >,
 ): WorkspaceUI;
 ```
 
@@ -19238,7 +20042,7 @@ _No JSDoc summary is available yet._
 ### REDUCER_CONTRACT_VERSION
 
 ```ts
-const REDUCER_CONTRACT_VERSION: "0.2.1";
+const REDUCER_CONTRACT_VERSION: "0.3.0";
 ```
 
 The wire-protocol version this package implements. Bumped in lockstep with any breaking change to schema/reducer-runtime.schema.json. At bundle load time hosts refuse bundles whose major version differs.
@@ -19419,7 +20223,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface CompilePluginProtocolTapeOptions {
   readonly trace: ReducerScenarioTrace;
-  readonly session: v;
+  readonly session: w;
 }
 ```
 
@@ -19481,7 +20285,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface CreateFixtureHostHarnessOptions {
-  readonly tape: u;
+  readonly tape: v;
   readonly strict?: boolean;
   readonly latencyMs?: number;
   readonly channelId?: string;
@@ -19747,7 +20551,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface FixtureHostHarness {
   readonly transport: PluginTransport;
-  readonly tape: u;
+  readonly tape: v;
   reset(): void;
   flush(): Promise<void>;
   advanceHost(): Promise<void>;
@@ -19870,7 +20674,7 @@ _No JSDoc summary is available yet._
 ### PluginProtocolTape
 
 ```ts
-type PluginProtocolTape = u;
+type PluginProtocolTape = v;
 ```
 
 _No JSDoc summary is available yet._
@@ -19879,9 +20683,9 @@ _No JSDoc summary is available yet._
 
 ```ts
 const pluginProtocolTapeSchema: z.ZodType<
-  u,
+  v,
   unknown,
-  z.core.$ZodTypeInternals<u, unknown>
+  z.core.$ZodTypeInternals<v, unknown>
 >;
 ```
 
@@ -20168,7 +20972,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureFrame
 
 ```ts
-type UIFixtureFrame = s;
+type UIFixtureFrame = t;
 ```
 
 _No JSDoc summary is available yet._
@@ -20180,9 +20984,9 @@ const uiFixtureFrameSchema: z.ZodObject<
   {
     id: z.ZodString;
     frame: z.ZodType<
-      o<unknown, string, string, string>,
+      p<unknown, string, string, string>,
       unknown,
-      z.core.$ZodTypeInternals<o<unknown, string, string, string>, unknown>
+      z.core.$ZodTypeInternals<p<unknown, string, string, string>, unknown>
     >;
     projectionDigest: z.ZodString;
   },
@@ -20195,7 +20999,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureProtocolStep
 
 ```ts
-type UIFixtureProtocolStep = t;
+type UIFixtureProtocolStep = u;
 ```
 
 _No JSDoc summary is available yet._

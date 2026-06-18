@@ -47,6 +47,9 @@ export default defineScenario({
     expect(v.playerVP[seat0]).toBe(5);
     expect(v.playerVP[seat1]).toBe(5);
     // seat(1) has 1 item, seat(0) has 0 → seat(1) wins.
-    expect(v.winnerPlayerId).toBe(seat1);
+    expect(
+      v.outcome?.standings.find((standing) => standing.result === "win")
+        ?.playerId,
+    ).toBe(seat1);
   },
 });

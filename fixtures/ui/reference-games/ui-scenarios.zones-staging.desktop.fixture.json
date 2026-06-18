@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:06136b5a1bc290f6c06325c6851a90fc4ef7903cfb95e053df42296bcb748b94",
-    "finalSemanticDigest": "sha256:5995680b7da3c5b984b171172f2da4a2008b9a207be6fe628386afee93521434",
+    "finalSemanticDigest": "sha256:ce95f5ad89261cd936f5c491007b7c1f2671435f445e4cce5535b132986a2386",
     "initialProjectionDigest": "sha256:6ed987165996d35f5b0299db74831b7dc4398336e7cfdba63d68364337cb6d35",
     "submissionDigest": "sha256:c4d22e11b3d442cbfb614170e18d32b5343b7147df6d48a63ccd42ee73b92a9c"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:f170571b8872a4d532eab0096f6ecadd352ef20c6b07c9f5f1e2aec238480c0f",
+              "descriptorDigest": "sha256:365105b07e02634bf988f12a03df6ef4db135143fcc73345618ab09e2654cfc3",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "A staged transfer between list, pile, and staging zones.",
             "family": "zones",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:f170571b8872a4d532eab0096f6ecadd352ef20c6b07c9f5f1e2aec238480c0f",
+              "descriptorDigest": "sha256:365105b07e02634bf988f12a03df6ef4db135143fcc73345618ab09e2654cfc3",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "A staged transfer between list, pile, and staging zones.",
             "family": "zones",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.zones-staging.desktop.submitted",
         "projectionDigest": "sha256:06136b5a1bc290f6c06325c6851a90fc4ef7903cfb95e053df42296bcb748b94",
-        "semanticDigest": "sha256:5995680b7da3c5b984b171172f2da4a2008b9a207be6fe628386afee93521434",
+        "semanticDigest": "sha256:ce95f5ad89261cd936f5c491007b7c1f2671435f445e4cce5535b132986a2386",
         "submissionDigest": "sha256:c4d22e11b3d442cbfb614170e18d32b5343b7147df6d48a63ccd42ee73b92a9c",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.zones-staging.desktop",
-    "sourceDigest": "sha256:d3a309a37862d05bd5b31c20b617cc27a88acee70ee2adf75f2225890a83d28c",
+    "sourceDigest": "sha256:b332e84107d49afe1777629a42f5db41d3d70d871b163cbcaa99878f08d27679",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

@@ -11,7 +11,7 @@ export default defineScenario({
 
     expect(state()).toBe("playerTurn");
     expect(view(playerId).gameOver).toBe(false);
-    expect(view(playerId).winnerPlayerId).toBe(null);
+    expect(view(playerId).outcome).toBeNull();
 
     await game.submit(playerId, "endActionPhase", {});
     await game.submit(playerId, "endTurn", {});
@@ -20,7 +20,11 @@ export default defineScenario({
     const winner = seat(0);
     expect(state()).toBe("gameOver");
     expect(view(winner).gameOver).toBe(true);
-    expect(view(winner).winnerPlayerId).toBe(winner);
+    expect(
+      view(winner).outcome?.standings.find(
+        (standing) => standing.result === "win",
+      )?.playerId,
+    ).toBe(winner);
     expect(
       interactions(winner).some(
         (descriptor) => descriptor.interactionId === "endTurn",

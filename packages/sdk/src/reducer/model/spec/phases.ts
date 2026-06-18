@@ -26,6 +26,11 @@ import type {
   StageMap,
 } from "./interactions";
 
+export type PhaseGuidance = {
+  summary: string;
+  objective?: string;
+};
+
 type PhaseDefinitionCommon<
   PhaseStateSchema extends SchemaLike<object>,
   State extends {
@@ -36,6 +41,7 @@ type PhaseDefinitionCommon<
   Manifest extends ManifestContract<TableOfState<State>>,
 > = {
   name?: string;
+  guidance?: PhaseGuidance;
   state: PhaseStateSchema;
   initialState?: (ctx: {
     manifest: Manifest;

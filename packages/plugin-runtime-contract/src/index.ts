@@ -1,5 +1,7 @@
 export type {
   ActionInteractionDescriptor,
+  GameEvent,
+  GameEventDetail,
   InteractionAvailability,
   InteractionChoiceOption,
   InteractionCommitPolicy,
@@ -15,11 +17,13 @@ export type {
   PlayerId,
   PluginGameplayFrame,
   PluginPlayerSummary,
+  ProjectedGameEvent,
   PluginSessionDescriptor,
   PromptInteractionDescriptor,
   ReducerBoardStaticProjection,
   ReducerSeatProjectionBundle,
   SimultaneousPhaseSnapshot,
+  SystemActionEvent,
   ZoneHandlesSnapshot,
 } from "./frame.js";
 export type { CanonicalJson, RuntimeJson } from "./json.js";
@@ -57,6 +61,8 @@ export {
 } from "./projection.js";
 export {
   BoardStaticProjectionSchema,
+  GameEventDetailSchema,
+  GameEventSchema,
   HostToPluginEnvelopeSchema,
   HostToPluginPayloadSchema,
   InputDomainDependenciesSchema,
@@ -75,10 +81,12 @@ export {
   PluginSessionDescriptorSchema,
   PluginToHostEnvelopeSchema,
   PluginToHostPayloadSchema,
+  ProjectedGameEventSchema,
   RuntimeJsonSchema,
   SeatProjectionBundleSchema,
   SimultaneousPhaseSnapshotSchema,
   SubmissionResultSchema,
+  SystemActionEventSchema,
   SubmitInteractionCommandSchema,
   ValidateInteractionCommandSchema,
   ValidationResultSchema,

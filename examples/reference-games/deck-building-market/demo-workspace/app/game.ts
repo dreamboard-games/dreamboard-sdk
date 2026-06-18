@@ -13,7 +13,7 @@ const game: ReducerGameDefinition<GameContract, typeof phases, typeof views> =
   defineGame({
     contract: gameContract,
     initial: {
-      public: () => ({ turnNumber: 1, winnerPlayerId: null }),
+      public: () => ({ turnNumber: 1, outcome: null }),
       private: () => ({}),
       hidden: () => ({}),
     },

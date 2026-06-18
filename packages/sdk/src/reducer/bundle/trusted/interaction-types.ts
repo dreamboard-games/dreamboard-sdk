@@ -92,6 +92,8 @@ type InteractionDescriptorBaseShape<
   phaseName: PhaseName;
   interactionKey: `${PhaseName}.${InteractionId}`;
   interactionId: InteractionId;
+  label: string;
+  help?: string;
   commit: InteractionCommitPolicyShape;
   descriptorDigest?: string;
   actorSeat?: number;

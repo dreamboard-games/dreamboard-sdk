@@ -123,6 +123,7 @@ export function createTrustedReducerBundle<
         type: "accept" as const,
         state: scope.toSessionState(result.state),
         instructions: result.instructions ?? [],
+        events: result.events ?? [],
         ...(result.terminal ? { terminal: result.terminal } : {}),
       };
     },
@@ -176,6 +177,7 @@ export function createTrustedReducerBundle<
         type: "accept" as const,
         state: scope.toSessionState(result.state),
         trace: result.trace,
+        events: result.events ?? [],
         ...(result.terminal ? { terminal: result.terminal } : {}),
       };
     },

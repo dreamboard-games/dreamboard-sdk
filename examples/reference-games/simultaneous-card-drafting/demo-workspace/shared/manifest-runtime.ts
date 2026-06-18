@@ -62,7 +62,10 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
+import type {
+  PlayerId as PublicPlayerId,
+  TableState as PublicTableState,
+} from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -71,10 +74,7 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(
-    literals.playerIds,
-    playerIds,
-  );
+  return resolveManifestPlayerIds(literals.playerIds, playerIds);
 }
 
 export { literals };
@@ -95,8 +95,12 @@ const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
   ),
 );
 const phaseNameSchema = markManifestScopedSchema(z.string());
-const boardLayoutSchema = createManifestStringLiteralSchema(literals.boardLayouts);
-const setupOptionIdSchema = createManifestStringLiteralSchema(literals.setupOptionIds);
+const boardLayoutSchema = createManifestStringLiteralSchema(
+  literals.boardLayouts,
+);
+const setupOptionIdSchema = createManifestStringLiteralSchema(
+  literals.setupOptionIds,
+);
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
 );
@@ -105,27 +109,47 @@ const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
 const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
 const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
 const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
-const sharedZoneIdSchema = createManifestStringLiteralSchema(literals.sharedZoneIds);
-const playerZoneIdSchema = createManifestStringLiteralSchema(literals.playerZoneIds);
+const sharedZoneIdSchema = createManifestStringLiteralSchema(
+  literals.sharedZoneIds,
+);
+const playerZoneIdSchema = createManifestStringLiteralSchema(
+  literals.playerZoneIds,
+);
 const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
-const resourceIdSchema = createManifestStringLiteralSchema(literals.resourceIds);
-const pieceTypeIdSchema = createManifestStringLiteralSchema(literals.pieceTypeIds);
+const resourceIdSchema = createManifestStringLiteralSchema(
+  literals.resourceIds,
+);
+const pieceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.pieceTypeIds,
+);
 const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
 const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
 const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
-const boardTypeIdSchema = createManifestStringLiteralSchema(literals.boardTypeIds);
-const boardBaseIdSchema = createManifestStringLiteralSchema(literals.boardBaseIds);
+const boardTypeIdSchema = createManifestStringLiteralSchema(
+  literals.boardTypeIds,
+);
+const boardBaseIdSchema = createManifestStringLiteralSchema(
+  literals.boardBaseIds,
+);
 const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
 );
-const relationTypeIdSchema = createManifestStringLiteralSchema(literals.relationTypeIds);
+const relationTypeIdSchema = createManifestStringLiteralSchema(
+  literals.relationTypeIds,
+);
 const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
-const edgeTypeIdSchema = createManifestStringLiteralSchema(literals.edgeTypeIds);
+const edgeTypeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeTypeIds,
+);
 const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
-const vertexTypeIdSchema = createManifestStringLiteralSchema(literals.vertexTypeIds);
+const vertexTypeIdSchema = createManifestStringLiteralSchema(
+  literals.vertexTypeIds,
+);
 const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
-const spaceTypeIdSchema = createManifestStringLiteralSchema(literals.spaceTypeIds);
+const spaceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.spaceTypeIds,
+);
 
 export const ids = {
   playerId: playerIdSchema,
@@ -190,26 +214,26 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  "chopsticks": "chopsticks",
-  "dumpling": "dumpling",
-  "maki1": "maki-1",
-  "maki2": "maki-2",
-  "maki3": "maki-3",
-  "nigiriEgg": "nigiri-egg",
-  "nigiriSalmon": "nigiri-salmon",
-  "nigiriSquid": "nigiri-squid",
-  "pudding": "pudding",
-  "sashimi": "sashimi",
-  "tempura": "tempura",
-  "wasabi": "wasabi",
+  chopsticks: "chopsticks",
+  dumpling: "dumpling",
+  maki1: "maki-1",
+  maki2: "maki-2",
+  maki3: "maki-3",
+  nigiriEgg: "nigiri-egg",
+  nigiriSalmon: "nigiri-salmon",
+  nigiriSquid: "nigiri-squid",
+  pudding: "pudding",
+  sashimi: "sashimi",
+  tempura: "tempura",
+  wasabi: "wasabi",
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  "drawPile": "draw-pile",
-  "hand": "hand",
-  "played": "played",
-  "pudding": "pudding",
-  "roundDiscard": "round-discard",
+  drawPile: "draw-pile",
+  hand: "hand",
+  played: "played",
+  pudding: "pudding",
+  roundDiscard: "round-discard",
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -469,7 +493,11 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(literals.boardContainerIds, value, "board container id");
+    return expectTypedId(
+      literals.boardContainerIds,
+      value,
+      "board container id",
+    );
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -528,9 +556,9 @@ export type ComponentIdsBySharedZoneId = {
   "round-discard": ComponentId[];
 };
 export type ComponentIdsByPlayerZoneId = {
-  "hand": PerPlayer<ComponentId[]>;
-  "played": PerPlayer<ComponentId[]>;
-  "pudding": PerPlayer<ComponentId[]>;
+  hand: PerPlayer<ComponentId[]>;
+  played: PerPlayer<ComponentId[]>;
+  pudding: PerPlayer<ComponentId[]>;
 };
 export type SetupOptionChoice = {
   id: string;
@@ -551,163 +579,483 @@ export type SetupProfile = {
 };
 export const setupOptionsById = {
   "default-game": {
-    "id": "default-game",
-    "name": "Standard game",
-    "description": "Full drafting deck with three scoring rounds.",
-    "choices": [
+    id: "default-game",
+    name: "Standard game",
+    description: "Full drafting deck with three scoring rounds.",
+    choices: [
       {
-        "id": "default-game",
-        "label": "Standard game",
-        "description": null
-      }
-    ]
-  }
+        id: "default-game",
+        label: "Standard game",
+        description: null,
+      },
+    ],
+  },
 } as const;
 export const setupChoiceIdsByOptionId = {
   "default-game": ["default-game"] as const,
 } as const;
 export const setupProfilesById = {
   "default-setup": {
-    "id": "default-setup",
-    "name": "Default setup",
-    "description": null,
-    "optionValues": {
-      "default-game": "default-game"
-    }
-  }
+    id: "default-setup",
+    name: "Default setup",
+    description: null,
+    optionValues: {
+      "default-game": "default-game",
+    },
+  },
 } as const;
 
 export type SushiCardsNigiriEggCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "nigiriPoints": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  nigiriPoints: number;
 };
 
 export const SushiCardsNigiriEggCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "nigiriPoints": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  nigiriPoints: z.number().int(),
 });
 
 export type SushiCardsNigiriSalmonCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "nigiriPoints": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  nigiriPoints: number;
 };
 
 export const SushiCardsNigiriSalmonCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "nigiriPoints": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  nigiriPoints: z.number().int(),
 });
 
 export type SushiCardsNigiriSquidCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "nigiriPoints": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  nigiriPoints: number;
 };
 
 export const SushiCardsNigiriSquidCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "nigiriPoints": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  nigiriPoints: z.number().int(),
 });
 
 export type SushiCardsWasabiCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsWasabiCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
 export type SushiCardsTempuraCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsTempuraCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
 export type SushiCardsSashimiCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsSashimiCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
 export type SushiCardsDumplingCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsDumplingCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
 export type SushiCardsMaki1CardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "makiIcons": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  makiIcons: number;
 };
 
 export const SushiCardsMaki1CardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "makiIcons": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  makiIcons: z.number().int(),
 });
 
 export type SushiCardsMaki2CardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "makiIcons": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  makiIcons: number;
 };
 
 export const SushiCardsMaki2CardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "makiIcons": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  makiIcons: z.number().int(),
 });
 
 export type SushiCardsMaki3CardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
-  "makiIcons": number;
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
+  makiIcons: number;
 };
 
 export const SushiCardsMaki3CardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
-  "makiIcons": z.number().int(),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
+  makiIcons: z.number().int(),
 });
 
 export type SushiCardsPuddingCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsPuddingCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
 export type SushiCardsChopsticksCardProperties = {
-  "category": "nigiri" | "wasabi" | "tempura" | "sashimi" | "dumpling" | "maki" | "pudding" | "chopsticks";
+  category:
+    | "nigiri"
+    | "wasabi"
+    | "tempura"
+    | "sashimi"
+    | "dumpling"
+    | "maki"
+    | "pudding"
+    | "chopsticks";
 };
 
 export const SushiCardsChopsticksCardPropertiesSchema = z.object({
-  "category": z.enum(["nigiri", "wasabi", "tempura", "sashimi", "dumpling", "maki", "pudding", "chopsticks"]),
+  category: z.enum([
+    "nigiri",
+    "wasabi",
+    "tempura",
+    "sashimi",
+    "dumpling",
+    "maki",
+    "pudding",
+    "chopsticks",
+  ]),
 });
 
-export type SushiCardsCardProperties = SushiCardsNigiriEggCardProperties | SushiCardsNigiriSalmonCardProperties | SushiCardsNigiriSquidCardProperties | SushiCardsWasabiCardProperties | SushiCardsTempuraCardProperties | SushiCardsSashimiCardProperties | SushiCardsDumplingCardProperties | SushiCardsMaki1CardProperties | SushiCardsMaki2CardProperties | SushiCardsMaki3CardProperties | SushiCardsPuddingCardProperties | SushiCardsChopsticksCardProperties;
+export type SushiCardsCardProperties =
+  | SushiCardsNigiriEggCardProperties
+  | SushiCardsNigiriSalmonCardProperties
+  | SushiCardsNigiriSquidCardProperties
+  | SushiCardsWasabiCardProperties
+  | SushiCardsTempuraCardProperties
+  | SushiCardsSashimiCardProperties
+  | SushiCardsDumplingCardProperties
+  | SushiCardsMaki1CardProperties
+  | SushiCardsMaki2CardProperties
+  | SushiCardsMaki3CardProperties
+  | SushiCardsPuddingCardProperties
+  | SushiCardsChopsticksCardProperties;
 
-export const SushiCardsCardPropertiesSchema = z.union([SushiCardsNigiriEggCardPropertiesSchema, SushiCardsNigiriSalmonCardPropertiesSchema, SushiCardsNigiriSquidCardPropertiesSchema, SushiCardsWasabiCardPropertiesSchema, SushiCardsTempuraCardPropertiesSchema, SushiCardsSashimiCardPropertiesSchema, SushiCardsDumplingCardPropertiesSchema, SushiCardsMaki1CardPropertiesSchema, SushiCardsMaki2CardPropertiesSchema, SushiCardsMaki3CardPropertiesSchema, SushiCardsPuddingCardPropertiesSchema, SushiCardsChopsticksCardPropertiesSchema]);
+export const SushiCardsCardPropertiesSchema = z.union([
+  SushiCardsNigiriEggCardPropertiesSchema,
+  SushiCardsNigiriSalmonCardPropertiesSchema,
+  SushiCardsNigiriSquidCardPropertiesSchema,
+  SushiCardsWasabiCardPropertiesSchema,
+  SushiCardsTempuraCardPropertiesSchema,
+  SushiCardsSashimiCardPropertiesSchema,
+  SushiCardsDumplingCardPropertiesSchema,
+  SushiCardsMaki1CardPropertiesSchema,
+  SushiCardsMaki2CardPropertiesSchema,
+  SushiCardsMaki3CardPropertiesSchema,
+  SushiCardsPuddingCardPropertiesSchema,
+  SushiCardsChopsticksCardPropertiesSchema,
+]);
 
-export type SushiCardsCardId = "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-salmon-10" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6" | "tempura-1" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "sashimi-1" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "dumpling-1" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "pudding-1" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "pudding-10" | "chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4";
+export type SushiCardsCardId =
+  | "nigiri-egg-1"
+  | "nigiri-egg-2"
+  | "nigiri-egg-3"
+  | "nigiri-egg-4"
+  | "nigiri-egg-5"
+  | "nigiri-egg-6"
+  | "nigiri-salmon-1"
+  | "nigiri-salmon-2"
+  | "nigiri-salmon-3"
+  | "nigiri-salmon-4"
+  | "nigiri-salmon-5"
+  | "nigiri-salmon-6"
+  | "nigiri-salmon-7"
+  | "nigiri-salmon-8"
+  | "nigiri-salmon-9"
+  | "nigiri-salmon-10"
+  | "nigiri-squid-1"
+  | "nigiri-squid-2"
+  | "nigiri-squid-3"
+  | "nigiri-squid-4"
+  | "nigiri-squid-5"
+  | "wasabi-1"
+  | "wasabi-2"
+  | "wasabi-3"
+  | "wasabi-4"
+  | "wasabi-5"
+  | "wasabi-6"
+  | "tempura-1"
+  | "tempura-2"
+  | "tempura-3"
+  | "tempura-4"
+  | "tempura-5"
+  | "tempura-6"
+  | "tempura-7"
+  | "tempura-8"
+  | "tempura-9"
+  | "tempura-10"
+  | "tempura-11"
+  | "tempura-12"
+  | "tempura-13"
+  | "tempura-14"
+  | "sashimi-1"
+  | "sashimi-2"
+  | "sashimi-3"
+  | "sashimi-4"
+  | "sashimi-5"
+  | "sashimi-6"
+  | "sashimi-7"
+  | "sashimi-8"
+  | "sashimi-9"
+  | "sashimi-10"
+  | "sashimi-11"
+  | "sashimi-12"
+  | "sashimi-13"
+  | "sashimi-14"
+  | "dumpling-1"
+  | "dumpling-2"
+  | "dumpling-3"
+  | "dumpling-4"
+  | "dumpling-5"
+  | "dumpling-6"
+  | "dumpling-7"
+  | "dumpling-8"
+  | "dumpling-9"
+  | "dumpling-10"
+  | "dumpling-11"
+  | "dumpling-12"
+  | "dumpling-13"
+  | "dumpling-14"
+  | "maki-1-1"
+  | "maki-1-2"
+  | "maki-1-3"
+  | "maki-1-4"
+  | "maki-1-5"
+  | "maki-1-6"
+  | "maki-2-1"
+  | "maki-2-2"
+  | "maki-2-3"
+  | "maki-2-4"
+  | "maki-2-5"
+  | "maki-2-6"
+  | "maki-3-1"
+  | "maki-3-2"
+  | "maki-3-3"
+  | "maki-3-4"
+  | "maki-3-5"
+  | "maki-3-6"
+  | "pudding-1"
+  | "pudding-2"
+  | "pudding-3"
+  | "pudding-4"
+  | "pudding-5"
+  | "pudding-6"
+  | "pudding-7"
+  | "pudding-8"
+  | "pudding-9"
+  | "pudding-10"
+  | "chopsticks-1"
+  | "chopsticks-2"
+  | "chopsticks-3"
+  | "chopsticks-4";
 
+export type BoardFieldsByBoardId = {};
 
+export type BoardSpaceFieldsByBoardId = {};
 
-export type BoardFieldsByBoardId = {
+export type BoardRelationFieldsByBoardId = {};
 
-};
-
-export type BoardSpaceFieldsByBoardId = {
-
-};
-
-export type BoardRelationFieldsByBoardId = {
-
-};
-
-export type BoardContainerFieldsByBoardId = {
-
-};
+export type BoardContainerFieldsByBoardId = {};
 
 export type HexEdgeFieldsByBoardId = Record<string, never>;
 
@@ -740,107 +1088,612 @@ export type CardStateRecord<
 };
 
 export type CardStateById = {
-  "chopsticks-1": CardStateRecord<"chopsticks-1", "sushi-cards", "chopsticks", SushiCardsChopsticksCardProperties>;
-  "chopsticks-2": CardStateRecord<"chopsticks-2", "sushi-cards", "chopsticks", SushiCardsChopsticksCardProperties>;
-  "chopsticks-3": CardStateRecord<"chopsticks-3", "sushi-cards", "chopsticks", SushiCardsChopsticksCardProperties>;
-  "chopsticks-4": CardStateRecord<"chopsticks-4", "sushi-cards", "chopsticks", SushiCardsChopsticksCardProperties>;
-  "dumpling-1": CardStateRecord<"dumpling-1", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-10": CardStateRecord<"dumpling-10", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-11": CardStateRecord<"dumpling-11", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-12": CardStateRecord<"dumpling-12", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-13": CardStateRecord<"dumpling-13", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-14": CardStateRecord<"dumpling-14", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-2": CardStateRecord<"dumpling-2", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-3": CardStateRecord<"dumpling-3", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-4": CardStateRecord<"dumpling-4", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-5": CardStateRecord<"dumpling-5", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-6": CardStateRecord<"dumpling-6", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-7": CardStateRecord<"dumpling-7", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-8": CardStateRecord<"dumpling-8", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "dumpling-9": CardStateRecord<"dumpling-9", "sushi-cards", "dumpling", SushiCardsDumplingCardProperties>;
-  "maki-1-1": CardStateRecord<"maki-1-1", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-1-2": CardStateRecord<"maki-1-2", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-1-3": CardStateRecord<"maki-1-3", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-1-4": CardStateRecord<"maki-1-4", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-1-5": CardStateRecord<"maki-1-5", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-1-6": CardStateRecord<"maki-1-6", "sushi-cards", "maki-1", SushiCardsMaki1CardProperties>;
-  "maki-2-1": CardStateRecord<"maki-2-1", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-2-2": CardStateRecord<"maki-2-2", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-2-3": CardStateRecord<"maki-2-3", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-2-4": CardStateRecord<"maki-2-4", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-2-5": CardStateRecord<"maki-2-5", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-2-6": CardStateRecord<"maki-2-6", "sushi-cards", "maki-2", SushiCardsMaki2CardProperties>;
-  "maki-3-1": CardStateRecord<"maki-3-1", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "maki-3-2": CardStateRecord<"maki-3-2", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "maki-3-3": CardStateRecord<"maki-3-3", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "maki-3-4": CardStateRecord<"maki-3-4", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "maki-3-5": CardStateRecord<"maki-3-5", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "maki-3-6": CardStateRecord<"maki-3-6", "sushi-cards", "maki-3", SushiCardsMaki3CardProperties>;
-  "nigiri-egg-1": CardStateRecord<"nigiri-egg-1", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-egg-2": CardStateRecord<"nigiri-egg-2", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-egg-3": CardStateRecord<"nigiri-egg-3", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-egg-4": CardStateRecord<"nigiri-egg-4", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-egg-5": CardStateRecord<"nigiri-egg-5", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-egg-6": CardStateRecord<"nigiri-egg-6", "sushi-cards", "nigiri-egg", SushiCardsNigiriEggCardProperties>;
-  "nigiri-salmon-1": CardStateRecord<"nigiri-salmon-1", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-10": CardStateRecord<"nigiri-salmon-10", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-2": CardStateRecord<"nigiri-salmon-2", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-3": CardStateRecord<"nigiri-salmon-3", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-4": CardStateRecord<"nigiri-salmon-4", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-5": CardStateRecord<"nigiri-salmon-5", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-6": CardStateRecord<"nigiri-salmon-6", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-7": CardStateRecord<"nigiri-salmon-7", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-8": CardStateRecord<"nigiri-salmon-8", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-salmon-9": CardStateRecord<"nigiri-salmon-9", "sushi-cards", "nigiri-salmon", SushiCardsNigiriSalmonCardProperties>;
-  "nigiri-squid-1": CardStateRecord<"nigiri-squid-1", "sushi-cards", "nigiri-squid", SushiCardsNigiriSquidCardProperties>;
-  "nigiri-squid-2": CardStateRecord<"nigiri-squid-2", "sushi-cards", "nigiri-squid", SushiCardsNigiriSquidCardProperties>;
-  "nigiri-squid-3": CardStateRecord<"nigiri-squid-3", "sushi-cards", "nigiri-squid", SushiCardsNigiriSquidCardProperties>;
-  "nigiri-squid-4": CardStateRecord<"nigiri-squid-4", "sushi-cards", "nigiri-squid", SushiCardsNigiriSquidCardProperties>;
-  "nigiri-squid-5": CardStateRecord<"nigiri-squid-5", "sushi-cards", "nigiri-squid", SushiCardsNigiriSquidCardProperties>;
-  "pudding-1": CardStateRecord<"pudding-1", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-10": CardStateRecord<"pudding-10", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-2": CardStateRecord<"pudding-2", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-3": CardStateRecord<"pudding-3", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-4": CardStateRecord<"pudding-4", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-5": CardStateRecord<"pudding-5", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-6": CardStateRecord<"pudding-6", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-7": CardStateRecord<"pudding-7", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-8": CardStateRecord<"pudding-8", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "pudding-9": CardStateRecord<"pudding-9", "sushi-cards", "pudding", SushiCardsPuddingCardProperties>;
-  "sashimi-1": CardStateRecord<"sashimi-1", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-10": CardStateRecord<"sashimi-10", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-11": CardStateRecord<"sashimi-11", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-12": CardStateRecord<"sashimi-12", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-13": CardStateRecord<"sashimi-13", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-14": CardStateRecord<"sashimi-14", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-2": CardStateRecord<"sashimi-2", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-3": CardStateRecord<"sashimi-3", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-4": CardStateRecord<"sashimi-4", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-5": CardStateRecord<"sashimi-5", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-6": CardStateRecord<"sashimi-6", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-7": CardStateRecord<"sashimi-7", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-8": CardStateRecord<"sashimi-8", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "sashimi-9": CardStateRecord<"sashimi-9", "sushi-cards", "sashimi", SushiCardsSashimiCardProperties>;
-  "tempura-1": CardStateRecord<"tempura-1", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-10": CardStateRecord<"tempura-10", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-11": CardStateRecord<"tempura-11", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-12": CardStateRecord<"tempura-12", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-13": CardStateRecord<"tempura-13", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-14": CardStateRecord<"tempura-14", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-2": CardStateRecord<"tempura-2", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-3": CardStateRecord<"tempura-3", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-4": CardStateRecord<"tempura-4", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-5": CardStateRecord<"tempura-5", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-6": CardStateRecord<"tempura-6", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-7": CardStateRecord<"tempura-7", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-8": CardStateRecord<"tempura-8", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "tempura-9": CardStateRecord<"tempura-9", "sushi-cards", "tempura", SushiCardsTempuraCardProperties>;
-  "wasabi-1": CardStateRecord<"wasabi-1", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
-  "wasabi-2": CardStateRecord<"wasabi-2", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
-  "wasabi-3": CardStateRecord<"wasabi-3", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
-  "wasabi-4": CardStateRecord<"wasabi-4", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
-  "wasabi-5": CardStateRecord<"wasabi-5", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
-  "wasabi-6": CardStateRecord<"wasabi-6", "sushi-cards", "wasabi", SushiCardsWasabiCardProperties>;
+  "chopsticks-1": CardStateRecord<
+    "chopsticks-1",
+    "sushi-cards",
+    "chopsticks",
+    SushiCardsChopsticksCardProperties
+  >;
+  "chopsticks-2": CardStateRecord<
+    "chopsticks-2",
+    "sushi-cards",
+    "chopsticks",
+    SushiCardsChopsticksCardProperties
+  >;
+  "chopsticks-3": CardStateRecord<
+    "chopsticks-3",
+    "sushi-cards",
+    "chopsticks",
+    SushiCardsChopsticksCardProperties
+  >;
+  "chopsticks-4": CardStateRecord<
+    "chopsticks-4",
+    "sushi-cards",
+    "chopsticks",
+    SushiCardsChopsticksCardProperties
+  >;
+  "dumpling-1": CardStateRecord<
+    "dumpling-1",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-10": CardStateRecord<
+    "dumpling-10",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-11": CardStateRecord<
+    "dumpling-11",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-12": CardStateRecord<
+    "dumpling-12",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-13": CardStateRecord<
+    "dumpling-13",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-14": CardStateRecord<
+    "dumpling-14",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-2": CardStateRecord<
+    "dumpling-2",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-3": CardStateRecord<
+    "dumpling-3",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-4": CardStateRecord<
+    "dumpling-4",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-5": CardStateRecord<
+    "dumpling-5",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-6": CardStateRecord<
+    "dumpling-6",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-7": CardStateRecord<
+    "dumpling-7",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-8": CardStateRecord<
+    "dumpling-8",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "dumpling-9": CardStateRecord<
+    "dumpling-9",
+    "sushi-cards",
+    "dumpling",
+    SushiCardsDumplingCardProperties
+  >;
+  "maki-1-1": CardStateRecord<
+    "maki-1-1",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-1-2": CardStateRecord<
+    "maki-1-2",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-1-3": CardStateRecord<
+    "maki-1-3",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-1-4": CardStateRecord<
+    "maki-1-4",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-1-5": CardStateRecord<
+    "maki-1-5",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-1-6": CardStateRecord<
+    "maki-1-6",
+    "sushi-cards",
+    "maki-1",
+    SushiCardsMaki1CardProperties
+  >;
+  "maki-2-1": CardStateRecord<
+    "maki-2-1",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-2-2": CardStateRecord<
+    "maki-2-2",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-2-3": CardStateRecord<
+    "maki-2-3",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-2-4": CardStateRecord<
+    "maki-2-4",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-2-5": CardStateRecord<
+    "maki-2-5",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-2-6": CardStateRecord<
+    "maki-2-6",
+    "sushi-cards",
+    "maki-2",
+    SushiCardsMaki2CardProperties
+  >;
+  "maki-3-1": CardStateRecord<
+    "maki-3-1",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "maki-3-2": CardStateRecord<
+    "maki-3-2",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "maki-3-3": CardStateRecord<
+    "maki-3-3",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "maki-3-4": CardStateRecord<
+    "maki-3-4",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "maki-3-5": CardStateRecord<
+    "maki-3-5",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "maki-3-6": CardStateRecord<
+    "maki-3-6",
+    "sushi-cards",
+    "maki-3",
+    SushiCardsMaki3CardProperties
+  >;
+  "nigiri-egg-1": CardStateRecord<
+    "nigiri-egg-1",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-egg-2": CardStateRecord<
+    "nigiri-egg-2",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-egg-3": CardStateRecord<
+    "nigiri-egg-3",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-egg-4": CardStateRecord<
+    "nigiri-egg-4",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-egg-5": CardStateRecord<
+    "nigiri-egg-5",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-egg-6": CardStateRecord<
+    "nigiri-egg-6",
+    "sushi-cards",
+    "nigiri-egg",
+    SushiCardsNigiriEggCardProperties
+  >;
+  "nigiri-salmon-1": CardStateRecord<
+    "nigiri-salmon-1",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-10": CardStateRecord<
+    "nigiri-salmon-10",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-2": CardStateRecord<
+    "nigiri-salmon-2",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-3": CardStateRecord<
+    "nigiri-salmon-3",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-4": CardStateRecord<
+    "nigiri-salmon-4",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-5": CardStateRecord<
+    "nigiri-salmon-5",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-6": CardStateRecord<
+    "nigiri-salmon-6",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-7": CardStateRecord<
+    "nigiri-salmon-7",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-8": CardStateRecord<
+    "nigiri-salmon-8",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-salmon-9": CardStateRecord<
+    "nigiri-salmon-9",
+    "sushi-cards",
+    "nigiri-salmon",
+    SushiCardsNigiriSalmonCardProperties
+  >;
+  "nigiri-squid-1": CardStateRecord<
+    "nigiri-squid-1",
+    "sushi-cards",
+    "nigiri-squid",
+    SushiCardsNigiriSquidCardProperties
+  >;
+  "nigiri-squid-2": CardStateRecord<
+    "nigiri-squid-2",
+    "sushi-cards",
+    "nigiri-squid",
+    SushiCardsNigiriSquidCardProperties
+  >;
+  "nigiri-squid-3": CardStateRecord<
+    "nigiri-squid-3",
+    "sushi-cards",
+    "nigiri-squid",
+    SushiCardsNigiriSquidCardProperties
+  >;
+  "nigiri-squid-4": CardStateRecord<
+    "nigiri-squid-4",
+    "sushi-cards",
+    "nigiri-squid",
+    SushiCardsNigiriSquidCardProperties
+  >;
+  "nigiri-squid-5": CardStateRecord<
+    "nigiri-squid-5",
+    "sushi-cards",
+    "nigiri-squid",
+    SushiCardsNigiriSquidCardProperties
+  >;
+  "pudding-1": CardStateRecord<
+    "pudding-1",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-10": CardStateRecord<
+    "pudding-10",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-2": CardStateRecord<
+    "pudding-2",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-3": CardStateRecord<
+    "pudding-3",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-4": CardStateRecord<
+    "pudding-4",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-5": CardStateRecord<
+    "pudding-5",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-6": CardStateRecord<
+    "pudding-6",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-7": CardStateRecord<
+    "pudding-7",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-8": CardStateRecord<
+    "pudding-8",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "pudding-9": CardStateRecord<
+    "pudding-9",
+    "sushi-cards",
+    "pudding",
+    SushiCardsPuddingCardProperties
+  >;
+  "sashimi-1": CardStateRecord<
+    "sashimi-1",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-10": CardStateRecord<
+    "sashimi-10",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-11": CardStateRecord<
+    "sashimi-11",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-12": CardStateRecord<
+    "sashimi-12",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-13": CardStateRecord<
+    "sashimi-13",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-14": CardStateRecord<
+    "sashimi-14",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-2": CardStateRecord<
+    "sashimi-2",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-3": CardStateRecord<
+    "sashimi-3",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-4": CardStateRecord<
+    "sashimi-4",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-5": CardStateRecord<
+    "sashimi-5",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-6": CardStateRecord<
+    "sashimi-6",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-7": CardStateRecord<
+    "sashimi-7",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-8": CardStateRecord<
+    "sashimi-8",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "sashimi-9": CardStateRecord<
+    "sashimi-9",
+    "sushi-cards",
+    "sashimi",
+    SushiCardsSashimiCardProperties
+  >;
+  "tempura-1": CardStateRecord<
+    "tempura-1",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-10": CardStateRecord<
+    "tempura-10",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-11": CardStateRecord<
+    "tempura-11",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-12": CardStateRecord<
+    "tempura-12",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-13": CardStateRecord<
+    "tempura-13",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-14": CardStateRecord<
+    "tempura-14",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-2": CardStateRecord<
+    "tempura-2",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-3": CardStateRecord<
+    "tempura-3",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-4": CardStateRecord<
+    "tempura-4",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-5": CardStateRecord<
+    "tempura-5",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-6": CardStateRecord<
+    "tempura-6",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-7": CardStateRecord<
+    "tempura-7",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-8": CardStateRecord<
+    "tempura-8",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "tempura-9": CardStateRecord<
+    "tempura-9",
+    "sushi-cards",
+    "tempura",
+    SushiCardsTempuraCardProperties
+  >;
+  "wasabi-1": CardStateRecord<
+    "wasabi-1",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
+  "wasabi-2": CardStateRecord<
+    "wasabi-2",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
+  "wasabi-3": CardStateRecord<
+    "wasabi-3",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
+  "wasabi-4": CardStateRecord<
+    "wasabi-4",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
+  "wasabi-5": CardStateRecord<
+    "wasabi-5",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
+  "wasabi-6": CardStateRecord<
+    "wasabi-6",
+    "sushi-cards",
+    "wasabi",
+    SushiCardsWasabiCardProperties
+  >;
 };
 
 export type PieceStateRecord<
@@ -867,13 +1720,529 @@ export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
 export type CardIdsBySharedZoneId = {
-  "draw-pile": Array<"chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4" | "dumpling-1" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-10" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "pudding-1" | "pudding-10" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "sashimi-1" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "tempura-1" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6">;
-  "round-discard": Array<"chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4" | "dumpling-1" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-10" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "pudding-1" | "pudding-10" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "sashimi-1" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "tempura-1" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6">;
+  "draw-pile": Array<
+    | "chopsticks-1"
+    | "chopsticks-2"
+    | "chopsticks-3"
+    | "chopsticks-4"
+    | "dumpling-1"
+    | "dumpling-10"
+    | "dumpling-11"
+    | "dumpling-12"
+    | "dumpling-13"
+    | "dumpling-14"
+    | "dumpling-2"
+    | "dumpling-3"
+    | "dumpling-4"
+    | "dumpling-5"
+    | "dumpling-6"
+    | "dumpling-7"
+    | "dumpling-8"
+    | "dumpling-9"
+    | "maki-1-1"
+    | "maki-1-2"
+    | "maki-1-3"
+    | "maki-1-4"
+    | "maki-1-5"
+    | "maki-1-6"
+    | "maki-2-1"
+    | "maki-2-2"
+    | "maki-2-3"
+    | "maki-2-4"
+    | "maki-2-5"
+    | "maki-2-6"
+    | "maki-3-1"
+    | "maki-3-2"
+    | "maki-3-3"
+    | "maki-3-4"
+    | "maki-3-5"
+    | "maki-3-6"
+    | "nigiri-egg-1"
+    | "nigiri-egg-2"
+    | "nigiri-egg-3"
+    | "nigiri-egg-4"
+    | "nigiri-egg-5"
+    | "nigiri-egg-6"
+    | "nigiri-salmon-1"
+    | "nigiri-salmon-10"
+    | "nigiri-salmon-2"
+    | "nigiri-salmon-3"
+    | "nigiri-salmon-4"
+    | "nigiri-salmon-5"
+    | "nigiri-salmon-6"
+    | "nigiri-salmon-7"
+    | "nigiri-salmon-8"
+    | "nigiri-salmon-9"
+    | "nigiri-squid-1"
+    | "nigiri-squid-2"
+    | "nigiri-squid-3"
+    | "nigiri-squid-4"
+    | "nigiri-squid-5"
+    | "pudding-1"
+    | "pudding-10"
+    | "pudding-2"
+    | "pudding-3"
+    | "pudding-4"
+    | "pudding-5"
+    | "pudding-6"
+    | "pudding-7"
+    | "pudding-8"
+    | "pudding-9"
+    | "sashimi-1"
+    | "sashimi-10"
+    | "sashimi-11"
+    | "sashimi-12"
+    | "sashimi-13"
+    | "sashimi-14"
+    | "sashimi-2"
+    | "sashimi-3"
+    | "sashimi-4"
+    | "sashimi-5"
+    | "sashimi-6"
+    | "sashimi-7"
+    | "sashimi-8"
+    | "sashimi-9"
+    | "tempura-1"
+    | "tempura-10"
+    | "tempura-11"
+    | "tempura-12"
+    | "tempura-13"
+    | "tempura-14"
+    | "tempura-2"
+    | "tempura-3"
+    | "tempura-4"
+    | "tempura-5"
+    | "tempura-6"
+    | "tempura-7"
+    | "tempura-8"
+    | "tempura-9"
+    | "wasabi-1"
+    | "wasabi-2"
+    | "wasabi-3"
+    | "wasabi-4"
+    | "wasabi-5"
+    | "wasabi-6"
+  >;
+  "round-discard": Array<
+    | "chopsticks-1"
+    | "chopsticks-2"
+    | "chopsticks-3"
+    | "chopsticks-4"
+    | "dumpling-1"
+    | "dumpling-10"
+    | "dumpling-11"
+    | "dumpling-12"
+    | "dumpling-13"
+    | "dumpling-14"
+    | "dumpling-2"
+    | "dumpling-3"
+    | "dumpling-4"
+    | "dumpling-5"
+    | "dumpling-6"
+    | "dumpling-7"
+    | "dumpling-8"
+    | "dumpling-9"
+    | "maki-1-1"
+    | "maki-1-2"
+    | "maki-1-3"
+    | "maki-1-4"
+    | "maki-1-5"
+    | "maki-1-6"
+    | "maki-2-1"
+    | "maki-2-2"
+    | "maki-2-3"
+    | "maki-2-4"
+    | "maki-2-5"
+    | "maki-2-6"
+    | "maki-3-1"
+    | "maki-3-2"
+    | "maki-3-3"
+    | "maki-3-4"
+    | "maki-3-5"
+    | "maki-3-6"
+    | "nigiri-egg-1"
+    | "nigiri-egg-2"
+    | "nigiri-egg-3"
+    | "nigiri-egg-4"
+    | "nigiri-egg-5"
+    | "nigiri-egg-6"
+    | "nigiri-salmon-1"
+    | "nigiri-salmon-10"
+    | "nigiri-salmon-2"
+    | "nigiri-salmon-3"
+    | "nigiri-salmon-4"
+    | "nigiri-salmon-5"
+    | "nigiri-salmon-6"
+    | "nigiri-salmon-7"
+    | "nigiri-salmon-8"
+    | "nigiri-salmon-9"
+    | "nigiri-squid-1"
+    | "nigiri-squid-2"
+    | "nigiri-squid-3"
+    | "nigiri-squid-4"
+    | "nigiri-squid-5"
+    | "pudding-1"
+    | "pudding-10"
+    | "pudding-2"
+    | "pudding-3"
+    | "pudding-4"
+    | "pudding-5"
+    | "pudding-6"
+    | "pudding-7"
+    | "pudding-8"
+    | "pudding-9"
+    | "sashimi-1"
+    | "sashimi-10"
+    | "sashimi-11"
+    | "sashimi-12"
+    | "sashimi-13"
+    | "sashimi-14"
+    | "sashimi-2"
+    | "sashimi-3"
+    | "sashimi-4"
+    | "sashimi-5"
+    | "sashimi-6"
+    | "sashimi-7"
+    | "sashimi-8"
+    | "sashimi-9"
+    | "tempura-1"
+    | "tempura-10"
+    | "tempura-11"
+    | "tempura-12"
+    | "tempura-13"
+    | "tempura-14"
+    | "tempura-2"
+    | "tempura-3"
+    | "tempura-4"
+    | "tempura-5"
+    | "tempura-6"
+    | "tempura-7"
+    | "tempura-8"
+    | "tempura-9"
+    | "wasabi-1"
+    | "wasabi-2"
+    | "wasabi-3"
+    | "wasabi-4"
+    | "wasabi-5"
+    | "wasabi-6"
+  >;
 };
 export type CardIdsByPlayerZoneId = {
-  "hand": PerPlayer<Array<"chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4" | "dumpling-1" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-10" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "pudding-1" | "pudding-10" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "sashimi-1" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "tempura-1" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6">>;
-  "played": PerPlayer<Array<"chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4" | "dumpling-1" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-10" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "pudding-1" | "pudding-10" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "sashimi-1" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "tempura-1" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6">>;
-  "pudding": PerPlayer<Array<"chopsticks-1" | "chopsticks-2" | "chopsticks-3" | "chopsticks-4" | "dumpling-1" | "dumpling-10" | "dumpling-11" | "dumpling-12" | "dumpling-13" | "dumpling-14" | "dumpling-2" | "dumpling-3" | "dumpling-4" | "dumpling-5" | "dumpling-6" | "dumpling-7" | "dumpling-8" | "dumpling-9" | "maki-1-1" | "maki-1-2" | "maki-1-3" | "maki-1-4" | "maki-1-5" | "maki-1-6" | "maki-2-1" | "maki-2-2" | "maki-2-3" | "maki-2-4" | "maki-2-5" | "maki-2-6" | "maki-3-1" | "maki-3-2" | "maki-3-3" | "maki-3-4" | "maki-3-5" | "maki-3-6" | "nigiri-egg-1" | "nigiri-egg-2" | "nigiri-egg-3" | "nigiri-egg-4" | "nigiri-egg-5" | "nigiri-egg-6" | "nigiri-salmon-1" | "nigiri-salmon-10" | "nigiri-salmon-2" | "nigiri-salmon-3" | "nigiri-salmon-4" | "nigiri-salmon-5" | "nigiri-salmon-6" | "nigiri-salmon-7" | "nigiri-salmon-8" | "nigiri-salmon-9" | "nigiri-squid-1" | "nigiri-squid-2" | "nigiri-squid-3" | "nigiri-squid-4" | "nigiri-squid-5" | "pudding-1" | "pudding-10" | "pudding-2" | "pudding-3" | "pudding-4" | "pudding-5" | "pudding-6" | "pudding-7" | "pudding-8" | "pudding-9" | "sashimi-1" | "sashimi-10" | "sashimi-11" | "sashimi-12" | "sashimi-13" | "sashimi-14" | "sashimi-2" | "sashimi-3" | "sashimi-4" | "sashimi-5" | "sashimi-6" | "sashimi-7" | "sashimi-8" | "sashimi-9" | "tempura-1" | "tempura-10" | "tempura-11" | "tempura-12" | "tempura-13" | "tempura-14" | "tempura-2" | "tempura-3" | "tempura-4" | "tempura-5" | "tempura-6" | "tempura-7" | "tempura-8" | "tempura-9" | "wasabi-1" | "wasabi-2" | "wasabi-3" | "wasabi-4" | "wasabi-5" | "wasabi-6">>;
+  hand: PerPlayer<
+    Array<
+      | "chopsticks-1"
+      | "chopsticks-2"
+      | "chopsticks-3"
+      | "chopsticks-4"
+      | "dumpling-1"
+      | "dumpling-10"
+      | "dumpling-11"
+      | "dumpling-12"
+      | "dumpling-13"
+      | "dumpling-14"
+      | "dumpling-2"
+      | "dumpling-3"
+      | "dumpling-4"
+      | "dumpling-5"
+      | "dumpling-6"
+      | "dumpling-7"
+      | "dumpling-8"
+      | "dumpling-9"
+      | "maki-1-1"
+      | "maki-1-2"
+      | "maki-1-3"
+      | "maki-1-4"
+      | "maki-1-5"
+      | "maki-1-6"
+      | "maki-2-1"
+      | "maki-2-2"
+      | "maki-2-3"
+      | "maki-2-4"
+      | "maki-2-5"
+      | "maki-2-6"
+      | "maki-3-1"
+      | "maki-3-2"
+      | "maki-3-3"
+      | "maki-3-4"
+      | "maki-3-5"
+      | "maki-3-6"
+      | "nigiri-egg-1"
+      | "nigiri-egg-2"
+      | "nigiri-egg-3"
+      | "nigiri-egg-4"
+      | "nigiri-egg-5"
+      | "nigiri-egg-6"
+      | "nigiri-salmon-1"
+      | "nigiri-salmon-10"
+      | "nigiri-salmon-2"
+      | "nigiri-salmon-3"
+      | "nigiri-salmon-4"
+      | "nigiri-salmon-5"
+      | "nigiri-salmon-6"
+      | "nigiri-salmon-7"
+      | "nigiri-salmon-8"
+      | "nigiri-salmon-9"
+      | "nigiri-squid-1"
+      | "nigiri-squid-2"
+      | "nigiri-squid-3"
+      | "nigiri-squid-4"
+      | "nigiri-squid-5"
+      | "pudding-1"
+      | "pudding-10"
+      | "pudding-2"
+      | "pudding-3"
+      | "pudding-4"
+      | "pudding-5"
+      | "pudding-6"
+      | "pudding-7"
+      | "pudding-8"
+      | "pudding-9"
+      | "sashimi-1"
+      | "sashimi-10"
+      | "sashimi-11"
+      | "sashimi-12"
+      | "sashimi-13"
+      | "sashimi-14"
+      | "sashimi-2"
+      | "sashimi-3"
+      | "sashimi-4"
+      | "sashimi-5"
+      | "sashimi-6"
+      | "sashimi-7"
+      | "sashimi-8"
+      | "sashimi-9"
+      | "tempura-1"
+      | "tempura-10"
+      | "tempura-11"
+      | "tempura-12"
+      | "tempura-13"
+      | "tempura-14"
+      | "tempura-2"
+      | "tempura-3"
+      | "tempura-4"
+      | "tempura-5"
+      | "tempura-6"
+      | "tempura-7"
+      | "tempura-8"
+      | "tempura-9"
+      | "wasabi-1"
+      | "wasabi-2"
+      | "wasabi-3"
+      | "wasabi-4"
+      | "wasabi-5"
+      | "wasabi-6"
+    >
+  >;
+  played: PerPlayer<
+    Array<
+      | "chopsticks-1"
+      | "chopsticks-2"
+      | "chopsticks-3"
+      | "chopsticks-4"
+      | "dumpling-1"
+      | "dumpling-10"
+      | "dumpling-11"
+      | "dumpling-12"
+      | "dumpling-13"
+      | "dumpling-14"
+      | "dumpling-2"
+      | "dumpling-3"
+      | "dumpling-4"
+      | "dumpling-5"
+      | "dumpling-6"
+      | "dumpling-7"
+      | "dumpling-8"
+      | "dumpling-9"
+      | "maki-1-1"
+      | "maki-1-2"
+      | "maki-1-3"
+      | "maki-1-4"
+      | "maki-1-5"
+      | "maki-1-6"
+      | "maki-2-1"
+      | "maki-2-2"
+      | "maki-2-3"
+      | "maki-2-4"
+      | "maki-2-5"
+      | "maki-2-6"
+      | "maki-3-1"
+      | "maki-3-2"
+      | "maki-3-3"
+      | "maki-3-4"
+      | "maki-3-5"
+      | "maki-3-6"
+      | "nigiri-egg-1"
+      | "nigiri-egg-2"
+      | "nigiri-egg-3"
+      | "nigiri-egg-4"
+      | "nigiri-egg-5"
+      | "nigiri-egg-6"
+      | "nigiri-salmon-1"
+      | "nigiri-salmon-10"
+      | "nigiri-salmon-2"
+      | "nigiri-salmon-3"
+      | "nigiri-salmon-4"
+      | "nigiri-salmon-5"
+      | "nigiri-salmon-6"
+      | "nigiri-salmon-7"
+      | "nigiri-salmon-8"
+      | "nigiri-salmon-9"
+      | "nigiri-squid-1"
+      | "nigiri-squid-2"
+      | "nigiri-squid-3"
+      | "nigiri-squid-4"
+      | "nigiri-squid-5"
+      | "pudding-1"
+      | "pudding-10"
+      | "pudding-2"
+      | "pudding-3"
+      | "pudding-4"
+      | "pudding-5"
+      | "pudding-6"
+      | "pudding-7"
+      | "pudding-8"
+      | "pudding-9"
+      | "sashimi-1"
+      | "sashimi-10"
+      | "sashimi-11"
+      | "sashimi-12"
+      | "sashimi-13"
+      | "sashimi-14"
+      | "sashimi-2"
+      | "sashimi-3"
+      | "sashimi-4"
+      | "sashimi-5"
+      | "sashimi-6"
+      | "sashimi-7"
+      | "sashimi-8"
+      | "sashimi-9"
+      | "tempura-1"
+      | "tempura-10"
+      | "tempura-11"
+      | "tempura-12"
+      | "tempura-13"
+      | "tempura-14"
+      | "tempura-2"
+      | "tempura-3"
+      | "tempura-4"
+      | "tempura-5"
+      | "tempura-6"
+      | "tempura-7"
+      | "tempura-8"
+      | "tempura-9"
+      | "wasabi-1"
+      | "wasabi-2"
+      | "wasabi-3"
+      | "wasabi-4"
+      | "wasabi-5"
+      | "wasabi-6"
+    >
+  >;
+  pudding: PerPlayer<
+    Array<
+      | "chopsticks-1"
+      | "chopsticks-2"
+      | "chopsticks-3"
+      | "chopsticks-4"
+      | "dumpling-1"
+      | "dumpling-10"
+      | "dumpling-11"
+      | "dumpling-12"
+      | "dumpling-13"
+      | "dumpling-14"
+      | "dumpling-2"
+      | "dumpling-3"
+      | "dumpling-4"
+      | "dumpling-5"
+      | "dumpling-6"
+      | "dumpling-7"
+      | "dumpling-8"
+      | "dumpling-9"
+      | "maki-1-1"
+      | "maki-1-2"
+      | "maki-1-3"
+      | "maki-1-4"
+      | "maki-1-5"
+      | "maki-1-6"
+      | "maki-2-1"
+      | "maki-2-2"
+      | "maki-2-3"
+      | "maki-2-4"
+      | "maki-2-5"
+      | "maki-2-6"
+      | "maki-3-1"
+      | "maki-3-2"
+      | "maki-3-3"
+      | "maki-3-4"
+      | "maki-3-5"
+      | "maki-3-6"
+      | "nigiri-egg-1"
+      | "nigiri-egg-2"
+      | "nigiri-egg-3"
+      | "nigiri-egg-4"
+      | "nigiri-egg-5"
+      | "nigiri-egg-6"
+      | "nigiri-salmon-1"
+      | "nigiri-salmon-10"
+      | "nigiri-salmon-2"
+      | "nigiri-salmon-3"
+      | "nigiri-salmon-4"
+      | "nigiri-salmon-5"
+      | "nigiri-salmon-6"
+      | "nigiri-salmon-7"
+      | "nigiri-salmon-8"
+      | "nigiri-salmon-9"
+      | "nigiri-squid-1"
+      | "nigiri-squid-2"
+      | "nigiri-squid-3"
+      | "nigiri-squid-4"
+      | "nigiri-squid-5"
+      | "pudding-1"
+      | "pudding-10"
+      | "pudding-2"
+      | "pudding-3"
+      | "pudding-4"
+      | "pudding-5"
+      | "pudding-6"
+      | "pudding-7"
+      | "pudding-8"
+      | "pudding-9"
+      | "sashimi-1"
+      | "sashimi-10"
+      | "sashimi-11"
+      | "sashimi-12"
+      | "sashimi-13"
+      | "sashimi-14"
+      | "sashimi-2"
+      | "sashimi-3"
+      | "sashimi-4"
+      | "sashimi-5"
+      | "sashimi-6"
+      | "sashimi-7"
+      | "sashimi-8"
+      | "sashimi-9"
+      | "tempura-1"
+      | "tempura-10"
+      | "tempura-11"
+      | "tempura-12"
+      | "tempura-13"
+      | "tempura-14"
+      | "tempura-2"
+      | "tempura-3"
+      | "tempura-4"
+      | "tempura-5"
+      | "tempura-6"
+      | "tempura-7"
+      | "tempura-8"
+      | "tempura-9"
+      | "wasabi-1"
+      | "wasabi-2"
+      | "wasabi-3"
+      | "wasabi-4"
+      | "wasabi-5"
+      | "wasabi-6"
+    >
+  >;
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -945,14 +2314,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -1029,14 +2398,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    never,
-    BoardFields,
-    SpaceFields,
-    RuntimeRecord,
-    RuntimeRecord
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  never,
+  BoardFields,
+  SpaceFields,
+  RuntimeRecord,
+  RuntimeRecord
+> {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -1061,14 +2430,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -1089,24 +2458,23 @@ export type TiledBoardStateRecord =
   | HexBoardStateRecord
   | SquareBoardStateRecord;
 
-export type BoardStateById = {
-
-};
+export type BoardStateById = {};
 
 export type HexBoardStateById = Record<string, never>;
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> =
-  T extends readonly (infer Item)[]
+type ManifestArrayElement<T> = T extends readonly (infer Item)[]
+  ? Item
+  : T extends (infer Item)[]
     ? Item
-    : T extends (infer Item)[]
-      ? Item
-      : never;
+    : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
+  BoardIdValue extends keyof BoardStateById
+    ? BoardStateById[BoardIdValue]
+    : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1163,26 +2531,29 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
-> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
-  ? Ref
-  : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
+> =
+  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1192,9 +2563,8 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1204,9 +2574,10 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1216,9 +2587,10 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1228,9 +2600,10 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1246,19 +2619,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<
-  BoardIdValue extends TiledBoardId = TiledBoardId,
-> = BoardIdValue extends keyof HexBoardStateById
-  ? HexVertexState<BoardIdValue>
-  : BoardIdValue extends keyof SquareBoardStateById
-    ? SquareVertexState<BoardIdValue>
-    : never;
+export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
+  BoardIdValue extends keyof HexBoardStateById
+    ? HexVertexState<BoardIdValue>
+    : BoardIdValue extends keyof SquareBoardStateById
+      ? SquareVertexState<BoardIdValue>
+      : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type BoardStateRecord = never;
 
@@ -1443,8 +2816,13 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
-    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
+    visibility: z.record(
+      zoneIdSchema,
+      z.enum(["all", "ownerOnly", "public", "hidden"]),
+    ),
+    cardSetIdsByZoneId: z
+      .record(zoneIdSchema, z.array(ids.cardSetId))
+      .optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -1501,11 +2879,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-      type: z.literal("InSlot"),
-      host: z.never(),
-      slotId: z.never(),
-      position: z.number().int().nullable().optional(),
-    }),
+        type: z.literal("InSlot"),
+        host: z.never(),
+        slotId: z.never(),
+        position: z.number().int().nullable().optional(),
+      }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -1550,44 +2928,290 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(playerIds, () =>
-    Object.fromEntries(
-      literals.resourceIds.map((resourceId) => [resourceId, 0]),
-    ) as Record<ResourceId, number>,
+  return perPlayer(
+    playerIds,
+    () =>
+      Object.fromEntries(
+        literals.resourceIds.map((resourceId) => [resourceId, 0]),
+      ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) => ({
-    shared: cloneManifestDefault({"draw-pile":[],"round-discard":[]}),
-    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-    visibility: cloneManifestDefault({"draw-pile":"hidden","hand":"ownerOnly","played":"public","pudding":"public","round-discard":"public"}),
-    cardSetIdsByZoneId: cloneManifestDefault({"draw-pile":["sushi-cards"],"hand":["sushi-cards"],"played":["sushi-cards"],"pudding":["sushi-cards"],"round-discard":["sushi-cards"]}),
-  }) as TableState["zones"],
-  decks: () => cloneManifestDefault({"draw-pile":[],"round-discard":[]}) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) =>
+    ({
+      shared: cloneManifestDefault({ "draw-pile": [], "round-discard": [] }),
+      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+      visibility: cloneManifestDefault({
+        "draw-pile": "hidden",
+        hand: "ownerOnly",
+        played: "public",
+        pudding: "public",
+        "round-discard": "public",
+      }),
+      cardSetIdsByZoneId: cloneManifestDefault({
+        "draw-pile": ["sushi-cards"],
+        hand: ["sushi-cards"],
+        played: ["sushi-cards"],
+        pudding: ["sushi-cards"],
+        "round-discard": ["sushi-cards"],
+      }),
+    }) as TableState["zones"],
+  decks: () =>
+    cloneManifestDefault({
+      "draw-pile": [],
+      "round-discard": [],
+    }) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
-  handVisibility: () => cloneManifestDefault({"hand":"ownerOnly","played":"public","pudding":"public"}) as TableState["handVisibility"],
-  ownerOfCard: () => cloneManifestDefault({"chopsticks-1":null,"chopsticks-2":null,"chopsticks-3":null,"chopsticks-4":null,"dumpling-1":null,"dumpling-10":null,"dumpling-11":null,"dumpling-12":null,"dumpling-13":null,"dumpling-14":null,"dumpling-2":null,"dumpling-3":null,"dumpling-4":null,"dumpling-5":null,"dumpling-6":null,"dumpling-7":null,"dumpling-8":null,"dumpling-9":null,"maki-1-1":null,"maki-1-2":null,"maki-1-3":null,"maki-1-4":null,"maki-1-5":null,"maki-1-6":null,"maki-2-1":null,"maki-2-2":null,"maki-2-3":null,"maki-2-4":null,"maki-2-5":null,"maki-2-6":null,"maki-3-1":null,"maki-3-2":null,"maki-3-3":null,"maki-3-4":null,"maki-3-5":null,"maki-3-6":null,"nigiri-egg-1":null,"nigiri-egg-2":null,"nigiri-egg-3":null,"nigiri-egg-4":null,"nigiri-egg-5":null,"nigiri-egg-6":null,"nigiri-salmon-1":null,"nigiri-salmon-10":null,"nigiri-salmon-2":null,"nigiri-salmon-3":null,"nigiri-salmon-4":null,"nigiri-salmon-5":null,"nigiri-salmon-6":null,"nigiri-salmon-7":null,"nigiri-salmon-8":null,"nigiri-salmon-9":null,"nigiri-squid-1":null,"nigiri-squid-2":null,"nigiri-squid-3":null,"nigiri-squid-4":null,"nigiri-squid-5":null,"pudding-1":null,"pudding-10":null,"pudding-2":null,"pudding-3":null,"pudding-4":null,"pudding-5":null,"pudding-6":null,"pudding-7":null,"pudding-8":null,"pudding-9":null,"sashimi-1":null,"sashimi-10":null,"sashimi-11":null,"sashimi-12":null,"sashimi-13":null,"sashimi-14":null,"sashimi-2":null,"sashimi-3":null,"sashimi-4":null,"sashimi-5":null,"sashimi-6":null,"sashimi-7":null,"sashimi-8":null,"sashimi-9":null,"tempura-1":null,"tempura-10":null,"tempura-11":null,"tempura-12":null,"tempura-13":null,"tempura-14":null,"tempura-2":null,"tempura-3":null,"tempura-4":null,"tempura-5":null,"tempura-6":null,"tempura-7":null,"tempura-8":null,"tempura-9":null,"wasabi-1":null,"wasabi-2":null,"wasabi-3":null,"wasabi-4":null,"wasabi-5":null,"wasabi-6":null}) as TableState["ownerOfCard"],
-  visibility: () => cloneManifestDefault({"chopsticks-1":{"faceUp":true},"chopsticks-2":{"faceUp":true},"chopsticks-3":{"faceUp":true},"chopsticks-4":{"faceUp":true},"dumpling-1":{"faceUp":true},"dumpling-10":{"faceUp":true},"dumpling-11":{"faceUp":true},"dumpling-12":{"faceUp":true},"dumpling-13":{"faceUp":true},"dumpling-14":{"faceUp":true},"dumpling-2":{"faceUp":true},"dumpling-3":{"faceUp":true},"dumpling-4":{"faceUp":true},"dumpling-5":{"faceUp":true},"dumpling-6":{"faceUp":true},"dumpling-7":{"faceUp":true},"dumpling-8":{"faceUp":true},"dumpling-9":{"faceUp":true},"maki-1-1":{"faceUp":true},"maki-1-2":{"faceUp":true},"maki-1-3":{"faceUp":true},"maki-1-4":{"faceUp":true},"maki-1-5":{"faceUp":true},"maki-1-6":{"faceUp":true},"maki-2-1":{"faceUp":true},"maki-2-2":{"faceUp":true},"maki-2-3":{"faceUp":true},"maki-2-4":{"faceUp":true},"maki-2-5":{"faceUp":true},"maki-2-6":{"faceUp":true},"maki-3-1":{"faceUp":true},"maki-3-2":{"faceUp":true},"maki-3-3":{"faceUp":true},"maki-3-4":{"faceUp":true},"maki-3-5":{"faceUp":true},"maki-3-6":{"faceUp":true},"nigiri-egg-1":{"faceUp":true},"nigiri-egg-2":{"faceUp":true},"nigiri-egg-3":{"faceUp":true},"nigiri-egg-4":{"faceUp":true},"nigiri-egg-5":{"faceUp":true},"nigiri-egg-6":{"faceUp":true},"nigiri-salmon-1":{"faceUp":true},"nigiri-salmon-10":{"faceUp":true},"nigiri-salmon-2":{"faceUp":true},"nigiri-salmon-3":{"faceUp":true},"nigiri-salmon-4":{"faceUp":true},"nigiri-salmon-5":{"faceUp":true},"nigiri-salmon-6":{"faceUp":true},"nigiri-salmon-7":{"faceUp":true},"nigiri-salmon-8":{"faceUp":true},"nigiri-salmon-9":{"faceUp":true},"nigiri-squid-1":{"faceUp":true},"nigiri-squid-2":{"faceUp":true},"nigiri-squid-3":{"faceUp":true},"nigiri-squid-4":{"faceUp":true},"nigiri-squid-5":{"faceUp":true},"pudding-1":{"faceUp":true},"pudding-10":{"faceUp":true},"pudding-2":{"faceUp":true},"pudding-3":{"faceUp":true},"pudding-4":{"faceUp":true},"pudding-5":{"faceUp":true},"pudding-6":{"faceUp":true},"pudding-7":{"faceUp":true},"pudding-8":{"faceUp":true},"pudding-9":{"faceUp":true},"sashimi-1":{"faceUp":true},"sashimi-10":{"faceUp":true},"sashimi-11":{"faceUp":true},"sashimi-12":{"faceUp":true},"sashimi-13":{"faceUp":true},"sashimi-14":{"faceUp":true},"sashimi-2":{"faceUp":true},"sashimi-3":{"faceUp":true},"sashimi-4":{"faceUp":true},"sashimi-5":{"faceUp":true},"sashimi-6":{"faceUp":true},"sashimi-7":{"faceUp":true},"sashimi-8":{"faceUp":true},"sashimi-9":{"faceUp":true},"tempura-1":{"faceUp":true},"tempura-10":{"faceUp":true},"tempura-11":{"faceUp":true},"tempura-12":{"faceUp":true},"tempura-13":{"faceUp":true},"tempura-14":{"faceUp":true},"tempura-2":{"faceUp":true},"tempura-3":{"faceUp":true},"tempura-4":{"faceUp":true},"tempura-5":{"faceUp":true},"tempura-6":{"faceUp":true},"tempura-7":{"faceUp":true},"tempura-8":{"faceUp":true},"tempura-9":{"faceUp":true},"wasabi-1":{"faceUp":true},"wasabi-2":{"faceUp":true},"wasabi-3":{"faceUp":true},"wasabi-4":{"faceUp":true},"wasabi-5":{"faceUp":true},"wasabi-6":{"faceUp":true}}) as TableState["visibility"],
+    buildPerPlayerCardIds(
+      resolveDefaultPlayerIds(playerIds),
+    ) as TableState["hands"],
+  handVisibility: () =>
+    cloneManifestDefault({
+      hand: "ownerOnly",
+      played: "public",
+      pudding: "public",
+    }) as TableState["handVisibility"],
+  ownerOfCard: () =>
+    cloneManifestDefault({
+      "chopsticks-1": null,
+      "chopsticks-2": null,
+      "chopsticks-3": null,
+      "chopsticks-4": null,
+      "dumpling-1": null,
+      "dumpling-10": null,
+      "dumpling-11": null,
+      "dumpling-12": null,
+      "dumpling-13": null,
+      "dumpling-14": null,
+      "dumpling-2": null,
+      "dumpling-3": null,
+      "dumpling-4": null,
+      "dumpling-5": null,
+      "dumpling-6": null,
+      "dumpling-7": null,
+      "dumpling-8": null,
+      "dumpling-9": null,
+      "maki-1-1": null,
+      "maki-1-2": null,
+      "maki-1-3": null,
+      "maki-1-4": null,
+      "maki-1-5": null,
+      "maki-1-6": null,
+      "maki-2-1": null,
+      "maki-2-2": null,
+      "maki-2-3": null,
+      "maki-2-4": null,
+      "maki-2-5": null,
+      "maki-2-6": null,
+      "maki-3-1": null,
+      "maki-3-2": null,
+      "maki-3-3": null,
+      "maki-3-4": null,
+      "maki-3-5": null,
+      "maki-3-6": null,
+      "nigiri-egg-1": null,
+      "nigiri-egg-2": null,
+      "nigiri-egg-3": null,
+      "nigiri-egg-4": null,
+      "nigiri-egg-5": null,
+      "nigiri-egg-6": null,
+      "nigiri-salmon-1": null,
+      "nigiri-salmon-10": null,
+      "nigiri-salmon-2": null,
+      "nigiri-salmon-3": null,
+      "nigiri-salmon-4": null,
+      "nigiri-salmon-5": null,
+      "nigiri-salmon-6": null,
+      "nigiri-salmon-7": null,
+      "nigiri-salmon-8": null,
+      "nigiri-salmon-9": null,
+      "nigiri-squid-1": null,
+      "nigiri-squid-2": null,
+      "nigiri-squid-3": null,
+      "nigiri-squid-4": null,
+      "nigiri-squid-5": null,
+      "pudding-1": null,
+      "pudding-10": null,
+      "pudding-2": null,
+      "pudding-3": null,
+      "pudding-4": null,
+      "pudding-5": null,
+      "pudding-6": null,
+      "pudding-7": null,
+      "pudding-8": null,
+      "pudding-9": null,
+      "sashimi-1": null,
+      "sashimi-10": null,
+      "sashimi-11": null,
+      "sashimi-12": null,
+      "sashimi-13": null,
+      "sashimi-14": null,
+      "sashimi-2": null,
+      "sashimi-3": null,
+      "sashimi-4": null,
+      "sashimi-5": null,
+      "sashimi-6": null,
+      "sashimi-7": null,
+      "sashimi-8": null,
+      "sashimi-9": null,
+      "tempura-1": null,
+      "tempura-10": null,
+      "tempura-11": null,
+      "tempura-12": null,
+      "tempura-13": null,
+      "tempura-14": null,
+      "tempura-2": null,
+      "tempura-3": null,
+      "tempura-4": null,
+      "tempura-5": null,
+      "tempura-6": null,
+      "tempura-7": null,
+      "tempura-8": null,
+      "tempura-9": null,
+      "wasabi-1": null,
+      "wasabi-2": null,
+      "wasabi-3": null,
+      "wasabi-4": null,
+      "wasabi-5": null,
+      "wasabi-6": null,
+    }) as TableState["ownerOfCard"],
+  visibility: () =>
+    cloneManifestDefault({
+      "chopsticks-1": { faceUp: true },
+      "chopsticks-2": { faceUp: true },
+      "chopsticks-3": { faceUp: true },
+      "chopsticks-4": { faceUp: true },
+      "dumpling-1": { faceUp: true },
+      "dumpling-10": { faceUp: true },
+      "dumpling-11": { faceUp: true },
+      "dumpling-12": { faceUp: true },
+      "dumpling-13": { faceUp: true },
+      "dumpling-14": { faceUp: true },
+      "dumpling-2": { faceUp: true },
+      "dumpling-3": { faceUp: true },
+      "dumpling-4": { faceUp: true },
+      "dumpling-5": { faceUp: true },
+      "dumpling-6": { faceUp: true },
+      "dumpling-7": { faceUp: true },
+      "dumpling-8": { faceUp: true },
+      "dumpling-9": { faceUp: true },
+      "maki-1-1": { faceUp: true },
+      "maki-1-2": { faceUp: true },
+      "maki-1-3": { faceUp: true },
+      "maki-1-4": { faceUp: true },
+      "maki-1-5": { faceUp: true },
+      "maki-1-6": { faceUp: true },
+      "maki-2-1": { faceUp: true },
+      "maki-2-2": { faceUp: true },
+      "maki-2-3": { faceUp: true },
+      "maki-2-4": { faceUp: true },
+      "maki-2-5": { faceUp: true },
+      "maki-2-6": { faceUp: true },
+      "maki-3-1": { faceUp: true },
+      "maki-3-2": { faceUp: true },
+      "maki-3-3": { faceUp: true },
+      "maki-3-4": { faceUp: true },
+      "maki-3-5": { faceUp: true },
+      "maki-3-6": { faceUp: true },
+      "nigiri-egg-1": { faceUp: true },
+      "nigiri-egg-2": { faceUp: true },
+      "nigiri-egg-3": { faceUp: true },
+      "nigiri-egg-4": { faceUp: true },
+      "nigiri-egg-5": { faceUp: true },
+      "nigiri-egg-6": { faceUp: true },
+      "nigiri-salmon-1": { faceUp: true },
+      "nigiri-salmon-10": { faceUp: true },
+      "nigiri-salmon-2": { faceUp: true },
+      "nigiri-salmon-3": { faceUp: true },
+      "nigiri-salmon-4": { faceUp: true },
+      "nigiri-salmon-5": { faceUp: true },
+      "nigiri-salmon-6": { faceUp: true },
+      "nigiri-salmon-7": { faceUp: true },
+      "nigiri-salmon-8": { faceUp: true },
+      "nigiri-salmon-9": { faceUp: true },
+      "nigiri-squid-1": { faceUp: true },
+      "nigiri-squid-2": { faceUp: true },
+      "nigiri-squid-3": { faceUp: true },
+      "nigiri-squid-4": { faceUp: true },
+      "nigiri-squid-5": { faceUp: true },
+      "pudding-1": { faceUp: true },
+      "pudding-10": { faceUp: true },
+      "pudding-2": { faceUp: true },
+      "pudding-3": { faceUp: true },
+      "pudding-4": { faceUp: true },
+      "pudding-5": { faceUp: true },
+      "pudding-6": { faceUp: true },
+      "pudding-7": { faceUp: true },
+      "pudding-8": { faceUp: true },
+      "pudding-9": { faceUp: true },
+      "sashimi-1": { faceUp: true },
+      "sashimi-10": { faceUp: true },
+      "sashimi-11": { faceUp: true },
+      "sashimi-12": { faceUp: true },
+      "sashimi-13": { faceUp: true },
+      "sashimi-14": { faceUp: true },
+      "sashimi-2": { faceUp: true },
+      "sashimi-3": { faceUp: true },
+      "sashimi-4": { faceUp: true },
+      "sashimi-5": { faceUp: true },
+      "sashimi-6": { faceUp: true },
+      "sashimi-7": { faceUp: true },
+      "sashimi-8": { faceUp: true },
+      "sashimi-9": { faceUp: true },
+      "tempura-1": { faceUp: true },
+      "tempura-10": { faceUp: true },
+      "tempura-11": { faceUp: true },
+      "tempura-12": { faceUp: true },
+      "tempura-13": { faceUp: true },
+      "tempura-14": { faceUp: true },
+      "tempura-2": { faceUp: true },
+      "tempura-3": { faceUp: true },
+      "tempura-4": { faceUp: true },
+      "tempura-5": { faceUp: true },
+      "tempura-6": { faceUp: true },
+      "tempura-7": { faceUp: true },
+      "tempura-8": { faceUp: true },
+      "tempura-9": { faceUp: true },
+      "wasabi-1": { faceUp: true },
+      "wasabi-2": { faceUp: true },
+      "wasabi-3": { faceUp: true },
+      "wasabi-4": { faceUp: true },
+      "wasabi-5": { faceUp: true },
+      "wasabi-6": { faceUp: true },
+    }) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
-type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
+type GeneratedStaticBoards = Pick<
+  PublicTableState["boards"],
+  "byId" | "hex" | "square"
+>;
+type GeneratedStaticBoardsJsonEnvelope = Omit<
+  StaticBoardsJsonEnvelope<TableState>,
+  "boards"
+> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData =
+  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
+const baseInitialTable = cloneManifestDefault<TableState>(
+  manifestStaticData.initialTable,
+);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
+  SharedZoneId,
+  readonly CardId[]
+>;
 
-export function createInitialTable(options: {
-  playerIds?: readonly string[];
-  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-} = {}): TableState {
+export function createInitialTable(
+  options: {
+    playerIds?: readonly string[];
+    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+  } = {},
+): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -1679,48 +3303,22 @@ export const manifestContract: ReducerManifestContract<
   createGameStateSchema,
 };
 
-const boardIdsByLayoutLookup = {
-
-} as const;
-const boardBaseIdsByLayoutLookup = {
-
-} as const;
-const boardIdsByBaseIdLookup = {
-
-} as const;
-const boardBaseIdsByTemplateIdLookup = {
-
-} as const;
-const boardLayoutByIdLookup = {
-
-} as const;
-const boardTemplateLayoutByIdLookup = {
-
-} as const;
-const boardIdsByTypeIdLookup = {
-
-} as const;
-const spaceIdsByBoardIdLookup = {
-
-} as const;
+const boardIdsByLayoutLookup = {} as const;
+const boardBaseIdsByLayoutLookup = {} as const;
+const boardIdsByBaseIdLookup = {} as const;
+const boardBaseIdsByTemplateIdLookup = {} as const;
+const boardLayoutByIdLookup = {} as const;
+const boardTemplateLayoutByIdLookup = {} as const;
+const boardIdsByTypeIdLookup = {} as const;
+const spaceIdsByBoardIdLookup = {} as const;
 const spaceTypeIdByBoardIdLookup = {} as const;
-const spaceIdsByTypeIdLookup = {
-
-} as const;
-const containerIdsByBoardIdLookup = {
-
-} as const;
+const spaceIdsByTypeIdLookup = {} as const;
+const containerIdsByBoardIdLookup = {} as const;
 const containerHostByBoardIdLookup = {} as const;
-const relationTypeIdsByBoardIdLookup = {
-
-} as const;
-const edgeIdsByTypeIdLookup = {
-
-} as const;
+const relationTypeIdsByBoardIdLookup = {} as const;
+const edgeIdsByTypeIdLookup = {} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {} as const;
-const vertexIdsByTypeIdLookup = {
-
-} as const;
+const vertexIdsByTypeIdLookup = {} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {} as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -1748,9 +3346,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<
-    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
-  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
+    layout: LayoutValue,
+  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -1758,9 +3356,7 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<
-    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
-  >(
+  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -1794,10 +3390,7 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<
-    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
-    Value,
-  >(
+  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -1858,10 +3451,7 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<
-    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
-    Value
-  > {
+  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -1871,9 +3461,7 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<
-    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
-  >(
+  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -1896,7 +3484,8 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends
+      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -1996,9 +3585,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
-      authoredHexRefKey(edgeRef.spaces)
-    ];
+    const edgeId = (
+      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
+    )[authoredHexRefKey(edgeRef.spaces)];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -2079,10 +3668,7 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<
-    typeof edgeIdsByBoardIdAndTypeIdLookup,
-    BoardIdValue
-  > {
+  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -2099,7 +3685,8 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2143,7 +3730,10 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
+      BoardLookupIdValue<
+        typeof vertexIdsByBoardIdAndTypeIdLookup,
+        BoardIdValue
+      >,
       Value
     >;
   },
@@ -2187,7 +3777,8 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2216,9 +3807,7 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(
-    boardBaseId: BoardBaseId,
-  ): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

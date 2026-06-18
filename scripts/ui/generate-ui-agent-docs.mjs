@@ -36,6 +36,16 @@ function formatList(values) {
   return values.length > 0 ? values.join(", ") : "none";
 }
 
+function sentenceList(values) {
+  if (values.length <= 1) {
+    return values[0] ?? "";
+  }
+  if (values.length === 2) {
+    return `${values[0]} and ${values[1]}`;
+  }
+  return `${values.slice(0, -1).join(", ")}, and ${values.at(-1)}`;
+}
+
 function componentContractRows(componentIndex) {
   return Object.values(componentIndex.contracts ?? {})
     .filter((entry) => entry.kind === "component")
@@ -51,6 +61,9 @@ function componentContractRows(componentIndex) {
 
 async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
   const packageJson = await readJson(path.join(root, "package.json"));
+  const requiredScenarioSummary = formatList(
+    requiredWorkbenchScenarioIds.map((scenarioId) => `\`${scenarioId}\``),
+  );
   const decisionRows = [
     [
       "Pure color or spacing token",
@@ -105,9 +118,9 @@ This guide is generated from the live UI scenario catalog and root command map.
 
 Use \`fixtures/ui/component-scenario-index.json\` to map changed component files
 to scenario IDs. Shared runtime, theme, fixture, or browser-interaction changes
-fall back to the required Workbench scenario set: Hearts mobile interaction,
-desktop card drag, and desktop runtime draft. Other checked-in scenarios remain
-available for focused follow-up coverage but do not block the foundation release.
+fall back to the required Workbench scenario set: ${requiredScenarioSummary}.
+Other checked-in scenarios remain available for focused follow-up coverage but
+do not block the foundation release.
 
 ${table(["Change", "Minimum command"], decisionRows)}
 
@@ -137,10 +150,14 @@ Attach the relevant receipt paths and any parity receipt to handoff notes.
 
 async function renderReferenceGamesDoc({ scenarios }) {
   const rows = [];
+  const requiredGameNames = [];
   for (const game of expectedReferenceGames) {
     const manifest = await readJson(
       path.join(referenceGamesRoot, game.id, "reference-game.json"),
     );
+    if (requiredGameIds.has(game.id)) {
+      requiredGameNames.push(game.displayName);
+    }
     rows.push([
       `\`${game.id}\``,
       requiredGameIds.has(game.id)
@@ -171,10 +188,10 @@ ${table(["Game", "Release role", "Display name", "Mechanics", "UI patterns", "Sc
 
 Run \`pnpm reference-games:check\` for source validation and
 \`pnpm reference-games:test:packed --required\` for the required isolated
-packed-consumer proof. The packed proof covers the Hearts, Hex Network Trading,
-and Worker Placement Tableau consumers and must install the SDK tarball rather
-than workspace source links. Other reference consumers are optional follow-up
-coverage.
+packed-consumer proof. The packed proof covers the ${sentenceList(
+      requiredGameNames,
+    )} consumers and must install the SDK tarball rather than workspace source
+links. Other reference consumers are optional follow-up coverage.
 
 ## Fixture Bundle
 

@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:58c163d5cf88396dfd7d63855dcc2d348969528d24b0866c8393e736a40ef8b6",
-    "finalSemanticDigest": "sha256:e32dcc9c8992d5b795a6fa6b76f8720d29b8cb9149a83d4a9e7c64cdaad20f6a",
+    "finalSemanticDigest": "sha256:145e0127978ace926637702d67745a6331407bffc30b5b89da9fd67906579fa3",
     "initialProjectionDigest": "sha256:82bcc77792668f86ded79eafbb40e88eaaeaa0e37d988355fba10c9535912fcf",
     "submissionDigest": "sha256:a507f088e0dcc6a575c9ad168181aa7e794672bda370bed29ed84afa4826cb70"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:383ce41ff6570bf498aadf2977773bb6904780a4df453a9e77615c7c601ff1de",
+              "descriptorDigest": "sha256:a1401cc6b2ba1d90b78594bf1dca950b69d3ebd58d9e03bbe76725772e85c9a7",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Slot-based board targets with occupied and available spaces.",
             "family": "boards",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:383ce41ff6570bf498aadf2977773bb6904780a4df453a9e77615c7c601ff1de",
+              "descriptorDigest": "sha256:a1401cc6b2ba1d90b78594bf1dca950b69d3ebd58d9e03bbe76725772e85c9a7",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Slot-based board targets with occupied and available spaces.",
             "family": "boards",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.boards-slot.desktop.submitted",
         "projectionDigest": "sha256:58c163d5cf88396dfd7d63855dcc2d348969528d24b0866c8393e736a40ef8b6",
-        "semanticDigest": "sha256:e32dcc9c8992d5b795a6fa6b76f8720d29b8cb9149a83d4a9e7c64cdaad20f6a",
+        "semanticDigest": "sha256:145e0127978ace926637702d67745a6331407bffc30b5b89da9fd67906579fa3",
         "submissionDigest": "sha256:a507f088e0dcc6a575c9ad168181aa7e794672bda370bed29ed84afa4826cb70",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.boards-slot.desktop",
-    "sourceDigest": "sha256:ff224546ea824dbb4d80f0e732e8e2025c2d8bfdd4ee60ea9b3ca5e1ecea7666",
+    "sourceDigest": "sha256:e6b5bd9f994f0112d1ccf0faa017e8ad3867541c8b2bb26e91831973a7edb2b5",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

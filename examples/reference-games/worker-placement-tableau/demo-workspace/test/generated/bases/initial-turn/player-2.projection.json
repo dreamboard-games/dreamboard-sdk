@@ -1,6 +1,8 @@
 {
   "currentStage": "wakeup",
-  "stageSeats": ["player-1"],
+  "stageSeats": [
+    "player-1"
+  ],
   "view": {
     "seasonNumber": 1,
     "enabledActionSpaces": [
@@ -14,9 +16,16 @@
       "patrons-estate",
       "forge"
     ],
-    "setupVariablePoolDraw": ["library", "patrons-estate", "forge"],
-    "turnOrderThisSeason": ["player-1", "player-2"],
-    "winnerPlayerId": null,
+    "setupVariablePoolDraw": [
+      "library",
+      "patrons-estate",
+      "forge"
+    ],
+    "turnOrderThisSeason": [
+      "player-1",
+      "player-2"
+    ],
+    "outcome": null,
     "finalVPByPlayerId": null,
     "currentPhase": "wakeup",
     "currentActorPlayerId": "player-1",
@@ -92,14 +101,19 @@
       "stone": 0,
       "wood": 1
     },
-    "myOrderHand": ["mixed-set"],
-    "myApprenticeHand": ["foreman"]
+    "myOrderHand": [
+      "architects-plan"
+    ],
+    "myApprenticeHand": [
+      "quick-delivery"
+    ]
   },
   "availableInteractions": [
     {
       "phaseName": "wakeup",
       "interactionKey": "wakeup.selectWakeUpSlot",
       "interactionId": "selectWakeUpSlot",
+      "label": "Select Wake Up Slot",
       "commit": {
         "mode": "autoWhenReady"
       },

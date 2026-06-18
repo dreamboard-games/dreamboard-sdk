@@ -88,7 +88,7 @@ export const passPlacement = defineInteraction<
     if (remaining.length === 0) {
       const tx = edit(state);
       tx.patchPhaseState({ passedPlayerIds: finalPassed });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
 
     const currentIdx = order.indexOf(playerId);

@@ -22,6 +22,6 @@ export const setup = definePhase<GameContract>()({
         count: 13,
       });
     }
-    return accept(tx.state, [fx.transition("passing")]);
+    return accept(tx.state, { instructions: [fx.transition("passing")] });
   },
 });

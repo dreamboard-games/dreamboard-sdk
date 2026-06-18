@@ -55,7 +55,7 @@ const game: ReducerGameDefinition<GameContract, typeof phases, typeof views> =
           seasonNumber: 1,
           turnOrderThisSeason: [...playerIds],
           playerVP,
-          winnerPlayerId: null,
+          outcome: null,
         };
       },
       private: () => ({}),

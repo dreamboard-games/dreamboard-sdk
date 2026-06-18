@@ -1,0 +1,36 @@
+{
+  "id": "setup-variant-draft-01",
+  "title": "Camp setup variant draft",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 4 },
+  "summary": "A selected setup profile changes the starting camp cards before players draft their opening tool.",
+  "authorJobs":
+    [
+      "choose setup profile",
+      "draft one starting tool",
+      "seed profile-specific decks",
+    ],
+  "uiJobs":
+    [
+      "show active setup profile",
+      "show draft options",
+      "support phone-width setup flow",
+    ],
+  "authorityJobs":
+    [
+      "reject tools outside the setup pool",
+      "materialize only selected profile content",
+      "preserve profile selection in runtime state",
+    ],
+  "acceptance":
+    [
+      "uses setup profiles and card selection",
+      "profile data is deterministic",
+      "setup choice appears in baseline metrics",
+    ],
+  "formatNotes":
+    {
+      "compactMobile": true,
+      "optionalPhysicalNotes": ["setup cards", "tool cards"],
+    },
+}

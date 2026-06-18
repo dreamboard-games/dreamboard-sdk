@@ -1,3 +1,3 @@
 export { Root } from "../../../../examples/reference-games/hearts/src/ui.mjs";
 export const uiContractFingerprint =
-  "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a";
+  "sha256:289ce91a8f21657723f0f92f53efc7c272b75f99224e290e4950f01a9d215c3e";

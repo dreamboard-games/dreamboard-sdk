@@ -24,7 +24,9 @@ import type {
   ReducerGameDefinition,
   StageSpec,
   TableQueriesOfState,
-  TerminalOutcome,
+  GameOutcome,
+  GameEvent,
+  ReducerAcceptOptions,
   ViewMapOf,
 } from "../../model";
 import type {
@@ -98,29 +100,23 @@ export interface TrustedRuntimeHelpers<
 > {
   accept: (
     state: TrustedDomainState<Contract>,
-    instructions?: Array<
-      RuntimeInstructionForState<TrustedDomainState<Contract>>
-    >,
+    options?: ReducerAcceptOptions<TrustedDomainState<Contract>>,
   ) => {
     type: "accept";
     state: TrustedDomainState<Contract>;
-    instructions: Array<
-      RuntimeInstructionForState<TrustedDomainState<Contract>>
-    >;
+    instructions: RuntimeInstructionForState<TrustedDomainState<Contract>>[];
+    events: GameEvent[];
   };
   endGame: (
     state: TrustedDomainState<Contract>,
-    outcome: TerminalOutcome<TrustedPlayerId<Contract>>,
-    instructions?: Array<
-      RuntimeInstructionForState<TrustedDomainState<Contract>>
-    >,
+    outcome: GameOutcome<TrustedPlayerId<Contract>>,
+    options?: ReducerAcceptOptions<TrustedDomainState<Contract>>,
   ) => {
     type: "accept";
     state: TrustedDomainState<Contract>;
-    instructions: Array<
-      RuntimeInstructionForState<TrustedDomainState<Contract>>
-    >;
-    terminal: TerminalOutcome<TrustedPlayerId<Contract>>;
+    instructions: RuntimeInstructionForState<TrustedDomainState<Contract>>[];
+    events: GameEvent[];
+    terminal: GameOutcome<TrustedPlayerId<Contract>>;
   };
   reject: typeof rejectResult;
   ops: ReturnType<typeof createReducerOps<TrustedDomainState<Contract>>>;

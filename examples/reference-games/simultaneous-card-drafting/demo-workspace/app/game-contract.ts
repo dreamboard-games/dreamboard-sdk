@@ -3,6 +3,7 @@ import { ids, manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
   type ErrorCodeOfContract,
+  type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
 
@@ -15,7 +16,7 @@ export const publicStateSchema = z.object({
   totalScoreByPlayer: perPlayerScore,
   roundScoreByPlayer: perPlayerScore,
   puddingScoreByPlayer: perPlayerScore,
-  winnerPlayerIds: z.array(ids.playerId).default([]),
+  outcome: z.custom<GameOutcome<string>>().nullable().default(null),
 });
 
 export const privateStateSchema = z.object({});

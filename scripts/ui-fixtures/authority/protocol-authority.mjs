@@ -61,7 +61,11 @@ export async function executeProtocolAuthority(scenario) {
     submissionDigest,
     replaySteps: scenario.replay,
     capabilitiesForReplay(replaySteps, viewportTags) {
-      const capabilities = new Set(scenario.capabilities ?? []);
+      const capabilities = new Set([
+        ...(scenario.capabilities ?? []),
+        "accessibility-scan",
+        "reduced-motion",
+      ]);
       for (const step of replaySteps) {
         if (step.kind === "assert") continue;
         if (step.execute.kind === "activate") capabilities.add("click");

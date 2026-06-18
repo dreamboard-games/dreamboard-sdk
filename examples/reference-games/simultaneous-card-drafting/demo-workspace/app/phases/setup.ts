@@ -24,6 +24,6 @@ export const setup = definePhase<GameContract>()({
       round: 1,
       roundScoreByPlayer: {},
     });
-    return accept(tx.state, [fx.transition("drafting")]);
+    return accept(tx.state, { instructions: [fx.transition("drafting")] });
   },
 });

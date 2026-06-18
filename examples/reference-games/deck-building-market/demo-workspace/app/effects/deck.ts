@@ -22,10 +22,11 @@ export const shuffleOpeningDeck = defineEffect<GameContract>()({
       toZoneId: "hand",
       count: OPENING_HAND,
     });
-    return accept(
-      tx.state,
-      input.data.transitionToPlayerTurn ? [fx.transition("playerTurn")] : [],
-    );
+    return accept(tx.state, {
+      instructions: input.data.transitionToPlayerTurn
+        ? [fx.transition("playerTurn")]
+        : [],
+    });
   },
 });
 
@@ -58,6 +59,6 @@ export const shufflePlayerDeckForDraw = defineEffect<GameContract>()({
       toZoneId: "hand",
       count: input.data.drawCount,
     });
-    return accept(tx.state, nextEffects);
+    return accept(tx.state, { instructions: nextEffects });
   },
 });

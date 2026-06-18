@@ -12,7 +12,7 @@ export default defineGame({
       totalScoreByPlayer: {},
       roundScoreByPlayer: {},
       puddingScoreByPlayer: {},
-      winnerPlayerIds: [],
+      outcome: null,
     }),
     private: () => ({}),
     hidden: () => ({}),

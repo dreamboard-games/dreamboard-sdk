@@ -130,7 +130,7 @@ export const chooseMarketAction = defineInteraction<
         pendingMarketChoiceBy: null,
         passedPlayerIds: result.finalPassed,
       });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       pendingMarketChoiceBy: null,

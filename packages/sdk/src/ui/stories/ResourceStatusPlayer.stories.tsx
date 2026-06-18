@@ -9,7 +9,12 @@ import {
   type ResourceDefinition,
 } from "../components/CostDisplay.js";
 import { PhaseIndicator } from "../components/PhaseIndicator.js";
-import { GameEndDisplay } from "../components/GameEndDisplay.js";
+import { OutcomeDialog } from "../components/OutcomeDialog.js";
+import {
+  ActionHelp,
+  GuidancePanel,
+  SetupChecklist,
+} from "../components/Guidance.js";
 
 // `ResourceDisplayConfig.icon` accepts either a component or a ReactNode.
 // Pass JSX so the component-vs-forwardRef detection in `renderResourceIcon`
@@ -117,15 +122,132 @@ export const ActiveSelfPhase: Story = {
 };
 
 export const Winner: Story = {
-  name: "GameEndDisplay — winner",
+  name: "OutcomeDialog — winner",
   render: () => (
-    <GameEndDisplay
-      isGameOver
-      scores={[
-        { playerId: "p1", name: "Sage", score: 10, isWinner: true },
-        { playerId: "p2", name: "Mor", score: 7 },
-        { playerId: "p3", name: "Iri", score: 5 },
-      ]}
+    <OutcomeDialog
+      outcome={{
+        reason: { code: "FINAL_ROUND", message: "Final round complete." },
+        standings: [
+          {
+            playerId: "p1",
+            rank: 1,
+            result: "win",
+            score: 10,
+            scoreBreakdown: [{ id: "routes", label: "Routes", value: 8 }],
+          },
+          {
+            playerId: "p2",
+            rank: 2,
+            result: "loss",
+            score: 7,
+            tieBreaks: [{ id: "coins", label: "Coins", value: 3 }],
+          },
+          { playerId: "p3", rank: 3, result: "loss", score: 5 },
+        ],
+      }}
+      playerName={(playerId) =>
+        ({ p1: "Sage", p2: "Mor", p3: "Iri" })[playerId] ?? playerId
+      }
     />
+  ),
+};
+
+const setupGuidance = {
+  profileId: "standard",
+  name: "Standard Cloudline Survey",
+  summary: "Prepare one scorecard per player and the seeded dice sequence.",
+  steps: [
+    {
+      id: "prepare-scorecards",
+      label: "Prepare player scorecards",
+      description: "Give each player a private 4 by 4 survey grid.",
+    },
+    {
+      id: "prepare-dice",
+      label: "Prepare dice",
+      description: "Use the seeded two-die roll list for all eight rounds.",
+    },
+  ],
+};
+
+export const GuidanceOverview: Story = {
+  name: "GuidancePanel — overview",
+  render: () => (
+    <div className="sb-stage" style={{ maxWidth: 420 }}>
+      <GuidancePanel
+        phase={{
+          id: "markSurvey",
+          label: "Mark the survey grid",
+          summary: "Resolve the shared dice roll on each player scorecard.",
+          objective:
+            "Choose an unmarked matching cell, or mark any open cell as failed when no match remains.",
+        }}
+        actions={[
+          {
+            label: "Mark cell",
+            help: "Choose one highlighted scorecard cell, then submit the pending mark.",
+          },
+          {
+            label: "Roll first",
+            unavailableReason:
+              "Roll first, then choose a matching unmarked cell.",
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const SetupChecklistControlled: Story = {
+  name: "SetupChecklist — controlled completion",
+  render: () => (
+    <div className="sb-stage" style={{ maxWidth: 420 }}>
+      <SetupChecklist
+        guidance={setupGuidance}
+        completedStepIds={["prepare-scorecards"]}
+      />
+    </div>
+  ),
+};
+
+export const ActionHelpBlocked: Story = {
+  name: "ActionHelp — blocked reason",
+  render: () => (
+    <div className="sb-stage" style={{ maxWidth: 320 }}>
+      <ActionHelp
+        label="Draft stall"
+        help="Choose one face-up stall card from the market."
+        unavailableReason="Players draft from the market in seat order."
+      />
+    </div>
+  ),
+};
+
+export const GuidancePhoneStack: Story = {
+  name: "Guidance — phone stack",
+  parameters: {
+    viewport: {
+      defaultViewport: "mobile1",
+    },
+  },
+  render: () => (
+    <div className="sb-stage" style={{ maxWidth: 300 }}>
+      <GuidancePanel
+        phase={{
+          id: "draft",
+          label: "Draft a stall",
+          summary: "Choose one face-up stall card from the shared market.",
+          objective:
+            "Build high-prestige guild sets before the second storm cancels the fair.",
+        }}
+        actions={[
+          {
+            label: "Draft stall",
+            help: "Final ties break by complete guild sets, then coins.",
+          },
+        ]}
+      />
+      <SetupChecklist guidance={setupGuidance} completedStepIds={[]} />
+    </div>
   ),
 };

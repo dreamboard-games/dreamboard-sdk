@@ -12,8 +12,8 @@ import { type PlayerId } from "../../shared/manifest-contract";
  *      intentionally clobber the running counter — by the time scoring
  *      runs no further VP can be earned, and the player view reads
  *      `playerVP` as the canonical "final score" map.)
- *   3. Resolve `winnerPlayerId` with rule.md's tiebreaker (most items,
- *      then most coin); ties beyond that latch null.
+ *   3. Resolve standings with rule.md's tiebreaker (most items, then most
+ *      coin); ties beyond that share rank 1 and draw.
  *   4. `fx.transition("gameOver")`.
  */
 export const scoring = definePhase<GameContract>()({
@@ -27,13 +27,27 @@ export const scoring = definePhase<GameContract>()({
       finalVP[playerId] = computeFinalVP(state, playerId);
     }
 
-    const winnerPlayerId = resolveWinner(state, finalVP);
-
+    const winningPlayerId = resolveWinner(state, finalVP);
     const tx = edit(state);
     tx.patchPublicState({
       playerVP: finalVP,
-      winnerPlayerId,
+      outcome: {
+        reason: {
+          code: "MASTER_CRAFTER_NAMED",
+          message: "The guild's master crafter is named.",
+        },
+        standings: players.map((playerId) => ({
+          playerId,
+          rank: winningPlayerId ? (playerId === winningPlayerId ? 1 : 2) : 1,
+          result: winningPlayerId
+            ? playerId === winningPlayerId
+              ? "win"
+              : "loss"
+            : "draw",
+          score: finalVP[playerId] ?? 0,
+        })),
+      },
     });
-    return accept(tx.state, [fx.transition("gameOver")]);
+    return accept(tx.state, { instructions: [fx.transition("gameOver")] });
   },
 });

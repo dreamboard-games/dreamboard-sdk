@@ -1,4 +1,4 @@
-import { GameEndDisplay } from "@dreamboard-games/sdk/ui";
+import { OutcomeDialog } from "@dreamboard-games/sdk/ui";
 import {
   Game,
   PlayerRoster,
@@ -49,6 +49,9 @@ export function ArtisansLayout({
   const otherPlayerId = literals.playerIds.find(
     (pid) => pid !== me.playerId,
   ) as PlayerId | undefined;
+  const winningPlayerId = view.outcome?.standings.find(
+    (standing) => standing.result === "win",
+  )?.playerId;
   const titleSub = phaseSubtitle(phase, view, turn, players);
 
   return (
@@ -135,7 +138,7 @@ export function ArtisansLayout({
               score={(playerId) => view.playerVPByPlayerId[playerId] ?? 0}
               scoreLabel="VP"
               badges={(playerId) => [
-                view.winnerPlayerId === playerId
+                winningPlayerId === playerId
                   ? {
                       key: "winner",
                       icon: "Winner",
@@ -193,16 +196,9 @@ export function ArtisansLayout({
         </div>
       </main>
 
-      <GameEndDisplay
-        isGameOver={!!view.winnerPlayerId}
-        scores={turn.order.map((playerId) => ({
-          playerId,
-          name: players.byId.get(playerId)?.name ?? playerId,
-          score:
-            (view.finalVPByPlayerId ?? view.playerVPByPlayerId)[playerId] ?? 0,
-          isWinner: playerId === view.winnerPlayerId,
-        }))}
-        winnerMessage="The guild's master crafter is named."
+      <OutcomeDialog
+        outcome={view.outcome}
+        playerName={(playerId) => players.byId.get(playerId)?.name ?? playerId}
       />
     </>
   );
@@ -214,7 +210,7 @@ function phaseSubtitle(
   turn: { isMine: boolean; currentPlayerId: PlayerId | null },
   players: { byId: ReadonlyMap<PlayerId, { name: string }> },
 ): string {
-  if (view.winnerPlayerId) return "Game over.";
+  if (view.outcome) return "Game over.";
   switch (phase) {
     case "setup":
       return "Setting up the season.";

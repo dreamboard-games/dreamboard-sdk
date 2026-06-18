@@ -1054,7 +1054,7 @@ function HexGridImpl(
           groupClassName="interactive-spaces"
           groupAriaLabel="Interactive spaces"
           groupRole="list"
-          spreadBrowserAttributes={true}
+          browserAttributeOrder="before-transform"
           selectMode="render-state"
           hover={spaceHover}
           getTargetTransform={({ pos }) => `translate(${pos.x}, ${pos.y})`}
@@ -1113,7 +1113,7 @@ function HexGridImpl(
           groupClassName="interactive-edges"
           groupAriaLabel="Interactive edges for placement"
           groupRole="list"
-          spreadBrowserAttributes={true}
+          browserAttributeOrder="before-transform"
           selectMode="render-state"
           hover={edgeHover}
           renderTargetContent={(
@@ -1164,7 +1164,7 @@ function HexGridImpl(
           groupClassName="interactive-vertices"
           groupAriaLabel="Interactive vertices for placement"
           groupRole="list"
-          spreadBrowserAttributes={true}
+          browserAttributeOrder="before-transform"
           selectMode="render-state"
           hover={vertexHover}
           renderTargetContent={(

@@ -25,7 +25,7 @@ export default defineScenario({
 
     await expect(async () => {
       await game.submit(seat0, "fulfillOrder", { cardId: "row-of-pride" });
-    }).toRejectWith({ errorCode: "ORDER_REQUIREMENT_NOT_MET" });
+    }).toRejectWith({ errorCode: "NO_FULFILLABLE_ORDER" });
 
     // Branch 2: 3 items in row 1.
     await patchMatOccupancy(game, seat0, [

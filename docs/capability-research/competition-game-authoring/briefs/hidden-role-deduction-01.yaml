@@ -1,0 +1,31 @@
+{
+  "id": "hidden-role-deduction-01",
+  "title": "Hidden role deduction with public accusations",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 3, "max": 5 },
+  "authorJobs":
+    [
+      "deal one private role to each player",
+      "submit one public accusation",
+      "end when every player has accused",
+    ],
+  "uiJobs":
+    [
+      "show own role and hide other roles",
+      "show public accusation history",
+      "render accusation form on mobile",
+    ],
+  "authorityJobs":
+    [
+      "reject viewing another private role",
+      "reject duplicate accusations",
+      "replay role deal from seeded shuffle",
+    ],
+  "acceptance":
+    [
+      "existing private projection is sufficient",
+      "existing forms are sufficient",
+      "no new runtime capability is required",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

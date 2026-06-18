@@ -1,6 +1,15 @@
 # Competition Game Authoring Capability Hard Cut
 
-Status: proposed on 2026-06-18 against SDK commit `3e2d976`.
+Status: closed on 2026-06-19. SDK Phase 05 reference-suite preparation,
+required internal parity, SDK release proof, public SDK package availability,
+public Dreamboard docs/skill source proof, CLI/dev-host `0.1.30-alpha.18` npm
+publication, public authoring compatibility proof, internal authoring
+release-set repin, `pnpm fin`, `pnpm verify:dev`, `pnpm verify:stack`,
+`pnpm verify:browser`, `pnpm verify:package`, and `pnpm verify:full` passed.
+Internal terminal-transport source cutover and focused terminal callback,
+reconnect event-batch, host ended-event, and history-restore regressions passed.
+Broader packed reconnect/event-history E2E remains recorded as a non-blocking
+follow-up outside this capability hard cut.
 
 This is a standalone successor to
 [Competition Game Framework Capabilities](../competition-game-framework-capabilities/README.md).
@@ -306,6 +315,44 @@ Required order:
 Do not parallelize phases 02-04 across incompatible SDK snapshots. The optional
 physical-format lint may proceed independently because no numbered phase
 consumes its output.
+
+## Current Source Progress
+
+Completed in the current `dreamboard-sdk` branch:
+
+- Phase 00 source baseline, representative briefs, matrix validation, and
+  characterization tests.
+- Phase 01 generated `Board.SquareGrid` path and the
+  `roll-and-write-scorecard` reference game with Workbench and packed proof.
+- Phase 02 SDK hard cut to canonical `GameOutcome`, including
+  `multiplayer-ranking-and-ties`, migrated SDK reference games, generated
+  fixtures/catalog/docs, Workbench evidence, and packed consumer proof.
+- Phase 03 SDK contract/projection, controlled-component source/proof,
+  anchor-game guidance, public-example lint/generation rules, and Workbench
+  evidence.
+- Phase 04 SDK event-contract/UI foundation, `solo-countdown-puzzle`,
+  `automa-river-rival`, generated catalog/docs, Workbench evidence, and packed
+  consumer proof.
+- Phase 05 SDK reference-suite preparation: all nine canonical examples are
+  release-required in the Workbench and packed-consumer gates, the canonical
+  examples index exists at `docs/reference/canonical-examples.md`, the Phase 00
+  capability matrix has no unresolved SDK gap classifications, the richer
+  required state-branch Workbench matrix covers roll-and-write,
+  multiplayer-ranking, solo, and automa branch states, reduced-motion and
+  accessibility-scan coverage are first-class Workbench capabilities with
+  enforced receipt proof, and the Phase 05 release receipt is trackable
+  in-source.
+- Phase 05 required SDK parity and local release proof: the required Hearts
+  real-host parity scenario passed against the internal product harness, and
+  `pnpm ui:release-proof` wrote
+  `artifacts/ui-release-proof/2026-06-18T15-54-23-559Z/receipt.json`.
+
+Not completed in this branch:
+
+- Phase 03 internal monorepo pass-through.
+- Phase 04 internal persistence/host proof.
+- Phase 05 exact public SDK release, internal repin/full verification, public
+  docs, and agent-skill release proof.
 
 ## Delivery Model
 

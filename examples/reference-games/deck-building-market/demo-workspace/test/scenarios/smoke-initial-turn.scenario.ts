@@ -12,6 +12,6 @@ export default defineScenario({
     expect(playerIds.length).toBeGreaterThanOrEqual(1);
     expect(state()).toBe("playerTurn");
     expect(view(seat(0)).gameOver).toBe(false);
-    expect(view(seat(0)).winnerPlayerId).toBe(null);
+    expect(view(seat(0)).outcome).toBeNull();
   },
 });

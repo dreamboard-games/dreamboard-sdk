@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from "react";
+import packageJson from "../../../package.json";
 import { createPostMessagePluginTransport } from "../browser/post-message-transport.js";
 import { createPluginRuntimeClient } from "../core/create-plugin-runtime-client.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type { RuntimeDiagnosticHandler } from "../types/runtime-api.js";
+
+const BUNDLED_SDK_VERSION =
+  typeof packageJson.version === "string" ? packageJson.version : "unknown";
 
 export interface UsePluginRuntimeOptions {
   /**
@@ -67,23 +71,30 @@ export function usePluginRuntime(
   options: UsePluginRuntimeOptions = {},
 ): UsePluginRuntimeResult {
   const { timeout = 10000, onDiagnostic } = options;
+  const [error, setError] = useState<string | null>(null);
 
   // Create runtime once and keep stable reference
   const [runtime] = useState<PluginRuntimeClient>(() =>
     createPluginRuntimeClient({
       transport: createPostMessagePluginTransport({
-        onInvalidMessage: (reason, value) =>
+        bundledSdkVersion: BUNDLED_SDK_VERSION,
+        onInvalidMessage: (reason, value) => {
+          const message =
+            `Plugin runtime rejected a host message (${reason}). ` +
+            `Bundled @dreamboard-games/sdk version: ${BUNDLED_SDK_VERSION}. ` +
+            "The host and plugin bundle may have incompatible SDK/runtime contract versions.";
+          setError(message);
           onDiagnostic?.({
             type: "runtimeLog",
             level: "warn",
-            message: `[PluginRuntime] Ignored invalid host message: ${reason}`,
+            message,
             details: [value],
-          }),
+          });
+        },
       }),
     }),
   );
   const [isReady, setIsReady] = useState(() => hasProjectedView(runtime));
-  const [error, setError] = useState<string | null>(null);
   // Latches once we've shown a view, so a later view-less snapshot reads as a
   // mid-game wait rather than a fresh load. (A ref, so it never re-triggers a
   // render on its own.)

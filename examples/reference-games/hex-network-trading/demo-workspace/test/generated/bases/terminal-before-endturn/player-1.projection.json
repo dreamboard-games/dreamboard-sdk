@@ -1,6 +1,8 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": ["player-1"],
+  "stageSeats": [
+    "player-1"
+  ],
   "view": {
     "spaces": [
       {
@@ -302,7 +304,7 @@
       "player-3": 0,
       "player-4": 0
     },
-    "winnerPlayerId": null,
+    "outcome": null,
     "tradeNetworkOwner": null,
     "tradeNetworkLength": 0,
     "explorerGuildOwner": null,
@@ -313,6 +315,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.rollDice",
       "interactionId": "rollDice",
+      "label": "Roll Dice",
       "commit": {
         "mode": "manual"
       },
@@ -330,6 +333,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.moveStorm",
       "interactionId": "moveStorm",
+      "label": "Move Storm",
       "commit": {
         "mode": "manual"
       },
@@ -656,6 +660,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buildTrail",
       "interactionId": "buildTrail",
+      "label": "Build Trail",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -694,6 +699,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buildCamp",
       "interactionId": "buildCamp",
+      "label": "Build Camp",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -732,6 +738,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.upgradeToTown",
       "interactionId": "upgradeToTown",
+      "label": "Upgrade To Town",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -770,6 +777,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buyCharterCard",
       "interactionId": "buyCharterCard",
+      "label": "Buy Charter Card",
       "commit": {
         "mode": "manual"
       },
@@ -789,6 +797,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.tradeWithBank",
       "interactionId": "tradeWithBank",
+      "label": "Trade With Bank",
       "commit": {
         "mode": "manual"
       },
@@ -899,6 +908,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.offerTrade",
       "interactionId": "offerTrade",
+      "label": "Offer Trade",
       "commit": {
         "mode": "manual"
       },
@@ -1014,7 +1024,11 @@
             "min": 1,
             "max": 3
           },
-          "defaultValue": ["player-2", "player-3", "player-4"]
+          "defaultValue": [
+            "player-2",
+            "player-3",
+            "player-4"
+          ]
         }
       ],
       "availability": {
@@ -1031,6 +1045,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.endTurn",
       "interactionId": "endTurn",
+      "label": "End Turn",
       "commit": {
         "mode": "manual"
       },
@@ -1050,11 +1065,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playLandmark",
       "interactionId": "playLandmark",
+      "label": "Play Landmark",
       "commit": {
         "mode": "autoWhenReady"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1063,7 +1081,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1088,11 +1108,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playScout",
       "interactionId": "playScout",
+      "label": "Play Scout",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1101,7 +1124,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1432,11 +1457,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playSurveyGrant",
       "interactionId": "playSurveyGrant",
+      "label": "Play Survey Grant",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1445,7 +1473,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1540,11 +1570,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playClaimMarker",
       "interactionId": "playClaimMarker",
+      "label": "Play Claim Marker",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1553,7 +1586,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1613,11 +1648,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playShortcut",
       "interactionId": "playShortcut",
+      "label": "Play Shortcut",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1626,7 +1664,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],

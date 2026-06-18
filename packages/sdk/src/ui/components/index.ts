@@ -143,10 +143,31 @@ export { MoreActions, type MoreActionsProps } from "./MoreActions.js";
 export { DiceRoller, type DiceRollerProps } from "./DiceRoller.js";
 export { PhaseIndicator, type PhaseIndicatorProps } from "./PhaseIndicator.js";
 export {
-  GameEndDisplay,
-  type GameEndDisplayProps,
-  type PlayerScore,
-} from "./GameEndDisplay.js";
+  ActionHelp,
+  GuidancePanel,
+  SetupChecklist,
+  type ActionHelpProps,
+  type GuidanceAction,
+  type GuidancePanelProps,
+  type GuidancePhase,
+  type GuidanceSetupStep,
+  type SetupChecklistProps,
+  type SetupGuidance,
+} from "./Guidance.js";
+export {
+  OutcomeDialog,
+  StandingsTable,
+  type OutcomeDialogProps,
+  type StandingsTableProps,
+} from "./OutcomeDialog.js";
+export {
+  GameEventLog,
+  SystemActionSummary,
+  type GameEventLogProps,
+  type ProjectedGameEvent,
+  type SystemActionEvent,
+  type SystemActionSummaryProps,
+} from "./GameEventLog.js";
 
 // Board primitives (SDK v0.2.0+)
 export {

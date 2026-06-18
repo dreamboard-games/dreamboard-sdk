@@ -1,8 +1,11 @@
 export { createWorkspaceUIContract } from "./workspace-contract/index.js";
 export type { DreamboardUI, TypedGame, UIContract } from "./ui-contract.js";
 export type {
+  BoardGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   BoardSpaceTargetProps,
   ClientParamSchemaMap,
   DefineGameUIConfig,

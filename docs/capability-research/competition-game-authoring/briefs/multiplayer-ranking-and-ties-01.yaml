@@ -1,0 +1,36 @@
+{
+  "id": "multiplayer-ranking-and-ties-01",
+  "title": "Open drafting game with ranked results and true ties",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 4 },
+  "authorJobs":
+    [
+      "draft one public stall card",
+      "refill market with seeded deck order",
+      "end immediately after the second storm",
+      "rank tied players with score and tie-break evidence",
+      "emit a scoreless cancellation outcome",
+    ],
+  "uiJobs":
+    [
+      "render market and player festival rows",
+      "show final standings without resorting in the UI",
+      "show score breakdown and tie-break evidence",
+      "show scoreless cancellation for every player",
+    ],
+  "authorityJobs":
+    [
+      "reject drafting unavailable market cards",
+      "persist terminal outcome through reconnect",
+      "preserve true tied winners",
+      "replay storm branch from a fixed deck",
+    ],
+  "acceptance":
+    [
+      "terminal result has ranks, results, optional scores, and breakdown rows",
+      "reducer assigns ranks before presentation",
+      "scoreless cancellation does not require fake scores",
+      "reconnect observes the same terminal payload",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

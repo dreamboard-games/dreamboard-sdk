@@ -22,6 +22,40 @@ test("generated UI contract does not export the retired browser demo automation 
   expect(uiContract).not.toContain("data-dreamboard-operation");
 });
 
+test("generated UI contract exposes square grid workspace board surface", () => {
+  const files = generateFrameworkFiles(MINIMAL_MANIFEST);
+  const uiContract = files["shared/generated/ui-contract.ts"];
+
+  expect(uiContract).toContain(
+    "type BoardSquareGridProps as BoardSquareGridPropsGeneric",
+  );
+  expect(uiContract).toContain("type BoardGridInteractionFilter");
+  expect(uiContract).toContain(
+    "const squareStaticBoards = staticBoards.square;",
+  );
+  expect(uiContract).toContain(
+    "export type SquareBoardId = keyof typeof squareStaticBoards & string;",
+  );
+  expect(uiContract).toContain(
+    "export type SquareBoardTopology<Id extends SquareBoardId> = (typeof squareStaticBoards)[Id];",
+  );
+  expect(uiContract).toContain(
+    "export type SquareBoardSpaceId<Id extends SquareBoardId> = BoardSpaceIdOf<",
+  );
+  expect(uiContract).toContain(
+    "export type SquareBoardGridProps<Id extends SquareBoardId> = Omit<",
+  );
+  expect(uiContract).toContain(
+    "BoardSquareGridPropsGeneric<SquareBoardTopology<Id>>",
+  );
+  expect(uiContract).toContain(
+    "interactions?: BoardGridInteractionFilter<InteractionKey>;",
+  );
+  expect(uiContract).toContain("SquareGrid<const Id extends SquareBoardId>(");
+  expect(uiContract).toContain("typeof squareStaticBoards");
+  expect(uiContract).toContain("squareStaticBoards,");
+});
+
 test("generated reducer seeds use bound authoring factories", () => {
   const files = generateSeedFiles(MINIMAL_MANIFEST);
 

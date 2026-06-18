@@ -12,15 +12,9 @@
     "rootDir": "..",
     "outDir": "./dist",
     "paths": {
-      "@dreamboard/manifest-contract": [
-        "../shared/manifest-contract.ts"
-      ],
-      "#dreamboard/ui-contract": [
-        "../shared/generated/ui-contract.ts"
-      ],
-      "@shared/*": [
-        "../shared/*"
-      ]
+      "@dreamboard/manifest-contract": ["../shared/manifest-contract.ts"],
+      "#dreamboard/ui-contract": ["../shared/generated/ui-contract.ts"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": [
@@ -30,9 +24,5 @@
     "../shared/manifest-*.d.ts",
     "../shared/manifest-*.json"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "../shared/generated"
-  ]
+  "exclude": ["node_modules", "dist", "../shared/generated"]
 }

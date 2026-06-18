@@ -34,7 +34,7 @@ export default defineScenario({
 
     expect(state()).toBe("playerTurn");
     expect(view(playerId).myTotalInfluence).toBeGreaterThanOrEqual(10);
-    expect(view(playerId).winnerPlayerId).toBe(null);
+    expect(view(playerId).outcome).toBeNull();
 
     await game.submit(playerId, "rollDice", {});
 
@@ -64,7 +64,11 @@ export default defineScenario({
   then: ({ expect, state, view, interactions, seat }) => {
     const winner = seat(0);
     expect(state()).toBe("gameOver");
-    expect(view(winner).winnerPlayerId).toBe(winner);
+    expect(
+      view(winner).outcome?.standings.find(
+        (standing) => standing.result === "win",
+      )?.playerId,
+    ).toBe(winner);
     expect(
       interactions(winner).some(
         (descriptor) => descriptor.interactionId === "endTurn",

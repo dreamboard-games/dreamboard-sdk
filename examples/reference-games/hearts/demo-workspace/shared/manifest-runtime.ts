@@ -62,7 +62,10 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
+import type {
+  PlayerId as PublicPlayerId,
+  TableState as PublicTableState,
+} from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -71,10 +74,7 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(
-    literals.playerIds,
-    playerIds,
-  );
+  return resolveManifestPlayerIds(literals.playerIds, playerIds);
 }
 
 export { literals };
@@ -95,8 +95,12 @@ const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
   ),
 );
 const phaseNameSchema = markManifestScopedSchema(z.string());
-const boardLayoutSchema = createManifestStringLiteralSchema(literals.boardLayouts);
-const setupOptionIdSchema = createManifestStringLiteralSchema(literals.setupOptionIds);
+const boardLayoutSchema = createManifestStringLiteralSchema(
+  literals.boardLayouts,
+);
+const setupOptionIdSchema = createManifestStringLiteralSchema(
+  literals.setupOptionIds,
+);
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
 );
@@ -105,27 +109,47 @@ const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
 const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
 const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
 const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
-const sharedZoneIdSchema = createManifestStringLiteralSchema(literals.sharedZoneIds);
-const playerZoneIdSchema = createManifestStringLiteralSchema(literals.playerZoneIds);
+const sharedZoneIdSchema = createManifestStringLiteralSchema(
+  literals.sharedZoneIds,
+);
+const playerZoneIdSchema = createManifestStringLiteralSchema(
+  literals.playerZoneIds,
+);
 const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
-const resourceIdSchema = createManifestStringLiteralSchema(literals.resourceIds);
-const pieceTypeIdSchema = createManifestStringLiteralSchema(literals.pieceTypeIds);
+const resourceIdSchema = createManifestStringLiteralSchema(
+  literals.resourceIds,
+);
+const pieceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.pieceTypeIds,
+);
 const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
 const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
 const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
-const boardTypeIdSchema = createManifestStringLiteralSchema(literals.boardTypeIds);
-const boardBaseIdSchema = createManifestStringLiteralSchema(literals.boardBaseIds);
+const boardTypeIdSchema = createManifestStringLiteralSchema(
+  literals.boardTypeIds,
+);
+const boardBaseIdSchema = createManifestStringLiteralSchema(
+  literals.boardBaseIds,
+);
 const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
 );
-const relationTypeIdSchema = createManifestStringLiteralSchema(literals.relationTypeIds);
+const relationTypeIdSchema = createManifestStringLiteralSchema(
+  literals.relationTypeIds,
+);
 const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
-const edgeTypeIdSchema = createManifestStringLiteralSchema(literals.edgeTypeIds);
+const edgeTypeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeTypeIds,
+);
 const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
-const vertexTypeIdSchema = createManifestStringLiteralSchema(literals.vertexTypeIds);
+const vertexTypeIdSchema = createManifestStringLiteralSchema(
+  literals.vertexTypeIds,
+);
 const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
-const spaceTypeIdSchema = createManifestStringLiteralSchema(literals.spaceTypeIds);
+const spaceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.spaceTypeIds,
+);
 
 export const ids = {
   playerId: playerIdSchema,
@@ -190,65 +214,65 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  "clubs10": "clubs-10",
-  "clubs2": "clubs-2",
-  "clubs3": "clubs-3",
-  "clubs4": "clubs-4",
-  "clubs5": "clubs-5",
-  "clubs6": "clubs-6",
-  "clubs7": "clubs-7",
-  "clubs8": "clubs-8",
-  "clubs9": "clubs-9",
-  "clubsA": "clubs-A",
-  "clubsJ": "clubs-J",
-  "clubsK": "clubs-K",
-  "clubsQ": "clubs-Q",
-  "diamonds10": "diamonds-10",
-  "diamonds2": "diamonds-2",
-  "diamonds3": "diamonds-3",
-  "diamonds4": "diamonds-4",
-  "diamonds5": "diamonds-5",
-  "diamonds6": "diamonds-6",
-  "diamonds7": "diamonds-7",
-  "diamonds8": "diamonds-8",
-  "diamonds9": "diamonds-9",
-  "diamondsA": "diamonds-A",
-  "diamondsJ": "diamonds-J",
-  "diamondsK": "diamonds-K",
-  "diamondsQ": "diamonds-Q",
-  "hearts10": "hearts-10",
-  "hearts2": "hearts-2",
-  "hearts3": "hearts-3",
-  "hearts4": "hearts-4",
-  "hearts5": "hearts-5",
-  "hearts6": "hearts-6",
-  "hearts7": "hearts-7",
-  "hearts8": "hearts-8",
-  "hearts9": "hearts-9",
-  "heartsA": "hearts-A",
-  "heartsJ": "hearts-J",
-  "heartsK": "hearts-K",
-  "heartsQ": "hearts-Q",
-  "spades10": "spades-10",
-  "spades2": "spades-2",
-  "spades3": "spades-3",
-  "spades4": "spades-4",
-  "spades5": "spades-5",
-  "spades6": "spades-6",
-  "spades7": "spades-7",
-  "spades8": "spades-8",
-  "spades9": "spades-9",
-  "spadesA": "spades-A",
-  "spadesJ": "spades-J",
-  "spadesK": "spades-K",
-  "spadesQ": "spades-Q",
+  clubs10: "clubs-10",
+  clubs2: "clubs-2",
+  clubs3: "clubs-3",
+  clubs4: "clubs-4",
+  clubs5: "clubs-5",
+  clubs6: "clubs-6",
+  clubs7: "clubs-7",
+  clubs8: "clubs-8",
+  clubs9: "clubs-9",
+  clubsA: "clubs-A",
+  clubsJ: "clubs-J",
+  clubsK: "clubs-K",
+  clubsQ: "clubs-Q",
+  diamonds10: "diamonds-10",
+  diamonds2: "diamonds-2",
+  diamonds3: "diamonds-3",
+  diamonds4: "diamonds-4",
+  diamonds5: "diamonds-5",
+  diamonds6: "diamonds-6",
+  diamonds7: "diamonds-7",
+  diamonds8: "diamonds-8",
+  diamonds9: "diamonds-9",
+  diamondsA: "diamonds-A",
+  diamondsJ: "diamonds-J",
+  diamondsK: "diamonds-K",
+  diamondsQ: "diamonds-Q",
+  hearts10: "hearts-10",
+  hearts2: "hearts-2",
+  hearts3: "hearts-3",
+  hearts4: "hearts-4",
+  hearts5: "hearts-5",
+  hearts6: "hearts-6",
+  hearts7: "hearts-7",
+  hearts8: "hearts-8",
+  hearts9: "hearts-9",
+  heartsA: "hearts-A",
+  heartsJ: "hearts-J",
+  heartsK: "hearts-K",
+  heartsQ: "hearts-Q",
+  spades10: "spades-10",
+  spades2: "spades-2",
+  spades3: "spades-3",
+  spades4: "spades-4",
+  spades5: "spades-5",
+  spades6: "spades-6",
+  spades7: "spades-7",
+  spades8: "spades-8",
+  spades9: "spades-9",
+  spadesA: "spades-A",
+  spadesJ: "spades-J",
+  spadesK: "spades-K",
+  spadesQ: "spades-Q",
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  "currentTrick": "current-trick",
-  "discard": "discard",
-  "drawPile": "draw-pile",
-  "hand": "hand",
+  currentTrick: "current-trick",
+  discard: "discard",
+  drawPile: "draw-pile",
+  hand: "hand",
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -508,7 +532,11 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(literals.boardContainerIds, value, "board container id");
+    return expectTypedId(
+      literals.boardContainerIds,
+      value,
+      "board container id",
+    );
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -564,11 +592,11 @@ export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
 export type ComponentIdsBySharedZoneId = {
   "current-trick": ComponentId[];
-  "discard": ComponentId[];
+  discard: ComponentId[];
   "draw-pile": ComponentId[];
 };
 export type ComponentIdsByPlayerZoneId = {
-  "hand": PerPlayer<ComponentId[]>;
+  hand: PerPlayer<ComponentId[]>;
 };
 export type SetupOptionChoice = {
   id: string;
@@ -588,47 +616,114 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {
-
-} as const;
+export const setupChoiceIdsByOptionId = {} as const;
 export const setupProfilesById = {
-  "default": {
-    "id": "default",
-    "name": "Default",
-    "description": "Standard 4-player Hearts setup.",
-    "optionValues": null
-  }
+  default: {
+    id: "default",
+    name: "Default",
+    description: "Standard 4-player Hearts setup.",
+    optionValues: null,
+  },
 } as const;
 
 export type PlayingCardsCardProperties = {
-  "suit": "clubs" | "diamonds" | "spades" | "hearts";
-  "rank": "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "J" | "Q" | "K" | "A";
+  suit: "clubs" | "diamonds" | "spades" | "hearts";
+  rank:
+    | "2"
+    | "3"
+    | "4"
+    | "5"
+    | "6"
+    | "7"
+    | "8"
+    | "9"
+    | "10"
+    | "J"
+    | "Q"
+    | "K"
+    | "A";
 };
 
 export const PlayingCardsCardPropertiesSchema = z.object({
-  "suit": z.enum(["clubs", "diamonds", "spades", "hearts"]),
-  "rank": z.enum(["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]),
+  suit: z.enum(["clubs", "diamonds", "spades", "hearts"]),
+  rank: z.enum([
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "J",
+    "Q",
+    "K",
+    "A",
+  ]),
 });
 
-export type PlayingCardsCardId = "clubs-2" | "clubs-3" | "clubs-4" | "clubs-5" | "clubs-6" | "clubs-7" | "clubs-8" | "clubs-9" | "clubs-10" | "clubs-J" | "clubs-Q" | "clubs-K" | "clubs-A" | "diamonds-2" | "diamonds-3" | "diamonds-4" | "diamonds-5" | "diamonds-6" | "diamonds-7" | "diamonds-8" | "diamonds-9" | "diamonds-10" | "diamonds-J" | "diamonds-Q" | "diamonds-K" | "diamonds-A" | "spades-2" | "spades-3" | "spades-4" | "spades-5" | "spades-6" | "spades-7" | "spades-8" | "spades-9" | "spades-10" | "spades-J" | "spades-Q" | "spades-K" | "spades-A" | "hearts-2" | "hearts-3" | "hearts-4" | "hearts-5" | "hearts-6" | "hearts-7" | "hearts-8" | "hearts-9" | "hearts-10" | "hearts-J" | "hearts-Q" | "hearts-K" | "hearts-A";
+export type PlayingCardsCardId =
+  | "clubs-2"
+  | "clubs-3"
+  | "clubs-4"
+  | "clubs-5"
+  | "clubs-6"
+  | "clubs-7"
+  | "clubs-8"
+  | "clubs-9"
+  | "clubs-10"
+  | "clubs-J"
+  | "clubs-Q"
+  | "clubs-K"
+  | "clubs-A"
+  | "diamonds-2"
+  | "diamonds-3"
+  | "diamonds-4"
+  | "diamonds-5"
+  | "diamonds-6"
+  | "diamonds-7"
+  | "diamonds-8"
+  | "diamonds-9"
+  | "diamonds-10"
+  | "diamonds-J"
+  | "diamonds-Q"
+  | "diamonds-K"
+  | "diamonds-A"
+  | "spades-2"
+  | "spades-3"
+  | "spades-4"
+  | "spades-5"
+  | "spades-6"
+  | "spades-7"
+  | "spades-8"
+  | "spades-9"
+  | "spades-10"
+  | "spades-J"
+  | "spades-Q"
+  | "spades-K"
+  | "spades-A"
+  | "hearts-2"
+  | "hearts-3"
+  | "hearts-4"
+  | "hearts-5"
+  | "hearts-6"
+  | "hearts-7"
+  | "hearts-8"
+  | "hearts-9"
+  | "hearts-10"
+  | "hearts-J"
+  | "hearts-Q"
+  | "hearts-K"
+  | "hearts-A";
 
+export type BoardFieldsByBoardId = {};
 
+export type BoardSpaceFieldsByBoardId = {};
 
-export type BoardFieldsByBoardId = {
+export type BoardRelationFieldsByBoardId = {};
 
-};
-
-export type BoardSpaceFieldsByBoardId = {
-
-};
-
-export type BoardRelationFieldsByBoardId = {
-
-};
-
-export type BoardContainerFieldsByBoardId = {
-
-};
+export type BoardContainerFieldsByBoardId = {};
 
 export type HexEdgeFieldsByBoardId = Record<string, never>;
 
@@ -661,58 +756,318 @@ export type CardStateRecord<
 };
 
 export type CardStateById = {
-  "clubs-10": CardStateRecord<"clubs-10", "playing-cards", "clubs-10", PlayingCardsCardProperties>;
-  "clubs-2": CardStateRecord<"clubs-2", "playing-cards", "clubs-2", PlayingCardsCardProperties>;
-  "clubs-3": CardStateRecord<"clubs-3", "playing-cards", "clubs-3", PlayingCardsCardProperties>;
-  "clubs-4": CardStateRecord<"clubs-4", "playing-cards", "clubs-4", PlayingCardsCardProperties>;
-  "clubs-5": CardStateRecord<"clubs-5", "playing-cards", "clubs-5", PlayingCardsCardProperties>;
-  "clubs-6": CardStateRecord<"clubs-6", "playing-cards", "clubs-6", PlayingCardsCardProperties>;
-  "clubs-7": CardStateRecord<"clubs-7", "playing-cards", "clubs-7", PlayingCardsCardProperties>;
-  "clubs-8": CardStateRecord<"clubs-8", "playing-cards", "clubs-8", PlayingCardsCardProperties>;
-  "clubs-9": CardStateRecord<"clubs-9", "playing-cards", "clubs-9", PlayingCardsCardProperties>;
-  "clubs-A": CardStateRecord<"clubs-A", "playing-cards", "clubs-A", PlayingCardsCardProperties>;
-  "clubs-J": CardStateRecord<"clubs-J", "playing-cards", "clubs-J", PlayingCardsCardProperties>;
-  "clubs-K": CardStateRecord<"clubs-K", "playing-cards", "clubs-K", PlayingCardsCardProperties>;
-  "clubs-Q": CardStateRecord<"clubs-Q", "playing-cards", "clubs-Q", PlayingCardsCardProperties>;
-  "diamonds-10": CardStateRecord<"diamonds-10", "playing-cards", "diamonds-10", PlayingCardsCardProperties>;
-  "diamonds-2": CardStateRecord<"diamonds-2", "playing-cards", "diamonds-2", PlayingCardsCardProperties>;
-  "diamonds-3": CardStateRecord<"diamonds-3", "playing-cards", "diamonds-3", PlayingCardsCardProperties>;
-  "diamonds-4": CardStateRecord<"diamonds-4", "playing-cards", "diamonds-4", PlayingCardsCardProperties>;
-  "diamonds-5": CardStateRecord<"diamonds-5", "playing-cards", "diamonds-5", PlayingCardsCardProperties>;
-  "diamonds-6": CardStateRecord<"diamonds-6", "playing-cards", "diamonds-6", PlayingCardsCardProperties>;
-  "diamonds-7": CardStateRecord<"diamonds-7", "playing-cards", "diamonds-7", PlayingCardsCardProperties>;
-  "diamonds-8": CardStateRecord<"diamonds-8", "playing-cards", "diamonds-8", PlayingCardsCardProperties>;
-  "diamonds-9": CardStateRecord<"diamonds-9", "playing-cards", "diamonds-9", PlayingCardsCardProperties>;
-  "diamonds-A": CardStateRecord<"diamonds-A", "playing-cards", "diamonds-A", PlayingCardsCardProperties>;
-  "diamonds-J": CardStateRecord<"diamonds-J", "playing-cards", "diamonds-J", PlayingCardsCardProperties>;
-  "diamonds-K": CardStateRecord<"diamonds-K", "playing-cards", "diamonds-K", PlayingCardsCardProperties>;
-  "diamonds-Q": CardStateRecord<"diamonds-Q", "playing-cards", "diamonds-Q", PlayingCardsCardProperties>;
-  "hearts-10": CardStateRecord<"hearts-10", "playing-cards", "hearts-10", PlayingCardsCardProperties>;
-  "hearts-2": CardStateRecord<"hearts-2", "playing-cards", "hearts-2", PlayingCardsCardProperties>;
-  "hearts-3": CardStateRecord<"hearts-3", "playing-cards", "hearts-3", PlayingCardsCardProperties>;
-  "hearts-4": CardStateRecord<"hearts-4", "playing-cards", "hearts-4", PlayingCardsCardProperties>;
-  "hearts-5": CardStateRecord<"hearts-5", "playing-cards", "hearts-5", PlayingCardsCardProperties>;
-  "hearts-6": CardStateRecord<"hearts-6", "playing-cards", "hearts-6", PlayingCardsCardProperties>;
-  "hearts-7": CardStateRecord<"hearts-7", "playing-cards", "hearts-7", PlayingCardsCardProperties>;
-  "hearts-8": CardStateRecord<"hearts-8", "playing-cards", "hearts-8", PlayingCardsCardProperties>;
-  "hearts-9": CardStateRecord<"hearts-9", "playing-cards", "hearts-9", PlayingCardsCardProperties>;
-  "hearts-A": CardStateRecord<"hearts-A", "playing-cards", "hearts-A", PlayingCardsCardProperties>;
-  "hearts-J": CardStateRecord<"hearts-J", "playing-cards", "hearts-J", PlayingCardsCardProperties>;
-  "hearts-K": CardStateRecord<"hearts-K", "playing-cards", "hearts-K", PlayingCardsCardProperties>;
-  "hearts-Q": CardStateRecord<"hearts-Q", "playing-cards", "hearts-Q", PlayingCardsCardProperties>;
-  "spades-10": CardStateRecord<"spades-10", "playing-cards", "spades-10", PlayingCardsCardProperties>;
-  "spades-2": CardStateRecord<"spades-2", "playing-cards", "spades-2", PlayingCardsCardProperties>;
-  "spades-3": CardStateRecord<"spades-3", "playing-cards", "spades-3", PlayingCardsCardProperties>;
-  "spades-4": CardStateRecord<"spades-4", "playing-cards", "spades-4", PlayingCardsCardProperties>;
-  "spades-5": CardStateRecord<"spades-5", "playing-cards", "spades-5", PlayingCardsCardProperties>;
-  "spades-6": CardStateRecord<"spades-6", "playing-cards", "spades-6", PlayingCardsCardProperties>;
-  "spades-7": CardStateRecord<"spades-7", "playing-cards", "spades-7", PlayingCardsCardProperties>;
-  "spades-8": CardStateRecord<"spades-8", "playing-cards", "spades-8", PlayingCardsCardProperties>;
-  "spades-9": CardStateRecord<"spades-9", "playing-cards", "spades-9", PlayingCardsCardProperties>;
-  "spades-A": CardStateRecord<"spades-A", "playing-cards", "spades-A", PlayingCardsCardProperties>;
-  "spades-J": CardStateRecord<"spades-J", "playing-cards", "spades-J", PlayingCardsCardProperties>;
-  "spades-K": CardStateRecord<"spades-K", "playing-cards", "spades-K", PlayingCardsCardProperties>;
-  "spades-Q": CardStateRecord<"spades-Q", "playing-cards", "spades-Q", PlayingCardsCardProperties>;
+  "clubs-10": CardStateRecord<
+    "clubs-10",
+    "playing-cards",
+    "clubs-10",
+    PlayingCardsCardProperties
+  >;
+  "clubs-2": CardStateRecord<
+    "clubs-2",
+    "playing-cards",
+    "clubs-2",
+    PlayingCardsCardProperties
+  >;
+  "clubs-3": CardStateRecord<
+    "clubs-3",
+    "playing-cards",
+    "clubs-3",
+    PlayingCardsCardProperties
+  >;
+  "clubs-4": CardStateRecord<
+    "clubs-4",
+    "playing-cards",
+    "clubs-4",
+    PlayingCardsCardProperties
+  >;
+  "clubs-5": CardStateRecord<
+    "clubs-5",
+    "playing-cards",
+    "clubs-5",
+    PlayingCardsCardProperties
+  >;
+  "clubs-6": CardStateRecord<
+    "clubs-6",
+    "playing-cards",
+    "clubs-6",
+    PlayingCardsCardProperties
+  >;
+  "clubs-7": CardStateRecord<
+    "clubs-7",
+    "playing-cards",
+    "clubs-7",
+    PlayingCardsCardProperties
+  >;
+  "clubs-8": CardStateRecord<
+    "clubs-8",
+    "playing-cards",
+    "clubs-8",
+    PlayingCardsCardProperties
+  >;
+  "clubs-9": CardStateRecord<
+    "clubs-9",
+    "playing-cards",
+    "clubs-9",
+    PlayingCardsCardProperties
+  >;
+  "clubs-A": CardStateRecord<
+    "clubs-A",
+    "playing-cards",
+    "clubs-A",
+    PlayingCardsCardProperties
+  >;
+  "clubs-J": CardStateRecord<
+    "clubs-J",
+    "playing-cards",
+    "clubs-J",
+    PlayingCardsCardProperties
+  >;
+  "clubs-K": CardStateRecord<
+    "clubs-K",
+    "playing-cards",
+    "clubs-K",
+    PlayingCardsCardProperties
+  >;
+  "clubs-Q": CardStateRecord<
+    "clubs-Q",
+    "playing-cards",
+    "clubs-Q",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-10": CardStateRecord<
+    "diamonds-10",
+    "playing-cards",
+    "diamonds-10",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-2": CardStateRecord<
+    "diamonds-2",
+    "playing-cards",
+    "diamonds-2",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-3": CardStateRecord<
+    "diamonds-3",
+    "playing-cards",
+    "diamonds-3",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-4": CardStateRecord<
+    "diamonds-4",
+    "playing-cards",
+    "diamonds-4",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-5": CardStateRecord<
+    "diamonds-5",
+    "playing-cards",
+    "diamonds-5",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-6": CardStateRecord<
+    "diamonds-6",
+    "playing-cards",
+    "diamonds-6",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-7": CardStateRecord<
+    "diamonds-7",
+    "playing-cards",
+    "diamonds-7",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-8": CardStateRecord<
+    "diamonds-8",
+    "playing-cards",
+    "diamonds-8",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-9": CardStateRecord<
+    "diamonds-9",
+    "playing-cards",
+    "diamonds-9",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-A": CardStateRecord<
+    "diamonds-A",
+    "playing-cards",
+    "diamonds-A",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-J": CardStateRecord<
+    "diamonds-J",
+    "playing-cards",
+    "diamonds-J",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-K": CardStateRecord<
+    "diamonds-K",
+    "playing-cards",
+    "diamonds-K",
+    PlayingCardsCardProperties
+  >;
+  "diamonds-Q": CardStateRecord<
+    "diamonds-Q",
+    "playing-cards",
+    "diamonds-Q",
+    PlayingCardsCardProperties
+  >;
+  "hearts-10": CardStateRecord<
+    "hearts-10",
+    "playing-cards",
+    "hearts-10",
+    PlayingCardsCardProperties
+  >;
+  "hearts-2": CardStateRecord<
+    "hearts-2",
+    "playing-cards",
+    "hearts-2",
+    PlayingCardsCardProperties
+  >;
+  "hearts-3": CardStateRecord<
+    "hearts-3",
+    "playing-cards",
+    "hearts-3",
+    PlayingCardsCardProperties
+  >;
+  "hearts-4": CardStateRecord<
+    "hearts-4",
+    "playing-cards",
+    "hearts-4",
+    PlayingCardsCardProperties
+  >;
+  "hearts-5": CardStateRecord<
+    "hearts-5",
+    "playing-cards",
+    "hearts-5",
+    PlayingCardsCardProperties
+  >;
+  "hearts-6": CardStateRecord<
+    "hearts-6",
+    "playing-cards",
+    "hearts-6",
+    PlayingCardsCardProperties
+  >;
+  "hearts-7": CardStateRecord<
+    "hearts-7",
+    "playing-cards",
+    "hearts-7",
+    PlayingCardsCardProperties
+  >;
+  "hearts-8": CardStateRecord<
+    "hearts-8",
+    "playing-cards",
+    "hearts-8",
+    PlayingCardsCardProperties
+  >;
+  "hearts-9": CardStateRecord<
+    "hearts-9",
+    "playing-cards",
+    "hearts-9",
+    PlayingCardsCardProperties
+  >;
+  "hearts-A": CardStateRecord<
+    "hearts-A",
+    "playing-cards",
+    "hearts-A",
+    PlayingCardsCardProperties
+  >;
+  "hearts-J": CardStateRecord<
+    "hearts-J",
+    "playing-cards",
+    "hearts-J",
+    PlayingCardsCardProperties
+  >;
+  "hearts-K": CardStateRecord<
+    "hearts-K",
+    "playing-cards",
+    "hearts-K",
+    PlayingCardsCardProperties
+  >;
+  "hearts-Q": CardStateRecord<
+    "hearts-Q",
+    "playing-cards",
+    "hearts-Q",
+    PlayingCardsCardProperties
+  >;
+  "spades-10": CardStateRecord<
+    "spades-10",
+    "playing-cards",
+    "spades-10",
+    PlayingCardsCardProperties
+  >;
+  "spades-2": CardStateRecord<
+    "spades-2",
+    "playing-cards",
+    "spades-2",
+    PlayingCardsCardProperties
+  >;
+  "spades-3": CardStateRecord<
+    "spades-3",
+    "playing-cards",
+    "spades-3",
+    PlayingCardsCardProperties
+  >;
+  "spades-4": CardStateRecord<
+    "spades-4",
+    "playing-cards",
+    "spades-4",
+    PlayingCardsCardProperties
+  >;
+  "spades-5": CardStateRecord<
+    "spades-5",
+    "playing-cards",
+    "spades-5",
+    PlayingCardsCardProperties
+  >;
+  "spades-6": CardStateRecord<
+    "spades-6",
+    "playing-cards",
+    "spades-6",
+    PlayingCardsCardProperties
+  >;
+  "spades-7": CardStateRecord<
+    "spades-7",
+    "playing-cards",
+    "spades-7",
+    PlayingCardsCardProperties
+  >;
+  "spades-8": CardStateRecord<
+    "spades-8",
+    "playing-cards",
+    "spades-8",
+    PlayingCardsCardProperties
+  >;
+  "spades-9": CardStateRecord<
+    "spades-9",
+    "playing-cards",
+    "spades-9",
+    PlayingCardsCardProperties
+  >;
+  "spades-A": CardStateRecord<
+    "spades-A",
+    "playing-cards",
+    "spades-A",
+    PlayingCardsCardProperties
+  >;
+  "spades-J": CardStateRecord<
+    "spades-J",
+    "playing-cards",
+    "spades-J",
+    PlayingCardsCardProperties
+  >;
+  "spades-K": CardStateRecord<
+    "spades-K",
+    "playing-cards",
+    "spades-K",
+    PlayingCardsCardProperties
+  >;
+  "spades-Q": CardStateRecord<
+    "spades-Q",
+    "playing-cards",
+    "spades-Q",
+    PlayingCardsCardProperties
+  >;
 };
 
 export type PieceStateRecord<
@@ -739,12 +1094,226 @@ export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
 export type CardIdsBySharedZoneId = {
-  "current-trick": Array<"clubs-10" | "clubs-2" | "clubs-3" | "clubs-4" | "clubs-5" | "clubs-6" | "clubs-7" | "clubs-8" | "clubs-9" | "clubs-A" | "clubs-J" | "clubs-K" | "clubs-Q" | "diamonds-10" | "diamonds-2" | "diamonds-3" | "diamonds-4" | "diamonds-5" | "diamonds-6" | "diamonds-7" | "diamonds-8" | "diamonds-9" | "diamonds-A" | "diamonds-J" | "diamonds-K" | "diamonds-Q" | "hearts-10" | "hearts-2" | "hearts-3" | "hearts-4" | "hearts-5" | "hearts-6" | "hearts-7" | "hearts-8" | "hearts-9" | "hearts-A" | "hearts-J" | "hearts-K" | "hearts-Q" | "spades-10" | "spades-2" | "spades-3" | "spades-4" | "spades-5" | "spades-6" | "spades-7" | "spades-8" | "spades-9" | "spades-A" | "spades-J" | "spades-K" | "spades-Q">;
-  "discard": Array<"clubs-10" | "clubs-2" | "clubs-3" | "clubs-4" | "clubs-5" | "clubs-6" | "clubs-7" | "clubs-8" | "clubs-9" | "clubs-A" | "clubs-J" | "clubs-K" | "clubs-Q" | "diamonds-10" | "diamonds-2" | "diamonds-3" | "diamonds-4" | "diamonds-5" | "diamonds-6" | "diamonds-7" | "diamonds-8" | "diamonds-9" | "diamonds-A" | "diamonds-J" | "diamonds-K" | "diamonds-Q" | "hearts-10" | "hearts-2" | "hearts-3" | "hearts-4" | "hearts-5" | "hearts-6" | "hearts-7" | "hearts-8" | "hearts-9" | "hearts-A" | "hearts-J" | "hearts-K" | "hearts-Q" | "spades-10" | "spades-2" | "spades-3" | "spades-4" | "spades-5" | "spades-6" | "spades-7" | "spades-8" | "spades-9" | "spades-A" | "spades-J" | "spades-K" | "spades-Q">;
-  "draw-pile": Array<"clubs-10" | "clubs-2" | "clubs-3" | "clubs-4" | "clubs-5" | "clubs-6" | "clubs-7" | "clubs-8" | "clubs-9" | "clubs-A" | "clubs-J" | "clubs-K" | "clubs-Q" | "diamonds-10" | "diamonds-2" | "diamonds-3" | "diamonds-4" | "diamonds-5" | "diamonds-6" | "diamonds-7" | "diamonds-8" | "diamonds-9" | "diamonds-A" | "diamonds-J" | "diamonds-K" | "diamonds-Q" | "hearts-10" | "hearts-2" | "hearts-3" | "hearts-4" | "hearts-5" | "hearts-6" | "hearts-7" | "hearts-8" | "hearts-9" | "hearts-A" | "hearts-J" | "hearts-K" | "hearts-Q" | "spades-10" | "spades-2" | "spades-3" | "spades-4" | "spades-5" | "spades-6" | "spades-7" | "spades-8" | "spades-9" | "spades-A" | "spades-J" | "spades-K" | "spades-Q">;
+  "current-trick": Array<
+    | "clubs-10"
+    | "clubs-2"
+    | "clubs-3"
+    | "clubs-4"
+    | "clubs-5"
+    | "clubs-6"
+    | "clubs-7"
+    | "clubs-8"
+    | "clubs-9"
+    | "clubs-A"
+    | "clubs-J"
+    | "clubs-K"
+    | "clubs-Q"
+    | "diamonds-10"
+    | "diamonds-2"
+    | "diamonds-3"
+    | "diamonds-4"
+    | "diamonds-5"
+    | "diamonds-6"
+    | "diamonds-7"
+    | "diamonds-8"
+    | "diamonds-9"
+    | "diamonds-A"
+    | "diamonds-J"
+    | "diamonds-K"
+    | "diamonds-Q"
+    | "hearts-10"
+    | "hearts-2"
+    | "hearts-3"
+    | "hearts-4"
+    | "hearts-5"
+    | "hearts-6"
+    | "hearts-7"
+    | "hearts-8"
+    | "hearts-9"
+    | "hearts-A"
+    | "hearts-J"
+    | "hearts-K"
+    | "hearts-Q"
+    | "spades-10"
+    | "spades-2"
+    | "spades-3"
+    | "spades-4"
+    | "spades-5"
+    | "spades-6"
+    | "spades-7"
+    | "spades-8"
+    | "spades-9"
+    | "spades-A"
+    | "spades-J"
+    | "spades-K"
+    | "spades-Q"
+  >;
+  discard: Array<
+    | "clubs-10"
+    | "clubs-2"
+    | "clubs-3"
+    | "clubs-4"
+    | "clubs-5"
+    | "clubs-6"
+    | "clubs-7"
+    | "clubs-8"
+    | "clubs-9"
+    | "clubs-A"
+    | "clubs-J"
+    | "clubs-K"
+    | "clubs-Q"
+    | "diamonds-10"
+    | "diamonds-2"
+    | "diamonds-3"
+    | "diamonds-4"
+    | "diamonds-5"
+    | "diamonds-6"
+    | "diamonds-7"
+    | "diamonds-8"
+    | "diamonds-9"
+    | "diamonds-A"
+    | "diamonds-J"
+    | "diamonds-K"
+    | "diamonds-Q"
+    | "hearts-10"
+    | "hearts-2"
+    | "hearts-3"
+    | "hearts-4"
+    | "hearts-5"
+    | "hearts-6"
+    | "hearts-7"
+    | "hearts-8"
+    | "hearts-9"
+    | "hearts-A"
+    | "hearts-J"
+    | "hearts-K"
+    | "hearts-Q"
+    | "spades-10"
+    | "spades-2"
+    | "spades-3"
+    | "spades-4"
+    | "spades-5"
+    | "spades-6"
+    | "spades-7"
+    | "spades-8"
+    | "spades-9"
+    | "spades-A"
+    | "spades-J"
+    | "spades-K"
+    | "spades-Q"
+  >;
+  "draw-pile": Array<
+    | "clubs-10"
+    | "clubs-2"
+    | "clubs-3"
+    | "clubs-4"
+    | "clubs-5"
+    | "clubs-6"
+    | "clubs-7"
+    | "clubs-8"
+    | "clubs-9"
+    | "clubs-A"
+    | "clubs-J"
+    | "clubs-K"
+    | "clubs-Q"
+    | "diamonds-10"
+    | "diamonds-2"
+    | "diamonds-3"
+    | "diamonds-4"
+    | "diamonds-5"
+    | "diamonds-6"
+    | "diamonds-7"
+    | "diamonds-8"
+    | "diamonds-9"
+    | "diamonds-A"
+    | "diamonds-J"
+    | "diamonds-K"
+    | "diamonds-Q"
+    | "hearts-10"
+    | "hearts-2"
+    | "hearts-3"
+    | "hearts-4"
+    | "hearts-5"
+    | "hearts-6"
+    | "hearts-7"
+    | "hearts-8"
+    | "hearts-9"
+    | "hearts-A"
+    | "hearts-J"
+    | "hearts-K"
+    | "hearts-Q"
+    | "spades-10"
+    | "spades-2"
+    | "spades-3"
+    | "spades-4"
+    | "spades-5"
+    | "spades-6"
+    | "spades-7"
+    | "spades-8"
+    | "spades-9"
+    | "spades-A"
+    | "spades-J"
+    | "spades-K"
+    | "spades-Q"
+  >;
 };
 export type CardIdsByPlayerZoneId = {
-  "hand": PerPlayer<Array<"clubs-10" | "clubs-2" | "clubs-3" | "clubs-4" | "clubs-5" | "clubs-6" | "clubs-7" | "clubs-8" | "clubs-9" | "clubs-A" | "clubs-J" | "clubs-K" | "clubs-Q" | "diamonds-10" | "diamonds-2" | "diamonds-3" | "diamonds-4" | "diamonds-5" | "diamonds-6" | "diamonds-7" | "diamonds-8" | "diamonds-9" | "diamonds-A" | "diamonds-J" | "diamonds-K" | "diamonds-Q" | "hearts-10" | "hearts-2" | "hearts-3" | "hearts-4" | "hearts-5" | "hearts-6" | "hearts-7" | "hearts-8" | "hearts-9" | "hearts-A" | "hearts-J" | "hearts-K" | "hearts-Q" | "spades-10" | "spades-2" | "spades-3" | "spades-4" | "spades-5" | "spades-6" | "spades-7" | "spades-8" | "spades-9" | "spades-A" | "spades-J" | "spades-K" | "spades-Q">>;
+  hand: PerPlayer<
+    Array<
+      | "clubs-10"
+      | "clubs-2"
+      | "clubs-3"
+      | "clubs-4"
+      | "clubs-5"
+      | "clubs-6"
+      | "clubs-7"
+      | "clubs-8"
+      | "clubs-9"
+      | "clubs-A"
+      | "clubs-J"
+      | "clubs-K"
+      | "clubs-Q"
+      | "diamonds-10"
+      | "diamonds-2"
+      | "diamonds-3"
+      | "diamonds-4"
+      | "diamonds-5"
+      | "diamonds-6"
+      | "diamonds-7"
+      | "diamonds-8"
+      | "diamonds-9"
+      | "diamonds-A"
+      | "diamonds-J"
+      | "diamonds-K"
+      | "diamonds-Q"
+      | "hearts-10"
+      | "hearts-2"
+      | "hearts-3"
+      | "hearts-4"
+      | "hearts-5"
+      | "hearts-6"
+      | "hearts-7"
+      | "hearts-8"
+      | "hearts-9"
+      | "hearts-A"
+      | "hearts-J"
+      | "hearts-K"
+      | "hearts-Q"
+      | "spades-10"
+      | "spades-2"
+      | "spades-3"
+      | "spades-4"
+      | "spades-5"
+      | "spades-6"
+      | "spades-7"
+      | "spades-8"
+      | "spades-9"
+      | "spades-A"
+      | "spades-J"
+      | "spades-K"
+      | "spades-Q"
+    >
+  >;
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -816,14 +1385,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -900,14 +1469,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    never,
-    BoardFields,
-    SpaceFields,
-    RuntimeRecord,
-    RuntimeRecord
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  never,
+  BoardFields,
+  SpaceFields,
+  RuntimeRecord,
+  RuntimeRecord
+> {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -932,14 +1501,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -960,24 +1529,23 @@ export type TiledBoardStateRecord =
   | HexBoardStateRecord
   | SquareBoardStateRecord;
 
-export type BoardStateById = {
-
-};
+export type BoardStateById = {};
 
 export type HexBoardStateById = Record<string, never>;
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> =
-  T extends readonly (infer Item)[]
+type ManifestArrayElement<T> = T extends readonly (infer Item)[]
+  ? Item
+  : T extends (infer Item)[]
     ? Item
-    : T extends (infer Item)[]
-      ? Item
-      : never;
+    : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
+  BoardIdValue extends keyof BoardStateById
+    ? BoardStateById[BoardIdValue]
+    : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1034,26 +1602,29 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
-> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
-  ? Ref
-  : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
+> =
+  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1063,9 +1634,8 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1075,9 +1645,10 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1087,9 +1658,10 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1099,9 +1671,10 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1117,19 +1690,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<
-  BoardIdValue extends TiledBoardId = TiledBoardId,
-> = BoardIdValue extends keyof HexBoardStateById
-  ? HexVertexState<BoardIdValue>
-  : BoardIdValue extends keyof SquareBoardStateById
-    ? SquareVertexState<BoardIdValue>
-    : never;
+export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
+  BoardIdValue extends keyof HexBoardStateById
+    ? HexVertexState<BoardIdValue>
+    : BoardIdValue extends keyof SquareBoardStateById
+      ? SquareVertexState<BoardIdValue>
+      : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type BoardStateRecord = never;
 
@@ -1303,8 +1876,13 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
-    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
+    visibility: z.record(
+      zoneIdSchema,
+      z.enum(["all", "ownerOnly", "public", "hidden"]),
+    ),
+    cardSetIdsByZoneId: z
+      .record(zoneIdSchema, z.array(ids.cardSetId))
+      .optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -1361,11 +1939,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-      type: z.literal("InSlot"),
-      host: z.never(),
-      slotId: z.never(),
-      position: z.number().int().nullable().optional(),
-    }),
+        type: z.literal("InSlot"),
+        host: z.never(),
+        slotId: z.never(),
+        position: z.number().int().nullable().optional(),
+      }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -1410,44 +1988,191 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(playerIds, () =>
-    Object.fromEntries(
-      literals.resourceIds.map((resourceId) => [resourceId, 0]),
-    ) as Record<ResourceId, number>,
+  return perPlayer(
+    playerIds,
+    () =>
+      Object.fromEntries(
+        literals.resourceIds.map((resourceId) => [resourceId, 0]),
+      ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) => ({
-    shared: cloneManifestDefault({"current-trick":[],"discard":[],"draw-pile":[]}),
-    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-    visibility: cloneManifestDefault({"current-trick":"public","discard":"public","draw-pile":"hidden","hand":"ownerOnly"}),
-    cardSetIdsByZoneId: cloneManifestDefault({"current-trick":["playing-cards"],"discard":["playing-cards"],"draw-pile":["playing-cards"],"hand":["playing-cards"]}),
-  }) as TableState["zones"],
-  decks: () => cloneManifestDefault({"current-trick":[],"discard":[],"draw-pile":[]}) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) =>
+    ({
+      shared: cloneManifestDefault({
+        "current-trick": [],
+        discard: [],
+        "draw-pile": [],
+      }),
+      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+      visibility: cloneManifestDefault({
+        "current-trick": "public",
+        discard: "public",
+        "draw-pile": "hidden",
+        hand: "ownerOnly",
+      }),
+      cardSetIdsByZoneId: cloneManifestDefault({
+        "current-trick": ["playing-cards"],
+        discard: ["playing-cards"],
+        "draw-pile": ["playing-cards"],
+        hand: ["playing-cards"],
+      }),
+    }) as TableState["zones"],
+  decks: () =>
+    cloneManifestDefault({
+      "current-trick": [],
+      discard: [],
+      "draw-pile": [],
+    }) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
-  handVisibility: () => cloneManifestDefault({"hand":"ownerOnly"}) as TableState["handVisibility"],
-  ownerOfCard: () => cloneManifestDefault({"clubs-10":null,"clubs-2":null,"clubs-3":null,"clubs-4":null,"clubs-5":null,"clubs-6":null,"clubs-7":null,"clubs-8":null,"clubs-9":null,"clubs-A":null,"clubs-J":null,"clubs-K":null,"clubs-Q":null,"diamonds-10":null,"diamonds-2":null,"diamonds-3":null,"diamonds-4":null,"diamonds-5":null,"diamonds-6":null,"diamonds-7":null,"diamonds-8":null,"diamonds-9":null,"diamonds-A":null,"diamonds-J":null,"diamonds-K":null,"diamonds-Q":null,"hearts-10":null,"hearts-2":null,"hearts-3":null,"hearts-4":null,"hearts-5":null,"hearts-6":null,"hearts-7":null,"hearts-8":null,"hearts-9":null,"hearts-A":null,"hearts-J":null,"hearts-K":null,"hearts-Q":null,"spades-10":null,"spades-2":null,"spades-3":null,"spades-4":null,"spades-5":null,"spades-6":null,"spades-7":null,"spades-8":null,"spades-9":null,"spades-A":null,"spades-J":null,"spades-K":null,"spades-Q":null}) as TableState["ownerOfCard"],
-  visibility: () => cloneManifestDefault({"clubs-10":{"faceUp":true},"clubs-2":{"faceUp":true},"clubs-3":{"faceUp":true},"clubs-4":{"faceUp":true},"clubs-5":{"faceUp":true},"clubs-6":{"faceUp":true},"clubs-7":{"faceUp":true},"clubs-8":{"faceUp":true},"clubs-9":{"faceUp":true},"clubs-A":{"faceUp":true},"clubs-J":{"faceUp":true},"clubs-K":{"faceUp":true},"clubs-Q":{"faceUp":true},"diamonds-10":{"faceUp":true},"diamonds-2":{"faceUp":true},"diamonds-3":{"faceUp":true},"diamonds-4":{"faceUp":true},"diamonds-5":{"faceUp":true},"diamonds-6":{"faceUp":true},"diamonds-7":{"faceUp":true},"diamonds-8":{"faceUp":true},"diamonds-9":{"faceUp":true},"diamonds-A":{"faceUp":true},"diamonds-J":{"faceUp":true},"diamonds-K":{"faceUp":true},"diamonds-Q":{"faceUp":true},"hearts-10":{"faceUp":true},"hearts-2":{"faceUp":true},"hearts-3":{"faceUp":true},"hearts-4":{"faceUp":true},"hearts-5":{"faceUp":true},"hearts-6":{"faceUp":true},"hearts-7":{"faceUp":true},"hearts-8":{"faceUp":true},"hearts-9":{"faceUp":true},"hearts-A":{"faceUp":true},"hearts-J":{"faceUp":true},"hearts-K":{"faceUp":true},"hearts-Q":{"faceUp":true},"spades-10":{"faceUp":true},"spades-2":{"faceUp":true},"spades-3":{"faceUp":true},"spades-4":{"faceUp":true},"spades-5":{"faceUp":true},"spades-6":{"faceUp":true},"spades-7":{"faceUp":true},"spades-8":{"faceUp":true},"spades-9":{"faceUp":true},"spades-A":{"faceUp":true},"spades-J":{"faceUp":true},"spades-K":{"faceUp":true},"spades-Q":{"faceUp":true}}) as TableState["visibility"],
+    buildPerPlayerCardIds(
+      resolveDefaultPlayerIds(playerIds),
+    ) as TableState["hands"],
+  handVisibility: () =>
+    cloneManifestDefault({ hand: "ownerOnly" }) as TableState["handVisibility"],
+  ownerOfCard: () =>
+    cloneManifestDefault({
+      "clubs-10": null,
+      "clubs-2": null,
+      "clubs-3": null,
+      "clubs-4": null,
+      "clubs-5": null,
+      "clubs-6": null,
+      "clubs-7": null,
+      "clubs-8": null,
+      "clubs-9": null,
+      "clubs-A": null,
+      "clubs-J": null,
+      "clubs-K": null,
+      "clubs-Q": null,
+      "diamonds-10": null,
+      "diamonds-2": null,
+      "diamonds-3": null,
+      "diamonds-4": null,
+      "diamonds-5": null,
+      "diamonds-6": null,
+      "diamonds-7": null,
+      "diamonds-8": null,
+      "diamonds-9": null,
+      "diamonds-A": null,
+      "diamonds-J": null,
+      "diamonds-K": null,
+      "diamonds-Q": null,
+      "hearts-10": null,
+      "hearts-2": null,
+      "hearts-3": null,
+      "hearts-4": null,
+      "hearts-5": null,
+      "hearts-6": null,
+      "hearts-7": null,
+      "hearts-8": null,
+      "hearts-9": null,
+      "hearts-A": null,
+      "hearts-J": null,
+      "hearts-K": null,
+      "hearts-Q": null,
+      "spades-10": null,
+      "spades-2": null,
+      "spades-3": null,
+      "spades-4": null,
+      "spades-5": null,
+      "spades-6": null,
+      "spades-7": null,
+      "spades-8": null,
+      "spades-9": null,
+      "spades-A": null,
+      "spades-J": null,
+      "spades-K": null,
+      "spades-Q": null,
+    }) as TableState["ownerOfCard"],
+  visibility: () =>
+    cloneManifestDefault({
+      "clubs-10": { faceUp: true },
+      "clubs-2": { faceUp: true },
+      "clubs-3": { faceUp: true },
+      "clubs-4": { faceUp: true },
+      "clubs-5": { faceUp: true },
+      "clubs-6": { faceUp: true },
+      "clubs-7": { faceUp: true },
+      "clubs-8": { faceUp: true },
+      "clubs-9": { faceUp: true },
+      "clubs-A": { faceUp: true },
+      "clubs-J": { faceUp: true },
+      "clubs-K": { faceUp: true },
+      "clubs-Q": { faceUp: true },
+      "diamonds-10": { faceUp: true },
+      "diamonds-2": { faceUp: true },
+      "diamonds-3": { faceUp: true },
+      "diamonds-4": { faceUp: true },
+      "diamonds-5": { faceUp: true },
+      "diamonds-6": { faceUp: true },
+      "diamonds-7": { faceUp: true },
+      "diamonds-8": { faceUp: true },
+      "diamonds-9": { faceUp: true },
+      "diamonds-A": { faceUp: true },
+      "diamonds-J": { faceUp: true },
+      "diamonds-K": { faceUp: true },
+      "diamonds-Q": { faceUp: true },
+      "hearts-10": { faceUp: true },
+      "hearts-2": { faceUp: true },
+      "hearts-3": { faceUp: true },
+      "hearts-4": { faceUp: true },
+      "hearts-5": { faceUp: true },
+      "hearts-6": { faceUp: true },
+      "hearts-7": { faceUp: true },
+      "hearts-8": { faceUp: true },
+      "hearts-9": { faceUp: true },
+      "hearts-A": { faceUp: true },
+      "hearts-J": { faceUp: true },
+      "hearts-K": { faceUp: true },
+      "hearts-Q": { faceUp: true },
+      "spades-10": { faceUp: true },
+      "spades-2": { faceUp: true },
+      "spades-3": { faceUp: true },
+      "spades-4": { faceUp: true },
+      "spades-5": { faceUp: true },
+      "spades-6": { faceUp: true },
+      "spades-7": { faceUp: true },
+      "spades-8": { faceUp: true },
+      "spades-9": { faceUp: true },
+      "spades-A": { faceUp: true },
+      "spades-J": { faceUp: true },
+      "spades-K": { faceUp: true },
+      "spades-Q": { faceUp: true },
+    }) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
-type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
+type GeneratedStaticBoards = Pick<
+  PublicTableState["boards"],
+  "byId" | "hex" | "square"
+>;
+type GeneratedStaticBoardsJsonEnvelope = Omit<
+  StaticBoardsJsonEnvelope<TableState>,
+  "boards"
+> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData =
+  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
+const baseInitialTable = cloneManifestDefault<TableState>(
+  manifestStaticData.initialTable,
+);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
+  SharedZoneId,
+  readonly CardId[]
+>;
 
-export function createInitialTable(options: {
-  playerIds?: readonly string[];
-  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-} = {}): TableState {
+export function createInitialTable(
+  options: {
+    playerIds?: readonly string[];
+    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+  } = {},
+): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -1539,48 +2264,22 @@ export const manifestContract: ReducerManifestContract<
   createGameStateSchema,
 };
 
-const boardIdsByLayoutLookup = {
-
-} as const;
-const boardBaseIdsByLayoutLookup = {
-
-} as const;
-const boardIdsByBaseIdLookup = {
-
-} as const;
-const boardBaseIdsByTemplateIdLookup = {
-
-} as const;
-const boardLayoutByIdLookup = {
-
-} as const;
-const boardTemplateLayoutByIdLookup = {
-
-} as const;
-const boardIdsByTypeIdLookup = {
-
-} as const;
-const spaceIdsByBoardIdLookup = {
-
-} as const;
+const boardIdsByLayoutLookup = {} as const;
+const boardBaseIdsByLayoutLookup = {} as const;
+const boardIdsByBaseIdLookup = {} as const;
+const boardBaseIdsByTemplateIdLookup = {} as const;
+const boardLayoutByIdLookup = {} as const;
+const boardTemplateLayoutByIdLookup = {} as const;
+const boardIdsByTypeIdLookup = {} as const;
+const spaceIdsByBoardIdLookup = {} as const;
 const spaceTypeIdByBoardIdLookup = {} as const;
-const spaceIdsByTypeIdLookup = {
-
-} as const;
-const containerIdsByBoardIdLookup = {
-
-} as const;
+const spaceIdsByTypeIdLookup = {} as const;
+const containerIdsByBoardIdLookup = {} as const;
 const containerHostByBoardIdLookup = {} as const;
-const relationTypeIdsByBoardIdLookup = {
-
-} as const;
-const edgeIdsByTypeIdLookup = {
-
-} as const;
+const relationTypeIdsByBoardIdLookup = {} as const;
+const edgeIdsByTypeIdLookup = {} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {} as const;
-const vertexIdsByTypeIdLookup = {
-
-} as const;
+const vertexIdsByTypeIdLookup = {} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {} as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -1608,9 +2307,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<
-    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
-  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
+    layout: LayoutValue,
+  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -1618,9 +2317,7 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<
-    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
-  >(
+  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -1654,10 +2351,7 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<
-    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
-    Value,
-  >(
+  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -1718,10 +2412,7 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<
-    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
-    Value
-  > {
+  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -1731,9 +2422,7 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<
-    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
-  >(
+  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -1756,7 +2445,8 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends
+      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -1856,9 +2546,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
-      authoredHexRefKey(edgeRef.spaces)
-    ];
+    const edgeId = (
+      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
+    )[authoredHexRefKey(edgeRef.spaces)];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -1939,10 +2629,7 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<
-    typeof edgeIdsByBoardIdAndTypeIdLookup,
-    BoardIdValue
-  > {
+  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -1959,7 +2646,8 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2003,7 +2691,10 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
+      BoardLookupIdValue<
+        typeof vertexIdsByBoardIdAndTypeIdLookup,
+        BoardIdValue
+      >,
       Value
     >;
   },
@@ -2047,7 +2738,8 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2076,9 +2768,7 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(
-    boardBaseId: BoardBaseId,
-  ): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

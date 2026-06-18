@@ -14,11 +14,11 @@
  * - `groupAriaLabel`: HexGrid labels edge/vertex groups
  *   "Interactive edges/vertices for placement"; SquareGrid uses
  *   "Interactive edges/vertices".
- * - `spreadBrowserAttributes`: HexGrid spreads `state.browserAttributes`
- *   onto every target `<g>`; SquareGrid never does. This prop also selects
- *   the grid's original JSX attribute ordering (HexGrid: browser attrs,
- *   transform, role, className; SquareGrid: transform, className, role) so
- *   rendered attribute order stays byte-identical per grid.
+ * - `browserAttributeOrder`: HexGrid historically spread
+ *   `state.browserAttributes` before transform/role/className while
+ *   SquareGrid kept transform first. Both grids now expose semantic browser
+ *   attributes for replay, but this prop preserves each grid's rendered
+ *   attribute order.
  * - `selectMode`: how selection is dispatched.
  *   "render-state" (HexGrid) runs `void state.select?.()`, honoring
  *   `targetState(...).select` overrides; "layer-direct" (SquareGrid) runs
@@ -53,10 +53,8 @@ export interface InteractiveTargetLayerGroupProps<TTarget> {
   /** HexGrid passes "list"; SquareGrid leaves the group role unset. */
   groupRole?: "list";
   /**
-   * HexGrid: true — `state.browserAttributes` are spread onto each target
-   * `<g>` (and the HexGrid attribute order is used). SquareGrid: false.
-   */
-  spreadBrowserAttributes: boolean;
+  /** Selects the historical per-grid JSX attribute order. */
+  browserAttributeOrder: "before-transform" | "after-transform";
   /**
    * "render-state" (HexGrid): `void state.select?.()`.
    * "layer-direct" (SquareGrid): `void layer.selectTargetId?.(targetId)`.
@@ -82,7 +80,7 @@ export function InteractiveTargetLayerGroup<TTarget>({
   groupClassName,
   groupAriaLabel,
   groupRole,
-  spreadBrowserAttributes,
+  browserAttributeOrder,
   selectMode,
   hover,
   getTargetTransform,
@@ -108,7 +106,7 @@ export function InteractiveTargetLayerGroup<TTarget>({
             : () => {
                 void layer.selectTargetId?.(targetId);
               };
-        return spreadBrowserAttributes ? (
+        return browserAttributeOrder === "before-transform" ? (
           // HexGrid markup variant: browserAttributes spread first, then
           // transform, role, className (preserves HexGrid's rendered
           // attribute order).
@@ -141,14 +139,15 @@ export function InteractiveTargetLayerGroup<TTarget>({
             {renderTargetContent(target, state, isSelectable)}
           </g>
         ) : (
-          // SquareGrid markup variant: no browserAttributes spread;
-          // transform, className, role (preserves SquareGrid's rendered
-          // attribute order).
+          // SquareGrid markup variant: transform first, then browser
+          // attributes, className, role (preserves SquareGrid's rendered
+          // attribute order while exposing semantic replay metadata).
           <g
             key={targetId}
             {...(getTargetTransform
               ? { transform: getTargetTransform(target) }
               : {})}
+            {...state.browserAttributes}
             onClick={isSelectable ? activate : undefined}
             onKeyDown={(event) =>
               handleKeyboardActivation(

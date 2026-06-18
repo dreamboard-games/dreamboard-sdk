@@ -1,0 +1,1335 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "desktop"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:2a7e60c6dcf9a09b5933a6082de7754dcffc34cb159d001de7faae25773c6b28",
+    "finalSemanticDigest": "sha256:0e715918b183984cbb2b611f14b760b5be52977e690526d240da52bc72c91371",
+    "initialProjectionDigest": "sha256:dbd816c4b50e47c110a7186f1c3f9092c55de8aef6c60bbe35932029934f7aa6",
+    "submissionDigest": "sha256:e1764438dd5180bcc55a6569c7b7123165f92e671ac937b865dd7ef8f2227b2c"
+  },
+  "gameId": "multiplayer-ranking-and-ties",
+  "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:6d484398b47a11c13489013bfb8139e23a8cd96905068cd502829a7904c9b55b",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
+              "help": "Choose one face-up stall card. Final ties break by complete guild sets, then coins.",
+              "inputs": [],
+              "interactionId": "draft-stall:player-1",
+              "interactionKey": "draft-stall",
+              "kind": "action",
+              "label": "Draft stall",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+            "currentStage": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "draft",
+              "label": "Draft a stall",
+              "objective": "Build high-prestige guild sets before six rounds end or the second storm cancels the fair.",
+              "summary": "Choose one face-up stall card from the shared harbor market."
+            },
+            "setup": {
+              "name": "Standard Harbor Fair",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Use two to four unique player seats.",
+                  "id": "seat-players",
+                  "label": "Seat players"
+                },
+                {
+                  "description": "Fill the market with four face-up stall cards, resolving storms as setup events.",
+                  "id": "reveal-market",
+                  "label": "Reveal the market"
+                }
+              ],
+              "summary": "Shuffle the stall and storm deck, then reveal four stall cards to the market."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [],
+          "view": {
+            "displayName": "Multiplayer Ranking And Ties",
+            "recentEvents": [],
+            "referenceGameId": "multiplayer-ranking-and-ties",
+            "scenarioBranch": {
+              "id": "multiplayer-ranking-and-ties.unique-winner",
+              "key": "uniqueWinner",
+              "outcome": {
+                "reason": {
+                  "code": "SIX_ROUNDS_COMPLETE"
+                },
+                "standings": [
+                  {
+                    "playerId": "player-1",
+                    "rank": 1,
+                    "result": "win",
+                    "score": 26,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 15
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 8
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 2
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-2",
+                    "rank": 2,
+                    "result": "loss",
+                    "score": 20,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 9
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 8
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 2
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-3",
+                    "rank": 3,
+                    "result": "loss",
+                    "score": 18,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 13
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 4
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 1
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 1
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-4",
+                    "rank": 4,
+                    "result": "loss",
+                    "score": 16,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 9
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 4
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 1
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              "playerCount": 4,
+              "sequence": [
+                "food-p3-c0-1",
+                "food-p2-c0-1",
+                "craft-p2-c0-1",
+                "food-p2-c0-2",
+                "craft-p3-c0-1",
+                "craft-p2-c0-2",
+                "food-p2-c0-3",
+                "food-p2-c0-4",
+                "music-p3-c0-1",
+                "music-p2-c0-1",
+                "craft-p2-c0-3",
+                "craft-p2-c0-4",
+                "food-p2-c1-1",
+                "craft-p1-c1-1",
+                "music-p2-c0-2",
+                "food-p1-c1-1",
+                "craft-p2-c1-1",
+                "music-p1-c1-1",
+                "music-p2-c1-1",
+                "craft-p1-c1-2",
+                "music-p2-c1-2",
+                "food-p1-c1-2",
+                "craft-p3-c0-2",
+                "music-p1-c1-2"
+              ],
+              "state": {
+                "activePlayerIndex": 0,
+                "completed": true,
+                "deck": [
+                  "music-p2-c0-4",
+                  "music-p3-c0-2",
+                  "storm-1",
+                  "storm-2"
+                ],
+                "events": [
+                  {
+                    "cardId": "food-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "food-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "craft-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "food-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "craft-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "craft-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "food-p2-c0-3",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "food-p2-c0-4",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "music-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "music-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "craft-p2-c0-3",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "craft-p2-c0-4",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "food-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "craft-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "music-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "food-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "craft-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "craft-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p2-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "food-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "craft-p3-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "music-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 6
+                  },
+                  {
+                    "kind": "festival-scored",
+                    "round": 6
+                  }
+                ],
+                "festivalRows": {
+                  "player-1": [
+                    "food-p3-c0-1",
+                    "craft-p3-c0-1",
+                    "music-p3-c0-1",
+                    "food-p2-c1-1",
+                    "craft-p2-c1-1",
+                    "music-p2-c1-2"
+                  ],
+                  "player-2": [
+                    "food-p2-c0-1",
+                    "craft-p2-c0-2",
+                    "music-p2-c0-1",
+                    "craft-p1-c1-1",
+                    "music-p1-c1-1",
+                    "food-p1-c1-2"
+                  ],
+                  "player-3": [
+                    "craft-p2-c0-1",
+                    "food-p2-c0-3",
+                    "craft-p2-c0-3",
+                    "music-p2-c0-2",
+                    "music-p2-c1-1",
+                    "craft-p3-c0-2"
+                  ],
+                  "player-4": [
+                    "food-p2-c0-2",
+                    "food-p2-c0-4",
+                    "craft-p2-c0-4",
+                    "food-p1-c1-1",
+                    "craft-p1-c1-2",
+                    "music-p1-c1-2"
+                  ]
+                },
+                "market": [
+                  "food-p2-c1-2",
+                  "food-p3-c0-2",
+                  "craft-p2-c1-2",
+                  "music-p2-c0-3"
+                ],
+                "phase": "complete",
+                "playerIds": [
+                  "player-1",
+                  "player-2",
+                  "player-3",
+                  "player-4"
+                ],
+                "round": 6,
+                "stormsRevealed": 0,
+                "terminal": {
+                  "reason": {
+                    "code": "SIX_ROUNDS_COMPLETE"
+                  },
+                  "standings": [
+                    {
+                      "playerId": "player-1",
+                      "rank": 1,
+                      "result": "win",
+                      "score": 26,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 15
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 8
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 2
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-2",
+                      "rank": 2,
+                      "result": "loss",
+                      "score": 20,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 9
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 8
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 2
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-3",
+                      "rank": 3,
+                      "result": "loss",
+                      "score": 18,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 13
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 4
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 1
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 1
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 1
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-4",
+                      "rank": 4,
+                      "result": "loss",
+                      "score": 16,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 9
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 4
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 1
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "scenarioId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+            "submittedInteractionId": null
+          },
+          "zones": {}
+        },
+        "id": "frame-1",
+        "projectionDigest": "sha256:dbd816c4b50e47c110a7186f1c3f9092c55de8aef6c60bbe35932029934f7aa6"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:da6739312c7e9af513ad3811b773cecce60f81031ceb2bda75b002ac35d63235",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
+              "help": "Choose one face-up stall card. Final ties break by complete guild sets, then coins.",
+              "inputs": [],
+              "interactionId": "draft-stall:player-1",
+              "interactionKey": "draft-stall",
+              "kind": "action",
+              "label": "Draft stall",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.submitted",
+            "currentStage": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.submitted",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "draft",
+              "label": "Draft a stall",
+              "objective": "Build high-prestige guild sets before six rounds end or the second storm cancels the fair.",
+              "summary": "Choose one face-up stall card from the shared harbor market."
+            },
+            "setup": {
+              "name": "Standard Harbor Fair",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Use two to four unique player seats.",
+                  "id": "seat-players",
+                  "label": "Seat players"
+                },
+                {
+                  "description": "Fill the market with four face-up stall cards, resolving storms as setup events.",
+                  "id": "reveal-market",
+                  "label": "Reveal the market"
+                }
+              ],
+              "summary": "Shuffle the stall and storm deck, then reveal four stall cards to the market."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [],
+          "view": {
+            "displayName": "Multiplayer Ranking And Ties",
+            "recentEvents": [],
+            "referenceGameId": "multiplayer-ranking-and-ties",
+            "scenarioBranch": {
+              "id": "multiplayer-ranking-and-ties.unique-winner",
+              "key": "uniqueWinner",
+              "outcome": {
+                "reason": {
+                  "code": "SIX_ROUNDS_COMPLETE"
+                },
+                "standings": [
+                  {
+                    "playerId": "player-1",
+                    "rank": 1,
+                    "result": "win",
+                    "score": 26,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 15
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 8
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 2
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-2",
+                    "rank": 2,
+                    "result": "loss",
+                    "score": 20,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 9
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 8
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 2
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-3",
+                    "rank": 3,
+                    "result": "loss",
+                    "score": 18,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 13
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 4
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 1
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 1
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 1
+                      }
+                    ]
+                  },
+                  {
+                    "playerId": "player-4",
+                    "rank": 4,
+                    "result": "loss",
+                    "score": 16,
+                    "scoreBreakdown": [
+                      {
+                        "id": "stall-prestige",
+                        "label": "Stall prestige",
+                        "value": 9
+                      },
+                      {
+                        "id": "guild-sets",
+                        "label": "Guild sets",
+                        "value": 4
+                      },
+                      {
+                        "id": "coin-bonus",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ],
+                    "tieBreaks": [
+                      {
+                        "id": "complete-sets",
+                        "label": "Complete sets",
+                        "value": 1
+                      },
+                      {
+                        "id": "coins",
+                        "label": "Coins",
+                        "value": 3
+                      }
+                    ]
+                  }
+                ]
+              },
+              "playerCount": 4,
+              "sequence": [
+                "food-p3-c0-1",
+                "food-p2-c0-1",
+                "craft-p2-c0-1",
+                "food-p2-c0-2",
+                "craft-p3-c0-1",
+                "craft-p2-c0-2",
+                "food-p2-c0-3",
+                "food-p2-c0-4",
+                "music-p3-c0-1",
+                "music-p2-c0-1",
+                "craft-p2-c0-3",
+                "craft-p2-c0-4",
+                "food-p2-c1-1",
+                "craft-p1-c1-1",
+                "music-p2-c0-2",
+                "food-p1-c1-1",
+                "craft-p2-c1-1",
+                "music-p1-c1-1",
+                "music-p2-c1-1",
+                "craft-p1-c1-2",
+                "music-p2-c1-2",
+                "food-p1-c1-2",
+                "craft-p3-c0-2",
+                "music-p1-c1-2"
+              ],
+              "state": {
+                "activePlayerIndex": 0,
+                "completed": true,
+                "deck": [
+                  "music-p2-c0-4",
+                  "music-p3-c0-2",
+                  "storm-1",
+                  "storm-2"
+                ],
+                "events": [
+                  {
+                    "cardId": "food-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "food-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "craft-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "food-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 1
+                  },
+                  {
+                    "cardId": "craft-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "craft-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "food-p2-c0-3",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "food-p2-c0-4",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 2
+                  },
+                  {
+                    "cardId": "music-p3-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "music-p2-c0-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "craft-p2-c0-3",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "craft-p2-c0-4",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 3
+                  },
+                  {
+                    "cardId": "food-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "craft-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "music-p2-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "food-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 4
+                  },
+                  {
+                    "cardId": "craft-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p1-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p2-c1-1",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "craft-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 5
+                  },
+                  {
+                    "cardId": "music-p2-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-1",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "food-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-2",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "craft-p3-c0-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-3",
+                    "round": 6
+                  },
+                  {
+                    "cardId": "music-p1-c1-2",
+                    "kind": "stall-drafted",
+                    "playerId": "player-4",
+                    "round": 6
+                  },
+                  {
+                    "kind": "festival-scored",
+                    "round": 6
+                  }
+                ],
+                "festivalRows": {
+                  "player-1": [
+                    "food-p3-c0-1",
+                    "craft-p3-c0-1",
+                    "music-p3-c0-1",
+                    "food-p2-c1-1",
+                    "craft-p2-c1-1",
+                    "music-p2-c1-2"
+                  ],
+                  "player-2": [
+                    "food-p2-c0-1",
+                    "craft-p2-c0-2",
+                    "music-p2-c0-1",
+                    "craft-p1-c1-1",
+                    "music-p1-c1-1",
+                    "food-p1-c1-2"
+                  ],
+                  "player-3": [
+                    "craft-p2-c0-1",
+                    "food-p2-c0-3",
+                    "craft-p2-c0-3",
+                    "music-p2-c0-2",
+                    "music-p2-c1-1",
+                    "craft-p3-c0-2"
+                  ],
+                  "player-4": [
+                    "food-p2-c0-2",
+                    "food-p2-c0-4",
+                    "craft-p2-c0-4",
+                    "food-p1-c1-1",
+                    "craft-p1-c1-2",
+                    "music-p1-c1-2"
+                  ]
+                },
+                "market": [
+                  "food-p2-c1-2",
+                  "food-p3-c0-2",
+                  "craft-p2-c1-2",
+                  "music-p2-c0-3"
+                ],
+                "phase": "complete",
+                "playerIds": [
+                  "player-1",
+                  "player-2",
+                  "player-3",
+                  "player-4"
+                ],
+                "round": 6,
+                "stormsRevealed": 0,
+                "terminal": {
+                  "reason": {
+                    "code": "SIX_ROUNDS_COMPLETE"
+                  },
+                  "standings": [
+                    {
+                      "playerId": "player-1",
+                      "rank": 1,
+                      "result": "win",
+                      "score": 26,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 15
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 8
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 2
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-2",
+                      "rank": 2,
+                      "result": "loss",
+                      "score": 20,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 9
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 8
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 2
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-3",
+                      "rank": 3,
+                      "result": "loss",
+                      "score": 18,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 13
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 4
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 1
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 1
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 1
+                        }
+                      ]
+                    },
+                    {
+                      "playerId": "player-4",
+                      "rank": 4,
+                      "result": "loss",
+                      "score": 16,
+                      "scoreBreakdown": [
+                        {
+                          "id": "stall-prestige",
+                          "label": "Stall prestige",
+                          "value": 9
+                        },
+                        {
+                          "id": "guild-sets",
+                          "label": "Guild sets",
+                          "value": 4
+                        },
+                        {
+                          "id": "coin-bonus",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ],
+                      "tieBreaks": [
+                        {
+                          "id": "complete-sets",
+                          "label": "Complete sets",
+                          "value": 1
+                        },
+                        {
+                          "id": "coins",
+                          "label": "Coins",
+                          "value": 3
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "scenarioId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+            "submittedInteractionId": "draft-stall:player-1"
+          },
+          "zones": {}
+        },
+        "id": "frame-2",
+        "projectionDigest": "sha256:2a7e60c6dcf9a09b5933a6082de7754dcffc34cb159d001de7faae25773c6b28"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.fixture-session"
+    },
+    "steps": [
+      {
+        "frameId": "frame-1",
+        "id": "frame-1.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:13ab8e368605037e4bd1ef9bf9d06313f4f9d49341e323a0db9b58ac71e7306e",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:f78d6475171f663115136748eecd1f0cf813410ea5bcaaca792a0711b24e18dd",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "frame-2",
+        "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.submit.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:2a7e60c6dcf9a09b5933a6082de7754dcffc34cb159d001de7faae25773c6b28",
+        "semanticDigest": "sha256:0e715918b183984cbb2b611f14b760b5be52977e690526d240da52bc72c91371",
+        "submissionDigest": "sha256:e1764438dd5180bcc55a6569c7b7123165f92e671ac937b865dd7ef8f2227b2c",
+        "visibleInteractionKeys": [
+          "draft-stall"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
+        "interactionId": "draft-stall:player-1",
+        "interactionKey": "draft-stall",
+        "scopeId": "runtime",
+        "stepId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:cb74378bf695f99c077d7141894f0fd5378d77f166d2d343fd9b5ea639f6c003",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "draft-stall:player-1",
+        "interactionKey": "draft-stall",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.invoke"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:f3f12a9f15408c6e64b241ca83cf15e232c99dcf7bfdbbde9ba783ba15458e27",
+    "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.mjs",
+    "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
+    "scenarioId": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+    "sourceDigest": "sha256:c3a24e6b2aee084f53a877ce27d32072ea4adca07462974d57a2ef56b399e0a4",
+    "sourceFiles": [
+      "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
+      "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+      "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
+      "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/_branch-scenarios.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs",
+      "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/unique-winner.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:db599a2c590de33a3aba287e153ebe2f60bf130cd856904b7dc6591834499c59"
+  },
+  "tags": [
+    "card-drafting",
+    "market-row",
+    "outcome-dialog",
+    "set-collection",
+    "shared-card-play",
+    "standings-table",
+    "turn-summary"
+  ],
+  "title": "Multiplayer Ranking And Ties: unique winner branch projects reducer-owned first-place evidence",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

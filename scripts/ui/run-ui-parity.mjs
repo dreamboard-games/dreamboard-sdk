@@ -15,12 +15,17 @@ import {
   sha256File,
   writeJson,
 } from "./reference-games-lib.mjs";
+import { requiredParityScenarioIds } from "./required-ui-scenarios.mjs";
 
 const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
-const requiredGoldenScenario = "hearts.pass-three.mobile";
+if (requiredParityScenarioIds.length === 0) {
+  throw new Error(
+    "requiredParityScenarioIds must contain at least one scenario.",
+  );
+}
 
 const goldenScenarioAliases = new Map([
-  [requiredGoldenScenario, requiredGoldenScenario],
+  ...requiredParityScenarioIds.map((scenarioId) => [scenarioId, scenarioId]),
 ]);
 
 function parseArgs(argv) {
@@ -78,7 +83,7 @@ function resolveScenarioIds(requestedScenarios, bundle) {
   const requests =
     requestedScenarios.length > 0
       ? requestedScenarios
-      : [requiredGoldenScenario];
+      : requiredParityScenarioIds;
   return requests.map((requestedId) => {
     const fixtureId = fixtureIds.has(requestedId)
       ? requestedId
@@ -218,6 +223,7 @@ function createMeasuredObservation({
       );
     }
     const identity = replayStep.expectedIdentity;
+    const isFinal = index === fixture.replay.length - 1;
     return {
       stepId: measured.stepId,
       interactionKey: identity?.interactionKey,
@@ -230,7 +236,9 @@ function createMeasuredObservation({
       perspectivePlayerId: frame.frame.perspectivePlayerId,
       projectionDigest: measured.projectionDigest,
       semanticDigest: measured.semanticDigest,
-      submissionDigest: measured.submissionDigest,
+      submissionDigest:
+        replayStep.expect.submissionDigest ??
+        (isFinal ? measured.submissionDigest : undefined),
     };
   });
   return {

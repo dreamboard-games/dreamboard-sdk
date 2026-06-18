@@ -145,7 +145,7 @@ export const chooseTradePostExchange = defineInteraction<
         pendingTradeChoiceBy: null,
         passedPlayerIds: result.finalPassed,
       });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       pendingTradeChoiceBy: null,
@@ -214,7 +214,7 @@ export const chooseLibraryDiscard = defineInteraction<
     );
     if (result.kind === "transition") {
       tx.patchPhaseState({ passedPlayerIds: result.finalPassed });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       activePlayerIndex: result.nextIndex,
@@ -302,7 +302,7 @@ export const recallWorker = defineInteraction<
         pendingApothecaryChoiceBy: null,
         passedPlayerIds: result.finalPassed,
       });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       pendingApothecaryChoiceBy: null,

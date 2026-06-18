@@ -274,6 +274,7 @@ function buildPluginFrame(options: {
       simultaneousPhase: projection.simultaneousPhase ?? null,
     },
     availableInteractions,
+    recentEvents: [],
     zones,
   };
 }

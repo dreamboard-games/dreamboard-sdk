@@ -82,7 +82,7 @@ describe("contractFingerprint", () => {
         publicState: z.object({
           score: z.number().int(),
           note: z.string().optional(),
-          winnerPlayerId: z.string().nullable(),
+          resolvedSeatId: z.string().nullable(),
         }),
       }),
     );

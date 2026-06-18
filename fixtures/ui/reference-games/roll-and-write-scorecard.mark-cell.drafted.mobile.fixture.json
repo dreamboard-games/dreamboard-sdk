@@ -1,0 +1,466 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "roll-and-write-scorecard.mark-cell.drafted.mobile.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "phone",
+      "touch"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:9ba63dc520c321530b74eadfa21e8ef706611468d2b382b1f5f9c9687777f0f2",
+    "finalSemanticDigest": "sha256:0baab59310cb80bc470013abd33c7435ca17764cd713c83f401a703deb71e878",
+    "initialProjectionDigest": "sha256:ff096a343169b16119934bb5985348f613aa6c74c9fc56324f8c75c0a0810b7e",
+    "submissionDigest": "sha256:4186d4d70b08f7bee1b96e5c60cfc974c30d9e59ecac2355668fa3dc624d0af5"
+  },
+  "gameId": "roll-and-write-scorecard",
+  "id": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:30120a53058144c526665cc95b0948229652d297c4b32cff2379cfbf22d8a06d",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
+              "help": "Choose one highlighted scorecard cell, then submit the pending mark.",
+              "inputs": [
+                {
+                  "domain": {
+                    "eligibleTargets": [
+                      "cell-0-1",
+                      "cell-3-2"
+                    ],
+                    "projection": "resolved",
+                    "selection": {
+                      "mode": "single"
+                    },
+                    "targetKind": "space",
+                    "type": "boardTarget"
+                  },
+                  "key": "cell",
+                  "kind": "boardTarget"
+                }
+              ],
+              "interactionId": "mark-cell:player-1",
+              "interactionKey": "mark-cell",
+              "kind": "action",
+              "label": "Mark cell",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "code": "ROLL_REQUIRED",
+                "reason": "Roll first, then choose a matching unmarked cell.",
+                "status": "blocked"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:299edeca9a30d32c8ac3ffb59a6f16e8a96eb332c8fb63ad32d5465ef61655ad",
+              "help": "The shared roll must exist before any scorecard cell can be marked.",
+              "inputs": [],
+              "interactionId": "roll-first:player-1",
+              "interactionKey": "roll-first",
+              "kind": "action",
+              "label": "Roll first",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+            "currentStage": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "markSurvey",
+              "label": "Mark the survey grid",
+              "objective": "Choose an unmarked cell matching the roll; if none remain, mark any open cell as a failed survey.",
+              "summary": "Resolve the shared dice roll on each player scorecard."
+            },
+            "setup": {
+              "name": "Standard Cloudline Survey",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Give each player a private 4 by 4 survey grid.",
+                  "id": "prepare-scorecards",
+                  "label": "Prepare player scorecards"
+                },
+                {
+                  "description": "Use the seeded two-die roll list for all eight rounds.",
+                  "id": "prepare-dice",
+                  "label": "Prepare dice"
+                }
+              ],
+              "summary": "Prepare one scorecard per player and the seeded dice sequence."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [],
+          "view": {
+            "displayName": "Roll And Write Scorecard",
+            "recentEvents": [],
+            "referenceGameId": "roll-and-write-scorecard",
+            "scenarioBranch": {
+              "id": "roll-and-write-scorecard.draft",
+              "key": "draft",
+              "state": {
+                "activePlayerIndex": 0,
+                "completed": false,
+                "draft": {
+                  "cellId": "cell-0-1",
+                  "kind": "survey-mark",
+                  "playerId": "player-1",
+                  "rollTotal": 5,
+                  "round": 1,
+                  "validAt": "1:2-3"
+                },
+                "log": [
+                  {
+                    "dice": [
+                      2,
+                      3
+                    ],
+                    "kind": "dice-rolled",
+                    "round": 1,
+                    "total": 5
+                  }
+                ],
+                "marks": {
+                  "player-1": {},
+                  "player-2": {}
+                },
+                "phase": "markSurvey",
+                "playerIds": [
+                  "player-1",
+                  "player-2"
+                ],
+                "roll": {
+                  "dice": [
+                    2,
+                    3
+                  ],
+                  "round": 1,
+                  "total": 5
+                },
+                "round": 1,
+                "scores": null
+              }
+            },
+            "scenarioId": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+            "submittedInteractionId": null
+          },
+          "zones": {}
+        },
+        "id": "frame-1",
+        "projectionDigest": "sha256:ff096a343169b16119934bb5985348f613aa6c74c9fc56324f8c75c0a0810b7e"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:bee34b2a36f330de025300a2555c0741d1c6aa141a0c5e432be210d09e702725",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
+              "help": "Choose one highlighted scorecard cell, then submit the pending mark.",
+              "inputs": [
+                {
+                  "domain": {
+                    "eligibleTargets": [
+                      "cell-0-1",
+                      "cell-3-2"
+                    ],
+                    "projection": "resolved",
+                    "selection": {
+                      "mode": "single"
+                    },
+                    "targetKind": "space",
+                    "type": "boardTarget"
+                  },
+                  "key": "cell",
+                  "kind": "boardTarget"
+                }
+              ],
+              "interactionId": "mark-cell:player-1",
+              "interactionKey": "mark-cell",
+              "kind": "action",
+              "label": "Mark cell",
+              "phaseName": "fixture"
+            },
+            {
+              "availability": {
+                "code": "ROLL_REQUIRED",
+                "reason": "Roll first, then choose a matching unmarked cell.",
+                "status": "blocked"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:299edeca9a30d32c8ac3ffb59a6f16e8a96eb332c8fb63ad32d5465ef61655ad",
+              "help": "The shared roll must exist before any scorecard cell can be marked.",
+              "inputs": [],
+              "interactionId": "roll-first:player-1",
+              "interactionKey": "roll-first",
+              "kind": "action",
+              "label": "Roll first",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "roll-and-write-scorecard.mark-cell.drafted.mobile.submitted",
+            "currentStage": "roll-and-write-scorecard.mark-cell.drafted.mobile.submitted",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "markSurvey",
+              "label": "Mark the survey grid",
+              "objective": "Choose an unmarked cell matching the roll; if none remain, mark any open cell as a failed survey.",
+              "summary": "Resolve the shared dice roll on each player scorecard."
+            },
+            "setup": {
+              "name": "Standard Cloudline Survey",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Give each player a private 4 by 4 survey grid.",
+                  "id": "prepare-scorecards",
+                  "label": "Prepare player scorecards"
+                },
+                {
+                  "description": "Use the seeded two-die roll list for all eight rounds.",
+                  "id": "prepare-dice",
+                  "label": "Prepare dice"
+                }
+              ],
+              "summary": "Prepare one scorecard per player and the seeded dice sequence."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [],
+          "view": {
+            "displayName": "Roll And Write Scorecard",
+            "recentEvents": [],
+            "referenceGameId": "roll-and-write-scorecard",
+            "scenarioBranch": {
+              "id": "roll-and-write-scorecard.draft",
+              "key": "draft",
+              "state": {
+                "activePlayerIndex": 0,
+                "completed": false,
+                "draft": {
+                  "cellId": "cell-0-1",
+                  "kind": "survey-mark",
+                  "playerId": "player-1",
+                  "rollTotal": 5,
+                  "round": 1,
+                  "validAt": "1:2-3"
+                },
+                "log": [
+                  {
+                    "dice": [
+                      2,
+                      3
+                    ],
+                    "kind": "dice-rolled",
+                    "round": 1,
+                    "total": 5
+                  }
+                ],
+                "marks": {
+                  "player-1": {},
+                  "player-2": {}
+                },
+                "phase": "markSurvey",
+                "playerIds": [
+                  "player-1",
+                  "player-2"
+                ],
+                "roll": {
+                  "dice": [
+                    2,
+                    3
+                  ],
+                  "round": 1,
+                  "total": 5
+                },
+                "round": 1,
+                "scores": null
+              }
+            },
+            "scenarioId": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+            "submittedInteractionId": "mark-cell:player-1"
+          },
+          "zones": {}
+        },
+        "id": "frame-2",
+        "projectionDigest": "sha256:9ba63dc520c321530b74eadfa21e8ef706611468d2b382b1f5f9c9687777f0f2"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "roll-and-write-scorecard.mark-cell.drafted.mobile.fixture-session"
+    },
+    "steps": [
+      {
+        "frameId": "frame-1",
+        "id": "frame-1.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "roll-and-write-scorecard.mark-cell.drafted.mobile.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:f6e8faf441caac8e860db0b3c1cb2554c4c6da25ab5d1ec2bae1db0380b3de04",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "roll-and-write-scorecard.mark-cell.drafted.mobile.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:fa92678f3c1a9699e7d2825f3ad8a3d01fec53ace32be28a1c48bfffebd150ec",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "frame-2",
+        "id": "roll-and-write-scorecard.mark-cell.drafted.mobile.submit.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "semanticDigest": "sha256:a5408c393031999bc59379efd22ae12e2fe2ec2fc83c00406cbe0919489c3eeb",
+        "visibleInteractionKeys": [
+          "mark-cell"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "board:space:cell-0-1",
+        "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
+        "interactionId": "mark-cell:player-1",
+        "interactionKey": "mark-cell",
+        "scopeId": "runtime",
+        "stepId": "roll-and-write-scorecard.mark-cell.drafted.mobile.board-space",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:982e22eda24168eb5c26afc79e8fe7c218ab0af2bb55409050eb700f63a69d97",
+      "resolve": {
+        "effect": {
+          "afterSelected": true,
+          "beforeSelected": false,
+          "candidateValue": "cell-0-1",
+          "inputKey": "cell",
+          "kind": "setCandidate"
+        },
+        "interactionId": "mark-cell:player-1",
+        "interactionKey": "mark-cell",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "roll-and-write-scorecard.mark-cell.drafted.mobile.board-space"
+    },
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:9ba63dc520c321530b74eadfa21e8ef706611468d2b382b1f5f9c9687777f0f2",
+        "semanticDigest": "sha256:0baab59310cb80bc470013abd33c7435ca17764cd713c83f401a703deb71e878",
+        "submissionDigest": "sha256:4186d4d70b08f7bee1b96e5c60cfc974c30d9e59ecac2355668fa3dc624d0af5",
+        "visibleInteractionKeys": [
+          "mark-cell"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
+        "interactionId": "mark-cell:player-1",
+        "interactionKey": "mark-cell",
+        "scopeId": "runtime",
+        "stepId": "roll-and-write-scorecard.mark-cell.drafted.mobile.commit",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:af80b7feb6d7585c059759a050eff3d0cb3fe9dc9ab5e3fa9379a54ab0b4a8d9",
+      "resolve": {
+        "intent": "submit",
+        "interactionId": "mark-cell:player-1",
+        "interactionKey": "mark-cell",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "roll-and-write-scorecard.mark-cell.drafted.mobile.commit"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:0d85dc570679810b7c42dee7697a3014091e954def03288fe9cca406183c9b37",
+    "renderModule": "modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs",
+    "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+    "scenarioId": "roll-and-write-scorecard.mark-cell.drafted.mobile",
+    "sourceDigest": "sha256:3ce3a616bfad90648299a1124c7d2f22bbc88c34c978938f1e810f1a2bc1aeed",
+    "sourceFiles": [
+      "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
+      "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
+      "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
+      "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs",
+      "examples/reference-games/roll-and-write-scorecard/src/scenarios/drafted.scenario.mjs"
+    ],
+    "uiContractFingerprint": "sha256:15153fa0faf4b53b4d19ba1900a3e8cf5adac99729f8c8a5527b65f9be0171a7"
+  },
+  "tags": [
+    "compact-mobile-scorecard",
+    "dice-result",
+    "drafted-mark",
+    "roll-and-write",
+    "scorecard-grid",
+    "simultaneous-marking",
+    "square-board-targets",
+    "square-grid"
+  ],
+  "title": "Roll And Write Scorecard: drafted scorecard state preserves a pending mark before submit",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

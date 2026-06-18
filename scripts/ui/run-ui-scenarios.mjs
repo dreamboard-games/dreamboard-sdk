@@ -344,10 +344,22 @@ async function main() {
         `${entry.scenarioId} ${entry.project} measured evidence did not match fixture expectations.`,
       );
     }
+    if (
+      test.status === 0 &&
+      (evidence?.proof?.reducedMotion !== "passed" ||
+        evidence?.proof?.accessibility?.axeScan !== "passed" ||
+        !Array.isArray(evidence?.proof?.accessibility?.layoutAssertions) ||
+        evidence.proof.accessibility.layoutAssertions.length === 0)
+    ) {
+      throw new Error(
+        `${entry.scenarioId} ${entry.project} passed without reduced-motion and accessibility proof.`,
+      );
+    }
     results.push({
       scenarioId: entry.scenarioId,
       project: entry.project,
       result: evidence && test.status === 0 ? "passed" : "failed",
+      proof: evidence?.proof,
       projectionDigest: evidence?.projectionDigest,
       semanticDigest: evidence?.semanticDigest,
       submissionDigest: evidence?.submissionDigest,

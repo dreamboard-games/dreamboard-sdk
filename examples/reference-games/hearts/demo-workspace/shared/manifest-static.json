@@ -7,12 +7,7 @@
     "square": {}
   },
   "initialTable": {
-    "playerOrder": [
-      "player-1",
-      "player-2",
-      "player-3",
-      "player-4"
-    ],
+    "playerOrder": ["player-1", "player-2", "player-3", "player-4"],
     "zones": {
       "shared": {
         "draw-pile": [
@@ -76,22 +71,10 @@
         "hand": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ],
-            [
-              "player-3",
-              []
-            ],
-            [
-              "player-4",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []],
+            ["player-3", []],
+            ["player-4", []]
           ]
         }
       },
@@ -102,18 +85,10 @@
         "discard": "public"
       },
       "cardSetIdsByZoneId": {
-        "current-trick": [
-          "playing-cards"
-        ],
-        "discard": [
-          "playing-cards"
-        ],
-        "draw-pile": [
-          "playing-cards"
-        ],
-        "hand": [
-          "playing-cards"
-        ]
+        "current-trick": ["playing-cards"],
+        "discard": ["playing-cards"],
+        "draw-pile": ["playing-cards"],
+        "hand": ["playing-cards"]
       }
     },
     "decks": {
@@ -178,22 +153,10 @@
       "hand": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ],
-          [
-            "player-3",
-            []
-          ],
-          [
-            "player-4",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []],
+          ["player-3", []],
+          ["player-4", []]
         ]
       }
     },
@@ -1252,22 +1215,10 @@
     "resources": {
       "__perPlayer": true,
       "entries": [
-        [
-          "player-1",
-          {}
-        ],
-        [
-          "player-2",
-          {}
-        ],
-        [
-          "player-3",
-          {}
-        ],
-        [
-          "player-4",
-          {}
-        ]
+        ["player-1", {}],
+        ["player-2", {}],
+        ["player-3", {}],
+        ["player-4", {}]
       ]
     },
     "boards": {

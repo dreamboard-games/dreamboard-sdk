@@ -1,5 +1,5 @@
 import { createReadStream } from "node:fs";
-import { cp, mkdir, stat } from "node:fs/promises";
+import { cp, mkdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
 
@@ -57,6 +57,7 @@ function fixtureAssetPlugin(): Plugin {
     },
     async closeBundle() {
       const outputRoot = path.join(__dirname, "dist/fixtures");
+      await rm(outputRoot, { recursive: true, force: true });
       await mkdir(outputRoot, { recursive: true });
       await cp(fixtureSourceRoot, outputRoot, {
         recursive: true,
@@ -97,6 +98,10 @@ function sdkAliases(useSource: boolean) {
     {
       find: /^@dreamboard-games\/sdk\/ui$/,
       replacement: target("ui"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/package-set$/,
+      replacement: target("package-set"),
     },
   ];
   // `testing` and `browser-interaction` resolve to `dist` via package exports in

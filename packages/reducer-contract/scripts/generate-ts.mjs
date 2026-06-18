@@ -141,20 +141,28 @@ function zodExprOf(def) {
           ? `z.string().min(${def.minLength})`
           : "z.string()";
     case "number":
-      return "z.number()";
+      return `z.number().finite()${typeof def.minimum === "number" ? `.gte(${def.minimum})` : ""}`;
     case "integer":
       if (def.format === "int64") {
         return 'z.number().refine(Number.isInteger, { message: "Expected integer" })';
       }
-      return "z.number().int()";
+      return `z.number().int()${typeof def.minimum === "number" ? `.gte(${def.minimum})` : ""}`;
     case "boolean":
       return "z.boolean()";
     case "null":
       return "z.null()";
-    case "array":
-      return def.items
+    case "array": {
+      let expr = def.items
         ? `z.array(${zodExprOf(def.items)})`
         : "z.array(z.unknown())";
+      if (typeof def.minItems === "number") {
+        expr += `.min(${def.minItems})`;
+      }
+      if (typeof def.maxItems === "number") {
+        expr += `.max(${def.maxItems})`;
+      }
+      return expr;
+    }
     case "object":
       if (def.additionalProperties && !def.properties) {
         return `z.record(z.string(), ${zodExprOf(def.additionalProperties)})`;

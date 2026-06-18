@@ -62,7 +62,10 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
+import type {
+  PlayerId as PublicPlayerId,
+  TableState as PublicTableState,
+} from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -71,10 +74,7 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(
-    literals.playerIds,
-    playerIds,
-  );
+  return resolveManifestPlayerIds(literals.playerIds, playerIds);
 }
 
 export { literals };
@@ -95,8 +95,12 @@ const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
   ),
 );
 const phaseNameSchema = markManifestScopedSchema(z.string());
-const boardLayoutSchema = createManifestStringLiteralSchema(literals.boardLayouts);
-const setupOptionIdSchema = createManifestStringLiteralSchema(literals.setupOptionIds);
+const boardLayoutSchema = createManifestStringLiteralSchema(
+  literals.boardLayouts,
+);
+const setupOptionIdSchema = createManifestStringLiteralSchema(
+  literals.setupOptionIds,
+);
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
 );
@@ -105,27 +109,47 @@ const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
 const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
 const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
 const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
-const sharedZoneIdSchema = createManifestStringLiteralSchema(literals.sharedZoneIds);
-const playerZoneIdSchema = createManifestStringLiteralSchema(literals.playerZoneIds);
+const sharedZoneIdSchema = createManifestStringLiteralSchema(
+  literals.sharedZoneIds,
+);
+const playerZoneIdSchema = createManifestStringLiteralSchema(
+  literals.playerZoneIds,
+);
 const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
-const resourceIdSchema = createManifestStringLiteralSchema(literals.resourceIds);
-const pieceTypeIdSchema = createManifestStringLiteralSchema(literals.pieceTypeIds);
+const resourceIdSchema = createManifestStringLiteralSchema(
+  literals.resourceIds,
+);
+const pieceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.pieceTypeIds,
+);
 const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
 const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
 const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
-const boardTypeIdSchema = createManifestStringLiteralSchema(literals.boardTypeIds);
-const boardBaseIdSchema = createManifestStringLiteralSchema(literals.boardBaseIds);
+const boardTypeIdSchema = createManifestStringLiteralSchema(
+  literals.boardTypeIds,
+);
+const boardBaseIdSchema = createManifestStringLiteralSchema(
+  literals.boardBaseIds,
+);
 const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
 );
-const relationTypeIdSchema = createManifestStringLiteralSchema(literals.relationTypeIds);
+const relationTypeIdSchema = createManifestStringLiteralSchema(
+  literals.relationTypeIds,
+);
 const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
-const edgeTypeIdSchema = createManifestStringLiteralSchema(literals.edgeTypeIds);
+const edgeTypeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeTypeIds,
+);
 const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
-const vertexTypeIdSchema = createManifestStringLiteralSchema(literals.vertexTypeIds);
+const vertexTypeIdSchema = createManifestStringLiteralSchema(
+  literals.vertexTypeIds,
+);
 const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
-const spaceTypeIdSchema = createManifestStringLiteralSchema(literals.spaceTypeIds);
+const spaceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.spaceTypeIds,
+);
 
 export const ids = {
   playerId: playerIdSchema,
@@ -190,17 +214,17 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  "claimMarker": "claimMarker",
-  "landmark": "landmark",
-  "scout": "scout",
-  "shortcut": "shortcut",
-  "surveyGrant": "surveyGrant",
+  claimMarker: "claimMarker",
+  landmark: "landmark",
+  scout: "scout",
+  shortcut: "shortcut",
+  surveyGrant: "surveyGrant",
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  "charterDeck": "charter-deck",
-  "charterHand": "charter-hand",
-  "charterPlayed": "charter-played",
+  charterDeck: "charter-deck",
+  charterHand: "charter-hand",
+  charterPlayed: "charter-played",
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -460,7 +484,11 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(literals.boardContainerIds, value, "board container id");
+    return expectTypedId(
+      literals.boardContainerIds,
+      value,
+      "board container id",
+    );
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -539,39 +567,70 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {
-
-} as const;
+export const setupChoiceIdsByOptionId = {} as const;
 export const setupProfilesById = {
   "charter-verification": {
-    "id": "charter-verification",
-    "name": "Charter verification",
-    "description": "Reducer-test profile that deals charter cards to the first player for browser interaction verification.",
-    "optionValues": null
+    id: "charter-verification",
+    name: "Charter verification",
+    description:
+      "Reducer-test profile that deals charter cards to the first player for browser interaction verification.",
+    optionValues: null,
   },
-  "standard": {
-    "id": "standard",
-    "name": "Standard",
-    "description": "Standard Frontier Trails setup",
-    "optionValues": null
+  standard: {
+    id: "standard",
+    name: "Standard",
+    description: "Standard Frontier Trails setup",
+    optionValues: null,
   },
   "terminal-regression": {
-    "id": "terminal-regression",
-    "name": "Terminal regression",
-    "description": "Reducer-test profile that starts with a latched winner pending the next end-turn boundary.",
-    "optionValues": null
-  }
+    id: "terminal-regression",
+    name: "Terminal regression",
+    description:
+      "Reducer-test profile that starts with a latched winner pending the next end-turn boundary.",
+    optionValues: null,
+  },
 } as const;
 
 export type CharterCardsCardProperties = {
-  "cardType": "scout" | "shortcut" | "surveyGrant" | "claimMarker" | "landmark";
+  cardType: "scout" | "shortcut" | "surveyGrant" | "claimMarker" | "landmark";
 };
 
 export const CharterCardsCardPropertiesSchema = z.object({
-  "cardType": z.enum(["scout", "shortcut", "surveyGrant", "claimMarker", "landmark"]),
+  cardType: z.enum([
+    "scout",
+    "shortcut",
+    "surveyGrant",
+    "claimMarker",
+    "landmark",
+  ]),
 });
 
-export type CharterCardsCardId = "scout-1" | "scout-2" | "scout-3" | "scout-4" | "scout-5" | "scout-6" | "scout-7" | "scout-8" | "scout-9" | "scout-10" | "scout-11" | "scout-12" | "scout-13" | "scout-14" | "shortcut-1" | "shortcut-2" | "surveyGrant-1" | "surveyGrant-2" | "claimMarker-1" | "claimMarker-2" | "landmark-1" | "landmark-2" | "landmark-3" | "landmark-4" | "landmark-5";
+export type CharterCardsCardId =
+  | "scout-1"
+  | "scout-2"
+  | "scout-3"
+  | "scout-4"
+  | "scout-5"
+  | "scout-6"
+  | "scout-7"
+  | "scout-8"
+  | "scout-9"
+  | "scout-10"
+  | "scout-11"
+  | "scout-12"
+  | "scout-13"
+  | "scout-14"
+  | "shortcut-1"
+  | "shortcut-2"
+  | "surveyGrant-1"
+  | "surveyGrant-2"
+  | "claimMarker-1"
+  | "claimMarker-2"
+  | "landmark-1"
+  | "landmark-2"
+  | "landmark-3"
+  | "landmark-4"
+  | "landmark-5";
 
 export type FrontierBoardFields = RuntimeRecord;
 
@@ -582,11 +641,11 @@ export type FrontierSpaceFields = RuntimeRecord;
 export const FrontierSpaceFieldsSchema = z.record(z.string(), z.unknown());
 
 export type FrontierEdgeFields = {
-  "relayIndex"?: number;
+  relayIndex?: number;
 };
 
 export const FrontierEdgeFieldsSchema = z.object({
-  "relayIndex": z.number().int().optional(),
+  relayIndex: z.number().int().optional(),
 });
 
 export type FrontierVertexFields = RuntimeRecord;
@@ -614,27 +673,27 @@ export type D6DieFields = RuntimeRecord;
 export const D6DieFieldsSchema = z.record(z.string(), z.unknown());
 
 export type BoardFieldsByBoardId = {
-  "frontier": FrontierBoardFields;
+  frontier: FrontierBoardFields;
 };
 
 export type BoardSpaceFieldsByBoardId = {
-  "frontier": FrontierSpaceFields;
+  frontier: FrontierSpaceFields;
 };
 
 export type BoardRelationFieldsByBoardId = {
-  "frontier": RuntimeRecord;
+  frontier: RuntimeRecord;
 };
 
 export type BoardContainerFieldsByBoardId = {
-  "frontier": RuntimeRecord;
+  frontier: RuntimeRecord;
 };
 
 export type HexEdgeFieldsByBoardId = {
-  "frontier": FrontierEdgeFields;
+  frontier: FrontierEdgeFields;
 };
 
 export type HexVertexFieldsByBoardId = {
-  "frontier": FrontierVertexFields;
+  frontier: FrontierVertexFields;
 };
 
 export type SquareEdgeFieldsByBoardId = Record<string, never>;
@@ -642,22 +701,22 @@ export type SquareEdgeFieldsByBoardId = Record<string, never>;
 export type SquareVertexFieldsByBoardId = Record<string, never>;
 
 export type TiledEdgeFieldsByBoardId = {
-  "frontier": FrontierEdgeFields;
+  frontier: FrontierEdgeFields;
 };
 
 export type TiledVertexFieldsByBoardId = {
-  "frontier": FrontierVertexFields;
+  frontier: FrontierVertexFields;
 };
 
 export type PieceFieldsByTypeId = {
-  "camp": CampPieceFields;
-  "storm": StormPieceFields;
-  "town": TownPieceFields;
-  "trail": TrailPieceFields;
+  camp: CampPieceFields;
+  storm: StormPieceFields;
+  town: TownPieceFields;
+  trail: TrailPieceFields;
 };
 
 export type DieFieldsByTypeId = {
-  "d6": D6DieFields;
+  d6: D6DieFields;
 };
 
 export type CardProperties = CharterCardsCardProperties;
@@ -675,31 +734,156 @@ export type CardStateRecord<
 };
 
 export type CardStateById = {
-  "claimMarker-1": CardStateRecord<"claimMarker-1", "charter-cards", "claimMarker", CharterCardsCardProperties>;
-  "claimMarker-2": CardStateRecord<"claimMarker-2", "charter-cards", "claimMarker", CharterCardsCardProperties>;
-  "landmark-1": CardStateRecord<"landmark-1", "charter-cards", "landmark", CharterCardsCardProperties>;
-  "landmark-2": CardStateRecord<"landmark-2", "charter-cards", "landmark", CharterCardsCardProperties>;
-  "landmark-3": CardStateRecord<"landmark-3", "charter-cards", "landmark", CharterCardsCardProperties>;
-  "landmark-4": CardStateRecord<"landmark-4", "charter-cards", "landmark", CharterCardsCardProperties>;
-  "landmark-5": CardStateRecord<"landmark-5", "charter-cards", "landmark", CharterCardsCardProperties>;
-  "scout-1": CardStateRecord<"scout-1", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-10": CardStateRecord<"scout-10", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-11": CardStateRecord<"scout-11", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-12": CardStateRecord<"scout-12", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-13": CardStateRecord<"scout-13", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-14": CardStateRecord<"scout-14", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-2": CardStateRecord<"scout-2", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-3": CardStateRecord<"scout-3", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-4": CardStateRecord<"scout-4", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-5": CardStateRecord<"scout-5", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-6": CardStateRecord<"scout-6", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-7": CardStateRecord<"scout-7", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-8": CardStateRecord<"scout-8", "charter-cards", "scout", CharterCardsCardProperties>;
-  "scout-9": CardStateRecord<"scout-9", "charter-cards", "scout", CharterCardsCardProperties>;
-  "shortcut-1": CardStateRecord<"shortcut-1", "charter-cards", "shortcut", CharterCardsCardProperties>;
-  "shortcut-2": CardStateRecord<"shortcut-2", "charter-cards", "shortcut", CharterCardsCardProperties>;
-  "surveyGrant-1": CardStateRecord<"surveyGrant-1", "charter-cards", "surveyGrant", CharterCardsCardProperties>;
-  "surveyGrant-2": CardStateRecord<"surveyGrant-2", "charter-cards", "surveyGrant", CharterCardsCardProperties>;
+  "claimMarker-1": CardStateRecord<
+    "claimMarker-1",
+    "charter-cards",
+    "claimMarker",
+    CharterCardsCardProperties
+  >;
+  "claimMarker-2": CardStateRecord<
+    "claimMarker-2",
+    "charter-cards",
+    "claimMarker",
+    CharterCardsCardProperties
+  >;
+  "landmark-1": CardStateRecord<
+    "landmark-1",
+    "charter-cards",
+    "landmark",
+    CharterCardsCardProperties
+  >;
+  "landmark-2": CardStateRecord<
+    "landmark-2",
+    "charter-cards",
+    "landmark",
+    CharterCardsCardProperties
+  >;
+  "landmark-3": CardStateRecord<
+    "landmark-3",
+    "charter-cards",
+    "landmark",
+    CharterCardsCardProperties
+  >;
+  "landmark-4": CardStateRecord<
+    "landmark-4",
+    "charter-cards",
+    "landmark",
+    CharterCardsCardProperties
+  >;
+  "landmark-5": CardStateRecord<
+    "landmark-5",
+    "charter-cards",
+    "landmark",
+    CharterCardsCardProperties
+  >;
+  "scout-1": CardStateRecord<
+    "scout-1",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-10": CardStateRecord<
+    "scout-10",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-11": CardStateRecord<
+    "scout-11",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-12": CardStateRecord<
+    "scout-12",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-13": CardStateRecord<
+    "scout-13",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-14": CardStateRecord<
+    "scout-14",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-2": CardStateRecord<
+    "scout-2",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-3": CardStateRecord<
+    "scout-3",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-4": CardStateRecord<
+    "scout-4",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-5": CardStateRecord<
+    "scout-5",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-6": CardStateRecord<
+    "scout-6",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-7": CardStateRecord<
+    "scout-7",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-8": CardStateRecord<
+    "scout-8",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "scout-9": CardStateRecord<
+    "scout-9",
+    "charter-cards",
+    "scout",
+    CharterCardsCardProperties
+  >;
+  "shortcut-1": CardStateRecord<
+    "shortcut-1",
+    "charter-cards",
+    "shortcut",
+    CharterCardsCardProperties
+  >;
+  "shortcut-2": CardStateRecord<
+    "shortcut-2",
+    "charter-cards",
+    "shortcut",
+    CharterCardsCardProperties
+  >;
+  "surveyGrant-1": CardStateRecord<
+    "surveyGrant-1",
+    "charter-cards",
+    "surveyGrant",
+    CharterCardsCardProperties
+  >;
+  "surveyGrant-2": CardStateRecord<
+    "surveyGrant-2",
+    "charter-cards",
+    "surveyGrant",
+    CharterCardsCardProperties
+  >;
 };
 
 export type PieceStateRecord<
@@ -743,7 +927,7 @@ export type PieceStateById = {
   "camp-p4-3": PieceStateRecord<"camp-p4-3", "camp", CampPieceFields>;
   "camp-p4-4": PieceStateRecord<"camp-p4-4", "camp", CampPieceFields>;
   "camp-p4-5": PieceStateRecord<"camp-p4-5", "camp", CampPieceFields>;
-  "storm": PieceStateRecord<"storm", "storm", StormPieceFields>;
+  storm: PieceStateRecord<"storm", "storm", StormPieceFields>;
   "town-p1-1": PieceStateRecord<"town-p1-1", "town", TownPieceFields>;
   "town-p1-2": PieceStateRecord<"town-p1-2", "town", TownPieceFields>;
   "town-p1-3": PieceStateRecord<"town-p1-3", "town", TownPieceFields>;
@@ -827,11 +1011,91 @@ export type DieStateById = {
   "die-2": DieStateRecord<"die-2", "d6", D6DieFields>;
 };
 export type CardIdsBySharedZoneId = {
-  "charter-deck": Array<"claimMarker-1" | "claimMarker-2" | "landmark-1" | "landmark-2" | "landmark-3" | "landmark-4" | "landmark-5" | "scout-1" | "scout-10" | "scout-11" | "scout-12" | "scout-13" | "scout-14" | "scout-2" | "scout-3" | "scout-4" | "scout-5" | "scout-6" | "scout-7" | "scout-8" | "scout-9" | "shortcut-1" | "shortcut-2" | "surveyGrant-1" | "surveyGrant-2">;
-  "charter-played": Array<"claimMarker-1" | "claimMarker-2" | "landmark-1" | "landmark-2" | "landmark-3" | "landmark-4" | "landmark-5" | "scout-1" | "scout-10" | "scout-11" | "scout-12" | "scout-13" | "scout-14" | "scout-2" | "scout-3" | "scout-4" | "scout-5" | "scout-6" | "scout-7" | "scout-8" | "scout-9" | "shortcut-1" | "shortcut-2" | "surveyGrant-1" | "surveyGrant-2">;
+  "charter-deck": Array<
+    | "claimMarker-1"
+    | "claimMarker-2"
+    | "landmark-1"
+    | "landmark-2"
+    | "landmark-3"
+    | "landmark-4"
+    | "landmark-5"
+    | "scout-1"
+    | "scout-10"
+    | "scout-11"
+    | "scout-12"
+    | "scout-13"
+    | "scout-14"
+    | "scout-2"
+    | "scout-3"
+    | "scout-4"
+    | "scout-5"
+    | "scout-6"
+    | "scout-7"
+    | "scout-8"
+    | "scout-9"
+    | "shortcut-1"
+    | "shortcut-2"
+    | "surveyGrant-1"
+    | "surveyGrant-2"
+  >;
+  "charter-played": Array<
+    | "claimMarker-1"
+    | "claimMarker-2"
+    | "landmark-1"
+    | "landmark-2"
+    | "landmark-3"
+    | "landmark-4"
+    | "landmark-5"
+    | "scout-1"
+    | "scout-10"
+    | "scout-11"
+    | "scout-12"
+    | "scout-13"
+    | "scout-14"
+    | "scout-2"
+    | "scout-3"
+    | "scout-4"
+    | "scout-5"
+    | "scout-6"
+    | "scout-7"
+    | "scout-8"
+    | "scout-9"
+    | "shortcut-1"
+    | "shortcut-2"
+    | "surveyGrant-1"
+    | "surveyGrant-2"
+  >;
 };
 export type CardIdsByPlayerZoneId = {
-  "charter-hand": PerPlayer<Array<"claimMarker-1" | "claimMarker-2" | "landmark-1" | "landmark-2" | "landmark-3" | "landmark-4" | "landmark-5" | "scout-1" | "scout-10" | "scout-11" | "scout-12" | "scout-13" | "scout-14" | "scout-2" | "scout-3" | "scout-4" | "scout-5" | "scout-6" | "scout-7" | "scout-8" | "scout-9" | "shortcut-1" | "shortcut-2" | "surveyGrant-1" | "surveyGrant-2">>;
+  "charter-hand": PerPlayer<
+    Array<
+      | "claimMarker-1"
+      | "claimMarker-2"
+      | "landmark-1"
+      | "landmark-2"
+      | "landmark-3"
+      | "landmark-4"
+      | "landmark-5"
+      | "scout-1"
+      | "scout-10"
+      | "scout-11"
+      | "scout-12"
+      | "scout-13"
+      | "scout-14"
+      | "scout-2"
+      | "scout-3"
+      | "scout-4"
+      | "scout-5"
+      | "scout-6"
+      | "scout-7"
+      | "scout-8"
+      | "scout-9"
+      | "shortcut-1"
+      | "shortcut-2"
+      | "surveyGrant-1"
+      | "surveyGrant-2"
+    >
+  >;
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -903,14 +1167,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -987,14 +1251,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    never,
-    BoardFields,
-    SpaceFields,
-    RuntimeRecord,
-    RuntimeRecord
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  never,
+  BoardFields,
+  SpaceFields,
+  RuntimeRecord,
+  RuntimeRecord
+> {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -1019,14 +1283,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-    BoardIdValue,
-    SpaceIdValue,
-    ContainerIdValue,
-    BoardFields,
-    SpaceFields,
-    RelationFields,
-    ContainerFields
-  > {
+  BoardIdValue,
+  SpaceIdValue,
+  ContainerIdValue,
+  BoardFields,
+  SpaceFields,
+  RelationFields,
+  ContainerFields
+> {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -1048,25 +1312,297 @@ export type TiledBoardStateRecord =
   | SquareBoardStateRecord;
 
 export type BoardStateById = {
-  "frontier": HexBoardStateRecord<"frontier", "h-0-0" | "h-1-0" | "h-1-1" | "h-1-2" | "h-1-3" | "h-1-4" | "h-1-5" | "h-2-0" | "h-2-1" | "h-2-10" | "h-2-11" | "h-2-2" | "h-2-3" | "h-2-4" | "h-2-5" | "h-2-6" | "h-2-7" | "h-2-8" | "h-2-9" | "o-0" | "o-1" | "o-10" | "o-11" | "o-12" | "o-13" | "o-14" | "o-15" | "o-16" | "o-17" | "o-2" | "o-3" | "o-4" | "o-5" | "o-6" | "o-7" | "o-8" | "o-9", "hex-edge:-1,-1,2::-2,-2,4" | "hex-edge:-1,-1,2::-2,1,1" | "hex-edge:-1,-1,2::1,-2,1" | "hex-edge:-1,-10,11::-2,-8,10" | "hex-edge:-1,-10,11::1,-11,10" | "hex-edge:-1,-4,5::-2,-2,4" | "hex-edge:-1,-4,5::-2,-5,7" | "hex-edge:-1,-4,5::1,-5,4" | "hex-edge:-1,-7,8::-2,-5,7" | "hex-edge:-1,-7,8::-2,-8,10" | "hex-edge:-1,-7,8::1,-8,7" | "hex-edge:-1,11,-10::-2,10,-8" | "hex-edge:-1,11,-10::1,10,-11" | "hex-edge:-1,2,-1::-2,1,1" | "hex-edge:-1,2,-1::-2,4,-2" | "hex-edge:-1,2,-1::1,1,-2" | "hex-edge:-1,5,-4::-2,4,-2" | "hex-edge:-1,5,-4::-2,7,-5" | "hex-edge:-1,5,-4::1,4,-5" | "hex-edge:-1,8,-7::-2,10,-8" | "hex-edge:-1,8,-7::-2,7,-5" | "hex-edge:-1,8,-7::1,7,-8" | "hex-edge:-10,-1,11::-11,1,10" | "hex-edge:-10,-1,11::-8,-2,10" | "hex-edge:-10,11,-1::-11,10,1" | "hex-edge:-10,11,-1::-8,10,-2" | "hex-edge:-10,2,8::-11,1,10" | "hex-edge:-10,2,8::-11,4,7" | "hex-edge:-10,2,8::-8,1,7" | "hex-edge:-10,5,5::-11,4,7" | "hex-edge:-10,5,5::-11,7,4" | "hex-edge:-10,5,5::-8,4,4" | "hex-edge:-10,8,2::-11,10,1" | "hex-edge:-10,8,2::-11,7,4" | "hex-edge:-10,8,2::-8,7,1" | "hex-edge:-2,-2,4::-4,-1,5" | "hex-edge:-2,-5,7::-4,-4,8" | "hex-edge:-2,-8,10::-4,-7,11" | "hex-edge:-2,1,1::-4,2,2" | "hex-edge:-2,10,-8::-4,11,-7" | "hex-edge:-2,4,-2::-4,5,-1" | "hex-edge:-2,7,-5::-4,8,-4" | "hex-edge:-4,-1,5::-5,-2,7" | "hex-edge:-4,-1,5::-5,1,4" | "hex-edge:-4,-4,8::-5,-2,7" | "hex-edge:-4,-4,8::-5,-5,10" | "hex-edge:-4,-7,11::-5,-5,10" | "hex-edge:-4,11,-7::-5,10,-5" | "hex-edge:-4,2,2::-5,1,4" | "hex-edge:-4,2,2::-5,4,1" | "hex-edge:-4,5,-1::-5,4,1" | "hex-edge:-4,5,-1::-5,7,-2" | "hex-edge:-4,8,-4::-5,10,-5" | "hex-edge:-4,8,-4::-5,7,-2" | "hex-edge:-5,-2,7::-7,-1,8" | "hex-edge:-5,-5,10::-7,-4,11" | "hex-edge:-5,1,4::-7,2,5" | "hex-edge:-5,10,-5::-7,11,-4" | "hex-edge:-5,4,1::-7,5,2" | "hex-edge:-5,7,-2::-7,8,-1" | "hex-edge:-7,-1,8::-8,-2,10" | "hex-edge:-7,-1,8::-8,1,7" | "hex-edge:-7,-4,11::-8,-2,10" | "hex-edge:-7,11,-4::-8,10,-2" | "hex-edge:-7,2,5::-8,1,7" | "hex-edge:-7,2,5::-8,4,4" | "hex-edge:-7,5,2::-8,4,4" | "hex-edge:-7,5,2::-8,7,1" | "hex-edge:-7,8,-1::-8,10,-2" | "hex-edge:-7,8,-1::-8,7,1" | "hex-edge:1,-11,10::2,-10,8" | "hex-edge:1,-2,1::2,-1,-1" | "hex-edge:1,-2,1::2,-4,2" | "hex-edge:1,-5,4::2,-4,2" | "hex-edge:1,-5,4::2,-7,5" | "hex-edge:1,-8,7::2,-10,8" | "hex-edge:1,-8,7::2,-7,5" | "hex-edge:1,1,-2::2,-1,-1" | "hex-edge:1,1,-2::2,2,-4" | "hex-edge:1,10,-11::2,8,-10" | "hex-edge:1,4,-5::2,2,-4" | "hex-edge:1,4,-5::2,5,-7" | "hex-edge:1,7,-8::2,5,-7" | "hex-edge:1,7,-8::2,8,-10" | "hex-edge:10,-11,1::11,-10,-1" | "hex-edge:10,-11,1::8,-10,2" | "hex-edge:10,-2,-8::11,-1,-10" | "hex-edge:10,-2,-8::11,-4,-7" | "hex-edge:10,-2,-8::8,-1,-7" | "hex-edge:10,-5,-5::11,-4,-7" | "hex-edge:10,-5,-5::11,-7,-4" | "hex-edge:10,-5,-5::8,-4,-4" | "hex-edge:10,-8,-2::11,-10,-1" | "hex-edge:10,-8,-2::11,-7,-4" | "hex-edge:10,-8,-2::8,-7,-1" | "hex-edge:10,1,-11::11,-1,-10" | "hex-edge:10,1,-11::8,2,-10" | "hex-edge:2,-1,-1::4,-2,-2" | "hex-edge:2,-10,8::4,-11,7" | "hex-edge:2,-4,2::4,-5,1" | "hex-edge:2,-7,5::4,-8,4" | "hex-edge:2,2,-4::4,1,-5" | "hex-edge:2,5,-7::4,4,-8" | "hex-edge:2,8,-10::4,7,-11" | "hex-edge:4,-11,7::5,-10,5" | "hex-edge:4,-2,-2::5,-1,-4" | "hex-edge:4,-2,-2::5,-4,-1" | "hex-edge:4,-5,1::5,-4,-1" | "hex-edge:4,-5,1::5,-7,2" | "hex-edge:4,-8,4::5,-10,5" | "hex-edge:4,-8,4::5,-7,2" | "hex-edge:4,1,-5::5,-1,-4" | "hex-edge:4,1,-5::5,2,-7" | "hex-edge:4,4,-8::5,2,-7" | "hex-edge:4,4,-8::5,5,-10" | "hex-edge:4,7,-11::5,5,-10" | "hex-edge:5,-1,-4::7,-2,-5" | "hex-edge:5,-10,5::7,-11,4" | "hex-edge:5,-4,-1::7,-5,-2" | "hex-edge:5,-7,2::7,-8,1" | "hex-edge:5,2,-7::7,1,-8" | "hex-edge:5,5,-10::7,4,-11" | "hex-edge:7,-11,4::8,-10,2" | "hex-edge:7,-2,-5::8,-1,-7" | "hex-edge:7,-2,-5::8,-4,-4" | "hex-edge:7,-5,-2::8,-4,-4" | "hex-edge:7,-5,-2::8,-7,-1" | "hex-edge:7,-8,1::8,-10,2" | "hex-edge:7,-8,1::8,-7,-1" | "hex-edge:7,1,-8::8,-1,-7" | "hex-edge:7,1,-8::8,2,-10" | "hex-edge:7,4,-11::8,2,-10", "hex-vertex:-1,-1,2" | "hex-vertex:-1,-10,11" | "hex-vertex:-1,-4,5" | "hex-vertex:-1,-7,8" | "hex-vertex:-1,11,-10" | "hex-vertex:-1,2,-1" | "hex-vertex:-1,5,-4" | "hex-vertex:-1,8,-7" | "hex-vertex:-10,-1,11" | "hex-vertex:-10,11,-1" | "hex-vertex:-10,2,8" | "hex-vertex:-10,5,5" | "hex-vertex:-10,8,2" | "hex-vertex:-11,1,10" | "hex-vertex:-11,10,1" | "hex-vertex:-11,4,7" | "hex-vertex:-11,7,4" | "hex-vertex:-2,-2,4" | "hex-vertex:-2,-5,7" | "hex-vertex:-2,-8,10" | "hex-vertex:-2,1,1" | "hex-vertex:-2,10,-8" | "hex-vertex:-2,4,-2" | "hex-vertex:-2,7,-5" | "hex-vertex:-4,-1,5" | "hex-vertex:-4,-4,8" | "hex-vertex:-4,-7,11" | "hex-vertex:-4,11,-7" | "hex-vertex:-4,2,2" | "hex-vertex:-4,5,-1" | "hex-vertex:-4,8,-4" | "hex-vertex:-5,-2,7" | "hex-vertex:-5,-5,10" | "hex-vertex:-5,1,4" | "hex-vertex:-5,10,-5" | "hex-vertex:-5,4,1" | "hex-vertex:-5,7,-2" | "hex-vertex:-7,-1,8" | "hex-vertex:-7,-4,11" | "hex-vertex:-7,11,-4" | "hex-vertex:-7,2,5" | "hex-vertex:-7,5,2" | "hex-vertex:-7,8,-1" | "hex-vertex:-8,-2,10" | "hex-vertex:-8,1,7" | "hex-vertex:-8,10,-2" | "hex-vertex:-8,4,4" | "hex-vertex:-8,7,1" | "hex-vertex:1,-11,10" | "hex-vertex:1,-2,1" | "hex-vertex:1,-5,4" | "hex-vertex:1,-8,7" | "hex-vertex:1,1,-2" | "hex-vertex:1,10,-11" | "hex-vertex:1,4,-5" | "hex-vertex:1,7,-8" | "hex-vertex:10,-11,1" | "hex-vertex:10,-2,-8" | "hex-vertex:10,-5,-5" | "hex-vertex:10,-8,-2" | "hex-vertex:10,1,-11" | "hex-vertex:11,-1,-10" | "hex-vertex:11,-10,-1" | "hex-vertex:11,-4,-7" | "hex-vertex:11,-7,-4" | "hex-vertex:2,-1,-1" | "hex-vertex:2,-10,8" | "hex-vertex:2,-4,2" | "hex-vertex:2,-7,5" | "hex-vertex:2,2,-4" | "hex-vertex:2,5,-7" | "hex-vertex:2,8,-10" | "hex-vertex:4,-11,7" | "hex-vertex:4,-2,-2" | "hex-vertex:4,-5,1" | "hex-vertex:4,-8,4" | "hex-vertex:4,1,-5" | "hex-vertex:4,4,-8" | "hex-vertex:4,7,-11" | "hex-vertex:5,-1,-4" | "hex-vertex:5,-10,5" | "hex-vertex:5,-4,-1" | "hex-vertex:5,-7,2" | "hex-vertex:5,2,-7" | "hex-vertex:5,5,-10" | "hex-vertex:7,-11,4" | "hex-vertex:7,-2,-5" | "hex-vertex:7,-5,-2" | "hex-vertex:7,-8,1" | "hex-vertex:7,1,-8" | "hex-vertex:7,4,-11" | "hex-vertex:8,-1,-7" | "hex-vertex:8,-10,2" | "hex-vertex:8,-4,-4" | "hex-vertex:8,-7,-1" | "hex-vertex:8,2,-10", FrontierBoardFields, FrontierSpaceFields, FrontierEdgeFields, FrontierVertexFields>;
+  frontier: HexBoardStateRecord<
+    "frontier",
+    | "h-0-0"
+    | "h-1-0"
+    | "h-1-1"
+    | "h-1-2"
+    | "h-1-3"
+    | "h-1-4"
+    | "h-1-5"
+    | "h-2-0"
+    | "h-2-1"
+    | "h-2-10"
+    | "h-2-11"
+    | "h-2-2"
+    | "h-2-3"
+    | "h-2-4"
+    | "h-2-5"
+    | "h-2-6"
+    | "h-2-7"
+    | "h-2-8"
+    | "h-2-9"
+    | "o-0"
+    | "o-1"
+    | "o-10"
+    | "o-11"
+    | "o-12"
+    | "o-13"
+    | "o-14"
+    | "o-15"
+    | "o-16"
+    | "o-17"
+    | "o-2"
+    | "o-3"
+    | "o-4"
+    | "o-5"
+    | "o-6"
+    | "o-7"
+    | "o-8"
+    | "o-9",
+    | "hex-edge:-1,-1,2::-2,-2,4"
+    | "hex-edge:-1,-1,2::-2,1,1"
+    | "hex-edge:-1,-1,2::1,-2,1"
+    | "hex-edge:-1,-10,11::-2,-8,10"
+    | "hex-edge:-1,-10,11::1,-11,10"
+    | "hex-edge:-1,-4,5::-2,-2,4"
+    | "hex-edge:-1,-4,5::-2,-5,7"
+    | "hex-edge:-1,-4,5::1,-5,4"
+    | "hex-edge:-1,-7,8::-2,-5,7"
+    | "hex-edge:-1,-7,8::-2,-8,10"
+    | "hex-edge:-1,-7,8::1,-8,7"
+    | "hex-edge:-1,11,-10::-2,10,-8"
+    | "hex-edge:-1,11,-10::1,10,-11"
+    | "hex-edge:-1,2,-1::-2,1,1"
+    | "hex-edge:-1,2,-1::-2,4,-2"
+    | "hex-edge:-1,2,-1::1,1,-2"
+    | "hex-edge:-1,5,-4::-2,4,-2"
+    | "hex-edge:-1,5,-4::-2,7,-5"
+    | "hex-edge:-1,5,-4::1,4,-5"
+    | "hex-edge:-1,8,-7::-2,10,-8"
+    | "hex-edge:-1,8,-7::-2,7,-5"
+    | "hex-edge:-1,8,-7::1,7,-8"
+    | "hex-edge:-10,-1,11::-11,1,10"
+    | "hex-edge:-10,-1,11::-8,-2,10"
+    | "hex-edge:-10,11,-1::-11,10,1"
+    | "hex-edge:-10,11,-1::-8,10,-2"
+    | "hex-edge:-10,2,8::-11,1,10"
+    | "hex-edge:-10,2,8::-11,4,7"
+    | "hex-edge:-10,2,8::-8,1,7"
+    | "hex-edge:-10,5,5::-11,4,7"
+    | "hex-edge:-10,5,5::-11,7,4"
+    | "hex-edge:-10,5,5::-8,4,4"
+    | "hex-edge:-10,8,2::-11,10,1"
+    | "hex-edge:-10,8,2::-11,7,4"
+    | "hex-edge:-10,8,2::-8,7,1"
+    | "hex-edge:-2,-2,4::-4,-1,5"
+    | "hex-edge:-2,-5,7::-4,-4,8"
+    | "hex-edge:-2,-8,10::-4,-7,11"
+    | "hex-edge:-2,1,1::-4,2,2"
+    | "hex-edge:-2,10,-8::-4,11,-7"
+    | "hex-edge:-2,4,-2::-4,5,-1"
+    | "hex-edge:-2,7,-5::-4,8,-4"
+    | "hex-edge:-4,-1,5::-5,-2,7"
+    | "hex-edge:-4,-1,5::-5,1,4"
+    | "hex-edge:-4,-4,8::-5,-2,7"
+    | "hex-edge:-4,-4,8::-5,-5,10"
+    | "hex-edge:-4,-7,11::-5,-5,10"
+    | "hex-edge:-4,11,-7::-5,10,-5"
+    | "hex-edge:-4,2,2::-5,1,4"
+    | "hex-edge:-4,2,2::-5,4,1"
+    | "hex-edge:-4,5,-1::-5,4,1"
+    | "hex-edge:-4,5,-1::-5,7,-2"
+    | "hex-edge:-4,8,-4::-5,10,-5"
+    | "hex-edge:-4,8,-4::-5,7,-2"
+    | "hex-edge:-5,-2,7::-7,-1,8"
+    | "hex-edge:-5,-5,10::-7,-4,11"
+    | "hex-edge:-5,1,4::-7,2,5"
+    | "hex-edge:-5,10,-5::-7,11,-4"
+    | "hex-edge:-5,4,1::-7,5,2"
+    | "hex-edge:-5,7,-2::-7,8,-1"
+    | "hex-edge:-7,-1,8::-8,-2,10"
+    | "hex-edge:-7,-1,8::-8,1,7"
+    | "hex-edge:-7,-4,11::-8,-2,10"
+    | "hex-edge:-7,11,-4::-8,10,-2"
+    | "hex-edge:-7,2,5::-8,1,7"
+    | "hex-edge:-7,2,5::-8,4,4"
+    | "hex-edge:-7,5,2::-8,4,4"
+    | "hex-edge:-7,5,2::-8,7,1"
+    | "hex-edge:-7,8,-1::-8,10,-2"
+    | "hex-edge:-7,8,-1::-8,7,1"
+    | "hex-edge:1,-11,10::2,-10,8"
+    | "hex-edge:1,-2,1::2,-1,-1"
+    | "hex-edge:1,-2,1::2,-4,2"
+    | "hex-edge:1,-5,4::2,-4,2"
+    | "hex-edge:1,-5,4::2,-7,5"
+    | "hex-edge:1,-8,7::2,-10,8"
+    | "hex-edge:1,-8,7::2,-7,5"
+    | "hex-edge:1,1,-2::2,-1,-1"
+    | "hex-edge:1,1,-2::2,2,-4"
+    | "hex-edge:1,10,-11::2,8,-10"
+    | "hex-edge:1,4,-5::2,2,-4"
+    | "hex-edge:1,4,-5::2,5,-7"
+    | "hex-edge:1,7,-8::2,5,-7"
+    | "hex-edge:1,7,-8::2,8,-10"
+    | "hex-edge:10,-11,1::11,-10,-1"
+    | "hex-edge:10,-11,1::8,-10,2"
+    | "hex-edge:10,-2,-8::11,-1,-10"
+    | "hex-edge:10,-2,-8::11,-4,-7"
+    | "hex-edge:10,-2,-8::8,-1,-7"
+    | "hex-edge:10,-5,-5::11,-4,-7"
+    | "hex-edge:10,-5,-5::11,-7,-4"
+    | "hex-edge:10,-5,-5::8,-4,-4"
+    | "hex-edge:10,-8,-2::11,-10,-1"
+    | "hex-edge:10,-8,-2::11,-7,-4"
+    | "hex-edge:10,-8,-2::8,-7,-1"
+    | "hex-edge:10,1,-11::11,-1,-10"
+    | "hex-edge:10,1,-11::8,2,-10"
+    | "hex-edge:2,-1,-1::4,-2,-2"
+    | "hex-edge:2,-10,8::4,-11,7"
+    | "hex-edge:2,-4,2::4,-5,1"
+    | "hex-edge:2,-7,5::4,-8,4"
+    | "hex-edge:2,2,-4::4,1,-5"
+    | "hex-edge:2,5,-7::4,4,-8"
+    | "hex-edge:2,8,-10::4,7,-11"
+    | "hex-edge:4,-11,7::5,-10,5"
+    | "hex-edge:4,-2,-2::5,-1,-4"
+    | "hex-edge:4,-2,-2::5,-4,-1"
+    | "hex-edge:4,-5,1::5,-4,-1"
+    | "hex-edge:4,-5,1::5,-7,2"
+    | "hex-edge:4,-8,4::5,-10,5"
+    | "hex-edge:4,-8,4::5,-7,2"
+    | "hex-edge:4,1,-5::5,-1,-4"
+    | "hex-edge:4,1,-5::5,2,-7"
+    | "hex-edge:4,4,-8::5,2,-7"
+    | "hex-edge:4,4,-8::5,5,-10"
+    | "hex-edge:4,7,-11::5,5,-10"
+    | "hex-edge:5,-1,-4::7,-2,-5"
+    | "hex-edge:5,-10,5::7,-11,4"
+    | "hex-edge:5,-4,-1::7,-5,-2"
+    | "hex-edge:5,-7,2::7,-8,1"
+    | "hex-edge:5,2,-7::7,1,-8"
+    | "hex-edge:5,5,-10::7,4,-11"
+    | "hex-edge:7,-11,4::8,-10,2"
+    | "hex-edge:7,-2,-5::8,-1,-7"
+    | "hex-edge:7,-2,-5::8,-4,-4"
+    | "hex-edge:7,-5,-2::8,-4,-4"
+    | "hex-edge:7,-5,-2::8,-7,-1"
+    | "hex-edge:7,-8,1::8,-10,2"
+    | "hex-edge:7,-8,1::8,-7,-1"
+    | "hex-edge:7,1,-8::8,-1,-7"
+    | "hex-edge:7,1,-8::8,2,-10"
+    | "hex-edge:7,4,-11::8,2,-10",
+    | "hex-vertex:-1,-1,2"
+    | "hex-vertex:-1,-10,11"
+    | "hex-vertex:-1,-4,5"
+    | "hex-vertex:-1,-7,8"
+    | "hex-vertex:-1,11,-10"
+    | "hex-vertex:-1,2,-1"
+    | "hex-vertex:-1,5,-4"
+    | "hex-vertex:-1,8,-7"
+    | "hex-vertex:-10,-1,11"
+    | "hex-vertex:-10,11,-1"
+    | "hex-vertex:-10,2,8"
+    | "hex-vertex:-10,5,5"
+    | "hex-vertex:-10,8,2"
+    | "hex-vertex:-11,1,10"
+    | "hex-vertex:-11,10,1"
+    | "hex-vertex:-11,4,7"
+    | "hex-vertex:-11,7,4"
+    | "hex-vertex:-2,-2,4"
+    | "hex-vertex:-2,-5,7"
+    | "hex-vertex:-2,-8,10"
+    | "hex-vertex:-2,1,1"
+    | "hex-vertex:-2,10,-8"
+    | "hex-vertex:-2,4,-2"
+    | "hex-vertex:-2,7,-5"
+    | "hex-vertex:-4,-1,5"
+    | "hex-vertex:-4,-4,8"
+    | "hex-vertex:-4,-7,11"
+    | "hex-vertex:-4,11,-7"
+    | "hex-vertex:-4,2,2"
+    | "hex-vertex:-4,5,-1"
+    | "hex-vertex:-4,8,-4"
+    | "hex-vertex:-5,-2,7"
+    | "hex-vertex:-5,-5,10"
+    | "hex-vertex:-5,1,4"
+    | "hex-vertex:-5,10,-5"
+    | "hex-vertex:-5,4,1"
+    | "hex-vertex:-5,7,-2"
+    | "hex-vertex:-7,-1,8"
+    | "hex-vertex:-7,-4,11"
+    | "hex-vertex:-7,11,-4"
+    | "hex-vertex:-7,2,5"
+    | "hex-vertex:-7,5,2"
+    | "hex-vertex:-7,8,-1"
+    | "hex-vertex:-8,-2,10"
+    | "hex-vertex:-8,1,7"
+    | "hex-vertex:-8,10,-2"
+    | "hex-vertex:-8,4,4"
+    | "hex-vertex:-8,7,1"
+    | "hex-vertex:1,-11,10"
+    | "hex-vertex:1,-2,1"
+    | "hex-vertex:1,-5,4"
+    | "hex-vertex:1,-8,7"
+    | "hex-vertex:1,1,-2"
+    | "hex-vertex:1,10,-11"
+    | "hex-vertex:1,4,-5"
+    | "hex-vertex:1,7,-8"
+    | "hex-vertex:10,-11,1"
+    | "hex-vertex:10,-2,-8"
+    | "hex-vertex:10,-5,-5"
+    | "hex-vertex:10,-8,-2"
+    | "hex-vertex:10,1,-11"
+    | "hex-vertex:11,-1,-10"
+    | "hex-vertex:11,-10,-1"
+    | "hex-vertex:11,-4,-7"
+    | "hex-vertex:11,-7,-4"
+    | "hex-vertex:2,-1,-1"
+    | "hex-vertex:2,-10,8"
+    | "hex-vertex:2,-4,2"
+    | "hex-vertex:2,-7,5"
+    | "hex-vertex:2,2,-4"
+    | "hex-vertex:2,5,-7"
+    | "hex-vertex:2,8,-10"
+    | "hex-vertex:4,-11,7"
+    | "hex-vertex:4,-2,-2"
+    | "hex-vertex:4,-5,1"
+    | "hex-vertex:4,-8,4"
+    | "hex-vertex:4,1,-5"
+    | "hex-vertex:4,4,-8"
+    | "hex-vertex:4,7,-11"
+    | "hex-vertex:5,-1,-4"
+    | "hex-vertex:5,-10,5"
+    | "hex-vertex:5,-4,-1"
+    | "hex-vertex:5,-7,2"
+    | "hex-vertex:5,2,-7"
+    | "hex-vertex:5,5,-10"
+    | "hex-vertex:7,-11,4"
+    | "hex-vertex:7,-2,-5"
+    | "hex-vertex:7,-5,-2"
+    | "hex-vertex:7,-8,1"
+    | "hex-vertex:7,1,-8"
+    | "hex-vertex:7,4,-11"
+    | "hex-vertex:8,-1,-7"
+    | "hex-vertex:8,-10,2"
+    | "hex-vertex:8,-4,-4"
+    | "hex-vertex:8,-7,-1"
+    | "hex-vertex:8,2,-10",
+    FrontierBoardFields,
+    FrontierSpaceFields,
+    FrontierEdgeFields,
+    FrontierVertexFields
+  >;
 };
 
 export type HexBoardStateById = {
-  "frontier": BoardStateById["frontier"];
+  frontier: BoardStateById["frontier"];
 };
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> =
-  T extends readonly (infer Item)[]
+type ManifestArrayElement<T> = T extends readonly (infer Item)[]
+  ? Item
+  : T extends (infer Item)[]
     ? Item
-    : T extends (infer Item)[]
-      ? Item
-      : never;
+    : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
+  BoardIdValue extends keyof BoardStateById
+    ? BoardStateById[BoardIdValue]
+    : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1123,26 +1659,29 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
+    keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
-> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
-  ? Ref
-  : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
+    keyof HexAuthoredVerticesByBoardId,
+> =
+  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1152,9 +1691,8 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1164,9 +1702,10 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  HexVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1176,9 +1715,10 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1188,9 +1728,10 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1206,19 +1747,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<
-  BoardIdValue extends TiledBoardId = TiledBoardId,
-> = BoardIdValue extends keyof HexBoardStateById
-  ? HexVertexState<BoardIdValue>
-  : BoardIdValue extends keyof SquareBoardStateById
-    ? SquareVertexState<BoardIdValue>
-    : never;
+export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
+  BoardIdValue extends keyof HexBoardStateById
+    ? HexVertexState<BoardIdValue>
+    : BoardIdValue extends keyof SquareBoardStateById
+      ? SquareVertexState<BoardIdValue>
+      : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-  ? Fields
-  : never;
+> =
+  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+    ? Fields
+    : never;
 
 export type BoardStateRecord = BoardStateById[BoardId];
 
@@ -1443,7 +1984,7 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: CampPieceFieldsSchema,
   }),
-  "storm": z.object({
+  storm: z.object({
     componentType: z.string().optional(),
     id: z.literal("storm"),
     pieceTypeId: z.literal("storm"),
@@ -2083,7 +2624,7 @@ const dieStateByIdSchema = z.object({
   }),
 });
 const boardStateByIdSchema = z.object({
-  "frontier": z.object({
+  frontier: z.object({
     id: z.literal("frontier"),
     baseId: z.literal("frontier"),
     layout: z.literal("hex"),
@@ -2140,7 +2681,7 @@ const boardStateByIdSchema = z.object({
   }),
 });
 const hexBoardStateByIdSchema = z.object({
-  "frontier": z.object({
+  frontier: z.object({
     id: z.literal("frontier"),
     baseId: z.literal("frontier"),
     layout: z.literal("hex"),
@@ -2302,8 +2843,13 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
-    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
+    visibility: z.record(
+      zoneIdSchema,
+      z.enum(["all", "ownerOnly", "public", "hidden"]),
+    ),
+    cardSetIdsByZoneId: z
+      .record(zoneIdSchema, z.array(ids.cardSetId))
+      .optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -2360,11 +2906,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-      type: z.literal("InSlot"),
-      host: z.never(),
-      slotId: z.never(),
-      position: z.number().int().nullable().optional(),
-    }),
+        type: z.literal("InSlot"),
+        host: z.never(),
+        slotId: z.never(),
+        position: z.number().int().nullable().optional(),
+      }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -2409,44 +2955,135 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(playerIds, () =>
-    Object.fromEntries(
-      literals.resourceIds.map((resourceId) => [resourceId, 0]),
-    ) as Record<ResourceId, number>,
+  return perPlayer(
+    playerIds,
+    () =>
+      Object.fromEntries(
+        literals.resourceIds.map((resourceId) => [resourceId, 0]),
+      ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) => ({
-    shared: cloneManifestDefault({"charter-deck":[],"charter-played":[]}),
-    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-    visibility: cloneManifestDefault({"charter-deck":"hidden","charter-hand":"ownerOnly","charter-played":"public"}),
-    cardSetIdsByZoneId: cloneManifestDefault({"charter-deck":["charter-cards"],"charter-hand":["charter-cards"],"charter-played":["charter-cards"]}),
-  }) as TableState["zones"],
-  decks: () => cloneManifestDefault({"charter-deck":[],"charter-played":[]}) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) =>
+    ({
+      shared: cloneManifestDefault({
+        "charter-deck": [],
+        "charter-played": [],
+      }),
+      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+      visibility: cloneManifestDefault({
+        "charter-deck": "hidden",
+        "charter-hand": "ownerOnly",
+        "charter-played": "public",
+      }),
+      cardSetIdsByZoneId: cloneManifestDefault({
+        "charter-deck": ["charter-cards"],
+        "charter-hand": ["charter-cards"],
+        "charter-played": ["charter-cards"],
+      }),
+    }) as TableState["zones"],
+  decks: () =>
+    cloneManifestDefault({
+      "charter-deck": [],
+      "charter-played": [],
+    }) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
-  handVisibility: () => cloneManifestDefault({"charter-hand":"ownerOnly"}) as TableState["handVisibility"],
-  ownerOfCard: () => cloneManifestDefault({"claimMarker-1":null,"claimMarker-2":null,"landmark-1":null,"landmark-2":null,"landmark-3":null,"landmark-4":null,"landmark-5":null,"scout-1":null,"scout-10":null,"scout-11":null,"scout-12":null,"scout-13":null,"scout-14":null,"scout-2":null,"scout-3":null,"scout-4":null,"scout-5":null,"scout-6":null,"scout-7":null,"scout-8":null,"scout-9":null,"shortcut-1":null,"shortcut-2":null,"surveyGrant-1":null,"surveyGrant-2":null}) as TableState["ownerOfCard"],
-  visibility: () => cloneManifestDefault({"claimMarker-1":{"faceUp":true},"claimMarker-2":{"faceUp":true},"landmark-1":{"faceUp":true},"landmark-2":{"faceUp":true},"landmark-3":{"faceUp":true},"landmark-4":{"faceUp":true},"landmark-5":{"faceUp":true},"scout-1":{"faceUp":true},"scout-10":{"faceUp":true},"scout-11":{"faceUp":true},"scout-12":{"faceUp":true},"scout-13":{"faceUp":true},"scout-14":{"faceUp":true},"scout-2":{"faceUp":true},"scout-3":{"faceUp":true},"scout-4":{"faceUp":true},"scout-5":{"faceUp":true},"scout-6":{"faceUp":true},"scout-7":{"faceUp":true},"scout-8":{"faceUp":true},"scout-9":{"faceUp":true},"shortcut-1":{"faceUp":true},"shortcut-2":{"faceUp":true},"surveyGrant-1":{"faceUp":true},"surveyGrant-2":{"faceUp":true}}) as TableState["visibility"],
+    buildPerPlayerCardIds(
+      resolveDefaultPlayerIds(playerIds),
+    ) as TableState["hands"],
+  handVisibility: () =>
+    cloneManifestDefault({
+      "charter-hand": "ownerOnly",
+    }) as TableState["handVisibility"],
+  ownerOfCard: () =>
+    cloneManifestDefault({
+      "claimMarker-1": null,
+      "claimMarker-2": null,
+      "landmark-1": null,
+      "landmark-2": null,
+      "landmark-3": null,
+      "landmark-4": null,
+      "landmark-5": null,
+      "scout-1": null,
+      "scout-10": null,
+      "scout-11": null,
+      "scout-12": null,
+      "scout-13": null,
+      "scout-14": null,
+      "scout-2": null,
+      "scout-3": null,
+      "scout-4": null,
+      "scout-5": null,
+      "scout-6": null,
+      "scout-7": null,
+      "scout-8": null,
+      "scout-9": null,
+      "shortcut-1": null,
+      "shortcut-2": null,
+      "surveyGrant-1": null,
+      "surveyGrant-2": null,
+    }) as TableState["ownerOfCard"],
+  visibility: () =>
+    cloneManifestDefault({
+      "claimMarker-1": { faceUp: true },
+      "claimMarker-2": { faceUp: true },
+      "landmark-1": { faceUp: true },
+      "landmark-2": { faceUp: true },
+      "landmark-3": { faceUp: true },
+      "landmark-4": { faceUp: true },
+      "landmark-5": { faceUp: true },
+      "scout-1": { faceUp: true },
+      "scout-10": { faceUp: true },
+      "scout-11": { faceUp: true },
+      "scout-12": { faceUp: true },
+      "scout-13": { faceUp: true },
+      "scout-14": { faceUp: true },
+      "scout-2": { faceUp: true },
+      "scout-3": { faceUp: true },
+      "scout-4": { faceUp: true },
+      "scout-5": { faceUp: true },
+      "scout-6": { faceUp: true },
+      "scout-7": { faceUp: true },
+      "scout-8": { faceUp: true },
+      "scout-9": { faceUp: true },
+      "shortcut-1": { faceUp: true },
+      "shortcut-2": { faceUp: true },
+      "surveyGrant-1": { faceUp: true },
+      "surveyGrant-2": { faceUp: true },
+    }) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
-type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
+type GeneratedStaticBoards = Pick<
+  PublicTableState["boards"],
+  "byId" | "hex" | "square"
+>;
+type GeneratedStaticBoardsJsonEnvelope = Omit<
+  StaticBoardsJsonEnvelope<TableState>,
+  "boards"
+> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData =
+  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
+const baseInitialTable = cloneManifestDefault<TableState>(
+  manifestStaticData.initialTable,
+);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
+  SharedZoneId,
+  readonly CardId[]
+>;
 
-export function createInitialTable(options: {
-  playerIds?: readonly string[];
-  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-} = {}): TableState {
+export function createInitialTable(
+  options: {
+    playerIds?: readonly string[];
+    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+  } = {},
+): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -2539,31 +3176,67 @@ export const manifestContract: ReducerManifestContract<
 };
 
 const boardIdsByLayoutLookup = {
-  "hex": ["frontier"] as const,
+  hex: ["frontier"] as const,
 } as const;
 const boardBaseIdsByLayoutLookup = {
-  "hex": ["frontier"] as const,
+  hex: ["frontier"] as const,
 } as const;
 const boardIdsByBaseIdLookup = {
-  "frontier": ["frontier"] as const,
+  frontier: ["frontier"] as const,
 } as const;
 const boardBaseIdsByTemplateIdLookup = {
   "star-frontier": ["frontier"] as const,
 } as const;
 const boardLayoutByIdLookup = {
-  "frontier": "hex",
+  frontier: "hex",
 } as const;
 const boardTemplateLayoutByIdLookup = {
   "star-frontier": "hex",
 } as const;
-const boardIdsByTypeIdLookup = {
-
-} as const;
+const boardIdsByTypeIdLookup = {} as const;
 const spaceIdsByBoardIdLookup = {
-  "frontier": ["h-0-0", "h-1-0", "h-1-1", "h-1-2", "h-1-3", "h-1-4", "h-1-5", "h-2-0", "h-2-1", "h-2-10", "h-2-11", "h-2-2", "h-2-3", "h-2-4", "h-2-5", "h-2-6", "h-2-7", "h-2-8", "h-2-9", "o-0", "o-1", "o-10", "o-11", "o-12", "o-13", "o-14", "o-15", "o-16", "o-17", "o-2", "o-3", "o-4", "o-5", "o-6", "o-7", "o-8", "o-9"] as const,
+  frontier: [
+    "h-0-0",
+    "h-1-0",
+    "h-1-1",
+    "h-1-2",
+    "h-1-3",
+    "h-1-4",
+    "h-1-5",
+    "h-2-0",
+    "h-2-1",
+    "h-2-10",
+    "h-2-11",
+    "h-2-2",
+    "h-2-3",
+    "h-2-4",
+    "h-2-5",
+    "h-2-6",
+    "h-2-7",
+    "h-2-8",
+    "h-2-9",
+    "o-0",
+    "o-1",
+    "o-10",
+    "o-11",
+    "o-12",
+    "o-13",
+    "o-14",
+    "o-15",
+    "o-16",
+    "o-17",
+    "o-2",
+    "o-3",
+    "o-4",
+    "o-5",
+    "o-6",
+    "o-7",
+    "o-8",
+    "o-9",
+  ] as const,
 } as const;
 const spaceTypeIdByBoardIdLookup = {
-  "frontier": {
+  frontier: {
     "h-0-0": "land",
     "h-1-0": "land",
     "h-1-1": "land",
@@ -2600,28 +3273,77 @@ const spaceTypeIdByBoardIdLookup = {
     "o-6": "borderland",
     "o-7": "borderland",
     "o-8": "borderland",
-    "o-9": "borderland"
-  }
+    "o-9": "borderland",
+  },
 } as const;
 const spaceIdsByTypeIdLookup = {
-  "borderland": ["o-0", "o-1", "o-10", "o-11", "o-12", "o-13", "o-14", "o-15", "o-16", "o-17", "o-2", "o-3", "o-4", "o-5", "o-6", "o-7", "o-8", "o-9"] as const,
-  "land": ["h-0-0", "h-1-0", "h-1-1", "h-1-2", "h-1-3", "h-1-4", "h-1-5", "h-2-0", "h-2-1", "h-2-10", "h-2-11", "h-2-2", "h-2-3", "h-2-4", "h-2-5", "h-2-6", "h-2-7", "h-2-8", "h-2-9"] as const,
+  borderland: [
+    "o-0",
+    "o-1",
+    "o-10",
+    "o-11",
+    "o-12",
+    "o-13",
+    "o-14",
+    "o-15",
+    "o-16",
+    "o-17",
+    "o-2",
+    "o-3",
+    "o-4",
+    "o-5",
+    "o-6",
+    "o-7",
+    "o-8",
+    "o-9",
+  ] as const,
+  land: [
+    "h-0-0",
+    "h-1-0",
+    "h-1-1",
+    "h-1-2",
+    "h-1-3",
+    "h-1-4",
+    "h-1-5",
+    "h-2-0",
+    "h-2-1",
+    "h-2-10",
+    "h-2-11",
+    "h-2-2",
+    "h-2-3",
+    "h-2-4",
+    "h-2-5",
+    "h-2-6",
+    "h-2-7",
+    "h-2-8",
+    "h-2-9",
+  ] as const,
 } as const;
 const containerIdsByBoardIdLookup = {
-  "frontier": [] as const,
+  frontier: [] as const,
 } as const;
 const containerHostByBoardIdLookup = {
-  "frontier": {}
+  frontier: {},
 } as const;
 const relationTypeIdsByBoardIdLookup = {
-  "frontier": ["adjacent"] as const,
+  frontier: ["adjacent"] as const,
 } as const;
 const edgeIdsByTypeIdLookup = {
-  "relay": ["hex-edge:-2,7,-5::-4,8,-4", "hex-edge:-4,-4,8::-5,-2,7", "hex-edge:-5,7,-2::-7,8,-1", "hex-edge:-7,2,5::-8,4,4", "hex-edge:1,-8,7::2,-7,5", "hex-edge:2,5,-7::4,4,-8", "hex-edge:4,-8,4::5,-7,2", "hex-edge:4,4,-8::5,2,-7", "hex-edge:7,-2,-5::8,-4,-4"] as const,
+  relay: [
+    "hex-edge:-2,7,-5::-4,8,-4",
+    "hex-edge:-4,-4,8::-5,-2,7",
+    "hex-edge:-5,7,-2::-7,8,-1",
+    "hex-edge:-7,2,5::-8,4,4",
+    "hex-edge:1,-8,7::2,-7,5",
+    "hex-edge:2,5,-7::4,4,-8",
+    "hex-edge:4,-8,4::5,-7,2",
+    "hex-edge:4,4,-8::5,2,-7",
+    "hex-edge:7,-2,-5::8,-4,-4",
+  ] as const,
 } as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {
-  "frontier": {
-    "relay": [
+  frontier: {
+    relay: [
       "hex-edge:-2,7,-5::-4,8,-4",
       "hex-edge:-4,-4,8::-5,-2,7",
       "hex-edge:-5,7,-2::-7,8,-1",
@@ -2630,133 +3352,104 @@ const edgeIdsByBoardIdAndTypeIdLookup = {
       "hex-edge:2,5,-7::4,4,-8",
       "hex-edge:4,-8,4::5,-7,2",
       "hex-edge:4,4,-8::5,2,-7",
-      "hex-edge:7,-2,-5::8,-4,-4"
-    ]
-  }
+      "hex-edge:7,-2,-5::8,-4,-4",
+    ],
+  },
 } as const;
-const vertexIdsByTypeIdLookup = {
-
-} as const;
+const vertexIdsByTypeIdLookup = {} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {
-  "frontier": {}
+  frontier: {},
 } as const;
 const authoredHexEdgesByBoardIdLookup = {
-  "frontier": [
+  frontier: [
     {
-      "ref": {
-        "spaces": [
-          "h-2-11",
-          "o-16"
-        ]
+      ref: {
+        spaces: ["h-2-11", "o-16"],
       },
-      "fields": {
-        "relayIndex": 0
+      fields: {
+        relayIndex: 0,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-11",
-          "o-17"
-        ]
+      ref: {
+        spaces: ["h-2-11", "o-17"],
       },
-      "fields": {
-        "relayIndex": 1
+      fields: {
+        relayIndex: 1,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-1",
-          "o-1"
-        ]
+      ref: {
+        spaces: ["h-2-1", "o-1"],
       },
-      "fields": {
-        "relayIndex": 2
+      fields: {
+        relayIndex: 2,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-3",
-          "o-4"
-        ]
+      ref: {
+        spaces: ["h-2-3", "o-4"],
       },
-      "fields": {
-        "relayIndex": 3
+      fields: {
+        relayIndex: 3,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-4",
-          "o-5"
-        ]
+      ref: {
+        spaces: ["h-2-4", "o-5"],
       },
-      "fields": {
-        "relayIndex": 4
+      fields: {
+        relayIndex: 4,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-5",
-          "o-8"
-        ]
+      ref: {
+        spaces: ["h-2-5", "o-8"],
       },
-      "fields": {
-        "relayIndex": 5
+      fields: {
+        relayIndex: 5,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-7",
-          "o-10"
-        ]
+      ref: {
+        spaces: ["h-2-7", "o-10"],
       },
-      "fields": {
-        "relayIndex": 6
+      fields: {
+        relayIndex: 6,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-8",
-          "o-13"
-        ]
+      ref: {
+        spaces: ["h-2-8", "o-13"],
       },
-      "fields": {
-        "relayIndex": 7
+      fields: {
+        relayIndex: 7,
       },
-      "typeId": "relay"
+      typeId: "relay",
     },
     {
-      "ref": {
-        "spaces": [
-          "h-2-9",
-          "o-14"
-        ]
+      ref: {
+        spaces: ["h-2-9", "o-14"],
       },
-      "fields": {
-        "relayIndex": 8
+      fields: {
+        relayIndex: 8,
       },
-      "typeId": "relay"
-    }
-  ]
+      typeId: "relay",
+    },
+  ],
 } as const;
 const authoredHexVerticesByBoardIdLookup = {
-  "frontier": []
+  frontier: [],
 } as const;
 const authoredHexEdgeIdsByBoardIdAndRefLookup = {
-  "frontier": {
+  frontier: {
     "h-2-1$$o-1": "hex-edge:7,-2,-5::8,-4,-4",
     "h-2-11$$o-16": "hex-edge:2,5,-7::4,4,-8",
     "h-2-11$$o-17": "hex-edge:4,4,-8::5,2,-7",
@@ -2765,11 +3458,11 @@ const authoredHexEdgeIdsByBoardIdAndRefLookup = {
     "h-2-5$$o-8": "hex-edge:-4,-4,8::-5,-2,7",
     "h-2-7$$o-10": "hex-edge:-7,2,5::-8,4,4",
     "h-2-8$$o-13": "hex-edge:-5,7,-2::-7,8,-1",
-    "h-2-9$$o-14": "hex-edge:-2,7,-5::-4,8,-4"
-  }
+    "h-2-9$$o-14": "hex-edge:-2,7,-5::-4,8,-4",
+  },
 } as const;
 const authoredHexVertexIdsByBoardIdAndRefLookup = {
-  "frontier": {}
+  frontier: {},
 } as const;
 
 function authoredHexRefKey(spaceIds: readonly string[]): string {
@@ -2793,9 +3486,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<
-    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
-  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
+    layout: LayoutValue,
+  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -2803,9 +3496,7 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<
-    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
-  >(
+  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -2839,10 +3530,7 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<
-    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
-    Value,
-  >(
+  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -2903,10 +3591,7 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<
-    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
-    Value
-  > {
+  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -2916,9 +3601,7 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<
-    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
-  >(
+  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -2941,7 +3624,8 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends
+      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -3041,9 +3725,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
-      authoredHexRefKey(edgeRef.spaces)
-    ];
+    const edgeId = (
+      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
+    )[authoredHexRefKey(edgeRef.spaces)];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -3124,10 +3808,7 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<
-    typeof edgeIdsByBoardIdAndTypeIdLookup,
-    BoardIdValue
-  > {
+  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -3144,7 +3825,8 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3188,7 +3870,10 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
+      BoardLookupIdValue<
+        typeof vertexIdsByBoardIdAndTypeIdLookup,
+        BoardIdValue
+      >,
       Value
     >;
   },
@@ -3232,7 +3917,8 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends
+      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3261,9 +3947,7 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(
-    boardBaseId: BoardBaseId,
-  ): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

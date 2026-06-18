@@ -9,10 +9,13 @@ import { useStore } from "zustand";
 import {
   createHexBoardView,
   HexGrid,
+  SquareGrid,
   type AnyHexBoardInput,
+  type AnySquareBoardInput,
   type BoardSpaceIdOf,
   type HexBoardView,
   type HexGridBoardProps,
+  type SquareGridBoardProps,
 } from "../../ui.js";
 import {
   useBoardInteractions,
@@ -138,14 +141,18 @@ export interface BoardHexGridInteractions {
   space?: BoardTargetLayerOptions;
 }
 
-export type BoardHexGridInteractionFilter =
+export type BoardGridInteractionFilter<Key extends string = string> =
   | "auto"
   | false
   | {
-      edge?: readonly string[];
-      vertex?: readonly string[];
-      space?: readonly string[];
+      edge?: readonly Key[];
+      vertex?: readonly Key[];
+      space?: readonly Key[];
     };
+
+export type BoardHexGridInteractionFilter = BoardGridInteractionFilter<string>;
+export type BoardSquareGridInteractionFilter =
+  BoardGridInteractionFilter<string>;
 
 type BoardHexGridView<
   TBoard extends AnyHexBoardInput,
@@ -174,33 +181,11 @@ export function BoardHexGrid<
 }: BoardHexGridProps<TBoard, TSpaceView>) {
   const boardInteractions = useBoardPrimitiveContext();
   const gameActionError = useGameActionError();
-  const edgeLayer =
-    interactions === false
-      ? undefined
-      : boardInteractions.targetLayers.edge({
-          enabled: boardInteractions.eligible.edge.size > 0,
-          interactionKeys:
-            interactions === "auto" ? undefined : interactions.edge,
-          onError: gameActionError ?? undefined,
-        });
-  const vertexLayer =
-    interactions === false
-      ? undefined
-      : boardInteractions.targetLayers.vertex({
-          enabled: boardInteractions.eligible.vertex.size > 0,
-          interactionKeys:
-            interactions === "auto" ? undefined : interactions.vertex,
-          onError: gameActionError ?? undefined,
-        });
-  const spaceLayer =
-    interactions === false
-      ? undefined
-      : boardInteractions.targetLayers.space({
-          enabled: boardInteractions.eligible.space.size > 0,
-          interactionKeys:
-            interactions === "auto" ? undefined : interactions.space,
-          onError: gameActionError ?? undefined,
-        });
+  const { edgeLayer, vertexLayer, spaceLayer } = useBoardGridTargetLayers({
+    boardInteractions,
+    interactions,
+    onError: gameActionError ?? undefined,
+  });
   return (
     <BoardHexView board={board} spaces={spaces}>
       {(view) => (
@@ -214,6 +199,76 @@ export function BoardHexGrid<
       )}
     </BoardHexView>
   );
+}
+
+export type BoardSquareGridProps<TBoard extends AnySquareBoardInput> = Omit<
+  SquareGridBoardProps<TBoard>,
+  "interactiveEdges" | "interactiveVertices" | "interactiveSpaces"
+> & {
+  interactions?: BoardSquareGridInteractionFilter;
+};
+
+export function BoardSquareGrid<const TBoard extends AnySquareBoardInput>({
+  board,
+  interactions = "auto",
+  ...props
+}: BoardSquareGridProps<TBoard>) {
+  const boardInteractions = useBoardPrimitiveContext();
+  const gameActionError = useGameActionError();
+  const { edgeLayer, vertexLayer, spaceLayer } = useBoardGridTargetLayers({
+    boardInteractions,
+    interactions,
+    onError: gameActionError ?? undefined,
+  });
+  return (
+    <SquareGrid
+      {...props}
+      board={board}
+      interactiveEdges={edgeLayer}
+      interactiveVertices={vertexLayer}
+      interactiveSpaces={spaceLayer}
+    />
+  );
+}
+
+function useBoardGridTargetLayers({
+  boardInteractions,
+  interactions,
+  onError,
+}: {
+  boardInteractions: BoardInteractionsContext;
+  interactions: BoardGridInteractionFilter;
+  onError?: (error: unknown) => void;
+}) {
+  return {
+    edgeLayer:
+      interactions === false
+        ? undefined
+        : boardInteractions.targetLayers.edge({
+            enabled: boardInteractions.eligible.edge.size > 0,
+            interactionKeys:
+              interactions === "auto" ? undefined : interactions.edge,
+            onError,
+          }),
+    vertexLayer:
+      interactions === false
+        ? undefined
+        : boardInteractions.targetLayers.vertex({
+            enabled: boardInteractions.eligible.vertex.size > 0,
+            interactionKeys:
+              interactions === "auto" ? undefined : interactions.vertex,
+            onError,
+          }),
+    spaceLayer:
+      interactions === false
+        ? undefined
+        : boardInteractions.targetLayers.space({
+            enabled: boardInteractions.eligible.space.size > 0,
+            interactionKeys:
+              interactions === "auto" ? undefined : interactions.space,
+            onError,
+          }),
+  };
 }
 
 export type BoardTargetExtraInputs =
@@ -532,6 +587,7 @@ export const Board = {
   State: BoardState,
   HexGrid: BoardHexGrid,
   HexView: BoardHexView,
+  SquareGrid: BoardSquareGrid,
   Target: BoardTarget,
   SpaceTarget: BoardSpaceTarget,
   EdgeTarget: BoardEdgeTarget,

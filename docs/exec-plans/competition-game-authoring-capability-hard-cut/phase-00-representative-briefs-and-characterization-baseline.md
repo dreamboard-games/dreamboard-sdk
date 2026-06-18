@@ -1,6 +1,6 @@
 # Phase 00: Representative Briefs And Characterization Baseline
 
-Status: proposed.
+Status: source baseline implemented on 2026-06-18.
 
 ## Objective
 
@@ -221,6 +221,24 @@ mise exec node@24 -- node scripts/capability/check-competition-game-briefs.mjs
 mise exec node@24 -- pnpm test
 mise exec node@24 -- pnpm check
 ```
+
+Current source receipt:
+
+- `mise exec node@24 -- node scripts/capability/check-competition-game-briefs.mjs`
+  passes with 24 briefs and 83 matrix rows; receipt written to
+  `artifacts/capability/competition-game-authoring/brief-check-receipt.json`.
+- `mise exec node@24 -- pnpm --filter @dreamboard-games/sdk test src/testing/competition-characterization`
+  passes; the package script runs the SDK suite and includes the Phase 00
+  characterization tests.
+- `mise exec node@24 -- pnpm docs:check`, `mise exec node@24 -- pnpm lint`,
+  and `mise exec node@24 -- pnpm typecheck` pass.
+- `mise exec node@24 -- pnpm test` passes after aligning
+  `packages/ui-workbench/tests/driver/semantic-browser-driver.spec.ts` with the
+  existing `ReplayStepExecutionError` failure envelope while preserving the
+  underlying `SemanticResolutionError` as `cause`.
+- `mise exec node@24 -- pnpm check` stops at `format:check` because 53 existing
+  reference/generated files outside this phase are not formatted according to
+  the current Prettier configuration.
 
 The validator must fail on:
 

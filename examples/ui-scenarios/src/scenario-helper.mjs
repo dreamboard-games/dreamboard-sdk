@@ -10,19 +10,19 @@ const interactionKey = "inspect";
 const interactionId = `${interactionKey}:${playerId}`;
 const browserSemanticDigests = {
   "ui-scenarios.boards-slot.desktop":
-    "sha256:e32dcc9c8992d5b795a6fa6b76f8720d29b8cb9149a83d4a9e7c64cdaad20f6a",
+    "sha256:145e0127978ace926637702d67745a6331407bffc30b5b89da9fd67906579fa3",
   "ui-scenarios.cards-hand.desktop":
-    "sha256:5514837becaaf6fd33823feaba7bed807fe43f9eb2244b36f0bc1ea071ab911a",
+    "sha256:365a0fac0835530df450fc062070b9da0fb06a088ea9c9cfc3842a91cd8ba65b",
   "ui-scenarios.dice-result.desktop":
-    "sha256:74e12ccca1837405e44d50baa03d5efa1eee8b91b7a2b055b6627154ce10c02b",
+    "sha256:1a10c8269beb45be3ff94eeaf46b2e8d4016526e08565a3dcb697f9a5f668ba0",
   "ui-scenarios.game-shell.desktop":
-    "sha256:46204b9a117b7891555b33ef6ed7b8d0a2dfd258fe883a16e8a63ac93211519f",
+    "sha256:5eef31cb0727e2f13a3cd5a3e0fb9b6380e01fc61eacb4d1faeb861b864f364f",
   "ui-scenarios.prompts-choice.desktop":
-    "sha256:0b8f77adb851955366ae13fa12db832e806a1950ff32975be47d4410ddcd6e28",
+    "sha256:9cfb246e899fa1b2619958930cf88b14145cb651e05f996b01825364d44f2f4a",
   "ui-scenarios.resources-cost.desktop":
-    "sha256:375167a807a7fd8cdf00ca35eca7df6f11cd13650e00cae91cad5b6127828488",
+    "sha256:3cf166cb66b1caa9d43942a5c4d98ce95746b9081af691576c0d563533b6b2ff",
   "ui-scenarios.zones-staging.desktop":
-    "sha256:5995680b7da3c5b984b171172f2da4a2008b9a207be6fe628386afee93521434",
+    "sha256:ce95f5ad89261cd936f5c491007b7c1f2671435f445e4cce5535b132986a2386",
 };
 
 function digest(seed) {
@@ -55,6 +55,7 @@ function frame({ id, scenarioId, version, view }) {
       },
       availableInteractions: [interactionDescriptor(scenarioId)],
       zones: {},
+      recentEvents: [],
     },
   };
 }
@@ -64,6 +65,7 @@ function interactionDescriptor(scenarioId) {
     phaseName: "inspect",
     interactionKey,
     interactionId,
+    label: "Inspect",
     kind: "action",
     availability: { status: "available" },
     commit: { mode: "manual" },

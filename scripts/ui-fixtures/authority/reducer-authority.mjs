@@ -26,13 +26,22 @@ function scenarioSubmissionParams(coverage) {
   if (replay.kind === "draft") {
     return { [replay.inputKey]: replay.value };
   }
+  if (replay.kind === "board-space") {
+    return { [replay.inputKey]: replay.spaceId };
+  }
   return {};
 }
 
 function scenarioInteraction(referenceGame, coverage) {
-  const interaction = referenceGame.interactions.find((candidate) =>
-    coverage.scenarioId.includes(candidate.id),
-  );
+  const explicitInteractionId =
+    coverage.interactionId ?? scenarioReplay(coverage).interactionId;
+  const interaction =
+    referenceGame.interactions.find(
+      (candidate) => candidate.id === explicitInteractionId,
+    ) ??
+    referenceGame.interactions.find((candidate) =>
+      coverage.scenarioId.includes(candidate.id),
+    );
   if (!interaction) {
     throw new Error(
       `${coverage.scenarioId} does not identify a reference-game interaction.`,
@@ -119,6 +128,26 @@ function buildSourcePlan(coverage, interactionId) {
       },
     };
   }
+  if (replay.kind === "board-space") {
+    return {
+      sourceSteps: [
+        {
+          exercise: "activate",
+          request: {
+            ...base,
+            effect: {
+              kind: "setCandidate",
+              inputKey: replay.inputKey,
+              candidateValue: replay.spaceId,
+              beforeSelected: false,
+              afterSelected: true,
+            },
+          },
+        },
+      ],
+      finalSubmit: { kind: "semantic-submit" },
+    };
+  }
   return {
     sourceSteps: [
       {
@@ -167,6 +196,7 @@ function buildReplaySteps({
         : replay.kind === "multi-select"
           ? `${fixtureId}.select-${String(index + 1).padStart(2, "0")}`
           : `${fixtureId}.${replay.kind}`;
+    const measuredSemanticDigest = exercise.stepSemanticDigests?.[index];
     return {
       stepId,
       requestDigest: digestUIFixtureRequest(sourceRequest),
@@ -192,6 +222,9 @@ function buildReplaySteps({
               visibleInteractionKeys: exercise.visibleInteractionKeys,
             }
           : {
+              ...(measuredSemanticDigest
+                ? { semanticDigest: measuredSemanticDigest }
+                : {}),
               visibleInteractionKeys: [interaction.id],
             },
     };
@@ -213,6 +246,15 @@ function buildReplaySteps({
       requestDigest: digestUIFixtureRequest(commitRequest),
       resolve: commitRequest,
       execute: { kind: "activate" },
+      ...(exercise.submitResolution
+        ? {
+            expectedIdentity: expectedIdentity(
+              commitStepId,
+              interaction.id,
+              exercise.submitResolution,
+            ),
+          }
+        : {}),
       expect: {
         frameId: finalFrame.id,
         projectionDigest: finalFrame.projectionDigest,
@@ -226,9 +268,17 @@ function buildReplaySteps({
 
 function capabilitiesForReplay(replaySteps, viewportTags, coverage) {
   const replay = scenarioReplay(coverage);
-  const capabilities = new Set(["runtime-submit"]);
+  const capabilities = new Set([
+    "accessibility-scan",
+    "reduced-motion",
+    "runtime-submit",
+  ]);
   if (replay.kind === "multi-select") {
     capabilities.add("runtime-draft");
+  }
+  if (replay.kind === "board-space") {
+    capabilities.add("runtime-draft");
+    capabilities.add("keyboard");
   }
   for (const step of replaySteps) {
     if (step.execute.kind === "activate") capabilities.add("click");

@@ -1,6 +1,8 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": ["player-1"],
+  "stageSeats": [
+    "player-1"
+  ],
   "view": {
     "spaces": [
       {
@@ -354,7 +356,7 @@
       "player-3": 0,
       "player-4": 0
     },
-    "winnerPlayerId": null,
+    "outcome": null,
     "tradeNetworkOwner": null,
     "tradeNetworkLength": 0,
     "explorerGuildOwner": null,
@@ -365,6 +367,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.rollDice",
       "interactionId": "rollDice",
+      "label": "Roll Dice",
       "commit": {
         "mode": "manual"
       },
@@ -382,6 +385,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.moveStorm",
       "interactionId": "moveStorm",
+      "label": "Move Storm",
       "commit": {
         "mode": "manual"
       },
@@ -708,6 +712,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buildTrail",
       "interactionId": "buildTrail",
+      "label": "Build Trail",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -746,6 +751,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buildCamp",
       "interactionId": "buildCamp",
+      "label": "Build Camp",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -784,6 +790,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.upgradeToTown",
       "interactionId": "upgradeToTown",
+      "label": "Upgrade To Town",
       "commit": {
         "mode": "autoWhenReady"
       },
@@ -822,6 +829,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.buyCharterCard",
       "interactionId": "buyCharterCard",
+      "label": "Buy Charter Card",
       "commit": {
         "mode": "manual"
       },
@@ -841,6 +849,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.tradeWithBank",
       "interactionId": "tradeWithBank",
+      "label": "Trade With Bank",
       "commit": {
         "mode": "manual"
       },
@@ -951,6 +960,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.offerTrade",
       "interactionId": "offerTrade",
+      "label": "Offer Trade",
       "commit": {
         "mode": "manual"
       },
@@ -1066,7 +1076,11 @@
             "min": 1,
             "max": 3
           },
-          "defaultValue": ["player-2", "player-3", "player-4"]
+          "defaultValue": [
+            "player-2",
+            "player-3",
+            "player-4"
+          ]
         }
       ],
       "availability": {
@@ -1083,6 +1097,7 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.endTurn",
       "interactionId": "endTurn",
+      "label": "End Turn",
       "commit": {
         "mode": "manual"
       },
@@ -1102,11 +1117,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playLandmark",
       "interactionId": "playLandmark",
+      "label": "Play Landmark",
       "commit": {
         "mode": "autoWhenReady"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1115,7 +1133,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1140,11 +1160,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playScout",
       "interactionId": "playScout",
+      "label": "Play Scout",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1153,7 +1176,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1484,11 +1509,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playSurveyGrant",
       "interactionId": "playSurveyGrant",
+      "label": "Play Survey Grant",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1497,7 +1525,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1592,11 +1622,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playClaimMarker",
       "interactionId": "playClaimMarker",
+      "label": "Play Claim Marker",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1605,7 +1638,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1665,11 +1700,14 @@
       "phaseName": "playerTurn",
       "interactionKey": "playerTurn.playShortcut",
       "interactionId": "playShortcut",
+      "label": "Play Shortcut",
       "commit": {
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": ["charter-hand"],
+      "zoneIds": [
+        "charter-hand"
+      ],
       "inputs": [
         {
           "key": "cardId",
@@ -1678,7 +1716,9 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": ["charter-hand"],
+            "zoneIds": [
+              "charter-hand"
+            ],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1781,31 +1821,81 @@
         "landmark-1": "{\"id\":\"landmark-1\",\"cardType\":\"landmark\",\"name\":\"Landmark\",\"properties\":{\"cardType\":\"landmark\"}}"
       },
       "playableByCardId": {
-        "claimMarker-2": ["playClaimMarker:5d9098e7e8a1885d"],
-        "surveyGrant-1": ["playSurveyGrant:93c5d8061282e4da"],
-        "scout-6": ["playScout:b1973a00a6bb2b11"],
-        "claimMarker-1": ["playClaimMarker:5d9098e7e8a1885d"],
-        "scout-3": ["playScout:b1973a00a6bb2b11"],
-        "scout-13": ["playScout:b1973a00a6bb2b11"],
-        "shortcut-1": ["playShortcut:6ab8066013c4aa18"],
-        "scout-12": ["playScout:b1973a00a6bb2b11"],
-        "landmark-5": ["playLandmark:08923a8a4d85dd3f"],
-        "scout-1": ["playScout:b1973a00a6bb2b11"],
-        "scout-9": ["playScout:b1973a00a6bb2b11"],
-        "landmark-4": ["playLandmark:08923a8a4d85dd3f"],
-        "surveyGrant-2": ["playSurveyGrant:93c5d8061282e4da"],
-        "scout-4": ["playScout:b1973a00a6bb2b11"],
-        "scout-11": ["playScout:b1973a00a6bb2b11"],
-        "shortcut-2": ["playShortcut:6ab8066013c4aa18"],
-        "scout-7": ["playScout:b1973a00a6bb2b11"],
-        "landmark-2": ["playLandmark:08923a8a4d85dd3f"],
-        "scout-14": ["playScout:b1973a00a6bb2b11"],
-        "scout-5": ["playScout:b1973a00a6bb2b11"],
-        "scout-8": ["playScout:b1973a00a6bb2b11"],
-        "scout-2": ["playScout:b1973a00a6bb2b11"],
-        "scout-10": ["playScout:b1973a00a6bb2b11"],
-        "landmark-3": ["playLandmark:08923a8a4d85dd3f"],
-        "landmark-1": ["playLandmark:08923a8a4d85dd3f"]
+        "claimMarker-2": [
+          "playClaimMarker:106540de8a1f04a2"
+        ],
+        "surveyGrant-1": [
+          "playSurveyGrant:ac0c62cf3fff6d13"
+        ],
+        "scout-6": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "claimMarker-1": [
+          "playClaimMarker:106540de8a1f04a2"
+        ],
+        "scout-3": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-13": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "shortcut-1": [
+          "playShortcut:6f9bfc6c1d0308cb"
+        ],
+        "scout-12": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "landmark-5": [
+          "playLandmark:0d69e2ef955c3b12"
+        ],
+        "scout-1": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-9": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "landmark-4": [
+          "playLandmark:0d69e2ef955c3b12"
+        ],
+        "surveyGrant-2": [
+          "playSurveyGrant:ac0c62cf3fff6d13"
+        ],
+        "scout-4": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-11": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "shortcut-2": [
+          "playShortcut:6f9bfc6c1d0308cb"
+        ],
+        "scout-7": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "landmark-2": [
+          "playLandmark:0d69e2ef955c3b12"
+        ],
+        "scout-14": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-5": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-8": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-2": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "scout-10": [
+          "playScout:6485bbd8df0d2952"
+        ],
+        "landmark-3": [
+          "playLandmark:0d69e2ef955c3b12"
+        ],
+        "landmark-1": [
+          "playLandmark:0d69e2ef955c3b12"
+        ]
       }
     }
   }

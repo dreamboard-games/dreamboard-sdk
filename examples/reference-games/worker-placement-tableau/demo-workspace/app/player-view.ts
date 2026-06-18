@@ -1,4 +1,4 @@
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { defineView, type GameOutcome } from "@dreamboard-games/sdk/reducer";
 import type { GameContract, ItemId } from "./game-contract";
 import type { PlacementPhaseState } from "./game-contract";
 import {
@@ -43,10 +43,10 @@ export type PlayerView = {
   readonly enabledActionSpaces: readonly SpaceId[];
   readonly setupVariablePoolDraw: readonly SpaceId[];
   readonly turnOrderThisSeason: readonly PlayerId[];
-  readonly winnerPlayerId: PlayerId | null;
+  readonly outcome: GameOutcome<PlayerId> | null;
   /**
    * Final per-player VP totals; populated only after the scoring phase
-   * runs (i.e. when `winnerPlayerId` is non-null). Until then the UI
+   * runs (i.e. when `outcome` is non-null). Until then the UI
    * should use `playerVPByPlayerId` for the running counter.
    */
   readonly finalVPByPlayerId: Readonly<Record<PlayerId, number>> | null;
@@ -194,20 +194,18 @@ export const playerView = defineView<GameContract>()({
       : ((state.flow.activePlayers[0] as PlayerId | undefined) ?? null);
 
     // ── finalVP gate ───────────────────────────────────────────────────
-    // After scoring runs, `winnerPlayerId` flips off null and
+    // After scoring runs, `outcome` flips off null and
     // `playerVP` has been overwritten with totals. We surface that as
     // `finalVPByPlayerId` so consumers don't have to phase-check.
-    const winnerPlayerId = state.publicState.winnerPlayerId;
-    const finalVPByPlayerId = winnerPlayerId
-      ? state.publicState.playerVP
-      : null;
+    const outcome = state.publicState.outcome as GameOutcome<PlayerId> | null;
+    const finalVPByPlayerId = outcome ? state.publicState.playerVP : null;
 
     return {
       seasonNumber: state.publicState.seasonNumber,
       enabledActionSpaces: state.publicState.enabledActionSpaces,
       setupVariablePoolDraw: state.publicState.setupVariablePoolDraw,
       turnOrderThisSeason: state.publicState.turnOrderThisSeason,
-      winnerPlayerId,
+      outcome,
       finalVPByPlayerId,
 
       currentPhase,

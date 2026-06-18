@@ -1,10 +1,107 @@
 # Phase 03: Guidance Projection And Explanation UI
 
-Status: proposed.
+Status: SDK contract/projection, controlled-component source/proof, SDK
+anchor-game guidance/proof, and public-example lint/generation-rule slices
+complete on 2026-06-18; internal monorepo pass-through remains.
 
 Depends on Phase 02.
 
 Primary repositories: `dreamboard-sdk` and the internal monorepo.
+
+## Source Receipt: SDK Contract/Projection Slice
+
+Completed in `dreamboard-sdk` on 2026-06-18:
+
+- Added `SetupProfileSpec.guidance`, `PhaseDefinitionCommon.guidance`, and
+  `InteractionSpec`/`CardActionSpec.presentation` authoring fields.
+- Preserved setup guidance through manifest metadata/codegen analysis and
+  added duplicate guidance-step ID validation.
+- Projected `descriptor.label`/`descriptor.help` from authored presentation
+  with the existing deterministic humanized interaction fallback.
+- Projected current phase/setup guidance through trusted dynamic projection,
+  the strict plugin runtime contract, materialized gameplay frames, runtime
+  snapshot types, and semantic projection digests.
+- Added controlled `GuidancePanel`, `SetupChecklist`, and `ActionHelp`
+  components exported from the public UI component surface. Setup completion
+  stays prop-driven from game view data, and unavailable reasons render from
+  `descriptor.availability.reason`-shaped input without developer diagnostics.
+- Added Storybook coverage for guidance overview, setup completion, blocked
+  action reasons, and a phone-width guidance stack; registered the public
+  guidance components in `ui:coverage:check`.
+- Recompiled portable UI fixtures so fixture receipts include the new descriptor
+  and digest shape.
+- Added authored guidance to `roll-and-write-scorecard` and
+  `multiplayer-ranking-and-ties`, including exact verifier assertions for phase
+  guidance, setup guidance, interaction presentation, and the visible blocked
+  roll-first reason.
+- Preserved reference-reducer guidance and player-safe descriptor help/reason
+  projection for portable reference scenarios.
+- Added explicit authored phase guidance and interaction labels to the earlier
+  public reference descriptors that still relied on fallback copy.
+- Extended `reference-games:check` to validate required phase labels/summaries,
+  interaction labels, unique setup guidance step IDs, bounded non-empty strings,
+  no raw Markdown/HTML in player-facing descriptor fields, and exact source text
+  preservation in generated UI fixture frames.
+- Aligned reducer accept/event wire types, generated reducer-contract fixtures,
+  and trusted-bundle readonly return types so the guidance fixture build and
+  `typecheck` gates consume the same event-aware reducer result shape.
+- Recompiled generated UI fixtures and scenario catalog after the anchor-game
+  guidance updates.
+
+Verification run:
+
+```sh
+mise exec node@24 -- pnpm --filter @dreamboard-games/plugin-runtime-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk exec bun test src/reducer/interaction-decision.test.ts src/reducer/setup-profile-runtime.test.ts src/testing/ui-fixture/ui-fixture.test.ts src/testing/competition-characterization/phase-00-baseline.test.ts
+mise exec node@24 -- pnpm typecheck
+mise exec node@24 -- pnpm ui:fixtures:compile
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm ui:catalog:check
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk exec bun test src/ui/components/Guidance.test.tsx
+mise exec node@24 -- pnpm exports:check
+mise exec node@24 -- pnpm reference-games:check
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm ui:test --scenario roll-and-write-scorecard.mark-cell.mobile
+mise exec node@24 -- pnpm ui:test --scenario multiplayer-ranking-and-ties.draft-stall.desktop
+mise exec node@24 -- pnpm generate:check
+mise exec node@24 -- pnpm --filter @dreamboard-games/reducer-contract build
+mise exec node@24 -- pnpm --filter @dreamboard-games/reducer-contract test
+mise exec node@24 -- pnpm --filter @dreamboard-games/sdk exec bun test src/ui/components/Guidance.test.tsx src/reducer/interaction-decision.test.ts src/reducer/setup-profile-runtime.test.ts src/testing/ui-fixture/ui-fixture.test.ts
+mise exec node@24 -- pnpm ui:coverage:check
+mise exec node@24 -- pnpm ui:test:stories
+mise exec node@24 -- pnpm ui:test:visual
+```
+
+Workbench evidence receipts:
+
+- `artifacts/ui/2026-06-18T13-29-08-213Z/receipt.json`:
+  `roll-and-write-scorecard.mark-cell.mobile` passed on chromium desktop,
+  chromium touch phone, and webkit phone with measured projection, semantic,
+  submission, screenshot, and transcript evidence.
+- `artifacts/ui/2026-06-18T13-29-48-028Z/receipt.json`:
+  `multiplayer-ranking-and-ties.draft-stall.desktop` passed on chromium desktop
+  with measured projection, semantic, submission, screenshot, and transcript
+  evidence.
+- `artifacts/ui-stories/2026-06-18T13-44-40-576Z/receipt.json`:
+  Storybook interaction proof passed after building Storybook.
+- `artifacts/ui-visual/2026-06-18T13-45-00-518Z/receipt.json`:
+  Storybook visual proof passed after building Storybook.
+
+`pnpm check` was not rerun for this slice because Phase 02 already records the
+current clean-checkout blocker as the pre-existing repository `format:check`
+backlog, not this guidance projection work.
+
+Remaining Phase 03 work:
+
+- Update strict internal monorepo consumers, host selectors/adapters, reconnect
+  handling, and real-host parity proof.
+
+Phase 00 brief jobs cited:
+
+- `roll-and-write-scorecard-01`: `show why other squares are blocked`.
+- `per-player-resource-track-01`: `block overheat actions`.
+- `variable-setup-race-01`: `race to non-score objective`.
 
 ## Objective
 

@@ -35,12 +35,12 @@ Each of the 6 seasons proceeds through three phases:
 
 Players take turns (last season's turn order, reversed) selecting a slot on the wake-up track. Each slot grants its bonus immediately:
 
-| Slot | Turn order | Bonus |
-| ---- | ---------- | ----- |
-| 1    | First      | none |
-| 2    | First      | +1 coin |
+| Slot | Turn order | Bonus                  |
+| ---- | ---------- | ---------------------- |
+| 1    | First      | none                   |
+| 2    | First      | +1 coin                |
 | 3    | Second     | draw 1 Apprentice card |
-| 4    | Second     | +1 wood, +1 stone |
+| 4    | Second     | +1 wood, +1 stone      |
 
 Only one player per slot. The lower-numbered slot acts first this season.
 
@@ -63,7 +63,7 @@ All workers return to their players. Advance the season marker. After season 6, 
 3. **Market** — gain 3 coin, or sell 1 stone for 2 coin.
 4. **Guild Hall** — draw 1 Order card and 1 Apprentice card; keep both.
 5. **Training Hall** — pay 3 coin to add 1 new apprentice to your roster (max 4 apprentices). The new worker is available next season.
-6. **Workshop** — craft 1 item onto an empty cell of your mat. Pay the item's resource cost. Items grant VP at game end and may have placement adjacency requirements (e.g. *Workbench must touch another item*).
+6. **Workshop** — craft 1 item onto an empty cell of your mat. Pay the item's resource cost. Items grant VP at game end and may have placement adjacency requirements (e.g. _Workbench must touch another item_).
 
 ### Variable pool (3 drawn at setup)
 
@@ -80,18 +80,18 @@ All workers return to their players. Advance the season marker. After season 6, 
 
 Each order card lists requirements your workshop mat must satisfy. Once met, you may fulfill the order at any point on your turn (no worker required): discard the card and immediately gain its reward.
 
-| # | Name | Requirement | Reward |
-| - | ---- | ----------- | ------ |
-| 1 | Furniture Commission | 2 wood items on mat | 3 VP |
-| 2 | Stone Sculpture | 2 stone items on mat | 3 VP |
-| 3 | Master's Display | 1 Showroom on mat | 4 VP + 2 coin |
-| 4 | Forge Order | 1 Anvil + 1 Kiln on mat | 5 VP |
-| 5 | Weaver's Request | 2 Looms on mat | 4 VP |
-| 6 | Apprentice Trial | 3 items of any kind on mat | 2 VP + 2 coin |
-| 7 | Mixed Set | 1 wood item + 1 stone item on mat | 3 VP + 1 coin |
-| 8 | Architect's Plan | 4 items in a 2×2 square | 6 VP |
-| 9 | Row of Pride | 3 items in a single row | 5 VP |
-| 10 | Grand Atelier | 6 or more cells filled on mat | 7 VP |
+| #   | Name                 | Requirement                       | Reward        |
+| --- | -------------------- | --------------------------------- | ------------- |
+| 1   | Furniture Commission | 2 wood items on mat               | 3 VP          |
+| 2   | Stone Sculpture      | 2 stone items on mat              | 3 VP          |
+| 3   | Master's Display     | 1 Showroom on mat                 | 4 VP + 2 coin |
+| 4   | Forge Order          | 1 Anvil + 1 Kiln on mat           | 5 VP          |
+| 5   | Weaver's Request     | 2 Looms on mat                    | 4 VP          |
+| 6   | Apprentice Trial     | 3 items of any kind on mat        | 2 VP + 2 coin |
+| 7   | Mixed Set            | 1 wood item + 1 stone item on mat | 3 VP + 1 coin |
+| 8   | Architect's Plan     | 4 items in a 2×2 square           | 6 VP          |
+| 9   | Row of Pride         | 3 items in a single row           | 5 VP          |
+| 10  | Grand Atelier        | 6 or more cells filled on mat     | 7 VP          |
 
 Item type (wood/stone) is determined by the item's primary resource cost. Items requiring both (e.g. Kiln) count as both types for orders.
 
@@ -99,35 +99,35 @@ Item type (wood/stone) is determined by the item's primary resource cost. Items 
 
 **One-shot** (6 cards) — play on your turn for an immediate effect, then discard:
 
-| # | Name | Effect |
-| - | ---- | ------ |
-| 1 | Quick Delivery | Gain 3 coin. |
-| 2 | Lumber Stash | Gain 3 wood. |
-| 3 | Stone Cache | Gain 2 stone. |
-| 4 | Spare Hands | Place 1 extra apprentice this season; it returns at season end. |
-| 5 | Inspiration | Craft 1 item this turn at -1 wood cost (minimum 0). Does not require a Workshop worker. |
-| 6 | Reassign | Recall one of your placed workers; you may immediately re-place it on a different empty space. |
+| #   | Name           | Effect                                                                                         |
+| --- | -------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | Quick Delivery | Gain 3 coin.                                                                                   |
+| 2   | Lumber Stash   | Gain 3 wood.                                                                                   |
+| 3   | Stone Cache    | Gain 2 stone.                                                                                  |
+| 4   | Spare Hands    | Place 1 extra apprentice this season; it returns at season end.                                |
+| 5   | Inspiration    | Craft 1 item this turn at -1 wood cost (minimum 0). Does not require a Workshop worker.        |
+| 6   | Reassign       | Recall one of your placed workers; you may immediately re-place it on a different empty space. |
 
 **Persistent** (4 cards) — play face-up in front of you for the rest of the game:
 
-| # | Name | Effect |
-| - | ---- | ------ |
-| 7 | Foreman | Lumberyard gives you +1 wood whenever you place a worker there. |
-| 8 | Tireless Master | Your master may be placed twice per season: once normally, then recalled and re-placed when your next turn begins. |
-| 9 | Guild Scholar | When you place on the Guild Hall, draw 1 extra Apprentice card. |
-| 10 | Patron's Favor | Gain 1 coin at the end of each season. |
+| #   | Name            | Effect                                                                                                             |
+| --- | --------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 7   | Foreman         | Lumberyard gives you +1 wood whenever you place a worker there.                                                    |
+| 8   | Tireless Master | Your master may be placed twice per season: once normally, then recalled and re-placed when your next turn begins. |
+| 9   | Guild Scholar   | When you place on the Guild Hall, draw 1 extra Apprentice card.                                                    |
+| 10  | Patron's Favor  | Gain 1 coin at the end of each season.                                                                             |
 
 ## Player mat: items
 
 Items occupy single cells on the 4×3 workshop mat. Common items (illustrative):
 
-| Item       | Cost            | VP  | Placement rule              |
-| ---------- | --------------- | --- | --------------------------- |
-| Workbench  | 1 wood          | 1   | must touch another item     |
-| Anvil      | 1 stone         | 2   | none                        |
-| Loom       | 2 wood          | 2   | none                        |
-| Kiln       | 1 wood + 1 stone | 3   | corner cells only          |
-| Showroom   | 2 stone + 2 coin | 4   | must touch ≥ 2 other items |
+| Item      | Cost             | VP  | Placement rule             |
+| --------- | ---------------- | --- | -------------------------- |
+| Workbench | 1 wood           | 1   | must touch another item    |
+| Anvil     | 1 stone          | 2   | none                       |
+| Loom      | 2 wood           | 2   | none                       |
+| Kiln      | 1 wood + 1 stone | 3   | corner cells only          |
+| Showroom  | 2 stone + 2 coin | 4   | must touch ≥ 2 other items |
 
 (Exact item set finalized during implementation.)
 

@@ -4,7 +4,7 @@ import type {
   TrustedRuntimeInput,
 } from "../core/types";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
-import type { TerminalOutcome } from "../model/runtime";
+import type { GameEvent, GameOutcome } from "../model/runtime";
 
 export function createRuntimeInstructionEngine<
   State,
@@ -24,8 +24,9 @@ export function createRuntimeInstructionEngine<
     | {
         type: "accept";
         state: State;
-        instructions?: RuntimeInstructionForState<State>[];
-        terminal?: TerminalOutcome<PlayerId>;
+        instructions?: readonly RuntimeInstructionForState<State>[];
+        terminal?: GameOutcome<PlayerId>;
+        events?: readonly GameEvent[];
       };
   resolveInstruction: (
     state: State,
@@ -95,7 +96,8 @@ export function createRuntimeInstructionEngine<
   ): TrustedReducerDispatchResult<State, PlayerId> {
     let workingState = state;
     const pendingInputs: Input[] = [input];
-    let terminal: TerminalOutcome<PlayerId> | undefined;
+    let terminal: GameOutcome<PlayerId> | undefined;
+    const events: GameEvent[] = [];
     const trace: DispatchTraceEntry<State, PlayerId, Input>[] = [
       {
         type: "acceptedClientInput",
@@ -119,6 +121,7 @@ export function createRuntimeInstructionEngine<
 
       workingState = result.state;
       terminal ??= result.terminal;
+      events.push(...(result.events ?? []));
 
       if (afterInput) {
         const afterInputResult = afterInput(workingState, pendingInput);
@@ -161,6 +164,7 @@ export function createRuntimeInstructionEngine<
       state: workingState,
       trace,
       ...(terminal ? { terminal } : {}),
+      events,
     };
   }
 

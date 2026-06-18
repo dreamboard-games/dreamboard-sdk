@@ -50,6 +50,9 @@ function scenarioCapabilityIsExercised(entry, capability) {
   const replayKinds = new Set(entry.replayStepKinds ?? []);
   const expectationKeys = new Set(entry.replayExpectationKeys ?? []);
   switch (capability) {
+    case "accessibility-scan":
+    case "reduced-motion":
+      return (entry.replayStepCount ?? 0) > 0;
     case "click":
       return replayKinds.has("activate");
     case "keyboard":

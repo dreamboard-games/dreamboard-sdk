@@ -41,7 +41,7 @@ export const playerView = defineView<GameContract>()({
       totalScoreByPlayer: state.publicState.totalScoreByPlayer ?? {},
       roundScoreByPlayer: state.publicState.roundScoreByPlayer ?? {},
       puddingScoreByPlayer: state.publicState.puddingScoreByPlayer ?? {},
-      winnerPlayerIds: state.publicState.winnerPlayerIds ?? [],
+      outcome: state.publicState.outcome,
       canUseChopsticks: hasChopsticksReady(q, playerId),
     };
   },

@@ -243,7 +243,7 @@ export const playing = definePhase<GameContract>()({
 
           // Trick complete: determine the winner (highest card of lead suit).
           const leadSuit = isLead ? props.suit : phaseState.leadSuit;
-          let winnerPlayerId = newPlays[0]!.playerId;
+          let trickWinnerPlayerId = newPlays[0]!.playerId;
           let winnerRank = -1;
           for (const play of newPlays) {
             const c = q.card.get(play.cardId).properties;
@@ -251,7 +251,7 @@ export const playing = definePhase<GameContract>()({
               const r = RANK_ORDER[c.rank] ?? 0;
               if (r > winnerRank) {
                 winnerRank = r;
-                winnerPlayerId = play.playerId;
+                trickWinnerPlayerId = play.playerId;
               }
             }
           }
@@ -269,12 +269,12 @@ export const playing = definePhase<GameContract>()({
           const tricksWon = state.publicState.tricksWonByPlayer ?? {};
           const updatedHearts = {
             ...heartsTaken,
-            [winnerPlayerId]:
-              (heartsTaken[winnerPlayerId] ?? 0) + heartsInTrick,
+            [trickWinnerPlayerId]:
+              (heartsTaken[trickWinnerPlayerId] ?? 0) + heartsInTrick,
           };
           const updatedTricks = {
             ...tricksWon,
-            [winnerPlayerId]: (tricksWon[winnerPlayerId] ?? 0) + 1,
+            [trickWinnerPlayerId]: (tricksWon[trickWinnerPlayerId] ?? 0) + 1,
           };
 
           // Move the four trick cards into the shared discard pile.
@@ -293,7 +293,7 @@ export const playing = definePhase<GameContract>()({
             heartsTakenByPlayer: updatedHearts,
             tricksWonByPlayer: updatedTricks,
             queenTakenBy: queenInTrick
-              ? winnerPlayerId
+              ? trickWinnerPlayerId
               : state.publicState.queenTakenBy,
             isFirstTrick: false,
           });
@@ -302,9 +302,11 @@ export const playing = definePhase<GameContract>()({
             plays: [],
             tricksPlayed,
           });
-          tx.setActivePlayers(handDone ? [] : [winnerPlayerId]);
+          tx.setActivePlayers(handDone ? [] : [trickWinnerPlayerId]);
 
-          return accept(tx.state, handDone ? [fx.transition("scoreHand")] : []);
+          return accept(tx.state, {
+            instructions: handDone ? [fx.transition("scoreHand")] : [],
+          });
         },
       },
     ),

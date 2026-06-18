@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "id": "multiplayer-ranking-and-ties",
+  "displayName": "Multiplayer Ranking And Ties",
+  "publishToDemoGallery": false,
+  "mechanics": [
+    "card-drafting",
+    "market-row",
+    "set-collection",
+    "shared-card-play"
+  ],
+  "uiPatterns": [
+    "market-row",
+    "turn-summary",
+    "standings-table",
+    "outcome-dialog"
+  ],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-18"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

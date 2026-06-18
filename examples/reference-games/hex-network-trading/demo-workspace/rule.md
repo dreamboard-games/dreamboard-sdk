@@ -57,13 +57,13 @@ On each turn the active player:
 
 ## Scoring
 
-| Item                          | Renown     |
-| ----------------------------- | ------ |
-| Camp                    | 1      |
-| Town                          | 2      |
+| Item                           | Renown |
+| ------------------------------ | ------ |
+| Camp                           | 1      |
+| Town                           | 2      |
 | Trade Network (≥ 5 continuous) | 2      |
 | Explorer Guild (≥ 3 scouts)    | 2      |
-| Landmark charter card        | 1 each |
+| Landmark charter card          | 1 each |
 
 ## Winning conditions
 

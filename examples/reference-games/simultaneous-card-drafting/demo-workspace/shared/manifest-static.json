@@ -7,13 +7,7 @@
     "square": {}
   },
   "initialTable": {
-    "playerOrder": [
-      "player-1",
-      "player-2",
-      "player-3",
-      "player-4",
-      "player-5"
-    ],
+    "playerOrder": ["player-1", "player-2", "player-3", "player-4", "player-5"],
     "zones": {
       "shared": {
         "draw-pile": [
@@ -125,76 +119,31 @@
         "hand": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ],
-            [
-              "player-3",
-              []
-            ],
-            [
-              "player-4",
-              []
-            ],
-            [
-              "player-5",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []],
+            ["player-3", []],
+            ["player-4", []],
+            ["player-5", []]
           ]
         },
         "played": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ],
-            [
-              "player-3",
-              []
-            ],
-            [
-              "player-4",
-              []
-            ],
-            [
-              "player-5",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []],
+            ["player-3", []],
+            ["player-4", []],
+            ["player-5", []]
           ]
         },
         "pudding": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ],
-            [
-              "player-3",
-              []
-            ],
-            [
-              "player-4",
-              []
-            ],
-            [
-              "player-5",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []],
+            ["player-3", []],
+            ["player-4", []],
+            ["player-5", []]
           ]
         }
       },
@@ -206,21 +155,11 @@
         "round-discard": "public"
       },
       "cardSetIdsByZoneId": {
-        "draw-pile": [
-          "sushi-cards"
-        ],
-        "hand": [
-          "sushi-cards"
-        ],
-        "played": [
-          "sushi-cards"
-        ],
-        "pudding": [
-          "sushi-cards"
-        ],
-        "round-discard": [
-          "sushi-cards"
-        ]
+        "draw-pile": ["sushi-cards"],
+        "hand": ["sushi-cards"],
+        "played": ["sushi-cards"],
+        "pudding": ["sushi-cards"],
+        "round-discard": ["sushi-cards"]
       }
     },
     "decks": {
@@ -333,76 +272,31 @@
       "hand": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ],
-          [
-            "player-3",
-            []
-          ],
-          [
-            "player-4",
-            []
-          ],
-          [
-            "player-5",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []],
+          ["player-3", []],
+          ["player-4", []],
+          ["player-5", []]
         ]
       },
       "played": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ],
-          [
-            "player-3",
-            []
-          ],
-          [
-            "player-4",
-            []
-          ],
-          [
-            "player-5",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []],
+          ["player-3", []],
+          ["player-4", []],
+          ["player-5", []]
         ]
       },
       "pudding": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ],
-          [
-            "player-3",
-            []
-          ],
-          [
-            "player-4",
-            []
-          ],
-          [
-            "player-5",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []],
+          ["player-3", []],
+          ["player-4", []],
+          ["player-5", []]
         ]
       }
     },
@@ -2381,26 +2275,11 @@
     "resources": {
       "__perPlayer": true,
       "entries": [
-        [
-          "player-1",
-          {}
-        ],
-        [
-          "player-2",
-          {}
-        ],
-        [
-          "player-3",
-          {}
-        ],
-        [
-          "player-4",
-          {}
-        ],
-        [
-          "player-5",
-          {}
-        ]
+        ["player-1", {}],
+        ["player-2", {}],
+        ["player-3", {}],
+        ["player-4", {}],
+        ["player-5", {}]
       ]
     },
     "boards": {

@@ -13,7 +13,7 @@ export default defineScenario({
 
     await game.submit(player1, "endActionPhase", {});
     await game.submit(player1, "playAllTreasures", {});
-    await game.submit(player1, "buyCard", { cardId: "sketchpad-2" as CardId });
+    await game.submit(player1, "buyCard", { cardId: "sketchpad-7" as CardId });
     await game.submit(player1, "endTurn", {});
 
     await game.submit(player2, "endActionPhase", {});

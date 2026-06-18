@@ -918,6 +918,16 @@ export type SetupOptionSpec = {
 };
 
 /**
+ * One player-facing setup guidance step. Completion state remains game-owned
+ * view data; the framework only preserves authored copy.
+ */
+export type SetupGuidanceStep = {
+  id: string;
+  label: string;
+  description?: string;
+};
+
+/**
  * Reducer-consumed authored setup profile, recipe, or loadout metadata
  */
 export type SetupProfileSpec = {
@@ -929,6 +939,10 @@ export type SetupProfileSpec = {
    */
   optionValues?: {
     [key: string]: string;
+  };
+  guidance?: {
+    summary?: string;
+    steps?: ReadonlyArray<SetupGuidanceStep>;
   };
 };
 

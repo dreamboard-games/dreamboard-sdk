@@ -1,0 +1,36 @@
+{
+  "id": "shared-markable-map-01",
+  "title": "Beacon map claims",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 4 },
+  "summary": "Players claim shared map spaces to connect beacons before the route deck expires.",
+  "authorJobs":
+    [
+      "select one unclaimed shared space",
+      "pay route resource costs",
+      "score connected beacon groups",
+    ],
+  "uiJobs":
+    [
+      "show claimed and unclaimed spaces",
+      "support touch target selection at phone width",
+      "show unaffordable routes as unavailable",
+    ],
+  "authorityJobs":
+    [
+      "reject occupied spaces",
+      "reject unpaid resource costs",
+      "replay deck order from seed",
+    ],
+  "acceptance":
+    [
+      "uses shared board spaces",
+      "cost rejection comes from reducer rules",
+      "final result includes connected-group scoring",
+    ],
+  "formatNotes":
+    {
+      "compactMobile": true,
+      "optionalPhysicalNotes": ["shared board", "claim markers"],
+    },
+}

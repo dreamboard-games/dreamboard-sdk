@@ -284,7 +284,9 @@ export function ArtisansInteractionRoutes({
               title="Resolve trade post"
               defaultOpen
               trigger={
-                <chooseTradePostExchangeForm.Arm className={ACTION_BUTTON_CLASS}>
+                <chooseTradePostExchangeForm.Arm
+                  className={ACTION_BUTTON_CLASS}
+                >
                   Resolve trade post
                 </chooseTradePostExchangeForm.Arm>
               }

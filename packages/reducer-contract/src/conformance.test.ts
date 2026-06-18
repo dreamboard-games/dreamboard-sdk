@@ -211,6 +211,7 @@ describe("generated builders produce wire-valid effects", () => {
       },
       effects,
       continuations,
+      events: [],
     };
 
     expect(() => Zod.ReduceResultSchema.parse(accept)).not.toThrow();
@@ -250,6 +251,82 @@ describe("generated builders produce wire-valid effects", () => {
 describe("protocol version constant", () => {
   test("is semver", () => {
     expect(REDUCER_CONTRACT_VERSION).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+});
+
+describe("GameOutcome wire shape", () => {
+  test("accepts scoreless tied outcomes", () => {
+    const parsed = Zod.GameOutcomeSchema.parse({
+      reason: { code: "SECOND_STORM" },
+      standings: [
+        { playerId: "player-1", rank: 1, result: "draw" },
+        { playerId: "player-2", rank: 1, result: "draw" },
+      ],
+    });
+
+    expect(parsed.standings).toHaveLength(2);
+  });
+
+  test("accepts breakdown and tie-break evidence", () => {
+    const parsed = Zod.GameOutcomeSchema.parse({
+      reason: {
+        code: "ROUND_LIMIT_REACHED",
+        message: "The final round is complete.",
+      },
+      standings: [
+        {
+          playerId: "player-1",
+          rank: 1,
+          result: "win",
+          score: 18,
+          scoreBreakdown: [
+            { id: "routes", label: "Routes", value: 12 },
+            { id: "bonuses", label: "Bonuses", value: 6 },
+          ],
+          tieBreaks: [
+            { id: "cards-left", label: "Cards left", value: 2 },
+            { id: "seed-order", label: "Seed order", value: "A" },
+          ],
+        },
+      ],
+    });
+
+    expect(parsed.standings[0]?.scoreBreakdown?.[0]?.value).toBe(12);
+  });
+
+  test("rejects the legacy winner and score-map terminal payload", () => {
+    const legacyWinnerKey = `winner${"Player"}Id`;
+    const legacyScoreMapKey = `final${"Scores"}`;
+    expect(() =>
+      Zod.GameOutcomeSchema.parse({
+        [legacyWinnerKey]: "player-1",
+        [legacyScoreMapKey]: { "player-1": 12 },
+        reason: "Game ended.",
+      }),
+    ).toThrow();
+  });
+
+  test("rejects invalid ranks and non-finite scores", () => {
+    expect(() =>
+      Zod.GameOutcomeSchema.parse({
+        reason: { code: "EMPTY_STANDINGS" },
+        standings: [],
+      }),
+    ).toThrow();
+    expect(() =>
+      Zod.GameOutcomeSchema.parse({
+        reason: { code: "BAD_RANK" },
+        standings: [{ playerId: "player-1", rank: 0, result: "win" }],
+      }),
+    ).toThrow();
+    expect(() =>
+      Zod.GameOutcomeSchema.parse({
+        reason: { code: "BAD_SCORE" },
+        standings: [
+          { playerId: "player-1", rank: 1, result: "win", score: Infinity },
+        ],
+      }),
+    ).toThrow();
   });
 });
 

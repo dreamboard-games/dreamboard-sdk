@@ -92,6 +92,59 @@ export const UI_CONTRACTS = [
     requiredCapabilities: ["responsive-layout"],
   }),
   defineUIContract({
+    id: "GuidancePanel",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "GuidancePanel",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Guidance.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: [
+      "resource-status--guidance-overview",
+      "resource-status--guidance-phone-stack",
+    ],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
+    id: "GameEventLog",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "GameEventLog",
+    sourceFiles: ["packages/sdk/src/ui/components/GameEventLog.tsx"],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
+    id: "SetupChecklist",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "SetupChecklist",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Guidance.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: [
+      "resource-status--setup-checklist-controlled",
+      "resource-status--guidance-phone-stack",
+    ],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
+    id: "ActionHelp",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "ActionHelp",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Guidance.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: [
+      "resource-status--action-help-blocked",
+      "resource-status--guidance-overview",
+    ],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
     id: "Dialog",
     kind: "component",
     owner: "sdk-ui",
@@ -204,6 +257,18 @@ export const UI_CONTRACTS = [
     requiredCapabilities: ["click", "keyboard", "responsive-layout"],
   }),
   defineUIContract({
+    id: "OutcomeDialog",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "OutcomeDialog",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: ["resource-status--outcomedialog-winner"],
+    requiredCapabilities: ["click", "runtime-submit"],
+  }),
+  defineUIContract({
     id: "PluginRuntime",
     kind: "runtime",
     owner: "sdk-runtime",
@@ -266,6 +331,18 @@ export const UI_CONTRACTS = [
     requiredCapabilities: ["click", "keyboard"],
   }),
   defineUIContract({
+    id: "StandingsTable",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "StandingsTable",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    storyIds: ["resource-status--outcomedialog-winner"],
+    requiredCapabilities: ["click", "runtime-submit"],
+  }),
+  defineUIContract({
     id: "SlotSystem",
     kind: "component",
     owner: "sdk-ui",
@@ -279,6 +356,26 @@ export const UI_CONTRACTS = [
       "board-targets--claimed-and-disabled",
     ],
     requiredCapabilities: ["click", "keyboard", "responsive-layout"],
+  }),
+  defineUIContract({
+    id: "SquareGrid",
+    kind: "component",
+    owner: "sdk-ui",
+    publicExport: "SquareGrid",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/board/SquareGrid.tsx",
+      "packages/sdk/src/ui/components/board/tiled-grid/interactive-layer.tsx",
+      "packages/sdk/src/runtime/primitives/board.tsx",
+      "packages/sdk/src/ui/stories/BoardTarget.stories.tsx",
+    ],
+    storyIds: ["board-targets--eligible-targets"],
+    requiredCapabilities: [
+      "click",
+      "keyboard",
+      "responsive-layout",
+      "runtime-draft",
+      "runtime-submit",
+    ],
   }),
   defineUIContract({
     id: "StagingZone",

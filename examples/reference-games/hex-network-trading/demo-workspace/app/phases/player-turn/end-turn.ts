@@ -35,6 +35,6 @@ export const endTurn = playerTurn.interaction({
     // End-turn cleanup is complete. The auto phase owns the terminal branch
     // and, when needed, advances to the next active player before re-entering
     // `playerTurn` with fresh turn-scoped phase state.
-    return accept(state, [fx.transition("checkGameEnd")]);
+    return accept(state, { instructions: [fx.transition("checkGameEnd")] });
   },
 });

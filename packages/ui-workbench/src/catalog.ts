@@ -29,6 +29,137 @@ export function defineUIScenarios(
 
 export const scenarios = defineUIScenarios([
   {
+    id: "automa-river-rival.claim-cargo.duplicate.mobile",
+    title:
+      "Automa River Rival: duplicate automa branch preserves committed rival events",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.duplicate.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.duplicate.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.duplicate.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:a7c44f571a6be5dcc31e621c5649d891c0aa63c083cf62d3b3c0c3903e860f2d",
+  },
+  {
+    id: "automa-river-rival.claim-cargo.initial.mobile",
+    title:
+      "Automa River Rival: initial automa branch shows rival state without fake seats",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.initial.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.initial.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.initial.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:e6d7714b2831ef06f667671d49963948e8b8c6a0a6f259e32e891dfcf1ae9e72",
+  },
+  {
+    id: "automa-river-rival.claim-cargo.live-update.mobile",
+    title: "Automa River Rival: live automa branch appends rival action events",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.live-update.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.live-update.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.live-update.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:8b3aed61db1ae35f3e007c267419e1ea8492689a11bcfd28cfca990e3203a0db",
+  },
+  {
+    id: "automa-river-rival.claim-cargo.mobile",
+    title:
+      "Automa River Rival: human claim triggers deterministic rival claim-highest resolution",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel", "PluginRuntime"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:01d265b63da3ec8f0f046fe8c94e458a346c0dda28e289ee1d80083d2cb6778c",
+  },
+  {
+    id: "automa-river-rival.claim-cargo.reconnect.mobile",
+    title:
+      "Automa River Rival: reconnect automa branch restores rival event history",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.reconnect.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.reconnect.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.reconnect.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:aea44fb804f01e15707bf562f06f202369f031a5637910ca2ca47e037fee52d0",
+  },
+  {
+    id: "automa-river-rival.claim-cargo.terminal.mobile",
+    title:
+      "Automa River Rival: terminal automa branch carries cooperative outcome evidence",
+    gameId: "automa-river-rival",
+    fixtureUrl:
+      "/fixtures/reference-games/automa-river-rival.claim-cargo.terminal.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/automa-river-rival.claim-cargo.terminal.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/automa-river-rival.claim-cargo.terminal.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:41fcb349eb22d2d46f5cc8298590e91a50a90a88980cea324a13b8996c0edd85",
+  },
+  {
     id: "deck-building-market.buy-card.desktop",
     title:
       "Deck Building Market: market row exposes affordable and unavailable cards",
@@ -46,10 +177,15 @@ export const scenarios = defineUIScenarios([
       "Panel",
       "PluginRuntime",
     ],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:5986571a014f9adb21e6da1e18e623862ad8e4d9a6349754591132dddfd4b397",
+      "sha256:94dd9dab019905fa643db82abd54ee258da58e2ec6ff1daae0370462648059cc",
   },
   {
     id: "hearts.pass-three.mobile",
@@ -68,10 +204,16 @@ export const scenarios = defineUIScenarios([
       "Panel",
       "PluginRuntime",
     ],
-    capabilities: ["click", "runtime-draft", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:9c15ba67c9b91907a31d2a503ca10aaef2ef51ae40540a282f74cc231d13d123",
+      "sha256:494e581ccc1e6db8e3687fce7e16610c13f1d694b66e8cf12ee677d51fabc28b",
   },
   {
     id: "hex-network-trading.place-route.desktop",
@@ -95,10 +237,294 @@ export const scenarios = defineUIScenarios([
       "PluginRuntime",
       "ResourceCounter",
     ],
-    capabilities: ["click", "pointer-drag", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "pointer-drag",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:60fe78f1df3e8fef8c9c141399e656c3dc00f5c7775b4af05fcb38ff2b58cb9f",
+      "sha256:30050be67f29416921333f63e3357284e50f0cd108354b1dae20a222869882fc",
+  },
+  {
+    id: "multiplayer-ranking-and-ties.draft-stall.desktop",
+    title:
+      "Multiplayer Ranking And Ties: players draft one public stall card in seat order",
+    gameId: "multiplayer-ranking-and-ties",
+    fixtureUrl:
+      "/fixtures/reference-games/multiplayer-ranking-and-ties.draft-stall.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs"),
+    components: ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:9c03728a1121a5e9dfca0c4a3008a9bf2ec85a7aef914f7bcca1c3b9ce20e915",
+  },
+  {
+    id: "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
+    title:
+      "Multiplayer Ranking And Ties: reconnect branch preserves scoreless cancellation outcome evidence",
+    gameId: "multiplayer-ranking-and-ties",
+    fixtureUrl:
+      "/fixtures/reference-games/multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.mjs"),
+    components: ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:723d2f99203544f2e989eb739a63d1bf416b475b6f6043e158387ec03edfe039",
+  },
+  {
+    id: "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
+    title:
+      "Multiplayer Ranking And Ties: tie-break branch projects complete-set evidence before coins",
+    gameId: "multiplayer-ranking-and-ties",
+    fixtureUrl:
+      "/fixtures/reference-games/multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.mjs"),
+    components: ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:70be849af3a16859c5063edcdc466176580fb3c207fe3c1a9d955d8fd29c884b",
+  },
+  {
+    id: "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
+    title:
+      "Multiplayer Ranking And Ties: true tie branch keeps equal first-place players at rank one",
+    gameId: "multiplayer-ranking-and-ties",
+    fixtureUrl:
+      "/fixtures/reference-games/multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.mjs"),
+    components: ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:ae6ba4afc1c394916ffb7b7a5063167a222ae6419795d782285079df14c5c83a",
+  },
+  {
+    id: "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
+    title:
+      "Multiplayer Ranking And Ties: unique winner branch projects reducer-owned first-place evidence",
+    gameId: "multiplayer-ranking-and-ties",
+    fixtureUrl:
+      "/fixtures/reference-games/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.mjs"),
+    components: ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
+    viewportTags: ["desktop"],
+    sourceDigest:
+      "sha256:c3a24e6b2aee084f53a877ce27d32072ea4adca07462974d57a2ef56b399e0a4",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.drafted.mobile",
+    title:
+      "Roll And Write Scorecard: drafted scorecard state preserves a pending mark before submit",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.drafted.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:3ce3a616bfad90648299a1124c7d2f22bbc88c34c978938f1e810f1a2bc1aeed",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.initial.mobile",
+    title:
+      "Roll And Write Scorecard: initial scorecard state appears before the first seeded roll",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:fb7bf7ad68a2578b9ddad7f6250875ee4bb0ffa33cfd896a860430a298ff5497",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.invalid.mobile",
+    title:
+      "Roll And Write Scorecard: invalid scorecard state retains reducer-owned error evidence",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.invalid.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.invalid.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.invalid.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:ba789b1d053d94ce0c8e6ad2c3f2dbb83d01b81d5743a2993adb57c93c657c26",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.mobile",
+    title:
+      "Roll And Write Scorecard: initial state starts before the first seeded roll",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:3429db46eed49cb441e372cd9f23b1550e4303d9c553beefb7886e30ae8ea9ca",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.rolled.mobile",
+    title:
+      "Roll And Write Scorecard: rolled scorecard state highlights legal cells for the seeded total",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.rolled.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.rolled.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.rolled.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:b095f985fb610b93d702925da3d09bb1082786aeb495fe36cbec9e315912c9b7",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.submitted.mobile",
+    title:
+      "Roll And Write Scorecard: submitted scorecard state advances seat-order resolution",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.submitted.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.submitted.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.submitted.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:f136ee439d36fac255f1c305e48831adff7a38bd3822775deb402c2feae2b338",
+  },
+  {
+    id: "roll-and-write-scorecard.mark-cell.terminal.mobile",
+    title:
+      "Roll And Write Scorecard: terminal scorecard state carries reducer-owned scoring evidence",
+    gameId: "roll-and-write-scorecard",
+    fixtureUrl:
+      "/fixtures/reference-games/roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs"),
+    components: ["InteractionSubmit", "Panel", "PluginRuntime", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:2f13f30e0a2e12b2bd8d0e9f908d837f054fdd60a6d694933ccf2787cd41c343",
   },
   {
     id: "simultaneous-card-drafting.lock-choice.mobile",
@@ -118,10 +544,141 @@ export const scenarios = defineUIScenarios([
       "Panel",
       "PluginRuntime",
     ],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["phone", "touch"],
     sourceDigest:
-      "sha256:fe56f1d21628e059cc2a0e42999e1fa2458e203172fa1ccfe9aae8c3d54533aa",
+      "sha256:d411ae6901eb9a05ce985ff37aa500159005924e8c60b3589e69ff6c426a9e40",
+  },
+  {
+    id: "solo-countdown-puzzle.repair-beacon.initial.mobile",
+    title:
+      "Solo Countdown Puzzle: initial solo branch has one human player and no event history",
+    gameId: "solo-countdown-puzzle",
+    fixtureUrl:
+      "/fixtures/reference-games/solo-countdown-puzzle.repair-beacon.initial.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/solo-countdown-puzzle.repair-beacon.initial.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/solo-countdown-puzzle.repair-beacon.initial.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:ec62e8fa5e143bdda8efe63d8aabf1503d05974b35e5d5420c8bb166cb9708ef",
+  },
+  {
+    id: "solo-countdown-puzzle.repair-beacon.live-update.mobile",
+    title:
+      "Solo Countdown Puzzle: live solo branch appends deterministic weather events",
+    gameId: "solo-countdown-puzzle",
+    fixtureUrl:
+      "/fixtures/reference-games/solo-countdown-puzzle.repair-beacon.live-update.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/solo-countdown-puzzle.repair-beacon.live-update.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/solo-countdown-puzzle.repair-beacon.live-update.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:3b025a85d667a2b77dd876d6d1c2c875b27adc08dcd6dcaeb2cac7b29ab09684",
+  },
+  {
+    id: "solo-countdown-puzzle.repair-beacon.mobile",
+    title:
+      "Solo Countdown Puzzle: initial state has exactly one human player and no opponent identity",
+    gameId: "solo-countdown-puzzle",
+    fixtureUrl:
+      "/fixtures/reference-games/solo-countdown-puzzle.repair-beacon.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/solo-countdown-puzzle.repair-beacon.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/solo-countdown-puzzle.repair-beacon.mobile.mjs"),
+    components: [
+      "GameEventLog",
+      "InteractionSubmit",
+      "Panel",
+      "PluginRuntime",
+      "SquareGrid",
+    ],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:89645a0d2a37f6bbc6826f5eb47431290d61572595401d49a53ff0414ad3dff4",
+  },
+  {
+    id: "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
+    title:
+      "Solo Countdown Puzzle: reconnect solo branch restores committed system events",
+    gameId: "solo-countdown-puzzle",
+    fixtureUrl:
+      "/fixtures/reference-games/solo-countdown-puzzle.repair-beacon.reconnect.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/solo-countdown-puzzle.repair-beacon.reconnect.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/solo-countdown-puzzle.repair-beacon.reconnect.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:de4b964846b584aace7018f7cf765b027217a2a3e081dab8a1810eeb2cf48c61",
+  },
+  {
+    id: "solo-countdown-puzzle.repair-beacon.terminal.mobile",
+    title:
+      "Solo Countdown Puzzle: terminal solo branch carries countdown loss evidence",
+    gameId: "solo-countdown-puzzle",
+    fixtureUrl:
+      "/fixtures/reference-games/solo-countdown-puzzle.repair-beacon.terminal.mobile.fixture.json",
+    renderModuleUrl:
+      "/fixtures/reference-games/modules/solo-countdown-puzzle.repair-beacon.terminal.mobile.mjs",
+    renderModuleLoader: () =>
+      import("../../../fixtures/ui/reference-games/modules/solo-countdown-puzzle.repair-beacon.terminal.mobile.mjs"),
+    components: ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "keyboard",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+    viewportTags: ["phone", "touch"],
+    sourceDigest:
+      "sha256:b2a0d219c29d693818f33ce8d5ccd7ff0832bdfaceb5324b2e63e9d347ee58ca",
   },
   {
     id: "ui-scenarios.boards-slot.desktop",
@@ -134,10 +691,15 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/ui-scenarios.boards-slot.desktop.mjs"),
     components: ["Panel", "PluginRuntime", "SlotSystem"],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:ff224546ea824dbb4d80f0e732e8e2025c2d8bfdd4ee60ea9b3ca5e1ecea7666",
+      "sha256:e6b5bd9f994f0112d1ccf0faa017e8ad3867541c8b2bb26e91831973a7edb2b5",
   },
   {
     id: "ui-scenarios.cards-hand.desktop",
@@ -156,10 +718,15 @@ export const scenarios = defineUIScenarios([
       "PluginRuntime",
       "StagingZone",
     ],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:9433c787ba1e3bef3b376509eea4c20692d9442eaefb68d15a13edb616bfea1c",
+      "sha256:dd9cf989b6b9c5b0f05f5b2bcc77ae0142de9cbb2ca035c996eefaad5b2296ca",
   },
   {
     id: "ui-scenarios.dice-result.desktop",
@@ -172,10 +739,15 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/ui-scenarios.dice-result.desktop.mjs"),
     components: ["Dialog", "Panel", "PluginRuntime", "ThemedButton"],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:16d3c9039aa99896d3f6606adbfc3f385c2ccc8d7a1ba063d339f5b415092602",
+      "sha256:fb798329886e1bebb597d031ae77e565c747d132c834e8a59cd368c71ec7e38d",
   },
   {
     id: "ui-scenarios.game-shell.desktop",
@@ -188,10 +760,15 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/ui-scenarios.game-shell.desktop.mjs"),
     components: ["MoreActions", "Panel", "PrimaryButton", "ThemedButton"],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:48b8100ad7503693345f7a32039f10db73300b1b355142d489b611c8c2322e84",
+      "sha256:ca877dea68a317389521268392b387eb303f273cba96783ff1adcac735d6d735",
   },
   {
     id: "ui-scenarios.prompts-choice.desktop",
@@ -210,10 +787,15 @@ export const scenarios = defineUIScenarios([
       "PluginRuntime",
       "PrimaryActionButton",
     ],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:86b5f7355f7dd9f7c28335eea175e82bf21b33bb8392a59c599af8e1a1809c96",
+      "sha256:a40795c6a7b789cfd79c5077a5530cc53fe00b7b919e7c88144b0d048013f544",
   },
   {
     id: "ui-scenarios.resources-cost.desktop",
@@ -226,10 +808,15 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/ui-scenarios.resources-cost.desktop.mjs"),
     components: ["CostDisplay", "Panel", "PluginRuntime", "ResourceCounter"],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:699daf5be7a2055667ac9713a705251488ec2297d2a9b73474e7e50205e3bb4b",
+      "sha256:404e350c22feff087a0efa2bdf5dcc81b58a6eff44f0aa2d2bd05254e16d5b9b",
   },
   {
     id: "ui-scenarios.zones-staging.desktop",
@@ -242,10 +829,15 @@ export const scenarios = defineUIScenarios([
     renderModuleLoader: () =>
       import("../../../fixtures/ui/reference-games/modules/ui-scenarios.zones-staging.desktop.mjs"),
     components: ["Panel", "PluginRuntime", "SlotSystem", "StagingZone"],
-    capabilities: ["click", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:d3a309a37862d05bd5b31c20b617cc27a88acee70ee2adf75f2225890a83d28c",
+      "sha256:b332e84107d49afe1777629a42f5db41d3d70d871b163cbcaa99878f08d27679",
   },
   {
     id: "worker-placement-tableau.place-worker.desktop",
@@ -266,9 +858,15 @@ export const scenarios = defineUIScenarios([
       "ResourceCounter",
       "SlotSystem",
     ],
-    capabilities: ["click", "runtime-draft", "runtime-submit"],
+    capabilities: [
+      "accessibility-scan",
+      "click",
+      "reduced-motion",
+      "runtime-draft",
+      "runtime-submit",
+    ],
     viewportTags: ["desktop"],
     sourceDigest:
-      "sha256:baebcd0bbf42293cde4ea240bae30dc41168d686f60ced24346210c8955fee7c",
+      "sha256:e90609eb4d3065c212a5808b21c59005f0cf8c3c8fc3b702540afec0c9da501f",
   },
 ] satisfies readonly UIScenarioCatalogEntry[]);

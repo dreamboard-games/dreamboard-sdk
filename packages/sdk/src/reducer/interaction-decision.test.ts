@@ -356,11 +356,20 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
     phases: {
       takeTurn: defineStepPhase<typeof contract>()({
         kind: "player",
+        name: "Take turn",
+        guidance: {
+          summary: "Spend gold, answer prompts, or play a card.",
+          objective: "Use the best available action before passing priority.",
+        },
         steps: ["main", "blocked"],
         state: phaseState,
         interactions: {
           spendGold: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Spend gold",
+                help: "Spend exactly two gold from your current resource pool.",
+              },
               commit: { mode: "autoWhenReady" },
               inputs: {},
               cost: () => ({ gold: 2 }),
@@ -427,6 +436,10 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
           ),
           ruleGatedBid: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Bid gold",
+                help: "Choose a bid that your current gold can pay.",
+              },
               inputs: {
                 amount: ruleBidAmountInput,
               },
@@ -436,6 +449,9 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
           ),
           stringRuleBid: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Choose mode",
+              },
               inputs: {
                 amount: ruleBidAmountInput,
               },
@@ -525,6 +541,10 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
           playCard: {
             steps: ["main"],
             action: defineCardAction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Play spell",
+                help: "Choose a spell from your play zone.",
+              },
               cardType: "spell",
               playFrom: "playZone",
               rules: [
@@ -691,6 +711,60 @@ describe("trusted interaction decision pipeline", () => {
       valid: false,
       errorCode: "action-unavailable",
       message: "Interaction 'stepBlocked' is not allowed in the current step.",
+    });
+  });
+
+  test("descriptor projection carries authored presentation and fallback labels", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const descriptors = getAvailableInteractions(bundle, state, "player-1");
+
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "spendGold",
+      ),
+    ).toMatchObject({
+      label: "Spend gold",
+      help: "Spend exactly two gold from your current resource pool.",
+      availability: {
+        status: "insufficientResources",
+        reason: "INSUFFICIENT_RESOURCES",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "stageBlocked",
+      ),
+    ).toMatchObject({
+      label: "Stage Blocked",
+      availability: {
+        status: "blocked",
+        reason: "Interaction not allowed in current stage",
+      },
+    });
+  });
+
+  test("dynamic projection carries current phase guidance", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const projection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-1"],
+    });
+
+    expect(projection.guidance).toEqual({
+      phase: {
+        id: "takeTurn",
+        label: "Take turn",
+        summary: "Spend gold, answer prompts, or play a card.",
+        objective: "Use the best available action before passing priority.",
+      },
     });
   });
 

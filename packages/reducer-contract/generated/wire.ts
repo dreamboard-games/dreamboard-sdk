@@ -65,7 +65,7 @@ export type ReduceResult = ReduceResultReject | ReduceResultAccept;
 
 export type ReduceResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
 
-export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: TerminalOutcome; "effects": Array<Effect>; "continuations": ContinuationMap };
+export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "effects": Array<Effect>; "continuations": ContinuationMap; "events": Array<GameEvent> };
 
 export type DispatchTrace = DispatchTraceAcceptedClientInput | DispatchTraceAppliedEffect | DispatchTraceRngConsumption;
 
@@ -79,9 +79,25 @@ export type DispatchResult = DispatchResultReject | DispatchResultAccept;
 
 export type DispatchResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
 
-export type DispatchResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: TerminalOutcome; "trace": Array<DispatchTrace> };
+export type DispatchResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "trace": Array<DispatchTrace>; "events": Array<GameEvent> };
 
-export type TerminalOutcome = { "winnerPlayerId"?: string; "finalScores"?: Record<string, number>; "reason": string };
+export type GameEventDetail = { "label": string; "value": string | number | boolean };
+
+export type SystemActionEvent = { "kind": "systemAction"; "procedureId": string; "title": string; "summary"?: string; "details"?: Array<GameEventDetail> };
+
+export type GameEvent = SystemActionEvent;
+
+export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+
+export type OutcomeScoreComponent = { "id": string; "label": string; "value": number };
+
+export type OutcomeTieBreak = { "id": string; "label": string; "value": number | string };
+
+export type OutcomeStanding = { "playerId": string; "rank": number; "result": OutcomeResult; "score"?: number; "scoreBreakdown"?: Array<OutcomeScoreComponent>; "tieBreaks"?: Array<OutcomeTieBreak> };
+
+export type GameOutcomeReason = { "code": string; "message"?: string };
+
+export type GameOutcome = { "reason": GameOutcomeReason; "standings": Array<OutcomeStanding> };
 
 export type ReducerRuntimeLogEntry = ReducerRuntimeLogEntryAcceptedClientInput | ReducerRuntimeLogEntryAppliedEffect | ReducerRuntimeLogEntryRngConsumption | ReducerRuntimeLogEntryStateCommit;
 

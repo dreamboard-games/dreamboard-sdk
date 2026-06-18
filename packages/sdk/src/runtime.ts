@@ -35,13 +35,17 @@ export type TypedGame<
 
 export type {
   InteractionDescriptor,
+  GameEvent,
+  GameEventDetail,
   PluginRuntimeClient,
   PluginRuntimeClientOptions,
   PluginTransport,
   PluginRuntimeProps,
   PostMessagePluginTransportOptions,
+  ProjectedGameEvent,
   RuntimeClock,
   RuntimeIdFactory,
+  SystemActionEvent,
 } from "./runtime/index.js";
 
 // Workspace contract surface. Generated game UIs import these from
@@ -49,8 +53,11 @@ export type {
 // for `DreamboardUIRegister` lives on this subpath as well).
 export { createWorkspaceUIContract } from "./runtime/workspace-contract.js";
 export type {
+  BoardGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   BoardSpaceTargetProps,
   ClientParamSchemaMap,
   GameMeState,

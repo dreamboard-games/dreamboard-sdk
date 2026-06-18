@@ -1,0 +1,31 @@
+{
+  "id": "variable-setup-race-01",
+  "title": "Variable setup race with public scenario choice",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 4 },
+  "authorJobs":
+    [
+      "select setup profile before play",
+      "seed different board obstacles by profile",
+      "race to non-score objective",
+    ],
+  "uiJobs":
+    [
+      "show selected setup profile",
+      "render profile-specific obstacles",
+      "show current objective",
+    ],
+  "authorityJobs":
+    [
+      "reject unknown setup profile",
+      "materialize only selected setup",
+      "replay selected setup from seed",
+    ],
+  "acceptance":
+    [
+      "existing setup profiles are sufficient",
+      "objective guidance needs authored projection in Phase 03",
+      "no new topology capability is required",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

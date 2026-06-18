@@ -17,6 +17,8 @@ import {
   Zone as ZonePrimitive,
   type BoardHexGridProps,
   type BoardHexGridInteractionFilter,
+  type BoardSquareGridProps,
+  type BoardSquareGridInteractionFilter,
   type BoardTargetProps,
   type BoardSpaceTargetProps,
   type BoardEdgeTargetProps,
@@ -57,7 +59,11 @@ import {
   type ZoneRootProps,
 } from "./primitives/index.js";
 import type { InteractionDescriptor } from "./types/plugin-state.js";
-import type { AnyHexBoardInput, BoardSpaceIdOf } from "../ui.js";
+import type {
+  AnyHexBoardInput,
+  AnySquareBoardInput,
+  BoardSpaceIdOf,
+} from "../ui.js";
 
 /**
  * Workspace-aware UI typing extension point.
@@ -435,7 +441,12 @@ export type TypedZone<Contract extends UIContract> = Omit<
 
 export type TypedBoard<Contract extends UIContract> = Omit<
   typeof BoardPrimitive,
-  "Target" | "SpaceTarget" | "EdgeTarget" | "VertexTarget" | "HexGrid"
+  | "Target"
+  | "SpaceTarget"
+  | "EdgeTarget"
+  | "VertexTarget"
+  | "HexGrid"
+  | "SquareGrid"
 > & {
   Target<Target extends BoardTargetKey<Contract>>(
     props: Omit<BoardTargetProps, "value"> & { value: Target },
@@ -456,6 +467,17 @@ export type TypedBoard<Contract extends UIContract> = Omit<
     props: Omit<BoardHexGridProps<TBoard, TSpaceView>, "interactions"> & {
       interactions?:
         | Exclude<BoardHexGridInteractionFilter, object>
+        | {
+            edge?: ReadonlyArray<InteractionKey<Contract>>;
+            vertex?: ReadonlyArray<InteractionKey<Contract>>;
+            space?: ReadonlyArray<InteractionKey<Contract>>;
+          };
+    },
+  ): ReactElement;
+  SquareGrid<TBoard extends AnySquareBoardInput>(
+    props: Omit<BoardSquareGridProps<TBoard>, "interactions"> & {
+      interactions?:
+        | Exclude<BoardSquareGridInteractionFilter, object>
         | {
             edge?: ReadonlyArray<InteractionKey<Contract>>;
             vertex?: ReadonlyArray<InteractionKey<Contract>>;

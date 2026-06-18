@@ -33,6 +33,7 @@ function makeFixture(): UIScenarioFixture {
         phaseName: "play",
         interactionKey: "play-card",
         interactionId,
+        label: "Play card",
         kind: "action",
         availability: { status: "available" },
         commit: { mode: "manual" },
@@ -40,6 +41,7 @@ function makeFixture(): UIScenarioFixture {
       },
     ],
     zones: {},
+    recentEvents: [],
   };
   const projectionDigest = digestUIFixtureJson({ frame });
   const requestDigest = digestUIFixtureTransportRequest({

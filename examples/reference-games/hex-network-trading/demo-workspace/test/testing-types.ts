@@ -52,25 +52,10 @@ export function createTestRuntime(options: {
   controllingPlayerId?: (typeof literals.playerIds)[number];
   userId?: string | null;
 }) {
-  const reducerBundle = createReducerBundle(
-    game,
-  ) satisfies CreateTestRuntimeOptions["bundle"];
+  const reducerBundle =
+    createReducerBundle(game) satisfies CreateTestRuntimeOptions["bundle"];
   const baseStates =
     BASE_STATES satisfies CreateTestRuntimeOptions["baseStates"];
-  const basePlayerIds = literals.playerIds.slice(
-    0,
-    BASE_STATES[options.baseId]?.fingerprint.players ?? literals.playerIds.length,
-  );
-  const playerIds =
-    options.controllingPlayerId &&
-    basePlayerIds.includes(options.controllingPlayerId)
-      ? [
-          options.controllingPlayerId,
-          ...basePlayerIds.filter(
-            (playerId) => playerId !== options.controllingPlayerId,
-          ),
-        ]
-      : basePlayerIds;
   const runtime = createDreamboardTestRuntime({
     baseId: options.baseId,
     baseStates,
@@ -79,8 +64,15 @@ export function createTestRuntime(options: {
     expectedBaseStateFingerprint: BASE_STATES_CONTRACT_FINGERPRINT,
     phase: options.phase,
     userId: options.userId ?? "test-user",
-    playerIds,
+    playerIds: literals.playerIds.slice(
+      0,
+      BASE_STATES[options.baseId]?.fingerprint.players ?? literals.playerIds.length,
+    ),
   });
+
+  if (options.controllingPlayerId) {
+    runtime.setControllingPlayer(options.controllingPlayerId);
+  }
 
   return runtime;
 }

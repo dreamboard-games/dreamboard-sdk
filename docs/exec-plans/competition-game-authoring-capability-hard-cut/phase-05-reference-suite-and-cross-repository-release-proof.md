@@ -1,6 +1,14 @@
 # Phase 05: Reference Suite And Cross-Repository Release Proof
 
-Status: proposed.
+Status: closed on 2026-06-19. SDK reference-suite preparation, required
+internal parity, SDK release proof, exact public SDK package availability,
+public Dreamboard docs/skill source proof, CLI/dev-host `0.1.30-alpha.18` npm
+publication, public authoring compatibility proof, internal authoring
+release-set repin, and internal `pnpm verify:package` / `pnpm verify:full`
+passed. Internal terminal-transport source cutover, focused checks, terminal
+callback/message, reconnect event-batch, host ended-event, and history-restore
+regressions passed. Broader packed reconnect/event-history E2E remains recorded
+as a non-blocking follow-up outside this capability hard cut.
 
 Depends on Phases 00-04.
 
@@ -9,6 +17,158 @@ Primary repositories:
 - `dreamboard-sdk`;
 - the internal monorepo; and
 - the public `dreamboard-games/dreamboard` checkout.
+
+## Source Receipt: SDK Reference-Suite Preparation
+
+Completed in `dreamboard-sdk` on 2026-06-19:
+
+- Added `docs/reference/canonical-examples.md` as the SDK-owned index mapping
+  common authoring questions to the nine canonical reference games, public SDK
+  concepts, and focused packed proof commands.
+- Promoted all nine canonical examples into the release-required Workbench
+  scenario set in `scripts/ui/required-ui-scenarios.mjs`; the same source now
+  drives `pnpm reference-games:test:packed --required`, so required packed proof
+  covers all nine reference consumers.
+- Regenerated `docs/ui-agent-iteration.md` and `docs/reference-games.md` so the
+  generated docs show all nine reference games as required foundation coverage.
+- Updated the Phase 00 capability matrix so no row remains `blocked`,
+  `contract-gap`, or `ergonomic-gap`; the 28 SDK-composition rows carry Phase
+  05 evidence fields for public API symbol, source implementation,
+  reference-game call site, focused test, Workbench scenario, packed proof,
+  public documentation, and retained limitations.
+- Tightened `scripts/capability/check-competition-game-briefs.mjs` so old gap
+  classifications fail and Phase 05 evidence fields are required for non-native
+  rows.
+- Added
+  `docs/exec-plans/competition-game-authoring-capability-hard-cut/artifacts/phase-05-release-receipt.md`
+  and a narrow `.gitignore` exception so the plan-owned release receipt can be
+  committed while runtime artifacts remain ignored.
+- Added required state-branch Workbench coverage for roll-and-write
+  initial/rolled/drafted/submitted/invalid/terminal states, multiplayer
+  unique-winner/tie/tie-break/reconnect states, solo
+  initial/live/reconnect/terminal states, and automa
+  initial/live/duplicate/reconnect/terminal states. Required Workbench
+  selection now covers 28 scenario IDs and 35 generated UI scenarios.
+- Tightened reducer scenario interaction lookup to prefer explicit
+  `coverage.interactionId` / `coverage.replay.interactionId` before falling
+  back to legacy scenario-ID matching, and recorded branch scenario source files
+  so changed-scenario selection can trace each generated fixture to its owning
+  module.
+- Promoted `reduced-motion` and `accessibility-scan` into generated Workbench
+  scenario capabilities. Workbench scenario tests now explicitly emulate and
+  assert `prefers-reduced-motion: reduce`, run layout accessibility invariants
+  and Axe, write those proof dimensions into semantic evidence, and fail the
+  receipt if the proof block is missing.
+- Tightened the SDK parity preflight so generated fixtures retain measured
+  intermediate semantic digests and submit actuator identity for the required
+  Hearts parity scenario. `run-ui-parity` and release proof now use
+  `requiredParityScenarioIds` as the shared source of truth, preventing
+  release-proof scenario drift.
+- Proved required Hearts real-host parity against the internal product harness
+  with `pnpm ui:test:parity --require-internal`; receipt
+  `artifacts/ui-parity/2026-06-18T15-54-10-552Z/receipt.json`.
+- Proved the local SDK release candidate with `pnpm ui:release-proof`; receipt
+  `artifacts/ui-release-proof/2026-06-18T15-54-23-559Z/receipt.json`.
+
+Verification run:
+
+```sh
+mise exec node@24 -- pnpm format:check
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm ui:test --required
+mise exec node@24 -- pnpm ui:test --capability reduced-motion
+mise exec node@24 -- pnpm ui:test --capability accessibility-scan
+mise exec node@24 -- pnpm reference-games:check
+mise exec node@24 -- pnpm reference-games:test:packed --required
+mise exec node@24 -- pnpm ui:test:parity
+mise exec node@24 -- pnpm ui:test:parity --require-internal
+mise exec node@24 -- pnpm ui:release-proof
+mise exec node@24 -- node scripts/capability/check-competition-game-briefs.mjs
+mise exec node@24 -- pnpm check
+mise exec node@24 -- pnpm ui:test
+```
+
+Latest SDK receipts:
+
+- Aggregate required Workbench replay from `pnpm check`, with explicit
+  reduced-motion/accessibility proof:
+  `artifacts/ui/2026-06-18T15-06-27-068Z/receipt.json`.
+- Latest required Workbench replay after parity fixture regeneration:
+  `artifacts/ui/2026-06-18T15-23-03-249Z/receipt.json`.
+- Reduced-motion capability proof:
+  `artifacts/ui/2026-06-18T15-01-47-138Z/receipt.json`.
+- Accessibility-scan capability proof:
+  `artifacts/ui/2026-06-18T15-02-25-701Z/receipt.json`.
+- Focused required Workbench replay:
+  `artifacts/ui/2026-06-18T14-48-04-934Z/receipt.json`.
+- Storybook interaction proof from `pnpm check`:
+  `artifacts/ui-stories/2026-06-18T15-05-41-989Z/receipt.json`.
+- Visual proof from `pnpm check`:
+  `artifacts/ui-visual/2026-06-18T15-05-55-525Z/receipt.json`.
+- Packed required consumer tarball:
+  `sha256:f42e3d0e5a8f17839cf10b519e13fc29a9b898410ee5a3ba72993c19ed3b96b8`.
+- Source-side parity preflight for the required Hearts real-host scenario:
+  `artifacts/ui-parity/2026-06-18T15-25-28-502Z/receipt.json`; source
+  comparison passed, internal executor skipped because `DREAMBOARD_INTERNAL_REPO`
+  was not set.
+- Required Hearts real-host parity with internal executor:
+  `artifacts/ui-parity/2026-06-18T15-54-10-552Z/receipt.json`.
+- SDK release proof:
+  `artifacts/ui-release-proof/2026-06-18T15-54-23-559Z/receipt.json`.
+- Full Workbench scenario sweep:
+  `artifacts/ui/2026-06-18T21-43-46-503Z/receipt.json`.
+- Capability matrix check:
+  `artifacts/capability/competition-game-authoring/brief-check-receipt.json`.
+
+Remaining Phase 05 work:
+
+- None blocking for this capability hard cut. Broader packed product-flow proof
+  for reconnect and event-history routes remains a recorded follow-up beyond
+  the passing full product harness, browser smoke, Hearts parity, focused
+  terminal callback, reconnect event-batch, host ended-event, and
+  history-restore evidence.
+
+Internal evidence recorded in the retained Phase 05 receipt:
+
+- public npm SDK package `@dreamboard-games/sdk@0.4.0-alpha.5`;
+- public SDK repin and public authoring release-set check;
+- `pnpm fin` passed;
+- `pnpm verify:dev` passed;
+- `pnpm verify:stack` passed in installed-release-set proof mode;
+- `pnpm verify:browser` passed in installed-release-set proof mode; and
+- `pnpm verify:package` and `pnpm verify:full` passed after publishing and
+  adopting the CLI/dev-host `0.1.30-alpha.18` authoring release set.
+- Public Dreamboard docs and bundled skill source were updated in
+  `/Users/mac/code/dreamboard` to cover `Board.SquareGrid`, canonical
+  `GameOutcome`, reducer-owned availability/guidance, deterministic solo and
+  automa procedures, and the canonical concept/example chooser. The public
+  checkout has no `packages/agent-skills`; the skill currently ships through
+  the staged `@dreamboard-games/cli` package.
+- Deletion audit found no blocking SDK `packages/sdk` or reducer-contract
+  source hit. Existing deck/hex/worker demo-workspace projections and tests
+  were cut to canonical `outcome`, generated baselines were regenerated, and
+  the local reducer-native scenario suites passed. Internal live source was cut
+  from the old `TerminalOutcome` / `winnerPlayerId` / `finalScores` transport
+  through executor, authority, backend callback/persistence, private
+  contracts, and generated clients; focused executor/authority/contract/client
+  and backend compile checks passed. The installed-release-set stack lane passed
+  after the source cut, covering database migrations, backend startup,
+  authenticated workspace creation, compile/status, clone/sync/pull, durable
+  commit equality, and executor-loss retry. Package and full product proof
+  passed after the authoring release-set publication and repin. Focused terminal
+  callback/message, reconnect event-batch, host ended-event, and history-restore
+  regressions now pass, while broader packed reconnect/event-history E2E
+  verification remains a non-blocking follow-up.
+
+Phase 00 brief jobs cited:
+
+- All non-native rows in
+  `docs/capability-research/competition-game-authoring/capability-matrix.yaml`
+  must point to their shipped API symbol, reference-game call site, Workbench
+  scenario, packed proof, and public documentation.
+- Native-control briefs `trick-taking-follow-suit-01`,
+  `simple-shared-market-01`, and `setup-variant-draft-01` remain regression
+  checks against speculative runtime concepts.
 
 ## Objective
 

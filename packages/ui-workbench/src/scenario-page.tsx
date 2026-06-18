@@ -145,10 +145,7 @@ export function ScenarioPage({
     } catch (cause) {
       const message = cause instanceof Error ? cause.message : String(cause);
       if (cause instanceof ReplayStepExecutionError) {
-        setReplayDiagnostics((previous) => [
-          ...previous,
-          cause.diagnostics,
-        ]);
+        setReplayDiagnostics((previous) => [...previous, cause.diagnostics]);
       } else {
         const firstStep = replay[0];
         if (firstStep) {

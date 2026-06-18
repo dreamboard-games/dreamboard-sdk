@@ -464,6 +464,9 @@ export function ScoreBoard({ view }: { view: GameView }) {
   const running = view.playerVP;
   const players = view.turnOrderThisSeason;
   const scores = finalVP ?? running;
+  const winningPlayerId = view.outcome?.standings.find(
+    (standing) => standing.result === "win",
+  )?.playerId;
   return (
     <section
       aria-label="Scores"
@@ -474,7 +477,7 @@ export function ScoreBoard({ view }: { view: GameView }) {
       </h2>
       <ul className="flex flex-col gap-1">
         {players.map((pid) => {
-          const isWinner = view.winnerPlayerId === pid;
+          const isWinner = winningPlayerId === pid;
           return (
             <li
               key={pid}

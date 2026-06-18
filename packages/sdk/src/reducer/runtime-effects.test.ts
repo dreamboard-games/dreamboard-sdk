@@ -10,6 +10,8 @@ import {
   definePhase,
   defineStepPhase,
   defineView,
+  gameEvent,
+  pipe,
   rngInput,
 } from "../reducer";
 import {
@@ -155,6 +157,104 @@ function createManifestContract() {
 }
 
 describe("runtime-owned reducer effects", () => {
+  test("reduce and dispatch materialize reducer-authored game events", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          count: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ count: 0 }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          interactions: {
+            advance: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ state, accept, ops }) {
+                return accept(
+                  pipe(
+                    state,
+                    ops.patchPublicState({
+                      count: state.publicState.count + 1,
+                    }),
+                  ),
+                  {
+                    events: [
+                      gameEvent.systemAction({
+                        procedureId: "count-advance",
+                        title: "The count advanced",
+                        details: [
+                          {
+                            label: "Count",
+                            value: state.publicState.count + 1,
+                          },
+                        ],
+                      }),
+                    ],
+                  },
+                );
+              },
+            }),
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const input = {
+      kind: "interaction" as const,
+      playerId: "player-1",
+      interactionId: "advance",
+      params: {},
+    };
+
+    const reduced = await bundle.reduce({ state: initial, input });
+    expect(reduced).toMatchObject({
+      kind: "accept",
+      events: [
+        {
+          kind: "systemAction",
+          procedureId: "count-advance",
+          title: "The count advanced",
+          details: [{ label: "Count", value: 1 }],
+        },
+      ],
+    });
+
+    const dispatched = await bundle.dispatch({ state: initial, input });
+    expect(dispatched).toMatchObject({
+      kind: "accept",
+      events: [
+        {
+          kind: "systemAction",
+          procedureId: "count-advance",
+          title: "The count advanced",
+          details: [{ label: "Count", value: 1 }],
+        },
+      ],
+    });
+  });
+
   test("bundle projectSeatsDynamic returns a plain view synchronously", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -709,12 +809,14 @@ describe("runtime-owned reducer effects", () => {
             rollVisibleDie: defineInteraction<typeof contract>()({
               inputs: {},
               reduce({ state, accept, fx }) {
-                return accept(state, [
-                  fx.effect(rollDieEffect, {
-                    dieId: "die-1",
-                    context: { reason: "action" },
-                  }),
-                ]);
+                return accept(state, {
+                  instructions: [
+                    fx.effect(rollDieEffect, {
+                      dieId: "die-1",
+                      context: { reason: "action" },
+                    }),
+                  ],
+                });
               },
             }),
           },
@@ -824,9 +926,11 @@ describe("runtime-owned reducer effects", () => {
             rollSilently: defineInteraction<typeof contract>()({
               inputs: {},
               reduce({ state, accept, fx }) {
-                return accept(state, [
-                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                ]);
+                return accept(state, {
+                  instructions: [
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                  ],
+                });
               },
             }),
           },
@@ -942,10 +1046,12 @@ describe("runtime-owned reducer effects", () => {
             rollTwice: defineInteraction<typeof contract>()({
               inputs: {},
               reduce({ state, accept, fx }) {
-                return accept(state, [
-                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                ]);
+                return accept(state, {
+                  instructions: [
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                  ],
+                });
               },
             }),
           },

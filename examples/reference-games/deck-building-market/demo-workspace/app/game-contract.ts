@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ids, manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
+  type GameOutcome,
   type ErrorCodeOfContract,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
@@ -22,7 +23,7 @@ import {
 // value uses zone counts and `turnNumber` (for tiebreak).
 const publicStateSchema = z.object({
   turnNumber: z.number().int().min(1).default(1),
-  winnerPlayerId: ids.playerId.nullable(),
+  outcome: z.custom<GameOutcome<PlayerId>>().nullable(),
 });
 
 const privateStateSchema = z.object({});
@@ -111,6 +112,7 @@ export const gameContract = defineGameContract({
 });
 
 export type GameContract = typeof gameContract;
+export type PlayerId = z.infer<typeof ids.playerId>;
 export type GameState = GameStateOf<GameContract>;
 export type GameErrorCode = ErrorCodeOfContract<GameContract>;
 export type PublicState = z.infer<typeof publicStateSchema>;

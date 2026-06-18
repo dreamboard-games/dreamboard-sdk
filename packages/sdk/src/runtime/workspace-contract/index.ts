@@ -18,8 +18,11 @@ import {
   type UIContract,
 } from "../ui-contract.js";
 import type {
+  BoardGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   InteractionDialogProps,
   InteractionFormPrimitiveProps,
   InteractionStateProps,
@@ -97,8 +100,15 @@ export function createWorkspaceUIContract<
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
+  SquareBoards extends Record<string, unknown> = Record<string, unknown>,
 >(
-  options: WorkspaceContractOptions<Contract, Resource, Card, HexBoards>,
+  options: WorkspaceContractOptions<
+    Contract,
+    Resource,
+    Card,
+    HexBoards,
+    SquareBoards
+  >,
 ): WorkspaceUI {
   const baseUI = createDreamboardUI(options.uiContract);
   const runtimeInteraction = baseUI.Interaction as RuntimeInteraction;
@@ -218,8 +228,11 @@ export function createWorkspaceUIContract<
 }
 
 export type {
+  BoardGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   ClientParamSchemaMap,
   DreamboardUI,
   GameMeState,

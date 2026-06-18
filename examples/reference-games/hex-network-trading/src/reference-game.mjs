@@ -5,6 +5,16 @@ export const referenceGame = {
   id: "hex-network-trading",
   displayName: "Hex Network Trading",
   sdkPackageSetVersion: DREAMBOARD_SDK_PACKAGE_SET.sdkVersion,
+  guidance: {
+    phase: {
+      id: "playerTurn",
+      label: "Build a route",
+      summary:
+        "Place route segments and trade resources to extend the network.",
+      objective:
+        "Connect high-value spaces while keeping enough resources for future routes.",
+    },
+  },
   board: {
     topology: "hex",
     spaces: ["forest-1", "ore-2", "river-3", "market-4"],
@@ -19,12 +29,14 @@ export const referenceGame = {
   interactions: [
     {
       id: "place-route",
+      label: "Place route",
       input: "choose-edge",
       target: "hex-board",
       confirmation: "route-cost",
     },
     {
       id: "offer-trade",
+      label: "Offer trade",
       input: "resource-exchange",
       target: "trade-panel",
     },
@@ -32,7 +44,10 @@ export const referenceGame = {
   coverage,
 };
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+  typeof process !== "undefined" &&
+  import.meta.url === `file://${process.argv[1]}`
+) {
   console.log(
     JSON.stringify({
       id: referenceGame.id,

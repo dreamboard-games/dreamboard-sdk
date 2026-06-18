@@ -36,14 +36,14 @@ exports[`phase 4 trusted-bundle characterization lifecycle transition and phase 
 
 exports[`phase 4 trusted-bundle characterization seat projection digest stays golden 1`] = `
 {
-  "digest": "af57ff39ec9cc3474d4348ea5893c58ab97ace1167b249a52a2d9c7809ee9db3",
+  "digest": "8729bdf7844fd3a91bf14c10ed571365868dbabd6db4760bb7c0f7fd2421b865",
   "seats": {
     "player-1": {
       "availableInteractionRefs": [
-        "score:b9a6c67fd8f38287",
-        "rejectNow:489a5e50c0c51e22",
-        "finish:ad8eae039b009c0c",
-        "rollTwice:5af16be06e1ba6cb",
+        "score:3c9d61620f10e288",
+        "rejectNow:b2c97f0ae3b11fcc",
+        "finish:c74b0041df70fd66",
+        "rollTwice:3e767cf3a39783a9",
       ],
       "view": {
         "phase": "play",
@@ -55,10 +55,10 @@ exports[`phase 4 trusted-bundle characterization seat projection digest stays go
     },
     "player-2": {
       "availableInteractionRefs": [
-        "score:70033f632d4d9b3b",
-        "rejectNow:afca5ef4a5bb3525",
-        "finish:948936b3b0c25256",
-        "rollTwice:5046689bc9395460",
+        "score:008f9282526585bc",
+        "rejectNow:e09a347cebdf4063",
+        "finish:895cad50c9b65724",
+        "rollTwice:1690c2f678a6f34e",
       ],
       "view": {
         "phase": "play",

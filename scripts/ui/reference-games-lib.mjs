@@ -90,6 +90,70 @@ export const expectedReferenceGames = [
       "compact-mobile-hand",
     ],
   },
+  {
+    id: "roll-and-write-scorecard",
+    displayName: "Roll And Write Scorecard",
+    mechanics: [
+      "roll-and-write",
+      "square-grid",
+      "dice-result",
+      "simultaneous-marking",
+    ],
+    uiPatterns: [
+      "square-board-targets",
+      "scorecard-grid",
+      "drafted-mark",
+      "compact-mobile-scorecard",
+    ],
+  },
+  {
+    id: "multiplayer-ranking-and-ties",
+    displayName: "Multiplayer Ranking And Ties",
+    mechanics: [
+      "card-drafting",
+      "market-row",
+      "set-collection",
+      "shared-card-play",
+    ],
+    uiPatterns: [
+      "market-row",
+      "turn-summary",
+      "standings-table",
+      "outcome-dialog",
+    ],
+  },
+  {
+    id: "solo-countdown-puzzle",
+    displayName: "Solo Countdown Puzzle",
+    mechanics: [
+      "resource-management",
+      "repeated-turn-state",
+      "square-grid",
+      "set-collection",
+    ],
+    uiPatterns: [
+      "square-board-targets",
+      "turn-summary",
+      "confirmation-dialog",
+      "compact-mobile-scorecard",
+    ],
+  },
+  {
+    id: "automa-river-rival",
+    displayName: "Automa River Rival",
+    mechanics: [
+      "automa-rival",
+      "open-market",
+      "cooperative-scoring",
+      "deterministic-procedure",
+    ],
+    uiPatterns: [
+      "market-row",
+      "event-log",
+      "cooperative-outcome",
+      "compact-mobile-history",
+    ],
+  },
 ];
 
 export const expectedReferenceGameIds = expectedReferenceGames.map(

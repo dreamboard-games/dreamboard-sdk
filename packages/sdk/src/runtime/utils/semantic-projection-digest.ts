@@ -16,7 +16,7 @@ type JsonValue =
 type CanonicalJson = JsonValue;
 
 export const AUTHORIZED_SEAT_PROJECTION_DIGEST_VERSION =
-  "authorized-seat-projection@2";
+  "authorized-seat-projection@4";
 
 export function semanticProjectionDigestForFrame(
   frame: PluginGameplayFrame,
@@ -55,6 +55,14 @@ function semanticSeatProjection(
     stageSeats: frame.flow.activePlayers.map((playerId) =>
       canonicalizeSeatReference(playerId, playerToSeat),
     ),
+    guidance: canonicalizeSemanticProjectionValue(
+      frame.guidance ?? null,
+      playerToSeat,
+    ),
+    recentEvents: canonicalizeSemanticProjectionValue(
+      frame.recentEvents ?? [],
+      playerToSeat,
+    ),
     view: canonicalizeSemanticProjectionValue(frame.view, playerToSeat),
     zones: canonicalizeSemanticProjectionValue(frame.zones ?? {}, playerToSeat),
     availableInteractions: frame.availableInteractions.map((descriptor) =>
@@ -74,6 +82,8 @@ function semanticInteractionDescriptor(
   return {
     interactionKey: descriptor.interactionKey,
     interactionId: descriptor.interactionId,
+    label: descriptor.label,
+    help: descriptor.help ?? null,
     stableIdentity: canonicalizeSemanticProjectionValue(
       `${descriptor.interactionKey}:${descriptor.interactionId}`,
       playerToSeat,
@@ -255,11 +265,12 @@ function canonicalJson(value: CanonicalJson): string {
 
 function canonicalizeJson(value: CanonicalJson): CanonicalJson {
   if (
+    value === undefined ||
     value === null ||
     typeof value === "boolean" ||
     typeof value === "string"
   ) {
-    return value;
+    return value ?? null;
   }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) {
@@ -272,6 +283,7 @@ function canonicalizeJson(value: CanonicalJson): CanonicalJson {
   }
   return Object.fromEntries(
     Object.entries(value)
+      .filter(([, item]) => item !== undefined)
       .sort(([left], [right]) => compareJson(left, right))
       .map(([key, item]) => [key, canonicalizeJson(item)]),
   );

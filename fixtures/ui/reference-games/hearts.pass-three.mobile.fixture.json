@@ -11,9 +11,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8",
-    "finalSemanticDigest": "sha256:87bd01a0eb057b0b8c9c474dc85ca4a51abe1973fe1be5d2744a9f9234987f82",
-    "initialProjectionDigest": "sha256:4a1f309f11ebce428d5956f583d69c85d5c88429d90261cd6eab771312ba0665",
+    "finalProjectionDigest": "sha256:6cf5bac823cea93fdebac38029593135712b3d8369cecc7214e815f98bc501fe",
+    "finalSemanticDigest": "sha256:931557522d0f0248cf6456eebad81699568591e8852a57d2f97df0d2cc559c28",
+    "initialProjectionDigest": "sha256:ea5023b9c4cbfafed094eb5d1a6b721b51786478aacbe6120470aff394d23534",
     "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c"
   },
   "gameId": "hearts",
@@ -23,7 +23,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:e3528eeacb659a8823aab97facf0e28afd26dd5a1b4919df68abdc0c8d0fd0cc",
+          "actionSetVersion": "sha256:2a083058a2daf26f0298e8292e0661601b05312fa1a8aa9678a04a2328328536",
           "availableInteractions": [
             {
               "availability": {
@@ -32,7 +32,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+              "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
               "inputs": [
                 {
                   "domain": {
@@ -60,6 +60,7 @@
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
               "kind": "action",
+              "label": "Pass three",
               "phaseName": "fixture",
               "zoneId": "hand"
             },
@@ -70,11 +71,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:ebfe4b83520f734c2dc4a0028484a05aae21c0f063ef5207e6470631590f50cc",
+              "descriptorDigest": "sha256:3c1c852dd40074a4f9968986405b7c8c3457d4b5eceabf8c721f8c89597a0cdc",
               "inputs": [],
               "interactionId": "play-to-trick:player-1",
               "interactionKey": "play-to-trick",
               "kind": "action",
+              "label": "Play to trick",
               "phaseName": "fixture"
             }
           ],
@@ -87,10 +89,21 @@
             "simultaneousPhase": null
           },
           "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "passing",
+              "label": "Pass cards",
+              "objective": "Reduce hand risk while preserving enough suit coverage for the first trick.",
+              "summary": "Select three private cards to pass before trick play begins."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Hearts",
+            "recentEvents": [],
             "referenceGameId": "hearts",
+            "scenarioBranch": null,
             "scenarioId": "hearts.pass-three.mobile",
             "submittedInteractionId": null
           },
@@ -119,7 +132,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -147,6 +160,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -159,7 +173,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -187,6 +201,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -199,7 +214,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -227,6 +242,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -239,7 +255,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -267,6 +283,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -279,7 +296,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -307,6 +324,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -316,11 +334,11 @@
           }
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:4a1f309f11ebce428d5956f583d69c85d5c88429d90261cd6eab771312ba0665"
+        "projectionDigest": "sha256:ea5023b9c4cbfafed094eb5d1a6b721b51786478aacbe6120470aff394d23534"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:4a77a4d1d020680b6c1894fff246b6777d7838a3bedf9fca9fd6a959f6b704cb",
+          "actionSetVersion": "sha256:84afa63592b86092fd81e4ab816da583f039fee6a7279a88ef4ad19b31f5b8d7",
           "availableInteractions": [
             {
               "availability": {
@@ -329,7 +347,7 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+              "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
               "inputs": [
                 {
                   "domain": {
@@ -357,6 +375,7 @@
               "interactionId": "pass-three:player-1",
               "interactionKey": "pass-three",
               "kind": "action",
+              "label": "Pass three",
               "phaseName": "fixture",
               "zoneId": "hand"
             },
@@ -367,11 +386,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:ebfe4b83520f734c2dc4a0028484a05aae21c0f063ef5207e6470631590f50cc",
+              "descriptorDigest": "sha256:3c1c852dd40074a4f9968986405b7c8c3457d4b5eceabf8c721f8c89597a0cdc",
               "inputs": [],
               "interactionId": "play-to-trick:player-1",
               "interactionKey": "play-to-trick",
               "kind": "action",
+              "label": "Play to trick",
               "phaseName": "fixture"
             }
           ],
@@ -384,10 +404,21 @@
             "simultaneousPhase": null
           },
           "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "passing",
+              "label": "Pass cards",
+              "objective": "Reduce hand risk while preserving enough suit coverage for the first trick.",
+              "summary": "Select three private cards to pass before trick play begins."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Hearts",
+            "recentEvents": [],
             "referenceGameId": "hearts",
+            "scenarioBranch": null,
             "scenarioId": "hearts.pass-three.mobile",
             "submittedInteractionId": "pass-three:player-1"
           },
@@ -416,7 +447,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -444,6 +475,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -456,7 +488,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -484,6 +516,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -496,7 +529,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -524,6 +557,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -536,7 +570,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -564,6 +598,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -576,7 +611,7 @@
                     "commit": {
                       "mode": "manual"
                     },
-                    "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+                    "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
                     "inputs": [
                       {
                         "domain": {
@@ -604,6 +639,7 @@
                     "interactionId": "pass-three:player-1",
                     "interactionKey": "pass-three",
                     "kind": "action",
+                    "label": "Pass three",
                     "phaseName": "fixture",
                     "zoneId": "hand"
                   }
@@ -613,7 +649,7 @@
           }
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8"
+        "projectionDigest": "sha256:6cf5bac823cea93fdebac38029593135712b3d8369cecc7214e815f98bc501fe"
       }
     ],
     "session": {
@@ -635,7 +671,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:4da3926d248adc5125494643fb26aa65c7c90778a4597c0cd0d28fa9c6f006ab",
+        "requestDigest": "sha256:cab1b969af239ba41549d334102035a34ac1be74d6bbb4b8f71513b0ca51d08b",
         "response": {
           "valid": true
         }
@@ -644,7 +680,7 @@
         "fromFrameId": "frame-1",
         "id": "hearts.pass-three.mobile.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:45082419e69da42a04f441bf206249f6e7d6eeeb05937046c08800a49bca954d",
+        "requestDigest": "sha256:8ac9f7083fd30f0f36fdb216eb1b0c565b71b79a12b2484507d0854d4f3cb0a6",
         "response": {
           "accepted": true
         }
@@ -662,13 +698,14 @@
         "kind": "activate"
       },
       "expect": {
+        "semanticDigest": "sha256:7b7bdfa6c312e119002308030f058c0237dd333cf342bb7e7120ef16661cf52b",
         "visibleInteractionKeys": [
           "pass-three"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-card:cardIds:two-clubs",
-        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+        "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
@@ -696,13 +733,14 @@
         "kind": "activate"
       },
       "expect": {
+        "semanticDigest": "sha256:45be55316dbd26eef2d14d9b424c27122d530c1ed8a874eecbef6b3ce1a632cc",
         "visibleInteractionKeys": [
           "pass-three"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-card:cardIds:queen-spades",
-        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+        "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
@@ -730,13 +768,14 @@
         "kind": "activate"
       },
       "expect": {
+        "semanticDigest": "sha256:0511f6adb80e758b938d0bc3589560d1685e2a89199f13ac001ac50ee6856861",
         "visibleInteractionKeys": [
           "pass-three"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-card:cardIds:ace-hearts",
-        "descriptorDigest": "sha256:5b710c946ca6cd5b3b0bb26961fa08d621e1e11c2e8b64ca7f6b7be1500ac74d",
+        "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
         "interactionId": "pass-three:player-1",
         "interactionKey": "pass-three",
         "scopeId": "runtime",
@@ -765,12 +804,21 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:d988aa8c6b99cfcd1cf15e427bee5768b9f78f7d31fe7f3aa655de17dadbe8c8",
-        "semanticDigest": "sha256:87bd01a0eb057b0b8c9c474dc85ca4a51abe1973fe1be5d2744a9f9234987f82",
+        "projectionDigest": "sha256:6cf5bac823cea93fdebac38029593135712b3d8369cecc7214e815f98bc501fe",
+        "semanticDigest": "sha256:931557522d0f0248cf6456eebad81699568591e8852a57d2f97df0d2cc559c28",
         "submissionDigest": "sha256:46c3df4d0a5a7a3cb12471a8c2bf851d52c20c2d66b98dc22e75890424a6f93c",
         "visibleInteractionKeys": [
           "pass-three"
         ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:5c08474e500ddbe369f3b31229e771b0c4b90fb97d25b5bbc1cfc8da3119bea4",
+        "interactionId": "pass-three:player-1",
+        "interactionKey": "pass-three",
+        "scopeId": "runtime",
+        "stepId": "hearts.pass-three.mobile.commit",
+        "surface": "gameplay"
       },
       "requestDigest": "sha256:4765bb5bed212ef9cbf1916aafe6645581e600c05b109b7d3354ca462f335afc",
       "resolve": {
@@ -785,11 +833,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:a6c5feda6e08cd6a9bf609d6ede9460912661d031eb259ca2459bced4a9ecf7f",
+    "reducerFingerprint": "sha256:6484e3eba4250e57883b0487cc6d3f3e77d8a8ce891bc553b197900b342e3ee5",
     "renderModule": "modules/hearts.pass-three.mobile.mjs",
-    "renderModuleDigest": "sha256:2c456ac6e468275f9f937d1a02b7627403f67e1f5fc21aff699bc2ddb32a9dff",
+    "renderModuleDigest": "sha256:22fe20ac2966b6bc8e8dc5e3983a44ed9b08cffe8759e614256416a1a21bfd10",
     "scenarioId": "hearts.pass-three.mobile",
-    "sourceDigest": "sha256:9c15ba67c9b91907a31d2a503ca10aaef2ef51ae40540a282f74cc231d13d123",
+    "sourceDigest": "sha256:494e581ccc1e6db8e3687fce7e16610c13f1d694b66e8cf12ee677d51fabc28b",
     "sourceFiles": [
       "examples/reference-games/hearts/scenarios/coverage.json",
       "examples/reference-games/hearts/src/reference-game.mjs",
@@ -797,7 +845,7 @@
       "examples/reference-games/shared/reference-ui.mjs",
       "examples/reference-games/hearts/src/scenarios/pass-three.scenario.mjs"
     ],
-    "uiContractFingerprint": "sha256:d11b8694328d711612c214b6db70e0d9e4e01211941c9d061f136b89515b995a"
+    "uiContractFingerprint": "sha256:289ce91a8f21657723f0f92f53efc7c272b75f99224e290e4950f01a9d215c3e"
   },
   "tags": [
     "hidden-information",

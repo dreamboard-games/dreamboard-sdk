@@ -1,5 +1,7 @@
 import type { DispatchTraceEntry, TrustedRuntimeInput } from "../core/types";
 import type {
+  GameEvent,
+  GameOutcome,
   BaseGameStateOfContract,
   BaseGameSessionOfContract,
   ManifestContractOf,
@@ -76,9 +78,11 @@ export type TrustedReducerBundle<
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
-        instructions: RuntimeInstructionForState<
+        instructions: readonly RuntimeInstructionForState<
           TrustedCombinedState<Contract>
         >[];
+        events: readonly GameEvent[];
+        terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }
   >;
   dispatch(input: {
@@ -89,10 +93,12 @@ export type TrustedReducerBundle<
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
-        trace: DispatchTraceEntry<
+        trace: readonly DispatchTraceEntry<
           TrustedCombinedState<Contract>,
           TrustedPlayerId<Contract>
         >[];
+        events: readonly GameEvent[];
+        terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }
   >;
   projectStatic(): {

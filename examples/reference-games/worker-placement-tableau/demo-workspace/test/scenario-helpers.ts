@@ -310,13 +310,19 @@ export async function givePlayerOrderCard(
     }
 
     // Push the card into each per-player hand projection.
-    const pushIntoPerPlayer = (
+    const moveIntoPerPlayer = (
       bucket: Record<string, unknown>,
       zoneId: string,
     ): void => {
       const zone = asRecord(bucket[zoneId]);
       const entries = zone.entries;
       if (!Array.isArray(entries)) return;
+      for (const candidate of entries) {
+        if (!Array.isArray(candidate) || !Array.isArray(candidate[1])) {
+          continue;
+        }
+        candidate[1] = candidate[1].filter((id) => id !== cardId);
+      }
       const entry = entries.find(
         (candidate): candidate is [string, unknown[]] =>
           Array.isArray(candidate) && candidate[0] === playerId,
@@ -326,8 +332,8 @@ export async function givePlayerOrderCard(
       if (!cards.includes(cardId)) cards.push(cardId);
     };
 
-    pushIntoPerPlayer(asRecord(zones.perPlayer), "order-hand");
-    pushIntoPerPlayer(asRecord(table.hands), "order-hand");
+    moveIntoPerPlayer(asRecord(zones.perPlayer), "order-hand");
+    moveIntoPerPlayer(asRecord(table.hands), "order-hand");
 
     // Update the component-location index so q.zone.playerCards picks
     // the card up under the new owner. The location schema uses
@@ -380,13 +386,19 @@ export async function givePlayerApprenticeCard(
       decks["apprentice-deck"] = deckList.filter((id) => id !== cardId);
     }
 
-    const pushIntoPerPlayer = (
+    const moveIntoPerPlayer = (
       bucket: Record<string, unknown>,
       zoneId: string,
     ): void => {
       const zone = asRecord(bucket[zoneId]);
       const entries = zone.entries;
       if (!Array.isArray(entries)) return;
+      for (const candidate of entries) {
+        if (!Array.isArray(candidate) || !Array.isArray(candidate[1])) {
+          continue;
+        }
+        candidate[1] = candidate[1].filter((id) => id !== cardId);
+      }
       const entry = entries.find(
         (candidate): candidate is [string, unknown[]] =>
           Array.isArray(candidate) && candidate[0] === playerId,
@@ -396,8 +408,8 @@ export async function givePlayerApprenticeCard(
       if (!cards.includes(cardId)) cards.push(cardId);
     };
 
-    pushIntoPerPlayer(asRecord(zones.perPlayer), "apprentice-hand");
-    pushIntoPerPlayer(asRecord(table.hands), "apprentice-hand");
+    moveIntoPerPlayer(asRecord(zones.perPlayer), "apprentice-hand");
+    moveIntoPerPlayer(asRecord(table.hands), "apprentice-hand");
 
     const componentLocations = asRecord(table.componentLocations);
     const handBucket = asRecord(asRecord(table.hands)["apprentice-hand"]);

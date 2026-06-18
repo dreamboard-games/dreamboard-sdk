@@ -11,13 +11,13 @@ import type {
   AnyContinuationToken,
   ContinuationToken,
   ReducerAccept,
+  ReducerAcceptOptions,
   ReducerFx,
   ReducerReject,
   ReducerResult,
   ReducerRuntimeStateForState,
-  TerminalOutcome,
+  GameOutcome,
 } from "../runtime";
-import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { TableQueriesOfState } from "../queries";
 import type { ReducerOps } from "../../ops";
 import type { ReducerTransaction } from "../../transaction";
@@ -166,12 +166,12 @@ export type RuntimeHelpers<
 > = {
   accept(
     state: State,
-    instructions?: RuntimeInstructionForState<State>[],
+    options?: ReducerAcceptOptions<State>,
   ): ReducerAccept<State>;
   endGame(
     state: State,
-    outcome: TerminalOutcome<PlayerIdOfState<State>>,
-    instructions?: RuntimeInstructionForState<State>[],
+    outcome: GameOutcome<PlayerIdOfState<State>>,
+    options?: ReducerAcceptOptions<State>,
   ): ReducerAccept<State>;
   reject: (errorCode: ErrorCode, message?: string) => ReducerReject;
   fx: ReducerFx<State>;

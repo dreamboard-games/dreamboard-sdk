@@ -12,4 +12,5 @@ artifacts/ui-stories/
 artifacts/ui-visual/
 artifacts/ui-release-proof/
 artifacts/
-
+!docs/exec-plans/competition-game-authoring-capability-hard-cut/artifacts/
+!docs/exec-plans/competition-game-authoring-capability-hard-cut/artifacts/phase-05-release-receipt.md

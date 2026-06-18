@@ -1,0 +1,31 @@
+{
+  "id": "simultaneous-vote-planning-01",
+  "title": "Simultaneous vote planning with reveal",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 6 },
+  "authorJobs":
+    [
+      "choose one plan card simultaneously",
+      "lock choices before reveal",
+      "resolve majority result with tied vote handling",
+    ],
+  "uiJobs":
+    [
+      "show own locked choice",
+      "hide other choices before reveal",
+      "show reveal summary after all players submit",
+    ],
+  "authorityJobs":
+    [
+      "reject changing locked choice",
+      "hide unrevealed choices from other players",
+      "resolve tied votes deterministically",
+    ],
+  "acceptance":
+    [
+      "existing simultaneous collectors are sufficient",
+      "tie handling remains game-local until GameOutcome",
+      "no new target protocol is required",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

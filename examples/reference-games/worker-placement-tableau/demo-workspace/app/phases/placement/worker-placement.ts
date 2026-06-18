@@ -372,7 +372,7 @@ export const placeWorker = defineInteraction<
         passedPlayerIds: result.finalPassed,
         spareHandsActiveBy: nextSpareHandsActiveBy,
       });
-      return accept(tx.state, [fx.transition("cleanup")]);
+      return accept(tx.state, { instructions: [fx.transition("cleanup")] });
     }
     tx.patchPhaseState({
       activePlayerIndex: result.nextIndex,

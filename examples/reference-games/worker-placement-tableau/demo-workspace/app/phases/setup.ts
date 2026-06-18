@@ -57,6 +57,6 @@ export const setup = definePhase<GameContract>()({
       tx.addResources({ playerId, amounts: STARTING_RESOURCES });
     }
 
-    return accept(tx.state, [fx.transition("wakeup")]);
+    return accept(tx.state, { instructions: [fx.transition("wakeup")] });
   },
 });

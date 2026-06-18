@@ -7,7 +7,7 @@ import {
 import {
   CostDisplay,
   DiceRoller,
-  GameEndDisplay,
+  OutcomeDialog,
   Panel,
   PhaseIndicator,
   ResourceCounter,
@@ -63,16 +63,24 @@ function renderDice(view) {
 
 function renderScoreboard(view) {
   if (!Array.isArray(view.scoreboard)) return null;
-  const scores = view.scoreboard.map((entry) => ({
+  const winnerIds = new Set(view.terminalOutcome?.winnerIds ?? []);
+  const standings = view.scoreboard.map((entry) => ({
     playerId: entry.playerId,
-    name: entry.playerId,
+    rank: entry.rank ?? (winnerIds.has(entry.playerId) ? 1 : 2),
+    result: winnerIds.has(entry.playerId) ? "win" : "loss",
     score: entry.score,
-    isWinner: view.terminalOutcome?.winnerIds?.includes(entry.playerId),
   }));
-  return e(GameEndDisplay, {
-    isGameOver: Boolean(view.terminalOutcome),
-    scores,
-    winnerMessage: view.terminalOutcome?.reason,
+  return e(OutcomeDialog, {
+    outcome: view.terminalOutcome
+      ? {
+          reason: {
+            code: "SCENARIO_COMPLETE",
+            message: view.terminalOutcome.reason,
+          },
+          standings,
+        }
+      : null,
+    playerName: (playerId) => playerId,
   });
 }
 

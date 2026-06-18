@@ -7,10 +7,7 @@
     "square": {}
   },
   "initialTable": {
-    "playerOrder": [
-      "player-1",
-      "player-2"
-    ],
+    "playerOrder": ["player-1", "player-2"],
     "zones": {
       "shared": {
         "supply-doodle": [
@@ -269,53 +266,29 @@
         "deck": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []]
           ]
         },
         "hand": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []]
           ]
         },
         "in-play": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []]
           ]
         },
         "discard": {
           "__perPlayer": true,
           "entries": [
-            [
-              "player-1",
-              []
-            ],
-            [
-              "player-2",
-              []
-            ]
+            ["player-1", []],
+            ["player-2", []]
           ]
         }
       },
@@ -342,66 +315,26 @@
         "trash": "public"
       },
       "cardSetIdsByZoneId": {
-        "deck": [
-          "sketchbook-cards"
-        ],
-        "discard": [
-          "sketchbook-cards"
-        ],
-        "hand": [
-          "sketchbook-cards"
-        ],
-        "in-play": [
-          "sketchbook-cards"
-        ],
-        "supply-brainstorm": [
-          "sketchbook-cards"
-        ],
-        "supply-concept": [
-          "sketchbook-cards"
-        ],
-        "supply-critic": [
-          "sketchbook-cards"
-        ],
-        "supply-doodle": [
-          "sketchbook-cards"
-        ],
-        "supply-eraser": [
-          "sketchbook-cards"
-        ],
-        "supply-gallery": [
-          "sketchbook-cards"
-        ],
-        "supply-idea": [
-          "sketchbook-cards"
-        ],
-        "supply-inkwork": [
-          "sketchbook-cards"
-        ],
-        "supply-masterpiece": [
-          "sketchbook-cards"
-        ],
-        "supply-open-mic": [
-          "sketchbook-cards"
-        ],
-        "supply-sketch": [
-          "sketchbook-cards"
-        ],
-        "supply-sketchpad": [
-          "sketchbook-cards"
-        ],
-        "supply-smudge": [
-          "sketchbook-cards"
-        ],
-        "supply-studio": [
-          "sketchbook-cards"
-        ],
-        "supply-studio-visit": [
-          "sketchbook-cards"
-        ],
-        "trash": [
-          "sketchbook-cards"
-        ]
+        "deck": ["sketchbook-cards"],
+        "discard": ["sketchbook-cards"],
+        "hand": ["sketchbook-cards"],
+        "in-play": ["sketchbook-cards"],
+        "supply-brainstorm": ["sketchbook-cards"],
+        "supply-concept": ["sketchbook-cards"],
+        "supply-critic": ["sketchbook-cards"],
+        "supply-doodle": ["sketchbook-cards"],
+        "supply-eraser": ["sketchbook-cards"],
+        "supply-gallery": ["sketchbook-cards"],
+        "supply-idea": ["sketchbook-cards"],
+        "supply-inkwork": ["sketchbook-cards"],
+        "supply-masterpiece": ["sketchbook-cards"],
+        "supply-open-mic": ["sketchbook-cards"],
+        "supply-sketch": ["sketchbook-cards"],
+        "supply-sketchpad": ["sketchbook-cards"],
+        "supply-smudge": ["sketchbook-cards"],
+        "supply-studio": ["sketchbook-cards"],
+        "supply-studio-visit": ["sketchbook-cards"],
+        "trash": ["sketchbook-cards"]
       }
     },
     "decks": {
@@ -661,53 +594,29 @@
       "deck": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []]
         ]
       },
       "hand": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []]
         ]
       },
       "in-play": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []]
         ]
       },
       "discard": {
         "__perPlayer": true,
         "entries": [
-          [
-            "player-1",
-            []
-          ],
-          [
-            "player-2",
-            []
-          ]
+          ["player-1", []],
+          ["player-2", []]
         ]
       }
     },
@@ -5073,14 +4982,8 @@
     "resources": {
       "__perPlayer": true,
       "entries": [
-        [
-          "player-1",
-          {}
-        ],
-        [
-          "player-2",
-          {}
-        ]
+        ["player-1", {}],
+        ["player-2", {}]
       ]
     },
     "boards": {

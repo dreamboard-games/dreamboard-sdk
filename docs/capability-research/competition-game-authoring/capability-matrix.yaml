@@ -1,0 +1,1568 @@
+[
+  {
+    "briefId": "roll-and-write-scorecard-01",
+    "job": "roll seeded dice",
+    "classification": "native",
+    "canonicalConcepts": ["rngInput", "fx.effect", "seeded reducer runtime"],
+    "evidence": ["packages/sdk/src/reducer/runtime-instruction.test.ts"],
+  },
+  {
+    "briefId": "roll-and-write-scorecard-01",
+    "job": "select one legal square",
+    "classification": "composition",
+    "canonicalConcepts":
+      ["square board", "boardInput.playerSpace", "Board.surface"],
+    "evidence":
+      [
+        "packages/sdk/src/reducer/inputs/boardInput.ts",
+        "packages/sdk/src/reducer/inputs/boardTarget.ts",
+        "packages/sdk/src/runtime/workspace-contract/board.ts",
+      ],
+    "sourceBoundary": "Generated workspace UI contract has Board.HexGrid but no runtime-aware square counterpart.",
+    "currentWorkaround": "Game UI composes Board.surface().Root plus manual square presentation and target slots.",
+    "documentationInsufficient": "Coding agents must invent how square topology and target slots are bound in SVG.",
+    "owningPhase": "Phase 01",
+    "newCapability": "generated runtime-aware square-grid adapter",
+    "acceptanceTest": "roll-and-write-scorecard uses Board.SquareGrid with player-space targets in Workbench and packed consumer proof.",
+    "publicApiSymbol":
+      ["Board.SquareGrid", "Board.surface", "boardInput.playerSpace"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/runtime/primitives/board.tsx",
+        "packages/sdk/src/runtime/workspace-contract/board.ts",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
+        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/runtime/workspace-contract.test.tsx",
+        "examples/reference-games/roll-and-write-scorecard/scenarios/verify.mjs",
+      ],
+    "workbenchScenario": ["roll-and-write-scorecard.mark-cell.mobile"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game roll-and-write-scorecard",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Physical scorecard carrier and manufacturing metadata remain intentionally outside gameplay contracts.",
+  },
+  {
+    "briefId": "roll-and-write-scorecard-01",
+    "job": "record a failed survey when no matching square remains",
+    "classification": "native",
+    "canonicalConcepts": ["reducer validation", "game-local state"],
+    "evidence":
+      ["packages/sdk/src/reducer/bundle/trusted/interaction-decision.ts"],
+  },
+  {
+    "briefId": "roll-and-write-scorecard-01",
+    "job": "show why other squares are blocked",
+    "classification": "composition",
+    "canonicalConcepts": ["descriptor availability", "target validation"],
+    "evidence":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/interaction-descriptor.ts",
+        "packages/sdk/src/reducer/bundle/trusted/interaction-decision.ts",
+      ],
+    "sourceBoundary": "Projected descriptors expose availability but not authored player-facing target explanations.",
+    "currentWorkaround": "Game UI duplicates reducer rules into local explanatory copy.",
+    "documentationInsufficient": "Duplicated copy silently drifts from reducer authority.",
+    "owningPhase": "Phase 03",
+    "newCapability": "guidance projection and blocked-action explanation UI",
+    "acceptanceTest": "canonical games display reducer-authoritative unavailable reasons without UI-side rule recomputation.",
+    "publicApiSymbol":
+      [
+        "SetupProfileSpec.guidance",
+        "PhaseDefinitionCommon.guidance",
+        "InteractionSpec.presentation",
+        "GuidancePanel",
+        "SetupChecklist",
+        "ActionHelp",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/manifest.ts",
+        "packages/sdk/src/reducer/model/spec/phases.ts",
+        "packages/sdk/src/reducer/model/spec/interactions.ts",
+        "packages/sdk/src/ui/components/Guidance.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/interaction-decision.test.ts",
+        "packages/sdk/src/reducer/setup-profile-runtime.test.ts",
+        "packages/sdk/src/ui/components/Guidance.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "roll-and-write-scorecard.mark-cell.mobile",
+        "multiplayer-ranking-and-ties.draft-stall.desktop",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal host selector, reconnect, and real-host parity pass-through remain pending.",
+  },
+  {
+    "briefId": "roll-and-write-scorecard-01",
+    "job": "total marked regions at game end",
+    "classification": "composition",
+    "canonicalConcepts": ["TerminalOutcome", "GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome supports winnerPlayerId and finalScores only.",
+    "currentWorkaround": "Game view keeps score details in public state outside the terminal payload.",
+    "documentationInsufficient": "Hosts and reconnect paths need one terminal payload, not parallel view state.",
+    "owningPhase": "Phase 02",
+    "newCapability": "canonical GameOutcome standings with score breakdown",
+    "acceptanceTest": "roll-and-write-scorecard terminal result carries every player's score components.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "multiplayer-ranking-and-ties-01",
+    "job": "draft one public stall card",
+    "classification": "native",
+    "canonicalConcepts": ["cardInput", "cardTarget", "market zone"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/player-turn/interactions/buy.ts",
+      ],
+  },
+  {
+    "briefId": "multiplayer-ranking-and-ties-01",
+    "job": "refill market with seeded deck order",
+    "classification": "native",
+    "canonicalConcepts": ["table ops", "seeded shuffle"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "multiplayer-ranking-and-ties-01",
+    "job": "end immediately after the second storm",
+    "classification": "native",
+    "canonicalConcepts": ["endGame", "reducer state"],
+    "evidence": ["packages/sdk/src/reducer/model/spec/runtime-args.ts"],
+  },
+  {
+    "briefId": "multiplayer-ranking-and-ties-01",
+    "job": "rank tied players with score and tie-break evidence",
+    "classification": "composition",
+    "canonicalConcepts": ["TerminalOutcome", "GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot carry rank, result, scoreBreakdown, or tieBreaks.",
+    "currentWorkaround": "Game-local public state and UI-specific score rows duplicate terminal logic.",
+    "documentationInsufficient": "Persistence, callbacks, host reconnect, and UI need the same authoritative rows.",
+    "owningPhase": "Phase 02",
+    "newCapability": "GameOutcome standings",
+    "acceptanceTest": "multiplayer-ranking-and-ties proves tied winners, tie-break evidence, persistence, reconnect, and end UI.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "multiplayer-ranking-and-ties-01",
+    "job": "emit a scoreless cancellation outcome",
+    "classification": "composition",
+    "canonicalConcepts": ["TerminalOutcome", "GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome has score-shaped optional fields and no result enum per standing.",
+    "currentWorkaround": "Encode cancellation in reason and omit finalScores.",
+    "documentationInsufficient": "Consumers cannot distinguish draw/cancel/no-score semantics structurally.",
+    "owningPhase": "Phase 02",
+    "newCapability": "score-optional GameOutcome standings",
+    "acceptanceTest": "storm cancellation yields rank-1 draw standings without fake scores.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "solo-countdown-puzzle-01",
+    "job": "place one tool on a shared puzzle grid",
+    "classification": "native",
+    "canonicalConcepts": ["square board", "boardInput.space"],
+    "evidence": ["packages/sdk/src/reducer/table/board-queries.test.ts"],
+  },
+  {
+    "briefId": "solo-countdown-puzzle-01",
+    "job": "advance countdown after each player action",
+    "classification": "native",
+    "canonicalConcepts": ["reducer state", "fx.transition"],
+    "evidence": ["packages/sdk/src/reducer/runtime-instruction.test.ts"],
+  },
+  {
+    "briefId": "solo-countdown-puzzle-01",
+    "job": "resolve deterministic environment procedure",
+    "classification": "composition",
+    "canonicalConcepts": ["auto phase", "GameEvent"],
+    "evidence": ["packages/sdk/src/reducer/model/spec/runtime-args.ts"],
+    "sourceBoundary": "ReducerResult has instructions and terminal outcome but no persisted public event stream.",
+    "currentWorkaround": "Store procedure history in game-local public state.",
+    "documentationInsufficient": "Hosts cannot distinguish user-authored state from authoritative system event provenance.",
+    "owningPhase": "Phase 04",
+    "newCapability": "deterministic system procedure events",
+    "acceptanceTest": "solo-countdown-puzzle replays identical system events and final projection from the same seed.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "solo-countdown-puzzle-01",
+    "job": "end in win or countdown loss",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot express result type without score or winner fields.",
+    "currentWorkaround": "Encode result semantics in reason string.",
+    "documentationInsufficient": "Designer and host UI need structured win/loss/draw semantics.",
+    "owningPhase": "Phase 02",
+    "newCapability": "GameOutcome result codes",
+    "acceptanceTest": "solo win and countdown loss use the same canonical outcome payload.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "solo-countdown-puzzle-01",
+    "job": "explain automatic procedure events",
+    "classification": "composition",
+    "canonicalConcepts": ["GameEvent", "guidance projection"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "No persisted event payload exists on reducer accepts.",
+    "currentWorkaround": "Render prose from game-local state transitions.",
+    "documentationInsufficient": "Replay/reconnect proof must compare event payloads, not inferred text.",
+    "owningPhase": "Phase 04",
+    "newCapability": "GameEvent event log",
+    "acceptanceTest": "event log names the countdown procedure and survives reconnect.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "automa-river-rival-01",
+    "job": "draft one river card for the human player",
+    "classification": "native",
+    "canonicalConcepts": ["cardInput", "shared market zone"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/player-turn/interactions/buy.ts",
+      ],
+  },
+  {
+    "briefId": "automa-river-rival-01",
+    "job": "advance deterministic rival after human action",
+    "classification": "composition",
+    "canonicalConcepts": ["auto phase", "GameEvent"],
+    "evidence": ["packages/sdk/src/reducer/model/spec/runtime-args.ts"],
+    "sourceBoundary": "Runtime has no canonical persisted system event for non-actor procedures.",
+    "currentWorkaround": "Represent rival steps as ordinary public state and UI prose.",
+    "documentationInsufficient": "Coding agents can accidentally model the rival as a fake player seat.",
+    "owningPhase": "Phase 04",
+    "newCapability": "deterministic system procedures without actor identity",
+    "acceptanceTest": "automa-river-rival has deterministic rival actions with no non-human player ID.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "automa-river-rival-01",
+    "job": "record rival action in inspectable event log",
+    "classification": "composition",
+    "canonicalConcepts": ["GameEvent"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "Reducer accepts cannot carry structured persisted event records.",
+    "currentWorkaround": "Append event-like entries to game state.",
+    "documentationInsufficient": "Host projection needs a canonical event stream for duplicate/reconnect proof.",
+    "owningPhase": "Phase 04",
+    "newCapability": "persisted GameEvent log",
+    "acceptanceTest": "duplicate and reconnect paths preserve rival event records exactly.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "automa-river-rival-01",
+    "job": "score human and rival state without fake seats",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome is keyed by player IDs and cannot carry non-seat rival evidence cleanly.",
+    "currentWorkaround": "Store rival score in public state or invent a pseudo-player key.",
+    "documentationInsufficient": "Pseudo-player identity corrupts authorization and private projection boundaries.",
+    "owningPhase": "Phase 02",
+    "newCapability": "GameOutcome evidence that does not require fake seats",
+    "acceptanceTest": "rival score evidence is visible without adding an automa player to session seats.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "automa-river-rival-01",
+    "job": "resolve tied rival result deterministically",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome has no rank/result/tie-break structure.",
+    "currentWorkaround": "Encode tie resolution in prose.",
+    "documentationInsufficient": "UI and persistence need structured tie evidence.",
+    "owningPhase": "Phase 02",
+    "newCapability": "tie-aware GameOutcome standings",
+    "acceptanceTest": "automa tie branch records deterministic tie evidence.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "shared-garden-track-01",
+    "job": "move marker along a shared track",
+    "classification": "native",
+    "canonicalConcepts": ["generic board", "boardInput.space"],
+    "evidence": ["packages/sdk/src/reducer/table/board-queries.test.ts"],
+  },
+  {
+    "briefId": "shared-garden-track-01",
+    "job": "pay resource cost for selected space",
+    "classification": "native",
+    "canonicalConcepts": ["resources", "interaction rules"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "shared-garden-track-01",
+    "job": "score non-score objective completion",
+    "classification": "native",
+    "canonicalConcepts": ["endGame reason", "game-local view"],
+    "evidence": ["packages/sdk/src/reducer/model/spec/runtime-args.ts"],
+  },
+  {
+    "briefId": "hidden-role-deduction-01",
+    "job": "deal one private role to each player",
+    "classification": "native",
+    "canonicalConcepts": ["private state", "seeded deal"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "hidden-role-deduction-01",
+    "job": "submit one public accusation",
+    "classification": "native",
+    "canonicalConcepts": ["formInput", "public state"],
+    "evidence": ["packages/sdk/src/reducer/interaction-input-types.test.ts"],
+  },
+  {
+    "briefId": "hidden-role-deduction-01",
+    "job": "end when every player has accused",
+    "classification": "native",
+    "canonicalConcepts": ["reducer state", "endGame"],
+    "evidence": ["packages/sdk/src/reducer/model/spec/runtime-args.ts"],
+  },
+  {
+    "briefId": "simultaneous-vote-planning-01",
+    "job": "choose one plan card simultaneously",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous interactions", "cardInput"],
+    "evidence":
+      [
+        "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
+      ],
+  },
+  {
+    "briefId": "simultaneous-vote-planning-01",
+    "job": "lock choices before reveal",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous submit", "private projection"],
+    "evidence": ["packages/sdk/src/reducer/interaction-decision.test.ts"],
+  },
+  {
+    "briefId": "simultaneous-vote-planning-01",
+    "job": "resolve majority result with tied vote handling",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot structurally represent tied non-score winners.",
+    "currentWorkaround": "Keep vote tie result in public state and reason prose.",
+    "documentationInsufficient": "Terminal UI and callbacks need a single result payload.",
+    "owningPhase": "Phase 02",
+    "newCapability": "GameOutcome draw/tie semantics",
+    "acceptanceTest": "vote tie result is represented without score or winner-only fields.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "tile-laying-network-01",
+    "job": "select one hex tile edge",
+    "classification": "native",
+    "canonicalConcepts": ["Board.HexGrid", "boardInput.edge"],
+    "evidence": ["packages/sdk/src/runtime/workspace-contract/board.ts"],
+  },
+  {
+    "briefId": "tile-laying-network-01",
+    "job": "place a route piece",
+    "classification": "native",
+    "canonicalConcepts": ["piece locations", "board edges"],
+    "evidence": ["packages/sdk/src/reducer/table/component-mutations.test.ts"],
+  },
+  {
+    "briefId": "tile-laying-network-01",
+    "job": "score connected landmarks",
+    "classification": "native",
+    "canonicalConcepts": ["derived state", "game-local scoring"],
+    "evidence":
+      [
+        "examples/reference-games/hex-network-trading/demo-workspace/app/derived.ts",
+      ],
+  },
+  {
+    "briefId": "card-crafting-market-01",
+    "job": "play one action card",
+    "classification": "native",
+    "canonicalConcepts": ["card actions"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/cards/sketchpad.ts",
+      ],
+  },
+  {
+    "briefId": "card-crafting-market-01",
+    "job": "resolve chained card effect",
+    "classification": "native",
+    "canonicalConcepts": ["phase state", "forms"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/cards/studio-visit.ts",
+      ],
+  },
+  {
+    "briefId": "card-crafting-market-01",
+    "job": "buy one market card",
+    "classification": "native",
+    "canonicalConcepts": ["cardTarget", "resource rules"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/player-turn/interactions/buy.ts",
+      ],
+  },
+  {
+    "briefId": "card-crafting-market-01",
+    "job": "end when a supply pile empties",
+    "classification": "native",
+    "canonicalConcepts": ["derived state", "endGame"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/check-game-end.ts",
+      ],
+  },
+  {
+    "briefId": "variable-setup-race-01",
+    "job": "select setup profile before play",
+    "classification": "native",
+    "canonicalConcepts": ["setup profiles"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "variable-setup-race-01",
+    "job": "seed different board obstacles by profile",
+    "classification": "native",
+    "canonicalConcepts": ["setup bootstrap"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "variable-setup-race-01",
+    "job": "race to non-score objective",
+    "classification": "composition",
+    "canonicalConcepts": ["phase guidance", "GameOutcome"],
+    "evidence": ["packages/sdk/src/ui/components/PhaseIndicator.tsx"],
+    "sourceBoundary": "Current phase labels are passed by UI props or humanized from IDs.",
+    "currentWorkaround": "Game UI owns objective copy outside generated projection.",
+    "documentationInsufficient": "Coding agents duplicate objective state and phase guidance inconsistently.",
+    "owningPhase": "Phase 03",
+    "newCapability": "authored guidance projection",
+    "acceptanceTest": "setup race exposes current objective from generated phase guidance.",
+    "publicApiSymbol":
+      [
+        "SetupProfileSpec.guidance",
+        "PhaseDefinitionCommon.guidance",
+        "InteractionSpec.presentation",
+        "GuidancePanel",
+        "SetupChecklist",
+        "ActionHelp",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/manifest.ts",
+        "packages/sdk/src/reducer/model/spec/phases.ts",
+        "packages/sdk/src/reducer/model/spec/interactions.ts",
+        "packages/sdk/src/ui/components/Guidance.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/interaction-decision.test.ts",
+        "packages/sdk/src/reducer/setup-profile-runtime.test.ts",
+        "packages/sdk/src/ui/components/Guidance.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "roll-and-write-scorecard.mark-cell.mobile",
+        "multiplayer-ranking-and-ties.draft-stall.desktop",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal host selector, reconnect, and real-host parity pass-through remain pending.",
+  },
+  {
+    "briefId": "auction-resource-bidding-01",
+    "job": "submit hidden bid",
+    "classification": "native",
+    "canonicalConcepts": ["formInput", "private state"],
+    "evidence": ["packages/sdk/src/reducer/interaction-input-types.test.ts"],
+  },
+  {
+    "briefId": "auction-resource-bidding-01",
+    "job": "reveal bids together",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous interactions", "public state"],
+    "evidence": ["packages/sdk/src/reducer/interaction-decision.test.ts"],
+  },
+  {
+    "briefId": "auction-resource-bidding-01",
+    "job": "award lot with deterministic tie-break",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "Terminal result cannot carry tie-break evidence.",
+    "currentWorkaround": "Tie-break explanation lives in game-local state.",
+    "documentationInsufficient": "Terminal consumers need structured evidence.",
+    "owningPhase": "Phase 02",
+    "newCapability": "tie-break evidence in GameOutcome",
+    "acceptanceTest": "auction tie-break is recorded in outcome details.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "auction-resource-bidding-01",
+    "job": "refund losing bids",
+    "classification": "native",
+    "canonicalConcepts": ["resource ops", "transaction"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "cooperative-bag-puzzle-01",
+    "job": "draw tokens from seeded bag",
+    "classification": "native",
+    "canonicalConcepts": ["rngInput", "reducer state"],
+    "evidence": ["packages/sdk/src/reducer/runtime-effects.test.ts"],
+  },
+  {
+    "briefId": "cooperative-bag-puzzle-01",
+    "job": "assign token to shared objective",
+    "classification": "native",
+    "canonicalConcepts": ["boardInput.space", "formInput"],
+    "evidence": ["packages/sdk/src/reducer/inputs/boardInput.ts"],
+  },
+  {
+    "briefId": "cooperative-bag-puzzle-01",
+    "job": "trigger shared loss threshold",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot express team loss result for every player.",
+    "currentWorkaround": "Encode shared loss in reason string.",
+    "documentationInsufficient": "Team outcomes must project consistently through host and callbacks.",
+    "owningPhase": "Phase 02",
+    "newCapability": "GameOutcome result semantics",
+    "acceptanceTest": "cooperative loss gives every human an explicit loss result.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "cooperative-bag-puzzle-01",
+    "job": "end with team result",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "Winner-only terminal shape does not model cooperative team result.",
+    "currentWorkaround": "Omit winner and rely on reason prose.",
+    "documentationInsufficient": "UI cannot reliably infer team result semantics from text.",
+    "owningPhase": "Phase 02",
+    "newCapability": "team result standings",
+    "acceptanceTest": "team win/loss is structural and not parsed from reason.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "dice-worker-scheduler-01",
+    "job": "roll personal worker dice",
+    "classification": "native",
+    "canonicalConcepts": ["dice", "rngInput"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "dice-worker-scheduler-01",
+    "job": "place one die on matching worker space",
+    "classification": "native",
+    "canonicalConcepts": ["boardInput.space", "dice state"],
+    "evidence": ["packages/sdk/src/reducer/table/component-mutations.test.ts"],
+  },
+  {
+    "briefId": "dice-worker-scheduler-01",
+    "job": "resolve cleanup after all dice placed",
+    "classification": "composition",
+    "canonicalConcepts": ["GameEvent"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "Cleanup can mutate state, but there is no persisted system event payload.",
+    "currentWorkaround": "Write cleanup facts into public state.",
+    "documentationInsufficient": "Users need to understand automatic cleanup without deriving it from state diffs.",
+    "owningPhase": "Phase 04",
+    "newCapability": "system procedure GameEvent",
+    "acceptanceTest": "cleanup event is persisted and replay-stable.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "drafting-scoring-breakdown-01",
+    "job": "draft one card from rotating hand",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous drafting", "cardInput"],
+    "evidence":
+      [
+        "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
+      ],
+  },
+  {
+    "briefId": "drafting-scoring-breakdown-01",
+    "job": "score several independent categories",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome finalScores cannot carry named scoreBreakdown rows.",
+    "currentWorkaround": "GameEndDisplay receives ad hoc details props from UI state.",
+    "documentationInsufficient": "Terminal score categories need to survive wire and reconnect boundaries.",
+    "owningPhase": "Phase 02",
+    "newCapability": "scoreBreakdown rows in GameOutcome",
+    "acceptanceTest": "drafting final scores preserve named categories through terminal payload.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "drafting-scoring-breakdown-01",
+    "job": "rank tied players after deterministic tie-break",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot distinguish tied rank from equal score.",
+    "currentWorkaround": "Sort in UI and infer ties.",
+    "documentationInsufficient": "UI sorting can contradict reducer-owned tie-break rules.",
+    "owningPhase": "Phase 02",
+    "newCapability": "ranked standings with tie-break evidence",
+    "acceptanceTest": "equal score and equal tie-break rows share rank from reducer-owned outcome.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "asymmetric-objective-cards-01",
+    "job": "deal private objective cards",
+    "classification": "native",
+    "canonicalConcepts": ["private card projection", "seeded deal"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "asymmetric-objective-cards-01",
+    "job": "score revealed objectives",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome", "scoreBreakdown"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot preserve named private-objective score evidence.",
+    "currentWorkaround": "Reveal objective contribution through game-local public view state.",
+    "documentationInsufficient": "Reconnect and host consumers need the score evidence in the terminal payload.",
+    "owningPhase": "Phase 02",
+    "newCapability": "score breakdown rows in GameOutcome",
+    "acceptanceTest": "objective contribution survives terminal persistence and reconnect.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "asymmetric-objective-cards-01",
+    "job": "show final private-score evidence",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome", "outcome presentation"],
+    "evidence": ["packages/sdk/src/ui/components/GameEndDisplay.tsx"],
+    "sourceBoundary": "GameEndDisplay receives UI-local score rows rather than canonical terminal evidence.",
+    "currentWorkaround": "UI maps revealed objective state into ad hoc detail props.",
+    "documentationInsufficient": "UI-local detail mapping can diverge from reducer-owned scoring.",
+    "owningPhase": "Phase 02",
+    "newCapability": "canonical outcome presentation",
+    "acceptanceTest": "final objective evidence renders from GameOutcome rows.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "cooperative-threshold-01",
+    "job": "contribute resources to shared goal",
+    "classification": "native",
+    "canonicalConcepts": ["resources", "formInput"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "cooperative-threshold-01",
+    "job": "advance dusk countdown",
+    "classification": "composition",
+    "canonicalConcepts": ["GameEvent"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "Automatic countdown steps have no canonical persisted event payload.",
+    "currentWorkaround": "Store countdown history in ordinary public state.",
+    "documentationInsufficient": "Designer-facing replay needs event provenance, not inferred state deltas.",
+    "owningPhase": "Phase 04",
+    "newCapability": "system procedure GameEvent",
+    "acceptanceTest": "countdown events replay identically from the same seed.",
+    "publicApiSymbol":
+      [
+        "GameEvent",
+        "gameEvent.systemAction",
+        "ReducerAcceptOptions",
+        "GameEventLog",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/reducer/game-event.ts",
+        "packages/sdk/src/ui/components/GameEventLog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
+        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/bundle/trusted/trusted-runtime-result.test.ts",
+        "packages/sdk/src/ui/components/GameEventLog.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "automa-river-rival.claim-cargo.mobile",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal event persistence, duplicate delivery, reconnect, and real-host projection proof remain pending.",
+  },
+  {
+    "briefId": "cooperative-threshold-01",
+    "job": "resolve team win or loss",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot express team result for all humans without winner semantics.",
+    "currentWorkaround": "Put team result in reason prose.",
+    "documentationInsufficient": "Result semantics must survive wire boundaries structurally.",
+    "owningPhase": "Phase 02",
+    "newCapability": "team result standings",
+    "acceptanceTest": "team win/loss produces explicit result rows for every player.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "dice-allocation-engine-01",
+    "job": "roll a pool of seeded dice",
+    "classification": "native",
+    "canonicalConcepts": ["dice", "rngInput"],
+    "evidence": ["packages/sdk/src/reducer/runtime-effects.test.ts"],
+  },
+  {
+    "briefId": "dice-allocation-engine-01",
+    "job": "assign one die to a legal slot",
+    "classification": "native",
+    "canonicalConcepts": ["board spaces", "component movement"],
+    "evidence": ["packages/sdk/src/reducer/table/component-mutations.test.ts"],
+  },
+  {
+    "briefId": "dice-allocation-engine-01",
+    "job": "spend stored steam for rerolls",
+    "classification": "native",
+    "canonicalConcepts": ["resources", "interaction rules"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "hidden-bid-reveal-01",
+    "job": "commit a hidden bid",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous submit", "private projection"],
+    "evidence": ["packages/sdk/src/reducer/interaction-decision.test.ts"],
+  },
+  {
+    "briefId": "hidden-bid-reveal-01",
+    "job": "reveal all bids together",
+    "classification": "native",
+    "canonicalConcepts": ["simultaneous interactions", "public state"],
+    "evidence": ["packages/sdk/src/reducer/interaction-decision.test.ts"],
+  },
+  {
+    "briefId": "hidden-bid-reveal-01",
+    "job": "resolve tied bid awards",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome", "tieBreaks"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome has no tie-break evidence structure.",
+    "currentWorkaround": "Render tie explanation from game-local state.",
+    "documentationInsufficient": "Tie-break proof must cross persistence and host boundaries.",
+    "owningPhase": "Phase 02",
+    "newCapability": "tie-break evidence in GameOutcome",
+    "acceptanceTest": "tied bid award records deterministic tie evidence in outcome rows.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "per-player-resource-track-01",
+    "job": "advance a personal track",
+    "classification": "native",
+    "canonicalConcepts": ["per-player board", "boardInput.playerSpace"],
+    "evidence": ["packages/sdk/src/reducer/inputs/boardInput.ts"],
+  },
+  {
+    "briefId": "per-player-resource-track-01",
+    "job": "choose one craft recipe",
+    "classification": "native",
+    "canonicalConcepts": ["formInput", "resources"],
+    "evidence": ["packages/sdk/src/reducer/interaction-input-types.test.ts"],
+  },
+  {
+    "briefId": "per-player-resource-track-01",
+    "job": "block overheat actions",
+    "classification": "composition",
+    "canonicalConcepts": ["descriptor availability", "guidance projection"],
+    "evidence":
+      ["packages/sdk/src/reducer/bundle/trusted/interaction-decision.ts"],
+    "sourceBoundary": "Descriptor rules can gate actions, but authored player-facing blocked guidance is not projected.",
+    "currentWorkaround": "Game UI duplicates overheat copy.",
+    "documentationInsufficient": "Duplicated guidance can drift from reducer rule evaluation.",
+    "owningPhase": "Phase 03",
+    "newCapability": "authored unavailable-action explanation",
+    "acceptanceTest": "overheat rule reason renders from projected guidance and reducer availability.",
+    "publicApiSymbol":
+      [
+        "SetupProfileSpec.guidance",
+        "PhaseDefinitionCommon.guidance",
+        "InteractionSpec.presentation",
+        "GuidancePanel",
+        "SetupChecklist",
+        "ActionHelp",
+      ],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/manifest.ts",
+        "packages/sdk/src/reducer/model/spec/phases.ts",
+        "packages/sdk/src/reducer/model/spec/interactions.ts",
+        "packages/sdk/src/ui/components/Guidance.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/interaction-decision.test.ts",
+        "packages/sdk/src/reducer/setup-profile-runtime.test.ts",
+        "packages/sdk/src/ui/components/Guidance.test.tsx",
+      ],
+    "workbenchScenario":
+      [
+        "roll-and-write-scorecard.mark-cell.mobile",
+        "multiplayer-ranking-and-ties.draft-stall.desktop",
+      ],
+    "packedProof":
+      ["mise exec node@24 -- pnpm reference-games:test:packed --required"],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal host selector, reconnect, and real-host parity pass-through remain pending.",
+  },
+  {
+    "briefId": "route-race-tiebreaker-01",
+    "job": "place a legal route edge",
+    "classification": "native",
+    "canonicalConcepts": ["boardInput.edge", "Board.HexGrid"],
+    "evidence": ["packages/sdk/src/runtime/workspace-contract/board.ts"],
+  },
+  {
+    "briefId": "route-race-tiebreaker-01",
+    "job": "score landmark connections",
+    "classification": "native",
+    "canonicalConcepts": ["derived state", "game-local scoring"],
+    "evidence":
+      [
+        "examples/reference-games/hex-network-trading/demo-workspace/app/derived.ts",
+      ],
+  },
+  {
+    "briefId": "route-race-tiebreaker-01",
+    "job": "break ties by cards remaining",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome", "tieBreaks"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot carry tie-break rows.",
+    "currentWorkaround": "UI infers or recomputes remaining-card tie-break.",
+    "documentationInsufficient": "Reducer-owned tie-breaks must be preserved through packed host proof.",
+    "owningPhase": "Phase 02",
+    "newCapability": "tie-break rows in GameOutcome",
+    "acceptanceTest": "route race terminal payload includes cards-remaining tie-break evidence.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "setup-variant-draft-01",
+    "job": "choose setup profile",
+    "classification": "native",
+    "canonicalConcepts": ["setup profiles"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "setup-variant-draft-01",
+    "job": "draft one starting tool",
+    "classification": "native",
+    "canonicalConcepts": ["cardInput", "cardTarget"],
+    "evidence": ["packages/sdk/src/reducer/interaction-input-types.test.ts"],
+  },
+  {
+    "briefId": "setup-variant-draft-01",
+    "job": "seed profile-specific decks",
+    "classification": "native",
+    "canonicalConcepts": ["setup bootstrap", "seeded shuffle"],
+    "evidence": ["packages/sdk/src/reducer/setup-profile-runtime.test.ts"],
+  },
+  {
+    "briefId": "shared-markable-map-01",
+    "job": "select one unclaimed shared space",
+    "classification": "native",
+    "canonicalConcepts": ["boardInput.space", "shared square board"],
+    "evidence": ["packages/sdk/src/reducer/inputs/boardInput.ts"],
+  },
+  {
+    "briefId": "shared-markable-map-01",
+    "job": "pay route resource costs",
+    "classification": "native",
+    "canonicalConcepts": ["resources", "interaction rules"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "shared-markable-map-01",
+    "job": "score connected beacon groups",
+    "classification": "composition",
+    "canonicalConcepts": ["GameOutcome", "scoreBreakdown"],
+    "evidence": ["packages/sdk/src/reducer/model/runtime.ts"],
+    "sourceBoundary": "TerminalOutcome cannot preserve connected-group score components.",
+    "currentWorkaround": "Score groups in game-local view state.",
+    "documentationInsufficient": "Final score components must not be recomputed in UI.",
+    "owningPhase": "Phase 02",
+    "newCapability": "scoreBreakdown rows in GameOutcome",
+    "acceptanceTest": "connected beacon scoring appears as reducer-owned outcome breakdown.",
+    "publicApiSymbol": ["GameOutcome", "endGame", "OutcomeDialog"],
+    "sourceImplementation":
+      [
+        "packages/sdk/src/reducer/model/runtime.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      ],
+    "referenceGameCallSite":
+      [
+        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
+        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/verify.mjs",
+      ],
+    "focusedTest":
+      [
+        "packages/sdk/src/reducer/runtime-effects.test.ts",
+        "packages/sdk/src/ui/components/OutcomeDialog.test.tsx",
+      ],
+    "workbenchScenario": ["multiplayer-ranking-and-ties.draft-stall.desktop"],
+    "packedProof":
+      [
+        "mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties",
+      ],
+    "publicDocumentation":
+      ["docs/reference/canonical-examples.md", "docs/reference-games.md"],
+    "retainedLimitation": "Internal persistence, callback, reconnect, and exact public-release proof remain Phase 05/internal closeout work.",
+  },
+  {
+    "briefId": "simple-shared-market-01",
+    "job": "select one affordable market card",
+    "classification": "native",
+    "canonicalConcepts": ["cardTarget", "interaction rules"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/player-turn/interactions/buy.ts",
+      ],
+  },
+  {
+    "briefId": "simple-shared-market-01",
+    "job": "spend visible coins",
+    "classification": "native",
+    "canonicalConcepts": ["resources", "transaction"],
+    "evidence": ["packages/sdk/src/reducer/table/resource-ops.test.ts"],
+  },
+  {
+    "briefId": "simple-shared-market-01",
+    "job": "refill the market from deck",
+    "classification": "native",
+    "canonicalConcepts": ["card movement", "seeded deck order"],
+    "evidence":
+      [
+        "examples/reference-games/deck-building-market/demo-workspace/app/phases/player-turn/interactions/buy.ts",
+      ],
+  },
+  {
+    "briefId": "trick-taking-follow-suit-01",
+    "job": "deal private hands",
+    "classification": "native",
+    "canonicalConcepts": ["private hands", "seeded deal"],
+    "evidence":
+      ["examples/reference-games/hearts/demo-workspace/app/phases/setup.ts"],
+  },
+  {
+    "briefId": "trick-taking-follow-suit-01",
+    "job": "play one legal card",
+    "classification": "native",
+    "canonicalConcepts": ["card actions", "interaction rules"],
+    "evidence":
+      ["examples/reference-games/hearts/demo-workspace/app/phases/playing.ts"],
+  },
+  {
+    "briefId": "trick-taking-follow-suit-01",
+    "job": "award trick to winning card",
+    "classification": "native",
+    "canonicalConcepts": ["reducer state", "phase transition"],
+    "evidence":
+      ["examples/reference-games/hearts/demo-workspace/app/phases/playing.ts"],
+  },
+]

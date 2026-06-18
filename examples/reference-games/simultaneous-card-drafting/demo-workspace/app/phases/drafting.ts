@@ -138,7 +138,7 @@ export const drafting = definePhase<GameContract>()({
     });
 
     if (allEmpty) {
-      return accept(tx.state, [fx.transition("scoreRound")]);
+      return accept(tx.state, { instructions: [fx.transition("scoreRound")] });
     }
 
     return accept(tx.state);

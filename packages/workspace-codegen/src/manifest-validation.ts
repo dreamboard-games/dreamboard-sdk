@@ -1178,6 +1178,10 @@ function collectManifestRecordKeyIssues(
           value: profile.id,
           path: `manifest.setupProfiles[${profileIndex}].id`,
         },
+        ...(profile.guidance?.steps ?? []).map((step, stepIndex) => ({
+          value: step.id,
+          path: `manifest.setupProfiles[${profileIndex}].guidance.steps[${stepIndex}].id`,
+        })),
         ...Object.entries(profile.optionValues ?? {}).flatMap(
           ([optionId, choiceId]) => [
             {
@@ -1354,6 +1358,19 @@ export function validateManifestAuthoring(
       label: "setup profile id",
     }),
   );
+  for (const [profileIndex, profile] of (
+    manifest.setupProfiles ?? []
+  ).entries()) {
+    errors.push(
+      ...collectDuplicateIdIssues({
+        entries: (profile.guidance?.steps ?? []).map((step, stepIndex) => ({
+          id: step.id,
+          path: `manifest.setupProfiles[${profileIndex}].guidance.steps[${stepIndex}].id`,
+        })),
+        label: `setup profile '${profile.id}' guidance step id`,
+      }),
+    );
+  }
   errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));

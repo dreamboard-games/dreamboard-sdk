@@ -1,0 +1,498 @@
+{
+  "browserInteractionProtocol": "3.0.0",
+  "environment": {
+    "clockIso": "2026-01-01T00:00:00.000Z",
+    "locale": "en-US",
+    "randomSeed": "automa-river-rival.claim-cargo.mobile.seed",
+    "timezone": "UTC",
+    "viewportTags": [
+      "phone",
+      "touch"
+    ]
+  },
+  "expected": {
+    "finalProjectionDigest": "sha256:210f3678b6d43f8db55ed6a8f84a5d5decf1eab0f94a4692a21d43cbf4f71015",
+    "finalSemanticDigest": "sha256:b4b08b75d7aa08b7aebd80047ddff69041f7553636bf5fd7fb0bd7b0361a0045",
+    "initialProjectionDigest": "sha256:03b59171680bb309d4bea40628d6fbd0cd0716e3296a7299f7038441000e7590",
+    "submissionDigest": "sha256:5fd74db23deb0132893beb67f041de4c96825fe44e2a9861d09dcf889239e5ab"
+  },
+  "gameId": "automa-river-rival",
+  "id": "automa-river-rival.claim-cargo.mobile",
+  "pluginRuntimeProtocol": 3,
+  "protocol": {
+    "frames": [
+      {
+        "frame": {
+          "actionSetVersion": "sha256:2f71b87f449ff43e86e5468f517bd48075e6ebce9f8a46043689435a70b2b63f",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:ad8d07462da73c7ddd9701aab05dbceb97182508194d63e3b20a5494144799e3",
+              "help": "Claim one cargo, then let the reducer resolve the rival procedure.",
+              "inputs": [],
+              "interactionId": "claim-cargo:player-1",
+              "interactionKey": "claim-cargo",
+              "kind": "action",
+              "label": "Claim cargo",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "automa-river-rival.claim-cargo.mobile",
+            "currentStage": "automa-river-rival.claim-cargo.mobile",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "humanTurn",
+              "label": "Claim cargo",
+              "objective": "Outscore the river rival without assigning it a player seat.",
+              "summary": "Claim cargo for the team, then resolve deterministic rival actions."
+            },
+            "setup": {
+              "name": "River Guild setup",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Place four cargo cards in the public river market.",
+                  "id": "deal-river",
+                  "label": "Deal river"
+                },
+                {
+                  "description": "Prepare the deterministic rival instruction deck.",
+                  "id": "seed-rival",
+                  "label": "Seed rival"
+                }
+              ],
+              "summary": "One human player shares a public river with a deterministic rival deck."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 0,
+              "kind": "systemAction",
+              "procedureId": "rival-instruction-revealed",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded rival-instruction-revealed.",
+              "title": "Rival Instruction Revealed",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 1,
+              "kind": "systemAction",
+              "procedureId": "rival-cargo-claimed",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded rival-cargo-claimed.",
+              "title": "Rival Cargo Claimed",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 2,
+              "kind": "systemAction",
+              "procedureId": "river-refilled",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded river-refilled.",
+              "title": "River Refilled",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 3,
+              "kind": "systemAction",
+              "procedureId": "river-round-advanced",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded river-round-advanced.",
+              "title": "River Round Advanced",
+              "version": 1
+            }
+          ],
+          "view": {
+            "displayName": "Automa River Rival",
+            "recentEvents": [
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 0,
+                "kind": "systemAction",
+                "procedureId": "rival-instruction-revealed",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded rival-instruction-revealed.",
+                "title": "Rival Instruction Revealed",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 1,
+                "kind": "systemAction",
+                "procedureId": "rival-cargo-claimed",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded rival-cargo-claimed.",
+                "title": "Rival Cargo Claimed",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 2,
+                "kind": "systemAction",
+                "procedureId": "river-refilled",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded river-refilled.",
+                "title": "River Refilled",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 3,
+                "kind": "systemAction",
+                "procedureId": "river-round-advanced",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded river-round-advanced.",
+                "title": "River Round Advanced",
+                "version": 1
+              }
+            ],
+            "referenceGameId": "automa-river-rival",
+            "scenarioBranch": null,
+            "scenarioId": "automa-river-rival.claim-cargo.mobile",
+            "submittedInteractionId": null
+          },
+          "zones": {}
+        },
+        "id": "frame-1",
+        "projectionDigest": "sha256:03b59171680bb309d4bea40628d6fbd0cd0716e3296a7299f7038441000e7590"
+      },
+      {
+        "frame": {
+          "actionSetVersion": "sha256:d3377ab3f22865351c4d3207e39656f7c794d6a40120441a53e6aa992f394042",
+          "availableInteractions": [
+            {
+              "availability": {
+                "status": "available"
+              },
+              "commit": {
+                "mode": "manual"
+              },
+              "descriptorDigest": "sha256:ad8d07462da73c7ddd9701aab05dbceb97182508194d63e3b20a5494144799e3",
+              "help": "Claim one cargo, then let the reducer resolve the rival procedure.",
+              "inputs": [],
+              "interactionId": "claim-cargo:player-1",
+              "interactionKey": "claim-cargo",
+              "kind": "action",
+              "label": "Claim cargo",
+              "phaseName": "fixture"
+            }
+          ],
+          "flow": {
+            "activePlayers": [
+              "player-1"
+            ],
+            "currentPhase": "automa-river-rival.claim-cargo.mobile.submitted",
+            "currentStage": "automa-river-rival.claim-cargo.mobile.submitted",
+            "simultaneousPhase": null
+          },
+          "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "humanTurn",
+              "label": "Claim cargo",
+              "objective": "Outscore the river rival without assigning it a player seat.",
+              "summary": "Claim cargo for the team, then resolve deterministic rival actions."
+            },
+            "setup": {
+              "name": "River Guild setup",
+              "profileId": "standard",
+              "steps": [
+                {
+                  "description": "Place four cargo cards in the public river market.",
+                  "id": "deal-river",
+                  "label": "Deal river"
+                },
+                {
+                  "description": "Prepare the deterministic rival instruction deck.",
+                  "id": "seed-rival",
+                  "label": "Seed rival"
+                }
+              ],
+              "summary": "One human player shares a public river with a deterministic rival deck."
+            }
+          },
+          "perspectivePlayerId": "player-1",
+          "recentEvents": [
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 0,
+              "kind": "systemAction",
+              "procedureId": "rival-instruction-revealed",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded rival-instruction-revealed.",
+              "title": "Rival Instruction Revealed",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 1,
+              "kind": "systemAction",
+              "procedureId": "rival-cargo-claimed",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded rival-cargo-claimed.",
+              "title": "Rival Cargo Claimed",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 2,
+              "kind": "systemAction",
+              "procedureId": "river-refilled",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded river-refilled.",
+              "title": "River Refilled",
+              "version": 1
+            },
+            {
+              "details": [
+                {
+                  "label": "Scenario",
+                  "value": "automa-river-rival.claim-cargo.mobile"
+                }
+              ],
+              "index": 3,
+              "kind": "systemAction",
+              "procedureId": "river-round-advanced",
+              "summary": "automa-river-rival.claim-cargo.mobile recorded river-round-advanced.",
+              "title": "River Round Advanced",
+              "version": 1
+            }
+          ],
+          "view": {
+            "displayName": "Automa River Rival",
+            "recentEvents": [
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 0,
+                "kind": "systemAction",
+                "procedureId": "rival-instruction-revealed",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded rival-instruction-revealed.",
+                "title": "Rival Instruction Revealed",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 1,
+                "kind": "systemAction",
+                "procedureId": "rival-cargo-claimed",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded rival-cargo-claimed.",
+                "title": "Rival Cargo Claimed",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 2,
+                "kind": "systemAction",
+                "procedureId": "river-refilled",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded river-refilled.",
+                "title": "River Refilled",
+                "version": 1
+              },
+              {
+                "details": [
+                  {
+                    "label": "Scenario",
+                    "value": "automa-river-rival.claim-cargo.mobile"
+                  }
+                ],
+                "index": 3,
+                "kind": "systemAction",
+                "procedureId": "river-round-advanced",
+                "summary": "automa-river-rival.claim-cargo.mobile recorded river-round-advanced.",
+                "title": "River Round Advanced",
+                "version": 1
+              }
+            ],
+            "referenceGameId": "automa-river-rival",
+            "scenarioBranch": null,
+            "scenarioId": "automa-river-rival.claim-cargo.mobile",
+            "submittedInteractionId": "claim-cargo:player-1"
+          },
+          "zones": {}
+        },
+        "id": "frame-2",
+        "projectionDigest": "sha256:210f3678b6d43f8db55ed6a8f84a5d5decf1eab0f94a4692a21d43cbf4f71015"
+      }
+    ],
+    "session": {
+      "players": [
+        {
+          "displayName": "Player 1",
+          "playerId": "player-1"
+        }
+      ],
+      "sessionId": "automa-river-rival.claim-cargo.mobile.fixture-session"
+    },
+    "steps": [
+      {
+        "frameId": "frame-1",
+        "id": "frame-1.host-frame",
+        "kind": "host.frame"
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "automa-river-rival.claim-cargo.mobile.validate",
+        "kind": "client.validate",
+        "requestDigest": "sha256:35aeb28bee701868cb650039511baf04aec9c8e8626a6f40269fbf18b44f2ef3",
+        "response": {
+          "valid": true
+        }
+      },
+      {
+        "fromFrameId": "frame-1",
+        "id": "automa-river-rival.claim-cargo.mobile.submit",
+        "kind": "client.submit",
+        "requestDigest": "sha256:692ebe8405b8f9614ac5c92ab5c46b07e6becf401f87a905401d650ea00bdfd0",
+        "response": {
+          "accepted": true
+        }
+      },
+      {
+        "frameId": "frame-2",
+        "id": "automa-river-rival.claim-cargo.mobile.submit.host-frame",
+        "kind": "host.frame"
+      }
+    ]
+  },
+  "replay": [
+    {
+      "execute": {
+        "kind": "activate"
+      },
+      "expect": {
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:210f3678b6d43f8db55ed6a8f84a5d5decf1eab0f94a4692a21d43cbf4f71015",
+        "semanticDigest": "sha256:b4b08b75d7aa08b7aebd80047ddff69041f7553636bf5fd7fb0bd7b0361a0045",
+        "submissionDigest": "sha256:5fd74db23deb0132893beb67f041de4c96825fe44e2a9861d09dcf889239e5ab",
+        "visibleInteractionKeys": [
+          "claim-cargo"
+        ]
+      },
+      "expectedIdentity": {
+        "actuatorId": "primitive-submit",
+        "descriptorDigest": "sha256:ad8d07462da73c7ddd9701aab05dbceb97182508194d63e3b20a5494144799e3",
+        "interactionId": "claim-cargo:player-1",
+        "interactionKey": "claim-cargo",
+        "scopeId": "runtime",
+        "stepId": "automa-river-rival.claim-cargo.mobile.invoke",
+        "surface": "gameplay"
+      },
+      "requestDigest": "sha256:e2b8a2ba2c313416eaa8a3e77fe5f967be4cbbf8bff9819443e84b906b2d6539",
+      "resolve": {
+        "intent": "invoke",
+        "interactionId": "claim-cargo:player-1",
+        "interactionKey": "claim-cargo",
+        "scopeId": "runtime",
+        "surface": "gameplay"
+      },
+      "stepId": "automa-river-rival.claim-cargo.mobile.invoke"
+    }
+  ],
+  "schemaVersion": 2,
+  "source": {
+    "reducerFingerprint": "sha256:4d71145d0d559d37639ad726bee30d4c42b29610a4aec23d73860c10546034d9",
+    "renderModule": "modules/automa-river-rival.claim-cargo.mobile.mjs",
+    "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
+    "scenarioId": "automa-river-rival.claim-cargo.mobile",
+    "sourceDigest": "sha256:01d265b63da3ec8f0f046fe8c94e458a346c0dda28e289ee1d80083d2cb6778c",
+    "sourceFiles": [
+      "examples/reference-games/automa-river-rival/scenarios/coverage.json",
+      "examples/reference-games/automa-river-rival/src/reference-game.mjs",
+      "examples/reference-games/automa-river-rival/src/ui.mjs",
+      "examples/reference-games/automa-river-rival/src/scenarios/claim-cargo.scenario.mjs",
+      "examples/reference-games/shared/reference-reducer.mjs"
+    ],
+    "uiContractFingerprint": "sha256:bf0673db11ea66232cd225092a6e864e4b3958fc55028d837cda4e0c4d8684a8"
+  },
+  "tags": [
+    "automa-rival",
+    "compact-mobile-history",
+    "cooperative-outcome",
+    "cooperative-scoring",
+    "deterministic-procedure",
+    "event-log",
+    "market-row",
+    "open-market"
+  ],
+  "title": "Automa River Rival: human claim triggers deterministic rival claim-highest resolution",
+  "viewer": {
+    "playerId": "player-1",
+    "seatId": "player-1"
+  }
+}

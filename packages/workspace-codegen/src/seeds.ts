@@ -29,11 +29,15 @@ import {
   type BoardSpaceIdOf,
   type InteractionVisualState,
 } from "@dreamboard-games/sdk/ui";
-import { type InteractionDescriptor } from "@dreamboard-games/sdk/runtime";
+import {
+  type BoardGridInteractionFilter,
+  type InteractionDescriptor,
+} from "@dreamboard-games/sdk/runtime";
 import {
   createWorkspaceUIContract,
   type BoardHexGridProps as BoardHexGridPropsGeneric,
   type BoardHexViewProps as BoardHexViewPropsGeneric,
+  type BoardSquareGridProps as BoardSquareGridPropsGeneric,
   type BoardSpaceTargetProps as BoardSpaceTargetPropsGeneric,
   type ClientParamSchemaMap,
   type DefineGameUIConfig,
@@ -1001,15 +1005,29 @@ declare module "@dreamboard-games/sdk/runtime" {
 /** Generated hex-board topology source, keyed by hex-board id. */
 const hexStaticBoards = staticBoards.hex;
 
+/** Generated square-board topology source, keyed by square-board id. */
+const squareStaticBoards = staticBoards.square;
+
 /** Union of authored hex-board ids in this workspace's manifest. */
 export type HexBoardId = keyof typeof hexStaticBoards & string;
+
+/** Union of authored square-board ids in this workspace's manifest. */
+export type SquareBoardId = keyof typeof squareStaticBoards & string;
 
 /** Topology object for the named hex board, drawn from \`staticBoards.hex\`. */
 export type HexBoardTopology<Id extends HexBoardId> = (typeof hexStaticBoards)[Id];
 
+/** Topology object for the named square board, drawn from \`staticBoards.square\`. */
+export type SquareBoardTopology<Id extends SquareBoardId> = (typeof squareStaticBoards)[Id];
+
 /** Space id type for the named hex board. */
 export type HexBoardSpaceId<Id extends HexBoardId> = BoardSpaceIdOf<
   HexBoardTopology<Id>
+>;
+
+/** Space id type for the named square board. */
+export type SquareBoardSpaceId<Id extends SquareBoardId> = BoardSpaceIdOf<
+  SquareBoardTopology<Id>
 >;
 
 export type HexBoardViewProps<
@@ -1029,6 +1047,14 @@ export type HexBoardGridProps<
   board: Id;
 };
 
+export type SquareBoardGridProps<Id extends SquareBoardId> = Omit<
+  BoardSquareGridPropsGeneric<SquareBoardTopology<Id>>,
+  "board" | "interactions"
+> & {
+  board: Id;
+  interactions?: BoardGridInteractionFilter<InteractionKey>;
+};
+
 type WorkspaceBoard = {
   surface<const Board extends BoardSurfaceBoardId>(
     board: Board,
@@ -1046,6 +1072,9 @@ type WorkspaceBoard = {
     const Id extends HexBoardId,
     const TSpaceView extends { id: HexBoardSpaceId<Id> },
   >(props: HexBoardGridProps<Id, TSpaceView>): ReactElement;
+  SquareGrid<const Id extends SquareBoardId>(
+    props: SquareBoardGridProps<Id>,
+  ): ReactElement;
 };
 
 type WorkspaceCardProperties = CardProperties extends Record<string, unknown>
@@ -1206,7 +1235,8 @@ export const UI = createWorkspaceUIContract<
   typeof uiContract,
   ResourceId,
   WorkspaceZoneCard,
-  typeof hexStaticBoards
+  typeof hexStaticBoards,
+  typeof squareStaticBoards
 >({
   uiContract,
   clientParamSchemasByPhase: createClientParamSchemasByPhase(game) as ClientParamSchemaMap,
@@ -1216,6 +1246,7 @@ export const UI = createWorkspaceUIContract<
     Record<string, { label?: string; icon?: string }>
   >,
   hexStaticBoards,
+  squareStaticBoards,
   cardIdFromZoneCard: (card) => card.id,
   zoneIdFromZoneCard: (card) => card.zone,
 });
@@ -1317,7 +1348,7 @@ function generateReducerDerivedSeed(): string {
 //
 //   reduce({ state, derived, accept }) {
 //     const winner = derived(winnerOf);
-//     return accept({ ...state, publicState: { ...state.publicState, winnerPlayerId: winner } });
+//     return accept({ ...state, publicState: { ...state.publicState, currentLeaderId: winner } });
 //   }
 //
 // Do NOT mirror derived values back into \`publicState\`. Keep the raw
@@ -1333,7 +1364,7 @@ function generateReducerDerivedSeed(): string {
 //   name: "winnerOf",
 //   compute: ({ state }) => {
 //     // Example: return the first player at or above the VP target.
-//     return state.publicState.winnerPlayerId ?? null;
+//     return state.publicState.currentLeaderId ?? null;
 //   },
 // });
 

@@ -60,25 +60,25 @@ a new deck. Pass to your opponent.
 
 ## Card actions
 
-| Card | Effect |
-| --- | --- |
-| **Brainstorm** | +3 cards |
-| **Studio** | +1 card, +2 actions |
-| **Gallery** | +1 card, +1 action, +1 buy, +$1 |
-| **Open Mic** | +2 actions, +1 buy, +$2 |
-| **Critic** | +2 cards. Each opponent gains a Smudge. |
-| **Eraser** | Trash up to 4 cards from your hand. |
-| **Sketchpad** | +1 action. Discard any number of cards, then draw that many. |
-| **Studio Visit** | Gain a card from the shelf costing up to $4. |
+| Card             | Effect                                                       |
+| ---------------- | ------------------------------------------------------------ |
+| **Brainstorm**   | +3 cards                                                     |
+| **Studio**       | +1 card, +2 actions                                          |
+| **Gallery**      | +1 card, +1 action, +1 buy, +$1                              |
+| **Open Mic**     | +2 actions, +1 buy, +$2                                      |
+| **Critic**       | +2 cards. Each opponent gains a Smudge.                      |
+| **Eraser**       | Trash up to 4 cards from your hand.                          |
+| **Sketchpad**    | +1 action. Discard any number of cards, then draw that many. |
+| **Studio Visit** | Gain a card from the shelf costing up to $4.                 |
 
 ## Scoring
 
-| Card | VP |
-| --- | --- |
-| Idea | 1 |
-| Concept | 3 |
-| Masterpiece | 6 |
-| Smudge | -1 |
+| Card        | VP  |
+| ----------- | --- |
+| Idea        | 1   |
+| Concept     | 3   |
+| Masterpiece | 6   |
+| Smudge      | -1  |
 
 Score = sum of VP across every card in your deck, hand, in-play area, and
 discard pile.

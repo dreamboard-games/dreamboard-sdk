@@ -20,7 +20,7 @@ test("Sketchbook initial-turn projection is generated and parseable", () => {
   assert.equal(typeof projection, "object");
   assert.ok(projection !== null, "projection should not be null");
   assert.equal(projection.view.gameOver, false);
-  assert.equal(projection.view.winnerPlayerId, null);
+  assert.equal(projection.view.outcome, null);
 });
 
 test("Sketchbook initial-turn projection includes every market pile", () => {

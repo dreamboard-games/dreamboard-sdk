@@ -1,0 +1,32 @@
+{
+  "id": "auction-resource-bidding-01",
+  "title": "Resource auction with deterministic tie handling",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 3, "max": 5 },
+  "authorJobs":
+    [
+      "submit hidden bid",
+      "reveal bids together",
+      "award lot with deterministic tie-break",
+      "refund losing bids",
+    ],
+  "uiJobs":
+    [
+      "render hidden bid form",
+      "show revealed bid history",
+      "show why a bid is unaffordable",
+    ],
+  "authorityJobs":
+    [
+      "reject bid above available resources",
+      "hide bids before reveal",
+      "apply tie-break without UI sorting",
+    ],
+  "acceptance":
+    [
+      "existing forms and resources handle bids",
+      "final standings need GameOutcome for evidence",
+      "no new target protocol is required",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

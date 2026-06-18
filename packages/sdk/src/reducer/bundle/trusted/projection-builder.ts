@@ -209,6 +209,67 @@ export function createProjectionBuilder<
     );
   }
 
+  function resolveGuidanceFor(combinedState: State) {
+    const phaseName = combinedState.flow.currentPhase as PhaseName;
+    const phase = scope.phaseByName(phaseName) as {
+      name?: unknown;
+      guidance?: { summary?: unknown; objective?: unknown };
+    };
+    const phaseSummary = normalizeGuidanceText(phase.guidance?.summary);
+    const phaseObjective = normalizeGuidanceText(phase.guidance?.objective);
+    const setupProfileId = combinedState.runtime.setup?.profileId;
+    const setupProfile =
+      setupProfileId == null
+        ? undefined
+        : scope.manifestSetupProfilesById[String(setupProfileId)];
+    const setupGuidance = setupProfile?.guidance;
+    const setupSummary = normalizeGuidanceText(setupGuidance?.summary);
+    const setup =
+      setupProfileId == null || !setupProfile
+        ? undefined
+        : {
+            profileId: String(setupProfileId),
+            name: setupProfile.name,
+            ...(setupSummary ? { summary: setupSummary } : {}),
+            steps: (setupGuidance?.steps ?? []).map((step) => ({
+              id: step.id,
+              label: step.label,
+              ...(step.description ? { description: step.description } : {}),
+            })),
+          };
+    return {
+      phase: {
+        id: String(phaseName),
+        label:
+          normalizeGuidanceText(phase.name) ??
+          humanizeGuidanceId(String(phaseName)),
+        ...(phaseSummary ? { summary: phaseSummary } : {}),
+        ...(phaseObjective ? { objective: phaseObjective } : {}),
+      },
+      ...(setup ? { setup } : {}),
+    };
+  }
+
+  function normalizeGuidanceText(value: unknown): string | undefined {
+    if (typeof value !== "string") return undefined;
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  function humanizeGuidanceId(id: string): string {
+    if (!id) return id;
+    const withSpaces = id
+      .replace(/[-_]+/g, " ")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+      .trim();
+    if (!withSpaces) return id;
+    return withSpaces
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
   function resolveStageSeatsFor(state: SessionState): string[] {
     const combinedState = scope.toCombinedState(state);
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -263,7 +324,7 @@ export function createProjectionBuilder<
       derived: projection.derived,
       state: projection.domainState,
       playerId,
-    } as Parameters<typeof view.project>[0];
+    } as unknown as Parameters<typeof view.project>[0];
     return view.project(viewArgs);
   }
 
@@ -316,6 +377,8 @@ export function createProjectionBuilder<
       currentStage: resolveCurrentStageFor(combinedState, projection),
       stageSeats: resolveStageSeatsFor(state),
       simultaneousPhase: resolveSimultaneousPhaseFor(state),
+      guidance: resolveGuidanceFor(combinedState),
+      recentEvents: [],
       interactionsByRef: registry.entries(),
       seats,
     };

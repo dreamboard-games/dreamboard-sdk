@@ -1,0 +1,94 @@
+{
+  "scenarioId": "solo-countdown-puzzle.repair-beacon.mobile",
+  "mechanics": [
+    "resource-management",
+    "repeated-turn-state",
+    "square-grid",
+    "set-collection"
+  ],
+  "uiPatterns": [
+    "square-board-targets",
+    "turn-summary",
+    "confirmation-dialog",
+    "compact-mobile-scorecard"
+  ],
+  "assertions": [
+    "initial state has exactly one human player and no opponent identity",
+    "seeded weather deck repeats with the same seed",
+    "repair beacon spends energy and raises the selected beacon",
+    "player actions flow through resolveWeather and advanceCountdown auto phases",
+    "weather resolution emits deterministic systemAction game events",
+    "reinforcement prevents one gale or squall without creating a bot actor",
+    "lighting all three beacons ends immediately before weather resolution",
+    "storm six ends before the countdown advances",
+    "countdown exhaustion ends after deterministic weather and countdown events",
+    "invalid repair charge and actor submissions are rejected by reducer validation",
+    "mobile beacon grid exposes authored labels help text and event-log context"
+  ],
+  "scenarios": {
+    "initial": {
+      "id": "solo-countdown-puzzle.initial",
+      "phase": "playerTurn",
+      "playerIds": ["player-1"],
+      "turnsRemaining": 8,
+      "energy": 5,
+      "storm": 0,
+      "expected": "no second player opponent bot or system actor is present"
+    },
+    "repair": {
+      "id": "solo-countdown-puzzle.repair",
+      "inputKey": "beacon",
+      "spaceId": "beacon-north",
+      "accepted": true,
+      "energy": 4,
+      "beaconLevel": 1,
+      "nextPhase": "playerTurn"
+    },
+    "weather": {
+      "id": "solo-countdown-puzzle.weather",
+      "procedureIds": ["resolve-weather", "advance-countdown"],
+      "expected": "automated procedures are recorded as systemAction events"
+    },
+    "reinforced": {
+      "id": "solo-countdown-puzzle.reinforced",
+      "procedureIds": ["resolve-weather", "advance-countdown"],
+      "expected": "one storm card is prevented and reinforcement is consumed"
+    },
+    "seedRepeat": {
+      "id": "solo-countdown-puzzle.seed-repeat",
+      "expected": "same seed produces the same revealed weather and event digest"
+    },
+    "beaconWin": {
+      "id": "solo-countdown-puzzle.beacon-win",
+      "completed": true,
+      "outcome": "all-beacons-lit"
+    },
+    "stormLoss": {
+      "id": "solo-countdown-puzzle.storm-loss",
+      "completed": true,
+      "outcome": "storm-six"
+    },
+    "countdownLoss": {
+      "id": "solo-countdown-puzzle.countdown-loss",
+      "completed": true,
+      "outcome": "countdown-exhausted"
+    },
+    "invalid": {
+      "id": "solo-countdown-puzzle.invalid",
+      "energyErrorCode": "NOT_ENOUGH_ENERGY",
+      "actorErrorCode": "PLAYER_NOT_AUTHORIZED",
+      "unknownBeaconErrorCode": "UNKNOWN_BEACON"
+    },
+    "identity": {
+      "id": "solo-countdown-puzzle.identity",
+      "humanPlayerIds": ["player-1"],
+      "forbiddenPlayerIds": ["system", "weather", "automa", "bot"]
+    }
+  },
+  "replay": {
+    "kind": "board-space",
+    "inputKey": "beacon",
+    "spaceId": "beacon-north",
+    "eligibleSpaceIds": ["beacon-north", "beacon-harbor", "beacon-south"]
+  }
+}

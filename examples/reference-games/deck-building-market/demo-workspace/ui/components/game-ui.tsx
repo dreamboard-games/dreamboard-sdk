@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import {
   CardFace,
-  GameEndDisplay,
+  OutcomeDialog,
   useIsMobile,
   type ViewCard,
 } from "@dreamboard-games/sdk/ui";
@@ -210,7 +210,12 @@ export function GameUI({
       ? (players.byId.get(currentPlayerId)?.name ?? currentPlayerId)
       : undefined;
 
-  const tip = view.winnerPlayerId
+  const winningStanding = view.outcome?.standings.find(
+    (standing) => standing.result === "win",
+  );
+  const winningPlayerId = winningStanding?.playerId;
+
+  const tip = view.outcome
     ? "The sketchbook is filled."
     : !isMyTurn
       ? waitingFor
@@ -405,7 +410,7 @@ export function GameUI({
                 score={(playerId) => vpTotals[playerId] ?? 0}
                 scoreLabel="VP"
                 badges={(playerId) => [
-                  view.winnerPlayerId === playerId
+                  winningPlayerId === playerId
                     ? { key: "winner", icon: "🏆", tooltip: "Winner" }
                     : null,
                 ]}
@@ -532,15 +537,9 @@ export function GameUI({
       {/* Collector bindings for every interaction (mounted once). */}
       <SketchbookRoutes hand={hand} market={market} />
 
-      <GameEndDisplay
-        isGameOver={view.gameOver}
-        scores={turnOrder.map((playerId) => ({
-          playerId,
-          name: players.byId.get(playerId)?.name ?? playerId,
-          score: vpTotals[playerId] ?? 0,
-          isWinner: playerId === view.winnerPlayerId,
-        }))}
-        winnerMessage="The sketchbook is filled."
+      <OutcomeDialog
+        outcome={view.outcome}
+        playerName={(playerId) => players.byId.get(playerId)?.name ?? playerId}
       />
     </>
   );

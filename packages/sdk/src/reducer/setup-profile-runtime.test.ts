@@ -197,6 +197,16 @@ function createManifestContract(setupProfileIds: readonly string[]) {
         {
           id: profileId,
           name: profileId,
+          guidance: {
+            summary: `Use ${profileId} setup.`,
+            steps: [
+              {
+                id: "choose-mode",
+                label: "Choose mode",
+                description: "Select the setup mode before the draft begins.",
+              },
+            ],
+          },
           optionValues: {
             mode: "draft",
           },
@@ -432,6 +442,11 @@ describe("setup profile runtime", () => {
       }),
       draftPhase: definePhase<typeof contract>()({
         kind: "player",
+        name: "Draft phase",
+        guidance: {
+          summary: "Draft using the selected setup profile.",
+          objective: "Record the setup profile before play continues.",
+        },
         state: z.object({}),
         initialState: () => ({}),
         enter({ state, accept, setup }) {
@@ -512,6 +527,31 @@ describe("setup profile runtime", () => {
     });
     expect(initialized.domain.hiddenState).toEqual({
       hiddenSetupProfileId: "draft-profile",
+    });
+    expect(
+      bundle.projectSeatsDynamic({
+        state: initialized,
+        playerIds: ["player-1"],
+      }).guidance,
+    ).toEqual({
+      phase: {
+        id: "draftPhase",
+        label: "Draft phase",
+        summary: "Draft using the selected setup profile.",
+        objective: "Record the setup profile before play continues.",
+      },
+      setup: {
+        profileId: "draft-profile",
+        name: "draft-profile",
+        summary: "Use draft-profile setup.",
+        steps: [
+          {
+            id: "choose-mode",
+            label: "Choose mode",
+            description: "Select the setup mode before the draft begins.",
+          },
+        ],
+      },
     });
 
     const reduced = await bundle.reduce({

@@ -180,6 +180,14 @@ interface ManifestAnalysis {
       name: string;
       description?: string | null;
       optionValues?: Record<string, string> | null;
+      guidance?: {
+        summary?: string | null;
+        steps: ReadonlyArray<{
+          id: string;
+          label: string;
+          description?: string | null;
+        }>;
+      } | null;
     }
   >;
   pieceTypeIds: string[];
@@ -1942,6 +1950,16 @@ function analyzeManifest(
                     typeof entry[1] === "string",
                 ),
               )
+            : null,
+          guidance: profile.guidance
+            ? {
+                summary: profile.guidance.summary ?? null,
+                steps: (profile.guidance.steps ?? []).map((step) => ({
+                  id: step.id,
+                  label: step.label,
+                  description: step.description ?? null,
+                })),
+              }
             : null,
         },
       ]),

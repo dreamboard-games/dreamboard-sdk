@@ -332,6 +332,7 @@ export function createTrustedInstructionRunner<
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
       } as State),
       instructions: resolved.instructions ?? [],
+      events: resolved.events ?? [],
     };
   }
 
@@ -358,6 +359,7 @@ export function createTrustedInstructionRunner<
         },
       } as State,
       instructions: result.instructions ?? [],
+      events: result.events ?? [],
     };
   }
 

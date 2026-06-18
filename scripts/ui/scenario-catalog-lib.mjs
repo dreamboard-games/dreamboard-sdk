@@ -22,9 +22,11 @@ export const componentScenarioIndexPath = path.join(
 );
 
 export const knownScenarioCapabilities = new Set([
+  "accessibility-scan",
   "click",
   "keyboard",
   "pointer-drag",
+  "reduced-motion",
   "touch-drag",
   "desktop-drag",
   "responsive-layout",

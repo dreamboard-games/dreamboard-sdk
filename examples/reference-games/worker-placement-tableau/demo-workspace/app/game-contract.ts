@@ -4,6 +4,7 @@ import {
   defineGameContract,
   sparseCounts,
   type ErrorCodeOfContract,
+  type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
 
@@ -74,8 +75,8 @@ export const publicStateSchema = z.object({
   // adjacency bonuses, coin) is applied during the scoring phase.
   playerVP: perPlayerCountSchema,
 
-  // Terminal winner. Null until scoring latches the result.
-  winnerPlayerId: ids.playerId.nullable(),
+  // Terminal outcome. Null until scoring latches the reducer-owned result.
+  outcome: z.custom<GameOutcome<string>>().nullable(),
 });
 
 // ── Phase state schemas ──────────────────────────────────────────────────────

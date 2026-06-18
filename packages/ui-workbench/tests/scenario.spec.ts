@@ -102,6 +102,10 @@ for (const entry of readScenarioMatrix()) {
     await page.evaluate(() => window.__dreamboardUIFixture?.assertConsumed());
     const finalSnapshot = await readPageBrowserInteractionSnapshot(page);
     assertValidSemanticSnapshot(finalSnapshot);
+    const reducedMotion = await page.evaluate(
+      () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    );
+    expect(reducedMotion).toBe(true);
     const measured = await page.evaluate(() => {
       const bridge = window.__dreamboardUIFixture;
       if (!bridge) throw new Error("UI fixture test bridge is not installed.");
@@ -131,18 +135,18 @@ for (const entry of readScenarioMatrix()) {
       steps,
       screenshots,
     };
-    const evidencePath =
-      entry.evidencePath ?? process.env.UI_SCENARIO_EVIDENCE_PATH;
-    if (evidencePath) {
-      await mkdir(path.dirname(evidencePath), { recursive: true });
-      await writeFile(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
-    }
 
     expect(measured.hostEvents.length).toBeGreaterThan(0);
     await expectNoHorizontalOverflow(page);
     await expectAllEnabledActuatorsInViewport(page);
+    const layoutAssertions = [
+      "no-horizontal-overflow",
+      "enabled-actuators-in-viewport",
+      "basic-accessibility-invariants",
+    ];
     if (testInfo.project.name.includes("phone")) {
       await expectMinimumTouchTargetSize(page, { width: 44, height: 44 });
+      layoutAssertions.push("minimum-touch-target-size");
     }
     await expectBasicAccessibilityInvariants(page);
     await injectAxe(page);
@@ -155,5 +159,28 @@ for (const entry of readScenarioMatrix()) {
       },
       true,
     );
+
+    const evidencePath =
+      entry.evidencePath ?? process.env.UI_SCENARIO_EVIDENCE_PATH;
+    if (evidencePath) {
+      await mkdir(path.dirname(evidencePath), { recursive: true });
+      await writeFile(
+        evidencePath,
+        `${JSON.stringify(
+          {
+            ...evidence,
+            proof: {
+              reducedMotion: "passed",
+              accessibility: {
+                axeScan: "passed",
+                layoutAssertions,
+              },
+            },
+          },
+          null,
+          2,
+        )}\n`,
+      );
+    }
   });
 }

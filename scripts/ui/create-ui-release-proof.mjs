@@ -20,6 +20,19 @@ import {
 import { requiredParityScenarioIds } from "./required-ui-scenarios.mjs";
 
 const requiredGoldenScenario = requiredParityScenarioIds[0];
+if (!requiredGoldenScenario) {
+  throw new Error(
+    "requiredParityScenarioIds must contain at least one scenario.",
+  );
+}
+
+function sameStringArray(left, right) {
+  return (
+    Array.isArray(left) &&
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  );
+}
 
 function parseArgs(argv) {
   const options = {};
@@ -200,10 +213,12 @@ async function readDeviceCanaryReceipt(options, expected) {
       device.scenarios.some(
         (scenario) => typeof scenario !== "string" || scenario.length === 0,
       ) ||
-      !device.scenarios.includes(requiredGoldenScenario)
+      !requiredParityScenarioIds.every((scenarioId) =>
+        device.scenarios.includes(scenarioId),
+      )
     ) {
       throw new Error(
-        `Device canary receipt is missing passing ${requirement.platform}/${requirement.browser} evidence with versions and scenarios.`,
+        `Device canary receipt is missing passing ${requirement.platform}/${requirement.browser} evidence with versions and required parity scenarios.`,
       );
     }
     evidencePaths.push(
@@ -252,12 +267,13 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     receipt.fixtureBundleSha256,
     expected.fixtureBundleSha256,
   );
+  const scenarioIds = Array.isArray(receipt.scenarios)
+    ? receipt.scenarios.map((scenario) => scenario?.id)
+    : [];
   if (
-    !Array.isArray(receipt.scenarios) ||
-    receipt.scenarios.length !== 1 ||
-    receipt.scenarios[0]?.id !== requiredGoldenScenario ||
+    !sameStringArray(scenarioIds, requiredParityScenarioIds) ||
     receipt.source?.result !== "passed" ||
-    receipt.source.comparisons?.length !== 1 ||
+    receipt.source.comparisons?.length !== requiredParityScenarioIds.length ||
     receipt.internal.comparisons?.length !== receipt.scenarios.length ||
     receipt.internal.comparisons.some(
       (comparison) =>
@@ -266,7 +282,7 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     )
   ) {
     throw new Error(
-      `Real-host parity receipt must contain independently measured, passing source and internal comparisons for '${requiredGoldenScenario}'.`,
+      `Real-host parity receipt must contain independently measured, passing source and internal comparisons for required scenarios: ${requiredParityScenarioIds.join(", ")}.`,
     );
   }
   if (typeof receipt.input !== "string") {

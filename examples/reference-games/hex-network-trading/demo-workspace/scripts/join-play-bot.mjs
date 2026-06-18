@@ -10,7 +10,8 @@ import path from "node:path";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 
-const SESSION = process.env.JOIN_SESSION ?? "001ce351-40f4-499c-8b37-7122c48c81ce";
+const SESSION =
+  process.env.JOIN_SESSION ?? "001ce351-40f4-499c-8b37-7122c48c81ce";
 const MY = "player-2";
 
 /** Lower index = try first */
@@ -95,10 +96,10 @@ function isMyTurn() {
 }
 
 function gameOver() {
-  const v = /** @type {{ winnerPlayerId?: string | null }} */ (
+  const v = /** @type {{ outcome?: unknown | null }} */ (
     lastGameplay?.view ?? {}
   );
-  return Boolean(v?.winnerPlayerId);
+  return Boolean(v?.outcome);
 }
 
 /**
@@ -112,8 +113,7 @@ function eligibleFromDomain(domain) {
       domain
     );
   if (
-    d.type !== "cardTarget" &&
-    d.type !== "boardTarget" ||
+    (d.type !== "cardTarget" && d.type !== "boardTarget") ||
     d.projection !== "resolved" ||
     !Array.isArray(d.eligibleTargets)
   )
@@ -186,7 +186,21 @@ async function resolveInputs(action) {
 async function tryOneTurn() {
   if (busy || !child || child.killed) return;
   if (gameOver()) {
-    log("winner:", /** @type {{ winnerPlayerId?: string }} */ (lastGameplay?.view ?? {}).winnerPlayerId);
+    const outcome = /** @type {{ outcome?: { standings?: unknown[] } }} */ (
+      lastGameplay?.view ?? {}
+    ).outcome;
+    const winner = outcome?.standings?.find(
+      (standing) =>
+        standing &&
+        typeof standing === "object" &&
+        /** @type {{ result?: string }} */ (standing).result === "win",
+    );
+    log(
+      "winner:",
+      winner && typeof winner === "object"
+        ? /** @type {{ playerId?: string }} */ (winner).playerId
+        : null,
+    );
     child.kill("SIGTERM");
     return;
   }
@@ -222,8 +236,7 @@ async function tryOneTurn() {
         /** @type {{ availability?: { status?: string }; interactionId?: string }} */ (
           action
         );
-      if (a.availability?.status !== "available" || !a.interactionId)
-        continue;
+      if (a.availability?.status !== "available" || !a.interactionId) continue;
 
       const inputs = await resolveInputs(action);
       if (inputs === null) continue;
@@ -244,14 +257,15 @@ async function tryOneTurn() {
 
       if (!validated?.valid) continue;
 
-      const submitted = /** @type {{ gameplay?: unknown; success?: boolean }} */ (
-        await rpc("actions.submit", {
-          interactionId: a.interactionId,
-          expectedVersion: version,
-          actionSetVersion,
-          inputs,
-        })
-      );
+      const submitted =
+        /** @type {{ gameplay?: unknown; success?: boolean }} */ (
+          await rpc("actions.submit", {
+            interactionId: a.interactionId,
+            expectedVersion: version,
+            actionSetVersion,
+            inputs,
+          })
+        );
 
       if (submitted?.gameplay) applyGameplay(submitted.gameplay);
       log("submitted", a.interactionId, inputs);
@@ -306,7 +320,14 @@ function onEnvelope(o) {
       const g = /** @type {{ activePlayers?: string[]; version?: number }} */ (
         ev.gameplay ?? {}
       );
-      log("event", ev.type, "v=", g.version, "active=", g.activePlayers?.join(","));
+      log(
+        "event",
+        ev.type,
+        "v=",
+        g.version,
+        "active=",
+        g.activePlayers?.join(","),
+      );
       scheduleAct();
     }
     return;
@@ -318,10 +339,14 @@ function onEnvelope(o) {
 }
 
 function main() {
-  child = spawn("dreamboard", ["join", "--env", "local", "--session", SESSION, "--player", "2"], {
-    cwd: ROOT,
-    stdio: ["pipe", "pipe", "pipe"],
-  });
+  child = spawn(
+    "dreamboard",
+    ["join", "--env", "local", "--session", SESSION, "--player", "2"],
+    {
+      cwd: ROOT,
+      stdio: ["pipe", "pipe", "pipe"],
+    },
+  );
 
   child.stderr.on("data", (buf) => process.stderr.write(buf));
 

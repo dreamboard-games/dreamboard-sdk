@@ -1,0 +1,36 @@
+{
+  "id": "cooperative-threshold-01",
+  "title": "Signal tower cooperative threshold",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 1, "max": 4 },
+  "summary": "Players contribute resources to a shared signal tower and win together if the threshold is met before dusk.",
+  "authorJobs":
+    [
+      "contribute resources to shared goal",
+      "advance dusk countdown",
+      "resolve team win or loss",
+    ],
+  "uiJobs":
+    [
+      "show shared threshold progress",
+      "show team result for every player",
+      "explain unavailable contributions",
+    ],
+  "authorityJobs":
+    [
+      "reject contributions without resources",
+      "replay dusk countdown from seed",
+      "project the same team outcome to all players",
+    ],
+  "acceptance":
+    [
+      "supports non-score cooperative ending",
+      "does not require fake team player id",
+      "result reason is preserved",
+    ],
+  "formatNotes":
+    {
+      "compactMobile": true,
+      "optionalPhysicalNotes": ["resource tokens", "countdown marker"],
+    },
+}

@@ -145,6 +145,11 @@ type InteractionCommitPolicyFor<
  */
 export type InteractionKind = "action" | "prompt";
 
+export type InteractionPresentation = {
+  label: string;
+  help?: string;
+};
+
 export type InteractionToArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
@@ -171,6 +176,7 @@ export type InteractionSpec<
 > = {
   inputs: Collectors;
   paramsSchema?: SchemaLike<ClientParamsOf<Collectors>>;
+  presentation?: InteractionPresentation;
   /** @internal Phase-local step gates are attached by `defineStepPhase`. */
   __steps?: readonly string[];
   /**
@@ -249,6 +255,7 @@ export type CardActionSpec<
   playFrom: PlayFrom;
   inputs?: Collectors;
   paramsSchema?: SchemaLike<Record<string, unknown>>;
+  presentation?: InteractionPresentation;
   /** @internal Phase-local step gates are attached by `defineStepPhase`. */
   __steps?: readonly string[];
   /**

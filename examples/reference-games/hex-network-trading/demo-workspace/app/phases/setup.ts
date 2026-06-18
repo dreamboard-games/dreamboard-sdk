@@ -96,7 +96,7 @@ const placeSetupTrail = setupAuthoring.interaction({
     });
 
     if (goToPlayerTurn) {
-      return accept(tx.state, [fx.transition("playerTurn")]);
+      return accept(tx.state, { instructions: [fx.transition("playerTurn")] });
     }
 
     tx.patchPhaseState({

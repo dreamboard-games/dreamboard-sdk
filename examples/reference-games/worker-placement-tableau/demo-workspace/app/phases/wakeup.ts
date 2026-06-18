@@ -118,7 +118,7 @@ const selectWakeUpSlot = defineInteraction<
     });
     tx.patchPhaseState({ pendingPlayerIds: [] });
     tx.setActivePlayers([finalTurnOrder[0]!]);
-    return accept(tx.state, [fx.transition("placement")]);
+    return accept(tx.state, { instructions: [fx.transition("placement")] });
   },
 });
 

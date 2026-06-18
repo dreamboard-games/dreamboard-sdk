@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:2a2e5c73513cb92871fbdba204082267ca8962e2f40aebf960457694519b0d08",
-    "finalSemanticDigest": "sha256:0b8f77adb851955366ae13fa12db832e806a1950ff32975be47d4410ddcd6e28",
+    "finalSemanticDigest": "sha256:9cfb246e899fa1b2619958930cf88b14145cb651e05f996b01825364d44f2f4a",
     "initialProjectionDigest": "sha256:02b8d541cb8b95876088778cd7ff52528738dcca9042822f1aac4183720a5cbe",
     "submissionDigest": "sha256:9beb2db62083787260501cbe2819b666148243c24fcbe2873527ddf5ecd5b591"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:440e616f9d4acaecd0a4bf933d6293bd5327d2784fdea126cab47936d62fa0da",
+              "descriptorDigest": "sha256:c14aa24c25f5b02edf98c83786666b9abe151bee7da9abb45501c6563690d5c9",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Choice validation and submit affordances.",
             "family": "prompts",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:440e616f9d4acaecd0a4bf933d6293bd5327d2784fdea126cab47936d62fa0da",
+              "descriptorDigest": "sha256:c14aa24c25f5b02edf98c83786666b9abe151bee7da9abb45501c6563690d5c9",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Choice validation and submit affordances.",
             "family": "prompts",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.prompts-choice.desktop.submitted",
         "projectionDigest": "sha256:2a2e5c73513cb92871fbdba204082267ca8962e2f40aebf960457694519b0d08",
-        "semanticDigest": "sha256:0b8f77adb851955366ae13fa12db832e806a1950ff32975be47d4410ddcd6e28",
+        "semanticDigest": "sha256:9cfb246e899fa1b2619958930cf88b14145cb651e05f996b01825364d44f2f4a",
         "submissionDigest": "sha256:9beb2db62083787260501cbe2819b666148243c24fcbe2873527ddf5ecd5b591",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.prompts-choice.desktop",
-    "sourceDigest": "sha256:86b5f7355f7dd9f7c28335eea175e82bf21b33bb8392a59c599af8e1a1809c96",
+    "sourceDigest": "sha256:a40795c6a7b789cfd79c5077a5530cc53fe00b7b919e7c88144b0d048013f544",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

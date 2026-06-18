@@ -59,7 +59,8 @@ export function createTestRuntime(options: {
     BASE_STATES satisfies CreateTestRuntimeOptions["baseStates"];
   const basePlayerIds = literals.playerIds.slice(
     0,
-    BASE_STATES[options.baseId]?.fingerprint.players ?? literals.playerIds.length,
+    BASE_STATES[options.baseId]?.fingerprint.players ??
+      literals.playerIds.length,
   );
   const playerIds =
     options.controllingPlayerId &&

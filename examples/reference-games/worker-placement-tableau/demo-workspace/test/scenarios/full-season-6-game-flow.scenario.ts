@@ -158,7 +158,7 @@ export default defineScenario({
     const v = view(seat0);
 
     expect(state()).toBe("gameOver");
-    expect(v.winnerPlayerId === null).toBe(false);
+    expect(v.outcome === null).toBe(false);
     expect(v.finalVPByPlayerId === null).toBe(false);
 
     const seat0Tableau = v.playedPersistentApprenticesByPlayer[seat0] ?? [];

@@ -48,6 +48,7 @@ function frame(gameVersion: number): PluginGameplayFrame {
         phaseName: "play",
         interactionKey: "play-card",
         interactionId,
+        label: "Play card",
         kind: "action",
         availability: { status: "available" },
         commit: { mode: "manual" },
@@ -55,7 +56,8 @@ function frame(gameVersion: number): PluginGameplayFrame {
       },
     ],
     zones: {},
-  } as unknown as PluginGameplayFrame;
+    recentEvents: [],
+  };
 }
 
 function requestDigest(

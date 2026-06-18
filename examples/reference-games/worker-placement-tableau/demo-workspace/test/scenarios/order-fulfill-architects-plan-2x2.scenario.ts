@@ -1,9 +1,8 @@
 import { defineScenario } from "../testing-types";
 import { givePlayerOrderCard, patchMatOccupancy } from "../scenario-helpers";
 
-// Architect's Plan: 4 items in a 2x2 → +6 VP. We test BOTH branches in
-// the same scenario to keep the spatial-pattern matcher honest:
-//   1. Plant 4 items NOT in a 2x2 (corners) → fulfilment must reject.
+// Architect's Plan: 4 items in a 2x2 → +6 VP. We test BOTH branches:
+//   1. Plant 4 items NOT in a 2x2 (corners) → no order is fulfillable.
 //   2. Move them into a 2x2 block → fulfilment succeeds.
 export default defineScenario({
   id: "order-fulfill-architects-plan-2x2",
@@ -30,7 +29,7 @@ export default defineScenario({
       await game.submit(seat0, "fulfillOrder", {
         cardId: "architects-plan",
       });
-    }).toRejectWith({ errorCode: "ORDER_REQUIREMENT_NOT_MET" });
+    }).toRejectWith({ errorCode: "NO_FULFILLABLE_ORDER" });
 
     // Branch 2: re-seed a tight 2x2 block and retry.
     await patchMatOccupancy(game, seat0, [

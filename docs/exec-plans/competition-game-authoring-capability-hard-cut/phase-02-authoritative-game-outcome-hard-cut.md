@@ -1,10 +1,99 @@
 # Phase 02: Authoritative `GameOutcome` Hard Cut
 
-Status: proposed.
+Status: SDK source-complete on 2026-06-18; internal monorepo migration pending.
 
 Depends on Phases 00-01.
 
 Primary repositories: `dreamboard-sdk` and the internal monorepo.
+
+SDK source receipt:
+
+- Reducer wire schema now exposes `GameOutcome` as the only `terminal`
+  payload and generated reducer-contract artifacts are at protocol version
+  `0.3.0`.
+- SDK reducer runtime, trusted bundle normalization, ingress types, public
+  exports, and characterization tests use `GameOutcome`; the public
+  `TerminalOutcome` alias is removed.
+- SDK UI replaces `GameEndDisplay` with `OutcomeDialog` and `StandingsTable`.
+  The controlled components render reducer-owned rows without score sorting or
+  winner inference.
+- `examples/reference-games/multiplayer-ranking-and-ties/` implements Harbor
+  Fair with unique winner, complete-set tie-break, coin tie-break, true tie,
+  non-first tied rank, scoreless cancellation, and reconnect serialization
+  scenarios.
+- Harbor Fair has an executable Workbench scenario:
+  `multiplayer-ranking-and-ties.draft-stall.desktop`.
+
+SDK verification receipts:
+
+```bash
+mise exec node@24 -- pnpm --filter @dreamboard-games/reducer-contract generate:check
+mise exec node@24 -- pnpm --filter @dreamboard-games/reducer-contract test
+mise exec node@24 -- pnpm ui:fixtures:compile
+mise exec node@24 -- pnpm ui:catalog:generate
+mise exec node@24 -- pnpm docs:generate
+mise exec node@24 -- pnpm ui:fixtures:check
+mise exec node@24 -- pnpm ui:catalog:check
+mise exec node@24 -- pnpm docs:check
+mise exec node@24 -- pnpm ui:runtime:test
+mise exec node@24 -- pnpm ui:test
+mise exec node@24 -- pnpm ui:test:runtime-visual
+mise exec node@24 -- pnpm ui:coverage:check
+mise exec node@24 -- pnpm ui:hard-cut:check
+mise exec node@24 -- pnpm reference-games:check
+mise exec node@24 -- pnpm reference-games:test:packed --game multiplayer-ranking-and-ties
+mise exec node@24 -- pnpm reference-games:test:packed
+```
+
+Latest Workbench receipt:
+
+- `artifacts/ui/2026-06-18T13-25-47-904Z/receipt.json`
+- `ui:test` passed across 20 scenario results, including
+  `multiplayer-ranking-and-ties.draft-stall.desktop`.
+
+Latest reference-game receipts:
+
+- `reference-games:check` passed at `2026-06-18T13:30:33.161Z`.
+- `reference-games:test:packed --game multiplayer-ranking-and-ties` passed for
+  Harbor Fair outcome scenarios.
+- `reference-games:test:packed` passed for all seven current reference games at
+  `2026-06-18T13:28:53.207Z`.
+- packed SDK tarball:
+  `sha256:5b345d2c5cf6c4146b1fbd0dba1fd23edebbdad0e76f2fcfaad000aa9cbf4788`.
+
+Hard-cut scans:
+
+```bash
+rg -n "\bTerminalOutcome\b|\bPlayerScore\b|winnerPlayerId|finalScores" packages/sdk packages/reducer-contract examples/reference-games/*/demo-workspace/app examples/reference-games/*/demo-workspace/ui examples/reference-games/*/src examples/reference-games/*/scenarios scripts/ui scripts/ui-fixtures fixtures/ui
+rg -n "\bTerminalOutcome\b|\bPlayerScore\b|winnerPlayerId\?:|finalScores\?:|export type TerminalOutcome" packages/sdk/src packages/sdk/REFERENCE.md docs/reference/agent-api.md docs/reference/llms.txt packages/reducer-contract/generated packages/reducer-contract/schema examples/ui-scenarios/src/ui.mjs examples/reference-games/hex-network-trading/demo-workspace/app/phases/check-game-end.ts
+```
+
+Both scans returned no matches.
+
+Remaining phase work:
+
+- Land the internal monorepo contract, executor, authority, persistence,
+  backend, API-client, and host migrations described below.
+- Repin the internal monorepo to the exact SDK artifact used for real-host
+  proof.
+- Run the internal verification commands and real-host reconnect proof.
+- `pnpm check` remains blocked by the repository's pre-existing
+  `format:check` backlog outside this phase slice. The latest run reports 53
+  formatting warnings after all changed files that overlapped the warning set
+  were formatted.
+
+Phase 00 brief jobs cited:
+
+- `multiplayer-ranking-and-ties-01`: `rank tied players with score and
+tie-break evidence`, `emit a scoreless cancellation outcome`.
+- `roll-and-write-scorecard-01`: `total marked regions at game end`.
+- `solo-countdown-puzzle-01`: `end in win or countdown loss`.
+- `cooperative-threshold-01`: `resolve team win or loss`.
+- `route-race-tiebreaker-01`: `break ties by cards remaining`.
+- `asymmetric-objective-cards-01`: `score revealed objectives`, `show final
+private-score evidence`.
+- `drafting-scoring-breakdown-01`: `score several independent categories`,
+  `rank tied players after deterministic tie-break`.
 
 ## Objective
 

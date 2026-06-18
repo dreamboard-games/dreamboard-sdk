@@ -111,6 +111,7 @@ async function exerciseRenderedScenario({
     });
 
     const resolutions = [];
+    const stepSemanticDigests = [];
     for (const sourceStep of sourceSteps) {
       const sourceRequest = sourceStep.request;
       const snapshot = readBrowserInteractionSnapshot(container);
@@ -125,12 +126,9 @@ async function exerciseRenderedScenario({
       }
       resolutions.push(resolution);
       if (sourceStep.exercise === "activate") {
-        const actuator = [...container.querySelectorAll("button")].find(
-          (candidate) =>
-            candidate.getAttribute("data-dreamboard-actuator-id") ===
-              resolution.actuator.actuatorId &&
-            candidate.getAttribute("data-dreamboard-actuator-enabled") ===
-              "true",
+        const actuator = findEnabledActuator(
+          container,
+          resolution.actuator.actuatorId,
         );
         if (!actuator) {
           throw new Error(
@@ -138,9 +136,20 @@ async function exerciseRenderedScenario({
           );
         }
         await act(async () => {
-          actuator.click();
+          activateElement(actuator);
           await settleFixtureRuntime(harness);
         });
+      }
+      if (sourceStep.exercise === "activate") {
+        const stepSnapshot = readBrowserInteractionSnapshot(container);
+        stepSemanticDigests.push(
+          digestUIFixtureJson({
+            digestVersion: "runtime-browser-interaction@2",
+            snapshot: stepSnapshot,
+          }),
+        );
+      } else {
+        stepSemanticDigests.push(undefined);
       }
     }
     if (targetRequest) {
@@ -163,6 +172,7 @@ async function exerciseRenderedScenario({
       );
     }
 
+    let submitResolution;
     await act(async () => {
       if (finalSubmit.kind === "semantic-submit") {
         const snapshot = readBrowserInteractionSnapshot(container);
@@ -171,7 +181,7 @@ async function exerciseRenderedScenario({
           intent: "submit",
         };
         delete submitRequest.effect;
-        const submitResolution = resolveBrowserInteractionIntent(
+        submitResolution = resolveBrowserInteractionIntent(
           snapshot,
           submitRequest,
         );
@@ -180,7 +190,9 @@ async function exerciseRenderedScenario({
             `${fixtureId} semantic submit request did not resolve uniquely: ${submitResolution.code}`,
           );
         }
-        const actuator = [...container.querySelectorAll("button")].find(
+        const actuator = [
+          ...container.querySelectorAll("[data-dreamboard-actuator-id]"),
+        ].find(
           (candidate) =>
             candidate.getAttribute("data-dreamboard-actuator-id") ===
               submitResolution.actuator.actuatorId &&
@@ -194,7 +206,7 @@ async function exerciseRenderedScenario({
             `${fixtureId} could not find enabled submit actuator '${submitResolution.actuator.actuatorId}'.`,
           );
         }
-        actuator.click();
+        activateElement(actuator);
       } else {
         await runtime.submitInteraction(interactionId, finalSubmit.params);
       }
@@ -206,6 +218,8 @@ async function exerciseRenderedScenario({
     return {
       resolution: resolutions[0],
       resolutions,
+      submitResolution,
+      stepSemanticDigests,
       finalFrameId: harness.getCurrentFrameId(),
       finalSemanticDigest: digestUIFixtureJson({
         digestVersion: "runtime-browser-interaction@2",
@@ -220,6 +234,24 @@ async function exerciseRenderedScenario({
     runtime.disconnect();
     container.remove();
   }
+}
+
+function findEnabledActuator(container, actuatorId) {
+  return [...container.querySelectorAll("[data-dreamboard-actuator-id]")].find(
+    (candidate) =>
+      candidate.getAttribute("data-dreamboard-actuator-id") === actuatorId &&
+      candidate.getAttribute("data-dreamboard-actuator-enabled") === "true",
+  );
+}
+
+function activateElement(element) {
+  if (typeof element.click === "function") {
+    element.click();
+    return;
+  }
+  element.dispatchEvent(
+    new MouseEvent("click", { bubbles: true, cancelable: true }),
+  );
 }
 
 function viewportTagsForScenario(scenario, fixtureId) {

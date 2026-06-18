@@ -302,6 +302,7 @@ export interface WorkspaceContractOptions<
   Resource extends string,
   Card,
   HexBoards extends Record<string, unknown>,
+  SquareBoards extends Record<string, unknown> = Record<string, unknown>,
 > {
   readonly uiContract: Contract;
   readonly clientParamSchemasByPhase?: ClientParamSchemaMap;
@@ -313,6 +314,7 @@ export interface WorkspaceContractOptions<
     Record<string, { label?: string; icon?: string }>
   >;
   readonly hexStaticBoards: HexBoards;
+  readonly squareStaticBoards?: SquareBoards;
   readonly cardIdFromZoneCard: (card: Card) => string;
   readonly zoneIdFromZoneCard: (card: Card) => string;
 }
@@ -327,6 +329,7 @@ export interface WorkspaceContractContext<Card> {
     UIContract,
     string,
     Card,
+    Record<string, unknown>,
     Record<string, unknown>
   >;
   readonly baseUI: DreamboardUI;

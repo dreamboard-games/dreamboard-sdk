@@ -11,7 +11,7 @@
   },
   "expected": {
     "finalProjectionDigest": "sha256:a781c1dcd990f2eadc08217ba07bbb217fb491a7d07455024e9f21ac8c4fe765",
-    "finalSemanticDigest": "sha256:74e12ccca1837405e44d50baa03d5efa1eee8b91b7a2b055b6627154ce10c02b",
+    "finalSemanticDigest": "sha256:1a10c8269beb45be3ff94eeaf46b2e8d4016526e08565a3dcb697f9a5f668ba0",
     "initialProjectionDigest": "sha256:6893b312bfce970b29443a4422a7d5a30794f63538e7477af873c9193783e043",
     "submissionDigest": "sha256:ba5aed62c94ed9b4474e706812b2f26ba3e65b9f22f3461cef269afe50337981"
   },
@@ -31,11 +31,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:bbc787b3c6865025c1423885f9586fa00e984a73b35a70f1d9e7fb9007e4feb9",
+              "descriptorDigest": "sha256:213785d57131a42028321a414d06e0a67c52398139f9062c38d8fb24cdc0ccd2",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -49,6 +50,7 @@
           },
           "gameVersion": 1,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Rolled dice result and reroll affordance.",
             "family": "dice",
@@ -73,11 +75,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:bbc787b3c6865025c1423885f9586fa00e984a73b35a70f1d9e7fb9007e4feb9",
+              "descriptorDigest": "sha256:213785d57131a42028321a414d06e0a67c52398139f9062c38d8fb24cdc0ccd2",
               "inputs": [],
               "interactionId": "inspect:player-1",
               "interactionKey": "inspect",
               "kind": "action",
+              "label": "Inspect",
               "phaseName": "inspect"
             }
           ],
@@ -91,6 +94,7 @@
           },
           "gameVersion": 2,
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "description": "Rolled dice result and reroll affordance.",
             "family": "dice",
@@ -153,7 +157,7 @@
       "expect": {
         "frameId": "ui-scenarios.dice-result.desktop.submitted",
         "projectionDigest": "sha256:a781c1dcd990f2eadc08217ba07bbb217fb491a7d07455024e9f21ac8c4fe765",
-        "semanticDigest": "sha256:74e12ccca1837405e44d50baa03d5efa1eee8b91b7a2b055b6627154ce10c02b",
+        "semanticDigest": "sha256:1a10c8269beb45be3ff94eeaf46b2e8d4016526e08565a3dcb697f9a5f668ba0",
         "submissionDigest": "sha256:ba5aed62c94ed9b4474e706812b2f26ba3e65b9f22f3461cef269afe50337981",
         "visibleInteractionKeys": [
           "inspect"
@@ -176,7 +180,7 @@
     "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
     "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
     "scenarioId": "ui-scenarios.dice-result.desktop",
-    "sourceDigest": "sha256:16d3c9039aa99896d3f6606adbfc3f385c2ccc8d7a1ba063d339f5b415092602",
+    "sourceDigest": "sha256:fb798329886e1bebb597d031ae77e565c747d132c834e8a59cd368c71ec7e38d",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

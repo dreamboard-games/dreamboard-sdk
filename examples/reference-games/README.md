@@ -11,6 +11,8 @@ Reference IDs describe mechanics and UI patterns rather than product names:
 - `deck-building-market`
 - `worker-placement-tableau`
 - `simultaneous-card-drafting`
+- `roll-and-write-scorecard`
+- `multiplayer-ranking-and-ties`
 
 Each game has a `reference-game.json` provenance manifest, its own
 `package.json`, its own `pnpm-lock.yaml`, source under `src/`, and scenario

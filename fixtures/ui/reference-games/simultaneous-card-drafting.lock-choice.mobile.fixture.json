@@ -11,9 +11,9 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df",
-    "finalSemanticDigest": "sha256:a529a7c4fe36c983535d6110a3bd6cf3adfb2c42dcdb540969bb3d008df12c49",
-    "initialProjectionDigest": "sha256:3be31df3b1e1ca8db9f5ab9ecc2946a960c9a390f8f00ddaccafb1c77e0af64f",
+    "finalProjectionDigest": "sha256:bdbaeabe22c1b266780b4e7aa4ffb4cfdf0daacdc43b4d763ae02a48d63f181e",
+    "finalSemanticDigest": "sha256:c9b7f25e73b7271980138384d1d5230dc2b2d7ed4ee1187512ae6c9630221e9d",
+    "initialProjectionDigest": "sha256:ec93dcef0f336ba79ffd3e27c55351f826c4fa1afbf134bd0accd1ee1658338f",
     "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c"
   },
   "gameId": "simultaneous-card-drafting",
@@ -23,7 +23,7 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:1bc2ed7894ac67f70e9c9f008b3179e0f076268b5a2406863563c13e3abeb477",
+          "actionSetVersion": "sha256:9d5bec9dc3b183a61fa2be82b960913521e61833fefe261fa079d1d777521d46",
           "availableInteractions": [
             {
               "availability": {
@@ -32,11 +32,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:e9e045ccaee9b67c031141014eb86a3e8434d91375bc9be0482248454e15ec48",
+              "descriptorDigest": "sha256:c5cf71a44fc5b4641ae56d9d61d1a5a6cd92dad07db775bbe1985b054fb86e80",
               "inputs": [],
               "interactionId": "choose-card:player-1",
               "interactionKey": "choose-card",
               "kind": "action",
+              "label": "Choose card",
               "phaseName": "fixture"
             },
             {
@@ -46,11 +47,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
+              "descriptorDigest": "sha256:979aeff2aebcf5d53ee80965102b48a249945d51ea8337add5672f06f718f5b2",
               "inputs": [],
               "interactionId": "lock-choice:player-1",
               "interactionKey": "lock-choice",
               "kind": "action",
+              "label": "Lock choice",
               "phaseName": "fixture"
             },
             {
@@ -60,11 +62,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:7e97c9be793808a314ab64d11a610fb68a22bd0fc32ce58500ad20955f3e7fbe",
+              "descriptorDigest": "sha256:fff329974d67df24b9261b7c23fb570cd7800a293ebae4b29a34c4b09ffed226",
               "inputs": [],
               "interactionId": "reveal-and-pass:player-1",
               "interactionKey": "reveal-and-pass",
               "kind": "action",
+              "label": "Reveal and pass",
               "phaseName": "fixture"
             }
           ],
@@ -77,21 +80,32 @@
             "simultaneousPhase": null
           },
           "gameVersion": 1,
+          "guidance": {
+            "phase": {
+              "id": "draft",
+              "label": "Choose and lock",
+              "objective": "Draft a card that improves your set while anticipating what neighbors need.",
+              "summary": "Choose one card privately, lock it, then reveal and pass hands."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Simultaneous Card Drafting",
+            "recentEvents": [],
             "referenceGameId": "simultaneous-card-drafting",
+            "scenarioBranch": null,
             "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
             "submittedInteractionId": null
           },
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:3be31df3b1e1ca8db9f5ab9ecc2946a960c9a390f8f00ddaccafb1c77e0af64f"
+        "projectionDigest": "sha256:ec93dcef0f336ba79ffd3e27c55351f826c4fa1afbf134bd0accd1ee1658338f"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:1c3f96a2fe5de002cc6eb98ab2d605161b1f6b850e67664ce1fd66b4be101f79",
+          "actionSetVersion": "sha256:323fdda90f64644aee27dfd2d604878e230cabaad629aa12a6f67063b7e14e24",
           "availableInteractions": [
             {
               "availability": {
@@ -100,11 +114,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:e9e045ccaee9b67c031141014eb86a3e8434d91375bc9be0482248454e15ec48",
+              "descriptorDigest": "sha256:c5cf71a44fc5b4641ae56d9d61d1a5a6cd92dad07db775bbe1985b054fb86e80",
               "inputs": [],
               "interactionId": "choose-card:player-1",
               "interactionKey": "choose-card",
               "kind": "action",
+              "label": "Choose card",
               "phaseName": "fixture"
             },
             {
@@ -114,11 +129,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
+              "descriptorDigest": "sha256:979aeff2aebcf5d53ee80965102b48a249945d51ea8337add5672f06f718f5b2",
               "inputs": [],
               "interactionId": "lock-choice:player-1",
               "interactionKey": "lock-choice",
               "kind": "action",
+              "label": "Lock choice",
               "phaseName": "fixture"
             },
             {
@@ -128,11 +144,12 @@
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:7e97c9be793808a314ab64d11a610fb68a22bd0fc32ce58500ad20955f3e7fbe",
+              "descriptorDigest": "sha256:fff329974d67df24b9261b7c23fb570cd7800a293ebae4b29a34c4b09ffed226",
               "inputs": [],
               "interactionId": "reveal-and-pass:player-1",
               "interactionKey": "reveal-and-pass",
               "kind": "action",
+              "label": "Reveal and pass",
               "phaseName": "fixture"
             }
           ],
@@ -145,17 +162,28 @@
             "simultaneousPhase": null
           },
           "gameVersion": 2,
+          "guidance": {
+            "phase": {
+              "id": "draft",
+              "label": "Choose and lock",
+              "objective": "Draft a card that improves your set while anticipating what neighbors need.",
+              "summary": "Choose one card privately, lock it, then reveal and pass hands."
+            }
+          },
           "perspectivePlayerId": "player-1",
+          "recentEvents": [],
           "view": {
             "displayName": "Simultaneous Card Drafting",
+            "recentEvents": [],
             "referenceGameId": "simultaneous-card-drafting",
+            "scenarioBranch": null,
             "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
             "submittedInteractionId": "lock-choice:player-1"
           },
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df"
+        "projectionDigest": "sha256:bdbaeabe22c1b266780b4e7aa4ffb4cfdf0daacdc43b4d763ae02a48d63f181e"
       }
     ],
     "session": {
@@ -177,7 +205,7 @@
         "fromFrameId": "frame-1",
         "id": "simultaneous-card-drafting.lock-choice.mobile.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:4498b8b9e1b262e9ec63114645112a8e7c103704aab4a3b3a23d9ba2c0910491",
+        "requestDigest": "sha256:1dd6bf56a58aa8e3b2c9c777fe7a6637c58ad48f95d2760d17860fffddeb6d3f",
         "response": {
           "valid": true
         }
@@ -186,7 +214,7 @@
         "fromFrameId": "frame-1",
         "id": "simultaneous-card-drafting.lock-choice.mobile.submit",
         "kind": "client.submit",
-        "requestDigest": "sha256:d6f68571bce375d9c78bb518f39c3b5237f09153689038a01a669e7b7d48b168",
+        "requestDigest": "sha256:28301fdec13c6f81a8b19b75b464578ab23869a2700379dcd1b6e84768a2e604",
         "response": {
           "accepted": true
         }
@@ -205,8 +233,8 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:e97021bf3a504df056f3afa23cb49cbbcfe733fa0e71bcb6d354678b376854df",
-        "semanticDigest": "sha256:a529a7c4fe36c983535d6110a3bd6cf3adfb2c42dcdb540969bb3d008df12c49",
+        "projectionDigest": "sha256:bdbaeabe22c1b266780b4e7aa4ffb4cfdf0daacdc43b4d763ae02a48d63f181e",
+        "semanticDigest": "sha256:c9b7f25e73b7271980138384d1d5230dc2b2d7ed4ee1187512ae6c9630221e9d",
         "submissionDigest": "sha256:c5af5438f0e108b2cd0ff10c384539ccda9aed3f4cc150732b5bb0fe3b75219c",
         "visibleInteractionKeys": [
           "lock-choice"
@@ -214,7 +242,7 @@
       },
       "expectedIdentity": {
         "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:a35aff4c82cf499abea4406f02659eed70bc077dbc3fcd5bc255eef7ad7fbc02",
+        "descriptorDigest": "sha256:979aeff2aebcf5d53ee80965102b48a249945d51ea8337add5672f06f718f5b2",
         "interactionId": "lock-choice:player-1",
         "interactionKey": "lock-choice",
         "scopeId": "runtime",
@@ -234,11 +262,11 @@
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:26f78f793197c798286fb1adad30a6a43cc88c80891d87ffb62cbe34dec8992d",
+    "reducerFingerprint": "sha256:87e5f718d1793cb7e1a08fa061ca0064189078cfecac48aad250e3dfdfb250cc",
     "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-    "renderModuleDigest": "sha256:80d778b9552bb4beaa16dc5f96f61ddbc26af944f32d30d454a3922cfdce1148",
+    "renderModuleDigest": "sha256:885ccadb21037f474452aa723994a63c024ac2c2309883e19cc36f01ece08cc5",
     "scenarioId": "simultaneous-card-drafting.lock-choice.mobile",
-    "sourceDigest": "sha256:fe56f1d21628e059cc2a0e42999e1fa2458e203172fa1ccfe9aae8c3d54533aa",
+    "sourceDigest": "sha256:d411ae6901eb9a05ce985ff37aa500159005924e8c60b3589e69ff6c426a9e40",
     "sourceFiles": [
       "examples/reference-games/simultaneous-card-drafting/scenarios/coverage.json",
       "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
@@ -246,7 +274,7 @@
       "examples/reference-games/shared/reference-ui.mjs",
       "examples/reference-games/simultaneous-card-drafting/src/scenarios/lock-choice.scenario.mjs"
     ],
-    "uiContractFingerprint": "sha256:4016f48a07fa5246662cf0a7a833868c5ac3f71319d1f40fa74a104a747fd3d7"
+    "uiContractFingerprint": "sha256:2d77b9e010ca830077ed40887d9689423a2ce3210024bd103ab61e36e8452986"
   },
   "tags": [
     "card-drafting",

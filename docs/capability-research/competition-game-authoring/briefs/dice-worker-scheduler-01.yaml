@@ -1,0 +1,31 @@
+{
+  "id": "dice-worker-scheduler-01",
+  "title": "Dice worker scheduler with value-gated spaces",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 2, "max": 4 },
+  "authorJobs":
+    [
+      "roll personal worker dice",
+      "place one die on matching worker space",
+      "resolve cleanup after all dice placed",
+    ],
+  "uiJobs":
+    [
+      "render worker spaces and die values",
+      "show invalid value reason",
+      "support drag or keyboard placement",
+    ],
+  "authorityJobs":
+    [
+      "reject occupied spaces",
+      "reject die value mismatch",
+      "replay dice rolls from seed",
+    ],
+  "acceptance":
+    [
+      "existing dice and board collectors are sufficient",
+      "cleanup procedure may need GameEvent if visible to users",
+      "no sheet runtime is required",
+    ],
+  "formatNotes": { "compactMobile": true },
+}

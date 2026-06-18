@@ -214,16 +214,18 @@ function createCharacterizationGame() {
           finish: defineInteraction<typeof contract>()({
             inputs: {},
             reduce({ state, accept, fx }) {
-              return accept(state, [fx.transition("done")]);
+              return accept(state, { instructions: [fx.transition("done")] });
             },
           }),
           rollTwice: defineInteraction<typeof contract>()({
             inputs: {},
             reduce({ state, accept, fx }) {
-              return accept(state, [
-                fx.effect(rollDieEffect, { dieId: "die-1" }),
-                fx.effect(rollDieEffect, { dieId: "die-1" }),
-              ]);
+              return accept(state, {
+                instructions: [
+                  fx.effect(rollDieEffect, { dieId: "die-1" }),
+                  fx.effect(rollDieEffect, { dieId: "die-1" }),
+                ],
+              });
             },
           }),
         },

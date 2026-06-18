@@ -388,6 +388,92 @@ test("generated interaction arms render semantic browser replay digests", () => 
   expect(html).toContain("data-dreamboard-preparation-patterns=");
 });
 
+test("generated square grid board resolves topology from square static boards", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const squareStaticBoards = {
+    scorecard: {
+      id: "scorecard",
+      layout: "square" as const,
+      spaces: {
+        a1: { id: "a1", row: 0, col: 0, typeId: null, fields: {} },
+        a2: { id: "a2", row: 0, col: 1, typeId: null, fields: {} },
+      },
+      edges: [] as const,
+      vertices: [] as const,
+      pieces: [] as const,
+    },
+  } as const;
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Board: {
+      useSurface(name: string): {
+        Root(props: { children?: unknown }): ReactElement | null;
+      };
+      SquareGrid(props: {
+        board: "scorecard";
+        interactions?: false;
+        cellSize?: number;
+        renderCell(row: number, col: number): ReactElement;
+        renderPiece(): null;
+      }): ReactElement;
+    };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    squareStaticBoards,
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  function ScorecardHarness() {
+    const scorecard = UI.Board.useSurface("scorecard");
+    return createElement(
+      scorecard.Root,
+      null,
+      createElement(UI.Board.SquareGrid, {
+        board: "scorecard",
+        interactions: false,
+        cellSize: 24,
+        renderCell: (row, col) =>
+          createElement("rect", {
+            "data-cell": `${row},${col}`,
+            width: 24,
+            height: 24,
+          }),
+        renderPiece: () => null,
+      }),
+    );
+  }
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(ScorecardHarness),
+      ),
+    ),
+  );
+
+  expect(html).toContain('class="square-grid"');
+  expect(html).toContain('aria-label="1x2 game grid"');
+  expect(html).toContain('data-cell="0,0"');
+  expect(html).toContain('data-cell="0,1"');
+});
+
 test("UI root emits the semantic projection digest marker", () => {
   const snapshot = makeSnapshot();
   const runtime = makeRuntime(snapshot, async () => undefined);
@@ -547,6 +633,134 @@ test("board targets render semantic browser replay select actuators", () => {
   expect(html).toContain("data-dreamboard-candidate-value=");
   expect(html).toContain("data-dreamboard-semantic-effects=");
   expect(html).toContain("setCandidate");
+});
+
+test("generated square grids bind static boards and semantic replay actuators", () => {
+  const snapshot = {
+    ...makeSnapshot(),
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["cell-a1"],
+            },
+          },
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+  } satisfies PluginGameplayFrame;
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const squareStaticBoards = {
+    "survey-grid": {
+      id: "survey-grid",
+      layout: "square" as const,
+      spaces: {
+        "cell-a1": {
+          id: "cell-a1",
+          row: 0,
+          col: 0,
+          typeId: null,
+          fields: {},
+        },
+        "cell-a2": {
+          id: "cell-a2",
+          row: 0,
+          col: 1,
+          typeId: null,
+          fields: {},
+        },
+      },
+      edges: [],
+      vertices: [],
+      pieces: [],
+    },
+  };
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Board: {
+      useSurface: () => {
+        Root: React.FC<{ children?: unknown }>;
+      };
+      SquareGrid: React.FC<{
+        board: "survey-grid";
+        renderCell: (row: number, col: number) => unknown;
+        renderPiece: (piece: unknown) => unknown;
+        cellSize?: number;
+        width?: number;
+        height?: number;
+      }>;
+    };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    squareStaticBoards,
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const board = UI.Board.useSurface();
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(
+          board.Root,
+          null,
+          createElement(UI.Board.SquareGrid, {
+            board: "survey-grid",
+            cellSize: 20,
+            width: 60,
+            height: 40,
+            renderCell: (row, col) =>
+              createElement("rect", {
+                "data-cell": `${row}:${col}`,
+                width: 20,
+                height: 20,
+              }),
+            renderPiece: () => null,
+          }),
+        ),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-cell="0:0"');
+  expect(html).toContain('aria-label="Select space cell-a1"');
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain('data-dreamboard-browser-intent="select"');
+  expect(html).toContain('data-dreamboard-actuator-kind="click"');
+  expect(html).toContain('data-dreamboard-interaction-key="play.placeCard"');
+  expect(html).toContain('data-dreamboard-input-key="spaceId"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
 });
 
 test("default interaction form controls emit exact semantic effects and bounded fill patterns", () => {

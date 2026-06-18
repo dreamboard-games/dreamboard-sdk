@@ -22,12 +22,17 @@ export {
   type ReducerPhaseDefinition,
   type ReducerViewDefinition,
 } from "./reducer/authoring";
+export { gameEvent } from "./reducer/game-event";
 export type {
   ErrorCodeOfContract,
+  GameEvent,
+  GameEventDetail,
   GameStateOf,
+  ReducerAcceptOptions,
   InteractionRule,
   PhaseMapOf,
   ReducerValidationResult,
+  SystemActionEvent,
   ValidationIssue,
 } from "./reducer/model";
 export {
@@ -156,5 +161,9 @@ export type {
   ReducerResult,
   TableQueries,
   TableQueriesOfState,
-  TerminalOutcome,
+  GameOutcome,
+  OutcomeResult,
+  OutcomeScoreComponent,
+  OutcomeStanding,
+  OutcomeTieBreak,
 } from "./reducer/model";

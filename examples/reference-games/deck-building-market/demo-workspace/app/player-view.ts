@@ -58,8 +58,8 @@ export const playerView = defineView<GameContract>()({
       supplyCosts,
       myVp: vpTotals[playerId] ?? 0,
       vpTotals,
-      gameOver: state.publicState.winnerPlayerId !== null,
-      winnerPlayerId: state.publicState.winnerPlayerId,
+      gameOver: state.publicState.outcome !== null,
+      outcome: state.publicState.outcome,
     };
   },
 });

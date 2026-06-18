@@ -169,6 +169,27 @@ export interface InteractionDiagnosticReason {
   errorCode: string;
 }
 
+export interface SetupGuidanceStep {
+  id: string;
+  label: string;
+  description?: string;
+}
+
+export interface GameGuidanceProjection {
+  phase: {
+    id: string;
+    label: string;
+    summary?: string;
+    objective?: string;
+  };
+  setup?: {
+    profileId: string;
+    name: string;
+    summary?: string;
+    steps: readonly SetupGuidanceStep[];
+  };
+}
+
 export type InteractionAvailability =
   | { status: "available" }
   | { status: "notYourTurn"; reason: string }
@@ -183,6 +204,8 @@ interface InteractionDescriptorBase<Key extends string = string> {
   phaseName: string;
   interactionKey: Key;
   interactionId: string;
+  label: string;
+  help?: string;
   /** Draft commit policy. Always materialized by the trusted reducer bundle. */
   commit: InteractionCommitPolicy;
   /** Canonical descriptor digest used by browser replay/protocol tooling when projected by the host. */
@@ -245,6 +268,26 @@ export interface SimultaneousPhaseSnapshot {
   pendingPlayerIds: PlayerId[];
 }
 
+export interface GameEventDetail {
+  label: string;
+  value: string | number | boolean;
+}
+
+export interface SystemActionEvent {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+}
+
+export type GameEvent = SystemActionEvent;
+
+export type ProjectedGameEvent = GameEvent & {
+  version: number;
+  index: number;
+};
+
 export interface GameplaySnapshot<
   PhaseType extends string = string,
   StageType extends string = string,
@@ -255,6 +298,8 @@ export interface GameplaySnapshot<
   activePlayers: PlayerId[];
   simultaneousPhase?: SimultaneousPhaseSnapshot | null;
   availableInteractions: ReadonlyArray<InteractionDescriptor<InteractionType>>;
+  guidance?: GameGuidanceProjection | null;
+  recentEvents: ReadonlyArray<ProjectedGameEvent>;
   /**
    * Zone handles scoped to the controlling player. Keyed by zoneId.
    * Authored via phase `zones`; projected from `resolveZoneHandles`.

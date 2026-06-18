@@ -1,0 +1,32 @@
+{
+  "id": "cooperative-bag-puzzle-01",
+  "title": "Cooperative bag puzzle with shared loss condition",
+  "source": { "kind": "original", "rights": "public-safe-original" },
+  "players": { "min": 1, "max": 4 },
+  "authorJobs":
+    [
+      "draw tokens from seeded bag",
+      "assign token to shared objective",
+      "trigger shared loss threshold",
+      "end with team result",
+    ],
+  "uiJobs":
+    [
+      "render shared objective tracks",
+      "show bag draw history",
+      "show team result",
+    ],
+  "authorityJobs":
+    [
+      "reject assigning token to full track",
+      "replay draw order from seed",
+      "preserve team result for every player",
+    ],
+  "acceptance":
+    [
+      "tracks use existing board spaces",
+      "team draw result needs GameOutcome result semantics",
+      "draw history is ordinary state until GameEvent",
+    ],
+  "formatNotes": { "compactMobile": true },
+}
