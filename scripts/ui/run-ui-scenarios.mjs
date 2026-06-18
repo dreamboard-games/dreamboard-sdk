@@ -263,7 +263,7 @@ async function main() {
     "--short=12",
     "HEAD",
   ]).stdout.trim();
-  const results = [];
+  const matrixEntries = [];
   for (const scenarioId of selection.scenarioIds) {
     if (!scenarioById(index, scenarioId)) {
       throw new Error(`Unknown selected scenario '${scenarioId}'.`);
@@ -272,82 +272,91 @@ async function main() {
       path.join(fixturesRoot, `${scenarioId}.fixture.json`),
     );
     for (const project of projectsForScenario(fixture, options.project)) {
-      const transcriptFile = path.join(
-        artifactRoot,
-        "transcripts",
-        `${scenarioId}.${project}.txt`,
-      );
-      const evidenceFile = path.join(
-        artifactRoot,
-        "semantic",
-        `${scenarioId}.${project}.json`,
-      );
-      const test = run(
-        "pnpm",
-        [
-          "--filter",
-          "@dreamboard-games/ui-workbench",
-          "test",
-          `--project=${project}`,
-          "tests/scenario.spec.ts",
-        ],
-        {
-          env: {
-            UI_SCENARIO_ID: scenarioId,
-            UI_SCENARIO_EVIDENCE_PATH: evidenceFile,
-            UI_SCENARIO_SCREENSHOT_DIR: path.join(artifactRoot, "screenshots"),
-          },
-        },
-      );
-      await writeFile(
-        transcriptFile,
-        `${test.stdout ?? ""}${test.stderr ?? ""}`,
-      );
-      const evidence =
-        test.status === 0 ? await readJson(evidenceFile) : undefined;
-      if (test.status === 0 && !evidence) {
-        throw new Error(
-          `${scenarioId} ${project} passed without writing measured evidence.`,
-        );
-      }
-      if (
-        evidence &&
-        (evidence.scenarioId !== scenarioId || evidence.project !== project)
-      ) {
-        throw new Error(
-          `${scenarioId} ${project} wrote evidence for ${evidence.scenarioId} ${evidence.project}.`,
-        );
-      }
-      if (
-        evidence &&
-        (evidence.projectionDigest !== fixture.expected.finalProjectionDigest ||
-          evidence.semanticDigest !== fixture.expected.finalSemanticDigest ||
-          evidence.submissionDigest !== fixture.expected.submissionDigest)
-      ) {
-        throw new Error(
-          `${scenarioId} ${project} measured evidence did not match fixture expectations.`,
-        );
-      }
-      results.push({
+      matrixEntries.push({
         scenarioId,
         project,
-        result: test.status === 0 ? "passed" : "failed",
-        projectionDigest: evidence?.projectionDigest,
-        semanticDigest: evidence?.semanticDigest,
-        submissionDigest: evidence?.submissionDigest,
-        screenshotFiles: (evidence?.screenshots ?? []).map((file) =>
-          path.relative(root, file),
+        evidencePath: path.join(
+          artifactRoot,
+          "semantic",
+          `${scenarioId}.${project}.json`,
         ),
-        evidenceFile: path.relative(root, evidenceFile),
-        transcriptFile: path.relative(root, transcriptFile),
       });
-      if (test.status !== 0) {
-        break;
-      }
     }
-    if (results.some((result) => result.result === "failed")) {
-      break;
+  }
+
+  const matrixPath = path.join(artifactRoot, "scenario-matrix.json");
+  await writeFile(
+    matrixPath,
+    `${JSON.stringify({ schemaVersion: 1, entries: matrixEntries }, null, 2)}\n`,
+  );
+  const transcriptFile = path.join(
+    artifactRoot,
+    "transcripts",
+    "playwright.txt",
+  );
+  const testArgs = [
+    "--filter",
+    "@dreamboard-games/ui-workbench",
+    "test",
+    "tests/scenario.spec.ts",
+  ];
+  if (options.project) {
+    testArgs.splice(3, 0, `--project=${options.project}`);
+  }
+  const test = run("pnpm", testArgs, {
+    env: {
+      UI_SCENARIO_MATRIX_PATH: matrixPath,
+      UI_SCENARIO_SCREENSHOT_DIR: path.join(artifactRoot, "screenshots"),
+    },
+  });
+  await writeFile(transcriptFile, `${test.stdout ?? ""}${test.stderr ?? ""}`);
+
+  const results = [];
+  for (const entry of matrixEntries) {
+    const fixture = await readJson(
+      path.join(fixturesRoot, `${entry.scenarioId}.fixture.json`),
+    );
+    const evidence = await readJson(entry.evidencePath).catch((error) => {
+      if (error?.code === "ENOENT") return undefined;
+      throw error;
+    });
+    if (test.status === 0 && !evidence) {
+      throw new Error(
+        `${entry.scenarioId} ${entry.project} passed without writing measured evidence.`,
+      );
     }
+    if (
+      evidence &&
+      (evidence.scenarioId !== entry.scenarioId ||
+        evidence.project !== entry.project)
+    ) {
+      throw new Error(
+        `${entry.scenarioId} ${entry.project} wrote evidence for ${evidence.scenarioId} ${evidence.project}.`,
+      );
+    }
+    if (
+      evidence &&
+      (evidence.projectionDigest !== fixture.expected.finalProjectionDigest ||
+        evidence.semanticDigest !== fixture.expected.finalSemanticDigest ||
+        evidence.submissionDigest !== fixture.expected.submissionDigest)
+    ) {
+      throw new Error(
+        `${entry.scenarioId} ${entry.project} measured evidence did not match fixture expectations.`,
+      );
+    }
+    results.push({
+      scenarioId: entry.scenarioId,
+      project: entry.project,
+      result: evidence && test.status === 0 ? "passed" : "failed",
+      projectionDigest: evidence?.projectionDigest,
+      semanticDigest: evidence?.semanticDigest,
+      submissionDigest: evidence?.submissionDigest,
+      screenshotFiles: (evidence?.screenshots ?? []).map((file) =>
+        path.relative(root, file),
+      ),
+      evidenceFile: path.relative(root, entry.evidencePath),
+      transcriptFile: path.relative(root, transcriptFile),
+    });
   }
 
   const receipt = {
@@ -367,7 +376,8 @@ async function main() {
     `${JSON.stringify(receipt, null, 2)}\n`,
   );
 
-  const failed = results.find((result) => result.result === "failed");
+  const failed =
+    test.status !== 0 || results.find((result) => result.result === "failed");
   console.log(`wrote ${path.relative(root, artifactRoot)}/receipt.json`);
   if (failed) {
     process.exit(1);

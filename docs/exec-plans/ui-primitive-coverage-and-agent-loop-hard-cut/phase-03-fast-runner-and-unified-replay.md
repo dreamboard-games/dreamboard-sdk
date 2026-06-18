@@ -1,6 +1,6 @@
 # Phase 03: Fast Runner And Unified Replay
 
-Status: Proposed
+Status: In Progress
 
 Depends on: Phases 00 and 01
 
@@ -142,6 +142,30 @@ stable selection order, and each replay execution kind.
 - Interactive Replay no longer submits directly through runtime APIs.
 - Existing semantic, digest, Axe, and submission assertions still pass.
 - Failure output identifies the first divergent replay step.
+
+## Progress notes
+
+- Focused and changed-only command selection now uses the generated component
+  scenario index and supports explain output.
+- `run-ui-scenarios.mjs` now writes one scenario/project matrix and invokes the
+  Workbench Playwright suite once for the selected set.
+- The Workbench scenario spec fans out from that matrix and keeps per-scenario
+  evidence files, screenshots, and digest assertions.
+
+Verification:
+
+```sh
+node --test scripts/ui/component-scenario-index-lib.test.mjs
+pnpm ui:test:changed --base HEAD --explain
+pnpm ui:test --scenario hearts.pass-three.mobile --project chromium-touch-phone
+```
+
+Remaining:
+
+- Extract the shared semantic replay planner.
+- Replace direct in-page Replay runtime submission calls with the shared replay
+  adapter.
+- Broaden verification to the full required Workbench matrix.
 
 ## Deferred
 
