@@ -17,13 +17,26 @@ const declarationChunks = (await readdir(pluginContractDist)).filter(
 const sdkReducerContractChunk = (await readdir(sdkDist)).find((fileName) =>
   /^index\.d-.*\.d\.ts$/.test(fileName),
 );
+const sdkReducerContractFacade = "reducer-contract.d.ts";
+const sdkReducerContractDeclaration = sdkReducerContractChunk
+  ? {
+      importName: "w as Wire",
+      modulePath: `./${sdkReducerContractChunk.replace(/\.d\.ts$/, ".js")}`,
+    }
+  : {
+      importName: "ReducerWire as Wire",
+      modulePath: "./reducer-contract.js",
+    };
 
 if (declarationChunks.length === 0) {
   throw new Error(
     "Expected plugin-runtime-contract declaration chunks to exist before copying SDK private DTS files.",
   );
 }
-if (!sdkReducerContractChunk) {
+if (
+  !sdkReducerContractChunk &&
+  !(await readdir(sdkDist)).includes(sdkReducerContractFacade)
+) {
   throw new Error(
     "Expected SDK reducer-contract declaration chunk to exist before copying SDK private DTS files.",
   );
@@ -37,7 +50,7 @@ for (const fileName of declarationChunks) {
     .replace(/\nimport '@dreamboard-games\/reducer-contract\/zod';/, "")
     .replace(
       /import \* as Wire from '@dreamboard-games\/reducer-contract\/wire';/,
-      `import { w as Wire } from './${sdkReducerContractChunk.replace(/\.d\.ts$/, ".js")}';`,
+      `import { ${sdkReducerContractDeclaration.importName} } from '${sdkReducerContractDeclaration.modulePath}';`,
     );
   await writeFile(targetPath, rewritten);
 }
