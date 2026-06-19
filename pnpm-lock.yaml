@@ -34,6 +34,9 @@ importers:
 
   packages/plugin-runtime-contract:
     dependencies:
+      "@noble/hashes":
+        specifier: ^2.2.0
+        version: 2.2.0
       zod:
         specifier: 4.4.3
         version: 4.4.3
@@ -1509,6 +1512,13 @@ packages:
     peerDependencies:
       "@emnapi/core": ^1.7.1
       "@emnapi/runtime": ^1.7.1
+
+  "@noble/hashes@2.2.0":
+    resolution:
+      {
+        integrity: sha512-IYqDGiTXab6FniAgnSdZwgWbomxpy9FtYvLKs7wCUs2a8RkITG+DFGO1DM9cr+E3/RgADRpFjrKVaJ1z6sjtEg==,
+      }
+    engines: { node: ">= 20.19.0" }
 
   "@oxc-parser/binding-android-arm-eabi@0.127.0":
     resolution:
@@ -8657,6 +8667,8 @@ snapshots:
       "@emnapi/runtime": 1.9.2
       "@tybys/wasm-util": 0.10.2
     optional: true
+
+  "@noble/hashes@2.2.0": {}
 
   "@oxc-parser/binding-android-arm-eabi@0.127.0":
     optional: true

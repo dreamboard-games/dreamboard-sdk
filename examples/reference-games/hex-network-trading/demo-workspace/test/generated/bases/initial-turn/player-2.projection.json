@@ -1,8 +1,6 @@
 {
   "currentStage": "setup",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "spaces": [
       {

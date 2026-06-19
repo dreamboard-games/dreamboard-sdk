@@ -1,8 +1,6 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "mode": "action",
     "actionsLeft": 1,
@@ -11,13 +9,7 @@
     "pendingDraw": 0,
     "pendingAction": null,
     "turnNumber": 1,
-    "handCards": [
-      "doodle-58",
-      "idea-5",
-      "doodle-55",
-      "doodle-6",
-      "doodle-27"
-    ],
+    "handCards": ["doodle-58", "idea-5", "doodle-55", "doodle-6", "doodle-27"],
     "inPlayCards": [],
     "discardCards": [
       "masterpiece-7",
@@ -25,13 +17,7 @@
       "masterpiece-6",
       "masterpiece-1"
     ],
-    "deckCards": [
-      "idea-7",
-      "doodle-33",
-      "doodle-47",
-      "idea-2",
-      "doodle-37"
-    ],
+    "deckCards": ["idea-7", "doodle-33", "doodle-47", "idea-2", "doodle-37"],
     "deckCount": 5,
     "supplyCosts": {
       "brainstorm": 4,
@@ -87,9 +73,7 @@
         "mode": "manual"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -109,9 +93,7 @@
         "mode": "manual"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -167,9 +149,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -263,9 +243,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -285,9 +263,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -307,9 +283,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -329,9 +303,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -351,9 +323,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -373,9 +343,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -395,9 +363,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -417,9 +383,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -433,13 +397,7 @@
   ],
   "zones": {
     "hand": {
-      "cardIds": [
-        "doodle-58",
-        "idea-5",
-        "doodle-55",
-        "doodle-6",
-        "doodle-27"
-      ],
+      "cardIds": ["doodle-58", "idea-5", "doodle-55", "doodle-6", "doodle-27"],
       "cardViewsById": {
         "doodle-58": "{\"id\":\"doodle-58\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
         "idea-5": "{\"id\":\"idea-5\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
@@ -456,13 +414,7 @@
       }
     },
     "deck": {
-      "cardIds": [
-        "idea-7",
-        "doodle-33",
-        "doodle-47",
-        "idea-2",
-        "doodle-37"
-      ],
+      "cardIds": ["idea-7", "doodle-33", "doodle-47", "idea-2", "doodle-37"],
       "cardViewsById": {
         "idea-7": "{\"id\":\"idea-7\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
         "doodle-33": "{\"id\":\"doodle-33\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
@@ -1103,10 +1055,7 @@
       }
     },
     "supply-idea": {
-      "cardIds": [
-        "idea-1",
-        "idea-3"
-      ],
+      "cardIds": ["idea-1", "idea-3"],
       "cardViewsById": {
         "idea-1": "{\"id\":\"idea-1\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
         "idea-3": "{\"id\":\"idea-3\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}"

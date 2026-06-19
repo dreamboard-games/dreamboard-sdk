@@ -1,8 +1,6 @@
 {
   "currentStage": "wakeup",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "seasonNumber": 1,
     "enabledActionSpaces": [
@@ -16,15 +14,8 @@
       "patrons-estate",
       "forge"
     ],
-    "setupVariablePoolDraw": [
-      "library",
-      "patrons-estate",
-      "forge"
-    ],
-    "turnOrderThisSeason": [
-      "player-1",
-      "player-2"
-    ],
+    "setupVariablePoolDraw": ["library", "patrons-estate", "forge"],
+    "turnOrderThisSeason": ["player-1", "player-2"],
     "outcome": null,
     "finalVPByPlayerId": null,
     "currentPhase": "wakeup",
@@ -101,12 +92,8 @@
       "stone": 0,
       "wood": 1
     },
-    "myOrderHand": [
-      "grand-atelier"
-    ],
-    "myApprenticeHand": [
-      "reassign"
-    ]
+    "myOrderHand": ["grand-atelier"],
+    "myApprenticeHand": ["reassign"]
   },
   "availableInteractions": [
     {

@@ -62,9 +62,8 @@ export default defineScenario({
     expect(seat0View.playerVP[seat0]).toBe(12);
     expect(seat0View.playerVP[seat1]).toBe(0);
     expect(
-      seat0View.outcome?.standings.find(
-        (standing) => standing.result === "win",
-      )?.playerId,
+      seat0View.outcome?.standings.find((standing) => standing.result === "win")
+        ?.playerId,
     ).toBe(seat0);
   },
 });

@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import packageJson from "../../../package.json";
+import { DREAMBOARD_SDK_VERSION } from "../../package-set.js";
 import { createPostMessagePluginTransport } from "../browser/post-message-transport.js";
 import { createPluginRuntimeClient } from "../core/create-plugin-runtime-client.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type { RuntimeDiagnosticHandler } from "../types/runtime-api.js";
 
-const BUNDLED_SDK_VERSION =
-  typeof packageJson.version === "string" ? packageJson.version : "unknown";
+const BUNDLED_SDK_VERSION = DREAMBOARD_SDK_VERSION;
 
 export interface UsePluginRuntimeOptions {
   /**

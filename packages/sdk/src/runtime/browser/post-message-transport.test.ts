@@ -212,9 +212,7 @@ describe("createPostMessagePluginTransport", () => {
         code: "host-runtime-protocol-mismatch",
       },
     });
-    expect(JSON.stringify(outbound[0]?.message)).toContain(
-      "sdk-test-version",
-    );
+    expect(JSON.stringify(outbound[0]?.message)).toContain("sdk-test-version");
     stop();
   });
 });

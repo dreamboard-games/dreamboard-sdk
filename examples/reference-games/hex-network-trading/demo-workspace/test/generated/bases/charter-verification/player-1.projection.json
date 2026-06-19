@@ -1,8 +1,6 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "spaces": [
       {
@@ -1076,11 +1074,7 @@
             "min": 1,
             "max": 3
           },
-          "defaultValue": [
-            "player-2",
-            "player-3",
-            "player-4"
-          ]
+          "defaultValue": ["player-2", "player-3", "player-4"]
         }
       ],
       "availability": {
@@ -1122,9 +1116,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1133,9 +1125,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1165,9 +1155,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1176,9 +1164,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1514,9 +1500,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1525,9 +1509,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1627,9 +1609,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1638,9 +1618,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1705,9 +1683,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1716,9 +1692,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1821,81 +1795,31 @@
         "landmark-1": "{\"id\":\"landmark-1\",\"cardType\":\"landmark\",\"name\":\"Landmark\",\"properties\":{\"cardType\":\"landmark\"}}"
       },
       "playableByCardId": {
-        "claimMarker-2": [
-          "playClaimMarker:106540de8a1f04a2"
-        ],
-        "surveyGrant-1": [
-          "playSurveyGrant:ac0c62cf3fff6d13"
-        ],
-        "scout-6": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "claimMarker-1": [
-          "playClaimMarker:106540de8a1f04a2"
-        ],
-        "scout-3": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-13": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "shortcut-1": [
-          "playShortcut:6f9bfc6c1d0308cb"
-        ],
-        "scout-12": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "landmark-5": [
-          "playLandmark:0d69e2ef955c3b12"
-        ],
-        "scout-1": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-9": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "landmark-4": [
-          "playLandmark:0d69e2ef955c3b12"
-        ],
-        "surveyGrant-2": [
-          "playSurveyGrant:ac0c62cf3fff6d13"
-        ],
-        "scout-4": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-11": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "shortcut-2": [
-          "playShortcut:6f9bfc6c1d0308cb"
-        ],
-        "scout-7": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "landmark-2": [
-          "playLandmark:0d69e2ef955c3b12"
-        ],
-        "scout-14": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-5": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-8": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-2": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "scout-10": [
-          "playScout:6485bbd8df0d2952"
-        ],
-        "landmark-3": [
-          "playLandmark:0d69e2ef955c3b12"
-        ],
-        "landmark-1": [
-          "playLandmark:0d69e2ef955c3b12"
-        ]
+        "claimMarker-2": ["playClaimMarker:106540de8a1f04a2"],
+        "surveyGrant-1": ["playSurveyGrant:ac0c62cf3fff6d13"],
+        "scout-6": ["playScout:6485bbd8df0d2952"],
+        "claimMarker-1": ["playClaimMarker:106540de8a1f04a2"],
+        "scout-3": ["playScout:6485bbd8df0d2952"],
+        "scout-13": ["playScout:6485bbd8df0d2952"],
+        "shortcut-1": ["playShortcut:6f9bfc6c1d0308cb"],
+        "scout-12": ["playScout:6485bbd8df0d2952"],
+        "landmark-5": ["playLandmark:0d69e2ef955c3b12"],
+        "scout-1": ["playScout:6485bbd8df0d2952"],
+        "scout-9": ["playScout:6485bbd8df0d2952"],
+        "landmark-4": ["playLandmark:0d69e2ef955c3b12"],
+        "surveyGrant-2": ["playSurveyGrant:ac0c62cf3fff6d13"],
+        "scout-4": ["playScout:6485bbd8df0d2952"],
+        "scout-11": ["playScout:6485bbd8df0d2952"],
+        "shortcut-2": ["playShortcut:6f9bfc6c1d0308cb"],
+        "scout-7": ["playScout:6485bbd8df0d2952"],
+        "landmark-2": ["playLandmark:0d69e2ef955c3b12"],
+        "scout-14": ["playScout:6485bbd8df0d2952"],
+        "scout-5": ["playScout:6485bbd8df0d2952"],
+        "scout-8": ["playScout:6485bbd8df0d2952"],
+        "scout-2": ["playScout:6485bbd8df0d2952"],
+        "scout-10": ["playScout:6485bbd8df0d2952"],
+        "landmark-3": ["playLandmark:0d69e2ef955c3b12"],
+        "landmark-1": ["playLandmark:0d69e2ef955c3b12"]
       }
     }
   }

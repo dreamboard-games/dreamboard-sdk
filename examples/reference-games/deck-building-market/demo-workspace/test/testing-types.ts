@@ -52,8 +52,9 @@ export function createTestRuntime(options: {
   controllingPlayerId?: (typeof literals.playerIds)[number];
   userId?: string | null;
 }) {
-  const reducerBundle =
-    createReducerBundle(game) satisfies CreateTestRuntimeOptions["bundle"];
+  const reducerBundle = createReducerBundle(
+    game,
+  ) satisfies CreateTestRuntimeOptions["bundle"];
   const baseStates =
     BASE_STATES satisfies CreateTestRuntimeOptions["baseStates"];
   const runtime = createDreamboardTestRuntime({
@@ -66,7 +67,8 @@ export function createTestRuntime(options: {
     userId: options.userId ?? "test-user",
     playerIds: literals.playerIds.slice(
       0,
-      BASE_STATES[options.baseId]?.fingerprint.players ?? literals.playerIds.length,
+      BASE_STATES[options.baseId]?.fingerprint.players ??
+        literals.playerIds.length,
     ),
   });
 

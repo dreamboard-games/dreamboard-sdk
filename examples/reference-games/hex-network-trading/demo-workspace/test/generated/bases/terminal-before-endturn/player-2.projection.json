@@ -1,8 +1,6 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "spaces": [
       {
@@ -491,9 +489,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -513,9 +509,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -535,9 +529,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -557,9 +549,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",
@@ -579,9 +569,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [],
       "availability": {
         "status": "notYourTurn",

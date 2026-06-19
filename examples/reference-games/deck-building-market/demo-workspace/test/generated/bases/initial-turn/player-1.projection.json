@@ -1,8 +1,6 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "mode": "action",
     "actionsLeft": 1,
@@ -11,22 +9,10 @@
     "pendingDraw": 0,
     "pendingAction": null,
     "turnNumber": 1,
-    "handCards": [
-      "doodle-48",
-      "doodle-54",
-      "doodle-5",
-      "idea-8",
-      "idea-5"
-    ],
+    "handCards": ["doodle-48", "doodle-54", "doodle-5", "idea-8", "idea-5"],
     "inPlayCards": [],
     "discardCards": [],
-    "deckCards": [
-      "doodle-55",
-      "doodle-4",
-      "doodle-44",
-      "doodle-24",
-      "idea-4"
-    ],
+    "deckCards": ["doodle-55", "doodle-4", "doodle-44", "doodle-24", "idea-4"],
     "deckCount": 5,
     "supplyCosts": {
       "brainstorm": 4,
@@ -81,9 +67,7 @@
         "mode": "manual"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "trashedCardIds",
@@ -92,9 +76,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -129,9 +111,7 @@
         "mode": "manual"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "discardedCardIds",
@@ -140,9 +120,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -247,9 +225,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -258,9 +234,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -401,9 +375,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -412,9 +384,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -436,9 +406,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -447,9 +415,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -471,9 +437,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -482,9 +446,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -506,9 +468,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -517,9 +477,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -541,9 +499,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -552,9 +508,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -576,9 +530,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -587,9 +539,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -611,9 +561,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -622,9 +570,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -646,9 +592,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "hand",
-      "zoneIds": [
-        "hand"
-      ],
+      "zoneIds": ["hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -657,9 +601,7 @@
             "type": "cardTarget",
             "projection": "resolved",
             "targetKind": "card",
-            "zoneIds": [
-              "hand"
-            ],
+            "zoneIds": ["hand"],
             "eligibleTargets": []
           }
         }
@@ -675,13 +617,7 @@
   ],
   "zones": {
     "hand": {
-      "cardIds": [
-        "doodle-48",
-        "doodle-54",
-        "doodle-5",
-        "idea-8",
-        "idea-5"
-      ],
+      "cardIds": ["doodle-48", "doodle-54", "doodle-5", "idea-8", "idea-5"],
       "cardViewsById": {
         "doodle-48": "{\"id\":\"doodle-48\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
         "doodle-54": "{\"id\":\"doodle-54\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
@@ -716,13 +652,7 @@
       }
     },
     "deck": {
-      "cardIds": [
-        "doodle-55",
-        "doodle-4",
-        "doodle-44",
-        "doodle-24",
-        "idea-4"
-      ],
+      "cardIds": ["doodle-55", "doodle-4", "doodle-44", "doodle-24", "idea-4"],
       "cardViewsById": {
         "doodle-55": "{\"id\":\"doodle-55\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
         "doodle-4": "{\"id\":\"doodle-4\",\"cardType\":\"doodle\",\"name\":\"Doodle\",\"properties\":{\"cost\":0,\"coins\":1}}",
@@ -763,9 +693,7 @@
         "brainstorm-1": "{\"id\":\"brainstorm-1\",\"cardType\":\"brainstorm\",\"name\":\"Brainstorm\",\"properties\":{\"cost\":4}}"
       },
       "playableByCardId": {
-        "brainstorm-6": [
-          "resolveStudioVisit:a5c073b13176a3e0"
-        ],
+        "brainstorm-6": ["resolveStudioVisit:a5c073b13176a3e0"],
         "brainstorm-5": [],
         "brainstorm-4": [],
         "brainstorm-7": [],
@@ -794,9 +722,7 @@
         "studio-2": "{\"id\":\"studio-2\",\"cardType\":\"studio\",\"name\":\"Studio\",\"properties\":{\"cost\":3}}"
       },
       "playableByCardId": {
-        "studio-7": [
-          "resolveStudioVisit:c16863dc7bd9aeb5"
-        ],
+        "studio-7": ["resolveStudioVisit:c16863dc7bd9aeb5"],
         "studio-1": [],
         "studio-3": [],
         "studio-5": [],
@@ -912,9 +838,7 @@
         "eraser-1": "{\"id\":\"eraser-1\",\"cardType\":\"eraser\",\"name\":\"Eraser\",\"properties\":{\"cost\":2}}"
       },
       "playableByCardId": {
-        "eraser-5": [
-          "resolveStudioVisit:c4068c1e06e87aeb"
-        ],
+        "eraser-5": ["resolveStudioVisit:c4068c1e06e87aeb"],
         "eraser-3": [],
         "eraser-2": [],
         "eraser-7": [],
@@ -943,9 +867,7 @@
         "sketchpad-1": "{\"id\":\"sketchpad-1\",\"cardType\":\"sketchpad\",\"name\":\"Sketchpad\",\"properties\":{\"cost\":2}}"
       },
       "playableByCardId": {
-        "sketchpad-7": [
-          "resolveStudioVisit:6bea06fcebe6b6cc"
-        ],
+        "sketchpad-7": ["resolveStudioVisit:6bea06fcebe6b6cc"],
         "sketchpad-4": [],
         "sketchpad-6": [],
         "sketchpad-2": [],
@@ -974,9 +896,7 @@
         "studio-visit-3": "{\"id\":\"studio-visit-3\",\"cardType\":\"studio-visit\",\"name\":\"Studio Visit\",\"properties\":{\"cost\":3}}"
       },
       "playableByCardId": {
-        "studio-visit-2": [
-          "resolveStudioVisit:9c8b05e8cdf0d0db"
-        ],
+        "studio-visit-2": ["resolveStudioVisit:9c8b05e8cdf0d0db"],
         "studio-visit-4": [],
         "studio-visit-6": [],
         "studio-visit-7": [],
@@ -1220,9 +1140,7 @@
         "sketch-13": "{\"id\":\"sketch-13\",\"cardType\":\"sketch\",\"name\":\"Sketch\",\"properties\":{\"cost\":3,\"coins\":2}}"
       },
       "playableByCardId": {
-        "sketch-5": [
-          "resolveStudioVisit:6de19950943c87a7"
-        ],
+        "sketch-5": ["resolveStudioVisit:6de19950943c87a7"],
         "sketch-31": [],
         "sketch-24": [],
         "sketch-38": [],
@@ -1363,18 +1281,13 @@
       }
     },
     "supply-idea": {
-      "cardIds": [
-        "idea-6",
-        "idea-7"
-      ],
+      "cardIds": ["idea-6", "idea-7"],
       "cardViewsById": {
         "idea-6": "{\"id\":\"idea-6\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}",
         "idea-7": "{\"id\":\"idea-7\",\"cardType\":\"idea\",\"name\":\"Idea\",\"properties\":{\"cost\":2,\"vp\":1}}"
       },
       "playableByCardId": {
-        "idea-6": [
-          "resolveStudioVisit:2f3712e44faa23f2"
-        ],
+        "idea-6": ["resolveStudioVisit:2f3712e44faa23f2"],
         "idea-7": []
       }
     },

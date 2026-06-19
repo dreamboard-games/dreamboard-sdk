@@ -6,6 +6,7 @@ import {
   PluginGameplayFrameSchema,
   computePluginActionSetVersion,
   digestPluginGameplayFrame,
+  digestPluginRuntimeJson,
   encodeCanonicalPluginRuntimeJson,
   materializePluginGameplayFrame,
   type InteractionDescriptor,
@@ -253,6 +254,12 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     ).toBe('{"action":"claim"}');
     expect(() => encodeCanonicalPluginRuntimeJson([undefined])).toThrow(
       "runtime JSON contains unsupported undefined value",
+    );
+  });
+
+  test("runtime JSON digest uses a fixed SHA-256 vector", () => {
+    expect(digestPluginRuntimeJson({ b: 2, a: 1 })).toBe(
+      "sha256:43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
     );
   });
 });

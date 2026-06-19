@@ -47,7 +47,11 @@ export type InteractionExplanation = {
 };
 export type TestRunner = SharedTestRunner;
 export type ExpectFn = SharedExpectFn;
-export type KnownRejectionCode = "action-unavailable" | "invalid-action-params" | "NOT_YOUR_TURN" | "prompt-not-owned";
+export type KnownRejectionCode =
+  | "action-unavailable"
+  | "invalid-action-params"
+  | "NOT_YOUR_TURN"
+  | "prompt-not-owned";
 export type RejectionCode = [KnownRejectionCode] extends [never]
   ? string
   : KnownRejectionCode;
@@ -57,7 +61,9 @@ type PhaseTaggedView<Phase extends PhaseName> = Extract<
   GameView,
   { phase: Phase } | { currentPhase: Phase } | { state: Phase }
 >;
-type NarrowedView<Phase extends PhaseName> = [PhaseTaggedView<Phase>] extends [never]
+type NarrowedView<Phase extends PhaseName> = [PhaseTaggedView<Phase>] extends [
+  never,
+]
   ? GameView
   : PhaseTaggedView<Phase>;
 
@@ -71,8 +77,9 @@ type InteractionKeyForId<Id extends InteractionId> = Extract<
 >;
 type InteractionParamsForKey<Key extends InteractionKey> =
   Key extends InteractionKey ? InteractionParamsOf<Key> : never;
-type InteractionParamsOfId<Id extends InteractionId> =
-  InteractionParamsForKey<InteractionKeyForId<Id>>;
+type InteractionParamsOfId<Id extends InteractionId> = InteractionParamsForKey<
+  InteractionKeyForId<Id>
+>;
 
 export interface BrowserRunnerSnapshot {
   sessionId: string | null;
@@ -148,16 +155,20 @@ export interface SharedScenarioContext {
   state(): StateName;
   view(playerId: PlayerId): GameView;
   interactions(playerId: PlayerId): readonly InteractionDescriptorFor[];
-  explain(playerId: PlayerId, interactionId: InteractionId): InteractionExplanation;
+  explain(
+    playerId: PlayerId,
+    interactionId: InteractionId,
+  ): InteractionExplanation;
   expect: ExpectFn;
 }
 
-export type ScenarioContext<
-  Phase extends PhaseName | undefined = undefined,
-> = Omit<SharedScenarioContext, "state" | "view"> & {
-  state(): Phase extends PhaseName ? Phase : StateName;
-  view(playerId: PlayerId): Phase extends PhaseName ? ViewByPhase[Phase] : GameView;
-};
+export type ScenarioContext<Phase extends PhaseName | undefined = undefined> =
+  Omit<SharedScenarioContext, "state" | "view"> & {
+    state(): Phase extends PhaseName ? Phase : StateName;
+    view(
+      playerId: PlayerId,
+    ): Phase extends PhaseName ? ViewByPhase[Phase] : GameView;
+  };
 
 export type ScenarioThenContext<
   _Runners extends readonly TestRunner[] = DefaultRunners,

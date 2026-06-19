@@ -332,7 +332,12 @@ async function checkGeneratedTextPreservation({
   }
 }
 
-function checkDependencies({ packageJson, gameId, expectedSdkVersion, errors }) {
+function checkDependencies({
+  packageJson,
+  gameId,
+  expectedSdkVersion,
+  errors,
+}) {
   const dependencyGroups = [
     ["dependencies", packageJson.dependencies ?? {}],
     ["devDependencies", packageJson.devDependencies ?? {}],
@@ -633,7 +638,11 @@ async function main() {
   );
   for (const gameId of expectedReferenceGameIds) {
     if (gameDirs.includes(gameId)) {
-      const receipt = await validateGame(gameId, errors, sdkPackageJson.version);
+      const receipt = await validateGame(
+        gameId,
+        errors,
+        sdkPackageJson.version,
+      );
       if (receipt) {
         receipts.push(receipt);
       }

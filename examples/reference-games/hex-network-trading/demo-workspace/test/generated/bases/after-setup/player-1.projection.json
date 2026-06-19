@@ -1,8 +1,6 @@
 {
   "currentStage": "playerTurn",
-  "stageSeats": [
-    "player-1"
-  ],
+  "stageSeats": ["player-1"],
   "view": {
     "spaces": [
       {
@@ -1024,11 +1022,7 @@
             "min": 1,
             "max": 3
           },
-          "defaultValue": [
-            "player-2",
-            "player-3",
-            "player-4"
-          ]
+          "defaultValue": ["player-2", "player-3", "player-4"]
         }
       ],
       "availability": {
@@ -1070,9 +1064,7 @@
         "mode": "autoWhenReady"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1081,9 +1073,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1113,9 +1103,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1124,9 +1112,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1462,9 +1448,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1473,9 +1457,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1575,9 +1557,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1586,9 +1566,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
@@ -1653,9 +1631,7 @@
         "mode": "manual"
       },
       "zoneId": "charter-hand",
-      "zoneIds": [
-        "charter-hand"
-      ],
+      "zoneIds": ["charter-hand"],
       "inputs": [
         {
           "key": "cardId",
@@ -1664,9 +1640,7 @@
             "type": "cardTarget",
             "projection": "lazy",
             "targetKind": "card",
-            "zoneIds": [
-              "charter-hand"
-            ],
+            "zoneIds": ["charter-hand"],
             "dependencies": {
               "mode": "lazy",
               "dependsOn": [],
