@@ -11,7 +11,7 @@
     "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/*.test.tsx"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.4.0-alpha.5",
+    "@dreamboard-games/sdk": "0.4.0-alpha.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "zod": "4.4.3"

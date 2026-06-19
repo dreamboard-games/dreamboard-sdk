@@ -120,8 +120,13 @@ function extractLockfileResolution({
   expectedSpecifier,
   errors,
 }) {
+  const escapedSdkPackage = sdkPackage.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const escapedSpecifier = expectedSpecifier.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
   const importerDependencyPattern = new RegExp(
-    String.raw`importers:\n(?:[\s\S]*?)  \.:\n(?:[\s\S]*?)      "${sdkPackage.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}":\n        specifier: ([^\n]+)\n        version: ([^\n]+)`,
+    String.raw`importers:\n(?:[\s\S]*?)  \.:\n(?:[\s\S]*?)      ["']${escapedSdkPackage}["']:\n        specifier: ([^\n]+)\n        version: ([^\n]+)`,
   );
   const importerMatch = lockfileText.match(importerDependencyPattern);
   if (!importerMatch) {
@@ -148,7 +153,7 @@ function extractLockfileResolution({
   }
 
   const packageEntryPattern = new RegExp(
-    String.raw`  "${sdkPackage.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}@${expectedSpecifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}":\n    resolution:\n      \{\n        integrity: ([^,\n]+),\n      \}`,
+    String.raw`  ["']${escapedSdkPackage}@${escapedSpecifier}["']:\n    resolution:(?: \{integrity: ([^,}\n]+)[^}\n]*\}|\n      \{\n        integrity: ([^,\n]+),?\n      \})`,
   );
   const packageEntryMatch = lockfileText.match(packageEntryPattern);
   if (!packageEntryMatch) {
@@ -162,7 +167,9 @@ function extractLockfileResolution({
     };
   }
 
-  const integrity = packageEntryMatch[1].trim().replace(/^["']|["']$/g, "");
+  const integrity = (packageEntryMatch[1] ?? packageEntryMatch[2])
+    .trim()
+    .replace(/^["']|["']$/g, "");
   if (!integrity.startsWith("sha512-")) {
     errors.push(
       `${gameId}: ${sdkPackage}@${expectedSpecifier} integrity must be sha512`,

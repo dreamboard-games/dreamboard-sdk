@@ -1,8 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import { createReducerFx } from "./effects";
+import { acceptResult } from "./bundle/trusted/trusted-runtime-result";
 import type { RuntimeInstructionForState } from "./core/runtime-instruction";
 import { createRuntimeInstructionEngine } from "./engine/runtime-instruction-engine";
-import type { RuntimeTableRecord } from "./model";
+import type { RuntimeHelpers, RuntimeTableRecord } from "./model";
 
 type TestFxState = {
   table: RuntimeTableRecord;
@@ -33,6 +34,19 @@ describe("runtime instruction authoring", () => {
       kind: "flow.transition",
       to: "next",
     });
+  });
+
+  test("accept accepts reducer instruction options", () => {
+    const fx = createReducerFx<TestFxState>();
+    const accept: RuntimeHelpers<TestFxState>["accept"] = acceptResult;
+    const state: TestFxState = {
+      table: {} as RuntimeTableRecord,
+      flow: { currentPhase: "start" },
+    };
+
+    expect(
+      accept(state, { instructions: [fx.transition("next")] }).instructions,
+    ).toEqual([{ kind: "flow.transition", to: "next" }]);
   });
 
   test("fx.effect returns a resumable rollDie instruction", () => {
