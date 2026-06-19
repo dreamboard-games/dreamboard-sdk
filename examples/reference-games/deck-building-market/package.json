@@ -8,7 +8,7 @@
     "test": "node scenarios/verify.mjs"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.2.0"
+    "@dreamboard-games/sdk": "0.4.0-alpha.5"
   },
   "packageManager": "pnpm@10.4.1",
   "files": [
