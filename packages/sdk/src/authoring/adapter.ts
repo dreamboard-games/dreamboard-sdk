@@ -175,7 +175,13 @@ export const GENERATED_WORKSPACE_PATHS = [
   "test/generated/base-state.json",
 ] as const;
 
-export const GENERATED_WORKSPACE_PATH_PATTERNS = SEED_FILE_PATTERNS;
+export type GeneratedWorkspacePathPattern = {
+  readonly prefix: string;
+  readonly suffix: string;
+};
+
+export const GENERATED_WORKSPACE_PATH_PATTERNS: readonly GeneratedWorkspacePathPattern[] =
+  SEED_FILE_PATTERNS;
 
 export const MANIFEST_CONFORMANCE_CASES = createManifestConformanceCases();
 

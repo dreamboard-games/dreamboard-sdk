@@ -19892,10 +19892,7 @@ _No JSDoc summary is available yet._
 ### GENERATED_WORKSPACE_PATH_PATTERNS
 
 ```ts
-const GENERATED_WORKSPACE_PATH_PATTERNS: {
-  prefix: string;
-  suffix: string;
-}[];
+const GENERATED_WORKSPACE_PATH_PATTERNS: readonly GeneratedWorkspacePathPattern[];
 ```
 
 _No JSDoc summary is available yet._
