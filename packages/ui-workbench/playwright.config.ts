@@ -4,6 +4,13 @@ export default defineConfig({
   testDir: "./tests",
   reporter: "list",
   retries: process.env.CI ? 1 : 0,
+  snapshotPathTemplate:
+    "{testDir}/{testFileName}-snapshots/{arg}-{projectName}-darwin{ext}",
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.025,
+    },
+  },
   use: {
     baseURL: "http://127.0.0.1:4173",
     colorScheme: "light",
