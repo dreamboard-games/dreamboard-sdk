@@ -2,7 +2,7 @@
 import type { GeneratedAuthoringMetadataV1 } from "./types.js";
 
 export const GENERATED_AUTHORING_METADATA = {
-  sdkVersion: "0.4.0-alpha.5",
+  sdkVersion: "0.4.0-alpha.6",
   codegenVersion: "0.3.0-alpha.0",
   manifestSchemaVersion: 2,
   generatedArtifactSchemaVersion: 1,
