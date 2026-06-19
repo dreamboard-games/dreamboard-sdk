@@ -1,19 +1,42 @@
 {
-  "name": "@dreamboard-reference/hex-network-trading",
-  "version": "0.1.0",
+  "name": "@dreamboard/example-frontier-trails",
   "private": true,
   "type": "module",
+  "imports": {
+    "#dreamboard/ui-contract": "./shared/generated/ui-contract.ts"
+  },
   "scripts": {
-    "build": "node src/reference-game.mjs",
-    "test": "node scenarios/verify.mjs"
+    "dev": "dreamboard dev",
+    "typecheck": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
+    "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
+    "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
+    "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
+    "test": "tsx --tsconfig test/tsconfig.json --test test/player-turn-params.test.ts",
+    "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx test/ui-scenarios/**/*.scenario.ts",
+    "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.4.0-alpha.6"
+    "@dreamboard-games/sdk": "0.4.0-alpha.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.12",
+    "@types/node": "^24.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "csstype": "^3.1.3",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   },
   "packageManager": "pnpm@10.4.1",
-  "files": [
-    "reference-game.json",
-    "scenarios",
-    "src"
-  ]
+  "pnpm": {
+    "overrides": {
+      "react": "19.2.6",
+      "react-dom": "19.2.6",
+      "zod": "4.4.3"
+    }
+  }
 }

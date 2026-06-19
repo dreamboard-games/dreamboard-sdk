@@ -72,7 +72,8 @@ Scoring per player:
 
 ## Scenario Coverage
 
-`scenarios/coverage.json` carries explicit metadata for the Phase 01 lifecycle:
+`test/scenarios/` carries executable reducer coverage for the scorecard
+lifecycle:
 
 - `initial`: empty scorecards before the first automatic roll.
 - `dice`: round 1 roll `2 + 3 = 5` with legal spaces `cell-0-1` and
@@ -82,10 +83,9 @@ Scoring per player:
 - `invalid`: illegal non-matching cell and stale submission rejection.
 - `complete`: deterministic 8-round completion with score components.
 
-`src/reference-game.mjs` exports the same lifecycle as executable reference
-metadata through `scenarioMetadata`. The UI scenario remains the required mobile
-`Board.SquareGrid` mark-cell scenario and uses the existing board-space browser
-effect path.
+The UI scenarios in `test/ui-scenarios/` import those behavior scenarios. The
+required mobile `Board.SquareGrid` mark-cell scenario uses the generated
+workspace contract and the board-space browser effect path.
 
 Run the narrow source check from the repository root:
 

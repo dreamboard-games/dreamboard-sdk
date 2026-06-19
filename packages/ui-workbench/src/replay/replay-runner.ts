@@ -1,5 +1,6 @@
 import type { BrowserInteractionSnapshot } from "@dreamboard-games/sdk/browser-interaction";
 import {
+  assertSnapshotExpectation,
   assertStepExpectation,
   createPreparationInstruction,
   createStepDiagnostics,
@@ -8,7 +9,7 @@ import {
   type ReplayStepMeasurement,
   type ReplayStepDiagnostics,
   type WorkbenchReplayStepEvidence,
-  type WorkbenchSemanticReplayStep,
+  type WorkbenchScenarioReplayStep,
 } from "./replay-plan.js";
 
 export interface ReplayRunnerAdapter {
@@ -16,7 +17,7 @@ export interface ReplayRunnerAdapter {
   validate?(instruction: ReplayExecutionInstruction): Promise<void>;
   execute(instruction: ReplayExecutionInstruction): Promise<void>;
   flush(): Promise<void>;
-  waitForExpectedState?(step: WorkbenchSemanticReplayStep): Promise<void>;
+  waitForExpectedState?(step: WorkbenchScenarioReplayStep): Promise<void>;
   measure(
     instruction: ReplayExecutionInstruction,
   ): Promise<ReplayStepMeasurement>;
@@ -27,7 +28,7 @@ export class ReplayStepExecutionError extends Error {
   readonly cause: unknown;
 
   constructor(
-    step: WorkbenchSemanticReplayStep,
+    step: WorkbenchScenarioReplayStep,
     diagnostics: ReplayStepDiagnostics,
     cause: unknown,
   ) {
@@ -41,11 +42,39 @@ export class ReplayStepExecutionError extends Error {
 
 export async function runReplayStep(
   adapter: ReplayRunnerAdapter,
-  step: WorkbenchSemanticReplayStep,
+  step: WorkbenchScenarioReplayStep,
 ): Promise<WorkbenchReplayStepEvidence> {
   let diagnostics = createStepDiagnostics(step);
   try {
     let snapshot = await adapter.readSnapshot();
+    if (!("resolve" in step)) {
+      await adapter.flush();
+      await adapter.waitForExpectedState?.(step);
+      snapshot = await adapter.readSnapshot();
+      const measurement = await adapter.measure({
+        stepId: step.stepId,
+        source: {
+          kind: "actuator",
+          surface: "assert",
+          scopeId: "assert",
+          interactionKey: "assert",
+          interactionId: "assert",
+          actuator: {
+            actuatorId: "assert",
+            actuatorKind: "action",
+            intent: "assert",
+          },
+        },
+        execute: { kind: "activate" },
+      } as unknown as ReplayExecutionInstruction);
+      return assertSnapshotExpectation(
+        step,
+        snapshot,
+        measurement,
+        diagnostics,
+      );
+    }
+
     let plan = planReplayStep(snapshot, step);
     diagnostics = plan.diagnostics;
 
@@ -97,7 +126,7 @@ export async function runReplayStep(
 
 export async function runReplaySequence(
   adapter: ReplayRunnerAdapter,
-  steps: readonly WorkbenchSemanticReplayStep[],
+  steps: readonly WorkbenchScenarioReplayStep[],
 ): Promise<readonly WorkbenchReplayStepEvidence[]> {
   const evidence: WorkbenchReplayStepEvidence[] = [];
   for (const step of steps) {

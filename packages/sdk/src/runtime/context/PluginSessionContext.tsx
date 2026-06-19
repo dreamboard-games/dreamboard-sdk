@@ -16,11 +16,24 @@ import type { PluginSessionState } from "../types/runtime-api";
  * Context for plugin session metadata.
  * This context is provided by the RuntimeContext after receiving init message from parent.
  */
-export const PluginSessionContext = createContext<PluginSessionState | null>(
-  null,
-);
-const PluginSessionDescriptorContext =
-  createContext<PluginSessionDescriptor | null>(null);
+type PluginSessionContextRegistry = {
+  session: React.Context<PluginSessionState | null>;
+  descriptor: React.Context<PluginSessionDescriptor | null>;
+};
+
+const contextRegistryKey = "__dreamboardPluginSessionContext";
+const contextRegistryGlobal = globalThis as typeof globalThis & {
+  [contextRegistryKey]?: PluginSessionContextRegistry;
+};
+const contextRegistry =
+  contextRegistryGlobal[contextRegistryKey] ??
+  (contextRegistryGlobal[contextRegistryKey] = {
+    session: createContext<PluginSessionState | null>(null),
+    descriptor: createContext<PluginSessionDescriptor | null>(null),
+  });
+
+export const PluginSessionContext = contextRegistry.session;
+const PluginSessionDescriptorContext = contextRegistry.descriptor;
 
 function sessionStateFromClient(
   runtime: PluginRuntimeClient,

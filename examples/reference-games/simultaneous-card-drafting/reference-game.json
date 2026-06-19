@@ -1,8 +1,41 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "simultaneous-card-drafting",
   "displayName": "Simultaneous Card Drafting",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/smoke-initial-turn.scenario.ts",
+      "test/scenarios/draft-one-pick.scenario.ts",
+      "test/scenarios/five-player-draft.scenario.ts"
+    ],
+    "uiScenarios": ["test/ui-scenarios/lock-choice.mobile.scenario.ts"]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "simultaneous private card selection",
+      "draft hands passed between players",
+      "set-collection scoring across rounds"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when every player submits a private choice before shared reveal.",
+      "Use passed hands when private card state moves between seats after each draft.",
+      "Keep scoring helpers separate from reducer phase assembly when card categories have many scoring rules."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/drafting.ts",
+      "app/rules/scoring.ts",
+      "ui/App.tsx",
+      "test/scenarios/draft-one-pick.scenario.ts",
+      "test/ui-scenarios/lock-choice.mobile.scenario.ts"
+    ]
+  },
   "mechanics": [
     "simultaneous-selection",
     "card-drafting",

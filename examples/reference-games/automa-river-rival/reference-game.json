@@ -1,8 +1,49 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "automa-river-rival",
   "displayName": "Automa River Rival",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/claim-cargo.scenario.ts",
+      "test/scenarios/duplicate.scenario.ts",
+      "test/scenarios/reconnect.scenario.ts",
+      "test/scenarios/terminal.scenario.ts"
+    ],
+    "uiScenarios": [
+      "test/ui-scenarios/claim-cargo.mobile.scenario.ts",
+      "test/ui-scenarios/reconnect.mobile.scenario.ts",
+      "test/ui-scenarios/terminal.mobile.scenario.ts"
+    ]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "deterministic solo rival procedures",
+      "system-authored event logs",
+      "cooperative outcomes without fake player seats"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when a solo or cooperative game needs a predictable opponent that is ordinary game state.",
+      "Use system events to explain every automatic rival step after the human action resolves.",
+      "Use duplicate claim ids when a client might retry the same action after reconnect."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/human-turn.ts",
+      "app/phases/rival-procedure.ts",
+      "ui/App.tsx",
+      "test/scenarios/claim-cargo.scenario.ts",
+      "test/scenarios/duplicate.scenario.ts",
+      "test/scenarios/reconnect.scenario.ts",
+      "test/scenarios/terminal.scenario.ts",
+      "test/ui-scenarios/claim-cargo.mobile.scenario.ts"
+    ]
+  },
   "mechanics": [
     "automa-rival",
     "open-market",

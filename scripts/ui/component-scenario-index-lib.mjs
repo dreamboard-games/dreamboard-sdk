@@ -9,7 +9,7 @@ import {
 
 export const smokeWorkbenchScenarioIds = [
   "hearts.pass-three.mobile",
-  "hex-network-trading.place-route.desktop",
+  "hex-network-trading.build-trail.desktop",
   "worker-placement-tableau.place-worker.desktop",
 ];
 

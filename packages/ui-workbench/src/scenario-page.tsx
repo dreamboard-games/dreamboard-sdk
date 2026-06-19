@@ -208,7 +208,7 @@ export function ScenarioPage({
       ) : null}
 
       <div className="scenario-layout">
-        <section className="fixture-stage" aria-label="Scenario">
+        <section className="fixture-stage" aria-label="Scenario" tabIndex={0}>
           {status === "failed" ? (
             <div className="error-state">{error}</div>
           ) : Root && loaded ? (

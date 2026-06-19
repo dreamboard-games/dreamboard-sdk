@@ -1,0 +1,75 @@
+.harbor-fair {
+  color: #172033;
+  display: grid;
+  gap: 24px;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 32px;
+}
+
+.harbor-header {
+  border-bottom: 1px solid #d8dee8;
+  padding-bottom: 16px;
+}
+
+.eyebrow {
+  color: #336a5b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.harbor-fair h1,
+.harbor-fair h2 {
+  margin: 0 0 12px;
+}
+
+.market-grid,
+.row-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.market-card,
+.festival-row,
+.draft-action {
+  border: 1px solid #d8dee8;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.market-card {
+  background: #f7fbf4;
+}
+
+.draft-action {
+  align-items: start;
+  background: #f8fafc;
+}
+
+.draft-action button {
+  background: #245c4f;
+  border: 0;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  justify-self: start;
+  padding: 10px 14px;
+}
+
+.outcome-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.outcome-table th,
+.outcome-table td {
+  border-bottom: 1px solid #d8dee8;
+  padding: 10px;
+  text-align: left;
+}

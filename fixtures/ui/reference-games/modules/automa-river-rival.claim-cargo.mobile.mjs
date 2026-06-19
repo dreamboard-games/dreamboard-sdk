@@ -1,3 +1,27 @@
-export { Root } from "../../../../examples/reference-games/automa-river-rival/src/ui.mjs";
+import * as React from "react";
+import * as DreamboardRuntime from "@dreamboard-games/sdk/runtime/primitives";
+import * as PluginRuntimeContract from "@dreamboard-games/plugin-runtime-contract";
+import * as ui from "../../../../examples/reference-games/automa-river-rival/ui/App.tsx";
+
+void React;
+void DreamboardRuntime;
+void PluginRuntimeContract;
+
+const Root = ui.Root ?? ui.default ?? ui.App;
+if (!Root) {
+  throw new Error(
+    "Reference game UI entrypoint must export Root, default, or App.",
+  );
+}
+
+function ReferenceGameRoot(props) {
+  return React.createElement(
+    "div",
+    { "data-reference-game": "reference-game" },
+    React.createElement(Root, props),
+  );
+}
+
+export { ReferenceGameRoot as Root };
 export const uiContractFingerprint =
-  "sha256:bf0673db11ea66232cd225092a6e864e4b3958fc55028d837cda4e0c4d8684a8";
+  "sha256:c23bb79fd5980142327c0a05bd7ff569f058a352ce409b20aaff359d34f2bb59";

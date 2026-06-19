@@ -51,6 +51,111 @@
         "runtime-submit"
       ]
     },
+    "Board.HexGrid": {
+      "id": "Board.HexGrid",
+      "kind": "component",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/board.tsx",
+        "packages/sdk/src/runtime/workspace-contract/index.ts",
+        "packages/sdk/src/ui/components/board/HexGrid.tsx",
+        "packages/sdk/src/ui/components/board/hex-board-view.ts"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": [
+        "click",
+        "keyboard",
+        "responsive-layout",
+        "runtime-draft",
+        "runtime-submit"
+      ],
+      "scenarioIds": ["hex-network-trading.build-trail.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "keyboard",
+        "reduced-motion",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "Board.Space": {
+      "id": "Board.Space",
+      "kind": "primitive",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/board.tsx",
+        "packages/sdk/src/runtime/workspace-contract/index.ts"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": [
+        "click",
+        "keyboard",
+        "runtime-draft",
+        "runtime-submit"
+      ],
+      "scenarioIds": [
+        "roll-and-write-scorecard.mark-cell.drafted.mobile",
+        "roll-and-write-scorecard.mark-cell.invalid.mobile",
+        "roll-and-write-scorecard.mark-cell.mobile",
+        "roll-and-write-scorecard.mark-cell.rolled.mobile",
+        "roll-and-write-scorecard.mark-cell.submitted.mobile",
+        "solo-countdown-puzzle.repair-beacon.mobile",
+        "worker-placement-tableau.place-worker.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "keyboard",
+        "reduced-motion",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "Card": {
+      "id": "Card",
+      "kind": "component",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/workspace-contract/index.ts",
+        "packages/sdk/src/ui/components/Card.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
+      "scenarioIds": [
+        "deck-building-market.buy-flow.desktop",
+        "hearts.pass-three.mobile",
+        "multiplayer-ranking-and-ties.draft-stall.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-draft",
+        "runtime-submit"
+      ]
+    },
+    "CardCollection": {
+      "id": "CardCollection",
+      "kind": "component",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/zone.tsx",
+        "packages/sdk/src/runtime/workspace-contract/index.ts"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
+      "scenarioIds": [
+        "deck-building-market.buy-flow.desktop",
+        "multiplayer-ranking-and-ties.draft-stall.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
+    },
     "CardDragSurface": {
       "id": "CardDragSurface",
       "kind": "component",
@@ -66,14 +171,8 @@
         "hands-handview--drag-to-target-surface-layout"
       ],
       "requiredCapabilities": ["keyboard", "pointer-drag", "touch-drag"],
-      "scenarioIds": ["hex-network-trading.place-route.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "pointer-drag",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "CardDropTargetView": {
       "id": "CardDropTargetView",
@@ -90,14 +189,8 @@
         "hands-handview--drag-to-target-surface-layout"
       ],
       "requiredCapabilities": ["keyboard", "pointer-drag", "runtime-draft"],
-      "scenarioIds": ["hex-network-trading.place-route.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "pointer-drag",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "CardFace": {
       "id": "CardFace",
@@ -115,16 +208,12 @@
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
       "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
         "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -141,17 +230,11 @@
       ],
       "storyIds": ["resource-status--cost"],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": [
-        "hex-network-trading.place-route.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "worker-placement-tableau.place-worker.desktop"
-      ],
+      "scenarioIds": ["ui-scenarios.resources-cost.desktop"],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
         "reduced-motion",
-        "runtime-draft",
         "runtime-submit"
       ]
     },
@@ -202,17 +285,11 @@
       "storyIds": [],
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.duplicate.mobile",
-        "automa-river-rival.claim-cargo.initial.mobile",
-        "automa-river-rival.claim-cargo.live-update.mobile",
         "automa-river-rival.claim-cargo.mobile",
         "automa-river-rival.claim-cargo.reconnect.mobile",
         "automa-river-rival.claim-cargo.terminal.mobile",
-        "solo-countdown-puzzle.repair-beacon.initial.mobile",
-        "solo-countdown-puzzle.repair-beacon.live-update.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
-        "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.terminal.mobile"
+        "solo-countdown-puzzle.reconnect.mobile",
+        "solo-countdown-puzzle.repair-beacon.mobile"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -239,6 +316,31 @@
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [],
       "capabilities": []
+    },
+    "Hand": {
+      "id": "Hand",
+      "kind": "component",
+      "owner": "sdk-runtime",
+      "sourceFiles": [
+        "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+        "packages/sdk/src/runtime/workspace-contract/index.ts",
+        "packages/sdk/src/ui/components/HandView.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": [
+        "click",
+        "keyboard",
+        "runtime-draft",
+        "runtime-submit"
+      ],
+      "scenarioIds": ["hearts.pass-three.mobile"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-draft",
+        "runtime-submit"
+      ]
     },
     "HandView": {
       "id": "HandView",
@@ -268,16 +370,12 @@
         "touch-drag"
       ],
       "scenarioIds": [
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
         "ui-scenarios.cards-hand.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -312,14 +410,8 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["keyboard", "runtime-draft"],
-      "scenarioIds": ["worker-placement-tableau.place-worker.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "InteractionSubmit": {
       "id": "InteractionSubmit",
@@ -331,40 +423,27 @@
       "storyIds": [],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.duplicate.mobile",
-        "automa-river-rival.claim-cargo.initial.mobile",
-        "automa-river-rival.claim-cargo.live-update.mobile",
         "automa-river-rival.claim-cargo.mobile",
         "automa-river-rival.claim-cargo.reconnect.mobile",
         "automa-river-rival.claim-cargo.terminal.mobile",
-        "deck-building-market.buy-card.desktop",
+        "deck-building-market.buy-flow.desktop",
         "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
+        "hex-network-trading.build-trail.desktop",
         "multiplayer-ranking-and-ties.draft-stall.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
         "roll-and-write-scorecard.mark-cell.drafted.mobile",
-        "roll-and-write-scorecard.mark-cell.initial.mobile",
         "roll-and-write-scorecard.mark-cell.invalid.mobile",
         "roll-and-write-scorecard.mark-cell.mobile",
         "roll-and-write-scorecard.mark-cell.rolled.mobile",
         "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "roll-and-write-scorecard.mark-cell.terminal.mobile",
         "simultaneous-card-drafting.lock-choice.mobile",
-        "solo-countdown-puzzle.repair-beacon.initial.mobile",
-        "solo-countdown-puzzle.repair-beacon.live-update.mobile",
+        "solo-countdown-puzzle.reconnect.mobile",
         "solo-countdown-puzzle.repair-beacon.mobile",
-        "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.terminal.mobile",
         "worker-placement-tableau.place-worker.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
         "keyboard",
-        "pointer-drag",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -389,6 +468,19 @@
         "runtime-submit"
       ]
     },
+    "Outcome": {
+      "id": "Outcome",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["runtime-submit"],
+      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "capabilities": ["accessibility-scan", "reduced-motion"]
+    },
     "OutcomeDialog": {
       "id": "OutcomeDialog",
       "kind": "component",
@@ -400,19 +492,8 @@
       ],
       "storyIds": ["resource-status--outcomedialog-winner"],
       "requiredCapabilities": ["click", "runtime-submit"],
-      "scenarioIds": [
-        "multiplayer-ranking-and-ties.draft-stall.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Panel": {
       "id": "Panel",
@@ -426,15 +507,11 @@
       "storyIds": ["panels--compound-panel"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.duplicate.mobile",
-        "automa-river-rival.claim-cargo.initial.mobile",
-        "automa-river-rival.claim-cargo.live-update.mobile",
         "automa-river-rival.claim-cargo.mobile",
         "automa-river-rival.claim-cargo.reconnect.mobile",
         "automa-river-rival.claim-cargo.terminal.mobile",
-        "deck-building-market.buy-card.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
+        "multiplayer-ranking-and-ties.draft-stall.desktop",
+        "multiplayer-ranking-and-ties.tie-break.desktop",
         "roll-and-write-scorecard.mark-cell.drafted.mobile",
         "roll-and-write-scorecard.mark-cell.initial.mobile",
         "roll-and-write-scorecard.mark-cell.invalid.mobile",
@@ -443,11 +520,8 @@
         "roll-and-write-scorecard.mark-cell.submitted.mobile",
         "roll-and-write-scorecard.mark-cell.terminal.mobile",
         "simultaneous-card-drafting.lock-choice.mobile",
-        "solo-countdown-puzzle.repair-beacon.initial.mobile",
-        "solo-countdown-puzzle.repair-beacon.live-update.mobile",
+        "solo-countdown-puzzle.reconnect.mobile",
         "solo-countdown-puzzle.repair-beacon.mobile",
-        "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.terminal.mobile",
         "ui-scenarios.boards-slot.desktop",
         "ui-scenarios.cards-hand.desktop",
         "ui-scenarios.dice-result.desktop",
@@ -461,11 +535,23 @@
         "accessibility-scan",
         "click",
         "keyboard",
-        "pointer-drag",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
       ]
+    },
+    "PlayerScore": {
+      "id": "PlayerScore",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["responsive-layout"],
+      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "PluginRuntime": {
       "id": "PluginRuntime",
@@ -480,18 +566,10 @@
       "requiredCapabilities": ["runtime-draft", "runtime-submit"],
       "scenarioIds": [
         "automa-river-rival.claim-cargo.mobile",
-        "deck-building-market.buy-card.desktop",
+        "deck-building-market.buy-flow.desktop",
         "hearts.pass-three.mobile",
-        "hex-network-trading.place-route.desktop",
-        "roll-and-write-scorecard.mark-cell.drafted.mobile",
-        "roll-and-write-scorecard.mark-cell.initial.mobile",
-        "roll-and-write-scorecard.mark-cell.invalid.mobile",
-        "roll-and-write-scorecard.mark-cell.mobile",
-        "roll-and-write-scorecard.mark-cell.rolled.mobile",
-        "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "roll-and-write-scorecard.mark-cell.terminal.mobile",
+        "hex-network-trading.build-trail.desktop",
         "simultaneous-card-drafting.lock-choice.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
         "ui-scenarios.boards-slot.desktop",
         "ui-scenarios.cards-hand.desktop",
         "ui-scenarios.dice-result.desktop",
@@ -504,7 +582,6 @@
         "accessibility-scan",
         "click",
         "keyboard",
-        "pointer-drag",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -548,6 +625,25 @@
         "runtime-submit"
       ]
     },
+    "Resource": {
+      "id": "Resource",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/CostDisplay.tsx",
+        "packages/sdk/src/ui/components/ResourceCounter.tsx",
+        "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx"
+      ],
+      "storyIds": [],
+      "requiredCapabilities": ["responsive-layout"],
+      "scenarioIds": ["deck-building-market.buy-flow.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
+    },
     "ResourceCounter": {
       "id": "ResourceCounter",
       "kind": "component",
@@ -563,14 +659,13 @@
       ],
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [
-        "hex-network-trading.place-route.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "worker-placement-tableau.place-worker.desktop"
+        "hex-network-trading.build-trail.desktop",
+        "ui-scenarios.resources-cost.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
+        "keyboard",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -623,14 +718,12 @@
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
       "scenarioIds": [
         "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.zones-staging.desktop",
-        "worker-placement-tableau.place-worker.desktop"
+        "ui-scenarios.zones-staging.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
         "reduced-motion",
-        "runtime-draft",
         "runtime-submit"
       ]
     },
@@ -660,12 +753,7 @@
         "roll-and-write-scorecard.mark-cell.mobile",
         "roll-and-write-scorecard.mark-cell.rolled.mobile",
         "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "roll-and-write-scorecard.mark-cell.terminal.mobile",
-        "solo-countdown-puzzle.repair-beacon.initial.mobile",
-        "solo-countdown-puzzle.repair-beacon.live-update.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
-        "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.terminal.mobile"
+        "roll-and-write-scorecard.mark-cell.terminal.mobile"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -709,19 +797,21 @@
       ],
       "storyIds": ["resource-status--outcomedialog-winner"],
       "requiredCapabilities": ["click", "runtime-submit"],
-      "scenarioIds": [
-        "multiplayer-ranking-and-ties.draft-stall.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop"
+      "scenarioIds": [],
+      "capabilities": []
+    },
+    "Table": {
+      "id": "Table",
+      "kind": "component",
+      "owner": "sdk-ui",
+      "sourceFiles": [
+        "packages/sdk/src/ui/components/Panel.tsx",
+        "packages/sdk/src/ui/stories/Panels.stories.tsx"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "storyIds": [],
+      "requiredCapabilities": ["responsive-layout"],
+      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "ThemedButton": {
       "id": "ThemedButton",
@@ -751,91 +841,21 @@
     }
   },
   "scenarios": {
-    "automa-river-rival.claim-cargo.duplicate.mobile": {
-      "id": "automa-river-rival.claim-cargo.duplicate.mobile",
-      "title": "Automa River Rival: duplicate automa branch preserves committed rival events",
-      "gameId": "automa-river-rival",
-      "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/duplicate.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.duplicate.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.duplicate.mobile.mjs",
-      "fixtureDigest": "sha256:a02ac079f08f886d850abba6f257d0122407212d13a2340682278281b095a9b1",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
-    },
-    "automa-river-rival.claim-cargo.initial.mobile": {
-      "id": "automa-river-rival.claim-cargo.initial.mobile",
-      "title": "Automa River Rival: initial automa branch shows rival state without fake seats",
-      "gameId": "automa-river-rival",
-      "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/initial.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.initial.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.initial.mobile.mjs",
-      "fixtureDigest": "sha256:bb69abb7a908109221795c27ca58d9741f0dcb84ad0f4c9321fb5ed839d14ae9",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
-    },
-    "automa-river-rival.claim-cargo.live-update.mobile": {
-      "id": "automa-river-rival.claim-cargo.live-update.mobile",
-      "title": "Automa River Rival: live automa branch appends rival action events",
-      "gameId": "automa-river-rival",
-      "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/live-update.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.live-update.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.live-update.mobile.mjs",
-      "fixtureDigest": "sha256:1d98afe1ef5640c7e349ae7cab3420f56d1bf1daa04fc17f32790de573872bc9",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
-    },
     "automa-river-rival.claim-cargo.mobile": {
       "id": "automa-river-rival.claim-cargo.mobile",
-      "title": "Automa River Rival: human claim triggers deterministic rival claim-highest resolution",
+      "title": "Automa River Rival: claim cargo resolves rival procedure",
       "gameId": "automa-river-rival",
       "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/claim-cargo.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/automa-river-rival/app/game.ts",
+        "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
+        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/manifest.ts",
+        "examples/reference-games/automa-river-rival/reference-game.json",
+        "examples/reference-games/automa-river-rival/rule.md",
+        "examples/reference-games/automa-river-rival/test/scenarios/claim-cargo.scenario.ts",
+        "examples/reference-games/automa-river-rival/test/ui-scenarios/claim-cargo.mobile.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx",
+        "examples/reference-games/automa-river-rival/ui/interaction-routes.tsx"
       ],
       "contracts": [
         "GameEventLog",
@@ -852,20 +872,22 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.claim-cargo.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.claim-cargo.mobile.mjs",
-      "fixtureDigest": "sha256:a978937d8e8467db6119be170de8072749bc83989e9d0d66e9a4c4c306b42196",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
+      "fixtureDigest": "sha256:5ca635b1df021faf57a410c80d9e73d48619f032eccf1e75c373fcfdff015a20",
+      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
     },
     "automa-river-rival.claim-cargo.reconnect.mobile": {
       "id": "automa-river-rival.claim-cargo.reconnect.mobile",
-      "title": "Automa River Rival: reconnect automa branch restores rival event history",
+      "title": "Automa River Rival: reconnect restores rival event history",
       "gameId": "automa-river-rival",
       "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/reconnect.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/automa-river-rival/app/game.ts",
+        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/manifest.ts",
+        "examples/reference-games/automa-river-rival/reference-game.json",
+        "examples/reference-games/automa-river-rival/rule.md",
+        "examples/reference-games/automa-river-rival/test/scenarios/reconnect.scenario.ts",
+        "examples/reference-games/automa-river-rival/test/ui-scenarios/reconnect.mobile.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx"
       ],
       "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
       "capabilities": [
@@ -877,20 +899,23 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.claim-cargo.reconnect.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.claim-cargo.reconnect.mobile.mjs",
-      "fixtureDigest": "sha256:331f0ced1053071465b2b88469c91a52254ca0d9ee7725c8e3d0bdd9709c526e",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
+      "fixtureDigest": "sha256:5c9a6c4b6bf9558640a69d955a4a7ff2312d78c84ae1a80ed7b0c18ae2ec4324",
+      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
     },
     "automa-river-rival.claim-cargo.terminal.mobile": {
       "id": "automa-river-rival.claim-cargo.terminal.mobile",
-      "title": "Automa River Rival: terminal automa branch carries cooperative outcome evidence",
+      "title": "Automa River Rival: terminal cooperative outcome evidence",
       "gameId": "automa-river-rival",
       "sourceFiles": [
-        "examples/reference-games/automa-river-rival/scenarios/coverage.json",
-        "examples/reference-games/automa-river-rival/src/reference-game.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/automa-river-rival/src/scenarios/terminal.scenario.mjs",
-        "examples/reference-games/automa-river-rival/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/automa-river-rival/app/game.ts",
+        "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
+        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/manifest.ts",
+        "examples/reference-games/automa-river-rival/reference-game.json",
+        "examples/reference-games/automa-river-rival/rule.md",
+        "examples/reference-games/automa-river-rival/test/scenarios/terminal.scenario.ts",
+        "examples/reference-games/automa-river-rival/test/ui-scenarios/terminal.mobile.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx"
       ],
       "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
       "capabilities": [
@@ -902,26 +927,32 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.claim-cargo.terminal.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.claim-cargo.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:ebe56cde80f1d15170fe135beab63332e0dd5ecc9a5bda2ea8e187019855a8a9",
-      "renderModuleDigest": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450"
+      "fixtureDigest": "sha256:bbdb3e32a9bc8f2fa8450f26c7010c233ab0d7ff3e5567893fa8a9badc882833",
+      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
     },
-    "deck-building-market.buy-card.desktop": {
-      "id": "deck-building-market.buy-card.desktop",
-      "title": "Deck Building Market: market row exposes affordable and unavailable cards",
+    "deck-building-market.buy-flow.desktop": {
+      "id": "deck-building-market.buy-flow.desktop",
+      "title": "Deck Building Market: desktop market buy flow",
       "gameId": "deck-building-market",
       "sourceFiles": [
-        "examples/reference-games/deck-building-market/scenarios/coverage.json",
-        "examples/reference-games/deck-building-market/src/reference-game.mjs",
-        "examples/reference-games/deck-building-market/src/scenarios/buy-card.scenario.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/shared/reference-ui.mjs"
+        "examples/reference-games/deck-building-market/app/game.ts",
+        "examples/reference-games/deck-building-market/app/phases/player-turn/index.ts",
+        "examples/reference-games/deck-building-market/app/phases/player-turn/interactions/buy.ts",
+        "examples/reference-games/deck-building-market/manifest.ts",
+        "examples/reference-games/deck-building-market/reference-game.json",
+        "examples/reference-games/deck-building-market/rule.md",
+        "examples/reference-games/deck-building-market/test/scenarios/player-two-buy-ready.scenario.ts",
+        "examples/reference-games/deck-building-market/test/ui-scenarios/buy-flow.desktop.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/App.tsx",
+        "examples/reference-games/deck-building-market/ui/interaction-routes.tsx",
+        "examples/reference-games/deck-building-market/ui/surfaces.ts"
       ],
       "contracts": [
-        "CardFace",
-        "HandView",
+        "Card",
+        "CardCollection",
         "InteractionSubmit",
-        "Panel",
-        "PluginRuntime"
+        "PluginRuntime",
+        "Resource"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -930,29 +961,27 @@
         "runtime-submit"
       ],
       "viewportTags": ["desktop"],
-      "fixtureFile": "deck-building-market.buy-card.desktop.fixture.json",
-      "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "fixtureDigest": "sha256:c6fb9d0c9fb1a110b25f7ae2b3bb97c45caecf98728e337f42c7dabbf4954125",
-      "renderModuleDigest": "sha256:4b771b14b69046de0935c5da7b795fb52c14650b8adf8604fe5fdc3a3d800f3d"
+      "fixtureFile": "deck-building-market.buy-flow.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.buy-flow.desktop.mjs",
+      "fixtureDigest": "sha256:e597d3b316b741001a5ecbdf84e5049a3a7fd53f0e0fe24bc0d87fd5473147ce",
+      "renderModuleDigest": "sha256:01e50fb548d0fb0b425b0e57efd419a960c3dc530dfb65f22665ec12b1e18019"
     },
     "hearts.pass-three.mobile": {
       "id": "hearts.pass-three.mobile",
-      "title": "Hearts: player hand remains private before pass reveal",
+      "title": "Hearts: mobile pass-three hand action",
       "gameId": "hearts",
       "sourceFiles": [
-        "examples/reference-games/hearts/scenarios/coverage.json",
-        "examples/reference-games/hearts/src/reference-game.mjs",
-        "examples/reference-games/hearts/src/scenarios/pass-three.scenario.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/shared/reference-ui.mjs"
+        "examples/reference-games/hearts/app/game.ts",
+        "examples/reference-games/hearts/app/phases/passing.ts",
+        "examples/reference-games/hearts/manifest.ts",
+        "examples/reference-games/hearts/reference-game.json",
+        "examples/reference-games/hearts/rule.md",
+        "examples/reference-games/hearts/test/scenarios/smoke-initial-hand.scenario.ts",
+        "examples/reference-games/hearts/test/ui-scenarios/pass-three.mobile.scenario.ts",
+        "examples/reference-games/hearts/ui/App.tsx",
+        "examples/reference-games/hearts/ui/interaction-routes.tsx"
       ],
-      "contracts": [
-        "CardFace",
-        "HandView",
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime"
-      ],
+      "contracts": ["Card", "Hand", "InteractionSubmit", "PluginRuntime"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -963,56 +992,64 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.pass-three.mobile.fixture.json",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "fixtureDigest": "sha256:33de77d6abdacca586159463fbe71673dbb463e270e64029cccfba789a7edefa",
-      "renderModuleDigest": "sha256:22fe20ac2966b6bc8e8dc5e3983a44ed9b08cffe8759e614256416a1a21bfd10"
+      "fixtureDigest": "sha256:d898e13206ea0007901589c5750a439c762c7790fce3d405ba3fb35f1f4ca8db",
+      "renderModuleDigest": "sha256:dd84e73c64f555c56b4ebf3fb3eac67218322046e192aea45417bddcde9d9730"
     },
-    "hex-network-trading.place-route.desktop": {
-      "id": "hex-network-trading.place-route.desktop",
-      "title": "Hex Network Trading: route card drags to an eligible edge before commit",
+    "hex-network-trading.build-trail.desktop": {
+      "id": "hex-network-trading.build-trail.desktop",
+      "title": "Hex Network Trading: desktop trail build target",
       "gameId": "hex-network-trading",
       "sourceFiles": [
-        "examples/reference-games/hex-network-trading/scenarios/coverage.json",
-        "examples/reference-games/hex-network-trading/src/reference-game.mjs",
-        "examples/reference-games/hex-network-trading/src/scenarios/place-route.scenario.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/shared/reference-ui.mjs"
+        "examples/reference-games/hex-network-trading/app/game.ts",
+        "examples/reference-games/hex-network-trading/app/phases/player-turn/build.ts",
+        "examples/reference-games/hex-network-trading/app/phases/player-turn/index.ts",
+        "examples/reference-games/hex-network-trading/manifest.ts",
+        "examples/reference-games/hex-network-trading/reference-game.json",
+        "examples/reference-games/hex-network-trading/rule.md",
+        "examples/reference-games/hex-network-trading/test/scenarios/build-trail-ready.scenario.ts",
+        "examples/reference-games/hex-network-trading/test/ui-scenarios/build-trail.desktop.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx",
+        "examples/reference-games/hex-network-trading/ui/frontier-trails-board.tsx",
+        "examples/reference-games/hex-network-trading/ui/interaction-routes.tsx"
       ],
       "contracts": [
-        "CardDragSurface",
-        "CardDropTargetView",
-        "CardFace",
-        "CostDisplay",
-        "HandView",
+        "Board.HexGrid",
         "InteractionSubmit",
-        "Panel",
         "PluginRuntime",
         "ResourceCounter"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
+        "keyboard",
         "reduced-motion",
+        "runtime-draft",
         "runtime-submit"
       ],
       "viewportTags": ["desktop"],
-      "fixtureFile": "hex-network-trading.place-route.desktop.fixture.json",
-      "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "fixtureDigest": "sha256:fb66b4e51094f14d51e7936684aa975b2e673c420ea33fb6633f243f131a8846",
-      "renderModuleDigest": "sha256:6b108aebccc2aed469d086a46ca60e409c580c7bd78102240176be48e59d84d1"
+      "fixtureFile": "hex-network-trading.build-trail.desktop.fixture.json",
+      "renderModule": "modules/hex-network-trading.build-trail.desktop.mjs",
+      "fixtureDigest": "sha256:6a4fc2b5709056ea22de4689d137c46a11ce11d57bdf52ca526eeb63a21ad57b",
+      "renderModuleDigest": "sha256:2a62242024d1471f27a98496a9f29bddbcbf99b8357121658eb8d92a23632ec2"
     },
     "multiplayer-ranking-and-ties.draft-stall.desktop": {
       "id": "multiplayer-ranking-and-ties.draft-stall.desktop",
-      "title": "Multiplayer Ranking And Ties: players draft one public stall card in seat order",
+      "title": "Multiplayer Ranking And Ties: draft a stall from the market",
       "gameId": "multiplayer-ranking-and-ties",
       "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/draft-stall.scenario.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/draft-flow.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/drafting.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/scenarios.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/manifest.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+        "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/draft-stall-ready.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/draft-stall.desktop.scenario.tsx",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/interaction-routes.tsx"
       ],
-      "contracts": ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
+      "contracts": ["Card", "CardCollection", "InteractionSubmit", "Panel"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -1022,127 +1059,49 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.desktop.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs",
-      "fixtureDigest": "sha256:5682d635fe000bc1cbd749e6851eb0d9cc367c53d549713851de79d7d7d57082",
-      "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477"
+      "fixtureDigest": "sha256:34fe94012cddc1421a62145912c9353ee541e08c4858cb984826bff233dc4c58",
+      "renderModuleDigest": "sha256:45f22c85a209346966f3501872ea6a3f688c15f1649a1bc6e0d4da925237c084"
     },
-    "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop": {
-      "id": "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
-      "title": "Multiplayer Ranking And Ties: reconnect branch preserves scoreless cancellation outcome evidence",
+    "multiplayer-ranking-and-ties.tie-break.desktop": {
+      "id": "multiplayer-ranking-and-ties.tie-break.desktop",
+      "title": "Multiplayer Ranking And Ties: tie-break outcome evidence",
       "gameId": "multiplayer-ranking-and-ties",
       "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/reconnect.scenario.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game-contract.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/draft-flow.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/scenarios.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/manifest.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+        "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/outcomes.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/tie-break.desktop.scenario.tsx",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
       ],
-      "contracts": ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
+      "contracts": ["Outcome", "Panel", "PlayerScore", "Table"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.mjs",
-      "fixtureDigest": "sha256:d9d87e01c4038e4c72985b5319a384f8196e126c6bef27af8179c267245a6126",
-      "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477"
-    },
-    "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop": {
-      "id": "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
-      "title": "Multiplayer Ranking And Ties: tie-break branch projects complete-set evidence before coins",
-      "gameId": "multiplayer-ranking-and-ties",
-      "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/tie-break.scenario.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.mjs",
-      "fixtureDigest": "sha256:d990523ea39dc27d7e9a78990a55919f8eb6e04989aff7441e8a9e2a62af4af1",
-      "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477"
-    },
-    "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop": {
-      "id": "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
-      "title": "Multiplayer Ranking And Ties: true tie branch keeps equal first-place players at rank one",
-      "gameId": "multiplayer-ranking-and-ties",
-      "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/true-tie.scenario.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.mjs",
-      "fixtureDigest": "sha256:9bf8d2a27ff4177a8ae9047a643ade827dd01e23d9822d6dffff479e97af7a3f",
-      "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477"
-    },
-    "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop": {
-      "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
-      "title": "Multiplayer Ranking And Ties: unique winner branch projects reducer-owned first-place evidence",
-      "gameId": "multiplayer-ranking-and-ties",
-      "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/unique-winner.scenario.mjs",
-        "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
-      ],
-      "contracts": ["InteractionSubmit", "OutcomeDialog", "StandingsTable"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.mjs",
-      "fixtureDigest": "sha256:eb5a2d675c5be6b974846a6099d08faacd20f4d73aefde0ca7e65c00529bdfe8",
-      "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477"
+      "fixtureFile": "multiplayer-ranking-and-ties.tie-break.desktop.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.tie-break.desktop.mjs",
+      "fixtureDigest": "sha256:f8646f0b3b9f47053bf8ba8e6c92528f9941d26f108239d5e7aa25fa89d11cff",
+      "renderModuleDigest": "sha256:fffe26bc297dfadff32f7ba1d6c3967c99689b71944cd83bbf96a65c27796ebb"
     },
     "roll-and-write-scorecard.mark-cell.drafted.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.drafted.mobile",
-      "title": "Roll And Write Scorecard: drafted scorecard state preserves a pending mark before submit",
+      "title": "Roll And Write Scorecard: drafted mobile mark preview",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/drafted.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/drafted.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.drafted.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -1154,90 +1113,70 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.drafted.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs",
-      "fixtureDigest": "sha256:fb7c0eb036d865ea147e2f0d9ebb82e4387b816cba5cb134772a428ccfde542b",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:99a4524a6989d6e0626ef996ebaa18b6c7de7b9154524bc755017dead89321f9",
+      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
     },
     "roll-and-write-scorecard.mark-cell.initial.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.initial.mobile",
-      "title": "Roll And Write Scorecard: initial scorecard state appears before the first seeded roll",
+      "title": "Roll And Write Scorecard: initial mobile scorecard",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/initial.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/initial.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "contracts": ["Panel", "SquareGrid"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
-      "fixtureDigest": "sha256:7db7abf6c24a861527d43471a396e59983679a02020edc7d072be4aa493d13bb",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:fc416877f87e6235c26f2aa10a9657f20863a3a52f4732c6d3b01d9986487463",
+      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
     },
     "roll-and-write-scorecard.mark-cell.invalid.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.invalid.mobile",
-      "title": "Roll And Write Scorecard: invalid scorecard state retains reducer-owned error evidence",
+      "title": "Roll And Write Scorecard: mobile invalid target boundary",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/invalid.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/invalid.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.invalid.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.invalid.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.invalid.mobile.mjs",
-      "fixtureDigest": "sha256:4a8823d94b1c77ef2ccb412a5695256727ba473b98289a0470f79b21858d7132",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:cd508b7f3f93605becbc7b0dfd2525b290772db558d3be025ef69d3216ced82c",
+      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
     },
     "roll-and-write-scorecard.mark-cell.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.mobile",
-      "title": "Roll And Write Scorecard: initial state starts before the first seeded roll",
+      "title": "Roll And Write Scorecard: mobile scorecard mark cell",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/mark-cell.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -1249,27 +1188,25 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-      "fixtureDigest": "sha256:e00155f1e19d99f1fe800cd20bb0d30fecc38b37d77140db7ba5f114dc6d023f",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:d5604d816427b08c85fbb6927a9ff05a0d21e665426156ff65873cda273ac3b9",
+      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
     },
     "roll-and-write-scorecard.mark-cell.rolled.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.rolled.mobile",
-      "title": "Roll And Write Scorecard: rolled scorecard state highlights legal cells for the seeded total",
+      "title": "Roll And Write Scorecard: rolled mobile legal targets",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/rolled.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/rolled.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.rolled.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -1281,27 +1218,25 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.rolled.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.rolled.mobile.mjs",
-      "fixtureDigest": "sha256:51848ce5a2ecee2364b90fef1eb3ae085c7801e8e81d7c78250415c1d20426f5",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:1f300f9158b3dd599744a3b7796fc6eb694011ae75734838a7899fe757cc1ef7",
+      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
     },
     "roll-and-write-scorecard.mark-cell.submitted.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.submitted.mobile",
-      "title": "Roll And Write Scorecard: submitted scorecard state advances seat-order resolution",
+      "title": "Roll And Write Scorecard: submitted mobile mark evidence",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/submitted.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.submitted.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -1313,51 +1248,46 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.submitted.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.submitted.mobile.mjs",
-      "fixtureDigest": "sha256:d089683d81d870870256d15ce2ce4ebe0d0135e878533be8e48018ce98dfbf38",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:ab45f4bd3f14015bf035ce9f22cb6714db1413c880704c9a7f78e67a5a26a92f",
+      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
     },
     "roll-and-write-scorecard.mark-cell.terminal.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.terminal.mobile",
-      "title": "Roll And Write Scorecard: terminal scorecard state carries reducer-owned scoring evidence",
+      "title": "Roll And Write Scorecard: terminal mobile scoring evidence",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-        "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/scenarios/terminal.scenario.mjs",
-        "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-        "examples/reference-games/shared/reference-reducer.mjs"
+        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+        "examples/reference-games/roll-and-write-scorecard/rule.md",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/terminal.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
-      "contracts": [
-        "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "contracts": ["Panel", "SquareGrid"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:8ecd9f5c74166e357f3e1966bd84624fb84462a326b0210317733185581f9290",
-      "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886"
+      "fixtureDigest": "sha256:6d3d253d51e27bfc195207f936f2cf9a34741621259d7a17f488641b0b62aca9",
+      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
     },
     "simultaneous-card-drafting.lock-choice.mobile": {
       "id": "simultaneous-card-drafting.lock-choice.mobile",
-      "title": "Simultaneous Card Drafting: choice remains private until every player locks",
+      "title": "Simultaneous Card Drafting: mobile locked draft choice",
       "gameId": "simultaneous-card-drafting",
       "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/shared/reference-ui.mjs",
-        "examples/reference-games/simultaneous-card-drafting/scenarios/coverage.json",
-        "examples/reference-games/simultaneous-card-drafting/src/reference-game.mjs",
-        "examples/reference-games/simultaneous-card-drafting/src/scenarios/lock-choice.scenario.mjs"
+        "examples/reference-games/simultaneous-card-drafting/app/game.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/phases/drafting.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/rules/scoring.ts",
+        "examples/reference-games/simultaneous-card-drafting/manifest.ts",
+        "examples/reference-games/simultaneous-card-drafting/reference-game.json",
+        "examples/reference-games/simultaneous-card-drafting/rule.md",
+        "examples/reference-games/simultaneous-card-drafting/test/scenarios/draft-one-pick.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/lock-choice.mobile.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/ui/App.tsx",
+        "examples/reference-games/simultaneous-card-drafting/ui/interaction-routes.tsx"
       ],
       "contracts": [
         "CardFace",
@@ -1370,85 +1300,56 @@
         "accessibility-scan",
         "click",
         "reduced-motion",
+        "runtime-draft",
         "runtime-submit"
       ],
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "fixtureDigest": "sha256:eba745feadfd5c5fabaa224bd72843b091d21c886e1dbb142ac1ab50bf9fa38c",
-      "renderModuleDigest": "sha256:885ccadb21037f474452aa723994a63c024ac2c2309883e19cc36f01ece08cc5"
+      "fixtureDigest": "sha256:a5abb3fc23b04b45c2531d79f9a4f447cd72c51eddd9324933665696f7ec9625",
+      "renderModuleDigest": "sha256:db7509d3babb583215bd302f68e18c69af8cf566cd58d862dd9a9f308b1a4237"
     },
-    "solo-countdown-puzzle.repair-beacon.initial.mobile": {
-      "id": "solo-countdown-puzzle.repair-beacon.initial.mobile",
-      "title": "Solo Countdown Puzzle: initial solo branch has one human player and no event history",
+    "solo-countdown-puzzle.reconnect.mobile": {
+      "id": "solo-countdown-puzzle.reconnect.mobile",
+      "title": "Solo Countdown Puzzle: reconnect event history",
       "gameId": "solo-countdown-puzzle",
       "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/initial.scenario.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/ui.mjs"
+        "examples/reference-games/solo-countdown-puzzle/app/game.ts",
+        "examples/reference-games/solo-countdown-puzzle/app/phases/resolve-weather.ts",
+        "examples/reference-games/solo-countdown-puzzle/manifest.ts",
+        "examples/reference-games/solo-countdown-puzzle/reference-game.json",
+        "examples/reference-games/solo-countdown-puzzle/rule.md",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/reconnect.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/reconnect.mobile.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
       ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.repair-beacon.initial.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.initial.mobile.mjs",
-      "fixtureDigest": "sha256:eb2060d221ee0cd6bce4fc248d7484ce164d6dd3d9181a90a9c785b43758ec02",
-      "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016"
-    },
-    "solo-countdown-puzzle.repair-beacon.live-update.mobile": {
-      "id": "solo-countdown-puzzle.repair-beacon.live-update.mobile",
-      "title": "Solo Countdown Puzzle: live solo branch appends deterministic weather events",
-      "gameId": "solo-countdown-puzzle",
-      "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/live-update.scenario.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/ui.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.repair-beacon.live-update.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.live-update.mobile.mjs",
-      "fixtureDigest": "sha256:571fdfd22f97ffcf1e16711d3ae378ac3dfb5c54dbc6b1dec2da768da9a3e69c",
-      "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016"
+      "fixtureFile": "solo-countdown-puzzle.reconnect.mobile.fixture.json",
+      "renderModule": "modules/solo-countdown-puzzle.reconnect.mobile.mjs",
+      "fixtureDigest": "sha256:e402606a720feff412cd7ab14ba89d0dfb5b2a38437fbf432b24a3080eb85dfd",
+      "renderModuleDigest": "sha256:948015301625184e71cbfb7fba8c66a36e42da9814d9f45d8e393210f925f0f8"
     },
     "solo-countdown-puzzle.repair-beacon.mobile": {
       "id": "solo-countdown-puzzle.repair-beacon.mobile",
-      "title": "Solo Countdown Puzzle: initial state has exactly one human player and no opponent identity",
+      "title": "Solo Countdown Puzzle: repair beacon",
       "gameId": "solo-countdown-puzzle",
       "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/repair-beacon.scenario.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/ui.mjs"
+        "examples/reference-games/solo-countdown-puzzle/app/game.ts",
+        "examples/reference-games/solo-countdown-puzzle/app/phases/player-turn.ts",
+        "examples/reference-games/solo-countdown-puzzle/manifest.ts",
+        "examples/reference-games/solo-countdown-puzzle/reference-game.json",
+        "examples/reference-games/solo-countdown-puzzle/rule.md",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/repair-beacon.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/repair-beacon.mobile.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
       ],
       "contracts": [
+        "Board.Space",
         "GameEventLog",
         "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
+        "Panel"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -1461,62 +1362,8 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "solo-countdown-puzzle.repair-beacon.mobile.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.repair-beacon.mobile.mjs",
-      "fixtureDigest": "sha256:b8e604f16d1b4b345b105d2e9ea64bd38f113be951bff7990fc190376518b3c0",
-      "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016"
-    },
-    "solo-countdown-puzzle.repair-beacon.reconnect.mobile": {
-      "id": "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-      "title": "Solo Countdown Puzzle: reconnect solo branch restores committed system events",
-      "gameId": "solo-countdown-puzzle",
-      "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/reconnect.scenario.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/ui.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.repair-beacon.reconnect.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.reconnect.mobile.mjs",
-      "fixtureDigest": "sha256:7e887934b476b445023a8c3519d41c2fb9dea7c20893e7a9ff66bc983c6a01ae",
-      "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016"
-    },
-    "solo-countdown-puzzle.repair-beacon.terminal.mobile": {
-      "id": "solo-countdown-puzzle.repair-beacon.terminal.mobile",
-      "title": "Solo Countdown Puzzle: terminal solo branch carries countdown loss evidence",
-      "gameId": "solo-countdown-puzzle",
-      "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-        "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/_branch-scenarios.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/scenarios/terminal.scenario.mjs",
-        "examples/reference-games/solo-countdown-puzzle/src/ui.mjs"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.repair-beacon.terminal.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:f28f12118ccd47ec103662733e2ee5139ed3692a7a8ef5aa662a81234f417dc3",
-      "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016"
+      "fixtureDigest": "sha256:553d2e49dad5de457096e1dcda47422423f9b6667b4b3b3ff000b2e2877073cc",
+      "renderModuleDigest": "sha256:67a9edb8fd53b7b87766a080c7a32dca2b6b11790f627478c027d373150b183e"
     },
     "ui-scenarios.boards-slot.desktop": {
       "id": "ui-scenarios.boards-slot.desktop",
@@ -1538,8 +1385,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-      "fixtureDigest": "sha256:b626b7f366ce153d6df92c528672134c71c27e4620d364ee535af1560c9e0f3b",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:59e181a11cd6ffd52cb4a6ab775d0f7320074f52174e2fba38a5ac02bf6757f3",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.cards-hand.desktop": {
       "id": "ui-scenarios.cards-hand.desktop",
@@ -1567,8 +1414,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-      "fixtureDigest": "sha256:d67df9adb08d45b5962ee63ab624aa2f4ae4e72cd26229ebc54b008bc0ee8de7",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:76a8e6ad67a02adc72fd96056caeab9e607b597a49f8cd351719199dacafb235",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.dice-result.desktop": {
       "id": "ui-scenarios.dice-result.desktop",
@@ -1590,8 +1437,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
-      "fixtureDigest": "sha256:8e512a402c1b5aeb0f2858e01177b01d0411849aab83a99f49ab2d7cfac2b34f",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:ee1e07de1cf931711bc2e45b3b4581ecb2b3f4a5c0c00ac597ff54cead476d61",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.game-shell.desktop": {
       "id": "ui-scenarios.game-shell.desktop",
@@ -1613,8 +1460,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
-      "fixtureDigest": "sha256:43d18d6d6bc285ace9959f668e3180f8e7d93fb32f37732b7a8ffdb7da8d94fc",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:4775a4c356fc7f482d15db741acd1ad5f372a4b4ead1ee079062cfa4ed1eb4d5",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.prompts-choice.desktop": {
       "id": "ui-scenarios.prompts-choice.desktop",
@@ -1642,8 +1489,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
-      "fixtureDigest": "sha256:214e63f8bdfc429dfe8bf9d4069216a81b035dff45ecf86c11f11cfed29c0cd7",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:7a15a30fbba61d55688b05395d02573e1f7fb409a083605396c0fe1ae9f4b0f3",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.resources-cost.desktop": {
       "id": "ui-scenarios.resources-cost.desktop",
@@ -1665,8 +1512,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
-      "fixtureDigest": "sha256:5abaf3aff3a02c32f36f3ec83fce2ef2210706a5966942c471172c282598f921",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:d3a62c6f6f63640921f823cda2799ce0c81a923a79c9f06e4365acd66130b8cf",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "ui-scenarios.zones-staging.desktop": {
       "id": "ui-scenarios.zones-staging.desktop",
@@ -1688,32 +1535,34 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
-      "fixtureDigest": "sha256:7fe1697c8a29c5fb6f3d95ba1fb9c9ed1fb8edda47d35ecbcf2c66fb6eec2bd1",
-      "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476"
+      "fixtureDigest": "sha256:512df9dc07f1533e4e9ac4244a1c841d0723574e2ebd8dc979c1138205c56a1c",
+      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
     },
     "worker-placement-tableau.place-worker.desktop": {
       "id": "worker-placement-tableau.place-worker.desktop",
-      "title": "Worker Placement Tableau: worker count draft persists until commit",
+      "title": "Worker Placement Tableau: place a worker on an action space",
       "gameId": "worker-placement-tableau",
       "sourceFiles": [
-        "examples/reference-games/shared/reference-reducer.mjs",
-        "examples/reference-games/shared/reference-ui.mjs",
-        "examples/reference-games/worker-placement-tableau/scenarios/coverage.json",
-        "examples/reference-games/worker-placement-tableau/src/reference-game.mjs",
-        "examples/reference-games/worker-placement-tableau/src/scenarios/place-worker.scenario.mjs"
+        "examples/reference-games/worker-placement-tableau/app/game.ts",
+        "examples/reference-games/worker-placement-tableau/app/phases/placement/worker-placement.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/reference-game.json",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/placement-ready-lumberyard.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/test/ui-scenarios/place-worker.desktop.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx",
+        "examples/reference-games/worker-placement-tableau/ui/interaction-routes.tsx"
       ],
       "contracts": [
-        "CostDisplay",
-        "InteractionInput",
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
-        "ResourceCounter",
-        "SlotSystem"
+        "PluginRuntime"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
+        "keyboard",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -1721,8 +1570,8 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "fixtureDigest": "sha256:65bafc87a195ffe48c58e30e5d5b7c0e333e6dd8a9fddc9ad917e1aa2e349f9f",
-      "renderModuleDigest": "sha256:a4528b5fbd9b63c49f780a2fc3fc91944a552ff79f8ab803c6279787901891fc"
+      "fixtureDigest": "sha256:2da852245eaabaaaacded2bc2ea06b967e34d2ec47242a01510db45b9f146a6e",
+      "renderModuleDigest": "sha256:3c909126cc7e9924170b0014f70655e473bf7f71761af58c1e5c6367e74cb580"
     }
   },
   "sharedFallbacks": [

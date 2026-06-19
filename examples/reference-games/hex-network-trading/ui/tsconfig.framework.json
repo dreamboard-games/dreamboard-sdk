@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": false,
+    "allowImportingTsExtensions": true,
+    "types": [],
+    "paths": {
+      "@dreamboard/manifest-contract": ["../shared/manifest-contract.ts"],
+      "#dreamboard/ui-contract": ["../shared/generated/ui-contract.ts"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../shared/**/*.ts",
+    "../shared/**/*.json"
+  ],
+  "exclude": ["node_modules", "dist"]
+}

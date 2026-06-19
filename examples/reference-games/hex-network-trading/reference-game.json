@@ -1,8 +1,58 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "hex-network-trading",
   "displayName": "Hex Network Trading",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/bank-trade-ready.scenario.ts",
+      "test/scenarios/build-camp-ready.scenario.ts",
+      "test/scenarios/build-trail-ready.scenario.ts",
+      "test/scenarios/buy-charter-card.scenario.ts",
+      "test/scenarios/charter-claim-marker-ready.scenario.ts",
+      "test/scenarios/charter-landmark-ready.scenario.ts",
+      "test/scenarios/charter-scout-ready.scenario.ts",
+      "test/scenarios/charter-shortcut-ready.scenario.ts",
+      "test/scenarios/charter-survey-grant-ready.scenario.ts",
+      "test/scenarios/every-action-authorization.scenario.ts",
+      "test/scenarios/player-turn-roll.scenario.ts",
+      "test/scenarios/port-trade-ready.scenario.ts",
+      "test/scenarios/post-roll-action-availability.scenario.ts",
+      "test/scenarios/relay-edge-rates.scenario.ts",
+      "test/scenarios/relay-nearby-vertex-no-rate.scenario.ts",
+      "test/scenarios/setup-place.scenario.ts",
+      "test/scenarios/smoke-initial-turn.scenario.ts",
+      "test/scenarios/storm.scenario.ts",
+      "test/scenarios/terminal-winner-after-endturn.scenario.ts",
+      "test/scenarios/trade-full-lifecycle.scenario.ts",
+      "test/scenarios/trade-offer-pending-dialog.scenario.ts",
+      "test/scenarios/trade-offer-sparse.scenario.ts",
+      "test/scenarios/trade-offer-unaffordable-dialog.scenario.ts",
+      "test/scenarios/upgrade-town-ready.scenario.ts"
+    ],
+    "uiScenarios": ["test/ui-scenarios/build-trail.desktop.scenario.ts"]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "hex board topology with vertex and edge placement targets",
+      "setup snake order with camp and trail placement",
+      "resource production and bank or port trade availability",
+      "typed interaction routes for board, hand, and dialog surfaces"
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/setup.ts",
+      "app/phases/player-turn/index.ts",
+      "ui/App.tsx",
+      "ui/interaction-routes.tsx",
+      "test/scenarios/build-trail-ready.scenario.ts"
+    ]
+  },
   "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
   "uiPatterns": [
     "hex-board-targets",

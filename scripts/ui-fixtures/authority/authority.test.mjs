@@ -1,16 +1,21 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdir, rm, symlink } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { executeProtocolAuthority } from "./protocol-authority.mjs";
-import { executeReducerAuthority } from "./reducer-authority.mjs";
-import { root } from "../../ui/reference-games-lib.mjs";
+import { root, readJson } from "../../ui/reference-games-lib.mjs";
+import { compileScenarioModule } from "../compile-scenario.mjs";
 import { loadScenarioModule } from "../load-scenario-module.mjs";
 
 const sdkRequire = createRequire(
   new URL("../../../packages/sdk/package.json", import.meta.url),
 );
+const { GlobalRegistrator } = sdkRequire("@happy-dom/global-registrator");
+
+GlobalRegistrator.register();
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 async function withPackageLinks(callback) {
   const links = [
@@ -28,6 +33,10 @@ async function withPackageLinks(callback) {
     {
       link: path.join(root, "node_modules/react"),
       target: path.dirname(sdkRequire.resolve("react/package.json")),
+    },
+    {
+      link: path.join(root, "node_modules/react-dom"),
+      target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
     },
   ];
   const created = [];
@@ -108,28 +117,53 @@ test("protocol authority materializes protocol fixture inputs", async () => {
   ]);
 });
 
-test("reducer authority executes the reducer bundle supplied by a scenario module", async () => {
+test("workspace fixture compilation materializes reducer authority from v2 source", async () => {
   await withPackageLinks(async () => {
+    const gameDir = path.join(root, "examples/reference-games/hearts");
+    const metadata = await readJson(path.join(gameDir, "reference-game.json"));
     const scenario = await loadScenarioModule(
-      path.join(
-        root,
-        "examples/reference-games/hearts/src/scenarios/pass-three.scenario.mjs",
-      ),
+      path.join(gameDir, "test/ui-scenarios/pass-three.mobile.scenario.ts"),
+    );
+    const outputRoot = await mkdtemp(
+      path.join(os.tmpdir(), "dreamboard-authority-test-"),
+    );
+    const fixture = await compileScenarioModule({
+      game: {
+        id: metadata.id,
+        displayName: metadata.displayName,
+        mechanics: metadata.mechanics,
+        uiPatterns: metadata.uiPatterns,
+      },
+      gameDir,
+      scenario,
+      outputRoot,
+      sdkCommit: "test",
+    });
+
+    assert.equal(fixture.id, "hearts.pass-three.mobile");
+    assert.ok(fixture.capabilities.includes("runtime-submit"));
+    const fixtureJson = JSON.parse(
+      await readFile(path.join(outputRoot, fixture.file), "utf8"),
     );
     assert.equal(
-      typeof scenario.authority.bundle.projectSeatsDynamic,
-      "function",
+      fixtureJson.source.renderModule,
+      "modules/hearts.pass-three.mobile.mjs",
     );
-    assert.equal(typeof scenario.authority.bundle.validateInput, "function");
-    assert.equal(typeof scenario.authority.bundle.dispatch, "function");
-
-    const result = await executeReducerAuthority(scenario);
-    assert.equal(result.viewer.playerId, "player-1");
-    assert.equal(result.protocol.frames.length, 2);
     assert.ok(
-      result.protocol.steps.some((step) => step.kind === "client.submit"),
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/app/game.ts",
+      ),
     );
-    assert.equal(result.sourceSteps.length, 3);
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/ui/App.tsx",
+      ),
+    );
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/test/ui-scenarios/pass-three.mobile.scenario.ts",
+      ),
+    );
   });
 });
 

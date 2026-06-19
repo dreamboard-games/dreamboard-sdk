@@ -1,7 +1,38 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "multiplayer-ranking-and-ties",
   "displayName": "Multiplayer Ranking And Ties",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/draft-flow.scenario.ts",
+      "test/scenarios/outcomes.scenario.ts",
+      "test/scenarios/cancellation.scenario.ts"
+    ],
+    "uiScenarios": [
+      "test/ui-scenarios/draft-stall.desktop.scenario.tsx",
+      "test/ui-scenarios/tie-break.desktop.scenario.tsx"
+    ]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "ranked multiplayer outcomes",
+      "shared market drafting",
+      "tie-break evidence",
+      "scoreless cancellation"
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/game-contract.ts",
+      "app/phases/draft-flow.ts",
+      "ui/App.tsx",
+      "test/scenarios/outcomes.scenario.ts"
+    ]
+  },
   "publishToDemoGallery": false,
   "mechanics": [
     "card-drafting",

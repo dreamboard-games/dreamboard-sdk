@@ -217,25 +217,8 @@ async function listPublishableDemos({ selectedGames, errors }) {
     if (!manifest.publishToDemoGallery) {
       continue;
     }
-    const sourcePath = manifest.demoRelease?.sourcePath;
-    if (typeof sourcePath !== "string" || sourcePath.trim() === "") {
-      errors.push(
-        `${gameId}: publishToDemoGallery true requires demoRelease.sourcePath`,
-      );
-      continue;
-    }
-    const demoDir = path.join(referenceGamesRoot, sourcePath);
-    const expectedDemoDir = path.join(
-      referenceGamesRoot,
-      gameId,
-      "demo-workspace",
-    );
-    if (demoDir !== expectedDemoDir) {
-      errors.push(
-        `${gameId}: demoRelease.sourcePath must point to ${gameId}/demo-workspace`,
-      );
-      continue;
-    }
+    const sourcePath = gameId;
+    const demoDir = path.join(referenceGamesRoot, gameId);
     demos.push({ gameId, demoDir, sourcePath });
   }
   if (selected) {

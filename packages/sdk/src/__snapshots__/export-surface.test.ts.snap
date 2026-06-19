@@ -469,3 +469,18 @@ exports[`public export surface browser-interaction export names are stable 1`] =
   "validateBrowserInteractionSnapshot",
 ]
 `;
+
+exports[`public export surface reference-games export names are stable 1`] = `
+[
+  "REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION",
+  "canonicalizeReferenceGameSourcePayload",
+  "computeReferenceGameSourceDigest",
+  "parseReferenceGameSourceManifest",
+  "referenceGameSha256DigestSchema",
+  "referenceGameSourceEntrySchema",
+  "referenceGameSourceManifestPayloadSchema",
+  "referenceGameSourceManifestSchema",
+  "referenceGameSourceObjectSchema",
+  "referenceGameSourceProvenanceSchema",
+]
+`;

@@ -1,8 +1,50 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "deck-building-market",
   "displayName": "Deck Building Market",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/browser-action-chain-ready.scenario.ts",
+      "test/scenarios/browser-form-actions-ready.scenario.ts",
+      "test/scenarios/buy-flow.scenario.ts",
+      "test/scenarios/card-effects.scenario.ts",
+      "test/scenarios/cleanup-reshuffle.scenario.ts",
+      "test/scenarios/multi-card-chain.scenario.ts",
+      "test/scenarios/play-single-treasure.scenario.ts",
+      "test/scenarios/play-treasures-unavailable.scenario.ts",
+      "test/scenarios/player-one-sketchpad-hand.scenario.ts",
+      "test/scenarios/player-two-buy-ready.scenario.ts",
+      "test/scenarios/player-two-turn.scenario.ts",
+      "test/scenarios/setup-deal.scenario.ts",
+      "test/scenarios/six-vp-does-not-win.scenario.ts",
+      "test/scenarios/smoke-initial-turn.scenario.ts",
+      "test/scenarios/terminal-winner-after-endturn.scenario.ts",
+      "test/scenarios/unavailable-card-actions.scenario.ts"
+    ],
+    "uiScenarios": ["test/ui-scenarios/buy-flow.desktop.scenario.ts"]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "deck-building state across deck hand discard and market zones",
+      "multi-step turn flow with action buy cleanup modes",
+      "typed card collectors for hand and market targets",
+      "reshuffle and terminal scoring branches in reducer scenarios"
+    ],
+    "readFirst": [
+      "README.md",
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/player-turn/index.ts",
+      "ui/App.tsx",
+      "ui/interaction-routes.tsx",
+      "test/scenarios/buy-flow.scenario.ts"
+    ]
+  },
   "mechanics": [
     "deck-building",
     "market-row",

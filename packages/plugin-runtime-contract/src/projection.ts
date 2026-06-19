@@ -13,6 +13,7 @@ import type {
   ReducerSeatProjectionBundle,
   ZoneHandlesSnapshot,
 } from "./frame.js";
+import { canonicalizePluginRuntimeJson } from "./json.js";
 import type { RuntimeJson } from "./json.js";
 
 export interface MaterializePluginGameplayFrameInput {
@@ -29,13 +30,13 @@ export function materializePluginGameplayFrame(
   input: MaterializePluginGameplayFrameInput,
 ): PluginGameplayFrame {
   const dynamicProjection = SeatProjectionBundleSchema.parse(
-    input.dynamicProjection,
+    canonicalizeReducerProjection(input.dynamicProjection),
   ) as ReducerSeatProjectionBundle;
   const staticProjection =
     input.staticProjection == null
       ? null
       : (BoardStaticProjectionSchema.parse(
-          input.staticProjection,
+          canonicalizeReducerProjection(input.staticProjection),
         ) as ReducerBoardStaticProjection);
 
   const registry = parseInteractionRegistry(
@@ -75,6 +76,10 @@ export function materializePluginGameplayFrame(
   } satisfies PluginGameplayFrame;
 
   return PluginGameplayFrameSchema.parse(frame);
+}
+
+function canonicalizeReducerProjection(value: unknown): unknown {
+  return canonicalizePluginRuntimeJson(value);
 }
 
 function parseInteractionRegistry(

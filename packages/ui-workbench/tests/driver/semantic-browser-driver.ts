@@ -3,6 +3,7 @@ import {
   assertValidSemanticSnapshot,
   SemanticResolutionError,
   type WorkbenchReplayStepEvidence,
+  type WorkbenchScenarioReplayStep,
   type WorkbenchSemanticReplayStep,
 } from "../../src/replay/replay-plan.js";
 import { runReplayStep } from "../../src/replay/replay-runner.js";
@@ -14,7 +15,7 @@ import {
 
 export async function executeFixtureStep(
   page: Page,
-  step: WorkbenchSemanticReplayStep,
+  step: WorkbenchScenarioReplayStep,
 ): Promise<WorkbenchReplayStepEvidence> {
   return runReplayStep(createPlaywrightReplayAdapter(page), step);
 }
@@ -48,5 +49,6 @@ export {
   SemanticResolutionError,
   waitForWorkbenchStablePage,
   type WorkbenchReplayStepEvidence,
+  type WorkbenchScenarioReplayStep,
   type WorkbenchSemanticReplayStep,
 };

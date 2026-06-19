@@ -1,7 +1,39 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "solo-countdown-puzzle",
   "displayName": "Solo Countdown Puzzle",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/initial.scenario.ts",
+      "test/scenarios/repair-beacon.scenario.ts",
+      "test/scenarios/reconnect.scenario.ts",
+      "test/scenarios/terminal.scenario.ts"
+    ],
+    "uiScenarios": [
+      "test/ui-scenarios/repair-beacon.mobile.scenario.ts",
+      "test/ui-scenarios/reconnect.mobile.scenario.ts"
+    ]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "solo deterministic system phases",
+      "countdown pressure",
+      "reconnect-safe public event history"
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/player-turn.ts",
+      "app/phases/resolve-weather.ts",
+      "app/phases/advance-countdown.ts",
+      "ui/App.tsx",
+      "test/scenarios/repair-beacon.scenario.ts"
+    ]
+  },
   "publishToDemoGallery": false,
   "mechanics": [
     "resource-management",

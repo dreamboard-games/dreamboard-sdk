@@ -16,6 +16,11 @@
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
     },
+    "./reference-games": {
+      "types": "./dist/reference-games/index.d.ts",
+      "import": "./dist/reference-games/index.js",
+      "default": "./dist/reference-games/index.js"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
@@ -128,6 +133,7 @@
     "@radix-ui/react-select": "^2.3.1",
     "@radix-ui/react-slot": "^1.3.0",
     "@radix-ui/react-tooltip": "^1.2.10",
+    "@noble/hashes": "^2.2.0",
     "@use-gesture/react": "^10.3.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.20.0",

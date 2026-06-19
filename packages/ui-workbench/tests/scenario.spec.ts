@@ -16,7 +16,7 @@ import {
   installDeterministicWorkbenchEnvironment,
   readPageBrowserInteractionSnapshot,
   waitForWorkbenchStablePage,
-  type WorkbenchSemanticReplayStep,
+  type WorkbenchScenarioReplayStep,
 } from "./driver/semantic-browser-driver.js";
 
 test.beforeEach(async ({ page }) => {
@@ -66,7 +66,9 @@ for (const entry of readScenarioMatrix()) {
       "data-dreamboard-scenario-id",
       scenarioId,
     );
-    await expect(scenario.locator("[data-reference-game]")).toBeVisible();
+    await expect(
+      scenario.locator("[data-reference-game]").first(),
+    ).toBeVisible();
     assertValidSemanticSnapshot(await readPageBrowserInteractionSnapshot(page));
 
     const replay = await page.evaluate(() => {
@@ -80,7 +82,7 @@ for (const entry of readScenarioMatrix()) {
     const screenshots: string[] = [];
     const steps = [];
     for (const [index, step] of (
-      replay as readonly WorkbenchSemanticReplayStep[]
+      replay as readonly WorkbenchScenarioReplayStep[]
     ).entries()) {
       const evidence = await executeFixtureStep(page, step);
       let screenshotPath: string | undefined;

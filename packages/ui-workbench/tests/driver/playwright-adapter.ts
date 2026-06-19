@@ -11,7 +11,7 @@ import type {
   ReplayExecutionInstruction,
   ReplayPointerTargetReference,
   ReplayStepMeasurement,
-  WorkbenchSemanticReplayStep,
+  WorkbenchScenarioReplayStep,
 } from "../../src/replay/replay-plan.js";
 import type { ReplayRunnerAdapter } from "../../src/replay/replay-runner.js";
 
@@ -125,7 +125,7 @@ async function settleFixtureHost(page: Page): Promise<void> {
 
 async function waitForExpectedFixtureState(
   page: Page,
-  step: WorkbenchSemanticReplayStep,
+  step: WorkbenchScenarioReplayStep,
 ): Promise<void> {
   const frameId = step.expect.frameId;
   const projectionDigest = step.expect.projectionDigest;
@@ -186,7 +186,7 @@ async function activateResolvedActuator(
   }
   const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
   if (touchCapable) {
-    await locator.tap();
+    await locator.click();
     return;
   }
   await locator.click();

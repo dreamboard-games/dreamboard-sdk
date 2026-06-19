@@ -178,9 +178,9 @@
   "source": {
     "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
     "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
     "scenarioId": "ui-scenarios.cards-hand.desktop",
-    "sourceDigest": "sha256:dd9cf989b6b9c5b0f05f5b2bcc77ae0142de9cbb2ca035c996eefaad5b2296ca",
+    "sourceDigest": "sha256:4e76843c77396775d2562ab79556dd81eaad0ca671ccd9bfcffd81604424703a",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

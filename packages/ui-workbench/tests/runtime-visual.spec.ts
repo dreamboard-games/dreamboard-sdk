@@ -24,11 +24,11 @@ const baselines: readonly RuntimeVisualBaseline[] = [
     snapshotName: "hearts-phone-three-selected.png",
   },
   {
-    name: "hex route drag draft",
-    scenarioId: "hex-network-trading.place-route.desktop",
+    name: "hex trail draft",
+    scenarioId: "hex-network-trading.build-trail.desktop",
     project: "chromium-desktop",
     replaySteps: 1,
-    snapshotName: "hex-route-draft.png",
+    snapshotName: "hex-trail-draft.png",
     stageWidth: 820,
   },
   {
@@ -78,19 +78,29 @@ for (const baseline of baselines) {
     await page.goto(`/scenario/${baseline.scenarioId}?mode=test`);
     if (baseline.stageWidth) {
       await page.addStyleTag({
-        content: `.scenario-view--test .fixture-stage { width: ${baseline.stageWidth}px; min-height: auto; }`,
+        content: `.scenario-view--test .fixture-stage { --fixture-stage-test-width: ${baseline.stageWidth}px; min-height: auto; }`,
       });
     }
     await waitForWorkbenchStablePage(page);
 
     const scenario = page.locator('[data-dreamboard-workbench="scenario"]');
-    const runtimeSurface = scenario.locator("[data-reference-game]");
+    const runtimeSurface = scenario.locator(
+      '[data-reference-game="reference-game"]',
+    );
     await expect(scenario).toHaveAttribute(
       "data-dreamboard-scenario-status",
       "ready",
     );
     await expect(runtimeSurface).toBeVisible();
-    const visualSurface = runtimeSurface.locator(":scope > *").first();
+    const nestedSurface = runtimeSurface
+      .locator(
+        '[data-reference-game]:not([data-reference-game="reference-game"])',
+      )
+      .first();
+    const visualSurface =
+      (await nestedSurface.count()) > 0
+        ? nestedSurface.locator(":scope > *").first()
+        : runtimeSurface.locator(":scope > *").first();
     await expect(visualSurface).toBeVisible();
 
     const replay = (await page.evaluate(() => {

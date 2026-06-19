@@ -12,10 +12,14 @@ function scenarioReplay(coverage) {
   return coverage.replay ?? { kind: "invoke" };
 }
 
+function isAssertOnlyReplay(replay) {
+  return Array.isArray(replay) && replay.length === 0;
+}
+
 function scenarioSubmissionParams(coverage) {
   const replay = scenarioReplay(coverage);
   if (replay.kind === "multi-select") {
-    return { [replay.inputKey]: replay.cardIds };
+    return replay.params ?? { [replay.inputKey]: replay.cardIds };
   }
   if (replay.kind === "drag") {
     return {
@@ -27,7 +31,13 @@ function scenarioSubmissionParams(coverage) {
     return { [replay.inputKey]: replay.value };
   }
   if (replay.kind === "board-space") {
-    return { [replay.inputKey]: replay.spaceId };
+    return replay.params ?? { [replay.inputKey]: replay.spaceId };
+  }
+  if (replay.kind === "card-target") {
+    return { [replay.inputKey]: replay.cardId };
+  }
+  if (replay.kind === "submit") {
+    return replay.params ?? {};
   }
   return {};
 }
@@ -50,12 +60,21 @@ function scenarioInteraction(referenceGame, coverage) {
   return interaction;
 }
 
-function buildSourcePlan(coverage, interactionId) {
+function submitIntentForProtocolInteraction(protocolInteraction) {
+  return protocolInteraction?.commit?.mode === "manual" ? "submit" : "invoke";
+}
+
+function autoSubmitsOnActivation(protocolInteraction) {
+  return protocolInteraction?.commit?.mode === "autoWhenReady";
+}
+
+function buildSourcePlan(coverage, interactionId, protocolInteraction) {
+  const interactionKey = coverage.interactionKey ?? interactionId;
   const base = {
     surface: "gameplay",
     scopeId: gameplayScopeId,
-    interactionKey: interactionId,
-    interactionId: `${interactionId}:player-1`,
+    interactionKey,
+    interactionId,
   };
   const replay = scenarioReplay(coverage);
   if (replay.kind === "multi-select") {
@@ -73,7 +92,10 @@ function buildSourcePlan(coverage, interactionId) {
           },
         },
       })),
-      finalSubmit: { kind: "semantic-submit" },
+      finalSubmit: {
+        kind: "semantic-submit",
+        params: scenarioSubmissionParams(coverage),
+      },
     };
   }
   if (replay.kind === "drag") {
@@ -129,10 +151,16 @@ function buildSourcePlan(coverage, interactionId) {
     };
   }
   if (replay.kind === "board-space") {
+    const autoSubmit = autoSubmitsOnActivation(protocolInteraction);
     return {
       sourceSteps: [
         {
+          stepKind: "board-space",
           exercise: "activate",
+          ...(replay.assertIntermediateSemantic === false
+            ? { assertSemantic: false }
+            : {}),
+          ...(autoSubmit ? { preValidate: true } : {}),
           request: {
             ...base,
             effect: {
@@ -144,8 +172,73 @@ function buildSourcePlan(coverage, interactionId) {
             },
           },
         },
+        ...(replay.choices ?? []).map((choice) => ({
+          stepKind: `choice-${choice.inputKey}`,
+          exercise: "activate",
+          ...(choice.assertIntermediateSemantic === false
+            ? { assertSemantic: false }
+            : {}),
+          request: {
+            ...base,
+            effect: {
+              kind: "setCandidate",
+              inputKey: choice.inputKey,
+              candidateValue: choice.value,
+              beforeSelected: false,
+              afterSelected: true,
+            },
+          },
+        })),
       ],
-      finalSubmit: { kind: "semantic-submit" },
+      finalSubmit: {
+        kind: autoSubmit
+          ? "auto-submit"
+          : replay.params
+            ? "runtime-submit"
+            : "semantic-submit",
+        params: scenarioSubmissionParams(coverage),
+      },
+    };
+  }
+  if (replay.kind === "card-target") {
+    const autoSubmit = autoSubmitsOnActivation(protocolInteraction);
+    return {
+      sourceSteps: [
+        {
+          exercise: "activate",
+          ...(autoSubmit ? { preValidate: true } : {}),
+          request: {
+            ...base,
+            effect: {
+              kind: "setCandidate",
+              inputKey: replay.inputKey,
+              candidateValue: replay.cardId,
+              beforeSelected: false,
+              afterSelected: true,
+            },
+          },
+        },
+      ],
+      finalSubmit: {
+        kind: autoSubmit ? "auto-submit" : "semantic-submit",
+        params: scenarioSubmissionParams(coverage),
+      },
+    };
+  }
+  if (replay.kind === "submit") {
+    return {
+      sourceSteps: [
+        {
+          request: {
+            ...base,
+            intent: submitIntentForProtocolInteraction(protocolInteraction),
+          },
+        },
+      ],
+      finalSubmit: {
+        kind: "runtime-submit",
+        params: scenarioSubmissionParams(coverage),
+      },
     };
   }
   return {
@@ -170,7 +263,7 @@ function expectedIdentity(stepId, interactionId, resolution) {
     surface: "gameplay",
     scopeId: gameplayScopeId,
     interactionKey: resolution.interactionKey,
-    interactionId: `${interactionId}:player-1`,
+    interactionId,
     actuatorId: resolution.actuator.actuatorId,
     descriptorDigest: resolution.actuator.descriptorDigest,
     draftDigest: resolution.actuator.draftDigest,
@@ -188,15 +281,29 @@ function buildReplaySteps({
 }) {
   const replay = scenarioReplay(coverage);
   const fixtureId = coverage.scenarioId;
+  const directSubmitReplay =
+    replay.kind === "invoke" ||
+    replay.kind === "submit" ||
+    exercise.finalSubmitKind === "auto-submit";
   const firstSteps = sourceSteps.map((sourceStep, index) => {
-    const sourceRequest = sourceStep.request;
+    const sourceRequest =
+      exercise.resolvedRequests?.[index] ?? sourceStep.request;
     const stepId =
-      replay.kind === "invoke"
-        ? `${fixtureId}.invoke`
-        : replay.kind === "multi-select"
-          ? `${fixtureId}.select-${String(index + 1).padStart(2, "0")}`
-          : `${fixtureId}.${replay.kind}`;
-    const measuredSemanticDigest = exercise.stepSemanticDigests?.[index];
+      replay.kind === "submit"
+        ? `${fixtureId}.submit`
+        : replay.kind === "invoke"
+          ? `${fixtureId}.invoke`
+          : replay.kind === "multi-select"
+            ? `${fixtureId}.select-${String(index + 1).padStart(2, "0")}`
+            : replay.kind === "card-target"
+              ? `${fixtureId}.card-target`
+              : sourceStep.stepKind
+                ? `${fixtureId}.${sourceStep.stepKind}`
+                : `${fixtureId}.${replay.kind}`;
+    const measuredSemanticDigest =
+      sourceStep.assertSemantic === false
+        ? undefined
+        : exercise.stepSemanticDigests?.[index];
     return {
       stepId,
       requestDigest: digestUIFixtureRequest(sourceRequest),
@@ -212,31 +319,29 @@ function buildReplaySteps({
         interaction.id,
         exercise.resolutions[index],
       ),
-      expect:
-        replay.kind === "invoke"
-          ? {
-              frameId: finalFrame.id,
-              projectionDigest: finalFrame.projectionDigest,
-              semanticDigest: exercise.finalSemanticDigest,
-              submissionDigest,
-              visibleInteractionKeys: exercise.visibleInteractionKeys,
-            }
-          : {
-              ...(measuredSemanticDigest
-                ? { semanticDigest: measuredSemanticDigest }
-                : {}),
-              visibleInteractionKeys: [interaction.id],
-            },
+      expect: directSubmitReplay
+        ? {
+            frameId: finalFrame.id,
+            projectionDigest: finalFrame.projectionDigest,
+            semanticDigest: exercise.finalSemanticDigest,
+            submissionDigest,
+            visibleInteractionKeys: exercise.visibleInteractionKeys,
+          }
+        : {
+            ...(measuredSemanticDigest
+              ? { semanticDigest: measuredSemanticDigest }
+              : {}),
+          },
     };
   });
-  if (replay.kind === "invoke") return firstSteps;
+  if (directSubmitReplay) return firstSteps;
 
   const commitStepId = `${fixtureId}.commit`;
   const commitRequest = {
     surface: "gameplay",
     scopeId: gameplayScopeId,
-    interactionKey: interaction.id,
-    interactionId: `${interaction.id}:player-1`,
+    interactionKey: coverage.interactionKey ?? interaction.id,
+    interactionId: interaction.id,
     intent: "submit",
   };
   return [
@@ -268,11 +373,13 @@ function buildReplaySteps({
 
 function capabilitiesForReplay(replaySteps, viewportTags, coverage) {
   const replay = scenarioReplay(coverage);
-  const capabilities = new Set([
-    "accessibility-scan",
-    "reduced-motion",
-    "runtime-submit",
-  ]);
+  const capabilities = new Set(["accessibility-scan", "reduced-motion"]);
+  if (!isAssertOnlyReplay(replay)) {
+    capabilities.add("runtime-submit");
+  }
+  if (isAssertOnlyReplay(replay)) {
+    return [...capabilities].sort();
+  }
   if (replay.kind === "multi-select") {
     capabilities.add("runtime-draft");
   }
@@ -297,7 +404,6 @@ export async function executeReducerAuthority(scenario) {
     scenario.authority;
   const viewer = scenario.authority.viewer ?? defaultViewer;
   const playerIds = scenario.authority.playerIds ?? defaultPlayerIds;
-  const interaction = scenarioInteraction(referenceGame, coverage);
   const runner = createReducerScenarioRunner({
     scenarioId: coverage.scenarioId,
     gameId: referenceGame.id,
@@ -314,12 +420,46 @@ export async function executeReducerAuthority(scenario) {
       players: [{ playerId: viewer.playerId, displayName: "Player 1" }],
     },
   });
+  if (isAssertOnlyReplay(scenarioReplay(coverage))) {
+    return {
+      assertOnly: true,
+      coverage,
+      protocol,
+      interaction: null,
+      viewer,
+      sourceSteps: [],
+      targetRequest: null,
+      finalSubmit: null,
+      buildReplaySteps({ exercise, finalFrame }) {
+        return [
+          {
+            stepId: `${coverage.scenarioId}.assert`,
+            kind: "assert",
+            expect: {
+              frameId: finalFrame.id,
+              projectionDigest: finalFrame.projectionDigest,
+              semanticDigest: exercise.finalSemanticDigest,
+              visibleInteractionKeys: exercise.visibleInteractionKeys,
+            },
+          },
+        ];
+      },
+      capabilitiesForReplay(replaySteps, viewportTags) {
+        return capabilitiesForReplay(replaySteps, viewportTags, coverage);
+      },
+    };
+  }
+  const interaction = scenarioInteraction(referenceGame, coverage);
+  const protocolInteraction =
+    protocol.frames[0]?.frame.availableInteractions.find(
+      (candidate) => candidate.interactionId === interaction.id,
+    );
   return {
     coverage,
     protocol,
     interaction,
     viewer,
-    ...buildSourcePlan(coverage, interaction.id),
+    ...buildSourcePlan(coverage, interaction.id, protocolInteraction),
     buildReplaySteps(options) {
       return buildReplaySteps({
         coverage,

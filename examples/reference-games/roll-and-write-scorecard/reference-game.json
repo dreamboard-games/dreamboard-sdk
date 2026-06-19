@@ -1,8 +1,40 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "roll-and-write-scorecard",
   "displayName": "Roll And Write Scorecard",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/initial.scenario.ts",
+      "test/scenarios/rolled.scenario.ts",
+      "test/scenarios/drafted.scenario.ts",
+      "test/scenarios/submitted.scenario.ts",
+      "test/scenarios/invalid.scenario.ts",
+      "test/scenarios/fallback.scenario.ts",
+      "test/scenarios/terminal.scenario.ts"
+    ],
+    "uiScenarios": [
+      "test/ui-scenarios/mark-cell.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.rolled.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.drafted.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.submitted.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.invalid.mobile.scenario.ts",
+      "test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts"
+    ]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "roll-and-write scorecard topology",
+      "per-player square board targeting",
+      "fallback marks when no legal match remains",
+      "terminal scoring from rows columns regions and penalties"
+    ],
+    "readFirst": ["README.md", "rule.md", "app/game.ts"]
+  },
   "mechanics": [
     "roll-and-write",
     "square-grid",

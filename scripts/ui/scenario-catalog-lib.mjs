@@ -243,9 +243,9 @@ export async function collectValidatedScenarioCatalog() {
       gameId: fixture.gameId,
       sourceFiles: sortUnique(
         fixture.source?.sourceFiles ?? [
-          `examples/reference-games/${fixture.gameId}/scenarios/coverage.json`,
-          `examples/reference-games/${fixture.gameId}/src/reference-game.mjs`,
-          `examples/reference-games/${fixture.gameId}/src/ui.mjs`,
+          `examples/reference-games/${fixture.gameId}/reference-game.json`,
+          `examples/reference-games/${fixture.gameId}/app/game.ts`,
+          `examples/reference-games/${fixture.gameId}/ui/index.tsx`,
         ],
       ),
       fixtureUrl: `/fixtures/reference-games/${entry.file}`,
@@ -258,9 +258,10 @@ export async function collectValidatedScenarioCatalog() {
       ),
       replayStepCount: (fixture.replay ?? []).length,
       replayExpectationKeys: sortUnique(
-        (fixture.replay ?? []).flatMap((step) =>
-          Object.keys(step.expect ?? {}),
-        ),
+        (fixture.replay ?? []).flatMap((step) => [
+          ...Object.keys(step.expect ?? {}),
+          ...Object.keys(step.expectedIdentity ?? {}),
+        ]),
       ),
       sourceDigest: fixture.source?.sourceDigest,
       fixtureFile: entry.file,

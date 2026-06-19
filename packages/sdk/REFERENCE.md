@@ -129,6 +129,167 @@ type DreamboardSdkPackageSet = {
 
 _No JSDoc summary is available yet._
 
+## @dreamboard-games/sdk/reference-games
+
+### canonicalizeReferenceGameSourcePayload
+
+```ts
+function canonicalizeReferenceGameSourcePayload(
+  payload: ReferenceGameSourceManifestPayload,
+): CanonicalReferenceGameJson;
+```
+
+_No JSDoc summary is available yet._
+
+### computeReferenceGameSourceDigest
+
+```ts
+function computeReferenceGameSourceDigest(
+  payload: ReferenceGameSourceManifestPayload,
+): `sha256:${string}`;
+```
+
+_No JSDoc summary is available yet._
+
+### parseReferenceGameSourceManifest
+
+```ts
+function parseReferenceGameSourceManifest(
+  value: unknown,
+): ReferenceGameSourceManifest;
+```
+
+_No JSDoc summary is available yet._
+
+### REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION
+
+```ts
+const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 1;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSha256DigestSchema
+
+```ts
+const referenceGameSha256DigestSchema: z.ZodString;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceEntry
+
+```ts
+type ReferenceGameSourceEntry = z.infer<typeof referenceGameSourceEntrySchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceEntrySchema
+
+```ts
+declare const referenceGameSourceEntrySchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceManifest
+
+```ts
+type ReferenceGameSourceManifest = z.infer<
+  typeof referenceGameSourceManifestSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceManifestPayload
+
+```ts
+type ReferenceGameSourceManifestPayload = z.infer<
+  typeof referenceGameSourceManifestPayloadSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceManifestPayloadSchema
+
+```ts
+declare const referenceGameSourceManifestPayloadSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceManifestSchema
+
+```ts
+declare const referenceGameSourceManifestSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceObject
+
+```ts
+type ReferenceGameSourceObject = z.infer<
+  typeof referenceGameSourceObjectSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceObjectSchema
+
+```ts
+const referenceGameSourceObjectSchema: z.ZodObject<
+  {
+    path: z.ZodString;
+    sha256: z.ZodString;
+    byteLength: z.ZodNumber;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceProvenance
+
+```ts
+type ReferenceGameSourceProvenance = z.infer<
+  typeof referenceGameSourceProvenanceSchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceProvenanceSchema
+
+```ts
+const referenceGameSourceProvenanceSchema: z.ZodDiscriminatedUnion<
+  [
+    z.ZodObject<
+      {
+        kind: z.ZodLiteral<"worktree">;
+      },
+      z.core.$strict
+    >,
+    z.ZodObject<
+      {
+        kind: z.ZodLiteral<"git">;
+        repository: z.ZodLiteral<"dreamboard-games/dreamboard-sdk">;
+        revision: z.ZodString;
+      },
+      z.core.$strict
+    >,
+  ],
+  "kind"
+>;
+```
+
+_No JSDoc summary is available yet._
+
 ## @dreamboard-games/sdk/types
 
 ### ActionDefinition

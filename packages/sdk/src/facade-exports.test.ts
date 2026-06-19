@@ -7,6 +7,7 @@ const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const jsSubpaths = [
   "@dreamboard-games/sdk",
   "@dreamboard-games/sdk/package-set",
+  "@dreamboard-games/sdk/reference-games",
   "@dreamboard-games/sdk/types",
   "@dreamboard-games/sdk/reducer",
   "@dreamboard-games/sdk/reducer/advanced",

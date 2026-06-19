@@ -1,3 +1,27 @@
-export { Root } from "../../../../examples/reference-games/worker-placement-tableau/src/ui.mjs";
+import * as React from "react";
+import * as DreamboardRuntime from "@dreamboard-games/sdk/runtime/primitives";
+import * as PluginRuntimeContract from "@dreamboard-games/plugin-runtime-contract";
+import * as ui from "../../../../examples/reference-games/worker-placement-tableau/ui/App.tsx";
+
+void React;
+void DreamboardRuntime;
+void PluginRuntimeContract;
+
+const Root = ui.Root ?? ui.default ?? ui.App;
+if (!Root) {
+  throw new Error(
+    "Reference game UI entrypoint must export Root, default, or App.",
+  );
+}
+
+function ReferenceGameRoot(props) {
+  return React.createElement(
+    "div",
+    { "data-reference-game": "reference-game" },
+    React.createElement(Root, props),
+  );
+}
+
+export { ReferenceGameRoot as Root };
 export const uiContractFingerprint =
-  "sha256:7f19aabf5c9a73c40f2746e7d399147e86cb4196b64697d7a3553be6b88b4e99";
+  "sha256:184c24264d617568241ead6fd53943365b3763c58997ac784a5cb8cdb7b6189c";

@@ -98,7 +98,12 @@ export function createZoneCardComponent<Card>(
       });
     const match = useAuthoredPluginGameplayFrameSelector((frame) => {
       const candidates = frame.zones[zone]?.playableByCardId[cardId] ?? [];
-      for (const descriptor of candidates) {
+      const orderedCandidates = [...candidates].sort((left, right) => {
+        const leftAvailable = left.availability.status === "available";
+        const rightAvailable = right.availability.status === "available";
+        return leftAvailable === rightAvailable ? 0 : leftAvailable ? -1 : 1;
+      });
+      for (const descriptor of orderedCandidates) {
         const input = descriptor.inputs.find(
           (candidateInput) =>
             candidateInput.domain.type === "cardTarget" &&
