@@ -78,7 +78,12 @@ function findSdkSpecifier(packageJson) {
   return matches;
 }
 
-function assertExactSdkSpecifier({ gameId, packageJson, errors }) {
+function assertExactSdkSpecifier({
+  gameId,
+  packageJson,
+  expectedSdkVersion,
+  errors,
+}) {
   const matches = findSdkSpecifier(packageJson);
   if (matches.length === 0) {
     errors.push(`${gameId}: missing ${sdkPackage} dependency`);
@@ -97,6 +102,12 @@ function assertExactSdkSpecifier({ gameId, packageJson, errors }) {
   ) {
     errors.push(
       `${gameId}: dependencies.${sdkPackage} must be an exact public registry version, received ${JSON.stringify(specifier)}`,
+    );
+    return null;
+  }
+  if (specifier !== expectedSdkVersion) {
+    errors.push(
+      `${gameId}: dependencies.${sdkPackage} must match packages/sdk version ${expectedSdkVersion}, received ${specifier}`,
     );
     return null;
   }
@@ -231,7 +242,13 @@ async function listPublishableDemos({ selectedGames, errors }) {
   return demos;
 }
 
-async function validateDemoMetadata({ gameId, demoDir, sourcePath, errors }) {
+async function validateDemoMetadata({
+  gameId,
+  demoDir,
+  sourcePath,
+  expectedSdkVersion,
+  errors,
+}) {
   const packagePath = path.join(demoDir, "package.json");
   const lockfilePath = path.join(demoDir, "pnpm-lock.yaml");
   if (!(await pathExists(packagePath))) {
@@ -244,7 +261,12 @@ async function validateDemoMetadata({ gameId, demoDir, sourcePath, errors }) {
   }
 
   const packageJson = await readJson(packagePath);
-  const sdkSpecifier = assertExactSdkSpecifier({ gameId, packageJson, errors });
+  const sdkSpecifier = assertExactSdkSpecifier({
+    gameId,
+    packageJson,
+    expectedSdkVersion,
+    errors,
+  });
   const lockfileText = await import("node:fs/promises").then(({ readFile }) =>
     readFile(lockfilePath, "utf8"),
   );
@@ -329,9 +351,13 @@ async function main() {
 
   const receipts = [];
   const demos = [];
+  const sdkPackageJson = await readJson(
+    path.join(root, "packages/sdk/package.json"),
+  );
   for (const demo of publishableDemos) {
     const receipt = await validateDemoMetadata({
       ...demo,
+      expectedSdkVersion: sdkPackageJson.version,
       errors,
     });
     if (receipt) {

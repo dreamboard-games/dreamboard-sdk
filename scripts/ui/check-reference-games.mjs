@@ -332,7 +332,7 @@ async function checkGeneratedTextPreservation({
   }
 }
 
-function checkDependencies({ packageJson, gameId, errors }) {
+function checkDependencies({ packageJson, gameId, expectedSdkVersion, errors }) {
   const dependencyGroups = [
     ["dependencies", packageJson.dependencies ?? {}],
     ["devDependencies", packageJson.devDependencies ?? {}],
@@ -358,6 +358,10 @@ function checkDependencies({ packageJson, gameId, errors }) {
   } else if (!exactVersionPattern.test(sdkVersion)) {
     errors.push(
       `${gameId}: dependencies.${sdkPackage} must be exact, received ${sdkVersion}`,
+    );
+  } else if (sdkVersion !== expectedSdkVersion) {
+    errors.push(
+      `${gameId}: dependencies.${sdkPackage} must match packages/sdk version ${expectedSdkVersion}, received ${sdkVersion}`,
     );
   }
 }
@@ -481,7 +485,7 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
   }
 }
 
-async function validateGame(gameId, errors) {
+async function validateGame(gameId, errors, expectedSdkVersion) {
   const gameDir = path.join(referenceGamesRoot, gameId);
   const packagePath = path.join(gameDir, "package.json");
   const lockfilePath = path.join(gameDir, "pnpm-lock.yaml");
@@ -522,7 +526,7 @@ async function validateGame(gameId, errors) {
   if (packageJson.scripts?.test !== "node scenarios/verify.mjs") {
     errors.push(`${gameId}: test script must run node scenarios/verify.mjs`);
   }
-  checkDependencies({ packageJson, gameId, errors });
+  checkDependencies({ packageJson, gameId, expectedSdkVersion, errors });
   const referenceGame = await loadReferenceGameSource({
     srcPath,
     scenarioPath,
@@ -624,9 +628,12 @@ async function main() {
   }
 
   const receipts = [];
+  const sdkPackageJson = await readJson(
+    path.join(root, "packages/sdk/package.json"),
+  );
   for (const gameId of expectedReferenceGameIds) {
     if (gameDirs.includes(gameId)) {
-      const receipt = await validateGame(gameId, errors);
+      const receipt = await validateGame(gameId, errors, sdkPackageJson.version);
       if (receipt) {
         receipts.push(receipt);
       }
