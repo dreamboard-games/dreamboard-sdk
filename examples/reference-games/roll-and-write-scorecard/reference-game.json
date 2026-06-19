@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "roll-and-write-scorecard",
   "displayName": "Roll And Write Scorecard",
-  "publishToDemoGallery": false,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",

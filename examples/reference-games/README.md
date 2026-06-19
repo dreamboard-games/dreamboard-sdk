@@ -8,15 +8,17 @@ Reference IDs describe mechanics and UI patterns rather than product names:
 
 - `hearts`
 - `hex-network-trading`
+- `automa-river-rival`
 - `deck-building-market`
-- `worker-placement-tableau`
-- `simultaneous-card-drafting`
-- `roll-and-write-scorecard`
 - `multiplayer-ranking-and-ties`
+- `roll-and-write-scorecard`
+- `simultaneous-card-drafting`
+- `solo-countdown-puzzle`
+- `worker-placement-tableau`
 
 Each game has a `reference-game.json` provenance manifest, its own
-`package.json`, its own `pnpm-lock.yaml`, source under `src/`, and scenario
-coverage under `scenarios/`.
+`package.json`, its own `pnpm-lock.yaml`, workspace source, and scenario
+coverage under `test/`.
 
 Run the Phase 1 gates from the repository root:
 
@@ -26,5 +28,6 @@ pnpm reference-games:test:packed
 pnpm reference-games:bundle
 ```
 
-The reference games are not demo-gallery entries and all manifests set
-`publishToDemoGallery` to `false`.
+Reference games with a valid `demoRelease` block are packageable demo
+candidates. Product-owned release sets decide whether any packageable candidate
+is admitted to preview or production.

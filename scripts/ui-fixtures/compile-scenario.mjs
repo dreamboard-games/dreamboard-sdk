@@ -929,7 +929,7 @@ async function materializeWorkspaceScenario({
   metadata,
   scenario,
 }) {
-  if (metadata.schemaVersion !== 2) return scenario;
+  if (metadata.schemaVersion !== 3) return scenario;
 
   const bundle = await loadWorkspaceReducerBundle({ gameDir, metadata });
   const loadedBehaviorScenario = await loadBehaviorScenario({
@@ -1096,12 +1096,12 @@ export async function compileScenarioModule({
       })
     : scenario;
   const workspaceUiPath =
-    metadata?.schemaVersion === 2
+    metadata?.schemaVersion === 3
       ? path.join(gameDir, metadata.workspace.ui)
       : path.join(gameDir, "src", "ui.mjs");
   const workspaceAppPath = path.join(gameDir, "ui/App.tsx");
   const sourceModulePath =
-    metadata?.schemaVersion === 2 && existsSync(workspaceAppPath)
+    metadata?.schemaVersion === 3 && existsSync(workspaceAppPath)
       ? workspaceAppPath
       : workspaceUiPath;
   const referenceGame = materializedScenario.authority.referenceGame ?? game;

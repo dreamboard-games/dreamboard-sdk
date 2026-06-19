@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "solo-countdown-puzzle",
   "displayName": "Solo Countdown Puzzle",
   "workspace": {
@@ -34,7 +34,6 @@
       "test/scenarios/repair-beacon.scenario.ts"
     ]
   },
-  "publishToDemoGallery": false,
   "mechanics": [
     "resource-management",
     "repeated-turn-state",

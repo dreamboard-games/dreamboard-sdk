@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "hex-network-trading",
   "displayName": "Hex Network Trading",
-  "publishToDemoGallery": false,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",

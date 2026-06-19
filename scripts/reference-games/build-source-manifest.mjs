@@ -105,12 +105,11 @@ async function buildGameEntry({ gameId, gameRoot, sourceRoot, metadata }) {
     mechanics: metadata.mechanics,
     readFirst:
       metadata.teaching?.readFirst ??
-      (await deriveReadFirst(gameRoot, metadata, sourceRoot)),
-    publishToDemoGallery: metadata.publishToDemoGallery === true,
+      (await deriveReadFirst(gameRoot, sourceRoot)),
   };
 }
 
-async function deriveReadFirst(gameRoot, metadata, sourceRoot) {
+async function deriveReadFirst(gameRoot, sourceRoot) {
   const candidates = [
     "README.md",
     "rule.md",
@@ -129,7 +128,7 @@ async function deriveReadFirst(gameRoot, metadata, sourceRoot) {
       `${path.relative(sourceRoot, gameRoot)} must provide at least one readFirst file.`,
     );
   }
-  return existing.slice(0, Math.max(3, metadata.publishToDemoGallery ? 5 : 3));
+  return existing.slice(0, 5);
 }
 
 async function firstExistingRelative(root, candidates) {

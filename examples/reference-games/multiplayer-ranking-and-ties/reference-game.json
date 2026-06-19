@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "multiplayer-ranking-and-ties",
   "displayName": "Multiplayer Ranking And Ties",
   "workspace": {
@@ -33,7 +33,6 @@
       "test/scenarios/outcomes.scenario.ts"
     ]
   },
-  "publishToDemoGallery": false,
   "mechanics": [
     "card-drafting",
     "market-row",

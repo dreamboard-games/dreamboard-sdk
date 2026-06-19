@@ -157,8 +157,8 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
   );
   const sandboxPackage = await readJson(path.join(sandbox, "package.json"));
   const scripts = sandboxPackage.scripts ?? {};
-  const v2 = manifest.schemaVersion === 2;
-  if (v2) {
+  const v3 = manifest.schemaVersion === 3;
+  if (v3) {
     if (scripts.verify) {
       run("pnpm", ["verify"], { cwd: sandbox, stdio: "inherit" });
     } else {
@@ -180,15 +180,15 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     id: gameId,
     packageSha256: await sha256File(path.join(sourceDir, "package.json")),
     lockfileSha256: await sha256File(path.join(sourceDir, "pnpm-lock.yaml")),
-    sourceSha256: v2
+    sourceSha256: v3
       ? await sha256Directory(sourceDir, {
           excludeDirs: new Set(["node_modules", "dist"]),
         })
       : await sha256Directory(path.join(sourceDir, "src")),
-    scenarioSha256: v2
+    scenarioSha256: v3
       ? await sha256Directory(path.join(sourceDir, "test"))
       : await sha256Directory(path.join(sourceDir, "scenarios")),
-    ...(v2
+    ...(v3
       ? {
           typecheck: "passed",
           test: "passed",
