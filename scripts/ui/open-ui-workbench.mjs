@@ -96,7 +96,7 @@ async function main() {
   console.log(url);
   console.log(`UI Workbench deterministic route: ${url}`);
 
-  const child = spawn("pnpm", ["ui:workbench:dev", "--", "--port", "5173"], {
+  const child = spawn("pnpm", ["ui:workbench:dev", "--port", "5173"], {
     cwd: root,
     stdio: "inherit",
   });

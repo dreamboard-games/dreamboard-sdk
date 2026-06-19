@@ -10,7 +10,7 @@ This guide is generated from the live UI scenario catalog and root command map.
 - Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required`
 - Runtime visual gate: `pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/ui-workbench test tests/runtime-visual.spec.ts`
 - Release proof: `node scripts/ui/create-ui-release-proof.mjs`
-- Focused Workbench route: `pnpm ui:workbench -- --scenario <scenario-id>`
+- Focused Workbench route: `pnpm ui:workbench --scenario <scenario-id>`
 
 ## Scenario Selection
 

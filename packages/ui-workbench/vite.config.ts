@@ -6,8 +6,10 @@ import { defineConfig, type Plugin } from "vite";
 
 const workspaceRoot = path.resolve(__dirname, "../..");
 const sdkRoot = path.join(workspaceRoot, "packages/sdk");
+const referenceGamesRoot = path.join(workspaceRoot, "examples/reference-games");
 const fixtureSourceRoot = path.join(workspaceRoot, "fixtures/ui");
 const fixtureRequestPrefix = "/fixtures/";
+const manifestContractId = "@dreamboard/manifest-contract";
 
 function fixtureAssetPlugin(): Plugin {
   return {
@@ -64,6 +66,36 @@ function fixtureAssetPlugin(): Plugin {
         recursive: true,
         force: true,
       });
+    },
+  };
+}
+
+function referenceGameManifestContractPlugin(): Plugin {
+  return {
+    name: "dreamboard-reference-game-manifest-contract",
+    enforce: "pre",
+    resolveId(source, importer) {
+      if (source !== manifestContractId || !importer) {
+        return null;
+      }
+
+      const importerPath = importer.startsWith("/@fs/")
+        ? importer.slice("/@fs/".length)
+        : importer;
+      const relativeImporter = path.relative(referenceGamesRoot, importerPath);
+      if (
+        relativeImporter.startsWith("..") ||
+        path.isAbsolute(relativeImporter)
+      ) {
+        return null;
+      }
+
+      const [gameId] = relativeImporter.split(path.sep);
+      if (!gameId) {
+        return null;
+      }
+
+      return path.join(referenceGamesRoot, gameId, "shared/manifest-contract.ts");
     },
   };
 }
@@ -136,7 +168,11 @@ export default defineConfig(({ command }) => {
   }
 
   return {
-    plugins: [tailwindcss(), fixtureAssetPlugin()],
+    plugins: [
+      referenceGameManifestContractPlugin(),
+      tailwindcss(),
+      fixtureAssetPlugin(),
+    ],
     build: {
       target: "esnext",
     },
