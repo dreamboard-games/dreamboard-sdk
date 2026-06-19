@@ -112,7 +112,7 @@ This guide is generated from the live UI scenario catalog and root command map.
 - Main full gate: \`${packageJson.scripts["ui:check"]}\`
 - Runtime visual gate: \`${packageJson.scripts["ui:test:runtime-visual"]}\`
 - Release proof: \`${packageJson.scripts["ui:release-proof"]}\`
-- Focused Workbench route: \`pnpm ui:workbench -- --scenario <scenario-id>\`
+- Focused Workbench route: \`pnpm ui:workbench --scenario <scenario-id>\`
 
 ## Scenario Selection
 

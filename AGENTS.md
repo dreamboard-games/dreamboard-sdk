@@ -74,11 +74,11 @@ detect stale generated output.
 6. Run `pnpm ui:test:changed --base <ref>` and the relevant aggregate gate
    before handoff. Preserve the generated evidence receipt.
 
-See `docs/references/ui-iteration-loops.md` for the two-loop model (Storybook
+See `docs/reference/ui-iteration-loops.md` for the two-loop model (Storybook
 proves pixels, Workbench proves behavior) and the motion-gate rule.
 See `docs/ui-agent-iteration.md` for generated command selection and
 `docs/exec-plans/ui-agent-iteration-workbench/README.md` for the full workflow.
-See `docs/references/ui-workbench-behavioral-proof.md` for Workbench replay
+See `docs/reference/ui-workbench-behavioral-proof.md` for Workbench replay
 lessons about semantic evidence, mobile card targets, and screenshot limits.
 
 ## UI Evidence Invariants
