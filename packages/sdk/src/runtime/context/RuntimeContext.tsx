@@ -6,7 +6,15 @@ import { PluginSessionContext } from "./PluginSessionContext.js";
  * React Context for providing RuntimeAPI to plugin components.
  * This context must be provided by the plugin wrapper, not by the plugin code itself.
  */
-export const RuntimeContext = createContext<RuntimeAPI | null>(null);
+const contextRegistryKey = "__dreamboardRuntimeContext";
+const contextRegistryGlobal = globalThis as typeof globalThis & {
+  [contextRegistryKey]?: React.Context<RuntimeAPI | null>;
+};
+export const RuntimeContext =
+  contextRegistryGlobal[contextRegistryKey] ??
+  (contextRegistryGlobal[contextRegistryKey] = createContext<RuntimeAPI | null>(
+    null,
+  ));
 
 /**
  * Hook to access the RuntimeAPI from context.

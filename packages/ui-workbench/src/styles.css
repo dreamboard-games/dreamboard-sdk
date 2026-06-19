@@ -200,9 +200,13 @@ h2 {
 }
 
 .scenario-view--test .fixture-stage {
-  width: 390px;
+  width: var(--fixture-stage-test-width, 390px);
   min-height: 760px;
   border: 0;
+}
+
+.scenario-view--test.scenario-view--desktop .fixture-stage {
+  width: var(--fixture-stage-test-width, 100%);
 }
 
 .scenario-view--desktop .fixture-stage > main,

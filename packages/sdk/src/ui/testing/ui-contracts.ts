@@ -80,6 +80,26 @@ export const UI_CONTRACTS = [
     requiredCapabilities: ["click", "keyboard", "responsive-layout"],
   }),
   defineUIContract({
+    id: "Card",
+    kind: "component",
+    owner: "sdk-runtime",
+    sourceFiles: [
+      "packages/sdk/src/runtime/workspace-contract/index.ts",
+      "packages/sdk/src/ui/components/Card.tsx",
+    ],
+    requiredCapabilities: ["click", "keyboard", "runtime-draft"],
+  }),
+  defineUIContract({
+    id: "CardCollection",
+    kind: "component",
+    owner: "sdk-runtime",
+    sourceFiles: [
+      "packages/sdk/src/runtime/workspace-contract/index.ts",
+      "packages/sdk/src/runtime/primitives/zone.tsx",
+    ],
+    requiredCapabilities: ["click", "keyboard", "runtime-submit"],
+  }),
+  defineUIContract({
     id: "CostDisplay",
     kind: "component",
     owner: "sdk-ui",
@@ -202,6 +222,22 @@ export const UI_CONTRACTS = [
     ],
   }),
   defineUIContract({
+    id: "Hand",
+    kind: "component",
+    owner: "sdk-runtime",
+    sourceFiles: [
+      "packages/sdk/src/runtime/workspace-contract/index.ts",
+      "packages/sdk/src/runtime/primitives/hand-surface.tsx",
+      "packages/sdk/src/ui/components/HandView.tsx",
+    ],
+    requiredCapabilities: [
+      "click",
+      "keyboard",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+  }),
+  defineUIContract({
     id: "Input",
     kind: "component",
     owner: "sdk-ui",
@@ -269,6 +305,26 @@ export const UI_CONTRACTS = [
     requiredCapabilities: ["click", "runtime-submit"],
   }),
   defineUIContract({
+    id: "Outcome",
+    kind: "component",
+    owner: "sdk-ui",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    requiredCapabilities: ["runtime-submit"],
+  }),
+  defineUIContract({
+    id: "PlayerScore",
+    kind: "component",
+    owner: "sdk-ui",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/OutcomeDialog.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
+    ],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
     id: "PluginRuntime",
     kind: "runtime",
     owner: "sdk-runtime",
@@ -315,6 +371,17 @@ export const UI_CONTRACTS = [
     storyIds: [
       "resource-status--resource-compact",
       "resource-status--resource-zero-hidden",
+    ],
+    requiredCapabilities: ["responsive-layout"],
+  }),
+  defineUIContract({
+    id: "Resource",
+    kind: "component",
+    owner: "sdk-ui",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/ResourceCounter.tsx",
+      "packages/sdk/src/ui/components/CostDisplay.tsx",
+      "packages/sdk/src/ui/stories/ResourceStatusPlayer.stories.tsx",
     ],
     requiredCapabilities: ["responsive-layout"],
   }),
@@ -378,6 +445,39 @@ export const UI_CONTRACTS = [
     ],
   }),
   defineUIContract({
+    id: "Board.Space",
+    kind: "primitive",
+    owner: "sdk-runtime",
+    sourceFiles: [
+      "packages/sdk/src/runtime/primitives/board.tsx",
+      "packages/sdk/src/runtime/workspace-contract/index.ts",
+    ],
+    requiredCapabilities: [
+      "click",
+      "keyboard",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+  }),
+  defineUIContract({
+    id: "Board.HexGrid",
+    kind: "component",
+    owner: "sdk-runtime",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/board/hex-board-view.ts",
+      "packages/sdk/src/ui/components/board/HexGrid.tsx",
+      "packages/sdk/src/runtime/primitives/board.tsx",
+      "packages/sdk/src/runtime/workspace-contract/index.ts",
+    ],
+    requiredCapabilities: [
+      "click",
+      "keyboard",
+      "responsive-layout",
+      "runtime-draft",
+      "runtime-submit",
+    ],
+  }),
+  defineUIContract({
     id: "StagingZone",
     kind: "component",
     owner: "sdk-ui",
@@ -388,6 +488,16 @@ export const UI_CONTRACTS = [
     ],
     storyIds: ["hand-stagingzone--removes-on-click"],
     requiredCapabilities: ["click", "keyboard", "runtime-draft"],
+  }),
+  defineUIContract({
+    id: "Table",
+    kind: "component",
+    owner: "sdk-ui",
+    sourceFiles: [
+      "packages/sdk/src/ui/components/Panel.tsx",
+      "packages/sdk/src/ui/stories/Panels.stories.tsx",
+    ],
+    requiredCapabilities: ["responsive-layout"],
   }),
   defineUIContract({
     id: "ThemedButton",

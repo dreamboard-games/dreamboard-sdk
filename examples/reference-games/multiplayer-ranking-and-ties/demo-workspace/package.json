@@ -1,7 +1,0 @@
-{
-  "name": "@dreamboard-reference/multiplayer-ranking-and-ties-demo-workspace",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "packageManager": "pnpm@10.4.1"
-}

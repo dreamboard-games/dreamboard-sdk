@@ -1,4 +1,10 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useMemo,
+  type Context,
+  type ReactNode,
+} from "react";
 import { useStore } from "zustand";
 import { createStore, type StoreApi } from "zustand/vanilla";
 import { useShallow } from "zustand/shallow";
@@ -194,7 +200,14 @@ export function createInteractionUiStore(): InteractionUiStoreApi {
   return Object.assign(store, api);
 }
 
-const InteractionUiCtx = createContext<InteractionUiStoreApi | null>(null);
+const contextRegistryKey = "__dreamboardInteractionUiContext";
+const contextRegistryGlobal = globalThis as typeof globalThis & {
+  [contextRegistryKey]?: Context<InteractionUiStoreApi | null>;
+};
+const InteractionUiCtx =
+  contextRegistryGlobal[contextRegistryKey] ??
+  (contextRegistryGlobal[contextRegistryKey] =
+    createContext<InteractionUiStoreApi | null>(null));
 
 /**
  * React provider that holds draft input state shared across every surface

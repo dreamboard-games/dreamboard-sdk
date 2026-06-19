@@ -1,70 +1,16 @@
 {
   "schemaVersion": 2,
-  "bundleId": "reference-games@8343922bf08c",
-  "sdkCommit": "8343922bf08c",
+  "bundleId": "reference-games@d9ecc33dd14d",
+  "sdkCommit": "d9ecc33dd14d",
   "pluginRuntimeProtocol": 3,
   "browserInteractionProtocol": "3.0.0",
   "fixtures": [
     {
-      "id": "automa-river-rival.claim-cargo.duplicate.mobile",
-      "file": "automa-river-rival.claim-cargo.duplicate.mobile.fixture.json",
-      "sha256": "sha256:a02ac079f08f886d850abba6f257d0122407212d13a2340682278281b095a9b1",
-      "renderModule": "modules/automa-river-rival.claim-cargo.duplicate.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "automa-river-rival.claim-cargo.initial.mobile",
-      "file": "automa-river-rival.claim-cargo.initial.mobile.fixture.json",
-      "sha256": "sha256:bb69abb7a908109221795c27ca58d9741f0dcb84ad0f4c9321fb5ed839d14ae9",
-      "renderModule": "modules/automa-river-rival.claim-cargo.initial.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "automa-river-rival.claim-cargo.live-update.mobile",
-      "file": "automa-river-rival.claim-cargo.live-update.mobile.fixture.json",
-      "sha256": "sha256:1d98afe1ef5640c7e349ae7cab3420f56d1bf1daa04fc17f32790de573872bc9",
-      "renderModule": "modules/automa-river-rival.claim-cargo.live-update.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
       "id": "automa-river-rival.claim-cargo.mobile",
       "file": "automa-river-rival.claim-cargo.mobile.fixture.json",
-      "sha256": "sha256:a978937d8e8467db6119be170de8072749bc83989e9d0d66e9a4c4c306b42196",
+      "sha256": "sha256:5ca635b1df021faf57a410c80d9e73d48619f032eccf1e75c373fcfdff015a20",
       "renderModule": "modules/automa-river-rival.claim-cargo.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
+      "renderModuleSha256": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644",
       "components": [
         "GameEventLog",
         "InteractionSubmit",
@@ -81,9 +27,9 @@
     {
       "id": "automa-river-rival.claim-cargo.reconnect.mobile",
       "file": "automa-river-rival.claim-cargo.reconnect.mobile.fixture.json",
-      "sha256": "sha256:331f0ced1053071465b2b88469c91a52254ca0d9ee7725c8e3d0bdd9709c526e",
+      "sha256": "sha256:5c9a6c4b6bf9558640a69d955a4a7ff2312d78c84ae1a80ed7b0c18ae2ec4324",
       "renderModule": "modules/automa-river-rival.claim-cargo.reconnect.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
+      "renderModuleSha256": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644",
       "components": [
         "GameEventLog",
         "InteractionSubmit",
@@ -99,9 +45,9 @@
     {
       "id": "automa-river-rival.claim-cargo.terminal.mobile",
       "file": "automa-river-rival.claim-cargo.terminal.mobile.fixture.json",
-      "sha256": "sha256:ebe56cde80f1d15170fe135beab63332e0dd5ecc9a5bda2ea8e187019855a8a9",
+      "sha256": "sha256:bbdb3e32a9bc8f2fa8450f26c7010c233ab0d7ff3e5567893fa8a9badc882833",
       "renderModule": "modules/automa-river-rival.claim-cargo.terminal.mobile.mjs",
-      "renderModuleSha256": "sha256:a5b330c9165bedeed64ca56cd51994f45b7263f9e3b9ec878137b5f5779e2450",
+      "renderModuleSha256": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644",
       "components": [
         "GameEventLog",
         "InteractionSubmit",
@@ -115,17 +61,17 @@
       ]
     },
     {
-      "id": "deck-building-market.buy-card.desktop",
-      "file": "deck-building-market.buy-card.desktop.fixture.json",
-      "sha256": "sha256:c6fb9d0c9fb1a110b25f7ae2b3bb97c45caecf98728e337f42c7dabbf4954125",
-      "renderModule": "modules/deck-building-market.buy-card.desktop.mjs",
-      "renderModuleSha256": "sha256:4b771b14b69046de0935c5da7b795fb52c14650b8adf8604fe5fdc3a3d800f3d",
+      "id": "deck-building-market.buy-flow.desktop",
+      "file": "deck-building-market.buy-flow.desktop.fixture.json",
+      "sha256": "sha256:e597d3b316b741001a5ecbdf84e5049a3a7fd53f0e0fe24bc0d87fd5473147ce",
+      "renderModule": "modules/deck-building-market.buy-flow.desktop.mjs",
+      "renderModuleSha256": "sha256:01e50fb548d0fb0b425b0e57efd419a960c3dc530dfb65f22665ec12b1e18019",
       "components": [
-        "CardFace",
-        "HandView",
+        "Card",
+        "CardCollection",
         "InteractionSubmit",
-        "Panel",
-        "PluginRuntime"
+        "PluginRuntime",
+        "Resource"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -137,14 +83,13 @@
     {
       "id": "hearts.pass-three.mobile",
       "file": "hearts.pass-three.mobile.fixture.json",
-      "sha256": "sha256:33de77d6abdacca586159463fbe71673dbb463e270e64029cccfba789a7edefa",
+      "sha256": "sha256:d898e13206ea0007901589c5750a439c762c7790fce3d405ba3fb35f1f4ca8db",
       "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "renderModuleSha256": "sha256:22fe20ac2966b6bc8e8dc5e3983a44ed9b08cffe8759e614256416a1a21bfd10",
+      "renderModuleSha256": "sha256:dd84e73c64f555c56b4ebf3fb3eac67218322046e192aea45417bddcde9d9730",
       "components": [
-        "CardFace",
-        "HandView",
+        "Card",
+        "Hand",
         "InteractionSubmit",
-        "Panel",
         "PluginRuntime"
       ],
       "capabilities": [
@@ -156,40 +101,37 @@
       ]
     },
     {
-      "id": "hex-network-trading.place-route.desktop",
-      "file": "hex-network-trading.place-route.desktop.fixture.json",
-      "sha256": "sha256:fb66b4e51094f14d51e7936684aa975b2e673c420ea33fb6633f243f131a8846",
-      "renderModule": "modules/hex-network-trading.place-route.desktop.mjs",
-      "renderModuleSha256": "sha256:6b108aebccc2aed469d086a46ca60e409c580c7bd78102240176be48e59d84d1",
+      "id": "hex-network-trading.build-trail.desktop",
+      "file": "hex-network-trading.build-trail.desktop.fixture.json",
+      "sha256": "sha256:6a4fc2b5709056ea22de4689d137c46a11ce11d57bdf52ca526eeb63a21ad57b",
+      "renderModule": "modules/hex-network-trading.build-trail.desktop.mjs",
+      "renderModuleSha256": "sha256:2a62242024d1471f27a98496a9f29bddbcbf99b8357121658eb8d92a23632ec2",
       "components": [
-        "CardDragSurface",
-        "CardDropTargetView",
-        "CardFace",
-        "CostDisplay",
-        "HandView",
+        "Board.HexGrid",
         "InteractionSubmit",
-        "Panel",
         "PluginRuntime",
         "ResourceCounter"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "pointer-drag",
+        "keyboard",
         "reduced-motion",
+        "runtime-draft",
         "runtime-submit"
       ]
     },
     {
       "id": "multiplayer-ranking-and-ties.draft-stall.desktop",
       "file": "multiplayer-ranking-and-ties.draft-stall.desktop.fixture.json",
-      "sha256": "sha256:5682d635fe000bc1cbd749e6851eb0d9cc367c53d549713851de79d7d7d57082",
+      "sha256": "sha256:34fe94012cddc1421a62145912c9353ee541e08c4858cb984826bff233dc4c58",
       "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs",
-      "renderModuleSha256": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
+      "renderModuleSha256": "sha256:45f22c85a209346966f3501872ea6a3f688c15f1649a1bc6e0d4da925237c084",
       "components": [
+        "Card",
+        "CardCollection",
         "InteractionSubmit",
-        "OutcomeDialog",
-        "StandingsTable"
+        "Panel"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -199,87 +141,32 @@
       ]
     },
     {
-      "id": "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop",
-      "file": "multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.fixture.json",
-      "sha256": "sha256:d9d87e01c4038e4c72985b5319a384f8196e126c6bef27af8179c267245a6126",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.reconnect.desktop.mjs",
-      "renderModuleSha256": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
+      "id": "multiplayer-ranking-and-ties.tie-break.desktop",
+      "file": "multiplayer-ranking-and-ties.tie-break.desktop.fixture.json",
+      "sha256": "sha256:f8646f0b3b9f47053bf8ba8e6c92528f9941d26f108239d5e7aa25fa89d11cff",
+      "renderModule": "modules/multiplayer-ranking-and-ties.tie-break.desktop.mjs",
+      "renderModuleSha256": "sha256:fffe26bc297dfadff32f7ba1d6c3967c99689b71944cd83bbf96a65c27796ebb",
       "components": [
-        "InteractionSubmit",
-        "OutcomeDialog",
-        "StandingsTable"
+        "Outcome",
+        "Panel",
+        "PlayerScore",
+        "Table"
       ],
       "capabilities": [
         "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop",
-      "file": "multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.fixture.json",
-      "sha256": "sha256:d990523ea39dc27d7e9a78990a55919f8eb6e04989aff7441e8a9e2a62af4af1",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.tie-break.desktop.mjs",
-      "renderModuleSha256": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
-      "components": [
-        "InteractionSubmit",
-        "OutcomeDialog",
-        "StandingsTable"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop",
-      "file": "multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.fixture.json",
-      "sha256": "sha256:9bf8d2a27ff4177a8ae9047a643ade827dd01e23d9822d6dffff479e97af7a3f",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.true-tie.desktop.mjs",
-      "renderModuleSha256": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
-      "components": [
-        "InteractionSubmit",
-        "OutcomeDialog",
-        "StandingsTable"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop",
-      "file": "multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.fixture.json",
-      "sha256": "sha256:eb5a2d675c5be6b974846a6099d08faacd20f4d73aefde0ca7e65c00529bdfe8",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.unique-winner.desktop.mjs",
-      "renderModuleSha256": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
-      "components": [
-        "InteractionSubmit",
-        "OutcomeDialog",
-        "StandingsTable"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
+        "reduced-motion"
       ]
     },
     {
       "id": "roll-and-write-scorecard.mark-cell.drafted.mobile",
       "file": "roll-and-write-scorecard.mark-cell.drafted.mobile.fixture.json",
-      "sha256": "sha256:fb7c0eb036d865ea147e2f0d9ebb82e4387b816cba5cb134772a428ccfde542b",
+      "sha256": "sha256:99a4524a6989d6e0626ef996ebaa18b6c7de7b9154524bc755017dead89321f9",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001",
       "components": [
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
@@ -294,55 +181,45 @@
     {
       "id": "roll-and-write-scorecard.mark-cell.initial.mobile",
       "file": "roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
-      "sha256": "sha256:7db7abf6c24a861527d43471a396e59983679a02020edc7d072be4aa493d13bb",
+      "sha256": "sha256:fc416877f87e6235c26f2aa10a9657f20863a3a52f4732c6d3b01d9986487463",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7",
       "components": [
-        "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
         "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
+        "reduced-motion"
       ]
     },
     {
       "id": "roll-and-write-scorecard.mark-cell.invalid.mobile",
       "file": "roll-and-write-scorecard.mark-cell.invalid.mobile.fixture.json",
-      "sha256": "sha256:4a8823d94b1c77ef2ccb412a5695256727ba473b98289a0470f79b21858d7132",
+      "sha256": "sha256:cd508b7f3f93605becbc7b0dfd2525b290772db558d3be025ef69d3216ced82c",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.invalid.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7",
       "components": [
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
         "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
+        "reduced-motion"
       ]
     },
     {
       "id": "roll-and-write-scorecard.mark-cell.mobile",
       "file": "roll-and-write-scorecard.mark-cell.mobile.fixture.json",
-      "sha256": "sha256:e00155f1e19d99f1fe800cd20bb0d30fecc38b37d77140db7ba5f114dc6d023f",
+      "sha256": "sha256:d5604d816427b08c85fbb6927a9ff05a0d21e665426156ff65873cda273ac3b9",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001",
       "components": [
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
@@ -357,13 +234,13 @@
     {
       "id": "roll-and-write-scorecard.mark-cell.rolled.mobile",
       "file": "roll-and-write-scorecard.mark-cell.rolled.mobile.fixture.json",
-      "sha256": "sha256:51848ce5a2ecee2364b90fef1eb3ae085c7801e8e81d7c78250415c1d20426f5",
+      "sha256": "sha256:1f300f9158b3dd599744a3b7796fc6eb694011ae75734838a7899fe757cc1ef7",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.rolled.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001",
       "components": [
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
@@ -378,13 +255,13 @@
     {
       "id": "roll-and-write-scorecard.mark-cell.submitted.mobile",
       "file": "roll-and-write-scorecard.mark-cell.submitted.mobile.fixture.json",
-      "sha256": "sha256:d089683d81d870870256d15ce2ce4ebe0d0135e878533be8e48018ce98dfbf38",
+      "sha256": "sha256:ab45f4bd3f14015bf035ce9f22cb6714db1413c880704c9a7f78e67a5a26a92f",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.submitted.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001",
       "components": [
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
@@ -399,30 +276,24 @@
     {
       "id": "roll-and-write-scorecard.mark-cell.terminal.mobile",
       "file": "roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
-      "sha256": "sha256:8ecd9f5c74166e357f3e1966bd84624fb84462a326b0210317733185581f9290",
+      "sha256": "sha256:6d3d253d51e27bfc195207f936f2cf9a34741621259d7a17f488641b0b62aca9",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
-      "renderModuleSha256": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+      "renderModuleSha256": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7",
       "components": [
-        "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
         "SquareGrid"
       ],
       "capabilities": [
         "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
+        "reduced-motion"
       ]
     },
     {
       "id": "simultaneous-card-drafting.lock-choice.mobile",
       "file": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
-      "sha256": "sha256:eba745feadfd5c5fabaa224bd72843b091d21c886e1dbb142ac1ab50bf9fa38c",
+      "sha256": "sha256:a5abb3fc23b04b45c2531d79f9a4f447cd72c51eddd9324933665696f7ec9625",
       "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "renderModuleSha256": "sha256:885ccadb21037f474452aa723994a63c024ac2c2309883e19cc36f01ece08cc5",
+      "renderModuleSha256": "sha256:db7509d3babb583215bd302f68e18c69af8cf566cd58d862dd9a9f308b1a4237",
       "components": [
         "CardFace",
         "HandView",
@@ -434,105 +305,37 @@
         "accessibility-scan",
         "click",
         "reduced-motion",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "solo-countdown-puzzle.repair-beacon.initial.mobile",
-      "file": "solo-countdown-puzzle.repair-beacon.initial.mobile.fixture.json",
-      "sha256": "sha256:eb2060d221ee0cd6bce4fc248d7484ce164d6dd3d9181a90a9c785b43758ec02",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.initial.mobile.mjs",
-      "renderModuleSha256": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
         "runtime-draft",
         "runtime-submit"
       ]
     },
     {
-      "id": "solo-countdown-puzzle.repair-beacon.live-update.mobile",
-      "file": "solo-countdown-puzzle.repair-beacon.live-update.mobile.fixture.json",
-      "sha256": "sha256:571fdfd22f97ffcf1e16711d3ae378ac3dfb5c54dbc6b1dec2da768da9a3e69c",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.live-update.mobile.mjs",
-      "renderModuleSha256": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
+      "id": "solo-countdown-puzzle.reconnect.mobile",
+      "file": "solo-countdown-puzzle.reconnect.mobile.fixture.json",
+      "sha256": "sha256:e402606a720feff412cd7ab14ba89d0dfb5b2a38437fbf432b24a3080eb85dfd",
+      "renderModule": "modules/solo-countdown-puzzle.reconnect.mobile.mjs",
+      "renderModuleSha256": "sha256:948015301625184e71cbfb7fba8c66a36e42da9814d9f45d8e393210f925f0f8",
       "components": [
         "GameEventLog",
         "InteractionSubmit",
-        "Panel",
-        "SquareGrid"
+        "Panel"
       ],
       "capabilities": [
         "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
+        "reduced-motion"
       ]
     },
     {
       "id": "solo-countdown-puzzle.repair-beacon.mobile",
       "file": "solo-countdown-puzzle.repair-beacon.mobile.fixture.json",
-      "sha256": "sha256:b8e604f16d1b4b345b105d2e9ea64bd38f113be951bff7990fc190376518b3c0",
+      "sha256": "sha256:553d2e49dad5de457096e1dcda47422423f9b6667b4b3b3ff000b2e2877073cc",
       "renderModule": "modules/solo-countdown-puzzle.repair-beacon.mobile.mjs",
-      "renderModuleSha256": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
+      "renderModuleSha256": "sha256:67a9edb8fd53b7b87766a080c7a32dca2b6b11790f627478c027d373150b183e",
       "components": [
+        "Board.Space",
         "GameEventLog",
         "InteractionSubmit",
-        "Panel",
-        "PluginRuntime",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "solo-countdown-puzzle.repair-beacon.reconnect.mobile",
-      "file": "solo-countdown-puzzle.repair-beacon.reconnect.mobile.fixture.json",
-      "sha256": "sha256:7e887934b476b445023a8c3519d41c2fb9dea7c20893e7a9ff66bc983c6a01ae",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.reconnect.mobile.mjs",
-      "renderModuleSha256": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel",
-        "SquareGrid"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
-    },
-    {
-      "id": "solo-countdown-puzzle.repair-beacon.terminal.mobile",
-      "file": "solo-countdown-puzzle.repair-beacon.terminal.mobile.fixture.json",
-      "sha256": "sha256:f28f12118ccd47ec103662733e2ee5139ed3692a7a8ef5aa662a81234f417dc3",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.terminal.mobile.mjs",
-      "renderModuleSha256": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
-      "components": [
-        "GameEventLog",
-        "InteractionSubmit",
-        "Panel",
-        "SquareGrid"
+        "Panel"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -546,9 +349,9 @@
     {
       "id": "ui-scenarios.boards-slot.desktop",
       "file": "ui-scenarios.boards-slot.desktop.fixture.json",
-      "sha256": "sha256:b626b7f366ce153d6df92c528672134c71c27e4620d364ee535af1560c9e0f3b",
+      "sha256": "sha256:59e181a11cd6ffd52cb4a6ab775d0f7320074f52174e2fba38a5ac02bf6757f3",
       "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "SlotSystem",
         "Panel",
@@ -564,9 +367,9 @@
     {
       "id": "ui-scenarios.cards-hand.desktop",
       "file": "ui-scenarios.cards-hand.desktop.fixture.json",
-      "sha256": "sha256:d67df9adb08d45b5962ee63ab624aa2f4ae4e72cd26229ebc54b008bc0ee8de7",
+      "sha256": "sha256:76a8e6ad67a02adc72fd96056caeab9e607b597a49f8cd351719199dacafb235",
       "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "CardFace",
         "HandView",
@@ -584,9 +387,9 @@
     {
       "id": "ui-scenarios.dice-result.desktop",
       "file": "ui-scenarios.dice-result.desktop.fixture.json",
-      "sha256": "sha256:8e512a402c1b5aeb0f2858e01177b01d0411849aab83a99f49ab2d7cfac2b34f",
+      "sha256": "sha256:ee1e07de1cf931711bc2e45b3b4581ecb2b3f4a5c0c00ac597ff54cead476d61",
       "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "Dialog",
         "ThemedButton",
@@ -603,9 +406,9 @@
     {
       "id": "ui-scenarios.game-shell.desktop",
       "file": "ui-scenarios.game-shell.desktop.fixture.json",
-      "sha256": "sha256:43d18d6d6bc285ace9959f668e3180f8e7d93fb32f37732b7a8ffdb7da8d94fc",
+      "sha256": "sha256:4775a4c356fc7f482d15db741acd1ad5f372a4b4ead1ee079062cfa4ed1eb4d5",
       "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "MoreActions",
         "PrimaryButton",
@@ -622,9 +425,9 @@
     {
       "id": "ui-scenarios.prompts-choice.desktop",
       "file": "ui-scenarios.prompts-choice.desktop.fixture.json",
-      "sha256": "sha256:214e63f8bdfc429dfe8bf9d4069216a81b035dff45ecf86c11f11cfed29c0cd7",
+      "sha256": "sha256:7a15a30fbba61d55688b05395d02573e1f7fb409a083605396c0fe1ae9f4b0f3",
       "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "ActionPanel",
         "Input",
@@ -642,9 +445,9 @@
     {
       "id": "ui-scenarios.resources-cost.desktop",
       "file": "ui-scenarios.resources-cost.desktop.fixture.json",
-      "sha256": "sha256:5abaf3aff3a02c32f36f3ec83fce2ef2210706a5966942c471172c282598f921",
+      "sha256": "sha256:d3a62c6f6f63640921f823cda2799ce0c81a923a79c9f06e4365acd66130b8cf",
       "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "CostDisplay",
         "ResourceCounter",
@@ -661,9 +464,9 @@
     {
       "id": "ui-scenarios.zones-staging.desktop",
       "file": "ui-scenarios.zones-staging.desktop.fixture.json",
-      "sha256": "sha256:7fe1697c8a29c5fb6f3d95ba1fb9c9ed1fb8edda47d35ecbcf2c66fb6eec2bd1",
+      "sha256": "sha256:512df9dc07f1533e4e9ac4244a1c841d0723574e2ebd8dc979c1138205c56a1c",
       "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
-      "renderModuleSha256": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+      "renderModuleSha256": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
       "components": [
         "StagingZone",
         "SlotSystem",
@@ -680,21 +483,19 @@
     {
       "id": "worker-placement-tableau.place-worker.desktop",
       "file": "worker-placement-tableau.place-worker.desktop.fixture.json",
-      "sha256": "sha256:65bafc87a195ffe48c58e30e5d5b7c0e333e6dd8a9fddc9ad917e1aa2e349f9f",
+      "sha256": "sha256:2da852245eaabaaaacded2bc2ea06b967e34d2ec47242a01510db45b9f146a6e",
       "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "renderModuleSha256": "sha256:a4528b5fbd9b63c49f780a2fc3fc91944a552ff79f8ab803c6279787901891fc",
+      "renderModuleSha256": "sha256:3c909126cc7e9924170b0014f70655e473bf7f71761af58c1e5c6367e74cb580",
       "components": [
-        "CostDisplay",
-        "InteractionInput",
+        "Board.Space",
         "InteractionSubmit",
         "Panel",
-        "PluginRuntime",
-        "ResourceCounter",
-        "SlotSystem"
+        "PluginRuntime"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
+        "keyboard",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"

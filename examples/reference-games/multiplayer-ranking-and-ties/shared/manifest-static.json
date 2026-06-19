@@ -1,0 +1,851 @@
+{
+  "formatVersion": 1,
+  "generatedBy": "@dreamboard-games/sdk/codegen",
+  "boards": {
+    "byId": {},
+    "hex": {},
+    "square": {}
+  },
+  "initialTable": {
+    "playerOrder": ["player-1", "player-2", "player-3", "player-4"],
+    "zones": {
+      "shared": {
+        "draw-pile": [
+          "food-p1-c1-1",
+          "food-p1-c1-2",
+          "food-p2-c0-1",
+          "food-p2-c0-2",
+          "food-p2-c0-3",
+          "food-p2-c0-4",
+          "food-p2-c1-1",
+          "food-p2-c1-2",
+          "food-p3-c0-1",
+          "food-p3-c0-2",
+          "craft-p1-c1-1",
+          "craft-p1-c1-2",
+          "craft-p2-c0-1",
+          "craft-p2-c0-2",
+          "craft-p2-c0-3",
+          "craft-p2-c0-4",
+          "craft-p2-c1-1",
+          "craft-p2-c1-2",
+          "craft-p3-c0-1",
+          "craft-p3-c0-2",
+          "music-p1-c1-1",
+          "music-p1-c1-2",
+          "music-p2-c0-1",
+          "music-p2-c0-2",
+          "music-p2-c0-3",
+          "music-p2-c0-4",
+          "music-p2-c1-1",
+          "music-p2-c1-2",
+          "music-p3-c0-1",
+          "music-p3-c0-2",
+          "storm-1",
+          "storm-2"
+        ],
+        "market": [],
+        "storm-discard": []
+      },
+      "perPlayer": {
+        "festival-row": {
+          "__perPlayer": true,
+          "entries": [
+            ["player-1", []],
+            ["player-2", []],
+            ["player-3", []],
+            ["player-4", []]
+          ]
+        }
+      },
+      "visibility": {
+        "draw-pile": "hidden",
+        "market": "public",
+        "storm-discard": "public",
+        "festival-row": "public"
+      },
+      "cardSetIdsByZoneId": {
+        "draw-pile": ["harbor-fair-cards"],
+        "festival-row": ["harbor-fair-cards"],
+        "market": ["harbor-fair-cards"],
+        "storm-discard": ["harbor-fair-cards"]
+      }
+    },
+    "decks": {
+      "draw-pile": [
+        "food-p1-c1-1",
+        "food-p1-c1-2",
+        "food-p2-c0-1",
+        "food-p2-c0-2",
+        "food-p2-c0-3",
+        "food-p2-c0-4",
+        "food-p2-c1-1",
+        "food-p2-c1-2",
+        "food-p3-c0-1",
+        "food-p3-c0-2",
+        "craft-p1-c1-1",
+        "craft-p1-c1-2",
+        "craft-p2-c0-1",
+        "craft-p2-c0-2",
+        "craft-p2-c0-3",
+        "craft-p2-c0-4",
+        "craft-p2-c1-1",
+        "craft-p2-c1-2",
+        "craft-p3-c0-1",
+        "craft-p3-c0-2",
+        "music-p1-c1-1",
+        "music-p1-c1-2",
+        "music-p2-c0-1",
+        "music-p2-c0-2",
+        "music-p2-c0-3",
+        "music-p2-c0-4",
+        "music-p2-c1-1",
+        "music-p2-c1-2",
+        "music-p3-c0-1",
+        "music-p3-c0-2",
+        "storm-1",
+        "storm-2"
+      ],
+      "market": [],
+      "storm-discard": []
+    },
+    "hands": {
+      "festival-row": {
+        "__perPlayer": true,
+        "entries": [
+          ["player-1", []],
+          ["player-2", []],
+          ["player-3", []],
+          ["player-4", []]
+        ]
+      }
+    },
+    "handVisibility": {
+      "festival-row": "public"
+    },
+    "cards": {
+      "food-p1-c1-1": {
+        "id": "food-p1-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p1-c1",
+        "name": "food stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "food-p1-c1-2": {
+        "id": "food-p1-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p1-c1",
+        "name": "food stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "food-p2-c0-1": {
+        "id": "food-p2-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c0",
+        "name": "food stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "food-p2-c0-2": {
+        "id": "food-p2-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c0",
+        "name": "food stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "food-p2-c0-3": {
+        "id": "food-p2-c0-3",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c0",
+        "name": "food stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "food-p2-c0-4": {
+        "id": "food-p2-c0-4",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c0",
+        "name": "food stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "food-p2-c1-1": {
+        "id": "food-p2-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c1",
+        "name": "food stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "food-p2-c1-2": {
+        "id": "food-p2-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p2-c1",
+        "name": "food stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "food-p3-c0-1": {
+        "id": "food-p3-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p3-c0",
+        "name": "food stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "food-p3-c0-2": {
+        "id": "food-p3-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "food-p3-c0",
+        "name": "food stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "food",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "craft-p1-c1-1": {
+        "id": "craft-p1-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p1-c1",
+        "name": "craft stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "craft-p1-c1-2": {
+        "id": "craft-p1-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p1-c1",
+        "name": "craft stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "craft-p2-c0-1": {
+        "id": "craft-p2-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c0",
+        "name": "craft stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "craft-p2-c0-2": {
+        "id": "craft-p2-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c0",
+        "name": "craft stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "craft-p2-c0-3": {
+        "id": "craft-p2-c0-3",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c0",
+        "name": "craft stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "craft-p2-c0-4": {
+        "id": "craft-p2-c0-4",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c0",
+        "name": "craft stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "craft-p2-c1-1": {
+        "id": "craft-p2-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c1",
+        "name": "craft stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "craft-p2-c1-2": {
+        "id": "craft-p2-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p2-c1",
+        "name": "craft stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "craft-p3-c0-1": {
+        "id": "craft-p3-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p3-c0",
+        "name": "craft stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "craft-p3-c0-2": {
+        "id": "craft-p3-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "craft-p3-c0",
+        "name": "craft stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "craft",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "music-p1-c1-1": {
+        "id": "music-p1-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p1-c1",
+        "name": "music stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "music-p1-c1-2": {
+        "id": "music-p1-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p1-c1",
+        "name": "music stall 1/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 1,
+          "coins": 1
+        }
+      },
+      "music-p2-c0-1": {
+        "id": "music-p2-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c0",
+        "name": "music stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "music-p2-c0-2": {
+        "id": "music-p2-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c0",
+        "name": "music stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "music-p2-c0-3": {
+        "id": "music-p2-c0-3",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c0",
+        "name": "music stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "music-p2-c0-4": {
+        "id": "music-p2-c0-4",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c0",
+        "name": "music stall 2/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 0
+        }
+      },
+      "music-p2-c1-1": {
+        "id": "music-p2-c1-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c1",
+        "name": "music stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "music-p2-c1-2": {
+        "id": "music-p2-c1-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p2-c1",
+        "name": "music stall 2/1",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 2,
+          "coins": 1
+        }
+      },
+      "music-p3-c0-1": {
+        "id": "music-p3-c0-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p3-c0",
+        "name": "music stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "music-p3-c0-2": {
+        "id": "music-p3-c0-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "music-p3-c0",
+        "name": "music stall 3/0",
+        "properties": {
+          "kind": "stall",
+          "guild": "music",
+          "prestige": 3,
+          "coins": 0
+        }
+      },
+      "storm-1": {
+        "id": "storm-1",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "storm",
+        "name": "Storm",
+        "properties": {
+          "kind": "storm"
+        }
+      },
+      "storm-2": {
+        "id": "storm-2",
+        "cardSetId": "harbor-fair-cards",
+        "cardType": "storm",
+        "name": "Storm",
+        "properties": {
+          "kind": "storm"
+        }
+      }
+    },
+    "pieces": {},
+    "componentLocations": {
+      "food-p1-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 0
+      },
+      "food-p1-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 1
+      },
+      "food-p2-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 2
+      },
+      "food-p2-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 3
+      },
+      "food-p2-c0-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 4
+      },
+      "food-p2-c0-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 5
+      },
+      "food-p2-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 6
+      },
+      "food-p2-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 7
+      },
+      "food-p3-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 8
+      },
+      "food-p3-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 9
+      },
+      "craft-p1-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 10
+      },
+      "craft-p1-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 11
+      },
+      "craft-p2-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 12
+      },
+      "craft-p2-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 13
+      },
+      "craft-p2-c0-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 14
+      },
+      "craft-p2-c0-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 15
+      },
+      "craft-p2-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 16
+      },
+      "craft-p2-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 17
+      },
+      "craft-p3-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 18
+      },
+      "craft-p3-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 19
+      },
+      "music-p1-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 20
+      },
+      "music-p1-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 21
+      },
+      "music-p2-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 22
+      },
+      "music-p2-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 23
+      },
+      "music-p2-c0-3": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 24
+      },
+      "music-p2-c0-4": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 25
+      },
+      "music-p2-c1-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 26
+      },
+      "music-p2-c1-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 27
+      },
+      "music-p3-c0-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 28
+      },
+      "music-p3-c0-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 29
+      },
+      "storm-1": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 30
+      },
+      "storm-2": {
+        "type": "InDeck",
+        "deckId": "draw-pile",
+        "playedBy": null,
+        "position": 31
+      }
+    },
+    "ownerOfCard": {
+      "food-p1-c1-1": null,
+      "food-p1-c1-2": null,
+      "food-p2-c0-1": null,
+      "food-p2-c0-2": null,
+      "food-p2-c0-3": null,
+      "food-p2-c0-4": null,
+      "food-p2-c1-1": null,
+      "food-p2-c1-2": null,
+      "food-p3-c0-1": null,
+      "food-p3-c0-2": null,
+      "craft-p1-c1-1": null,
+      "craft-p1-c1-2": null,
+      "craft-p2-c0-1": null,
+      "craft-p2-c0-2": null,
+      "craft-p2-c0-3": null,
+      "craft-p2-c0-4": null,
+      "craft-p2-c1-1": null,
+      "craft-p2-c1-2": null,
+      "craft-p3-c0-1": null,
+      "craft-p3-c0-2": null,
+      "music-p1-c1-1": null,
+      "music-p1-c1-2": null,
+      "music-p2-c0-1": null,
+      "music-p2-c0-2": null,
+      "music-p2-c0-3": null,
+      "music-p2-c0-4": null,
+      "music-p2-c1-1": null,
+      "music-p2-c1-2": null,
+      "music-p3-c0-1": null,
+      "music-p3-c0-2": null,
+      "storm-1": null,
+      "storm-2": null
+    },
+    "visibility": {
+      "food-p1-c1-1": {
+        "faceUp": true
+      },
+      "food-p1-c1-2": {
+        "faceUp": true
+      },
+      "food-p2-c0-1": {
+        "faceUp": true
+      },
+      "food-p2-c0-2": {
+        "faceUp": true
+      },
+      "food-p2-c0-3": {
+        "faceUp": true
+      },
+      "food-p2-c0-4": {
+        "faceUp": true
+      },
+      "food-p2-c1-1": {
+        "faceUp": true
+      },
+      "food-p2-c1-2": {
+        "faceUp": true
+      },
+      "food-p3-c0-1": {
+        "faceUp": true
+      },
+      "food-p3-c0-2": {
+        "faceUp": true
+      },
+      "craft-p1-c1-1": {
+        "faceUp": true
+      },
+      "craft-p1-c1-2": {
+        "faceUp": true
+      },
+      "craft-p2-c0-1": {
+        "faceUp": true
+      },
+      "craft-p2-c0-2": {
+        "faceUp": true
+      },
+      "craft-p2-c0-3": {
+        "faceUp": true
+      },
+      "craft-p2-c0-4": {
+        "faceUp": true
+      },
+      "craft-p2-c1-1": {
+        "faceUp": true
+      },
+      "craft-p2-c1-2": {
+        "faceUp": true
+      },
+      "craft-p3-c0-1": {
+        "faceUp": true
+      },
+      "craft-p3-c0-2": {
+        "faceUp": true
+      },
+      "music-p1-c1-1": {
+        "faceUp": true
+      },
+      "music-p1-c1-2": {
+        "faceUp": true
+      },
+      "music-p2-c0-1": {
+        "faceUp": true
+      },
+      "music-p2-c0-2": {
+        "faceUp": true
+      },
+      "music-p2-c0-3": {
+        "faceUp": true
+      },
+      "music-p2-c0-4": {
+        "faceUp": true
+      },
+      "music-p2-c1-1": {
+        "faceUp": true
+      },
+      "music-p2-c1-2": {
+        "faceUp": true
+      },
+      "music-p3-c0-1": {
+        "faceUp": true
+      },
+      "music-p3-c0-2": {
+        "faceUp": true
+      },
+      "storm-1": {
+        "faceUp": true
+      },
+      "storm-2": {
+        "faceUp": true
+      }
+    },
+    "resources": {
+      "__perPlayer": true,
+      "entries": [
+        ["player-1", {}],
+        ["player-2", {}],
+        ["player-3", {}],
+        ["player-4", {}]
+      ]
+    },
+    "boards": {
+      "byId": {},
+      "hex": {},
+      "square": {},
+      "network": {},
+      "track": {}
+    },
+    "dice": {}
+  }
+}

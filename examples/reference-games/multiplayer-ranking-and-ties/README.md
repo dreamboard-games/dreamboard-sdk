@@ -1,105 +1,99 @@
 # Multiplayer Ranking And Ties
 
-Harbor Fair is the Phase 02 anchor reference game for canonical
-`GameOutcome`. It is a compact open-information drafting game that proves
-ranked standings, true ties, tie-break evidence, score breakdowns, and a
-scoreless cancellation branch.
+Harbor Fair is a compact open-information drafting game that teaches canonical
+multiplayer standings. It proves unique winners, true ties, tie-break evidence,
+rank gaps, and scoreless cancellation without adding a larger game system.
 
-The package intentionally stops at deterministic source metadata. It does not
-add generated UI fixtures, scenario catalogs, or repository registries; those
-surfaces are wired by the owning integration pass.
+## What This Teaches
 
-## Rules
+- How to publish a `GameOutcome` with ranked standings for every player.
+- How to keep tie-break evidence explicit in each standing row.
+- How to model a public market draft in seat order.
+- How to end without scores when a cancellation branch fires.
 
-Harbor Fair supports two to four human players. The festival deck contains 30
-stall cards and two storm cards. Each stall belongs to one guild:
+## When To Copy This Pattern
 
-- food
-- craft
-- music
+Copy this workspace when a game needs reducer-owned standings rather than UI
+winner inference. It is intentionally small: draft one card, refill the market,
+advance the active seat, and score only after the sixth round unless the second
+storm cancels the fair.
 
-Each guild has ten stall cards:
+## Files To Read First
 
-| Prestige | Coins | Count |
-| -------- | ----- | ----- |
-| 1        | 1     | 2     |
-| 2        | 0     | 4     |
-| 2        | 1     | 2     |
-| 3        | 0     | 2     |
+- `rule.md`
+- `manifest.ts`
+- `app/game.ts`
+- `app/game-contract.ts`
+- `app/phases/draft-flow.ts`
+- `ui/App.tsx`
+- `test/scenarios/outcomes.scenario.ts`
 
-The shared market contains four face-up stall cards. Players draft one stall in
-session seat order, move it to their public festival row, then refill the
-market. Storm cards revealed during refill do not occupy a market slot. The
-second revealed storm immediately ends the game with reason
-`FESTIVAL_CANCELLED`.
+## Rules Summary
 
-If the fair is not cancelled, the game scores after six rounds.
+Harbor Fair supports two to four human players. The deck contains 30 stall
+cards and two storm cards. Each stall belongs to food, craft, or music. The
+market holds four face-up stall cards. Players draft one stall in seat order,
+add it to their public festival row, and refill the market. Storm cards
+revealed during refill do not occupy market slots. The second storm immediately
+ends the game with reason `FESTIVAL_CANCELLED`.
 
-## Scoring
+If the fair is not cancelled, the game scores after six rounds. Each player
+scores stall prestige, four points for each complete food/craft/music set, and
+one point per coin. Ties break by complete sets, then coins. Players still tied
+after both tie-breaks share a rank.
 
-Each player scores:
+## Authoring Model
 
-- stall prestige: sum printed prestige
-- guild sets: 4 points for each complete food, craft, and music set
-- coin bonus: 1 point per coin
+The root workspace is the editable source. `manifest.ts` declares the Harbor
+Fair deck, market, festival-row, and storm zones. `app/game-contract.ts` owns
+the reducer schemas. The pure reducer behavior lives in
+`app/phases/draft-flow.ts`, and `app/phases/drafting.ts` adapts it to the SDK
+interaction surface.
 
-The reducer assigns standings explicitly. It sorts by total score, then by
-complete sets, then by coins. Players with identical score and both tie-breaks
-share a rank. The outcome keeps all evidence in the canonical shape:
+Legacy `src/` fixtures remain only for the coordinated integration pass. New
+behavior authority is under `app/` and `test/`.
 
-```js
-{
-  reason: { code: "SIX_ROUNDS_COMPLETE" },
-  standings: [
-    {
-      playerId: "player-1",
-      rank: 1,
-      result: "win",
-      score: 26,
-      scoreBreakdown: [
-        { id: "stall-prestige", label: "Stall prestige", value: 15 },
-        { id: "guild-sets", label: "Guild sets", value: 8 },
-        { id: "coin-bonus", label: "Coins", value: 3 }
-      ],
-      tieBreaks: [
-        { id: "complete-sets", label: "Complete sets", value: 2 },
-        { id: "coins", label: "Coins", value: 3 }
-      ]
-    }
-  ]
-}
-```
+## Reducer Flow
+
+The setup phase creates the initial market and transitions to `drafting`. The
+drafting phase exposes `draftStall`, validates that the active seat selected a
+face-up stall, updates festival rows, refills the market, advances the active
+seat, and writes the terminal outcome when scoring or cancellation completes.
+
+## UI Flow
+
+`ui/App.tsx` renders a focused teaching view: market cards, turn state, festival
+rows, and an outcome table. `ui/interaction-routes.tsx` keeps the draft action
+boundary visible for Workbench and agent readers.
 
 ## Scenario Coverage
 
-`scenarios/coverage.json` and `src/reference-game.mjs` include executable
-metadata for:
+Behavior scenarios cover:
 
-- `uniqueWinner`: four-player completion with a unique winner
-- `trueTie`: two-player first-place tie after both tie-breaks
-- `completeSetTieBreak`: equal scores separated by complete sets
-- `coinTieBreak`: equal scores and complete sets separated by coins
-- `scorelessCancellation`: second-storm cancellation without numeric scores
+- draft flow and validation
+- unique winner
+- true first-place tie
+- complete-set tie-break evidence
+- coin tie-break evidence
+- non-first tied rank gap
+- scoreless cancellation
 
-`scenarios/verify.mjs` asserts each full canonical `GameOutcome`, including
-reason, standings, ranks, results, score components, and tie-break rows. It
-also checks that legacy winner and score-map fields are absent.
+UI scenarios render the root UI and assert that the market, draft action, and
+tie-break table remain present.
 
-Run the local source proof from this directory:
+## Workbench Proof
+
+The V2 manifest names behavior scenarios and UI scenarios separately so the
+fixture compiler can derive Workbench proof from the root workspace. Generated
+fixture outputs are intentionally not hand-edited here.
+
+## Verification
+
+Run from this directory:
 
 ```sh
-pnpm --ignore-workspace exec node scenarios/verify.mjs
+pnpm typecheck
+pnpm test
+pnpm test:ui
+pnpm verify
 ```
-
-Or from the repository root:
-
-```sh
-pnpm --dir examples/reference-games/multiplayer-ranking-and-ties --ignore-workspace exec node scenarios/verify.mjs
-```
-
-## Implementation Boundary
-
-This package stays inside the public reference-game shape: exact
-`@dreamboard-games/sdk` dependency metadata, deterministic source scenarios,
-and source-only verification. It intentionally does not introduce a generic
-ranking engine, UI-side winner inference, or generated Workbench outputs.

@@ -178,9 +178,9 @@
   "source": {
     "reducerFingerprint": "sha256:9cd98c33c28f475d0b47ea06593a6c9cde09ac228d5767c0703d98c480f487ca",
     "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-    "renderModuleDigest": "sha256:f61f22ed127f09a8fbca3964f23161bf4511abbb76b3b248d1f8b62ada3f2476",
+    "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60",
     "scenarioId": "ui-scenarios.boards-slot.desktop",
-    "sourceDigest": "sha256:e6b5bd9f994f0112d1ccf0faa017e8ad3867541c8b2bb26e91831973a7edb2b5",
+    "sourceDigest": "sha256:48cbc16dbf647ebc880eaf2fe6c9fdef89a3fb68957496658b017af805dea4ad",
     "sourceFiles": [
       "examples/ui-scenarios/package.json",
       "examples/ui-scenarios/src/scenario-helper.mjs",

@@ -11,10 +11,10 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:7666f46a7a1b9c0006109078ea3abdcef42ddd5915495b085037fb359983fbf6",
-    "finalSemanticDigest": "sha256:0baab59310cb80bc470013abd33c7435ca17764cd713c83f401a703deb71e878",
-    "initialProjectionDigest": "sha256:72107f3b74f89cc3058658cb09f248ffbb97e73c24af9b77c1efc81645f708eb",
-    "submissionDigest": "sha256:dbeacfd9ab7d0018b6ef13914bc002616002e49913597249f8e08489f5eafa9a"
+    "finalProjectionDigest": "sha256:01ea74bedde7e1f21d4a381982c12b43b7d6e1ece9a17cc229ddc52ba01028ca",
+    "finalSemanticDigest": "sha256:5282ff84e10079bfc95e87e1684146659af366add17ff77cc0b1fa3baa3a52bd",
+    "initialProjectionDigest": "sha256:a12cf8c88090dfd0d09b3ad6b2e36855f1967209d5b3f9b79e806653a3ee248d",
+    "submissionDigest": "sha256:4e51bdab59a274444b3538ce9873ff42622f8e87cd6feb2fca44a97508106fc4"
   },
   "gameId": "roll-and-write-scorecard",
   "id": "roll-and-write-scorecard.mark-cell.mobile",
@@ -23,75 +23,56 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:30120a53058144c526665cc95b0948229652d297c4b32cff2379cfbf22d8a06d",
+          "actionSetVersion": "sha256:a4384ae46f3065e04edfe3f79954d01106e3f59207f35c0f11375d182a89b373",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
                 "status": "available"
               },
               "commit": {
-                "mode": "manual"
+                "mode": "autoWhenReady"
               },
-              "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
-              "help": "Choose one highlighted scorecard cell, then submit the pending mark.",
+              "descriptorDigest": "sha256:ae6847d561f325c2708e61559c682f45e278f04e601564799b771a895ef81c43",
+              "draftDigest": "sha256:db224b6f617aa9c9cfc07eb5fd94dd44e06ab18dce793c77125723527fe137c4",
               "inputs": [
                 {
                   "domain": {
+                    "boardId": "survey-grid",
                     "eligibleTargets": [
                       "cell-0-1",
                       "cell-3-2"
                     ],
                     "projection": "resolved",
-                    "selection": {
-                      "mode": "single"
-                    },
                     "targetKind": "space",
-                    "type": "boardTarget"
+                    "type": "boardTarget",
+                    "valueKind": "player-board-space"
                   },
                   "key": "cell",
-                  "kind": "boardTarget"
+                  "kind": "board-space"
                 }
               ],
-              "interactionId": "mark-cell:player-1",
-              "interactionKey": "mark-cell",
+              "interactionId": "markCell",
+              "interactionKey": "markSurvey.markCell",
               "kind": "action",
-              "label": "Mark cell",
-              "phaseName": "fixture"
-            },
-            {
-              "availability": {
-                "code": "ROLL_REQUIRED",
-                "reason": "Roll first, then choose a matching unmarked cell.",
-                "status": "blocked"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "descriptorDigest": "sha256:299edeca9a30d32c8ac3ffb59a6f16e8a96eb332c8fb63ad32d5465ef61655ad",
-              "help": "The shared roll must exist before any scorecard cell can be marked.",
-              "inputs": [],
-              "interactionId": "roll-first:player-1",
-              "interactionKey": "roll-first",
-              "kind": "action",
-              "label": "Roll first",
-              "phaseName": "fixture"
+              "label": "Mark Cell",
+              "phaseName": "markSurvey",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "roll-and-write-scorecard.mark-cell.mobile",
-            "currentStage": "roll-and-write-scorecard.mark-cell.mobile",
+            "currentPhase": "markSurvey",
+            "currentStage": "markSurvey",
             "simultaneousPhase": null
           },
           "gameVersion": 1,
           "guidance": {
             "phase": {
               "id": "markSurvey",
-              "label": "Mark the survey grid",
-              "objective": "Choose an unmarked cell matching the roll; if none remain, mark any open cell as a failed survey.",
-              "summary": "Resolve the shared dice roll on each player scorecard."
+              "label": "Mark Survey"
             },
             "setup": {
               "name": "Standard Cloudline Survey",
@@ -103,100 +84,185 @@
                   "label": "Prepare player scorecards"
                 },
                 {
-                  "description": "Use the seeded two-die roll list for all eight rounds.",
+                  "description": "Use the seeded two-die roll list for all rounds.",
                   "id": "prepare-dice",
                   "label": "Prepare dice"
                 }
               ],
-              "summary": "Prepare one scorecard per player and the seeded dice sequence."
+              "summary": "Prepare one scorecard per player and the seeded dice list."
             }
           },
           "perspectivePlayerId": "player-1",
           "recentEvents": [],
           "view": {
-            "displayName": "Roll And Write Scorecard",
-            "recentEvents": [],
-            "referenceGameId": "roll-and-write-scorecard",
-            "scenarioBranch": null,
-            "scenarioId": "roll-and-write-scorecard.mark-cell.mobile",
-            "submittedInteractionId": null
+            "activePlayerId": "player-1",
+            "cells": [
+              {
+                "col": 0,
+                "id": "cell-0-0",
+                "row": 0,
+                "target": 2
+              },
+              {
+                "col": 1,
+                "id": "cell-0-1",
+                "row": 0,
+                "target": 5
+              },
+              {
+                "col": 2,
+                "id": "cell-0-2",
+                "row": 0,
+                "target": 8
+              },
+              {
+                "col": 3,
+                "id": "cell-0-3",
+                "row": 0,
+                "target": 11
+              },
+              {
+                "col": 0,
+                "id": "cell-1-0",
+                "row": 1,
+                "target": 6
+              },
+              {
+                "col": 1,
+                "id": "cell-1-1",
+                "row": 1,
+                "target": 9
+              },
+              {
+                "col": 2,
+                "id": "cell-1-2",
+                "row": 1,
+                "target": 3
+              },
+              {
+                "col": 3,
+                "id": "cell-1-3",
+                "row": 1,
+                "target": 7
+              },
+              {
+                "col": 0,
+                "id": "cell-2-0",
+                "row": 2,
+                "target": 10
+              },
+              {
+                "col": 1,
+                "id": "cell-2-1",
+                "row": 2,
+                "target": 4
+              },
+              {
+                "col": 2,
+                "id": "cell-2-2",
+                "row": 2,
+                "target": 12
+              },
+              {
+                "col": 3,
+                "id": "cell-2-3",
+                "row": 2,
+                "target": 6
+              },
+              {
+                "col": 0,
+                "id": "cell-3-0",
+                "row": 3,
+                "target": 7
+              },
+              {
+                "col": 1,
+                "id": "cell-3-1",
+                "row": 3,
+                "target": 11
+              },
+              {
+                "col": 2,
+                "id": "cell-3-2",
+                "row": 3,
+                "target": 5
+              },
+              {
+                "col": 3,
+                "id": "cell-3-3",
+                "row": 3,
+                "target": 9
+              }
+            ],
+            "completed": false,
+            "currentPhase": "markSurvey",
+            "isActivePlayer": true,
+            "legalSpaceIds": [
+              "cell-0-1",
+              "cell-3-2"
+            ],
+            "myMarks": {},
+            "outcome": null,
+            "playerId": "player-1",
+            "playerIds": [
+              "player-1",
+              "player-2",
+              "player-3",
+              "player-4"
+            ],
+            "roll": {
+              "dice": [
+                2,
+                3
+              ],
+              "round": 1,
+              "total": 5
+            },
+            "round": 1,
+            "scores": null
           },
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:72107f3b74f89cc3058658cb09f248ffbb97e73c24af9b77c1efc81645f708eb"
+        "projectionDigest": "sha256:a12cf8c88090dfd0d09b3ad6b2e36855f1967209d5b3f9b79e806653a3ee248d"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:bee34b2a36f330de025300a2555c0741d1c6aa141a0c5e432be210d09e702725",
+          "actionSetVersion": "sha256:9e7a9a0fae454515419ab1da7134e0b0e925b99cb506acc44d8d8d8399d6d3e0",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
-                "status": "available"
+                "reason": "Not your turn",
+                "status": "notYourTurn"
               },
               "commit": {
-                "mode": "manual"
+                "mode": "autoWhenReady"
               },
-              "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
-              "help": "Choose one highlighted scorecard cell, then submit the pending mark.",
-              "inputs": [
-                {
-                  "domain": {
-                    "eligibleTargets": [
-                      "cell-0-1",
-                      "cell-3-2"
-                    ],
-                    "projection": "resolved",
-                    "selection": {
-                      "mode": "single"
-                    },
-                    "targetKind": "space",
-                    "type": "boardTarget"
-                  },
-                  "key": "cell",
-                  "kind": "boardTarget"
-                }
-              ],
-              "interactionId": "mark-cell:player-1",
-              "interactionKey": "mark-cell",
-              "kind": "action",
-              "label": "Mark cell",
-              "phaseName": "fixture"
-            },
-            {
-              "availability": {
-                "code": "ROLL_REQUIRED",
-                "reason": "Roll first, then choose a matching unmarked cell.",
-                "status": "blocked"
-              },
-              "commit": {
-                "mode": "manual"
-              },
-              "descriptorDigest": "sha256:299edeca9a30d32c8ac3ffb59a6f16e8a96eb332c8fb63ad32d5465ef61655ad",
-              "help": "The shared roll must exist before any scorecard cell can be marked.",
+              "descriptorDigest": "sha256:7ca989302a97359b54336f0a105548e0c67c6504be0ce80912ab9bada2860a59",
+              "draftDigest": "sha256:e2795761ff45ff558781debee43134ccdb9074ab385a331d32a225d264f693fe",
               "inputs": [],
-              "interactionId": "roll-first:player-1",
-              "interactionKey": "roll-first",
+              "interactionId": "markCell",
+              "interactionKey": "markSurvey.markCell",
               "kind": "action",
-              "label": "Roll first",
-              "phaseName": "fixture"
+              "label": "Mark Cell",
+              "phaseName": "markSurvey",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
-              "player-1"
+              "player-2"
             ],
-            "currentPhase": "roll-and-write-scorecard.mark-cell.mobile.submitted",
-            "currentStage": "roll-and-write-scorecard.mark-cell.mobile.submitted",
+            "currentPhase": "markSurvey",
+            "currentStage": "markSurvey",
             "simultaneousPhase": null
           },
           "gameVersion": 2,
           "guidance": {
             "phase": {
               "id": "markSurvey",
-              "label": "Mark the survey grid",
-              "objective": "Choose an unmarked cell matching the roll; if none remain, mark any open cell as a failed survey.",
-              "summary": "Resolve the shared dice roll on each player scorecard."
+              "label": "Mark Survey"
             },
             "setup": {
               "name": "Standard Cloudline Survey",
@@ -208,28 +274,152 @@
                   "label": "Prepare player scorecards"
                 },
                 {
-                  "description": "Use the seeded two-die roll list for all eight rounds.",
+                  "description": "Use the seeded two-die roll list for all rounds.",
                   "id": "prepare-dice",
                   "label": "Prepare dice"
                 }
               ],
-              "summary": "Prepare one scorecard per player and the seeded dice sequence."
+              "summary": "Prepare one scorecard per player and the seeded dice list."
             }
           },
           "perspectivePlayerId": "player-1",
           "recentEvents": [],
           "view": {
-            "displayName": "Roll And Write Scorecard",
-            "recentEvents": [],
-            "referenceGameId": "roll-and-write-scorecard",
-            "scenarioBranch": null,
-            "scenarioId": "roll-and-write-scorecard.mark-cell.mobile",
-            "submittedInteractionId": "mark-cell:player-1"
+            "activePlayerId": "player-2",
+            "cells": [
+              {
+                "col": 0,
+                "id": "cell-0-0",
+                "row": 0,
+                "target": 2
+              },
+              {
+                "col": 1,
+                "id": "cell-0-1",
+                "row": 0,
+                "target": 5
+              },
+              {
+                "col": 2,
+                "id": "cell-0-2",
+                "row": 0,
+                "target": 8
+              },
+              {
+                "col": 3,
+                "id": "cell-0-3",
+                "row": 0,
+                "target": 11
+              },
+              {
+                "col": 0,
+                "id": "cell-1-0",
+                "row": 1,
+                "target": 6
+              },
+              {
+                "col": 1,
+                "id": "cell-1-1",
+                "row": 1,
+                "target": 9
+              },
+              {
+                "col": 2,
+                "id": "cell-1-2",
+                "row": 1,
+                "target": 3
+              },
+              {
+                "col": 3,
+                "id": "cell-1-3",
+                "row": 1,
+                "target": 7
+              },
+              {
+                "col": 0,
+                "id": "cell-2-0",
+                "row": 2,
+                "target": 10
+              },
+              {
+                "col": 1,
+                "id": "cell-2-1",
+                "row": 2,
+                "target": 4
+              },
+              {
+                "col": 2,
+                "id": "cell-2-2",
+                "row": 2,
+                "target": 12
+              },
+              {
+                "col": 3,
+                "id": "cell-2-3",
+                "row": 2,
+                "target": 6
+              },
+              {
+                "col": 0,
+                "id": "cell-3-0",
+                "row": 3,
+                "target": 7
+              },
+              {
+                "col": 1,
+                "id": "cell-3-1",
+                "row": 3,
+                "target": 11
+              },
+              {
+                "col": 2,
+                "id": "cell-3-2",
+                "row": 3,
+                "target": 5
+              },
+              {
+                "col": 3,
+                "id": "cell-3-3",
+                "row": 3,
+                "target": 9
+              }
+            ],
+            "completed": false,
+            "currentPhase": "markSurvey",
+            "isActivePlayer": false,
+            "legalSpaceIds": [
+              "cell-3-2"
+            ],
+            "myMarks": {
+              "cell-0-1": {
+                "kind": "surveyed",
+                "rolledTotal": 5,
+                "round": 1
+              }
+            },
+            "outcome": null,
+            "playerId": "player-1",
+            "playerIds": [
+              "player-1",
+              "player-2",
+              "player-3",
+              "player-4"
+            ],
+            "roll": {
+              "dice": [
+                2,
+                3
+              ],
+              "round": 1,
+              "total": 5
+            },
+            "round": 1,
+            "scores": null
           },
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:7666f46a7a1b9c0006109078ea3abdcef42ddd5915495b085037fb359983fbf6"
+        "projectionDigest": "sha256:01ea74bedde7e1f21d4a381982c12b43b7d6e1ece9a17cc229ddc52ba01028ca"
       }
     ],
     "session": {
@@ -249,25 +439,25 @@
       },
       {
         "fromFrameId": "frame-1",
-        "id": "roll-and-write-scorecard.mark-cell.mobile.validate",
+        "id": "roll-and-write-scorecard.mark-cell.mobile.submit-1.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:f6e8faf441caac8e860db0b3c1cb2554c4c6da25ab5d1ec2bae1db0380b3de04",
+        "requestDigest": "sha256:a670721039a0565af869037db28e3ee30c8694c98de031f70c9a00fd44c71f65",
         "response": {
           "valid": true
         }
       },
       {
         "fromFrameId": "frame-1",
-        "id": "roll-and-write-scorecard.mark-cell.mobile.submit",
+        "id": "roll-and-write-scorecard.mark-cell.mobile.submit-1",
         "kind": "client.submit",
-        "requestDigest": "sha256:fa92678f3c1a9699e7d2825f3ad8a3d01fec53ace32be28a1c48bfffebd150ec",
+        "requestDigest": "sha256:2006c3391820d93f67d86159a5327cbd51dab28560ccde97f05931f94d1d8fed",
         "response": {
           "accepted": true
         }
       },
       {
         "frameId": "frame-2",
-        "id": "roll-and-write-scorecard.mark-cell.mobile.submit.host-frame",
+        "id": "roll-and-write-scorecard.mark-cell.mobile.submit-1.host-frame",
         "kind": "host.frame"
       }
     ]
@@ -278,21 +468,25 @@
         "kind": "activate"
       },
       "expect": {
-        "semanticDigest": "sha256:a5408c393031999bc59379efd22ae12e2fe2ec2fc83c00406cbe0919489c3eeb",
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:01ea74bedde7e1f21d4a381982c12b43b7d6e1ece9a17cc229ddc52ba01028ca",
+        "semanticDigest": "sha256:5282ff84e10079bfc95e87e1684146659af366add17ff77cc0b1fa3baa3a52bd",
+        "submissionDigest": "sha256:4e51bdab59a274444b3538ce9873ff42622f8e87cd6feb2fca44a97508106fc4",
         "visibleInteractionKeys": [
-          "mark-cell"
+          "markSurvey.markCell"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "board:space:cell-0-1",
-        "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
-        "interactionId": "mark-cell:player-1",
-        "interactionKey": "mark-cell",
+        "descriptorDigest": "sha256:ae6847d561f325c2708e61559c682f45e278f04e601564799b771a895ef81c43",
+        "draftDigest": "sha256:db224b6f617aa9c9cfc07eb5fd94dd44e06ab18dce793c77125723527fe137c4",
+        "interactionId": "markCell",
+        "interactionKey": "markSurvey.markCell",
         "scopeId": "runtime",
         "stepId": "roll-and-write-scorecard.mark-cell.mobile.board-space",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:982e22eda24168eb5c26afc79e8fe7c218ab0af2bb55409050eb700f63a69d97",
+      "requestDigest": "sha256:903eadfc8a9f0715e1cc0af73985f3ba223a1c4969aedf478d621a8917c495fd",
       "resolve": {
         "effect": {
           "afterSelected": true,
@@ -301,61 +495,33 @@
           "inputKey": "cell",
           "kind": "setCandidate"
         },
-        "interactionId": "mark-cell:player-1",
-        "interactionKey": "mark-cell",
+        "interactionId": "markCell",
+        "interactionKey": "markSurvey.markCell",
         "scopeId": "runtime",
         "surface": "gameplay"
       },
       "stepId": "roll-and-write-scorecard.mark-cell.mobile.board-space"
-    },
-    {
-      "execute": {
-        "kind": "activate"
-      },
-      "expect": {
-        "frameId": "frame-2",
-        "projectionDigest": "sha256:7666f46a7a1b9c0006109078ea3abdcef42ddd5915495b085037fb359983fbf6",
-        "semanticDigest": "sha256:0baab59310cb80bc470013abd33c7435ca17764cd713c83f401a703deb71e878",
-        "submissionDigest": "sha256:dbeacfd9ab7d0018b6ef13914bc002616002e49913597249f8e08489f5eafa9a",
-        "visibleInteractionKeys": [
-          "mark-cell"
-        ]
-      },
-      "expectedIdentity": {
-        "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:fa291ecde5a225544c2b1f0c10defb7c414ffe2bb8d672d9a586ce4051a6bc81",
-        "interactionId": "mark-cell:player-1",
-        "interactionKey": "mark-cell",
-        "scopeId": "runtime",
-        "stepId": "roll-and-write-scorecard.mark-cell.mobile.commit",
-        "surface": "gameplay"
-      },
-      "requestDigest": "sha256:af80b7feb6d7585c059759a050eff3d0cb3fe9dc9ab5e3fa9379a54ab0b4a8d9",
-      "resolve": {
-        "intent": "submit",
-        "interactionId": "mark-cell:player-1",
-        "interactionKey": "mark-cell",
-        "scopeId": "runtime",
-        "surface": "gameplay"
-      },
-      "stepId": "roll-and-write-scorecard.mark-cell.mobile.commit"
     }
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:0d85dc570679810b7c42dee7697a3014091e954def03288fe9cca406183c9b37",
+    "reducerFingerprint": "sha256:d7d141163f9925c6f919aa3e3180fa119d8a5619546e982e32b7c4c2f92af337",
     "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-    "renderModuleDigest": "sha256:8a0f6f7e5efd3a7a77fac8e41657cb019f3cc642a12a68226b2a8d40b9e55886",
+    "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001",
     "scenarioId": "roll-and-write-scorecard.mark-cell.mobile",
-    "sourceDigest": "sha256:3429db46eed49cb441e372cd9f23b1550e4303d9c553beefb7886e30ae8ea9ca",
+    "sourceDigest": "sha256:0bc130d09dc2741c91c2f428c51b5169a08cb97f3a3043900ac32e6dde9f4019",
     "sourceFiles": [
-      "examples/reference-games/roll-and-write-scorecard/scenarios/coverage.json",
-      "examples/reference-games/roll-and-write-scorecard/src/reference-game.mjs",
-      "examples/reference-games/roll-and-write-scorecard/src/ui.mjs",
-      "examples/reference-games/roll-and-write-scorecard/src/scenarios/mark-cell.scenario.mjs",
-      "examples/reference-games/shared/reference-reducer.mjs"
+      "examples/reference-games/roll-and-write-scorecard/reference-game.json",
+      "examples/reference-games/roll-and-write-scorecard/rule.md",
+      "examples/reference-games/roll-and-write-scorecard/manifest.ts",
+      "examples/reference-games/roll-and-write-scorecard/app/game.ts",
+      "examples/reference-games/roll-and-write-scorecard/app/model.ts",
+      "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
+      "examples/reference-games/roll-and-write-scorecard/ui/App.tsx",
+      "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
+      "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.mobile.scenario.ts"
     ],
-    "uiContractFingerprint": "sha256:15153fa0faf4b53b4d19ba1900a3e8cf5adac99729f8c8a5527b65f9be0171a7"
+    "uiContractFingerprint": "sha256:c0b031381b3538ec372c986755c0e7dc879c888d37db0d103651bb899f7ae3f9"
   },
   "tags": [
     "compact-mobile-scorecard",
@@ -367,7 +533,7 @@
     "square-board-targets",
     "square-grid"
   ],
-  "title": "Roll And Write Scorecard: initial state starts before the first seeded roll",
+  "title": "Roll And Write Scorecard: mobile scorecard mark cell",
   "viewer": {
     "playerId": "player-1",
     "seatId": "player-1"

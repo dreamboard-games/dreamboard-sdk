@@ -31,11 +31,24 @@ type PluginGameplayFrameStore = {
   getServerSnapshot: () => PluginGameplayFrame | null;
 };
 
-const PluginGameplayFrameStoreContext =
-  createContext<PluginGameplayFrameStore | null>(null);
-const PluginGameplayFrameContext = createContext<PluginGameplayFrame | null>(
-  null,
-);
+type PluginGameplayFrameContextRegistry = {
+  store: React.Context<PluginGameplayFrameStore | null>;
+  frame: React.Context<PluginGameplayFrame | null>;
+};
+
+const contextRegistryKey = "__dreamboardPluginGameplayFrameContext";
+const contextRegistryGlobal = globalThis as typeof globalThis & {
+  [contextRegistryKey]?: PluginGameplayFrameContextRegistry;
+};
+const contextRegistry =
+  contextRegistryGlobal[contextRegistryKey] ??
+  (contextRegistryGlobal[contextRegistryKey] = {
+    store: createContext<PluginGameplayFrameStore | null>(null),
+    frame: createContext<PluginGameplayFrame | null>(null),
+  });
+
+const PluginGameplayFrameStoreContext = contextRegistry.store;
+const PluginGameplayFrameContext = contextRegistry.frame;
 
 function DefaultLoadingScreen() {
   return (

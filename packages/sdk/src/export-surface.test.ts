@@ -18,6 +18,7 @@ const facades = {
   runtime: () => import("./runtime.js"),
   "runtime/primitives": () => import("./runtime/primitives.js"),
   "runtime/workspace-contract": () => import("./runtime/workspace-contract.js"),
+  "reference-games": () => import("./reference-games/index.js"),
   ui: () => import("./ui.js"),
   types: () => import("./types.js"),
   testing: () => import("./testing.js"),

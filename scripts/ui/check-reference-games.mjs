@@ -18,15 +18,6 @@ import {
 
 const sdkPackage = "@dreamboard-games/sdk";
 const exactVersionPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/;
-const guidanceStringBounds = {
-  label: 80,
-  name: 80,
-  summary: 220,
-  objective: 280,
-  description: 280,
-  help: 240,
-  blockedReason: 240,
-};
 
 function fail(errors) {
   throw new Error(
@@ -60,275 +51,6 @@ function checkArraySubset({ values, allowed, label, errors, gameId }) {
       errors.push(`${gameId}: duplicated ${label} tag ${value}`);
     }
     seen.add(value);
-  }
-}
-
-function checkTextField({ value, label, maxLength, errors, gameId }) {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    errors.push(`${gameId}: ${label} must be a non-empty string`);
-    return false;
-  }
-  if (value !== value.trim()) {
-    errors.push(`${gameId}: ${label} must not have leading or trailing space`);
-  }
-  if (value.length > maxLength) {
-    errors.push(
-      `${gameId}: ${label} must be ${maxLength} characters or less, received ${value.length}`,
-    );
-  }
-  if (
-    /<\/?[A-Za-z][^>]*>/.test(value) ||
-    /```|`|\*\*|__|\[[^\]]+\]\([^)]+\)/.test(value) ||
-    /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s)/.test(value)
-  ) {
-    errors.push(`${gameId}: ${label} must not contain raw Markdown or HTML`);
-  }
-  return true;
-}
-
-function checkTextObject({ object, fieldBounds, pathPrefix, errors, gameId }) {
-  for (const [field, maxLength] of Object.entries(fieldBounds)) {
-    if (object?.[field] !== undefined) {
-      checkTextField({
-        value: object[field],
-        label: `${pathPrefix}.${field}`,
-        maxLength,
-        errors,
-        gameId,
-      });
-    }
-  }
-}
-
-async function loadReferenceGameSource({
-  srcPath,
-  scenarioPath,
-  gameId,
-  errors,
-}) {
-  try {
-    const source = await readFile(srcPath, "utf8");
-    const coverage = await readFile(scenarioPath, "utf8");
-    const moduleSource = source
-      .replace(
-        /import\s+\{\s*DREAMBOARD_SDK_PACKAGE_SET\s*\}\s+from\s+["']@dreamboard-games\/sdk\/package-set["'];/,
-        'const DREAMBOARD_SDK_PACKAGE_SET = { sdkVersion: "reference-check" };',
-      )
-      .replace(
-        /import\s+coverage\s+from\s+["']\.\.\/scenarios\/coverage\.json["']\s+with\s+\{\s*type:\s*["']json["']\s*\};/,
-        `const coverage = ${coverage};`,
-      );
-    const moduleUrl = `data:text/javascript;base64,${Buffer.from(
-      moduleSource,
-      "utf8",
-    ).toString("base64")}`;
-    const module = await import(moduleUrl);
-    if (!module.referenceGame || typeof module.referenceGame !== "object") {
-      errors.push(
-        `${gameId}: src/reference-game.mjs must export referenceGame`,
-      );
-      return null;
-    }
-    return module.referenceGame;
-  } catch (error) {
-    errors.push(`${gameId}: failed to import src/reference-game.mjs: ${error}`);
-    return null;
-  }
-}
-
-function checkReferenceGuidance({ referenceGame, gameId, errors }) {
-  const phase = referenceGame.guidance?.phase;
-  if (!phase || typeof phase !== "object") {
-    errors.push(`${gameId}: guidance.phase is required`);
-  } else {
-    checkTextField({
-      value: phase.label,
-      label: "guidance.phase.label",
-      maxLength: guidanceStringBounds.label,
-      errors,
-      gameId,
-    });
-    checkTextField({
-      value: phase.summary,
-      label: "guidance.phase.summary",
-      maxLength: guidanceStringBounds.summary,
-      errors,
-      gameId,
-    });
-    checkTextObject({
-      object: phase,
-      fieldBounds: { objective: guidanceStringBounds.objective },
-      pathPrefix: "guidance.phase",
-      errors,
-      gameId,
-    });
-  }
-
-  const setup = referenceGame.guidance?.setup;
-  if (setup !== undefined) {
-    checkTextObject({
-      object: setup,
-      fieldBounds: {
-        name: guidanceStringBounds.name,
-        summary: guidanceStringBounds.summary,
-      },
-      pathPrefix: "guidance.setup",
-      errors,
-      gameId,
-    });
-    if (!Array.isArray(setup.steps) || setup.steps.length === 0) {
-      errors.push(`${gameId}: guidance.setup.steps must be a non-empty array`);
-    } else {
-      const seenStepIds = new Set();
-      for (const [index, step] of setup.steps.entries()) {
-        const stepPath = `guidance.setup.steps[${index}]`;
-        checkTextField({
-          value: step?.id,
-          label: `${stepPath}.id`,
-          maxLength: guidanceStringBounds.label,
-          errors,
-          gameId,
-        });
-        if (seenStepIds.has(step?.id)) {
-          errors.push(
-            `${gameId}: duplicated setup guidance step id ${step.id}`,
-          );
-        }
-        seenStepIds.add(step?.id);
-        checkTextField({
-          value: step?.label,
-          label: `${stepPath}.label`,
-          maxLength: guidanceStringBounds.label,
-          errors,
-          gameId,
-        });
-        checkTextObject({
-          object: step,
-          fieldBounds: { description: guidanceStringBounds.description },
-          pathPrefix: stepPath,
-          errors,
-          gameId,
-        });
-      }
-    }
-  }
-
-  if (
-    !Array.isArray(referenceGame.interactions) ||
-    referenceGame.interactions.length === 0
-  ) {
-    errors.push(`${gameId}: interactions must be a non-empty array`);
-    return;
-  }
-  const seenInteractionIds = new Set();
-  for (const [index, interaction] of referenceGame.interactions.entries()) {
-    const interactionPath = `interactions[${index}]`;
-    checkTextField({
-      value: interaction?.id,
-      label: `${interactionPath}.id`,
-      maxLength: guidanceStringBounds.label,
-      errors,
-      gameId,
-    });
-    if (seenInteractionIds.has(interaction?.id)) {
-      errors.push(`${gameId}: duplicated interaction id ${interaction.id}`);
-    }
-    seenInteractionIds.add(interaction?.id);
-    checkTextField({
-      value: interaction?.label,
-      label: `${interactionPath}.label`,
-      maxLength: guidanceStringBounds.label,
-      errors,
-      gameId,
-    });
-    checkTextObject({
-      object: interaction,
-      fieldBounds: {
-        help: guidanceStringBounds.help,
-        blockedReason: guidanceStringBounds.blockedReason,
-      },
-      pathPrefix: interactionPath,
-      errors,
-      gameId,
-    });
-  }
-}
-
-async function checkGeneratedTextPreservation({
-  referenceGame,
-  gameId,
-  scenarioPath,
-  errors,
-}) {
-  const coverage = await readJson(scenarioPath);
-  if (!coverage.scenarioId) {
-    return;
-  }
-  const fixturePath = path.join(
-    root,
-    "fixtures/ui/reference-games",
-    `${coverage.scenarioId}.fixture.json`,
-  );
-  if (!(await pathExists(fixturePath))) {
-    errors.push(
-      `${gameId}: missing generated fixture for ${coverage.scenarioId}`,
-    );
-    return;
-  }
-  const fixture = await readJson(fixturePath);
-  const firstFrame = fixture.protocol?.frames?.[0]?.frame;
-  if (!firstFrame) {
-    errors.push(`${gameId}: ${coverage.scenarioId} fixture has no first frame`);
-    return;
-  }
-
-  const authoredGuidance = referenceGame.guidance;
-  if (authoredGuidance) {
-    const generated = firstFrame.guidance;
-    if (!generated) {
-      errors.push(`${gameId}: ${coverage.scenarioId} fixture lost guidance`);
-    } else if (
-      generated.phase?.label !== authoredGuidance.phase?.label ||
-      generated.phase?.summary !== authoredGuidance.phase?.summary ||
-      generated.phase?.objective !== authoredGuidance.phase?.objective ||
-      generated.setup?.summary !== authoredGuidance.setup?.summary ||
-      generated.setup?.steps?.length !== authoredGuidance.setup?.steps?.length
-    ) {
-      errors.push(
-        `${gameId}: ${coverage.scenarioId} fixture guidance text does not match source`,
-      );
-    }
-  }
-
-  const sourceInteractions = new Map(
-    (referenceGame.interactions ?? []).map((interaction) => [
-      interaction.id,
-      interaction,
-    ]),
-  );
-  for (const descriptor of firstFrame.availableInteractions ?? []) {
-    const source = sourceInteractions.get(descriptor.interactionKey);
-    if (!source) {
-      continue;
-    }
-    if (descriptor.label !== source.label) {
-      errors.push(
-        `${gameId}: ${coverage.scenarioId} fixture label for ${source.id} does not match source`,
-      );
-    }
-    if (source.help !== undefined && descriptor.help !== source.help) {
-      errors.push(
-        `${gameId}: ${coverage.scenarioId} fixture help for ${source.id} does not match source`,
-      );
-    }
-    if (
-      source.blockedReason !== undefined &&
-      descriptor.availability?.reason !== source.blockedReason
-    ) {
-      errors.push(
-        `${gameId}: ${coverage.scenarioId} fixture blocked reason for ${source.id} does not match source`,
-      );
-    }
   }
 }
 
@@ -371,7 +93,111 @@ function checkDependencies({
   }
 }
 
-async function checkDemoRelease({ manifest, gameId, gameDir, errors }) {
+async function checkWorkspacePath({ gameDir, gameId, label, value, errors }) {
+  if (typeof value !== "string" || value.length === 0) {
+    errors.push(`${gameId}: workspace.${label} must be a non-empty string`);
+    return false;
+  }
+  if (path.isAbsolute(value) || value.includes("..")) {
+    errors.push(`${gameId}: workspace.${label} must stay inside the game root`);
+    return false;
+  }
+  if (!(await pathExists(path.join(gameDir, value)))) {
+    errors.push(`${gameId}: missing workspace.${label} ${value}`);
+    return false;
+  }
+  return true;
+}
+
+async function checkWorkspacePathList({
+  gameDir,
+  gameId,
+  label,
+  values,
+  errors,
+}) {
+  if (!Array.isArray(values) || values.length === 0) {
+    errors.push(`${gameId}: workspace.${label} must be a non-empty array`);
+    return;
+  }
+  const seen = new Set();
+  for (const value of values) {
+    if (seen.has(value)) {
+      errors.push(`${gameId}: duplicated workspace.${label} entry ${value}`);
+    }
+    seen.add(value);
+    await checkWorkspacePath({ gameDir, gameId, label, value, errors });
+  }
+}
+
+async function checkWorkspaceManifest({ manifest, gameId, gameDir, errors }) {
+  const workspace = manifest.workspace;
+  if (!workspace || typeof workspace !== "object") {
+    errors.push(`${gameId}: schemaVersion 2 requires workspace`);
+    return;
+  }
+  await checkWorkspacePath({
+    gameDir,
+    gameId,
+    label: "manifest",
+    value: workspace.manifest,
+    errors,
+  });
+  await checkWorkspacePath({
+    gameDir,
+    gameId,
+    label: "reducer",
+    value: workspace.reducer,
+    errors,
+  });
+  await checkWorkspacePath({
+    gameDir,
+    gameId,
+    label: "ui",
+    value: workspace.ui,
+    errors,
+  });
+  await checkWorkspacePathList({
+    gameDir,
+    gameId,
+    label: "behaviorScenarios",
+    values: workspace.behaviorScenarios,
+    errors,
+  });
+  await checkWorkspacePathList({
+    gameDir,
+    gameId,
+    label: "uiScenarios",
+    values: workspace.uiScenarios,
+    errors,
+  });
+
+  const readFirst = manifest.teaching?.readFirst;
+  if (!Array.isArray(readFirst) || readFirst.length === 0) {
+    errors.push(`${gameId}: teaching.readFirst must be a non-empty array`);
+  } else {
+    for (const value of readFirst) {
+      await checkWorkspacePath({
+        gameDir,
+        gameId,
+        label: "teaching.readFirst",
+        value,
+        errors,
+      });
+    }
+  }
+
+  if (
+    !Array.isArray(manifest.teaching?.whatThisTeaches) ||
+    manifest.teaching.whatThisTeaches.length === 0
+  ) {
+    errors.push(
+      `${gameId}: teaching.whatThisTeaches must be a non-empty array`,
+    );
+  }
+}
+
+async function checkDemoReleaseV2({ manifest, gameId, errors }) {
   if (typeof manifest.publishToDemoGallery !== "boolean") {
     errors.push(`${gameId}: publishToDemoGallery must be a boolean`);
     return;
@@ -382,47 +208,20 @@ async function checkDemoRelease({ manifest, gameId, gameDir, errors }) {
     }
     return;
   }
-
   const demoRelease = manifest.demoRelease;
   if (!demoRelease || typeof demoRelease !== "object") {
     errors.push(`${gameId}: published demo requires demoRelease`);
     return;
   }
-
-  const expectedSourcePath = `${gameId}/demo-workspace`;
-  if (demoRelease.sourcePath !== expectedSourcePath) {
+  if (demoRelease.sourcePath !== undefined) {
     errors.push(
-      `${gameId}: demoRelease.sourcePath must be ${expectedSourcePath}`,
+      `${gameId}: demoRelease.sourcePath is forbidden in schemaVersion 2`,
     );
   }
-  if (!(await pathExists(path.join(referenceGamesRoot, expectedSourcePath)))) {
-    errors.push(`${gameId}: missing ${expectedSourcePath}`);
-  }
-
-  if (demoRelease.slug !== gameId) {
-    errors.push(`${gameId}: demoRelease.slug must match game id`);
-  }
-  if (
-    typeof demoRelease.heroImageUrl !== "string" ||
-    !demoRelease.heroImageUrl.startsWith(`/demos/${gameId}/`)
-  ) {
+  if (demoRelease.screenshot?.projection !== undefined) {
     errors.push(
-      `${gameId}: demoRelease.heroImageUrl must be under /demos/${gameId}/`,
+      `${gameId}: demoRelease.screenshot.projection is forbidden in schemaVersion 2`,
     );
-  }
-  if (
-    demoRelease.screenshot?.projection !==
-    `${gameId}/demo-workspace/ui/index.tsx`
-  ) {
-    errors.push(
-      `${gameId}: demoRelease.screenshot.projection must target demo-workspace/ui/index.tsx`,
-    );
-  }
-  if (
-    typeof demoRelease.demoPlayerCount !== "number" ||
-    demoRelease.demoPlayerCount < 1
-  ) {
-    errors.push(`${gameId}: demoRelease.demoPlayerCount must be positive`);
   }
 }
 
@@ -464,8 +263,12 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
         "docs/exec-plans/ui-primitive-coverage-and-agent-loop-hard-cut/",
       ) ||
       relative.startsWith(
+        "docs/exec-plans/reference-game-teaching-source-and-admission-hard-cut/",
+      ) ||
+      relative.startsWith(
         "docs/exec-plans/competition-game-authoring-capability-hard-cut/",
       ) ||
+      relative.startsWith("packages/sdk/src/reference-games/") ||
       relative.startsWith(
         "docs/capability-research/competition-game-authoring/",
       ) ||
@@ -495,18 +298,7 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
   const packagePath = path.join(gameDir, "package.json");
   const lockfilePath = path.join(gameDir, "pnpm-lock.yaml");
   const manifestPath = path.join(gameDir, "reference-game.json");
-  const srcPath = path.join(gameDir, "src/reference-game.mjs");
-  const scenarioPath = path.join(gameDir, "scenarios/coverage.json");
-  const testPath = path.join(gameDir, "scenarios/verify.mjs");
-
-  for (const requiredPath of [
-    packagePath,
-    lockfilePath,
-    manifestPath,
-    srcPath,
-    scenarioPath,
-    testPath,
-  ]) {
+  for (const requiredPath of [packagePath, lockfilePath, manifestPath]) {
     if (!(await pathExists(requiredPath))) {
       errors.push(`${gameId}: missing ${path.relative(root, requiredPath)}`);
     }
@@ -520,43 +312,18 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
   if (packageJson.private !== true) {
     errors.push(`${gameId}: package.json must set private true`);
   }
-  if (packageJson.name !== `@dreamboard-reference/${gameId}`) {
-    errors.push(
-      `${gameId}: package name must be @dreamboard-reference/${gameId}`,
-    );
-  }
-  if (packageJson.scripts?.build !== "node src/reference-game.mjs") {
-    errors.push(`${gameId}: build script must run node src/reference-game.mjs`);
-  }
-  if (packageJson.scripts?.test !== "node scenarios/verify.mjs") {
-    errors.push(`${gameId}: test script must run node scenarios/verify.mjs`);
-  }
   checkDependencies({ packageJson, gameId, expectedSdkVersion, errors });
-  const referenceGame = await loadReferenceGameSource({
-    srcPath,
-    scenarioPath,
-    gameId,
-    errors,
-  });
-  if (referenceGame) {
-    checkReferenceGuidance({ referenceGame, gameId, errors });
-    await checkGeneratedTextPreservation({
-      referenceGame,
-      gameId,
-      scenarioPath,
-      errors,
-    });
-  }
 
-  if (manifest.schemaVersion !== 1) {
-    errors.push(`${gameId}: manifest schemaVersion must be 1`);
+  if (manifest.schemaVersion !== 2) {
+    errors.push(`${gameId}: manifest schemaVersion must be 2`);
   }
   if (manifest.id !== gameId) {
     errors.push(
       `${gameId}: manifest id mismatch ${JSON.stringify(manifest.id)}`,
     );
   }
-  await checkDemoRelease({ manifest, gameId, gameDir, errors });
+  await checkWorkspaceManifest({ manifest, gameId, gameDir, errors });
+  await checkDemoReleaseV2({ manifest, gameId, errors });
   checkArraySubset({
     values: manifest.mechanics,
     allowed: knownMechanics,
@@ -599,11 +366,39 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
     id: gameId,
     packageSha256: await sha256File(packagePath),
     lockfileSha256: await sha256File(lockfilePath),
-    sourceSha256: await sha256Directory(path.join(gameDir, "src")),
-    scenarioSha256: await sha256Directory(path.join(gameDir, "scenarios")),
+    sourceSha256: await sha256Directory(gameDir, {
+      excludeDirs: new Set(["node_modules", "dist"]),
+    }),
+    scenarioSha256: await sha256Directory(path.join(gameDir, "test")),
     manifestSha256: await sha256File(manifestPath),
     sdkDependency: packageJson.dependencies?.[sdkPackage],
   };
+}
+
+async function checkLegacyFixtureSidecarInventory(errors) {
+  const legacyGames = [];
+  for (const gameId of await listReferenceGameDirs()) {
+    if (gameId === "shared") {
+      continue;
+    }
+    const gameDir = path.join(referenceGamesRoot, gameId);
+    for (const marker of [
+      "demo-workspace",
+      "src/reference-game.mjs",
+      "src/ui.mjs",
+      "scenarios/coverage.json",
+      "scenarios/verify.mjs",
+    ]) {
+      if (await pathExists(path.join(gameDir, marker))) {
+        legacyGames.push(`${gameId}: ${marker}`);
+        break;
+      }
+    }
+  }
+
+  for (const marker of legacyGames.sort()) {
+    errors.push(`${marker} legacy fixture-sidecar source is forbidden`);
+  }
 }
 
 async function main() {
@@ -631,6 +426,7 @@ async function main() {
   if (new Set(gameDirs).size !== gameDirs.length) {
     errors.push("duplicated reference game IDs");
   }
+  await checkLegacyFixtureSidecarInventory(errors);
 
   const receipts = [];
   const sdkPackageJson = await readJson(

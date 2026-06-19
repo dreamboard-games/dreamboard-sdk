@@ -11,6 +11,8 @@ import {
   materializePluginGameplayFrame,
   type InteractionDescriptor,
   type PluginProtocolEnvelope,
+  type ReducerBoardStaticProjection,
+  type ReducerSeatProjectionBundle,
 } from "./index.js";
 
 const claimDescriptor = {
@@ -213,6 +215,83 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       claimDescriptor,
     ]);
     expect(digestPluginGameplayFrame(frame)).toMatch(/^sha256:[a-f0-9]{64}$/);
+  });
+
+  test("materialization omits optional undefined object fields from reducer projections", () => {
+    const frame = materializePluginGameplayFrame({
+      currentPhase: "play",
+      activePlayers: ["player-1"],
+      perspectivePlayerId: "player-1",
+      gameVersion: 8,
+      actionSetVersion: "sha256:actions",
+      staticProjection: {
+        view: { board: { id: "shared-board", optional: undefined } },
+        hash: undefined,
+        manifestVersion: "manifest-v1",
+      } as unknown as ReducerBoardStaticProjection,
+      dynamicProjection: {
+        currentStage: "play",
+        interactionsByRef: {
+          "claim-ref": {
+            ...claimDescriptor,
+            help: undefined,
+            inputs: [
+              {
+                key: "card",
+                kind: "choice",
+                defaultValue: undefined,
+                domain: {
+                  type: "choice",
+                  choices: [
+                    {
+                      value: "card-1",
+                      label: "Card 1",
+                      icon: undefined,
+                      disabled: undefined,
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+        seats: {
+          "player-1": {
+            view: { handSize: 1, optional: undefined },
+            availableInteractionRefs: ["claim-ref"],
+          },
+        },
+      } as unknown as ReducerSeatProjectionBundle,
+    });
+
+    expect(frame.view).toEqual({
+      board: { id: "shared-board" },
+      handSize: 1,
+    });
+    expect(frame.availableInteractions[0]?.inputs[0]?.domain).toEqual({
+      type: "choice",
+      choices: [{ value: "card-1", label: "Card 1" }],
+    });
+  });
+
+  test("materialization rejects undefined array entries in reducer projections", () => {
+    expect(() =>
+      materializePluginGameplayFrame({
+        currentPhase: "play",
+        activePlayers: ["player-1"],
+        perspectivePlayerId: "player-1",
+        gameVersion: 8,
+        actionSetVersion: "sha256:actions",
+        dynamicProjection: {
+          interactionsByRef: {},
+          seats: {
+            "player-1": {
+              availableInteractionRefs: [undefined],
+            },
+          },
+        } as unknown as ReducerSeatProjectionBundle,
+      }),
+    ).toThrow("runtime JSON contains unsupported undefined value");
   });
 
   test("action set hashing is canonical and sensitive to gameplay basis", () => {

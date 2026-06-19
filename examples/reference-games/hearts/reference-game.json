@@ -1,8 +1,41 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "hearts",
   "displayName": "Hearts",
   "publishToDemoGallery": true,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/smoke-initial-hand.scenario.ts",
+      "test/scenarios/smoke-initial-turn.scenario.ts"
+    ],
+    "uiScenarios": ["test/ui-scenarios/pass-three.mobile.scenario.ts"]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "private player views",
+      "simultaneous card passing",
+      "follow-suit legality"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when each player needs a private hand and a shared trick area.",
+      "Use simultaneous passing when actions must be hidden until every player commits.",
+      "Use reducer-owned legality to keep follow-suit and first-trick constraints consistent across UI and tests."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/passing.ts",
+      "app/phases/playing.ts",
+      "ui/App.tsx",
+      "ui/interaction-routes.tsx",
+      "test/scenarios/smoke-initial-hand.scenario.ts",
+      "test/ui-scenarios/pass-three.mobile.scenario.ts"
+    ]
+  },
   "demoRelease": {
     "slug": "hearts",
     "name": "Hearts",
@@ -23,9 +56,7 @@
     "heroImageUrl": "/demos/hearts/desktop.png",
     "estimatedMinutes": 10,
     "demoPlayerCount": 4,
-    "sourcePath": "hearts/demo-workspace",
     "screenshot": {
-      "projection": "hearts/demo-workspace/ui/index.tsx",
       "presets": {
         "desktop": {
           "viewport": [1440, 1000],

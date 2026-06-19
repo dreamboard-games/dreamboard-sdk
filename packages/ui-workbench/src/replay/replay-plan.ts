@@ -39,6 +39,7 @@ export type WorkbenchSemanticReplayStep = Extract<
   UIScenarioReplayStep,
   { readonly resolve: UIReplayRequest }
 >;
+export type WorkbenchScenarioReplayStep = UIScenarioReplayStep;
 
 export interface ReplayActuatorReference {
   readonly kind: "actuator";
@@ -252,38 +253,57 @@ export function assertStepExpectation(
     submissionState: measurement.submissionState ?? diagnostics.submissionState,
   };
 
-  for (const key of [
-    "frameId",
-    "projectionDigest",
-    "semanticDigest",
-    "draftDigest",
-    "submissionDigest",
-    "focusedInteractionKey",
-  ] as const) {
-    if (
-      step.expect[key] !== undefined &&
-      actualValues[key] !== step.expect[key]
-    ) {
-      throw new Error(
-        `Replay step '${step.stepId}' expected ${key} '${step.expect[key]}', received '${actualValues[key] ?? "<unavailable>"}'.`,
-      );
-    }
-  }
-  if (step.expect.visibleInteractionKeys) {
-    const visible = new Set(actualValues.visibleInteractionKeys);
-    const missing = step.expect.visibleInteractionKeys.filter(
-      (key) => !visible.has(key),
-    );
-    if (missing.length > 0) {
-      throw new Error(
-        `Replay step '${step.stepId}' missing visible interactions: ${missing.join(", ")}.`,
-      );
-    }
-  }
+  assertExpectedValues(step, actualValues);
 
   return {
     stepId: step.stepId,
     interactionId: source.interactionId,
+    frameId: actualValues.frameId,
+    projectionDigest: actualValues.projectionDigest,
+    semanticDigest: actualValues.semanticDigest,
+    draftDigest: actualValues.draftDigest,
+    submissionDigest: actualValues.submissionDigest,
+    visibleInteractionKeys,
+    diagnostics: nextDiagnostics,
+  };
+}
+
+export function assertSnapshotExpectation(
+  step: WorkbenchScenarioReplayStep,
+  snapshot: BrowserInteractionSnapshot,
+  measurement: ReplayStepMeasurement,
+  diagnostics: ReplayStepDiagnostics,
+): WorkbenchReplayStepEvidence {
+  const visibleInteractionKeys = snapshot.surfaces.flatMap((surface) =>
+    isSemanticSurfaceSnapshot(surface)
+      ? surface.interactions.map((interaction) => interaction.interactionKey)
+      : [],
+  );
+  const actualValues = {
+    ...measurement,
+    draftDigest: readCurrentDraftDigest(snapshot),
+    submissionDigest: undefined,
+    semanticDigest: measurement.scenarioId
+      ? digestWorkbenchReplayJson({
+          digestVersion: "runtime-browser-interaction@2",
+          snapshot,
+        })
+      : undefined,
+    visibleInteractionKeys,
+  };
+  const nextDiagnostics = {
+    ...diagnostics,
+    measuredSemanticDigest: actualValues.semanticDigest,
+    draftDigest: actualValues.draftDigest ?? diagnostics.draftDigest,
+    validationState: measurement.validationState ?? diagnostics.validationState,
+    submissionState: measurement.submissionState ?? diagnostics.submissionState,
+  };
+
+  assertExpectedValues(step, actualValues);
+
+  return {
+    stepId: step.stepId,
+    interactionId: "assert",
     frameId: actualValues.frameId,
     projectionDigest: actualValues.projectionDigest,
     semanticDigest: actualValues.semanticDigest,
@@ -309,16 +329,57 @@ export function assertValidSemanticSnapshot(
 }
 
 export function createStepDiagnostics(
-  step: WorkbenchSemanticReplayStep,
+  step: WorkbenchScenarioReplayStep,
   values: Partial<ReplayStepDiagnostics> = {},
 ): ReplayStepDiagnostics {
   return {
     stepId: step.stepId,
-    request: step.resolve,
-    requestDigest: step.requestDigest,
+    request: "resolve" in step ? step.resolve : ({} as UIReplayRequest),
+    requestDigest: "requestDigest" in step ? step.requestDigest : undefined,
     expectedSemanticDigest: step.expect.semanticDigest,
     ...values,
   };
+}
+
+function assertExpectedValues(
+  step: WorkbenchScenarioReplayStep,
+  actualValues: Partial<
+    ReplayStepMeasurement & {
+      readonly semanticDigest: string;
+      readonly draftDigest: string;
+      readonly submissionDigest: string;
+      readonly visibleInteractionKeys: readonly string[];
+    }
+  >,
+): void {
+  for (const key of [
+    "frameId",
+    "projectionDigest",
+    "semanticDigest",
+    "draftDigest",
+    "submissionDigest",
+    "focusedInteractionKey",
+  ] as const) {
+    if (
+      step.expect[key] !== undefined &&
+      actualValues[key] !== step.expect[key]
+    ) {
+      throw new Error(
+        `Replay step '${step.stepId}' expected ${key} '${step.expect[key]}', received '${actualValues[key] ?? "<unavailable>"}'.`,
+      );
+    }
+  }
+  if (step.expect.visibleInteractionKeys) {
+    const visible = new Set(actualValues.visibleInteractionKeys ?? []);
+    const missing = step.expect.visibleInteractionKeys.filter(
+      (key) => !visible.has(key),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `Replay step '${step.stepId}' missing visible interactions: ${missing.join(", ")}.`,
+      );
+    }
+  }
 }
 
 function resolveReplayTarget(

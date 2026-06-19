@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { referenceGamesRoot, root } from "../ui/reference-games-lib.mjs";
 
@@ -9,6 +10,30 @@ const allowedSourceRoots = [
   uiScenariosRoot,
   path.join(root, "packages/sdk/src"),
 ];
+const tsxApiPath = path.join(
+  root,
+  "node_modules/.pnpm/tsx@4.22.4/node_modules/tsx/dist/esm/api/index.mjs",
+);
+
+let tsImport;
+
+async function loadTsImport() {
+  if (!tsImport) {
+    if (!existsSync(tsxApiPath)) {
+      throw new Error(`tsx ESM API was not found at ${tsxApiPath}.`);
+    }
+    ({ tsImport } = await import(pathToFileURL(tsxApiPath).href));
+  }
+  return tsImport;
+}
+
+async function importScenarioModule(absolutePath) {
+  const specifier = `${pathToFileURL(absolutePath).href}?scenario=${Date.now()}`;
+  if (/\.[cm]?tsx?$/.test(absolutePath)) {
+    return (await loadTsImport())(specifier, { parentURL: import.meta.url });
+  }
+  return import(specifier);
+}
 
 function isWithin(child, parent) {
   const relative = path.relative(parent, child);
@@ -46,6 +71,23 @@ function validateScenarioDefinition(scenario, modulePath) {
         `${modulePath} source file '${sourceFile}' is outside allowed UI scenario roots.`,
       );
     }
+  }
+  if (!Array.isArray(scenario.contracts)) {
+    throw new Error(`${modulePath} scenario.contracts must be an array.`);
+  }
+  if (scenario.capabilities && !Array.isArray(scenario.capabilities)) {
+    throw new Error(`${modulePath} scenario.capabilities must be an array.`);
+  }
+  if (scenario.replay && !Array.isArray(scenario.replay)) {
+    throw new Error(`${modulePath} scenario.replay must be an array.`);
+  }
+  if (!scenario.authority) {
+    if (!scenario.behaviorScenario) {
+      throw new Error(
+        `${modulePath} v2 workspace scenarios must include behaviorScenario or authority.`,
+      );
+    }
+    return;
   }
   assertObject(
     scenario.authority,
@@ -105,12 +147,21 @@ function validateScenarioDefinition(scenario, modulePath) {
       `${modulePath} reducer authority must include operations array.`,
     );
   }
-  if (scenario.authority.coverage.scenarioId !== scenario.id) {
+  const coverageScenarioId =
+    scenario.authority.coverage.scenarioId ?? scenario.authority.coverage.id;
+  if (
+    typeof coverageScenarioId === "string" &&
+    coverageScenarioId !== scenario.id &&
+    !scenario.id.startsWith(`${coverageScenarioId}.`)
+  ) {
     throw new Error(
-      `${modulePath} scenario.id must match authority.coverage.scenarioId.`,
+      `${modulePath} scenario.id must match or extend authority.coverage.scenarioId.`,
     );
   }
-  if (scenario.authority.referenceGame.id !== gameId) {
+  if (
+    scenario.authority.referenceGame.id &&
+    scenario.authority.referenceGame.id !== gameId
+  ) {
     throw new Error(
       `${modulePath} scenario.gameId must match authority.referenceGame.id.`,
     );
@@ -127,13 +178,12 @@ export async function loadScenarioModule(modulePath) {
       `${modulePath} is outside ${examplesRoot} and ${uiScenariosRoot}.`,
     );
   }
-  const module = await import(
-    `${pathToFileURL(absolutePath).href}?scenario=${Date.now()}`
-  );
+  const module = await importScenarioModule(absolutePath);
   const scenario = module.scenario ?? module.default;
   validateScenarioDefinition(scenario, modulePath);
   return {
     ...scenario,
-    gameId: scenario.gameId ?? scenario.authority.referenceGame?.id,
+    __modulePath: absolutePath,
+    gameId: scenario.gameId ?? scenario.authority?.referenceGame?.id,
   };
 }

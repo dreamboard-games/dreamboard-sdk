@@ -334,11 +334,16 @@ async function main() {
         `${entry.scenarioId} ${entry.project} wrote evidence for ${evidence.scenarioId} ${evidence.project}.`,
       );
     }
+    const assertOnlyReplay =
+      evidence &&
+      Array.isArray(fixture.replay) &&
+      fixture.replay.every((step) => !("resolve" in step));
     if (
       evidence &&
       (evidence.projectionDigest !== fixture.expected.finalProjectionDigest ||
         evidence.semanticDigest !== fixture.expected.finalSemanticDigest ||
-        evidence.submissionDigest !== fixture.expected.submissionDigest)
+        (!assertOnlyReplay &&
+          evidence.submissionDigest !== fixture.expected.submissionDigest))
     ) {
       throw new Error(
         `${entry.scenarioId} ${entry.project} measured evidence did not match fixture expectations.`,

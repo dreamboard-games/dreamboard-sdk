@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/package-set.ts",
+    "src/reference-games/index.ts",
     "src/types.ts",
     "src/reducer.ts",
     "src/reducer/advanced.ts",
@@ -48,6 +49,8 @@ export default defineConfig({
     "@radix-ui/react-select",
     "@radix-ui/react-slot",
     "@radix-ui/react-tooltip",
+    "@noble/hashes/sha2.js",
+    "@noble/hashes/utils.js",
     "@use-gesture/react",
     "clsx",
     "framer-motion",

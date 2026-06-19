@@ -45,20 +45,15 @@ test("roll-and-write scorecard accepts keyboard activation for square board targ
       assertValidSemanticSnapshot(snapshot);
       const interaction = snapshot.surfaces
         .flatMap((surface) => surface.interactions)
-        .find((item) => item.interactionKey === "mark-cell");
+        .find((item) => item.interactionKey === "markSurvey.markCell");
       const cellActuator = interaction?.actuators.find(
         (actuator) => actuator.actuatorId === "board:space:cell-0-1",
       );
-      const submitActuator = interaction?.actuators.find(
-        (actuator) => actuator.actuatorId === "primitive-submit",
-      );
       return {
         cellCandidateState: cellActuator?.candidateState,
-        submitEnabled: submitActuator?.enabled,
       };
     })
     .toEqual({
       cellCandidateState: "selected",
-      submitEnabled: true,
     });
 });

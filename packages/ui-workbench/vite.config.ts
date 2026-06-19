@@ -1,6 +1,7 @@
 import { createReadStream } from "node:fs";
 import { cp, mkdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, type Plugin } from "vite";
 
 const workspaceRoot = path.resolve(__dirname, "../..");
@@ -135,7 +136,7 @@ export default defineConfig(({ command }) => {
   }
 
   return {
-    plugins: [fixtureAssetPlugin()],
+    plugins: [tailwindcss(), fixtureAssetPlugin()],
     build: {
       target: "esnext",
     },

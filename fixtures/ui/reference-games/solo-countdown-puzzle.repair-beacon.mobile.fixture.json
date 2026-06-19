@@ -11,10 +11,10 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:2ac64ff8fac690cb373a1359af3d4eefb3b77648bacb817fc0adcc0d4ea3b2bc",
-    "finalSemanticDigest": "sha256:8f82d8f2b2ee861a5c97d45909c781d8dfccb1949dd8acf6a9f9974366632cb0",
-    "initialProjectionDigest": "sha256:d06445d3a757683784824f9c9cbdcd7f277c400eb1a107cff1c97fa25ed01fd9",
-    "submissionDigest": "sha256:1443f18830f870dd99b24f7c36032fb93337a42a0ec0b4ec666f821cb4e28097"
+    "finalProjectionDigest": "sha256:dc37a0cb453d11fe322831d36c35fa4d9c6c48a24d7bdcdace6227a151b59eb7",
+    "finalSemanticDigest": "sha256:ef0d9d611c62c08be7cab41567f6ed5b4ae8cccb4febff97aeb12132ea6a867c",
+    "initialProjectionDigest": "sha256:e5c540daeb4c93ba9a44da9eccd38fa39366ae751a26a147365c48b083906941",
+    "submissionDigest": "sha256:f70937b2e4d6f5c1eaecff672ae6447668ac35785c1e8bce9d033fefafe518d0"
   },
   "gameId": "solo-countdown-puzzle",
   "id": "solo-countdown-puzzle.repair-beacon.mobile",
@@ -23,295 +23,252 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:9607bf61187d48920c6d603d28fae5d28298cbca49ceada4f795854dc5e846db",
+          "actionSetVersion": "sha256:90dd1378dde395d816802e67a55a67db0c7b9ff4324cbd0b18b1537f0a2cce0f",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
                 "status": "available"
               },
               "commit": {
-                "mode": "manual"
+                "mode": "autoWhenReady"
               },
-              "descriptorDigest": "sha256:379054c26139f911223a221f94c50ccbb345d0968e85de2274e3cc300f279e66",
-              "help": "Spend one energy to raise the selected beacon by one level.",
+              "descriptorDigest": "sha256:39a5722143aa15e580b7d452fc2b81ca74e92bd6fc3551eafc1548a243492840",
+              "draftDigest": "sha256:ca552992f924c7c59e971b4f52409d67c56914a0148b385ddfc503f74475ac7b",
+              "help": "Spend one energy and raise the selected beacon by one level.",
               "inputs": [
                 {
                   "domain": {
+                    "boardId": "beacon-grid",
                     "eligibleTargets": [
-                      "beacon-north",
                       "beacon-harbor",
+                      "beacon-north",
                       "beacon-south"
                     ],
                     "projection": "resolved",
-                    "selection": {
-                      "mode": "single"
-                    },
                     "targetKind": "space",
-                    "type": "boardTarget"
+                    "type": "boardTarget",
+                    "valueKind": "board-id"
                   },
-                  "key": "beacon",
-                  "kind": "boardTarget"
+                  "key": "beaconId",
+                  "kind": "board-space"
                 }
               ],
-              "interactionId": "repair-beacon:player-1",
-              "interactionKey": "repair-beacon",
+              "interactionId": "repairBeacon",
+              "interactionKey": "playerTurn.repairBeacon",
               "kind": "action",
               "label": "Repair beacon",
-              "phaseName": "fixture"
+              "phaseName": "playerTurn",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "solo-countdown-puzzle.repair-beacon.mobile",
-            "currentStage": "solo-countdown-puzzle.repair-beacon.mobile",
+            "currentPhase": "playerTurn",
+            "currentStage": "playerTurn",
             "simultaneousPhase": null
           },
           "gameVersion": 1,
           "guidance": {
             "phase": {
               "id": "playerTurn",
-              "label": "Repair the beacons",
-              "objective": "Light all three beacons before storm or countdown defeat.",
-              "summary": "Choose a beacon, spend energy, then resolve weather and countdown events."
+              "label": "Player Turn"
             },
             "setup": {
-              "name": "Last Light setup",
+              "name": "Standard",
               "profileId": "standard",
               "steps": [
                 {
-                  "description": "Put north, harbor, and south beacons on the square grid.",
-                  "id": "place-beacons",
-                  "label": "Place beacons"
+                  "description": "Spend one energy and raise a beacon by one level.",
+                  "id": "repair",
+                  "label": "Repair a beacon"
                 },
                 {
-                  "description": "Use the deterministic weather deck for repeatable events.",
-                  "id": "seed-weather",
-                  "label": "Seed weather"
+                  "description": "Reveal the next deterministic weather card.",
+                  "id": "weather",
+                  "label": "Resolve weather"
+                },
+                {
+                  "description": "Lose if the countdown reaches zero.",
+                  "id": "countdown",
+                  "label": "Advance countdown"
                 }
               ],
-              "summary": "One human player starts with energy, three beacons, and a seeded weather deck."
+              "summary": "Repair all three beacons before storm or countdown defeat."
             }
           },
           "perspectivePlayerId": "player-1",
-          "recentEvents": [
-            {
-              "details": [
-                {
-                  "label": "Scenario",
-                  "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                }
-              ],
-              "index": 0,
-              "kind": "systemAction",
-              "procedureId": "resolve-weather",
-              "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded resolve-weather.",
-              "title": "Resolve Weather",
-              "version": 1
-            },
-            {
-              "details": [
-                {
-                  "label": "Scenario",
-                  "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                }
-              ],
-              "index": 1,
-              "kind": "systemAction",
-              "procedureId": "advance-countdown",
-              "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded advance-countdown.",
-              "title": "Advance Countdown",
-              "version": 1
-            }
-          ],
+          "recentEvents": [],
           "view": {
-            "displayName": "Solo Countdown Puzzle",
-            "recentEvents": [
+            "activePlayers": [
+              "player-1"
+            ],
+            "beacons": [
               {
-                "details": [
-                  {
-                    "label": "Scenario",
-                    "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                  }
-                ],
-                "index": 0,
-                "kind": "systemAction",
-                "procedureId": "resolve-weather",
-                "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded resolve-weather.",
-                "title": "Resolve Weather",
-                "version": 1
+                "id": "beacon-north",
+                "level": 0,
+                "lit": false,
+                "name": "North Beacon"
               },
               {
-                "details": [
-                  {
-                    "label": "Scenario",
-                    "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                  }
-                ],
-                "index": 1,
-                "kind": "systemAction",
-                "procedureId": "advance-countdown",
-                "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded advance-countdown.",
-                "title": "Advance Countdown",
-                "version": 1
+                "id": "beacon-harbor",
+                "level": 0,
+                "lit": false,
+                "name": "Harbor Beacon"
+              },
+              {
+                "id": "beacon-south",
+                "level": 0,
+                "lit": false,
+                "name": "South Beacon"
               }
             ],
-            "referenceGameId": "solo-countdown-puzzle",
-            "scenarioBranch": null,
-            "scenarioId": "solo-countdown-puzzle.repair-beacon.mobile",
-            "submittedInteractionId": null
+            "completed": false,
+            "currentPhase": "playerTurn",
+            "energy": 5,
+            "events": [],
+            "outcomeCode": null,
+            "reinforcement": 0,
+            "storm": 0,
+            "turnsRemaining": 8
           },
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:d06445d3a757683784824f9c9cbdcd7f277c400eb1a107cff1c97fa25ed01fd9"
+        "projectionDigest": "sha256:e5c540daeb4c93ba9a44da9eccd38fa39366ae751a26a147365c48b083906941"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:bd1a133f31932ece4748e9b04c95ee69cdeaa48e20799522b58102a48433e4fc",
+          "actionSetVersion": "sha256:5c0a2587cd9df485e8cdaa3a0f06783904ad87837bcfc1427050873053f5e75e",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
                 "status": "available"
               },
               "commit": {
-                "mode": "manual"
+                "mode": "autoWhenReady"
               },
-              "descriptorDigest": "sha256:379054c26139f911223a221f94c50ccbb345d0968e85de2274e3cc300f279e66",
-              "help": "Spend one energy to raise the selected beacon by one level.",
+              "descriptorDigest": "sha256:39a5722143aa15e580b7d452fc2b81ca74e92bd6fc3551eafc1548a243492840",
+              "draftDigest": "sha256:ca552992f924c7c59e971b4f52409d67c56914a0148b385ddfc503f74475ac7b",
+              "help": "Spend one energy and raise the selected beacon by one level.",
               "inputs": [
                 {
                   "domain": {
+                    "boardId": "beacon-grid",
                     "eligibleTargets": [
-                      "beacon-north",
                       "beacon-harbor",
+                      "beacon-north",
                       "beacon-south"
                     ],
                     "projection": "resolved",
-                    "selection": {
-                      "mode": "single"
-                    },
                     "targetKind": "space",
-                    "type": "boardTarget"
+                    "type": "boardTarget",
+                    "valueKind": "board-id"
                   },
-                  "key": "beacon",
-                  "kind": "boardTarget"
+                  "key": "beaconId",
+                  "kind": "board-space"
                 }
               ],
-              "interactionId": "repair-beacon:player-1",
-              "interactionKey": "repair-beacon",
+              "interactionId": "repairBeacon",
+              "interactionKey": "playerTurn.repairBeacon",
               "kind": "action",
               "label": "Repair beacon",
-              "phaseName": "fixture"
+              "phaseName": "playerTurn",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "solo-countdown-puzzle.repair-beacon.mobile.submitted",
-            "currentStage": "solo-countdown-puzzle.repair-beacon.mobile.submitted",
+            "currentPhase": "playerTurn",
+            "currentStage": "playerTurn",
             "simultaneousPhase": null
           },
           "gameVersion": 2,
           "guidance": {
             "phase": {
               "id": "playerTurn",
-              "label": "Repair the beacons",
-              "objective": "Light all three beacons before storm or countdown defeat.",
-              "summary": "Choose a beacon, spend energy, then resolve weather and countdown events."
+              "label": "Player Turn"
             },
             "setup": {
-              "name": "Last Light setup",
+              "name": "Standard",
               "profileId": "standard",
               "steps": [
                 {
-                  "description": "Put north, harbor, and south beacons on the square grid.",
-                  "id": "place-beacons",
-                  "label": "Place beacons"
+                  "description": "Spend one energy and raise a beacon by one level.",
+                  "id": "repair",
+                  "label": "Repair a beacon"
                 },
                 {
-                  "description": "Use the deterministic weather deck for repeatable events.",
-                  "id": "seed-weather",
-                  "label": "Seed weather"
+                  "description": "Reveal the next deterministic weather card.",
+                  "id": "weather",
+                  "label": "Resolve weather"
+                },
+                {
+                  "description": "Lose if the countdown reaches zero.",
+                  "id": "countdown",
+                  "label": "Advance countdown"
                 }
               ],
-              "summary": "One human player starts with energy, three beacons, and a seeded weather deck."
+              "summary": "Repair all three beacons before storm or countdown defeat."
             }
           },
           "perspectivePlayerId": "player-1",
-          "recentEvents": [
-            {
-              "details": [
-                {
-                  "label": "Scenario",
-                  "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                }
-              ],
-              "index": 0,
-              "kind": "systemAction",
-              "procedureId": "resolve-weather",
-              "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded resolve-weather.",
-              "title": "Resolve Weather",
-              "version": 1
-            },
-            {
-              "details": [
-                {
-                  "label": "Scenario",
-                  "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                }
-              ],
-              "index": 1,
-              "kind": "systemAction",
-              "procedureId": "advance-countdown",
-              "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded advance-countdown.",
-              "title": "Advance Countdown",
-              "version": 1
-            }
-          ],
+          "recentEvents": [],
           "view": {
-            "displayName": "Solo Countdown Puzzle",
-            "recentEvents": [
+            "activePlayers": [
+              "player-1"
+            ],
+            "beacons": [
               {
-                "details": [
-                  {
-                    "label": "Scenario",
-                    "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                  }
-                ],
-                "index": 0,
-                "kind": "systemAction",
-                "procedureId": "resolve-weather",
-                "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded resolve-weather.",
-                "title": "Resolve Weather",
-                "version": 1
+                "id": "beacon-north",
+                "level": 1,
+                "lit": false,
+                "name": "North Beacon"
               },
               {
-                "details": [
-                  {
-                    "label": "Scenario",
-                    "value": "solo-countdown-puzzle.repair-beacon.mobile"
-                  }
-                ],
-                "index": 1,
-                "kind": "systemAction",
-                "procedureId": "advance-countdown",
-                "summary": "solo-countdown-puzzle.repair-beacon.mobile recorded advance-countdown.",
-                "title": "Advance Countdown",
-                "version": 1
+                "id": "beacon-harbor",
+                "level": 0,
+                "lit": false,
+                "name": "Harbor Beacon"
+              },
+              {
+                "id": "beacon-south",
+                "level": 0,
+                "lit": false,
+                "name": "South Beacon"
               }
             ],
-            "referenceGameId": "solo-countdown-puzzle",
-            "scenarioBranch": null,
-            "scenarioId": "solo-countdown-puzzle.repair-beacon.mobile",
-            "submittedInteractionId": "repair-beacon:player-1"
+            "completed": false,
+            "currentPhase": "playerTurn",
+            "energy": 4,
+            "events": [
+              {
+                "kind": "systemAction",
+                "procedureId": "resolve-weather",
+                "summary": "calm changed storm by 0.",
+                "title": "Resolve weather"
+              },
+              {
+                "kind": "systemAction",
+                "procedureId": "advance-countdown",
+                "summary": "7 turns remain.",
+                "title": "Advance countdown"
+              }
+            ],
+            "outcomeCode": null,
+            "reinforcement": 0,
+            "storm": 0,
+            "turnsRemaining": 7
           },
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:2ac64ff8fac690cb373a1359af3d4eefb3b77648bacb817fc0adcc0d4ea3b2bc"
+        "projectionDigest": "sha256:dc37a0cb453d11fe322831d36c35fa4d9c6c48a24d7bdcdace6227a151b59eb7"
       }
     ],
     "session": {
@@ -331,25 +288,25 @@
       },
       {
         "fromFrameId": "frame-1",
-        "id": "solo-countdown-puzzle.repair-beacon.mobile.validate",
+        "id": "solo-countdown-puzzle.repair-beacon.mobile.submit-1.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:7bc1578b1be56a0eee96ecbecb790cb9bcce983ee2e917dc0f584ca7dc6ba568",
+        "requestDigest": "sha256:9f08dfd073600e95e1525a62163127a96951b13a385680ec2e3c57943a249a77",
         "response": {
           "valid": true
         }
       },
       {
         "fromFrameId": "frame-1",
-        "id": "solo-countdown-puzzle.repair-beacon.mobile.submit",
+        "id": "solo-countdown-puzzle.repair-beacon.mobile.submit-1",
         "kind": "client.submit",
-        "requestDigest": "sha256:b522d0c6c74ae9504877228419f9f4bf0de722fa07d29067fdafeb691ec6c017",
+        "requestDigest": "sha256:5b638c7c437b85648606098278d5bae2528a1529dde9d12e6570bbee678244cf",
         "response": {
           "accepted": true
         }
       },
       {
         "frameId": "frame-2",
-        "id": "solo-countdown-puzzle.repair-beacon.mobile.submit.host-frame",
+        "id": "solo-countdown-puzzle.repair-beacon.mobile.submit-1.host-frame",
         "kind": "host.frame"
       }
     ]
@@ -360,84 +317,59 @@
         "kind": "activate"
       },
       "expect": {
-        "semanticDigest": "sha256:cefb824aa101e102622217ed66f390ef28344a07ab6babc2de671fd72c65e01a",
+        "frameId": "frame-2",
+        "projectionDigest": "sha256:dc37a0cb453d11fe322831d36c35fa4d9c6c48a24d7bdcdace6227a151b59eb7",
+        "semanticDigest": "sha256:ef0d9d611c62c08be7cab41567f6ed5b4ae8cccb4febff97aeb12132ea6a867c",
+        "submissionDigest": "sha256:f70937b2e4d6f5c1eaecff672ae6447668ac35785c1e8bce9d033fefafe518d0",
         "visibleInteractionKeys": [
-          "repair-beacon"
+          "playerTurn.repairBeacon"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "board:space:beacon-north",
-        "descriptorDigest": "sha256:379054c26139f911223a221f94c50ccbb345d0968e85de2274e3cc300f279e66",
-        "interactionId": "repair-beacon:player-1",
-        "interactionKey": "repair-beacon",
+        "descriptorDigest": "sha256:39a5722143aa15e580b7d452fc2b81ca74e92bd6fc3551eafc1548a243492840",
+        "draftDigest": "sha256:ca552992f924c7c59e971b4f52409d67c56914a0148b385ddfc503f74475ac7b",
+        "interactionId": "repairBeacon",
+        "interactionKey": "playerTurn.repairBeacon",
         "scopeId": "runtime",
         "stepId": "solo-countdown-puzzle.repair-beacon.mobile.board-space",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:0f6860c8eee6c824d142043c72b3a486cedd4f982ab2ec44492d6c12a447fad3",
+      "requestDigest": "sha256:45ffcbc3a06e0303fef7043d5d7d6f3438a8c5c271af451ebf258b52aa5a82a3",
       "resolve": {
         "effect": {
           "afterSelected": true,
           "beforeSelected": false,
           "candidateValue": "beacon-north",
-          "inputKey": "beacon",
+          "inputKey": "beaconId",
           "kind": "setCandidate"
         },
-        "interactionId": "repair-beacon:player-1",
-        "interactionKey": "repair-beacon",
+        "interactionId": "repairBeacon",
+        "interactionKey": "playerTurn.repairBeacon",
         "scopeId": "runtime",
         "surface": "gameplay"
       },
       "stepId": "solo-countdown-puzzle.repair-beacon.mobile.board-space"
-    },
-    {
-      "execute": {
-        "kind": "activate"
-      },
-      "expect": {
-        "frameId": "frame-2",
-        "projectionDigest": "sha256:2ac64ff8fac690cb373a1359af3d4eefb3b77648bacb817fc0adcc0d4ea3b2bc",
-        "semanticDigest": "sha256:8f82d8f2b2ee861a5c97d45909c781d8dfccb1949dd8acf6a9f9974366632cb0",
-        "submissionDigest": "sha256:1443f18830f870dd99b24f7c36032fb93337a42a0ec0b4ec666f821cb4e28097",
-        "visibleInteractionKeys": [
-          "repair-beacon"
-        ]
-      },
-      "expectedIdentity": {
-        "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:379054c26139f911223a221f94c50ccbb345d0968e85de2274e3cc300f279e66",
-        "interactionId": "repair-beacon:player-1",
-        "interactionKey": "repair-beacon",
-        "scopeId": "runtime",
-        "stepId": "solo-countdown-puzzle.repair-beacon.mobile.commit",
-        "surface": "gameplay"
-      },
-      "requestDigest": "sha256:e54b7e5b76fa802d3a1e9b6e8570be1469266413c20336477842d3efb725633c",
-      "resolve": {
-        "intent": "submit",
-        "interactionId": "repair-beacon:player-1",
-        "interactionKey": "repair-beacon",
-        "scopeId": "runtime",
-        "surface": "gameplay"
-      },
-      "stepId": "solo-countdown-puzzle.repair-beacon.mobile.commit"
     }
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:eac262fcfbfe195b3c06c77ca1f6e52ccf97a3394fe9ca4262d9917555009b5e",
+    "reducerFingerprint": "sha256:6e534accaf8c6fb407a53e65c65ae3e2ac75b888f3c169e1135343339b7570b6",
     "renderModule": "modules/solo-countdown-puzzle.repair-beacon.mobile.mjs",
-    "renderModuleDigest": "sha256:92ea2ad690bb856ba12305738e85a2ae5409b434fc8a8a491e2536faea040016",
+    "renderModuleDigest": "sha256:67a9edb8fd53b7b87766a080c7a32dca2b6b11790f627478c027d373150b183e",
     "scenarioId": "solo-countdown-puzzle.repair-beacon.mobile",
-    "sourceDigest": "sha256:89645a0d2a37f6bbc6826f5eb47431290d61572595401d49a53ff0414ad3dff4",
+    "sourceDigest": "sha256:2dd3b0113754d0f542d75593bc8084bd096054c0a2e6b6d42c8ad863a7f4bb12",
     "sourceFiles": [
-      "examples/reference-games/solo-countdown-puzzle/scenarios/coverage.json",
-      "examples/reference-games/solo-countdown-puzzle/src/reference-game.mjs",
-      "examples/reference-games/solo-countdown-puzzle/src/ui.mjs",
-      "examples/reference-games/solo-countdown-puzzle/src/scenarios/repair-beacon.scenario.mjs",
-      "examples/reference-games/shared/reference-reducer.mjs"
+      "examples/reference-games/solo-countdown-puzzle/reference-game.json",
+      "examples/reference-games/solo-countdown-puzzle/rule.md",
+      "examples/reference-games/solo-countdown-puzzle/manifest.ts",
+      "examples/reference-games/solo-countdown-puzzle/app/game.ts",
+      "examples/reference-games/solo-countdown-puzzle/app/phases/player-turn.ts",
+      "examples/reference-games/solo-countdown-puzzle/ui/App.tsx",
+      "examples/reference-games/solo-countdown-puzzle/test/scenarios/repair-beacon.scenario.ts",
+      "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/repair-beacon.mobile.scenario.ts"
     ],
-    "uiContractFingerprint": "sha256:ff84d8d1fbadb068344abc1ed7744054da854454aa5250d57ec14bedea5acafd"
+    "uiContractFingerprint": "sha256:ed6b64c8286f0dd91e690ad57f1eb92050462ec5b59f30300ea9ac9699e7bd9e"
   },
   "tags": [
     "compact-mobile-scorecard",
@@ -449,7 +381,7 @@
     "square-grid",
     "turn-summary"
   ],
-  "title": "Solo Countdown Puzzle: initial state has exactly one human player and no opponent identity",
+  "title": "Solo Countdown Puzzle: repair beacon",
   "viewer": {
     "playerId": "player-1",
     "seatId": "player-1"

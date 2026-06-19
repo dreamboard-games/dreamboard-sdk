@@ -130,6 +130,7 @@ function dependencyGraph(cwd) {
 
 async function verifyGame(gameId, tempRoot, sdkTarballPath) {
   const sourceDir = path.join(referenceGamesRoot, gameId);
+  const manifest = await readJson(path.join(sourceDir, "reference-game.json"));
   const sandbox = path.join(tempRoot, "consumers", gameId);
   await mkdir(path.dirname(sandbox), { recursive: true });
   await cp(sourceDir, sandbox, {
@@ -154,8 +155,23 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
       stdio: "inherit",
     },
   );
-  run("pnpm", ["build"], { cwd: sandbox, stdio: "inherit" });
-  run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
+  const sandboxPackage = await readJson(path.join(sandbox, "package.json"));
+  const scripts = sandboxPackage.scripts ?? {};
+  const v2 = manifest.schemaVersion === 2;
+  if (v2) {
+    if (scripts.verify) {
+      run("pnpm", ["verify"], { cwd: sandbox, stdio: "inherit" });
+    } else {
+      run("pnpm", ["typecheck"], { cwd: sandbox, stdio: "inherit" });
+      run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
+      if (scripts["test:ui"]) {
+        run("pnpm", ["test:ui"], { cwd: sandbox, stdio: "inherit" });
+      }
+    }
+  } else {
+    run("pnpm", ["build"], { cwd: sandbox, stdio: "inherit" });
+    run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
+  }
 
   const dependencyResolution = await assertNoWorkspaceLink(sandbox, sdkPackage);
   const graph = dependencyGraph(sandbox);
@@ -164,10 +180,24 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     id: gameId,
     packageSha256: await sha256File(path.join(sourceDir, "package.json")),
     lockfileSha256: await sha256File(path.join(sourceDir, "pnpm-lock.yaml")),
-    sourceSha256: await sha256Directory(path.join(sourceDir, "src")),
-    scenarioSha256: await sha256Directory(path.join(sourceDir, "scenarios")),
-    build: "passed",
-    test: "passed",
+    sourceSha256: v2
+      ? await sha256Directory(sourceDir, {
+          excludeDirs: new Set(["node_modules", "dist"]),
+        })
+      : await sha256Directory(path.join(sourceDir, "src")),
+    scenarioSha256: v2
+      ? await sha256Directory(path.join(sourceDir, "test"))
+      : await sha256Directory(path.join(sourceDir, "scenarios")),
+    ...(v2
+      ? {
+          typecheck: "passed",
+          test: "passed",
+          uiTest: scripts["test:ui"] ? "passed" : "not-declared",
+        }
+      : {
+          build: "passed",
+          test: "passed",
+        }),
     dependencyResolution,
     dependencyGraph: graph,
   };

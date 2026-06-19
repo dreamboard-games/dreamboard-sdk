@@ -1,8 +1,45 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "worker-placement-tableau",
   "displayName": "Worker Placement Tableau",
   "publishToDemoGallery": false,
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx",
+    "behaviorScenarios": [
+      "test/scenarios/smoke-initial-turn.scenario.ts",
+      "test/scenarios/wakeup-slot-selection-and-bonuses.scenario.ts",
+      "test/scenarios/placement-space-resolution-lumberyard.scenario.ts",
+      "test/scenarios/placement-one-worker-per-space.scenario.ts",
+      "test/scenarios/placement-master-override.scenario.ts",
+      "test/scenarios/workshop-placement-requires-craft-option.scenario.ts",
+      "test/scenarios/market-sell-stone.scenario.ts",
+      "test/scenarios/order-fulfill-furniture-commission.scenario.ts",
+      "test/scenarios/items-craft-workbench-adjacency.scenario.ts",
+      "test/scenarios/full-season-6-game-flow.scenario.ts"
+    ],
+    "uiScenarios": ["test/ui-scenarios/place-worker.desktop.scenario.ts"]
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "worker placement action-space blocking",
+      "worker choice after target-first board selection",
+      "dynamic wake-up turn order and bonuses",
+      "tableau item placement with adjacency restrictions",
+      "order fulfillment and end-game tie-break scoring"
+    ],
+    "readFirst": [
+      "README.md",
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/placement/worker-placement.ts",
+      "ui/App.tsx",
+      "test/scenarios/placement-space-resolution-lumberyard.scenario.ts",
+      "test/ui-scenarios/place-worker.desktop.scenario.ts"
+    ]
+  },
   "mechanics": [
     "worker-placement",
     "resource-allocation",

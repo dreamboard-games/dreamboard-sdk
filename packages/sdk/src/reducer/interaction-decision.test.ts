@@ -589,6 +589,81 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
 }
 
 describe("trusted interaction decision pipeline", () => {
+  test("dispatch hands explicit paramsSchema data to params-only reducers", async () => {
+    const manifest = buildManifest();
+    const contract = defineGameContract({
+      manifest,
+      state: {
+        public: z.object({
+          selectedCardId: manifest.ids.cardId.nullable(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: {
+        takeTurn: z.object({}),
+      },
+      errors: {},
+    });
+    const phaseState = z.object({});
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ selectedCardId: null }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: phaseState,
+          initialState: () => ({}),
+          interactions: {
+            chooseCard: defineInteraction<typeof contract, typeof phaseState>()(
+              {
+                inputs: {},
+                paramsSchema: z.object({
+                  cardId: manifest.ids.cardId,
+                }),
+                reduce({ state, input, accept }) {
+                  return accept({
+                    ...state,
+                    publicState: {
+                      ...state.publicState,
+                      selectedCardId: input.params.cardId,
+                    },
+                  });
+                },
+              },
+            ),
+          },
+        }),
+      },
+    });
+    const bundle = createReducerBundle(game);
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const result = await bundle.dispatch({
+      state,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "chooseCard",
+        params: { cardId: "card-a" },
+      },
+    });
+
+    expect(result.kind).toBe("accept");
+    if (result.kind !== "accept") return;
+    expect(result.state.domain.publicState).toMatchObject({
+      selectedCardId: "card-a",
+    });
+  });
+
   test("projected descriptors carry stable descriptor digests and seat-scoped initial draft digests", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({

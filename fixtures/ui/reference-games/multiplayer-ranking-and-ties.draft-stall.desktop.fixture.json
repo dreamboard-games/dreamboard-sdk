@@ -10,10 +10,10 @@
     ]
   },
   "expected": {
-    "finalProjectionDigest": "sha256:fca4afadaef753ca5306cedbbc2633d7fb600f6182d9dda5aa3c59755d4f73a4",
-    "finalSemanticDigest": "sha256:0e715918b183984cbb2b611f14b760b5be52977e690526d240da52bc72c91371",
-    "initialProjectionDigest": "sha256:e22e9f8a246507126e8ab270c6a834cef0f0c722c9ece55383cf64688b71da5e",
-    "submissionDigest": "sha256:c2b095e43e547fdfb4e0da80d409add84b4ed1ba12f650ef38ba443382eaf3d4"
+    "finalProjectionDigest": "sha256:28ff8b265607b8dc7b723c112af3c959866fc75fe63b99fe2647a6006181b9a0",
+    "finalSemanticDigest": "sha256:c6ba5f77a209a611ec51e32a62a516fc4e7e3f6a2ec392c3b7a09cb3281a9fa7",
+    "initialProjectionDigest": "sha256:98c8186887e2372ffcb11a2052a01fa794c20da63a3febc9ed003fba496d068e",
+    "submissionDigest": "sha256:95f66fe704079533685e0c24ad55db60d262fa6f37b228c22ccce570192e976b"
   },
   "gameId": "multiplayer-ranking-and-ties",
   "id": "multiplayer-ranking-and-ties.draft-stall.desktop",
@@ -22,143 +22,219 @@
     "frames": [
       {
         "frame": {
-          "actionSetVersion": "sha256:6d484398b47a11c13489013bfb8139e23a8cd96905068cd502829a7904c9b55b",
+          "actionSetVersion": "sha256:5b81dfea975ca47cfbbef3d5ce9721ce14de9c667579326b14ef18b14a674f5c",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
                 "status": "available"
               },
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
-              "help": "Choose one face-up stall card. Final ties break by complete guild sets, then coins.",
+              "descriptorDigest": "sha256:426bceed477b2c66d35a1362169e6f5e51cdc7812fbb9fbed37fc69a441a3669",
+              "draftDigest": "sha256:917d951c95810db5e0bbe521c08f2fd5497739cc63c1ff516c101595b0522672",
               "inputs": [],
-              "interactionId": "draft-stall:player-1",
-              "interactionKey": "draft-stall",
+              "interactionId": "draftStall",
+              "interactionKey": "drafting.draftStall",
               "kind": "action",
-              "label": "Draft stall",
-              "phaseName": "fixture"
+              "label": "Draft Stall",
+              "phaseName": "drafting",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
               "player-1"
             ],
-            "currentPhase": "multiplayer-ranking-and-ties.draft-stall.desktop",
-            "currentStage": "multiplayer-ranking-and-ties.draft-stall.desktop",
+            "currentPhase": "drafting",
+            "currentStage": "drafting",
             "simultaneousPhase": null
           },
           "gameVersion": 1,
           "guidance": {
             "phase": {
-              "id": "draft",
-              "label": "Draft a stall",
-              "objective": "Build high-prestige guild sets before six rounds end or the second storm cancels the fair.",
-              "summary": "Choose one face-up stall card from the shared harbor market."
+              "id": "drafting",
+              "label": "Drafting"
             },
             "setup": {
               "name": "Standard Harbor Fair",
               "profileId": "standard",
-              "steps": [
-                {
-                  "description": "Use two to four unique player seats.",
-                  "id": "seat-players",
-                  "label": "Seat players"
-                },
-                {
-                  "description": "Fill the market with four face-up stall cards, resolving storms as setup events.",
-                  "id": "reveal-market",
-                  "label": "Reveal the market"
-                }
-              ],
-              "summary": "Shuffle the stall and storm deck, then reveal four stall cards to the market."
+              "steps": []
             }
           },
           "perspectivePlayerId": "player-1",
           "recentEvents": [],
           "view": {
-            "displayName": "Multiplayer Ranking And Ties",
-            "recentEvents": [],
-            "referenceGameId": "multiplayer-ranking-and-ties",
-            "scenarioBranch": null,
-            "scenarioId": "multiplayer-ranking-and-ties.draft-stall.desktop",
-            "submittedInteractionId": null
+            "activePlayerId": "player-1",
+            "completed": false,
+            "currentPhase": "drafting",
+            "events": [],
+            "festivalRows": {
+              "player-1": [],
+              "player-2": []
+            },
+            "legalMarketCardIds": [
+              "food-p3-c0-1",
+              "food-p3-c0-2",
+              "craft-p2-c1-1",
+              "craft-p2-c1-2"
+            ],
+            "market": [
+              {
+                "coins": 0,
+                "guild": "food",
+                "id": "food-p3-c0-1",
+                "kind": "stall",
+                "prestige": 3
+              },
+              {
+                "coins": 0,
+                "guild": "food",
+                "id": "food-p3-c0-2",
+                "kind": "stall",
+                "prestige": 3
+              },
+              {
+                "coins": 1,
+                "guild": "craft",
+                "id": "craft-p2-c1-1",
+                "kind": "stall",
+                "prestige": 2
+              },
+              {
+                "coins": 1,
+                "guild": "craft",
+                "id": "craft-p2-c1-2",
+                "kind": "stall",
+                "prestige": 2
+              }
+            ],
+            "outcome": null,
+            "round": 1,
+            "stormsRevealed": 0,
+            "viewer": "player-1"
           },
           "zones": {}
         },
         "id": "frame-1",
-        "projectionDigest": "sha256:e22e9f8a246507126e8ab270c6a834cef0f0c722c9ece55383cf64688b71da5e"
+        "projectionDigest": "sha256:98c8186887e2372ffcb11a2052a01fa794c20da63a3febc9ed003fba496d068e"
       },
       {
         "frame": {
-          "actionSetVersion": "sha256:da6739312c7e9af513ad3811b773cecce60f81031ceb2bda75b002ac35d63235",
+          "actionSetVersion": "sha256:1aca9d4350459a9ef23ac7eec58b93ddb2e6f426fa2553c1ef90c4e46894defc",
           "availableInteractions": [
             {
+              "actorSeat": 0,
               "availability": {
-                "status": "available"
+                "reason": "Not your turn",
+                "status": "notYourTurn"
               },
               "commit": {
                 "mode": "manual"
               },
-              "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
-              "help": "Choose one face-up stall card. Final ties break by complete guild sets, then coins.",
+              "descriptorDigest": "sha256:426bceed477b2c66d35a1362169e6f5e51cdc7812fbb9fbed37fc69a441a3669",
+              "draftDigest": "sha256:917d951c95810db5e0bbe521c08f2fd5497739cc63c1ff516c101595b0522672",
               "inputs": [],
-              "interactionId": "draft-stall:player-1",
-              "interactionKey": "draft-stall",
+              "interactionId": "draftStall",
+              "interactionKey": "drafting.draftStall",
               "kind": "action",
-              "label": "Draft stall",
-              "phaseName": "fixture"
+              "label": "Draft Stall",
+              "phaseName": "drafting",
+              "zoneIds": []
             }
           ],
           "flow": {
             "activePlayers": [
-              "player-1"
+              "player-2"
             ],
-            "currentPhase": "multiplayer-ranking-and-ties.draft-stall.desktop.submitted",
-            "currentStage": "multiplayer-ranking-and-ties.draft-stall.desktop.submitted",
+            "currentPhase": "drafting",
+            "currentStage": "drafting",
             "simultaneousPhase": null
           },
           "gameVersion": 2,
           "guidance": {
             "phase": {
-              "id": "draft",
-              "label": "Draft a stall",
-              "objective": "Build high-prestige guild sets before six rounds end or the second storm cancels the fair.",
-              "summary": "Choose one face-up stall card from the shared harbor market."
+              "id": "drafting",
+              "label": "Drafting"
             },
             "setup": {
               "name": "Standard Harbor Fair",
               "profileId": "standard",
-              "steps": [
-                {
-                  "description": "Use two to four unique player seats.",
-                  "id": "seat-players",
-                  "label": "Seat players"
-                },
-                {
-                  "description": "Fill the market with four face-up stall cards, resolving storms as setup events.",
-                  "id": "reveal-market",
-                  "label": "Reveal the market"
-                }
-              ],
-              "summary": "Shuffle the stall and storm deck, then reveal four stall cards to the market."
+              "steps": []
             }
           },
           "perspectivePlayerId": "player-1",
           "recentEvents": [],
           "view": {
-            "displayName": "Multiplayer Ranking And Ties",
-            "recentEvents": [],
-            "referenceGameId": "multiplayer-ranking-and-ties",
-            "scenarioBranch": null,
-            "scenarioId": "multiplayer-ranking-and-ties.draft-stall.desktop",
-            "submittedInteractionId": "draft-stall:player-1"
+            "activePlayerId": "player-2",
+            "completed": false,
+            "currentPhase": "drafting",
+            "events": [
+              {
+                "cardId": "food-p3-c0-1",
+                "kind": "stall-drafted",
+                "playerId": "player-1",
+                "round": 1
+              }
+            ],
+            "festivalRows": {
+              "player-1": [
+                {
+                  "coins": 0,
+                  "guild": "food",
+                  "id": "food-p3-c0-1",
+                  "kind": "stall",
+                  "prestige": 3
+                }
+              ],
+              "player-2": []
+            },
+            "legalMarketCardIds": [
+              "food-p3-c0-2",
+              "craft-p2-c1-1",
+              "craft-p2-c1-2",
+              "music-p1-c1-1"
+            ],
+            "market": [
+              {
+                "coins": 0,
+                "guild": "food",
+                "id": "food-p3-c0-2",
+                "kind": "stall",
+                "prestige": 3
+              },
+              {
+                "coins": 1,
+                "guild": "craft",
+                "id": "craft-p2-c1-1",
+                "kind": "stall",
+                "prestige": 2
+              },
+              {
+                "coins": 1,
+                "guild": "craft",
+                "id": "craft-p2-c1-2",
+                "kind": "stall",
+                "prestige": 2
+              },
+              {
+                "coins": 1,
+                "guild": "music",
+                "id": "music-p1-c1-1",
+                "kind": "stall",
+                "prestige": 1
+              }
+            ],
+            "outcome": null,
+            "round": 1,
+            "stormsRevealed": 0,
+            "viewer": "player-1"
           },
           "zones": {}
         },
         "id": "frame-2",
-        "projectionDigest": "sha256:fca4afadaef753ca5306cedbbc2633d7fb600f6182d9dda5aa3c59755d4f73a4"
+        "projectionDigest": "sha256:28ff8b265607b8dc7b723c112af3c959866fc75fe63b99fe2647a6006181b9a0"
       }
     ],
     "session": {
@@ -178,25 +254,25 @@
       },
       {
         "fromFrameId": "frame-1",
-        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.validate",
+        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.submit-1.validate",
         "kind": "client.validate",
-        "requestDigest": "sha256:13ab8e368605037e4bd1ef9bf9d06313f4f9d49341e323a0db9b58ac71e7306e",
+        "requestDigest": "sha256:1484c43a04e09e0d9327c06301e8f503027bcf4877801cde2cfbdb2c1d59d052",
         "response": {
           "valid": true
         }
       },
       {
         "fromFrameId": "frame-1",
-        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.submit",
+        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.submit-1",
         "kind": "client.submit",
-        "requestDigest": "sha256:f78d6475171f663115136748eecd1f0cf813410ea5bcaaca792a0711b24e18dd",
+        "requestDigest": "sha256:f2522ced523c6073b6e9c6466e9f4b1c3f2a210e20ca7592ae84291b1ce59774",
         "response": {
           "accepted": true
         }
       },
       {
         "frameId": "frame-2",
-        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.submit.host-frame",
+        "id": "multiplayer-ranking-and-ties.draft-stall.desktop.submit-1.host-frame",
         "kind": "host.frame"
       }
     ]
@@ -208,48 +284,55 @@
       },
       "expect": {
         "frameId": "frame-2",
-        "projectionDigest": "sha256:fca4afadaef753ca5306cedbbc2633d7fb600f6182d9dda5aa3c59755d4f73a4",
-        "semanticDigest": "sha256:0e715918b183984cbb2b611f14b760b5be52977e690526d240da52bc72c91371",
-        "submissionDigest": "sha256:c2b095e43e547fdfb4e0da80d409add84b4ed1ba12f650ef38ba443382eaf3d4",
+        "projectionDigest": "sha256:28ff8b265607b8dc7b723c112af3c959866fc75fe63b99fe2647a6006181b9a0",
+        "semanticDigest": "sha256:c6ba5f77a209a611ec51e32a62a516fc4e7e3f6a2ec392c3b7a09cb3281a9fa7",
+        "submissionDigest": "sha256:95f66fe704079533685e0c24ad55db60d262fa6f37b228c22ccce570192e976b",
         "visibleInteractionKeys": [
-          "draft-stall"
+          "drafting.draftStall"
         ]
       },
       "expectedIdentity": {
         "actuatorId": "primitive-submit",
-        "descriptorDigest": "sha256:fc1530e92d609f073bfd80fe85c494a9b45a06fe52cce8ee30f02be2d0688cc2",
-        "interactionId": "draft-stall:player-1",
-        "interactionKey": "draft-stall",
+        "descriptorDigest": "sha256:426bceed477b2c66d35a1362169e6f5e51cdc7812fbb9fbed37fc69a441a3669",
+        "draftDigest": "sha256:917d951c95810db5e0bbe521c08f2fd5497739cc63c1ff516c101595b0522672",
+        "interactionId": "draftStall",
+        "interactionKey": "drafting.draftStall",
         "scopeId": "runtime",
-        "stepId": "multiplayer-ranking-and-ties.draft-stall.desktop.invoke",
+        "stepId": "multiplayer-ranking-and-ties.draft-stall.desktop.submit",
         "surface": "gameplay"
       },
-      "requestDigest": "sha256:cb74378bf695f99c077d7141894f0fd5378d77f166d2d343fd9b5ea639f6c003",
+      "requestDigest": "sha256:9221455e44e7ac159d5388a1e16778687e9567e19c48bc05e3957e23380fc1a5",
       "resolve": {
         "intent": "invoke",
-        "interactionId": "draft-stall:player-1",
-        "interactionKey": "draft-stall",
+        "interactionId": "draftStall",
+        "interactionKey": "drafting.draftStall",
         "scopeId": "runtime",
         "surface": "gameplay"
       },
-      "stepId": "multiplayer-ranking-and-ties.draft-stall.desktop.invoke"
+      "stepId": "multiplayer-ranking-and-ties.draft-stall.desktop.submit"
     }
   ],
   "schemaVersion": 2,
   "source": {
-    "reducerFingerprint": "sha256:f3f12a9f15408c6e64b241ca83cf15e232c99dcf7bfdbbde9ba783ba15458e27",
+    "reducerFingerprint": "sha256:89d05a62c83c3d88de829ba75953470d6935d4bfe30bae5828020e22bbafd979",
     "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs",
-    "renderModuleDigest": "sha256:a94dca0db6a41ca9c3201a2c5cbc8e8b920d97de3b25f855f902c341b6278477",
+    "renderModuleDigest": "sha256:45f22c85a209346966f3501872ea6a3f688c15f1649a1bc6e0d4da925237c084",
     "scenarioId": "multiplayer-ranking-and-ties.draft-stall.desktop",
-    "sourceDigest": "sha256:9c03728a1121a5e9dfca0c4a3008a9bf2ec85a7aef914f7bcca1c3b9ce20e915",
+    "sourceDigest": "sha256:9c08658144ac20c8e453497370df3f84d20b7f28aeffd317d9ff49379d25f96f",
     "sourceFiles": [
-      "examples/reference-games/multiplayer-ranking-and-ties/scenarios/coverage.json",
-      "examples/reference-games/multiplayer-ranking-and-ties/src/reference-game.mjs",
-      "examples/reference-games/multiplayer-ranking-and-ties/src/ui.mjs",
-      "examples/reference-games/multiplayer-ranking-and-ties/src/scenarios/draft-stall.scenario.mjs",
-      "examples/reference-games/shared/reference-reducer.mjs"
+      "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+      "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+      "examples/reference-games/multiplayer-ranking-and-ties/manifest.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/app/phases/draft-flow.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/app/phases/drafting.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/app/phases/scenarios.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx",
+      "examples/reference-games/multiplayer-ranking-and-ties/ui/interaction-routes.tsx",
+      "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/draft-stall-ready.scenario.ts",
+      "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/draft-stall.desktop.scenario.tsx"
     ],
-    "uiContractFingerprint": "sha256:db599a2c590de33a3aba287e153ebe2f60bf130cd856904b7dc6591834499c59"
+    "uiContractFingerprint": "sha256:08f6b2eca65ae8b34de7a3ebe3558c08af3af27325915e7fdad3179b26540bec"
   },
   "tags": [
     "card-drafting",
@@ -260,7 +343,7 @@
     "standings-table",
     "turn-summary"
   ],
-  "title": "Multiplayer Ranking And Ties: players draft one public stall card in seat order",
+  "title": "Multiplayer Ranking And Ties: draft a stall from the market",
   "viewer": {
     "playerId": "player-1",
     "seatId": "player-1"

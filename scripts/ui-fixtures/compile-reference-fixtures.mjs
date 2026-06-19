@@ -1,11 +1,22 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
-import { cp, mkdir, mkdtemp, readdir, rm, symlink } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readlink,
+  readdir,
+  rm,
+  symlink,
+  unlink,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
   repoCommandEnv,
+  expectedReferenceGames,
   root,
   sha256File,
   writeJson,
@@ -26,7 +37,7 @@ GlobalRegistrator.register();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 async function withTemporaryNodeModuleLinks(callback) {
-  const links = [
+  const linkTargets = [
     {
       link: path.join(root, "node_modules/@dreamboard-games/sdk"),
       target: path.join(root, "packages/sdk"),
@@ -42,13 +53,67 @@ async function withTemporaryNodeModuleLinks(callback) {
       link: path.join(root, "node_modules/react"),
       target: path.dirname(sdkRequire.resolve("react/package.json")),
     },
+    {
+      link: path.join(root, "node_modules/react-dom"),
+      target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
+    },
   ];
-  const created = [];
-  for (const item of links) {
+  for (const game of expectedReferenceGames) {
+    const gameNodeModules = path.join(
+      root,
+      "examples/reference-games",
+      game.id,
+      "node_modules",
+    );
+    linkTargets.push(
+      {
+        link: path.join(gameNodeModules, "@dreamboard-games/sdk"),
+        target: path.join(root, "packages/sdk"),
+      },
+      {
+        link: path.join(
+          gameNodeModules,
+          "@dreamboard-games/plugin-runtime-contract",
+        ),
+        target: path.join(root, "packages/plugin-runtime-contract"),
+      },
+      {
+        link: path.join(gameNodeModules, "react"),
+        target: path.dirname(sdkRequire.resolve("react/package.json")),
+      },
+      {
+        link: path.join(gameNodeModules, "react-dom"),
+        target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
+      },
+    );
+  }
+
+  const restore = [];
+  for (const item of linkTargets) {
     try {
       await mkdir(path.dirname(item.link), { recursive: true });
+      const stat = await lstat(item.link).catch((error) => {
+        if (error?.code === "ENOENT") return null;
+        throw error;
+      });
+      if (stat) {
+        if (!stat.isSymbolicLink()) {
+          throw new Error(
+            `${item.link} exists and is not a symlink; refusing to replace it for fixture compilation.`,
+          );
+        }
+        const previousTarget = await readlink(item.link);
+        await unlink(item.link);
+        restore.push(async () => {
+          await rm(item.link, { force: true });
+          await symlink(previousTarget, item.link, "dir");
+        });
+      } else {
+        restore.push(async () => {
+          await rm(item.link, { force: true });
+        });
+      }
       await symlink(item.target, item.link, "dir");
-      created.push(item.link);
     } catch (error) {
       if (error?.code !== "EEXIST") {
         throw error;
@@ -58,9 +123,9 @@ async function withTemporaryNodeModuleLinks(callback) {
   try {
     return await callback();
   } finally {
-    await Promise.all(
-      created.reverse().map((link) => rm(link, { force: true })),
-    );
+    for (const restoreLink of restore.reverse()) {
+      await restoreLink();
+    }
   }
 }
 
@@ -106,15 +171,24 @@ async function compileAll(outputRoot) {
   const fixtures = [];
   const modules = await discoverAllScenarioModules();
   for (const entry of modules) {
-    fixtures.push(
-      await compileScenarioModule({
-        game: entry.game,
-        gameDir: entry.gameDir,
-        scenario: await loadScenarioModule(entry.modulePath),
-        outputRoot,
-        sdkCommit,
-      }),
-    );
+    const scenario = await loadScenarioModule(entry.modulePath);
+    try {
+      fixtures.push(
+        await compileScenarioModule({
+          game: entry.game,
+          gameDir: entry.gameDir,
+          scenario,
+          outputRoot,
+          sdkCommit,
+        }),
+      );
+    } catch (error) {
+      const cause = error instanceof Error ? error : new Error(String(error));
+      throw new Error(
+        `${entry.game.id}/${scenario.id} failed while compiling UI fixture ${path.relative(root, entry.modulePath)}`,
+        { cause },
+      );
+    }
   }
   await writeJson(path.join(outputRoot, "index.json"), {
     schemaVersion: 2,

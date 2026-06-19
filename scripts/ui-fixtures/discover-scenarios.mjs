@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import {
   expectedReferenceGames,
+  readJson,
   referenceGamesRoot,
   root,
 } from "../ui/reference-games-lib.mjs";
@@ -40,25 +41,42 @@ export async function discoverReferenceGameScenarioModules() {
   const discovered = [];
   for (const game of expectedReferenceGames) {
     const gameDir = path.join(referenceGamesRoot, game.id);
-    const scenarioDir = path.join(gameDir, "src/scenarios");
-    let entries;
-    try {
-      entries = await readdir(scenarioDir, { withFileTypes: true });
-    } catch (error) {
-      if (error?.code === "ENOENT") {
-        throw new Error(
-          `${game.id} must provide at least one src/scenarios/*.scenario.mjs module.`,
-        );
-      }
-      throw error;
+    const metadata = await readJson(path.join(gameDir, "reference-game.json"));
+    if (metadata.schemaVersion !== 2) {
+      throw new Error(
+        `${game.id} must use reference-game.json schemaVersion 2 for UI fixture discovery.`,
+      );
     }
-    const modulePaths = entries
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".scenario.mjs"))
-      .map((entry) => path.join(scenarioDir, entry.name))
+    const uiScenarios = metadata.workspace?.uiScenarios;
+    if (!Array.isArray(uiScenarios)) {
+      throw new Error(
+        `${game.id} must declare reference-game.json workspace.uiScenarios.`,
+      );
+    }
+    const modulePaths = uiScenarios
+      .map((entry) => {
+        if (typeof entry !== "string" || path.isAbsolute(entry)) {
+          throw new Error(
+            `${game.id} workspace.uiScenarios entries must be relative strings.`,
+          );
+        }
+        const absolute = path.resolve(gameDir, entry);
+        const relative = path.relative(gameDir, absolute);
+        if (
+          relative === "" ||
+          relative.startsWith("..") ||
+          path.isAbsolute(relative)
+        ) {
+          throw new Error(
+            `${game.id} workspace.uiScenarios entry ${entry} escapes the game root.`,
+          );
+        }
+        return absolute;
+      })
       .sort();
     if (modulePaths.length === 0) {
       throw new Error(
-        `${game.id} must provide at least one src/scenarios/*.scenario.mjs module.`,
+        `${game.id} must provide at least one workspace.uiScenarios entry.`,
       );
     }
     for (const modulePath of modulePaths) {

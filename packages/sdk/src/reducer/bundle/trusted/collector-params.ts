@@ -24,7 +24,7 @@ export function parseInteractionParams<
   | { ok: false; message: string } {
   const collectors = interactionInputsOf(interaction);
   const record = (rawParams ?? {}) as Record<string, unknown>;
-  if (options.skipRng && interaction.paramsSchema) {
+  if (interaction.paramsSchema) {
     const result = interaction.paramsSchema.safeParse(record);
     if (!result.success) {
       return {
