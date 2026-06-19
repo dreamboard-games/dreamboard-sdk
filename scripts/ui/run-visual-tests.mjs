@@ -48,7 +48,11 @@ async function main() {
   };
   await writeJson(path.join(artifactRoot, "receipt.json"), receipt);
   console.log(`wrote ${path.relative(root, artifactRoot)}/receipt.json`);
-  if (failed) process.exit(1);
+  if (failed) {
+    console.error(`failed: ${failed.command}`);
+    console.error(failed.output);
+    process.exit(1);
+  }
 }
 
 main().catch((error) => {
