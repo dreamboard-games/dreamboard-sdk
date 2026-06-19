@@ -57,6 +57,11 @@ const baselines: readonly RuntimeVisualBaseline[] = [
   },
 ];
 
+test.skip(
+  process.platform !== "darwin",
+  "Runtime visual baselines are authored against Darwin snapshots.",
+);
+
 test.beforeEach(async ({ page }) => {
   await installDeterministicWorkbenchEnvironment(page);
 });
