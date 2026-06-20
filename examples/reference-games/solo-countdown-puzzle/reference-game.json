@@ -34,6 +34,50 @@
       "test/scenarios/repair-beacon.scenario.ts"
     ]
   },
+  "demoRelease": {
+    "slug": "solo-countdown-puzzle",
+    "name": "Solo Countdown Puzzle",
+    "description": "A solo countdown puzzle with resource pressure, deterministic system phases, and reconnect-safe history.",
+    "overview": "Repair beacons, manage scarce resources, survive weather, and beat the countdown before the system closes in.",
+    "creator": "Dreamboard",
+    "minPlayers": 1,
+    "maxPlayers": 1,
+    "playTimeMinMinutes": 10,
+    "playTimeMaxMinutes": 20,
+    "difficulty": 2,
+    "mechanics": [
+      "resource-management",
+      "repeated-turn-state",
+      "square-grid",
+      "set-collection"
+    ],
+    "categories": ["solo", "puzzle"],
+    "heroImageUrl": "/demos/solo-countdown-puzzle/desktop.png",
+    "estimatedMinutes": 8,
+    "demoPlayerCount": 1,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "resource-management",
     "repeated-turn-state",

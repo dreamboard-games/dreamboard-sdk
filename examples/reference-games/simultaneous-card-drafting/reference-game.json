@@ -35,6 +35,50 @@
       "test/ui-scenarios/lock-choice.mobile.scenario.ts"
     ]
   },
+  "demoRelease": {
+    "slug": "simultaneous-card-drafting",
+    "name": "Simultaneous Card Drafting",
+    "description": "A simultaneous card-drafting game with private picks, hand passing, reveal timing, and set scoring.",
+    "overview": "Choose a card in secret, lock your pick, pass the remaining hand, and build scoring sets over several rounds.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 5,
+    "playTimeMinMinutes": 20,
+    "playTimeMaxMinutes": 35,
+    "difficulty": 2,
+    "mechanics": [
+      "simultaneous-selection",
+      "card-drafting",
+      "hand-passing",
+      "set-collection"
+    ],
+    "categories": ["card-game", "drafting"],
+    "heroImageUrl": "/demos/simultaneous-card-drafting/desktop.png",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 4,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "simultaneous-selection",
     "card-drafting",

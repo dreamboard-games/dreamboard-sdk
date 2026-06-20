@@ -39,6 +39,50 @@
       "test/ui-scenarios/place-worker.desktop.scenario.ts"
     ]
   },
+  "demoRelease": {
+    "slug": "worker-placement-tableau",
+    "name": "Worker Placement Tableau",
+    "description": "A worker-placement strategy game about blocking spaces, crafting tableau items, and fulfilling orders.",
+    "overview": "Choose wake-up order, place workers on contested spaces, collect resources, craft items, and complete commissions.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playTimeMinMinutes": 30,
+    "playTimeMaxMinutes": 45,
+    "difficulty": 3,
+    "mechanics": [
+      "worker-placement",
+      "resource-allocation",
+      "tableau-building",
+      "order-fulfillment"
+    ],
+    "categories": ["strategy", "tableau"],
+    "heroImageUrl": "/demos/worker-placement-tableau/desktop.png",
+    "estimatedMinutes": 15,
+    "demoPlayerCount": 2,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "worker-placement",
     "resource-allocation",

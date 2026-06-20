@@ -44,6 +44,50 @@
       "test/scenarios/buy-flow.scenario.ts"
     ]
   },
+  "demoRelease": {
+    "slug": "deck-building-market",
+    "name": "Deck Building Market",
+    "description": "A two-player deck-builder with a shared market, action chains, cleanup, and terminal scoring.",
+    "overview": "Play treasures, buy from the market, resolve card effects, and reshuffle your growing deck across repeated turns.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playTimeMinMinutes": 20,
+    "playTimeMaxMinutes": 30,
+    "difficulty": 2,
+    "mechanics": [
+      "deck-building",
+      "market-row",
+      "hand-management",
+      "repeated-turn-state"
+    ],
+    "categories": ["card-game", "strategy"],
+    "heroImageUrl": "/demos/deck-building-market/desktop.png",
+    "estimatedMinutes": 12,
+    "demoPlayerCount": 2,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "deck-building",
     "market-row",
