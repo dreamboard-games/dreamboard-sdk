@@ -13,6 +13,7 @@ export default defineConfig({
     "src/ui/defaults.ts",
     "src/ui/player-state.ts",
     "src/testing.ts",
+    "src/testing-runtime.ts",
     "src/runtime.ts",
     "src/runtime/primitives.ts",
     "src/runtime/workspace-contract.ts",

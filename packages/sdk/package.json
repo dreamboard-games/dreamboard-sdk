@@ -99,6 +99,11 @@
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
     },
+    "./testing-runtime": {
+      "types": "./dist/testing-runtime.d.ts",
+      "import": "./dist/testing-runtime.js",
+      "default": "./dist/testing-runtime.js"
+    },
     "./browser-interaction": {
       "bun": "./src/browser-interaction.ts",
       "types": "./dist/browser-interaction.d.ts",
