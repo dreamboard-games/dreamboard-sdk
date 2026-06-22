@@ -42,9 +42,9 @@ export async function discoverReferenceGameScenarioModules() {
   for (const game of expectedReferenceGames) {
     const gameDir = path.join(referenceGamesRoot, game.id);
     const metadata = await readJson(path.join(gameDir, "reference-game.json"));
-    if (metadata.schemaVersion !== 2) {
+    if (metadata.schemaVersion !== 3) {
       throw new Error(
-        `${game.id} must use reference-game.json schemaVersion 2 for UI fixture discovery.`,
+        `${game.id} must use reference-game.json schemaVersion 3 for UI fixture discovery.`,
       );
     }
     const uiScenarios = metadata.workspace?.uiScenarios;

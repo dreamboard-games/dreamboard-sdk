@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "automa-river-rival",
   "displayName": "Automa River Rival",
-  "publishToDemoGallery": false,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
@@ -43,6 +42,50 @@
       "test/scenarios/terminal.scenario.ts",
       "test/ui-scenarios/claim-cargo.mobile.scenario.ts"
     ]
+  },
+  "demoRelease": {
+    "slug": "automa-river-rival",
+    "name": "Automa River Rival",
+    "description": "A solo river rival game with deterministic automa procedures, cargo claims, and cooperative scoring.",
+    "overview": "Claim cargo before the rival, follow every automatic system step, and compare outcomes through a transparent event log.",
+    "creator": "Dreamboard",
+    "minPlayers": 1,
+    "maxPlayers": 1,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 25,
+    "difficulty": 2,
+    "mechanics": [
+      "automa-rival",
+      "open-market",
+      "cooperative-scoring",
+      "deterministic-procedure"
+    ],
+    "categories": ["solo", "strategy"],
+    "heroImageUrl": "/demos/automa-river-rival/desktop.png",
+    "estimatedMinutes": 8,
+    "demoPlayerCount": 1,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
   },
   "mechanics": [
     "automa-rival",

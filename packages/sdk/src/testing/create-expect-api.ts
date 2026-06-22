@@ -1,4 +1,3 @@
-import { isDeepStrictEqual } from "node:util";
 import type {
   ExpectFn,
   ExpectMatchers,
@@ -19,6 +18,54 @@ type CreateExpectApiOptions = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isDeepStrictEqual(actual: unknown, expected: unknown): boolean {
+  if (Object.is(actual, expected)) return true;
+  if (typeof actual !== typeof expected) return false;
+  if (actual === null || expected === null) return false;
+  if (typeof actual !== "object" || typeof expected !== "object") return false;
+
+  if (actual instanceof Date || expected instanceof Date) {
+    return (
+      actual instanceof Date &&
+      expected instanceof Date &&
+      Object.is(actual.getTime(), expected.getTime())
+    );
+  }
+  if (actual instanceof RegExp || expected instanceof RegExp) {
+    return (
+      actual instanceof RegExp &&
+      expected instanceof RegExp &&
+      actual.source === expected.source &&
+      actual.flags === expected.flags
+    );
+  }
+  if (Array.isArray(actual) || Array.isArray(expected)) {
+    return (
+      Array.isArray(actual) &&
+      Array.isArray(expected) &&
+      actual.length === expected.length &&
+      actual.every((value, index) => isDeepStrictEqual(value, expected[index]))
+    );
+  }
+
+  const actualPrototype = Object.getPrototypeOf(actual);
+  const expectedPrototype = Object.getPrototypeOf(expected);
+  if (actualPrototype !== expectedPrototype) return false;
+
+  const actualRecord = actual as Record<string, unknown>;
+  const expectedRecord = expected as Record<string, unknown>;
+  const actualKeys = Object.keys(actualRecord);
+  const expectedKeys = Object.keys(expectedRecord);
+  return (
+    actualKeys.length === expectedKeys.length &&
+    actualKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(expectedRecord, key) &&
+        isDeepStrictEqual(actualRecord[key], expectedRecord[key]),
+    )
+  );
 }
 
 function matchPartial(

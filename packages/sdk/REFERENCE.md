@@ -151,6 +151,22 @@ function computeReferenceGameSourceDigest(
 
 _No JSDoc summary is available yet._
 
+### isPackageableReferenceGame
+
+```ts
+function isPackageableReferenceGame(game: ReferenceGameManifestV3): boolean;
+```
+
+_No JSDoc summary is available yet._
+
+### parseReferenceGameManifestV3
+
+```ts
+function parseReferenceGameManifestV3(value: unknown): ReferenceGameManifestV3;
+```
+
+_No JSDoc summary is available yet._
+
 ### parseReferenceGameSourceManifest
 
 ```ts
@@ -161,10 +177,102 @@ function parseReferenceGameSourceManifest(
 
 _No JSDoc summary is available yet._
 
+### REFERENCE_GAME_MANIFEST_SCHEMA_VERSION
+
+```ts
+const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 3;
+```
+
+_No JSDoc summary is available yet._
+
 ### REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION
 
 ```ts
-const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 1;
+const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 2;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameDemoRelease
+
+```ts
+type ReferenceGameDemoRelease = z.infer<typeof referenceGameDemoReleaseSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameDemoReleaseSchema
+
+```ts
+declare const referenceGameDemoReleaseSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameManifestV3
+
+```ts
+type ReferenceGameManifestV3 = z.infer<typeof referenceGameManifestV3Schema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameManifestV3Schema
+
+```ts
+declare const referenceGameManifestV3Schema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameRights
+
+```ts
+type ReferenceGameRights = z.infer<typeof referenceGameRightsSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameRightsSchema
+
+```ts
+declare const referenceGameRightsSchema: z.ZodObject<
+  {
+    mechanicsProvenance: z.ZodString;
+    sourceCode: z.ZodString;
+    codeLicense: z.ZodString;
+    ruleText: z.ZodString;
+    artwork: z.ZodString;
+    assetLicenseManifest: z.ZodString;
+    thirdPartyMarks: z.ZodArray<z.ZodString>;
+    reviewStatus: z.ZodLiteral<"approved">;
+    reviewedBy: z.ZodString;
+    reviewedAt: z.ZodString;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSdkPolicy
+
+```ts
+type ReferenceGameSdkPolicy = z.infer<typeof referenceGameSdkPolicySchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSdkPolicySchema
+
+```ts
+const referenceGameSdkPolicySchema: z.ZodObject<
+  {
+    dependency: z.ZodLiteral<"@dreamboard-games/sdk">;
+    versionPolicy: z.ZodLiteral<"exact">;
+  },
+  z.core.$strict
+>;
 ```
 
 _No JSDoc summary is available yet._
@@ -188,7 +296,24 @@ _No JSDoc summary is available yet._
 ### referenceGameSourceEntrySchema
 
 ```ts
-declare const referenceGameSourceEntrySchema: ...;
+declare const referenceGameSourceEntrySchema: z.ZodObject<
+  {
+    id: z.ZodString;
+    root: z.ZodString;
+    sourceSha256: z.ZodString;
+    packageJsonSha256: z.ZodString;
+    lockfileSha256: z.ZodString;
+    sdkSpecifier: z.ZodString;
+    manifest: z.ZodString;
+    reducer: z.ZodString;
+    ui: z.ZodString;
+    behaviorScenarios: z.ZodArray<z.ZodString>;
+    uiScenarios: z.ZodArray<z.ZodString>;
+    mechanics: z.ZodArray<z.ZodString>;
+    readFirst: z.ZodArray<z.ZodString>;
+  },
+  z.core.$strict
+>;
 ```
 
 _No JSDoc summary is available yet._
@@ -285,6 +410,54 @@ const referenceGameSourceProvenanceSchema: z.ZodDiscriminatedUnion<
     >,
   ],
   "kind"
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameTeaching
+
+```ts
+type ReferenceGameTeaching = z.infer<typeof referenceGameTeachingSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameTeachingSchema
+
+```ts
+const referenceGameTeachingSchema: z.ZodObject<
+  {
+    whatThisTeaches: z.ZodArray<z.ZodString>;
+    whenToCopyThisPattern: z.ZodArray<z.ZodString>;
+    readFirst: z.ZodArray<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameWorkspace
+
+```ts
+type ReferenceGameWorkspace = z.infer<typeof referenceGameWorkspaceSchema>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameWorkspaceSchema
+
+```ts
+const referenceGameWorkspaceSchema: z.ZodObject<
+  {
+    manifest: z.ZodString;
+    reducer: z.ZodString;
+    ui: z.ZodString;
+    behaviorScenarios: z.ZodArray<z.ZodString>;
+    uiScenarios: z.ZodArray<z.ZodString>;
+  },
+  z.core.$strict
 >;
 ```
 

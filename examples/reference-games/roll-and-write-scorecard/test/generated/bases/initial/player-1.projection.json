@@ -1,0 +1,10 @@
+{
+  "currentStage": "marking",
+  "stageSeats": ["player-1", "player-2", "player-3"],
+  "view": {
+    "round": 1,
+    "roll": null,
+    "completed": false,
+    "marks": {}
+  }
+}

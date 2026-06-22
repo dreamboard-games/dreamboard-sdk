@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "roll-and-write-scorecard",
   "displayName": "Roll And Write Scorecard",
-  "publishToDemoGallery": false,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
@@ -34,6 +33,50 @@
       "terminal scoring from rows columns regions and penalties"
     ],
     "readFirst": ["README.md", "rule.md", "app/game.ts"]
+  },
+  "demoRelease": {
+    "slug": "roll-and-write-scorecard",
+    "name": "Roll And Write Scorecard",
+    "description": "A compact roll-and-write scorecard game with dice results, drafted marks, fallback cells, and terminal scoring.",
+    "overview": "Roll, draft a mark, fill your scorecard, and chase row, column, and region bonuses before the sheet fills.",
+    "creator": "Dreamboard",
+    "minPlayers": 1,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 25,
+    "difficulty": 1,
+    "mechanics": [
+      "roll-and-write",
+      "square-grid",
+      "dice-result",
+      "simultaneous-marking"
+    ],
+    "categories": ["puzzle", "scorecard"],
+    "heroImageUrl": "/demos/roll-and-write-scorecard/desktop.png",
+    "estimatedMinutes": 8,
+    "demoPlayerCount": 3,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
   },
   "mechanics": [
     "roll-and-write",

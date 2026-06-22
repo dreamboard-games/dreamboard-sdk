@@ -1,0 +1,10 @@
+{
+  "currentStage": "playerTurn",
+  "stageSeats": ["player-1"],
+  "view": {
+    "currentPhase": "playerTurn",
+    "energy": 3,
+    "eventLog": [],
+    "availableActions": ["repairBeacon"]
+  }
+}

@@ -23,7 +23,7 @@ const localVersionPattern = /(?:^|[-.])local(?:[-.]|$)/i;
 
 function fail(errors) {
   throw new Error(
-    `Publishable reference game verification failed:\n\n${errors.map((error) => `- ${error}`).join("\n")}`,
+    `Packageable reference game verification failed:\n\n${errors.map((error) => `- ${error}`).join("\n")}`,
   );
 }
 
@@ -183,7 +183,33 @@ function extractLockfileResolution({
   };
 }
 
-async function listPublishableDemos({ selectedGames, errors }) {
+function isPackageableReferenceGameManifest(manifest) {
+  return manifest.demoRelease !== undefined;
+}
+
+function validatePackageableCandidateManifest({ gameId, manifest, errors }) {
+  if (manifest.schemaVersion !== 3) {
+    errors.push(`${gameId}: reference-game.json schemaVersion must be 3`);
+  }
+  if (Object.hasOwn(manifest, "publishToDemoGallery")) {
+    errors.push(`${gameId}: publishToDemoGallery is forbidden`);
+  }
+  if (Object.hasOwn(manifest, "releaseChannels")) {
+    errors.push(
+      `${gameId}: releaseChannels is product policy and is forbidden`,
+    );
+  }
+  if (
+    manifest.demoRelease !== undefined &&
+    (manifest.demoRelease === null ||
+      typeof manifest.demoRelease !== "object" ||
+      Array.isArray(manifest.demoRelease))
+  ) {
+    errors.push(`${gameId}: demoRelease must be an object`);
+  }
+}
+
+async function listPackageableDemos({ selectedGames, errors }) {
   const dirs = await listReferenceGameDirs();
   const selected = selectedGames.length > 0 ? new Set(selectedGames) : null;
   for (const gameId of selectedGames) {
@@ -214,7 +240,8 @@ async function listPublishableDemos({ selectedGames, errors }) {
       continue;
     }
     const manifest = await readJson(manifestPath);
-    if (!manifest.publishToDemoGallery) {
+    validatePackageableCandidateManifest({ gameId, manifest, errors });
+    if (!isPackageableReferenceGameManifest(manifest)) {
       continue;
     }
     const sourcePath = gameId;
@@ -226,7 +253,9 @@ async function listPublishableDemos({ selectedGames, errors }) {
       (gameId) => !demos.some((demo) => demo.gameId === gameId),
     );
     for (const gameId of missingSelection) {
-      errors.push(`${gameId}: is not marked publishToDemoGallery`);
+      errors.push(
+        `${gameId}: does not declare demoRelease packageability metadata`,
+      );
     }
   }
   return demos;
@@ -270,7 +299,7 @@ async function validateDemoMetadata({
     : null;
 
   if (!packageJson.scripts?.typecheck) {
-    errors.push(`${gameId}: publishable demo must define a typecheck script`);
+    errors.push(`${gameId}: packageable demo must define a typecheck script`);
   }
 
   return {
@@ -331,12 +360,14 @@ async function runDemoChecks({ demo, tempRoot }) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const errors = [];
-  const publishableDemos = await listPublishableDemos({
+  const packageableDemos = await listPackageableDemos({
     selectedGames: options.games,
     errors,
   });
-  if (publishableDemos.length === 0 && errors.length === 0) {
-    errors.push("no reference games are marked publishToDemoGallery");
+  if (packageableDemos.length === 0 && errors.length === 0) {
+    errors.push(
+      "no reference games declare demoRelease packageability metadata",
+    );
   }
 
   const receipts = [];
@@ -344,7 +375,7 @@ async function main() {
   const sdkPackageJson = await readJson(
     path.join(root, "packages/sdk/package.json"),
   );
-  for (const demo of publishableDemos) {
+  for (const demo of packageableDemos) {
     const receipt = await validateDemoMetadata({
       ...demo,
       expectedSdkVersion: sdkPackageJson.version,
@@ -370,7 +401,7 @@ async function main() {
   );
   if (releaseSetIdentities.size !== 1) {
     fail([
-      `${sdkPackage}: publishable reference games must resolve one SDK version and integrity`,
+      `${sdkPackage}: packageable reference games must resolve one SDK version and integrity`,
       ...receipts.map(
         (receipt) =>
           `${receipt.gameId}: ${receipt.sdkSpecifier} -> ${receipt.sdkResolution?.resolvedVersion ?? "<missing>"} ${receipt.sdkResolution?.integrity ?? "<missing integrity>"}`,
@@ -379,7 +410,7 @@ async function main() {
   }
 
   const tempRoot = await mkdtemp(
-    path.join(tmpdir(), "dreamboard-publishable-reference-games-"),
+    path.join(tmpdir(), "dreamboard-packageable-reference-games-"),
   );
   try {
     for (const demo of demos) {
@@ -393,11 +424,11 @@ async function main() {
     schemaVersion: 1,
     checkedAt: new Date().toISOString(),
     sdkPackage,
-    publishableReferenceGames: receipts,
+    packageableReferenceGames: receipts,
   };
   await mkdir(buildRoot, { recursive: true });
   await writeJson(
-    path.join(buildRoot, "publishable-demo-receipt.json"),
+    path.join(buildRoot, "packageable-demo-receipt.json"),
     receipt,
   );
   console.log(JSON.stringify(receipt, null, 2));

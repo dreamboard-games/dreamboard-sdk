@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "hearts",
   "displayName": "Hearts",
-  "publishToDemoGallery": true,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",

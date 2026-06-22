@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "multiplayer-ranking-and-ties",
   "displayName": "Multiplayer Ranking And Ties",
   "workspace": {
@@ -33,7 +33,50 @@
       "test/scenarios/outcomes.scenario.ts"
     ]
   },
-  "publishToDemoGallery": false,
+  "demoRelease": {
+    "slug": "multiplayer-ranking-and-ties",
+    "name": "Multiplayer Ranking And Ties",
+    "description": "A multiplayer drafting game focused on ranked outcomes, tie-break evidence, and cancellation handling.",
+    "overview": "Draft from a shared market, score sets, inspect standings, and resolve tied or cancelled outcomes cleanly.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 30,
+    "difficulty": 2,
+    "mechanics": [
+      "card-drafting",
+      "market-row",
+      "set-collection",
+      "shared-card-play"
+    ],
+    "categories": ["card-game", "ranking"],
+    "heroImageUrl": "/demos/multiplayer-ranking-and-ties/desktop.png",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 4,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
+  },
   "mechanics": [
     "card-drafting",
     "market-row",

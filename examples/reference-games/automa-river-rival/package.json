@@ -14,23 +14,29 @@
   },
   "dependencies": {
     "@dreamboard-games/sdk": "0.4.0-alpha.6",
+    "framer-motion": "12.38.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
+    "@types/react": "19.2.16",
+    "@types/react-dom": "19.2.3",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "use-sync-external-store": "1.6.0"
   },
   "packageManager": "pnpm@10.4.1",
   "pnpm": {
     "overrides": {
       "zod": "4.4.3",
       "react": "19.2.6",
-      "react-dom": "19.2.6"
+      "react-dom": "19.2.6",
+      "@types/react": "19.2.16",
+      "@types/react-dom": "19.2.3",
+      "framer-motion": "12.38.0",
+      "use-sync-external-store": "1.6.0"
     }
   }
 }

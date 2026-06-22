@@ -1,8 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "id": "hex-network-trading",
   "displayName": "Hex Network Trading",
-  "publishToDemoGallery": false,
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
@@ -52,6 +51,45 @@
       "ui/interaction-routes.tsx",
       "test/scenarios/build-trail-ready.scenario.ts"
     ]
+  },
+  "demoRelease": {
+    "slug": "hex-network-trading",
+    "name": "Hex Network Trading",
+    "description": "A network-building trading game with hex placement, resource production, and negotiated routes.",
+    "overview": "Settle camps, build trails, gather resources, and trade through ports and banks to grow the strongest route network.",
+    "creator": "Dreamboard",
+    "minPlayers": 3,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 60,
+    "playTimeMaxMinutes": 120,
+    "difficulty": 3,
+    "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
+    "categories": ["strategy", "network-building"],
+    "heroImageUrl": "/demos/hex-network-trading/desktop.png",
+    "estimatedMinutes": 15,
+    "demoPlayerCount": 4,
+    "screenshot": {
+      "presets": {
+        "desktop": {
+          "viewport": [1440, 1000],
+          "theme": "paper",
+          "stagePadding": 32,
+          "frame": "shadow"
+        },
+        "mobile": {
+          "viewport": [390, 844],
+          "theme": "paper",
+          "stagePadding": 16,
+          "frame": "shadow"
+        },
+        "thumb": {
+          "viewport": [800, 600],
+          "theme": "paper",
+          "stagePadding": 24,
+          "frame": "shadow"
+        }
+      }
+    }
   },
   "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
   "uiPatterns": [

@@ -5,9 +5,9 @@ import { readJson } from "../../ui/reference-games-lib.mjs";
 export async function loadReferenceGameWorkspace(gameRoot) {
   const root = path.resolve(gameRoot);
   const metadata = await readJson(path.join(root, "reference-game.json"));
-  if (metadata.schemaVersion !== 2) {
+  if (metadata.schemaVersion !== 3) {
     throw new Error(
-      `${path.relative(process.cwd(), root)} reference-game.json must use schemaVersion 2.`,
+      `${path.relative(process.cwd(), root)} reference-game.json must use schemaVersion 3.`,
     );
   }
   const workspace = metadata.workspace;

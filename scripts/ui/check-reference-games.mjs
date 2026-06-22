@@ -133,7 +133,7 @@ async function checkWorkspacePathList({
 async function checkWorkspaceManifest({ manifest, gameId, gameDir, errors }) {
   const workspace = manifest.workspace;
   if (!workspace || typeof workspace !== "object") {
-    errors.push(`${gameId}: schemaVersion 2 requires workspace`);
+    errors.push(`${gameId}: schemaVersion 3 requires workspace`);
     return;
   }
   await checkWorkspacePath({
@@ -197,31 +197,164 @@ async function checkWorkspaceManifest({ manifest, gameId, gameDir, errors }) {
   }
 }
 
-async function checkDemoReleaseV2({ manifest, gameId, errors }) {
-  if (typeof manifest.publishToDemoGallery !== "boolean") {
-    errors.push(`${gameId}: publishToDemoGallery must be a boolean`);
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function checkRequiredString({ value, label, gameId, errors }) {
+  if (typeof value !== "string" || value.length === 0) {
+    errors.push(`${gameId}: ${label} must be a non-empty string`);
+  }
+}
+
+function checkPositiveInteger({ value, label, gameId, errors }) {
+  if (!Number.isInteger(value) || value <= 0) {
+    errors.push(`${gameId}: ${label} must be a positive integer`);
+  }
+}
+
+function checkStringArray({ values, label, gameId, errors }) {
+  if (!Array.isArray(values) || values.length === 0) {
+    errors.push(`${gameId}: ${label} must be a non-empty array`);
     return;
   }
-  if (!manifest.publishToDemoGallery) {
-    if (manifest.demoRelease !== undefined) {
-      errors.push(`${gameId}: demoRelease requires publishToDemoGallery true`);
+  for (const value of values) {
+    if (typeof value !== "string" || value.length === 0) {
+      errors.push(`${gameId}: ${label} entries must be non-empty strings`);
     }
+  }
+}
+
+function checkDemoReleaseV3({ manifest, gameId, errors }) {
+  if (Object.hasOwn(manifest, "publishToDemoGallery")) {
+    errors.push(
+      `${gameId}: publishToDemoGallery is forbidden in schemaVersion 3`,
+    );
+  }
+  if (Object.hasOwn(manifest, "releaseChannels")) {
+    errors.push(
+      `${gameId}: releaseChannels is product policy and is forbidden`,
+    );
+  }
+
+  if (manifest.demoRelease === undefined) {
     return;
   }
   const demoRelease = manifest.demoRelease;
-  if (!demoRelease || typeof demoRelease !== "object") {
-    errors.push(`${gameId}: published demo requires demoRelease`);
+  if (!isPlainObject(demoRelease)) {
+    errors.push(`${gameId}: demoRelease must be an object`);
     return;
   }
-  if (demoRelease.sourcePath !== undefined) {
-    errors.push(
-      `${gameId}: demoRelease.sourcePath is forbidden in schemaVersion 2`,
-    );
+  if (Object.hasOwn(demoRelease, "sourcePath")) {
+    errors.push(`${gameId}: demoRelease.sourcePath is forbidden`);
   }
   if (demoRelease.screenshot?.projection !== undefined) {
+    errors.push(`${gameId}: demoRelease.screenshot.projection is forbidden`);
+  }
+
+  for (const field of [
+    "slug",
+    "name",
+    "description",
+    "overview",
+    "creator",
+    "heroImageUrl",
+  ]) {
+    checkRequiredString({
+      value: demoRelease[field],
+      label: `demoRelease.${field}`,
+      gameId,
+      errors,
+    });
+  }
+  for (const field of [
+    "minPlayers",
+    "maxPlayers",
+    "playTimeMinMinutes",
+    "playTimeMaxMinutes",
+    "estimatedMinutes",
+    "demoPlayerCount",
+  ]) {
+    checkPositiveInteger({
+      value: demoRelease[field],
+      label: `demoRelease.${field}`,
+      gameId,
+      errors,
+    });
+  }
+  if (
+    !Number.isInteger(demoRelease.difficulty) ||
+    demoRelease.difficulty < 1 ||
+    demoRelease.difficulty > 5
+  ) {
     errors.push(
-      `${gameId}: demoRelease.screenshot.projection is forbidden in schemaVersion 2`,
+      `${gameId}: demoRelease.difficulty must be an integer from 1 to 5`,
     );
+  }
+  if (
+    Number.isInteger(demoRelease.minPlayers) &&
+    Number.isInteger(demoRelease.maxPlayers) &&
+    demoRelease.maxPlayers < demoRelease.minPlayers
+  ) {
+    errors.push(`${gameId}: demoRelease.maxPlayers must be >= minPlayers`);
+  }
+  if (
+    Number.isInteger(demoRelease.playTimeMinMinutes) &&
+    Number.isInteger(demoRelease.playTimeMaxMinutes) &&
+    demoRelease.playTimeMaxMinutes < demoRelease.playTimeMinMinutes
+  ) {
+    errors.push(
+      `${gameId}: demoRelease.playTimeMaxMinutes must be >= playTimeMinMinutes`,
+    );
+  }
+  checkStringArray({
+    values: demoRelease.mechanics,
+    label: "demoRelease.mechanics",
+    gameId,
+    errors,
+  });
+  checkStringArray({
+    values: demoRelease.categories,
+    label: "demoRelease.categories",
+    gameId,
+    errors,
+  });
+
+  const presets = demoRelease.screenshot?.presets;
+  if (!isPlainObject(presets) || Object.keys(presets).length === 0) {
+    errors.push(`${gameId}: demoRelease.screenshot.presets must be non-empty`);
+    return;
+  }
+  for (const [presetName, preset] of Object.entries(presets)) {
+    const label = `demoRelease.screenshot.presets.${presetName}`;
+    if (!isPlainObject(preset)) {
+      errors.push(`${gameId}: ${label} must be an object`);
+      continue;
+    }
+    if (
+      !Array.isArray(preset.viewport) ||
+      preset.viewport.length !== 2 ||
+      !preset.viewport.every((value) => Number.isInteger(value) && value > 0)
+    ) {
+      errors.push(`${gameId}: ${label}.viewport must be two positive integers`);
+    }
+    checkRequiredString({
+      value: preset.theme,
+      label: `${label}.theme`,
+      gameId,
+      errors,
+    });
+    if (!Number.isInteger(preset.stagePadding) || preset.stagePadding < 0) {
+      errors.push(
+        `${gameId}: ${label}.stagePadding must be a non-negative integer`,
+      );
+    }
+    checkRequiredString({
+      value: preset.frame,
+      label: `${label}.frame`,
+      gameId,
+      errors,
+    });
   }
 }
 
@@ -314,8 +447,8 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
   }
   checkDependencies({ packageJson, gameId, expectedSdkVersion, errors });
 
-  if (manifest.schemaVersion !== 2) {
-    errors.push(`${gameId}: manifest schemaVersion must be 2`);
+  if (manifest.schemaVersion !== 3) {
+    errors.push(`${gameId}: manifest schemaVersion must be 3`);
   }
   if (manifest.id !== gameId) {
     errors.push(
@@ -323,7 +456,7 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
     );
   }
   await checkWorkspaceManifest({ manifest, gameId, gameDir, errors });
-  await checkDemoReleaseV2({ manifest, gameId, errors });
+  checkDemoReleaseV3({ manifest, gameId, errors });
   checkArraySubset({
     values: manifest.mechanics,
     allowed: knownMechanics,

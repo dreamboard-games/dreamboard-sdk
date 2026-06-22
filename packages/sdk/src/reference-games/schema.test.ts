@@ -2,7 +2,10 @@ import { describe, expect, test } from "bun:test";
 
 import {
   computeReferenceGameSourceDigest,
+  isPackageableReferenceGame,
+  parseReferenceGameManifestV3,
   parseReferenceGameSourceManifest,
+  type ReferenceGameManifestV3,
   type ReferenceGameSourceManifestPayload,
 } from "./index.js";
 
@@ -30,7 +33,6 @@ function payload(
         uiScenarios: ["test/ui-scenarios/pass-three.mobile.scenario.ts"],
         mechanics: ["hidden-information", "trick-taking"],
         readFirst: ["rule.md", "manifest.ts", "app/game.ts"],
-        publishToDemoGallery: true,
       },
       {
         id: "hex-network-trading",
@@ -46,7 +48,6 @@ function payload(
         uiScenarios: ["test/ui-scenarios/place-route.desktop.scenario.ts"],
         mechanics: ["hex-grid", "route-building"],
         readFirst: ["rule.md", "manifest.ts", "app/game.ts"],
-        publishToDemoGallery: false,
       },
     ],
     objects: [
@@ -62,6 +63,77 @@ function payload(
       },
     ],
     ...overrides,
+  };
+}
+
+function referenceGameManifest(
+  overrides: Partial<ReferenceGameManifestV3> = {},
+): ReferenceGameManifestV3 {
+  return {
+    schemaVersion: 3,
+    id: "hearts",
+    displayName: "Hearts",
+    workspace: {
+      manifest: "manifest.ts",
+      reducer: "app/game.ts",
+      ui: "ui/index.tsx",
+      behaviorScenarios: ["test/scenarios/smoke-initial-turn.scenario.ts"],
+      uiScenarios: ["test/ui-scenarios/pass-three.mobile.scenario.ts"],
+    },
+    teaching: {
+      whatThisTeaches: ["hidden hands"],
+      whenToCopyThisPattern: ["Use for private player views."],
+      readFirst: ["rule.md", "manifest.ts", "app/game.ts"],
+    },
+    mechanics: ["trick-taking"],
+    uiPatterns: ["private-hand"],
+    rights: {
+      mechanicsProvenance: "traditional-card-game",
+      sourceCode: "original-for-this-repository",
+      codeLicense: "PolyForm-Shield-1.0.0",
+      ruleText: "original-summary",
+      artwork: "repository-owned-or-licensed",
+      assetLicenseManifest: "assets/LICENSES.json",
+      thirdPartyMarks: [],
+      reviewStatus: "approved",
+      reviewedBy: "rights-owner-or-counsel",
+      reviewedAt: "2026-06-16",
+    },
+    sdk: {
+      dependency: "@dreamboard-games/sdk",
+      versionPolicy: "exact",
+    },
+    ...overrides,
+  };
+}
+
+function demoRelease(): NonNullable<ReferenceGameManifestV3["demoRelease"]> {
+  return {
+    slug: "hearts",
+    name: "Hearts",
+    description: "A four-player trick-taking card game.",
+    overview: "Pass cards, follow suit, and avoid points.",
+    creator: "Dreamboard",
+    minPlayers: 4,
+    maxPlayers: 4,
+    playTimeMinMinutes: 20,
+    playTimeMaxMinutes: 40,
+    difficulty: 2,
+    mechanics: ["trick-taking", "hidden-information"],
+    categories: ["card-game", "classic"],
+    heroImageUrl: "/demos/hearts/desktop.png",
+    estimatedMinutes: 10,
+    demoPlayerCount: 4,
+    screenshot: {
+      presets: {
+        desktop: {
+          viewport: [1440, 1000],
+          theme: "paper",
+          stagePadding: 32,
+          frame: "shadow",
+        },
+      },
+    },
   };
 }
 
@@ -103,7 +175,7 @@ describe("reference game source manifest", () => {
   test("parse rejects mismatched bundle digest", () => {
     expect(() =>
       parseReferenceGameSourceManifest({
-        schemaVersion: 1,
+        schemaVersion: 2,
         manifestType: "dreamboard.reference-game-source",
         bundleDigest: digestA,
         payload: payload(),
@@ -118,7 +190,7 @@ describe("reference game source manifest", () => {
 
     expect(
       parseReferenceGameSourceManifest({
-        schemaVersion: 1,
+        schemaVersion: 2,
         manifestType: "dreamboard.reference-game-source",
         bundleDigest,
         payload: source,
@@ -127,7 +199,7 @@ describe("reference game source manifest", () => {
     ).toBe(bundleDigest);
     expect(
       parseReferenceGameSourceManifest({
-        schemaVersion: 1,
+        schemaVersion: 2,
         manifestType: "dreamboard.reference-game-source",
         bundleDigest,
         payload: source,
@@ -138,5 +210,51 @@ describe("reference game source manifest", () => {
         },
       }).bundleDigest,
     ).toBe(bundleDigest);
+  });
+});
+
+describe("reference game manifest v3", () => {
+  test("rejects the removed publishToDemoGallery field", () => {
+    expect(() =>
+      parseReferenceGameManifestV3({
+        ...referenceGameManifest(),
+        publishToDemoGallery: true,
+      }),
+    ).toThrow();
+  });
+
+  test("rejects release channel policy", () => {
+    expect(() =>
+      parseReferenceGameManifestV3({
+        ...referenceGameManifest(),
+        releaseChannels: ["preview"],
+      }),
+    ).toThrow();
+  });
+
+  test("keeps teaching-only games valid and non-packageable", () => {
+    const manifest = parseReferenceGameManifestV3(referenceGameManifest());
+
+    expect(isPackageableReferenceGame(manifest)).toBe(false);
+  });
+
+  test("recognizes complete demoRelease metadata as packageable", () => {
+    const manifest = parseReferenceGameManifestV3(
+      referenceGameManifest({ demoRelease: demoRelease() }),
+    );
+
+    expect(isPackageableReferenceGame(manifest)).toBe(true);
+  });
+
+  test("rejects malformed demoRelease metadata", () => {
+    expect(() =>
+      parseReferenceGameManifestV3(
+        referenceGameManifest({
+          demoRelease: {
+            slug: "hearts",
+          } as ReferenceGameManifestV3["demoRelease"],
+        }),
+      ),
+    ).toThrow();
   });
 });

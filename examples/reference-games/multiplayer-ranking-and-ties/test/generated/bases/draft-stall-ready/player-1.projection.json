@@ -1,0 +1,8 @@
+{
+  "currentStage": "drafting",
+  "stageSeats": ["player-1"],
+  "view": {
+    "currentPhase": "drafting",
+    "legalMarketCardIds": ["food-p3-c0-1"]
+  }
+}

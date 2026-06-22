@@ -2,7 +2,8 @@ import { z } from "zod";
 
 import { computeReferenceGameSourceDigest } from "./canonical.js";
 
-export const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 1;
+export const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 2;
+export const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 3;
 
 export const referenceGameSha256DigestSchema = z
   .string()
@@ -31,7 +32,6 @@ export const referenceGameSourceEntrySchema = z
     uiScenarios: z.array(z.string().min(1)).min(1),
     mechanics: z.array(z.string().min(1)).min(1),
     readFirst: z.array(z.string().min(1)).min(1),
-    publishToDemoGallery: z.boolean(),
   })
   .strict();
 
@@ -76,6 +76,122 @@ export const referenceGameSourceManifestSchema = z
     }
   });
 
+const referenceGameIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
+const referenceGameWorkspacePathSchema = z.string().min(1);
+
+export const referenceGameWorkspaceSchema = z
+  .object({
+    manifest: referenceGameWorkspacePathSchema,
+    reducer: referenceGameWorkspacePathSchema,
+    ui: referenceGameWorkspacePathSchema,
+    behaviorScenarios: z.array(referenceGameWorkspacePathSchema).min(1),
+    uiScenarios: z.array(referenceGameWorkspacePathSchema).min(1),
+  })
+  .strict();
+
+export const referenceGameTeachingSchema = z
+  .object({
+    whatThisTeaches: z.array(z.string().min(1)).min(1),
+    whenToCopyThisPattern: z.array(z.string().min(1)).min(1),
+    readFirst: z.array(referenceGameWorkspacePathSchema).min(1),
+  })
+  .strict();
+
+const referenceGameDemoScreenshotPresetSchema = z
+  .object({
+    viewport: z.tuple([
+      z.number().int().positive(),
+      z.number().int().positive(),
+    ]),
+    theme: z.string().min(1),
+    stagePadding: z.number().int().nonnegative(),
+    frame: z.string().min(1),
+  })
+  .strict();
+
+export const referenceGameDemoReleaseSchema = z
+  .object({
+    slug: referenceGameIdSchema,
+    name: z.string().min(1),
+    description: z.string().min(1),
+    overview: z.string().min(1),
+    creator: z.string().min(1),
+    minPlayers: z.number().int().positive(),
+    maxPlayers: z.number().int().positive(),
+    playTimeMinMinutes: z.number().int().positive(),
+    playTimeMaxMinutes: z.number().int().positive(),
+    difficulty: z.number().int().min(1).max(5),
+    mechanics: z.array(z.string().min(1)).min(1),
+    categories: z.array(z.string().min(1)).min(1),
+    heroImageUrl: z.string().min(1),
+    estimatedMinutes: z.number().int().positive(),
+    demoPlayerCount: z.number().int().positive(),
+    screenshot: z
+      .object({
+        presets: z
+          .record(z.string().min(1), referenceGameDemoScreenshotPresetSchema)
+          .refine((value) => Object.keys(value).length > 0, {
+            message: "screenshot.presets must include at least one preset",
+          }),
+      })
+      .strict(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (value.maxPlayers < value.minPlayers) {
+      context.addIssue({
+        code: "custom",
+        path: ["maxPlayers"],
+        message: "maxPlayers must be greater than or equal to minPlayers",
+      });
+    }
+    if (value.playTimeMaxMinutes < value.playTimeMinMinutes) {
+      context.addIssue({
+        code: "custom",
+        path: ["playTimeMaxMinutes"],
+        message:
+          "playTimeMaxMinutes must be greater than or equal to playTimeMinMinutes",
+      });
+    }
+  });
+
+export const referenceGameRightsSchema = z
+  .object({
+    mechanicsProvenance: z.string().min(1),
+    sourceCode: z.string().min(1),
+    codeLicense: z.string().min(1),
+    ruleText: z.string().min(1),
+    artwork: z.string().min(1),
+    assetLicenseManifest: z.string().min(1),
+    thirdPartyMarks: z.array(z.string()),
+    reviewStatus: z.literal("approved"),
+    reviewedBy: z.string().min(1),
+    reviewedAt: z.string().min(1),
+  })
+  .strict();
+
+export const referenceGameSdkPolicySchema = z
+  .object({
+    dependency: z.literal("@dreamboard-games/sdk"),
+    versionPolicy: z.literal("exact"),
+  })
+  .strict();
+
+export const referenceGameManifestV3Schema = z
+  .object({
+    schemaVersion: z.literal(REFERENCE_GAME_MANIFEST_SCHEMA_VERSION),
+    id: referenceGameIdSchema,
+    displayName: z.string().min(1),
+    workspace: referenceGameWorkspaceSchema,
+    teaching: referenceGameTeachingSchema,
+    demoRelease: referenceGameDemoReleaseSchema.optional(),
+    mechanics: z.array(z.string().min(1)).min(1),
+    uiPatterns: z.array(z.string().min(1)).min(1),
+    rights: referenceGameRightsSchema,
+    sdk: referenceGameSdkPolicySchema,
+  })
+  .strict();
+
 export type ReferenceGameSourceObject = z.infer<
   typeof referenceGameSourceObjectSchema
 >;
@@ -91,9 +207,35 @@ export type ReferenceGameSourceProvenance = z.infer<
 export type ReferenceGameSourceManifest = z.infer<
   typeof referenceGameSourceManifestSchema
 >;
+export type ReferenceGameWorkspace = z.infer<
+  typeof referenceGameWorkspaceSchema
+>;
+export type ReferenceGameTeaching = z.infer<typeof referenceGameTeachingSchema>;
+export type ReferenceGameDemoRelease = z.infer<
+  typeof referenceGameDemoReleaseSchema
+>;
+export type ReferenceGameRights = z.infer<typeof referenceGameRightsSchema>;
+export type ReferenceGameSdkPolicy = z.infer<
+  typeof referenceGameSdkPolicySchema
+>;
+export type ReferenceGameManifestV3 = z.infer<
+  typeof referenceGameManifestV3Schema
+>;
 
 export function parseReferenceGameSourceManifest(
   value: unknown,
 ): ReferenceGameSourceManifest {
   return referenceGameSourceManifestSchema.parse(value);
+}
+
+export function parseReferenceGameManifestV3(
+  value: unknown,
+): ReferenceGameManifestV3 {
+  return referenceGameManifestV3Schema.parse(value);
+}
+
+export function isPackageableReferenceGame(
+  game: ReferenceGameManifestV3,
+): boolean {
+  return game.demoRelease !== undefined;
 }
