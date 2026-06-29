@@ -105,6 +105,7 @@ export const SeatProjectionBundleSchema = z
     simultaneousPhase: z.unknown().nullable().optional(),
     guidance: GameGuidanceProjectionSchema.nullable().optional(),
     recentEvents: z.array(ProjectedGameEventSchema).optional(),
+    sharedView: z.unknown().optional(),
     interactionsByRef: z.record(z.string(), z.unknown()).optional(),
     seats: z.record(
       z.string(),
@@ -313,6 +314,12 @@ export const PluginGameplayFrameSchema = z
     gameVersion: z.number().int().nonnegative(),
     actionSetVersion: z.string().min(1),
     perspectivePlayerId: PlayerIdSchema.nullable(),
+    sharedView: z
+      .object({
+        boardStatic: RuntimeJsonSchema.nullable(),
+        dynamicView: RuntimeJsonSchema.nullable(),
+      })
+      .strict(),
     view: RuntimeJsonSchema.nullable(),
     flow: z
       .object({

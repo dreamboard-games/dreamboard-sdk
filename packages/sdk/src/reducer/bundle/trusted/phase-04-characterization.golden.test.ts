@@ -3,12 +3,13 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createReducerBundle,
+  defineEmptyView,
   defineEffect,
   defineGame,
   defineGameContract,
   defineInteraction,
+  definePlayerView,
   definePhase,
-  defineView,
   type ReducerDiagnosticEvent,
 } from "../../../reducer";
 import type { RuntimeTableRecord } from "../../../reducer/advanced";
@@ -237,7 +238,8 @@ function createCharacterizationGame() {
       }),
     },
     views: {
-      player: defineView<typeof contract>()({
+      shared: defineEmptyView<typeof contract>(),
+      player: definePlayerView<typeof contract>()({
         project({ state, playerId }) {
           return {
             playerId,

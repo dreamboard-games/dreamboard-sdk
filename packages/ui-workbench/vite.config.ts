@@ -95,7 +95,11 @@ function referenceGameManifestContractPlugin(): Plugin {
         return null;
       }
 
-      return path.join(referenceGamesRoot, gameId, "shared/manifest-contract.ts");
+      return path.join(
+        referenceGamesRoot,
+        gameId,
+        "shared/manifest-contract.ts",
+      );
     },
   };
 }
@@ -120,6 +124,10 @@ function sdkAliases(useSource: boolean) {
       ? path.join(sdkRoot, "src", `${subpath}.ts`)
       : path.join(sdkRoot, "dist", `${subpath}.js`);
   const aliases = [
+    {
+      find: /^@dreamboard-games\/sdk\/runtime\/workspace-contract$/,
+      replacement: target("runtime/workspace-contract"),
+    },
     {
       find: /^@dreamboard-games\/sdk\/runtime\/primitives$/,
       replacement: target("runtime/primitives"),

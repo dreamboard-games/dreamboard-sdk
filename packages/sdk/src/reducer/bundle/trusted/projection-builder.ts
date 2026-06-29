@@ -28,6 +28,12 @@ import {
 } from "./simultaneous-player";
 
 type ProjectionMode = "full" | "actionsOnly";
+type ProjectionTimingMetadata = {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+};
 type DescriptorRegistry = {
   add(descriptor: InteractionDescriptorShape, actorSeat: number): string;
   entries(): Record<string, InteractionDescriptorShape>;
@@ -61,27 +67,31 @@ export function createProjectionBuilder<
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
 
-  function createDescriptorRegistry(): DescriptorRegistry {
+  function createDescriptorRegistry(
+    timing: ProjectionTimingMetadata,
+  ): DescriptorRegistry {
     const byRef: Record<string, InteractionDescriptorShape> = {};
     const byHash = new Map<string, string>();
     return {
       add(descriptor, actorSeat) {
-        const enriched = descriptorWithBrowserReplayDigests(
-          descriptor,
-          actorSeat,
-        );
-        const fingerprint = stableStringify(enriched);
-        const existing = byHash.get(fingerprint);
-        if (existing) return existing;
-        const base =
-          typeof enriched.interactionId === "string" &&
-          enriched.interactionId.length > 0
-            ? enriched.interactionId
-            : "interaction";
-        const ref = `${base}:${fnv1a64(fingerprint)}`;
-        byHash.set(fingerprint, ref);
-        byRef[ref] = enriched;
-        return ref;
+        return measureProjectionTiming(timing, "descriptorHashMs", () => {
+          const enriched = descriptorWithBrowserReplayDigests(
+            descriptor,
+            actorSeat,
+          );
+          const fingerprint = stableStringify(enriched);
+          const existing = byHash.get(fingerprint);
+          if (existing) return existing;
+          const base =
+            typeof enriched.interactionId === "string" &&
+            enriched.interactionId.length > 0
+              ? enriched.interactionId
+              : "interaction";
+          const ref = `${base}:${fnv1a64(fingerprint)}`;
+          byHash.set(fingerprint, ref);
+          byRef[ref] = enriched;
+          return ref;
+        });
       },
       entries() {
         return byRef;
@@ -305,17 +315,29 @@ export function createProjectionBuilder<
     };
   }
 
-  function resolveViewFor(
+  function resolveSharedViewFor(
     combinedState: State,
-    playerId: PlayerId,
-    viewId: string,
     projection: ProjectionContext<DomainState, State>,
   ): unknown {
-    const views = scope.definition.views;
-    const view = views?.[viewId as keyof typeof views];
-    if (!view) {
-      return null;
-    }
+    const view = scope.definition.views.shared;
+    const viewArgs = {
+      ...scope.buildContext(combinedState),
+      ...scope.runtimeHelpers,
+      fx: projection.fx,
+      q: projection.q,
+      derived: projection.derived,
+      state: projection.domainState,
+    } as unknown as Parameters<typeof view.project>[0];
+    return view.project(viewArgs);
+  }
+
+  function resolvePlayerViewFor(
+    combinedState: State,
+    playerId: PlayerId,
+    sharedView: unknown,
+    projection: ProjectionContext<DomainState, State>,
+  ): unknown {
+    const view = scope.definition.views.player;
     const viewArgs = {
       ...scope.buildContext(combinedState),
       ...scope.runtimeHelpers,
@@ -324,6 +346,7 @@ export function createProjectionBuilder<
       derived: projection.derived,
       state: projection.domainState,
       playerId,
+      shared: sharedView,
     } as unknown as Parameters<typeof view.project>[0];
     return view.project(viewArgs);
   }
@@ -331,12 +354,10 @@ export function createProjectionBuilder<
   function projectSeatsDynamic({
     state,
     playerIds,
-    viewId = "player",
     projectionMode = "full",
   }: {
     state: SessionState;
     playerIds: PlayerId[];
-    viewId?: string;
     projectionMode?: ProjectionMode;
   }) {
     const combinedState = scope.toCombinedState(state);
@@ -344,71 +365,124 @@ export function createProjectionBuilder<
       combinedState,
       domainState: scope.toDomainState(combinedState),
     });
-    const registry = createDescriptorRegistry();
+    const timing = createProjectionTimingMetadata();
+    const registry = createDescriptorRegistry(timing);
     type SeatProjection = {
-      view?: ReturnType<typeof resolveViewFor>;
+      view?: ReturnType<typeof resolvePlayerViewFor>;
       availableInteractionRefs: string[];
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
     };
     const seats: Record<string, SeatProjection> = {};
+    const sharedView =
+      projectionMode === "full"
+        ? measureProjectionTiming(timing, "resolveViewMs", () =>
+            resolveSharedViewFor(combinedState, projection),
+          )
+        : undefined;
     for (const [actorSeat, playerId] of playerIds.entries()) {
-      const availableInteractionRefs = interactions
-        .resolveAvailableInteractionsFor(combinedState, playerId, {
-          projection,
-        })
-        .map((descriptor) => registry.add(descriptor, actorSeat));
-      seats[playerId as unknown as string] = {
-        ...(projectionMode === "full"
+      const availableInteractions = measureProjectionTiming(
+        timing,
+        "resolveAvailableInteractionsMs",
+        () =>
+          interactions.resolveAvailableInteractionsFor(
+            combinedState,
+            playerId,
+            {
+              projection,
+            },
+          ),
+      );
+      const availableInteractionRefs = availableInteractions.map((descriptor) =>
+        registry.add(descriptor, actorSeat),
+      );
+      const fullProjection =
+        projectionMode === "full"
           ? {
-              view: resolveViewFor(combinedState, playerId, viewId, projection),
-              zones: resolveZoneHandlesFor(
-                combinedState,
-                playerId,
-                actorSeat,
-                projection,
-                registry,
+              view: measureProjectionTiming(timing, "resolveViewMs", () =>
+                resolvePlayerViewFor(
+                  combinedState,
+                  playerId,
+                  sharedView,
+                  projection,
+                ),
+              ),
+              zones: measureProjectionTiming(
+                timing,
+                "resolveZoneHandlesMs",
+                () =>
+                  resolveZoneHandlesFor(
+                    combinedState,
+                    playerId,
+                    actorSeat,
+                    projection,
+                    registry,
+                  ),
               ),
             }
-          : {}),
+          : {};
+      seats[playerId as unknown as string] = {
+        ...fullProjection,
         availableInteractionRefs,
       };
     }
-    return {
-      currentStage: resolveCurrentStageFor(combinedState, projection),
-      stageSeats: resolveStageSeatsFor(state),
-      simultaneousPhase: resolveSimultaneousPhaseFor(state),
-      guidance: resolveGuidanceFor(combinedState),
-      recentEvents: [],
-      interactionsByRef: registry.entries(),
-      seats,
-    };
-  }
-
-  function projectSeatViewDynamic({
-    state,
-    playerId,
-    viewId = "player",
-  }: {
-    state: SessionState;
-    playerId: PlayerId;
-    viewId?: string;
-  }) {
-    const combinedState = scope.toCombinedState(state);
-    const projection = createProjectionContext({
-      combinedState,
-      domainState: scope.toDomainState(combinedState),
-    });
-    return resolveViewFor(combinedState, playerId, viewId, projection);
+    return withProjectionTiming(
+      {
+        currentStage: resolveCurrentStageFor(combinedState, projection),
+        stageSeats: resolveStageSeatsFor(state),
+        simultaneousPhase: resolveSimultaneousPhaseFor(state),
+        ...(projectionMode === "full" ? { sharedView } : {}),
+        guidance: resolveGuidanceFor(combinedState),
+        recentEvents: [],
+        interactionsByRef: registry.entries(),
+        seats,
+      },
+      timing,
+    );
   }
 
   return {
     projectSeatsDynamic,
-    projectSeatViewDynamic,
     resolveCurrentStageFor,
     resolveStageSeatsFor,
-    resolveViewFor,
+    resolvePlayerViewFor,
+    resolveSharedViewFor,
     resolveZoneHandlesFor,
   };
+}
+
+function createProjectionTimingMetadata(): ProjectionTimingMetadata {
+  return {
+    resolveAvailableInteractionsMs: 0,
+    resolveViewMs: 0,
+    resolveZoneHandlesMs: 0,
+    descriptorHashMs: 0,
+  };
+}
+
+function measureProjectionTiming<T>(
+  timing: ProjectionTimingMetadata,
+  field: keyof ProjectionTimingMetadata,
+  block: () => T,
+): T {
+  const startedAt = performance.now();
+  try {
+    return block();
+  } finally {
+    timing[field] += performance.now() - startedAt;
+  }
+}
+
+function withProjectionTiming<T extends object>(
+  projection: T,
+  timing: ProjectionTimingMetadata,
+): T & { timing: ProjectionTimingMetadata } {
+  Object.defineProperty(projection, "timing", {
+    value: timing,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+  return projection as T & { timing: ProjectionTimingMetadata };
 }
 
 function descriptorWithBrowserReplayDigests(

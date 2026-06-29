@@ -1,8 +1,8 @@
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 import type { GameContract } from "./game-contract";
 import { activePlayerId, legalSurveyTargets, surveyCells } from "./model";
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId }) {
     const publicState = state.publicState;
     return {

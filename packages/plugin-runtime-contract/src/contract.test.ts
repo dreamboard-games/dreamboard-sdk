@@ -43,6 +43,10 @@ function baseFrame() {
     gameVersion: 42,
     actionSetVersion: "sha256:actions",
     perspectivePlayerId: "player-1",
+    sharedView: {
+      boardStatic: null,
+      dynamicView: null,
+    },
     view: { score: 7 },
     flow: {
       currentPhase: "play",
@@ -159,6 +163,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
             details: [{ label: "Revealed", value: "Storm" }],
           },
         ],
+        sharedView: { market: ["card-1"] },
         interactionsByRef: {
           "claim-ref": claimDescriptor,
         },
@@ -185,8 +190,11 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     expect(frame.gameVersion).toBe(8);
     expect(frame.actionSetVersion).toBe(actionSetVersion);
     expect(frame.view).toEqual({
-      board: { id: "shared-board" },
       handSize: 1,
+    });
+    expect(frame.sharedView).toEqual({
+      boardStatic: { board: { id: "shared-board" } },
+      dynamicView: { market: ["card-1"] },
     });
     expect(frame.availableInteractions).toEqual([claimDescriptor]);
     expect(frame.guidance).toEqual({
@@ -265,8 +273,11 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     });
 
     expect(frame.view).toEqual({
-      board: { id: "shared-board" },
       handSize: 1,
+    });
+    expect(frame.sharedView).toEqual({
+      boardStatic: { board: { id: "shared-board" } },
+      dynamicView: null,
     });
     expect(frame.availableInteractions[0]?.inputs[0]?.domain).toEqual({
       type: "choice",

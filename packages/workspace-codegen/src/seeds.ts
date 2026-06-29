@@ -1433,7 +1433,10 @@ export default authoring.game({
   initialPhase: "setup",
   setupProfiles,
   phases,
-  views: {},
+  views: {
+    shared: authoring.emptyView(),
+    player: authoring.emptyView(),
+  },
 });
 `;
 }

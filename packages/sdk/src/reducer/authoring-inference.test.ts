@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createContractAuthoring,
+  defineEmptyView,
   defineGameContract,
   defineInteraction,
 } from "../reducer";
@@ -203,7 +204,10 @@ describe("createContractAuthoring", () => {
         setup: setupPhase,
         playerTurn: playerTurnPhase,
       },
-      views: {},
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;

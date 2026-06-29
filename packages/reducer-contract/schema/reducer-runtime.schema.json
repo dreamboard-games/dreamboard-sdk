@@ -755,13 +755,35 @@
             { "type": "null" }
           ]
         },
+        "sharedView": { "$ref": "#/$defs/JsonValue" },
         "interactionsByRef": { "$ref": "#/$defs/JsonValue" },
         "seats": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/SeatProjection" }
+        },
+        "timing": {
+          "$ref": "#/$defs/ProjectionTimingMetadata"
         }
       },
       "required": ["seats"],
+      "additionalProperties": false
+    },
+
+    "ProjectionTimingMetadata": {
+      "description": "Optional SDK-owned diagnostics for projectSeatsDynamic internals. Hosts may record these values for profiling; reducer authors should not depend on them.",
+      "type": "object",
+      "properties": {
+        "resolveAvailableInteractionsMs": { "type": "number", "minimum": 0 },
+        "resolveViewMs": { "type": "number", "minimum": 0 },
+        "resolveZoneHandlesMs": { "type": "number", "minimum": 0 },
+        "descriptorHashMs": { "type": "number", "minimum": 0 }
+      },
+      "required": [
+        "resolveAvailableInteractionsMs",
+        "resolveViewMs",
+        "resolveZoneHandlesMs",
+        "descriptorHashMs"
+      ],
       "additionalProperties": false
     },
 
@@ -774,7 +796,6 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
-        "viewId": { "type": "string", "minLength": 1 },
         "projectionMode": {
           "anyOf": [
             { "type": "string", "enum": ["full", "actionsOnly"] },

@@ -5,12 +5,12 @@ import type {
   CardType,
 } from "../shared/manifest-contract";
 import type { GameContract } from "./game-contract";
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 import { hasChopsticksReady } from "./rules/scoring";
 
 type SushiCardView = ViewCard<CardId, CardType, CardProperties>;
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q }) {
     const viewCard = (cardId: CardId): SushiCardView => {
       const card = q.card.get(cardId);

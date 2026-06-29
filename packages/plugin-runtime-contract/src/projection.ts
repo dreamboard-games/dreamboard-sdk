@@ -62,7 +62,14 @@ export function materializePluginGameplayFrame(
     gameVersion: input.gameVersion,
     actionSetVersion: input.actionSetVersion,
     perspectivePlayerId: input.perspectivePlayerId,
-    view: composeProjectionView(staticProjection, seat?.view),
+    sharedView: {
+      boardStatic: staticProjection?.view ?? null,
+      dynamicView:
+        dynamicProjection.sharedView === undefined
+          ? null
+          : (dynamicProjection.sharedView as RuntimeJson | null),
+    },
+    view: seat?.view === undefined ? null : (seat.view as RuntimeJson | null),
     flow: {
       currentPhase: input.currentPhase,
       currentStage: dynamicProjection.currentStage ?? null,
@@ -170,30 +177,6 @@ function hydrateInteractionRefs(
     }
     return descriptor;
   });
-}
-
-function composeProjectionView(
-  staticProjection: ReducerBoardStaticProjection | null,
-  dynamicView: unknown,
-): RuntimeJson | null {
-  const normalizedDynamicView =
-    dynamicView === undefined ? null : (dynamicView as RuntimeJson | null);
-  if (staticProjection == null) {
-    return normalizedDynamicView;
-  }
-  if (normalizedDynamicView == null) {
-    return staticProjection.view;
-  }
-  if (isRecord(staticProjection.view) && isRecord(normalizedDynamicView)) {
-    return {
-      ...staticProjection.view,
-      ...normalizedDynamicView,
-    } as RuntimeJson;
-  }
-  return {
-    static: staticProjection.view,
-    dynamic: normalizedDynamicView,
-  };
 }
 
 function arrayOfStrings(value: unknown, path: string): string[] {

@@ -1,4 +1,4 @@
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 import type { GameContract } from "./game-contract";
 import {
   activePlayerId,
@@ -6,7 +6,7 @@ import {
   legalMarketCardIds,
 } from "./phases/draft-flow";
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId }) {
     const publicState = state.publicState;
     return {

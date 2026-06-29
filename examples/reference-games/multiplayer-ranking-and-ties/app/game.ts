@@ -14,6 +14,7 @@ export default authoring.game({
   setupProfiles,
   phases,
   views: {
+    shared: authoring.emptyView(),
     player: playerView,
   },
 });

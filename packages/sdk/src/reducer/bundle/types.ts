@@ -44,6 +44,13 @@ type TrustedCombinedState<Contract extends ReducerGameContractLike> =
 type TrustedPlayerId<Contract extends ReducerGameContractLike> =
   PlayerIdOfState<BaseGameStateOfContract<Contract>>;
 
+type ProjectionTimingMetadata = {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+};
+
 export type TrustedReducerBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
@@ -109,7 +116,6 @@ export type TrustedReducerBundle<
   projectSeatsDynamic(input: {
     state: TrustedSessionState<Contract>;
     playerIds: TrustedPlayerId<Contract>[];
-    viewId?: string;
     projectionMode?: "full" | "actionsOnly";
   }): {
     currentStage: string | null;
@@ -121,6 +127,7 @@ export type TrustedReducerBundle<
       sealedPlayerIds: string[];
       pendingPlayerIds: string[];
     } | null;
+    sharedView?: unknown;
     seats: Record<
       string,
       {
@@ -130,12 +137,8 @@ export type TrustedReducerBundle<
       }
     >;
     interactionsByRef: Record<string, unknown>;
+    timing: ProjectionTimingMetadata;
   };
-  projectSeatViewDynamic(input: {
-    state: TrustedSessionState<Contract>;
-    playerId: TrustedPlayerId<Contract>;
-    viewId?: string;
-  }): unknown;
 };
 
 export type ReducerBundle = ReducerBundleContract & {
@@ -154,13 +157,8 @@ export type ReducerBundle = ReducerBundleContract & {
       | { kind: "accept"; state: unknown; trace: unknown[] }
       | { kind: "reject"; errorCode: string; message?: string }
     >;
-    projectSeatViewDynamic(input: {
-      playerId: unknown;
-      viewId?: string;
-    }): unknown;
     projectSeatsDynamic(input: {
       playerIds: unknown[];
-      viewId?: string;
       projectionMode?: "full" | "actionsOnly";
     }): {
       currentStage: string | null;
@@ -172,6 +170,7 @@ export type ReducerBundle = ReducerBundleContract & {
         sealedPlayerIds: string[];
         pendingPlayerIds: string[];
       } | null;
+      sharedView?: unknown;
       seats: Record<
         string,
         {
@@ -181,6 +180,7 @@ export type ReducerBundle = ReducerBundleContract & {
         }
       >;
       interactionsByRef: Record<string, unknown>;
+      timing: ProjectionTimingMetadata;
     };
     explainInteraction(input: {
       playerId: unknown;
@@ -189,11 +189,6 @@ export type ReducerBundle = ReducerBundleContract & {
     snapshot(): unknown;
     unsafeState(): unknown;
   };
-  projectSeatViewDynamic(input: {
-    state: unknown;
-    playerId: unknown;
-    viewId?: string;
-  }): unknown;
   explainInteraction(input: {
     state: unknown;
     playerId: unknown;

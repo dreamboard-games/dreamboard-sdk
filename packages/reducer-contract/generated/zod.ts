@@ -116,8 +116,10 @@ export const SeatProjectionSchema = z.object({ "view": JsonValueSchema.optional(
 
 export const SimultaneousPhaseProjectionSchema = z.object({ "phaseName": z.string().min(1), "interactionId": z.string().min(1), "actorIds": z.array(z.string().min(1)), "sealedPlayerIds": z.array(z.string().min(1)), "pendingPlayerIds": z.array(z.string().min(1)) }).strict();
 
-export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema) }).strict();
+export const ProjectionTimingMetadataSchema = z.object({ "resolveAvailableInteractionsMs": z.number().finite().gte(0), "resolveViewMs": z.number().finite().gte(0), "resolveZoneHandlesMs": z.number().finite().gte(0), "descriptorHashMs": z.number().finite().gte(0) }).strict();
 
-export const ProjectSeatsDynamicRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)), "viewId": z.string().min(1).optional(), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
+export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
+
+export const ProjectSeatsDynamicRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
 
 export const BoardStaticProjectionSchema = z.object({ "view": JsonValueSchema, "hash": z.string().min(1), "manifestVersion": z.string() }).strict();

@@ -18,6 +18,10 @@ export function makeTestGameplayFrame<View = unknown>(options: {
     gameVersion: options.gameVersion,
     actionSetVersion: `sha256:${options.gameVersion.toString(16).padStart(64, "0")}`,
     perspectivePlayerId: options.perspectivePlayerId ?? "player-1",
+    sharedView: {
+      boardStatic: null,
+      dynamicView: null,
+    },
     view: options.view,
     flow: {
       currentPhase: options.currentPhase ?? "play",

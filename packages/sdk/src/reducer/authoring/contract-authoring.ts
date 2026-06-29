@@ -14,10 +14,12 @@ import type {
   PhaseNameOfContract,
   PhaseSchemasOfContract,
   PhaseZoneList,
+  PlayerViewDefinition,
   PlayerIdOfState,
   PlayerZoneIdOfManifest,
   SchemaLike,
   SetupSelectionOfManifest,
+  SharedViewDefinition,
   StageMap,
   StaticViewDefinition,
   TableOfManifest,
@@ -25,7 +27,6 @@ import type {
   TiledEdgeIdOfTable,
   TiledSpaceIdOfTable,
   TiledVertexIdOfTable,
-  ViewDefinition,
   ViewMapOf,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
@@ -73,7 +74,12 @@ import {
   type UnwrappedStepCardActions,
   type UnwrappedStepInteractions,
 } from "./phase";
-import { defineStaticView, defineView } from "./view-stage";
+import {
+  defineEmptyView,
+  definePlayerView,
+  defineSharedView,
+  defineStaticView,
+} from "./view-stage";
 
 export type ContractWithPhases = AnyReducerGameContract & {
   readonly phases: Record<string, SchemaLike<object>>;
@@ -474,20 +480,41 @@ export type ContractAuthoring<Contract extends ContractWithPhases> = {
   readonly contract: Contract;
   game<
     Definitions extends PhaseMapOf<Contract>,
-    Views extends ViewMapOf<Contract> = Record<string, never>,
+    Views extends ViewMapOf<Contract>,
   >(
     definition: Omit<
       import("../model").ReducerGameDefinition<Contract, Definitions, Views>,
       "contract"
     >,
   ): import("../model").ReducerGameDefinition<Contract, Definitions, Views>;
-  view<Projection>(
-    definition: ViewDefinition<
+  sharedView<Projection>(
+    definition: SharedViewDefinition<
       BoundState<Contract>,
       BoundManifest<Contract>,
       Projection
     >,
-  ): ViewDefinition<BoundState<Contract>, BoundManifest<Contract>, Projection>;
+  ): SharedViewDefinition<
+    BoundState<Contract>,
+    BoundManifest<Contract>,
+    Projection
+  >;
+  playerView<SharedProjection = unknown, Projection = unknown>(
+    definition: PlayerViewDefinition<
+      BoundState<Contract>,
+      BoundManifest<Contract>,
+      SharedProjection,
+      Projection
+    >,
+  ): PlayerViewDefinition<
+    BoundState<Contract>,
+    BoundManifest<Contract>,
+    SharedProjection,
+    Projection
+  >;
+  emptyView(): import("../model").EmptyViewDefinition<
+    BoundState<Contract>,
+    BoundManifest<Contract>
+  >;
   staticView<Projection>(
     definition: StaticViewDefinition<
       import("../model").ExactManifestContractOf<Contract>,
@@ -566,7 +593,9 @@ export function createContractAuthoring<
   return {
     contract,
     game: (definition) => defineGame({ contract, ...definition }),
-    view: (definition) => defineView<Contract>()(definition),
+    sharedView: (definition) => defineSharedView<Contract>()(definition),
+    playerView: (definition) => definePlayerView<Contract>()(definition),
+    emptyView: () => defineEmptyView<Contract>(),
     staticView: (definition) => defineStaticView<Contract>()(definition),
     phase: (name) => {
       const cached = phaseCache.get(name);

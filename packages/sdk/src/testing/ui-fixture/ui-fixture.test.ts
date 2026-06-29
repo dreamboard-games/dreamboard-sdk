@@ -36,6 +36,7 @@ function frame(gameVersion: number): PluginGameplayFrame {
     gameVersion,
     actionSetVersion: `sha256:${String(gameVersion).padStart(64, "0")}`,
     perspectivePlayerId: "player-1",
+    sharedView: { boardStatic: null, dynamicView: { gameVersion } },
     view: { hand: ["card-a"], public: { trick: [] }, gameVersion },
     flow: {
       currentPhase: "play",

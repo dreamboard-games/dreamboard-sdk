@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.6";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.7";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.6";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.7";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.6";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.7";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.6";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.7";
 ```
 
 _No JSDoc summary is available yet._
@@ -2592,13 +2592,23 @@ function defineEffect(...args: never[]): unknown;
 
 _No JSDoc summary is available yet._
 
+### defineEmptyView
+
+```ts
+function defineEmptyView<
+  Contract extends AnyReducerGameContract,
+>(): EmptyViewDefinition<ContractState<Contract>, ContractManifest<Contract>>;
+```
+
+_No JSDoc summary is available yet._
+
 ### defineGame
 
 ```ts
 function defineGame<
   const Contract extends AnyReducerGameContract,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract> = Record<string, never>,
+  Views extends ViewMapOf<Contract>,
 >(
   definition: { contract: Contract } & Omit<
     ReducerGameDefinition<NoInfer<Contract>, Definitions, Views>,
@@ -2670,6 +2680,49 @@ function definePhaseStage<
 
 _No JSDoc summary is available yet._
 
+### definePlayerView
+
+```ts
+function definePlayerView<Contract extends AnyReducerGameContract>(): <
+  SharedProjection = unknown,
+  Projection = unknown,
+>(
+  definition: PlayerViewDefinition<
+    ContractState<Contract>,
+    ContractManifest<Contract>,
+    SharedProjection,
+    Projection
+  >,
+) => PlayerViewDefinition<
+  ContractState<Contract>,
+  ContractManifest<Contract>,
+  SharedProjection,
+  Projection
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### defineSharedView
+
+```ts
+function defineSharedView<Contract extends AnyReducerGameContract>(): <
+  Projection,
+>(
+  definition: SharedViewDefinition<
+    ContractState<Contract>,
+    ContractManifest<Contract>,
+    Projection
+  >,
+) => SharedViewDefinition<
+  ContractState<Contract>,
+  ContractManifest<Contract>,
+  Projection
+>;
+```
+
+_No JSDoc summary is available yet._
+
 ### defineStage
 
 ```ts
@@ -2693,30 +2746,12 @@ function defineStaticView<Contract extends AnyReducerGameContract>(): <
 ) => StaticViewDefinition<ExactManifestContractOf<Contract>, Projection>;
 ```
 
-Factory for the session-scoped static view (see {@link StaticViewDefinition}). Kept separate from {@link defineView} because the argument shape is structurally different: it exposes only the manifest and generated static queries, with no `state`, `playerId`, `runtime`, `fx`, `ops`, or `accept/reject`. That shape is what prevents authors from accidentally projecting per-tick state into the once-per-session payload.
+Factory for the session-scoped static view (see {@link StaticViewDefinition}). Kept separate from dynamic view helpers because the argument shape is structurally different: it exposes only the manifest and generated static queries, with no `state`, `playerId`, `runtime`, `fx`, `ops`, or `accept/reject`. That shape is what prevents authors from accidentally projecting per-tick state into the once-per-session payload.
 
 ### defineStepPhase
 
 ```ts
 function defineStepPhase(...args: never[]): unknown;
-```
-
-_No JSDoc summary is available yet._
-
-### defineView
-
-```ts
-function defineView<Contract extends AnyReducerGameContract>(): <Projection>(
-  definition: ViewDefinition<
-    ContractState<Contract>,
-    ContractManifest<Contract>,
-    Projection
-  >,
-) => ViewDefinition<
-  ContractState<Contract>,
-  ContractManifest<Contract>,
-  Projection
->;
 ```
 
 _No JSDoc summary is available yet._
@@ -3409,6 +3444,23 @@ type ReducerPhaseDefinition<
 
 _No JSDoc summary is available yet._
 
+### ReducerPlayerViewDefinition
+
+```ts
+type ReducerPlayerViewDefinition<
+  Contract extends AnyReducerGameContract,
+  SharedProjection = unknown,
+  Projection = unknown,
+> = PlayerViewDefinition<
+  ContractState<Contract>,
+  ContractManifest<Contract>,
+  SharedProjection,
+  Projection
+>;
+```
+
+_No JSDoc summary is available yet._
+
 ### ReducerReject
 
 ```ts
@@ -3425,6 +3477,21 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ReducerResult<State> = ReducerAccept<State> | ReducerReject;
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerSharedViewDefinition
+
+```ts
+type ReducerSharedViewDefinition<
+  Contract extends AnyReducerGameContract,
+  Projection = unknown,
+> = SharedViewDefinition<
+  ContractState<Contract>,
+  ContractManifest<Contract>,
+  Projection
+>;
 ```
 
 _No JSDoc summary is available yet._
@@ -3459,21 +3526,6 @@ type ReducerValidationResult =
       errorCode: string;
       message?: string;
     };
-```
-
-_No JSDoc summary is available yet._
-
-### ReducerViewDefinition
-
-```ts
-type ReducerViewDefinition<
-  Contract extends AnyReducerGameContract,
-  Projection = unknown,
-> = ViewDefinition<
-  ContractState<Contract>,
-  ContractManifest<Contract>,
-  Projection
->;
 ```
 
 _No JSDoc summary is available yet._
@@ -4879,6 +4931,23 @@ type EffectTypeTag = "rollDie" | "shuffleSharedZone" | "shufflePlayerZone";
 
 Marker tag attached by `defineEffect` to every effect spec. `fx.effect` uses `type` to dispatch to the right wire-effect builder.
 
+### EmptyViewDefinition
+
+```ts
+type EmptyViewDefinition<
+  State extends {
+    table: RuntimeTableRecord;
+    flow: {
+      currentPhase: string;
+    };
+  },
+  Manifest extends ManifestContract<TableOfState<State>>,
+> = SharedViewDefinition<State, Manifest, Record<string, never>> &
+  PlayerViewDefinition<State, Manifest, unknown, Record<string, never>>;
+```
+
+_No JSDoc summary is available yet._
+
 ### ErrorCodeOfContract
 
 ```ts
@@ -6122,6 +6191,14 @@ _No JSDoc summary is available yet._
 
 ```ts
 type PlayerPhaseDefinition = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### PlayerViewDefinition
+
+```ts
+type PlayerViewDefinition = ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -7626,6 +7703,30 @@ type SetupSelectionOfManifest<Manifest> = {
 
 _No JSDoc summary is available yet._
 
+### SharedViewDefinition
+
+```ts
+type SharedViewDefinition<
+  State extends {
+    table: RuntimeTableRecord;
+    flow: {
+      currentPhase: string;
+    };
+  },
+  Manifest extends ManifestContract<TableOfState<State>>,
+  Projection = unknown,
+> = {
+  project: (
+    args: ActionContext<State, Manifest> &
+      RuntimeHelpers<State> & {
+        state: State;
+      },
+  ) => Projection;
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### SharedZoneIdOfManifest
 
 ```ts
@@ -8412,14 +8513,6 @@ type VertexTypeIdOfManifest<Manifest> = Manifest extends {
 
 _No JSDoc summary is available yet._
 
-### ViewDefinition
-
-```ts
-type ViewDefinition = ...;
-```
-
-_No JSDoc summary is available yet._
-
 ### ViewDefinitionByName
 
 ```ts
@@ -8434,14 +8527,23 @@ _No JSDoc summary is available yet._
 ### ViewMapOf
 
 ```ts
-type ViewMapOf<Contract> = Record<
-  string,
-  ViewDefinition<
+type ViewMapOf<
+  Contract,
+  SharedProjection = unknown,
+  PlayerProjection = unknown,
+> = {
+  shared: SharedViewDefinition<
     BaseGameStateOfContract<Contract>,
     ManifestContractOf<Contract>,
-    unknown
-  >
->;
+    SharedProjection
+  >;
+  player: PlayerViewDefinition<
+    BaseGameStateOfContract<Contract>,
+    ManifestContractOf<Contract>,
+    SharedProjection,
+    PlayerProjection
+  >;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -8477,9 +8579,9 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ViewsOfDefinition<Definition> = Definition extends {
-  views?: infer Views;
+  views: infer Views;
 }
-  ? NonNullable<Views>
+  ? Views
   : never;
 ```
 
@@ -21540,6 +21642,75 @@ declare const uiStepExpectationSchema: z.ZodObject<
   },
   z.core.$strict
 >;
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/testing-runtime
+
+### CandidateVerificationBase
+
+```ts
+type CandidateVerificationBase =
+  | BaseStateArtifact
+  | (BaseDefinition & Partial<BaseStateArtifact>);
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationInput
+
+```ts
+type CandidateVerificationInput = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationResult
+
+```ts
+type CandidateVerificationResult = {
+  readonly status: "passed" | "failed";
+  readonly scenarioSummary: {
+    readonly total: number;
+    readonly passed: number;
+    readonly failed: number;
+    readonly scenarios: readonly CandidateVerificationScenarioResult[];
+  };
+};
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationScenario
+
+```ts
+type CandidateVerificationScenario = ScenarioDefinition;
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationScenarioResult
+
+```ts
+type CandidateVerificationScenarioResult = {
+  readonly id: string;
+  readonly status: "passed" | "failed";
+  readonly diagnostic?: {
+    readonly kind: "assertion";
+    readonly message: string;
+  };
+};
+```
+
+_No JSDoc summary is available yet._
+
+### runCandidateVerification
+
+```ts
+function runCandidateVerification(
+  input: CandidateVerificationInput,
+): Promise<CandidateVerificationResult>;
 ```
 
 _No JSDoc summary is available yet._

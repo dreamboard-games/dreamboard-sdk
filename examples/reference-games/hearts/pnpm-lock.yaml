@@ -13,8 +13,8 @@ importers:
   .:
     dependencies:
       "@dreamboard-games/sdk":
-        specifier: 0.4.0-alpha.6
-        version: 0.4.0-alpha.6(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
+        specifier: 0.4.0-alpha.7
+        version: 0.4.0-alpha.7(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
       react:
         specifier: 19.2.6
         version: 19.2.6
@@ -48,7 +48,7 @@ importers:
         version: 5.9.3
 
 packages:
-  "@dreamboard-games/sdk@0.4.0-alpha.6":
+  "@dreamboard-games/sdk@0.4.0-alpha.7":
     resolution:
       {
         integrity: sha512-P8mIk73UiGcZgQg4bzB4Vk4nFXSuznZ23TgYTzPUXEI+NNqvNdbDdxSdhjHvXLMhwwnhpQJ/usYv9P12Nk0W5g==,
@@ -1037,7 +1037,7 @@ packages:
         optional: true
 
 snapshots:
-  "@dreamboard-games/sdk@0.4.0-alpha.6(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)":
+  "@dreamboard-games/sdk@0.4.0-alpha.7(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)":
     dependencies:
       "@radix-ui/react-accordion": 1.2.14(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       "@radix-ui/react-dialog": 1.1.17(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)

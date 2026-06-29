@@ -403,31 +403,18 @@ export function createReducerBundle<
     projectStatic() {
       return trustedBundle.projectStatic() as Wire.BoardStaticProjection | null;
     },
-    /**
-     * Wire-side passthrough for per-tick seat projection. The seat views carry
-     * only the fields produced by `defineView`; static topology, when present,
-     * was served once via `projectStatic` and is re-merged on the client.
-     */
     projectSeatsDynamic({
       state,
       playerIds,
-      viewId = "player",
+      projectionMode,
     }: Wire.ProjectSeatsDynamicRequest) {
       const parsedState = parseTrustedState(state);
       const parsedPlayerIds = playerIds.map((pid) => codec.parsePlayerId(pid));
       return trustedBundle.projectSeatsDynamic({
         state: parsedState,
         playerIds: parsedPlayerIds,
-        viewId,
+        projectionMode: projectionMode ?? undefined,
       }) as Wire.SeatProjectionBundle;
-    },
-    projectSeatViewDynamic({ state, playerId, viewId = "player" }) {
-      const parsedState = parseTrustedState(state);
-      return trustedBundle.projectSeatViewDynamic({
-        state: parsedState,
-        playerId: parseRuntimePlayerId(playerId),
-        viewId,
-      });
     },
     createInProcessRuntime() {
       let state: TrustedState | null = null;
@@ -477,21 +464,14 @@ export function createReducerBundle<
             trace: toWireDispatchTrace(result as never),
           };
         },
-        projectSeatViewDynamic({ playerId, viewId = "player" }) {
-          return trustedBundle.projectSeatViewDynamic({
-            state: requireState(),
-            playerId: parseRuntimePlayerId(playerId),
-            viewId,
-          });
-        },
-        projectSeatsDynamic({ playerIds, viewId = "player" }) {
+        projectSeatsDynamic({ playerIds, projectionMode }) {
           const parsedPlayerIds = playerIds.map((pid) =>
             parseRuntimePlayerId(pid),
           );
           return trustedBundle.projectSeatsDynamic({
             state: requireState(),
             playerIds: parsedPlayerIds,
-            viewId,
+            projectionMode: projectionMode ?? undefined,
           });
         },
         explainInteraction({ playerId, interactionId }) {

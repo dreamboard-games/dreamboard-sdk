@@ -177,7 +177,7 @@ async function main() {
   await rm(tempRoot, { recursive: true, force: true });
   await mkdir(tempRoot, { recursive: true });
 
-  run("pnpm", ["build"]);
+  run("pnpm", ["--filter", "@dreamboard-games/sdk", "build"]);
 
   for (const pkg of sdkPackages) {
     const outDir = await preparePackage(pkg, localVersion, tempRoot);

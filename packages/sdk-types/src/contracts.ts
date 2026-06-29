@@ -1160,6 +1160,10 @@ export type HostGameplaySharedView = {
    */
   simultaneousPhase?: SimultaneousPhaseSnapshot | null;
   /**
+   * JSON-serialized dynamic view shared by every player for this projection.
+   */
+  dynamicView?: string | null;
+  /**
    * JSON-serialized session-scoped static view. Populated on gameplay bootstrap payloads only.
    */
   boardStatic?: string | null;

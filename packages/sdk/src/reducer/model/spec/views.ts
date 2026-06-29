@@ -7,7 +7,7 @@ import type {
   StaticViewQueries,
 } from "./runtime-args";
 
-export type ViewDefinition<
+export type SharedViewDefinition<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
   Projection = unknown,
@@ -16,15 +16,31 @@ export type ViewDefinition<
     args: ActionContext<State, Manifest> &
       RuntimeHelpers<State> & {
         state: State;
-        playerId: PlayerIdOfState<State>;
-        runtime: State extends {
-          runtime: infer RuntimeStateValue;
-        }
-          ? RuntimeStateValue
-          : never;
       },
   ) => Projection;
 };
+
+export type PlayerViewDefinition<
+  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
+  Manifest extends ManifestContract<TableOfState<State>>,
+  SharedProjection = unknown,
+  Projection = unknown,
+> = {
+  project: (
+    args: ActionContext<State, Manifest> &
+      RuntimeHelpers<State> & {
+        state: State;
+        playerId: PlayerIdOfState<State>;
+        shared: SharedProjection;
+      },
+  ) => Projection;
+};
+
+export type EmptyViewDefinition<
+  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
+  Manifest extends ManifestContract<TableOfState<State>>,
+> = SharedViewDefinition<State, Manifest, Record<string, never>> &
+  PlayerViewDefinition<State, Manifest, unknown, Record<string, never>>;
 
 /**
  * Session-scoped, once-per-init view. The `project` callback receives only

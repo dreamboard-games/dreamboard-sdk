@@ -59,6 +59,10 @@ function semanticSeatProjection(
       frame.guidance ?? null,
       playerToSeat,
     ),
+    sharedView: canonicalizeSemanticProjectionValue(
+      frame.sharedView,
+      playerToSeat,
+    ),
     recentEvents: canonicalizeSemanticProjectionValue(
       frame.recentEvents ?? [],
       playerToSeat,

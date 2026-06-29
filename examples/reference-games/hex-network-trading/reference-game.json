@@ -63,7 +63,12 @@
     "playTimeMinMinutes": 60,
     "playTimeMaxMinutes": 120,
     "difficulty": 3,
-    "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
+    "mechanics": [
+      "hex-grid",
+      "route-building",
+      "resource-management",
+      "trading"
+    ],
     "categories": ["strategy", "network-building"],
     "heroImageUrl": "/demos/hex-network-trading/desktop.png",
     "estimatedMinutes": 15,

@@ -1,6 +1,6 @@
 import type { BeaconId, GameContract, OutcomeCode } from "./game-contract";
 import { beaconIds } from "./game-contract";
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 
 export type BeaconView = {
   readonly id: BeaconId;
@@ -33,7 +33,7 @@ const beaconNames: Record<BeaconId, string> = {
   "beacon-south": "South Beacon",
 };
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state }): PlayerView {
     return {
       currentPhase: state.flow.currentPhase,

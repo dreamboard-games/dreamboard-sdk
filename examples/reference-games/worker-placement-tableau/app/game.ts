@@ -1,4 +1,5 @@
 import {
+  defineEmptyView,
   defineGame,
   type ReducerGameDefinition,
 } from "@dreamboard-games/sdk/reducer";
@@ -14,6 +15,7 @@ import setupProfiles from "./setup-profiles";
 import { playerView } from "./player-view";
 
 const views = {
+  shared: defineEmptyView<GameContract>(),
   player: playerView,
 };
 

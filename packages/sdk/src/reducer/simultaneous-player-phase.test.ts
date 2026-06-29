@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createReducerBundle,
+  defineEmptyView,
   defineGame,
   defineGameContract,
   definePhase,
@@ -284,6 +285,10 @@ function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
         },
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
 }
 
@@ -345,6 +350,10 @@ function createCardPassGame(options?: {
           return accept(pipe(state, ops.patchPublicState({ resolved })));
         },
       }),
+    },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
     },
   });
 }

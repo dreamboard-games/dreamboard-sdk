@@ -7,6 +7,7 @@ import {
   choiceTarget,
   createReducerBundle,
   defineCardAction,
+  defineEmptyView,
   defineGame,
   defineGameContract,
   defineInputs,
@@ -584,6 +585,10 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
         zones: ["playZone"],
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
   return createReducerBundle(game, options);
 }
@@ -639,6 +644,10 @@ describe("trusted interaction decision pipeline", () => {
             ),
           },
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1180,6 +1189,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1264,6 +1277,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           zones: ["playZone"],
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1393,6 +1410,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1508,6 +1529,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1572,6 +1597,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           zones: ["playZone", "discardZone"],
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1639,6 +1668,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           resolve: ({ state, accept }) => accept(state),
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1765,6 +1798,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1831,6 +1868,10 @@ describe("trusted interaction decision pipeline", () => {
             zones: ["typo-zone" as never],
           }),
         },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
+        },
       }),
     ).toThrow(
       "defineGame: phases.takeTurn.zones[0] 'typo-zone' is not declared in manifest.literals.playerZoneIds.",
@@ -1869,6 +1910,10 @@ describe("trusted interaction decision pipeline", () => {
               } as never,
             } as never,
           }),
+        },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
         },
       }),
     ).toThrow(

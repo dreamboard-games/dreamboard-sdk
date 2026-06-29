@@ -113,8 +113,10 @@ export type SeatProjection = { "view"?: JsonValue; "availableInteractionRefs"?: 
 
 export type SimultaneousPhaseProjection = { "phaseName": string; "interactionId": string; "actorIds": Array<string>; "sealedPlayerIds": Array<string>; "pendingPlayerIds": Array<string> };
 
-export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection> };
+export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
 
-export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "viewId"?: string; "projectionMode"?: "full" | "actionsOnly" | null };
+export type ProjectionTimingMetadata = { "resolveAvailableInteractionsMs": number; "resolveViewMs": number; "resolveZoneHandlesMs": number; "descriptorHashMs": number };
+
+export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "projectionMode"?: "full" | "actionsOnly" | null };
 
 export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manifestVersion": string };

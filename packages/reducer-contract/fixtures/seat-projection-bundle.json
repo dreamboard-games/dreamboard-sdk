@@ -1,6 +1,9 @@
 {
   "currentStage": "play",
   "stageSeats": ["player-1"],
+  "sharedView": {
+    "market": ["c1", "c2"]
+  },
   "seats": {
     "player-1": {
       "view": {

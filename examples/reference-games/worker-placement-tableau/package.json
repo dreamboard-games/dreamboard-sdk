@@ -20,7 +20,7 @@
     "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.4.0-alpha.6",
+    "@dreamboard-games/sdk": "0.4.0-alpha.7",
     "framer-motion": "12.38.0",
     "lucide-react": "^0.562.0",
     "react": "19.2.6",

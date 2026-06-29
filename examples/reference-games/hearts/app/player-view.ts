@@ -5,11 +5,11 @@ import type {
   PlayingCardsCardProperties,
 } from "../shared/manifest-contract";
 import type { GameContract } from "./game-contract";
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 
 type PlayingCardView = ViewCard<CardId, CardType, PlayingCardsCardProperties>;
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q }) {
     const viewCard = (cardId: CardId): PlayingCardView => {
       const card = q.card.get(cardId);

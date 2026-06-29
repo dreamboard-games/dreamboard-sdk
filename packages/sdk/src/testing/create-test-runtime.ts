@@ -266,6 +266,13 @@ function buildPluginFrame(options: {
       availableInteractions,
     }),
     perspectivePlayerId: options.playerId || null,
+    sharedView: {
+      boardStatic: null,
+      dynamicView:
+        projection.sharedView === undefined
+          ? null
+          : (projection.sharedView as PluginGameplayFrame["sharedView"]["dynamicView"]),
+    },
     view: seat?.view ?? null,
     flow: {
       currentPhase: flow.currentPhase,

@@ -187,8 +187,5 @@ export function createTrustedReducerBundle<
     projectSeatsDynamic(input) {
       return projection.projectSeatsDynamic(input);
     },
-    projectSeatViewDynamic(input) {
-      return projection.projectSeatViewDynamic(input);
-    },
   };
 }

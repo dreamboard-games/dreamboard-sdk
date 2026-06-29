@@ -6,6 +6,7 @@ import { playerView } from "./player-view";
 import { canonicalBoardSetup } from "./board-randomization";
 
 const views = {
+  shared: authoring.emptyView(),
   player: playerView,
 };
 

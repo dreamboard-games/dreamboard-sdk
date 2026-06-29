@@ -31,9 +31,10 @@ import type {
   InteractionMap,
   PhaseDefinition,
   PhaseZoneList,
+  PlayerViewDefinition,
+  SharedViewDefinition,
   StageMap,
   StaticViewDefinition,
-  ViewDefinition,
 } from "./spec";
 
 export type ReducerGameContract<
@@ -234,14 +235,23 @@ export type ResolvedGameSessionOf<
   RuntimeSetupSelection<ManifestContractOf<Contract>>
 >;
 
-export type ViewMapOf<Contract> = Record<
-  string,
-  ViewDefinition<
+export type ViewMapOf<
+  Contract,
+  SharedProjection = unknown,
+  PlayerProjection = unknown,
+> = {
+  shared: SharedViewDefinition<
     BaseGameStateOfContract<Contract>,
     ManifestContractOf<Contract>,
-    unknown
-  >
->;
+    SharedProjection
+  >;
+  player: PlayerViewDefinition<
+    BaseGameStateOfContract<Contract>,
+    ManifestContractOf<Contract>,
+    SharedProjection,
+    PlayerProjection
+  >;
+};
 
 type PhasesOfDefinition<Definition> = Definition extends {
   phases: infer Definitions extends Record<string, unknown>;
@@ -250,9 +260,9 @@ type PhasesOfDefinition<Definition> = Definition extends {
   : never;
 
 export type ViewsOfDefinition<Definition> = Definition extends {
-  views?: infer Views;
+  views: infer Views;
 }
-  ? NonNullable<Views>
+  ? Views
   : never;
 
 type NonNeverKeys<Registry> = {
@@ -362,7 +372,7 @@ export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
 export type ReducerGameDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract> = Record<string, never>,
+  Views extends ViewMapOf<Contract>,
 > = {
   contract: Contract;
   initial?: InitialStateCallbacks<NoInfer<Contract>>;
@@ -375,7 +385,7 @@ export type ReducerGameDefinition<
     >
   >;
   phases: Definitions;
-  views?: Views;
+  views: Views;
   /**
    * Optional session-scoped static projection. Authored via
    * {@link StaticViewDefinition}; computed once per reducer session from the

@@ -15,15 +15,18 @@ export {
 } from "./authoring/interaction";
 export { definePhase, defineStepPhase } from "./authoring/phase";
 export {
+  defineEmptyView,
+  definePlayerView,
   definePhaseStage,
+  defineSharedView,
   defineStage,
   defineStaticView,
-  defineView,
 } from "./authoring/view-stage";
 
 export type {
   ReducerPhaseDefinition,
-  ReducerViewDefinition,
+  ReducerPlayerViewDefinition,
+  ReducerSharedViewDefinition,
 } from "./authoring/types";
 
 export type {

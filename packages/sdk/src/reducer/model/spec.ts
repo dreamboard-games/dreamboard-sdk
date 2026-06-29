@@ -109,4 +109,9 @@ export type {
   PhaseDefinition,
 } from "./spec/phases";
 
-export type { ViewDefinition, StaticViewDefinition } from "./spec/views";
+export type {
+  EmptyViewDefinition,
+  PlayerViewDefinition,
+  SharedViewDefinition,
+  StaticViewDefinition,
+} from "./spec/views";

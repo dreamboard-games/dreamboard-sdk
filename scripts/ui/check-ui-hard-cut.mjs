@@ -110,6 +110,7 @@ async function assertReferenceGamesAbsentFromDemoRegistries(failures) {
     const relative = path.relative(root, filePath);
     return (
       !relative.startsWith("docs/exec-plans/") &&
+      !relative.startsWith("build/") &&
       !relative.startsWith("examples/reference-games/") &&
       !relative.startsWith("fixtures/ui/") &&
       !relative.startsWith("scripts/ui/") &&

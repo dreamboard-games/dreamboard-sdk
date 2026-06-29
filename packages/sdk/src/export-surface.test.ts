@@ -61,7 +61,7 @@ describe("public export surface", () => {
       .map((name) => name.trim())
       .filter(Boolean);
 
-    expect(names.length).toBeLessThanOrEqual(140);
+    expect(names.length).toBeLessThanOrEqual(145);
     expect(names).not.toContain("CardIdOfTable");
     expect(names).not.toContain("ClientParamsOfInteractionOfDefinition");
     expect(names).not.toContain("RuntimeCardData");

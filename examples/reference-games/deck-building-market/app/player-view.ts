@@ -1,4 +1,4 @@
-import { defineView } from "@dreamboard-games/sdk/reducer";
+import { definePlayerView } from "@dreamboard-games/sdk/reducer";
 import type { GameContract, PlayerTurnPhaseState } from "./game-contract";
 import { vpTotalsByPlayer } from "./derived";
 import { literals, type CardType } from "../shared/manifest-contract";
@@ -10,7 +10,7 @@ import { literals, type CardType } from "../shared/manifest-contract";
 //
 // We summarise card ids only — the runtime card metadata (name, properties)
 // is available everywhere via the static manifest projection.
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q, derived }) {
     const handCards = q.zone.playerCards(playerId, "hand");
     const inPlayCards = q.zone.playerCards(playerId, "in-play");

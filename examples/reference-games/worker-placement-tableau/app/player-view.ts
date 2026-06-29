@@ -1,4 +1,7 @@
-import { defineView, type GameOutcome } from "@dreamboard-games/sdk/reducer";
+import {
+  definePlayerView,
+  type GameOutcome,
+} from "@dreamboard-games/sdk/reducer";
 import type { GameContract, ItemId } from "./game-contract";
 import type { PlacementPhaseState } from "./game-contract";
 import {
@@ -127,7 +130,7 @@ function isWorkerOf(pieceId: string, playerId: PlayerId): boolean {
   return false;
 }
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q }): PlayerView {
     const myResources = q.player.resources(playerId);
     const myOrderHand = [...q.zone.playerCards(playerId, "order-hand")];

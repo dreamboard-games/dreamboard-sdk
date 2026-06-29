@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   createReducerBundle,
+  defineEmptyView,
   defineGame,
   defineGameContract,
   defineInteraction,
@@ -410,6 +411,10 @@ function createBootstrapGame(
         initialState: () => ({}),
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
 }
 
@@ -497,6 +502,10 @@ describe("setup profile runtime", () => {
         },
       },
       phases,
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     const bundle = createReducerBundle(game);
@@ -603,6 +612,10 @@ describe("setup profile runtime", () => {
           state: z.object({}),
           initialState: () => ({}),
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 
@@ -791,6 +804,10 @@ describe("setup profile runtime", () => {
           initialState: () => ({}),
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     const bundle = createReducerBundle(game);
@@ -935,6 +952,10 @@ describe("setup profile runtime", () => {
           state: z.object({}),
           initialState: () => ({}),
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 
@@ -1423,6 +1444,10 @@ describe("setup profile runtime", () => {
           state: z.object({}),
           initialState: () => ({}),
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 

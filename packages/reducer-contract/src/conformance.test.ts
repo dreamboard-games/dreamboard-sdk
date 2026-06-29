@@ -389,6 +389,37 @@ describe("strict zod rejects unknown keys", () => {
       }),
     ).toThrow();
   });
+
+  test("seat projection bundle accepts strict timing metadata", () => {
+    const projectionFixture = FIXTURES.find(
+      (fixture) => fixture.typeName === "SeatProjectionBundle",
+    );
+    if (!projectionFixture) {
+      throw new Error("Missing SeatProjectionBundle fixture");
+    }
+    const timing = {
+      resolveAvailableInteractionsMs: 1,
+      resolveViewMs: 2,
+      resolveZoneHandlesMs: 3,
+      descriptorHashMs: 4,
+    };
+
+    expect(() =>
+      Zod.SeatProjectionBundleSchema.parse({
+        ...projectionFixture.value,
+        timing,
+      }),
+    ).not.toThrow();
+    expect(() =>
+      Zod.SeatProjectionBundleSchema.parse({
+        ...projectionFixture.value,
+        timing: {
+          ...timing,
+          unexpected: 5,
+        },
+      }),
+    ).toThrow();
+  });
 });
 
 describe("round-trip stability", () => {

@@ -205,6 +205,10 @@ export interface PluginGameplayFrame<
   readonly gameVersion: number;
   readonly actionSetVersion: string;
   readonly perspectivePlayerId: PlayerId | null;
+  readonly sharedView: {
+    readonly boardStatic: RuntimeJson | null;
+    readonly dynamicView: RuntimeJson | null;
+  };
   readonly view: View | null;
   readonly flow: {
     readonly currentPhase: Phase | null;
@@ -226,6 +230,7 @@ export interface ReducerSeatProjectionBundle {
   readonly simultaneousPhase?: SimultaneousPhaseSnapshot | null;
   readonly guidance?: GameGuidanceProjection | null;
   readonly recentEvents?: readonly ProjectedGameEvent[];
+  readonly sharedView?: unknown;
   readonly interactionsByRef?: unknown;
   readonly seats: Readonly<
     Record<

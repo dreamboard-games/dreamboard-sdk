@@ -3,13 +3,15 @@ import { z } from "zod";
 import {
   createReducerBundle,
   defineDerived,
+  defineEmptyView,
   defineEffect,
   defineGame,
   defineGameContract,
   defineInteraction,
+  definePlayerView,
   definePhase,
+  defineSharedView,
   defineStepPhase,
-  defineView,
   gameEvent,
   pipe,
   rngInput,
@@ -156,6 +158,18 @@ function createManifestContract() {
   };
 }
 
+function expectProjectionTiming(timing: {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+}) {
+  for (const value of Object.values(timing)) {
+    expect(Number.isFinite(value)).toBe(true);
+    expect(value >= 0).toBe(true);
+  }
+}
+
 describe("runtime-owned reducer effects", () => {
   test("reduce and dispatch materialize reducer-authored game events", async () => {
     const contract = defineGameContract({
@@ -290,7 +304,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ state }) {
             return {
               counter: state.publicState.counter,
@@ -318,9 +333,180 @@ describe("runtime-owned reducer effects", () => {
       secret: "eel",
     });
     expect(typeof (view as { then?: unknown }).then).toBe("undefined");
+    expectProjectionTiming(projection.timing);
+    expect(
+      Object.prototype.propertyIsEnumerable.call(projection, "timing"),
+    ).toBe(false);
+    expect(JSON.stringify(projection)).not.toContain("descriptorHashMs");
   });
 
-  test("projectSeatViewDynamic returns a single view without descriptor work", async () => {
+  test("projectSeatsDynamic actionsOnly projects interaction refs and timing", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          counter: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({
+          counter: 3,
+        }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          interactions: {
+            advance: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          },
+        }),
+      },
+      views: {
+        shared: defineSharedView<typeof contract>()({
+          project({ state }) {
+            return { counter: state.publicState.counter };
+          },
+        }),
+        player: definePlayerView<typeof contract>()({
+          project({ shared }) {
+            return shared;
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const session = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const projection = bundle.projectSeatsDynamic({
+      state: session,
+      playerIds: ["player-1"],
+      projectionMode: "actionsOnly",
+    });
+    const seat = projection.seats["player-1"];
+    const refs = seat?.availableInteractionRefs;
+
+    expect(seat).toBeDefined();
+    expect("sharedView" in projection).toBe(false);
+    expect("view" in seat!).toBe(false);
+    expect("zones" in seat!).toBe(false);
+    expect(Array.isArray(refs)).toBe(true);
+    expect((refs as string[]).length).toBe(1);
+    expect(projection.interactionsByRef[(refs as string[])[0]!]).toMatchObject({
+      interactionId: "advance",
+    });
+    expectProjectionTiming(projection.timing);
+    expect(projection.timing.resolveViewMs).toBe(0);
+    expect(projection.timing.resolveZoneHandlesMs).toBe(0);
+
+    const runtime = bundle.createInProcessRuntime();
+    await runtime.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const runtimeProjection = runtime.projectSeatsDynamic({
+      playerIds: ["player-1"],
+      projectionMode: "actionsOnly",
+    });
+    const runtimeSeat = runtimeProjection.seats["player-1"];
+
+    expect(runtimeSeat).toBeDefined();
+    expect("sharedView" in runtimeProjection).toBe(false);
+    expect("view" in runtimeSeat!).toBe(false);
+    expect("zones" in runtimeSeat!).toBe(false);
+    expectProjectionTiming(runtimeProjection.timing);
+    expect(runtimeProjection.timing.resolveViewMs).toBe(0);
+    expect(runtimeProjection.timing.resolveZoneHandlesMs).toBe(0);
+  });
+
+  test("projectSeatsDynamic projects shared once and passes it to player views", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          counter: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    let sharedCalls = 0;
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({
+          counter: 3,
+        }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+        }),
+      },
+      views: {
+        shared: defineSharedView<typeof contract>()({
+          project({ state }) {
+            sharedCalls++;
+            return { counter: state.publicState.counter };
+          },
+        }),
+        player: definePlayerView<typeof contract>()({
+          project({ playerId, shared }) {
+            return { playerId, shared };
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const session = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const projection = bundle.projectSeatsDynamic({
+      state: session,
+      playerIds: ["player-1", "player-2"],
+    });
+
+    expect(sharedCalls).toBe(1);
+    expect(projection.sharedView).toEqual({ counter: 3 });
+    expect(projection.seats["player-1"]?.view).toEqual({
+      playerId: "player-1",
+      shared: { counter: 3 },
+    });
+    expect(projection.seats["player-2"]?.view).toEqual({
+      playerId: "player-2",
+      shared: { counter: 3 },
+    });
+  });
+
+  test("projectSeatsDynamic full projection resolves descriptors and views", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -368,7 +554,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ state, playerId }) {
             return {
               playerId,
@@ -385,13 +572,16 @@ describe("runtime-owned reducer effects", () => {
       playerIds: ["player-1", "player-2"],
     });
 
-    const view = bundle.projectSeatViewDynamic({
+    const projection = bundle.projectSeatsDynamic({
       state: session,
-      playerId: "player-1",
+      playerIds: ["player-1"],
     });
 
-    expect(view).toEqual({ playerId: "player-1", counter: 3 });
-    expect(availableCalls).toBe(0);
+    expect(projection.seats["player-1"]?.view).toEqual({
+      playerId: "player-1",
+      counter: 3,
+    });
+    expect(availableCalls).toBe(1);
   });
 
   test("projectSeatsDynamic shares derived values across seats and descriptors", async () => {
@@ -440,7 +630,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ derived }) {
             return { total: derived(expensiveTotal) };
           },
@@ -526,6 +717,10 @@ describe("runtime-owned reducer effects", () => {
             },
           },
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 

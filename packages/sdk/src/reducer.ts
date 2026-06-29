@@ -6,12 +6,14 @@ export {
   defineGameContract,
   defineInteraction,
   defineInteractionRule,
+  definePlayerView,
   definePhase,
   definePhaseStage,
+  defineSharedView,
   defineStepPhase,
   defineStage,
   defineStaticView,
-  defineView,
+  defineEmptyView,
   type ReducerGameContract,
   type ReducerGameDefinition,
   type BoundInputBuilders,
@@ -20,7 +22,8 @@ export {
   type InitialStateCallbacks,
   type PhaseAuthoring,
   type ReducerPhaseDefinition,
-  type ReducerViewDefinition,
+  type ReducerPlayerViewDefinition,
+  type ReducerSharedViewDefinition,
 } from "./reducer/authoring";
 export { gameEvent } from "./reducer/game-event";
 export type {

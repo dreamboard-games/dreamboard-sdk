@@ -1,4 +1,7 @@
-import { defineView, type GameOutcome } from "@dreamboard-games/sdk/reducer";
+import {
+  definePlayerView,
+  type GameOutcome,
+} from "@dreamboard-games/sdk/reducer";
 import type {
   GameContract,
   PlayerTurnPhaseState,
@@ -112,7 +115,7 @@ export type PlayerView = {
   readonly explorerGuildSize: number;
 };
 
-export const playerView = defineView<GameContract>()({
+export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q, derived }): PlayerView {
     const lr = derived(tradeNetwork);
     const la = derived(explorerGuild);
