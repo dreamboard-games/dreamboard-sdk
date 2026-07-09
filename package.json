@@ -29,6 +29,7 @@
     "reference-games:source:materialize": "node scripts/reference-games/build-source-bundle.mjs",
     "reference-games:bundle": "pnpm reference-games:source:materialize",
     "reference-games:check": "node scripts/ui/check-reference-games.mjs",
+    "reference-games:repin": "node scripts/reference-games/repin-sdk.ts",
     "reference-games:test:packed": "node scripts/ui/verify-reference-consumers.mjs",
     "reference-games:verify-publishable": "node scripts/ui/verify-publishable-reference-games.mjs",
     "publish:alpha": "pnpm check && cd packages/sdk && npm publish --access public --tag alpha",

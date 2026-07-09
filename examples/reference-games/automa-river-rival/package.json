@@ -13,7 +13,7 @@
     "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.4.0-alpha.7",
+    "@dreamboard-games/sdk": "0.4.0-alpha.8",
     "framer-motion": "12.38.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",

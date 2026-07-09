@@ -100,6 +100,20 @@ node -e 'Promise.all([import("@dreamboard-games/sdk"), import("@dreamboard-games
 If rollback is needed, move the `alpha` dist-tag to the prior known-good
 version. Do not delete published package versions.
 
+## Reference Game Repin
+
+After the exact SDK version is visible on public npm, repin the SDK-owned
+reference games and commit the package/lockfile changes before running private
+demo-release packaging:
+
+```sh
+SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
+pnpm reference-games:repin "$SDK_VERSION"
+pnpm reference-games:verify-publishable
+git add examples/reference-games
+git commit -m "Repin reference games to SDK $SDK_VERSION"
+```
+
 ## Trusted Publishing Follow-Up
 
 After the package exists on npm, configure Trusted Publishing for the GitHub
