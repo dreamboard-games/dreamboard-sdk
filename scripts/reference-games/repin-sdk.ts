@@ -161,12 +161,14 @@ function sdkDependencyLocations(packageJson: PackageJson): Array<{
   section: keyof PackageJson;
   version: string;
 }> {
-  return ([
-    "dependencies",
-    "devDependencies",
-    "peerDependencies",
-    "optionalDependencies",
-  ] as const).flatMap((section) => {
+  return (
+    [
+      "dependencies",
+      "devDependencies",
+      "peerDependencies",
+      "optionalDependencies",
+    ] as const
+  ).flatMap((section) => {
     const dependencies = packageJson[section];
     const version = dependencies?.[sdkPackage];
     return typeof version === "string" ? [{ section, version }] : [];
@@ -226,7 +228,10 @@ function runPnpmInstall(game: ReferenceGame, npmrcPath: string): void {
   }
 }
 
-function extractLockfileSdkIdentity(lockfileText: string, version: string): {
+function extractLockfileSdkIdentity(
+  lockfileText: string,
+  version: string,
+): {
   importerSpecifier?: string;
   importerVersion?: string;
   integrity?: string;
@@ -346,7 +351,9 @@ async function main(): Promise<void> {
     const packageJson = await readJson(game.packageJsonPath);
     if (updatePackageJson({ game, packageJson, version })) {
       changedPackageJsonCount += 1;
-      console.log(`  package.json ${path.relative(root, game.packageJsonPath)}`);
+      console.log(
+        `  package.json ${path.relative(root, game.packageJsonPath)}`,
+      );
       if (!options.dryRun) {
         await writeJson(game.packageJsonPath, packageJson);
       }

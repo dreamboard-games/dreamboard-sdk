@@ -2,3 +2,4 @@ packages/reducer-contract/generated/**
 packages/reducer-contract/src/bundle.ts
 fixtures/ui/reference-games/*.fixture.json
 fixtures/ui/reference-games/index.json
+**/pnpm-lock.yaml
