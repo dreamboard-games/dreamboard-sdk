@@ -130,6 +130,34 @@ function createSubmissionErrorMatcher(
   expected: RejectionExpectation,
   options: CreateExpectApiOptions,
 ): Promise<void> {
+  if (
+    isRecord(actual) &&
+    (actual.kind === "accepted" || actual.kind === "rejected")
+  ) {
+    if (actual.kind === "accepted") {
+      throw new Error("Expected probe command to reject, but it was accepted.");
+    }
+    const errorCode =
+      typeof actual.errorCode === "string" ? actual.errorCode : undefined;
+    const message = typeof actual.message === "string" ? actual.message : "";
+    if (expected.errorCode !== undefined && errorCode !== expected.errorCode) {
+      throw new Error(
+        `Expected rejection errorCode '${expected.errorCode}', received '${errorCode ?? "undefined"}'.`,
+      );
+    }
+    if (typeof expected.message === "string" && message !== expected.message) {
+      throw new Error(
+        `Expected rejection message '${expected.message}', received '${message}'.`,
+      );
+    }
+    if (expected.message instanceof RegExp && !expected.message.test(message)) {
+      throw new Error(
+        `Expected rejection message '${message}' to match ${String(expected.message)}.`,
+      );
+    }
+    return Promise.resolve();
+  }
+
   const resolvePromise = (): Promise<unknown> => {
     if (typeof actual === "function") {
       return Promise.resolve().then(() => (actual as () => unknown)());

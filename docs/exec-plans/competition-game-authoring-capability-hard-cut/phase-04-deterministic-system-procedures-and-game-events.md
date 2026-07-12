@@ -30,9 +30,10 @@ Completed in `dreamboard-sdk` on 2026-06-18:
   exported from the public components surface, with passive event presentation
   and no gameplay command affordances.
 - Added the `solo-countdown-puzzle` and `automa-river-rival` canonical examples
-  from `canonical-game-briefs.md`, including deterministic event replay,
-  no-opponent/no-fake-seat checks, README/scenario coverage, generated fixtures,
-  catalog entries, and generated reference docs.
+  from the then-current canonical briefs. Their game-local `rule.md` files now
+  own the rules. The implementation included deterministic event replay,
+  no-opponent/no-fake-seat checks, README/scenario coverage, generated
+  fixtures, catalog entries, and generated reference docs.
 - Recompiled portable UI fixtures so every strict protocol frame carries
   `recentEvents`; the required catalog now contains 16 scenarios and the
   reference-game check validates all nine canonical examples.
@@ -377,10 +378,10 @@ Create two separate original games.
 examples/reference-games/solo-countdown-puzzle/
 ```
 
-Implement **Last Light** from
-[Canonical Game Briefs](canonical-game-briefs.md#solo-countdown-puzzle-last-light).
-That brief is the rules authority for player actions, weather resolution,
-countdown ordering, terminal checks, and required event branches.
+Implement **Last Light** from its authoritative
+[`rule.md`](../../../examples/reference-games/solo-countdown-puzzle/rule.md).
+That file owns player actions, weather resolution, countdown ordering,
+terminal checks, and acceptance obligations.
 
 This game demonstrates:
 
@@ -404,10 +405,10 @@ ordinary state plus auto phases.
 examples/reference-games/automa-river-rival/
 ```
 
-Implement **River Guild** from
-[Canonical Game Briefs](canonical-game-briefs.md#automa-river-rival-river-guild).
-That brief is the rules authority for human turns, rival instructions,
-fallback selection, cooperative outcomes, and required event branches.
+Implement **River Guild** from its authoritative
+[`rule.md`](../../../examples/reference-games/automa-river-rival/rule.md).
+That file owns human turns, rival instructions, fallback selection,
+cooperative outcomes, and acceptance obligations.
 
 This game demonstrates:
 

@@ -27,6 +27,7 @@ export function createRuntimeInstructionEngine<
         instructions?: readonly RuntimeInstructionForState<State>[];
         terminal?: GameOutcome<PlayerId>;
         events?: readonly GameEvent[];
+        trace?: readonly DispatchTraceEntry<State, PlayerId, Input>[];
       };
   resolveInstruction: (
     state: State,
@@ -122,6 +123,7 @@ export function createRuntimeInstructionEngine<
       workingState = result.state;
       terminal ??= result.terminal;
       events.push(...(result.events ?? []));
+      trace.push(...(result.trace ?? []));
 
       if (afterInput) {
         const afterInputResult = afterInput(workingState, pendingInput);

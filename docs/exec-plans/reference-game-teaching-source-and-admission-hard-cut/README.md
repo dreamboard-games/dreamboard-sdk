@@ -15,10 +15,18 @@ Primary repositories:
 
 Related plans:
 
+- [Reference Game Rule Conformance And Agent Testing Hard Cut](../reference-game-rule-conformance-hard-cut/README.md)
 - [UI Agent Iteration Workbench](../ui-agent-iteration-workbench/README.md)
 - [UI Primitive Coverage And Agent Loop](../ui-primitive-coverage-and-agent-loop-hard-cut/README.md)
 - [Competition Game Authoring Capability Hard Cut](../competition-game-authoring-capability-hard-cut/README.md)
 - `../internal/docs/exec-plans/demo-release-input-admission-and-sdk-authority-hard-cut/`
+
+The later rule-conformance hard cut owns the base-free scenario contract and
+the decision to generate workspace, test, and Workbench products on demand.
+Where this proposed plan implies those derived products remain checked in, the
+later plan supersedes that persistence detail. SDK-owned editable source,
+content-addressed admission, and one retained lockfile per isolated game remain
+unchanged.
 
 ## Executive Decision
 

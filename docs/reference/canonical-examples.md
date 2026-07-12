@@ -4,6 +4,38 @@ The SDK reference suite is the starting point for coding agents implementing
 designer briefs. Each example demonstrates the smallest public SDK shape for a
 common game family and has a packed consumer proof path.
 
+## Rules Authority
+
+Each game-local `rule.md` is the sole authority for that game's mechanics,
+theme, information boundaries, complete game arc, and deliberate exclusions.
+Current reducer code, tests, generated fixtures, screenshots, and historical
+base states must be audited against the rule file; they cannot define or amend
+the rules implicitly.
+
+Implementation and migration follow the
+[Reference Game Rule Conformance And Agent Testing Hard Cut](../exec-plans/reference-game-rule-conformance-hard-cut/README.md).
+Until that plan closes, existing tests and generated fixtures are
+characterization evidence rather than proof that a rewritten brief is already
+implemented.
+
+Read every brief in the same order: teaching scope, theme, players and
+objective, information visibility, components and setup, complete game arc,
+canonical interactions, automatic procedures, scoring and outcome, deliberate
+exclusions, then acceptance obligations. Game-specific rule sections may
+appear between those common boundaries; they do not create new SDK concepts.
+
+| Reference id                   | Display name     | Rules and theme brief                                                            |
+| ------------------------------ | ---------------- | -------------------------------------------------------------------------------- |
+| `hearts`                       | Hearts           | [`rule.md`](../../examples/reference-games/hearts/rule.md)                       |
+| `simultaneous-card-drafting`   | Lantern Market   | [`rule.md`](../../examples/reference-games/simultaneous-card-drafting/rule.md)   |
+| `deck-building-market`         | Sketchbook       | [`rule.md`](../../examples/reference-games/deck-building-market/rule.md)         |
+| `worker-placement-tableau`     | Mosaic Workshop  | [`rule.md`](../../examples/reference-games/worker-placement-tableau/rule.md)     |
+| `hex-network-trading`          | Stormtrail       | [`rule.md`](../../examples/reference-games/hex-network-trading/rule.md)          |
+| `roll-and-write-scorecard`     | Cloudline Survey | [`rule.md`](../../examples/reference-games/roll-and-write-scorecard/rule.md)     |
+| `multiplayer-ranking-and-ties` | Harbor Fair      | [`rule.md`](../../examples/reference-games/multiplayer-ranking-and-ties/rule.md) |
+| `solo-countdown-puzzle`        | Last Light       | [`rule.md`](../../examples/reference-games/solo-countdown-puzzle/rule.md)        |
+| `automa-river-rival`           | River Guild      | [`rule.md`](../../examples/reference-games/automa-river-rival/rule.md)           |
+
 | Author question                                                     | Start here                     | Canonical SDK concepts                                                                             | Smallest proof                                                         |
 | ------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | Build a trick-taking game with private hands and follow-suit rules. | `hearts`                       | private player views, card zones, simultaneous passing, trick resolution                           | `pnpm reference-games:test:packed --game hearts`                       |
@@ -47,5 +79,6 @@ mise exec node@24 -- pnpm reference-games:check
 mise exec node@24 -- pnpm reference-games:test:packed --required
 ```
 
-Phase 05 still requires the exact public SDK release, internal real-host proof,
-public documentation, and agent-skill proof before whole-plan closeout.
+Phase 08 of the conformance hard cut still requires the exact public SDK
+release, internal real-host proof, public documentation, and agent-skill proof
+before whole-plan closeout.

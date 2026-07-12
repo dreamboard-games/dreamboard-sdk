@@ -261,10 +261,10 @@ Create:
 examples/reference-games/roll-and-write-scorecard/
 ```
 
-Implement **Cloudline Survey** from
-[Canonical Game Briefs](canonical-game-briefs.md#roll-and-write-scorecard-cloudline-survey).
-That brief is the rules authority for the board layout, round loop, failed-mark
-branch, scoring, and scenario fixtures.
+Implement **Cloudline Survey** from its authoritative
+[`rule.md`](../../../examples/reference-games/roll-and-write-scorecard/rule.md).
+That file owns the board layout, round loop, failed-mark branch, scoring, and
+acceptance obligations.
 
 The original public-safe game demonstrates:
 

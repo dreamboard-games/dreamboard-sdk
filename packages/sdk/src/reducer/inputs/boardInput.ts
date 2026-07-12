@@ -5,8 +5,22 @@ import type {
   InputCollector,
   TargetKind,
 } from "../model/spec";
+import {
+  markManifestScopedSchema,
+  type ManifestIdSchema,
+} from "../model/manifest";
 import type { BoardTargetRule, PlayerBoardSpaceTarget } from "./boardTarget";
 import type { InputFieldRef } from "./defineInputs";
+
+export type PlayerSpaceInputSchema<
+  BoardId extends string,
+  SpaceId extends string,
+  PlayerId extends string,
+> = z.ZodObject<{
+  boardId: z.ZodLiteral<BoardId>;
+  playerId: ManifestIdSchema<PlayerId, "playerId">;
+  spaceId: z.ZodType<SpaceId>;
+}>;
 
 /**
  * `boardInput.*` helpers produce collectors that accept a board-element id
@@ -123,21 +137,23 @@ export function playerSpaceInput<
   >;
   dependsOn?: readonly InputFieldRef<string, unknown>[];
 }): InputCollector<
-  z.ZodType<PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>>,
+  PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
   State,
   "board-space"
 > {
   const target = options.target;
   const dependsOn = options.dependsOn?.map((dependency) => dependency.key);
+  const playerIdSchema = markManifestScopedSchema(
+    z.string(),
+    "playerId",
+  ) as unknown as ManifestIdSchema<PlayerId, "playerId">;
   return {
     kind: "board-space",
     schema: z.object({
       boardId: z.literal(target.boardId),
-      playerId: z.string(),
-      spaceId: z.string(),
-    }) as unknown as z.ZodType<
-      PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
-    >,
+      playerId: playerIdSchema,
+      spaceId: z.string() as unknown as z.ZodType<SpaceId>,
+    }) as PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
     eligibleTargets: ((state, playerId, q, values) =>
       target
         .eligible({

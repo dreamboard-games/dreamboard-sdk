@@ -119,9 +119,10 @@ The four anchor briefs are mandatory:
 | `solo-countdown-puzzle-01`        | Prove deterministic environment procedures for one human player                                | Phase 04     |
 | `automa-river-rival-01`           | Prove a deterministic rival without a fake participant                                         | Phase 04     |
 
-The anchor briefs must encode the rules in
-[Canonical Game Briefs](canonical-game-briefs.md). They may decompose those
-rules into machine-readable jobs, but they may not substitute different games.
+The anchor briefs must encode the approved rules linked from the
+[canonical rule brief index](canonical-game-briefs.md). They may decompose
+those rules into machine-readable jobs, but they may not substitute different
+games or infer rules from the current implementation.
 
 ## Capability Matrix
 

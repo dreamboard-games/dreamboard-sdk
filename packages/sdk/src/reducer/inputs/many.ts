@@ -48,7 +48,7 @@ export type ManyInputCollector<
     InputCollector["kind"],
     "rng"
   >,
-> = InputCollector<z.ZodType<ReadonlyArray<z.infer<Schema>>>, State, Kind> & {
+> = InputCollector<z.ZodArray<Schema>, State, Kind> & {
   readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
 };
 
@@ -112,9 +112,9 @@ export function many<Collector extends NonRngCollector>(
   delete rest.defaultValue;
   return {
     ...rest,
-    schema: z.array(collector.schema as z.ZodTypeAny) as unknown as z.ZodType<
-      ReadonlyArray<z.infer<CollectorSchema<Collector>>>
-    >,
+    schema: z.array(
+      collector.schema as CollectorSchema<Collector>,
+    ) as z.ZodArray<CollectorSchema<Collector>>,
     selection,
   } as unknown as ManyInputCollector<
     CollectorSchema<Collector>,

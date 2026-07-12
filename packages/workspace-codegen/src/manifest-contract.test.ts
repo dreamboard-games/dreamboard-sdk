@@ -1421,6 +1421,88 @@ test("generateManifestContractSources split runtime module executes generated ru
   });
 });
 
+test("generated contracts expose normal setup and semantic manifest ID families", async () => {
+  const source = generateManifestContractSource(TEST_MANIFEST);
+
+  expect(source).toContain('"playerId",');
+  expect(source).toContain("export const normalSetup = {");
+  expect(source).toContain("minPlayers: 2,");
+  expect(source).toContain("maxPlayers: 4,");
+  expect(source).toContain(
+    "createInitialTable: (options: { readonly playerIds: readonly string[] }) =>",
+  );
+  expect(source).toContain("readonly ids: typeof ids;");
+  expect(source).toContain("readonly normalSetup: typeof normalSetup;");
+
+  await withGeneratedContractModule({
+    tempPrefix: ".tmp-normal-setup-contract-",
+    manifest: TEST_MANIFEST,
+    run: (module) => {
+      expect(module.manifestContract.normalSetup).toBe(module.normalSetup);
+      expect(module.normalSetup.minPlayers).toBe(2);
+      expect(module.normalSetup.maxPlayers).toBe(4);
+      expect(
+        module.normalSetup.createInitialTable({
+          playerIds: ["player-1", "player-2"],
+        }).playerOrder,
+      ).toEqual(["player-1", "player-2"]);
+    },
+  });
+
+  await withGeneratedSplitContractModule({
+    tempPrefix: ".tmp-normal-setup-split-contract-",
+    manifest: TEST_MANIFEST,
+    run: (module) => {
+      expect(module.manifestContract.normalSetup).toBe(module.normalSetup);
+      expect(module.normalSetup.minPlayers).toBe(2);
+      expect(module.normalSetup.maxPlayers).toBe(4);
+      expect(
+        module.normalSetup.createInitialTable({
+          playerIds: ["player-1", "player-2", "player-3"],
+        }).playerOrder,
+      ).toEqual(["player-1", "player-2", "player-3"]);
+    },
+  });
+
+  await expectGeneratedSplitContractTypechecks({
+    tempPrefix: ".tmp-normal-setup-family-types-",
+    manifest: TEST_MANIFEST,
+    usageSource: `import manifestContract from "./manifest-contract";
+import type { ManifestIdSchema } from "@dreamboard-games/sdk/reducer/advanced";
+
+type Equal<Left, Right> =
+  (<Value>() => Value extends Left ? 1 : 2) extends
+  (<Value>() => Value extends Right ? 1 : 2) ? true : false;
+type Assert<Value extends true> = Value;
+type FamilyOf<Schema> = Schema extends ManifestIdSchema<unknown, infer Family>
+  ? Family
+  : never;
+
+const playerFamilyProof: Assert<
+  Equal<FamilyOf<typeof manifestContract.ids.playerId>, "playerId">
+> = true;
+const table = manifestContract.normalSetup.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+});
+const minPlayers: number = manifestContract.normalSetup.minPlayers;
+const maxPlayers: number = manifestContract.normalSetup.maxPlayers;
+
+// @ts-expect-error normal setup requires the runtime player roster.
+manifestContract.normalSetup.createInitialTable();
+manifestContract.normalSetup.createInitialTable({
+  playerIds: ["player-1", "player-2"],
+  // @ts-expect-error normal setup does not expose standalone shuffle control.
+  shuffleItems: <Value>(values: readonly Value[]) => [...values],
+});
+
+void playerFamilyProof;
+void table;
+void minPlayers;
+void maxPlayers;
+`,
+  });
+});
+
 test("generateManifestContractSources preserves static board runtime values", async () => {
   let legacyStaticBoards: Record<string, any> | undefined;
   let legacyInitialTable: Record<string, any> | undefined;

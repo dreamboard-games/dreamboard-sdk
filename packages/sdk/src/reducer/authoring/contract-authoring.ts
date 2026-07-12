@@ -41,6 +41,7 @@ import type {
   ChoiceTargetRule,
   InputFieldRef,
   PlayerBoardSpaceTarget,
+  PlayerSpaceInputSchema,
 } from "../inputs";
 import {
   boardInput,
@@ -146,7 +147,7 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
     >;
     dependsOn?: readonly InputFieldRef<string, unknown>[];
   }): InputCollector<
-    z.ZodType<PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>>,
+    PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
     BoundState<Contract>,
     "board-space"
   >;

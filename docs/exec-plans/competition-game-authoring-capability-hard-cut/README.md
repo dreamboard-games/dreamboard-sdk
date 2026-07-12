@@ -16,6 +16,12 @@ This is a standalone successor to
 The earlier document remains useful as problem discovery, but this plan replaces
 its implementation strategy.
 
+The later
+[Reference Game Rule Conformance And Agent Testing Hard Cut](../reference-game-rule-conformance-hard-cut/README.md)
+owns the rewrite of all nine implementations/tests against their approved
+`rule.md` files and the base-free agent testing workflow. This closed plan
+remains historical authority for the framework capabilities it shipped.
+
 ## Executive Decision
 
 Optimize the framework for this end-to-end job:
@@ -100,10 +106,10 @@ This plan adds:
 | Solo puzzle         | `solo-countdown-puzzle`        | Phase 04     | Auto phases and system events without an opponent identity       |
 | Automa rival        | `automa-river-rival`           | Phase 04     | Deterministic rival state and actions without a fake player seat |
 
-The exact original rules, state skeletons, terminal conditions, and required
-scenario branches are defined in
-[Canonical Game Briefs](canonical-game-briefs.md). The labels above are not
-placeholders for the implementation team to reinterpret.
+The exact gameplay, theme, terminal conditions, and acceptance obligations are
+defined by each game's authoritative `rule.md`. The
+[canonical rule brief index](canonical-game-briefs.md) links those sources. The
+labels above are not placeholders for the implementation team to reinterpret.
 
 Rules:
 

@@ -156,29 +156,41 @@ export function createTrustedInstructionRunner<
   function preSampleRngForAction(
     state: State,
     input: ReducerInput,
-  ): { state: State; input: ReducerInput } {
-    if (input.kind !== "interaction") return { state, input };
+  ): {
+    state: State;
+    input: ReducerInput;
+    consumptions: readonly {
+      operation: string;
+      traceEntry: string;
+    }[];
+  } {
+    if (input.kind !== "interaction") {
+      return { state, input, consumptions: [] };
+    }
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(
       phaseName,
       input.interactionId,
     );
-    if (!interaction) return { state, input };
+    if (!interaction) return { state, input, consumptions: [] };
     const collectors = interaction.inputs as Record<string, InputCollector>;
     let nextRng = state.runtime.rng;
     const sampled: Record<string, unknown> = {};
+    const consumptions: Array<{ operation: string; traceEntry: string }> = [];
     let anySampled = false;
     for (const [key, collector] of Object.entries(collectors)) {
       if (collector.kind !== "rng") continue;
-      const { value, nextRng: advanced } = sampleRngCollectorValue(
-        collector,
-        nextRng,
-      );
+      const {
+        value,
+        nextRng: advanced,
+        consumptions: collectorConsumptions,
+      } = sampleRngCollectorValue(collector, nextRng);
       sampled[key] = value;
       nextRng = advanced;
+      consumptions.push(...collectorConsumptions);
       anySampled = true;
     }
-    if (!anySampled) return { state, input };
+    if (!anySampled) return { state, input, consumptions: [] };
     const mergedParams: Record<string, unknown> = {
       ...((input.params ?? {}) as Record<string, unknown>),
       ...sampled,
@@ -189,6 +201,7 @@ export function createTrustedInstructionRunner<
         runtime: { ...state.runtime, rng: nextRng },
       } as State,
       input: { ...input, params: mergedParams } as ReducerInput,
+      consumptions,
     };
   }
 
@@ -336,14 +349,23 @@ export function createTrustedInstructionRunner<
     };
   }
 
-  function reduceOnce(state: State, input: ReducerInput): ReducerResult<State> {
+  function reduceOnce(state: State, input: ReducerInput) {
     const sampled = preSampleRngForAction(state, input);
     const simultaneousResult = reduceSimultaneousSubmit(
       sampled.state,
       sampled.input,
     );
     if (simultaneousResult) {
-      return simultaneousResult;
+      return simultaneousResult.type === "reject"
+        ? simultaneousResult
+        : {
+            ...simultaneousResult,
+            trace: sampled.consumptions.map((consumption) => ({
+              type: "rngConsumption" as const,
+              operation: consumption.operation,
+              traceEntry: consumption.traceEntry,
+            })),
+          };
     }
     const result = reduceInternal(sampled.state, sampled.input);
     if (result.type === "reject") {
@@ -360,6 +382,11 @@ export function createTrustedInstructionRunner<
       } as State,
       instructions: result.instructions ?? [],
       events: result.events ?? [],
+      trace: sampled.consumptions.map((consumption) => ({
+        type: "rngConsumption" as const,
+        operation: consumption.operation,
+        traceEntry: consumption.traceEntry,
+      })),
     };
   }
 

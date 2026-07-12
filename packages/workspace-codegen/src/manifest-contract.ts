@@ -5222,39 +5222,117 @@ const playerIdSchema = markManifestScopedSchema(
     .string()
     .min(1)
     .transform((value) => asPlayerId(value)),
+  "playerId",
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
-const boardLayoutSchema = createManifestStringLiteralSchema(literals.boardLayouts);
-const setupOptionIdSchema = createManifestStringLiteralSchema(literals.setupOptionIds);
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
+const boardLayoutSchema = createManifestStringLiteralSchema(
+  literals.boardLayouts,
+  "boardLayout",
+);
+const setupOptionIdSchema = createManifestStringLiteralSchema(
+  literals.setupOptionIds,
+  "setupOptionId",
+);
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
-const sharedZoneIdSchema = createManifestStringLiteralSchema(literals.sharedZoneIds);
-const playerZoneIdSchema = createManifestStringLiteralSchema(literals.playerZoneIds);
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
-const resourceIdSchema = createManifestStringLiteralSchema(literals.resourceIds);
-const pieceTypeIdSchema = createManifestStringLiteralSchema(literals.pieceTypeIds);
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
-const boardTypeIdSchema = createManifestStringLiteralSchema(literals.boardTypeIds);
-const boardBaseIdSchema = createManifestStringLiteralSchema(literals.boardBaseIds);
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
+const sharedZoneIdSchema = createManifestStringLiteralSchema(
+  literals.sharedZoneIds,
+  "sharedZoneId",
+);
+const playerZoneIdSchema = createManifestStringLiteralSchema(
+  literals.playerZoneIds,
+  "playerZoneId",
+);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
+const resourceIdSchema = createManifestStringLiteralSchema(
+  literals.resourceIds,
+  "resourceId",
+);
+const pieceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.pieceTypeIds,
+  "pieceTypeId",
+);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
+const boardTypeIdSchema = createManifestStringLiteralSchema(
+  literals.boardTypeIds,
+  "boardTypeId",
+);
+const boardBaseIdSchema = createManifestStringLiteralSchema(
+  literals.boardBaseIds,
+  "boardBaseId",
+);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
-const relationTypeIdSchema = createManifestStringLiteralSchema(literals.relationTypeIds);
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
-const edgeTypeIdSchema = createManifestStringLiteralSchema(literals.edgeTypeIds);
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
-const vertexTypeIdSchema = createManifestStringLiteralSchema(literals.vertexTypeIds);
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
-const spaceTypeIdSchema = createManifestStringLiteralSchema(literals.spaceTypeIds);
+const relationTypeIdSchema = createManifestStringLiteralSchema(
+  literals.relationTypeIds,
+  "relationTypeId",
+);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
+const edgeTypeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeTypeIds,
+  "edgeTypeId",
+);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
+const vertexTypeIdSchema = createManifestStringLiteralSchema(
+  literals.vertexTypeIds,
+  "vertexTypeId",
+);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
+const spaceTypeIdSchema = createManifestStringLiteralSchema(
+  literals.spaceTypeIds,
+  "spaceTypeId",
+);
 
 export const ids = {
   playerId: playerIdSchema,
@@ -5264,9 +5342,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: cardIdSchema as unknown as z.ZodType<CardId>,
-  deckId: deckIdSchema as unknown as z.ZodType<DeckId>,
-  handId: handIdSchema as unknown as z.ZodType<HandId>,
+  cardId: cardIdSchema as unknown as typeof cardIdSchema & z.ZodType<CardId>,
+  deckId: deckIdSchema as unknown as typeof deckIdSchema & z.ZodType<DeckId>,
+  handId: handIdSchema as unknown as typeof handIdSchema & z.ZodType<HandId>,
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -6159,6 +6237,13 @@ export function createInitialTable(options: {
   return tableSchema.parse(table);
 }
 
+export const normalSetup = {
+  minPlayers: ${JSON.stringify(manifest.players.minPlayers)},
+  maxPlayers: ${JSON.stringify(manifest.players.maxPlayers)},
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
+
 export const schemas = {
   table: tableSchema,
   runtime: runtimeSchema,
@@ -6202,10 +6287,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards: staticBoards as unknown as StaticBoards<TableState>,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -6376,16 +6465,16 @@ function renderManifestRuntimeSource(legacySource: string): string {
       "literals.playerIds",
     )
     .replaceAll(
-      "cardId: cardIdSchema as unknown as z.ZodType<CardId>,",
-      "cardId: assumeManifestSchema<CardId>(cardIdSchema),",
+      "cardId: cardIdSchema as unknown as typeof cardIdSchema & z.ZodType<CardId>,",
+      'cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),',
     )
     .replaceAll(
-      "deckId: deckIdSchema as unknown as z.ZodType<DeckId>,",
-      "deckId: assumeManifestSchema<DeckId>(deckIdSchema),",
+      "deckId: deckIdSchema as unknown as typeof deckIdSchema & z.ZodType<DeckId>,",
+      'deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),',
     )
     .replaceAll(
-      "handId: handIdSchema as unknown as z.ZodType<HandId>,",
-      "handId: assumeManifestSchema<HandId>(handIdSchema),",
+      "handId: handIdSchema as unknown as typeof handIdSchema & z.ZodType<HandId>,",
+      'handId: assumeManifestSchema<HandId, "handId">(handIdSchema),',
     )
     .replace(
       "  type StaticBoards,\n",
@@ -6412,8 +6501,8 @@ function renderManifestRuntimeSource(legacySource: string): string {
       `export const manifestContract: ReducerManifestContract<\n  PublicTableState,\n  string,\n  PublicPlayerId,`,
     )
     .replace(
-      `const playerIdSchema = markManifestScopedSchema(\n  z\n    .string()\n    .min(1)\n    .transform((value) => asPlayerId(value)),\n);`,
-      `const playerIdSchema = assumeManifestSchema<PublicPlayerId>(\n  markManifestScopedSchema(\n    z\n      .string()\n      .min(1)\n      .transform((value) => asPlayerId(value)),\n  ),\n);`,
+      `const playerIdSchema = markManifestScopedSchema(\n  z\n    .string()\n    .min(1)\n    .transform((value) => asPlayerId(value)),\n  "playerId",\n);`,
+      `const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(\n  markManifestScopedSchema(\n    z\n      .string()\n      .min(1)\n      .transform((value) => asPlayerId(value)),\n    "playerId",\n  ),\n);`,
     );
 }
 

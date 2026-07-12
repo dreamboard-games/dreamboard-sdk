@@ -165,6 +165,22 @@ describe("createExpectApi — rejection matcher", () => {
       throw makeError("X", "boom happened");
     }).toRejectWith({ message: /boom/ });
   });
+
+  test("toRejectWith accepts a structured clone-probe rejection", async () => {
+    await expectFn({
+      kind: "rejected",
+      errorCode: "NOT_YOUR_TURN",
+      message: "Wait for your turn.",
+    }).toRejectWith({
+      errorCode: "NOT_YOUR_TURN",
+      message: /your turn/,
+    });
+    expect(() =>
+      expectFn({ kind: "accepted" }).toRejectWith({
+        errorCode: "NOT_YOUR_TURN",
+      }),
+    ).toThrow(/was accepted/);
+  });
 });
 
 describe("createExpectApi — descriptor matchers", () => {

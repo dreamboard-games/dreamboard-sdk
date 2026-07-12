@@ -1,157 +1,237 @@
-# Artisans' Guild
+# Mosaic Workshop
 
-## Overview
+> **Authority status: approved gameplay and theme brief.** This document is the
+> rules authority for the `worker-placement-tableau` reference game. When the
+> implementation, tests, fixtures, or generated documentation disagree with
+> this brief, this brief wins until it is deliberately amended.
 
-- Players: 2
-- Objective: earn the most renown (VP) over 6 seasons
-- Duration: 30–45 minutes
+## Teaching scope
 
-A worker-placement game where two master crafters compete to build the most renowned workshop. Workers occupy action spaces (blocking opponents), gather materials, craft items onto a personal workshop mat, and fulfill orders for the guild.
+Mosaic Workshop is a compact, complete worker-placement game. It teaches only:
+
+- shared action-space blocking;
+- a master worker with one precise exception to ordinary placement;
+- dependent action inputs;
+- resource conversion;
+- crafting onto a personal spatial tableau; and
+- deterministic multi-round cleanup and scoring.
+
+It must play from normal setup through four seasons to an authoritative outcome.
+It is not a one-turn mechanic sample.
+
+## Theme brief
+
+Two workshops have four seasons to complete a civic mosaic. Their artisans
+collect timber for frames, shape stone reliefs, earn coin from patrons, and fit
+finished pieces into a six-cell display. The theme should feel like a warm,
+busy public workshop: visible supplies, crowded shared work sites, and a mosaic
+that becomes more complete every season.
+
+The folder and package identifier remains `worker-placement-tableau`. The
+public display name is **Mosaic Workshop**. UI copy and art should use the terms
+in this document rather than the former guild, apprentice-card, order-card, or
+wake-up-track vocabulary.
+
+## Players, length, and objective
+
+- Players: exactly 2.
+- Length: exactly 4 seasons.
+- Objective: finish with the most Prestige.
+- Expected play time: 8–15 minutes once both players know the actions.
+
+## Information visibility
+
+All gameplay information is public:
+
+- each player's wood, stone, and coin;
+- each worker's type and location;
+- every item and cell on both workshop tableaux;
+- the current season, active player, passed players, and first player; and
+- the running printed value of crafted items.
+
+Final adjacency bonuses and outcomes are computed authoritatively after season 4. There are no hands, decks, secret objectives, or hidden random values.
 
 ## Components
 
-- 1 shared **action board** with 9 spaces (6 fixed + 3 chosen at setup from a pool of 6)
-- 1 **wake-up track** with 4 slots, each granting a different start-of-season bonus
-- 2 personal **workshop mats**, each a 4×3 grid of cells
-- **Workers**: each player starts with 2 apprentices + 1 master; can grow to 4 apprentices total
-- **Resources**: wood, stone, coin
-- **Cards**: 10 Order cards (contracts) + 10 Apprentice cards (one-shot or persistent effects)
-- **Item tiles**: crafted items placed onto the workshop mat
-- **Season marker**: tracks the current round (1–6)
+- 1 fixed action board with five spaces:
+  `timberYard`, `stoneYard`, `patronSquare`, `exchangeHouse`, and
+  `mosaicBench`.
+- 2 personal workshop tableaux, each a 2-row by 3-column orthogonal grid.
+- Per player:
+  - 2 ordinary workers: `ordinary-1` and `ordinary-2`;
+  - 1 master worker: `master`;
+  - a public inventory of `wood`, `stone`, and `coin`.
+- An unlimited shared supply of resource tokens and the three item types below.
+- 1 season marker with positions 1 through 4.
+- 1 first-player marker.
+
+Resource and item supplies are not intended to run out. A player's tableau is
+the only limit on the number of items they may craft.
+
+### Items
+
+Each item occupies exactly one tableau cell.
+
+| Item ID        | Display name  | Cost                      | Printed Prestige | Placement rule                                                                                      |
+| -------------- | ------------- | ------------------------- | ---------------: | --------------------------------------------------------------------------------------------------- |
+| `timberFrame`  | Timber Frame  | 2 wood                    |                2 | Any empty cell                                                                                      |
+| `stoneRelief`  | Stone Relief  | 2 stone + 1 coin          |                3 | Any empty cell                                                                                      |
+| `joinedMosaic` | Joined Mosaic | 1 wood + 1 stone + 2 coin |                4 | The chosen cell must be orthogonally adjacent to at least one item already on that player's tableau |
+
+Diagonal cells are never adjacent. A Joined Mosaic cannot be the first item on
+an empty tableau.
 
 ## Setup
 
-1. Place the action board between players. Reveal 3 random **Variable Spaces** from the pool of 6; combine with the 6 fixed spaces to form this game's 9-space layout. (The variable spaces stay fixed for the entire game — only chosen at setup.)
-2. Each player takes a workshop mat (empty 4×3 grid), 2 apprentices, 1 master, and a starting hand of 2 coin + 1 wood.
-3. Shuffle the Order and Apprentice decks separately. Deal 1 Order card and 1 Apprentice card to each player.
-4. Randomly determine who places first on the wake-up track for season 1.
-5. Set the season marker to 1.
+1. Seat the players as player 1 and player 2. No random first-player selection
+   is performed.
+2. Give each player their empty 2x3 tableau, two ordinary workers, one master,
+   1 wood, 1 stone, and 2 coin.
+3. Put all five action spaces in play. The board never changes during a game.
+4. Put the season marker on season 1.
+5. Player 1 receives the first-player marker for season 1 and takes the first
+   placement.
 
-## Gameplay
+There is no setup entropy.
 
-Each of the 6 seasons proceeds through three phases:
+## Complete game arc
 
-### Phase: wake-up
+Every season has a placement phase followed by automatic cleanup:
 
-Players take turns (last season's turn order, reversed) selecting a slot on the wake-up track. Each slot grants its bonus immediately:
+1. The season's first player takes a placement turn.
+2. Players alternate placement turns while both remain active.
+3. On a placement turn, a player either places one unused worker and resolves
+   that action space, or passes for the rest of the season.
+4. A player who has placed all three workers is finished for the season and is
+   skipped. If one player has passed or finished, the other continues taking
+   turns until they also pass or finish.
+5. When both players have passed or placed all three workers, cleanup returns
+   every worker and clears both pass markers.
+6. After seasons 1, 2, and 3, advance the season marker, give the first-player
+   marker to the other player, and begin the next placement phase.
+7. After season 4 cleanup, score the game and publish the outcome.
 
-| Slot | Turn order | Bonus                  |
-| ---- | ---------- | ---------------------- |
-| 1    | First      | none                   |
-| 2    | First      | +1 coin                |
-| 3    | Second     | draw 1 Apprentice card |
-| 4    | Second     | +1 wood, +1 stone      |
+Player 1 is first in seasons 1 and 3. Player 2 is first in seasons 2 and 4.
 
-Only one player per slot. The lower-numbered slot acts first this season.
+## Worker placement rules
 
-### Phase: placement
-
-Players alternate placing one worker at a time onto an action space. Each space holds **one worker only**. A **master** worker may place onto an already-occupied space, ignoring blocking (once placed, the master is committed like any other worker). Each space resolves its effect immediately when a worker is placed.
-
-Placement continues until both players have placed all their workers, or pass. Passed workers return for next season.
-
-### Phase: cleanup
-
-All workers return to their players. Advance the season marker. After season 6, proceed to scoring.
+- Each worker may be placed at most once per season.
+- An ordinary worker may be placed only on an empty action space.
+- A master may be placed on an empty action space or on a space occupied by
+  exactly one ordinary worker, regardless of who owns that ordinary worker.
+- A master may not share with another master.
+- An ordinary worker may not be added to a space already occupied by a master.
+- No action space may ever contain more than two workers.
+- Placing the master does not displace or reactivate the ordinary worker already
+  there. Both placements resolve the space once at their respective times.
+- A placement is available only when the chosen worker, space, and complete
+  space-specific inputs are legal. Resources are paid and effects resolve as
+  one atomic action.
 
 ## Action spaces
 
-### Fixed (always in play)
+| Space ID        | Display name   | Immediate effect                                                                           |
+| --------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| `timberYard`    | Timber Yard    | Gain 2 wood.                                                                               |
+| `stoneYard`     | Stone Yard     | Gain 2 stone.                                                                              |
+| `patronSquare`  | Patron Square  | Gain 3 coin.                                                                               |
+| `exchangeHouse` | Exchange House | Return either 1 or 2 resources, then gain the same number of resources in a different mix. |
+| `mosaicBench`   | Mosaic Bench   | Pay for and craft one legal item into one legal empty cell.                                |
 
-1. **Lumberyard** — gain 2 wood.
-2. **Quarry** — gain 1 stone.
-3. **Market** — gain 3 coin, or sell 1 stone for 2 coin.
-4. **Guild Hall** — draw 1 Order card and 1 Apprentice card; keep both.
-5. **Training Hall** — pay 3 coin to add 1 new apprentice to your roster (max 4 apprentices). The new worker is available next season.
-6. **Workshop** — craft 1 item onto an empty cell of your mat. Pay the item's resource cost. Items grant VP at game end and may have placement adjacency requirements (e.g. _Workbench must touch another item_).
+For Exchange House:
 
-### Variable pool (3 drawn at setup)
+- wood, stone, and coin are all valid resources;
+- the returned and received totals must be equal and must be either 1 or 2;
+- all quantities must be non-negative integers;
+- a resource type cannot appear in both the returned and received maps; and
+- the received map must therefore be materially different from the returned
+  map.
 
-- **Mason's Lodge** — gain 1 wood + 1 stone.
-- **Trade Post** — exchange any 2 resources for any 2 resources (no like-for-like).
-- **Patron's Estate** — gain 2 coin and draw 1 Order card.
-- **Forge** — craft an item at -1 stone cost (minimum 0).
-- **Library** — draw 2 Apprentice cards, discard 1.
-- **Apothecary** — return one of your already-placed workers from any space; that space is now empty.
+Examples: 2 wood may become 1 stone and 1 coin; 1 coin may become 1 wood. A
+no-op exchange such as 1 wood for 1 wood is illegal.
 
-## Cards
+For Mosaic Bench, the player chooses the item type and destination cell as part
+of the placement. The action is unavailable when the player cannot afford any
+legal item-cell combination.
 
-### Order cards (10 total)
+## Canonical interactions
 
-Each order card lists requirements your workshop mat must satisfy. Once met, you may fulfill the order at any point on your turn (no worker required): discard the card and immediately gain its reward.
+These IDs are the public gameplay vocabulary exposed by action discovery,
+inspection, tests, and UI bindings.
 
-| #   | Name                 | Requirement                       | Reward        |
-| --- | -------------------- | --------------------------------- | ------------- |
-| 1   | Furniture Commission | 2 wood items on mat               | 3 VP          |
-| 2   | Stone Sculpture      | 2 stone items on mat              | 3 VP          |
-| 3   | Master's Display     | 1 Showroom on mat                 | 4 VP + 2 coin |
-| 4   | Forge Order          | 1 Anvil + 1 Kiln on mat           | 5 VP          |
-| 5   | Weaver's Request     | 2 Looms on mat                    | 4 VP          |
-| 6   | Apprentice Trial     | 3 items of any kind on mat        | 2 VP + 2 coin |
-| 7   | Mixed Set            | 1 wood item + 1 stone item on mat | 3 VP + 1 coin |
-| 8   | Architect's Plan     | 4 items in a 2×2 square           | 6 VP          |
-| 9   | Row of Pride         | 3 items in a single row           | 5 VP          |
-| 10  | Grand Atelier        | 6 or more cells filled on mat     | 7 VP          |
+| Phase       | Interaction ID  | Actor          | Inputs                                                                                                               | Availability and result                                                                                                                                                                              |
+| ----------- | --------------- | -------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `placement` | `placeWorker`   | Current player | `workerId`, `spaceId`; plus `give` and `receive` for `exchangeHouse`; plus `itemType` and `cellId` for `mosaicBench` | Available when the worker is unused, the occupancy rule is satisfied, and every dependent input is legal. Place the worker, pay any cost, resolve the space, then advance to the next active player. |
+| `placement` | `passPlacement` | Current player | none                                                                                                                 | Always available while the player still participates in the season. Mark that player passed for the remainder of the season, then advance or clean up.                                               |
 
-Item type (wood/stone) is determined by the item's primary resource cost. Items requiring both (e.g. Kiln) count as both types for orders.
+Action discovery may present the dependent inputs progressively, but submitting
+`placeWorker` is one atomic gameplay interaction. There are no separate
+`chooseExchange`, `chooseItem`, or `chooseCell` rules actions.
 
-### Apprentice cards (10 total)
+## Automatic procedures
 
-**One-shot** (6 cards) — play on your turn for an immediate effect, then discard:
+The runtime performs these procedures without inventing a system player:
 
-| #   | Name           | Effect                                                                                         |
-| --- | -------------- | ---------------------------------------------------------------------------------------------- |
-| 1   | Quick Delivery | Gain 3 coin.                                                                                   |
-| 2   | Lumber Stash   | Gain 3 wood.                                                                                   |
-| 3   | Stone Cache    | Gain 2 stone.                                                                                  |
-| 4   | Spare Hands    | Place 1 extra apprentice this season; it returns at season end.                                |
-| 5   | Inspiration    | Craft 1 item this turn at -1 wood cost (minimum 0). Does not require a Workshop worker.        |
-| 6   | Reassign       | Recall one of your placed workers; you may immediately re-place it on a different empty space. |
+- skip a player who passed or has no unused workers;
+- begin cleanup as soon as both players are passed or finished;
+- return all six workers during cleanup;
+- clear pass state;
+- alternate the first-player marker;
+- advance the season marker; and
+- after season 4 cleanup, compute scores and publish the outcome.
 
-**Persistent** (4 cards) — play face-up in front of you for the rest of the game:
+No player action is available during cleanup or scoring.
 
-| #   | Name            | Effect                                                                                                             |
-| --- | --------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 7   | Foreman         | Lumberyard gives you +1 wood whenever you place a worker there.                                                    |
-| 8   | Tireless Master | Your master may be placed twice per season: once normally, then recalled and re-placed when your next turn begins. |
-| 9   | Guild Scholar   | When you place on the Guild Hall, draw 1 extra Apprentice card.                                                    |
-| 10  | Patron's Favor  | Gain 1 coin at the end of each season.                                                                             |
+## Scoring and outcome
 
-## Player mat: items
+After season 4 cleanup, each player scores:
 
-Items occupy single cells on the 4×3 workshop mat. Common items (illustrative):
+1. the printed Prestige of every crafted item; plus
+2. 1 Harmony Prestige for every unique orthogonally adjacent pair of crafted
+   items with different item IDs.
 
-| Item      | Cost             | VP  | Placement rule             |
-| --------- | ---------------- | --- | -------------------------- |
-| Workbench | 1 wood           | 1   | must touch another item    |
-| Anvil     | 1 stone          | 2   | none                       |
-| Loom      | 2 wood           | 2   | none                       |
-| Kiln      | 1 wood + 1 stone | 3   | corner cells only          |
-| Showroom  | 2 stone + 2 coin | 4   | must touch ≥ 2 other items |
+Count each shared edge once. Same-type neighbors, diagonal neighbors, empty
+cells, workers, and leftover resources score nothing.
 
-(Exact item set finalized during implementation.)
+The player with more Prestige wins and receives rank 1; the other receives rank 2. If both totals are equal, both players receive rank 1 and a draw result.
+There are no tiebreakers.
 
-## End-game scoring
+## Deliberate exclusions
 
-After season 6:
+Mosaic Workshop intentionally has no:
 
-- **Items**: sum the VP printed on each item on your mat.
-- **Fulfilled orders**: VP already collected during play.
-- **Adjacency bonus**: +1 VP for each pair of orthogonally adjacent items sharing a "type" (e.g. two wood items).
-- **Coin**: +1 VP per 5 coin remaining.
-- **Unused resources**: 0 VP (wood/stone do not score).
+- wake-up or turn-order selection track;
+- variable or randomly selected action spaces;
+- worker growth, temporary workers, worker recall, or repeated workers;
+- cards, hands, orders, contracts, or persistent powers;
+- hidden information or random setup;
+- mid-season first-player manipulation;
+- additional crafting spaces or discounted costs; or
+- scoring from leftover resources, collections, orders, or private goals.
 
-Highest VP wins. Tiebreaker: most items on mat, then most coin.
+These omissions are part of the approved design. They must not be restored to
+make the game resemble an earlier implementation.
 
-## SDK features showcased
+## Acceptance obligations
 
-This example is designed as a canonical reference for:
+The executable proof suite must include, at minimum:
 
-- **Action-space blocking** (one worker per space)
-- **Worker types** with conditional blocking rules (master overrides)
-- **Dynamic turn order** via player choice (wake-up track)
-- **Two card types** with distinct lifecycles (one-shot vs persistent)
-- **Buying new workers** mid-game (roster as mutable state)
-- **Per-player spatial mats** with placement adjacency rules
-- **Setup-time board variability** (variable spaces fixed at setup)
-- **Multi-source end-game scoring**
+1. A complete four-season game from normal setup to win and a separate complete
+   game ending in a draw, without a checked-in mid-game base state.
+2. Ordinary-worker blocking, a legal master share with one ordinary worker,
+   and rejection of ordinary-on-occupied, master-on-master, and third-worker
+   placements.
+3. Permanent passing, skipping a finished player, automatic cleanup, worker
+   return, and first-player alternation across all four seasons.
+4. Every action space resolving once for an ordinary worker and once for a
+   legally sharing master.
+5. Valid one- and two-resource exchanges plus rejection of unaffordable,
+   unequal, empty, and no-op exchanges.
+6. Successful crafting of all three item types, insufficient-cost rejection,
+   occupied-cell rejection, Joined Mosaic rejection without a neighbor, and a
+   legal Joined Mosaic beside an existing item.
+7. Exact end scoring, including unique-edge Harmony scoring, same-type and
+   diagonal non-scoring, leftover-resource non-scoring, ranks, and draw output.
+8. Action discovery showing only the current actor's legal workers, spaces,
+   exchange values, items, and cells without relying on rejection to discover
+   normal legal play.

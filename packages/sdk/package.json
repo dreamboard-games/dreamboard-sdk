@@ -121,7 +121,7 @@
   ],
   "scripts": {
     "build": "pnpm --dir ../.. --filter @dreamboard-games/sdk-types build && pnpm --dir ../.. --filter @dreamboard-games/plugin-runtime-contract build && pnpm --dir ../.. authoring-metadata:generate && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
     "storybook:build": "storybook build -o storybook-static",

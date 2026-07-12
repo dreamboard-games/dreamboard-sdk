@@ -1,49 +1,58 @@
-import type { Wire } from "@dreamboard-games/reducer-contract";
-import { createExpectApi } from "./testing/create-expect-api.js";
-import { createTestRuntime } from "./testing/create-test-runtime.js";
-import type {
-  BaseContext,
-  BaseDefinition,
-  InteractionDescriptorLike,
-  ScenarioDefinition,
-  SharedScenarioContext,
+import type { DispatchTraceSummaryEntry } from "./reducer/diagnostics.js";
+import {
+  ScenarioReplayError,
+  type ScenarioDefinition,
 } from "./testing/definitions.js";
-import type { ReducerScenarioBundle } from "./testing/reducer-scenario/types.js";
+import type { ScenarioDefinitionGameLike } from "./testing/scenario-definition-validation.js";
+import { assertScenario, replayScenario } from "./testing/scenario-replay.js";
 
-type BaseStateArtifact = {
-  readonly snapshot: Wire.ReducerSessionState;
-  readonly fingerprint: {
-    readonly players: number;
-    readonly contractFingerprint?: string;
-  };
-};
+export type CandidateVerificationScenario<
+  Game extends ScenarioDefinitionGameLike,
+> = ScenarioDefinition<Game>;
 
-export type CandidateVerificationBase =
-  | BaseStateArtifact
-  | (BaseDefinition & Partial<BaseStateArtifact>);
-
-export type CandidateVerificationScenario = ScenarioDefinition;
-
-export type CandidateVerificationInput = {
-  readonly manifest?: unknown;
-  readonly bases:
-    | Readonly<Record<string, CandidateVerificationBase>>
-    | readonly CandidateVerificationBase[];
+export type CandidateVerificationInput<
+  Game extends ScenarioDefinitionGameLike,
+> = {
+  /** The authored reducer game definition used by production dispatch. */
+  readonly reducer: Game;
   readonly scenarios:
-    | Readonly<Record<string, CandidateVerificationScenario>>
-    | readonly CandidateVerificationScenario[];
-  readonly reducer: ReducerScenarioBundle;
+    | Readonly<Record<string, CandidateVerificationScenario<Game>>>
+    | readonly CandidateVerificationScenario<Game>[];
   readonly maxScenarios?: number;
   readonly maxStepsPerScenario?: number;
+};
+
+export type CandidateVerificationReplayDiagnostic = {
+  readonly kind: "replay";
+  readonly message: string;
+  readonly scenarioId?: string;
+  readonly segment?: "given" | "when";
+  readonly index?: number;
+  readonly interactionId?: string;
+  readonly errorCode?: string;
+  readonly reducerMessage?: string;
+  readonly trace?: readonly DispatchTraceSummaryEntry[];
+};
+
+export type CandidateVerificationAssertionDiagnostic = {
+  readonly kind: "assertion";
+  readonly message: string;
+};
+
+export type CandidateVerificationLimitDiagnostic = {
+  readonly kind: "limit";
+  readonly message: string;
+  readonly actualSteps: number;
+  readonly maxStepsPerScenario: number;
 };
 
 export type CandidateVerificationScenarioResult = {
   readonly id: string;
   readonly status: "passed" | "failed";
-  readonly diagnostic?: {
-    readonly kind: "assertion";
-    readonly message: string;
-  };
+  readonly diagnostic?:
+    | CandidateVerificationReplayDiagnostic
+    | CandidateVerificationAssertionDiagnostic
+    | CandidateVerificationLimitDiagnostic;
 };
 
 export type CandidateVerificationResult = {
@@ -56,36 +65,48 @@ export type CandidateVerificationResult = {
   };
 };
 
-export async function runCandidateVerification(
-  input: CandidateVerificationInput,
+const CANDIDATE_INPUT_FIELDS = new Set([
+  "reducer",
+  "scenarios",
+  "maxScenarios",
+  "maxStepsPerScenario",
+]);
+const MAX_DIAGNOSTIC_MESSAGE_LENGTH = 2_000;
+const MAX_DIAGNOSTIC_TRACE_ENTRIES = 100;
+
+export async function runCandidateVerification<
+  const Game extends ScenarioDefinitionGameLike,
+>(
+  input: CandidateVerificationInput<Game>,
 ): Promise<CandidateVerificationResult> {
-  const bases = normalizeBases(input.bases);
+  assertCandidateInputFields(input);
   const scenarios = normalizeScenarios(input.scenarios);
-  const maxScenarios = input.maxScenarios ?? scenarios.length;
-  if (!Number.isInteger(maxScenarios) || maxScenarios < 1) {
-    throw new Error("maxScenarios must be a positive integer.");
+  if (scenarios.length === 0) {
+    throw new Error("Candidate verification requires at least one scenario.");
   }
+
+  const maxScenarios = input.maxScenarios ?? scenarios.length;
+  assertPositiveInteger(maxScenarios, "maxScenarios");
   if (scenarios.length > maxScenarios) {
     throw new Error(
       `Candidate verification contains ${scenarios.length} scenarios, exceeding limit ${maxScenarios}.`,
     );
   }
-  const maxStepsPerScenario = input.maxStepsPerScenario ?? 1000;
-  if (!Number.isInteger(maxStepsPerScenario) || maxStepsPerScenario < 1) {
-    throw new Error("maxStepsPerScenario must be a positive integer.");
-  }
+
+  const maxStepsPerScenario = input.maxStepsPerScenario ?? 1_000;
+  assertPositiveInteger(maxStepsPerScenario, "maxStepsPerScenario");
 
   const results: CandidateVerificationScenarioResult[] = [];
   for (const scenario of scenarios) {
     results.push(
       await runScenario({
-        bases,
         reducer: input.reducer,
         scenario,
         maxStepsPerScenario,
       }),
     );
   }
+
   const failed = results.filter((result) => result.status === "failed").length;
   return {
     status: failed === 0 ? "passed" : "failed",
@@ -98,24 +119,43 @@ export async function runCandidateVerification(
   };
 }
 
-async function runScenario(input: {
-  bases: Readonly<Record<string, BaseStateArtifact>>;
-  reducer: ReducerScenarioBundle;
-  scenario: CandidateVerificationScenario;
-  maxStepsPerScenario: number;
+async function runScenario<Game extends ScenarioDefinitionGameLike>(input: {
+  readonly reducer: Game;
+  readonly scenario: CandidateVerificationScenario<Game>;
+  readonly maxStepsPerScenario: number;
 }): Promise<CandidateVerificationScenarioResult> {
-  const runtime = createTestRuntime({
-    baseId: input.scenario.from,
-    baseStates: input.bases,
-    bundle: input.reducer,
-    phase: input.scenario.phase,
-    playerIds:
-      input.bases[input.scenario.from]?.snapshot.domain?.flow?.activePlayers,
-  });
-  const ctx = createScenarioContext(runtime, input.maxStepsPerScenario);
+  const actualSteps = input.scenario.given.length + input.scenario.when.length;
+  if (actualSteps > input.maxStepsPerScenario) {
+    return {
+      id: input.scenario.id,
+      status: "failed",
+      diagnostic: {
+        kind: "limit",
+        message:
+          `Scenario contains ${actualSteps} replay steps, exceeding ` +
+          `maxStepsPerScenario limit ${input.maxStepsPerScenario}.`,
+        actualSteps,
+        maxStepsPerScenario: input.maxStepsPerScenario,
+      },
+    };
+  }
+
+  let replay;
   try {
-    await input.scenario.when(ctx);
-    await input.scenario.then(ctx);
+    replay = await replayScenario({
+      game: input.reducer,
+      scenario: input.scenario,
+    });
+  } catch (error) {
+    return {
+      id: input.scenario.id,
+      status: "failed",
+      diagnostic: replayDiagnostic(error),
+    };
+  }
+
+  try {
+    await assertScenario({ replay, assertion: input.scenario.then });
     return { id: input.scenario.id, status: "passed" };
   } catch (error) {
     return {
@@ -129,105 +169,73 @@ async function runScenario(input: {
   }
 }
 
-function createScenarioContext(
-  runtime: ReturnType<typeof createTestRuntime>,
-  maxStepsPerScenario: number,
-): SharedScenarioContext {
-  let submittedSteps = 0;
-  const baseContext: BaseContext = {
-    game: {
-      start: async () => undefined,
-      submit: async (...args) => {
-        submittedSteps += 1;
-        if (submittedSteps > maxStepsPerScenario) {
-          throw new Error(
-            `Scenario exceeded maxStepsPerScenario limit ${maxStepsPerScenario}.`,
-          );
-        }
-        return runtime.submit(...args);
-      },
-    },
-    players: runtime.players,
-    seat: runtime.seat,
-  };
-  return {
-    ...baseContext,
-    state: () => runtime.getFrame().flow.currentPhase ?? "",
-    view: (playerId) => {
-      const frame = runtime.getFrame();
-      if (frame.perspectivePlayerId === playerId) return frame.view;
-      return runtime.getFrame().view;
-    },
-    interactions: (playerId) => {
-      const frame = runtime.getFrame();
-      if (frame.perspectivePlayerId !== playerId) return [];
-      return frame.availableInteractions as unknown as readonly InteractionDescriptorLike[];
-    },
-    explain: runtime.explain,
-    diagnostics: runtime.diagnostics,
-    expect: createExpectApi({
-      lastDiagnosticRejection: () => {
-        for (
-          let index = runtime.diagnostics.events.length - 1;
-          index >= 0;
-          index -= 1
-        ) {
-          const event = runtime.diagnostics.events[index];
-          if (event?.type === "submitRejected") return event;
-        }
-        return null;
-      },
-    }),
-  };
+function assertCandidateInputFields(input: object): void {
+  for (const field of Object.keys(input)) {
+    if (!CANDIDATE_INPUT_FIELDS.has(field)) {
+      throw new Error(
+        `Candidate verification input contains unsupported field '${field}'.`,
+      );
+    }
+  }
 }
 
-function normalizeBases(
-  input:
-    | Readonly<Record<string, CandidateVerificationBase>>
-    | readonly CandidateVerificationBase[],
-): Record<string, BaseStateArtifact> {
-  const entries = Array.isArray(input)
-    ? input.map((base) => [base.id, base] as const)
-    : Object.entries(input);
-  return Object.fromEntries(
-    entries.map(([id, base]) => {
-      if (!id) throw new Error("Candidate verification base id is required.");
-      if (!("snapshot" in base) || !base.snapshot) {
-        throw new Error(`Candidate verification base '${id}' has no snapshot.`);
-      }
-      const players =
-        base.fingerprint?.players ??
-        base.players ??
-        base.snapshot.domain?.flow?.activePlayers?.length ??
-        1;
-      return [
-        id,
-        {
-          snapshot: base.snapshot,
-          fingerprint: {
-            players,
-            contractFingerprint: base.fingerprint?.contractFingerprint,
-          },
-        },
-      ];
-    }),
-  );
+function assertPositiveInteger(value: number, field: string): void {
+  if (!Number.isSafeInteger(value) || value < 1) {
+    throw new Error(`${field} must be a positive safe integer.`);
+  }
 }
 
-function normalizeScenarios(
+function normalizeScenarios<Game extends ScenarioDefinitionGameLike>(
   input:
-    | Readonly<Record<string, CandidateVerificationScenario>>
-    | readonly CandidateVerificationScenario[],
-): CandidateVerificationScenario[] {
-  const scenarios = Array.isArray(input) ? input : Object.values(input);
-  return scenarios.map((scenario) => {
-    if (!scenario.id)
+    | Readonly<Record<string, CandidateVerificationScenario<Game>>>
+    | readonly CandidateVerificationScenario<Game>[],
+): CandidateVerificationScenario<Game>[] {
+  if (typeof input !== "object" || input === null) {
+    throw new Error(
+      "Candidate verification scenarios must be an array or record.",
+    );
+  }
+  const scenarios = Array.isArray(input) ? [...input] : Object.values(input);
+  const seenIds = new Set<string>();
+  for (const scenario of scenarios) {
+    if (typeof scenario?.id !== "string" || scenario.id.length === 0) {
       throw new Error("Candidate verification scenario id is required.");
-    return scenario;
-  });
+    }
+    if (seenIds.has(scenario.id)) {
+      throw new Error(
+        `Candidate verification scenario id '${scenario.id}' is duplicated.`,
+      );
+    }
+    seenIds.add(scenario.id);
+  }
+  return scenarios;
+}
+
+function replayDiagnostic(
+  error: unknown,
+): CandidateVerificationReplayDiagnostic {
+  if (error instanceof ScenarioReplayError) {
+    return {
+      kind: "replay",
+      message: boundedMessage(error),
+      scenarioId: error.scenarioId,
+      segment: error.segment,
+      index: error.index,
+      interactionId: error.interactionId,
+      errorCode: error.errorCode,
+      ...(error.reducerMessage === undefined
+        ? {}
+        : { reducerMessage: boundedText(error.reducerMessage) }),
+      trace: error.trace.slice(0, MAX_DIAGNOSTIC_TRACE_ENTRIES),
+    };
+  }
+  return { kind: "replay", message: boundedMessage(error) };
 }
 
 function boundedMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error);
-  return message.slice(0, 2000);
+  return boundedText(error instanceof Error ? error.message : String(error));
+}
+
+function boundedText(value: string): string {
+  return value.slice(0, MAX_DIAGNOSTIC_MESSAGE_LENGTH);
 }

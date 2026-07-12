@@ -119,25 +119,40 @@ export function createMutableRandomHelpers(
 export function sampleRngCollectorValue(
   collector: InputCollector<SchemaLike<unknown>, CollectorState, "rng">,
   rng: RuntimeRngState,
-): { value: unknown; nextRng: RuntimeRngState } {
+): {
+  value: unknown;
+  nextRng: RuntimeRngState;
+  consumptions: readonly RngConsumption[];
+} {
   const meta = collector.meta;
   switch (meta.rng) {
     case "d6": {
       const count = meta.count > 0 ? meta.count : 1;
       const values: number[] = [];
       let nextRng = rng;
+      const consumptions: RngConsumption[] = [];
       for (let i = 0; i < count; i += 1) {
         const sampled = sampleDieValue(6, nextRng);
         values.push(sampled.value);
         nextRng = sampled.nextRng;
+        consumptions.push({
+          operation: "rngInput.d6",
+          traceEntry: sampled.consumption.traceEntry,
+        });
       }
-      return { value: { values }, nextRng };
+      return { value: { values }, nextRng, consumptions };
     }
     case "coin": {
       const [offset, nextRng] = nextRandomInt(2, rng);
       return {
         value: { value: offset === 0 ? "heads" : "tails" },
         nextRng,
+        consumptions: [
+          {
+            operation: "rngInput.coin",
+            traceEntry: nextRng.trace[nextRng.trace.length - 1] ?? "",
+          },
+        ],
       };
     }
     default: {

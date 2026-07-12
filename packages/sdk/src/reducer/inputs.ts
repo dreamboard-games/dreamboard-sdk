@@ -5,7 +5,7 @@ export {
   type DefinedInputs,
   type InputFieldRef,
 } from "./inputs/defineInputs";
-export { boardInput } from "./inputs/boardInput";
+export { boardInput, type PlayerSpaceInputSchema } from "./inputs/boardInput";
 export { boardTarget } from "./inputs/boardTarget";
 export type {
   BoardTargetBuilder,

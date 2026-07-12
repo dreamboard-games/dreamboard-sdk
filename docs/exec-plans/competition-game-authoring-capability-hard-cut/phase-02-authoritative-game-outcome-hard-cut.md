@@ -389,10 +389,10 @@ the backfill.
 
 Create `examples/reference-games/multiplayer-ranking-and-ties/`:
 
-Implement **Harbor Fair** from
-[Canonical Game Briefs](canonical-game-briefs.md#multiplayer-ranking-and-ties-harbor-fair).
-That brief is the rules authority for normal scoring, both tie-break levels,
-true ties, and the scoreless cancellation branch.
+Implement **Harbor Fair** from its authoritative
+[`rule.md`](../../../examples/reference-games/multiplayer-ranking-and-ties/rule.md).
+That file owns normal scoring, both tie-break levels, true ties, and the
+scoreless cancellation branch.
 
 - two to four players;
 - deterministic compact shared-card play;

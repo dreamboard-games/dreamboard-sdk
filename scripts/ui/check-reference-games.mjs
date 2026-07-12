@@ -379,6 +379,7 @@ async function checkDenylist({ gameId, gameDir, errors }) {
 async function checkDemoRegistryAbsence({ gameId, errors }) {
   const repoFiles = await walkFiles(root, {
     excludeDirs: new Set([
+      ".dreamboard-dev",
       ".git",
       ".turbo",
       "build",
@@ -401,6 +402,10 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
       relative.startsWith(
         "docs/exec-plans/competition-game-authoring-capability-hard-cut/",
       ) ||
+      relative.startsWith(
+        "docs/exec-plans/reference-game-rule-conformance-hard-cut/",
+      ) ||
+      relative === "docs/reference/canonical-examples.md" ||
       relative.startsWith("packages/sdk/src/reference-games/") ||
       relative.startsWith(
         "docs/capability-research/competition-game-authoring/",

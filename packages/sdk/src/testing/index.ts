@@ -1,6 +1,6 @@
 export * from "./definitions.js";
 export * from "./create-expect-api.js";
-export * from "./create-test-runtime.js";
+export * from "./scenario-replay.js";
 export * from "./reducer-scenario/index.js";
 export * from "./ui-scenario/index.js";
 export * from "./ui-fixture/index.js";

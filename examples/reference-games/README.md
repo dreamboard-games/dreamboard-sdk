@@ -4,6 +4,11 @@ This directory contains SDK-owned reference games used to verify public package
 consumption and future UI fixture coverage. They are intentionally outside the
 root pnpm workspace and must remain isolated consumers of `@dreamboard-games/sdk`.
 
+The approved game-local `rule.md` files are gameplay authority. Their
+base-free scenario, on-demand generation, and cross-repository migration is
+defined by the
+[Reference Game Rule Conformance And Agent Testing Hard Cut](../../docs/exec-plans/reference-game-rule-conformance-hard-cut/README.md).
+
 Reference IDs describe mechanics and UI patterns rather than product names:
 
 - `hearts`
