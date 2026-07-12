@@ -15,6 +15,11 @@ export const root = path.resolve(import.meta.dirname, "../..");
 export const referenceGamesRoot = path.join(root, "examples/reference-games");
 export const buildRoot = path.join(root, "build/reference-games");
 
+/** Locale-independent UTF-16 code-unit ordering for canonical receipts. */
+export function compareCanonicalStrings(left, right) {
+  return left === right ? 0 : left < right ? -1 : 1;
+}
+
 export const expectedReferenceGames = [
   {
     id: "hearts",
@@ -33,7 +38,7 @@ export const expectedReferenceGames = [
   },
   {
     id: "hex-network-trading",
-    displayName: "Hex Network Trading",
+    displayName: "Stormtrail",
     mechanics: ["hex-grid", "route-building", "resource-management", "trading"],
     uiPatterns: [
       "hex-board-targets",
@@ -44,7 +49,7 @@ export const expectedReferenceGames = [
   },
   {
     id: "deck-building-market",
-    displayName: "Deck Building Market",
+    displayName: "Sketchbook",
     mechanics: [
       "deck-building",
       "market-row",
@@ -60,23 +65,23 @@ export const expectedReferenceGames = [
   },
   {
     id: "worker-placement-tableau",
-    displayName: "Worker Placement Tableau",
+    displayName: "Mosaic Workshop",
     mechanics: [
       "worker-placement",
       "resource-allocation",
       "tableau-building",
-      "order-fulfillment",
+      "spatial-scoring",
     ],
     uiPatterns: [
       "worker-targets",
-      "tableau-cards",
+      "tableau-grid",
       "resource-allocation-form",
-      "confirmation-dialog",
+      "dependent-action-form",
     ],
   },
   {
     id: "simultaneous-card-drafting",
-    displayName: "Simultaneous Card Drafting",
+    displayName: "Lantern Market",
     mechanics: [
       "simultaneous-selection",
       "card-drafting",
@@ -109,7 +114,7 @@ export const expectedReferenceGames = [
   },
   {
     id: "multiplayer-ranking-and-ties",
-    displayName: "Multiplayer Ranking And Ties",
+    displayName: "Harbor Fair",
     mechanics: [
       "card-drafting",
       "market-row",
@@ -125,23 +130,13 @@ export const expectedReferenceGames = [
   },
   {
     id: "solo-countdown-puzzle",
-    displayName: "Solo Countdown Puzzle",
-    mechanics: [
-      "resource-management",
-      "repeated-turn-state",
-      "square-grid",
-      "set-collection",
-    ],
-    uiPatterns: [
-      "square-board-targets",
-      "turn-summary",
-      "confirmation-dialog",
-      "compact-mobile-scorecard",
-    ],
+    displayName: "Last Light",
+    mechanics: ["resource-management", "repeated-turn-state", "square-grid"],
+    uiPatterns: ["square-board-targets", "turn-summary", "event-log"],
   },
   {
     id: "automa-river-rival",
-    displayName: "Automa River Rival",
+    displayName: "River Guild",
     mechanics: [
       "automa-rival",
       "open-market",

@@ -6,7 +6,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
-  pathExists,
+  compareCanonicalStrings,
   root,
   sha256File,
   writeJson,
@@ -42,7 +42,7 @@ async function main() {
     });
     const bundleDir = path.join(
       outRoot,
-      manifest.bundleDigest.replace("sha256:", "sha256-"),
+      manifest.sourceFingerprint.replace("sha256:", "sha256-"),
     );
     await rm(bundleDir, { recursive: true, force: true });
     await mkdir(bundleDir, { recursive: true });
@@ -55,14 +55,15 @@ async function main() {
     const archivePath = path.join(bundleDir, "reference-game-source.tar.gz");
     await writeDeterministicSourceArchive({
       sourceRoot: materialized.sourceRoot,
+      objects: manifest.payload.objects,
       manifestPath,
       archivePath,
     });
     const receipt = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       receiptType: "dreamboard.reference-game-source-materialization",
       sourceRevision: materialized.revision,
-      bundleDigest: manifest.bundleDigest,
+      sourceFingerprint: manifest.sourceFingerprint,
       manifestSha256: `sha256:${await sha256File(manifestPath)}`,
       archiveSha256: `sha256:${await sha256File(archivePath)}`,
       output: path.relative(root, bundleDir),
@@ -79,16 +80,20 @@ async function main() {
 
 async function writeDeterministicSourceArchive({
   sourceRoot,
+  objects,
   manifestPath,
   archivePath,
 }) {
   const entries = [
-    ...(await collectArchiveEntries(sourceRoot, "examples/reference-games")),
+    ...objects.map(({ path: objectPath }) => ({
+      name: objectPath,
+      absolute: path.join(sourceRoot, objectPath),
+    })),
     {
       name: "reference-game-source-manifest.json",
       absolute: manifestPath,
     },
-  ].sort((left, right) => left.name.localeCompare(right.name));
+  ].sort((left, right) => compareCanonicalStrings(left.name, right.name));
   const chunks = [];
   for (const entry of entries) {
     const content = await readFile(entry.absolute);
@@ -106,44 +111,6 @@ async function writeDeterministicSourceArchive({
       mtime: 0,
     }),
   );
-}
-
-async function collectArchiveEntries(sourceRoot, prefix) {
-  const base = path.join(sourceRoot, prefix);
-  const entries = [];
-  async function visit(current) {
-    const dirents = await import("node:fs/promises").then(({ readdir }) =>
-      readdir(current, { withFileTypes: true }),
-    );
-    for (const dirent of dirents) {
-      if (dirent.isDirectory()) {
-        if (
-          !new Set([
-            ".dreamboard",
-            "dist",
-            "node_modules",
-            "playwright-report",
-            "test-results",
-          ]).has(dirent.name)
-        ) {
-          await visit(path.join(current, dirent.name));
-        }
-        continue;
-      }
-      if (dirent.isFile()) {
-        const absolute = path.join(current, dirent.name);
-        entries.push({
-          name: path.relative(sourceRoot, absolute).split(path.sep).join("/"),
-          absolute,
-        });
-      }
-    }
-  }
-  if (!(await pathExists(base))) {
-    throw new Error(`${base} does not exist.`);
-  }
-  await visit(base);
-  return entries;
 }
 
 function writeString(buffer, value, offset, length) {

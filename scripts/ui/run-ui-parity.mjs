@@ -16,8 +16,15 @@ import {
   writeJson,
 } from "./reference-games-lib.mjs";
 import { requiredParityScenarioIds } from "./required-ui-scenarios.mjs";
+import {
+  defaultGeneratedWorkbenchRoot,
+  materializeWorkbench,
+} from "./materialize-workbench.mjs";
 
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+const fixturesRoot = path.join(
+  defaultGeneratedWorkbenchRoot,
+  "fixtures/reference-games",
+);
 if (requiredParityScenarioIds.length === 0) {
   throw new Error(
     "requiredParityScenarioIds must contain at least one scenario.",
@@ -262,6 +269,7 @@ function createMeasuredObservation({
 }
 
 async function main() {
+  await materializeWorkbench({ outputRoot: defaultGeneratedWorkbenchRoot });
   const options = parseArgs(process.argv.slice(2));
   if (options.build) {
     run("node", ["scripts/ui/build-reference-bundle.mjs"], {

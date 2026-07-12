@@ -10,10 +10,17 @@ import {
   scenariosForContract,
   selectScenariosForSourceFiles,
 } from "./component-scenario-index-lib.mjs";
+import {
+  defaultGeneratedWorkbenchRoot,
+  materializeWorkbench,
+} from "./materialize-workbench.mjs";
 import { repoCommandEnv, root } from "./reference-games-lib.mjs";
 import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
 
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+const fixturesRoot = path.join(
+  defaultGeneratedWorkbenchRoot,
+  "fixtures/reference-games",
+);
 
 function parseArgs(argv) {
   const options = { changed: false };
@@ -224,6 +231,9 @@ function projectsForScenario(fixture, requestedProject) {
 }
 
 async function main() {
+  const materialization = await materializeWorkbench({
+    outputRoot: defaultGeneratedWorkbenchRoot,
+  });
   const options = parseArgs(process.argv.slice(2));
   const bundle = await readJson(path.join(fixturesRoot, "index.json"));
   const index = await readComponentScenarioIndex();
@@ -305,6 +315,7 @@ async function main() {
   }
   const test = run("pnpm", testArgs, {
     env: {
+      DREAMBOARD_WORKBENCH_GENERATED_ROOT: materialization.generatedRoot,
       UI_SCENARIO_MATRIX_PATH: matrixPath,
       UI_SCENARIO_SCREENSHOT_DIR: path.join(artifactRoot, "screenshots"),
     },

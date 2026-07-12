@@ -30,7 +30,7 @@ test("roll-and-write scorecard accepts keyboard activation for square board targ
     [
       `[${attrs.protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"]`,
       `[${attrs.role}="actuator"]`,
-      `[${attrs.actuatorId}="board:space:cell-0-1"]`,
+      `[${attrs.actuatorId}="board:space:cell-1-0"]`,
     ].join(""),
   );
   await expect(target).toHaveAttribute("role", "button");
@@ -47,7 +47,7 @@ test("roll-and-write scorecard accepts keyboard activation for square board targ
         .flatMap((surface) => surface.interactions)
         .find((item) => item.interactionKey === "markSurvey.markCell");
       const cellActuator = interaction?.actuators.find(
-        (actuator) => actuator.actuatorId === "board:space:cell-0-1",
+        (actuator) => actuator.actuatorId === "board:space:cell-1-0",
       );
       return {
         cellCandidateState: cellActuator?.candidateState,

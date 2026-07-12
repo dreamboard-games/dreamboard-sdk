@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "dev:src": "DREAMBOARD_WORKBENCH_SDK=source vite --host 127.0.0.1",
-    "build": "vite build",
+    "dev": "node ../../scripts/ui/run-workbench-command.mjs dev",
+    "dev:src": "DREAMBOARD_WORKBENCH_SDK=source node ../../scripts/ui/run-workbench-command.mjs dev",
+    "build": "node ../../scripts/ui/run-workbench-command.mjs build",
     "typecheck": "tsc --noEmit",
-    "test": "playwright test",
+    "test": "node ../../scripts/ui/run-workbench-command.mjs test",
     "test:runtime": "bun test src"
   },
   "dependencies": {

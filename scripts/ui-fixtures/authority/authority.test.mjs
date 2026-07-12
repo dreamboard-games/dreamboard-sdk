@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdir, mkdtemp, readFile, rm, symlink } from "node:fs/promises";
+import {
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readlink,
+  rm,
+  symlink,
+  unlink,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -17,44 +26,61 @@ const { GlobalRegistrator } = sdkRequire("@happy-dom/global-registrator");
 GlobalRegistrator.register();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-async function withPackageLinks(callback) {
-  const links = [
+async function withPackageLinks(gameDirs, callback) {
+  const packageRoots = [
+    root,
+    ...gameDirs.map((gameDir) => path.resolve(gameDir)),
+  ];
+  const links = packageRoots.flatMap((packageRoot) => [
     {
-      link: path.join(root, "node_modules/@dreamboard-games/sdk"),
+      link: path.join(packageRoot, "node_modules/@dreamboard-games/sdk"),
       target: path.join(root, "packages/sdk"),
     },
     {
       link: path.join(
-        root,
+        packageRoot,
         "node_modules/@dreamboard-games/plugin-runtime-contract",
       ),
       target: path.join(root, "packages/plugin-runtime-contract"),
     },
     {
-      link: path.join(root, "node_modules/react"),
+      link: path.join(packageRoot, "node_modules/react"),
       target: path.dirname(sdkRequire.resolve("react/package.json")),
     },
     {
-      link: path.join(root, "node_modules/react-dom"),
+      link: path.join(packageRoot, "node_modules/react-dom"),
       target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
     },
-  ];
-  const created = [];
+  ]);
+  const restore = [];
   for (const item of links) {
-    try {
-      await mkdir(path.dirname(item.link), { recursive: true });
-      await symlink(item.target, item.link, "dir");
-      created.push(item.link);
-    } catch (error) {
-      if (error?.code !== "EEXIST") throw error;
+    await mkdir(path.dirname(item.link), { recursive: true });
+    const existing = await lstat(item.link).catch((error) => {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    });
+    if (existing) {
+      assert.ok(
+        existing.isSymbolicLink(),
+        `${item.link} must be a symlink for fixture testing`,
+      );
+      const previousTarget = await readlink(item.link);
+      await unlink(item.link);
+      restore.push(async () => {
+        await rm(item.link, { force: true });
+        await symlink(previousTarget, item.link, "dir");
+      });
+    } else {
+      restore.push(() => rm(item.link, { force: true }));
     }
+    await symlink(item.target, item.link, "dir");
   }
   try {
     return await callback();
   } finally {
-    await Promise.all(
-      created.reverse().map((link) => rm(link, { force: true })),
-    );
+    for (const restoreLink of restore.reverse()) {
+      await restoreLink();
+    }
   }
 }
 
@@ -118,11 +144,11 @@ test("protocol authority materializes protocol fixture inputs", async () => {
 });
 
 test("workspace fixture compilation materializes reducer authority from v2 source", async () => {
-  await withPackageLinks(async () => {
-    const gameDir = path.join(root, "examples/reference-games/hearts");
+  const gameDir = path.join(root, "examples/reference-games/hearts");
+  await withPackageLinks([gameDir], async () => {
     const metadata = await readJson(path.join(gameDir, "reference-game.json"));
     const scenario = await loadScenarioModule(
-      path.join(gameDir, "test/ui-scenarios/pass-three.mobile.scenario.ts"),
+      path.join(gameDir, "test/ui-scenarios/sealed-pass.mobile.scenario.ts"),
     );
     const outputRoot = await mkdtemp(
       path.join(os.tmpdir(), "dreamboard-authority-test-"),
@@ -140,30 +166,83 @@ test("workspace fixture compilation materializes reducer authority from v2 sourc
       sdkCommit: "test",
     });
 
-    assert.equal(fixture.id, "hearts.pass-three.mobile");
-    assert.ok(fixture.capabilities.includes("runtime-submit"));
+    assert.equal(fixture.id, "hearts.sealed-pass.mobile");
+    assert.ok(fixture.capabilities.includes("accessibility-scan"));
     const fixtureJson = JSON.parse(
       await readFile(path.join(outputRoot, fixture.file), "utf8"),
     );
     assert.equal(
       fixtureJson.source.renderModule,
-      "modules/hearts.pass-three.mobile.mjs",
+      "modules/hearts.sealed-pass.mobile.mjs",
     );
     assert.ok(
       fixtureJson.source.sourceFiles.includes(
-        "examples/reference-games/hearts/app/game.ts",
+        "examples/reference-games/hearts/app/phases/passing.ts",
       ),
     );
     assert.ok(
       fixtureJson.source.sourceFiles.includes(
-        "examples/reference-games/hearts/ui/App.tsx",
+        "examples/reference-games/hearts/ui/components/game-ui.tsx",
       ),
     );
     assert.ok(
       fixtureJson.source.sourceFiles.includes(
-        "examples/reference-games/hearts/test/ui-scenarios/pass-three.mobile.scenario.ts",
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
       ),
     );
+  });
+});
+
+test("workspace fixture compilation materializes a reducer-native checkpoint from one source closure", async () => {
+  const gameDir = path.join(
+    root,
+    "examples/reference-games/roll-and-write-scorecard",
+  );
+  await withPackageLinks([gameDir], async () => {
+    const metadata = await readJson(path.join(gameDir, "reference-game.json"));
+    const scenario = await loadScenarioModule(
+      path.join(
+        gameDir,
+        "test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts",
+      ),
+    );
+    const outputRoot = await mkdtemp(
+      path.join(os.tmpdir(), "dreamboard-reducer-native-authority-test-"),
+    );
+    try {
+      const fixture = await compileScenarioModule({
+        game: {
+          id: metadata.id,
+          displayName: metadata.displayName,
+          mechanics: metadata.mechanics,
+          uiPatterns: metadata.uiPatterns,
+        },
+        gameDir,
+        scenario,
+        outputRoot,
+        sdkCommit: "test",
+      });
+
+      assert.equal(
+        fixture.id,
+        "roll-and-write-scorecard.mark-cell.terminal.mobile",
+      );
+      const fixtureJson = JSON.parse(
+        await readFile(path.join(outputRoot, fixture.file), "utf8"),
+      );
+      assert.equal(
+        fixtureJson.protocol.frames[0].frame.flow.currentPhase,
+        "gameOver",
+      );
+      assert.ok(
+        fixtureJson.source.sourceFiles.includes(
+          "examples/reference-games/roll-and-write-scorecard/test/scenarios/complete-game.scenario.ts",
+        ),
+      );
+      assert.equal(JSON.stringify(fixtureJson).includes('"given"'), false);
+    } finally {
+      await rm(outputRoot, { recursive: true, force: true });
+    }
   });
 });
 

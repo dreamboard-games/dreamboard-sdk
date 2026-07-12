@@ -15,6 +15,7 @@ import {
   writeJson,
 } from "./reference-games-lib.mjs";
 import { requiredReferenceGameIds } from "./required-ui-scenarios.mjs";
+import { isReferenceGameSourceObject } from "../reference-games/source-inventory-policy.mjs";
 
 const sdkPackage = "@dreamboard-games/sdk";
 
@@ -137,9 +138,20 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     recursive: true,
     filter(source) {
       const name = path.basename(source);
-      return name !== "node_modules" && name !== "dist";
+      if (name === "node_modules" || name === "dist") return false;
+      const relative = path.relative(sourceDir, source);
+      if (relative === "") return true;
+      const repositoryPath = path
+        .join("examples/reference-games", gameId, relative)
+        .split(path.sep)
+        .join("/");
+      return isReferenceGameSourceObject(repositoryPath);
     },
   });
+  const testedSourceSha256 = await sha256Directory(sandbox);
+  const testedScenarioSha256 = await sha256Directory(
+    path.join(sandbox, manifest.schemaVersion === 3 ? "test" : "scenarios"),
+  );
 
   await rewriteSdkDependency(sandbox, sdkTarballPath);
   run(
@@ -154,6 +166,18 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
       cwd: sandbox,
       stdio: "inherit",
     },
+  );
+  run(
+    "pnpm",
+    [
+      "exec",
+      "dreamboard-sdk-materialize",
+      "--manifest",
+      "manifest.ts",
+      "--project-root",
+      ".",
+    ],
+    { cwd: sandbox, stdio: "inherit" },
   );
   const sandboxPackage = await readJson(path.join(sandbox, "package.json"));
   const scripts = sandboxPackage.scripts ?? {};
@@ -180,14 +204,8 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     id: gameId,
     packageSha256: await sha256File(path.join(sourceDir, "package.json")),
     lockfileSha256: await sha256File(path.join(sourceDir, "pnpm-lock.yaml")),
-    sourceSha256: v3
-      ? await sha256Directory(sourceDir, {
-          excludeDirs: new Set(["node_modules", "dist"]),
-        })
-      : await sha256Directory(path.join(sourceDir, "src")),
-    scenarioSha256: v3
-      ? await sha256Directory(path.join(sourceDir, "test"))
-      : await sha256Directory(path.join(sourceDir, "scenarios")),
+    sourceSha256: testedSourceSha256,
+    scenarioSha256: testedScenarioSha256,
     ...(v3
       ? {
           typecheck: "passed",
@@ -206,10 +224,17 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const gameIds = selectGameIds(options);
-  run("node", ["scripts/ui/check-reference-games.mjs"], {
-    cwd: root,
-    stdio: "inherit",
-  });
+  run(
+    "node",
+    [
+      "scripts/ui/check-reference-games.mjs",
+      ...gameIds.flatMap((gameId) => ["--game", gameId]),
+    ],
+    {
+      cwd: root,
+      stdio: "inherit",
+    },
+  );
   const tempRoot = await mkdtemp(
     path.join(tmpdir(), "dreamboard-reference-consumers-"),
   );

@@ -4,6 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { format } from "prettier";
 import {
+  compareCanonicalStrings,
   componentScenarioIndexPath,
   repoRelative,
   root,
@@ -143,7 +144,9 @@ function buildContractIndex({ contracts, entries }) {
   }
   return Object.fromEntries(
     [...contracts]
-      .sort((left, right) => left.id.localeCompare(right.id))
+      .sort((left, right) =>
+        compareCanonicalStrings(left.id, right.id),
+      )
       .map((contract) => [
         contract.id,
         {
@@ -200,7 +203,7 @@ async function main() {
   );
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);

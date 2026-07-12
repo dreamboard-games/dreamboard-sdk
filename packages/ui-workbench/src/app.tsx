@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { scenarios, type UIScenarioCatalogEntry } from "./catalog.js";
+import { scenarios } from "virtual:dreamboard-scenario-catalog";
+import type { UIScenarioCatalogEntry } from "./catalog-types.js";
 import { ScenarioPage } from "./scenario-page.js";
 import "./styles.css";
 

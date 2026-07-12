@@ -1,6 +1,5 @@
-declare module "../../../fixtures/ui/reference-games/modules/*.mjs" {
-  import type React from "react";
+declare module "virtual:dreamboard-scenario-catalog" {
+  import type { UIScenarioCatalogEntry } from "./catalog-types.js";
 
-  export const Root: React.ComponentType;
-  export const uiContractFingerprint: string;
+  export const scenarios: readonly UIScenarioCatalogEntry[];
 }

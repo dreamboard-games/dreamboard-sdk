@@ -2,12 +2,17 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import {
+  compareCanonicalStrings,
   expectedReferenceGameIds,
   referenceGamesRoot,
   root,
 } from "./reference-games-lib.mjs";
 
 const sourceExtensions = /\.(mjs|js|jsx|ts|tsx|json|yaml|yml|md)$/;
+const generatedFixtureModulesRoot = path.join(
+  root,
+  "build/ui-workbench/generated/fixtures/reference-games/modules",
+);
 
 const deprecatedReferencePatterns = [
   {
@@ -82,7 +87,7 @@ async function collectFiles(dir) {
     }
   }
   await visit(dir);
-  return files.sort((left, right) => left.localeCompare(right));
+  return files.sort(compareCanonicalStrings);
 }
 
 function lineNumberFor(source, index) {
@@ -148,9 +153,7 @@ async function assertNoWorkspaceLinksInReferenceConsumers(failures) {
 }
 
 async function assertRenderModulesStayExternalized(failures) {
-  const files = await collectFiles(
-    path.join(root, "fixtures/ui/reference-games/modules"),
-  );
+  const files = await collectFiles(generatedFixtureModulesRoot);
   for (const filePath of files) {
     const source = await readFile(filePath, "utf8");
     const relative = path.relative(root, filePath);
@@ -194,9 +197,7 @@ async function main() {
     files: [
       ...(await collectFiles(path.join(root, "packages/sdk/src"))),
       ...(await collectFiles(path.join(root, "examples/reference-games"))),
-      ...(await collectFiles(
-        path.join(root, "fixtures/ui/reference-games/modules"),
-      )),
+      ...(await collectFiles(generatedFixtureModulesRoot)),
       path.join(root, "packages/sdk/REFERENCE.md"),
       path.join(root, "docs/reference/agent-api.md"),
       path.join(root, "docs/ui-agent-iteration.md"),

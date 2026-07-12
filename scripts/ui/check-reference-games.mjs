@@ -225,7 +225,7 @@ function checkStringArray({ values, label, gameId, errors }) {
   }
 }
 
-function checkDemoReleaseV3({ manifest, gameId, errors }) {
+async function checkDemoReleaseV3({ manifest, gameId, gameDir, errors }) {
   if (Object.hasOwn(manifest, "publishToDemoGallery")) {
     errors.push(
       `${gameId}: publishToDemoGallery is forbidden in schemaVersion 3`,
@@ -248,8 +248,13 @@ function checkDemoReleaseV3({ manifest, gameId, errors }) {
   if (Object.hasOwn(demoRelease, "sourcePath")) {
     errors.push(`${gameId}: demoRelease.sourcePath is forbidden`);
   }
-  if (demoRelease.screenshot?.projection !== undefined) {
-    errors.push(`${gameId}: demoRelease.screenshot.projection is forbidden`);
+  if (Object.hasOwn(demoRelease, "heroImageUrl")) {
+    errors.push(
+      `${gameId}: demoRelease.heroImageUrl is obsolete and forbidden`,
+    );
+  }
+  if (Object.hasOwn(demoRelease, "screenshot")) {
+    errors.push(`${gameId}: demoRelease.screenshot is obsolete and forbidden`);
   }
 
   for (const field of [
@@ -258,7 +263,7 @@ function checkDemoReleaseV3({ manifest, gameId, errors }) {
     "description",
     "overview",
     "creator",
-    "heroImageUrl",
+    "thumbnailPath",
   ]) {
     checkRequiredString({
       value: demoRelease[field],
@@ -320,41 +325,68 @@ function checkDemoReleaseV3({ manifest, gameId, errors }) {
     errors,
   });
 
-  const presets = demoRelease.screenshot?.presets;
-  if (!isPlainObject(presets) || Object.keys(presets).length === 0) {
-    errors.push(`${gameId}: demoRelease.screenshot.presets must be non-empty`);
+  const thumbnailPath = demoRelease.thumbnailPath;
+  const thumbnailSegments =
+    typeof thumbnailPath === "string" ? thumbnailPath.split("/") : [];
+  const safeThumbnailPath =
+    typeof thumbnailPath === "string" &&
+    thumbnailPath.startsWith("assets/") &&
+    !path.isAbsolute(thumbnailPath) &&
+    !thumbnailPath.includes("\\") &&
+    thumbnailSegments.every(
+      (segment) => segment.length > 0 && segment !== "." && segment !== "..",
+    );
+  if (!safeThumbnailPath) {
+    errors.push(
+      `${gameId}: demoRelease.thumbnailPath must stay inside the game assets directory`,
+    );
     return;
   }
-  for (const [presetName, preset] of Object.entries(presets)) {
-    const label = `demoRelease.screenshot.presets.${presetName}`;
-    if (!isPlainObject(preset)) {
-      errors.push(`${gameId}: ${label} must be an object`);
-      continue;
-    }
-    if (
-      !Array.isArray(preset.viewport) ||
-      preset.viewport.length !== 2 ||
-      !preset.viewport.every((value) => Number.isInteger(value) && value > 0)
-    ) {
-      errors.push(`${gameId}: ${label}.viewport must be two positive integers`);
-    }
-    checkRequiredString({
-      value: preset.theme,
-      label: `${label}.theme`,
-      gameId,
-      errors,
-    });
-    if (!Number.isInteger(preset.stagePadding) || preset.stagePadding < 0) {
+  if (!(await pathExists(path.join(gameDir, thumbnailPath)))) {
+    errors.push(
+      `${gameId}: missing demoRelease.thumbnailPath ${thumbnailPath}`,
+    );
+  }
+
+  const licenseManifestPath = manifest.rights?.assetLicenseManifest;
+  if (typeof licenseManifestPath !== "string") {
+    return;
+  }
+  const absoluteLicenseManifestPath = path.join(gameDir, licenseManifestPath);
+  if (!(await pathExists(absoluteLicenseManifestPath))) {
+    errors.push(
+      `${gameId}: missing rights.assetLicenseManifest ${licenseManifestPath}`,
+    );
+    return;
+  }
+  try {
+    const licenseManifest = await readJson(absoluteLicenseManifestPath);
+    const assetRelativePath = path.posix.relative("assets", thumbnailPath);
+    const licenseEntry = Array.isArray(licenseManifest.assets)
+      ? licenseManifest.assets.find(
+          (entry) =>
+            isPlainObject(entry) &&
+            (entry.path === assetRelativePath || entry.path === thumbnailPath),
+        )
+      : undefined;
+    if (!licenseEntry) {
       errors.push(
-        `${gameId}: ${label}.stagePadding must be a non-negative integer`,
+        `${gameId}: ${licenseManifestPath} must record ${assetRelativePath}`,
+      );
+    } else if (
+      typeof licenseEntry.license !== "string" ||
+      licenseEntry.license.length === 0 ||
+      typeof licenseEntry.source !== "string" ||
+      licenseEntry.source.length === 0
+    ) {
+      errors.push(
+        `${gameId}: ${licenseManifestPath} thumbnail entry requires license and source`,
       );
     }
-    checkRequiredString({
-      value: preset.frame,
-      label: `${label}.frame`,
-      gameId,
-      errors,
-    });
+  } catch (error) {
+    errors.push(
+      `${gameId}: invalid rights.assetLicenseManifest ${licenseManifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
   }
 }
 
@@ -461,7 +493,7 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
     );
   }
   await checkWorkspaceManifest({ manifest, gameId, gameDir, errors });
-  checkDemoReleaseV3({ manifest, gameId, errors });
+  await checkDemoReleaseV3({ manifest, gameId, gameDir, errors });
   checkArraySubset({
     values: manifest.mechanics,
     allowed: knownMechanics,
@@ -540,6 +572,26 @@ async function checkLegacyFixtureSidecarInventory(errors) {
 }
 
 async function main() {
+  const requestedGameIds = [];
+  const args = process.argv.slice(2);
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === "--game") {
+      requestedGameIds.push(args[index + 1]);
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown argument '${args[index]}'.`);
+  }
+  const selectedGameIds =
+    requestedGameIds.length > 0
+      ? [...new Set(requestedGameIds)]
+      : expectedReferenceGameIds;
+  const unknownRequested = selectedGameIds.filter(
+    (gameId) => !expectedReferenceGameIds.includes(gameId),
+  );
+  if (unknownRequested.length > 0) {
+    throw new Error(`Unknown reference games: ${unknownRequested.join(", ")}.`);
+  }
   const errors = [];
   if (!(await pathExists(referenceGamesRoot))) {
     fail([`missing ${path.relative(root, referenceGamesRoot)}`]);
@@ -570,7 +622,7 @@ async function main() {
   const sdkPackageJson = await readJson(
     path.join(root, "packages/sdk/package.json"),
   );
-  for (const gameId of expectedReferenceGameIds) {
+  for (const gameId of selectedGameIds) {
     if (gameDirs.includes(gameId)) {
       const receipt = await validateGame(
         gameId,

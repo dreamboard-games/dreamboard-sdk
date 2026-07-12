@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  compareCanonicalStrings,
   pathExists,
   readJson,
   root,
@@ -9,12 +10,19 @@ import {
   writeJson,
 } from "./reference-games-lib.mjs";
 
-export { root };
+export { compareCanonicalStrings, root };
 
-export const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
-export const catalogOutputPath = path.join(
+export const generatedWorkbenchRoot = path.join(
   root,
-  "packages/ui-workbench/src/catalog.ts",
+  "build/ui-workbench/generated",
+);
+export const fixturesRoot = path.join(
+  generatedWorkbenchRoot,
+  "fixtures/reference-games",
+);
+export const catalogOutputPath = path.join(
+  generatedWorkbenchRoot,
+  "catalog.ts",
 );
 export const componentScenarioIndexPath = path.join(
   root,
@@ -58,8 +66,10 @@ export function assertRelativeBundlePath(value, label, errors) {
   }
 }
 
-export async function readReferenceFixtureBundleIndex() {
-  return readJson(path.join(fixturesRoot, "index.json"));
+export async function readReferenceFixtureBundleIndex(
+  fixtureBundleRoot = fixturesRoot,
+) {
+  return readJson(path.join(fixtureBundleRoot, "index.json"));
 }
 
 export function sha256Text(value) {
@@ -89,7 +99,7 @@ export function canonicalizeJson(value) {
       return Object.fromEntries(
         Object.entries(value)
           .filter(([, item]) => item !== undefined)
-          .sort(([left], [right]) => left.localeCompare(right))
+          .sort(([left], [right]) => compareCanonicalStrings(left, right))
           .map(([key, item]) => [key, canonicalizeJson(item)]),
       );
     }
@@ -131,9 +141,11 @@ export function extractRenderModuleFingerprint(source, relativePath, errors) {
   return match[1];
 }
 
-export async function collectValidatedScenarioCatalog() {
+export async function collectValidatedScenarioCatalog({
+  fixtureBundleRoot = fixturesRoot,
+} = {}) {
   const errors = [];
-  const bundle = await readReferenceFixtureBundleIndex();
+  const bundle = await readReferenceFixtureBundleIndex(fixtureBundleRoot);
   if (bundle.schemaVersion !== 2) {
     errors.push(
       `fixtures/ui/reference-games/index.json schemaVersion must be 2`,
@@ -164,8 +176,8 @@ export async function collectValidatedScenarioCatalog() {
       errors,
     );
 
-    const fixturePath = path.join(fixturesRoot, entry.file);
-    const renderModulePath = path.join(fixturesRoot, entry.renderModule);
+    const fixturePath = path.join(fixtureBundleRoot, entry.file);
+    const renderModulePath = path.join(fixtureBundleRoot, entry.renderModule);
     if (!(await pathExists(fixturePath))) {
       errors.push(`${entry.id}: missing ${repoRelative(fixturePath)}`);
       continue;
@@ -276,7 +288,9 @@ export async function collectValidatedScenarioCatalog() {
   if (errors.length > 0) {
     throwCatalogError(errors);
   }
-  return entries.sort((left, right) => left.id.localeCompare(right.id));
+  return entries.sort((left, right) =>
+    compareCanonicalStrings(left.id, right.id),
+  );
 }
 
 export function toPublicScenarioEntry(entry) {

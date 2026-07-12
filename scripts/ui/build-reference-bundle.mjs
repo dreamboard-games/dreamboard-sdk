@@ -5,6 +5,7 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   buildRoot,
+  compareCanonicalStrings,
   expectedReferenceGameIds,
   readJson,
   referenceGamesRoot,
@@ -140,7 +141,9 @@ async function collectBundleEntries() {
       });
     }
   }
-  return entries.sort((left, right) => left.name.localeCompare(right.name));
+  return entries.sort((left, right) =>
+    compareCanonicalStrings(left.name, right.name),
+  );
 }
 
 async function writeDeterministicBundle(bundlePath) {

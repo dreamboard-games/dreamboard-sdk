@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import {
+  compareCanonicalStrings,
   expectedReferenceGames,
   readJson,
   referenceGamesRoot,
@@ -100,5 +101,7 @@ export async function discoverAllScenarioModules() {
   return [
     ...(await discoverReferenceGameScenarioModules()),
     ...(await discoverUIScenarioModules()),
-  ].sort((left, right) => left.modulePath.localeCompare(right.modulePath));
+  ].sort((left, right) =>
+    compareCanonicalStrings(left.modulePath, right.modulePath),
+  );
 }

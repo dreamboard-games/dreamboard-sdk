@@ -481,7 +481,7 @@ async function main() {
 
   const fixtureIndexPath = path.join(
     root,
-    "fixtures/ui/reference-games/index.json",
+    "build/ui-workbench/generated/fixtures/reference-games/index.json",
   );
   const sdkTarballSha256 = `sha256:${await sha256File(sdkTarball)}`;
   const fixtureBundleSha256 = `sha256:${await sha256File(fixtureIndexPath)}`;

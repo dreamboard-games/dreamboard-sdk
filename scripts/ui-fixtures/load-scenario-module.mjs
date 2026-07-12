@@ -1,6 +1,6 @@
 import path from "node:path";
-import { existsSync } from "node:fs";
 import { pathToFileURL } from "node:url";
+import { tsImport } from "tsx/esm/api";
 import { referenceGamesRoot, root } from "../ui/reference-games-lib.mjs";
 
 const examplesRoot = path.resolve(referenceGamesRoot);
@@ -10,27 +10,10 @@ const allowedSourceRoots = [
   uiScenariosRoot,
   path.join(root, "packages/sdk/src"),
 ];
-const tsxApiPath = path.join(
-  root,
-  "node_modules/.pnpm/tsx@4.22.4/node_modules/tsx/dist/esm/api/index.mjs",
-);
-
-let tsImport;
-
-async function loadTsImport() {
-  if (!tsImport) {
-    if (!existsSync(tsxApiPath)) {
-      throw new Error(`tsx ESM API was not found at ${tsxApiPath}.`);
-    }
-    ({ tsImport } = await import(pathToFileURL(tsxApiPath).href));
-  }
-  return tsImport;
-}
-
 async function importScenarioModule(absolutePath) {
   const specifier = `${pathToFileURL(absolutePath).href}?scenario=${Date.now()}`;
   if (/\.[cm]?tsx?$/.test(absolutePath)) {
-    return (await loadTsImport())(specifier, { parentURL: import.meta.url });
+    return tsImport(specifier, { parentURL: import.meta.url });
   }
   return import(specifier);
 }
@@ -80,6 +63,21 @@ function validateScenarioDefinition(scenario, modulePath) {
   }
   if (scenario.replay && !Array.isArray(scenario.replay)) {
     throw new Error(`${modulePath} scenario.replay must be an array.`);
+  }
+  if (scenario.at !== undefined) {
+    assertObject(scenario.at, `${modulePath} scenario.at must be an object.`);
+    const atKeys = Object.keys(scenario.at).sort();
+    if (
+      atKeys.join(",") !== "completed,segment" ||
+      !["setup", "given", "when"].includes(scenario.at.segment) ||
+      !Number.isSafeInteger(scenario.at.completed) ||
+      scenario.at.completed < 0 ||
+      (scenario.at.segment === "setup" && scenario.at.completed !== 0)
+    ) {
+      throw new Error(
+        `${modulePath} scenario.at must be { segment: "setup" | "given" | "when", completed: non-negative integer }.`,
+      );
+    }
   }
   if (!scenario.authority) {
     if (!scenario.behaviorScenario) {

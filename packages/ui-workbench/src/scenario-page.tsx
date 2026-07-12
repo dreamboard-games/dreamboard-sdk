@@ -3,7 +3,7 @@ import {
   installUIFixtureTestBridge,
   uninstallUIFixtureTestBridge,
 } from "./runtime/test-bridge.js";
-import type { UIScenarioCatalogEntry } from "./catalog.js";
+import type { UIScenarioCatalogEntry } from "./catalog-types.js";
 import { JsonPanel } from "./inspectors/JsonPanel.js";
 import { createInPageReplayAdapter } from "./replay/in-page-adapter.js";
 import {

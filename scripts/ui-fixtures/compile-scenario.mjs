@@ -1,9 +1,10 @@
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { format } from "prettier";
+import { tsImport } from "tsx/esm/api";
 import { readJson, root } from "../ui/reference-games-lib.mjs";
 import { executeProtocolAuthority } from "./authority/protocol-authority.mjs";
 import { executeReducerAuthority } from "./authority/reducer-authority.mjs";
@@ -21,18 +22,10 @@ import {
   resolveBrowserPointerTarget,
 } from "../../packages/sdk/dist/browser-interaction.js";
 import { createReducerBundle } from "../../packages/sdk/dist/reducer.js";
+import { compileScenarioReplay } from "../../packages/sdk/dist/testing-compiler.js";
 
-const tsxApiPath = path.join(
-  root,
-  "node_modules/.pnpm/tsx@4.22.4/node_modules/tsx/dist/esm/api/index.mjs",
-);
-const esbuildApiPath = path.join(
-  root,
-  "node_modules/.pnpm/esbuild@0.28.1/node_modules/esbuild/lib/main.js",
-);
-
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
 const gameplayScopeId = "runtime";
+const uiSourceModulePrefix = "virtual:dreamboard-ui-source:";
 
 function sha256Text(text) {
   return `sha256:${createHash("sha256").update(text).digest("hex")}`;
@@ -114,21 +107,20 @@ function toModuleSpecifier(fromFile, toFile) {
 }
 
 async function buildRenderModule({
-  modulePath,
-  sourceModulePath,
+  sourceModuleSpecifier,
+  sourceExportName,
   uiContractFingerprint,
 }) {
-  const sourceModule = toModuleSpecifier(modulePath, sourceModulePath);
   return `import * as React from "react";
 import * as DreamboardRuntime from "@dreamboard-games/sdk/runtime/primitives";
 import * as PluginRuntimeContract from "@dreamboard-games/plugin-runtime-contract";
-import * as ui from ${JSON.stringify(sourceModule)};
+import * as ui from ${JSON.stringify(sourceModuleSpecifier)};
 
 void React;
 void DreamboardRuntime;
 void PluginRuntimeContract;
 
-const Root = ui.Root ?? ui.default ?? ui.App;
+const Root = ui[${JSON.stringify(sourceExportName)}];
 if (!Root) {
   throw new Error("Reference game UI entrypoint must export Root, default, or App.");
 }
@@ -144,6 +136,28 @@ function ReferenceGameRoot(props) {
 export { ReferenceGameRoot as Root };
 export const uiContractFingerprint = ${JSON.stringify(uiContractFingerprint)};
 `;
+}
+
+async function resolveUiSourceExport(sourceModulePath) {
+  const source = await readFile(sourceModulePath, "utf8");
+  if (/\bexport\s+default\b/.test(source)) return "default";
+  if (
+    /\bexport\s+(?:async\s+)?(?:function|class|const|let|var)\s+Root\b/.test(
+      source,
+    )
+  ) {
+    return "Root";
+  }
+  if (
+    /\bexport\s+(?:async\s+)?(?:function|class|const|let|var)\s+App\b/.test(
+      source,
+    )
+  ) {
+    return "App";
+  }
+  throw new Error(
+    `${sourceModulePath} must export default, Root, or App for the UI fixture.`,
+  );
 }
 
 async function settleFixtureRuntime(harness) {
@@ -463,25 +477,11 @@ function resolveWorkspaceEntry(gameDir, entry, label) {
   return absolute;
 }
 
-let tsImport;
 let esbuild;
-
-async function loadTsImport() {
-  if (!tsImport) {
-    if (!existsSync(tsxApiPath)) {
-      throw new Error(`tsx ESM API was not found at ${tsxApiPath}.`);
-    }
-    ({ tsImport } = await import(pathToFileURL(tsxApiPath).href));
-  }
-  return tsImport;
-}
 
 async function loadEsbuild() {
   if (!esbuild) {
-    if (!existsSync(esbuildApiPath)) {
-      throw new Error(`esbuild API was not found at ${esbuildApiPath}.`);
-    }
-    esbuild = await import(pathToFileURL(esbuildApiPath).href);
+    esbuild = await import("esbuild");
   }
   return esbuild;
 }
@@ -490,20 +490,15 @@ async function importFresh(filePath, cacheKey = "workspace") {
   const fileUrl = pathToFileURL(filePath).href;
   const specifier = `${fileUrl}?${cacheKey}=${Date.now()}`;
   if (/\.[cm]?tsx?$/.test(filePath)) {
-    return (await loadTsImport())(specifier, { parentURL: fileUrl });
+    return tsImport(specifier, { parentURL: fileUrl });
   }
   return import(specifier);
 }
 
 async function importFromScenarioPackage(parentPath, specifier) {
-  return (await loadTsImport())(specifier, {
+  return tsImport(specifier, {
     parentURL: pathToFileURL(parentPath).href,
   });
-}
-
-async function importStableTs(filePath) {
-  const fileUrl = pathToFileURL(filePath).href;
-  return (await loadTsImport())(fileUrl, { parentURL: fileUrl });
 }
 
 async function buildExerciseUiModule({ gameDir, sourceModulePath, fixtureId }) {
@@ -535,7 +530,6 @@ async function buildExerciseUiModule({ gameDir, sourceModulePath, fixtureId }) {
       "@dreamboard-games/sdk/*",
       "@dreamboard-games/plugin-runtime-contract",
       "@dreamboard-games/plugin-runtime-contract/*",
-      "zod",
     ],
     logLevel: "silent",
   });
@@ -593,7 +587,10 @@ function resolveScenarioReference({ gameDir, modulePath, reference }) {
 
 async function loadBehaviorScenario({ gameDir, scenario }) {
   if (isObject(scenario.behaviorScenario)) {
-    return { definition: behaviorScenarioMetadata(scenario.behaviorScenario) };
+    return {
+      definition: behaviorScenarioMetadata(scenario.behaviorScenario),
+      sourcePath: null,
+    };
   }
   const modulePath = scenario.__modulePath;
   const resolved = resolveScenarioReference({
@@ -605,6 +602,7 @@ async function loadBehaviorScenario({ gameDir, scenario }) {
   const module = await importFresh(resolved, "behavior");
   return {
     definition: behaviorScenarioMetadata(module.scenario ?? module.default),
+    sourcePath: resolved,
   };
 }
 
@@ -614,8 +612,47 @@ function behaviorScenarioMetadata(scenario) {
 
 function behaviorScenarioCoverageMetadata(scenario) {
   if (!isObject(scenario)) return scenario;
-  const { when: _when, then: _then, ...metadata } = scenario;
+  const {
+    setup: _setup,
+    given: _given,
+    when: _when,
+    then: _then,
+    ...metadata
+  } = scenario;
   return metadata;
+}
+
+function isReducerNativeBehaviorScenario(scenario) {
+  return (
+    isObject(scenario) &&
+    isObject(scenario.setup) &&
+    Array.isArray(scenario.given) &&
+    Array.isArray(scenario.when)
+  );
+}
+
+function reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario) {
+  if (uiScenario.at === undefined) {
+    return {
+      segment: "given",
+      completed: behaviorScenario.given.length,
+    };
+  }
+  if (
+    !isObject(uiScenario.at) ||
+    !["setup", "given", "when"].includes(uiScenario.at.segment) ||
+    !Number.isSafeInteger(uiScenario.at.completed) ||
+    uiScenario.at.completed < 0 ||
+    (uiScenario.at.segment === "setup" && uiScenario.at.completed !== 0)
+  ) {
+    throw new Error(
+      `${uiScenario.id}.at must be { segment: "setup" | "given" | "when", completed: non-negative integer }.`,
+    );
+  }
+  return {
+    segment: uiScenario.at.segment,
+    completed: uiScenario.at.completed,
+  };
 }
 
 async function loadGeneratedBaseState({ gameDir, baseId }) {
@@ -768,16 +805,29 @@ function createBehaviorScenarioContext({ bundle, initialState, playerIds }) {
 }
 
 async function materializeBehaviorScenarioState({
+  gameDir,
+  metadata,
+  uiScenario,
   behaviorScenario,
+  behaviorScenarioPath,
   initialState,
   bundle,
   playerIds,
 }) {
+  if (isReducerNativeBehaviorScenario(behaviorScenario)) {
+    return materializeBundledReducerNativeCheckpoint({
+      gameDir,
+      metadata,
+      uiScenario,
+      behaviorScenarioPath,
+      checkpoint: reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario),
+    });
+  }
   if (
     !isObject(behaviorScenario) ||
     typeof behaviorScenario.when !== "function"
   ) {
-    return initialState;
+    return { state: initialState, playerIds };
   }
   const runtime = createBehaviorScenarioContext({
     bundle,
@@ -788,7 +838,111 @@ async function materializeBehaviorScenarioState({
   if (typeof behaviorScenario.then === "function") {
     await behaviorScenario.then(runtime.context);
   }
-  return runtime.getState();
+  return { state: runtime.getState(), playerIds };
+}
+
+async function materializeBundledReducerNativeCheckpoint({
+  gameDir,
+  metadata,
+  uiScenario,
+  behaviorScenarioPath,
+  checkpoint,
+}) {
+  const reducerPath = resolveWorkspaceEntry(
+    gameDir,
+    metadata.workspace.reducer,
+    "reducer",
+  );
+  if (
+    typeof behaviorScenarioPath !== "string" ||
+    !existsSync(behaviorScenarioPath)
+  ) {
+    throw new Error(
+      `${uiScenario.id} must reference its reducer-native behaviorScenario by relative source path.`,
+    );
+  }
+
+  const compiled = await compileScenarioReplay({
+    scenarioPath: behaviorScenarioPath,
+    at: checkpoint,
+  });
+
+  const reducerSpecifier = toModuleSpecifier(
+    path.join(gameDir, "__dreamboard_ui_checkpoint_entry__.ts"),
+    reducerPath,
+  );
+  const source = [
+    `import * as reducerModule from ${JSON.stringify(reducerSpecifier)};`,
+    'import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing-runtime";',
+    "const game = reducerModule.game ?? reducerModule.default;",
+    "export async function materialize(definition, checkpoint) {",
+    "  if (!game) {",
+    '    throw new Error("Reducer-native UI checkpoint entry is missing game authority.");',
+    "  }",
+    "  return materializeScenarioRuntimeCheckpoint({",
+    "    game,",
+    "    scenario: definition,",
+    "    at: checkpoint,",
+    "  });",
+    "}",
+  ].join("\n");
+
+  const api = await loadEsbuild();
+  const result = await api.build({
+    absWorkingDir: gameDir,
+    stdin: {
+      contents: source,
+      loader: "ts",
+      resolveDir: gameDir,
+      sourcefile: "__dreamboard_ui_checkpoint_entry__.ts",
+    },
+    bundle: true,
+    format: "esm",
+    platform: "node",
+    target: "node24",
+    write: false,
+    logLevel: "silent",
+  });
+  const output = result.outputFiles?.[0];
+  if (!output) {
+    throw new Error(
+      `${uiScenario.id} reducer-native checkpoint bundle did not produce output.`,
+    );
+  }
+
+  const cacheDir = path.join(
+    gameDir,
+    "node_modules/.cache/dreamboard-ui-fixtures",
+  );
+  const safeFixtureId = uiScenario.id.replaceAll(/[^a-zA-Z0-9._-]/g, "_");
+  const outputPath = path.join(cacheDir, `${safeFixtureId}.checkpoint.mjs`);
+  await mkdir(cacheDir, { recursive: true });
+  await writeFile(outputPath, output.text);
+  const module = await import(
+    `${pathToFileURL(outputPath).href}?checkpoint=${Date.now()}`
+  );
+  if (typeof module.materialize !== "function") {
+    throw new Error(
+      `${uiScenario.id} reducer-native checkpoint bundle is missing materialize().`,
+    );
+  }
+  const materialized = await module.materialize(
+    compiled.definition,
+    compiled.checkpoint,
+  );
+  if (materialized.checkpointDigest !== compiled.expected.checkpointDigest) {
+    throw new Error(
+      `${uiScenario.id} materialized checkpoint digest ${materialized.checkpointDigest} does not match compiled replay ${compiled.expected.checkpointDigest}.`,
+    );
+  }
+  return {
+    ...materialized,
+    compiledReplayEvidence: {
+      sourceDigest: compiled.scenario.sourceDigest,
+      checkpointDigest: compiled.expected.checkpointDigest,
+      publicProjectionDigest: compiled.expected.publicProjectionDigest,
+    },
+  };
 }
 
 async function initializeWorkspaceState({ gameDir, bundle, playerIds }) {
@@ -937,20 +1091,25 @@ async function materializeWorkspaceScenario({
     scenario,
   });
   const behaviorScenario = loadedBehaviorScenario?.definition ?? null;
-  const baseId =
-    scenario.baseId ??
-    scenario.authority?.baseId ??
-    behaviorScenario?.from ??
-    behaviorScenario?.baseId;
+  const behaviorScenarioPath = loadedBehaviorScenario?.sourcePath ?? null;
+  const reducerNativeBehavior =
+    isReducerNativeBehaviorScenario(behaviorScenario);
+  const baseId = reducerNativeBehavior
+    ? null
+    : (scenario.baseId ??
+      scenario.authority?.baseId ??
+      behaviorScenario?.from ??
+      behaviorScenario?.baseId);
   const baseState = await loadGeneratedBaseState({ gameDir, baseId });
   const playerIds =
     scenario.authority?.playerIds ??
     scenario.playerIds ??
     playerIdsFromState(baseState) ??
     behaviorScenario?.playerIds;
-  const baseInitialState =
-    scenario.authority?.initialState &&
-    !scenario.authority.initialState.scenario
+  const baseInitialState = reducerNativeBehavior
+    ? null
+    : scenario.authority?.initialState &&
+        !scenario.authority.initialState.scenario
       ? scenario.authority.initialState
       : (baseState ??
         (await initializeWorkspaceState({
@@ -958,22 +1117,30 @@ async function materializeWorkspaceScenario({
           bundle,
           playerIds,
         })));
-  const resolvedPlayerIds = scenario.authority?.playerIds ??
-    scenario.playerIds ??
-    playerIdsFromState(baseInitialState) ??
-    playerIds ?? ["player-1"];
+  const initialPlayerIds = reducerNativeBehavior
+    ? []
+    : (scenario.authority?.playerIds ??
+      scenario.playerIds ??
+      playerIdsFromState(baseInitialState) ??
+      playerIds ?? ["player-1"]);
+  const materialized = await materializeBehaviorScenarioState({
+    gameDir,
+    metadata,
+    uiScenario: scenario,
+    behaviorScenario,
+    behaviorScenarioPath,
+    initialState: baseInitialState,
+    bundle,
+    playerIds: initialPlayerIds,
+  });
+  const initialState = materialized.state;
+  const resolvedPlayerIds = materialized.playerIds;
   const viewer = scenario.viewer ??
     scenario.authority?.viewer ??
     behaviorScenario?.viewer ?? {
       seatId: resolvedPlayerIds[0] ?? "player-1",
       playerId: resolvedPlayerIds[0] ?? "player-1",
     };
-  const initialState = await materializeBehaviorScenarioState({
-    behaviorScenario,
-    initialState: baseInitialState,
-    bundle,
-    playerIds: resolvedPlayerIds,
-  });
   const existingCoverage =
     scenario.authority?.coverage ??
     behaviorScenarioCoverageMetadata(behaviorScenario) ??
@@ -1008,6 +1175,9 @@ async function materializeWorkspaceScenario({
 
   return {
     ...scenario,
+    ...(materialized.compiledReplayEvidence
+      ? { __compiledReplayEvidence: materialized.compiledReplayEvidence }
+      : {}),
     capabilities: scenario.capabilities ?? [],
     replay: scenario.replay ?? [],
     authority: {
@@ -1083,7 +1253,6 @@ export async function compileScenarioModule({
 }) {
   const fixtureId = scenario.id;
   const renderModule = `modules/${fixtureId}.mjs`;
-  const publishedModulePath = path.join(fixturesRoot, renderModule);
   const metadataPath = path.join(gameDir, "reference-game.json");
   const hasReferenceMetadata = existsSync(metadataPath);
   const metadata = hasReferenceMetadata ? await readJson(metadataPath) : null;
@@ -1113,8 +1282,11 @@ export async function compileScenarioModule({
   const modulePath = path.join(outputRoot, renderModule);
   const moduleSource = await format(
     await buildRenderModule({
-      modulePath: publishedModulePath,
-      sourceModulePath,
+      sourceModuleSpecifier: `${uiSourceModulePrefix}${path
+        .relative(root, sourceModulePath)
+        .split(path.sep)
+        .join("/")}`,
+      sourceExportName: await resolveUiSourceExport(sourceModulePath),
       uiContractFingerprint,
     }),
     { parser: "babel" },
@@ -1152,7 +1324,9 @@ export async function compileScenarioModule({
       renderModule,
       renderModuleDigest,
       sourceDigest: digestUIFixtureJson({
-        scenarioId: fixtureId,
+        scenarioSourceDigest:
+          materializedScenario.__compiledReplayEvidence?.sourceDigest ?? null,
+        uiScenarioId: fixtureId,
         sourceFiles: materializedScenario.sourceFiles,
         authority: materializedScenario.authority.kind,
         sdkCommit,

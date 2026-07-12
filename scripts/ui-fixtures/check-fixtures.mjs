@@ -2,6 +2,7 @@
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { root } from "../ui/reference-games-lib.mjs";
 import {
   digestUIScenarioFixture,
@@ -9,7 +10,10 @@ import {
   parseUIScenarioFixtureBundleIndex,
 } from "../../packages/sdk/dist/testing.js";
 
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+const defaultFixturesRoot = path.join(
+  root,
+  "build/ui-workbench/generated/fixtures/reference-games",
+);
 
 function sha256Buffer(buffer) {
   return `sha256:${createHash("sha256").update(buffer).digest("hex")}`;
@@ -57,9 +61,12 @@ function assertRenderModuleExternalized(relativePath, source) {
   }
 }
 
-async function main() {
+export async function checkReferenceFixtures({
+  fixturesRoot = defaultFixturesRoot,
+} = {}) {
+  const resolvedFixturesRoot = path.resolve(fixturesRoot);
   const bundle = parseUIScenarioFixtureBundleIndex(
-    await readJson(path.join(fixturesRoot, "index.json")),
+    await readJson(path.join(resolvedFixturesRoot, "index.json")),
   );
   const seenFiles = new Set();
   for (const entry of bundle.fixtures) {
@@ -68,7 +75,7 @@ async function main() {
     }
     seenFiles.add(entry.file);
 
-    const fixturePath = path.join(fixturesRoot, entry.file);
+    const fixturePath = path.join(resolvedFixturesRoot, entry.file);
     const fixture = parseUIScenarioFixture(await readJson(fixturePath));
     if (fixture.id !== entry.id) {
       throw new Error(
@@ -93,7 +100,7 @@ async function main() {
     }
 
     const moduleRelative = entry.renderModule;
-    const modulePath = path.join(fixturesRoot, moduleRelative);
+    const modulePath = path.join(resolvedFixturesRoot, moduleRelative);
     const moduleBytes = await readFile(modulePath);
     const moduleDigest = sha256Buffer(moduleBytes);
     if (moduleDigest !== entry.renderModuleSha256) {
@@ -106,10 +113,30 @@ async function main() {
       moduleBytes.toString("utf8"),
     );
   }
-  console.log(`checked ${bundle.fixtures.length} UI fixtures`);
+  return { fixtureCount: bundle.fixtures.length };
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+function parseArgs(argv) {
+  const options = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    if (argv[index] === "--root") {
+      options.fixturesRoot = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown argument '${argv[index]}'.`);
+  }
+  return options;
+}
+
+async function main() {
+  const result = await checkReferenceFixtures(parseArgs(process.argv.slice(2)));
+  console.log(`checked ${result.fixtureCount} UI fixtures`);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}

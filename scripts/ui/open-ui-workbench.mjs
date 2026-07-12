@@ -2,9 +2,10 @@
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { materializeWorkbench } from "./materialize-workbench.mjs";
 import { root } from "./reference-games-lib.mjs";
 
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+let fixturesRoot;
 
 function parseArgs(argv) {
   const options = {};
@@ -89,6 +90,8 @@ function routeFor(options, fixtures) {
 }
 
 async function main() {
+  const receipt = await materializeWorkbench();
+  fixturesRoot = path.join(receipt.generatedRoot, "fixtures/reference-games");
   const options = parseArgs(process.argv.slice(2));
   const bundle = await loadFixtureIndex();
   const route = routeFor(options, bundle.fixtures);
@@ -96,10 +99,18 @@ async function main() {
   console.log(url);
   console.log(`UI Workbench deterministic route: ${url}`);
 
-  const child = spawn("pnpm", ["ui:workbench:dev", "--port", "5173"], {
-    cwd: root,
-    stdio: "inherit",
-  });
+  const child = spawn(
+    "pnpm",
+    ["exec", "vite", "--host", "127.0.0.1", "--port", "5173"],
+    {
+      cwd: path.join(root, "packages/ui-workbench"),
+      env: {
+        ...process.env,
+        DREAMBOARD_WORKBENCH_GENERATED_ROOT: receipt.generatedRoot,
+      },
+      stdio: "inherit",
+    },
+  );
   process.on("SIGINT", () => child.kill("SIGINT"));
   process.on("SIGTERM", () => child.kill("SIGTERM"));
   const exitCode = await new Promise((resolve) => {

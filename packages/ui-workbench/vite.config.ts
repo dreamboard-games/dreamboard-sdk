@@ -1,4 +1,4 @@
-import { createReadStream } from "node:fs";
+import { createReadStream, existsSync } from "node:fs";
 import { cp, mkdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
@@ -7,11 +7,12 @@ import { defineConfig, type Plugin } from "vite";
 const workspaceRoot = path.resolve(__dirname, "../..");
 const sdkRoot = path.join(workspaceRoot, "packages/sdk");
 const referenceGamesRoot = path.join(workspaceRoot, "examples/reference-games");
-const fixtureSourceRoot = path.join(workspaceRoot, "fixtures/ui");
 const fixtureRequestPrefix = "/fixtures/";
 const manifestContractId = "@dreamboard/manifest-contract";
+const scenarioCatalogId = "virtual:dreamboard-scenario-catalog";
+const uiSourceModulePrefix = "virtual:dreamboard-ui-source:";
 
-function fixtureAssetPlugin(): Plugin {
+function fixtureAssetPlugin(fixtureSourceRoot: string): Plugin {
   return {
     name: "dreamboard-fixture-assets",
     configureServer(server) {
@@ -66,6 +67,28 @@ function fixtureAssetPlugin(): Plugin {
         recursive: true,
         force: true,
       });
+    },
+  };
+}
+
+function generatedScenarioPlugin(generatedRoot: string): Plugin {
+  const catalogPath = path.join(generatedRoot, "catalog.ts");
+  return {
+    name: "dreamboard-generated-scenarios",
+    enforce: "pre",
+    resolveId(source) {
+      if (source === scenarioCatalogId) {
+        return catalogPath;
+      }
+      if (!source.startsWith(uiSourceModulePrefix)) {
+        return null;
+      }
+      const relativePath = source.slice(uiSourceModulePrefix.length);
+      const absolutePath = path.resolve(workspaceRoot, relativePath);
+      if (!absolutePath.startsWith(`${workspaceRoot}${path.sep}`)) {
+        throw new Error(`Generated UI source escapes the workspace: ${source}`);
+      }
+      return absolutePath;
     },
   };
 }
@@ -164,6 +187,24 @@ function sdkAliases(useSource: boolean) {
 }
 
 export default defineConfig(({ command }) => {
+  const generatedRootValue = process.env.DREAMBOARD_WORKBENCH_GENERATED_ROOT;
+  if (!generatedRootValue || !path.isAbsolute(generatedRootValue)) {
+    throw new Error(
+      "DREAMBOARD_WORKBENCH_GENERATED_ROOT must be an explicit absolute materialization root. Run the Workbench through the repository wrapper.",
+    );
+  }
+  const generatedRoot = path.resolve(generatedRootValue);
+  const fixtureSourceRoot = path.join(generatedRoot, "fixtures");
+  for (const requiredPath of [
+    path.join(generatedRoot, "catalog.ts"),
+    path.join(fixtureSourceRoot, "reference-games/index.json"),
+  ]) {
+    if (!existsSync(requiredPath)) {
+      throw new Error(
+        `Workbench materialization is missing ${requiredPath}. Run pnpm ui:workbench:materialize.`,
+      );
+    }
+  }
   // Source mode is dev-only and opt-in. The `command === "serve"` guard means
   // every `vite build` (Playwright proof, `ui:workbench:build`) stays on `dist`
   // regardless of the environment variable.
@@ -177,9 +218,10 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [
+      generatedScenarioPlugin(generatedRoot),
       referenceGameManifestContractPlugin(),
       tailwindcss(),
-      fixtureAssetPlugin(),
+      fixtureAssetPlugin(fixtureSourceRoot),
     ],
     build: {
       target: "esnext",

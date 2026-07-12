@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
 import {
   cp,
@@ -14,9 +15,12 @@ import {
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   repoCommandEnv,
+  compareCanonicalStrings,
   expectedReferenceGames,
+  readJson,
   root,
   sha256File,
   writeJson,
@@ -31,12 +35,15 @@ const sdkRequire = createRequire(
 );
 const { GlobalRegistrator } = sdkRequire("@happy-dom/global-registrator");
 
-const fixturesRoot = path.join(root, "fixtures/ui/reference-games");
+const defaultFixturesRoot = path.join(
+  root,
+  "build/ui-workbench/generated/fixtures/reference-games",
+);
 const browserInteractionProtocolVersion = "3.0.0";
 GlobalRegistrator.register();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-async function withTemporaryNodeModuleLinks(callback) {
+export async function withTemporaryNodeModuleLinks(callback) {
   const linkTargets = [
     {
       link: path.join(root, "node_modules/@dreamboard-games/sdk"),
@@ -162,14 +169,20 @@ async function hashOutputFiles(outputRoot) {
     }
   }
   await visit(outputRoot);
-  return files.sort(([left], [right]) => left.localeCompare(right));
+  return files.sort(([left], [right]) => compareCanonicalStrings(left, right));
 }
 
-async function compileAll(outputRoot) {
+export async function compileAllReferenceFixtures(
+  outputRoot,
+  { gameIds = [] } = {},
+) {
   await mkdir(path.join(outputRoot, "modules"), { recursive: true });
   const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
   const fixtures = [];
-  const modules = await discoverAllScenarioModules();
+  const selectedGameIds = new Set(gameIds);
+  const modules = (await discoverAllScenarioModules()).filter(
+    (entry) => selectedGameIds.size === 0 || selectedGameIds.has(entry.game.id),
+  );
   for (const entry of modules) {
     const scenario = await loadScenarioModule(entry.modulePath);
     try {
@@ -196,12 +209,68 @@ async function compileAll(outputRoot) {
     sdkCommit,
     pluginRuntimeProtocol: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
     browserInteractionProtocol: browserInteractionProtocolVersion,
-    fixtures: fixtures.sort((left, right) => left.id.localeCompare(right.id)),
+    fixtures: fixtures.sort((left, right) =>
+      compareCanonicalStrings(left.id, right.id),
+    ),
   });
   return fixtures.length;
 }
 
-async function main() {
+async function compileReferenceFixturePartitions(outputRoot, gameIds) {
+  await mkdir(outputRoot, { recursive: true });
+  const partitionsRoot = await mkdtemp(
+    path.join(os.tmpdir(), "dreamboard-ui-fixture-partitions-"),
+  );
+  const fixtures = [];
+  try {
+    for (const gameId of gameIds) {
+      const partitionRoot = path.join(partitionsRoot, gameId);
+      run(
+        process.execPath,
+        [
+          fileURLToPath(import.meta.url),
+          "--out",
+          partitionRoot,
+          "--no-determinism-check",
+          "--game",
+          gameId,
+        ],
+        { stdio: "pipe" },
+      );
+      const partition = await readJson(path.join(partitionRoot, "index.json"));
+      fixtures.push(...partition.fixtures);
+      for (const entry of await readdir(partitionRoot, { withFileTypes: true })) {
+        if (entry.name === "index.json") continue;
+        await cp(
+          path.join(partitionRoot, entry.name),
+          path.join(outputRoot, entry.name),
+          { recursive: true, force: true },
+        );
+      }
+    }
+    const sdkCommit = run("git", ["rev-parse", "--short=12", "HEAD"]);
+    await writeJson(path.join(outputRoot, "index.json"), {
+      schemaVersion: 2,
+      bundleId: `reference-games@${sdkCommit}`,
+      sdkCommit,
+      pluginRuntimeProtocol: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+      browserInteractionProtocol: browserInteractionProtocolVersion,
+      fixtures: fixtures.sort((left, right) =>
+        compareCanonicalStrings(left.id, right.id),
+      ),
+    });
+    return fixtures.length;
+  } finally {
+    await rm(partitionsRoot, { recursive: true, force: true });
+  }
+}
+
+export async function compileReferenceFixtures({
+  outputRoot = defaultFixturesRoot,
+  verifyDeterminism = true,
+  gameIds = [],
+} = {}) {
+  const resolvedOutputRoot = path.resolve(outputRoot);
   const tmpRoot = await mkdtemp(
     path.join(os.tmpdir(), "dreamboard-ui-fixtures-"),
   );
@@ -209,26 +278,87 @@ async function main() {
   const second = path.join(tmpRoot, "second");
   try {
     let fixtureCount = 0;
-    await withTemporaryNodeModuleLinks(async () => {
-      fixtureCount = await compileAll(first);
-      await compileAll(second);
-    });
-    const firstHashes = JSON.stringify(await hashOutputFiles(first));
-    const secondHashes = JSON.stringify(await hashOutputFiles(second));
-    if (firstHashes !== secondHashes) {
-      throw new Error("Reference UI fixture compilation is non-deterministic.");
+    const selectedGameIds =
+      gameIds.length > 0 ? gameIds : expectedReferenceGames.map(({ id }) => id);
+    if (selectedGameIds.length === 1) {
+      await withTemporaryNodeModuleLinks(async () => {
+        fixtureCount = await compileAllReferenceFixtures(first, {
+          gameIds: selectedGameIds,
+        });
+        if (verifyDeterminism) {
+          await compileAllReferenceFixtures(second, {
+            gameIds: selectedGameIds,
+          });
+        }
+      });
+    } else {
+      fixtureCount = await compileReferenceFixturePartitions(
+        first,
+        selectedGameIds,
+      );
+      if (verifyDeterminism) {
+        await compileReferenceFixturePartitions(second, selectedGameIds);
+      }
+    }
+    const firstFiles = await hashOutputFiles(first);
+    if (verifyDeterminism) {
+      const secondFiles = await hashOutputFiles(second);
+      if (JSON.stringify(firstFiles) !== JSON.stringify(secondFiles)) {
+        throw new Error(
+          "Reference UI fixture compilation is non-deterministic.",
+        );
+      }
     }
 
-    await rm(fixturesRoot, { recursive: true, force: true });
-    await mkdir(fixturesRoot, { recursive: true });
-    await cp(first, fixturesRoot, { recursive: true });
-    console.log(`compiled ${fixtureCount} UI fixtures`);
+    await rm(resolvedOutputRoot, { recursive: true, force: true });
+    await mkdir(resolvedOutputRoot, { recursive: true });
+    await cp(first, resolvedOutputRoot, { recursive: true });
+    return {
+      fixtureCount,
+      outputRoot: resolvedOutputRoot,
+      digest: `sha256:${createHash("sha256")
+        .update(JSON.stringify(firstFiles))
+        .digest("hex")}`,
+    };
   } finally {
     await rm(tmpRoot, { recursive: true, force: true });
   }
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+function parseArgs(argv) {
+  const options = {};
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--out") {
+      options.outputRoot = argv[index + 1];
+      index += 1;
+      continue;
+    }
+    if (arg === "--no-determinism-check") {
+      options.verifyDeterminism = false;
+      continue;
+    }
+    if (arg === "--game") {
+      options.gameIds ??= [];
+      options.gameIds.push(argv[index + 1]);
+      index += 1;
+      continue;
+    }
+    throw new Error(`Unknown argument '${arg}'.`);
+  }
+  return options;
+}
+
+async function main() {
+  const result = await compileReferenceFixtures(
+    parseArgs(process.argv.slice(2)),
+  );
+  console.log(JSON.stringify(result, null, 2));
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
