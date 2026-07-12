@@ -1538,6 +1538,234 @@ describe("runtime-owned reducer effects", () => {
     });
   });
 
+  describe("random.integer mutation helper", () => {
+    function defineIntegerGame() {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({
+            results: z.array(z.number().int()),
+          }),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+
+      return defineGame({
+        contract,
+        initial: {
+          public: () => ({ results: [] }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            enter({ state, accept, random }) {
+              const result = random.integer({
+                minInclusive: 1,
+                maxInclusive: 6,
+              });
+              return accept({
+                ...state,
+                publicState: {
+                  results: [...state.publicState.results, result],
+                },
+              });
+            },
+            interactions: {
+              drawAndReenter: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ state, accept, fx, random }) {
+                  const result = random.integer({
+                    minInclusive: 10,
+                    maxInclusive: 12,
+                  });
+                  return accept(
+                    {
+                      ...state,
+                      publicState: {
+                        results: [...state.publicState.results, result],
+                      },
+                    },
+                    { instructions: [fx.transition("takeTurn")] },
+                  );
+                },
+              }),
+            },
+          }),
+        },
+      });
+    }
+
+    test("records initialization, dispatch, and lifecycle draws with structured trace identity", async () => {
+      const diagnosticEvents: Array<{
+        type: string;
+        trace?: readonly unknown[];
+      }> = [];
+      const bundle = createReducerBundle(defineIntegerGame(), {
+        diagnostics: {
+          event(event) {
+            diagnosticEvents.push(event);
+          },
+        },
+      });
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+
+      expect(initialized.runtime.rng.draws).toEqual([
+        {
+          index: 0,
+          cursorBefore: 0,
+          cursorAfter: 1,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 1, maxInclusive: 6 },
+          },
+        },
+      ]);
+
+      const dispatched = await bundle.dispatch({
+        state: initialized,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "drawAndReenter",
+          params: {},
+        },
+      });
+      if (dispatched.kind !== "accept") {
+        throw new Error("Expected drawAndReenter to accept.");
+      }
+
+      expect(dispatched.state.runtime.rng.draws).toEqual([
+        initialized.runtime.rng.draws[0],
+        {
+          index: 1,
+          cursorBefore: 1,
+          cursorAfter: 2,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 10, maxInclusive: 12 },
+          },
+        },
+        {
+          index: 2,
+          cursorBefore: 2,
+          cursorAfter: 3,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 1, maxInclusive: 6 },
+          },
+        },
+      ]);
+      expect(
+        dispatched.trace.filter((entry) => entry.kind === "rngConsumption"),
+      ).toEqual([
+        expect.objectContaining({
+          version: 2,
+          operation: "random.integer",
+          drawIndex: 1,
+        }),
+        expect.objectContaining({
+          version: 2,
+          operation: "random.integer",
+          drawIndex: 2,
+        }),
+      ]);
+
+      const acceptedDiagnostic = diagnosticEvents.find(
+        (event) => event.type === "submitAccepted",
+      );
+      expect(acceptedDiagnostic?.trace).toEqual([
+        expect.objectContaining({ kind: "acceptedClientInput" }),
+        expect.objectContaining({
+          kind: "rngConsumption",
+          version: 2,
+          drawIndex: 1,
+        }),
+        expect.objectContaining({
+          kind: "appliedInstruction",
+          instruction: "flow.transition",
+        }),
+        expect.objectContaining({
+          kind: "rngConsumption",
+          version: 2,
+          drawIndex: 2,
+        }),
+      ]);
+      const diagnosticJson = JSON.stringify(acceptedDiagnostic);
+      expect(diagnosticJson).not.toContain("traceEntry");
+      expect(diagnosticJson).not.toContain("value=");
+    });
+
+    test("rejects invalid inclusive integer ranges before consuming RNG", async () => {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({}),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+      const game = defineGame({
+        contract,
+        initial: {
+          public: () => ({}),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            interactions: {
+              invalid: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ state, accept, random }) {
+                  random.integer({ minInclusive: 7, maxInclusive: 6 });
+                  return accept(state);
+                },
+              }),
+            },
+          }),
+        },
+      });
+      const bundle = createReducerBundle(game);
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+
+      await expect(
+        bundle.dispatch({
+          state: initialized,
+          input: {
+            kind: "interaction",
+            playerId: "player-1",
+            interactionId: "invalid",
+            params: {},
+          },
+        }),
+      ).rejects.toThrow(
+        "random.integer minInclusive must be less than or equal to maxInclusive",
+      );
+      expect(initialized.runtime.rng.cursor).toBe(0);
+      expect(initialized.runtime.rng.draws).toEqual([]);
+    });
+  });
+
   describe("random.subset mutation helper", () => {
     function defineSubsetGame() {
       const contract = defineGameContract({

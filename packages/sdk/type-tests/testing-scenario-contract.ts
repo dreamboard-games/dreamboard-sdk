@@ -2,7 +2,15 @@ import { z } from "zod";
 import { many } from "../src/reducer/inputs/many.js";
 import type { PlayerSpaceInputSchema } from "../src/reducer/inputs/boardInput.js";
 import { markManifestScopedSchema } from "../src/reducer/model/manifest.js";
+import type { ReducerBundle } from "../src/reducer.js";
+import * as testingFacade from "../src/testing.js";
 import * as testingDefinitions from "../src/testing/definitions.js";
+import {
+  digestScenarioProjection,
+  resolveScenarioCommandParams,
+  scenarioProjectionInputMetadata,
+  scenarioProjectionParityFromInspectNode,
+} from "../src/testing-runtime.js";
 import {
   createScenarioAuthoring,
   type ScenarioCommandOf,
@@ -14,6 +22,28 @@ type HasDefineBase = "defineBase" extends keyof typeof testingDefinitions
   ? true
   : false;
 type _BaseApiIsAbsent = AssertFalse<HasDefineBase>;
+type HasCliRuntimePlumbing =
+  Extract<
+    keyof typeof testingFacade,
+    | "resolveScenarioCommandParams"
+    | "digestScenarioProjection"
+    | "scenarioProjectionInputMetadata"
+    | "scenarioProjectionParityFromInspectNode"
+  > extends never
+    ? false
+    : true;
+type _CliRuntimePlumbingIsAbsent = AssertFalse<HasCliRuntimePlumbing>;
+
+declare const reducerBundle: ReducerBundle;
+// @ts-expect-error testing-only actionability is not author-facing bundle API.
+reducerBundle.resolveInteractionActionability;
+// @ts-expect-error testing-only enumeration is not author-facing bundle API.
+reducerBundle.enumerateInteractionParams;
+const inProcessRuntime = reducerBundle.createInProcessRuntime();
+// @ts-expect-error testing-only actionability is not on the author runtime.
+inProcessRuntime.resolveInteractionActionability;
+// @ts-expect-error testing-only enumeration is not on the author runtime.
+inProcessRuntime.enumerateInteractionParams;
 
 const playerId = markManifestScopedSchema(z.string(), "playerId");
 const ordinaryString = z.string();
@@ -154,3 +184,7 @@ void ordinaryStringRemainsString;
 void manyPlayers;
 void manyRuntimeIdsAreRejected;
 void playerSpaceRuntimeIdIsRejected;
+void digestScenarioProjection;
+void resolveScenarioCommandParams;
+void scenarioProjectionInputMetadata;
+void scenarioProjectionParityFromInspectNode;

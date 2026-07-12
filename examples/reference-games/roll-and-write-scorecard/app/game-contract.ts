@@ -1,10 +1,12 @@
-import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
   type ErrorCodeOfContract,
+  type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
+import { z } from "zod";
+import { ids, manifestContract } from "../shared/manifest-contract";
+import type { PlayerId } from "../shared/manifest-contract";
 
 export const rollSchema = z.object({
   round: z.number().int().min(1).max(8),
@@ -27,10 +29,10 @@ export const failedMarkSchema = z.object({
 });
 
 export const scoreComponentsSchema = z.object({
-  completeRows: z.number().int().min(0),
-  completeColumns: z.number().int().min(0),
-  largestRegion: z.number().int().min(0),
-  failedSurveys: z.number().int().min(0),
+  "complete-rows": z.number().int().min(0),
+  "complete-columns": z.number().int().min(0),
+  "largest-region": z.number().int().min(0),
+  "failed-surveys": z.number().int().max(0),
 });
 
 export const scoreSchema = z.object({
@@ -58,27 +60,12 @@ export const publicStateSchema = z.object({
   marks: marksByPlayerSchema,
   completed: z.boolean(),
   scores: scoresByPlayerSchema.nullable(),
-  outcome: z
-    .object({
-      reason: z.object({
-        code: z.literal("SURVEY_COMPLETE"),
-        message: z.string(),
-      }),
-      standings: z.array(
-        z.object({
-          playerId: ids.playerId,
-          rank: z.number().int().min(1),
-          result: z.enum(["win", "loss", "draw"]),
-          score: z.number().int(),
-        }),
-      ),
-    })
-    .nullable(),
+  outcome: z.custom<GameOutcome<PlayerId>>().nullable(),
 });
 
 export const privateStateSchema = z.object({});
 export const hiddenStateSchema = z.object({});
-export const setupPhaseStateSchema = z.object({});
+export const rollPhaseStateSchema = z.object({});
 export const markSurveyPhaseStateSchema = z.object({});
 export const gameOverPhaseStateSchema = z.object({});
 
@@ -90,17 +77,19 @@ export const gameContract = defineGameContract({
     hidden: hiddenStateSchema,
   },
   phases: {
-    setup: setupPhaseStateSchema,
+    roll: rollPhaseStateSchema,
     markSurvey: markSurveyPhaseStateSchema,
     gameOver: gameOverPhaseStateSchema,
   },
   errors: {
-    CELL_ALREADY_MARKED: "Choose an unmarked scorecard cell.",
-    CELL_DOES_NOT_MATCH_ROLL: "Choose an unmarked cell matching the roll.",
+    CELL_ALREADY_MARKED: "Choose an unmarked survey-grid cell.",
+    CELL_DOES_NOT_MATCH_ROLL:
+      "Choose an unmarked cell matching the weather reading.",
     PHASE_NOT_MARKING: "A survey mark can only be submitted while marking.",
     PLAYER_NOT_ACTIVE: "Players resolve the shared roll in seat order.",
-    STALE_SUBMISSION: "The submitted draft belongs to an earlier roll.",
-    UNKNOWN_CELL: "The selected scorecard cell does not exist.",
+    STALE_SUBMISSION:
+      "The submitted mark belongs to an earlier weather reading.",
+    UNKNOWN_CELL: "The selected survey-grid cell does not exist.",
   },
 });
 

@@ -1,8 +1,8 @@
-import behaviorScenario from "../scenarios/initial.scenario.ts";
+import behaviorScenario from "../scenarios/multiple-matches.scenario.ts";
 
 export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.initial.mobile",
-  title: "Roll And Write Scorecard: initial mobile scorecard",
+  title: "Cloudline Survey: initial mobile survey grids",
   behaviorScenario,
   contracts: ["Panel", "SquareGrid"],
   capabilities: ["scorecard-grid"],
@@ -13,7 +13,7 @@ export const scenario = {
     "examples/reference-games/roll-and-write-scorecard/app/game.ts",
     "examples/reference-games/roll-and-write-scorecard/app/model.ts",
     "examples/reference-games/roll-and-write-scorecard/ui/App.tsx",
-    "examples/reference-games/roll-and-write-scorecard/test/scenarios/initial.scenario.ts",
+    "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
     "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
   ],
   environment: {

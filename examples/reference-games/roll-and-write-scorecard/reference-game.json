@@ -1,27 +1,28 @@
 {
   "schemaVersion": 3,
   "id": "roll-and-write-scorecard",
-  "displayName": "Roll And Write Scorecard",
+  "displayName": "Cloudline Survey",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/initial.scenario.ts",
-      "test/scenarios/rolled.scenario.ts",
-      "test/scenarios/drafted.scenario.ts",
-      "test/scenarios/submitted.scenario.ts",
-      "test/scenarios/invalid.scenario.ts",
-      "test/scenarios/fallback.scenario.ts",
-      "test/scenarios/terminal.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/solo-complete-game.scenario.ts",
+      "test/scenarios/tied-complete-game.scenario.ts",
+      "test/scenarios/seat-order-one.scenario.ts",
+      "test/scenarios/seat-order-two.scenario.ts",
+      "test/scenarios/seat-order-three.scenario.ts",
+      "test/scenarios/seat-order-four.scenario.ts",
+      "test/scenarios/multiple-matches.scenario.ts",
+      "test/scenarios/one-match.scenario.ts",
+      "test/scenarios/no-match-fallback.scenario.ts",
+      "test/scenarios/legality-probes.scenario.ts"
     ],
     "uiScenarios": [
+      "test/ui-scenarios/mark-cell.desktop.scenario.ts",
       "test/ui-scenarios/mark-cell.mobile.scenario.ts",
       "test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.rolled.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.drafted.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.submitted.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.invalid.mobile.scenario.ts",
       "test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts"
     ]
   },
@@ -36,9 +37,9 @@
   },
   "demoRelease": {
     "slug": "roll-and-write-scorecard",
-    "name": "Roll And Write Scorecard",
-    "description": "A compact roll-and-write scorecard game with dice results, drafted marks, fallback cells, and terminal scoring.",
-    "overview": "Roll, draft a mark, fill your scorecard, and chase row, column, and region bonuses before the sheet fills.",
+    "name": "Cloudline Survey",
+    "description": "Chart eight shared weather readings on public survey grids, complete formations, and manage failed observations.",
+    "overview": "Roll the weather dice, resolve each crew in seat order, and build rows, columns, and connected cloud regions across eight rounds.",
     "creator": "Dreamboard",
     "minPlayers": 1,
     "maxPlayers": 4,
@@ -48,8 +49,9 @@
     "mechanics": [
       "roll-and-write",
       "square-grid",
-      "dice-result",
-      "simultaneous-marking"
+      "seeded-shared-dice",
+      "seat-order-resolution",
+      "public-scorecards"
     ],
     "categories": ["puzzle", "scorecard"],
     "heroImageUrl": "/demos/roll-and-write-scorecard/desktop.png",
@@ -81,8 +83,9 @@
   "mechanics": [
     "roll-and-write",
     "square-grid",
-    "dice-result",
-    "simultaneous-marking"
+    "seeded-shared-dice",
+    "seat-order-resolution",
+    "public-scorecards"
   ],
   "uiPatterns": [
     "square-board-targets",

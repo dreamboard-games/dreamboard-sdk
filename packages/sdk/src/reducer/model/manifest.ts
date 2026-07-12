@@ -1,3 +1,4 @@
+import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import type {
   AnySchema,
@@ -386,11 +387,13 @@ export function createManifestRuntimeSchema<
         seed: z.number().nullable().optional(),
         cursor: z.number().int().default(0),
         trace: z.array(z.string()).default([]),
+        draws: z.array(ContractZod.RngDrawSchema).default([]),
       })
       .default({
         seed: null,
         cursor: 0,
         trace: [],
+        draws: [],
       }),
     setup: z
       .object({

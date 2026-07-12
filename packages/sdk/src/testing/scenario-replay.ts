@@ -1,11 +1,17 @@
 import type { Wire } from "@dreamboard-games/reducer-contract";
 import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
 import { createReducerBundle } from "../reducer/bundle.js";
+import type { ReducerBundleTestingRuntime } from "../reducer/bundle/types.js";
+import type {
+  InteractionActionabilityResult,
+  InteractionInputEnumerationResult,
+} from "../reducer/bundle/trusted/interaction-types.js";
 import type {
   DispatchTraceSummaryEntry,
   ReducerDiagnosticEvent,
 } from "../reducer/diagnostics.js";
 import { createExpectApi } from "./create-expect-api.js";
+import { scenarioAssertionFailure } from "./scenario-assertion-error.js";
 import {
   ScenarioDefinitionValidationError,
   ScenarioReplayError,
@@ -49,7 +55,7 @@ type ScenarioGame = ScenarioDefinitionGameLike & {
   };
 };
 
-type ScenarioBundle = ReturnType<typeof createReducerBundle>;
+type ScenarioBundle = ReducerBundleTestingRuntime;
 
 type ScenarioReplayState<Game> = {
   readonly game: Game;
@@ -61,15 +67,60 @@ type ScenarioReplayState<Game> = {
   readonly events: readonly ReducerDiagnosticEvent[];
 };
 
+export type ScenarioReplayPerspective =
+  | { readonly kind: "player"; readonly seat: number }
+  | { readonly kind: "spectator" };
+
+export type ScenarioReplayInspectionAuthority<Game> = {
+  readonly game: Game;
+  readonly scenario: ScenarioReplayDefinition<Game>;
+  readonly playerIds: readonly string[];
+  readonly checkpoint: ScenarioCheckpoint;
+  readonly checkpointDigest: string;
+  readonly publicState: unknown;
+  readonly view: unknown;
+  readonly scheduler: {
+    readonly phase: string;
+    readonly step: string | null;
+    readonly activePlayerIds: readonly string[];
+    readonly pendingPlayerIds: readonly string[];
+    readonly continuationDependencies: readonly {
+      readonly waiterPlayerId: string;
+      readonly blockerPlayerIds: readonly string[];
+    }[];
+  };
+  readonly interactions: readonly {
+    readonly descriptor: InteractionDescriptorLike;
+    readonly explanation: InteractionExplanationLike;
+    readonly actionability: InteractionActionabilityResult;
+  }[];
+  readonly entropy: {
+    readonly seed: number | null;
+    readonly draws: readonly Wire.RngDraw[];
+  };
+  readonly commandTrace: readonly ScenarioCommandTraceEntry<Game>[];
+};
+
+export type ScenarioReplayAdvanceResult<Game> =
+  | {
+      readonly kind: "accepted";
+      readonly replay: ScenarioReplay<Game>;
+      readonly trace: readonly DispatchTraceSummaryEntry[];
+    }
+  | {
+      readonly kind: "rejected";
+      readonly errorCode: string;
+      readonly message?: string;
+      readonly trace: readonly DispatchTraceSummaryEntry[];
+    };
+
 export async function replayScenario<
   const Game extends ScenarioDefinitionGameLike,
 >(options: ReplayScenarioOptions<Game>): Promise<ScenarioReplay<Game>> {
   validateReplayDefinition(options.game, options.scenario);
-  const checkpoint = normalizeCheckpoint(options.scenario, options.at);
-  const playerIds = resolvePlayerIds(
-    options.game,
-    options.scenario.setup.players,
-  );
+  const scenario = cloneReplayDefinition(options.scenario);
+  const checkpoint = normalizeCheckpoint(scenario, options.at);
+  const playerIds = resolvePlayerIds(options.game, scenario.setup.players);
   const events: ReducerDiagnosticEvent[] = [];
   const bundle = createScenarioBundle(options.game, events);
   const normalSetup = options.game.contract.manifest.normalSetup;
@@ -84,11 +135,11 @@ export async function replayScenario<
   const reducerState = await bundle.initialize({
     table: table as Wire.JsonValue,
     playerIds: [...playerIds],
-    rngSeed: options.scenario.setup.seed,
+    rngSeed: scenario.setup.seed,
     setup:
-      typeof options.scenario.setup.setupProfileId === "string"
+      typeof scenario.setup.setupProfileId === "string"
         ? {
-            profileId: options.scenario.setup.setupProfileId,
+            profileId: scenario.setup.setupProfileId,
             optionValues: {},
           }
         : null,
@@ -96,7 +147,7 @@ export async function replayScenario<
 
   const runtime = new ScenarioReplayImplementation<Game>({
     game: options.game,
-    scenario: options.scenario,
+    scenario,
     playerIds,
     reducerState,
     checkpoint: { segment: "setup", completed: 0 },
@@ -105,6 +156,20 @@ export async function replayScenario<
   });
   await runtime.replayTo(checkpoint);
   return runtime;
+}
+
+function cloneReplayDefinition<Game>(
+  scenario: ScenarioReplayDefinition<Game>,
+): ScenarioReplayDefinition<Game> {
+  return structuredClone({
+    id: scenario.id,
+    ...(scenario.description === undefined
+      ? {}
+      : { description: scenario.description }),
+    setup: scenario.setup,
+    given: scenario.given,
+    when: scenario.when,
+  });
 }
 
 export async function assertScenario<Game>(
@@ -259,6 +324,124 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     });
   }
 
+  inspectionAuthority(
+    perspective: ScenarioReplayPerspective,
+  ): ScenarioReplayInspectionAuthority<Game> {
+    const selectedPlayerId =
+      perspective.kind === "player"
+        ? this.playerId({ seat: perspective.seat }, "perspective.seat")
+        : null;
+    const projection = this.bundle.projectSeatsDynamic({
+      state: this.reducerState,
+      playerIds: selectedPlayerId ? [selectedPlayerId] : [],
+    });
+    const descriptors = selectedPlayerId
+      ? descriptorsForPlayer(projection, selectedPlayerId)
+      : [];
+    const flow = readFlowState(this.reducerState);
+    return {
+      game: this.game,
+      scenario: structuredClone(this.scenario),
+      playerIds: [...this.playerIds],
+      checkpoint: structuredClone(this.checkpoint),
+      checkpointDigest: this.checkpointDigest,
+      publicState: structuredClone(this.reducerState.domain.publicState),
+      view: structuredClone(
+        selectedPlayerId
+          ? (projection.seats[selectedPlayerId]?.view ?? null)
+          : (projection.sharedView ?? null),
+      ),
+      scheduler: {
+        phase: flow.currentPhase ?? "",
+        step: readPhaseStep(this.reducerState.domain.phase),
+        activePlayerIds: [
+          ...(projection.schedulerFlow?.activePlayerIds ??
+            projection.stageSeats ??
+            []),
+        ],
+        pendingPlayerIds: [
+          ...(projection.schedulerFlow?.pendingPlayerIds ??
+            projection.simultaneousPhase?.pendingPlayerIds ??
+            []),
+        ],
+        continuationDependencies: structuredClone(
+          projection.schedulerFlow?.continuationDependencies ?? [],
+        ),
+      },
+      interactions: descriptors.map((descriptor) => ({
+        descriptor: structuredClone(descriptor),
+        explanation: structuredClone(
+          this.bundle.explainInteraction({
+            state: this.reducerState,
+            playerId: selectedPlayerId!,
+            interactionId: String(descriptor.interactionId ?? ""),
+          }),
+        ) as InteractionExplanationLike,
+        actionability: structuredClone(
+          this.bundle.resolveInteractionActionability({
+            state: this.reducerState,
+            playerId: selectedPlayerId!,
+            interactionId: String(descriptor.interactionId ?? ""),
+          }),
+        ),
+      })),
+      entropy: {
+        seed: this.reducerState.runtime.rng.seed,
+        draws: structuredClone(this.reducerState.runtime.rng.draws ?? []),
+      },
+      commandTrace: structuredClone(this.trace),
+    };
+  }
+
+  enumerateInteractionParams(options: {
+    readonly seat: number;
+    readonly interactionId: string;
+    readonly maxEvaluations: number;
+  }): InteractionInputEnumerationResult {
+    return structuredClone(
+      this.bundle.enumerateInteractionParams({
+        state: this.reducerState,
+        playerId: this.playerId({ seat: options.seat }, "perspective.seat"),
+        interactionId: options.interactionId,
+        maxEvaluations: options.maxEvaluations,
+      }),
+    );
+  }
+
+  async advance(
+    command: ScenarioCommandOf<Game>,
+  ): Promise<ScenarioReplayAdvanceResult<Game>> {
+    const clone = new ScenarioReplayImplementation<Game>({
+      game: this.game,
+      scenario: this.scenario,
+      playerIds: this.playerIds,
+      reducerState: this.reducerState,
+      checkpoint: this.checkpoint,
+      trace: this.trace,
+      events: this.events,
+    });
+    const result = await clone.dispatch(command, "probe", 0);
+    if (result.kind === "accept") {
+      clone.trace.push({
+        segment: this.checkpoint.segment === "when" ? "when" : "given",
+        index: this.checkpoint.completed,
+        command: structuredClone(command),
+        trace: structuredClone(result.trace),
+      });
+      return {
+        kind: "accepted",
+        replay: clone,
+        trace: structuredClone(result.trace),
+      };
+    }
+    return {
+      kind: "rejected",
+      errorCode: result.errorCode,
+      ...(result.message === undefined ? {} : { message: result.message }),
+      trace: structuredClone(result.trace),
+    };
+  }
+
   async replayTo(target: ScenarioCheckpoint): Promise<void> {
     const givenCount =
       target.segment === "setup"
@@ -296,7 +479,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         trace: result.trace,
         toBeAccepted() {},
         toRejectWith(expected: RejectionExpectation): never {
-          throw new Error(
+          scenarioAssertionFailure(
             `Expected probe to reject${expected.errorCode ? ` with ${expected.errorCode}` : ""}, but it was accepted.`,
           );
         },
@@ -310,7 +493,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       ...(result.message === undefined ? {} : { message: result.message }),
       trace: result.trace,
       toBeAccepted(): never {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected probe to be accepted, but it rejected with ${result.errorCode}.`,
         );
       },
@@ -413,6 +596,53 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   }
 }
 
+export function inspectScenarioReplayAuthority<Game>(options: {
+  readonly replay: ScenarioReplay<Game>;
+  readonly perspective: ScenarioReplayPerspective;
+}): ScenarioReplayInspectionAuthority<Game> {
+  return requireScenarioReplayImplementation(
+    options.replay,
+  ).inspectionAuthority(options.perspective);
+}
+
+export function enumerateScenarioInteractionParams<Game>(options: {
+  readonly replay: ScenarioReplay<Game>;
+  readonly seat: number;
+  readonly interactionId: string;
+  readonly maxEvaluations: number;
+}): InteractionInputEnumerationResult {
+  return requireScenarioReplayImplementation(
+    options.replay,
+  ).enumerateInteractionParams(options);
+}
+
+export function advanceScenarioReplay<Game>(options: {
+  readonly replay: ScenarioReplay<Game>;
+  readonly command: ScenarioCommandOf<Game>;
+}): Promise<ScenarioReplayAdvanceResult<Game>> {
+  return requireScenarioReplayImplementation(options.replay).advance(
+    options.command,
+  );
+}
+
+function descriptorsForPlayer(
+  projection: Wire.SeatProjectionBundle,
+  playerId: string,
+): InteractionDescriptorLike[] {
+  const refs =
+    (projection.seats[playerId]?.availableInteractionRefs as
+      | readonly string[]
+      | undefined) ?? [];
+  const interactionsByRef =
+    (projection.interactionsByRef as
+      | Readonly<Record<string, InteractionDescriptorLike>>
+      | undefined) ?? {};
+  return refs.flatMap((ref) => {
+    const descriptor = interactionsByRef[ref];
+    return descriptor ? [descriptor] : [];
+  });
+}
+
 function createScenarioBundle(
   game: ScenarioDefinitionGameLike,
   events: ReducerDiagnosticEvent[],
@@ -423,7 +653,7 @@ function createScenarioBundle(
         events.push(structuredClone(event));
       },
     },
-  });
+  }) as ScenarioBundle;
 }
 
 function validateReplayDefinition<Game>(
@@ -498,6 +728,12 @@ function readFlowState(state: Wire.ReducerSessionState): {
   };
 }
 
+function readPhaseStep(phase: unknown): string | null {
+  if (!phase || typeof phase !== "object") return null;
+  const step = (phase as { readonly step?: unknown }).step;
+  return typeof step === "string" ? step : null;
+}
+
 function summarizeWireTrace(
   trace: readonly Wire.DispatchTrace[],
 ): DispatchTraceSummaryEntry[] {
@@ -531,8 +767,9 @@ function summarizeWireTrace(
         return [
           {
             kind: "rngConsumption",
+            version: entry.version,
             operation: entry.operation,
-            traceEntry: entry.traceEntry,
+            drawIndex: entry.drawIndex,
           },
         ];
     }
@@ -572,7 +809,7 @@ function assertRejectionMatches(
     expected.errorCode !== undefined &&
     rejection.errorCode !== expected.errorCode
   ) {
-    throw new Error(
+    scenarioAssertionFailure(
       `Expected rejection errorCode '${expected.errorCode}', received '${rejection.errorCode}'.`,
     );
   }
@@ -580,7 +817,7 @@ function assertRejectionMatches(
     typeof expected.message === "string" &&
     rejection.message !== expected.message
   ) {
-    throw new Error(
+    scenarioAssertionFailure(
       `Expected rejection message '${expected.message}', received '${rejection.message ?? "undefined"}'.`,
     );
   }
@@ -588,7 +825,7 @@ function assertRejectionMatches(
     expected.message instanceof RegExp &&
     !expected.message.test(rejection.message ?? "")
   ) {
-    throw new Error(
+    scenarioAssertionFailure(
       `Expected rejection message '${rejection.message ?? ""}' to match ${String(expected.message)}.`,
     );
   }

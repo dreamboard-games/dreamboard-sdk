@@ -247,7 +247,8 @@ export type CollectorState = {
  *     `reduce({ input: { params } })` sees branded ids from `cardInput` /
  *     `boardInput` without a second declaration.
  *   - an optional `eligibleTargets(state, playerId, q)` hook that the runtime
- *     calls to enumerate server-authoritative valid values. The hook receives
+ *     calls to enumerate server-authoritative, submit-ready values accepted by
+ *     the collector schema. The hook receives
  *     the same `q` table-queries helper that `validate` / `reduce` see, so
  *     board/card/prompt collectors can reuse whatever board-graph or zone
  *     lookups they already use for validation without rebuilding them from

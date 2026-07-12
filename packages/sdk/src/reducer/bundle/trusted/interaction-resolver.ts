@@ -82,6 +82,7 @@ export function createInteractionResolver<
   return {
     collectEligibleTargets,
     collectFirstCardZoneId,
+    enumerateInteractionParams: decisions.enumerateInteractionParams,
     evaluateInteractionCost: decisions.evaluateInteractionCost,
     explainInteraction: decisions.explainInteraction,
     findCardInputKey,
@@ -92,6 +93,7 @@ export function createInteractionResolver<
     resolveActiveStage: stages.resolveActiveStage,
     resolveActiveStageAllowlist: stages.resolveActiveStageAllowlist,
     resolveAvailableInteractionsFor: decisions.resolveAvailableInteractionsFor,
+    resolveInteractionActionability: decisions.resolveInteractionActionability,
     resolveInteractionActorAuthorization:
       authorization.resolveInteractionActorAuthorization,
     resolveInteractionDecision: decisions.resolveInteractionDecision,

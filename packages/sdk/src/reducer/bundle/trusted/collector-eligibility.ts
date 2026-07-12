@@ -3,6 +3,7 @@ import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
   CollectorState,
+  InputCollector,
   ManifestContract,
   TableOfState,
   TableQueriesOfState,
@@ -60,8 +61,8 @@ export function collectEligibleTargets<
         NonNullable<typeof collector.eligibleTargets>
       >[2],
     );
-    const resolved = Array.from(targets as ReadonlyArray<unknown>).map((t) =>
-      String(t),
+    const resolved = Array.from(targets as ReadonlyArray<unknown>).map(
+      (target) => projectEligibleTarget(collector, target),
     );
     result[key] = resolved;
     if (cacheKey) {
@@ -69,4 +70,21 @@ export function collectEligibleTargets<
     }
   }
   return result;
+}
+
+function projectEligibleTarget(
+  collector: InputCollector,
+  target: unknown,
+): string {
+  if (
+    collector.kind === "board-space" &&
+    collector.meta?.valueKind === "player-board-space" &&
+    typeof target === "object" &&
+    target !== null &&
+    "spaceId" in target &&
+    typeof target.spaceId === "string"
+  ) {
+    return target.spaceId;
+  }
+  return String(target);
 }

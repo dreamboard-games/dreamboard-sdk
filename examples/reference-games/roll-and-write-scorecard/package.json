@@ -12,7 +12,7 @@
     "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
     "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
     "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
-    "test": "tsx --test test/scenarios/*.scenario.ts test/ui-scenarios/*.scenario.ts",
+    "test": "tsx --test test/scenarios.test.ts test/unit/*.test.ts",
     "test:ui": "tsx --tsconfig test/tsconfig.json --test test/ui-scenarios/*.scenario.ts",
     "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
   },

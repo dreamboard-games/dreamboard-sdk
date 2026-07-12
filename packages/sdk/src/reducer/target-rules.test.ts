@@ -90,6 +90,15 @@ describe("target rules", () => {
     } as const;
 
     expect(target.eligible(ctx)).toContainEqual(ownedTarget);
+    expect(input.eligibleTargets?.(state, "player-1", q)).toContainEqual(
+      ownedTarget,
+    );
+    expect(input.domain?.(state, "player-1", q, {} as never)).toMatchObject({
+      type: "boardTarget",
+      projection: "resolved",
+      valueKind: "player-board-space",
+      eligibleTargets: ["s1", "s2"],
+    });
     expect(input.schema.parse(ownedTarget)).toEqual(ownedTarget);
     expect(
       input.validateTarget?.(state, "player-1", q, otherPlayerTarget),

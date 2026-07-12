@@ -17,6 +17,10 @@ import type {
   TrustedState,
 } from "./runtime-scope";
 import type { ProjectionContext } from "./projection-context";
+import type {
+  CollectorInputEnumeration,
+  CollectorInputSatisfiability,
+} from "./collector-input-solver";
 
 export type TrustedInteractionId<
   Contract extends ReducerGameContractLike,
@@ -171,6 +175,13 @@ export type ResolveDecisionInput<Contract extends ReducerGameContractLike> = {
   interactionId: string;
   params?: Record<string, unknown>;
   mode: ResolveDecisionMode;
+  /**
+   * Internal finite-domain optimization. The caller has already proven the
+   * param-independent actor, stage, step, and availability-rule invariants;
+   * concrete submit validation still parses params and evaluates targets,
+   * cost, and authored validate rules.
+   */
+  candidateInvariantsValidated?: boolean;
   projection?: ProjectionContext<
     TrustedDomainState<Contract>,
     TrustedState<Contract>
@@ -199,7 +210,31 @@ export type InteractionDecisionResult<
         Definitions,
         Views
       >;
+      /** Trusted collector/domain satisfiability used by inspect/explore. */
+      inputSatisfiability?: CollectorInputSatisfiability;
       validation: ReducerValidationResult;
+    };
+
+export type InteractionActionabilityResult =
+  | { readonly found: false }
+  | { readonly found: true; readonly visible: false }
+  | {
+      readonly found: true;
+      readonly visible: true;
+      readonly descriptor: InteractionDescriptorShape;
+      readonly inputSatisfiability?: CollectorInputSatisfiability;
+    };
+
+export type InteractionInputEnumerationResult =
+  | { readonly found: false }
+  | { readonly found: true; readonly visible: false }
+  | {
+      readonly found: true;
+      readonly visible: true;
+      readonly descriptor: InteractionDescriptorShape;
+      readonly inputSatisfiability?: CollectorInputSatisfiability;
+      /** Null when trusted availability fails before input enumeration. */
+      readonly enumeration: CollectorInputEnumeration | null;
     };
 
 export function makeValidationError(

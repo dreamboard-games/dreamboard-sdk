@@ -92,12 +92,13 @@ export const expectedReferenceGames = [
   },
   {
     id: "roll-and-write-scorecard",
-    displayName: "Roll And Write Scorecard",
+    displayName: "Cloudline Survey",
     mechanics: [
       "roll-and-write",
       "square-grid",
-      "dice-result",
-      "simultaneous-marking",
+      "seeded-shared-dice",
+      "seat-order-resolution",
+      "public-scorecards",
     ],
     uiPatterns: [
       "square-board-targets",

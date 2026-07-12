@@ -1508,7 +1508,10 @@ describe("trusted interaction decision pipeline", () => {
                 const mode = input.add(
                   "mode",
                   formInput.choice({
-                    choices: [{ value: "enabled", label: "Enabled" }],
+                    choices: [
+                      { value: "disabled", label: "Disabled" },
+                      { value: "enabled", label: "Enabled" },
+                    ],
                     defaultValue: () => undefined,
                   }),
                 );
@@ -1551,6 +1554,20 @@ describe("trusted interaction decision pipeline", () => {
         },
       }),
     ).resolves.toMatchObject({ valid: true });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "playWithMode",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      inputSatisfiability: { status: "yes" },
+      enumeration: {
+        status: "enumerated",
+        assignments: [{ mode: "enabled", cardId: "card-a" }],
+      },
+    });
   });
 
   test("hand zones bind playable cards to the matching card input zone", async () => {
@@ -2045,5 +2062,198 @@ describe("trusted interaction decision pipeline", () => {
         },
       }),
     ).resolves.toMatchObject({ valid: true });
+  });
+
+  test("synchronizes proven input emptiness with production descriptors", async () => {
+    const contract = defineGameContract({
+      manifest: buildManifest(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const phaseState = z.object({});
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: phaseState,
+          initialState: () => ({}),
+          interactions: {
+            noLegalInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                task: formInput.choice<string>({
+                  choices: () => [],
+                  defaultValue: () => undefined,
+                }),
+              },
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            ruleRejectedInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                task: formInput.choice({
+                  choices: [
+                    { value: "one", label: "One" },
+                    { value: "two", label: "Two" },
+                  ],
+                  defaultValue: () => undefined,
+                }),
+              },
+              rules: [
+                {
+                  id: "reject-every-task",
+                  errorCode: "TASK_REJECTED",
+                  validate: () => false,
+                },
+              ],
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            costFilteredInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                amount: formInput.number({ min: 1, max: 2, defaultValue: 2 }),
+              },
+              cost: ({ input }) => ({ gold: input.params.amount }),
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            opaqueInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {},
+              paramsSchema: z.object({ answer: z.string() }) as never,
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          },
+        }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
+    });
+    const bundle = createReducerBundle(game);
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const descriptors = getAvailableInteractions(bundle, state, "player-1");
+
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "noLegalInput",
+      ),
+    ).toMatchObject({
+      availability: {
+        status: "blocked",
+        code: "NO_LEGAL_INPUT",
+        reason: "No legal input is currently available.",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "opaqueInput",
+      ),
+    ).toMatchObject({ availability: { status: "available" } });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "ruleRejectedInput",
+      ),
+    ).toMatchObject({
+      availability: {
+        status: "blocked",
+        code: "NO_LEGAL_INPUT",
+        reason: "No legal input is currently available.",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "costFilteredInput",
+      ),
+    ).toMatchObject({ availability: { status: "available" } });
+    expect(
+      bundle.resolveInteractionActionability({
+        state,
+        playerId: "player-1",
+        interactionId: "noLegalInput",
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "no" },
+    });
+    expect(
+      bundle.resolveInteractionActionability({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleRejectedInput",
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      descriptor: {
+        availability: { status: "blocked", code: "NO_LEGAL_INPUT" },
+      },
+      inputSatisfiability: { status: "no" },
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleRejectedInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "no" },
+      enumeration: null,
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "costFilteredInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "yes" },
+      enumeration: {
+        status: "enumerated",
+        assignments: [{ amount: 1 }],
+      },
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "opaqueInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "notEnumerable" },
+      enumeration: { status: "notEnumerable", assignments: [] },
+    });
   });
 });

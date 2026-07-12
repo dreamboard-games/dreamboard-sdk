@@ -16,8 +16,15 @@ import type {
   ViewMapOf,
 } from "../model";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
-import type { ReducerBundleContract } from "@dreamboard-games/reducer-contract";
-import type { InteractionExplanation } from "./trusted/interaction-types";
+import type {
+  ReducerBundleContract,
+  Wire,
+} from "@dreamboard-games/reducer-contract";
+import type {
+  InteractionActionabilityResult,
+  InteractionExplanation,
+  InteractionInputEnumerationResult,
+} from "./trusted/interaction-types";
 import type { ReducerDiagnosticsSink } from "../diagnostics";
 import type { InteractionDiagnosticsMode } from "./trusted/interaction-types";
 
@@ -77,6 +84,17 @@ export type TrustedReducerBundle<
     playerId: TrustedPlayerId<Contract>;
     interactionId: string;
   }): InteractionExplanation;
+  resolveInteractionActionability(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+  }): InteractionActionabilityResult;
+  enumerateInteractionParams(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+    maxEvaluations: number;
+  }): InteractionInputEnumerationResult;
   reduce(input: {
     state: TrustedSessionState<Contract>;
     input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
@@ -127,6 +145,7 @@ export type TrustedReducerBundle<
       sealedPlayerIds: string[];
       pendingPlayerIds: string[];
     } | null;
+    schedulerFlow: Wire.SchedulerFlowAuthorityProjection;
     sharedView?: unknown;
     seats: Record<
       string,
@@ -170,6 +189,7 @@ export type ReducerBundle = ReducerBundleContract & {
         sealedPlayerIds: string[];
         pendingPlayerIds: string[];
       } | null;
+      schedulerFlow: Wire.SchedulerFlowAuthorityProjection;
       sharedView?: unknown;
       seats: Record<
         string,
@@ -194,4 +214,38 @@ export type ReducerBundle = ReducerBundleContract & {
     playerId: unknown;
     interactionId: string;
   }): InteractionExplanation;
+};
+
+/**
+ * SDK-internal extension used by scenario inspection and exploration.
+ * The runtime operations stay off the author-facing `ReducerBundle` type.
+ */
+export type ReducerBundleTestingRuntime = Omit<
+  ReducerBundle,
+  "createInProcessRuntime"
+> & {
+  createInProcessRuntime(): ReturnType<
+    ReducerBundle["createInProcessRuntime"]
+  > & {
+    resolveInteractionActionability(input: {
+      playerId: unknown;
+      interactionId: string;
+    }): InteractionActionabilityResult;
+    enumerateInteractionParams(input: {
+      playerId: unknown;
+      interactionId: string;
+      maxEvaluations: number;
+    }): InteractionInputEnumerationResult;
+  };
+  resolveInteractionActionability(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+  }): InteractionActionabilityResult;
+  enumerateInteractionParams(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+    maxEvaluations: number;
+  }): InteractionInputEnumerationResult;
 };

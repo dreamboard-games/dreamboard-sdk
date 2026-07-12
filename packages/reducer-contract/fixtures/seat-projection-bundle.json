@@ -1,6 +1,17 @@
 {
   "currentStage": "play",
   "stageSeats": ["player-1"],
+  "schedulerFlow": {
+    "version": 1,
+    "activePlayerIds": ["player-2"],
+    "pendingPlayerIds": ["player-2"],
+    "continuationDependencies": [
+      {
+        "waiterPlayerId": "player-1",
+        "blockerPlayerIds": ["player-2"]
+      }
+    ]
+  },
   "sharedView": {
     "market": ["c1", "c2"]
   },

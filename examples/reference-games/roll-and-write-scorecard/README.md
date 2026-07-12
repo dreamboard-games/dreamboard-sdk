@@ -5,9 +5,10 @@ resolved on ordinary per-player square boards in seat order.
 
 ## Rules Authority
 
-[`rule.md`](rule.md) is the approved gameplay and theme contract. Hard-coded
-roll sequences are scenario entropy, not game rules. Existing reducers, tests,
-fixtures, and screenshots must be audited against the brief.
+[`rule.md`](rule.md) is the approved gameplay and theme contract. Scenarios
+select ordinary deterministic seeds; they do not author roll tables or random
+streams. Existing reducers, tests, fixtures, and screenshots must be audited
+against the brief.
 
 ## What To Learn Here
 

@@ -1,9 +1,9 @@
 import { gameOver } from "./game-over";
 import { markSurvey } from "./mark-survey";
-import { setup } from "./setup";
+import { roll } from "./roll";
 
 export const phases = {
-  setup,
+  roll,
   markSurvey,
   gameOver,
 };

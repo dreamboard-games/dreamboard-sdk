@@ -11,15 +11,22 @@ import {
   prepareInteractionProjectionParams,
   validateCollectorTargets,
 } from "./collector-params";
+import {
+  enumerateCollectorInputAssignments,
+  hasAnyCollectorInputAssignment,
+} from "./collector-input-solver";
+import { interactionDomainEligibleCount } from "./interaction-domain-metadata";
 import { buildInteractionDescriptor } from "./interaction-descriptor";
 import type { createInteractionAuthorization } from "./interaction-authorization";
 import type { createStageResolver } from "./stage-resolver";
 import {
   makeValidationError,
   type InteractionDecision,
+  type InteractionActionabilityResult,
   type InteractionDiagnosticsMode,
   type InteractionExplanation,
   type InteractionDecisionResult,
+  type InteractionInputEnumerationResult,
   type ResolveDecisionInput,
   type TrustedInteractionDescriptorShape,
   type TrustedInteractionId,
@@ -62,42 +69,6 @@ type RuleValidationIssue = {
   errorCode: string;
   message?: string;
 };
-
-function domainEligibleCount(domain: unknown): number | "lazy" {
-  if (!domain || typeof domain !== "object") return "lazy";
-  const typed = domain as {
-    type?: string;
-    projection?: string;
-    eligibleTargets?: readonly unknown[];
-    choices?: readonly { disabled?: boolean }[];
-    resources?: readonly unknown[];
-    min?: number;
-    max?: number;
-    step?: number;
-  };
-  if (
-    (typed.type === "cardTarget" || typed.type === "boardTarget") &&
-    typed.projection === "resolved"
-  ) {
-    return typed.eligibleTargets?.length ?? 0;
-  }
-  if (typed.type === "choice" || typed.type === "choiceList") {
-    return (typed.choices ?? []).filter((choice) => !choice.disabled).length;
-  }
-  if (typed.type === "resourceMap") {
-    return typed.resources?.length ?? 0;
-  }
-  if (
-    typed.type === "boundedNumber" &&
-    typeof typed.min === "number" &&
-    typeof typed.max === "number"
-  ) {
-    const step =
-      typeof typed.step === "number" && typed.step > 0 ? typed.step : 1;
-    return Math.max(0, Math.floor((typed.max - typed.min) / step) + 1);
-  }
-  return "lazy";
-}
 
 function readStep(state: { phase?: unknown }): string | null {
   const phase = state.phase;
@@ -214,12 +185,32 @@ export function createInteractionDecisionResolver<
     }
   }
 
+  function acceptsSubmitAssignment(input: {
+    state: State;
+    playerId: PlayerId;
+    interactionId: string;
+    assignment: Readonly<Record<string, unknown>>;
+    projection?: ProjectionContext<DomainState, State>;
+  }): boolean {
+    const decision = resolveInteractionDecision({
+      state: input.state,
+      playerId: input.playerId,
+      interactionId: input.interactionId,
+      params: input.assignment,
+      mode: "submit",
+      candidateInvariantsValidated: true,
+      projection: input.projection,
+    });
+    return decision.found && decision.validation.valid;
+  }
+
   function resolveInteractionDecision({
     state,
     playerId,
     interactionId,
     params = {},
     mode,
+    candidateInvariantsValidated = false,
     projection,
   }: ResolveDecisionInput<Contract>): InteractionDecisionResult<
     Contract,
@@ -288,36 +279,36 @@ export function createInteractionDecisionResolver<
       isSimultaneousSubmit &&
       (phase as { canResubmit?: boolean }).canResubmit === true;
 
-    const actorAuthorization =
-      authorization.resolveInteractionActorAuthorization(
-        state,
-        interaction,
-        projection,
-      );
-    const authorized = authorization.isActorAuthorized(
-      state,
-      playerId,
-      actorAuthorization,
-    );
-    let visible = authorization.isInteractionVisible(
-      interaction,
-      actorAuthorization,
-      authorized,
-    );
+    const actorAuthorization = candidateInvariantsValidated
+      ? ({ mode: "active" } as const)
+      : authorization.resolveInteractionActorAuthorization(
+          state,
+          interaction,
+          projection,
+        );
+    const authorized = candidateInvariantsValidated
+      ? true
+      : authorization.isActorAuthorized(state, playerId, actorAuthorization);
+    let visible = candidateInvariantsValidated
+      ? true
+      : authorization.isInteractionVisible(
+          interaction,
+          actorAuthorization,
+          authorized,
+        );
     if (alreadySubmitted && !canResubmit && mode !== "submit") {
       visible = false;
     }
-    const stageAllow = stages.resolveActiveStageAllowlist(
-      state,
-      phaseName,
-      projection,
-    );
-    const stageAllowed = !stageAllow || stageAllow.has(interactionId);
-    const stepAllowed = stages.isInteractionAllowedInStep(
-      state,
-      interaction,
-      projection,
-    );
+    const stageAllow = candidateInvariantsValidated
+      ? null
+      : stages.resolveActiveStageAllowlist(state, phaseName, projection);
+    const stageAllowed =
+      candidateInvariantsValidated ||
+      !stageAllow ||
+      stageAllow.has(interactionId);
+    const stepAllowed =
+      candidateInvariantsValidated ||
+      stages.isInteractionAllowedInStep(state, interaction, projection);
 
     let validation: ReducerValidationResult = { valid: true };
     if (!authorized) {
@@ -388,6 +379,7 @@ export function createInteractionDecisionResolver<
     let ruleAvailabilityIssue: InteractionRuleIssue | undefined;
     if (
       (canContinueSubmitValidation || canEvaluateProjectionDetails) &&
+      !candidateInvariantsValidated &&
       interaction.rules
     ) {
       const availabilityArgs = scope.buildRuntimeArgs(
@@ -475,13 +467,36 @@ export function createInteractionDecisionResolver<
       }
     }
 
+    const candidateInvariantAvailable =
+      stageAllowed && stepAllowed && authorized && !ruleAvailabilityIssue;
+    const acceptsAssignment = (
+      assignment: Readonly<Record<string, unknown>>,
+    ): boolean =>
+      acceptsSubmitAssignment({
+        state,
+        playerId,
+        interactionId,
+        assignment,
+        projection,
+      });
+    const inputSatisfiability =
+      candidateInvariantAvailable && mode !== "submit"
+        ? hasAnyCollectorInputAssignment({
+            interaction,
+            domainState: projection?.domainState ?? scope.toDomainState(state),
+            playerId,
+            queries: projection?.q,
+            derived: projection?.derived,
+            initialValues: params,
+            acceptsAssignment,
+          })
+        : undefined;
     const available =
-      stageAllowed &&
-      stepAllowed &&
-      authorized &&
-      !ruleAvailabilityIssue &&
-      costAffordable &&
-      !authoredValidation;
+      candidateInvariantAvailable &&
+      (inputSatisfiability?.status === "yes" ||
+        (inputSatisfiability?.status !== "no" &&
+          costAffordable &&
+          !authoredValidation));
     const descriptorDecision: InteractionDecision = available
       ? { available: true, cost }
       : !authorized
@@ -532,12 +547,19 @@ export function createInteractionDecisionResolver<
                         authoredValidation.message ?? "Interaction unavailable",
                       cost,
                     }
-                  : {
-                      available: false,
-                      code: "action-unavailable",
-                      message: "Interaction unavailable",
-                      cost,
-                    };
+                  : inputSatisfiability?.status === "no"
+                    ? {
+                        available: false,
+                        code: FrameworkErrorCodes.NO_LEGAL_INPUT,
+                        message: "No legal input is currently available.",
+                        cost,
+                      }
+                    : {
+                        available: false,
+                        code: "action-unavailable",
+                        message: "Interaction unavailable",
+                        cost,
+                      };
     const descriptor = buildInteractionDescriptor(
       scope,
       state,
@@ -557,6 +579,7 @@ export function createInteractionDecisionResolver<
       parsedParams: parsed.params,
       visible,
       descriptor,
+      inputSatisfiability,
       validation,
     };
   }
@@ -581,6 +604,73 @@ export function createInteractionDecisionResolver<
       descriptors.push(decision.descriptor);
     }
     return descriptors;
+  }
+
+  function resolveInteractionActionability(input: {
+    state: State;
+    playerId: PlayerId;
+    interactionId: string;
+    projection?: ProjectionContext<DomainState, State>;
+  }): InteractionActionabilityResult {
+    const decision = resolveInteractionDecision({
+      ...input,
+      params: {},
+      mode: "descriptor",
+    });
+    if (!decision.found) return { found: false };
+    if (!decision.visible) return { found: true, visible: false };
+    return {
+      found: true,
+      visible: true,
+      descriptor: decision.descriptor,
+      inputSatisfiability: decision.inputSatisfiability,
+    };
+  }
+
+  function enumerateInteractionParams(input: {
+    state: State;
+    playerId: PlayerId;
+    interactionId: string;
+    maxEvaluations: number;
+    projection?: ProjectionContext<DomainState, State>;
+  }): InteractionInputEnumerationResult {
+    const decision = resolveInteractionDecision({
+      state: input.state,
+      playerId: input.playerId,
+      interactionId: input.interactionId,
+      params: {},
+      mode: "descriptor",
+      projection: input.projection,
+    });
+    if (!decision.found) return { found: false };
+    if (!decision.visible) return { found: true, visible: false };
+    const enumeration =
+      decision.descriptor.availability.status === "available"
+        ? enumerateCollectorInputAssignments({
+            interaction: decision.interaction,
+            domainState:
+              input.projection?.domainState ?? scope.toDomainState(input.state),
+            playerId: input.playerId,
+            queries: input.projection?.q,
+            derived: input.projection?.derived,
+            acceptsAssignment: (assignment) =>
+              acceptsSubmitAssignment({
+                state: input.state,
+                playerId: input.playerId,
+                interactionId: input.interactionId,
+                assignment,
+                projection: input.projection,
+              }),
+            maxEvaluations: input.maxEvaluations,
+          })
+        : null;
+    return {
+      found: true,
+      visible: true,
+      descriptor: decision.descriptor,
+      inputSatisfiability: decision.inputSatisfiability,
+      enumeration,
+    };
   }
 
   function explainInteraction(input: {
@@ -727,15 +817,17 @@ export function createInteractionDecisionResolver<
       inputs: domainDescriptor.inputs.map((entry) => ({
         key: entry.key,
         kind: entry.kind,
-        eligibleCount: domainEligibleCount(entry.domain),
+        eligibleCount: interactionDomainEligibleCount(entry.domain),
       })),
     };
   }
 
   return {
+    enumerateInteractionParams,
     evaluateInteractionCost,
     explainInteraction,
     resolveAvailableInteractionsFor,
+    resolveInteractionActionability,
     resolveInteractionDecision,
   };
 }

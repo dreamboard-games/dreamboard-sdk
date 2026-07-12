@@ -1,8 +1,8 @@
-import behaviorScenario from "../scenarios/submitted.scenario.ts";
+import behaviorScenario from "../scenarios/multiple-matches.scenario.ts";
 
 export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.mobile",
-  title: "Roll And Write Scorecard: mobile scorecard mark cell",
+  title: "Cloudline Survey: mobile survey-cell selection",
   behaviorScenario,
   contracts: ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
   capabilities: ["touch", "runtime-submit", "square-board-targets"],
@@ -14,7 +14,7 @@ export const scenario = {
     "examples/reference-games/roll-and-write-scorecard/app/model.ts",
     "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
     "examples/reference-games/roll-and-write-scorecard/ui/App.tsx",
-    "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
+    "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
     "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.mobile.scenario.ts",
   ],
   environment: {
@@ -27,7 +27,7 @@ export const scenario = {
       kind: "board-space",
       interactionId: "markCell",
       inputKey: "cell",
-      spaceId: "cell-0-1",
+      spaceId: "cell-1-0",
     },
   ],
 } as const;

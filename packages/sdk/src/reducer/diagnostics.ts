@@ -3,7 +3,12 @@ import type { DispatchTraceEntry } from "./core/types";
 export type DispatchTraceSummaryEntry =
   | { kind: "acceptedClientInput"; interactionId: string; playerId: string }
   | { kind: "appliedInstruction"; instruction: string }
-  | { kind: "rngConsumption"; operation: string; traceEntry: string };
+  | {
+      kind: "rngConsumption";
+      version: 2;
+      operation: string;
+      drawIndex: number;
+    };
 
 export type ReducerDiagnosticEvent =
   | {
@@ -115,8 +120,9 @@ export function summarizeDispatchTrace<State, PlayerId extends string>(
       case "rngConsumption":
         return {
           kind: "rngConsumption" as const,
+          version: entry.version,
           operation: entry.operation,
-          traceEntry: entry.traceEntry,
+          drawIndex: entry.drawIndex,
         };
       default: {
         const _exhaustive: never = entry;

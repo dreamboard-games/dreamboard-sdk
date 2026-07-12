@@ -2,6 +2,7 @@ import type { z } from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import type { ScenarioSeatRef } from "./definitions.js";
 import {
+  projectScenarioSeatReferences,
   resolveScenarioSeatReferences,
   ScenarioSchemaValueError,
 } from "./scenario-schema.js";
@@ -60,27 +61,7 @@ export function resolveScenarioCommandParams(options: {
   readonly playerIds: readonly string[];
   readonly path: string;
 }): Record<string, unknown> {
-  const schemas = createClientParamSchemasByPhase(options.game as never);
-  const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
-    | z.ZodTypeAny
-    | undefined;
-  const candidateSchemas = [
-    ...(currentPhaseSchema ? [currentPhaseSchema] : []),
-    ...Object.entries(schemas).flatMap(([phase, schemasForPhase]) => {
-      if (phase === options.phase) return [];
-      const schema = schemasForPhase[options.interactionId] as
-        | z.ZodTypeAny
-        | undefined;
-      return schema ? [schema] : [];
-    }),
-  ];
-  if (candidateSchemas.length === 0) {
-    throw new ScenarioCommandParamsError(
-      `${options.path}.interactionId`,
-      `interaction '${options.interactionId}' has no client parameter schema`,
-    );
-  }
-
+  const candidateSchemas = clientParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
   let firstIssue:
     | { readonly path: PropertyKey[]; readonly message: string }
@@ -123,6 +104,76 @@ export function resolveScenarioCommandParams(options: {
     `${options.path}.params${suffix}`,
     firstIssue?.message ?? "invalid interaction parameters",
   );
+}
+
+/** Convert runtime command params into the semantic, pasteable scenario form. */
+export function projectScenarioCommandParams(options: {
+  readonly game: GameLike;
+  readonly phase: string;
+  readonly interactionId: string;
+  readonly params: unknown;
+  readonly playerIds: readonly string[];
+  readonly path: string;
+}): Record<string, unknown> {
+  const candidateSchemas = clientParamSchemaCandidates(options);
+  let firstSeatError: ScenarioSchemaValueError | undefined;
+  for (const schema of candidateSchemas) {
+    if (!schema.safeParse(options.params).success) continue;
+    try {
+      const projected = projectScenarioSeatReferences({
+        schema,
+        value: options.params,
+        playerIds: options.playerIds,
+        path: `${options.path}.params`,
+      });
+      if (isPlainRecord(projected)) return projected;
+    } catch (error) {
+      if (error instanceof ScenarioSchemaValueError) {
+        firstSeatError ??= error;
+        continue;
+      }
+      throw error;
+    }
+  }
+  if (firstSeatError) {
+    throw new ScenarioCommandParamsError(
+      firstSeatError.path,
+      firstSeatError.message,
+    );
+  }
+  throw new ScenarioCommandParamsError(
+    `${options.path}.params`,
+    "runtime interaction parameters do not match a client parameter schema",
+  );
+}
+
+function clientParamSchemaCandidates(options: {
+  readonly game: GameLike;
+  readonly phase: string;
+  readonly interactionId: string;
+  readonly path: string;
+}): z.ZodTypeAny[] {
+  const schemas = createClientParamSchemasByPhase(options.game as never);
+  const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
+    | z.ZodTypeAny
+    | undefined;
+  const candidateSchemas = [
+    ...(currentPhaseSchema ? [currentPhaseSchema] : []),
+    ...Object.entries(schemas).flatMap(([phase, schemasForPhase]) => {
+      if (phase === options.phase) return [];
+      const schema = schemasForPhase[options.interactionId] as
+        | z.ZodTypeAny
+        | undefined;
+      return schema ? [schema] : [];
+    }),
+  ];
+  if (candidateSchemas.length === 0) {
+    throw new ScenarioCommandParamsError(
+      `${options.path}.interactionId`,
+      `interaction '${options.interactionId}' has no client parameter schema`,
+    );
+  }
+  return candidateSchemas;
 }
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {

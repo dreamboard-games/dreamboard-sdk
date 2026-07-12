@@ -620,6 +620,10 @@ describe("interaction input id types", () => {
       state: phaseState,
       initialState: () => ({}),
       enter({ state, accept, random, runtime }) {
+        const dieResult: number = random.integer({
+          minInclusive: 1,
+          maxInclusive: 6,
+        });
         const selected = random.subset({
           from: ["card-1", "card-2"] as const,
           count: 1,
@@ -630,6 +634,7 @@ describe("interaction input id types", () => {
           const rng = runtime.rng;
           void rng;
         };
+        void dieResult;
         void cardId;
         void assertEnterRuntimeShape;
         return accept(state);
@@ -638,6 +643,10 @@ describe("interaction input id types", () => {
         choose: defineInteraction<typeof contract, typeof phaseState>()({
           inputs: {},
           reduce({ state, accept, random, runtime }) {
+            const signedResult: number = random.integer({
+              minInclusive: -2,
+              maxInclusive: 2,
+            });
             const selected = random.subset({
               from: ["card-1", "card-2"] as const,
               count: 1,
@@ -648,6 +657,7 @@ describe("interaction input id types", () => {
               const rng = runtime.rng;
               void rng;
             };
+            void signedResult;
             void cardId;
             void assertReduceRuntimeShape;
             return accept(state);

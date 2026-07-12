@@ -68,8 +68,46 @@
       "additionalProperties": false
     },
 
+    "RngOperationParameter": {
+      "description": "One public, non-secret parameter that identifies the deterministic RNG operation without revealing its sampled value.",
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" }
+      ]
+    },
+
+    "RngOperation": {
+      "description": "Structured identity for a deterministic RNG operation. Sampled values are deliberately excluded.",
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RngOperationParameter"
+          }
+        }
+      },
+      "required": ["kind", "parameters"],
+      "additionalProperties": false
+    },
+
+    "RngDraw": {
+      "description": "Persisted metadata for one deterministic RNG cursor advance. The sampled value is never persisted in this structured projection.",
+      "type": "object",
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "cursorBefore": { "type": "integer", "minimum": 0 },
+        "cursorAfter": { "type": "integer", "minimum": 0 },
+        "operation": { "$ref": "#/$defs/RngOperation" }
+      },
+      "required": ["index", "cursorBefore", "cursorAfter", "operation"],
+      "additionalProperties": false
+    },
+
     "RngState": {
-      "description": "Deterministic RNG cursor state owned by the reducer runtime.",
+      "description": "Deterministic RNG cursor state owned by the reducer runtime. `trace` remains as a legacy compatibility field; new diagnostics consume structured `draws`.",
       "type": "object",
       "properties": {
         "seed": {
@@ -82,6 +120,11 @@
         "trace": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "draws": {
+          "description": "Structured draw metadata added in reducer contract 0.4. Older persisted states may omit it and are normalized by the SDK ingress codec.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/RngDraw" }
         }
       },
       "required": ["seed", "cursor", "trace"],
@@ -461,10 +504,12 @@
       "type": "object",
       "properties": {
         "kind": { "const": "rngConsumption" },
+        "version": { "const": 2 },
         "operation": { "type": "string", "minLength": 1 },
+        "drawIndex": { "type": "integer", "minimum": 0 },
         "traceEntry": { "type": "string" }
       },
-      "required": ["kind", "operation", "traceEntry"],
+      "required": ["kind", "version", "operation", "drawIndex", "traceEntry"],
       "additionalProperties": false
     },
 
@@ -681,6 +726,11 @@
         "kind": { "const": "rngConsumption" },
         "version": { "type": "integer" },
         "operation": { "type": "string", "minLength": 1 },
+        "drawIndex": {
+          "description": "Index into runtime.rng.draws for contract 0.4+ entries. Older persisted log entries omit it.",
+          "type": "integer",
+          "minimum": 0
+        },
         "traceEntry": { "type": "string" }
       },
       "required": ["kind", "version", "operation", "traceEntry"],
@@ -738,6 +788,47 @@
       "additionalProperties": false
     },
 
+    "SchedulerContinuationDependency": {
+      "description": "One scheduler-proven causal wait. Values contain public actor identities only; submitted params and private domain facts never cross this boundary.",
+      "type": "object",
+      "properties": {
+        "waiterPlayerId": { "type": "string", "minLength": 1 },
+        "blockerPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": ["waiterPlayerId", "blockerPlayerIds"],
+      "additionalProperties": false
+    },
+
+    "SchedulerFlowAuthorityProjection": {
+      "description": "Versioned, visibility-safe scheduler authority for inspect/dev parity. It exposes only public actor identities and causal relationships derived by trusted phase and interaction authorization machinery.",
+      "type": "object",
+      "properties": {
+        "version": { "const": 1 },
+        "activePlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pendingPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "continuationDependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SchedulerContinuationDependency" }
+        }
+      },
+      "required": [
+        "version",
+        "activePlayerIds",
+        "pendingPlayerIds",
+        "continuationDependencies"
+      ],
+      "additionalProperties": false
+    },
+
     "SeatProjectionBundle": {
       "description": "Result of `createReducerBundle(...).projectSeatsDynamic(...)`.",
       "type": "object",
@@ -754,6 +845,9 @@
             { "$ref": "#/$defs/SimultaneousPhaseProjection" },
             { "type": "null" }
           ]
+        },
+        "schedulerFlow": {
+          "$ref": "#/$defs/SchedulerFlowAuthorityProjection"
         },
         "sharedView": { "$ref": "#/$defs/JsonValue" },
         "interactionsByRef": { "$ref": "#/$defs/JsonValue" },

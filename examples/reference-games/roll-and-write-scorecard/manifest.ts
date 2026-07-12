@@ -61,19 +61,22 @@ export default defineTopologyManifest({
     {
       id: "standard",
       name: "Standard Cloudline Survey",
-      description: "Two-player teaching setup with eight seeded shared rolls.",
+      description:
+        "Prepare public survey grids for every crew before the first seeded weather reading.",
       guidance: {
-        summary: "Prepare one scorecard per player and the seeded dice list.",
+        summary:
+          "Prepare one public field notebook per crew and calibrate the shared weather dice.",
         steps: [
           {
             id: "prepare-scorecards",
-            label: "Prepare player scorecards",
-            description: "Give each player a private 4 by 4 survey grid.",
+            label: "Prepare survey grids",
+            description: "Give each crew the same public 4 by 4 target layout.",
           },
           {
             id: "prepare-dice",
-            label: "Prepare dice",
-            description: "Use the seeded two-die roll list for all rounds.",
+            label: "Calibrate weather instruments",
+            description:
+              "Use the seeded random source to roll two six-sided dice in each round.",
           },
         ],
       },

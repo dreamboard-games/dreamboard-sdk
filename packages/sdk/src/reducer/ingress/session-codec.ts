@@ -236,6 +236,7 @@ export function createIngressRuntimeCodec<
       seed: z.number().int().nullable(),
       cursor: z.number().int(),
       trace: z.array(z.string()),
+      draws: z.array(ContractZod.RngDrawSchema).default([]),
     }),
     setup: z
       .object({
@@ -280,6 +281,7 @@ export function createIngressRuntimeCodec<
           seed,
           cursor: 0,
           trace: [],
+          draws: [],
         },
         setup,
         simultaneous: { current: null },

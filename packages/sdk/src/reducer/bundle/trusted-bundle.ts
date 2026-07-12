@@ -109,6 +109,26 @@ export function createTrustedReducerBundle<
         interactionId,
       });
     },
+    resolveInteractionActionability({ state, playerId, interactionId }) {
+      return interactions.resolveInteractionActionability({
+        state: scope.toCombinedState(state),
+        playerId,
+        interactionId,
+      });
+    },
+    enumerateInteractionParams({
+      state,
+      playerId,
+      interactionId,
+      maxEvaluations,
+    }) {
+      return interactions.enumerateInteractionParams({
+        state: scope.toCombinedState(state),
+        playerId,
+        interactionId,
+        maxEvaluations,
+      });
+    },
     async reduce({ state, input }) {
       const combinedState = scope.toCombinedState(state);
       const reject = interactions.validateOrReject(combinedState, input);

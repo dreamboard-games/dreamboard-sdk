@@ -254,6 +254,48 @@ describe("protocol version constant", () => {
   });
 });
 
+describe("structured RNG draw compatibility", () => {
+  test("accepts legacy RNG state without structured draws", () => {
+    expect(() =>
+      Zod.RngStateSchema.parse({ seed: 42, cursor: 1, trace: ["legacy"] }),
+    ).not.toThrow();
+  });
+
+  test("accepts structured draw identity and rejects sampled values", () => {
+    const draw = {
+      index: 0,
+      cursorBefore: 0,
+      cursorAfter: 1,
+      operation: {
+        kind: "integer",
+        parameters: { minInclusive: 1, maxInclusive: 6 },
+      },
+    };
+    expect(() => Zod.RngDrawSchema.parse(draw)).not.toThrow();
+    expect(() => Zod.RngDrawSchema.parse({ ...draw, value: 4 })).toThrow();
+  });
+
+  test("keeps persisted legacy RNG log entries readable", () => {
+    expect(() =>
+      Zod.ReducerRuntimeLogEntrySchema.parse({
+        kind: "rngConsumption",
+        version: 1,
+        operation: "rollDie",
+        traceEntry: "legacy-value-bearing-entry",
+      }),
+    ).not.toThrow();
+    expect(() =>
+      Zod.ReducerRuntimeLogEntrySchema.parse({
+        kind: "rngConsumption",
+        version: 2,
+        operation: "rollDie",
+        drawIndex: 0,
+        traceEntry: "legacy-value-bearing-entry",
+      }),
+    ).not.toThrow();
+  });
+});
+
 describe("GameOutcome wire shape", () => {
   test("accepts scoreless tied outcomes", () => {
     const parsed = Zod.GameOutcomeSchema.parse({
@@ -416,6 +458,41 @@ describe("strict zod rejects unknown keys", () => {
         timing: {
           ...timing,
           unexpected: 5,
+        },
+      }),
+    ).toThrow();
+  });
+
+  test("scheduler flow projection carries actor identities but no private payload", () => {
+    const projectionFixture = FIXTURES.find(
+      (fixture) => fixture.typeName === "SeatProjectionBundle",
+    );
+    if (!projectionFixture) {
+      throw new Error("Missing SeatProjectionBundle fixture");
+    }
+    const schedulerFlow = (
+      projectionFixture.value as {
+        schedulerFlow?: Wire.SchedulerFlowAuthorityProjection;
+      }
+    ).schedulerFlow;
+
+    expect(schedulerFlow).toEqual({
+      version: 1,
+      activePlayerIds: ["player-2"],
+      pendingPlayerIds: ["player-2"],
+      continuationDependencies: [
+        {
+          waiterPlayerId: "player-1",
+          blockerPlayerIds: ["player-2"],
+        },
+      ],
+    });
+    expect(() =>
+      Zod.SeatProjectionBundleSchema.parse({
+        ...projectionFixture.value,
+        schedulerFlow: {
+          ...schedulerFlow,
+          submittedParams: { answer: "private" },
         },
       }),
     ).toThrow();

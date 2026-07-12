@@ -337,6 +337,8 @@ describe("phase 4 trusted-bundle characterization", () => {
 
     expect({
       digest: digest(projection),
+      stageSeats: projection.stageSeats,
+      schedulerFlow: projection.schedulerFlow,
       seats: projection.seats,
     }).toMatchSnapshot();
   });

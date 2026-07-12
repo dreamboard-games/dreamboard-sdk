@@ -8,12 +8,17 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": false,
-    "allowImportingTsExtensions": true,
     "types": [],
     "paths": {
-      "@dreamboard/manifest-contract": ["../shared/manifest-contract.ts"],
-      "#dreamboard/ui-contract": ["../shared/generated/ui-contract.ts"],
-      "@shared/*": ["../shared/*"]
+      "@dreamboard/manifest-contract": [
+        "../shared/manifest-contract.ts"
+      ],
+      "#dreamboard/ui-contract": [
+        "../shared/generated/ui-contract.ts"
+      ],
+      "@shared/*": [
+        "../shared/*"
+      ]
     }
   },
   "include": [
@@ -22,5 +27,8 @@
     "../shared/**/*.ts",
     "../shared/**/*.json"
   ],
-  "exclude": ["node_modules", "dist"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -1,7 +1,7 @@
 import {
   Interaction,
   type BoardSurface,
-} from "../shared/generated/ui-contract.ts";
+} from "../shared/generated/ui-contract";
 
 export function CloudlineInteractionRoutes({
   surveyGrid,
@@ -14,20 +14,14 @@ export function CloudlineInteractionRoutes({
     <>
       <Interaction.Routes
         routes={{
-          "setup.submit": {
-            collect: {},
-          },
           "markSurvey.markCell": {
             collect: {
               cell: surveyGrid.slot.playerSpace,
             },
           },
-          "markSurvey.submit": {
-            collect: {},
-          },
-          "gameOver.submit": {
-            collect: {},
-          },
+          "roll.submit": { collect: {} },
+          "markSurvey.submit": { collect: {} },
+          "gameOver.submit": { collect: {} },
         }}
       />
       <markCellForm.State unavailable={null}>

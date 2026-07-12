@@ -1,11 +1,11 @@
-import behaviorScenario from "../scenarios/invalid.scenario.ts";
+import behaviorScenario from "../scenarios/multiple-matches.scenario.ts";
 
 export const scenario = {
-  id: "roll-and-write-scorecard.mark-cell.invalid.mobile",
-  title: "Roll And Write Scorecard: mobile invalid target boundary",
+  id: "roll-and-write-scorecard.mark-cell.desktop",
+  title: "Cloudline Survey: desktop survey-cell selection",
   behaviorScenario,
   contracts: ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
-  capabilities: ["touch", "disabled-submit", "square-board-targets"],
+  capabilities: ["click", "runtime-submit", "square-board-targets"],
   sourceFiles: [
     "examples/reference-games/roll-and-write-scorecard/reference-game.json",
     "examples/reference-games/roll-and-write-scorecard/rule.md",
@@ -14,15 +14,22 @@ export const scenario = {
     "examples/reference-games/roll-and-write-scorecard/app/model.ts",
     "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
     "examples/reference-games/roll-and-write-scorecard/ui/App.tsx",
-    "examples/reference-games/roll-and-write-scorecard/test/scenarios/invalid.scenario.ts",
-    "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.invalid.mobile.scenario.ts",
+    "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
+    "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.desktop.scenario.ts",
   ],
   environment: {
-    viewport: "phone",
-    browsers: ["chromium", "webkit"],
-    input: ["touch", "keyboard"],
+    viewport: "desktop",
+    browsers: ["chromium"],
+    input: ["mouse", "keyboard"],
   },
-  replay: [],
+  replay: [
+    {
+      kind: "board-space",
+      interactionId: "markCell",
+      inputKey: "cell",
+      spaceId: "cell-1-0",
+    },
+  ],
 } as const;
 
 export default scenario;

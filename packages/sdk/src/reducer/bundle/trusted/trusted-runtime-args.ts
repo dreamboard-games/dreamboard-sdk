@@ -58,6 +58,11 @@ function publicRuntime<Runtime extends { rng?: unknown }>(
 }
 
 const DISABLED_RANDOM_HELPERS: RandomHelpers = {
+  integer() {
+    throw new Error(
+      "random helpers are only available in reducer mutation callbacks.",
+    );
+  },
   subset() {
     throw new Error(
       "random helpers are only available in reducer mutation callbacks.",

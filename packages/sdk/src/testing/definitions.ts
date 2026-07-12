@@ -41,7 +41,7 @@ export type InteractionAvailabilityLike =
       reason: string;
       missingResources?: Record<string, unknown>;
     }
-  | { status: "blocked"; reason: string };
+  | { status: "blocked"; reason: string; code?: string };
 
 export type InteractionExplanationLike = {
   interactionId: string;

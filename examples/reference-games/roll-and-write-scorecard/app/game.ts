@@ -1,8 +1,8 @@
-import { defineEmptyView, defineGame } from "@dreamboard-games/sdk/reducer";
+import { defineGame } from "@dreamboard-games/sdk/reducer";
 import { gameContract } from "./game-contract";
 import { createInitialPublicState } from "./model";
 import { phases } from "./phases";
-import { playerView } from "./player-view";
+import { playerView, sharedView } from "./player-view";
 import setupProfiles from "./setup-profiles";
 
 export default defineGame({
@@ -12,11 +12,11 @@ export default defineGame({
     private: () => ({}),
     hidden: () => ({}),
   },
-  initialPhase: "setup",
+  initialPhase: "roll",
   setupProfiles,
   phases,
   views: {
-    shared: defineEmptyView<typeof gameContract>(),
+    shared: sharedView,
     player: playerView,
   },
 });

@@ -155,14 +155,12 @@ export function playerSpaceInput<
       spaceId: z.string() as unknown as z.ZodType<SpaceId>,
     }) as PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
     eligibleTargets: ((state, playerId, q, values) =>
-      target
-        .eligible({
-          state: state as State,
-          playerId: playerId as never,
-          q: q as never,
-          values,
-        })
-        .map((candidate) => candidate.spaceId)) as
+      target.eligible({
+        state: state as State,
+        playerId: playerId as never,
+        q: q as never,
+        values,
+      })) as
       | ((
           state: CollectorState,
           playerId: string,

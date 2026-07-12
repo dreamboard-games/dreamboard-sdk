@@ -88,6 +88,27 @@ export type RuntimeRngState = {
   seed?: number | null;
   cursor: number;
   trace: string[];
+  draws: RuntimeRngDraw[];
+};
+
+export type RuntimeRngOperationParameter = string | number | boolean;
+
+export type RuntimeRngOperation = {
+  kind: string;
+  parameters: Record<string, RuntimeRngOperationParameter>;
+};
+
+/**
+ * Public, persisted identity for one deterministic RNG cursor advance.
+ *
+ * Sampled values deliberately remain absent. Their consequences are exposed
+ * only through the normal public/player projections.
+ */
+export type RuntimeRngDraw = {
+  index: number;
+  cursorBefore: number;
+  cursorAfter: number;
+  operation: RuntimeRngOperation;
 };
 
 export type RuntimeSimultaneousSubmission = {

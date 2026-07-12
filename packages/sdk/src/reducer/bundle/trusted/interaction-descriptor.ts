@@ -247,6 +247,12 @@ function interactionAvailabilityFromDecision(
         reason: decision.message ?? decision.code,
         code: decision.code,
       };
+    case FrameworkErrorCodes.NO_LEGAL_INPUT:
+      return {
+        status: "blocked",
+        reason: decision.message ?? "No legal input is currently available.",
+        code: FrameworkErrorCodes.NO_LEGAL_INPUT,
+      };
     default:
       return {
         status: "blocked",

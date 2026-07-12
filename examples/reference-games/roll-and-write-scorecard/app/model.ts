@@ -1,18 +1,10 @@
+import type { GameOutcome } from "@dreamboard-games/sdk/reducer";
 import type { PlayerId, SpaceId } from "../shared/manifest-contract";
 import type { PublicState, Roll, Score, SurveyMark } from "./game-contract";
 
 export type { PublicState };
 
-export const cloudlineRolls = [
-  { round: 1, dice: [2, 3], total: 5 },
-  { round: 2, dice: [4, 3], total: 7 },
-  { round: 3, dice: [6, 4], total: 10 },
-  { round: 4, dice: [1, 5], total: 6 },
-  { round: 5, dice: [3, 6], total: 9 },
-  { round: 6, dice: [2, 2], total: 4 },
-  { round: 7, dice: [5, 3], total: 8 },
-  { round: 8, dice: [6, 5], total: 11 },
-] as const satisfies readonly Roll[];
+export const CLOUDLINE_ROUND_COUNT = 8;
 
 export const surveyTargets = [
   [2, 5, 8, 11],
@@ -34,7 +26,9 @@ export const cellById = Object.fromEntries(
   surveyCells.map((cell) => [cell.id, cell]),
 ) as Record<SpaceId, (typeof surveyCells)[number]>;
 
-export function createInitialPublicState(playerIds: readonly PlayerId[] = []) {
+export function createInitialPublicState(
+  playerIds: readonly PlayerId[] = [],
+): PublicState {
   return {
     round: 1,
     activePlayerIndex: 0,
@@ -44,30 +38,34 @@ export function createInitialPublicState(playerIds: readonly PlayerId[] = []) {
     completed: false,
     scores: null,
     outcome: null,
-  } satisfies PublicState;
-}
-
-export function rollForRound(round: number): Roll {
-  const roll = cloudlineRolls.find((item) => item.round === round);
-  if (!roll) {
-    throw new Error(`Unknown Cloudline round ${round}`);
-  }
-  return {
-    round: roll.round,
-    dice: [roll.dice[0], roll.dice[1]],
-    total: roll.total,
   };
 }
 
-export function startRound(state: PublicState): PublicState {
+export function publishWeatherReading(
+  state: PublicState,
+  dice: readonly [number, number],
+): PublicState {
+  for (const [index, value] of dice.entries()) {
+    if (!Number.isSafeInteger(value) || value < 1 || value > 6) {
+      throw new Error(
+        `Cloudline die ${index + 1} must be an integer from 1 through 6.`,
+      );
+    }
+  }
+  const roll: Roll = {
+    round: state.round,
+    dice: [dice[0], dice[1]],
+    total: dice[0] + dice[1],
+  };
   return {
     ...state,
     activePlayerIndex: 0,
-    roll: rollForRound(state.round),
+    roll,
   };
 }
 
 export function activePlayerId(state: PublicState): PlayerId | null {
+  if (state.completed || state.roll === null) return null;
   return state.playerIds[state.activePlayerIndex] ?? null;
 }
 
@@ -82,27 +80,19 @@ export function legalSurveyTargets(
   state: PublicState,
   playerId = activePlayerId(state),
 ): SpaceId[] {
-  if (!playerId || !state.roll || state.completed) return [];
+  if (
+    !playerId ||
+    !state.roll ||
+    state.completed ||
+    playerId !== activePlayerId(state)
+  ) {
+    return [];
+  }
   const empty = emptyCells(state, playerId);
   const matching = empty.filter(
     (cellId) => cellById[cellId]?.target === state.roll?.total,
   );
   return matching.length > 0 ? matching : empty;
-}
-
-export function createDraft(
-  state: PublicState,
-  options: { playerId?: PlayerId | null; cellId: SpaceId },
-) {
-  const playerId = options.playerId ?? activePlayerId(state);
-  return {
-    kind: "survey-mark" as const,
-    playerId,
-    cellId: options.cellId,
-    round: state.round,
-    rollTotal: state.roll?.total ?? null,
-    validAt: `${state.round}:${state.roll?.dice.join("-") ?? "none"}`,
-  };
 }
 
 export function validateSubmission(
@@ -141,28 +131,28 @@ export function validateSubmission(
     return {
       ok: false,
       errorCode: "STALE_SUBMISSION",
-      message: "The submitted draft belongs to an earlier roll.",
+      message: "The submitted mark belongs to an earlier weather reading.",
     };
   }
   if (!playerId || playerId !== activePlayerId(state)) {
     return {
       ok: false,
       errorCode: "PLAYER_NOT_ACTIVE",
-      message: "Players resolve the shared roll in seat order.",
+      message: "Players resolve the shared weather reading in seat order.",
     };
   }
   if (!cellById[cellId]) {
     return {
       ok: false,
       errorCode: "UNKNOWN_CELL",
-      message: "The selected scorecard cell does not exist.",
+      message: "The selected survey-grid cell does not exist.",
     };
   }
   if (state.marks[playerId]?.[cellId]) {
     return {
       ok: false,
       errorCode: "CELL_ALREADY_MARKED",
-      message: "Choose an unmarked scorecard cell.",
+      message: "Choose an unmarked survey-grid cell.",
     };
   }
   const legalSpaceIds = legalSurveyTargets(state, playerId);
@@ -170,7 +160,7 @@ export function validateSubmission(
     return {
       ok: false,
       errorCode: "CELL_DOES_NOT_MATCH_ROLL",
-      message: "Choose an unmarked cell matching the roll.",
+      message: "Choose an unmarked cell matching the weather reading.",
       legalSpaceIds,
     };
   }
@@ -233,9 +223,9 @@ export function submitSurveyMark(
       },
     };
   }
-  if (state.round >= cloudlineRolls.length) {
+  if (state.round >= CLOUDLINE_ROUND_COUNT) {
     const scores = scorePlayers(marks, state.playerIds);
-    const standings = standingsFromScores(scores, state.playerIds);
+    const outcome = outcomeFromScores(scores, state.playerIds);
     return {
       accepted: true as const,
       mark,
@@ -245,13 +235,7 @@ export function submitSurveyMark(
         marks,
         completed: true,
         scores,
-        outcome: {
-          reason: {
-            code: "SURVEY_COMPLETE" as const,
-            message: "Every player resolved all eight survey rolls.",
-          },
-          standings,
-        },
+        outcome,
       },
     };
   }
@@ -259,13 +243,13 @@ export function submitSurveyMark(
     accepted: true as const,
     mark,
     validation,
-    state: startRound({
+    state: {
       ...state,
       round: state.round + 1,
       activePlayerIndex: 0,
       marks,
       roll: null,
-    }),
+    },
   };
 }
 
@@ -323,80 +307,100 @@ function largestSurveyedRegion(marks: Record<string, SurveyMark>): number {
 }
 
 export function scorePlayerMarks(marks: Record<string, SurveyMark>): Score {
-  const rows = completeRows(marks);
-  const columns = completeColumns(marks);
-  const largestRegion = largestSurveyedRegion(marks);
-  const failedSurveys = Object.values(marks).filter(
+  const failedSurveyCount = Object.values(marks).filter(
     (mark) => mark.kind === "failed",
   ).length;
+  const components: Score["components"] = {
+    "complete-rows": completeRows(marks) * 6,
+    "complete-columns": completeColumns(marks) * 6,
+    "largest-region": largestSurveyedRegion(marks),
+    "failed-surveys": failedSurveyCount === 0 ? 0 : failedSurveyCount * -2,
+  };
   return {
-    total: rows * 6 + columns * 6 + largestRegion - failedSurveys * 2,
-    components: {
-      completeRows: rows,
-      completeColumns: columns,
-      largestRegion,
-      failedSurveys,
-    },
+    total: Object.values(components).reduce((sum, value) => sum + value, 0),
+    components,
   };
 }
 
 export function scorePlayers(
   marksByPlayer: PublicState["marks"],
   playerIds = Object.keys(marksByPlayer) as PlayerId[],
-): Record<PlayerId, Score> {
+): Partial<Record<PlayerId, Score>> {
   return Object.fromEntries(
     playerIds.map((playerId) => [
       playerId,
       scorePlayerMarks(marksByPlayer[playerId] ?? {}),
     ]),
-  ) as Record<PlayerId, Score>;
+  ) as Partial<Record<PlayerId, Score>>;
 }
 
-function standingsFromScores(
-  scores: Record<PlayerId, Score>,
-  playerIds: PlayerId[],
-) {
-  const ranked = [...playerIds].sort(
-    (left, right) => (scores[right]?.total ?? 0) - (scores[left]?.total ?? 0),
+function scoreBreakdown(score: Score) {
+  return [
+    {
+      id: "complete-rows",
+      label: "Complete rows",
+      value: score.components["complete-rows"],
+    },
+    {
+      id: "complete-columns",
+      label: "Complete columns",
+      value: score.components["complete-columns"],
+    },
+    {
+      id: "largest-region",
+      label: "Largest region",
+      value: score.components["largest-region"],
+    },
+    {
+      id: "failed-surveys",
+      label: "Failed surveys",
+      value: score.components["failed-surveys"],
+    },
+  ] as const;
+}
+
+export function outcomeFromScores(
+  scores: Partial<Record<PlayerId, Score>>,
+  playerIds: readonly PlayerId[],
+): GameOutcome<PlayerId> {
+  const seatByPlayer = new Map(
+    playerIds.map((playerId, seat) => [playerId, seat]),
   );
-  const best = scores[ranked[0] as PlayerId]?.total ?? 0;
-  const winnerCount = ranked.filter(
-    (playerId) => (scores[playerId]?.total ?? 0) === best,
-  ).length;
-  return ranked.map((playerId, index) => {
-    const score = scores[playerId]?.total ?? 0;
-    const tiedBest = score === best && winnerCount > 1;
-    return {
-      playerId,
-      rank: tiedBest ? 1 : index + 1,
-      result: tiedBest
-        ? ("draw" as const)
-        : index === 0
-          ? ("win" as const)
-          : ("loss" as const),
-      score,
-    };
+  const ranked = [...playerIds].sort((left, right) => {
+    const scoreDelta = (scores[right]?.total ?? 0) - (scores[left]?.total ?? 0);
+    return scoreDelta !== 0
+      ? scoreDelta
+      : (seatByPlayer.get(left) ?? 0) - (seatByPlayer.get(right) ?? 0);
   });
-}
+  const rankByPlayer = new Map<PlayerId, number>();
+  let previousScore: number | undefined;
+  let previousRank = 0;
+  ranked.forEach((playerId, index) => {
+    const score = scores[playerId]?.total ?? 0;
+    const rank = score === previousScore ? previousRank : index + 1;
+    rankByPlayer.set(playerId, rank);
+    previousScore = score;
+    previousRank = rank;
+  });
+  const topCount = ranked.filter(
+    (playerId) => rankByPlayer.get(playerId) === 1,
+  ).length;
 
-export function playDeterministicGame(playerIds: readonly PlayerId[]) {
-  let state = startRound(createInitialPublicState(playerIds));
-  for (const roll of cloudlineRolls) {
-    for (const playerId of playerIds) {
-      const selection = legalSurveyTargets(state, playerId)[0];
-      if (!selection) {
-        throw new Error(`No legal Cloudline selection for ${playerId}.`);
-      }
-      const result = submitSurveyMark(state, {
+  return {
+    reason: {
+      code: "EIGHT_ROUNDS_COMPLETE",
+      message: "Every crew resolved all eight weather readings.",
+    },
+    standings: ranked.map((playerId) => {
+      const rank = rankByPlayer.get(playerId) ?? 1;
+      const score = scores[playerId] ?? scorePlayerMarks({});
+      return {
         playerId,
-        cellId: selection,
-        expectedRound: roll.round,
-      });
-      if (!result.accepted) {
-        throw new Error((result.validation as { errorCode: string }).errorCode);
-      }
-      state = result.state;
-    }
-  }
-  return state;
+        rank,
+        result: rank === 1 ? (topCount === 1 ? "win" : "draw") : "loss",
+        score: score.total,
+        scoreBreakdown: scoreBreakdown(score),
+      };
+    }),
+  };
 }

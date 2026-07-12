@@ -37,7 +37,9 @@ function toRngTrace<
 ): DispatchTraceEntry<State, PlayerId, ReducerInput>[] {
   return consumptions.map((consumption) => ({
     type: "rngConsumption" as const,
+    version: 2 as const,
     operation: consumption.operation,
+    drawIndex: consumption.drawIndex,
     traceEntry: consumption.traceEntry,
   }));
 }

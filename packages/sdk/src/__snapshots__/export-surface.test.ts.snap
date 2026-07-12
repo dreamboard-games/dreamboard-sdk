@@ -202,6 +202,30 @@ exports[`public export surface runtime/workspace-contract export names are stabl
 ]
 `;
 
+exports[`public export surface reference-games export names are stable 1`] = `
+[
+  "REFERENCE_GAME_MANIFEST_SCHEMA_VERSION",
+  "REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION",
+  "canonicalizeReferenceGameSourcePayload",
+  "computeReferenceGameSourceDigest",
+  "isPackageableReferenceGame",
+  "parseReferenceGameManifestV3",
+  "parseReferenceGameSourceManifest",
+  "referenceGameDemoReleaseSchema",
+  "referenceGameManifestV3Schema",
+  "referenceGameRightsSchema",
+  "referenceGameSdkPolicySchema",
+  "referenceGameSha256DigestSchema",
+  "referenceGameSourceEntrySchema",
+  "referenceGameSourceManifestPayloadSchema",
+  "referenceGameSourceManifestSchema",
+  "referenceGameSourceObjectSchema",
+  "referenceGameSourceProvenanceSchema",
+  "referenceGameTeachingSchema",
+  "referenceGameWorkspaceSchema",
+]
+`;
+
 exports[`public export surface ui export names are stable 1`] = `
 [
   "ActionButton",
@@ -355,6 +379,7 @@ exports[`public export surface types export names are stable 1`] = `
 exports[`public export surface testing export names are stable 1`] = `
 [
   "FixturePluginRuntime",
+  "ScenarioAssertionError",
   "ScenarioDefinitionValidationError",
   "ScenarioReplayError",
   "StaleContractArtifactError",
@@ -389,8 +414,10 @@ exports[`public export surface testing export names are stable 1`] = `
   "digestUIFixtureTransportRequest",
   "digestUIScenarioFixture",
   "drag",
+  "exploreScenario",
   "fill",
   "fixtureEnvironmentInitFor",
+  "inspectScenario",
   "isSha256Digest",
   "isStaleContractArtifactError",
   "parseUIParityObservationV1",
@@ -474,29 +501,5 @@ exports[`public export surface browser-interaction export names are stable 1`] =
   "resolveBrowserPointerTarget",
   "targetIdentityKey",
   "validateBrowserInteractionSnapshot",
-]
-`;
-
-exports[`public export surface reference-games export names are stable 1`] = `
-[
-  "REFERENCE_GAME_MANIFEST_SCHEMA_VERSION",
-  "REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION",
-  "canonicalizeReferenceGameSourcePayload",
-  "computeReferenceGameSourceDigest",
-  "isPackageableReferenceGame",
-  "parseReferenceGameManifestV3",
-  "parseReferenceGameSourceManifest",
-  "referenceGameDemoReleaseSchema",
-  "referenceGameManifestV3Schema",
-  "referenceGameRightsSchema",
-  "referenceGameSdkPolicySchema",
-  "referenceGameSha256DigestSchema",
-  "referenceGameSourceEntrySchema",
-  "referenceGameSourceManifestPayloadSchema",
-  "referenceGameSourceManifestSchema",
-  "referenceGameSourceObjectSchema",
-  "referenceGameSourceProvenanceSchema",
-  "referenceGameTeachingSchema",
-  "referenceGameWorkspaceSchema",
 ]
 `;

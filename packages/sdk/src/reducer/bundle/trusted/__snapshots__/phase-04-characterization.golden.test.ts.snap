@@ -36,7 +36,16 @@ exports[`phase 4 trusted-bundle characterization lifecycle transition and phase 
 
 exports[`phase 4 trusted-bundle characterization seat projection digest stays golden 1`] = `
 {
-  "digest": "d2ad580ed12fb1c878bc36888134aeca00e9bb2223a75cec6027080752c57900",
+  "digest": "a6585f41312f77506d53c6893dcce0919f4ff246e2b15c776af3f082023b3039",
+  "schedulerFlow": {
+    "activePlayerIds": [
+      "player-1",
+      "player-2",
+    ],
+    "continuationDependencies": [],
+    "pendingPlayerIds": [],
+    "version": 1,
+  },
   "seats": {
     "player-1": {
       "availableInteractionRefs": [
@@ -69,6 +78,10 @@ exports[`phase 4 trusted-bundle characterization seat projection digest stays go
       "zones": {},
     },
   },
+  "stageSeats": [
+    "player-1",
+    "player-2",
+  ],
 }
 `;
 

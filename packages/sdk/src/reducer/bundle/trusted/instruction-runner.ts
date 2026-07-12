@@ -18,6 +18,7 @@ import { createFlowInstructionResolver } from "./flow-instruction-resolver";
 import {
   createMutableRandomHelpers,
   sampleRngCollectorValue,
+  type RngConsumption,
 } from "./rng-sampler";
 import {
   isSimultaneousPhase,
@@ -66,7 +67,22 @@ export function createTrustedInstructionRunner<
   const flowInstructions = createFlowInstructionResolver(lifecycle);
   const engineInstructions = createEngineInstructionResolver<Contract>();
 
-  type RuntimeRngResult = { runtimeRng?: RuntimeRngState };
+  type RuntimeRngResult = {
+    runtimeRng?: RuntimeRngState;
+    rngConsumptions?: readonly RngConsumption[];
+  };
+
+  function rngTrace(
+    consumptions: readonly RngConsumption[],
+  ): DispatchTraceEntry<State, PlayerId, ReducerInput>[] {
+    return consumptions.map((consumption) => ({
+      type: "rngConsumption" as const,
+      version: 2 as const,
+      operation: consumption.operation,
+      drawIndex: consumption.drawIndex,
+      traceEntry: consumption.traceEntry,
+    }));
+  }
 
   function reduceInternal(
     state: State,
@@ -113,7 +129,11 @@ export function createTrustedInstructionRunner<
         scope.toDomainState(state),
       );
       return result.type === "accept"
-        ? { ...result, runtimeRng: random.currentRng() }
+        ? {
+            ...result,
+            runtimeRng: random.currentRng(),
+            rngConsumptions: random.consumptions(),
+          }
         : result;
     }
 
@@ -146,7 +166,11 @@ export function createTrustedInstructionRunner<
         scope.toDomainState(state),
       );
       return result.type === "accept"
-        ? { ...result, runtimeRng: random.currentRng() }
+        ? {
+            ...result,
+            runtimeRng: random.currentRng(),
+            rngConsumptions: random.consumptions(),
+          }
         : result;
     }
 
@@ -161,6 +185,7 @@ export function createTrustedInstructionRunner<
     input: ReducerInput;
     consumptions: readonly {
       operation: string;
+      drawIndex: number;
       traceEntry: string;
     }[];
   } {
@@ -176,7 +201,7 @@ export function createTrustedInstructionRunner<
     const collectors = interaction.inputs as Record<string, InputCollector>;
     let nextRng = state.runtime.rng;
     const sampled: Record<string, unknown> = {};
-    const consumptions: Array<{ operation: string; traceEntry: string }> = [];
+    const consumptions: RngConsumption[] = [];
     let anySampled = false;
     for (const [key, collector] of Object.entries(collectors)) {
       if (collector.kind !== "rng") continue;
@@ -218,7 +243,11 @@ export function createTrustedInstructionRunner<
   function reduceSimultaneousSubmit(
     state: State,
     input: ReducerInput,
-  ): ReducerResult<State> | null {
+  ):
+    | (ReducerResult<State> & {
+        trace?: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+      })
+    | null {
     if (
       input.kind !== "interaction" ||
       input.interactionId !== SIMULTANEOUS_SUBMIT_INTERACTION_ID
@@ -346,6 +375,7 @@ export function createTrustedInstructionRunner<
       } as State),
       instructions: resolved.instructions ?? [],
       events: resolved.events ?? [],
+      trace: rngTrace(random.consumptions()),
     };
   }
 
@@ -360,11 +390,10 @@ export function createTrustedInstructionRunner<
         ? simultaneousResult
         : {
             ...simultaneousResult,
-            trace: sampled.consumptions.map((consumption) => ({
-              type: "rngConsumption" as const,
-              operation: consumption.operation,
-              traceEntry: consumption.traceEntry,
-            })),
+            trace: [
+              ...rngTrace(sampled.consumptions),
+              ...(simultaneousResult.trace ?? []),
+            ],
           };
     }
     const result = reduceInternal(sampled.state, sampled.input);
@@ -382,11 +411,10 @@ export function createTrustedInstructionRunner<
       } as State,
       instructions: result.instructions ?? [],
       events: result.events ?? [],
-      trace: sampled.consumptions.map((consumption) => ({
-        type: "rngConsumption" as const,
-        operation: consumption.operation,
-        traceEntry: consumption.traceEntry,
-      })),
+      trace: rngTrace([
+        ...sampled.consumptions,
+        ...(result.rngConsumptions ?? []),
+      ]),
     };
   }
 

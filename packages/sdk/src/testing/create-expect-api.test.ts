@@ -1,6 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { createExpectApi } from "./create-expect-api.ts";
 import type { InteractionDescriptorLike } from "./definitions.ts";
+import {
+  SCENARIO_ASSERTION_ERROR_CODE,
+  ScenarioAssertionError,
+} from "./scenario-assertion-error.ts";
 
 function makeDescriptor(
   descriptor: Partial<InteractionDescriptorLike>,
@@ -17,6 +21,63 @@ function makeDescriptor(
 
 describe("createExpectApi — value matchers", () => {
   const expectFn = createExpectApi();
+
+  test("all built-in matcher mismatches use the typed scenario assertion error", () => {
+    const mismatches: readonly (() => unknown)[] = [
+      () => expectFn(1).toBe(2),
+      () => expectFn({ a: 1 }).toEqual({ a: 2 }),
+      () => expectFn({ a: 1 }).toMatchObject({ a: 2 }),
+      () => expectFn(undefined).toBeDefined(),
+      () => expectFn(1).toBeUndefined(),
+      () => expectFn(1).toBeNull(),
+      () => expectFn([]).toContain("missing"),
+      () => expectFn(1).toContain(1),
+      () => expectFn([]).toContainEqual({ id: "missing" }),
+      () => expectFn(1).toContainEqual(1),
+      () => expectFn([]).toHaveLength(1),
+      () => expectFn(1).toHaveLength(1),
+      () => expectFn(1).toBeGreaterThan(1),
+      () => expectFn("1").toBeGreaterThan(1),
+      () => expectFn(0).toBeGreaterThanOrEqual(1),
+      () => expectFn("1").toBeGreaterThanOrEqual(1),
+      () => expectFn(null).toThrow(),
+      () => expectFn(() => undefined).toThrow(),
+      () =>
+        expectFn(() => {
+          throw new Error("actual");
+        }).toThrow("expected"),
+      () => expectFn({}).toMatchSnapshot(),
+    ];
+
+    for (const mismatch of mismatches) {
+      expect(mismatch).toThrow(ScenarioAssertionError);
+      try {
+        mismatch();
+      } catch (error) {
+        expect(error).toMatchObject({
+          name: "ScenarioAssertionError",
+          code: SCENARIO_ASSERTION_ERROR_CODE,
+        });
+      }
+    }
+  });
+
+  test("does not wrap a generic exception thrown by an authored predicate", () => {
+    const unexpected = new Error("predicate crashed");
+    let caught: unknown;
+
+    try {
+      expectFn(() => {
+        throw new Error("actual");
+      }).toThrow(() => {
+        throw unexpected;
+      });
+    } catch (error) {
+      caught = error;
+    }
+
+    expect(caught).toBe(unexpected);
+  });
 
   test("toBe passes on strict equality and throws otherwise", () => {
     expectFn(1).toBe(1);
@@ -119,27 +180,17 @@ describe("createExpectApi — rejection matcher", () => {
   });
 
   test("toRejectWith fails when the function resolves", async () => {
-    let threw = false;
-    try {
-      await expectFn(async () => undefined).toRejectWith({
-        errorCode: "ANY",
-      });
-    } catch {
-      threw = true;
-    }
-    expect(threw).toBe(true);
+    await expect(
+      expectFn(async () => undefined).toRejectWith({}),
+    ).rejects.toBeInstanceOf(ScenarioAssertionError);
   });
 
   test("toRejectWith fails when errorCode mismatches", async () => {
-    let threw = false;
-    try {
-      await expectFn(async () => {
+    await expect(
+      expectFn(async () => {
         throw makeError("OTHER");
-      }).toRejectWith({ errorCode: "EXPECTED" });
-    } catch {
-      threw = true;
-    }
-    expect(threw).toBe(true);
+      }).toRejectWith({ errorCode: "EXPECTED" }),
+    ).rejects.toBeInstanceOf(ScenarioAssertionError);
   });
 
   test("toRejectWith appends the last diagnostic rejection", async () => {

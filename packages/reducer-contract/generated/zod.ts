@@ -18,7 +18,13 @@ export const ContinuationMapSchema = z.record(z.string(), ContinuationTokenSchem
 
 export const ReducerSetupSelectionSchema = z.object({ "profileId": z.string().min(1), "optionValues": z.record(z.string(), z.union([z.string(), z.null()])) }).strict();
 
-export const RngStateSchema = z.object({ "seed": z.union([z.number().refine(Number.isInteger, { message: "Expected integer" }), z.null()]), "cursor": z.number().int(), "trace": z.array(z.string()) }).strict();
+export const RngOperationParameterSchema = z.union([z.string(), z.number().finite(), z.boolean()]);
+
+export const RngOperationSchema = z.object({ "kind": z.string().min(1), "parameters": z.record(z.string(), RngOperationParameterSchema) }).strict();
+
+export const RngDrawSchema = z.object({ "index": z.number().int().gte(0), "cursorBefore": z.number().int().gte(0), "cursorAfter": z.number().int().gte(0), "operation": RngOperationSchema }).strict();
+
+export const RngStateSchema = z.object({ "seed": z.union([z.number().refine(Number.isInteger, { message: "Expected integer" }), z.null()]), "cursor": z.number().int(), "trace": z.array(z.string()), "draws": z.array(RngDrawSchema).optional() }).strict();
 
 export const ReducerFlowStateSchema = z.object({ "currentPhase": z.string().min(1), "turn": z.number().int(), "round": z.number().int(), "activePlayers": z.array(z.string().min(1)) }).strict();
 
@@ -92,7 +98,7 @@ export const DispatchTraceAcceptedClientInputSchema = z.object({ "kind": z.liter
 
 export const DispatchTraceAppliedEffectSchema = z.object({ "kind": z.literal("appliedEffect"), "effect": EffectSchema, "continuation": ContinuationTokenSchema.optional() }).strict();
 
-export const DispatchTraceRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "operation": z.string().min(1), "traceEntry": z.string() }).strict();
+export const DispatchTraceRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "version": z.literal(2), "operation": z.string().min(1), "drawIndex": z.number().int().gte(0), "traceEntry": z.string() }).strict();
 
 export const DispatchTraceSchema = z.discriminatedUnion("kind", [DispatchTraceAcceptedClientInputSchema, DispatchTraceAppliedEffectSchema, DispatchTraceRngConsumptionSchema]);
 
@@ -106,7 +112,7 @@ export const ReducerRuntimeLogEntryAcceptedClientInputSchema = z.object({ "kind"
 
 export const ReducerRuntimeLogEntryAppliedEffectSchema = z.object({ "kind": z.literal("appliedEffect"), "version": z.number().int(), "effect": EffectSchema, "continuation": z.union([ContinuationTokenSchema, z.null()]) }).strict();
 
-export const ReducerRuntimeLogEntryRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "version": z.number().int(), "operation": z.string().min(1), "traceEntry": z.string() }).strict();
+export const ReducerRuntimeLogEntryRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "version": z.number().int(), "operation": z.string().min(1), "drawIndex": z.number().int().gte(0).optional(), "traceEntry": z.string() }).strict();
 
 export const ReducerRuntimeLogEntryStateCommitSchema = z.object({ "kind": z.literal("stateCommit"), "version": z.number().int(), "state": ReducerSessionStateSchema }).strict();
 
@@ -116,9 +122,13 @@ export const SeatProjectionSchema = z.object({ "view": JsonValueSchema.optional(
 
 export const SimultaneousPhaseProjectionSchema = z.object({ "phaseName": z.string().min(1), "interactionId": z.string().min(1), "actorIds": z.array(z.string().min(1)), "sealedPlayerIds": z.array(z.string().min(1)), "pendingPlayerIds": z.array(z.string().min(1)) }).strict();
 
+export const SchedulerContinuationDependencySchema = z.object({ "waiterPlayerId": z.string().min(1), "blockerPlayerIds": z.array(z.string().min(1)) }).strict();
+
+export const SchedulerFlowAuthorityProjectionSchema = z.object({ "version": z.literal(1), "activePlayerIds": z.array(z.string().min(1)), "pendingPlayerIds": z.array(z.string().min(1)), "continuationDependencies": z.array(SchedulerContinuationDependencySchema) }).strict();
+
 export const ProjectionTimingMetadataSchema = z.object({ "resolveAvailableInteractionsMs": z.number().finite().gte(0), "resolveViewMs": z.number().finite().gte(0), "resolveZoneHandlesMs": z.number().finite().gte(0), "descriptorHashMs": z.number().finite().gte(0) }).strict();
 
-export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
+export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "schedulerFlow": SchedulerFlowAuthorityProjectionSchema.optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
 
 export const ProjectSeatsDynamicRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
 

@@ -184,6 +184,7 @@ export type RuntimeHelpers<
 };
 
 export type RandomHelpers = {
+  integer(options: { minInclusive: number; maxInclusive: number }): number;
   subset<const Values extends readonly unknown[]>(options: {
     from: Values;
     count: number;

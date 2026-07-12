@@ -17,7 +17,9 @@ export type DispatchTraceEntry<
     }
   | {
       type: "rngConsumption";
+      version: 2;
       operation: string;
+      drawIndex: number;
       traceEntry: string;
     };
 

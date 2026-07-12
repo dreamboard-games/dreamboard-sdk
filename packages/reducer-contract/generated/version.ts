@@ -6,4 +6,4 @@
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
  * time hosts refuse bundles whose major version differs.
  */
-export const REDUCER_CONTRACT_VERSION = "0.3.0" as const;
+export const REDUCER_CONTRACT_VERSION = "0.4.0" as const;

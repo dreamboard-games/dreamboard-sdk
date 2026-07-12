@@ -73,6 +73,27 @@ function resolvePlayerSeatReference(options: {
   return playerId;
 }
 
+function projectPlayerSeatReference(options: {
+  readonly value: unknown;
+  readonly playerIds: readonly string[];
+  readonly path: string;
+}): { readonly seat: number } {
+  if (typeof options.value !== "string") {
+    throw new ScenarioSchemaValueError(
+      options.path,
+      "expected a runtime player id string",
+    );
+  }
+  const seat = options.playerIds.indexOf(options.value);
+  if (seat < 0) {
+    throw new ScenarioSchemaValueError(
+      options.path,
+      `runtime player id '${options.value}' is not assigned to a scenario seat`,
+    );
+  }
+  return { seat };
+}
+
 type TupleDefinition = {
   readonly items?: readonly z.core.SomeType[];
   readonly rest?: z.core.SomeType | null;
@@ -97,40 +118,66 @@ function asClassicSchema(schema: z.core.SomeType): z.ZodTypeAny {
   return schema as unknown as z.ZodTypeAny;
 }
 
-/**
- * Resolve only schemas carrying the semantic `playerId` manifest family.
- * Ordinary strings and objects with a coincidental `seat` key are untouched.
- */
-export function resolveScenarioSeatReferences(options: {
+type ScenarioSchemaTransformOptions = {
   readonly schema: z.core.SomeType;
   readonly value: unknown;
   readonly playerIds: readonly string[];
   readonly path: string;
-}): unknown {
+};
+
+/**
+ * Resolve only schemas carrying the semantic `playerId` manifest family.
+ * Ordinary strings and objects with a coincidental `seat` key are untouched.
+ */
+export function resolveScenarioSeatReferences(
+  options: ScenarioSchemaTransformOptions,
+): unknown {
+  return transformScenarioSchemaValue({ ...options, direction: "resolve" });
+}
+
+/**
+ * Convert runtime player ids back to pasteable scenario seat references using
+ * the same semantic schema walker as command replay.
+ */
+export function projectScenarioSeatReferences(
+  options: ScenarioSchemaTransformOptions,
+): unknown {
+  return transformScenarioSchemaValue({ ...options, direction: "project" });
+}
+
+function transformScenarioSchemaValue(
+  options: ScenarioSchemaTransformOptions & {
+    readonly direction: "resolve" | "project";
+  },
+): unknown {
   const { schema, value, playerIds, path } = options;
 
   if (manifestSchemaFamily(schema) === "playerId") {
-    return resolvePlayerSeatReference({ value, playerIds, path });
+    return options.direction === "resolve"
+      ? resolvePlayerSeatReference({ value, playerIds, path })
+      : projectPlayerSeatReference({ value, playerIds, path });
   }
 
   if (schema instanceof z.ZodOptional || schema instanceof z.ZodExactOptional) {
     return value === undefined
       ? value
-      : resolveScenarioSeatReferences({
+      : transformScenarioSchemaValue({
           schema: asClassicSchema(schema.unwrap()),
           value,
           playerIds,
           path,
+          direction: options.direction,
         });
   }
   if (schema instanceof z.ZodNullable) {
     return value === null
       ? value
-      : resolveScenarioSeatReferences({
+      : transformScenarioSchemaValue({
           schema: asClassicSchema(schema.unwrap()),
           value,
           playerIds,
           path,
+          direction: options.direction,
         });
   }
   if (
@@ -140,21 +187,23 @@ export function resolveScenarioSeatReferences(options: {
     schema instanceof z.ZodReadonly ||
     schema instanceof z.ZodNonOptional
   ) {
-    return resolveScenarioSeatReferences({
+    return transformScenarioSchemaValue({
       schema: asClassicSchema(schema.unwrap()),
       value,
       playerIds,
       path,
+      direction: options.direction,
     });
   }
   if (schema instanceof z.ZodArray) {
     if (!Array.isArray(value)) return value;
     return value.map((item, index) =>
-      resolveScenarioSeatReferences({
+      transformScenarioSchemaValue({
         schema: asClassicSchema(schema.element),
         value: item,
         playerIds,
         path: appendScenarioPath(path, index),
+        direction: options.direction,
       }),
     );
   }
@@ -165,11 +214,12 @@ export function resolveScenarioSeatReferences(options: {
     return value.map((item, index) => {
       const itemSchema = items[index] ?? definition.rest;
       return itemSchema
-        ? resolveScenarioSeatReferences({
+        ? transformScenarioSchemaValue({
             schema: asClassicSchema(itemSchema),
             value: item,
             playerIds,
             path: appendScenarioPath(path, index),
+            direction: options.direction,
           })
         : item;
     });
@@ -179,11 +229,12 @@ export function resolveScenarioSeatReferences(options: {
     const output: Record<string, unknown> = { ...value };
     for (const [key, childSchema] of Object.entries(schema.shape)) {
       if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
-      output[key] = resolveScenarioSeatReferences({
+      output[key] = transformScenarioSchemaValue({
         schema: asClassicSchema(childSchema),
         value: value[key],
         playerIds,
         path: appendScenarioPath(path, key),
+        direction: options.direction,
       });
     }
     return output;
@@ -199,11 +250,12 @@ export function resolveScenarioSeatReferences(options: {
     return Object.fromEntries(
       Object.entries(value).map(([key, item]) => [
         key,
-        resolveScenarioSeatReferences({
+        transformScenarioSchemaValue({
           schema: asClassicSchema(schema.valueType),
           value: item,
           playerIds,
           path: appendScenarioPath(path, key),
+          direction: options.direction,
         }),
       ]),
     );
@@ -212,13 +264,23 @@ export function resolveScenarioSeatReferences(options: {
     let firstSeatError: ScenarioSchemaValueError | undefined;
     for (const option of schema.options) {
       try {
-        const resolved = resolveScenarioSeatReferences({
+        if (
+          options.direction === "project" &&
+          !asClassicSchema(option).safeParse(value).success
+        ) {
+          continue;
+        }
+        const resolved = transformScenarioSchemaValue({
           schema: asClassicSchema(option),
           value,
           playerIds,
           path,
+          direction: options.direction,
         });
-        if (asClassicSchema(option).safeParse(resolved).success) {
+        if (
+          options.direction === "project" ||
+          asClassicSchema(option).safeParse(resolved).success
+        ) {
           return resolved;
         }
       } catch (error) {
@@ -235,33 +297,37 @@ export function resolveScenarioSeatReferences(options: {
   }
   if (schema instanceof z.ZodIntersection) {
     const definition = intersectionDefinition(schema);
-    const leftResolved = resolveScenarioSeatReferences({
+    const leftResolved = transformScenarioSchemaValue({
       schema: asClassicSchema(definition.left),
       value,
       playerIds,
       path,
+      direction: options.direction,
     });
-    return resolveScenarioSeatReferences({
+    return transformScenarioSchemaValue({
       schema: asClassicSchema(definition.right),
       value: leftResolved,
       playerIds,
       path,
+      direction: options.direction,
     });
   }
   if (schema instanceof z.ZodPipe) {
-    return resolveScenarioSeatReferences({
+    return transformScenarioSchemaValue({
       schema: asClassicSchema(schema.in),
       value,
       playerIds,
       path,
+      direction: options.direction,
     });
   }
   if (schema instanceof z.ZodLazy) {
-    return resolveScenarioSeatReferences({
+    return transformScenarioSchemaValue({
       schema: asClassicSchema(schema.unwrap()),
       value,
       playerIds,
       path,
+      direction: options.direction,
     });
   }
 

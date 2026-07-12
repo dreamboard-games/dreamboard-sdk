@@ -66,5 +66,16 @@ describe("public export surface", () => {
     expect(names).not.toContain("ClientParamsOfInteractionOfDefinition");
     expect(names).not.toContain("RuntimeCardData");
     expect(names).not.toContain("ResolvedContainerLocation");
+    expect(names).not.toContain("InteractionActionabilityResult");
+    expect(names).not.toContain("InteractionInputEnumerationResult");
+  });
+
+  test("testing facade keeps CLI runtime plumbing off the author path", async () => {
+    const names = Object.keys(await import("./testing.js")).sort();
+
+    expect(names).not.toContain("resolveScenarioCommandParams");
+    expect(names).not.toContain("digestScenarioProjection");
+    expect(names).not.toContain("scenarioProjectionInputMetadata");
+    expect(names).not.toContain("scenarioProjectionParityFromInspectNode");
   });
 });

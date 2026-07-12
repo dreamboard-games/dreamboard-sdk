@@ -1,3 +1,4 @@
+import type { Wire } from "@dreamboard-games/reducer-contract";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,
@@ -287,7 +288,213 @@ export function createProjectionBuilder<
     if (isSimultaneousPhase(phase)) {
       return resolveSimultaneousActors(scope, combinedState, phase).map(String);
     }
-    return [...state.domain.flow.activePlayers];
+    const stageAllowlist = interactions.resolveActiveStageAllowlist(
+      combinedState,
+      phaseName,
+    );
+    const actors = new Set<string>();
+    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
+      phaseName,
+    )) {
+      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
+        continue;
+      }
+      if (
+        !interactions.isInteractionAllowedInStep(combinedState, interaction)
+      ) {
+        continue;
+      }
+      const authorization = interactions.resolveInteractionActorAuthorization(
+        combinedState,
+        interaction,
+      );
+      if (authorization.mode === "addressees") {
+        for (const playerId of authorization.addressees) {
+          actors.add(String(playerId));
+        }
+        continue;
+      }
+      if (authorization.mode === "actors") {
+        for (const playerId of authorization.actors) {
+          actors.add(String(playerId));
+        }
+        continue;
+      }
+      const activePlayers = combinedState.flow
+        .activePlayers as readonly string[];
+      for (const playerId of activePlayers.length > 0
+        ? activePlayers
+        : (combinedState.table.playerOrder as readonly string[])) {
+        actors.add(String(playerId));
+      }
+    }
+    const seatByPlayer = new Map(
+      (combinedState.table.playerOrder as readonly string[]).map(
+        (playerId, seat) => [String(playerId), seat] as const,
+      ),
+    );
+    return [...actors].sort(
+      (left, right) =>
+        (seatByPlayer.get(left) ?? Number.MAX_SAFE_INTEGER) -
+        (seatByPlayer.get(right) ?? Number.MAX_SAFE_INTEGER),
+    );
+  }
+
+  function resolveSchedulerFlowFor(
+    state: SessionState,
+    projection?: ProjectionContext<DomainState, State>,
+  ): Wire.SchedulerFlowAuthorityProjection {
+    const combinedState = scope.toCombinedState(state);
+    const phaseName = combinedState.flow.currentPhase as PhaseName;
+    const phase = scope.phaseByName(phaseName);
+    if (phase.kind === "auto") {
+      return emptySchedulerFlow();
+    }
+
+    if (isSimultaneousPhase(phase)) {
+      const current = state.runtime.simultaneous?.current;
+      const actors = orderKnownPlayerIds(
+        combinedState,
+        current?.phaseName === phaseName
+          ? current.actors.map(String)
+          : resolveSimultaneousActors(
+              scope,
+              combinedState,
+              phase,
+              projection,
+            ).map(String),
+      );
+      const submissions =
+        current?.phaseName === phaseName ? current.submissions : {};
+      const sealedPlayerIds = actors.filter(
+        (playerId) =>
+          submissions[playerId as keyof typeof submissions] !== undefined,
+      );
+      const pendingPlayerIds = actors.filter(
+        (playerId) =>
+          submissions[playerId as keyof typeof submissions] === undefined,
+      );
+      const activePlayerIds =
+        (phase as { canResubmit?: boolean }).canResubmit === true
+          ? actors
+          : pendingPlayerIds;
+      return {
+        version: 1,
+        activePlayerIds,
+        pendingPlayerIds,
+        continuationDependencies: sealedPlayerIds.flatMap((waiterPlayerId) => {
+          const blockerPlayerIds = pendingPlayerIds.filter(
+            (playerId) => playerId !== waiterPlayerId,
+          );
+          return blockerPlayerIds.length > 0
+            ? [{ waiterPlayerId, blockerPlayerIds }]
+            : [];
+        }),
+      };
+    }
+
+    const stageAllowlist = interactions.resolveActiveStageAllowlist(
+      combinedState,
+      phaseName,
+      projection,
+    );
+    const activePlayerIds = new Set<string>();
+    const pendingPlayerIds = new Set<string>();
+    let sawScheduledInteraction = false;
+    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
+      phaseName,
+    )) {
+      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
+        continue;
+      }
+      if (
+        !interactions.isInteractionAllowedInStep(
+          combinedState,
+          interaction,
+          projection,
+        )
+      ) {
+        continue;
+      }
+      sawScheduledInteraction = true;
+      const actorAuthorization =
+        interactions.resolveInteractionActorAuthorization(
+          combinedState,
+          interaction,
+          projection,
+        );
+      if (actorAuthorization.mode === "addressees") {
+        for (const playerId of actorAuthorization.addressees) {
+          activePlayerIds.add(String(playerId));
+          pendingPlayerIds.add(String(playerId));
+        }
+        continue;
+      }
+      if (actorAuthorization.mode === "actors") {
+        for (const playerId of actorAuthorization.actors) {
+          activePlayerIds.add(String(playerId));
+        }
+        continue;
+      }
+      const active = combinedState.flow.activePlayers as readonly string[];
+      for (const playerId of active.length > 0
+        ? active
+        : (combinedState.table.playerOrder as readonly string[])) {
+        activePlayerIds.add(String(playerId));
+      }
+    }
+
+    if (!sawScheduledInteraction) {
+      for (const playerId of combinedState.flow
+        .activePlayers as readonly string[]) {
+        activePlayerIds.add(String(playerId));
+      }
+    }
+
+    const orderedActivePlayerIds = orderKnownPlayerIds(
+      combinedState,
+      activePlayerIds,
+    );
+    const orderedPendingPlayerIds = orderKnownPlayerIds(
+      combinedState,
+      pendingPlayerIds,
+    );
+    const continuationDependencies = orderKnownPlayerIds(
+      combinedState,
+      combinedState.flow.activePlayers as readonly string[],
+    ).flatMap((waiterPlayerId) => {
+      const blockerPlayerIds = orderedPendingPlayerIds.filter(
+        (playerId) => playerId !== waiterPlayerId,
+      );
+      return blockerPlayerIds.length > 0
+        ? [{ waiterPlayerId, blockerPlayerIds }]
+        : [];
+    });
+    return {
+      version: 1,
+      activePlayerIds: orderedActivePlayerIds,
+      pendingPlayerIds: orderedPendingPlayerIds,
+      continuationDependencies,
+    };
+  }
+
+  function emptySchedulerFlow(): Wire.SchedulerFlowAuthorityProjection {
+    return {
+      version: 1,
+      activePlayerIds: [],
+      pendingPlayerIds: [],
+      continuationDependencies: [],
+    };
+  }
+
+  function orderKnownPlayerIds(
+    state: State,
+    playerIds: Iterable<string>,
+  ): string[] {
+    const selected = new Set([...playerIds].map(String));
+    return (state.table.playerOrder as readonly string[])
+      .map(String)
+      .filter((playerId) => selected.has(playerId));
   }
 
   function resolveSimultaneousPhaseFor(state: SessionState) {
@@ -430,6 +637,7 @@ export function createProjectionBuilder<
         currentStage: resolveCurrentStageFor(combinedState, projection),
         stageSeats: resolveStageSeatsFor(state),
         simultaneousPhase: resolveSimultaneousPhaseFor(state),
+        schedulerFlow: resolveSchedulerFlowFor(state, projection),
         ...(projectionMode === "full" ? { sharedView } : {}),
         guidance: resolveGuidanceFor(combinedState),
         recentEvents: [],
@@ -443,6 +651,7 @@ export function createProjectionBuilder<
   return {
     projectSeatsDynamic,
     resolveCurrentStageFor,
+    resolveSchedulerFlowFor,
     resolveStageSeatsFor,
     resolvePlayerViewFor,
     resolveSharedViewFor,

@@ -20,7 +20,11 @@ import type {
   UntrustedReducerSessionState,
   UntrustedRuntimeInput,
 } from "../ingress/types";
-import type { ReducerBundle, ReducerBundleOptions } from "./types";
+import type {
+  ReducerBundle,
+  ReducerBundleOptions,
+  ReducerBundleTestingRuntime,
+} from "./types";
 
 /**
  * Pass the wire-validated `interaction` input through to the trusted
@@ -255,7 +259,9 @@ function toWireDispatchResult<State, PlayerId extends string>(
       case "rngConsumption":
         trace.push({
           kind: "rngConsumption",
+          version: entry.version,
           operation: entry.operation,
+          drawIndex: entry.drawIndex,
           traceEntry: entry.traceEntry,
         });
         break;
@@ -364,6 +370,26 @@ export function createReducerBundle<
         state: parseTrustedState(state),
         playerId: parseRuntimePlayerId(playerId),
         interactionId,
+      });
+    },
+    resolveInteractionActionability({ state, playerId, interactionId }) {
+      return trustedBundle.resolveInteractionActionability({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+      });
+    },
+    enumerateInteractionParams({
+      state,
+      playerId,
+      interactionId,
+      maxEvaluations,
+    }) {
+      return trustedBundle.enumerateInteractionParams({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+        maxEvaluations,
       });
     },
     async reduce({
@@ -481,6 +507,25 @@ export function createReducerBundle<
             interactionId,
           });
         },
+        resolveInteractionActionability({ playerId, interactionId }) {
+          return trustedBundle.resolveInteractionActionability({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
+          });
+        },
+        enumerateInteractionParams({
+          playerId,
+          interactionId,
+          maxEvaluations,
+        }) {
+          return trustedBundle.enumerateInteractionParams({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
+            maxEvaluations,
+          });
+        },
         snapshot() {
           return codec.serializeState(requireState());
         },
@@ -489,7 +534,7 @@ export function createReducerBundle<
         },
       };
     },
-  } satisfies ReducerBundle;
+  } satisfies ReducerBundleTestingRuntime;
 
   return bundle;
 }
