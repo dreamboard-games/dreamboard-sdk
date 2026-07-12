@@ -1,21 +1,24 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { repairBeaconMobileScenario } from "./repair-beacon.mobile.scenario.ts";
-import { reconnectMobileScenario } from "./reconnect.mobile.scenario.ts";
+import developing from "./developing.mobile.scenario.ts";
+import initial from "./initial.desktop.scenario.ts";
+import reinforcementHit from "./reinforcement-hit.desktop.scenario.ts";
+import terminal from "./terminal.mobile.scenario.ts";
 
-test("UI scenarios cover repair and reconnect mobile evidence", () => {
-  assert.equal(
-    repairBeaconMobileScenario.id,
-    "solo-countdown-puzzle.repair-beacon.mobile",
+test("UI checkpoints derive opening, developing, reinforcement, and terminal states from legal scenarios", () => {
+  assert.deepEqual(
+    [initial, developing, reinforcementHit, terminal].map(
+      ({ behaviorScenario }) => behaviorScenario,
+    ),
+    [
+      "../scenarios/weather-procedure-calm.scenario.ts",
+      "../scenarios/complete-game-loss-storm.scenario.ts",
+      "../scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
+      "../scenarios/complete-game.scenario.ts",
+    ],
   );
-  assert.equal(repairBeaconMobileScenario.replay[0]?.inputKey, "beaconId");
-  assert.equal(repairBeaconMobileScenario.replay[0]?.spaceId, "beacon-north");
-  assert.equal(
-    reconnectMobileScenario.id,
-    "solo-countdown-puzzle.reconnect.mobile",
-  );
-  assert.deepEqual(reconnectMobileScenario.environment.browsers, [
-    "chromium",
-    "webkit",
-  ]);
+  assert.deepEqual(developing.environment.viewport, "phone");
+  assert.deepEqual(developing.environment.input, ["touch", "keyboard"]);
+  assert.equal(reinforcementHit.replay[0]?.interactionId, "reinforce");
+  assert.equal(terminal.replay[0]?.spaceId, "beacon-south");
 });

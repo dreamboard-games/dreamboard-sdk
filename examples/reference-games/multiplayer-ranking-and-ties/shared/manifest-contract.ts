@@ -30,6 +30,7 @@ export {
   idGuards,
   ids,
   manifestContract,
+  normalSetup,
   records,
   runtimeSchema,
   schemas,

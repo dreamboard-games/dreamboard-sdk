@@ -1,99 +1,88 @@
 {
   "schemaVersion": 3,
   "id": "worker-placement-tableau",
-  "displayName": "Worker Placement Tableau",
+  "displayName": "Mosaic Workshop",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/smoke-initial-turn.scenario.ts",
-      "test/scenarios/wakeup-slot-selection-and-bonuses.scenario.ts",
-      "test/scenarios/placement-space-resolution-lumberyard.scenario.ts",
-      "test/scenarios/placement-one-worker-per-space.scenario.ts",
-      "test/scenarios/placement-master-override.scenario.ts",
-      "test/scenarios/workshop-placement-requires-craft-option.scenario.ts",
-      "test/scenarios/market-sell-stone.scenario.ts",
-      "test/scenarios/order-fulfill-furniture-commission.scenario.ts",
-      "test/scenarios/items-craft-workbench-adjacency.scenario.ts",
-      "test/scenarios/full-season-6-game-flow.scenario.ts"
+      "test/scenarios/worker-occupancy.scenario.ts",
+      "test/scenarios/turn-and-cleanup.scenario.ts",
+      "test/scenarios/action-spaces.scenario.ts",
+      "test/scenarios/crafting-and-domains.scenario.ts",
+      "test/scenarios/scoring-and-outcome-win.scenario.ts",
+      "test/scenarios/scoring-and-outcome-draw.scenario.ts",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/complete-game-draw.scenario.ts"
     ],
-    "uiScenarios": ["test/ui-scenarios/place-worker.desktop.scenario.ts"]
+    "uiScenarios": [
+      "test/ui-scenarios/mosaic.initial.mobile.scenario.ts",
+      "test/ui-scenarios/mosaic.first-craft.desktop.scenario.ts",
+      "test/ui-scenarios/mosaic.season-transition.desktop.scenario.ts",
+      "test/ui-scenarios/mosaic.developed.mobile.scenario.ts",
+      "test/ui-scenarios/mosaic.contention.desktop.scenario.ts",
+      "test/ui-scenarios/mosaic.outcome.mobile.scenario.ts"
+    ]
   },
   "teaching": {
     "whatThisTeaches": [
-      "worker placement action-space blocking",
-      "worker choice after target-first board selection",
-      "dynamic wake-up turn order and bonuses",
-      "tableau item placement with adjacency restrictions",
-      "order fulfillment and end-game tie-break scoring"
+      "ordinary-worker blocking and master-worker sharing",
+      "one atomic action with worker, board, exchange, and craft inputs",
+      "permanent pass, finished-player skipping, and automatic cleanup",
+      "orthogonal tableau placement and Harmony scoring",
+      "deterministic four-season win and draw outcomes"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when workers claim shared action spaces and worker types have different blocking rules.",
+      "Submit placement, exchange, and craft inputs as one atomic action when they form one indivisible choice.",
+      "Let pass state and round cleanup advance automatically while tableau geometry remains a reducer-owned target domain."
     ],
     "readFirst": [
       "README.md",
       "rule.md",
       "manifest.ts",
       "app/game.ts",
-      "app/phases/placement/worker-placement.ts",
+      "app/phases/placement/index.ts",
       "ui/App.tsx",
-      "test/scenarios/placement-space-resolution-lumberyard.scenario.ts",
-      "test/ui-scenarios/place-worker.desktop.scenario.ts"
+      "test/scenarios/action-spaces.scenario.ts",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/ui-scenarios/mosaic.contention.desktop.scenario.ts"
     ]
   },
   "demoRelease": {
     "slug": "worker-placement-tableau",
-    "name": "Worker Placement Tableau",
-    "description": "A worker-placement strategy game about blocking spaces, crafting tableau items, and fulfilling orders.",
-    "overview": "Choose wake-up order, place workers on contested spaces, collect resources, craft items, and complete commissions.",
+    "name": "Mosaic Workshop",
+    "description": "A compact worker-placement duel about contested sites, master-worker sharing, and spatial mosaic scoring.",
+    "overview": "Across four seasons, gather wood, stone, and coin; place ordinary and master workers; craft a six-cell mosaic; and score unlike orthogonal neighbors.",
     "creator": "Dreamboard",
     "minPlayers": 2,
     "maxPlayers": 2,
-    "playTimeMinMinutes": 30,
-    "playTimeMaxMinutes": 45,
-    "difficulty": 3,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 25,
+    "difficulty": 2,
     "mechanics": [
       "worker-placement",
       "resource-allocation",
       "tableau-building",
-      "order-fulfillment"
+      "spatial-scoring"
     ],
     "categories": ["strategy", "tableau"],
-    "heroImageUrl": "/demos/worker-placement-tableau/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 15,
-    "demoPlayerCount": 2,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 2
   },
   "mechanics": [
     "worker-placement",
     "resource-allocation",
     "tableau-building",
-    "order-fulfillment"
+    "spatial-scoring"
   ],
   "uiPatterns": [
     "worker-targets",
-    "tableau-cards",
+    "tableau-grid",
     "resource-allocation-form",
-    "confirmation-dialog"
+    "dependent-action-form"
   ],
   "rights": {
     "mechanicsProvenance": "original-public-safe-pattern",

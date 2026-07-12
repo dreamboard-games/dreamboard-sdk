@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -156,7 +156,10 @@ const dieTypeIdSchema = createManifestStringLiteralSchema(
   literals.dieTypeIds,
   "dieTypeId",
 );
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds, "dieId");
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
   "boardTypeId",
@@ -264,9 +267,13 @@ export type VertexTypeId = (typeof literals.vertexTypeIds)[number];
 export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
-export const cardTypes = {} as const satisfies Record<string, CardType>;
+export const cardTypes = {
 
-export const zones = {} as const satisfies Record<string, ZoneId>;
+} as const satisfies Record<string, CardType>;
+
+export const zones = {
+
+} as const satisfies Record<string, ZoneId>;
 
 export const records = {
   boardLayouts<Value>(
@@ -525,11 +532,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -583,8 +586,12 @@ export const idGuards = {
 export type SharedZoneRecord<T> = Record<SharedZoneId, T>;
 export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
-export type ComponentIdsBySharedZoneId = {};
-export type ComponentIdsByPlayerZoneId = {};
+export type ComponentIdsBySharedZoneId = {
+
+};
+export type ComponentIdsByPlayerZoneId = {
+
+};
 export type SetupOptionChoice = {
   id: string;
   label: string;
@@ -603,44 +610,45 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {} as const;
-export const setupProfilesById = {
-  standard: {
-    id: "standard",
-    name: "Standard Cloudline Survey",
-    description:
-      "Prepare public survey grids for every crew before the first seeded weather reading.",
-    optionValues: null,
-    guidance: {
-      summary:
-        "Prepare one public field notebook per crew and calibrate the shared weather dice.",
-      steps: [
-        {
-          id: "prepare-scorecards",
-          label: "Prepare survey grids",
-          description: "Give each crew the same public 4 by 4 target layout.",
-        },
-        {
-          id: "prepare-dice",
-          label: "Calibrate weather instruments",
-          description:
-            "Use the seeded random source to roll two six-sided dice in each round.",
-        },
-      ],
-    },
-  },
+export const setupChoiceIdsByOptionId = {
+
 } as const;
+export const setupProfilesById = {
+  "standard": {
+    "id": "standard",
+    "name": "Standard Cloudline Survey",
+    "description": "Prepare public survey grids for every crew before the first seeded weather reading.",
+    "optionValues": null,
+    "guidance": {
+      "summary": "Prepare one public field notebook per crew and calibrate the shared weather dice.",
+      "steps": [
+        {
+          "id": "prepare-scorecards",
+          "label": "Prepare survey grids",
+          "description": "Give each crew the same public 4 by 4 target layout."
+        },
+        {
+          "id": "prepare-dice",
+          "label": "Calibrate weather instruments",
+          "description": "Use the seeded random source to roll two six-sided dice in each round."
+        }
+      ]
+    }
+  }
+} as const;
+
+
 
 export type SurveyGridBoardFields = RuntimeRecord;
 
 export const SurveyGridBoardFieldsSchema = z.record(z.string(), z.unknown());
 
 export type SurveyGridSpaceFields = {
-  target: number;
+  "target": number;
 };
 
 export const SurveyGridSpaceFieldsSchema = z.object({
-  target: z.number().int(),
+  "target": z.number().int(),
 });
 
 export type SurveyGridRelationFields = RuntimeRecord;
@@ -649,10 +657,7 @@ export const SurveyGridRelationFieldsSchema = z.record(z.string(), z.unknown());
 
 export type SurveyGridContainerFields = RuntimeRecord;
 
-export const SurveyGridContainerFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const SurveyGridContainerFieldsSchema = z.record(z.string(), z.unknown());
 
 export type SurveyGridEdgeFields = RuntimeRecord;
 
@@ -771,8 +776,12 @@ export type DieStateRecord<
 export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
-export type CardIdsBySharedZoneId = {};
-export type CardIdsByPlayerZoneId = {};
+export type CardIdsBySharedZoneId = {
+
+};
+export type CardIdsByPlayerZoneId = {
+
+};
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
 export interface BoardSpaceStateRecord<
@@ -843,14 +852,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -927,14 +936,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -959,14 +968,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -988,370 +997,10 @@ export type TiledBoardStateRecord =
   | SquareBoardStateRecord;
 
 export type BoardStateById = {
-  "survey-grid:player-1": SquareBoardStateRecord<
-    "survey-grid:player-1",
-    | "cell-0-0"
-    | "cell-0-1"
-    | "cell-0-2"
-    | "cell-0-3"
-    | "cell-1-0"
-    | "cell-1-1"
-    | "cell-1-2"
-    | "cell-1-3"
-    | "cell-2-0"
-    | "cell-2-1"
-    | "cell-2-2"
-    | "cell-2-3"
-    | "cell-3-0"
-    | "cell-3-1"
-    | "cell-3-2"
-    | "cell-3-3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::0,4"
-    | "square-edge:0,3::1,3"
-    | "square-edge:0,4::1,4"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::1,4"
-    | "square-edge:1,3::2,3"
-    | "square-edge:1,4::2,4"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::2,4"
-    | "square-edge:2,3::3,3"
-    | "square-edge:2,4::3,4"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::3,4"
-    | "square-edge:3,3::4,3"
-    | "square-edge:3,4::4,4"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3"
-    | "square-edge:4,3::4,4",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:0,4"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:1,4"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:2,4"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:3,4"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3"
-    | "square-vertex:4,4",
-    SurveyGridBoardFields,
-    SurveyGridSpaceFields,
-    SurveyGridRelationFields,
-    SurveyGridContainerFields,
-    SurveyGridEdgeFields,
-    SurveyGridVertexFields
-  >;
-  "survey-grid:player-2": SquareBoardStateRecord<
-    "survey-grid:player-2",
-    | "cell-0-0"
-    | "cell-0-1"
-    | "cell-0-2"
-    | "cell-0-3"
-    | "cell-1-0"
-    | "cell-1-1"
-    | "cell-1-2"
-    | "cell-1-3"
-    | "cell-2-0"
-    | "cell-2-1"
-    | "cell-2-2"
-    | "cell-2-3"
-    | "cell-3-0"
-    | "cell-3-1"
-    | "cell-3-2"
-    | "cell-3-3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::0,4"
-    | "square-edge:0,3::1,3"
-    | "square-edge:0,4::1,4"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::1,4"
-    | "square-edge:1,3::2,3"
-    | "square-edge:1,4::2,4"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::2,4"
-    | "square-edge:2,3::3,3"
-    | "square-edge:2,4::3,4"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::3,4"
-    | "square-edge:3,3::4,3"
-    | "square-edge:3,4::4,4"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3"
-    | "square-edge:4,3::4,4",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:0,4"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:1,4"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:2,4"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:3,4"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3"
-    | "square-vertex:4,4",
-    SurveyGridBoardFields,
-    SurveyGridSpaceFields,
-    SurveyGridRelationFields,
-    SurveyGridContainerFields,
-    SurveyGridEdgeFields,
-    SurveyGridVertexFields
-  >;
-  "survey-grid:player-3": SquareBoardStateRecord<
-    "survey-grid:player-3",
-    | "cell-0-0"
-    | "cell-0-1"
-    | "cell-0-2"
-    | "cell-0-3"
-    | "cell-1-0"
-    | "cell-1-1"
-    | "cell-1-2"
-    | "cell-1-3"
-    | "cell-2-0"
-    | "cell-2-1"
-    | "cell-2-2"
-    | "cell-2-3"
-    | "cell-3-0"
-    | "cell-3-1"
-    | "cell-3-2"
-    | "cell-3-3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::0,4"
-    | "square-edge:0,3::1,3"
-    | "square-edge:0,4::1,4"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::1,4"
-    | "square-edge:1,3::2,3"
-    | "square-edge:1,4::2,4"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::2,4"
-    | "square-edge:2,3::3,3"
-    | "square-edge:2,4::3,4"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::3,4"
-    | "square-edge:3,3::4,3"
-    | "square-edge:3,4::4,4"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3"
-    | "square-edge:4,3::4,4",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:0,4"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:1,4"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:2,4"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:3,4"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3"
-    | "square-vertex:4,4",
-    SurveyGridBoardFields,
-    SurveyGridSpaceFields,
-    SurveyGridRelationFields,
-    SurveyGridContainerFields,
-    SurveyGridEdgeFields,
-    SurveyGridVertexFields
-  >;
-  "survey-grid:player-4": SquareBoardStateRecord<
-    "survey-grid:player-4",
-    | "cell-0-0"
-    | "cell-0-1"
-    | "cell-0-2"
-    | "cell-0-3"
-    | "cell-1-0"
-    | "cell-1-1"
-    | "cell-1-2"
-    | "cell-1-3"
-    | "cell-2-0"
-    | "cell-2-1"
-    | "cell-2-2"
-    | "cell-2-3"
-    | "cell-3-0"
-    | "cell-3-1"
-    | "cell-3-2"
-    | "cell-3-3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::0,4"
-    | "square-edge:0,3::1,3"
-    | "square-edge:0,4::1,4"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::1,4"
-    | "square-edge:1,3::2,3"
-    | "square-edge:1,4::2,4"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::2,4"
-    | "square-edge:2,3::3,3"
-    | "square-edge:2,4::3,4"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::3,4"
-    | "square-edge:3,3::4,3"
-    | "square-edge:3,4::4,4"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3"
-    | "square-edge:4,3::4,4",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:0,4"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:1,4"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:2,4"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:3,4"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3"
-    | "square-vertex:4,4",
-    SurveyGridBoardFields,
-    SurveyGridSpaceFields,
-    SurveyGridRelationFields,
-    SurveyGridContainerFields,
-    SurveyGridEdgeFields,
-    SurveyGridVertexFields
-  >;
+  "survey-grid:player-1": SquareBoardStateRecord<"survey-grid:player-1", "cell-0-0" | "cell-0-1" | "cell-0-2" | "cell-0-3" | "cell-1-0" | "cell-1-1" | "cell-1-2" | "cell-1-3" | "cell-2-0" | "cell-2-1" | "cell-2-2" | "cell-2-3" | "cell-3-0" | "cell-3-1" | "cell-3-2" | "cell-3-3", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::0,4" | "square-edge:0,3::1,3" | "square-edge:0,4::1,4" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::1,4" | "square-edge:1,3::2,3" | "square-edge:1,4::2,4" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::2,4" | "square-edge:2,3::3,3" | "square-edge:2,4::3,4" | "square-edge:3,0::3,1" | "square-edge:3,0::4,0" | "square-edge:3,1::3,2" | "square-edge:3,1::4,1" | "square-edge:3,2::3,3" | "square-edge:3,2::4,2" | "square-edge:3,3::3,4" | "square-edge:3,3::4,3" | "square-edge:3,4::4,4" | "square-edge:4,0::4,1" | "square-edge:4,1::4,2" | "square-edge:4,2::4,3" | "square-edge:4,3::4,4", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:0,4" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:1,4" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:2,4" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3" | "square-vertex:3,4" | "square-vertex:4,0" | "square-vertex:4,1" | "square-vertex:4,2" | "square-vertex:4,3" | "square-vertex:4,4", SurveyGridBoardFields, SurveyGridSpaceFields, SurveyGridRelationFields, SurveyGridContainerFields, SurveyGridEdgeFields, SurveyGridVertexFields>;
+  "survey-grid:player-2": SquareBoardStateRecord<"survey-grid:player-2", "cell-0-0" | "cell-0-1" | "cell-0-2" | "cell-0-3" | "cell-1-0" | "cell-1-1" | "cell-1-2" | "cell-1-3" | "cell-2-0" | "cell-2-1" | "cell-2-2" | "cell-2-3" | "cell-3-0" | "cell-3-1" | "cell-3-2" | "cell-3-3", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::0,4" | "square-edge:0,3::1,3" | "square-edge:0,4::1,4" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::1,4" | "square-edge:1,3::2,3" | "square-edge:1,4::2,4" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::2,4" | "square-edge:2,3::3,3" | "square-edge:2,4::3,4" | "square-edge:3,0::3,1" | "square-edge:3,0::4,0" | "square-edge:3,1::3,2" | "square-edge:3,1::4,1" | "square-edge:3,2::3,3" | "square-edge:3,2::4,2" | "square-edge:3,3::3,4" | "square-edge:3,3::4,3" | "square-edge:3,4::4,4" | "square-edge:4,0::4,1" | "square-edge:4,1::4,2" | "square-edge:4,2::4,3" | "square-edge:4,3::4,4", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:0,4" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:1,4" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:2,4" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3" | "square-vertex:3,4" | "square-vertex:4,0" | "square-vertex:4,1" | "square-vertex:4,2" | "square-vertex:4,3" | "square-vertex:4,4", SurveyGridBoardFields, SurveyGridSpaceFields, SurveyGridRelationFields, SurveyGridContainerFields, SurveyGridEdgeFields, SurveyGridVertexFields>;
+  "survey-grid:player-3": SquareBoardStateRecord<"survey-grid:player-3", "cell-0-0" | "cell-0-1" | "cell-0-2" | "cell-0-3" | "cell-1-0" | "cell-1-1" | "cell-1-2" | "cell-1-3" | "cell-2-0" | "cell-2-1" | "cell-2-2" | "cell-2-3" | "cell-3-0" | "cell-3-1" | "cell-3-2" | "cell-3-3", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::0,4" | "square-edge:0,3::1,3" | "square-edge:0,4::1,4" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::1,4" | "square-edge:1,3::2,3" | "square-edge:1,4::2,4" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::2,4" | "square-edge:2,3::3,3" | "square-edge:2,4::3,4" | "square-edge:3,0::3,1" | "square-edge:3,0::4,0" | "square-edge:3,1::3,2" | "square-edge:3,1::4,1" | "square-edge:3,2::3,3" | "square-edge:3,2::4,2" | "square-edge:3,3::3,4" | "square-edge:3,3::4,3" | "square-edge:3,4::4,4" | "square-edge:4,0::4,1" | "square-edge:4,1::4,2" | "square-edge:4,2::4,3" | "square-edge:4,3::4,4", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:0,4" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:1,4" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:2,4" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3" | "square-vertex:3,4" | "square-vertex:4,0" | "square-vertex:4,1" | "square-vertex:4,2" | "square-vertex:4,3" | "square-vertex:4,4", SurveyGridBoardFields, SurveyGridSpaceFields, SurveyGridRelationFields, SurveyGridContainerFields, SurveyGridEdgeFields, SurveyGridVertexFields>;
+  "survey-grid:player-4": SquareBoardStateRecord<"survey-grid:player-4", "cell-0-0" | "cell-0-1" | "cell-0-2" | "cell-0-3" | "cell-1-0" | "cell-1-1" | "cell-1-2" | "cell-1-3" | "cell-2-0" | "cell-2-1" | "cell-2-2" | "cell-2-3" | "cell-3-0" | "cell-3-1" | "cell-3-2" | "cell-3-3", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::0,4" | "square-edge:0,3::1,3" | "square-edge:0,4::1,4" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::1,4" | "square-edge:1,3::2,3" | "square-edge:1,4::2,4" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::2,4" | "square-edge:2,3::3,3" | "square-edge:2,4::3,4" | "square-edge:3,0::3,1" | "square-edge:3,0::4,0" | "square-edge:3,1::3,2" | "square-edge:3,1::4,1" | "square-edge:3,2::3,3" | "square-edge:3,2::4,2" | "square-edge:3,3::3,4" | "square-edge:3,3::4,3" | "square-edge:3,4::4,4" | "square-edge:4,0::4,1" | "square-edge:4,1::4,2" | "square-edge:4,2::4,3" | "square-edge:4,3::4,4", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:0,4" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:1,4" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:2,4" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3" | "square-vertex:3,4" | "square-vertex:4,0" | "square-vertex:4,1" | "square-vertex:4,2" | "square-vertex:4,3" | "square-vertex:4,4", SurveyGridBoardFields, SurveyGridSpaceFields, SurveyGridRelationFields, SurveyGridContainerFields, SurveyGridEdgeFields, SurveyGridVertexFields>;
 };
 
 export type HexBoardStateById = Record<string, never>;
@@ -1364,16 +1013,15 @@ export type SquareBoardStateById = {
 };
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1430,29 +1078,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1462,8 +1107,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1473,10 +1119,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1486,10 +1131,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1499,10 +1143,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1518,19 +1161,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = BoardStateById[BoardId];
 
@@ -1568,7 +1211,9 @@ const cardStateSchema = z.object({
   text: z.string().optional(),
   properties: unknownRecordSchema,
 });
-const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {};
+const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {
+
+};
 
 const cardStateByIdSchema = z.object({});
 const pieceStateByIdSchema = z.object({});
@@ -2115,13 +1760,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -2178,11 +1818,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -2227,64 +1867,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({}),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({}),
-      cardSetIdsByZoneId: cloneManifestDefault({}),
-    }) as TableState["zones"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({}),
+    cardSetIdsByZoneId: cloneManifestDefault({}),
+  }) as TableState["zones"],
   decks: () => cloneManifestDefault({}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({}) as TableState["handVisibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({}) as TableState["handVisibility"],
   ownerOfCard: () => cloneManifestDefault({}) as TableState["ownerOfCard"],
   visibility: () => cloneManifestDefault({}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -2388,23 +2008,13 @@ export const manifestContract: ReducerManifestContract<
 };
 
 const boardIdsByLayoutLookup = {
-  square: [
-    "survey-grid:player-1",
-    "survey-grid:player-2",
-    "survey-grid:player-3",
-    "survey-grid:player-4",
-  ] as const,
+  "square": ["survey-grid:player-1", "survey-grid:player-2", "survey-grid:player-3", "survey-grid:player-4"] as const,
 } as const;
 const boardBaseIdsByLayoutLookup = {
-  square: ["survey-grid"] as const,
+  "square": ["survey-grid"] as const,
 } as const;
 const boardIdsByBaseIdLookup = {
-  "survey-grid": [
-    "survey-grid:player-1",
-    "survey-grid:player-2",
-    "survey-grid:player-3",
-    "survey-grid:player-4",
-  ] as const,
+  "survey-grid": ["survey-grid:player-1", "survey-grid:player-2", "survey-grid:player-3", "survey-grid:player-4"] as const,
 } as const;
 const boardBaseIdsByTemplateIdLookup = {
   "survey-grid-template": ["survey-grid"] as const,
@@ -2418,80 +2028,14 @@ const boardLayoutByIdLookup = {
 const boardTemplateLayoutByIdLookup = {
   "survey-grid-template": "square",
 } as const;
-const boardIdsByTypeIdLookup = {} as const;
+const boardIdsByTypeIdLookup = {
+
+} as const;
 const spaceIdsByBoardIdLookup = {
-  "survey-grid:player-1": [
-    "cell-0-0",
-    "cell-0-1",
-    "cell-0-2",
-    "cell-0-3",
-    "cell-1-0",
-    "cell-1-1",
-    "cell-1-2",
-    "cell-1-3",
-    "cell-2-0",
-    "cell-2-1",
-    "cell-2-2",
-    "cell-2-3",
-    "cell-3-0",
-    "cell-3-1",
-    "cell-3-2",
-    "cell-3-3",
-  ] as const,
-  "survey-grid:player-2": [
-    "cell-0-0",
-    "cell-0-1",
-    "cell-0-2",
-    "cell-0-3",
-    "cell-1-0",
-    "cell-1-1",
-    "cell-1-2",
-    "cell-1-3",
-    "cell-2-0",
-    "cell-2-1",
-    "cell-2-2",
-    "cell-2-3",
-    "cell-3-0",
-    "cell-3-1",
-    "cell-3-2",
-    "cell-3-3",
-  ] as const,
-  "survey-grid:player-3": [
-    "cell-0-0",
-    "cell-0-1",
-    "cell-0-2",
-    "cell-0-3",
-    "cell-1-0",
-    "cell-1-1",
-    "cell-1-2",
-    "cell-1-3",
-    "cell-2-0",
-    "cell-2-1",
-    "cell-2-2",
-    "cell-2-3",
-    "cell-3-0",
-    "cell-3-1",
-    "cell-3-2",
-    "cell-3-3",
-  ] as const,
-  "survey-grid:player-4": [
-    "cell-0-0",
-    "cell-0-1",
-    "cell-0-2",
-    "cell-0-3",
-    "cell-1-0",
-    "cell-1-1",
-    "cell-1-2",
-    "cell-1-3",
-    "cell-2-0",
-    "cell-2-1",
-    "cell-2-2",
-    "cell-2-3",
-    "cell-3-0",
-    "cell-3-1",
-    "cell-3-2",
-    "cell-3-3",
-  ] as const,
+  "survey-grid:player-1": ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-1-0", "cell-1-1", "cell-1-2", "cell-1-3", "cell-2-0", "cell-2-1", "cell-2-2", "cell-2-3", "cell-3-0", "cell-3-1", "cell-3-2", "cell-3-3"] as const,
+  "survey-grid:player-2": ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-1-0", "cell-1-1", "cell-1-2", "cell-1-3", "cell-2-0", "cell-2-1", "cell-2-2", "cell-2-3", "cell-3-0", "cell-3-1", "cell-3-2", "cell-3-3"] as const,
+  "survey-grid:player-3": ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-1-0", "cell-1-1", "cell-1-2", "cell-1-3", "cell-2-0", "cell-2-1", "cell-2-2", "cell-2-3", "cell-3-0", "cell-3-1", "cell-3-2", "cell-3-3"] as const,
+  "survey-grid:player-4": ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-1-0", "cell-1-1", "cell-1-2", "cell-1-3", "cell-2-0", "cell-2-1", "cell-2-2", "cell-2-3", "cell-3-0", "cell-3-1", "cell-3-2", "cell-3-3"] as const,
 } as const;
 const spaceTypeIdByBoardIdLookup = {
   "survey-grid:player-1": {
@@ -2510,7 +2054,7 @@ const spaceTypeIdByBoardIdLookup = {
     "cell-3-0": "survey-cell",
     "cell-3-1": "survey-cell",
     "cell-3-2": "survey-cell",
-    "cell-3-3": "survey-cell",
+    "cell-3-3": "survey-cell"
   },
   "survey-grid:player-2": {
     "cell-0-0": "survey-cell",
@@ -2528,7 +2072,7 @@ const spaceTypeIdByBoardIdLookup = {
     "cell-3-0": "survey-cell",
     "cell-3-1": "survey-cell",
     "cell-3-2": "survey-cell",
-    "cell-3-3": "survey-cell",
+    "cell-3-3": "survey-cell"
   },
   "survey-grid:player-3": {
     "cell-0-0": "survey-cell",
@@ -2546,7 +2090,7 @@ const spaceTypeIdByBoardIdLookup = {
     "cell-3-0": "survey-cell",
     "cell-3-1": "survey-cell",
     "cell-3-2": "survey-cell",
-    "cell-3-3": "survey-cell",
+    "cell-3-3": "survey-cell"
   },
   "survey-grid:player-4": {
     "cell-0-0": "survey-cell",
@@ -2564,28 +2108,11 @@ const spaceTypeIdByBoardIdLookup = {
     "cell-3-0": "survey-cell",
     "cell-3-1": "survey-cell",
     "cell-3-2": "survey-cell",
-    "cell-3-3": "survey-cell",
-  },
+    "cell-3-3": "survey-cell"
+  }
 } as const;
 const spaceIdsByTypeIdLookup = {
-  "survey-cell": [
-    "cell-0-0",
-    "cell-0-1",
-    "cell-0-2",
-    "cell-0-3",
-    "cell-1-0",
-    "cell-1-1",
-    "cell-1-2",
-    "cell-1-3",
-    "cell-2-0",
-    "cell-2-1",
-    "cell-2-2",
-    "cell-2-3",
-    "cell-3-0",
-    "cell-3-1",
-    "cell-3-2",
-    "cell-3-3",
-  ] as const,
+  "survey-cell": ["cell-0-0", "cell-0-1", "cell-0-2", "cell-0-3", "cell-1-0", "cell-1-1", "cell-1-2", "cell-1-3", "cell-2-0", "cell-2-1", "cell-2-2", "cell-2-3", "cell-3-0", "cell-3-1", "cell-3-2", "cell-3-3"] as const,
 } as const;
 const containerIdsByBoardIdLookup = {
   "survey-grid:player-1": [] as const,
@@ -2597,7 +2124,7 @@ const containerHostByBoardIdLookup = {
   "survey-grid:player-1": {},
   "survey-grid:player-2": {},
   "survey-grid:player-3": {},
-  "survey-grid:player-4": {},
+  "survey-grid:player-4": {}
 } as const;
 const relationTypeIdsByBoardIdLookup = {
   "survey-grid:player-1": ["adjacent"] as const,
@@ -2605,19 +2132,23 @@ const relationTypeIdsByBoardIdLookup = {
   "survey-grid:player-3": ["adjacent"] as const,
   "survey-grid:player-4": ["adjacent"] as const,
 } as const;
-const edgeIdsByTypeIdLookup = {} as const;
+const edgeIdsByTypeIdLookup = {
+
+} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {
   "survey-grid:player-1": {},
   "survey-grid:player-2": {},
   "survey-grid:player-3": {},
-  "survey-grid:player-4": {},
+  "survey-grid:player-4": {}
 } as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {
   "survey-grid:player-1": {},
   "survey-grid:player-2": {},
   "survey-grid:player-3": {},
-  "survey-grid:player-4": {},
+  "survey-grid:player-4": {}
 } as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -2645,9 +2176,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -2655,7 +2186,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -2689,7 +2222,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -2750,7 +2286,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -2760,7 +2299,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -2783,8 +2324,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -2884,9 +2424,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -2967,7 +2507,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -2984,8 +2527,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3029,10 +2571,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -3076,8 +2615,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3106,7 +2644,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

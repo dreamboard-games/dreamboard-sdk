@@ -3,69 +3,76 @@ import {
   cardTarget,
   defineInteraction,
 } from "@dreamboard-games/sdk/reducer";
+import type { CardId } from "../../../../shared/manifest-contract";
 import type {
   GameContract,
   GameState,
   PlayerTurnPhaseState,
 } from "../../../game-contract";
-import { edit } from "../../../reducer-support";
-import type { CardId } from "../../../../shared/manifest-contract";
-import { notYourTurn, treasureCoins } from "../rules";
+import { appendHistory, edit, inspirationOf } from "../../../reducer-support";
+import { notYourTurn } from "../rules";
 
-export const endActionPhase = defineInteraction<
+export const endActionStep = defineInteraction<
   GameContract,
   PlayerTurnPhaseState
 >()({
   inputs: {},
   rules: [
     {
-      id: "active-player-can-end-action-phase",
+      id: "active-player",
       errorCode: "NOT_YOUR_TURN",
-      validate({ state, input }) {
-        return notYourTurn(state, input.playerId);
-      },
+      validate: ({ state, input }) => notYourTurn(state, input.playerId),
     },
   ],
-  reduce({ state, accept }) {
+  reduce({ state, input, accept }) {
     const tx = edit(state);
-    tx.patchPhaseState({ step: "buy" as const });
-    return accept(tx.state);
+    tx.patchPhaseState({ ...state.phase, step: "buy" });
+    return accept(
+      appendHistory(tx.state, {
+        kind: "actionStepEnded",
+        actorPlayerId: input.playerId,
+        cardId: null,
+        summary: `${input.playerId} entered the buy step.`,
+      }),
+    );
   },
 });
 
-// Play a single treasure from hand for its coins. Lets players tap an
-// individual treasure in the buy step instead of only the bulk
-// `playAllTreasures`. The collector filters the hand to treasure cards.
-const treasureTarget = cardTarget
+const inspirationTarget = cardTarget
   .zones<GameState, CardId, readonly ["hand"]>(["hand"])
   .where({
-    id: "is-treasure",
-    errorCode: "NOT_A_TREASURE",
-    message: "Only treasures can be played for coins.",
-    test: ({ q, targetId }) => treasureCoins(q.card.get(targetId)) !== null,
+    id: "inspiration-card",
+    errorCode: "NOT_AN_INSPIRATION_CARD",
+    test: ({ q, targetId }) => inspirationOf(q, targetId) !== null,
   })
   .build();
 
-export const playTreasure = defineInteraction<
+export const playInspiration = defineInteraction<
   GameContract,
   PlayerTurnPhaseState
 >()({
   inputs: {
     cardId: cardInput<GameState, CardId, readonly ["hand"]>({
-      target: treasureTarget,
+      target: inspirationTarget,
     }),
   },
   rules: [
     {
-      id: "active-player-can-play-treasure",
+      id: "active-player",
       errorCode: "NOT_YOUR_TURN",
-      validate({ state, input }) {
-        return notYourTurn(state, input.playerId);
+      validate({ state, input, q }) {
+        return (
+          notYourTurn(state, input.playerId) ??
+          (inspirationOf(q, input.params.cardId) === null
+            ? { errorCode: "NOT_AN_INSPIRATION_CARD" }
+            : null)
+        );
       },
     },
   ],
   reduce({ state, input, accept, q }) {
-    const coins = treasureCoins(q.card.get(input.params.cardId)) ?? 0;
+    const inspiration = inspirationOf(q, input.params.cardId);
+    if (inspiration === null) throw new Error("Expected Inspiration card.");
     const tx = edit(state);
     tx.moveCardBetweenPlayerZones({
       playerId: input.playerId,
@@ -75,70 +82,15 @@ export const playTreasure = defineInteraction<
     });
     tx.patchPhaseState({
       ...state.phase,
-      coins: state.phase.coins + coins,
+      inspiration: state.phase.inspiration + inspiration,
     });
-    return accept(tx.state);
-  },
-});
-
-export const playAllTreasures = defineInteraction<
-  GameContract,
-  PlayerTurnPhaseState
->()({
-  inputs: {},
-  rules: [
-    {
-      id: "active-player-can-play-treasures",
-      errorCode: "NOT_YOUR_TURN",
-      validate({ state, input }) {
-        return notYourTurn(state, input.playerId);
-      },
-    },
-    {
-      id: "has-treasures-in-hand",
-      errorCode: "NO_TREASURES",
-      message: "No treasures in hand.",
-      available({ input, q }) {
-        return q.zone
-          .playerCards(input.playerId, "hand")
-          .some((cardId) => treasureCoins(q.card.get(cardId)) !== null);
-      },
-      validate({ input, q }) {
-        const hasTreasure = q.zone
-          .playerCards(input.playerId, "hand")
-          .some((cardId) => treasureCoins(q.card.get(cardId)) !== null);
-        if (!hasTreasure) {
-          return {
-            errorCode: "NO_TREASURES",
-            message: "No treasures in hand.",
-          };
-        }
-        return null;
-      },
-    },
-  ],
-  reduce({ state, input, accept, q }) {
-    const treasureCards = q.zone
-      .playerCards(input.playerId, "hand")
-      .map((cardId) => ({ cardId, coins: treasureCoins(q.card.get(cardId)) }))
-      .filter(
-        (entry): entry is { cardId: CardId; coins: number } =>
-          entry.coins !== null,
-      );
-    const coins = treasureCards.reduce((sum, card) => sum + card.coins, 0);
-    const tx = edit(state);
-    for (const { cardId } of treasureCards) {
-      tx.moveCardBetweenPlayerZones({
-        playerId: input.playerId,
-        fromZoneId: "hand",
-        toZoneId: "in-play",
-        cardId,
-      });
-    }
-    tx.patchPhaseState({
-      ...state.phase,
-      coins: state.phase.coins + coins,
-    });
-    return accept(tx.state);
+    return accept(
+      appendHistory(tx.state, {
+        kind: "inspirationPlayed",
+        actorPlayerId: input.playerId,
+        cardId: input.params.cardId,
+        summary: `${input.playerId} gained ${inspiration} inspiration.`,
+      }),
+    );
   },
 });

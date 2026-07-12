@@ -1,151 +1,90 @@
-import { defineInteraction, definePhase } from "@dreamboard-games/sdk/reducer";
+import type {
+  PlayerId,
+  RiverCargoCardId,
+} from "../../shared/manifest-contract";
+import type { GameContract, GameState, ProcedureEvent } from "../game-contract";
+import { humanTurnPhaseStateSchema } from "../game-contract";
+import { withRiverOrder } from "../rules/cards";
+import { procedureGameEvent } from "../rules/events";
 import {
-  claimCargoParamsSchema,
-  type ClaimCargoParams,
-  humanTurnPhaseStateSchema,
-  type GameContract,
-  type GameState,
-  type PlayerId,
-  type PublicState,
-} from "../game-contract";
-import { cooperativeOutcome, resolveRivalProcedure } from "./rival-procedure";
+  cardInput,
+  cardTarget,
+  defineInteraction,
+  definePhase,
+} from "@dreamboard-games/sdk/reducer";
 
-export function claimCargoForPublicState({
-  publicState,
-  playerId,
-  claimId,
-}: {
-  publicState: PublicState;
-  playerId: string;
-  claimId: string;
-}):
-  | {
-      accepted: true;
-      publicState: PublicState;
-      events: PublicState["eventLog"];
-      terminal: ReturnType<typeof cooperativeOutcome> | null;
-      duplicate: boolean;
-    }
-  | {
-      accepted: false;
-      errorCode: "PLAYER_NOT_AUTHORIZED" | "GAME_ALREADY_COMPLETE";
-      message: string;
-    } {
-  if (playerId !== "player-1") {
-    return {
-      accepted: false,
-      errorCode: "PLAYER_NOT_AUTHORIZED",
-      message: "Only the human player may claim cargo.",
-    };
-  }
-  if (publicState.outcome) {
-    return {
-      accepted: false,
-      errorCode: "GAME_ALREADY_COMPLETE",
-      message: "This river race is already complete.",
-    };
-  }
-  const existing = publicState.processedClaims[claimId];
-  if (existing) {
-    return {
-      accepted: true,
-      publicState,
-      events: publicState.eventLog.slice(
-        existing.eventStart,
-        existing.eventStart + existing.eventCount,
-      ),
-      terminal: null,
-      duplicate: true,
-    };
-  }
-
-  const eventStart = publicState.eventLog.length;
-  const scored = {
-    ...publicState,
-    teamScore: publicState.teamScore + 2,
-  };
-  const resolved = resolveRivalProcedure(scored);
-  const eventCount = resolved.events.length;
-  const terminal =
-    publicState.round >= 6
-      ? cooperativeOutcome({
-          teamScore: resolved.publicState.teamScore,
-          rivalProgress: resolved.publicState.rivalProgress,
-        })
-      : null;
-  return {
-    accepted: true,
-    publicState: {
-      ...resolved.publicState,
-      processedClaims: {
-        ...resolved.publicState.processedClaims,
-        [claimId]: { eventStart, eventCount },
-      },
-      outcome: terminal,
-    },
-    events: resolved.events,
-    terminal,
-    duplicate: false,
-  };
-}
-
-export function applyClaimToState({
-  state,
-  playerId,
-  claimId,
-}: {
-  state: GameState;
-  playerId: PlayerId;
-  claimId: string;
-}) {
-  const result = claimCargoForPublicState({
-    publicState: state.publicState,
-    playerId,
-    claimId,
-  });
-  if (!result.accepted) return result;
-  return {
-    ...result,
-    state: {
-      ...state,
-      publicState: result.publicState,
-    },
-  };
-}
+const RIVER_ZONES = ["river"] as const;
+const riverCardTarget = cardTarget
+  .zones<GameState, RiverCargoCardId, typeof RIVER_ZONES>(RIVER_ZONES)
+  .build();
 
 export const humanTurn = definePhase<GameContract>()({
   kind: "player",
   state: humanTurnPhaseStateSchema,
   initialState: () => ({}),
-  actor: ({ q }) => q.player.order(),
+  actor: ({ state, q }) =>
+    q.player.order()[state.publicState.activeHumanIndex] ?? null,
   interactions: {
     claimCargo: defineInteraction<
       GameContract,
       typeof humanTurnPhaseStateSchema
     >()({
-      inputs: {},
-      paramsSchema: claimCargoParamsSchema,
-      reduce({ state, input, accept, reject, fx }) {
-        const params = input.params as ClaimCargoParams;
-        const claimId = params.claimId ?? "main-claim";
-        const result = applyClaimToState({
-          state,
-          playerId: input.playerId as PlayerId,
-          claimId,
+      inputs: {
+        cargoId: cardInput<GameState, RiverCargoCardId, typeof RIVER_ZONES>({
+          target: riverCardTarget,
+        }),
+      },
+      reduce({ state, input, accept, edit, fx, q }) {
+        const cargoId = input.params.cargoId;
+        const playerId = input.playerId as PlayerId;
+        const riverBefore = q.zone.sharedCards("river");
+        const position = riverBefore.indexOf(cargoId);
+        if (position < 0) {
+          throw new Error(`Cargo '${cargoId}' is not in the river.`);
+        }
+
+        const tx = edit(state);
+        tx.moveCardFromSharedZoneToPlayerZone({
+          playerId,
+          fromZoneId: "river",
+          toZoneId: "human-cargo",
+          cardId: cargoId,
         });
-        if (!result.accepted) {
-          return reject(result.errorCode, result.message);
+        const replacementId = tx.q.zone.sharedCards("cargo-deck")[0];
+        if (!replacementId) {
+          throw new Error("River Guild cargo deck exhausted before refill.");
         }
-        if (result.terminal) {
-          return {
-            type: "accept",
-            state: result.state,
-            events: result.events,
-            terminal: result.terminal,
-            instructions: [fx.transition("gameOver")],
-          };
-        }
-        return accept(result.state, { events: result.events });
+        tx.moveCardBetweenSharedZones({
+          fromZoneId: "cargo-deck",
+          toZoneId: "river",
+          cardId: replacementId,
+        });
+        const nextRiver = [...riverBefore];
+        nextRiver[position] = replacementId;
+        const orderedState = withRiverOrder(tx.state, nextRiver);
+        const refillEvent: ProcedureEvent = {
+          kind: "river-refilled",
+          round: state.publicState.round,
+          cargoId: replacementId,
+          position,
+          source: "human",
+          playerId,
+        };
+        const nextTx = edit(orderedState);
+        const playerIds = q.player.order();
+        const nextHumanIndex = state.publicState.activeHumanIndex + 1;
+        nextTx.patchPublicState({
+          activeHumanIndex:
+            nextHumanIndex < playerIds.length ? nextHumanIndex : 0,
+          procedureEvents: [...state.publicState.procedureEvents, refillEvent],
+        });
+
+        return accept(nextTx.state, {
+          events: [procedureGameEvent(refillEvent)],
+          ...(nextHumanIndex >= playerIds.length
+            ? { instructions: [fx.transition("resolveRival")] }
+            : {}),
+        });
       },
     }),
   },

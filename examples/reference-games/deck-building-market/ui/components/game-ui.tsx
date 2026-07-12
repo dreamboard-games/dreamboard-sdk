@@ -1,80 +1,32 @@
-import React, { type ReactNode } from "react";
-import {
-  CardFace,
-  OutcomeDialog,
-  useIsMobile,
-  type ViewCard,
-} from "@dreamboard-games/sdk/ui";
+import { CardFace, OutcomeDialog } from "@dreamboard-games/sdk/ui";
 import {
   PlayerRoster,
   type CardCollectionSurface,
   type PhaseName,
-} from "../../shared/generated/ui-contract.ts";
-import {
-  cardCostOf,
-  cardKindOf,
-  SketchCardContent,
-  viewCardFromId,
-  type CostTone,
-} from "./cards";
-import {
-  SketchbookPrimaryActions,
-  SketchbookRoutes,
-} from "../interaction-routes";
-import { SUPPLY_GROUPS, type SketchbookSurfaces } from "../surfaces";
-import type { CardId } from "../../shared/manifest-contract";
+} from "../../shared/generated/ui-contract";
+import { literals, type CardId } from "../../shared/manifest-contract";
+import { SketchCardContent, viewCardFromId } from "./cards";
+import { SketchbookActions, SketchbookRoutes } from "../interaction-routes";
+import { SUPPLY_GROUPS } from "../surfaces";
 import type { SketchbookLayoutProps } from "../types";
 
-const PANEL_CLASS =
-  "rounded-2xl border border-[#2d2d2d]/15 bg-white shadow-[0_14px_30px_-20px_rgba(45,45,45,0.4)]";
-const SECTION_HEADING_CLASS =
-  "text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500";
+const PANEL =
+  "rounded-2xl border-2 border-stone-800/70 bg-[#fffdf7] shadow-[4px_4px_0_rgba(41,37,36,0.2)]";
 
-const PHASE_LABELS = {
-  setup: "Setting up",
-  playerTurn: "Your turn",
-  checkGameEnd: "Tallying",
-  gameOver: "Game over",
-} as const satisfies Record<PhaseName, string>;
-
-const STEP_LABELS: Record<string, string> = {
-  action: "Action phase",
-  resolve: "Resolving",
-  buy: "Buy phase",
-  cleanup: "Cleanup",
+const PHASE_LABEL: Record<PhaseName, string> = {
+  setup: "Opening sketchbooks",
+  playerTurn: "Working turn",
+  checkGameEnd: "Checking supplies",
+  gameOver: "Portfolio complete",
 };
 
-const CARD_BACK_STUB = {
-  id: "card-back",
-  cardType: "doodle",
-  name: "",
-  properties: {},
-} as unknown as ViewCard<CardId>;
-
-// ── Small themed status chip for the turn resources ──────────────────────────
-function StatChip({
-  label,
-  value,
-  active = false,
-}: {
-  label: string;
-  value: ReactNode;
-  active?: boolean;
-}) {
+function Stat({ label, value }: { readonly label: string; readonly value: string | number }) {
   return (
-    <div
-      className={`flex min-w-[58px] flex-col items-start rounded-xl border-2 px-2.5 py-1 transition-colors ${
-        active
-          ? "border-[#2d2d2d] bg-[#fff4cf]"
-          : "border-[#2d2d2d]/12 bg-[#fdfbf7]"
-      }`}
-    >
-      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+    <div className="rounded-xl border border-stone-400 bg-amber-50 px-3 py-2">
+      <div className="text-[9px] font-bold uppercase tracking-widest text-stone-500">
         {label}
-      </span>
-      <span className="text-lg font-bold leading-none tabular-nums text-[#2d2d2d]">
-        {value}
-      </span>
+      </div>
+      <div className="text-xl font-black tabular-nums text-stone-900">{value}</div>
     </div>
   );
 }
@@ -82,42 +34,39 @@ function StatChip({
 function SupplyGroup({
   label,
   surface,
-  costToneFor,
+  supplyCounts,
 }: {
-  label: string;
-  surface: CardCollectionSurface;
-  costToneFor: (cost: number) => CostTone;
+  readonly label: string;
+  readonly surface: CardCollectionSurface;
+  readonly supplyCounts: Readonly<Record<string, number>>;
 }) {
   return (
-    <section className="min-w-0">
-      <h3 className="mb-1.5 text-[11px] font-bold uppercase tracking-wider text-[#2d2d2d]">
-        {label}
-      </h3>
-      {/* `top-card` collections render one tile per pile; we still guard on the
-          top index so the layout stays a clean wrapping grid of pile tiles even
-          when the collection materializes the full pile. Each pile is its own
-          block list (a flex item here), so buried cards never add phantom gaps. */}
-      <div className="flex flex-wrap items-start gap-2">
+    <section>
+      <h3 className="mb-2 font-serif text-lg font-bold text-stone-800">{label}</h3>
+      <div className="flex flex-wrap gap-2">
         <surface.Collection>
           {(card) => {
             if (card.hidden || card.index !== 0) return null;
-            const tone = costToneFor(cardCostOf(card));
+            const zoneId = literals.homeSharedZoneIdByCardType[card.cardType];
             return (
-              <surface.Card
-                card={card}
-                className={`group rounded-2xl border-0 bg-transparent p-0 transition-transform enabled:cursor-pointer enabled:hover:-translate-y-0.5 disabled:cursor-default ${
-                  tone === "unaffordable" ? "opacity-45" : ""
-                }`}
-              >
-                <CardFace
+              <div key={card.id} className="relative">
+                <surface.Card
                   card={card}
-                  size="md"
-                  eligible={card.playable}
-                  renderContent={(c) => (
-                    <SketchCardContent card={c} costTone={tone} />
-                  )}
-                />
-              </surface.Card>
+                  className="rounded-xl border-0 bg-transparent p-0 transition-transform enabled:hover:-translate-y-1"
+                >
+                  <CardFace
+                    card={card}
+                    size="md"
+                    eligible={card.playable}
+                    renderContent={(value) => (
+                      <SketchCardContent card={value} showCost />
+                    )}
+                  />
+                </surface.Card>
+                <span className="absolute -right-1 -top-1 rounded-full border-2 border-stone-700 bg-white px-1.5 text-[10px] font-black text-stone-900">
+                  {supplyCounts[zoneId] ?? 0}
+                </span>
+              </div>
             );
           }}
         </surface.Collection>
@@ -126,25 +75,26 @@ function SupplyGroup({
   );
 }
 
-// A labelled pile column (deck / discard) for the table feedback row.
-function TablePile({
-  label,
-  count,
-  children,
+function CardStrip({
+  cardIds,
+  empty,
 }: {
-  label: string;
-  count: number;
-  children: ReactNode;
+  readonly cardIds: readonly CardId[];
+  readonly empty: string;
 }) {
+  if (cardIds.length === 0) {
+    return <span className="text-xs italic text-stone-400">{empty}</span>;
+  }
   return (
-    <div className="flex shrink-0 flex-col items-center gap-1">
-      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
-        {label}
-      </span>
-      {children}
-      <span className="rounded-full bg-[#2d2d2d]/85 px-2 text-[10px] font-bold tabular-nums text-white">
-        {count}
-      </span>
+    <div className="flex flex-wrap gap-1.5">
+      {cardIds.map((cardId) => (
+        <CardFace
+          key={cardId}
+          card={viewCardFromId(cardId)}
+          size="sm"
+          renderContent={(card) => <SketchCardContent card={card} />}
+        />
+      ))}
     </div>
   );
 }
@@ -156,400 +106,179 @@ export function GameUI({
   phase,
   hand,
   market,
-  supplyActions,
-  supplyTreasures,
-  supplyVictory,
-  supplyCurses,
+  supplyTechniques,
+  supplyInspiration,
+  supplyPortfolio,
 }: SketchbookLayoutProps) {
-  const isMyTurn = turn.isMine;
-  const turnOrder = turn.order;
-  const currentPlayerId = turn.currentPlayerId;
-  const {
-    mode,
-    actionsLeft,
-    buysLeft,
-    coins,
-    vpTotals,
-    deckCount,
-    turnNumber,
-    inPlayCards,
-    discardCards,
-  } = view;
+  const playerId = view.playerId;
+  const discard = view.discardCardsByPlayerId[playerId] ?? [];
+  const inPlay = view.inPlayCardsByPlayerId[playerId] ?? [];
+  const activeName = view.activePlayerId
+    ? (players.byId.get(view.activePlayerId)?.name ?? view.activePlayerId)
+    : null;
+  const instruction =
+    view.pendingTechnique === "eraser"
+      ? "Select zero to four cards, then confirm Eraser."
+      : view.pendingTechnique === "studioVisit"
+        ? "Choose a visible supply card costing four inspiration or less."
+        : view.step === "action"
+          ? "Play one Technique, chain extra actions, or continue to buy."
+          : view.step === "buy"
+            ? "Play Inspiration cards one at a time, then acquire a supply card."
+            : PHASE_LABEL[phase];
 
-  const supplyByKey: Record<string, CardCollectionSurface> = {
-    supplyActions,
-    supplyTreasures,
-    supplyVictory,
-    supplyCurses,
+  const supplySurfaces: Record<string, CardCollectionSurface> = {
+    supplyTechniques,
+    supplyInspiration,
+    supplyPortfolio,
   };
-
-  const resolveKind = view.pendingAction?.kind;
-
-  // Affordability cue for supply piles, derived from the view (independent of
-  // interaction projection timing) so the cost badge always reads true.
-  const costToneFor = (cost: number): CostTone => {
-    if (mode === "buy") {
-      return coins >= cost && buysLeft > 0 ? "affordable" : "unaffordable";
-    }
-    if (mode === "resolve" && resolveKind === "studioVisit") {
-      return cost <= 4 ? "affordable" : "unaffordable";
-    }
-    return "neutral";
-  };
-
-  // In the action step with no action card to play, the only move is to advance
-  // — make that explicit instead of a lonely "End actions".
-  const hasPlayableAction =
-    isMyTurn &&
-    mode === "action" &&
-    actionsLeft > 0 &&
-    view.handCards.some((id) => cardKindOf(viewCardFromId(id)) === "action");
-
-  const waitingFor =
-    !isMyTurn && currentPlayerId
-      ? (players.byId.get(currentPlayerId)?.name ?? currentPlayerId)
-      : undefined;
-
-  const winningStanding = view.outcome?.standings.find(
-    (standing) => standing.result === "win",
-  );
-  const winningPlayerId = winningStanding?.playerId;
-
-  const tip = view.outcome
-    ? "The sketchbook is filled."
-    : !isMyTurn
-      ? waitingFor
-        ? `Waiting for ${waitingFor} to finish their turn.`
-        : undefined
-      : phase !== "playerTurn"
-        ? PHASE_LABELS[phase]
-        : mode === "action"
-          ? hasPlayableAction
-            ? "Tap an action card in your hand to play it, or end your actions."
-            : "No action cards to play — continue to the buy phase."
-          : mode === "resolve"
-            ? resolveKind === "eraser"
-              ? "Tap up to four cards in your hand to trash, then confirm."
-              : resolveKind === "sketchpad"
-                ? "Tap cards to discard — you draw that many back."
-                : "Tap a supply pile costing $4 or less to gain a card."
-            : mode === "buy"
-              ? "Tap treasures to play them for coins, then tap a pile to buy."
-              : "Wrapping up your turn…";
-
-  const stepLabel = !isMyTurn
-    ? phase === "playerTurn"
-      ? "Opponent's turn"
-      : PHASE_LABELS[phase]
-    : phase === "playerTurn"
-      ? (STEP_LABELS[mode] ?? PHASE_LABELS[phase])
-      : PHASE_LABELS[phase];
-
-  const stagingLabel =
-    resolveKind === "eraser"
-      ? "Trashing"
-      : resolveKind === "sketchpad"
-        ? "Discarding"
-        : undefined;
-
-  const endActionLabel = hasPlayableAction ? "End actions" : "Continue to buy";
-
-  const trayActive = useIsMobile();
-  const discardTop = discardCards[discardCards.length - 1];
 
   return (
     <>
-      <div
-        className={`min-h-[100dvh] bg-[#fdfbf7] text-[#2d2d2d] ${
-          trayActive ? "pb-40" : "pb-[268px]"
-        }`}
-      >
-        {/* ── Header ──────────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-30 border-b border-[#2d2d2d]/12 bg-[#fdfbf7]/95 backdrop-blur-sm">
-          <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-3 py-2.5 sm:px-4">
-            <div className="flex items-center gap-3">
-              <h1 className="m-0 text-2xl font-bold tracking-tight sm:text-3xl">
-                Sketchbook
-              </h1>
-              <span
-                className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
-                  isMyTurn
-                    ? "border-[#2d2d2d] bg-[#fff4cf] text-[#2d2d2d]"
-                    : "border-[#2d2d2d]/15 bg-white text-slate-500"
-                }`}
-              >
-                {stepLabel}
-              </span>
+      <main className="min-h-screen bg-[#f2eadb] text-stone-900 [background-image:linear-gradient(rgba(120,113,108,.08)_1px,transparent_1px)] [background-size:100%_28px]">
+        <header className="border-b-2 border-stone-800 bg-[#fffdf7]/95 px-4 py-3">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
+            <div>
+              <h1 className="font-serif text-3xl font-black tracking-tight">Sketchbook</h1>
+              <p className="text-sm text-stone-600">{instruction}</p>
             </div>
-            <span className="text-xs font-semibold text-slate-600">
-              Turn{" "}
-              <span className="tabular-nums text-[#2d2d2d]">{turnNumber}</span>
-            </span>
+            <div className="text-right text-sm font-bold">
+              <div>Turn {view.turnNumber} · {PHASE_LABEL[phase]}</div>
+              <div className="text-stone-500">
+                {turn.isMine ? "Your page" : activeName ? `${activeName}'s page` : "Final page"}
+              </div>
+            </div>
           </div>
-          {tip ? (
-            <div className="mx-auto max-w-[1280px] px-3 pb-2 text-sm text-slate-600 sm:px-4">
-              {tip}
-            </div>
-          ) : null}
         </header>
 
-        <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[210px_minmax(0,1fr)_250px] lg:items-start">
-          {/* ── Resources + table ─────────────────────────────────────── */}
-          <aside className="flex flex-col gap-4 lg:order-1">
-            <section
-              aria-label="Your resources"
-              className={`${PANEL_CLASS} p-3`}
-            >
-              <h2 className={`${SECTION_HEADING_CLASS} mb-2`}>
-                Your resources
-              </h2>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-2">
-                <StatChip
-                  label="Actions"
-                  value={actionsLeft}
-                  active={isMyTurn && mode === "action"}
-                />
-                <StatChip
-                  label="Buys"
-                  value={buysLeft}
-                  active={isMyTurn && mode === "buy"}
-                />
-                <StatChip
-                  label="Coins"
-                  value={`$${coins}`}
-                  active={isMyTurn && mode === "buy"}
-                />
-                <StatChip label="Deck" value={deckCount} />
-                <StatChip
-                  label="VP"
-                  value={currentPlayerId ? (vpTotals[currentPlayerId] ?? 0) : 0}
-                />
+        <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 lg:grid-cols-[230px_minmax(0,1fr)_250px]">
+          <aside className="space-y-4">
+            <section className={`${PANEL} p-3`} aria-label="Turn resources">
+              <h2 className="mb-2 font-serif text-xl font-bold">Working palette</h2>
+              <div className="grid grid-cols-2 gap-2">
+                <Stat label="Actions" value={view.actionsLeft} />
+                <Stat label="Buys" value={view.buysLeft} />
+                <Stat label="Inspiration" value={view.inspiration} />
+                <Stat label="Draw deck" value={view.deckCountByPlayerId[playerId] ?? 0} />
               </div>
-              {phase === "playerTurn" && mode === "buy" ? (
-                <div className="mt-3 border-t border-[#2d2d2d]/10 pt-3">
-                  <SketchbookPrimaryActions
-                    selectedCount={0}
-                    endActionLabel={endActionLabel}
-                  />
-                </div>
-              ) : null}
             </section>
-
-            {/* Played cards land in "In play" and bought cards land in
-                "Discard", so plays and purchases have an obvious destination. */}
-            <section aria-label="Your table" className={`${PANEL_CLASS} p-3`}>
-              <h2 className={`${SECTION_HEADING_CLASS} mb-2`}>Your table</h2>
-              <div className="flex gap-4">
-                <TablePile label="Deck" count={deckCount}>
-                  <CardFace card={CARD_BACK_STUB} size="sm" faceDown />
-                </TablePile>
-                <TablePile label="Discard" count={discardCards.length}>
-                  {discardTop ? (
-                    <CardFace
-                      card={viewCardFromId(discardTop)}
-                      size="sm"
-                      renderContent={(c) => <SketchCardContent card={c} />}
-                    />
-                  ) : (
-                    <div className="h-24 w-16 rounded-lg border-2 border-dashed border-[#2d2d2d]/20 sm:h-28 sm:w-20" />
-                  )}
-                </TablePile>
-              </div>
-              <div className="mt-3">
-                <span className="mb-1 block text-[9px] font-bold uppercase tracking-wider text-slate-500">
-                  In play
-                </span>
-                {inPlayCards.length === 0 ? (
-                  <span className="text-xs italic text-slate-400">
-                    Cards you play this turn appear here.
-                  </span>
-                ) : (
-                  <div className="flex flex-wrap gap-1.5">
-                    {inPlayCards.map((id) => (
-                      <CardFace
-                        key={id}
-                        card={viewCardFromId(id)}
-                        size="sm"
-                        renderContent={(c) => <SketchCardContent card={c} />}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+            <section className={`${PANEL} p-3`} aria-label="Your card cycle">
+              <h2 className="font-serif text-xl font-bold">Card cycle</h2>
+              <p className="mb-2 text-xs text-stone-500">
+                Discard {discard.length} · In play {inPlay.length}
+              </p>
+              <h3 className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">In play</h3>
+              <CardStrip cardIds={inPlay} empty="Nothing played yet." />
+              <h3 className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-widest text-stone-500">Public discard</h3>
+              <CardStrip cardIds={discard.slice(-4)} empty="Discard is empty." />
             </section>
           </aside>
 
-          {/* ── Supply ────────────────────────────────────────────────── */}
-          <div className="lg:order-2">
-            <section
-              aria-label="Supply"
-              className={`${PANEL_CLASS} overflow-hidden`}
-            >
-              <div className="flex items-center justify-between gap-3 border-b border-[#2d2d2d]/10 bg-[#f4efe6] px-4 py-2">
-                <h2 className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#2d2d2d]">
-                  Supply
-                </h2>
-                <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-slate-500">
-                  {mode === "resolve" && resolveKind === "studioVisit"
-                    ? "Tap a pile to gain"
-                    : mode === "buy"
-                      ? "Tap a pile to buy"
-                      : "Buy in the buy phase"}
-                </span>
+          <section className={`${PANEL} space-y-5 p-4`} aria-label="Shared supply">
+            <div className="flex items-end justify-between gap-3 border-b border-dashed border-stone-400 pb-2">
+              <div>
+                <h2 className="font-serif text-2xl font-black">Studio shelf</h2>
+                <p className="text-xs text-stone-500">Top cards and pile counts are public.</p>
               </div>
-              <div className="flex flex-col gap-4 p-4">
-                {SUPPLY_GROUPS.map((group) => (
-                  <SupplyGroup
-                    key={group.label}
-                    label={group.label}
-                    surface={supplyByKey[group.surfaceKey]!}
-                    costToneFor={costToneFor}
-                  />
-                ))}
-              </div>
-            </section>
-          </div>
+              <span className="text-xs font-bold uppercase tracking-widest text-stone-500">
+                {view.step ?? "complete"}
+              </span>
+            </div>
+            {SUPPLY_GROUPS.map(({ label, surfaceKey }) => (
+              <SupplyGroup
+                key={label}
+                label={label}
+                surface={supplySurfaces[surfaceKey]!}
+                supplyCounts={view.supplyCountByZoneId}
+              />
+            ))}
+          </section>
 
-          {/* ── Players ───────────────────────────────────────────────── */}
-          <aside className="lg:order-3">
-            <section aria-label="Players" className={`${PANEL_CLASS} p-3`}>
-              <h2 className={`${SECTION_HEADING_CLASS} mb-2`}>Players</h2>
+          <aside className="space-y-4">
+            <section className={`${PANEL} p-3`} aria-label="Artists">
+              <h2 className="mb-2 font-serif text-xl font-bold">Artists</h2>
               <PlayerRoster.Root
-                score={(playerId) => vpTotals[playerId] ?? 0}
-                scoreLabel="VP"
-                badges={(playerId) => [
-                  winningPlayerId === playerId
-                    ? { key: "winner", icon: "🏆", tooltip: "Winner" }
-                    : null,
-                ]}
+                score={(id) => view.portfolioScores[id] ?? 0}
+                scoreLabel="Portfolio"
               >
-                <PlayerRoster.List className="flex flex-wrap gap-2 lg:flex-col">
+                <PlayerRoster.List className="space-y-2">
                   {(player) => (
                     <div
                       key={player.playerId}
-                      className={`flex items-center gap-2 rounded-xl border-2 border-l-[6px] border-[#2d2d2d]/80 bg-white px-2.5 py-1.5 text-sm font-semibold transition-colors lg:w-full ${
-                        player.isActive ? "bg-[#fff4cf]" : ""
+                      className={`rounded-xl border-2 px-3 py-2 ${
+                        player.isActive
+                          ? "border-rose-400 bg-rose-50"
+                          : "border-stone-300 bg-white"
                       }`}
-                      style={{ borderLeftColor: player.color ?? "#94a3b8" }}
                     >
-                      <span className="min-w-0 flex-1 truncate text-left">
+                      <div className="flex justify-between gap-2 font-bold">
                         <PlayerRoster.Name player={player} />
-                      </span>
-                      <span className="rounded bg-[#eef2f7] px-1.5 text-xs font-bold tabular-nums text-[#2d2d2d]">
                         <PlayerRoster.Score player={player} />
-                      </span>
-                      <PlayerRoster.Badges player={player} />
-                      {player.isActive ? (
-                        <span className="rounded bg-[#ff6b6b] px-1 py-px text-[9px] font-bold uppercase tracking-wide text-white">
-                          turn
-                        </span>
-                      ) : null}
+                      </div>
+                      <div className="text-[10px] uppercase tracking-wider text-stone-500">
+                        {view.handCountByPlayerId[player.playerId] ?? 0} in hand · {view.deckCountByPlayerId[player.playerId] ?? 0} in deck
+                      </div>
                     </div>
                   )}
                 </PlayerRoster.List>
               </PlayerRoster.Root>
             </section>
+            <section className={`${PANEL} p-3`} aria-label="Recent events">
+              <h2 className="mb-2 font-serif text-xl font-bold">Margin notes</h2>
+              <ol className="space-y-2 text-xs text-stone-600">
+                {view.history.slice(-6).map((entry, index) => (
+                  <li key={`${entry.turn}-${entry.kind}-${index}`} className="border-l-2 border-sky-300 pl-2">
+                    {entry.summary}
+                  </li>
+                ))}
+              </ol>
+            </section>
           </aside>
         </div>
 
-        {/* ── Hand dock ─────────────────────────────────────────────────
-            On mobile the SDK lifts the hand (and its action slot) into a fixed
-            tray; on desktop it renders inline below the board. Either way the
-            primary action + staging travel with the hand. */}
-        <div
-          className={
-            trayActive
-              ? ""
-              : "fixed inset-x-0 bottom-0 z-20 max-h-[62vh] overflow-y-auto border-t border-[#2d2d2d]/12 bg-[#fdfbf7]/95 backdrop-blur-sm"
-          }
-          style={
-            trayActive
-              ? undefined
-              : { paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }
-          }
-        >
-          <div className="mx-auto w-full max-w-[1280px] px-3 pt-2 sm:px-4">
-            {trayActive ? null : (
-              <span
-                className={`${SECTION_HEADING_CLASS} mb-1 block text-center`}
-              >
-                Your hand
-              </span>
-            )}
-            <hand.Hand
-              className="min-h-[132px]"
-              cardSize="md"
-              empty={
-                <span className="text-[13px] italic text-slate-400">
-                  (no cards in hand)
-                </span>
-              }
-            >
+        <section className="sticky bottom-0 z-20 border-t-2 border-stone-800 bg-[#fffdf7]/95 px-3 py-3 backdrop-blur" aria-label="Your hand">
+          <div className="mx-auto max-w-7xl">
+            <hand.Hand className="min-h-[138px]" cardSize="md">
               <hand.Actions>
-                {(summary) =>
-                  mode === "buy" ? null : (
-                    <SketchbookPrimaryActions
-                      selectedCount={summary.selectedCount}
-                      endActionLabel={endActionLabel}
-                    />
-                  )
-                }
+                {() => <SketchbookActions />}
               </hand.Actions>
-              {stagingLabel ? (
-                <hand.Summary>
-                  {() => (
-                    <hand.Staging label={stagingLabel} cardSize="md">
-                      {(card) => (
-                        <CardFace
-                          card={card}
-                          size="md"
-                          selected
-                          renderContent={(c) => <SketchCardContent card={c} />}
-                        />
-                      )}
-                    </hand.Staging>
-                  )}
-                </hand.Summary>
-              ) : null}
+              <hand.Staging label="Selected for Eraser" cardSize="md">
+                {(card) => (
+                  <CardFace
+                    card={card}
+                    size="md"
+                    selected
+                    renderContent={(value) => <SketchCardContent card={value} />}
+                  />
+                )}
+              </hand.Staging>
               <hand.Cards>
-                {(card, state) => {
-                  if (card.hidden) return <hand.Card card={card} />;
-                  // Lift the cards that can act this step (an action to play, a
-                  // treasure to cash in, a target to stage). Others stay readable.
-                  const showEligible = state.distinctlyEligible ?? false;
-                  const lift = state.selected
-                    ? "-translate-y-3"
-                    : showEligible
-                      ? "-translate-y-1 hover:-translate-y-2.5"
-                      : "";
-                  return (
-                    <hand.Card
-                      card={card}
-                      className={`relative border-0 bg-transparent p-0 transition-transform disabled:cursor-default ${lift}`}
-                    >
+                {(card, state) =>
+                  card.hidden ? (
+                    <hand.Card card={card} />
+                  ) : (
+                    <hand.Card card={card} className="border-0 bg-transparent p-0">
                       <CardFace
                         card={card}
                         size="md"
-                        eligible={showEligible}
+                        eligible={state.distinctlyEligible}
                         selected={state.selected}
                         invalid={state.invalid}
-                        renderContent={(c) => <SketchCardContent card={c} />}
+                        renderContent={(value) => <SketchCardContent card={value} />}
                       />
                     </hand.Card>
-                  );
-                }}
+                  )
+                }
               </hand.Cards>
             </hand.Hand>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
 
-      {/* Collector bindings for every interaction (mounted once). */}
       <SketchbookRoutes hand={hand} market={market} />
-
       <OutcomeDialog
         outcome={view.outcome}
-        playerName={(playerId) => players.byId.get(playerId)?.name ?? playerId}
+        playerName={(id) => players.byId.get(id)?.name ?? id}
       />
     </>
   );

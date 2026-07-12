@@ -17,5 +17,6 @@
     "../shared/**/*.ts",
     "../ui/**/*.ts",
     "../ui/**/*.tsx"
-  ]
+  ],
+  "exclude": ["./generated/**"]
 }

@@ -1,13 +1,24 @@
-# Dreamboard Test Workspace
+# Stormtrail executable rules
 
-TypeScript bases live in `test/bases/*.base.ts` and scenarios live in `test/scenarios/*.scenario.ts`.
+Every scenario in `test/scenarios/` starts from ordinary three-player setup
+with an authored safe-integer seed and replays accepted seat-based commands.
+No scenario patches state, fixes dice, injects resources, or selects a test-only
+setup profile.
 
-1. Define reusable seeded bases with `defineBase({ id, seed, players, setupProfileId?, setup })`.
-2. Define scenarios with `defineScenario({ id, from, when, then })`.
-3. Scenario assertions can read `players()`, `state()`, `view(playerId)`, and `interactions(playerId)`.
-4. Generate deterministic base snapshots: `dreamboard test generate`.
-5. Run tests: `dreamboard test run`.
+The nine authoritative scenario sources cover the full game, topology/setup,
+production, the discard barrier, Bandits, network/costs, depot trades,
+bilateral trade, and projection privacy. `test/scenarios.test.ts` adds exact
+checkpoint, probe, explore, scheduler, and privacy assertions.
 
-Import test helpers from `../testing-types`.
+`test/ui-scenarios/` contains derived Workbench checkpoints for setup,
+production, discard, pending trade, a growing network, and terminal victory.
 
-Generated artifacts are written to `test/generated/*` and should not be edited manually.
+`test/bases/**` and `test/generated/**` are preserved only for the coordinated
+Phase 07 deletion. They are unused by package scripts, scenario discovery,
+Workbench checkpoints, and verification; they are not assertion authority.
+
+Run:
+
+```sh
+pnpm verify
+```

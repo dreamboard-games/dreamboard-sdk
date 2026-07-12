@@ -1,140 +1,95 @@
-import { CardFace, type ViewCard } from "@dreamboard-games/sdk/ui";
+import type { ViewCard } from "@dreamboard-games/sdk/ui";
 import type {
   CardId,
   CardProperties,
   CardType,
 } from "../../shared/manifest-contract";
 
-export type SushiCardView = ViewCard<CardId, CardType, CardProperties>;
-
-export const ACTION_BUTTON_CLASS =
-  "rounded-lg border-2 border-[#2d2d2d] bg-white px-4 py-2 text-sm font-bold text-[#2d2d2d] shadow-[4px_4px_0_0_#2d2d2d] disabled:opacity-50";
+export type MarketCardView = ViewCard<CardId, CardType, CardProperties>;
 
 export const PRIMARY_BUTTON_CLASS =
-  "rounded-lg border-2 border-[#2d2d2d] bg-[#ff4d4d] px-4 py-2 text-sm font-bold text-white shadow-[4px_4px_0_0_#2d2d2d] disabled:opacity-50";
+  "rounded-lg border-2 border-[#40251b] bg-[#b83a2d] px-4 py-2 text-sm font-black text-white shadow-[3px_3px_0_#40251b] transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45";
 
-export const STAMP_CLASS =
-  "rounded-full border-2 border-[#2d2d2d] bg-[#fff9c4] px-3 py-1 text-xs font-bold uppercase text-[#2d2d2d]";
+export const BADGE_CLASS =
+  "rounded-full border border-[#40251b]/30 bg-[#fff4cf] px-3 py-1 text-xs font-black uppercase tracking-[0.12em] text-[#6a3527]";
 
-const CATEGORY_LABEL: Record<string, string> = {
-  nigiri: "Nigiri",
-  wasabi: "Wasabi",
-  tempura: "Tempura",
-  sashimi: "Sashimi",
-  dumpling: "Dumpling",
-  maki: "Maki",
-  pudding: "Pudding",
-  chopsticks: "Chopsticks",
-};
+const FAMILY_PRESENTATION = {
+  lantern: {
+    label: "Lantern",
+    icon: "🏮",
+    scoring: "2 each",
+    className: "border-[#9d332b] bg-[#ffe4d6]",
+  },
+  "tea-cup": {
+    label: "Tea Cup",
+    icon: "🍵",
+    scoring: "5 per pair",
+    className: "border-[#47734b] bg-[#e5f4d7]",
+  },
+  "festival-banner": {
+    label: "Festival Banner",
+    icon: "🎏",
+    scoring: "9 per trio",
+    className: "border-[#405f92] bg-[#e4edff]",
+  },
+} as const;
 
-const CATEGORY_COLOR: Record<string, string> = {
-  nigiri: "bg-orange-100",
-  wasabi: "bg-lime-100",
-  tempura: "bg-amber-100",
-  sashimi: "bg-rose-100",
-  dumpling: "bg-violet-100",
-  maki: "bg-emerald-100",
-  pudding: "bg-pink-100",
-  chopsticks: "bg-sky-100",
-};
-
-function cardSubtitle(card: SushiCardView): string {
-  const category = card.properties.category;
-  if (category === "nigiri" && "nigiriPoints" in card.properties) {
-    return `${card.properties.nigiriPoints} pt`;
-  }
-  if (category === "maki" && "makiIcons" in card.properties) {
-    return `${card.properties.makiIcons} maki`;
-  }
-  return CATEGORY_LABEL[category] ?? category;
-}
-
-export function SushiCardContent({ card }: { card: SushiCardView }) {
-  const category = card.properties.category;
-  const bg = CATEGORY_COLOR[category] ?? "bg-white";
+export function MarketCardContent({ card }: { card: MarketCardView }) {
+  const family = FAMILY_PRESENTATION[card.properties.family];
   return (
     <div
-      className={`flex h-full flex-col items-center justify-between rounded-lg border-2 border-[#2d2d2d] p-1.5 ${bg}`}
+      className={`flex h-full flex-col items-center justify-between rounded-xl border-2 p-2 text-[#40251b] ${family.className}`}
+      data-market-family={card.properties.family}
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-[#2d2d2d]">
-        {CATEGORY_LABEL[category] ?? category}
+      <span className="text-[10px] font-black uppercase tracking-[0.12em]">
+        {family.label}
       </span>
-      <span className="text-center text-xs font-bold text-[#2d2d2d]">
-        {card.name}
+      <span className="text-3xl" aria-hidden="true">
+        {family.icon}
       </span>
-      <span className="text-[10px] text-[#2d5da1]">{cardSubtitle(card)}</span>
+      <span className="text-[10px] font-bold text-[#68483b]">
+        {family.scoring}
+      </span>
     </div>
   );
 }
 
-export function SushiCardTile({ card }: { card: SushiCardView }) {
+export function MarketCardTile({
+  card,
+  compact = false,
+}: {
+  card: MarketCardView;
+  compact?: boolean;
+}) {
   return (
-    <div className="h-[88px] w-[64px] overflow-hidden shadow-[4px_4px_0_0_#2d2d2d]">
-      <SushiCardContent card={card} />
+    <div
+      className={`${compact ? "h-[82px] w-[60px]" : "h-[104px] w-[74px]"} shrink-0 overflow-hidden rounded-xl shadow-[3px_3px_0_#40251b]`}
+    >
+      <MarketCardContent card={card} />
     </div>
   );
 }
 
-export function HiddenCardTile() {
-  return (
-    <div className="h-[88px] w-[64px] overflow-hidden rounded-lg border-2 border-[#2d2d2d] bg-[#2d5da1] shadow-[4px_4px_0_0_#2d2d2d]">
-      <div className="flex h-full items-center justify-center text-[10px] font-bold uppercase tracking-wide text-white">
-        Sushi
-      </div>
-    </div>
-  );
-}
-
-export function PlayedRow({
+export function CardCollection({
   cards,
-  label,
+  emptyLabel = "No cards yet",
+  compact = false,
 }: {
-  cards: readonly SushiCardView[];
-  label: string;
+  cards: readonly MarketCardView[];
+  emptyLabel?: string;
+  compact?: boolean;
 }) {
   return (
-    <section className="flex flex-col items-center gap-1 rounded-xl border-2 border-[#2d2d2d] bg-[#fdfbf7] px-3 py-2">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-[#2d2d2d]">
-        {label}
-      </span>
-      <div className="flex min-h-[92px] flex-wrap justify-center gap-1">
-        {cards.length === 0 ? (
-          <span className="text-xs italic text-slate-500">-</span>
-        ) : (
-          cards.map((card) => <SushiCardTile key={card.id} card={card} />)
-        )}
-      </div>
-    </section>
-  );
-}
-
-export function OpponentPlayedCards({
-  name,
-  played,
-  pudding,
-}: {
-  name: string;
-  played: readonly SushiCardView[];
-  pudding: readonly SushiCardView[];
-}) {
-  return (
-    <section className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <span className="text-sm font-semibold">{name}</span>
-      <div className="mt-2 flex flex-wrap gap-1">
-        {played.map((card) => (
-          <CardFace
-            key={card.id}
-            card={card}
-            size="sm"
-            renderContent={() => <SushiCardContent card={card} />}
-          />
-        ))}
-      </div>
-      {pudding.length > 0 ? (
-        <span className="mt-1 block text-xs text-pink-700">
-          {pudding.length} pudding
+    <div className="flex min-h-[92px] flex-wrap content-start gap-2">
+      {cards.length > 0 ? (
+        cards.map((card) => (
+          <MarketCardTile key={card.id} card={card} compact={compact} />
+        ))
+      ) : (
+        <span className="self-center text-sm italic text-[#896d60]">
+          {emptyLabel}
         </span>
-      ) : null}
-    </section>
+      )}
+    </div>
   );
 }

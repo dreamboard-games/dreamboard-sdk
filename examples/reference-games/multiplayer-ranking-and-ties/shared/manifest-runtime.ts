@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -86,69 +86,123 @@ export { literals };
 // the "total-record" assumption the refactor is meant to eliminate. Runtime
 // roster validation is done through perPlayerSchema(runtimePlayerIds, ...)
 // instead, which can be bound to the actual active roster.
-const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
+const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(
   markManifestScopedSchema(
     z
       .string()
       .min(1)
       .transform((value) => asPlayerId(value)),
+    "playerId",
   ),
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
 const boardLayoutSchema = createManifestStringLiteralSchema(
   literals.boardLayouts,
+  "boardLayout",
 );
 const setupOptionIdSchema = createManifestStringLiteralSchema(
   literals.setupOptionIds,
+  "setupOptionId",
 );
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
 const sharedZoneIdSchema = createManifestStringLiteralSchema(
   literals.sharedZoneIds,
+  "sharedZoneId",
 );
 const playerZoneIdSchema = createManifestStringLiteralSchema(
   literals.playerZoneIds,
+  "playerZoneId",
 );
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
 const resourceIdSchema = createManifestStringLiteralSchema(
   literals.resourceIds,
+  "resourceId",
 );
 const pieceTypeIdSchema = createManifestStringLiteralSchema(
   literals.pieceTypeIds,
+  "pieceTypeId",
 );
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
+  "boardTypeId",
 );
 const boardBaseIdSchema = createManifestStringLiteralSchema(
   literals.boardBaseIds,
+  "boardBaseId",
 );
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
 const relationTypeIdSchema = createManifestStringLiteralSchema(
   literals.relationTypeIds,
+  "relationTypeId",
 );
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
 const edgeTypeIdSchema = createManifestStringLiteralSchema(
   literals.edgeTypeIds,
+  "edgeTypeId",
 );
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
 const vertexTypeIdSchema = createManifestStringLiteralSchema(
   literals.vertexTypeIds,
+  "vertexTypeId",
 );
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
 const spaceTypeIdSchema = createManifestStringLiteralSchema(
   literals.spaceTypeIds,
+  "spaceTypeId",
 );
 
 export const ids = {
@@ -159,9 +213,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: assumeManifestSchema<CardId>(cardIdSchema),
-  deckId: assumeManifestSchema<DeckId>(deckIdSchema),
-  handId: assumeManifestSchema<HandId>(handIdSchema),
+  cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),
+  deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),
+  handId: assumeManifestSchema<HandId, "handId">(handIdSchema),
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -214,26 +268,26 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  craftP1C1: "craft-p1-c1",
-  craftP2C0: "craft-p2-c0",
-  craftP2C1: "craft-p2-c1",
-  craftP3C0: "craft-p3-c0",
-  foodP1C1: "food-p1-c1",
-  foodP2C0: "food-p2-c0",
-  foodP2C1: "food-p2-c1",
-  foodP3C0: "food-p3-c0",
-  musicP1C1: "music-p1-c1",
-  musicP2C0: "music-p2-c0",
-  musicP2C1: "music-p2-c1",
-  musicP3C0: "music-p3-c0",
-  storm: "storm",
+  "craftP1C1": "craft-p1-c1",
+  "craftP2C0": "craft-p2-c0",
+  "craftP2C1": "craft-p2-c1",
+  "craftP3C0": "craft-p3-c0",
+  "foodP1C1": "food-p1-c1",
+  "foodP2C0": "food-p2-c0",
+  "foodP2C1": "food-p2-c1",
+  "foodP3C0": "food-p3-c0",
+  "musicP1C1": "music-p1-c1",
+  "musicP2C0": "music-p2-c0",
+  "musicP2C1": "music-p2-c1",
+  "musicP3C0": "music-p3-c0",
+  "storm": "storm",
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  drawPile: "draw-pile",
-  festivalRow: "festival-row",
-  market: "market",
-  stormDiscard: "storm-discard",
+  "drawPile": "draw-pile",
+  "festivalRow": "festival-row",
+  "market": "market",
+  "stormDiscard": "storm-discard",
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -493,11 +547,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -553,7 +603,7 @@ export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
 export type ComponentIdsBySharedZoneId = {
   "draw-pile": ComponentId[];
-  market: ComponentId[];
+  "market": ComponentId[];
   "storm-discard": ComponentId[];
 };
 export type ComponentIdsByPlayerZoneId = {
@@ -577,265 +627,237 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {} as const;
+export const setupChoiceIdsByOptionId = {
+
+} as const;
 export const setupProfilesById = {
-  standard: {
-    id: "standard",
-    name: "Standard Harbor Fair",
-    description: "Two to four players draft stalls for six rounds.",
-    optionValues: null,
-    guidance: null,
-  },
+  "standard": {
+    "id": "standard",
+    "name": "Standard fair",
+    "description": "Two to four organizers draft one public stall per round for six rounds.",
+    "optionValues": null,
+    "guidance": {
+      "summary": "Draft a face-up stall; the vacated awnings refills automatically and Storms may cancel the fair.",
+      "steps": [
+        {
+          "id": "draft-stall",
+          "label": "Draft a stall",
+          "description": "The active organizer adds one of the four market stalls to their public festival row."
+        },
+        {
+          "id": "refill-market",
+          "label": "Refill the awnings",
+          "description": "Storms are revealed and skipped until a stall fills the vacated market position."
+        },
+        {
+          "id": "judge-festival",
+          "label": "Judge after six rounds",
+          "description": "Prestige, complete guild sets, and coins produce authoritative competition ranks."
+        }
+      ]
+    }
+  }
 } as const;
 
 export type HarborFairCardsFoodP1C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "food";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "food";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsFoodP1C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["food"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["food"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsFoodP2C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "food";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "food";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsFoodP2C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["food"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["food"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsFoodP2C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "food";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "food";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsFoodP2C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["food"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["food"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsFoodP3C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "food";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "food";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsFoodP3C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["food"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["food"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsCraftP1C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "craft";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "craft";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsCraftP1C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["craft"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["craft"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsCraftP2C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "craft";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "craft";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsCraftP2C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["craft"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["craft"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsCraftP2C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "craft";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "craft";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsCraftP2C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["craft"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["craft"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsCraftP3C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "craft";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "craft";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsCraftP3C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["craft"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["craft"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsMusicP1C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "music";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "music";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsMusicP1C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["music"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["music"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsMusicP2C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "music";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "music";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsMusicP2C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["music"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["music"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsMusicP2C1CardProperties = {
-  kind: "stall" | "storm";
-  guild: "music";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "music";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsMusicP2C1CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["music"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["music"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsMusicP3C0CardProperties = {
-  kind: "stall" | "storm";
-  guild: "music";
-  prestige: number;
-  coins: number;
+  "kind": "stall" | "storm";
+  "guild": "music";
+  "prestige": number;
+  "coins": number;
 };
 
 export const HarborFairCardsMusicP3C0CardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
-  guild: z.enum(["music"]),
-  prestige: z.number().int(),
-  coins: z.number().int(),
+  "kind": z.enum(["stall", "storm"]),
+  "guild": z.enum(["music"]),
+  "prestige": z.number().int(),
+  "coins": z.number().int(),
 });
 
 export type HarborFairCardsStormCardProperties = {
-  kind: "stall" | "storm";
+  "kind": "stall" | "storm";
 };
 
 export const HarborFairCardsStormCardPropertiesSchema = z.object({
-  kind: z.enum(["stall", "storm"]),
+  "kind": z.enum(["stall", "storm"]),
 });
 
-export type HarborFairCardsCardProperties =
-  | HarborFairCardsFoodP1C1CardProperties
-  | HarborFairCardsFoodP2C0CardProperties
-  | HarborFairCardsFoodP2C1CardProperties
-  | HarborFairCardsFoodP3C0CardProperties
-  | HarborFairCardsCraftP1C1CardProperties
-  | HarborFairCardsCraftP2C0CardProperties
-  | HarborFairCardsCraftP2C1CardProperties
-  | HarborFairCardsCraftP3C0CardProperties
-  | HarborFairCardsMusicP1C1CardProperties
-  | HarborFairCardsMusicP2C0CardProperties
-  | HarborFairCardsMusicP2C1CardProperties
-  | HarborFairCardsMusicP3C0CardProperties
-  | HarborFairCardsStormCardProperties;
+export type HarborFairCardsCardProperties = HarborFairCardsFoodP1C1CardProperties | HarborFairCardsFoodP2C0CardProperties | HarborFairCardsFoodP2C1CardProperties | HarborFairCardsFoodP3C0CardProperties | HarborFairCardsCraftP1C1CardProperties | HarborFairCardsCraftP2C0CardProperties | HarborFairCardsCraftP2C1CardProperties | HarborFairCardsCraftP3C0CardProperties | HarborFairCardsMusicP1C1CardProperties | HarborFairCardsMusicP2C0CardProperties | HarborFairCardsMusicP2C1CardProperties | HarborFairCardsMusicP3C0CardProperties | HarborFairCardsStormCardProperties;
 
-export const HarborFairCardsCardPropertiesSchema = z.union([
-  HarborFairCardsFoodP1C1CardPropertiesSchema,
-  HarborFairCardsFoodP2C0CardPropertiesSchema,
-  HarborFairCardsFoodP2C1CardPropertiesSchema,
-  HarborFairCardsFoodP3C0CardPropertiesSchema,
-  HarborFairCardsCraftP1C1CardPropertiesSchema,
-  HarborFairCardsCraftP2C0CardPropertiesSchema,
-  HarborFairCardsCraftP2C1CardPropertiesSchema,
-  HarborFairCardsCraftP3C0CardPropertiesSchema,
-  HarborFairCardsMusicP1C1CardPropertiesSchema,
-  HarborFairCardsMusicP2C0CardPropertiesSchema,
-  HarborFairCardsMusicP2C1CardPropertiesSchema,
-  HarborFairCardsMusicP3C0CardPropertiesSchema,
-  HarborFairCardsStormCardPropertiesSchema,
-]);
+export const HarborFairCardsCardPropertiesSchema = z.union([HarborFairCardsFoodP1C1CardPropertiesSchema, HarborFairCardsFoodP2C0CardPropertiesSchema, HarborFairCardsFoodP2C1CardPropertiesSchema, HarborFairCardsFoodP3C0CardPropertiesSchema, HarborFairCardsCraftP1C1CardPropertiesSchema, HarborFairCardsCraftP2C0CardPropertiesSchema, HarborFairCardsCraftP2C1CardPropertiesSchema, HarborFairCardsCraftP3C0CardPropertiesSchema, HarborFairCardsMusicP1C1CardPropertiesSchema, HarborFairCardsMusicP2C0CardPropertiesSchema, HarborFairCardsMusicP2C1CardPropertiesSchema, HarborFairCardsMusicP3C0CardPropertiesSchema, HarborFairCardsStormCardPropertiesSchema]);
 
-export type HarborFairCardsCardId =
-  | "food-p1-c1-1"
-  | "food-p1-c1-2"
-  | "food-p2-c0-1"
-  | "food-p2-c0-2"
-  | "food-p2-c0-3"
-  | "food-p2-c0-4"
-  | "food-p2-c1-1"
-  | "food-p2-c1-2"
-  | "food-p3-c0-1"
-  | "food-p3-c0-2"
-  | "craft-p1-c1-1"
-  | "craft-p1-c1-2"
-  | "craft-p2-c0-1"
-  | "craft-p2-c0-2"
-  | "craft-p2-c0-3"
-  | "craft-p2-c0-4"
-  | "craft-p2-c1-1"
-  | "craft-p2-c1-2"
-  | "craft-p3-c0-1"
-  | "craft-p3-c0-2"
-  | "music-p1-c1-1"
-  | "music-p1-c1-2"
-  | "music-p2-c0-1"
-  | "music-p2-c0-2"
-  | "music-p2-c0-3"
-  | "music-p2-c0-4"
-  | "music-p2-c1-1"
-  | "music-p2-c1-2"
-  | "music-p3-c0-1"
-  | "music-p3-c0-2"
-  | "storm-1"
-  | "storm-2";
+export type HarborFairCardsCardId = "food-p1-c1-1" | "food-p1-c1-2" | "food-p2-c0-1" | "food-p2-c0-2" | "food-p2-c0-3" | "food-p2-c0-4" | "food-p2-c1-1" | "food-p2-c1-2" | "food-p3-c0-1" | "food-p3-c0-2" | "craft-p1-c1-1" | "craft-p1-c1-2" | "craft-p2-c0-1" | "craft-p2-c0-2" | "craft-p2-c0-3" | "craft-p2-c0-4" | "craft-p2-c1-1" | "craft-p2-c1-2" | "craft-p3-c0-1" | "craft-p3-c0-2" | "music-p1-c1-1" | "music-p1-c1-2" | "music-p2-c0-1" | "music-p2-c0-2" | "music-p2-c0-3" | "music-p2-c0-4" | "music-p2-c1-1" | "music-p2-c1-2" | "music-p3-c0-1" | "music-p3-c0-2" | "storm-1" | "storm-2";
 
-export type BoardFieldsByBoardId = {};
 
-export type BoardSpaceFieldsByBoardId = {};
 
-export type BoardRelationFieldsByBoardId = {};
+export type BoardFieldsByBoardId = {
 
-export type BoardContainerFieldsByBoardId = {};
+};
+
+export type BoardSpaceFieldsByBoardId = {
+
+};
+
+export type BoardRelationFieldsByBoardId = {
+
+};
+
+export type BoardContainerFieldsByBoardId = {
+
+};
 
 export type HexEdgeFieldsByBoardId = Record<string, never>;
 
@@ -868,198 +890,38 @@ export type CardStateRecord<
 };
 
 export type CardStateById = {
-  "craft-p1-c1-1": CardStateRecord<
-    "craft-p1-c1-1",
-    "harbor-fair-cards",
-    "craft-p1-c1",
-    HarborFairCardsCraftP1C1CardProperties
-  >;
-  "craft-p1-c1-2": CardStateRecord<
-    "craft-p1-c1-2",
-    "harbor-fair-cards",
-    "craft-p1-c1",
-    HarborFairCardsCraftP1C1CardProperties
-  >;
-  "craft-p2-c0-1": CardStateRecord<
-    "craft-p2-c0-1",
-    "harbor-fair-cards",
-    "craft-p2-c0",
-    HarborFairCardsCraftP2C0CardProperties
-  >;
-  "craft-p2-c0-2": CardStateRecord<
-    "craft-p2-c0-2",
-    "harbor-fair-cards",
-    "craft-p2-c0",
-    HarborFairCardsCraftP2C0CardProperties
-  >;
-  "craft-p2-c0-3": CardStateRecord<
-    "craft-p2-c0-3",
-    "harbor-fair-cards",
-    "craft-p2-c0",
-    HarborFairCardsCraftP2C0CardProperties
-  >;
-  "craft-p2-c0-4": CardStateRecord<
-    "craft-p2-c0-4",
-    "harbor-fair-cards",
-    "craft-p2-c0",
-    HarborFairCardsCraftP2C0CardProperties
-  >;
-  "craft-p2-c1-1": CardStateRecord<
-    "craft-p2-c1-1",
-    "harbor-fair-cards",
-    "craft-p2-c1",
-    HarborFairCardsCraftP2C1CardProperties
-  >;
-  "craft-p2-c1-2": CardStateRecord<
-    "craft-p2-c1-2",
-    "harbor-fair-cards",
-    "craft-p2-c1",
-    HarborFairCardsCraftP2C1CardProperties
-  >;
-  "craft-p3-c0-1": CardStateRecord<
-    "craft-p3-c0-1",
-    "harbor-fair-cards",
-    "craft-p3-c0",
-    HarborFairCardsCraftP3C0CardProperties
-  >;
-  "craft-p3-c0-2": CardStateRecord<
-    "craft-p3-c0-2",
-    "harbor-fair-cards",
-    "craft-p3-c0",
-    HarborFairCardsCraftP3C0CardProperties
-  >;
-  "food-p1-c1-1": CardStateRecord<
-    "food-p1-c1-1",
-    "harbor-fair-cards",
-    "food-p1-c1",
-    HarborFairCardsFoodP1C1CardProperties
-  >;
-  "food-p1-c1-2": CardStateRecord<
-    "food-p1-c1-2",
-    "harbor-fair-cards",
-    "food-p1-c1",
-    HarborFairCardsFoodP1C1CardProperties
-  >;
-  "food-p2-c0-1": CardStateRecord<
-    "food-p2-c0-1",
-    "harbor-fair-cards",
-    "food-p2-c0",
-    HarborFairCardsFoodP2C0CardProperties
-  >;
-  "food-p2-c0-2": CardStateRecord<
-    "food-p2-c0-2",
-    "harbor-fair-cards",
-    "food-p2-c0",
-    HarborFairCardsFoodP2C0CardProperties
-  >;
-  "food-p2-c0-3": CardStateRecord<
-    "food-p2-c0-3",
-    "harbor-fair-cards",
-    "food-p2-c0",
-    HarborFairCardsFoodP2C0CardProperties
-  >;
-  "food-p2-c0-4": CardStateRecord<
-    "food-p2-c0-4",
-    "harbor-fair-cards",
-    "food-p2-c0",
-    HarborFairCardsFoodP2C0CardProperties
-  >;
-  "food-p2-c1-1": CardStateRecord<
-    "food-p2-c1-1",
-    "harbor-fair-cards",
-    "food-p2-c1",
-    HarborFairCardsFoodP2C1CardProperties
-  >;
-  "food-p2-c1-2": CardStateRecord<
-    "food-p2-c1-2",
-    "harbor-fair-cards",
-    "food-p2-c1",
-    HarborFairCardsFoodP2C1CardProperties
-  >;
-  "food-p3-c0-1": CardStateRecord<
-    "food-p3-c0-1",
-    "harbor-fair-cards",
-    "food-p3-c0",
-    HarborFairCardsFoodP3C0CardProperties
-  >;
-  "food-p3-c0-2": CardStateRecord<
-    "food-p3-c0-2",
-    "harbor-fair-cards",
-    "food-p3-c0",
-    HarborFairCardsFoodP3C0CardProperties
-  >;
-  "music-p1-c1-1": CardStateRecord<
-    "music-p1-c1-1",
-    "harbor-fair-cards",
-    "music-p1-c1",
-    HarborFairCardsMusicP1C1CardProperties
-  >;
-  "music-p1-c1-2": CardStateRecord<
-    "music-p1-c1-2",
-    "harbor-fair-cards",
-    "music-p1-c1",
-    HarborFairCardsMusicP1C1CardProperties
-  >;
-  "music-p2-c0-1": CardStateRecord<
-    "music-p2-c0-1",
-    "harbor-fair-cards",
-    "music-p2-c0",
-    HarborFairCardsMusicP2C0CardProperties
-  >;
-  "music-p2-c0-2": CardStateRecord<
-    "music-p2-c0-2",
-    "harbor-fair-cards",
-    "music-p2-c0",
-    HarborFairCardsMusicP2C0CardProperties
-  >;
-  "music-p2-c0-3": CardStateRecord<
-    "music-p2-c0-3",
-    "harbor-fair-cards",
-    "music-p2-c0",
-    HarborFairCardsMusicP2C0CardProperties
-  >;
-  "music-p2-c0-4": CardStateRecord<
-    "music-p2-c0-4",
-    "harbor-fair-cards",
-    "music-p2-c0",
-    HarborFairCardsMusicP2C0CardProperties
-  >;
-  "music-p2-c1-1": CardStateRecord<
-    "music-p2-c1-1",
-    "harbor-fair-cards",
-    "music-p2-c1",
-    HarborFairCardsMusicP2C1CardProperties
-  >;
-  "music-p2-c1-2": CardStateRecord<
-    "music-p2-c1-2",
-    "harbor-fair-cards",
-    "music-p2-c1",
-    HarborFairCardsMusicP2C1CardProperties
-  >;
-  "music-p3-c0-1": CardStateRecord<
-    "music-p3-c0-1",
-    "harbor-fair-cards",
-    "music-p3-c0",
-    HarborFairCardsMusicP3C0CardProperties
-  >;
-  "music-p3-c0-2": CardStateRecord<
-    "music-p3-c0-2",
-    "harbor-fair-cards",
-    "music-p3-c0",
-    HarborFairCardsMusicP3C0CardProperties
-  >;
-  "storm-1": CardStateRecord<
-    "storm-1",
-    "harbor-fair-cards",
-    "storm",
-    HarborFairCardsStormCardProperties
-  >;
-  "storm-2": CardStateRecord<
-    "storm-2",
-    "harbor-fair-cards",
-    "storm",
-    HarborFairCardsStormCardProperties
-  >;
+  "craft-p1-c1-1": CardStateRecord<"craft-p1-c1-1", "harbor-fair-cards", "craft-p1-c1", HarborFairCardsCraftP1C1CardProperties>;
+  "craft-p1-c1-2": CardStateRecord<"craft-p1-c1-2", "harbor-fair-cards", "craft-p1-c1", HarborFairCardsCraftP1C1CardProperties>;
+  "craft-p2-c0-1": CardStateRecord<"craft-p2-c0-1", "harbor-fair-cards", "craft-p2-c0", HarborFairCardsCraftP2C0CardProperties>;
+  "craft-p2-c0-2": CardStateRecord<"craft-p2-c0-2", "harbor-fair-cards", "craft-p2-c0", HarborFairCardsCraftP2C0CardProperties>;
+  "craft-p2-c0-3": CardStateRecord<"craft-p2-c0-3", "harbor-fair-cards", "craft-p2-c0", HarborFairCardsCraftP2C0CardProperties>;
+  "craft-p2-c0-4": CardStateRecord<"craft-p2-c0-4", "harbor-fair-cards", "craft-p2-c0", HarborFairCardsCraftP2C0CardProperties>;
+  "craft-p2-c1-1": CardStateRecord<"craft-p2-c1-1", "harbor-fair-cards", "craft-p2-c1", HarborFairCardsCraftP2C1CardProperties>;
+  "craft-p2-c1-2": CardStateRecord<"craft-p2-c1-2", "harbor-fair-cards", "craft-p2-c1", HarborFairCardsCraftP2C1CardProperties>;
+  "craft-p3-c0-1": CardStateRecord<"craft-p3-c0-1", "harbor-fair-cards", "craft-p3-c0", HarborFairCardsCraftP3C0CardProperties>;
+  "craft-p3-c0-2": CardStateRecord<"craft-p3-c0-2", "harbor-fair-cards", "craft-p3-c0", HarborFairCardsCraftP3C0CardProperties>;
+  "food-p1-c1-1": CardStateRecord<"food-p1-c1-1", "harbor-fair-cards", "food-p1-c1", HarborFairCardsFoodP1C1CardProperties>;
+  "food-p1-c1-2": CardStateRecord<"food-p1-c1-2", "harbor-fair-cards", "food-p1-c1", HarborFairCardsFoodP1C1CardProperties>;
+  "food-p2-c0-1": CardStateRecord<"food-p2-c0-1", "harbor-fair-cards", "food-p2-c0", HarborFairCardsFoodP2C0CardProperties>;
+  "food-p2-c0-2": CardStateRecord<"food-p2-c0-2", "harbor-fair-cards", "food-p2-c0", HarborFairCardsFoodP2C0CardProperties>;
+  "food-p2-c0-3": CardStateRecord<"food-p2-c0-3", "harbor-fair-cards", "food-p2-c0", HarborFairCardsFoodP2C0CardProperties>;
+  "food-p2-c0-4": CardStateRecord<"food-p2-c0-4", "harbor-fair-cards", "food-p2-c0", HarborFairCardsFoodP2C0CardProperties>;
+  "food-p2-c1-1": CardStateRecord<"food-p2-c1-1", "harbor-fair-cards", "food-p2-c1", HarborFairCardsFoodP2C1CardProperties>;
+  "food-p2-c1-2": CardStateRecord<"food-p2-c1-2", "harbor-fair-cards", "food-p2-c1", HarborFairCardsFoodP2C1CardProperties>;
+  "food-p3-c0-1": CardStateRecord<"food-p3-c0-1", "harbor-fair-cards", "food-p3-c0", HarborFairCardsFoodP3C0CardProperties>;
+  "food-p3-c0-2": CardStateRecord<"food-p3-c0-2", "harbor-fair-cards", "food-p3-c0", HarborFairCardsFoodP3C0CardProperties>;
+  "music-p1-c1-1": CardStateRecord<"music-p1-c1-1", "harbor-fair-cards", "music-p1-c1", HarborFairCardsMusicP1C1CardProperties>;
+  "music-p1-c1-2": CardStateRecord<"music-p1-c1-2", "harbor-fair-cards", "music-p1-c1", HarborFairCardsMusicP1C1CardProperties>;
+  "music-p2-c0-1": CardStateRecord<"music-p2-c0-1", "harbor-fair-cards", "music-p2-c0", HarborFairCardsMusicP2C0CardProperties>;
+  "music-p2-c0-2": CardStateRecord<"music-p2-c0-2", "harbor-fair-cards", "music-p2-c0", HarborFairCardsMusicP2C0CardProperties>;
+  "music-p2-c0-3": CardStateRecord<"music-p2-c0-3", "harbor-fair-cards", "music-p2-c0", HarborFairCardsMusicP2C0CardProperties>;
+  "music-p2-c0-4": CardStateRecord<"music-p2-c0-4", "harbor-fair-cards", "music-p2-c0", HarborFairCardsMusicP2C0CardProperties>;
+  "music-p2-c1-1": CardStateRecord<"music-p2-c1-1", "harbor-fair-cards", "music-p2-c1", HarborFairCardsMusicP2C1CardProperties>;
+  "music-p2-c1-2": CardStateRecord<"music-p2-c1-2", "harbor-fair-cards", "music-p2-c1", HarborFairCardsMusicP2C1CardProperties>;
+  "music-p3-c0-1": CardStateRecord<"music-p3-c0-1", "harbor-fair-cards", "music-p3-c0", HarborFairCardsMusicP3C0CardProperties>;
+  "music-p3-c0-2": CardStateRecord<"music-p3-c0-2", "harbor-fair-cards", "music-p3-c0", HarborFairCardsMusicP3C0CardProperties>;
+  "storm-1": CardStateRecord<"storm-1", "harbor-fair-cards", "storm", HarborFairCardsStormCardProperties>;
+  "storm-2": CardStateRecord<"storm-2", "harbor-fair-cards", "storm", HarborFairCardsStormCardProperties>;
 };
 
 export type PieceStateRecord<
@@ -1086,146 +948,12 @@ export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
 export type CardIdsBySharedZoneId = {
-  "draw-pile": Array<
-    | "craft-p1-c1-1"
-    | "craft-p1-c1-2"
-    | "craft-p2-c0-1"
-    | "craft-p2-c0-2"
-    | "craft-p2-c0-3"
-    | "craft-p2-c0-4"
-    | "craft-p2-c1-1"
-    | "craft-p2-c1-2"
-    | "craft-p3-c0-1"
-    | "craft-p3-c0-2"
-    | "food-p1-c1-1"
-    | "food-p1-c1-2"
-    | "food-p2-c0-1"
-    | "food-p2-c0-2"
-    | "food-p2-c0-3"
-    | "food-p2-c0-4"
-    | "food-p2-c1-1"
-    | "food-p2-c1-2"
-    | "food-p3-c0-1"
-    | "food-p3-c0-2"
-    | "music-p1-c1-1"
-    | "music-p1-c1-2"
-    | "music-p2-c0-1"
-    | "music-p2-c0-2"
-    | "music-p2-c0-3"
-    | "music-p2-c0-4"
-    | "music-p2-c1-1"
-    | "music-p2-c1-2"
-    | "music-p3-c0-1"
-    | "music-p3-c0-2"
-    | "storm-1"
-    | "storm-2"
-  >;
-  market: Array<
-    | "craft-p1-c1-1"
-    | "craft-p1-c1-2"
-    | "craft-p2-c0-1"
-    | "craft-p2-c0-2"
-    | "craft-p2-c0-3"
-    | "craft-p2-c0-4"
-    | "craft-p2-c1-1"
-    | "craft-p2-c1-2"
-    | "craft-p3-c0-1"
-    | "craft-p3-c0-2"
-    | "food-p1-c1-1"
-    | "food-p1-c1-2"
-    | "food-p2-c0-1"
-    | "food-p2-c0-2"
-    | "food-p2-c0-3"
-    | "food-p2-c0-4"
-    | "food-p2-c1-1"
-    | "food-p2-c1-2"
-    | "food-p3-c0-1"
-    | "food-p3-c0-2"
-    | "music-p1-c1-1"
-    | "music-p1-c1-2"
-    | "music-p2-c0-1"
-    | "music-p2-c0-2"
-    | "music-p2-c0-3"
-    | "music-p2-c0-4"
-    | "music-p2-c1-1"
-    | "music-p2-c1-2"
-    | "music-p3-c0-1"
-    | "music-p3-c0-2"
-    | "storm-1"
-    | "storm-2"
-  >;
-  "storm-discard": Array<
-    | "craft-p1-c1-1"
-    | "craft-p1-c1-2"
-    | "craft-p2-c0-1"
-    | "craft-p2-c0-2"
-    | "craft-p2-c0-3"
-    | "craft-p2-c0-4"
-    | "craft-p2-c1-1"
-    | "craft-p2-c1-2"
-    | "craft-p3-c0-1"
-    | "craft-p3-c0-2"
-    | "food-p1-c1-1"
-    | "food-p1-c1-2"
-    | "food-p2-c0-1"
-    | "food-p2-c0-2"
-    | "food-p2-c0-3"
-    | "food-p2-c0-4"
-    | "food-p2-c1-1"
-    | "food-p2-c1-2"
-    | "food-p3-c0-1"
-    | "food-p3-c0-2"
-    | "music-p1-c1-1"
-    | "music-p1-c1-2"
-    | "music-p2-c0-1"
-    | "music-p2-c0-2"
-    | "music-p2-c0-3"
-    | "music-p2-c0-4"
-    | "music-p2-c1-1"
-    | "music-p2-c1-2"
-    | "music-p3-c0-1"
-    | "music-p3-c0-2"
-    | "storm-1"
-    | "storm-2"
-  >;
+  "draw-pile": Array<"craft-p1-c1-1" | "craft-p1-c1-2" | "craft-p2-c0-1" | "craft-p2-c0-2" | "craft-p2-c0-3" | "craft-p2-c0-4" | "craft-p2-c1-1" | "craft-p2-c1-2" | "craft-p3-c0-1" | "craft-p3-c0-2" | "food-p1-c1-1" | "food-p1-c1-2" | "food-p2-c0-1" | "food-p2-c0-2" | "food-p2-c0-3" | "food-p2-c0-4" | "food-p2-c1-1" | "food-p2-c1-2" | "food-p3-c0-1" | "food-p3-c0-2" | "music-p1-c1-1" | "music-p1-c1-2" | "music-p2-c0-1" | "music-p2-c0-2" | "music-p2-c0-3" | "music-p2-c0-4" | "music-p2-c1-1" | "music-p2-c1-2" | "music-p3-c0-1" | "music-p3-c0-2" | "storm-1" | "storm-2">;
+  "market": Array<"craft-p1-c1-1" | "craft-p1-c1-2" | "craft-p2-c0-1" | "craft-p2-c0-2" | "craft-p2-c0-3" | "craft-p2-c0-4" | "craft-p2-c1-1" | "craft-p2-c1-2" | "craft-p3-c0-1" | "craft-p3-c0-2" | "food-p1-c1-1" | "food-p1-c1-2" | "food-p2-c0-1" | "food-p2-c0-2" | "food-p2-c0-3" | "food-p2-c0-4" | "food-p2-c1-1" | "food-p2-c1-2" | "food-p3-c0-1" | "food-p3-c0-2" | "music-p1-c1-1" | "music-p1-c1-2" | "music-p2-c0-1" | "music-p2-c0-2" | "music-p2-c0-3" | "music-p2-c0-4" | "music-p2-c1-1" | "music-p2-c1-2" | "music-p3-c0-1" | "music-p3-c0-2" | "storm-1" | "storm-2">;
+  "storm-discard": Array<"craft-p1-c1-1" | "craft-p1-c1-2" | "craft-p2-c0-1" | "craft-p2-c0-2" | "craft-p2-c0-3" | "craft-p2-c0-4" | "craft-p2-c1-1" | "craft-p2-c1-2" | "craft-p3-c0-1" | "craft-p3-c0-2" | "food-p1-c1-1" | "food-p1-c1-2" | "food-p2-c0-1" | "food-p2-c0-2" | "food-p2-c0-3" | "food-p2-c0-4" | "food-p2-c1-1" | "food-p2-c1-2" | "food-p3-c0-1" | "food-p3-c0-2" | "music-p1-c1-1" | "music-p1-c1-2" | "music-p2-c0-1" | "music-p2-c0-2" | "music-p2-c0-3" | "music-p2-c0-4" | "music-p2-c1-1" | "music-p2-c1-2" | "music-p3-c0-1" | "music-p3-c0-2" | "storm-1" | "storm-2">;
 };
 export type CardIdsByPlayerZoneId = {
-  "festival-row": PerPlayer<
-    Array<
-      | "craft-p1-c1-1"
-      | "craft-p1-c1-2"
-      | "craft-p2-c0-1"
-      | "craft-p2-c0-2"
-      | "craft-p2-c0-3"
-      | "craft-p2-c0-4"
-      | "craft-p2-c1-1"
-      | "craft-p2-c1-2"
-      | "craft-p3-c0-1"
-      | "craft-p3-c0-2"
-      | "food-p1-c1-1"
-      | "food-p1-c1-2"
-      | "food-p2-c0-1"
-      | "food-p2-c0-2"
-      | "food-p2-c0-3"
-      | "food-p2-c0-4"
-      | "food-p2-c1-1"
-      | "food-p2-c1-2"
-      | "food-p3-c0-1"
-      | "food-p3-c0-2"
-      | "music-p1-c1-1"
-      | "music-p1-c1-2"
-      | "music-p2-c0-1"
-      | "music-p2-c0-2"
-      | "music-p2-c0-3"
-      | "music-p2-c0-4"
-      | "music-p2-c1-1"
-      | "music-p2-c1-2"
-      | "music-p3-c0-1"
-      | "music-p3-c0-2"
-      | "storm-1"
-      | "storm-2"
-    >
-  >;
+  "festival-row": PerPlayer<Array<"craft-p1-c1-1" | "craft-p1-c1-2" | "craft-p2-c0-1" | "craft-p2-c0-2" | "craft-p2-c0-3" | "craft-p2-c0-4" | "craft-p2-c1-1" | "craft-p2-c1-2" | "craft-p3-c0-1" | "craft-p3-c0-2" | "food-p1-c1-1" | "food-p1-c1-2" | "food-p2-c0-1" | "food-p2-c0-2" | "food-p2-c0-3" | "food-p2-c0-4" | "food-p2-c1-1" | "food-p2-c1-2" | "food-p3-c0-1" | "food-p3-c0-2" | "music-p1-c1-1" | "music-p1-c1-2" | "music-p2-c0-1" | "music-p2-c0-2" | "music-p2-c0-3" | "music-p2-c0-4" | "music-p2-c1-1" | "music-p2-c1-2" | "music-p3-c0-1" | "music-p3-c0-2" | "storm-1" | "storm-2">>;
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -1297,14 +1025,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -1381,14 +1109,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -1413,14 +1141,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -1441,23 +1169,24 @@ export type TiledBoardStateRecord =
   | HexBoardStateRecord
   | SquareBoardStateRecord;
 
-export type BoardStateById = {};
+export type BoardStateById = {
+
+};
 
 export type HexBoardStateById = Record<string, never>;
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1514,29 +1243,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1546,8 +1272,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1557,10 +1284,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1570,10 +1296,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1583,10 +1308,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1602,19 +1326,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = never;
 
@@ -1800,13 +1524,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -1863,11 +1582,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -1912,153 +1631,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({
-        "draw-pile": [],
-        market: [],
-        "storm-discard": [],
-      }),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({
-        "draw-pile": "hidden",
-        "festival-row": "public",
-        market: "public",
-        "storm-discard": "public",
-      }),
-      cardSetIdsByZoneId: cloneManifestDefault({
-        "draw-pile": ["harbor-fair-cards"],
-        "festival-row": ["harbor-fair-cards"],
-        market: ["harbor-fair-cards"],
-        "storm-discard": ["harbor-fair-cards"],
-      }),
-    }) as TableState["zones"],
-  decks: () =>
-    cloneManifestDefault({
-      "draw-pile": [],
-      market: [],
-      "storm-discard": [],
-    }) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({"draw-pile":[],"market":[],"storm-discard":[]}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({"draw-pile":"hidden","festival-row":"public","market":"public","storm-discard":"public"}),
+    cardSetIdsByZoneId: cloneManifestDefault({"draw-pile":["harbor-fair-cards"],"festival-row":["harbor-fair-cards"],"market":["harbor-fair-cards"],"storm-discard":["harbor-fair-cards"]}),
+  }) as TableState["zones"],
+  decks: () => cloneManifestDefault({"draw-pile":[],"market":[],"storm-discard":[]}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({
-      "festival-row": "public",
-    }) as TableState["handVisibility"],
-  ownerOfCard: () =>
-    cloneManifestDefault({
-      "craft-p1-c1-1": null,
-      "craft-p1-c1-2": null,
-      "craft-p2-c0-1": null,
-      "craft-p2-c0-2": null,
-      "craft-p2-c0-3": null,
-      "craft-p2-c0-4": null,
-      "craft-p2-c1-1": null,
-      "craft-p2-c1-2": null,
-      "craft-p3-c0-1": null,
-      "craft-p3-c0-2": null,
-      "food-p1-c1-1": null,
-      "food-p1-c1-2": null,
-      "food-p2-c0-1": null,
-      "food-p2-c0-2": null,
-      "food-p2-c0-3": null,
-      "food-p2-c0-4": null,
-      "food-p2-c1-1": null,
-      "food-p2-c1-2": null,
-      "food-p3-c0-1": null,
-      "food-p3-c0-2": null,
-      "music-p1-c1-1": null,
-      "music-p1-c1-2": null,
-      "music-p2-c0-1": null,
-      "music-p2-c0-2": null,
-      "music-p2-c0-3": null,
-      "music-p2-c0-4": null,
-      "music-p2-c1-1": null,
-      "music-p2-c1-2": null,
-      "music-p3-c0-1": null,
-      "music-p3-c0-2": null,
-      "storm-1": null,
-      "storm-2": null,
-    }) as TableState["ownerOfCard"],
-  visibility: () =>
-    cloneManifestDefault({
-      "craft-p1-c1-1": { faceUp: true },
-      "craft-p1-c1-2": { faceUp: true },
-      "craft-p2-c0-1": { faceUp: true },
-      "craft-p2-c0-2": { faceUp: true },
-      "craft-p2-c0-3": { faceUp: true },
-      "craft-p2-c0-4": { faceUp: true },
-      "craft-p2-c1-1": { faceUp: true },
-      "craft-p2-c1-2": { faceUp: true },
-      "craft-p3-c0-1": { faceUp: true },
-      "craft-p3-c0-2": { faceUp: true },
-      "food-p1-c1-1": { faceUp: true },
-      "food-p1-c1-2": { faceUp: true },
-      "food-p2-c0-1": { faceUp: true },
-      "food-p2-c0-2": { faceUp: true },
-      "food-p2-c0-3": { faceUp: true },
-      "food-p2-c0-4": { faceUp: true },
-      "food-p2-c1-1": { faceUp: true },
-      "food-p2-c1-2": { faceUp: true },
-      "food-p3-c0-1": { faceUp: true },
-      "food-p3-c0-2": { faceUp: true },
-      "music-p1-c1-1": { faceUp: true },
-      "music-p1-c1-2": { faceUp: true },
-      "music-p2-c0-1": { faceUp: true },
-      "music-p2-c0-2": { faceUp: true },
-      "music-p2-c0-3": { faceUp: true },
-      "music-p2-c0-4": { faceUp: true },
-      "music-p2-c1-1": { faceUp: true },
-      "music-p2-c1-2": { faceUp: true },
-      "music-p3-c0-1": { faceUp: true },
-      "music-p3-c0-2": { faceUp: true },
-      "storm-1": { faceUp: true },
-      "storm-2": { faceUp: true },
-    }) as TableState["visibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({"festival-row":"public"}) as TableState["handVisibility"],
+  ownerOfCard: () => cloneManifestDefault({"craft-p1-c1-1":null,"craft-p1-c1-2":null,"craft-p2-c0-1":null,"craft-p2-c0-2":null,"craft-p2-c0-3":null,"craft-p2-c0-4":null,"craft-p2-c1-1":null,"craft-p2-c1-2":null,"craft-p3-c0-1":null,"craft-p3-c0-2":null,"food-p1-c1-1":null,"food-p1-c1-2":null,"food-p2-c0-1":null,"food-p2-c0-2":null,"food-p2-c0-3":null,"food-p2-c0-4":null,"food-p2-c1-1":null,"food-p2-c1-2":null,"food-p3-c0-1":null,"food-p3-c0-2":null,"music-p1-c1-1":null,"music-p1-c1-2":null,"music-p2-c0-1":null,"music-p2-c0-2":null,"music-p2-c0-3":null,"music-p2-c0-4":null,"music-p2-c1-1":null,"music-p2-c1-2":null,"music-p3-c0-1":null,"music-p3-c0-2":null,"storm-1":null,"storm-2":null}) as TableState["ownerOfCard"],
+  visibility: () => cloneManifestDefault({"craft-p1-c1-1":{"faceUp":true},"craft-p1-c1-2":{"faceUp":true},"craft-p2-c0-1":{"faceUp":true},"craft-p2-c0-2":{"faceUp":true},"craft-p2-c0-3":{"faceUp":true},"craft-p2-c0-4":{"faceUp":true},"craft-p2-c1-1":{"faceUp":true},"craft-p2-c1-2":{"faceUp":true},"craft-p3-c0-1":{"faceUp":true},"craft-p3-c0-2":{"faceUp":true},"food-p1-c1-1":{"faceUp":true},"food-p1-c1-2":{"faceUp":true},"food-p2-c0-1":{"faceUp":true},"food-p2-c0-2":{"faceUp":true},"food-p2-c0-3":{"faceUp":true},"food-p2-c0-4":{"faceUp":true},"food-p2-c1-1":{"faceUp":true},"food-p2-c1-2":{"faceUp":true},"food-p3-c0-1":{"faceUp":true},"food-p3-c0-2":{"faceUp":true},"music-p1-c1-1":{"faceUp":true},"music-p1-c1-2":{"faceUp":true},"music-p2-c0-1":{"faceUp":true},"music-p2-c0-2":{"faceUp":true},"music-p2-c0-3":{"faceUp":true},"music-p2-c0-4":{"faceUp":true},"music-p2-c1-1":{"faceUp":true},"music-p2-c1-2":{"faceUp":true},"music-p3-c0-1":{"faceUp":true},"music-p3-c0-2":{"faceUp":true},"storm-1":{"faceUp":true},"storm-2":{"faceUp":true}}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -2093,6 +1703,13 @@ export function createInitialTable(
   table.componentLocations = componentLocations;
   return tableSchema.parse(table);
 }
+
+export const normalSetup = {
+  minPlayers: 2,
+  maxPlayers: 4,
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
 
 export const schemas = {
   table: tableSchema,
@@ -2137,10 +1754,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -2150,22 +1771,48 @@ export const manifestContract: ReducerManifestContract<
   createGameStateSchema,
 };
 
-const boardIdsByLayoutLookup = {} as const;
-const boardBaseIdsByLayoutLookup = {} as const;
-const boardIdsByBaseIdLookup = {} as const;
-const boardBaseIdsByTemplateIdLookup = {} as const;
-const boardLayoutByIdLookup = {} as const;
-const boardTemplateLayoutByIdLookup = {} as const;
-const boardIdsByTypeIdLookup = {} as const;
-const spaceIdsByBoardIdLookup = {} as const;
+const boardIdsByLayoutLookup = {
+
+} as const;
+const boardBaseIdsByLayoutLookup = {
+
+} as const;
+const boardIdsByBaseIdLookup = {
+
+} as const;
+const boardBaseIdsByTemplateIdLookup = {
+
+} as const;
+const boardLayoutByIdLookup = {
+
+} as const;
+const boardTemplateLayoutByIdLookup = {
+
+} as const;
+const boardIdsByTypeIdLookup = {
+
+} as const;
+const spaceIdsByBoardIdLookup = {
+
+} as const;
 const spaceTypeIdByBoardIdLookup = {} as const;
-const spaceIdsByTypeIdLookup = {} as const;
-const containerIdsByBoardIdLookup = {} as const;
+const spaceIdsByTypeIdLookup = {
+
+} as const;
+const containerIdsByBoardIdLookup = {
+
+} as const;
 const containerHostByBoardIdLookup = {} as const;
-const relationTypeIdsByBoardIdLookup = {} as const;
-const edgeIdsByTypeIdLookup = {} as const;
+const relationTypeIdsByBoardIdLookup = {
+
+} as const;
+const edgeIdsByTypeIdLookup = {
+
+} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {} as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {} as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -2193,9 +1840,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -2203,7 +1850,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -2237,7 +1886,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -2298,7 +1950,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -2308,7 +1963,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -2331,8 +1988,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -2432,9 +2088,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -2515,7 +2171,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -2532,8 +2191,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2577,10 +2235,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -2624,8 +2279,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2654,7 +2308,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

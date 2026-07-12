@@ -6,9 +6,9 @@ resolution, and bilateral trade.
 
 ## Rules Authority
 
-[`rule.md`](rule.md) is the approved gameplay and theme contract. The current
-19-hex implementation, five-resource economy, towns, ports, charters, awards,
-reducers, tests, and fixtures are superseded candidates, not rule sources.
+[`rule.md`](rule.md) is the approved gameplay and theme contract. The reducer,
+UI, and scenarios implement that brief directly; excluded legacy mechanics and
+serialized base states are not gameplay authority.
 
 ## What To Learn Here
 
@@ -22,13 +22,16 @@ reducers, tests, and fixtures are superseded candidates, not rule sources.
 
 - `rule.md`
 - `manifest.ts`
-- `app/phases/setup.ts`
-- `app/phases/player-turn/index.ts`
+- `app/phases/setup-camp.ts`
+- `app/phases/roll.ts`
+- `app/phases/discard-barrier.ts`
+- `app/phases/main.ts`
 - `ui/interaction-routes.tsx`
-- `test/scenarios/build-trail-ready.scenario.ts`
+- `test/scenarios/complete-game.scenario.ts`
+- `test/scenarios/discard-barrier.scenario.ts`
 
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/hex-network-trading verify
+pnpm verify
 ```

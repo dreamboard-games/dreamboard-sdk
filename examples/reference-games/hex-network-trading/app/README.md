@@ -1,55 +1,28 @@
-# App organization
+# Stormtrail reducer organization
 
-This directory owns the reducer: game state schemas, phases, interactions,
-derived values, player views, and reducer helpers.
+The reducer follows the approved turn graph directly:
 
-Use this layout while the game is small:
-
-```txt
-app/
-  game-contract.ts
-  game.ts
-  derived.ts
-  reducer-support.ts
-  phases/
-    setup.ts
+```text
+setupCamp -> setupTrail -> roll
+                         | non-7 -> main -> roll
+                         | 7 -> discardBarrier? -> moveBandits -> main
+main -> pendingTrade -> main
+main -> gameOver (immediate fourth camp)
 ```
 
-When a phase grows beyond a single idea, make the phase directory the table of
-contents and split the implementation by game concept:
+- `game-contract.ts` owns serializable state and phase schemas.
+- `model.ts` owns the fixed 7-hex, 24-intersection, 30-edge topology indexes.
+- `reducer-support.ts` owns shared occupancy, connectivity, costs, privacy, and
+  outcome helpers.
+- `eligibility.ts` declares legal board target domains.
+- `phases/*.ts` each own one canonical phase and its interactions.
+- `player-view.ts` is the privacy boundary: public totals, owner-only inventory
+  composition, private discard maps, and participant-only stolen type.
 
-```txt
-app/phases/player-turn/
-  index.ts          # definePhase assembly only
-  state.ts          # phase-local constants and types
-  inputs.ts         # shared typed input helpers
-  build.ts          # build interactions
-  trade.ts          # trade interactions
-  end-turn.ts       # end-turn interaction
-```
+Discard obligations are captured once in discard-phase rule state. The engine
+still derives active actors, pending actors, continuation waiters, and blockers;
+the game does not author `decision`, `requiredActions`, or `blockedBy` metadata.
 
-Split a phase when it has multiple action families, shared input helpers, card
-actions, or is roughly 250-300 lines. Keep `index.ts` as the assembly point
-that imports interactions and registers them with `definePhase`.
-
-Do not turn `reducer-support.ts` into a catch-all rule module. Keep it small
-for shared reducer plumbing; put real game rules under `app/rules/*` once
-there is more than one domain.
-
-UI follows the same scaffold-grown shape:
-
-```txt
-ui/
-  App.tsx
-  interaction-routes.tsx
-  styles.ts
-  types.ts
-  components/
-    game-ui.tsx
-    surfaces.tsx
-```
-
-Keep `ui/App.tsx` focused on providers, `Game.Root`, `Phase.Switch`, and
-surface/form hook construction. Keep `ui/interaction-routes.tsx` exhaustive:
-its route map should satisfy the generated `InteractionRoutes` type so adding a
-reducer interaction fails typecheck until the UI route is authored.
+The UI route map in `ui/interaction-routes.tsx` must continue to satisfy the
+generated `InteractionRoutes` type so reducer interaction changes fail UI
+typecheck until they are intentionally bound.

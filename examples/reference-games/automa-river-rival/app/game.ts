@@ -1,35 +1,35 @@
-import { defineEmptyView, defineGame } from "@dreamboard-games/sdk/reducer";
+import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { setupProfiles, shuffle } from "../shared/manifest-contract";
 import { gameContract } from "./game-contract";
 import { phases } from "./phases";
-import { playerView } from "./player-view";
-import { createInitialPublicState } from "./phases/rival-procedure";
+import { playerView, sharedView } from "./player-view";
 
 export default defineGame({
   contract: gameContract,
   initial: {
-    public: createInitialPublicState,
+    public: () => ({
+      round: 1,
+      activeHumanIndex: 0,
+      rivalProgress: 0,
+      procedureEvents: [],
+      outcome: null,
+    }),
     private: () => ({}),
     hidden: () => ({}),
   },
   initialPhase: "setup",
-  setupProfiles: {
-    standard: {},
-  },
+  setupProfiles: setupProfiles({
+    standard: {
+      initialPhase: "setup",
+      bootstrap: [
+        shuffle({ type: "sharedZone", zoneId: "cargo-deck" }),
+        shuffle({ type: "sharedZone", zoneId: "instruction-deck" }),
+      ],
+    },
+  }),
   phases,
   views: {
-    shared: defineEmptyView<typeof gameContract>(),
+    shared: sharedView,
     player: playerView,
   },
 });
-
-export {
-  createInitialPublicState,
-  cargoSupply,
-  chooseRivalCargo,
-  cooperativeOutcome,
-  eventProcedureIds,
-  resolveRivalProcedure,
-  rivalInstructions,
-  riverCards,
-} from "./phases/rival-procedure";
-export { claimCargoForPublicState } from "./phases/human-turn";

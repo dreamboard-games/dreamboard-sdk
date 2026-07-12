@@ -1,13 +1,28 @@
-# Dreamboard Test Workspace
+# Lantern Market scenarios
 
-TypeScript bases live in `test/bases/*.base.ts` and scenarios live in `test/scenarios/*.scenario.ts`.
+Every authored scenario starts from ordinary seeded setup and replays typed,
+seat-based `drafting.submit` commands. No scenario reads a base state, patches
+reducer state, injects a hand, or fixes a deck order.
 
-1. Define reusable seeded bases with `defineBase({ id, seed, players, setupProfileId?, setup })`.
-2. Define scenarios with `defineScenario({ id, from, when, then })`.
-3. Scenario assertions can read `players()`, `state()`, `view(playerId)`, and `interactions(playerId)`.
-4. Generate deterministic base snapshots: `dreamboard test generate`.
-5. Run tests: `dreamboard test run`.
+The canonical path is `scenarios/complete-game.scenario.ts`. It leaves the
+last sealed barrier in `when`, so the default inspect/explore checkpoint has a
+real action to discover while a full replay reaches terminal standings.
 
-Import test helpers from `../testing-types`.
+Run the focused source proof:
 
-Generated artifacts are written to `test/generated/*` and should not be edited manually.
+```sh
+pnpm test
+```
+
+From the game directory, use the packed public CLI for the agent-authoring
+loop. Both commands emit one JSON envelope; there is no output-format flag.
+
+```sh
+"$DREAMBOARD_CLI_BIN" test inspect test/scenarios/complete-game.scenario.ts --perspective player:0
+"$DREAMBOARD_CLI_BIN" test explore test/scenarios/complete-game.scenario.ts --perspective player:0
+```
+
+The retained `bases/` and `generated/` trees are migration artifacts only.
+They are excluded from TypeScript, scenario discovery, package tests, and UI
+scenario authority, and remain byte-retained until the coordinated deletion
+phase.

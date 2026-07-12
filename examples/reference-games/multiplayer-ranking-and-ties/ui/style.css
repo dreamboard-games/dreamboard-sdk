@@ -1,75 +1,91 @@
+:root {
+  color: #1f2937;
+  background: #edf7f5;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+button { font: inherit; }
+
 .harbor-fair {
-  color: #172033;
+  min-height: 100vh;
   display: grid;
-  gap: 24px;
+  gap: 18px;
+  max-width: 1180px;
   margin: 0 auto;
-  max-width: 960px;
-  padding: 32px;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 15% 0%, rgb(250 204 21 / 18%), transparent 28rem),
+    linear-gradient(#edf7f5, #f8fafc);
 }
 
 .harbor-header {
-  border-bottom: 1px solid #d8dee8;
-  padding-bottom: 16px;
-}
-
-.eyebrow {
-  color: #336a5b;
-  font-size: 0.82rem;
-  font-weight: 700;
-  margin: 0 0 4px;
-  text-transform: uppercase;
-}
-
-.harbor-fair h1,
-.harbor-fair h2 {
-  margin: 0 0 12px;
-}
-
-.market-grid,
-.row-grid {
-  display: grid;
-  gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-}
-
-.market-card,
-.festival-row,
-.draft-action {
-  border: 1px solid #d8dee8;
-  border-radius: 8px;
-  display: grid;
-  gap: 6px;
-  padding: 12px;
-}
-
-.market-card {
-  background: #f7fbf4;
-}
-
-.draft-action {
-  align-items: start;
-  background: #f8fafc;
-}
-
-.draft-action button {
-  background: #245c4f;
-  border: 0;
-  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  padding: 22px;
+  border: 2px solid #164e63;
+  border-radius: 20px;
   color: white;
-  cursor: pointer;
-  font-weight: 700;
-  justify-self: start;
-  padding: 10px 14px;
+  background: linear-gradient(120deg, #155e75, #0f766e);
+  box-shadow: 6px 6px 0 #083344;
 }
 
-.outcome-table {
-  border-collapse: collapse;
-  width: 100%;
-}
+.harbor-header h1 { margin: 2px 0 8px; font-size: clamp(1.9rem, 5vw, 3.5rem); line-height: 1; }
+.subtitle { max-width: 720px; margin: 0; color: #cffafe; line-height: 1.5; }
+.eyebrow { margin: 0; font-size: .72rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #a16207; }
+.harbor-header .eyebrow { color: #fde68a; }
+.round-badge { flex: 0 0 auto; display: grid; justify-items: center; min-width: 92px; padding: 10px; border: 1px solid #67e8f9; border-radius: 14px; background: rgb(8 51 68 / 45%); }
+.round-badge span { font-size: .72rem; text-transform: uppercase; letter-spacing: .12em; }
+.round-badge strong { font-size: 1.65rem; }
 
-.outcome-table th,
-.outcome-table td {
-  border-bottom: 1px solid #d8dee8;
-  padding: 10px;
-  text-align: left;
+.status-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.status-strip div { display: grid; gap: 3px; padding: 12px 15px; border: 1px solid #99c9c4; border-radius: 12px; background: #fff; }
+.status-strip span { color: #64748b; font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; }
+
+.harbor-panel { padding: 18px; border: 1px solid #a7c7c4; border-radius: 18px; background: rgb(255 255 255 / 92%); box-shadow: 0 12px 26px rgb(15 118 110 / 8%); }
+.section-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 14px; }
+.section-heading h2, .history-panel h2, .outcome-panel h2 { margin: 2px 0 0; }
+.section-heading > p { max-width: 420px; margin: 0; color: #64748b; font-size: .9rem; }
+
+.market-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.market-card { min-height: 168px; display: grid; align-content: space-between; gap: 7px; padding: 14px; text-align: left; color: #1f2937; border: 2px solid #334155; border-radius: 14px; box-shadow: 3px 3px 0 #334155; cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.market-card:enabled:hover, .market-card:enabled:focus-visible { transform: translateY(-3px); box-shadow: 5px 6px 0 #334155; }
+.market-card:focus-visible { outline: 3px solid #f59e0b; outline-offset: 3px; }
+.market-card:disabled { cursor: not-allowed; opacity: .56; }
+.guild-food { background: #fff7d6; }
+.guild-craft { background: #f3e8ff; }
+.guild-music { background: #dff7ff; }
+.stall-position, .market-card small { color: #64748b; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.market-card strong { font-size: 1.15rem; text-transform: capitalize; }
+.empty-stall { place-items: center; border-style: dashed; box-shadow: none; cursor: default; background: #f1f5f9; color: #64748b; }
+
+.festival-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.festival-row { display: grid; gap: 10px; padding: 13px; border: 1px solid #cbd5e1; border-radius: 12px; background: #f8fafc; }
+.festival-row-title { display: flex; justify-content: space-between; gap: 10px; }
+.festival-row-title span, .festival-row p { margin: 0; color: #64748b; font-size: .82rem; }
+.guild-counts { display: flex; flex-wrap: wrap; gap: 6px; }
+.guild-counts span { padding: 4px 8px; border-radius: 999px; background: #e2e8f0; font-size: .76rem; }
+
+.history-panel { display: grid; grid-template-columns: 180px 1fr; gap: 20px; }
+.history-panel ol { display: grid; gap: 6px; margin: 0; padding-left: 22px; color: #475569; font-size: .88rem; }
+.outcome-panel { border-width: 2px; }
+.outcome-panel.judged { border-color: #0f766e; }
+.outcome-panel.cancelled { border-color: #be123c; background: #fff1f2; }
+.outcome-scroll { overflow-x: auto; }
+.outcome-table { width: 100%; border-collapse: collapse; min-width: 620px; }
+.outcome-table th, .outcome-table td { padding: 10px; text-align: left; border-bottom: 1px solid #cbd5e1; }
+.outcome-table th { color: #64748b; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+
+@media (max-width: 720px) {
+  .harbor-fair { padding: 12px; gap: 12px; }
+  .harbor-header { align-items: start; padding: 17px; box-shadow: 4px 4px 0 #083344; }
+  .round-badge { min-width: 72px; }
+  .status-strip { grid-template-columns: 1fr; }
+  .market-grid { grid-template-columns: repeat(2, 1fr); }
+  .market-card { min-height: 148px; }
+  .festival-grid { grid-template-columns: 1fr; }
+  .section-heading, .history-panel { display: grid; grid-template-columns: 1fr; }
 }

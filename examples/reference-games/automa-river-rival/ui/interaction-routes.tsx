@@ -1,19 +1,25 @@
-import React from "react";
-import { Interaction } from "@dreamboard-games/sdk/runtime/primitives";
+import {
+  Interaction,
+  type CardCollectionSurface,
+} from "../shared/generated/ui-contract";
 
-export function AutomaRiverInteractionRoutes() {
+export function RiverGuildInteractionRoutes({
+  river,
+}: {
+  river: CardCollectionSurface<readonly ["river"]>;
+}) {
   return (
-    <>
-      <Interaction.Routes
-        routes={{
-          claimCargo: {
-            collect: {},
-          },
-        }}
-      />
-      <Interaction.Submit params={{ claimId: "main-claim" }}>
-        Claim cargo
-      </Interaction.Submit>
-    </>
+    <Interaction.Routes
+      routes={{
+        "setup.submit": { collect: {} },
+        "humanTurn.claimCargo": {
+          collect: { cargoId: river.slot.card },
+        },
+        "humanTurn.submit": { collect: {} },
+        "resolveRival.submit": { collect: {} },
+        "advanceRiverRound.submit": { collect: {} },
+        "gameOver.submit": { collect: {} },
+      }}
+    />
   );
 }

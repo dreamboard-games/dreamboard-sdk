@@ -12,7 +12,7 @@ export default defineTopologyManifest({
   boards: [
     {
       id: "beacon-grid",
-      name: "Beacon Grid",
+      name: "Coastal Beacons",
       layout: "square",
       typeId: "beacon-grid",
       scope: "shared",
@@ -56,25 +56,29 @@ export default defineTopologyManifest({
   setupProfiles: [
     {
       id: "standard",
-      name: "Standard",
-      description: "Solo Last Light setup with deterministic weather.",
+      name: "Standard watch",
+      description: "One keeper begins a seeded eight-turn lighthouse watch.",
       guidance: {
-        summary: "Repair all three beacons before storm or countdown defeat.",
+        summary:
+          "Charge, repair, or reinforce once per turn; then weather and countdown resolve automatically.",
         steps: [
           {
-            id: "repair",
-            label: "Repair a beacon",
-            description: "Spend one energy and raise a beacon by one level.",
+            id: "keeper-action",
+            label: "Choose one keeper action",
+            description:
+              "Gain two energy, spend one to repair a beacon stage, or spend two to store one reinforcement.",
           },
           {
             id: "weather",
             label: "Resolve weather",
-            description: "Reveal the next deterministic weather card.",
+            description:
+              "Reveal the next seeded card; reinforcement prevents one entire Gale or Squall.",
           },
           {
             id: "countdown",
             label: "Advance countdown",
-            description: "Lose if the countdown reaches zero.",
+            description:
+              "If the storm has not reached six, dawn advances by one turn.",
           },
         ],
       },

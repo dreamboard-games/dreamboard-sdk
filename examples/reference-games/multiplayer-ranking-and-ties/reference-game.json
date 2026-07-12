@@ -1,19 +1,35 @@
 {
   "schemaVersion": 3,
   "id": "multiplayer-ranking-and-ties",
-  "displayName": "Multiplayer Ranking And Ties",
+  "displayName": "Harbor Fair",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/draft-flow.scenario.ts",
-      "test/scenarios/outcomes.scenario.ts",
-      "test/scenarios/cancellation.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/supported-player-count-2.scenario.ts",
+      "test/scenarios/supported-player-count-3.scenario.ts",
+      "test/scenarios/supported-player-count-4.scenario.ts",
+      "test/scenarios/refill-and-cancellation-initial-first-storm.scenario.ts",
+      "test/scenarios/refill-and-cancellation-initial-second-storm.scenario.ts",
+      "test/scenarios/refill-and-cancellation-ordinary-first-storm.scenario.ts",
+      "test/scenarios/refill-and-cancellation-final-refill.scenario.ts",
+      "test/scenarios/draft-actionability.scenario.ts",
+      "test/scenarios/ranking-and-ties-unique-winner.scenario.ts",
+      "test/scenarios/ranking-and-ties-guild-set.scenario.ts",
+      "test/scenarios/ranking-and-ties-coin.scenario.ts",
+      "test/scenarios/ranking-and-ties-true-first.scenario.ts",
+      "test/scenarios/ranking-and-ties-lower-place.scenario.ts",
+      "test/scenarios/scoreless-cancellation.scenario.ts",
+      "test/scenarios/projection-privacy.scenario.ts"
     ],
     "uiScenarios": [
-      "test/ui-scenarios/draft-stall.desktop.scenario.tsx",
-      "test/ui-scenarios/tie-break.desktop.scenario.tsx"
+      "test/ui-scenarios/opening.desktop.scenario.ts",
+      "test/ui-scenarios/early-refill.mobile.scenario.ts",
+      "test/ui-scenarios/growing-rows.desktop.scenario.ts",
+      "test/ui-scenarios/terminal.mobile.scenario.ts",
+      "test/ui-scenarios/cancellation.mobile.scenario.ts"
     ]
   },
   "teaching": {
@@ -23,21 +39,29 @@
       "tie-break evidence",
       "scoreless cancellation"
     ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when several players draft from shared rows and final rank needs explicit tie-break evidence.",
+      "Keep refill and cancellation rules in automatic phases so players only see genuine draft decisions.",
+      "Separate a valid tied outcome from a cancelled scoreless game in the terminal result."
+    ],
     "readFirst": [
       "rule.md",
       "manifest.ts",
       "app/game.ts",
       "app/game-contract.ts",
-      "app/phases/draft-flow.ts",
+      "app/phases/setup.ts",
+      "app/phases/drafting.ts",
+      "app/rules.ts",
       "ui/App.tsx",
-      "test/scenarios/outcomes.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios.test.ts"
     ]
   },
   "demoRelease": {
     "slug": "multiplayer-ranking-and-ties",
-    "name": "Multiplayer Ranking And Ties",
-    "description": "A multiplayer drafting game focused on ranked outcomes, tie-break evidence, and cancellation handling.",
-    "overview": "Draft from a shared market, score sets, inspect standings, and resolve tied or cancelled outcomes cleanly.",
+    "name": "Harbor Fair",
+    "description": "Build a public harbor festival across six rounds, then resolve prestige, guild sets, coins, ties, or storm cancellation authoritatively.",
+    "overview": "Two to four organizers draft food, craft, and music stalls from four shared awnings while storms threaten a dramatic scoreless ending.",
     "creator": "Dreamboard",
     "minPlayers": 2,
     "maxPlayers": 4,
@@ -51,31 +75,9 @@
       "shared-card-play"
     ],
     "categories": ["card-game", "ranking"],
-    "heroImageUrl": "/demos/multiplayer-ranking-and-ties/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 10,
-    "demoPlayerCount": 4,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 4
   },
   "mechanics": [
     "card-drafting",

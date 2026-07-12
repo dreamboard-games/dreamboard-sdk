@@ -1,19 +1,19 @@
-import { setup } from "./setup";
-import { playerTurn } from "./player-turn";
-import { checkGameEnd } from "./check-game-end";
+import { discardBarrier } from "./discard-barrier";
 import { gameOver } from "./game-over";
-import type { GameContract } from "../game-contract";
-import type { PhaseMapOf } from "@dreamboard-games/sdk/reducer";
+import { main } from "./main";
+import { moveBanditsPhase } from "./move-bandits";
+import { pendingTrade } from "./pending-trade";
+import { roll } from "./roll";
+import { setupCamp } from "./setup-camp";
+import { setupTrail } from "./setup-trail";
 
-// NOTE: we use `satisfies` rather than a type annotation so that TypeScript
-// *preserves* the literal-typed flow shape (e.g. the `"accept" | "reject"`
-// option ids on `trade-offer`). An annotation like `: PhaseMapOf<GameContract>`
-// would widen the flow types, which then propagates into the generated
-// ui-contract and breaks `useChoicePrompt<"trade-offer">`'s ability to infer
-// the response type.
 export const phases = {
-  setup,
-  playerTurn,
-  checkGameEnd,
+  setupCamp,
+  setupTrail,
+  roll,
+  discardBarrier,
+  moveBandits: moveBanditsPhase,
+  main,
+  pendingTrade,
   gameOver,
-} as const satisfies PhaseMapOf<GameContract>;
+};

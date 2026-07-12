@@ -2,23 +2,31 @@ import { defineEmptyView, defineGame } from "@dreamboard-games/sdk/reducer";
 import { gameContract } from "./game-contract";
 import { phases } from "./phases";
 import { playerView } from "./player-view";
-import setupProfiles from "./setup-profiles";
+import { setupProfiles, shuffle } from "../shared/manifest-contract";
 
 export default defineGame({
   contract: gameContract,
   initial: {
-    public: () => ({
+    public: ({ playerIds }) => ({
       round: 1,
-      totalScoreByPlayer: {},
+      pick: 1,
+      totalScoreByPlayer: Object.fromEntries(
+        playerIds.map((playerId) => [playerId, 0]),
+      ),
       roundScoreByPlayer: {},
-      puddingScoreByPlayer: {},
+      roundHistory: [],
       outcome: null,
     }),
     private: () => ({}),
     hidden: () => ({}),
   },
   initialPhase: "setup",
-  setupProfiles,
+  setupProfiles: setupProfiles({
+    standard: {
+      initialPhase: "setup",
+      bootstrap: [shuffle({ type: "sharedZone", zoneId: "market-deck" })],
+    },
+  }),
   phases,
   views: {
     shared: defineEmptyView<typeof gameContract>(),

@@ -7,7 +7,12 @@
     "square": {}
   },
   "initialTable": {
-    "playerOrder": ["player-1", "player-2", "player-3", "player-4"],
+    "playerOrder": [
+      "player-1",
+      "player-2",
+      "player-3",
+      "player-4"
+    ],
     "zones": {
       "shared": {
         "draw-pile": [
@@ -51,10 +56,22 @@
         "festival-row": {
           "__perPlayer": true,
           "entries": [
-            ["player-1", []],
-            ["player-2", []],
-            ["player-3", []],
-            ["player-4", []]
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ],
+            [
+              "player-3",
+              []
+            ],
+            [
+              "player-4",
+              []
+            ]
           ]
         }
       },
@@ -65,10 +82,18 @@
         "festival-row": "public"
       },
       "cardSetIdsByZoneId": {
-        "draw-pile": ["harbor-fair-cards"],
-        "festival-row": ["harbor-fair-cards"],
-        "market": ["harbor-fair-cards"],
-        "storm-discard": ["harbor-fair-cards"]
+        "draw-pile": [
+          "harbor-fair-cards"
+        ],
+        "festival-row": [
+          "harbor-fair-cards"
+        ],
+        "market": [
+          "harbor-fair-cards"
+        ],
+        "storm-discard": [
+          "harbor-fair-cards"
+        ]
       }
     },
     "decks": {
@@ -113,10 +138,22 @@
       "festival-row": {
         "__perPlayer": true,
         "entries": [
-          ["player-1", []],
-          ["player-2", []],
-          ["player-3", []],
-          ["player-4", []]
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ],
+          [
+            "player-3",
+            []
+          ],
+          [
+            "player-4",
+            []
+          ]
         ]
       }
     },
@@ -833,10 +870,22 @@
     "resources": {
       "__perPlayer": true,
       "entries": [
-        ["player-1", {}],
-        ["player-2", {}],
-        ["player-3", {}],
-        ["player-4", {}]
+        [
+          "player-1",
+          {}
+        ],
+        [
+          "player-2",
+          {}
+        ],
+        [
+          "player-3",
+          {}
+        ],
+        [
+          "player-4",
+          {}
+        ]
       ]
     },
     "boards": {

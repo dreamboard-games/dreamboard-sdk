@@ -1,73 +1,32 @@
-const PLAYER_NUMBERS = [1, 2, 3, 4] as const;
+const PLAYER_NUMBERS = [1, 2, 3] as const;
+const detached = { type: "detached" } as const;
 
-type PlayerNumber = (typeof PLAYER_NUMBERS)[number];
-type SettlementPiece = "camp" | "town";
-
-const ownerId = (playerNumber: PlayerNumber) =>
-  `player-${playerNumber}` as const;
-
-const detachedHome = { type: "detached" } as const;
-
-function playerTrails(playerNumber: PlayerNumber) {
-  return Array.from(
-    { length: 15 },
-    (_, index) =>
-      ({
-        id: `trail-p${playerNumber}-${index + 1}`,
-        typeId: "trail",
-        ownerId: ownerId(playerNumber),
-        home: detachedHome,
-      }) as const,
-  );
-}
-
-function playerSettlements(
-  playerNumber: PlayerNumber,
-  typeId: SettlementPiece,
-  count: number,
-) {
-  return Array.from(
-    { length: count },
-    (_, index) =>
-      ({
-        id: `${typeId}-p${playerNumber}-${index + 1}`,
-        typeId,
-        ownerId: ownerId(playerNumber),
-        home: detachedHome,
-      }) as const,
-  );
+function ownerId(playerNumber: (typeof PLAYER_NUMBERS)[number]) {
+  return `player-${playerNumber}` as const;
 }
 
 export const pieceTypes = [
-  {
-    id: "trail",
-    name: "Trail",
-  },
-  {
-    id: "camp",
-    name: "Camp",
-  },
-  {
-    id: "town",
-    name: "Town",
-  },
-  {
-    id: "storm",
-    name: "Storm",
-  },
+  { id: "trail", name: "Trail" },
+  { id: "camp", name: "Camp" },
+  { id: "bandits", name: "Bandits" },
 ] as const;
 
 export const pieceSeeds = [
-  {
-    id: "storm",
-    typeId: "storm",
-    home: detachedHome,
-  },
-  ...PLAYER_NUMBERS.flatMap((playerNumber) => playerTrails(playerNumber)),
+  { id: "bandits", typeId: "bandits", home: detached },
   ...PLAYER_NUMBERS.flatMap((playerNumber) =>
-    playerSettlements(playerNumber, "camp", 5),
+    Array.from({ length: 10 }, (_, index) => ({
+      id: `trail-p${playerNumber}-${index + 1}`,
+      typeId: "trail" as const,
+      ownerId: ownerId(playerNumber),
+      home: detached,
+    })),
   ),
   ...PLAYER_NUMBERS.flatMap((playerNumber) =>
-    playerSettlements(playerNumber, "town", 4),
+    Array.from({ length: 4 }, (_, index) => ({
+      id: `camp-p${playerNumber}-${index + 1}`,
+      typeId: "camp" as const,
+      ownerId: ownerId(playerNumber),
+      home: detached,
+    })),
   ),
 ] as const;

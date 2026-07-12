@@ -3,85 +3,90 @@ import type {
   GameContract,
   PlayerTurnPhaseState,
 } from "../../../game-contract";
-import { shufflePlayerDeckForDraw } from "../../../effects/deck";
-import { edit } from "../../../reducer-support";
+import { shuffleDeckForDraw } from "../../../effects/deck";
+import { appendHistory, edit } from "../../../reducer-support";
 import { notYourTurn } from "../rules";
 
 export const endTurn = defineInteraction<GameContract, PlayerTurnPhaseState>()({
   inputs: {},
   rules: [
     {
-      id: "can-end-turn",
+      id: "active-player",
       errorCode: "NOT_YOUR_TURN",
       validate: ({ state, input }) => notYourTurn(state, input.playerId),
     },
   ],
-  reduce({ state, input, accept, fx, q }) {
-    const player = input.playerId;
-    const handCards = q.zone.playerCards(player, "hand");
-    const inPlayCards = q.zone.playerCards(player, "in-play");
-    const deckSize = q.zone.playerCards(player, "deck").length;
-    const drawCount = 5;
-    const drawFromDeck = Math.min(drawCount, deckSize);
-    const drawFromRecycledDiscard = drawCount - drawFromDeck;
-    const existingDiscardCards = q.zone.playerCards(player, "discard");
-    const recycledDiscardCards =
-      drawFromRecycledDiscard > 0
-        ? [...existingDiscardCards, ...handCards, ...inPlayCards]
-        : [];
-    const nextEffects =
-      drawFromRecycledDiscard > 0
-        ? [
-            fx.effect(shufflePlayerDeckForDraw, {
-              playerId: player,
-              zoneId: "deck",
-              context: {
-                playerId: player,
-                drawCount: drawFromRecycledDiscard,
-                transitionToPlayerTurn: false,
-                transitionToCheckGameEnd: true,
-              },
-            }),
-          ]
-        : [fx.transition("checkGameEnd")];
-
+  reduce({ state, input, accept, q, fx }) {
+    const playerId = input.playerId;
+    const hand = q.zone.playerCards(playerId, "hand");
+    const inPlay = q.zone.playerCards(playerId, "in-play");
+    const deck = q.zone.playerCards(playerId, "deck");
+    const discard = q.zone.playerCards(playerId, "discard");
+    const immediate = Math.min(5, deck.length);
+    const remainder = 5 - immediate;
+    const recycle = [...discard, ...hand, ...inPlay];
+    const shuffledDraw = Math.min(remainder, recycle.length);
     const tx = edit(state);
-    for (const cardId of handCards) {
+
+    for (const cardId of hand) {
       tx.moveCardBetweenPlayerZones({
-        playerId: player,
+        playerId,
         fromZoneId: "hand",
         toZoneId: "discard",
         cardId,
       });
     }
-    for (const cardId of inPlayCards) {
+    for (const cardId of inPlay) {
       tx.moveCardBetweenPlayerZones({
-        playerId: player,
+        playerId,
         fromZoneId: "in-play",
         toZoneId: "discard",
         cardId,
       });
     }
-    if (drawFromDeck > 0) {
+    if (immediate > 0) {
       tx.dealCardsBetweenPlayerZones({
-        playerId: player,
+        playerId,
         fromZoneId: "deck",
         toZoneId: "hand",
-        count: drawFromDeck,
+        count: immediate,
       });
     }
-    for (const cardId of recycledDiscardCards) {
-      tx.moveCardBetweenPlayerZones({
-        playerId: player,
-        fromZoneId: "discard",
-        toZoneId: "deck",
-        cardId,
-      });
+    if (shuffledDraw > 0) {
+      for (const cardId of recycle) {
+        tx.moveCardBetweenPlayerZones({
+          playerId,
+          fromZoneId: "discard",
+          toZoneId: "deck",
+          cardId,
+        });
+      }
     }
-    tx.patchPublicState((prev) => ({
-      ...prev,
-      turnNumber: prev.turnNumber + 1,
+    tx.patchPublicState((publicState) => ({
+      ...publicState,
+      turnNumber: publicState.turnNumber + 1,
     }));
-    return accept(tx.state, { instructions: nextEffects });
+    const next = appendHistory(tx.state, {
+      kind: "cleanup",
+      actorPlayerId: playerId,
+      cardId: null,
+      summary: `${playerId} cleaned up and drew a replacement hand.`,
+    });
+    return accept(next, {
+      instructions:
+        shuffledDraw > 0
+          ? [
+              fx.effect(shuffleDeckForDraw, {
+                playerId,
+                zoneId: "deck",
+                context: {
+                  playerId,
+                  drawCount: shuffledDraw,
+                  checkEndAfterDraw: true,
+                },
+              }),
+            ]
+          : [fx.transition("checkGameEnd")],
+    });
   },
 });

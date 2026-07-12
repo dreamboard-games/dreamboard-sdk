@@ -21,9 +21,36 @@ and generated fixtures belong to the superseded larger game.
 
 - `rule.md`
 - `manifest.ts`
-- `app/phases/placement/worker-placement.ts`
+- `app/phases/placement/index.ts`
 - `ui/interaction-routes.tsx`
-- `test/scenarios/placement-space-resolution-lumberyard.scenario.ts`
+- `test/scenarios/action-spaces.scenario.ts`
+- `test/scenarios/complete-game.scenario.ts`
+
+## Agent authoring workflow
+
+Start from the canonical normal-setup replay. Use `inspect` to understand the
+actor, public workshop state, and progressive input descriptors; use `explore`
+to copy one complete replay-accepted command into a scenario:
+
+```sh
+dreamboard test inspect test/scenarios/complete-game.scenario.ts \
+  --perspective player:0 --at setup
+
+dreamboard test explore test/scenarios/complete-game.scenario.ts \
+  --perspective player:0 --at setup --limit 100
+
+dreamboard test inspect test/scenarios/complete-game.scenario.ts \
+  --perspective player:1 --at given:1
+
+dreamboard test explore test/scenarios/complete-game.scenario.ts \
+  --perspective player:0 --at when:5 --limit 100
+```
+
+The opening exploration contains ordinary placements, master placements,
+legal one/two-resource exchanges, and pass. The developed `when:5` checkpoint
+also exposes only affordable item/cell pairs, including the Joined Mosaic
+neighbor restriction. Cleanup and scoring settle automatically, so agents do
+not author system-player commands or state snapshots.
 
 ## Verification
 

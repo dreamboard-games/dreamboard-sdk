@@ -3,13 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "materialize": "dreamboard-sdk-materialize --project-root . --manifest manifest.ts",
+    "pretypecheck": "pnpm materialize",
+    "pretest": "pnpm materialize",
+    "pretest:ui": "pnpm materialize",
     "typecheck": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
     "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
     "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
     "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
-    "test": "tsx --test test/scenarios/**/*.test.ts",
-    "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx",
+    "test": "tsx --tsconfig test/tsconfig.json --test test/scenarios.test.ts test/unit/*.test.ts",
+    "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx test/ui-scenarios/**/*.scenario.ts",
     "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
   },
   "dependencies": {

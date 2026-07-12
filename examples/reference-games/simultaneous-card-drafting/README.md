@@ -5,9 +5,8 @@ barrier resolution, reveal timing, hand passing, and compact set scoring.
 
 ## Rules Authority
 
-[`rule.md`](rule.md) is the approved gameplay and theme contract. Existing
-sushi-shaped content, reducers, tests, fixtures, and screenshots are candidates
-for replacement and cannot override the brief.
+[`rule.md`](rule.md) is the approved gameplay and theme contract. Reducers,
+tests, fixtures, and screenshots are evidence only and cannot override it.
 
 ## What To Learn Here
 
@@ -21,12 +20,15 @@ for replacement and cannot override the brief.
 - `rule.md`
 - `manifest.ts`
 - `app/phases/drafting.ts`
+- `app/phases/scoreRound.ts`
 - `app/rules/scoring.ts`
 - `ui/interaction-routes.tsx`
-- `test/scenarios/draft-one-pick.scenario.ts`
+- `test/scenarios/complete-game.scenario.ts`
+- `test/scenarios/barrier-actionability.scenario.ts`
+- `test/scenarios.test.ts`
 
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/simultaneous-card-drafting verify
+mise exec node@24 -- pnpm --dir examples/reference-games/simultaneous-card-drafting verify
 ```

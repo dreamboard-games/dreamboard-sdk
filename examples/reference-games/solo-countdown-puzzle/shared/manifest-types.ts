@@ -46,6 +46,8 @@ export type VertexTypeId = (typeof literals.vertexTypeIds)[number];
 export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
+
+
 export type BeaconGridBoardFields = RuntimeRecord;
 export type BeaconGridSpaceFields = RuntimeRecord;
 export type BeaconGridRelationFields = RuntimeRecord;
@@ -95,10 +97,7 @@ export type DieFieldsByTypeId = Record<string, RuntimeRecord>;
 
 export type CardProperties = RuntimeRecord;
 
-export type CardState = Omit<
-  RuntimeCardData,
-  "id" | "cardSetId" | "cardType" | "properties"
-> & {
+export type CardState = Omit<RuntimeCardData, "id" | "cardSetId" | "cardType" | "properties"> & {
   id: CardId;
   cardSetId: CardSetId;
   cardType: CardType;
@@ -107,25 +106,23 @@ export type CardState = Omit<
 export type CardStateById = Record<CardId, CardState>;
 export type PieceStateById = Record<PieceId, RuntimePieceData>;
 export type DieStateById = Record<DieId, RuntimeDieData>;
-export type CardIdsBySharedZoneId = {};
-export type CardIdsByPlayerZoneId = {};
+export type CardIdsBySharedZoneId = {
+
+};
+export type CardIdsByPlayerZoneId = {
+
+};
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 export type ComponentId = CardId | PieceId | DieId;
 
-export interface BoardSpaceStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  Fields = RuntimeRecord,
-> {
+export interface BoardSpaceStateRecord<SpaceIdValue extends SpaceId = SpaceId, Fields = RuntimeRecord> {
   id: SpaceIdValue;
   name?: string | null;
   typeId?: SpaceTypeId | null;
   fields: Fields;
   zoneId?: string | null;
 }
-export interface BoardRelationStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  Fields = RuntimeRecord,
-> {
+export interface BoardRelationStateRecord<SpaceIdValue extends SpaceId = SpaceId, Fields = RuntimeRecord> {
   id?: string | null;
   typeId: RelationTypeId;
   fromSpaceId: SpaceIdValue;
@@ -133,11 +130,7 @@ export interface BoardRelationStateRecord<
   directed: boolean;
   fields: Fields;
 }
-export interface BoardContainerStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  ContainerIdValue extends BoardContainerId = BoardContainerId,
-  Fields = RuntimeRecord,
-> {
+export interface BoardContainerStateRecord<SpaceIdValue extends SpaceId = SpaceId, ContainerIdValue extends BoardContainerId = BoardContainerId, Fields = RuntimeRecord> {
   id: ContainerIdValue;
   name: string;
   host: { type: "board" } | { type: "space"; spaceId: SpaceIdValue };
@@ -145,10 +138,7 @@ export interface BoardContainerStateRecord<
   zoneId: string;
   fields: Fields;
 }
-export interface BoardStateRecordBase<
-  BoardIdValue extends BoardId = BoardId,
-  BoardFields = RuntimeRecord,
-> {
+export interface BoardStateRecordBase<BoardIdValue extends BoardId = BoardId, BoardFields = RuntimeRecord> {
   id: BoardIdValue;
   baseId: BoardBaseId;
   typeId?: BoardTypeId | null;
@@ -157,45 +147,21 @@ export interface BoardStateRecordBase<
   templateId?: string | null;
   fields: BoardFields;
 }
-export interface GenericBoardStateRecord<
-  BoardIdValue extends BoardId = BoardId,
-  SpaceIdValue extends SpaceId = SpaceId,
-  ContainerIdValue extends BoardContainerId = BoardContainerId,
-  BoardFields = RuntimeRecord,
-  SpaceFields = RuntimeRecord,
-  RelationFields = RuntimeRecord,
-  ContainerFields = RuntimeRecord,
-> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
+export interface GenericBoardStateRecord<BoardIdValue extends BoardId = BoardId, SpaceIdValue extends SpaceId = SpaceId, ContainerIdValue extends BoardContainerId = BoardContainerId, BoardFields = RuntimeRecord, SpaceFields = RuntimeRecord, RelationFields = RuntimeRecord, ContainerFields = RuntimeRecord> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
   layout: "generic";
-  spaces: Record<
-    SpaceIdValue,
-    BoardSpaceStateRecord<SpaceIdValue, SpaceFields>
-  >;
+  spaces: Record<SpaceIdValue, BoardSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RelationFields>>;
-  containers: Record<
-    ContainerIdValue,
-    BoardContainerStateRecord<SpaceIdValue, ContainerIdValue, ContainerFields>
-  >;
+  containers: Record<ContainerIdValue, BoardContainerStateRecord<SpaceIdValue, ContainerIdValue, ContainerFields>>;
 }
-export interface HexSpaceStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  Fields = RuntimeRecord,
-> extends BoardSpaceStateRecord<SpaceIdValue, Fields> {
+export interface HexSpaceStateRecord<SpaceIdValue extends SpaceId = SpaceId, Fields = RuntimeRecord> extends BoardSpaceStateRecord<SpaceIdValue, Fields> {
   q: number;
   r: number;
 }
-export interface SquareSpaceStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  Fields = RuntimeRecord,
-> extends BoardSpaceStateRecord<SpaceIdValue, Fields> {
+export interface SquareSpaceStateRecord<SpaceIdValue extends SpaceId = SpaceId, Fields = RuntimeRecord> extends BoardSpaceStateRecord<SpaceIdValue, Fields> {
   row: number;
   col: number;
 }
-export interface TiledEdgeStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  EdgeIdValue extends EdgeId = EdgeId,
-  Fields = RuntimeRecord,
-> {
+export interface TiledEdgeStateRecord<SpaceIdValue extends SpaceId = SpaceId, EdgeIdValue extends EdgeId = EdgeId, Fields = RuntimeRecord> {
   id: EdgeIdValue;
   spaceIds: readonly SpaceIdValue[];
   typeId?: EdgeTypeId | null;
@@ -203,11 +169,7 @@ export interface TiledEdgeStateRecord<
   ownerId?: PlayerId | null;
   fields: Fields;
 }
-export interface TiledVertexStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  VertexIdValue extends VertexId = VertexId,
-  Fields = RuntimeRecord,
-> {
+export interface TiledVertexStateRecord<SpaceIdValue extends SpaceId = SpaceId, VertexIdValue extends VertexId = VertexId, Fields = RuntimeRecord> {
   id: VertexIdValue;
   spaceIds: readonly SpaceIdValue[];
   typeId?: VertexTypeId | null;
@@ -215,252 +177,58 @@ export interface TiledVertexStateRecord<
   ownerId?: PlayerId | null;
   fields: Fields;
 }
-export type HexEdgeStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  EdgeIdValue extends EdgeId = EdgeId,
-  Fields = RuntimeRecord,
-> = TiledEdgeStateRecord<SpaceIdValue, EdgeIdValue, Fields>;
-export type HexVertexStateRecord<
-  SpaceIdValue extends SpaceId = SpaceId,
-  VertexIdValue extends VertexId = VertexId,
-  Fields = RuntimeRecord,
-> = TiledVertexStateRecord<SpaceIdValue, VertexIdValue, Fields>;
-export interface HexBoardStateRecord<
-  BoardIdValue extends BoardId = BoardId,
-  SpaceIdValue extends SpaceId = SpaceId,
-  EdgeIdValue extends EdgeId = EdgeId,
-  VertexIdValue extends VertexId = VertexId,
-  BoardFields = RuntimeRecord,
-  SpaceFields = RuntimeRecord,
-  EdgeFields = RuntimeRecord,
-  VertexFields = RuntimeRecord,
-> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
+export type HexEdgeStateRecord<SpaceIdValue extends SpaceId = SpaceId, EdgeIdValue extends EdgeId = EdgeId, Fields = RuntimeRecord> = TiledEdgeStateRecord<SpaceIdValue, EdgeIdValue, Fields>;
+export type HexVertexStateRecord<SpaceIdValue extends SpaceId = SpaceId, VertexIdValue extends VertexId = VertexId, Fields = RuntimeRecord> = TiledVertexStateRecord<SpaceIdValue, VertexIdValue, Fields>;
+export interface HexBoardStateRecord<BoardIdValue extends BoardId = BoardId, SpaceIdValue extends SpaceId = SpaceId, EdgeIdValue extends EdgeId = EdgeId, VertexIdValue extends VertexId = VertexId, BoardFields = RuntimeRecord, SpaceFields = RuntimeRecord, EdgeFields = RuntimeRecord, VertexFields = RuntimeRecord> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
   containers: Record<never, never>;
   orientation: "pointy-top" | "flat-top";
   edges: Array<HexEdgeStateRecord<SpaceIdValue, EdgeIdValue, EdgeFields>>;
-  vertices: Array<
-    HexVertexStateRecord<SpaceIdValue, VertexIdValue, VertexFields>
-  >;
+  vertices: Array<HexVertexStateRecord<SpaceIdValue, VertexIdValue, VertexFields>>;
 }
-export interface SquareBoardStateRecord<
-  BoardIdValue extends BoardId = BoardId,
-  SpaceIdValue extends SpaceId = SpaceId,
-  ContainerIdValue extends BoardContainerId = BoardContainerId,
-  EdgeIdValue extends EdgeId = EdgeId,
-  VertexIdValue extends VertexId = VertexId,
-  BoardFields = RuntimeRecord,
-  SpaceFields = RuntimeRecord,
-  RelationFields = RuntimeRecord,
-  ContainerFields = RuntimeRecord,
-  EdgeFields = RuntimeRecord,
-  VertexFields = RuntimeRecord,
-> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
+export interface SquareBoardStateRecord<BoardIdValue extends BoardId = BoardId, SpaceIdValue extends SpaceId = SpaceId, ContainerIdValue extends BoardContainerId = BoardContainerId, EdgeIdValue extends EdgeId = EdgeId, VertexIdValue extends VertexId = VertexId, BoardFields = RuntimeRecord, SpaceFields = RuntimeRecord, RelationFields = RuntimeRecord, ContainerFields = RuntimeRecord, EdgeFields = RuntimeRecord, VertexFields = RuntimeRecord> extends BoardStateRecordBase<BoardIdValue, BoardFields> {
   layout: "square";
-  spaces: Record<
-    SpaceIdValue,
-    SquareSpaceStateRecord<SpaceIdValue, SpaceFields>
-  >;
+  spaces: Record<SpaceIdValue, SquareSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RelationFields>>;
-  containers: Record<
-    ContainerIdValue,
-    BoardContainerStateRecord<SpaceIdValue, ContainerIdValue, ContainerFields>
-  >;
+  containers: Record<ContainerIdValue, BoardContainerStateRecord<SpaceIdValue, ContainerIdValue, ContainerFields>>;
   edges: Array<TiledEdgeStateRecord<SpaceIdValue, EdgeIdValue, EdgeFields>>;
-  vertices: Array<
-    TiledVertexStateRecord<SpaceIdValue, VertexIdValue, VertexFields>
-  >;
+  vertices: Array<TiledVertexStateRecord<SpaceIdValue, VertexIdValue, VertexFields>>;
 }
 export type BoardStateById = {
-  "beacon-grid": SquareBoardStateRecord<
-    "beacon-grid",
-    | "beacon-harbor"
-    | "beacon-north"
-    | "beacon-south"
-    | "empty-east"
-    | "empty-ne"
-    | "empty-nw"
-    | "empty-se"
-    | "empty-sw"
-    | "empty-west",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::1,3"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::2,3"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::3,3"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,2::3,3",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3",
-    BeaconGridBoardFields,
-    BeaconGridSpaceFields,
-    BeaconGridRelationFields,
-    BeaconGridContainerFields,
-    BeaconGridEdgeFields,
-    BeaconGridVertexFields
-  >;
+  "beacon-grid": SquareBoardStateRecord<"beacon-grid", "beacon-harbor" | "beacon-north" | "beacon-south" | "empty-east" | "empty-ne" | "empty-nw" | "empty-se" | "empty-sw" | "empty-west", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::1,3" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::2,3" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::3,3" | "square-edge:3,0::3,1" | "square-edge:3,1::3,2" | "square-edge:3,2::3,3", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3", BeaconGridBoardFields, BeaconGridSpaceFields, BeaconGridRelationFields, BeaconGridContainerFields, BeaconGridEdgeFields, BeaconGridVertexFields>;
 };
-export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
-export type BoardFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardFieldsByBoardId
-    ? BoardFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type BoardSpaceState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends { spaces: Record<string, infer Space> }
-    ? Space
-    : never;
-export type BoardSpaceFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardSpaceFieldsByBoardId
-    ? BoardSpaceFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type BoardRelationState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends { relations: Array<infer Relation> }
-    ? Relation
-    : never;
-export type BoardRelationFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardRelationFieldsByBoardId
-    ? BoardRelationFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type BoardContainerState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends {
-    containers: Record<string, infer Container>;
-  }
-    ? Container
-    : never;
-export type BoardContainerFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardContainerFieldsByBoardId
-    ? BoardContainerFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
+export type BoardState<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
+export type BoardFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof BoardFieldsByBoardId ? BoardFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type BoardSpaceState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { spaces: Record<string, infer Space> } ? Space : never;
+export type BoardSpaceFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof BoardSpaceFieldsByBoardId ? BoardSpaceFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type BoardRelationState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { relations: Array<infer Relation> } ? Relation : never;
+export type BoardRelationFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof BoardRelationFieldsByBoardId ? BoardRelationFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type BoardContainerState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { containers: Record<string, infer Container> } ? Container : never;
+export type BoardContainerFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof BoardContainerFieldsByBoardId ? BoardContainerFieldsByBoardId[BoardIdValue] : RuntimeRecord;
 export type HexBoardStateById = {
-  [BoardIdValue in keyof BoardStateById as BoardStateById[BoardIdValue] extends {
-    layout: "hex";
-  }
-    ? BoardIdValue
-    : never]: BoardStateById[BoardIdValue];
+  [BoardIdValue in keyof BoardStateById as BoardStateById[BoardIdValue] extends { layout: "hex" } ? BoardIdValue : never]: BoardStateById[BoardIdValue];
 };
 export type SquareBoardStateById = {
-  [BoardIdValue in keyof BoardStateById as BoardStateById[BoardIdValue] extends {
-    layout: "square";
-  }
-    ? BoardIdValue
-    : never]: BoardStateById[BoardIdValue];
+  [BoardIdValue in keyof BoardStateById as BoardStateById[BoardIdValue] extends { layout: "square" } ? BoardIdValue : never]: BoardStateById[BoardIdValue];
 };
-export type HexEdgeState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends { layout: "hex"; edges: Array<infer Edge> }
-    ? Edge
-    : never;
-export type HexEdgeFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof HexEdgeFieldsByBoardId
-    ? HexEdgeFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type HexVertexState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends {
-    layout: "hex";
-    vertices: Array<infer Vertex>;
-  }
-    ? Vertex
-    : never;
-export type HexVertexFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof HexVertexFieldsByBoardId
-    ? HexVertexFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type SquareEdgeState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends {
-    layout: "square";
-    edges: Array<infer Edge>;
-  }
-    ? Edge
-    : never;
-export type SquareEdgeFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof SquareEdgeFieldsByBoardId
-    ? SquareEdgeFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type SquareVertexState<BoardIdValue extends BoardId = BoardId> =
-  BoardState<BoardIdValue> extends {
-    layout: "square";
-    vertices: Array<infer Vertex>;
-  }
-    ? Vertex
-    : never;
-export type SquareVertexFields<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof SquareVertexFieldsByBoardId
-    ? SquareVertexFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type TiledBoardId =
-  | keyof TiledEdgeFieldsByBoardId
-  | keyof TiledVertexFieldsByBoardId;
-export type TiledEdgeState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends BoardId
-    ? HexEdgeState<BoardIdValue> | SquareEdgeState<BoardIdValue>
-    : never;
-export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof TiledEdgeFieldsByBoardId
-    ? TiledEdgeFieldsByBoardId[BoardIdValue]
-    : RuntimeRecord;
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends BoardId
-    ? HexVertexState<BoardIdValue> | SquareVertexState<BoardIdValue>
-    : never;
-export type TiledVertexFields<
-  BoardIdValue extends TiledBoardId = TiledBoardId,
-> = BoardIdValue extends keyof TiledVertexFieldsByBoardId
-  ? TiledVertexFieldsByBoardId[BoardIdValue]
-  : RuntimeRecord;
+export type HexEdgeState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { layout: "hex"; edges: Array<infer Edge> } ? Edge : never;
+export type HexEdgeFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof HexEdgeFieldsByBoardId ? HexEdgeFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type HexVertexState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { layout: "hex"; vertices: Array<infer Vertex> } ? Vertex : never;
+export type HexVertexFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof HexVertexFieldsByBoardId ? HexVertexFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type SquareEdgeState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { layout: "square"; edges: Array<infer Edge> } ? Edge : never;
+export type SquareEdgeFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof SquareEdgeFieldsByBoardId ? SquareEdgeFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type SquareVertexState<BoardIdValue extends BoardId = BoardId> = BoardState<BoardIdValue> extends { layout: "square"; vertices: Array<infer Vertex> } ? Vertex : never;
+export type SquareVertexFields<BoardIdValue extends BoardId = BoardId> = BoardIdValue extends keyof SquareVertexFieldsByBoardId ? SquareVertexFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type TiledBoardId = keyof TiledEdgeFieldsByBoardId | keyof TiledVertexFieldsByBoardId;
+export type TiledEdgeState<BoardIdValue extends TiledBoardId = TiledBoardId> = BoardIdValue extends BoardId ? HexEdgeState<BoardIdValue> | SquareEdgeState<BoardIdValue> : never;
+export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> = BoardIdValue extends keyof TiledEdgeFieldsByBoardId ? TiledEdgeFieldsByBoardId[BoardIdValue] : RuntimeRecord;
+export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> = BoardIdValue extends BoardId ? HexVertexState<BoardIdValue> | SquareVertexState<BoardIdValue> : never;
+export type TiledVertexFields<BoardIdValue extends TiledBoardId = TiledBoardId> = BoardIdValue extends keyof TiledVertexFieldsByBoardId ? TiledVertexFieldsByBoardId[BoardIdValue] : RuntimeRecord;
 export type BoardStateRecord = BoardStateById[BoardId];
 
-export type TableState = Omit<
-  RuntimeTableRecord,
-  | "playerOrder"
-  | "zones"
-  | "decks"
-  | "hands"
-  | "handVisibility"
-  | "cards"
-  | "pieces"
-  | "componentLocations"
-  | "ownerOfCard"
-  | "visibility"
-  | "resources"
-  | "boards"
-  | "dice"
-> & {
+export type TableState = Omit<RuntimeTableRecord, "playerOrder" | "zones" | "decks" | "hands" | "handVisibility" | "cards" | "pieces" | "componentLocations" | "ownerOfCard" | "visibility" | "resources" | "boards" | "dice"> & {
   playerOrder: PlayerId[];
   zones: RuntimeTableRecord["zones"] & {
     visibility: Record<ZoneId, RuntimeHandVisibilityMode>;

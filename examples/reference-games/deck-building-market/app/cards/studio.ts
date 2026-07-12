@@ -1,21 +1,22 @@
 import { defineCardAction } from "@dreamboard-games/sdk/reducer";
 import { cardTypes } from "../../shared/manifest-contract";
 import type { GameContract, PlayerTurnPhaseState } from "../game-contract";
-import { edit } from "../reducer-support";
-import { validateActionPlay } from "./support";
+import { shuffleDeckForDraw } from "../effects/deck";
+import { appendHistory, edit, prepareMidTurnDraw } from "../reducer-support";
+import { validateTechniquePlay } from "./support";
 
-// Studio: +1 card, +2 actions. The Village.
 export const studio = defineCardAction<GameContract, PlayerTurnPhaseState>()({
   cardType: cardTypes.studio,
   playFrom: "hand",
   rules: [
     {
-      id: "action-card-playable",
+      id: "technique-playable",
       errorCode: "ACTION_CARD_NOT_PLAYABLE",
-      validate: ({ state, input }) => validateActionPlay(state, input.playerId),
+      validate: ({ state, input }) =>
+        validateTechniquePlay(state, input.playerId),
     },
   ],
-  reduce({ state, input, accept, q }) {
+  reduce({ state, input, accept, q, fx }) {
     const tx = edit(state);
     tx.moveCardBetweenPlayerZones({
       playerId: input.playerId,
@@ -23,16 +24,34 @@ export const studio = defineCardAction<GameContract, PlayerTurnPhaseState>()({
       toZoneId: "in-play",
       cardId: input.params.cardId,
     });
-    tx.patchPhaseState({
-      ...state.phase,
-      actionsLeft: state.phase.actionsLeft + 1,
-    });
-    tx.dealCardsBetweenPlayerZones({
+    tx.patchPhaseState({ ...state.phase, actionsLeft: state.phase.actionsLeft + 1 });
+    const draw = prepareMidTurnDraw({
+      state: tx.state,
+      q,
       playerId: input.playerId,
-      fromZoneId: "deck",
-      toZoneId: "hand",
       count: 1,
     });
-    return accept(tx.state);
+    const next = appendHistory(draw.state, {
+      kind: "technique",
+      actorPlayerId: input.playerId,
+      cardId: input.params.cardId,
+      summary: "Studio drew one card and granted two actions.",
+    });
+    return accept(next, {
+      instructions:
+        draw.shuffleDrawCount > 0
+          ? [
+              fx.effect(shuffleDeckForDraw, {
+                playerId: input.playerId,
+                zoneId: "deck",
+                context: {
+                  playerId: input.playerId,
+                  drawCount: draw.shuffleDrawCount,
+                  checkEndAfterDraw: false,
+                },
+              }),
+            ]
+          : [],
+    });
   },
 });

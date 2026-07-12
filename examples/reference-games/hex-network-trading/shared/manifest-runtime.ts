@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -86,69 +86,123 @@ export { literals };
 // the "total-record" assumption the refactor is meant to eliminate. Runtime
 // roster validation is done through perPlayerSchema(runtimePlayerIds, ...)
 // instead, which can be bound to the actual active roster.
-const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
+const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(
   markManifestScopedSchema(
     z
       .string()
       .min(1)
       .transform((value) => asPlayerId(value)),
+    "playerId",
   ),
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
 const boardLayoutSchema = createManifestStringLiteralSchema(
   literals.boardLayouts,
+  "boardLayout",
 );
 const setupOptionIdSchema = createManifestStringLiteralSchema(
   literals.setupOptionIds,
+  "setupOptionId",
 );
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
 const sharedZoneIdSchema = createManifestStringLiteralSchema(
   literals.sharedZoneIds,
+  "sharedZoneId",
 );
 const playerZoneIdSchema = createManifestStringLiteralSchema(
   literals.playerZoneIds,
+  "playerZoneId",
 );
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
 const resourceIdSchema = createManifestStringLiteralSchema(
   literals.resourceIds,
+  "resourceId",
 );
 const pieceTypeIdSchema = createManifestStringLiteralSchema(
   literals.pieceTypeIds,
+  "pieceTypeId",
 );
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
+  "boardTypeId",
 );
 const boardBaseIdSchema = createManifestStringLiteralSchema(
   literals.boardBaseIds,
+  "boardBaseId",
 );
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
 const relationTypeIdSchema = createManifestStringLiteralSchema(
   literals.relationTypeIds,
+  "relationTypeId",
 );
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
 const edgeTypeIdSchema = createManifestStringLiteralSchema(
   literals.edgeTypeIds,
+  "edgeTypeId",
 );
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
 const vertexTypeIdSchema = createManifestStringLiteralSchema(
   literals.vertexTypeIds,
+  "vertexTypeId",
 );
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
 const spaceTypeIdSchema = createManifestStringLiteralSchema(
   literals.spaceTypeIds,
+  "spaceTypeId",
 );
 
 export const ids = {
@@ -159,9 +213,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: assumeManifestSchema<CardId>(cardIdSchema),
-  deckId: assumeManifestSchema<DeckId>(deckIdSchema),
-  handId: assumeManifestSchema<HandId>(handIdSchema),
+  cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),
+  deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),
+  handId: assumeManifestSchema<HandId, "handId">(handIdSchema),
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -214,17 +268,11 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  claimMarker: "claimMarker",
-  landmark: "landmark",
-  scout: "scout",
-  shortcut: "shortcut",
-  surveyGrant: "surveyGrant",
+
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  charterDeck: "charter-deck",
-  charterHand: "charter-hand",
-  charterPlayed: "charter-played",
+
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -484,11 +532,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -543,11 +587,10 @@ export type SharedZoneRecord<T> = Record<SharedZoneId, T>;
 export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
 export type ComponentIdsBySharedZoneId = {
-  "charter-deck": ComponentId[];
-  "charter-played": ComponentId[];
+
 };
 export type ComponentIdsByPlayerZoneId = {
-  "charter-hand": PerPlayer<ComponentId[]>;
+
 };
 export type SetupOptionChoice = {
   id: string;
@@ -567,70 +610,12 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {} as const;
-export const setupProfilesById = {
-  "charter-verification": {
-    id: "charter-verification",
-    name: "Charter verification",
-    description:
-      "Reducer-test profile that deals charter cards to the first player for browser interaction verification.",
-    optionValues: null,
-  },
-  standard: {
-    id: "standard",
-    name: "Standard",
-    description: "Standard Frontier Trails setup",
-    optionValues: null,
-  },
-  "terminal-regression": {
-    id: "terminal-regression",
-    name: "Terminal regression",
-    description:
-      "Reducer-test profile that starts with a latched winner pending the next end-turn boundary.",
-    optionValues: null,
-  },
+export const setupChoiceIdsByOptionId = {
+
 } as const;
+export const setupProfilesById = {} as const;
 
-export type CharterCardsCardProperties = {
-  cardType: "scout" | "shortcut" | "surveyGrant" | "claimMarker" | "landmark";
-};
 
-export const CharterCardsCardPropertiesSchema = z.object({
-  cardType: z.enum([
-    "scout",
-    "shortcut",
-    "surveyGrant",
-    "claimMarker",
-    "landmark",
-  ]),
-});
-
-export type CharterCardsCardId =
-  | "scout-1"
-  | "scout-2"
-  | "scout-3"
-  | "scout-4"
-  | "scout-5"
-  | "scout-6"
-  | "scout-7"
-  | "scout-8"
-  | "scout-9"
-  | "scout-10"
-  | "scout-11"
-  | "scout-12"
-  | "scout-13"
-  | "scout-14"
-  | "shortcut-1"
-  | "shortcut-2"
-  | "surveyGrant-1"
-  | "surveyGrant-2"
-  | "claimMarker-1"
-  | "claimMarker-2"
-  | "landmark-1"
-  | "landmark-2"
-  | "landmark-3"
-  | "landmark-4"
-  | "landmark-5";
 
 export type FrontierBoardFields = RuntimeRecord;
 
@@ -640,29 +625,21 @@ export type FrontierSpaceFields = RuntimeRecord;
 
 export const FrontierSpaceFieldsSchema = z.record(z.string(), z.unknown());
 
-export type FrontierEdgeFields = {
-  relayIndex?: number;
-};
+export type FrontierEdgeFields = RuntimeRecord;
 
-export const FrontierEdgeFieldsSchema = z.object({
-  relayIndex: z.number().int().optional(),
-});
+export const FrontierEdgeFieldsSchema = z.record(z.string(), z.unknown());
 
 export type FrontierVertexFields = RuntimeRecord;
 
 export const FrontierVertexFieldsSchema = z.record(z.string(), z.unknown());
 
+export type BanditsPieceFields = RuntimeRecord;
+
+export const BanditsPieceFieldsSchema = z.record(z.string(), z.unknown());
+
 export type CampPieceFields = RuntimeRecord;
 
 export const CampPieceFieldsSchema = z.record(z.string(), z.unknown());
-
-export type StormPieceFields = RuntimeRecord;
-
-export const StormPieceFieldsSchema = z.record(z.string(), z.unknown());
-
-export type TownPieceFields = RuntimeRecord;
-
-export const TownPieceFieldsSchema = z.record(z.string(), z.unknown());
 
 export type TrailPieceFields = RuntimeRecord;
 
@@ -673,27 +650,27 @@ export type D6DieFields = RuntimeRecord;
 export const D6DieFieldsSchema = z.record(z.string(), z.unknown());
 
 export type BoardFieldsByBoardId = {
-  frontier: FrontierBoardFields;
+  "frontier": FrontierBoardFields;
 };
 
 export type BoardSpaceFieldsByBoardId = {
-  frontier: FrontierSpaceFields;
+  "frontier": FrontierSpaceFields;
 };
 
 export type BoardRelationFieldsByBoardId = {
-  frontier: RuntimeRecord;
+  "frontier": RuntimeRecord;
 };
 
 export type BoardContainerFieldsByBoardId = {
-  frontier: RuntimeRecord;
+  "frontier": RuntimeRecord;
 };
 
 export type HexEdgeFieldsByBoardId = {
-  frontier: FrontierEdgeFields;
+  "frontier": FrontierEdgeFields;
 };
 
 export type HexVertexFieldsByBoardId = {
-  frontier: FrontierVertexFields;
+  "frontier": FrontierVertexFields;
 };
 
 export type SquareEdgeFieldsByBoardId = Record<string, never>;
@@ -701,25 +678,24 @@ export type SquareEdgeFieldsByBoardId = Record<string, never>;
 export type SquareVertexFieldsByBoardId = Record<string, never>;
 
 export type TiledEdgeFieldsByBoardId = {
-  frontier: FrontierEdgeFields;
+  "frontier": FrontierEdgeFields;
 };
 
 export type TiledVertexFieldsByBoardId = {
-  frontier: FrontierVertexFields;
+  "frontier": FrontierVertexFields;
 };
 
 export type PieceFieldsByTypeId = {
-  camp: CampPieceFields;
-  storm: StormPieceFields;
-  town: TownPieceFields;
-  trail: TrailPieceFields;
+  "bandits": BanditsPieceFields;
+  "camp": CampPieceFields;
+  "trail": TrailPieceFields;
 };
 
 export type DieFieldsByTypeId = {
-  d6: D6DieFields;
+  "d6": D6DieFields;
 };
 
-export type CardProperties = CharterCardsCardProperties;
+export type CardProperties = RuntimeRecord;
 
 export type CardStateRecord<
   CardIdValue extends CardId = CardId,
@@ -733,158 +709,7 @@ export type CardStateRecord<
   properties: Properties;
 };
 
-export type CardStateById = {
-  "claimMarker-1": CardStateRecord<
-    "claimMarker-1",
-    "charter-cards",
-    "claimMarker",
-    CharterCardsCardProperties
-  >;
-  "claimMarker-2": CardStateRecord<
-    "claimMarker-2",
-    "charter-cards",
-    "claimMarker",
-    CharterCardsCardProperties
-  >;
-  "landmark-1": CardStateRecord<
-    "landmark-1",
-    "charter-cards",
-    "landmark",
-    CharterCardsCardProperties
-  >;
-  "landmark-2": CardStateRecord<
-    "landmark-2",
-    "charter-cards",
-    "landmark",
-    CharterCardsCardProperties
-  >;
-  "landmark-3": CardStateRecord<
-    "landmark-3",
-    "charter-cards",
-    "landmark",
-    CharterCardsCardProperties
-  >;
-  "landmark-4": CardStateRecord<
-    "landmark-4",
-    "charter-cards",
-    "landmark",
-    CharterCardsCardProperties
-  >;
-  "landmark-5": CardStateRecord<
-    "landmark-5",
-    "charter-cards",
-    "landmark",
-    CharterCardsCardProperties
-  >;
-  "scout-1": CardStateRecord<
-    "scout-1",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-10": CardStateRecord<
-    "scout-10",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-11": CardStateRecord<
-    "scout-11",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-12": CardStateRecord<
-    "scout-12",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-13": CardStateRecord<
-    "scout-13",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-14": CardStateRecord<
-    "scout-14",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-2": CardStateRecord<
-    "scout-2",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-3": CardStateRecord<
-    "scout-3",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-4": CardStateRecord<
-    "scout-4",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-5": CardStateRecord<
-    "scout-5",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-6": CardStateRecord<
-    "scout-6",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-7": CardStateRecord<
-    "scout-7",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-8": CardStateRecord<
-    "scout-8",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "scout-9": CardStateRecord<
-    "scout-9",
-    "charter-cards",
-    "scout",
-    CharterCardsCardProperties
-  >;
-  "shortcut-1": CardStateRecord<
-    "shortcut-1",
-    "charter-cards",
-    "shortcut",
-    CharterCardsCardProperties
-  >;
-  "shortcut-2": CardStateRecord<
-    "shortcut-2",
-    "charter-cards",
-    "shortcut",
-    CharterCardsCardProperties
-  >;
-  "surveyGrant-1": CardStateRecord<
-    "surveyGrant-1",
-    "charter-cards",
-    "surveyGrant",
-    CharterCardsCardProperties
-  >;
-  "surveyGrant-2": CardStateRecord<
-    "surveyGrant-2",
-    "charter-cards",
-    "surveyGrant",
-    CharterCardsCardProperties
-  >;
-};
+export type CardStateById = Record<string, never>;
 
 export type PieceStateRecord<
   PieceIdValue extends PieceId = PieceId,
@@ -907,50 +732,21 @@ export type DieStateRecord<
 };
 
 export type PieceStateById = {
+  "bandits": PieceStateRecord<"bandits", "bandits", BanditsPieceFields>;
   "camp-p1-1": PieceStateRecord<"camp-p1-1", "camp", CampPieceFields>;
   "camp-p1-2": PieceStateRecord<"camp-p1-2", "camp", CampPieceFields>;
   "camp-p1-3": PieceStateRecord<"camp-p1-3", "camp", CampPieceFields>;
   "camp-p1-4": PieceStateRecord<"camp-p1-4", "camp", CampPieceFields>;
-  "camp-p1-5": PieceStateRecord<"camp-p1-5", "camp", CampPieceFields>;
   "camp-p2-1": PieceStateRecord<"camp-p2-1", "camp", CampPieceFields>;
   "camp-p2-2": PieceStateRecord<"camp-p2-2", "camp", CampPieceFields>;
   "camp-p2-3": PieceStateRecord<"camp-p2-3", "camp", CampPieceFields>;
   "camp-p2-4": PieceStateRecord<"camp-p2-4", "camp", CampPieceFields>;
-  "camp-p2-5": PieceStateRecord<"camp-p2-5", "camp", CampPieceFields>;
   "camp-p3-1": PieceStateRecord<"camp-p3-1", "camp", CampPieceFields>;
   "camp-p3-2": PieceStateRecord<"camp-p3-2", "camp", CampPieceFields>;
   "camp-p3-3": PieceStateRecord<"camp-p3-3", "camp", CampPieceFields>;
   "camp-p3-4": PieceStateRecord<"camp-p3-4", "camp", CampPieceFields>;
-  "camp-p3-5": PieceStateRecord<"camp-p3-5", "camp", CampPieceFields>;
-  "camp-p4-1": PieceStateRecord<"camp-p4-1", "camp", CampPieceFields>;
-  "camp-p4-2": PieceStateRecord<"camp-p4-2", "camp", CampPieceFields>;
-  "camp-p4-3": PieceStateRecord<"camp-p4-3", "camp", CampPieceFields>;
-  "camp-p4-4": PieceStateRecord<"camp-p4-4", "camp", CampPieceFields>;
-  "camp-p4-5": PieceStateRecord<"camp-p4-5", "camp", CampPieceFields>;
-  storm: PieceStateRecord<"storm", "storm", StormPieceFields>;
-  "town-p1-1": PieceStateRecord<"town-p1-1", "town", TownPieceFields>;
-  "town-p1-2": PieceStateRecord<"town-p1-2", "town", TownPieceFields>;
-  "town-p1-3": PieceStateRecord<"town-p1-3", "town", TownPieceFields>;
-  "town-p1-4": PieceStateRecord<"town-p1-4", "town", TownPieceFields>;
-  "town-p2-1": PieceStateRecord<"town-p2-1", "town", TownPieceFields>;
-  "town-p2-2": PieceStateRecord<"town-p2-2", "town", TownPieceFields>;
-  "town-p2-3": PieceStateRecord<"town-p2-3", "town", TownPieceFields>;
-  "town-p2-4": PieceStateRecord<"town-p2-4", "town", TownPieceFields>;
-  "town-p3-1": PieceStateRecord<"town-p3-1", "town", TownPieceFields>;
-  "town-p3-2": PieceStateRecord<"town-p3-2", "town", TownPieceFields>;
-  "town-p3-3": PieceStateRecord<"town-p3-3", "town", TownPieceFields>;
-  "town-p3-4": PieceStateRecord<"town-p3-4", "town", TownPieceFields>;
-  "town-p4-1": PieceStateRecord<"town-p4-1", "town", TownPieceFields>;
-  "town-p4-2": PieceStateRecord<"town-p4-2", "town", TownPieceFields>;
-  "town-p4-3": PieceStateRecord<"town-p4-3", "town", TownPieceFields>;
-  "town-p4-4": PieceStateRecord<"town-p4-4", "town", TownPieceFields>;
   "trail-p1-1": PieceStateRecord<"trail-p1-1", "trail", TrailPieceFields>;
   "trail-p1-10": PieceStateRecord<"trail-p1-10", "trail", TrailPieceFields>;
-  "trail-p1-11": PieceStateRecord<"trail-p1-11", "trail", TrailPieceFields>;
-  "trail-p1-12": PieceStateRecord<"trail-p1-12", "trail", TrailPieceFields>;
-  "trail-p1-13": PieceStateRecord<"trail-p1-13", "trail", TrailPieceFields>;
-  "trail-p1-14": PieceStateRecord<"trail-p1-14", "trail", TrailPieceFields>;
-  "trail-p1-15": PieceStateRecord<"trail-p1-15", "trail", TrailPieceFields>;
   "trail-p1-2": PieceStateRecord<"trail-p1-2", "trail", TrailPieceFields>;
   "trail-p1-3": PieceStateRecord<"trail-p1-3", "trail", TrailPieceFields>;
   "trail-p1-4": PieceStateRecord<"trail-p1-4", "trail", TrailPieceFields>;
@@ -961,11 +757,6 @@ export type PieceStateById = {
   "trail-p1-9": PieceStateRecord<"trail-p1-9", "trail", TrailPieceFields>;
   "trail-p2-1": PieceStateRecord<"trail-p2-1", "trail", TrailPieceFields>;
   "trail-p2-10": PieceStateRecord<"trail-p2-10", "trail", TrailPieceFields>;
-  "trail-p2-11": PieceStateRecord<"trail-p2-11", "trail", TrailPieceFields>;
-  "trail-p2-12": PieceStateRecord<"trail-p2-12", "trail", TrailPieceFields>;
-  "trail-p2-13": PieceStateRecord<"trail-p2-13", "trail", TrailPieceFields>;
-  "trail-p2-14": PieceStateRecord<"trail-p2-14", "trail", TrailPieceFields>;
-  "trail-p2-15": PieceStateRecord<"trail-p2-15", "trail", TrailPieceFields>;
   "trail-p2-2": PieceStateRecord<"trail-p2-2", "trail", TrailPieceFields>;
   "trail-p2-3": PieceStateRecord<"trail-p2-3", "trail", TrailPieceFields>;
   "trail-p2-4": PieceStateRecord<"trail-p2-4", "trail", TrailPieceFields>;
@@ -976,11 +767,6 @@ export type PieceStateById = {
   "trail-p2-9": PieceStateRecord<"trail-p2-9", "trail", TrailPieceFields>;
   "trail-p3-1": PieceStateRecord<"trail-p3-1", "trail", TrailPieceFields>;
   "trail-p3-10": PieceStateRecord<"trail-p3-10", "trail", TrailPieceFields>;
-  "trail-p3-11": PieceStateRecord<"trail-p3-11", "trail", TrailPieceFields>;
-  "trail-p3-12": PieceStateRecord<"trail-p3-12", "trail", TrailPieceFields>;
-  "trail-p3-13": PieceStateRecord<"trail-p3-13", "trail", TrailPieceFields>;
-  "trail-p3-14": PieceStateRecord<"trail-p3-14", "trail", TrailPieceFields>;
-  "trail-p3-15": PieceStateRecord<"trail-p3-15", "trail", TrailPieceFields>;
   "trail-p3-2": PieceStateRecord<"trail-p3-2", "trail", TrailPieceFields>;
   "trail-p3-3": PieceStateRecord<"trail-p3-3", "trail", TrailPieceFields>;
   "trail-p3-4": PieceStateRecord<"trail-p3-4", "trail", TrailPieceFields>;
@@ -989,113 +775,17 @@ export type PieceStateById = {
   "trail-p3-7": PieceStateRecord<"trail-p3-7", "trail", TrailPieceFields>;
   "trail-p3-8": PieceStateRecord<"trail-p3-8", "trail", TrailPieceFields>;
   "trail-p3-9": PieceStateRecord<"trail-p3-9", "trail", TrailPieceFields>;
-  "trail-p4-1": PieceStateRecord<"trail-p4-1", "trail", TrailPieceFields>;
-  "trail-p4-10": PieceStateRecord<"trail-p4-10", "trail", TrailPieceFields>;
-  "trail-p4-11": PieceStateRecord<"trail-p4-11", "trail", TrailPieceFields>;
-  "trail-p4-12": PieceStateRecord<"trail-p4-12", "trail", TrailPieceFields>;
-  "trail-p4-13": PieceStateRecord<"trail-p4-13", "trail", TrailPieceFields>;
-  "trail-p4-14": PieceStateRecord<"trail-p4-14", "trail", TrailPieceFields>;
-  "trail-p4-15": PieceStateRecord<"trail-p4-15", "trail", TrailPieceFields>;
-  "trail-p4-2": PieceStateRecord<"trail-p4-2", "trail", TrailPieceFields>;
-  "trail-p4-3": PieceStateRecord<"trail-p4-3", "trail", TrailPieceFields>;
-  "trail-p4-4": PieceStateRecord<"trail-p4-4", "trail", TrailPieceFields>;
-  "trail-p4-5": PieceStateRecord<"trail-p4-5", "trail", TrailPieceFields>;
-  "trail-p4-6": PieceStateRecord<"trail-p4-6", "trail", TrailPieceFields>;
-  "trail-p4-7": PieceStateRecord<"trail-p4-7", "trail", TrailPieceFields>;
-  "trail-p4-8": PieceStateRecord<"trail-p4-8", "trail", TrailPieceFields>;
-  "trail-p4-9": PieceStateRecord<"trail-p4-9", "trail", TrailPieceFields>;
 };
 
 export type DieStateById = {
-  "die-1": DieStateRecord<"die-1", "d6", D6DieFields>;
-  "die-2": DieStateRecord<"die-2", "d6", D6DieFields>;
+  "stormtrail-die-1": DieStateRecord<"stormtrail-die-1", "d6", D6DieFields>;
+  "stormtrail-die-2": DieStateRecord<"stormtrail-die-2", "d6", D6DieFields>;
 };
 export type CardIdsBySharedZoneId = {
-  "charter-deck": Array<
-    | "claimMarker-1"
-    | "claimMarker-2"
-    | "landmark-1"
-    | "landmark-2"
-    | "landmark-3"
-    | "landmark-4"
-    | "landmark-5"
-    | "scout-1"
-    | "scout-10"
-    | "scout-11"
-    | "scout-12"
-    | "scout-13"
-    | "scout-14"
-    | "scout-2"
-    | "scout-3"
-    | "scout-4"
-    | "scout-5"
-    | "scout-6"
-    | "scout-7"
-    | "scout-8"
-    | "scout-9"
-    | "shortcut-1"
-    | "shortcut-2"
-    | "surveyGrant-1"
-    | "surveyGrant-2"
-  >;
-  "charter-played": Array<
-    | "claimMarker-1"
-    | "claimMarker-2"
-    | "landmark-1"
-    | "landmark-2"
-    | "landmark-3"
-    | "landmark-4"
-    | "landmark-5"
-    | "scout-1"
-    | "scout-10"
-    | "scout-11"
-    | "scout-12"
-    | "scout-13"
-    | "scout-14"
-    | "scout-2"
-    | "scout-3"
-    | "scout-4"
-    | "scout-5"
-    | "scout-6"
-    | "scout-7"
-    | "scout-8"
-    | "scout-9"
-    | "shortcut-1"
-    | "shortcut-2"
-    | "surveyGrant-1"
-    | "surveyGrant-2"
-  >;
+
 };
 export type CardIdsByPlayerZoneId = {
-  "charter-hand": PerPlayer<
-    Array<
-      | "claimMarker-1"
-      | "claimMarker-2"
-      | "landmark-1"
-      | "landmark-2"
-      | "landmark-3"
-      | "landmark-4"
-      | "landmark-5"
-      | "scout-1"
-      | "scout-10"
-      | "scout-11"
-      | "scout-12"
-      | "scout-13"
-      | "scout-14"
-      | "scout-2"
-      | "scout-3"
-      | "scout-4"
-      | "scout-5"
-      | "scout-6"
-      | "scout-7"
-      | "scout-8"
-      | "scout-9"
-      | "shortcut-1"
-      | "shortcut-2"
-      | "surveyGrant-1"
-      | "surveyGrant-2"
-    >
-  >;
+
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -1167,14 +857,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -1251,14 +941,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -1283,14 +973,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -1312,297 +1002,25 @@ export type TiledBoardStateRecord =
   | SquareBoardStateRecord;
 
 export type BoardStateById = {
-  frontier: HexBoardStateRecord<
-    "frontier",
-    | "h-0-0"
-    | "h-1-0"
-    | "h-1-1"
-    | "h-1-2"
-    | "h-1-3"
-    | "h-1-4"
-    | "h-1-5"
-    | "h-2-0"
-    | "h-2-1"
-    | "h-2-10"
-    | "h-2-11"
-    | "h-2-2"
-    | "h-2-3"
-    | "h-2-4"
-    | "h-2-5"
-    | "h-2-6"
-    | "h-2-7"
-    | "h-2-8"
-    | "h-2-9"
-    | "o-0"
-    | "o-1"
-    | "o-10"
-    | "o-11"
-    | "o-12"
-    | "o-13"
-    | "o-14"
-    | "o-15"
-    | "o-16"
-    | "o-17"
-    | "o-2"
-    | "o-3"
-    | "o-4"
-    | "o-5"
-    | "o-6"
-    | "o-7"
-    | "o-8"
-    | "o-9",
-    | "hex-edge:-1,-1,2::-2,-2,4"
-    | "hex-edge:-1,-1,2::-2,1,1"
-    | "hex-edge:-1,-1,2::1,-2,1"
-    | "hex-edge:-1,-10,11::-2,-8,10"
-    | "hex-edge:-1,-10,11::1,-11,10"
-    | "hex-edge:-1,-4,5::-2,-2,4"
-    | "hex-edge:-1,-4,5::-2,-5,7"
-    | "hex-edge:-1,-4,5::1,-5,4"
-    | "hex-edge:-1,-7,8::-2,-5,7"
-    | "hex-edge:-1,-7,8::-2,-8,10"
-    | "hex-edge:-1,-7,8::1,-8,7"
-    | "hex-edge:-1,11,-10::-2,10,-8"
-    | "hex-edge:-1,11,-10::1,10,-11"
-    | "hex-edge:-1,2,-1::-2,1,1"
-    | "hex-edge:-1,2,-1::-2,4,-2"
-    | "hex-edge:-1,2,-1::1,1,-2"
-    | "hex-edge:-1,5,-4::-2,4,-2"
-    | "hex-edge:-1,5,-4::-2,7,-5"
-    | "hex-edge:-1,5,-4::1,4,-5"
-    | "hex-edge:-1,8,-7::-2,10,-8"
-    | "hex-edge:-1,8,-7::-2,7,-5"
-    | "hex-edge:-1,8,-7::1,7,-8"
-    | "hex-edge:-10,-1,11::-11,1,10"
-    | "hex-edge:-10,-1,11::-8,-2,10"
-    | "hex-edge:-10,11,-1::-11,10,1"
-    | "hex-edge:-10,11,-1::-8,10,-2"
-    | "hex-edge:-10,2,8::-11,1,10"
-    | "hex-edge:-10,2,8::-11,4,7"
-    | "hex-edge:-10,2,8::-8,1,7"
-    | "hex-edge:-10,5,5::-11,4,7"
-    | "hex-edge:-10,5,5::-11,7,4"
-    | "hex-edge:-10,5,5::-8,4,4"
-    | "hex-edge:-10,8,2::-11,10,1"
-    | "hex-edge:-10,8,2::-11,7,4"
-    | "hex-edge:-10,8,2::-8,7,1"
-    | "hex-edge:-2,-2,4::-4,-1,5"
-    | "hex-edge:-2,-5,7::-4,-4,8"
-    | "hex-edge:-2,-8,10::-4,-7,11"
-    | "hex-edge:-2,1,1::-4,2,2"
-    | "hex-edge:-2,10,-8::-4,11,-7"
-    | "hex-edge:-2,4,-2::-4,5,-1"
-    | "hex-edge:-2,7,-5::-4,8,-4"
-    | "hex-edge:-4,-1,5::-5,-2,7"
-    | "hex-edge:-4,-1,5::-5,1,4"
-    | "hex-edge:-4,-4,8::-5,-2,7"
-    | "hex-edge:-4,-4,8::-5,-5,10"
-    | "hex-edge:-4,-7,11::-5,-5,10"
-    | "hex-edge:-4,11,-7::-5,10,-5"
-    | "hex-edge:-4,2,2::-5,1,4"
-    | "hex-edge:-4,2,2::-5,4,1"
-    | "hex-edge:-4,5,-1::-5,4,1"
-    | "hex-edge:-4,5,-1::-5,7,-2"
-    | "hex-edge:-4,8,-4::-5,10,-5"
-    | "hex-edge:-4,8,-4::-5,7,-2"
-    | "hex-edge:-5,-2,7::-7,-1,8"
-    | "hex-edge:-5,-5,10::-7,-4,11"
-    | "hex-edge:-5,1,4::-7,2,5"
-    | "hex-edge:-5,10,-5::-7,11,-4"
-    | "hex-edge:-5,4,1::-7,5,2"
-    | "hex-edge:-5,7,-2::-7,8,-1"
-    | "hex-edge:-7,-1,8::-8,-2,10"
-    | "hex-edge:-7,-1,8::-8,1,7"
-    | "hex-edge:-7,-4,11::-8,-2,10"
-    | "hex-edge:-7,11,-4::-8,10,-2"
-    | "hex-edge:-7,2,5::-8,1,7"
-    | "hex-edge:-7,2,5::-8,4,4"
-    | "hex-edge:-7,5,2::-8,4,4"
-    | "hex-edge:-7,5,2::-8,7,1"
-    | "hex-edge:-7,8,-1::-8,10,-2"
-    | "hex-edge:-7,8,-1::-8,7,1"
-    | "hex-edge:1,-11,10::2,-10,8"
-    | "hex-edge:1,-2,1::2,-1,-1"
-    | "hex-edge:1,-2,1::2,-4,2"
-    | "hex-edge:1,-5,4::2,-4,2"
-    | "hex-edge:1,-5,4::2,-7,5"
-    | "hex-edge:1,-8,7::2,-10,8"
-    | "hex-edge:1,-8,7::2,-7,5"
-    | "hex-edge:1,1,-2::2,-1,-1"
-    | "hex-edge:1,1,-2::2,2,-4"
-    | "hex-edge:1,10,-11::2,8,-10"
-    | "hex-edge:1,4,-5::2,2,-4"
-    | "hex-edge:1,4,-5::2,5,-7"
-    | "hex-edge:1,7,-8::2,5,-7"
-    | "hex-edge:1,7,-8::2,8,-10"
-    | "hex-edge:10,-11,1::11,-10,-1"
-    | "hex-edge:10,-11,1::8,-10,2"
-    | "hex-edge:10,-2,-8::11,-1,-10"
-    | "hex-edge:10,-2,-8::11,-4,-7"
-    | "hex-edge:10,-2,-8::8,-1,-7"
-    | "hex-edge:10,-5,-5::11,-4,-7"
-    | "hex-edge:10,-5,-5::11,-7,-4"
-    | "hex-edge:10,-5,-5::8,-4,-4"
-    | "hex-edge:10,-8,-2::11,-10,-1"
-    | "hex-edge:10,-8,-2::11,-7,-4"
-    | "hex-edge:10,-8,-2::8,-7,-1"
-    | "hex-edge:10,1,-11::11,-1,-10"
-    | "hex-edge:10,1,-11::8,2,-10"
-    | "hex-edge:2,-1,-1::4,-2,-2"
-    | "hex-edge:2,-10,8::4,-11,7"
-    | "hex-edge:2,-4,2::4,-5,1"
-    | "hex-edge:2,-7,5::4,-8,4"
-    | "hex-edge:2,2,-4::4,1,-5"
-    | "hex-edge:2,5,-7::4,4,-8"
-    | "hex-edge:2,8,-10::4,7,-11"
-    | "hex-edge:4,-11,7::5,-10,5"
-    | "hex-edge:4,-2,-2::5,-1,-4"
-    | "hex-edge:4,-2,-2::5,-4,-1"
-    | "hex-edge:4,-5,1::5,-4,-1"
-    | "hex-edge:4,-5,1::5,-7,2"
-    | "hex-edge:4,-8,4::5,-10,5"
-    | "hex-edge:4,-8,4::5,-7,2"
-    | "hex-edge:4,1,-5::5,-1,-4"
-    | "hex-edge:4,1,-5::5,2,-7"
-    | "hex-edge:4,4,-8::5,2,-7"
-    | "hex-edge:4,4,-8::5,5,-10"
-    | "hex-edge:4,7,-11::5,5,-10"
-    | "hex-edge:5,-1,-4::7,-2,-5"
-    | "hex-edge:5,-10,5::7,-11,4"
-    | "hex-edge:5,-4,-1::7,-5,-2"
-    | "hex-edge:5,-7,2::7,-8,1"
-    | "hex-edge:5,2,-7::7,1,-8"
-    | "hex-edge:5,5,-10::7,4,-11"
-    | "hex-edge:7,-11,4::8,-10,2"
-    | "hex-edge:7,-2,-5::8,-1,-7"
-    | "hex-edge:7,-2,-5::8,-4,-4"
-    | "hex-edge:7,-5,-2::8,-4,-4"
-    | "hex-edge:7,-5,-2::8,-7,-1"
-    | "hex-edge:7,-8,1::8,-10,2"
-    | "hex-edge:7,-8,1::8,-7,-1"
-    | "hex-edge:7,1,-8::8,-1,-7"
-    | "hex-edge:7,1,-8::8,2,-10"
-    | "hex-edge:7,4,-11::8,2,-10",
-    | "hex-vertex:-1,-1,2"
-    | "hex-vertex:-1,-10,11"
-    | "hex-vertex:-1,-4,5"
-    | "hex-vertex:-1,-7,8"
-    | "hex-vertex:-1,11,-10"
-    | "hex-vertex:-1,2,-1"
-    | "hex-vertex:-1,5,-4"
-    | "hex-vertex:-1,8,-7"
-    | "hex-vertex:-10,-1,11"
-    | "hex-vertex:-10,11,-1"
-    | "hex-vertex:-10,2,8"
-    | "hex-vertex:-10,5,5"
-    | "hex-vertex:-10,8,2"
-    | "hex-vertex:-11,1,10"
-    | "hex-vertex:-11,10,1"
-    | "hex-vertex:-11,4,7"
-    | "hex-vertex:-11,7,4"
-    | "hex-vertex:-2,-2,4"
-    | "hex-vertex:-2,-5,7"
-    | "hex-vertex:-2,-8,10"
-    | "hex-vertex:-2,1,1"
-    | "hex-vertex:-2,10,-8"
-    | "hex-vertex:-2,4,-2"
-    | "hex-vertex:-2,7,-5"
-    | "hex-vertex:-4,-1,5"
-    | "hex-vertex:-4,-4,8"
-    | "hex-vertex:-4,-7,11"
-    | "hex-vertex:-4,11,-7"
-    | "hex-vertex:-4,2,2"
-    | "hex-vertex:-4,5,-1"
-    | "hex-vertex:-4,8,-4"
-    | "hex-vertex:-5,-2,7"
-    | "hex-vertex:-5,-5,10"
-    | "hex-vertex:-5,1,4"
-    | "hex-vertex:-5,10,-5"
-    | "hex-vertex:-5,4,1"
-    | "hex-vertex:-5,7,-2"
-    | "hex-vertex:-7,-1,8"
-    | "hex-vertex:-7,-4,11"
-    | "hex-vertex:-7,11,-4"
-    | "hex-vertex:-7,2,5"
-    | "hex-vertex:-7,5,2"
-    | "hex-vertex:-7,8,-1"
-    | "hex-vertex:-8,-2,10"
-    | "hex-vertex:-8,1,7"
-    | "hex-vertex:-8,10,-2"
-    | "hex-vertex:-8,4,4"
-    | "hex-vertex:-8,7,1"
-    | "hex-vertex:1,-11,10"
-    | "hex-vertex:1,-2,1"
-    | "hex-vertex:1,-5,4"
-    | "hex-vertex:1,-8,7"
-    | "hex-vertex:1,1,-2"
-    | "hex-vertex:1,10,-11"
-    | "hex-vertex:1,4,-5"
-    | "hex-vertex:1,7,-8"
-    | "hex-vertex:10,-11,1"
-    | "hex-vertex:10,-2,-8"
-    | "hex-vertex:10,-5,-5"
-    | "hex-vertex:10,-8,-2"
-    | "hex-vertex:10,1,-11"
-    | "hex-vertex:11,-1,-10"
-    | "hex-vertex:11,-10,-1"
-    | "hex-vertex:11,-4,-7"
-    | "hex-vertex:11,-7,-4"
-    | "hex-vertex:2,-1,-1"
-    | "hex-vertex:2,-10,8"
-    | "hex-vertex:2,-4,2"
-    | "hex-vertex:2,-7,5"
-    | "hex-vertex:2,2,-4"
-    | "hex-vertex:2,5,-7"
-    | "hex-vertex:2,8,-10"
-    | "hex-vertex:4,-11,7"
-    | "hex-vertex:4,-2,-2"
-    | "hex-vertex:4,-5,1"
-    | "hex-vertex:4,-8,4"
-    | "hex-vertex:4,1,-5"
-    | "hex-vertex:4,4,-8"
-    | "hex-vertex:4,7,-11"
-    | "hex-vertex:5,-1,-4"
-    | "hex-vertex:5,-10,5"
-    | "hex-vertex:5,-4,-1"
-    | "hex-vertex:5,-7,2"
-    | "hex-vertex:5,2,-7"
-    | "hex-vertex:5,5,-10"
-    | "hex-vertex:7,-11,4"
-    | "hex-vertex:7,-2,-5"
-    | "hex-vertex:7,-5,-2"
-    | "hex-vertex:7,-8,1"
-    | "hex-vertex:7,1,-8"
-    | "hex-vertex:7,4,-11"
-    | "hex-vertex:8,-1,-7"
-    | "hex-vertex:8,-10,2"
-    | "hex-vertex:8,-4,-4"
-    | "hex-vertex:8,-7,-1"
-    | "hex-vertex:8,2,-10",
-    FrontierBoardFields,
-    FrontierSpaceFields,
-    FrontierEdgeFields,
-    FrontierVertexFields
-  >;
+  "frontier": HexBoardStateRecord<"frontier", "centralBarrens" | "northEastClay" | "northForest" | "northWestFields" | "southEastFields" | "southForest" | "southWestClay", "hex-edge:-1,-1,2::-2,-2,4" | "hex-edge:-1,-1,2::-2,1,1" | "hex-edge:-1,-1,2::1,-2,1" | "hex-edge:-1,-4,5::-2,-2,4" | "hex-edge:-1,-4,5::1,-5,4" | "hex-edge:-1,2,-1::-2,1,1" | "hex-edge:-1,2,-1::-2,4,-2" | "hex-edge:-1,2,-1::1,1,-2" | "hex-edge:-1,5,-4::-2,4,-2" | "hex-edge:-1,5,-4::1,4,-5" | "hex-edge:-2,-2,4::-4,-1,5" | "hex-edge:-2,1,1::-4,2,2" | "hex-edge:-2,4,-2::-4,5,-1" | "hex-edge:-4,-1,5::-5,1,4" | "hex-edge:-4,2,2::-5,1,4" | "hex-edge:-4,2,2::-5,4,1" | "hex-edge:-4,5,-1::-5,4,1" | "hex-edge:1,-2,1::2,-1,-1" | "hex-edge:1,-2,1::2,-4,2" | "hex-edge:1,-5,4::2,-4,2" | "hex-edge:1,1,-2::2,-1,-1" | "hex-edge:1,1,-2::2,2,-4" | "hex-edge:1,4,-5::2,2,-4" | "hex-edge:2,-1,-1::4,-2,-2" | "hex-edge:2,-4,2::4,-5,1" | "hex-edge:2,2,-4::4,1,-5" | "hex-edge:4,-2,-2::5,-1,-4" | "hex-edge:4,-2,-2::5,-4,-1" | "hex-edge:4,-5,1::5,-4,-1" | "hex-edge:4,1,-5::5,-1,-4", "hex-vertex:-1,-1,2" | "hex-vertex:-1,-4,5" | "hex-vertex:-1,2,-1" | "hex-vertex:-1,5,-4" | "hex-vertex:-2,-2,4" | "hex-vertex:-2,1,1" | "hex-vertex:-2,4,-2" | "hex-vertex:-4,-1,5" | "hex-vertex:-4,2,2" | "hex-vertex:-4,5,-1" | "hex-vertex:-5,1,4" | "hex-vertex:-5,4,1" | "hex-vertex:1,-2,1" | "hex-vertex:1,-5,4" | "hex-vertex:1,1,-2" | "hex-vertex:1,4,-5" | "hex-vertex:2,-1,-1" | "hex-vertex:2,-4,2" | "hex-vertex:2,2,-4" | "hex-vertex:4,-2,-2" | "hex-vertex:4,-5,1" | "hex-vertex:4,1,-5" | "hex-vertex:5,-1,-4" | "hex-vertex:5,-4,-1", FrontierBoardFields, FrontierSpaceFields, FrontierEdgeFields, FrontierVertexFields>;
 };
 
 export type HexBoardStateById = {
-  frontier: BoardStateById["frontier"];
+  "frontier": BoardStateById["frontier"];
 };
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1659,29 +1077,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1691,8 +1106,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1702,10 +1118,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1715,10 +1130,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1728,10 +1142,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1747,19 +1160,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = BoardStateById[BoardId];
 
@@ -1798,32 +1211,19 @@ const cardStateSchema = z.object({
   properties: unknownRecordSchema,
 });
 const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {
-  "charter-cards": CharterCardsCardPropertiesSchema,
+
 };
-function createCardStateSchema<CardIdValue extends CardId>(
-  cardId: CardIdValue,
-): z.ZodType<CardStateById[CardIdValue]> {
-  const cardSetId = literals.cardSetIdByCardId[cardId];
-  const cardType = literals.cardTypeByCardId[cardId];
-  const cardPropertiesSchema =
-    cardPropertiesSchemaByCardSetId[cardSetId + ":" + cardType] ??
-    cardPropertiesSchemaByCardSetId[cardSetId] ??
-    unknownRecordSchema;
-  return assumeManifestSchema<CardStateById[CardIdValue]>(
-    cardStateSchema.extend({
-      id: z.literal(cardId),
-      cardSetId: z.literal(cardSetId),
-      cardType: z.literal(cardType),
-      properties: cardPropertiesSchema,
-    }),
-  );
-}
-const cardStateByIdSchema = z.object(
-  Object.fromEntries(
-    literals.cardIds.map((cardId) => [cardId, createCardStateSchema(cardId)]),
-  ) as Record<CardId, z.ZodType<unknown>>,
-);
+
+const cardStateByIdSchema = z.object({});
 const pieceStateByIdSchema = z.object({
+  "bandits": z.object({
+    componentType: z.string().optional(),
+    id: z.literal("bandits"),
+    pieceTypeId: z.literal("bandits"),
+    pieceName: z.string().nullable().optional(),
+    ownerId: ids.playerId.nullable().optional(),
+    properties: BanditsPieceFieldsSchema,
+  }),
   "camp-p1-1": z.object({
     componentType: z.string().optional(),
     id: z.literal("camp-p1-1"),
@@ -1851,14 +1251,6 @@ const pieceStateByIdSchema = z.object({
   "camp-p1-4": z.object({
     componentType: z.string().optional(),
     id: z.literal("camp-p1-4"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p1-5": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p1-5"),
     pieceTypeId: z.literal("camp"),
     pieceName: z.string().nullable().optional(),
     ownerId: ids.playerId.nullable().optional(),
@@ -1896,14 +1288,6 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: CampPieceFieldsSchema,
   }),
-  "camp-p2-5": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p2-5"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
   "camp-p3-1": z.object({
     componentType: z.string().optional(),
     id: z.literal("camp-p3-1"),
@@ -1936,190 +1320,6 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: CampPieceFieldsSchema,
   }),
-  "camp-p3-5": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p3-5"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p4-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p4-1"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p4-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p4-2"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p4-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p4-3"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p4-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p4-4"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  "camp-p4-5": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("camp-p4-5"),
-    pieceTypeId: z.literal("camp"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: CampPieceFieldsSchema,
-  }),
-  storm: z.object({
-    componentType: z.string().optional(),
-    id: z.literal("storm"),
-    pieceTypeId: z.literal("storm"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: StormPieceFieldsSchema,
-  }),
-  "town-p1-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p1-1"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p1-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p1-2"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p1-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p1-3"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p1-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p1-4"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p2-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p2-1"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p2-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p2-2"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p2-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p2-3"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p2-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p2-4"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p3-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p3-1"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p3-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p3-2"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p3-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p3-3"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p3-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p3-4"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p4-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p4-1"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p4-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p4-2"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p4-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p4-3"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
-  "town-p4-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("town-p4-4"),
-    pieceTypeId: z.literal("town"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TownPieceFieldsSchema,
-  }),
   "trail-p1-1": z.object({
     componentType: z.string().optional(),
     id: z.literal("trail-p1-1"),
@@ -2131,46 +1331,6 @@ const pieceStateByIdSchema = z.object({
   "trail-p1-10": z.object({
     componentType: z.string().optional(),
     id: z.literal("trail-p1-10"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p1-11": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p1-11"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p1-12": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p1-12"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p1-13": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p1-13"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p1-14": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p1-14"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p1-15": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p1-15"),
     pieceTypeId: z.literal("trail"),
     pieceName: z.string().nullable().optional(),
     ownerId: ids.playerId.nullable().optional(),
@@ -2256,46 +1416,6 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: TrailPieceFieldsSchema,
   }),
-  "trail-p2-11": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p2-11"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p2-12": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p2-12"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p2-13": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p2-13"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p2-14": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p2-14"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p2-15": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p2-15"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
   "trail-p2-2": z.object({
     componentType: z.string().optional(),
     id: z.literal("trail-p2-2"),
@@ -2376,46 +1496,6 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: TrailPieceFieldsSchema,
   }),
-  "trail-p3-11": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p3-11"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p3-12": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p3-12"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p3-13": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p3-13"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p3-14": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p3-14"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p3-15": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p3-15"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
   "trail-p3-2": z.object({
     componentType: z.string().optional(),
     id: z.literal("trail-p3-2"),
@@ -2480,131 +1560,11 @@ const pieceStateByIdSchema = z.object({
     ownerId: ids.playerId.nullable().optional(),
     properties: TrailPieceFieldsSchema,
   }),
-  "trail-p4-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-1"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-10": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-10"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-11": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-11"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-12": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-12"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-13": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-13"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-14": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-14"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-15": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-15"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-2"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-3"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-4"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-5": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-5"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-6": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-6"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-7": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-7"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-8": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-8"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
-  "trail-p4-9": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("trail-p4-9"),
-    pieceTypeId: z.literal("trail"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: TrailPieceFieldsSchema,
-  }),
 });
 const dieStateByIdSchema = z.object({
-  "die-1": z.object({
+  "stormtrail-die-1": z.object({
     componentType: z.string().optional(),
-    id: z.literal("die-1"),
+    id: z.literal("stormtrail-die-1"),
     dieTypeId: z.literal("d6"),
     dieName: z.string().nullable().optional(),
     ownerId: ids.playerId.nullable().optional(),
@@ -2612,9 +1572,9 @@ const dieStateByIdSchema = z.object({
     value: z.number().int().nullable().optional(),
     properties: D6DieFieldsSchema,
   }),
-  "die-2": z.object({
+  "stormtrail-die-2": z.object({
     componentType: z.string().optional(),
-    id: z.literal("die-2"),
+    id: z.literal("stormtrail-die-2"),
     dieTypeId: z.literal("d6"),
     dieName: z.string().nullable().optional(),
     ownerId: ids.playerId.nullable().optional(),
@@ -2624,7 +1584,7 @@ const dieStateByIdSchema = z.object({
   }),
 });
 const boardStateByIdSchema = z.object({
-  frontier: z.object({
+  "frontier": z.object({
     id: z.literal("frontier"),
     baseId: z.literal("frontier"),
     layout: z.literal("hex"),
@@ -2681,7 +1641,7 @@ const boardStateByIdSchema = z.object({
   }),
 });
 const hexBoardStateByIdSchema = z.object({
-  frontier: z.object({
+  "frontier": z.object({
     id: z.literal("frontier"),
     baseId: z.literal("frontier"),
     layout: z.literal("hex"),
@@ -2843,13 +1803,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -2906,11 +1861,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -2955,135 +1910,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({
-        "charter-deck": [],
-        "charter-played": [],
-      }),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({
-        "charter-deck": "hidden",
-        "charter-hand": "ownerOnly",
-        "charter-played": "public",
-      }),
-      cardSetIdsByZoneId: cloneManifestDefault({
-        "charter-deck": ["charter-cards"],
-        "charter-hand": ["charter-cards"],
-        "charter-played": ["charter-cards"],
-      }),
-    }) as TableState["zones"],
-  decks: () =>
-    cloneManifestDefault({
-      "charter-deck": [],
-      "charter-played": [],
-    }) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({}),
+    cardSetIdsByZoneId: cloneManifestDefault({}),
+  }) as TableState["zones"],
+  decks: () => cloneManifestDefault({}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({
-      "charter-hand": "ownerOnly",
-    }) as TableState["handVisibility"],
-  ownerOfCard: () =>
-    cloneManifestDefault({
-      "claimMarker-1": null,
-      "claimMarker-2": null,
-      "landmark-1": null,
-      "landmark-2": null,
-      "landmark-3": null,
-      "landmark-4": null,
-      "landmark-5": null,
-      "scout-1": null,
-      "scout-10": null,
-      "scout-11": null,
-      "scout-12": null,
-      "scout-13": null,
-      "scout-14": null,
-      "scout-2": null,
-      "scout-3": null,
-      "scout-4": null,
-      "scout-5": null,
-      "scout-6": null,
-      "scout-7": null,
-      "scout-8": null,
-      "scout-9": null,
-      "shortcut-1": null,
-      "shortcut-2": null,
-      "surveyGrant-1": null,
-      "surveyGrant-2": null,
-    }) as TableState["ownerOfCard"],
-  visibility: () =>
-    cloneManifestDefault({
-      "claimMarker-1": { faceUp: true },
-      "claimMarker-2": { faceUp: true },
-      "landmark-1": { faceUp: true },
-      "landmark-2": { faceUp: true },
-      "landmark-3": { faceUp: true },
-      "landmark-4": { faceUp: true },
-      "landmark-5": { faceUp: true },
-      "scout-1": { faceUp: true },
-      "scout-10": { faceUp: true },
-      "scout-11": { faceUp: true },
-      "scout-12": { faceUp: true },
-      "scout-13": { faceUp: true },
-      "scout-14": { faceUp: true },
-      "scout-2": { faceUp: true },
-      "scout-3": { faceUp: true },
-      "scout-4": { faceUp: true },
-      "scout-5": { faceUp: true },
-      "scout-6": { faceUp: true },
-      "scout-7": { faceUp: true },
-      "scout-8": { faceUp: true },
-      "scout-9": { faceUp: true },
-      "shortcut-1": { faceUp: true },
-      "shortcut-2": { faceUp: true },
-      "surveyGrant-1": { faceUp: true },
-      "surveyGrant-2": { faceUp: true },
-    }) as TableState["visibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({}) as TableState["handVisibility"],
+  ownerOfCard: () => cloneManifestDefault({}) as TableState["ownerOfCard"],
+  visibility: () => cloneManifestDefault({}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -3118,6 +1982,13 @@ export function createInitialTable(
   table.componentLocations = componentLocations;
   return tableSchema.parse(table);
 }
+
+export const normalSetup = {
+  minPlayers: 3,
+  maxPlayers: 3,
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
 
 export const schemas = {
   table: tableSchema,
@@ -3162,10 +2033,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -3176,293 +2051,78 @@ export const manifestContract: ReducerManifestContract<
 };
 
 const boardIdsByLayoutLookup = {
-  hex: ["frontier"] as const,
+  "hex": ["frontier"] as const,
 } as const;
 const boardBaseIdsByLayoutLookup = {
-  hex: ["frontier"] as const,
+  "hex": ["frontier"] as const,
 } as const;
 const boardIdsByBaseIdLookup = {
-  frontier: ["frontier"] as const,
+  "frontier": ["frontier"] as const,
 } as const;
 const boardBaseIdsByTemplateIdLookup = {
-  "star-frontier": ["frontier"] as const,
+  "stormtrail-map": ["frontier"] as const,
 } as const;
 const boardLayoutByIdLookup = {
-  frontier: "hex",
+  "frontier": "hex",
 } as const;
 const boardTemplateLayoutByIdLookup = {
-  "star-frontier": "hex",
+  "stormtrail-map": "hex",
 } as const;
-const boardIdsByTypeIdLookup = {} as const;
+const boardIdsByTypeIdLookup = {
+
+} as const;
 const spaceIdsByBoardIdLookup = {
-  frontier: [
-    "h-0-0",
-    "h-1-0",
-    "h-1-1",
-    "h-1-2",
-    "h-1-3",
-    "h-1-4",
-    "h-1-5",
-    "h-2-0",
-    "h-2-1",
-    "h-2-10",
-    "h-2-11",
-    "h-2-2",
-    "h-2-3",
-    "h-2-4",
-    "h-2-5",
-    "h-2-6",
-    "h-2-7",
-    "h-2-8",
-    "h-2-9",
-    "o-0",
-    "o-1",
-    "o-10",
-    "o-11",
-    "o-12",
-    "o-13",
-    "o-14",
-    "o-15",
-    "o-16",
-    "o-17",
-    "o-2",
-    "o-3",
-    "o-4",
-    "o-5",
-    "o-6",
-    "o-7",
-    "o-8",
-    "o-9",
-  ] as const,
+  "frontier": ["centralBarrens", "northEastClay", "northForest", "northWestFields", "southEastFields", "southForest", "southWestClay"] as const,
 } as const;
 const spaceTypeIdByBoardIdLookup = {
-  frontier: {
-    "h-0-0": "land",
-    "h-1-0": "land",
-    "h-1-1": "land",
-    "h-1-2": "land",
-    "h-1-3": "land",
-    "h-1-4": "land",
-    "h-1-5": "land",
-    "h-2-0": "land",
-    "h-2-1": "land",
-    "h-2-10": "land",
-    "h-2-11": "land",
-    "h-2-2": "land",
-    "h-2-3": "land",
-    "h-2-4": "land",
-    "h-2-5": "land",
-    "h-2-6": "land",
-    "h-2-7": "land",
-    "h-2-8": "land",
-    "h-2-9": "land",
-    "o-0": "borderland",
-    "o-1": "borderland",
-    "o-10": "borderland",
-    "o-11": "borderland",
-    "o-12": "borderland",
-    "o-13": "borderland",
-    "o-14": "borderland",
-    "o-15": "borderland",
-    "o-16": "borderland",
-    "o-17": "borderland",
-    "o-2": "borderland",
-    "o-3": "borderland",
-    "o-4": "borderland",
-    "o-5": "borderland",
-    "o-6": "borderland",
-    "o-7": "borderland",
-    "o-8": "borderland",
-    "o-9": "borderland",
-  },
+  "frontier": {
+    "centralBarrens": "barrens",
+    "northEastClay": "clayFlats",
+    "northForest": "pineForest",
+    "northWestFields": "grainFields",
+    "southEastFields": "grainFields",
+    "southForest": "pineForest",
+    "southWestClay": "clayFlats"
+  }
 } as const;
 const spaceIdsByTypeIdLookup = {
-  borderland: [
-    "o-0",
-    "o-1",
-    "o-10",
-    "o-11",
-    "o-12",
-    "o-13",
-    "o-14",
-    "o-15",
-    "o-16",
-    "o-17",
-    "o-2",
-    "o-3",
-    "o-4",
-    "o-5",
-    "o-6",
-    "o-7",
-    "o-8",
-    "o-9",
-  ] as const,
-  land: [
-    "h-0-0",
-    "h-1-0",
-    "h-1-1",
-    "h-1-2",
-    "h-1-3",
-    "h-1-4",
-    "h-1-5",
-    "h-2-0",
-    "h-2-1",
-    "h-2-10",
-    "h-2-11",
-    "h-2-2",
-    "h-2-3",
-    "h-2-4",
-    "h-2-5",
-    "h-2-6",
-    "h-2-7",
-    "h-2-8",
-    "h-2-9",
-  ] as const,
+  "barrens": ["centralBarrens"] as const,
+  "clayFlats": ["northEastClay", "southWestClay"] as const,
+  "grainFields": ["northWestFields", "southEastFields"] as const,
+  "pineForest": ["northForest", "southForest"] as const,
 } as const;
 const containerIdsByBoardIdLookup = {
-  frontier: [] as const,
+  "frontier": [] as const,
 } as const;
 const containerHostByBoardIdLookup = {
-  frontier: {},
+  "frontier": {}
 } as const;
 const relationTypeIdsByBoardIdLookup = {
-  frontier: ["adjacent"] as const,
+  "frontier": ["adjacent"] as const,
 } as const;
 const edgeIdsByTypeIdLookup = {
-  relay: [
-    "hex-edge:-2,7,-5::-4,8,-4",
-    "hex-edge:-4,-4,8::-5,-2,7",
-    "hex-edge:-5,7,-2::-7,8,-1",
-    "hex-edge:-7,2,5::-8,4,4",
-    "hex-edge:1,-8,7::2,-7,5",
-    "hex-edge:2,5,-7::4,4,-8",
-    "hex-edge:4,-8,4::5,-7,2",
-    "hex-edge:4,4,-8::5,2,-7",
-    "hex-edge:7,-2,-5::8,-4,-4",
-  ] as const,
+
 } as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {
-  frontier: {
-    relay: [
-      "hex-edge:-2,7,-5::-4,8,-4",
-      "hex-edge:-4,-4,8::-5,-2,7",
-      "hex-edge:-5,7,-2::-7,8,-1",
-      "hex-edge:-7,2,5::-8,4,4",
-      "hex-edge:1,-8,7::2,-7,5",
-      "hex-edge:2,5,-7::4,4,-8",
-      "hex-edge:4,-8,4::5,-7,2",
-      "hex-edge:4,4,-8::5,2,-7",
-      "hex-edge:7,-2,-5::8,-4,-4",
-    ],
-  },
+  "frontier": {}
 } as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {
-  frontier: {},
+  "frontier": {}
 } as const;
 const authoredHexEdgesByBoardIdLookup = {
-  frontier: [
-    {
-      ref: {
-        spaces: ["h-2-11", "o-16"],
-      },
-      fields: {
-        relayIndex: 0,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-11", "o-17"],
-      },
-      fields: {
-        relayIndex: 1,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-1", "o-1"],
-      },
-      fields: {
-        relayIndex: 2,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-3", "o-4"],
-      },
-      fields: {
-        relayIndex: 3,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-4", "o-5"],
-      },
-      fields: {
-        relayIndex: 4,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-5", "o-8"],
-      },
-      fields: {
-        relayIndex: 5,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-7", "o-10"],
-      },
-      fields: {
-        relayIndex: 6,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-8", "o-13"],
-      },
-      fields: {
-        relayIndex: 7,
-      },
-      typeId: "relay",
-    },
-    {
-      ref: {
-        spaces: ["h-2-9", "o-14"],
-      },
-      fields: {
-        relayIndex: 8,
-      },
-      typeId: "relay",
-    },
-  ],
+  "frontier": []
 } as const;
 const authoredHexVerticesByBoardIdLookup = {
-  frontier: [],
+  "frontier": []
 } as const;
 const authoredHexEdgeIdsByBoardIdAndRefLookup = {
-  frontier: {
-    "h-2-1$$o-1": "hex-edge:7,-2,-5::8,-4,-4",
-    "h-2-11$$o-16": "hex-edge:2,5,-7::4,4,-8",
-    "h-2-11$$o-17": "hex-edge:4,4,-8::5,2,-7",
-    "h-2-3$$o-4": "hex-edge:4,-8,4::5,-7,2",
-    "h-2-4$$o-5": "hex-edge:1,-8,7::2,-7,5",
-    "h-2-5$$o-8": "hex-edge:-4,-4,8::-5,-2,7",
-    "h-2-7$$o-10": "hex-edge:-7,2,5::-8,4,4",
-    "h-2-8$$o-13": "hex-edge:-5,7,-2::-7,8,-1",
-    "h-2-9$$o-14": "hex-edge:-2,7,-5::-4,8,-4",
-  },
+  "frontier": {}
 } as const;
 const authoredHexVertexIdsByBoardIdAndRefLookup = {
-  frontier: {},
+  "frontier": {}
 } as const;
 
 function authoredHexRefKey(spaceIds: readonly string[]): string {
@@ -3486,9 +2146,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -3496,7 +2156,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -3530,7 +2192,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -3591,7 +2256,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -3601,7 +2269,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -3624,8 +2294,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -3725,9 +2394,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -3808,7 +2477,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -3825,8 +2497,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3870,10 +2541,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -3917,8 +2585,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3947,7 +2614,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

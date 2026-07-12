@@ -1,13 +1,25 @@
-# Dreamboard Test Workspace
+# Sketchbook scenario workspace
 
-TypeScript bases live in `test/bases/*.base.ts` and scenarios live in `test/scenarios/*.scenario.ts`.
+Every behavior scenario starts from ordinary two-player setup with a safe
+integer seed. A scenario reaches its subject only by replaying canonical legal
+commands; no authored base state, setup profile, patch, or generated snapshot
+is rules authority.
 
-1. Define reusable seeded bases with `defineBase({ id, seed, players, setupProfileId?, setup })`.
-2. Define scenarios with `defineScenario({ id, from, when, then })`.
-3. Scenario assertions can read `players()`, `state()`, `view(playerId)`, and `interactions(playerId)`.
-4. Generate deterministic base snapshots: `dreamboard test generate`.
-5. Run tests: `dreamboard test run`.
+Agent workflow:
 
-Import test helpers from `../testing-types`.
+1. Read `../rule.md` and `scenarios/complete-game.scenario.ts`.
+2. Inspect a structural checkpoint from the scenario path and a player or
+   spectator perspective.
+3. Explore that checkpoint to obtain accepted concrete commands and dependent
+   card domains.
+4. Add the chosen commands to one scenario default export.
+5. Put cross-checkpoint, rejection, privacy, and uniqueness assertions in
+   `scenarios.test.ts`.
+6. Run `pnpm verify` from the package root.
 
-Generated artifacts are written to `test/generated/*` and should not be edited manually.
+`complete-game.scenario.ts` is a normal growing-deck playthrough, not a fixture.
+The six UI scenarios select checkpoints from that same replay and carry no
+editable state of their own.
+
+The checked-in `bases/` and `generated/` trees are obsolete compatibility
+material awaiting Phase 07 deletion. Do not import, regenerate, or extend them.

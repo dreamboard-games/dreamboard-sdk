@@ -1,13 +1,14 @@
-# Dreamboard Test Workspace
+# Mosaic Workshop tests
 
-TypeScript bases live in `test/bases/*.base.ts` and scenarios live in `test/scenarios/*.scenario.ts`.
+Behavior scenarios start from the ordinary, entropy-free `standard` setup.
+`complete-game.scenario.ts` is the reusable four-season win arc and the single
+source for all UI checkpoints. `complete-game-draw.scenario.ts` proves the
+shared-rank draw branch. Focused scenarios and probes cover occupancy,
+pass/skip/cleanup, every action space, exchanges, crafting domains, scoring,
+inspection, and exploration.
 
-1. Define reusable seeded bases with `defineBase({ id, seed, players, setupProfileId?, setup })`.
-2. Define scenarios with `defineScenario({ id, from, when, then })`.
-3. Scenario assertions can read `players()`, `state()`, `view(playerId)`, and `interactions(playerId)`.
-4. Generate deterministic base snapshots: `dreamboard test generate`.
-5. Run tests: `dreamboard test run`.
+`test/bases/**` and `test/generated/**` are intentionally frozen legacy
+fixtures during the conformance phases. They are excluded from verification
+and will be removed together in the fixture-deletion phase.
 
-Import test helpers from `../testing-types`.
-
-Generated artifacts are written to `test/generated/*` and should not be edited manually.
+Run `pnpm test`, `pnpm test:ui`, or `pnpm verify` from this package.

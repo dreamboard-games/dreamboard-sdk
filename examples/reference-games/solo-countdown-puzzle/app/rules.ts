@@ -1,122 +1,264 @@
-import type {
-  BeaconId,
-  GameErrorCode,
-  GameState,
-  OutcomeCode,
-  PlayerId,
-  PublicState,
-} from "./game-contract";
-import { beaconIds, weatherDeck } from "./game-contract";
 import type { GameOutcome } from "@dreamboard-games/sdk/reducer";
+import {
+  beaconIds,
+  type BeaconId,
+  type HiddenState,
+  type OutcomeCode,
+  type PlayerId,
+  type PublicState,
+  type RevealedWeather,
+  type SystemEvent,
+  type WeatherCardId,
+  type WeatherKind,
+  weatherCardIds,
+} from "./game-contract";
 
-export const HUMAN_PLAYER_ID = "player-1";
 export const MAX_BEACON_LEVEL = 2;
+export const MAX_ENERGY = 7;
 export const STORM_LIMIT = 6;
+export const STARTING_TURNS = 8;
 
-export function initialPublicState(): PublicState {
+export type WeatherCard = {
+  readonly id: WeatherCardId;
+  readonly kind: WeatherKind;
+  readonly beaconId: BeaconId | null;
+};
+
+export const weatherCards = [
+  { id: "calm-1", kind: "calm", beaconId: null },
+  { id: "calm-2", kind: "calm", beaconId: null },
+  { id: "gale-1", kind: "gale", beaconId: null },
+  { id: "gale-2", kind: "gale", beaconId: null },
+  { id: "gale-3", kind: "gale", beaconId: null },
+  {
+    id: "north-squall",
+    kind: "north-squall",
+    beaconId: "beacon-north",
+  },
+  {
+    id: "harbor-squall",
+    kind: "harbor-squall",
+    beaconId: "beacon-harbor",
+  },
+  {
+    id: "south-squall",
+    kind: "south-squall",
+    beaconId: "beacon-south",
+  },
+] as const satisfies readonly WeatherCard[];
+
+export const weatherCardById = Object.fromEntries(
+  weatherCards.map((card) => [card.id, card]),
+) as Record<WeatherCardId, WeatherCard>;
+
+export function createInitialPublicState(): PublicState {
   return {
-    turnsRemaining: 8,
+    turnsRemaining: STARTING_TURNS,
     energy: 5,
     storm: 0,
-    reinforcement: 0,
+    reinforcement: false,
     beacons: Object.fromEntries(
       beaconIds.map((beaconId) => [beaconId, 0]),
     ) as Record<BeaconId, number>,
-    weatherDeck: weatherDeck.map((card) => card.id),
+    weatherHistory: [],
     events: [],
     completed: false,
     outcome: null,
   };
 }
 
-export function validateRepair(
-  state: Pick<GameState, "publicState">,
-  options: { playerId: string; beaconId: string },
-): { ok: true } | { ok: false; errorCode: GameErrorCode; message: string } {
-  if (state.publicState.completed) {
-    return {
-      ok: false,
-      errorCode: "GAME_ALREADY_COMPLETE",
-      message: "The lighthouse result is already final.",
-    };
+export function createInitialHiddenState(): HiddenState {
+  return { weatherDeck: [] };
+}
+
+export function assertWeatherComposition(deck: readonly WeatherCardId[]): void {
+  if (
+    deck.length !== weatherCardIds.length ||
+    [...deck].sort().join("|") !== [...weatherCardIds].sort().join("|")
+  ) {
+    throw new Error("Last Light setup requires the exact eight-card weather deck.");
   }
-  if (options.playerId !== HUMAN_PLAYER_ID) {
-    return {
-      ok: false,
-      errorCode: "PLAYER_NOT_AUTHORIZED",
-      message: "Only the human player may repair a beacon.",
-    };
-  }
-  if (!beaconIds.includes(options.beaconId as BeaconId)) {
-    return {
-      ok: false,
-      errorCode: "UNKNOWN_BEACON",
-      message: "Choose a known beacon space.",
-    };
-  }
-  if (state.publicState.energy <= 0) {
-    return {
-      ok: false,
-      errorCode: "NOT_ENOUGH_ENERGY",
-      message: "Repairing a beacon costs one energy.",
-    };
-  }
-  return { ok: true };
 }
 
 export function allBeaconsLit(beacons: Record<BeaconId, number>): boolean {
-  return beaconIds.every((beaconId) => beacons[beaconId] >= MAX_BEACON_LEVEL);
+  return beaconIds.every(
+    (beaconId) => beacons[beaconId] >= MAX_BEACON_LEVEL,
+  );
 }
 
-export function beaconScore(beacons: Record<BeaconId, number>): number {
-  return beaconIds.reduce((total, beaconId) => total + beacons[beaconId], 0);
+export function repairableBeaconIds(state: PublicState): BeaconId[] {
+  if (state.completed || state.energy < 1) return [];
+  return beaconIds.filter(
+    (beaconId) => state.beacons[beaconId] < MAX_BEACON_LEVEL,
+  );
 }
-
-export function nextWeather(deck: readonly string[]): {
-  card: (typeof weatherDeck)[number];
-  remainingDeck: WeatherCardId[];
-} {
-  const [cardId, ...remaining] = deck;
-  const card =
-    weatherDeck.find((candidate) => candidate.id === cardId) ?? weatherDeck[0];
-  return {
-    card,
-    remainingDeck:
-      remaining.length > 0
-        ? (remaining as WeatherCardId[])
-        : weatherDeck.map((entry) => entry.id),
-  };
-}
-
-export type WeatherCardId = (typeof weatherDeck)[number]["id"];
 
 export function makeOutcome(
   code: OutcomeCode,
-  score: number,
+  playerId: PlayerId,
 ): GameOutcome<PlayerId> {
-  const result = code === "all-beacons-lit" ? "win" : "loss";
-  const label =
-    code === "all-beacons-lit"
-      ? "All beacons lit"
-      : code === "storm-six"
-        ? "Storm reached six"
-        : "Countdown exhausted";
+  const result = code === "ALL_BEACONS_LIT" ? "win" : "loss";
+  const message =
+    code === "ALL_BEACONS_LIT"
+      ? "All three coastal beacons are fully lit."
+      : code === "STORM_REACHED_LIGHTHOUSE"
+        ? "The storm reached the lighthouse."
+        : "Dawn arrived before every beacon was lit.";
   return {
-    reason: { code, message: label },
-    standings: [
-      {
-        playerId: HUMAN_PLAYER_ID as PlayerId,
-        rank: 1,
-        result,
-        score,
-        scoreBreakdown: [
-          {
-            id: "beacon-levels",
-            label: "Beacon levels",
-            value: score,
-          },
-        ],
+    reason: { code, message },
+    standings: [{ playerId, rank: 1, result }],
+  };
+}
+
+function event(
+  values: Omit<SystemEvent, "kind">,
+): SystemEvent {
+  return { kind: "systemAction", ...values };
+}
+
+function reveal(card: WeatherCard): RevealedWeather {
+  return {
+    cardId: card.id,
+    kind: card.kind,
+    beaconId: card.beaconId,
+  };
+}
+
+export type WeatherResolution = {
+  readonly publicState: PublicState;
+  readonly hiddenState: HiddenState;
+  readonly events: readonly SystemEvent[];
+  readonly card: WeatherCard;
+};
+
+export function resolveNextWeather(
+  publicState: PublicState,
+  hiddenState: HiddenState,
+): WeatherResolution {
+  const [cardId, ...remainingDeck] = hiddenState.weatherDeck;
+  if (!cardId) {
+    throw new Error("Last Light weather deck was exhausted before game over.");
+  }
+  const card = weatherCardById[cardId];
+  if (!card) {
+    throw new Error(`Unknown Last Light weather card '${String(cardId)}'.`);
+  }
+
+  const dangerous = card.kind !== "calm";
+  const history = [...publicState.weatherHistory, reveal(card)];
+  if (dangerous && publicState.reinforcement) {
+    const held = event({
+      id: "reinforcement-held",
+      procedureId: "resolve-weather",
+      weatherCardId: card.id,
+      beaconId: card.beaconId,
+      previousValue: 1,
+      nextValue: 0,
+      title: "Reinforcement held",
+      summary: `${card.id} was completely prevented by the reinforced sea wall.`,
+    });
+    return {
+      card,
+      hiddenState: { weatherDeck: remainingDeck },
+      events: [held],
+      publicState: {
+        ...publicState,
+        reinforcement: false,
+        weatherHistory: history,
+        events: [...publicState.events, held],
       },
-    ],
+    };
+  }
+
+  if (card.kind === "calm") {
+    const calm = event({
+      id: "weather-calm",
+      procedureId: "resolve-weather",
+      weatherCardId: card.id,
+      beaconId: null,
+      previousValue: null,
+      nextValue: null,
+      title: "Calm weather",
+      summary: `${card.id} passed without changing the coast.`,
+    });
+    return {
+      card,
+      hiddenState: { weatherDeck: remainingDeck },
+      events: [calm],
+      publicState: {
+        ...publicState,
+        weatherHistory: history,
+        events: [...publicState.events, calm],
+      },
+    };
+  }
+
+  const nextStorm = Math.min(STORM_LIMIT, publicState.storm + 1);
+  const stormAdvanced = event({
+    id: "storm-advanced",
+    procedureId: "resolve-weather",
+    weatherCardId: card.id,
+    beaconId: card.beaconId,
+    previousValue: publicState.storm,
+    nextValue: nextStorm,
+    title: "Storm advanced",
+    summary: `${card.id} advanced the storm from ${publicState.storm} to ${nextStorm}.`,
+  });
+  const procedureEvents: SystemEvent[] = [stormAdvanced];
+  const nextBeacons = { ...publicState.beacons };
+  if (card.beaconId && nextBeacons[card.beaconId] > 0) {
+    const previousLevel = nextBeacons[card.beaconId];
+    const nextLevel = previousLevel - 1;
+    nextBeacons[card.beaconId] = nextLevel;
+    procedureEvents.push(
+      event({
+        id: "beacon-dimmed",
+        procedureId: "resolve-weather",
+        weatherCardId: card.id,
+        beaconId: card.beaconId,
+        previousValue: previousLevel,
+        nextValue: nextLevel,
+        title: "Beacon dimmed",
+        summary: `${card.id} dimmed ${card.beaconId} from ${previousLevel} to ${nextLevel}.`,
+      }),
+    );
+  }
+
+  return {
+    card,
+    hiddenState: { weatherDeck: remainingDeck },
+    events: procedureEvents,
+    publicState: {
+      ...publicState,
+      storm: nextStorm,
+      beacons: nextBeacons,
+      weatherHistory: history,
+      events: [...publicState.events, ...procedureEvents],
+    },
+  };
+}
+
+export function advanceCountdown(publicState: PublicState): {
+  readonly publicState: PublicState;
+  readonly event: SystemEvent;
+} {
+  const turnsRemaining = Math.max(0, publicState.turnsRemaining - 1);
+  const countdownEvent = event({
+    id: "countdown-advanced",
+    procedureId: "advance-countdown",
+    weatherCardId: null,
+    beaconId: null,
+    previousValue: publicState.turnsRemaining,
+    nextValue: turnsRemaining,
+    title: "Countdown advanced",
+    summary: `${turnsRemaining} turn${turnsRemaining === 1 ? "" : "s"} remain before dawn.`,
+  });
+  return {
+    event: countdownEvent,
+    publicState: {
+      ...publicState,
+      turnsRemaining,
+      events: [...publicState.events, countdownEvent],
+    },
   };
 }

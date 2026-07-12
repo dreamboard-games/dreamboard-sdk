@@ -1,111 +1,203 @@
-import type { BeaconId, GameContract, GameState } from "../game-contract";
-import { beaconIds, playerTurnPhaseStateSchema } from "../game-contract";
-import {
-  allBeaconsLit,
-  beaconScore,
-  makeOutcome,
-  MAX_BEACON_LEVEL,
-  validateRepair,
-} from "../rules";
 import {
   boardInput,
   boardTarget,
   defineInteraction,
   definePhase,
 } from "@dreamboard-games/sdk/reducer";
+import type { SpaceId } from "../../shared/manifest-contract";
+import {
+  beaconIds,
+  playerTurnPhaseStateSchema,
+  type BeaconId,
+  type GameContract,
+  type GameState,
+} from "../game-contract";
+import {
+  allBeaconsLit,
+  makeOutcome,
+  MAX_BEACON_LEVEL,
+  MAX_ENERGY,
+} from "../rules";
 
 const beaconSpaceTarget = boardTarget
-  .space<GameState, BeaconId>("beacon-grid")
+  .space<GameState, SpaceId>("beacon-grid")
   .where({
-    id: "known-beacon-space",
+    id: "known-beacon",
     errorCode: "UNKNOWN_BEACON",
-    message: "Choose a known beacon space.",
-    test: ({ target }) => beaconIds.includes(target),
+    message: "Choose north, harbor, or south beacon.",
+    test: ({ target }) => beaconIds.includes(target as BeaconId),
+  })
+  .where({
+    id: "beacon-below-maximum",
+    errorCode: "BEACON_ALREADY_LIT",
+    message: "Choose a beacon below level two.",
+    test: ({ state, target }) =>
+      state.publicState.beacons[target as BeaconId] < MAX_BEACON_LEVEL,
   })
   .build();
 
-export const repairBeacon = defineInteraction<
+const charge = defineInteraction<
+  GameContract,
+  typeof playerTurnPhaseStateSchema
+>()({
+  presentation: {
+    label: "Charge",
+    help: "Gain two energy, capped at seven.",
+  },
+  inputs: {},
+  rules: [
+    {
+      id: "energy-below-cap",
+      errorCode: "ENERGY_AT_CAP",
+      message: "Energy is already at its maximum of seven.",
+      available: ({ state }) => state.publicState.energy < MAX_ENERGY,
+      validate: ({ state }) =>
+        state.publicState.energy < MAX_ENERGY
+          ? null
+          : {
+              errorCode: "ENERGY_AT_CAP",
+              message: "Energy is already at its maximum of seven.",
+            },
+    },
+  ],
+  reduce({ state, accept, edit, fx }) {
+    const tx = edit(state);
+    tx.patchPublicState({
+      energy: Math.min(MAX_ENERGY, state.publicState.energy + 2),
+    });
+    tx.setActivePlayers([]);
+    return accept(tx.state, {
+      instructions: [fx.transition("resolveWeather")],
+    });
+  },
+});
+
+const repairBeacon = defineInteraction<
   GameContract,
   typeof playerTurnPhaseStateSchema
 >()({
   presentation: {
     label: "Repair beacon",
-    help: "Spend one energy and raise the selected beacon by one level.",
+    help: "Spend one energy and raise a non-full beacon by one level.",
   },
-  errorCodes: [
-    "PLAYER_NOT_AUTHORIZED",
-    "UNKNOWN_BEACON",
-    "NOT_ENOUGH_ENERGY",
-    "GAME_ALREADY_COMPLETE",
-  ],
   inputs: {
-    beaconId: boardInput.space<GameState, BeaconId>({
+    beaconId: boardInput.space<GameState, SpaceId>({
       target: beaconSpaceTarget,
     }),
   },
   rules: [
     {
-      id: "repair-beacon-rules",
-      errorCode: "UNKNOWN_BEACON",
-      validate({ state, input }) {
-        const result = validateRepair(state, {
-          playerId: input.playerId,
-          beaconId: input.params.beaconId,
-        });
-        return result.ok ? null : result;
-      },
+      id: "repair-energy-cost",
+      errorCode: "NOT_ENOUGH_ENERGY",
+      message: "Repairing a beacon requires one energy.",
+      available: ({ state }) => state.publicState.energy >= 1,
+      validate: ({ state }) =>
+        state.publicState.energy >= 1
+          ? null
+          : {
+              errorCode: "NOT_ENOUGH_ENERGY",
+              message: "Repairing a beacon requires one energy.",
+            },
     },
   ],
-  reduce({ state, input, accept, endGame, fx, reject }) {
-    const beaconId = input.params.beaconId;
-    const validation = validateRepair(state, {
-      playerId: input.playerId,
-      beaconId,
-    });
-    if (!validation.ok) {
-      return reject(validation.errorCode, validation.message);
+  reduce({ state, input, accept, edit, endGame, fx, reject }) {
+    if (state.publicState.completed) {
+      return reject("GAME_ALREADY_COMPLETE", "The lighthouse result is final.");
+    }
+    if (state.publicState.energy < 1) {
+      return reject("NOT_ENOUGH_ENERGY", "Repairing a beacon requires one energy.");
+    }
+    const beaconId = input.params.beaconId as BeaconId;
+    if (!beaconIds.includes(beaconId)) {
+      return reject("UNKNOWN_BEACON", "Choose north, harbor, or south beacon.");
+    }
+    if (state.publicState.beacons[beaconId] >= MAX_BEACON_LEVEL) {
+      return reject("BEACON_ALREADY_LIT", "Choose a beacon below level two.");
     }
 
-    const nextBeacons = {
+    const beacons = {
       ...state.publicState.beacons,
-      [beaconId]: Math.min(
-        MAX_BEACON_LEVEL,
-        state.publicState.beacons[beaconId] + 1,
-      ),
+      [beaconId]: state.publicState.beacons[beaconId] + 1,
     };
-    const nextReinforcement =
-      beaconId === "beacon-harbor" &&
-      state.publicState.beacons["beacon-harbor"] === 0
-        ? state.publicState.reinforcement + 1
-        : state.publicState.reinforcement;
+    const tx = edit(state);
+    tx.patchPublicState({
+      beacons,
+      energy: state.publicState.energy - 1,
+    });
+    tx.setActivePlayers([]);
 
-    const nextState = {
-      ...state,
-      publicState: {
-        ...state.publicState,
-        energy: state.publicState.energy - 1,
-        reinforcement: nextReinforcement,
-        beacons: nextBeacons,
-      },
-    };
+    if (allBeaconsLit(beacons)) {
+      const playerId = input.playerId;
+      const outcome = makeOutcome("ALL_BEACONS_LIT", playerId);
+      tx.patchPublicState({ completed: true, outcome });
+      return endGame(tx.state, outcome, {
+        instructions: [fx.transition("gameOver")],
+      });
+    }
 
-    if (allBeaconsLit(nextBeacons)) {
-      const outcome = makeOutcome("all-beacons-lit", beaconScore(nextBeacons));
-      return endGame(
-        {
-          ...nextState,
-          publicState: {
-            ...nextState.publicState,
-            completed: true,
-            outcome,
-          },
-        },
-        outcome,
-        { instructions: [fx.transition("gameOver")] },
+    return accept(tx.state, {
+      instructions: [fx.transition("resolveWeather")],
+    });
+  },
+});
+
+const reinforce = defineInteraction<
+  GameContract,
+  typeof playerTurnPhaseStateSchema
+>()({
+  presentation: {
+    label: "Reinforce",
+    help: "Spend two energy to prevent the next Gale or Squall.",
+  },
+  inputs: {},
+  rules: [
+    {
+      id: "reinforcement-not-stored",
+      errorCode: "REINFORCEMENT_ALREADY_STORED",
+      message: "The sea wall already has a stored reinforcement.",
+      available: ({ state }) => !state.publicState.reinforcement,
+      validate: ({ state }) =>
+        !state.publicState.reinforcement
+          ? null
+          : {
+              errorCode: "REINFORCEMENT_ALREADY_STORED",
+              message: "The sea wall already has a stored reinforcement.",
+            },
+    },
+    {
+      id: "reinforcement-energy-cost",
+      errorCode: "NOT_ENOUGH_ENERGY",
+      message: "Reinforcing the sea wall requires two energy.",
+      available: ({ state }) => state.publicState.energy >= 2,
+      validate: ({ state }) =>
+        state.publicState.energy >= 2
+          ? null
+          : {
+              errorCode: "NOT_ENOUGH_ENERGY",
+              message: "Reinforcing the sea wall requires two energy.",
+            },
+    },
+  ],
+  reduce({ state, accept, edit, fx, reject }) {
+    if (state.publicState.reinforcement) {
+      return reject(
+        "REINFORCEMENT_ALREADY_STORED",
+        "The sea wall already has a stored reinforcement.",
       );
     }
-
-    return accept(nextState, {
+    if (state.publicState.energy < 2) {
+      return reject(
+        "NOT_ENOUGH_ENERGY",
+        "Reinforcing the sea wall requires two energy.",
+      );
+    }
+    const tx = edit(state);
+    tx.patchPublicState({
+      energy: state.publicState.energy - 2,
+      reinforcement: true,
+    });
+    tx.setActivePlayers([]);
+    return accept(tx.state, {
       instructions: [fx.transition("resolveWeather")],
     });
   },
@@ -117,15 +209,17 @@ export const playerTurn = definePhase<GameContract>()({
   initialState: () => ({}),
   actor: ({ q }) => q.player.order()[0] ?? null,
   enter({ state, accept, edit, q }) {
-    const [playerId] = q.player.order();
-    if (!playerId || state.flow.activePlayers.includes(playerId)) {
-      return accept(state);
+    const playerIds = q.player.order();
+    if (playerIds.length !== 1) {
+      throw new Error("Last Light requires exactly one human player.");
     }
     const tx = edit(state);
-    tx.setActivePlayers([playerId]);
+    tx.setActivePlayers([playerIds[0]]);
     return accept(tx.state);
   },
   interactions: {
+    charge,
     repairBeacon,
+    reinforce,
   },
 });

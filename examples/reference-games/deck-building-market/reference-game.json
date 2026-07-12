@@ -1,37 +1,45 @@
 {
   "schemaVersion": 3,
   "id": "deck-building-market",
-  "displayName": "Deck Building Market",
+  "displayName": "Sketchbook",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/browser-action-chain-ready.scenario.ts",
-      "test/scenarios/browser-form-actions-ready.scenario.ts",
-      "test/scenarios/buy-flow.scenario.ts",
-      "test/scenarios/card-effects.scenario.ts",
-      "test/scenarios/cleanup-reshuffle.scenario.ts",
-      "test/scenarios/multi-card-chain.scenario.ts",
-      "test/scenarios/play-single-treasure.scenario.ts",
-      "test/scenarios/play-treasures-unavailable.scenario.ts",
-      "test/scenarios/player-one-sketchpad-hand.scenario.ts",
-      "test/scenarios/player-two-buy-ready.scenario.ts",
-      "test/scenarios/player-two-turn.scenario.ts",
-      "test/scenarios/setup-deal.scenario.ts",
-      "test/scenarios/six-vp-does-not-win.scenario.ts",
-      "test/scenarios/smoke-initial-turn.scenario.ts",
-      "test/scenarios/terminal-winner-after-endturn.scenario.ts",
-      "test/scenarios/unavailable-card-actions.scenario.ts"
+      "test/scenarios/setup-and-visibility.scenario.ts",
+      "test/scenarios/turn-ordering.scenario.ts",
+      "test/scenarios/technique-brainstorm.scenario.ts",
+      "test/scenarios/technique-studio.scenario.ts",
+      "test/scenarios/technique-gallery.scenario.ts",
+      "test/scenarios/technique-eraser.scenario.ts",
+      "test/scenarios/technique-studio-visit.scenario.ts",
+      "test/scenarios/zone-and-reshuffle.scenario.ts",
+      "test/scenarios/buying-and-actionability.scenario.ts",
+      "test/scenarios/ending-and-outcome-masterpiece.scenario.ts",
+      "test/scenarios/ending-and-outcome-three-piles.scenario.ts",
+      "test/scenarios/complete-game.scenario.ts"
     ],
-    "uiScenarios": ["test/ui-scenarios/buy-flow.desktop.scenario.ts"]
+    "uiScenarios": [
+      "test/ui-scenarios/opening-hand.desktop.scenario.ts",
+      "test/ui-scenarios/first-purchase.desktop.scenario.ts",
+      "test/ui-scenarios/acquired-card-recycle.mobile.scenario.ts",
+      "test/ui-scenarios/technique-chain.desktop.scenario.ts",
+      "test/ui-scenarios/depleted-supply.desktop.scenario.ts",
+      "test/ui-scenarios/terminal-outcome.mobile.scenario.ts"
+    ]
   },
   "teaching": {
     "whatThisTeaches": [
-      "deck-building state across deck hand discard and market zones",
-      "multi-step turn flow with action buy cleanup modes",
-      "typed card collectors for hand and market targets",
-      "reshuffle and terminal scoring branches in reducer scenarios"
+      "a complete growing deck across private hand, hidden deck, public discard, in-play, supply, and trash zones",
+      "action, buy, cleanup, deterministic reshuffle, and deferred supply-ending precedence",
+      "agent-discoverable card domains for repeatable Inspiration, Eraser subsets, and Studio Visit targets",
+      "normal-setup complete games with sole-winner, tied-draw, and simultaneous-ending outcomes"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when players improve a personal deck by buying from shared limited piles.",
+      "Keep card movement between hand, play, discard, deck, supply, and trash explicit so reshuffles and depletion remain inspectable.",
+      "Model card choices as reducer-owned domains when an effect can repeat or select a subset of cards."
     ],
     "readFirst": [
       "README.md",
@@ -41,14 +49,15 @@
       "app/phases/player-turn/index.ts",
       "ui/App.tsx",
       "ui/interaction-routes.tsx",
-      "test/scenarios/buy-flow.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios.test.ts"
     ]
   },
   "demoRelease": {
     "slug": "deck-building-market",
-    "name": "Deck Building Market",
-    "description": "A two-player deck-builder with a shared market, action chains, cleanup, and terminal scoring.",
-    "overview": "Play treasures, buy from the market, resolve card effects, and reshuffle your growing deck across repeated turns.",
+    "name": "Sketchbook",
+    "description": "Two artists build and cycle growing decks of Inspiration, Portfolio, and Technique cards.",
+    "overview": "Develop a portfolio over many turns, chain studio Techniques, watch new work return after reshuffles, and finish when the shared supply runs out.",
     "creator": "Dreamboard",
     "minPlayers": 2,
     "maxPlayers": 2,
@@ -62,31 +71,9 @@
       "repeated-turn-state"
     ],
     "categories": ["card-game", "strategy"],
-    "heroImageUrl": "/demos/deck-building-market/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 12,
-    "demoPlayerCount": 2,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 2
   },
   "mechanics": [
     "deck-building",

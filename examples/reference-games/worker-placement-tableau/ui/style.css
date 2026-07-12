@@ -1,5 +1,373 @@
-@import "tailwindcss";
-@import "@dreamboard-games/sdk/ui/plugin-styles.css";
-
-@source "../ui/**/*.{ts,tsx}";
-@source "../shared/**/*.{ts,tsx}";
+:root {
+  color: #241b17;
+  background: #efe7da;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+}
+button,
+select,
+input {
+  font: inherit;
+}
+.mosaic-workshop {
+  min-height: 100vh;
+  padding: 24px;
+  background: radial-gradient(
+    circle at top left,
+    #fff7e7 0,
+    #efe7da 42%,
+    #dacbb9 100%
+  );
+}
+.mosaic-workshop > * {
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px;
+  border: 2px solid #3f3027;
+  border-radius: 22px;
+  background: #fffaf0;
+  box-shadow: 6px 7px 0 #684d3b;
+}
+.hero h1 {
+  margin: 2px 0 8px;
+  font:
+    800 clamp(2rem, 6vw, 4.25rem)/0.95 Georgia,
+    serif;
+  color: #433027;
+}
+.hero p {
+  max-width: 720px;
+  margin: 0;
+}
+.eyebrow,
+.section-heading p,
+.workshop header p,
+.outcome > p {
+  color: #8c4e2d;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.season-marker {
+  min-width: 112px;
+  aspect-ratio: 1;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  border-radius: 50%;
+  background: #214f4b;
+  color: white;
+  box-shadow: inset 0 0 0 5px #d5b969;
+}
+.season-marker span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.season-marker strong {
+  font-size: 1.65rem;
+}
+.turn-banner {
+  margin-top: 18px;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: #432f27;
+  color: #fff8ec;
+  font-weight: 800;
+  text-align: center;
+}
+.game-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 18px;
+}
+.board-panel,
+.season-log,
+.workshop,
+.outcome {
+  border: 2px solid #4c392e;
+  border-radius: 18px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: 4px 5px 0 #9c7a60;
+}
+.board-panel {
+  padding: 18px;
+}
+.section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: end;
+}
+.section-heading h2,
+.season-log h2,
+.action-form h2,
+.workshop h2,
+.outcome h2 {
+  margin: 2px 0;
+  font-family: Georgia, serif;
+}
+.section-heading > span {
+  max-width: 390px;
+  font-size: 0.86rem;
+  color: #66544a;
+}
+.action-board {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 10px;
+}
+.action-space {
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border: 2px solid #79604d;
+  border-radius: 14px;
+  background: #f3dfb2;
+  color: #34241e;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+}
+.action-space:hover,
+.action-space[data-selected="true"] {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 0 #725844;
+}
+.action-space[data-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+  filter: grayscale(0.45);
+}
+.space-icon {
+  font-size: 2rem;
+  color: #9c4c2c;
+}
+.action-space > span:not(.space-icon):not(.occupants) {
+  font-size: 0.78rem;
+}
+.occupants {
+  min-height: 32px;
+  display: flex;
+  gap: 4px;
+}
+.worker-token {
+  width: 28px;
+  height: 28px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid #241b17;
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+.worker-ordinary {
+  border-radius: 50%;
+}
+.worker-master {
+  border-radius: 7px;
+  transform: rotate(45deg);
+}
+.worker-master::first-letter {
+  transform: rotate(-45deg);
+}
+.worker-indigo {
+  background: #3857a6;
+}
+.worker-saffron {
+  background: #cf7b16;
+}
+.action-form {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: #e6ded0;
+}
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.form-fields > p,
+.form-fields > button {
+  grid-column: 1 / -1;
+}
+.primary-button,
+.pass-button {
+  min-height: 44px;
+  border: 2px solid #2a211d;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.primary-button {
+  background: #214f4b;
+  color: white;
+}
+.pass-button {
+  margin-top: 10px;
+  background: #fff8ec;
+  color: #5b3929;
+}
+.primary-button:disabled,
+.pass-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.season-log {
+  padding: 16px;
+}
+.season-log ol {
+  margin: 12px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 0.84rem;
+}
+.workshops {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.workshop {
+  padding: 18px;
+}
+.workshop > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.score-medallion {
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: #a8482c;
+  color: white;
+}
+.resources,
+.worker-rack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.resources span,
+.worker-rack > span {
+  padding: 7px 9px;
+  border: 1px solid #bba68e;
+  border-radius: 999px;
+  background: #fff8ec;
+  font-size: 0.8rem;
+}
+.worker-rack .worker-used {
+  opacity: 0.55;
+}
+.tableau {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px;
+  border: 3px double #76563e;
+  border-radius: 12px;
+  background: #d8c09d;
+}
+.tableau-cell {
+  min-height: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px;
+  border: 2px dashed #95775f;
+  border-radius: 7px;
+  background: #eadbc3;
+  text-align: center;
+}
+.tableau-cell.cell-filled {
+  border-style: solid;
+  background: #fff6df;
+}
+.tableau-cell > span:first-child {
+  font-size: 1.5rem;
+}
+.tableau-cell strong {
+  font-size: 0.75rem;
+}
+.tableau-cell small,
+.empty-cell {
+  color: #756458;
+  font-size: 0.68rem;
+}
+.outcome {
+  margin-top: 18px;
+  padding: 24px;
+  text-align: center;
+}
+.standings {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+.standings article {
+  display: grid;
+  gap: 4px;
+  padding: 13px;
+  border-radius: 12px;
+  background: #eadbc3;
+}
+@media (max-width: 900px) {
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+  .action-board {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .workshops {
+    grid-template-columns: 1fr;
+  }
+  .season-log {
+    order: 2;
+  }
+}
+@media (max-width: 560px) {
+  .mosaic-workshop {
+    padding: 12px;
+  }
+  .hero {
+    align-items: flex-start;
+  }
+  .season-marker {
+    min-width: 82px;
+  }
+  .action-board,
+  .form-fields,
+  .standings {
+    grid-template-columns: 1fr;
+  }
+}

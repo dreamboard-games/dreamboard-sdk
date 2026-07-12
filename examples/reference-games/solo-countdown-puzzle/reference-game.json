@@ -1,95 +1,81 @@
 {
   "schemaVersion": 3,
   "id": "solo-countdown-puzzle",
-  "displayName": "Solo Countdown Puzzle",
+  "displayName": "Last Light",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/initial.scenario.ts",
-      "test/scenarios/repair-beacon.scenario.ts",
-      "test/scenarios/reconnect.scenario.ts",
-      "test/scenarios/terminal.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/complete-game-loss-storm.scenario.ts",
+      "test/scenarios/complete-game-loss-dawn.scenario.ts",
+      "test/scenarios/availability-charge.scenario.ts",
+      "test/scenarios/availability-repair-beacon.scenario.ts",
+      "test/scenarios/availability-repair-no-energy.scenario.ts",
+      "test/scenarios/availability-reinforce-stored.scenario.ts",
+      "test/scenarios/availability-reinforce-no-energy.scenario.ts",
+      "test/scenarios/weather-procedure-calm.scenario.ts",
+      "test/scenarios/weather-procedure-gale.scenario.ts",
+      "test/scenarios/weather-procedure-gale-reinforced.scenario.ts",
+      "test/scenarios/weather-procedure-north-squall.scenario.ts",
+      "test/scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
+      "test/scenarios/weather-procedure-harbor-squall.scenario.ts",
+      "test/scenarios/weather-procedure-harbor-squall-reinforced.scenario.ts",
+      "test/scenarios/weather-procedure-south-squall.scenario.ts",
+      "test/scenarios/weather-procedure-south-squall-reinforced.scenario.ts",
+      "test/scenarios/determinism-and-actors.scenario.ts"
     ],
     "uiScenarios": [
-      "test/ui-scenarios/repair-beacon.mobile.scenario.ts",
-      "test/ui-scenarios/reconnect.mobile.scenario.ts"
+      "test/ui-scenarios/initial.desktop.scenario.ts",
+      "test/ui-scenarios/developing.mobile.scenario.ts",
+      "test/ui-scenarios/reinforcement-hit.desktop.scenario.ts",
+      "test/ui-scenarios/terminal.mobile.scenario.ts"
     ]
   },
   "teaching": {
     "whatThisTeaches": [
-      "solo deterministic system phases",
-      "countdown pressure",
-      "reconnect-safe public event history"
+      "one human action followed by actorless automatic procedures",
+      "seeded hidden-deck randomness and countdown pressure",
+      "state-derived action availability and ordered public events"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern for a solo puzzle where one human decision triggers deterministic automatic consequences.",
+      "Keep hidden deck order private while exposing enough public event history to explain each consequence.",
+      "Model distinct countdown and damage loss reasons explicitly so complete scenarios can prove every terminal branch."
     ],
     "readFirst": [
       "rule.md",
       "manifest.ts",
       "app/game.ts",
+      "app/phases/setup.ts",
       "app/phases/player-turn.ts",
       "app/phases/resolve-weather.ts",
       "app/phases/advance-countdown.ts",
       "ui/App.tsx",
-      "test/scenarios/repair-beacon.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios.test.ts"
     ]
   },
   "demoRelease": {
     "slug": "solo-countdown-puzzle",
-    "name": "Solo Countdown Puzzle",
-    "description": "A solo countdown puzzle with resource pressure, deterministic system phases, and reconnect-safe history.",
-    "overview": "Repair beacons, manage scarce resources, survive weather, and beat the countdown before the system closes in.",
+    "name": "Last Light",
+    "description": "Relight three coastal beacons while seeded weather, a rising storm, and the approach of dawn test every decision.",
+    "overview": "Charge the lighthouse, repair six beacon stages, and time one stored sea-wall reinforcement across a complete eight-turn solo puzzle.",
     "creator": "Dreamboard",
     "minPlayers": 1,
     "maxPlayers": 1,
     "playTimeMinMinutes": 10,
     "playTimeMaxMinutes": 20,
     "difficulty": 2,
-    "mechanics": [
-      "resource-management",
-      "repeated-turn-state",
-      "square-grid",
-      "set-collection"
-    ],
+    "mechanics": ["resource-management", "repeated-turn-state", "square-grid"],
     "categories": ["solo", "puzzle"],
-    "heroImageUrl": "/demos/solo-countdown-puzzle/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 8,
-    "demoPlayerCount": 1,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 1
   },
-  "mechanics": [
-    "resource-management",
-    "repeated-turn-state",
-    "square-grid",
-    "set-collection"
-  ],
-  "uiPatterns": [
-    "square-board-targets",
-    "turn-summary",
-    "confirmation-dialog",
-    "compact-mobile-scorecard"
-  ],
+  "mechanics": ["resource-management", "repeated-turn-state", "square-grid"],
+  "uiPatterns": ["square-board-targets", "turn-summary", "event-log"],
   "rights": {
     "mechanicsProvenance": "original-public-safe-pattern",
     "sourceCode": "original-for-this-repository",

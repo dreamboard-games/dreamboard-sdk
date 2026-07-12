@@ -7,7 +7,10 @@
     "square": {}
   },
   "initialTable": {
-    "playerOrder": ["player-1", "player-2"],
+    "playerOrder": [
+      "player-1",
+      "player-2"
+    ],
     "zones": {
       "shared": {
         "supply-doodle": [
@@ -54,23 +57,7 @@
           "doodle-41",
           "doodle-42",
           "doodle-43",
-          "doodle-44",
-          "doodle-45",
-          "doodle-46",
-          "doodle-47",
-          "doodle-48",
-          "doodle-49",
-          "doodle-50",
-          "doodle-51",
-          "doodle-52",
-          "doodle-53",
-          "doodle-54",
-          "doodle-55",
-          "doodle-56",
-          "doodle-57",
-          "doodle-58",
-          "doodle-59",
-          "doodle-60"
+          "doodle-44"
         ],
         "supply-sketch": [
           "sketch-1",
@@ -92,27 +79,7 @@
           "sketch-17",
           "sketch-18",
           "sketch-19",
-          "sketch-20",
-          "sketch-21",
-          "sketch-22",
-          "sketch-23",
-          "sketch-24",
-          "sketch-25",
-          "sketch-26",
-          "sketch-27",
-          "sketch-28",
-          "sketch-29",
-          "sketch-30",
-          "sketch-31",
-          "sketch-32",
-          "sketch-33",
-          "sketch-34",
-          "sketch-35",
-          "sketch-36",
-          "sketch-37",
-          "sketch-38",
-          "sketch-39",
-          "sketch-40"
+          "sketch-20"
         ],
         "supply-inkwork": [
           "inkwork-1",
@@ -126,25 +93,7 @@
           "inkwork-9",
           "inkwork-10",
           "inkwork-11",
-          "inkwork-12",
-          "inkwork-13",
-          "inkwork-14",
-          "inkwork-15",
-          "inkwork-16",
-          "inkwork-17",
-          "inkwork-18",
-          "inkwork-19",
-          "inkwork-20",
-          "inkwork-21",
-          "inkwork-22",
-          "inkwork-23",
-          "inkwork-24",
-          "inkwork-25",
-          "inkwork-26",
-          "inkwork-27",
-          "inkwork-28",
-          "inkwork-29",
-          "inkwork-30"
+          "inkwork-12"
         ],
         "supply-idea": [
           "idea-1",
@@ -154,7 +103,13 @@
           "idea-5",
           "idea-6",
           "idea-7",
-          "idea-8"
+          "idea-8",
+          "idea-9",
+          "idea-10",
+          "idea-11",
+          "idea-12",
+          "idea-13",
+          "idea-14"
         ],
         "supply-concept": [
           "concept-1",
@@ -176,18 +131,6 @@
           "masterpiece-7",
           "masterpiece-8"
         ],
-        "supply-smudge": [
-          "smudge-1",
-          "smudge-2",
-          "smudge-3",
-          "smudge-4",
-          "smudge-5",
-          "smudge-6",
-          "smudge-7",
-          "smudge-8",
-          "smudge-9",
-          "smudge-10"
-        ],
         "supply-brainstorm": [
           "brainstorm-1",
           "brainstorm-2",
@@ -195,7 +138,8 @@
           "brainstorm-4",
           "brainstorm-5",
           "brainstorm-6",
-          "brainstorm-7"
+          "brainstorm-7",
+          "brainstorm-8"
         ],
         "supply-studio": [
           "studio-1",
@@ -204,7 +148,8 @@
           "studio-4",
           "studio-5",
           "studio-6",
-          "studio-7"
+          "studio-7",
+          "studio-8"
         ],
         "supply-gallery": [
           "gallery-1",
@@ -213,25 +158,8 @@
           "gallery-4",
           "gallery-5",
           "gallery-6",
-          "gallery-7"
-        ],
-        "supply-open-mic": [
-          "open-mic-1",
-          "open-mic-2",
-          "open-mic-3",
-          "open-mic-4",
-          "open-mic-5",
-          "open-mic-6",
-          "open-mic-7"
-        ],
-        "supply-critic": [
-          "critic-1",
-          "critic-2",
-          "critic-3",
-          "critic-4",
-          "critic-5",
-          "critic-6",
-          "critic-7"
+          "gallery-7",
+          "gallery-8"
         ],
         "supply-eraser": [
           "eraser-1",
@@ -240,16 +168,8 @@
           "eraser-4",
           "eraser-5",
           "eraser-6",
-          "eraser-7"
-        ],
-        "supply-sketchpad": [
-          "sketchpad-1",
-          "sketchpad-2",
-          "sketchpad-3",
-          "sketchpad-4",
-          "sketchpad-5",
-          "sketchpad-6",
-          "sketchpad-7"
+          "eraser-7",
+          "eraser-8"
         ],
         "supply-studio-visit": [
           "studio-visit-1",
@@ -258,7 +178,8 @@
           "studio-visit-4",
           "studio-visit-5",
           "studio-visit-6",
-          "studio-visit-7"
+          "studio-visit-7",
+          "studio-visit-8"
         ],
         "trash": []
       },
@@ -266,34 +187,58 @@
         "deck": {
           "__perPlayer": true,
           "entries": [
-            ["player-1", []],
-            ["player-2", []]
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ]
           ]
         },
         "hand": {
           "__perPlayer": true,
           "entries": [
-            ["player-1", []],
-            ["player-2", []]
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ]
           ]
         },
         "in-play": {
           "__perPlayer": true,
           "entries": [
-            ["player-1", []],
-            ["player-2", []]
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ]
           ]
         },
         "discard": {
           "__perPlayer": true,
           "entries": [
-            ["player-1", []],
-            ["player-2", []]
+            [
+              "player-1",
+              []
+            ],
+            [
+              "player-2",
+              []
+            ]
           ]
         }
       },
       "visibility": {
-        "deck": "ownerOnly",
+        "deck": "hidden",
         "hand": "ownerOnly",
         "in-play": "public",
         "discard": "public",
@@ -303,38 +248,62 @@
         "supply-idea": "public",
         "supply-concept": "public",
         "supply-masterpiece": "public",
-        "supply-smudge": "public",
         "supply-brainstorm": "public",
         "supply-studio": "public",
         "supply-gallery": "public",
-        "supply-open-mic": "public",
-        "supply-critic": "public",
         "supply-eraser": "public",
-        "supply-sketchpad": "public",
         "supply-studio-visit": "public",
         "trash": "public"
       },
       "cardSetIdsByZoneId": {
-        "deck": ["sketchbook-cards"],
-        "discard": ["sketchbook-cards"],
-        "hand": ["sketchbook-cards"],
-        "in-play": ["sketchbook-cards"],
-        "supply-brainstorm": ["sketchbook-cards"],
-        "supply-concept": ["sketchbook-cards"],
-        "supply-critic": ["sketchbook-cards"],
-        "supply-doodle": ["sketchbook-cards"],
-        "supply-eraser": ["sketchbook-cards"],
-        "supply-gallery": ["sketchbook-cards"],
-        "supply-idea": ["sketchbook-cards"],
-        "supply-inkwork": ["sketchbook-cards"],
-        "supply-masterpiece": ["sketchbook-cards"],
-        "supply-open-mic": ["sketchbook-cards"],
-        "supply-sketch": ["sketchbook-cards"],
-        "supply-sketchpad": ["sketchbook-cards"],
-        "supply-smudge": ["sketchbook-cards"],
-        "supply-studio": ["sketchbook-cards"],
-        "supply-studio-visit": ["sketchbook-cards"],
-        "trash": ["sketchbook-cards"]
+        "deck": [
+          "sketchbook-cards"
+        ],
+        "discard": [
+          "sketchbook-cards"
+        ],
+        "hand": [
+          "sketchbook-cards"
+        ],
+        "in-play": [
+          "sketchbook-cards"
+        ],
+        "supply-brainstorm": [
+          "sketchbook-cards"
+        ],
+        "supply-concept": [
+          "sketchbook-cards"
+        ],
+        "supply-doodle": [
+          "sketchbook-cards"
+        ],
+        "supply-eraser": [
+          "sketchbook-cards"
+        ],
+        "supply-gallery": [
+          "sketchbook-cards"
+        ],
+        "supply-idea": [
+          "sketchbook-cards"
+        ],
+        "supply-inkwork": [
+          "sketchbook-cards"
+        ],
+        "supply-masterpiece": [
+          "sketchbook-cards"
+        ],
+        "supply-sketch": [
+          "sketchbook-cards"
+        ],
+        "supply-studio": [
+          "sketchbook-cards"
+        ],
+        "supply-studio-visit": [
+          "sketchbook-cards"
+        ],
+        "trash": [
+          "sketchbook-cards"
+        ]
       }
     },
     "decks": {
@@ -382,23 +351,7 @@
         "doodle-41",
         "doodle-42",
         "doodle-43",
-        "doodle-44",
-        "doodle-45",
-        "doodle-46",
-        "doodle-47",
-        "doodle-48",
-        "doodle-49",
-        "doodle-50",
-        "doodle-51",
-        "doodle-52",
-        "doodle-53",
-        "doodle-54",
-        "doodle-55",
-        "doodle-56",
-        "doodle-57",
-        "doodle-58",
-        "doodle-59",
-        "doodle-60"
+        "doodle-44"
       ],
       "supply-sketch": [
         "sketch-1",
@@ -420,27 +373,7 @@
         "sketch-17",
         "sketch-18",
         "sketch-19",
-        "sketch-20",
-        "sketch-21",
-        "sketch-22",
-        "sketch-23",
-        "sketch-24",
-        "sketch-25",
-        "sketch-26",
-        "sketch-27",
-        "sketch-28",
-        "sketch-29",
-        "sketch-30",
-        "sketch-31",
-        "sketch-32",
-        "sketch-33",
-        "sketch-34",
-        "sketch-35",
-        "sketch-36",
-        "sketch-37",
-        "sketch-38",
-        "sketch-39",
-        "sketch-40"
+        "sketch-20"
       ],
       "supply-inkwork": [
         "inkwork-1",
@@ -454,25 +387,7 @@
         "inkwork-9",
         "inkwork-10",
         "inkwork-11",
-        "inkwork-12",
-        "inkwork-13",
-        "inkwork-14",
-        "inkwork-15",
-        "inkwork-16",
-        "inkwork-17",
-        "inkwork-18",
-        "inkwork-19",
-        "inkwork-20",
-        "inkwork-21",
-        "inkwork-22",
-        "inkwork-23",
-        "inkwork-24",
-        "inkwork-25",
-        "inkwork-26",
-        "inkwork-27",
-        "inkwork-28",
-        "inkwork-29",
-        "inkwork-30"
+        "inkwork-12"
       ],
       "supply-idea": [
         "idea-1",
@@ -482,7 +397,13 @@
         "idea-5",
         "idea-6",
         "idea-7",
-        "idea-8"
+        "idea-8",
+        "idea-9",
+        "idea-10",
+        "idea-11",
+        "idea-12",
+        "idea-13",
+        "idea-14"
       ],
       "supply-concept": [
         "concept-1",
@@ -504,18 +425,6 @@
         "masterpiece-7",
         "masterpiece-8"
       ],
-      "supply-smudge": [
-        "smudge-1",
-        "smudge-2",
-        "smudge-3",
-        "smudge-4",
-        "smudge-5",
-        "smudge-6",
-        "smudge-7",
-        "smudge-8",
-        "smudge-9",
-        "smudge-10"
-      ],
       "supply-brainstorm": [
         "brainstorm-1",
         "brainstorm-2",
@@ -523,7 +432,8 @@
         "brainstorm-4",
         "brainstorm-5",
         "brainstorm-6",
-        "brainstorm-7"
+        "brainstorm-7",
+        "brainstorm-8"
       ],
       "supply-studio": [
         "studio-1",
@@ -532,7 +442,8 @@
         "studio-4",
         "studio-5",
         "studio-6",
-        "studio-7"
+        "studio-7",
+        "studio-8"
       ],
       "supply-gallery": [
         "gallery-1",
@@ -541,25 +452,8 @@
         "gallery-4",
         "gallery-5",
         "gallery-6",
-        "gallery-7"
-      ],
-      "supply-open-mic": [
-        "open-mic-1",
-        "open-mic-2",
-        "open-mic-3",
-        "open-mic-4",
-        "open-mic-5",
-        "open-mic-6",
-        "open-mic-7"
-      ],
-      "supply-critic": [
-        "critic-1",
-        "critic-2",
-        "critic-3",
-        "critic-4",
-        "critic-5",
-        "critic-6",
-        "critic-7"
+        "gallery-7",
+        "gallery-8"
       ],
       "supply-eraser": [
         "eraser-1",
@@ -568,16 +462,8 @@
         "eraser-4",
         "eraser-5",
         "eraser-6",
-        "eraser-7"
-      ],
-      "supply-sketchpad": [
-        "sketchpad-1",
-        "sketchpad-2",
-        "sketchpad-3",
-        "sketchpad-4",
-        "sketchpad-5",
-        "sketchpad-6",
-        "sketchpad-7"
+        "eraser-7",
+        "eraser-8"
       ],
       "supply-studio-visit": [
         "studio-visit-1",
@@ -586,7 +472,8 @@
         "studio-visit-4",
         "studio-visit-5",
         "studio-visit-6",
-        "studio-visit-7"
+        "studio-visit-7",
+        "studio-visit-8"
       ],
       "trash": []
     },
@@ -594,34 +481,58 @@
       "deck": {
         "__perPlayer": true,
         "entries": [
-          ["player-1", []],
-          ["player-2", []]
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ]
         ]
       },
       "hand": {
         "__perPlayer": true,
         "entries": [
-          ["player-1", []],
-          ["player-2", []]
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ]
         ]
       },
       "in-play": {
         "__perPlayer": true,
         "entries": [
-          ["player-1", []],
-          ["player-2", []]
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ]
         ]
       },
       "discard": {
         "__perPlayer": true,
         "entries": [
-          ["player-1", []],
-          ["player-2", []]
+          [
+            "player-1",
+            []
+          ],
+          [
+            "player-2",
+            []
+          ]
         ]
       }
     },
     "handVisibility": {
-      "deck": "ownerOnly",
+      "deck": "hidden",
       "hand": "ownerOnly",
       "in-play": "public",
       "discard": "public"
@@ -634,7 +545,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-2": {
@@ -644,7 +555,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-3": {
@@ -654,7 +565,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-4": {
@@ -664,7 +575,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-5": {
@@ -674,7 +585,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-6": {
@@ -684,7 +595,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-7": {
@@ -694,7 +605,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-8": {
@@ -704,7 +615,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-9": {
@@ -714,7 +625,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-10": {
@@ -724,7 +635,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-11": {
@@ -734,7 +645,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-12": {
@@ -744,7 +655,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-13": {
@@ -754,7 +665,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-14": {
@@ -764,7 +675,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-15": {
@@ -774,7 +685,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-16": {
@@ -784,7 +695,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-17": {
@@ -794,7 +705,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-18": {
@@ -804,7 +715,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-19": {
@@ -814,7 +725,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-20": {
@@ -824,7 +735,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-21": {
@@ -834,7 +745,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-22": {
@@ -844,7 +755,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-23": {
@@ -854,7 +765,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-24": {
@@ -864,7 +775,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-25": {
@@ -874,7 +785,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-26": {
@@ -884,7 +795,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-27": {
@@ -894,7 +805,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-28": {
@@ -904,7 +815,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-29": {
@@ -914,7 +825,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-30": {
@@ -924,7 +835,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-31": {
@@ -934,7 +845,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-32": {
@@ -944,7 +855,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-33": {
@@ -954,7 +865,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-34": {
@@ -964,7 +875,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-35": {
@@ -974,7 +885,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-36": {
@@ -984,7 +895,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-37": {
@@ -994,7 +905,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-38": {
@@ -1004,7 +915,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-39": {
@@ -1014,7 +925,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-40": {
@@ -1024,7 +935,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-41": {
@@ -1034,7 +945,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-42": {
@@ -1044,7 +955,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-43": {
@@ -1054,7 +965,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "doodle-44": {
@@ -1064,167 +975,7 @@
         "name": "Doodle",
         "properties": {
           "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-45": {
-        "id": "doodle-45",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-46": {
-        "id": "doodle-46",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-47": {
-        "id": "doodle-47",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-48": {
-        "id": "doodle-48",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-49": {
-        "id": "doodle-49",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-50": {
-        "id": "doodle-50",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-51": {
-        "id": "doodle-51",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-52": {
-        "id": "doodle-52",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-53": {
-        "id": "doodle-53",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-54": {
-        "id": "doodle-54",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-55": {
-        "id": "doodle-55",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-56": {
-        "id": "doodle-56",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-57": {
-        "id": "doodle-57",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-58": {
-        "id": "doodle-58",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-59": {
-        "id": "doodle-59",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
-        }
-      },
-      "doodle-60": {
-        "id": "doodle-60",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "doodle",
-        "name": "Doodle",
-        "properties": {
-          "cost": 0,
-          "coins": 1
+          "inspiration": 1
         }
       },
       "sketch-1": {
@@ -1234,7 +985,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-2": {
@@ -1244,7 +995,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-3": {
@@ -1254,7 +1005,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-4": {
@@ -1264,7 +1015,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-5": {
@@ -1274,7 +1025,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-6": {
@@ -1284,7 +1035,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-7": {
@@ -1294,7 +1045,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-8": {
@@ -1304,7 +1055,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-9": {
@@ -1314,7 +1065,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-10": {
@@ -1324,7 +1075,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-11": {
@@ -1334,7 +1085,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-12": {
@@ -1344,7 +1095,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-13": {
@@ -1354,7 +1105,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-14": {
@@ -1364,7 +1115,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-15": {
@@ -1374,7 +1125,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-16": {
@@ -1384,7 +1135,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-17": {
@@ -1394,7 +1145,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-18": {
@@ -1404,7 +1155,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-19": {
@@ -1414,7 +1165,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "sketch-20": {
@@ -1424,207 +1175,7 @@
         "name": "Sketch",
         "properties": {
           "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-21": {
-        "id": "sketch-21",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-22": {
-        "id": "sketch-22",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-23": {
-        "id": "sketch-23",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-24": {
-        "id": "sketch-24",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-25": {
-        "id": "sketch-25",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-26": {
-        "id": "sketch-26",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-27": {
-        "id": "sketch-27",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-28": {
-        "id": "sketch-28",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-29": {
-        "id": "sketch-29",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-30": {
-        "id": "sketch-30",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-31": {
-        "id": "sketch-31",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-32": {
-        "id": "sketch-32",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-33": {
-        "id": "sketch-33",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-34": {
-        "id": "sketch-34",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-35": {
-        "id": "sketch-35",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-36": {
-        "id": "sketch-36",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-37": {
-        "id": "sketch-37",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-38": {
-        "id": "sketch-38",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-39": {
-        "id": "sketch-39",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
-        }
-      },
-      "sketch-40": {
-        "id": "sketch-40",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketch",
-        "name": "Sketch",
-        "properties": {
-          "cost": 3,
-          "coins": 2
+          "inspiration": 2
         }
       },
       "inkwork-1": {
@@ -1634,7 +1185,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-2": {
@@ -1644,7 +1195,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-3": {
@@ -1654,7 +1205,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-4": {
@@ -1664,7 +1215,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-5": {
@@ -1674,7 +1225,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-6": {
@@ -1684,7 +1235,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-7": {
@@ -1694,7 +1245,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-8": {
@@ -1704,7 +1255,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-9": {
@@ -1714,7 +1265,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-10": {
@@ -1724,7 +1275,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-11": {
@@ -1734,7 +1285,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "inkwork-12": {
@@ -1744,187 +1295,7 @@
         "name": "Inkwork",
         "properties": {
           "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-13": {
-        "id": "inkwork-13",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-14": {
-        "id": "inkwork-14",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-15": {
-        "id": "inkwork-15",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-16": {
-        "id": "inkwork-16",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-17": {
-        "id": "inkwork-17",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-18": {
-        "id": "inkwork-18",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-19": {
-        "id": "inkwork-19",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-20": {
-        "id": "inkwork-20",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-21": {
-        "id": "inkwork-21",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-22": {
-        "id": "inkwork-22",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-23": {
-        "id": "inkwork-23",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-24": {
-        "id": "inkwork-24",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-25": {
-        "id": "inkwork-25",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-26": {
-        "id": "inkwork-26",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-27": {
-        "id": "inkwork-27",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-28": {
-        "id": "inkwork-28",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-29": {
-        "id": "inkwork-29",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
-        }
-      },
-      "inkwork-30": {
-        "id": "inkwork-30",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "inkwork",
-        "name": "Inkwork",
-        "properties": {
-          "cost": 6,
-          "coins": 3
+          "inspiration": 3
         }
       },
       "idea-1": {
@@ -1934,7 +1305,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-2": {
@@ -1944,7 +1315,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-3": {
@@ -1954,7 +1325,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-4": {
@@ -1964,7 +1335,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-5": {
@@ -1974,7 +1345,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-6": {
@@ -1984,7 +1355,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-7": {
@@ -1994,7 +1365,7 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
         }
       },
       "idea-8": {
@@ -2004,7 +1375,67 @@
         "name": "Idea",
         "properties": {
           "cost": 2,
-          "vp": 1
+          "portfolioValue": 1
+        }
+      },
+      "idea-9": {
+        "id": "idea-9",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
+        }
+      },
+      "idea-10": {
+        "id": "idea-10",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
+        }
+      },
+      "idea-11": {
+        "id": "idea-11",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
+        }
+      },
+      "idea-12": {
+        "id": "idea-12",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
+        }
+      },
+      "idea-13": {
+        "id": "idea-13",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
+        }
+      },
+      "idea-14": {
+        "id": "idea-14",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "idea",
+        "name": "Idea",
+        "properties": {
+          "cost": 2,
+          "portfolioValue": 1
         }
       },
       "concept-1": {
@@ -2014,7 +1445,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-2": {
@@ -2024,7 +1455,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-3": {
@@ -2034,7 +1465,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-4": {
@@ -2044,7 +1475,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-5": {
@@ -2054,7 +1485,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-6": {
@@ -2064,7 +1495,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-7": {
@@ -2074,7 +1505,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "concept-8": {
@@ -2084,7 +1515,7 @@
         "name": "Concept",
         "properties": {
           "cost": 5,
-          "vp": 3
+          "portfolioValue": 3
         }
       },
       "masterpiece-1": {
@@ -2094,7 +1525,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-2": {
@@ -2104,7 +1535,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-3": {
@@ -2114,7 +1545,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-4": {
@@ -2124,7 +1555,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-5": {
@@ -2134,7 +1565,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-6": {
@@ -2144,7 +1575,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-7": {
@@ -2154,7 +1585,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
+          "portfolioValue": 6
         }
       },
       "masterpiece-8": {
@@ -2164,107 +1595,7 @@
         "name": "Masterpiece",
         "properties": {
           "cost": 8,
-          "vp": 6
-        }
-      },
-      "smudge-1": {
-        "id": "smudge-1",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-2": {
-        "id": "smudge-2",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-3": {
-        "id": "smudge-3",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-4": {
-        "id": "smudge-4",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-5": {
-        "id": "smudge-5",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-6": {
-        "id": "smudge-6",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-7": {
-        "id": "smudge-7",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-8": {
-        "id": "smudge-8",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-9": {
-        "id": "smudge-9",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
-        }
-      },
-      "smudge-10": {
-        "id": "smudge-10",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "smudge",
-        "name": "Smudge",
-        "properties": {
-          "cost": 0,
-          "vp": -1
+          "portfolioValue": 6
         }
       },
       "brainstorm-1": {
@@ -2323,6 +1654,15 @@
       },
       "brainstorm-7": {
         "id": "brainstorm-7",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "brainstorm",
+        "name": "Brainstorm",
+        "properties": {
+          "cost": 4
+        }
+      },
+      "brainstorm-8": {
+        "id": "brainstorm-8",
         "cardSetId": "sketchbook-cards",
         "cardType": "brainstorm",
         "name": "Brainstorm",
@@ -2393,6 +1733,15 @@
           "cost": 3
         }
       },
+      "studio-8": {
+        "id": "studio-8",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "studio",
+        "name": "Studio",
+        "properties": {
+          "cost": 3
+        }
+      },
       "gallery-1": {
         "id": "gallery-1",
         "cardSetId": "sketchbook-cards",
@@ -2456,128 +1805,11 @@
           "cost": 5
         }
       },
-      "open-mic-1": {
-        "id": "open-mic-1",
+      "gallery-8": {
+        "id": "gallery-8",
         "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-2": {
-        "id": "open-mic-2",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-3": {
-        "id": "open-mic-3",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-4": {
-        "id": "open-mic-4",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-5": {
-        "id": "open-mic-5",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-6": {
-        "id": "open-mic-6",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "open-mic-7": {
-        "id": "open-mic-7",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "open-mic",
-        "name": "Open Mic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-1": {
-        "id": "critic-1",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-2": {
-        "id": "critic-2",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-3": {
-        "id": "critic-3",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-4": {
-        "id": "critic-4",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-5": {
-        "id": "critic-5",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-6": {
-        "id": "critic-6",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
-        "properties": {
-          "cost": 5
-        }
-      },
-      "critic-7": {
-        "id": "critic-7",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "critic",
-        "name": "Critic",
+        "cardType": "gallery",
+        "name": "Gallery",
         "properties": {
           "cost": 5
         }
@@ -2645,65 +1877,11 @@
           "cost": 2
         }
       },
-      "sketchpad-1": {
-        "id": "sketchpad-1",
+      "eraser-8": {
+        "id": "eraser-8",
         "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-2": {
-        "id": "sketchpad-2",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-3": {
-        "id": "sketchpad-3",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-4": {
-        "id": "sketchpad-4",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-5": {
-        "id": "sketchpad-5",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-6": {
-        "id": "sketchpad-6",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
-        "properties": {
-          "cost": 2
-        }
-      },
-      "sketchpad-7": {
-        "id": "sketchpad-7",
-        "cardSetId": "sketchbook-cards",
-        "cardType": "sketchpad",
-        "name": "Sketchpad",
+        "cardType": "eraser",
+        "name": "Eraser",
         "properties": {
           "cost": 2
         }
@@ -2714,7 +1892,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-2": {
@@ -2723,7 +1901,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-3": {
@@ -2732,7 +1910,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-4": {
@@ -2741,7 +1919,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-5": {
@@ -2750,7 +1928,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-6": {
@@ -2759,7 +1937,7 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
         }
       },
       "studio-visit-7": {
@@ -2768,7 +1946,16 @@
         "cardType": "studio-visit",
         "name": "Studio Visit",
         "properties": {
-          "cost": 3
+          "cost": 4
+        }
+      },
+      "studio-visit-8": {
+        "id": "studio-visit-8",
+        "cardSetId": "sketchbook-cards",
+        "cardType": "studio-visit",
+        "name": "Studio Visit",
+        "properties": {
+          "cost": 4
         }
       }
     },
@@ -3038,102 +2225,6 @@
         "playedBy": null,
         "position": 43
       },
-      "doodle-45": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 44
-      },
-      "doodle-46": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 45
-      },
-      "doodle-47": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 46
-      },
-      "doodle-48": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 47
-      },
-      "doodle-49": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 48
-      },
-      "doodle-50": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 49
-      },
-      "doodle-51": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 50
-      },
-      "doodle-52": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 51
-      },
-      "doodle-53": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 52
-      },
-      "doodle-54": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 53
-      },
-      "doodle-55": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 54
-      },
-      "doodle-56": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 55
-      },
-      "doodle-57": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 56
-      },
-      "doodle-58": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 57
-      },
-      "doodle-59": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 58
-      },
-      "doodle-60": {
-        "type": "InDeck",
-        "deckId": "supply-doodle",
-        "playedBy": null,
-        "position": 59
-      },
       "sketch-1": {
         "type": "InDeck",
         "deckId": "supply-sketch",
@@ -3254,126 +2345,6 @@
         "playedBy": null,
         "position": 19
       },
-      "sketch-21": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 20
-      },
-      "sketch-22": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 21
-      },
-      "sketch-23": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 22
-      },
-      "sketch-24": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 23
-      },
-      "sketch-25": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 24
-      },
-      "sketch-26": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 25
-      },
-      "sketch-27": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 26
-      },
-      "sketch-28": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 27
-      },
-      "sketch-29": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 28
-      },
-      "sketch-30": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 29
-      },
-      "sketch-31": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 30
-      },
-      "sketch-32": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 31
-      },
-      "sketch-33": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 32
-      },
-      "sketch-34": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 33
-      },
-      "sketch-35": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 34
-      },
-      "sketch-36": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 35
-      },
-      "sketch-37": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 36
-      },
-      "sketch-38": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 37
-      },
-      "sketch-39": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 38
-      },
-      "sketch-40": {
-        "type": "InDeck",
-        "deckId": "supply-sketch",
-        "playedBy": null,
-        "position": 39
-      },
       "inkwork-1": {
         "type": "InDeck",
         "deckId": "supply-inkwork",
@@ -3446,114 +2417,6 @@
         "playedBy": null,
         "position": 11
       },
-      "inkwork-13": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 12
-      },
-      "inkwork-14": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 13
-      },
-      "inkwork-15": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 14
-      },
-      "inkwork-16": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 15
-      },
-      "inkwork-17": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 16
-      },
-      "inkwork-18": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 17
-      },
-      "inkwork-19": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 18
-      },
-      "inkwork-20": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 19
-      },
-      "inkwork-21": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 20
-      },
-      "inkwork-22": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 21
-      },
-      "inkwork-23": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 22
-      },
-      "inkwork-24": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 23
-      },
-      "inkwork-25": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 24
-      },
-      "inkwork-26": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 25
-      },
-      "inkwork-27": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 26
-      },
-      "inkwork-28": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 27
-      },
-      "inkwork-29": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 28
-      },
-      "inkwork-30": {
-        "type": "InDeck",
-        "deckId": "supply-inkwork",
-        "playedBy": null,
-        "position": 29
-      },
       "idea-1": {
         "type": "InDeck",
         "deckId": "supply-idea",
@@ -3601,6 +2464,42 @@
         "deckId": "supply-idea",
         "playedBy": null,
         "position": 7
+      },
+      "idea-9": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 8
+      },
+      "idea-10": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 9
+      },
+      "idea-11": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 10
+      },
+      "idea-12": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 11
+      },
+      "idea-13": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 12
+      },
+      "idea-14": {
+        "type": "InDeck",
+        "deckId": "supply-idea",
+        "playedBy": null,
+        "position": 13
       },
       "concept-1": {
         "type": "InDeck",
@@ -3698,66 +2597,6 @@
         "playedBy": null,
         "position": 7
       },
-      "smudge-1": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 0
-      },
-      "smudge-2": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 1
-      },
-      "smudge-3": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 2
-      },
-      "smudge-4": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 3
-      },
-      "smudge-5": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 4
-      },
-      "smudge-6": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 5
-      },
-      "smudge-7": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 6
-      },
-      "smudge-8": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 7
-      },
-      "smudge-9": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 8
-      },
-      "smudge-10": {
-        "type": "InDeck",
-        "deckId": "supply-smudge",
-        "playedBy": null,
-        "position": 9
-      },
       "brainstorm-1": {
         "type": "InDeck",
         "deckId": "supply-brainstorm",
@@ -3799,6 +2638,12 @@
         "deckId": "supply-brainstorm",
         "playedBy": null,
         "position": 6
+      },
+      "brainstorm-8": {
+        "type": "InDeck",
+        "deckId": "supply-brainstorm",
+        "playedBy": null,
+        "position": 7
       },
       "studio-1": {
         "type": "InDeck",
@@ -3842,6 +2687,12 @@
         "playedBy": null,
         "position": 6
       },
+      "studio-8": {
+        "type": "InDeck",
+        "deckId": "supply-studio",
+        "playedBy": null,
+        "position": 7
+      },
       "gallery-1": {
         "type": "InDeck",
         "deckId": "supply-gallery",
@@ -3884,89 +2735,11 @@
         "playedBy": null,
         "position": 6
       },
-      "open-mic-1": {
+      "gallery-8": {
         "type": "InDeck",
-        "deckId": "supply-open-mic",
+        "deckId": "supply-gallery",
         "playedBy": null,
-        "position": 0
-      },
-      "open-mic-2": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 1
-      },
-      "open-mic-3": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 2
-      },
-      "open-mic-4": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 3
-      },
-      "open-mic-5": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 4
-      },
-      "open-mic-6": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 5
-      },
-      "open-mic-7": {
-        "type": "InDeck",
-        "deckId": "supply-open-mic",
-        "playedBy": null,
-        "position": 6
-      },
-      "critic-1": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 0
-      },
-      "critic-2": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 1
-      },
-      "critic-3": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 2
-      },
-      "critic-4": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 3
-      },
-      "critic-5": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 4
-      },
-      "critic-6": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 5
-      },
-      "critic-7": {
-        "type": "InDeck",
-        "deckId": "supply-critic",
-        "playedBy": null,
-        "position": 6
+        "position": 7
       },
       "eraser-1": {
         "type": "InDeck",
@@ -4010,47 +2783,11 @@
         "playedBy": null,
         "position": 6
       },
-      "sketchpad-1": {
+      "eraser-8": {
         "type": "InDeck",
-        "deckId": "supply-sketchpad",
+        "deckId": "supply-eraser",
         "playedBy": null,
-        "position": 0
-      },
-      "sketchpad-2": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 1
-      },
-      "sketchpad-3": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 2
-      },
-      "sketchpad-4": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 3
-      },
-      "sketchpad-5": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 4
-      },
-      "sketchpad-6": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 5
-      },
-      "sketchpad-7": {
-        "type": "InDeck",
-        "deckId": "supply-sketchpad",
-        "playedBy": null,
-        "position": 6
+        "position": 7
       },
       "studio-visit-1": {
         "type": "InDeck",
@@ -4093,6 +2830,12 @@
         "deckId": "supply-studio-visit",
         "playedBy": null,
         "position": 6
+      },
+      "studio-visit-8": {
+        "type": "InDeck",
+        "deckId": "supply-studio-visit",
+        "playedBy": null,
+        "position": 7
       }
     },
     "ownerOfCard": {
@@ -4140,22 +2883,6 @@
       "doodle-42": null,
       "doodle-43": null,
       "doodle-44": null,
-      "doodle-45": null,
-      "doodle-46": null,
-      "doodle-47": null,
-      "doodle-48": null,
-      "doodle-49": null,
-      "doodle-50": null,
-      "doodle-51": null,
-      "doodle-52": null,
-      "doodle-53": null,
-      "doodle-54": null,
-      "doodle-55": null,
-      "doodle-56": null,
-      "doodle-57": null,
-      "doodle-58": null,
-      "doodle-59": null,
-      "doodle-60": null,
       "sketch-1": null,
       "sketch-2": null,
       "sketch-3": null,
@@ -4176,26 +2903,6 @@
       "sketch-18": null,
       "sketch-19": null,
       "sketch-20": null,
-      "sketch-21": null,
-      "sketch-22": null,
-      "sketch-23": null,
-      "sketch-24": null,
-      "sketch-25": null,
-      "sketch-26": null,
-      "sketch-27": null,
-      "sketch-28": null,
-      "sketch-29": null,
-      "sketch-30": null,
-      "sketch-31": null,
-      "sketch-32": null,
-      "sketch-33": null,
-      "sketch-34": null,
-      "sketch-35": null,
-      "sketch-36": null,
-      "sketch-37": null,
-      "sketch-38": null,
-      "sketch-39": null,
-      "sketch-40": null,
       "inkwork-1": null,
       "inkwork-2": null,
       "inkwork-3": null,
@@ -4208,24 +2915,6 @@
       "inkwork-10": null,
       "inkwork-11": null,
       "inkwork-12": null,
-      "inkwork-13": null,
-      "inkwork-14": null,
-      "inkwork-15": null,
-      "inkwork-16": null,
-      "inkwork-17": null,
-      "inkwork-18": null,
-      "inkwork-19": null,
-      "inkwork-20": null,
-      "inkwork-21": null,
-      "inkwork-22": null,
-      "inkwork-23": null,
-      "inkwork-24": null,
-      "inkwork-25": null,
-      "inkwork-26": null,
-      "inkwork-27": null,
-      "inkwork-28": null,
-      "inkwork-29": null,
-      "inkwork-30": null,
       "idea-1": null,
       "idea-2": null,
       "idea-3": null,
@@ -4234,6 +2923,12 @@
       "idea-6": null,
       "idea-7": null,
       "idea-8": null,
+      "idea-9": null,
+      "idea-10": null,
+      "idea-11": null,
+      "idea-12": null,
+      "idea-13": null,
+      "idea-14": null,
       "concept-1": null,
       "concept-2": null,
       "concept-3": null,
@@ -4250,16 +2945,6 @@
       "masterpiece-6": null,
       "masterpiece-7": null,
       "masterpiece-8": null,
-      "smudge-1": null,
-      "smudge-2": null,
-      "smudge-3": null,
-      "smudge-4": null,
-      "smudge-5": null,
-      "smudge-6": null,
-      "smudge-7": null,
-      "smudge-8": null,
-      "smudge-9": null,
-      "smudge-10": null,
       "brainstorm-1": null,
       "brainstorm-2": null,
       "brainstorm-3": null,
@@ -4267,6 +2952,7 @@
       "brainstorm-5": null,
       "brainstorm-6": null,
       "brainstorm-7": null,
+      "brainstorm-8": null,
       "studio-1": null,
       "studio-2": null,
       "studio-3": null,
@@ -4274,6 +2960,7 @@
       "studio-5": null,
       "studio-6": null,
       "studio-7": null,
+      "studio-8": null,
       "gallery-1": null,
       "gallery-2": null,
       "gallery-3": null,
@@ -4281,20 +2968,7 @@
       "gallery-5": null,
       "gallery-6": null,
       "gallery-7": null,
-      "open-mic-1": null,
-      "open-mic-2": null,
-      "open-mic-3": null,
-      "open-mic-4": null,
-      "open-mic-5": null,
-      "open-mic-6": null,
-      "open-mic-7": null,
-      "critic-1": null,
-      "critic-2": null,
-      "critic-3": null,
-      "critic-4": null,
-      "critic-5": null,
-      "critic-6": null,
-      "critic-7": null,
+      "gallery-8": null,
       "eraser-1": null,
       "eraser-2": null,
       "eraser-3": null,
@@ -4302,20 +2976,15 @@
       "eraser-5": null,
       "eraser-6": null,
       "eraser-7": null,
-      "sketchpad-1": null,
-      "sketchpad-2": null,
-      "sketchpad-3": null,
-      "sketchpad-4": null,
-      "sketchpad-5": null,
-      "sketchpad-6": null,
-      "sketchpad-7": null,
+      "eraser-8": null,
       "studio-visit-1": null,
       "studio-visit-2": null,
       "studio-visit-3": null,
       "studio-visit-4": null,
       "studio-visit-5": null,
       "studio-visit-6": null,
-      "studio-visit-7": null
+      "studio-visit-7": null,
+      "studio-visit-8": null
     },
     "visibility": {
       "doodle-1": {
@@ -4450,54 +3119,6 @@
       "doodle-44": {
         "faceUp": true
       },
-      "doodle-45": {
-        "faceUp": true
-      },
-      "doodle-46": {
-        "faceUp": true
-      },
-      "doodle-47": {
-        "faceUp": true
-      },
-      "doodle-48": {
-        "faceUp": true
-      },
-      "doodle-49": {
-        "faceUp": true
-      },
-      "doodle-50": {
-        "faceUp": true
-      },
-      "doodle-51": {
-        "faceUp": true
-      },
-      "doodle-52": {
-        "faceUp": true
-      },
-      "doodle-53": {
-        "faceUp": true
-      },
-      "doodle-54": {
-        "faceUp": true
-      },
-      "doodle-55": {
-        "faceUp": true
-      },
-      "doodle-56": {
-        "faceUp": true
-      },
-      "doodle-57": {
-        "faceUp": true
-      },
-      "doodle-58": {
-        "faceUp": true
-      },
-      "doodle-59": {
-        "faceUp": true
-      },
-      "doodle-60": {
-        "faceUp": true
-      },
       "sketch-1": {
         "faceUp": true
       },
@@ -4558,66 +3179,6 @@
       "sketch-20": {
         "faceUp": true
       },
-      "sketch-21": {
-        "faceUp": true
-      },
-      "sketch-22": {
-        "faceUp": true
-      },
-      "sketch-23": {
-        "faceUp": true
-      },
-      "sketch-24": {
-        "faceUp": true
-      },
-      "sketch-25": {
-        "faceUp": true
-      },
-      "sketch-26": {
-        "faceUp": true
-      },
-      "sketch-27": {
-        "faceUp": true
-      },
-      "sketch-28": {
-        "faceUp": true
-      },
-      "sketch-29": {
-        "faceUp": true
-      },
-      "sketch-30": {
-        "faceUp": true
-      },
-      "sketch-31": {
-        "faceUp": true
-      },
-      "sketch-32": {
-        "faceUp": true
-      },
-      "sketch-33": {
-        "faceUp": true
-      },
-      "sketch-34": {
-        "faceUp": true
-      },
-      "sketch-35": {
-        "faceUp": true
-      },
-      "sketch-36": {
-        "faceUp": true
-      },
-      "sketch-37": {
-        "faceUp": true
-      },
-      "sketch-38": {
-        "faceUp": true
-      },
-      "sketch-39": {
-        "faceUp": true
-      },
-      "sketch-40": {
-        "faceUp": true
-      },
       "inkwork-1": {
         "faceUp": true
       },
@@ -4654,60 +3215,6 @@
       "inkwork-12": {
         "faceUp": true
       },
-      "inkwork-13": {
-        "faceUp": true
-      },
-      "inkwork-14": {
-        "faceUp": true
-      },
-      "inkwork-15": {
-        "faceUp": true
-      },
-      "inkwork-16": {
-        "faceUp": true
-      },
-      "inkwork-17": {
-        "faceUp": true
-      },
-      "inkwork-18": {
-        "faceUp": true
-      },
-      "inkwork-19": {
-        "faceUp": true
-      },
-      "inkwork-20": {
-        "faceUp": true
-      },
-      "inkwork-21": {
-        "faceUp": true
-      },
-      "inkwork-22": {
-        "faceUp": true
-      },
-      "inkwork-23": {
-        "faceUp": true
-      },
-      "inkwork-24": {
-        "faceUp": true
-      },
-      "inkwork-25": {
-        "faceUp": true
-      },
-      "inkwork-26": {
-        "faceUp": true
-      },
-      "inkwork-27": {
-        "faceUp": true
-      },
-      "inkwork-28": {
-        "faceUp": true
-      },
-      "inkwork-29": {
-        "faceUp": true
-      },
-      "inkwork-30": {
-        "faceUp": true
-      },
       "idea-1": {
         "faceUp": true
       },
@@ -4730,6 +3237,24 @@
         "faceUp": true
       },
       "idea-8": {
+        "faceUp": true
+      },
+      "idea-9": {
+        "faceUp": true
+      },
+      "idea-10": {
+        "faceUp": true
+      },
+      "idea-11": {
+        "faceUp": true
+      },
+      "idea-12": {
+        "faceUp": true
+      },
+      "idea-13": {
+        "faceUp": true
+      },
+      "idea-14": {
         "faceUp": true
       },
       "concept-1": {
@@ -4780,36 +3305,6 @@
       "masterpiece-8": {
         "faceUp": true
       },
-      "smudge-1": {
-        "faceUp": true
-      },
-      "smudge-2": {
-        "faceUp": true
-      },
-      "smudge-3": {
-        "faceUp": true
-      },
-      "smudge-4": {
-        "faceUp": true
-      },
-      "smudge-5": {
-        "faceUp": true
-      },
-      "smudge-6": {
-        "faceUp": true
-      },
-      "smudge-7": {
-        "faceUp": true
-      },
-      "smudge-8": {
-        "faceUp": true
-      },
-      "smudge-9": {
-        "faceUp": true
-      },
-      "smudge-10": {
-        "faceUp": true
-      },
       "brainstorm-1": {
         "faceUp": true
       },
@@ -4829,6 +3324,9 @@
         "faceUp": true
       },
       "brainstorm-7": {
+        "faceUp": true
+      },
+      "brainstorm-8": {
         "faceUp": true
       },
       "studio-1": {
@@ -4852,6 +3350,9 @@
       "studio-7": {
         "faceUp": true
       },
+      "studio-8": {
+        "faceUp": true
+      },
       "gallery-1": {
         "faceUp": true
       },
@@ -4873,46 +3374,7 @@
       "gallery-7": {
         "faceUp": true
       },
-      "open-mic-1": {
-        "faceUp": true
-      },
-      "open-mic-2": {
-        "faceUp": true
-      },
-      "open-mic-3": {
-        "faceUp": true
-      },
-      "open-mic-4": {
-        "faceUp": true
-      },
-      "open-mic-5": {
-        "faceUp": true
-      },
-      "open-mic-6": {
-        "faceUp": true
-      },
-      "open-mic-7": {
-        "faceUp": true
-      },
-      "critic-1": {
-        "faceUp": true
-      },
-      "critic-2": {
-        "faceUp": true
-      },
-      "critic-3": {
-        "faceUp": true
-      },
-      "critic-4": {
-        "faceUp": true
-      },
-      "critic-5": {
-        "faceUp": true
-      },
-      "critic-6": {
-        "faceUp": true
-      },
-      "critic-7": {
+      "gallery-8": {
         "faceUp": true
       },
       "eraser-1": {
@@ -4936,25 +3398,7 @@
       "eraser-7": {
         "faceUp": true
       },
-      "sketchpad-1": {
-        "faceUp": true
-      },
-      "sketchpad-2": {
-        "faceUp": true
-      },
-      "sketchpad-3": {
-        "faceUp": true
-      },
-      "sketchpad-4": {
-        "faceUp": true
-      },
-      "sketchpad-5": {
-        "faceUp": true
-      },
-      "sketchpad-6": {
-        "faceUp": true
-      },
-      "sketchpad-7": {
+      "eraser-8": {
         "faceUp": true
       },
       "studio-visit-1": {
@@ -4977,13 +3421,22 @@
       },
       "studio-visit-7": {
         "faceUp": true
+      },
+      "studio-visit-8": {
+        "faceUp": true
       }
     },
     "resources": {
       "__perPlayer": true,
       "entries": [
-        ["player-1", {}],
-        ["player-2", {}]
+        [
+          "player-1",
+          {}
+        ],
+        [
+          "player-2",
+          {}
+        ]
       ]
     },
     "boards": {

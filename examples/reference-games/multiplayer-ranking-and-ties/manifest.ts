@@ -176,8 +176,33 @@ export default defineTopologyManifest({
   setupProfiles: [
     {
       id: "standard",
-      name: "Standard Harbor Fair",
-      description: "Two to four players draft stalls for six rounds.",
+      name: "Standard fair",
+      description:
+        "Two to four organizers draft one public stall per round for six rounds.",
+      guidance: {
+        summary:
+          "Draft a face-up stall; the vacated awnings refills automatically and Storms may cancel the fair.",
+        steps: [
+          {
+            id: "draft-stall",
+            label: "Draft a stall",
+            description:
+              "The active organizer adds one of the four market stalls to their public festival row.",
+          },
+          {
+            id: "refill-market",
+            label: "Refill the awnings",
+            description:
+              "Storms are revealed and skipped until a stall fills the vacated market position.",
+          },
+          {
+            id: "judge-festival",
+            label: "Judge after six rounds",
+            description:
+              "Prestige, complete guild sets, and coins produce authoritative competition ranks.",
+          },
+        ],
+      },
     },
   ],
 });

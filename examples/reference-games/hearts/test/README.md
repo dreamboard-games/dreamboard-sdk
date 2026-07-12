@@ -1,13 +1,20 @@
-# Dreamboard Test Workspace
+# Hearts scenario workspace
 
-TypeScript bases live in `test/bases/*.base.ts` and scenarios live in `test/scenarios/*.scenario.ts`.
+Every authored scenario starts from ordinary four-player setup with an explicit
+safe-integer seed and the `default` production setup profile. Scenarios reach
+their subject only by replaying canonical `passing.submit` and
+`playing.playCard` commands.
 
-1. Define reusable seeded bases with `defineBase({ id, seed, players, setupProfileId?, setup })`.
-2. Define scenarios with `defineScenario({ id, from, when, then })`.
-3. Scenario assertions can read `players()`, `state()`, `view(playerId)`, and `interactions(playerId)`.
-4. Generate deterministic base snapshots: `dreamboard test generate`.
-5. Run tests: `dreamboard test run`.
+`complete-game.scenario.ts` is the canonical full-hand replay. Behavior tests,
+inspect/explore checks, and UI/demo checkpoints all use that path or a separate
+legal seed/path for a mutually exclusive scoring or legality branch.
 
-Import test helpers from `../testing-types`.
+`test/bases/**` and `test/generated/**` are preserved byte-for-byte only for the
+Phase 07 deletion boundary. They are excluded from typecheck, test discovery,
+dev, and scenario authority; do not import or regenerate them.
 
-Generated artifacts are written to `test/generated/*` and should not be edited manually.
+Run the focused gate from this package:
+
+```sh
+pnpm verify
+```

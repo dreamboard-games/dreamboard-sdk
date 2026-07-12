@@ -6,33 +6,23 @@ import {
   many,
 } from "@dreamboard-games/sdk/reducer";
 import { cardTypes, type CardId } from "../../shared/manifest-contract";
-import {
-  type GameContract,
-  type GameState,
-  type PlayerTurnPhaseState,
+import type {
+  GameContract,
+  GameState,
+  PlayerTurnPhaseState,
 } from "../game-contract";
-import { edit } from "../reducer-support";
-import { validateActionPlay } from "./support";
-import { notYourTurn } from "../phases/player-turn/rules";
+import { appendHistory, edit } from "../reducer-support";
+import { validateTechniquePlay } from "./support";
 
-const TRASH_LIMIT = 4;
-
-// Eraser: trash up to 4 cards from your hand. The Chapel.
-//
-// Playing the Eraser is a two-step interaction so the trash targets are
-// selected from the *real* hand (canonical card-target selection), the same
-// way Hearts' pass picks cards. Step one (`eraser`) just plays the card and
-// arms the "resolve" step; step two (`resolveEraser`) collects the hand cards
-// to trash. Splitting the play from the selection keeps the hand-tap router
-// unambiguous: only `resolveEraser` is offered while the step is "resolve".
 export const eraser = defineCardAction<GameContract, PlayerTurnPhaseState>()({
   cardType: cardTypes.eraser,
   playFrom: "hand",
   rules: [
     {
-      id: "action-card-playable",
+      id: "technique-playable",
       errorCode: "ACTION_CARD_NOT_PLAYABLE",
-      validate: ({ state, input }) => validateActionPlay(state, input.playerId),
+      validate: ({ state, input }) =>
+        validateTechniquePlay(state, input.playerId),
     },
   ],
   reduce({ state, input, accept }) {
@@ -47,17 +37,20 @@ export const eraser = defineCardAction<GameContract, PlayerTurnPhaseState>()({
       ...state.phase,
       actionsLeft: state.phase.actionsLeft - 1,
       step: "resolve",
-      pendingAction: { kind: "eraser" },
+      pendingTechnique: "eraser",
     });
-    return accept(tx.state);
+    return accept(
+      appendHistory(tx.state, {
+        kind: "technique",
+        actorPlayerId: input.playerId,
+        cardId: input.params.cardId,
+        summary: "Eraser is waiting for zero to four hand cards.",
+      }),
+    );
   },
 });
 
-// "Trash" moves the chosen cards into the shared `trash` zone, where they
-// cannot re-enter play. The collector accepts 0..4 cardIds from the hand —
-// choosing none is legal (you simply commit the empty selection). The played
-// Eraser is already in `in-play`, so the hand target naturally excludes it.
-const trashTarget = cardTarget
+const handTarget = cardTarget
   .zones<GameState, CardId, readonly ["hand"]>(["hand"])
   .build();
 
@@ -67,41 +60,44 @@ export const resolveEraser = defineInteraction<
 >()({
   commit: { mode: "manual" },
   inputs: {
-    trashedCardIds: many(
-      cardInput<GameState, CardId, readonly ["hand"]>({ target: trashTarget }),
-      { max: TRASH_LIMIT },
+    cardIds: many(
+      cardInput<GameState, CardId, readonly ["hand"]>({ target: handTarget }),
+      { min: 0, max: 4 },
     ),
   },
   rules: [
     {
-      id: "eraser-resolution-pending",
+      id: "eraser-pending",
       errorCode: "NOT_RESOLVING_ERASER",
-      available({ state }) {
-        return (
-          state.phase.step === "resolve" &&
-          state.phase.pendingAction?.kind === "eraser"
-        );
-      },
-      validate({ state, input }) {
-        const turn = notYourTurn(state, input.playerId);
-        if (turn) return turn;
+      available: ({ state }) =>
+        state.phase.step === "resolve" &&
+        state.phase.pendingTechnique === "eraser",
+      validate({ state, input, q }) {
+        if (state.flow.activePlayers[0] !== input.playerId) {
+          return { errorCode: "NOT_YOUR_TURN" };
+        }
         if (
           state.phase.step !== "resolve" ||
-          state.phase.pendingAction?.kind !== "eraser"
+          state.phase.pendingTechnique !== "eraser"
         ) {
-          return {
-            errorCode: "NOT_RESOLVING_ERASER",
-            message: "No Eraser to resolve.",
-          };
+          return { errorCode: "NOT_RESOLVING_ERASER" };
         }
-        return null;
+        const cardIds = input.params.cardIds ?? [];
+        if (cardIds.length > 4) return { errorCode: "ERASER_LIMIT" };
+        if (new Set(cardIds).size !== cardIds.length) {
+          return { errorCode: "DUPLICATE_CARD" };
+        }
+        const hand = new Set(q.zone.playerCards(input.playerId, "hand"));
+        return cardIds.every((cardId) => hand.has(cardId))
+          ? null
+          : { errorCode: "CARD_NOT_IN_HAND" };
       },
     },
   ],
   reduce({ state, input, accept }) {
-    const trashed = input.params.trashedCardIds ?? [];
+    const cardIds = input.params.cardIds ?? [];
     const tx = edit(state);
-    for (const cardId of trashed) {
+    for (const cardId of cardIds) {
       tx.moveCardFromPlayerZoneToSharedZone({
         playerId: input.playerId,
         fromZoneId: "hand",
@@ -112,8 +108,15 @@ export const resolveEraser = defineInteraction<
     tx.patchPhaseState({
       ...state.phase,
       step: "action",
-      pendingAction: null,
+      pendingTechnique: null,
     });
-    return accept(tx.state);
+    return accept(
+      appendHistory(tx.state, {
+        kind: "techniqueResolved",
+        actorPlayerId: input.playerId,
+        cardId: null,
+        summary: `Eraser trashed ${cardIds.length} card(s).`,
+      }),
+    );
   },
 });

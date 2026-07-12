@@ -1,4 +1,12 @@
 {
-  "assets": [],
-  "notes": "River Guild uses plain text and CSS presentation in this reference slice."
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "path": "thumbnail.svg",
+      "license": "Repository-owned original artwork; use governed by the repository license.",
+      "source": "Original River Guild SVG created for this repository.",
+      "copyright": "Copyright 2026 Dreamboard"
+    }
+  ],
+  "note": "No third-party artwork is used."
 }

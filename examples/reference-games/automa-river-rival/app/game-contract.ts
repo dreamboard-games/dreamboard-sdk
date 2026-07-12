@@ -1,53 +1,80 @@
 import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
-  type ErrorCodeOfContract,
-  type GameEvent,
   type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
+import {
+  ids,
+  manifestContract,
+  type PlayerId,
+} from "../shared/manifest-contract";
 
-export const cargoKindSchema = z.enum(["timber", "ore", "grain"]);
-export const cargoSchema = z.object({
-  id: z.string(),
-  kind: cargoKindSchema,
-  value: z.number().int().min(1),
-});
-export const rivalInstructionSchema = z.discriminatedUnion("kind", [
-  z.object({ id: z.string(), kind: z.literal("claimHighest") }),
-  z.object({
-    id: z.string(),
-    kind: z.literal("claimKind"),
-    cargoKind: cargoKindSchema,
-  }),
-  z.object({ id: z.string(), kind: z.literal("sweepLeft") }),
+export const cargoKindSchema = z.enum(["timber", "grain", "ore"]);
+export const instructionKindSchema = z.enum([
+  "claimHighest",
+  "claimKind",
+  "sweepLeft",
 ]);
-export const processedClaimSchema = z.object({
-  eventStart: z.number().int().min(0),
-  eventCount: z.number().int().min(0),
-});
+
+export const procedureEventSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("rival-instruction-revealed"),
+    round: z.number().int().min(1).max(6),
+    instructionId: ids.cardId,
+    instructionKind: instructionKindSchema,
+    cargoKind: cargoKindSchema.optional(),
+  }),
+  z.object({
+    kind: z.literal("rival-cargo-claimed"),
+    round: z.number().int().min(1).max(6),
+    cargoId: ids.cardId,
+    cargoKind: cargoKindSchema,
+    value: z.number().int().min(1).max(3),
+    position: z.number().int().min(0).max(3),
+    rivalProgress: z.number().int().nonnegative(),
+  }),
+  z.object({
+    kind: z.literal("rival-river-swept"),
+    round: z.number().int().min(1).max(6),
+    cargoId: ids.cardId,
+    cargoKind: cargoKindSchema,
+    value: z.number().int().min(1).max(3),
+    position: z.literal(0),
+    progressGain: z.literal(1),
+    rivalProgress: z.number().int().nonnegative(),
+  }),
+  z.object({
+    kind: z.literal("river-refilled"),
+    round: z.number().int().min(1).max(6),
+    cargoId: ids.cardId,
+    position: z.number().int().min(0).max(3),
+    source: z.enum(["human", "rival"]),
+    playerId: ids.playerId.optional(),
+  }),
+  z.object({
+    kind: z.literal("river-round-advanced"),
+    completedRound: z.number().int().min(1).max(6),
+    nextRound: z.number().int().min(2).max(6).nullable(),
+  }),
+]);
+
 export const publicStateSchema = z.object({
-  round: z.number().int().min(1).default(1),
-  river: z.array(cargoSchema).default([]),
-  supply: z.array(cargoSchema).default([]),
-  rivalDeck: z.array(rivalInstructionSchema).default([]),
-  rivalProgress: z.number().int().min(0).default(0),
-  teamScore: z.number().int().min(0).default(0),
-  eventLog: z.array(z.custom<GameEvent>()).default([]),
-  processedClaims: z.record(z.string(), processedClaimSchema).default({}),
-  outcome: z.custom<GameOutcome<string>>().nullable().default(null),
+  round: z.number().int().min(1).max(6).default(1),
+  activeHumanIndex: z.number().int().min(0).max(1).default(0),
+  rivalProgress: z.number().int().nonnegative().default(0),
+  procedureEvents: z.array(procedureEventSchema).default([]),
+  outcome: z.custom<GameOutcome<PlayerId>>().nullable().default(null),
 });
+
 export const privateStateSchema = z.object({});
 export const hiddenStateSchema = z.object({});
 
 export const setupPhaseStateSchema = z.object({});
 export const humanTurnPhaseStateSchema = z.object({});
+export const resolveRivalPhaseStateSchema = z.object({});
+export const advanceRiverRoundPhaseStateSchema = z.object({});
 export const gameOverPhaseStateSchema = z.object({});
-
-export const claimCargoParamsSchema = z.object({
-  claimId: z.string().min(1).default("main-claim"),
-});
 
 export const gameContract = defineGameContract({
   manifest: manifestContract,
@@ -59,20 +86,15 @@ export const gameContract = defineGameContract({
   phases: {
     setup: setupPhaseStateSchema,
     humanTurn: humanTurnPhaseStateSchema,
+    resolveRival: resolveRivalPhaseStateSchema,
+    advanceRiverRound: advanceRiverRoundPhaseStateSchema,
     gameOver: gameOverPhaseStateSchema,
-  },
-  errors: {
-    PLAYER_NOT_AUTHORIZED: "Only the human player may claim cargo.",
-    GAME_ALREADY_COMPLETE: "This river race is already complete.",
   },
 });
 
 export type GameContract = typeof gameContract;
 export type GameState = GameStateOf<GameContract>;
-export type GameErrorCode = ErrorCodeOfContract<GameContract>;
-export type Cargo = z.infer<typeof cargoSchema>;
-export type CargoKind = z.infer<typeof cargoKindSchema>;
-export type RivalInstruction = z.infer<typeof rivalInstructionSchema>;
 export type PublicState = z.infer<typeof publicStateSchema>;
-export type ClaimCargoParams = z.infer<typeof claimCargoParamsSchema>;
-export type PlayerId = z.infer<typeof ids.playerId>;
+export type ProcedureEvent = z.infer<typeof procedureEventSchema>;
+export type CargoKind = z.infer<typeof cargoKindSchema>;
+export type InstructionKind = z.infer<typeof instructionKindSchema>;

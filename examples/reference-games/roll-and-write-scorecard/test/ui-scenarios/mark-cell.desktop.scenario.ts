@@ -1,9 +1,8 @@
-import behaviorScenario from "../scenarios/multiple-matches.scenario.ts";
-
 export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.desktop",
   title: "Cloudline Survey: desktop survey-cell selection",
-  behaviorScenario,
+  behaviorScenario: "../scenarios/multiple-matches.scenario.ts",
+  at: { segment: "given", completed: 0 },
   contracts: ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
   capabilities: ["click", "runtime-submit", "square-board-targets"],
   sourceFiles: [

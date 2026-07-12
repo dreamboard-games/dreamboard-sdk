@@ -1,21 +1,31 @@
 import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
+import { ids } from "../shared/manifest-contract";
+import { manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
-  type ErrorCodeOfContract,
   type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
 
-const perPlayerScore = z
-  .partialRecord(ids.playerId, z.number().int())
+const perPlayerScoreSchema = z
+  .partialRecord(ids.playerId, z.number().int().nonnegative())
+  .default({});
+const perPlayerCardIdsSchema = z
+  .partialRecord(ids.playerId, z.array(ids.cardId))
   .default({});
 
+export const roundHistoryEntrySchema = z.object({
+  round: z.number().int().min(1).max(2),
+  scoreByPlayer: perPlayerScoreSchema,
+  cardIdsByPlayer: perPlayerCardIdsSchema,
+});
+
 export const publicStateSchema = z.object({
-  round: z.number().int().min(1).max(3).default(1),
-  totalScoreByPlayer: perPlayerScore,
-  roundScoreByPlayer: perPlayerScore,
-  puddingScoreByPlayer: perPlayerScore,
+  round: z.number().int().min(1).max(2).default(1),
+  pick: z.number().int().min(1).max(6).default(1),
+  totalScoreByPlayer: perPlayerScoreSchema,
+  roundScoreByPlayer: perPlayerScoreSchema,
+  roundHistory: z.array(roundHistoryEntrySchema).default([]),
   outcome: z.custom<GameOutcome<string>>().nullable().default(null),
 });
 
@@ -40,13 +50,9 @@ export const gameContract = defineGameContract({
     scoreRound: scoreRoundPhaseStateSchema,
     gameOver: gameOverPhaseStateSchema,
   },
-  errors: {
-    CHOPSTICKS_NOT_AVAILABLE:
-      "Chopsticks can only be used after you kept them on a previous turn.",
-  },
 });
 
 export type GameContract = typeof gameContract;
 export type GameState = GameStateOf<GameContract>;
-export type GameErrorCode = ErrorCodeOfContract<GameContract>;
 export type PublicState = z.infer<typeof publicStateSchema>;
+export type RoundHistoryEntry = z.infer<typeof roundHistoryEntrySchema>;

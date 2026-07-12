@@ -1,71 +1,53 @@
-import { UI, Zone } from "../shared/generated/ui-contract.ts";
-import { literals, type CardType } from "../shared/manifest-contract";
+import { UI, Zone } from "../shared/generated/ui-contract";
+import type { SharedZoneId } from "../shared/manifest-contract";
 
-export type SupplyZoneId =
-  (typeof literals.homeSharedZoneIdByCardType)[CardType];
-
-// Supply piles grouped by card kind, so the supply renders as four labelled
-// sections of one tile per pile (top card only — never one tile per card).
-export const ACTION_SUPPLY_ZONES = [
+export const TECHNIQUE_SUPPLY_ZONES = [
   "supply-brainstorm",
   "supply-studio",
   "supply-gallery",
-  "supply-open-mic",
-  "supply-critic",
   "supply-eraser",
-  "supply-sketchpad",
   "supply-studio-visit",
-] as const satisfies readonly SupplyZoneId[];
+] as const satisfies readonly SharedZoneId[];
 
-export const TREASURE_SUPPLY_ZONES = [
+export const INSPIRATION_SUPPLY_ZONES = [
   "supply-doodle",
   "supply-sketch",
   "supply-inkwork",
-] as const satisfies readonly SupplyZoneId[];
+] as const satisfies readonly SharedZoneId[];
 
-export const VICTORY_SUPPLY_ZONES = [
+export const PORTFOLIO_SUPPLY_ZONES = [
   "supply-idea",
   "supply-concept",
   "supply-masterpiece",
-] as const satisfies readonly SupplyZoneId[];
-
-export const CURSE_SUPPLY_ZONES = [
-  "supply-smudge",
-] as const satisfies readonly SupplyZoneId[];
+] as const satisfies readonly SharedZoneId[];
 
 export const SUPPLY_ZONES = [
-  ...ACTION_SUPPLY_ZONES,
-  ...TREASURE_SUPPLY_ZONES,
-  ...VICTORY_SUPPLY_ZONES,
-  ...CURSE_SUPPLY_ZONES,
-] as const satisfies readonly SupplyZoneId[];
+  ...INSPIRATION_SUPPLY_ZONES,
+  ...PORTFOLIO_SUPPLY_ZONES,
+  ...TECHNIQUE_SUPPLY_ZONES,
+] as const;
 
 export const useSketchbookSurfaces = UI.defineSurfaces({
-  hand: Zone.hand("hand", {
-    role: "primary",
-    label: "Your hand",
-  }),
-  deck: Zone.pile("deck"),
-  discard: Zone.pile("discard"),
-  // Single collector spanning every supply pile. Bound to both `buyCard`
-  // (buy step) and `resolveStudioVisit` (resolve step); the active step picks
-  // which interaction a supply tap routes to, so one binding serves both.
+  hand: Zone.hand("hand", { role: "primary", label: "Your hand" }),
   market: Zone.collection(SUPPLY_ZONES, { mode: "top-card" }),
-  // Grouped top-card display surfaces (one tile per pile).
-  supplyActions: Zone.collection(ACTION_SUPPLY_ZONES, { mode: "top-card" }),
-  supplyTreasures: Zone.collection(TREASURE_SUPPLY_ZONES, { mode: "top-card" }),
-  supplyVictory: Zone.collection(VICTORY_SUPPLY_ZONES, { mode: "top-card" }),
-  supplyCurses: Zone.collection(CURSE_SUPPLY_ZONES, { mode: "top-card" }),
+  supplyTechniques: Zone.collection(TECHNIQUE_SUPPLY_ZONES, {
+    mode: "top-card",
+  }),
+  supplyInspiration: Zone.collection(INSPIRATION_SUPPLY_ZONES, {
+    mode: "top-card",
+  }),
+  supplyPortfolio: Zone.collection(PORTFOLIO_SUPPLY_ZONES, {
+    mode: "top-card",
+  }),
 });
 
 export type SketchbookSurfaces = ReturnType<typeof useSketchbookSurfaces>;
 
 export const SUPPLY_GROUPS = [
-  { label: "Actions", surfaceKey: "supplyActions" },
-  { label: "Treasures", surfaceKey: "supplyTreasures" },
-  { label: "Victory", surfaceKey: "supplyVictory" },
-  { label: "Curses", surfaceKey: "supplyCurses" },
+  { label: "Inspiration", surfaceKey: "supplyInspiration" },
+  { label: "Portfolio", surfaceKey: "supplyPortfolio" },
+  { label: "Techniques", surfaceKey: "supplyTechniques" },
 ] as const satisfies ReadonlyArray<{
-  label: string;
-  surfaceKey: keyof SketchbookSurfaces;
+  readonly label: string;
+  readonly surfaceKey: keyof SketchbookSurfaces;
 }>;

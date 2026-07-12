@@ -3,7 +3,7 @@ import {
   Phase,
   UI,
   type PhaseName,
-} from "../shared/generated/ui-contract.ts";
+} from "../shared/generated/ui-contract";
 import { HeartsSurfaces } from "./components/game-ui";
 import { useHeartsSurfaces } from "./surfaces";
 import "./style.css";

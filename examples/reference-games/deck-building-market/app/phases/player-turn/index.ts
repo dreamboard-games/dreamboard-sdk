@@ -1,71 +1,46 @@
 import { defineStepPhase } from "@dreamboard-games/sdk/reducer";
-import {
-  playerTurnPhaseStateSchema,
-  type GameContract,
-} from "../../game-contract";
+import type { GameContract } from "../../game-contract";
+import { sketchbookPhaseStateSchema } from "../../game-contract";
 import {
   brainstorm,
-  studio,
-  gallery,
-  openMic,
-  critic,
   eraser,
+  gallery,
   resolveEraser,
-  sketchpad,
-  resolveSketchpad,
-  studioVisit,
   resolveStudioVisit,
+  studio,
+  studioVisit,
 } from "../../cards";
 import {
+  shuffleDeckForDraw,
   shuffleOpeningDeck,
-  shufflePlayerDeckForDraw,
 } from "../../effects/deck";
+import { buyCard, endActionStep, endTurn, playInspiration } from "./interactions";
 import { FRESH_TURN } from "./state";
-import {
-  buyCard,
-  endActionPhase,
-  endTurn,
-  playAllTreasures,
-  playTreasure,
-} from "./interactions";
 
 export const playerTurn = defineStepPhase<GameContract>()({
   kind: "player",
-  steps: ["action", "resolve", "buy", "cleanup"],
-  state: playerTurnPhaseStateSchema,
+  steps: ["action", "resolve", "buy"],
+  state: sketchbookPhaseStateSchema,
   initialState: () => ({ ...FRESH_TURN }),
   actor: ({ state }) => state.flow.activePlayers,
-  zones: ["hand", "deck", "discard"],
+  zones: ["hand", "deck", "discard", "in-play"],
   cardActions: {
     brainstorm: { steps: ["action"], action: brainstorm },
     studio: { steps: ["action"], action: studio },
     gallery: { steps: ["action"], action: gallery },
-    openMic: { steps: ["action"], action: openMic },
-    critic: { steps: ["action"], action: critic },
     eraser: { steps: ["action"], action: eraser },
-    sketchpad: { steps: ["action"], action: sketchpad },
     studioVisit: { steps: ["action"], action: studioVisit },
   },
   interactions: {
-    endActionPhase: { steps: ["action"], interaction: endActionPhase },
-    // Resolve interactions are offered only during the "resolve" step, gated
-    // further to the matching `pendingAction.kind` by each interaction's
-    // `available()` rule so exactly one is shown at a time.
     resolveEraser: { steps: ["resolve"], interaction: resolveEraser },
-    resolveSketchpad: { steps: ["resolve"], interaction: resolveSketchpad },
     resolveStudioVisit: {
       steps: ["resolve"],
       interaction: resolveStudioVisit,
     },
-    playTreasure: { steps: ["buy"], interaction: playTreasure },
-    playAllTreasures: { steps: ["buy"], interaction: playAllTreasures },
+    endActionStep: { steps: ["action"], interaction: endActionStep },
+    playInspiration: { steps: ["buy"], interaction: playInspiration },
     buyCard: { steps: ["buy"], interaction: buyCard },
     endTurn: { steps: ["buy"], interaction: endTurn },
   },
-  effects: {
-    // Reducer effects are registered on the interactive phase; setup emits
-    // `shuffleOpeningDeck` before transitioning into this turn phase.
-    shuffleOpeningDeck,
-    shufflePlayerDeckForDraw,
-  },
+  effects: { shuffleOpeningDeck, shuffleDeckForDraw },
 });

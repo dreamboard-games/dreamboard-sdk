@@ -1,11 +1,11 @@
-import { Interaction, UI, Zone } from "../shared/generated/ui-contract.ts";
+import { Interaction, UI, Zone } from "../shared/generated/ui-contract";
 
-export const useSushiGoSurfaces = UI.defineSurfaces({
+export const useLanternMarketSurfaces = UI.defineSurfaces({
   hand: Zone.hand("hand", {
     role: "primary",
-    label: "Your hand",
+    label: "Your market hand",
   }),
   draftingForm: Interaction.form("drafting.submit"),
 });
 
-export type SushiGoSurfaces = ReturnType<typeof useSushiGoSurfaces>;
+export type LanternMarketSurfaces = ReturnType<typeof useLanternMarketSurfaces>;

@@ -6,43 +6,37 @@ import type {
 } from "../shared/manifest-contract";
 import type { GameContract } from "./game-contract";
 import { definePlayerView } from "@dreamboard-games/sdk/reducer";
-import { hasChopsticksReady } from "./rules/scoring";
 
-type SushiCardView = ViewCard<CardId, CardType, CardProperties>;
+type MarketCardView = ViewCard<CardId, CardType, CardProperties>;
 
 export const playerView = definePlayerView<GameContract>()({
   project({ state, playerId, q }) {
-    const viewCard = (cardId: CardId): SushiCardView => {
+    const viewCard = (cardId: CardId): MarketCardView => {
       const card = q.card.get(cardId);
       return { ...card, name: card.name ?? cardId };
     };
-
-    const hand = q.zone.playerCards(playerId, "hand").map(viewCard);
-    const played = q.zone.playerCards(playerId, "played").map(viewCard);
-    const pudding = q.zone.playerCards(playerId, "pudding").map(viewCard);
-
     const playerIds = q.player.order();
-    const playedByPlayer: Record<string, readonly SushiCardView[]> = {};
-    const puddingByPlayer: Record<string, readonly SushiCardView[]> = {};
-    for (const pid of playerIds) {
-      playedByPlayer[pid] = q.zone.playerCards(pid, "played").map(viewCard);
-      puddingByPlayer[pid] = q.zone.playerCards(pid, "pudding").map(viewCard);
-    }
-
+    const cardsByPlayer = (zoneId: "stall" | "scored-history") =>
+      Object.fromEntries(
+        playerIds.map((id) => [
+          id,
+          q.zone.playerCards(id, zoneId).map(viewCard),
+        ]),
+      );
     return {
       currentPhase: state.flow.currentPhase,
-      round: state.publicState.round ?? 1,
-      hand,
-      handCount: hand.length,
-      played,
-      pudding,
-      playedByPlayer,
-      puddingByPlayer,
-      totalScoreByPlayer: state.publicState.totalScoreByPlayer ?? {},
-      roundScoreByPlayer: state.publicState.roundScoreByPlayer ?? {},
-      puddingScoreByPlayer: state.publicState.puddingScoreByPlayer ?? {},
+      round: state.publicState.round,
+      pick: state.publicState.pick,
+      hand: q.zone.playerCards(playerId, "hand").map(viewCard),
+      handCountByPlayer: Object.fromEntries(
+        playerIds.map((id) => [id, q.zone.playerCards(id, "hand").length]),
+      ),
+      stallByPlayer: cardsByPlayer("stall"),
+      scoredHistoryByPlayer: cardsByPlayer("scored-history"),
+      totalScoreByPlayer: state.publicState.totalScoreByPlayer,
+      roundScoreByPlayer: state.publicState.roundScoreByPlayer,
+      roundHistory: state.publicState.roundHistory,
       outcome: state.publicState.outcome,
-      canUseChopsticks: hasChopsticksReady(q, playerId),
     };
   },
 });

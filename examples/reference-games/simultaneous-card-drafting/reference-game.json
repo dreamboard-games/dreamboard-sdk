@@ -1,50 +1,66 @@
 {
   "schemaVersion": 3,
   "id": "simultaneous-card-drafting",
-  "displayName": "Simultaneous Card Drafting",
+  "displayName": "Lantern Market",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/smoke-initial-turn.scenario.ts",
-      "test/scenarios/draft-one-pick.scenario.ts",
-      "test/scenarios/five-player-draft.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/supported-player-count-2.scenario.ts",
+      "test/scenarios/supported-player-count-3.scenario.ts",
+      "test/scenarios/supported-player-count-4.scenario.ts",
+      "test/scenarios/supported-player-count-5.scenario.ts",
+      "test/scenarios/barrier-actionability.scenario.ts",
+      "test/scenarios/round-scoring.scenario.ts",
+      "test/scenarios/outcome-sole-winner.scenario.ts",
+      "test/scenarios/outcome-tied-winner.scenario.ts",
+      "test/scenarios/outcome-lower-place-tie.scenario.ts",
+      "test/scenarios/projection-privacy.scenario.ts"
     ],
-    "uiScenarios": ["test/ui-scenarios/lock-choice.mobile.scenario.ts"]
+    "uiScenarios": [
+      "test/ui-scenarios/drafting.opening.mobile.scenario.ts",
+      "test/ui-scenarios/drafting.mid-round.mobile.scenario.ts",
+      "test/ui-scenarios/drafting.round-transition.mobile.scenario.ts",
+      "test/ui-scenarios/drafting.terminal.mobile.scenario.ts"
+    ]
   },
   "teaching": {
     "whatThisTeaches": [
-      "simultaneous private card selection",
-      "draft hands passed between players",
-      "set-collection scoring across rounds"
+      "one engine-owned simultaneous barrier for sealed private choices",
+      "atomic public reveal followed by deterministic hand rotation",
+      "one seeded deck supplying a complete two-round game",
+      "owner-only card identity with public stalls, scoring history, and outcome"
     ],
     "whenToCopyThisPattern": [
-      "Use this pattern when every player submits a private choice before shared reveal.",
-      "Use passed hands when private card state moves between seats after each draft.",
-      "Keep scoring helpers separate from reducer phase assembly when card categories have many scoring rules."
+      "Use this pattern when every active player owes one private commitment before shared play continues.",
+      "Use a card target sourced from an owner-only zone so inspect and explore discover only legal private choices.",
+      "Keep set scoring pure while a normal replay proves round clearing, score accumulation, and terminal ranking."
     ],
     "readFirst": [
       "rule.md",
       "manifest.ts",
       "app/game.ts",
       "app/phases/drafting.ts",
+      "app/phases/scoreRound.ts",
       "app/rules/scoring.ts",
-      "ui/App.tsx",
-      "test/scenarios/draft-one-pick.scenario.ts",
-      "test/ui-scenarios/lock-choice.mobile.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/barrier-actionability.scenario.ts",
+      "test/scenarios.test.ts",
+      "ui/App.tsx"
     ]
   },
   "demoRelease": {
     "slug": "simultaneous-card-drafting",
-    "name": "Simultaneous Card Drafting",
-    "description": "A simultaneous card-drafting game with private picks, hand passing, reveal timing, and set scoring.",
-    "overview": "Choose a card in secret, lock your pick, pass the remaining hand, and build scoring sets over several rounds.",
+    "name": "Lantern Market",
+    "description": "A compact festival card draft with sealed choices, simultaneous reveals, hand passing, and set scoring.",
+    "overview": "Build a two-round festival stall from Lanterns, Tea Cups, and Festival Banners. Every pick stays sealed until all players commit, then the market reveals together and the remaining hands pass left.",
     "creator": "Dreamboard",
     "minPlayers": 2,
     "maxPlayers": 5,
-    "playTimeMinMinutes": 20,
-    "playTimeMaxMinutes": 35,
+    "playTimeMinMinutes": 10,
+    "playTimeMaxMinutes": 20,
     "difficulty": 2,
     "mechanics": [
       "simultaneous-selection",
@@ -53,31 +69,9 @@
       "set-collection"
     ],
     "categories": ["card-game", "drafting"],
-    "heroImageUrl": "/demos/simultaneous-card-drafting/desktop.png",
-    "estimatedMinutes": 10,
-    "demoPlayerCount": 4,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 8,
+    "demoPlayerCount": 2
   },
   "mechanics": [
     "simultaneous-selection",

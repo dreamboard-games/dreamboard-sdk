@@ -1,14 +1,10 @@
 import { defineCardAction } from "@dreamboard-games/sdk/reducer";
 import { cardTypes } from "../../shared/manifest-contract";
 import type { GameContract, PlayerTurnPhaseState } from "../game-contract";
-import { edit } from "../reducer-support";
-import { validateActionPlay } from "./support";
+import { shuffleDeckForDraw } from "../effects/deck";
+import { appendHistory, edit, prepareMidTurnDraw } from "../reducer-support";
+import { validateTechniquePlay } from "./support";
 
-// Brainstorm: +3 cards. The simplest Smithy-style card.
-//
-// This is also the canonical reshuffle showcase — when the deck has
-// fewer than 3 cards, the reducer transaction pulls discard back into
-// the deck and continues drawing.
 export const brainstorm = defineCardAction<
   GameContract,
   PlayerTurnPhaseState
@@ -17,12 +13,13 @@ export const brainstorm = defineCardAction<
   playFrom: "hand",
   rules: [
     {
-      id: "action-card-playable",
+      id: "technique-playable",
       errorCode: "ACTION_CARD_NOT_PLAYABLE",
-      validate: ({ state, input }) => validateActionPlay(state, input.playerId),
+      validate: ({ state, input }) =>
+        validateTechniquePlay(state, input.playerId),
     },
   ],
-  reduce({ state, input, accept, q }) {
+  reduce({ state, input, accept, q, fx }) {
     const tx = edit(state);
     tx.moveCardBetweenPlayerZones({
       playerId: input.playerId,
@@ -30,40 +27,34 @@ export const brainstorm = defineCardAction<
       toZoneId: "in-play",
       cardId: input.params.cardId,
     });
-    tx.patchPhaseState({
-      ...state.phase,
-      actionsLeft: state.phase.actionsLeft - 1,
+    tx.patchPhaseState({ ...state.phase, actionsLeft: state.phase.actionsLeft - 1 });
+    const draw = prepareMidTurnDraw({
+      state: tx.state,
+      q,
+      playerId: input.playerId,
+      count: 3,
     });
-    const deckSize = q.zone.playerCards(input.playerId, "deck").length;
-    if (deckSize < 3) {
-      tx.dealCardsBetweenPlayerZones({
-        playerId: input.playerId,
-        fromZoneId: "deck",
-        toZoneId: "hand",
-        count: deckSize,
-      });
-      for (const cardId of q.zone.playerCards(input.playerId, "discard")) {
-        tx.moveCardBetweenPlayerZones({
-          playerId: input.playerId,
-          fromZoneId: "discard",
-          toZoneId: "deck",
-          cardId,
-        });
-      }
-      tx.dealCardsBetweenPlayerZones({
-        playerId: input.playerId,
-        fromZoneId: "deck",
-        toZoneId: "hand",
-        count: 3 - deckSize,
-      });
-    } else {
-      tx.dealCardsBetweenPlayerZones({
-        playerId: input.playerId,
-        fromZoneId: "deck",
-        toZoneId: "hand",
-        count: 3,
-      });
-    }
-    return accept(tx.state);
+    const next = appendHistory(draw.state, {
+      kind: "technique",
+      actorPlayerId: input.playerId,
+      cardId: input.params.cardId,
+      summary: "Brainstorm drew three cards where available.",
+    });
+    return accept(next, {
+      instructions:
+        draw.shuffleDrawCount > 0
+          ? [
+              fx.effect(shuffleDeckForDraw, {
+                playerId: input.playerId,
+                zoneId: "deck",
+                context: {
+                  playerId: input.playerId,
+                  drawCount: draw.shuffleDrawCount,
+                  checkEndAfterDraw: false,
+                },
+              }),
+            ]
+          : [],
+    });
   },
 });

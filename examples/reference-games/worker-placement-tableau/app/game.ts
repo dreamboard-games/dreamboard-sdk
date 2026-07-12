@@ -1,73 +1,32 @@
-import {
-  defineEmptyView,
-  defineGame,
-  type ReducerGameDefinition,
-} from "@dreamboard-games/sdk/reducer";
-import {
-  records,
-  type CardId,
-  type SpaceId,
-} from "../shared/manifest-contract";
-import { boardStatic } from "./board-static";
-import { gameContract, type GameContract, type ItemId } from "./game-contract";
+import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { records, setupProfiles } from "../shared/manifest-contract";
+import { gameContract, type PublicState } from "./game-contract";
 import { phases } from "./phases";
-import setupProfiles from "./setup-profiles";
-import { playerView } from "./player-view";
+import { playerView, sharedView } from "./player-view";
 
-const views = {
-  shared: defineEmptyView<GameContract>(),
-  player: playerView,
-};
-
-const game: ReducerGameDefinition<GameContract, typeof phases, typeof views> =
-  defineGame({
-    contract: gameContract,
-    initial: {
-      public: ({ playerIds }) => {
-        // Per-player initial counters.
-        const apprenticeRosterSize: Record<string, number> = {};
-        const pendingApprenticeBuysByPlayer: Record<string, number> = {};
-        const playedPersistentApprentices: Record<string, CardId[]> = {};
-        const playerVP: Record<string, number> = {};
-        const matOccupancyByPlayer: Record<
-          (typeof playerIds)[number],
-          Partial<Record<SpaceId, ItemId>>
-        > = {} as Record<
-          (typeof playerIds)[number],
-          Partial<Record<SpaceId, ItemId>>
-        >;
-        for (const pid of playerIds) {
-          apprenticeRosterSize[pid] = 2;
-          pendingApprenticeBuysByPlayer[pid] = 0;
-          playedPersistentApprentices[pid] = [];
-          playerVP[pid] = 0;
-          matOccupancyByPlayer[pid] = {};
-        }
-        return {
-          enabledActionSpaces: [],
-          setupVariablePoolDraw: [],
-          // Every authored piece starts unplaced. Setup attaches initial
-          // workers; the rest stay null until Training Hall promotes them.
-          workerLocations: records.pieceIds(() => null),
-          apprenticeRosterSize,
-          pendingApprenticeBuysByPlayer,
-          matOccupancyByPlayer,
-          playedPersistentApprentices,
-          wakeUpSelections: {},
-          seasonNumber: 1,
-          turnOrderThisSeason: [...playerIds],
-          playerVP,
-          outcome: null,
-        };
-      },
-      private: () => ({}),
-      hidden: () => ({}),
-    },
-    initialPhase: "setup",
-    setupProfiles,
-    phases,
-    views,
-    staticView: boardStatic,
-  });
-
-export default game;
+export default defineGame({
+  contract: gameContract,
+  initial: {
+    public: ({ playerIds }): PublicState => ({
+      season: 1,
+      firstPlayerId: playerIds[0]!,
+      activePlayerId: playerIds[0]!,
+      passedPlayerIds: [],
+      workerLocations: records.pieceIds(() => null),
+      tableauByPlayer: Object.fromEntries(
+        playerIds.map((id) => [id, {}]),
+      ) as PublicState["tableauByPlayer"],
+      events: [],
+      finalScoreByPlayer: null,
+      outcome: null,
+    }),
+    private: () => ({}),
+    hidden: () => ({}),
+  },
+  initialPhase: "setup",
+  setupProfiles: setupProfiles({
+    standard: { initialPhase: "setup", bootstrap: [] },
+  }),
+  phases,
+  views: { shared: sharedView, player: playerView },
+});

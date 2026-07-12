@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -86,69 +86,123 @@ export { literals };
 // the "total-record" assumption the refactor is meant to eliminate. Runtime
 // roster validation is done through perPlayerSchema(runtimePlayerIds, ...)
 // instead, which can be bound to the actual active roster.
-const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
+const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(
   markManifestScopedSchema(
     z
       .string()
       .min(1)
       .transform((value) => asPlayerId(value)),
+    "playerId",
   ),
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
 const boardLayoutSchema = createManifestStringLiteralSchema(
   literals.boardLayouts,
+  "boardLayout",
 );
 const setupOptionIdSchema = createManifestStringLiteralSchema(
   literals.setupOptionIds,
+  "setupOptionId",
 );
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
 const sharedZoneIdSchema = createManifestStringLiteralSchema(
   literals.sharedZoneIds,
+  "sharedZoneId",
 );
 const playerZoneIdSchema = createManifestStringLiteralSchema(
   literals.playerZoneIds,
+  "playerZoneId",
 );
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
 const resourceIdSchema = createManifestStringLiteralSchema(
   literals.resourceIds,
+  "resourceId",
 );
 const pieceTypeIdSchema = createManifestStringLiteralSchema(
   literals.pieceTypeIds,
+  "pieceTypeId",
 );
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
+  "boardTypeId",
 );
 const boardBaseIdSchema = createManifestStringLiteralSchema(
   literals.boardBaseIds,
+  "boardBaseId",
 );
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
 const relationTypeIdSchema = createManifestStringLiteralSchema(
   literals.relationTypeIds,
+  "relationTypeId",
 );
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
 const edgeTypeIdSchema = createManifestStringLiteralSchema(
   literals.edgeTypeIds,
+  "edgeTypeId",
 );
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
 const vertexTypeIdSchema = createManifestStringLiteralSchema(
   literals.vertexTypeIds,
+  "vertexTypeId",
 );
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
 const spaceTypeIdSchema = createManifestStringLiteralSchema(
   literals.spaceTypeIds,
+  "spaceTypeId",
 );
 
 export const ids = {
@@ -159,9 +213,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: assumeManifestSchema<CardId>(cardIdSchema),
-  deckId: assumeManifestSchema<DeckId>(deckIdSchema),
-  handId: assumeManifestSchema<HandId>(handIdSchema),
+  cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),
+  deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),
+  handId: assumeManifestSchema<HandId, "handId">(handIdSchema),
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -214,44 +268,36 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  brainstorm: "brainstorm",
-  concept: "concept",
-  critic: "critic",
-  doodle: "doodle",
-  eraser: "eraser",
-  gallery: "gallery",
-  idea: "idea",
-  inkwork: "inkwork",
-  masterpiece: "masterpiece",
-  openMic: "open-mic",
-  sketch: "sketch",
-  sketchpad: "sketchpad",
-  smudge: "smudge",
-  studio: "studio",
-  studioVisit: "studio-visit",
+  "brainstorm": "brainstorm",
+  "concept": "concept",
+  "doodle": "doodle",
+  "eraser": "eraser",
+  "gallery": "gallery",
+  "idea": "idea",
+  "inkwork": "inkwork",
+  "masterpiece": "masterpiece",
+  "sketch": "sketch",
+  "studio": "studio",
+  "studioVisit": "studio-visit",
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  deck: "deck",
-  discard: "discard",
-  hand: "hand",
-  inPlay: "in-play",
-  supplyBrainstorm: "supply-brainstorm",
-  supplyConcept: "supply-concept",
-  supplyCritic: "supply-critic",
-  supplyDoodle: "supply-doodle",
-  supplyEraser: "supply-eraser",
-  supplyGallery: "supply-gallery",
-  supplyIdea: "supply-idea",
-  supplyInkwork: "supply-inkwork",
-  supplyMasterpiece: "supply-masterpiece",
-  supplyOpenMic: "supply-open-mic",
-  supplySketch: "supply-sketch",
-  supplySketchpad: "supply-sketchpad",
-  supplySmudge: "supply-smudge",
-  supplyStudio: "supply-studio",
-  supplyStudioVisit: "supply-studio-visit",
-  trash: "trash",
+  "deck": "deck",
+  "discard": "discard",
+  "hand": "hand",
+  "inPlay": "in-play",
+  "supplyBrainstorm": "supply-brainstorm",
+  "supplyConcept": "supply-concept",
+  "supplyDoodle": "supply-doodle",
+  "supplyEraser": "supply-eraser",
+  "supplyGallery": "supply-gallery",
+  "supplyIdea": "supply-idea",
+  "supplyInkwork": "supply-inkwork",
+  "supplyMasterpiece": "supply-masterpiece",
+  "supplySketch": "supply-sketch",
+  "supplyStudio": "supply-studio",
+  "supplyStudioVisit": "supply-studio-visit",
+  "trash": "trash",
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -511,11 +557,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -572,25 +614,21 @@ export type ComponentId = CardId | PieceId | DieId;
 export type ComponentIdsBySharedZoneId = {
   "supply-brainstorm": ComponentId[];
   "supply-concept": ComponentId[];
-  "supply-critic": ComponentId[];
   "supply-doodle": ComponentId[];
   "supply-eraser": ComponentId[];
   "supply-gallery": ComponentId[];
   "supply-idea": ComponentId[];
   "supply-inkwork": ComponentId[];
   "supply-masterpiece": ComponentId[];
-  "supply-open-mic": ComponentId[];
   "supply-sketch": ComponentId[];
-  "supply-sketchpad": ComponentId[];
-  "supply-smudge": ComponentId[];
   "supply-studio": ComponentId[];
   "supply-studio-visit": ComponentId[];
-  trash: ComponentId[];
+  "trash": ComponentId[];
 };
 export type ComponentIdsByPlayerZoneId = {
-  deck: PerPlayer<ComponentId[]>;
-  discard: PerPlayer<ComponentId[]>;
-  hand: PerPlayer<ComponentId[]>;
+  "deck": PerPlayer<ComponentId[]>;
+  "discard": PerPlayer<ComponentId[]>;
+  "hand": PerPlayer<ComponentId[]>;
   "in-play": PerPlayer<ComponentId[]>;
 };
 export type SetupOptionChoice = {
@@ -610,441 +648,135 @@ export type SetupProfile = {
   description?: string | null;
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
-export const setupOptionsById = {
-  "default-game": {
-    id: "default-game",
-    name: "Default game",
-    description: "Two-player Sketchbook with the standard kingdom.",
-    choices: [
-      {
-        id: "default-game",
-        label: "Default game",
-        description: null,
-      },
-    ],
-  },
-} as const;
+export const setupOptionsById = {} as const;
 export const setupChoiceIdsByOptionId = {
-  "default-game": ["default-game"] as const,
+
 } as const;
-export const setupProfilesById = {
-  "default-setup": {
-    id: "default-setup",
-    name: "Default setup",
-    description: null,
-    optionValues: {
-      "default-game": "default-game",
-    },
-  },
-  "empty-masterpiece-regression": {
-    id: "empty-masterpiece-regression",
-    name: "Empty Masterpiece regression",
-    description:
-      "Reducer-test profile that starts with the Masterpiece pile depleted before the next end-turn boundary.",
-    optionValues: {
-      "default-game": "default-game",
-    },
-  },
-} as const;
+export const setupProfilesById = {} as const;
 
 export type SketchbookCardsDoodleCardProperties = {
-  cost: number;
-  coins: number;
+  "cost": number;
+  "inspiration": number;
 };
 
 export const SketchbookCardsDoodleCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  coins: z.number().int(),
+  "cost": z.number().int(),
+  "inspiration": z.number().int(),
 });
 
 export type SketchbookCardsSketchCardProperties = {
-  cost: number;
-  coins: number;
+  "cost": number;
+  "inspiration": number;
 };
 
 export const SketchbookCardsSketchCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  coins: z.number().int(),
+  "cost": z.number().int(),
+  "inspiration": z.number().int(),
 });
 
 export type SketchbookCardsInkworkCardProperties = {
-  cost: number;
-  coins: number;
+  "cost": number;
+  "inspiration": number;
 };
 
 export const SketchbookCardsInkworkCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  coins: z.number().int(),
+  "cost": z.number().int(),
+  "inspiration": z.number().int(),
 });
 
 export type SketchbookCardsIdeaCardProperties = {
-  cost: number;
-  vp: number;
+  "cost": number;
+  "portfolioValue": number;
 };
 
 export const SketchbookCardsIdeaCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  vp: z.number().int(),
+  "cost": z.number().int(),
+  "portfolioValue": z.number().int(),
 });
 
 export type SketchbookCardsConceptCardProperties = {
-  cost: number;
-  vp: number;
+  "cost": number;
+  "portfolioValue": number;
 };
 
 export const SketchbookCardsConceptCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  vp: z.number().int(),
+  "cost": z.number().int(),
+  "portfolioValue": z.number().int(),
 });
 
 export type SketchbookCardsMasterpieceCardProperties = {
-  cost: number;
-  vp: number;
+  "cost": number;
+  "portfolioValue": number;
 };
 
 export const SketchbookCardsMasterpieceCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  vp: z.number().int(),
-});
-
-export type SketchbookCardsSmudgeCardProperties = {
-  cost: number;
-  vp: number;
-};
-
-export const SketchbookCardsSmudgeCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-  vp: z.number().int(),
+  "cost": z.number().int(),
+  "portfolioValue": z.number().int(),
 });
 
 export type SketchbookCardsBrainstormCardProperties = {
-  cost: number;
+  "cost": number;
 };
 
 export const SketchbookCardsBrainstormCardPropertiesSchema = z.object({
-  cost: z.number().int(),
+  "cost": z.number().int(),
 });
 
 export type SketchbookCardsStudioCardProperties = {
-  cost: number;
+  "cost": number;
 };
 
 export const SketchbookCardsStudioCardPropertiesSchema = z.object({
-  cost: z.number().int(),
+  "cost": z.number().int(),
 });
 
 export type SketchbookCardsGalleryCardProperties = {
-  cost: number;
+  "cost": number;
 };
 
 export const SketchbookCardsGalleryCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-});
-
-export type SketchbookCardsOpenMicCardProperties = {
-  cost: number;
-};
-
-export const SketchbookCardsOpenMicCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-});
-
-export type SketchbookCardsCriticCardProperties = {
-  cost: number;
-};
-
-export const SketchbookCardsCriticCardPropertiesSchema = z.object({
-  cost: z.number().int(),
+  "cost": z.number().int(),
 });
 
 export type SketchbookCardsEraserCardProperties = {
-  cost: number;
+  "cost": number;
 };
 
 export const SketchbookCardsEraserCardPropertiesSchema = z.object({
-  cost: z.number().int(),
-});
-
-export type SketchbookCardsSketchpadCardProperties = {
-  cost: number;
-};
-
-export const SketchbookCardsSketchpadCardPropertiesSchema = z.object({
-  cost: z.number().int(),
+  "cost": z.number().int(),
 });
 
 export type SketchbookCardsStudioVisitCardProperties = {
-  cost: number;
+  "cost": number;
 };
 
 export const SketchbookCardsStudioVisitCardPropertiesSchema = z.object({
-  cost: z.number().int(),
+  "cost": z.number().int(),
 });
 
-export type SketchbookCardsCardProperties =
-  | SketchbookCardsDoodleCardProperties
-  | SketchbookCardsSketchCardProperties
-  | SketchbookCardsInkworkCardProperties
-  | SketchbookCardsIdeaCardProperties
-  | SketchbookCardsConceptCardProperties
-  | SketchbookCardsMasterpieceCardProperties
-  | SketchbookCardsSmudgeCardProperties
-  | SketchbookCardsBrainstormCardProperties
-  | SketchbookCardsStudioCardProperties
-  | SketchbookCardsGalleryCardProperties
-  | SketchbookCardsOpenMicCardProperties
-  | SketchbookCardsCriticCardProperties
-  | SketchbookCardsEraserCardProperties
-  | SketchbookCardsSketchpadCardProperties
-  | SketchbookCardsStudioVisitCardProperties;
+export type SketchbookCardsCardProperties = SketchbookCardsDoodleCardProperties | SketchbookCardsSketchCardProperties | SketchbookCardsInkworkCardProperties | SketchbookCardsIdeaCardProperties | SketchbookCardsConceptCardProperties | SketchbookCardsMasterpieceCardProperties | SketchbookCardsBrainstormCardProperties | SketchbookCardsStudioCardProperties | SketchbookCardsGalleryCardProperties | SketchbookCardsEraserCardProperties | SketchbookCardsStudioVisitCardProperties;
 
-export const SketchbookCardsCardPropertiesSchema = z.union([
-  SketchbookCardsDoodleCardPropertiesSchema,
-  SketchbookCardsSketchCardPropertiesSchema,
-  SketchbookCardsInkworkCardPropertiesSchema,
-  SketchbookCardsIdeaCardPropertiesSchema,
-  SketchbookCardsConceptCardPropertiesSchema,
-  SketchbookCardsMasterpieceCardPropertiesSchema,
-  SketchbookCardsSmudgeCardPropertiesSchema,
-  SketchbookCardsBrainstormCardPropertiesSchema,
-  SketchbookCardsStudioCardPropertiesSchema,
-  SketchbookCardsGalleryCardPropertiesSchema,
-  SketchbookCardsOpenMicCardPropertiesSchema,
-  SketchbookCardsCriticCardPropertiesSchema,
-  SketchbookCardsEraserCardPropertiesSchema,
-  SketchbookCardsSketchpadCardPropertiesSchema,
-  SketchbookCardsStudioVisitCardPropertiesSchema,
-]);
+export const SketchbookCardsCardPropertiesSchema = z.union([SketchbookCardsDoodleCardPropertiesSchema, SketchbookCardsSketchCardPropertiesSchema, SketchbookCardsInkworkCardPropertiesSchema, SketchbookCardsIdeaCardPropertiesSchema, SketchbookCardsConceptCardPropertiesSchema, SketchbookCardsMasterpieceCardPropertiesSchema, SketchbookCardsBrainstormCardPropertiesSchema, SketchbookCardsStudioCardPropertiesSchema, SketchbookCardsGalleryCardPropertiesSchema, SketchbookCardsEraserCardPropertiesSchema, SketchbookCardsStudioVisitCardPropertiesSchema]);
 
-export type SketchbookCardsCardId =
-  | "doodle-1"
-  | "doodle-2"
-  | "doodle-3"
-  | "doodle-4"
-  | "doodle-5"
-  | "doodle-6"
-  | "doodle-7"
-  | "doodle-8"
-  | "doodle-9"
-  | "doodle-10"
-  | "doodle-11"
-  | "doodle-12"
-  | "doodle-13"
-  | "doodle-14"
-  | "doodle-15"
-  | "doodle-16"
-  | "doodle-17"
-  | "doodle-18"
-  | "doodle-19"
-  | "doodle-20"
-  | "doodle-21"
-  | "doodle-22"
-  | "doodle-23"
-  | "doodle-24"
-  | "doodle-25"
-  | "doodle-26"
-  | "doodle-27"
-  | "doodle-28"
-  | "doodle-29"
-  | "doodle-30"
-  | "doodle-31"
-  | "doodle-32"
-  | "doodle-33"
-  | "doodle-34"
-  | "doodle-35"
-  | "doodle-36"
-  | "doodle-37"
-  | "doodle-38"
-  | "doodle-39"
-  | "doodle-40"
-  | "doodle-41"
-  | "doodle-42"
-  | "doodle-43"
-  | "doodle-44"
-  | "doodle-45"
-  | "doodle-46"
-  | "doodle-47"
-  | "doodle-48"
-  | "doodle-49"
-  | "doodle-50"
-  | "doodle-51"
-  | "doodle-52"
-  | "doodle-53"
-  | "doodle-54"
-  | "doodle-55"
-  | "doodle-56"
-  | "doodle-57"
-  | "doodle-58"
-  | "doodle-59"
-  | "doodle-60"
-  | "sketch-1"
-  | "sketch-2"
-  | "sketch-3"
-  | "sketch-4"
-  | "sketch-5"
-  | "sketch-6"
-  | "sketch-7"
-  | "sketch-8"
-  | "sketch-9"
-  | "sketch-10"
-  | "sketch-11"
-  | "sketch-12"
-  | "sketch-13"
-  | "sketch-14"
-  | "sketch-15"
-  | "sketch-16"
-  | "sketch-17"
-  | "sketch-18"
-  | "sketch-19"
-  | "sketch-20"
-  | "sketch-21"
-  | "sketch-22"
-  | "sketch-23"
-  | "sketch-24"
-  | "sketch-25"
-  | "sketch-26"
-  | "sketch-27"
-  | "sketch-28"
-  | "sketch-29"
-  | "sketch-30"
-  | "sketch-31"
-  | "sketch-32"
-  | "sketch-33"
-  | "sketch-34"
-  | "sketch-35"
-  | "sketch-36"
-  | "sketch-37"
-  | "sketch-38"
-  | "sketch-39"
-  | "sketch-40"
-  | "inkwork-1"
-  | "inkwork-2"
-  | "inkwork-3"
-  | "inkwork-4"
-  | "inkwork-5"
-  | "inkwork-6"
-  | "inkwork-7"
-  | "inkwork-8"
-  | "inkwork-9"
-  | "inkwork-10"
-  | "inkwork-11"
-  | "inkwork-12"
-  | "inkwork-13"
-  | "inkwork-14"
-  | "inkwork-15"
-  | "inkwork-16"
-  | "inkwork-17"
-  | "inkwork-18"
-  | "inkwork-19"
-  | "inkwork-20"
-  | "inkwork-21"
-  | "inkwork-22"
-  | "inkwork-23"
-  | "inkwork-24"
-  | "inkwork-25"
-  | "inkwork-26"
-  | "inkwork-27"
-  | "inkwork-28"
-  | "inkwork-29"
-  | "inkwork-30"
-  | "idea-1"
-  | "idea-2"
-  | "idea-3"
-  | "idea-4"
-  | "idea-5"
-  | "idea-6"
-  | "idea-7"
-  | "idea-8"
-  | "concept-1"
-  | "concept-2"
-  | "concept-3"
-  | "concept-4"
-  | "concept-5"
-  | "concept-6"
-  | "concept-7"
-  | "concept-8"
-  | "masterpiece-1"
-  | "masterpiece-2"
-  | "masterpiece-3"
-  | "masterpiece-4"
-  | "masterpiece-5"
-  | "masterpiece-6"
-  | "masterpiece-7"
-  | "masterpiece-8"
-  | "smudge-1"
-  | "smudge-2"
-  | "smudge-3"
-  | "smudge-4"
-  | "smudge-5"
-  | "smudge-6"
-  | "smudge-7"
-  | "smudge-8"
-  | "smudge-9"
-  | "smudge-10"
-  | "brainstorm-1"
-  | "brainstorm-2"
-  | "brainstorm-3"
-  | "brainstorm-4"
-  | "brainstorm-5"
-  | "brainstorm-6"
-  | "brainstorm-7"
-  | "studio-1"
-  | "studio-2"
-  | "studio-3"
-  | "studio-4"
-  | "studio-5"
-  | "studio-6"
-  | "studio-7"
-  | "gallery-1"
-  | "gallery-2"
-  | "gallery-3"
-  | "gallery-4"
-  | "gallery-5"
-  | "gallery-6"
-  | "gallery-7"
-  | "open-mic-1"
-  | "open-mic-2"
-  | "open-mic-3"
-  | "open-mic-4"
-  | "open-mic-5"
-  | "open-mic-6"
-  | "open-mic-7"
-  | "critic-1"
-  | "critic-2"
-  | "critic-3"
-  | "critic-4"
-  | "critic-5"
-  | "critic-6"
-  | "critic-7"
-  | "eraser-1"
-  | "eraser-2"
-  | "eraser-3"
-  | "eraser-4"
-  | "eraser-5"
-  | "eraser-6"
-  | "eraser-7"
-  | "sketchpad-1"
-  | "sketchpad-2"
-  | "sketchpad-3"
-  | "sketchpad-4"
-  | "sketchpad-5"
-  | "sketchpad-6"
-  | "sketchpad-7"
-  | "studio-visit-1"
-  | "studio-visit-2"
-  | "studio-visit-3"
-  | "studio-visit-4"
-  | "studio-visit-5"
-  | "studio-visit-6"
-  | "studio-visit-7";
+export type SketchbookCardsCardId = "doodle-1" | "doodle-2" | "doodle-3" | "doodle-4" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "sketch-1" | "sketch-2" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-20" | "inkwork-1" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "idea-1" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8";
 
-export type BoardFieldsByBoardId = {};
 
-export type BoardSpaceFieldsByBoardId = {};
 
-export type BoardRelationFieldsByBoardId = {};
+export type BoardFieldsByBoardId = {
 
-export type BoardContainerFieldsByBoardId = {};
+};
+
+export type BoardSpaceFieldsByBoardId = {
+
+};
+
+export type BoardRelationFieldsByBoardId = {
+
+};
+
+export type BoardContainerFieldsByBoardId = {
+
+};
 
 export type HexEdgeFieldsByBoardId = Record<string, never>;
 
@@ -1077,1326 +809,152 @@ export type CardStateRecord<
 };
 
 export type CardStateById = {
-  "brainstorm-1": CardStateRecord<
-    "brainstorm-1",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-2": CardStateRecord<
-    "brainstorm-2",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-3": CardStateRecord<
-    "brainstorm-3",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-4": CardStateRecord<
-    "brainstorm-4",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-5": CardStateRecord<
-    "brainstorm-5",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-6": CardStateRecord<
-    "brainstorm-6",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "brainstorm-7": CardStateRecord<
-    "brainstorm-7",
-    "sketchbook-cards",
-    "brainstorm",
-    SketchbookCardsBrainstormCardProperties
-  >;
-  "concept-1": CardStateRecord<
-    "concept-1",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-2": CardStateRecord<
-    "concept-2",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-3": CardStateRecord<
-    "concept-3",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-4": CardStateRecord<
-    "concept-4",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-5": CardStateRecord<
-    "concept-5",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-6": CardStateRecord<
-    "concept-6",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-7": CardStateRecord<
-    "concept-7",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "concept-8": CardStateRecord<
-    "concept-8",
-    "sketchbook-cards",
-    "concept",
-    SketchbookCardsConceptCardProperties
-  >;
-  "critic-1": CardStateRecord<
-    "critic-1",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-2": CardStateRecord<
-    "critic-2",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-3": CardStateRecord<
-    "critic-3",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-4": CardStateRecord<
-    "critic-4",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-5": CardStateRecord<
-    "critic-5",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-6": CardStateRecord<
-    "critic-6",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "critic-7": CardStateRecord<
-    "critic-7",
-    "sketchbook-cards",
-    "critic",
-    SketchbookCardsCriticCardProperties
-  >;
-  "doodle-1": CardStateRecord<
-    "doodle-1",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-10": CardStateRecord<
-    "doodle-10",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-11": CardStateRecord<
-    "doodle-11",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-12": CardStateRecord<
-    "doodle-12",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-13": CardStateRecord<
-    "doodle-13",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-14": CardStateRecord<
-    "doodle-14",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-15": CardStateRecord<
-    "doodle-15",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-16": CardStateRecord<
-    "doodle-16",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-17": CardStateRecord<
-    "doodle-17",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-18": CardStateRecord<
-    "doodle-18",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-19": CardStateRecord<
-    "doodle-19",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-2": CardStateRecord<
-    "doodle-2",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-20": CardStateRecord<
-    "doodle-20",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-21": CardStateRecord<
-    "doodle-21",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-22": CardStateRecord<
-    "doodle-22",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-23": CardStateRecord<
-    "doodle-23",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-24": CardStateRecord<
-    "doodle-24",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-25": CardStateRecord<
-    "doodle-25",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-26": CardStateRecord<
-    "doodle-26",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-27": CardStateRecord<
-    "doodle-27",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-28": CardStateRecord<
-    "doodle-28",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-29": CardStateRecord<
-    "doodle-29",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-3": CardStateRecord<
-    "doodle-3",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-30": CardStateRecord<
-    "doodle-30",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-31": CardStateRecord<
-    "doodle-31",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-32": CardStateRecord<
-    "doodle-32",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-33": CardStateRecord<
-    "doodle-33",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-34": CardStateRecord<
-    "doodle-34",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-35": CardStateRecord<
-    "doodle-35",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-36": CardStateRecord<
-    "doodle-36",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-37": CardStateRecord<
-    "doodle-37",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-38": CardStateRecord<
-    "doodle-38",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-39": CardStateRecord<
-    "doodle-39",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-4": CardStateRecord<
-    "doodle-4",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-40": CardStateRecord<
-    "doodle-40",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-41": CardStateRecord<
-    "doodle-41",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-42": CardStateRecord<
-    "doodle-42",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-43": CardStateRecord<
-    "doodle-43",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-44": CardStateRecord<
-    "doodle-44",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-45": CardStateRecord<
-    "doodle-45",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-46": CardStateRecord<
-    "doodle-46",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-47": CardStateRecord<
-    "doodle-47",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-48": CardStateRecord<
-    "doodle-48",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-49": CardStateRecord<
-    "doodle-49",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-5": CardStateRecord<
-    "doodle-5",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-50": CardStateRecord<
-    "doodle-50",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-51": CardStateRecord<
-    "doodle-51",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-52": CardStateRecord<
-    "doodle-52",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-53": CardStateRecord<
-    "doodle-53",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-54": CardStateRecord<
-    "doodle-54",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-55": CardStateRecord<
-    "doodle-55",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-56": CardStateRecord<
-    "doodle-56",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-57": CardStateRecord<
-    "doodle-57",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-58": CardStateRecord<
-    "doodle-58",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-59": CardStateRecord<
-    "doodle-59",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-6": CardStateRecord<
-    "doodle-6",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-60": CardStateRecord<
-    "doodle-60",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-7": CardStateRecord<
-    "doodle-7",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-8": CardStateRecord<
-    "doodle-8",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "doodle-9": CardStateRecord<
-    "doodle-9",
-    "sketchbook-cards",
-    "doodle",
-    SketchbookCardsDoodleCardProperties
-  >;
-  "eraser-1": CardStateRecord<
-    "eraser-1",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-2": CardStateRecord<
-    "eraser-2",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-3": CardStateRecord<
-    "eraser-3",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-4": CardStateRecord<
-    "eraser-4",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-5": CardStateRecord<
-    "eraser-5",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-6": CardStateRecord<
-    "eraser-6",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "eraser-7": CardStateRecord<
-    "eraser-7",
-    "sketchbook-cards",
-    "eraser",
-    SketchbookCardsEraserCardProperties
-  >;
-  "gallery-1": CardStateRecord<
-    "gallery-1",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-2": CardStateRecord<
-    "gallery-2",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-3": CardStateRecord<
-    "gallery-3",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-4": CardStateRecord<
-    "gallery-4",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-5": CardStateRecord<
-    "gallery-5",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-6": CardStateRecord<
-    "gallery-6",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "gallery-7": CardStateRecord<
-    "gallery-7",
-    "sketchbook-cards",
-    "gallery",
-    SketchbookCardsGalleryCardProperties
-  >;
-  "idea-1": CardStateRecord<
-    "idea-1",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-2": CardStateRecord<
-    "idea-2",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-3": CardStateRecord<
-    "idea-3",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-4": CardStateRecord<
-    "idea-4",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-5": CardStateRecord<
-    "idea-5",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-6": CardStateRecord<
-    "idea-6",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-7": CardStateRecord<
-    "idea-7",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "idea-8": CardStateRecord<
-    "idea-8",
-    "sketchbook-cards",
-    "idea",
-    SketchbookCardsIdeaCardProperties
-  >;
-  "inkwork-1": CardStateRecord<
-    "inkwork-1",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-10": CardStateRecord<
-    "inkwork-10",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-11": CardStateRecord<
-    "inkwork-11",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-12": CardStateRecord<
-    "inkwork-12",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-13": CardStateRecord<
-    "inkwork-13",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-14": CardStateRecord<
-    "inkwork-14",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-15": CardStateRecord<
-    "inkwork-15",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-16": CardStateRecord<
-    "inkwork-16",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-17": CardStateRecord<
-    "inkwork-17",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-18": CardStateRecord<
-    "inkwork-18",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-19": CardStateRecord<
-    "inkwork-19",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-2": CardStateRecord<
-    "inkwork-2",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-20": CardStateRecord<
-    "inkwork-20",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-21": CardStateRecord<
-    "inkwork-21",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-22": CardStateRecord<
-    "inkwork-22",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-23": CardStateRecord<
-    "inkwork-23",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-24": CardStateRecord<
-    "inkwork-24",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-25": CardStateRecord<
-    "inkwork-25",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-26": CardStateRecord<
-    "inkwork-26",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-27": CardStateRecord<
-    "inkwork-27",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-28": CardStateRecord<
-    "inkwork-28",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-29": CardStateRecord<
-    "inkwork-29",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-3": CardStateRecord<
-    "inkwork-3",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-30": CardStateRecord<
-    "inkwork-30",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-4": CardStateRecord<
-    "inkwork-4",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-5": CardStateRecord<
-    "inkwork-5",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-6": CardStateRecord<
-    "inkwork-6",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-7": CardStateRecord<
-    "inkwork-7",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-8": CardStateRecord<
-    "inkwork-8",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "inkwork-9": CardStateRecord<
-    "inkwork-9",
-    "sketchbook-cards",
-    "inkwork",
-    SketchbookCardsInkworkCardProperties
-  >;
-  "masterpiece-1": CardStateRecord<
-    "masterpiece-1",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-2": CardStateRecord<
-    "masterpiece-2",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-3": CardStateRecord<
-    "masterpiece-3",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-4": CardStateRecord<
-    "masterpiece-4",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-5": CardStateRecord<
-    "masterpiece-5",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-6": CardStateRecord<
-    "masterpiece-6",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-7": CardStateRecord<
-    "masterpiece-7",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "masterpiece-8": CardStateRecord<
-    "masterpiece-8",
-    "sketchbook-cards",
-    "masterpiece",
-    SketchbookCardsMasterpieceCardProperties
-  >;
-  "open-mic-1": CardStateRecord<
-    "open-mic-1",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-2": CardStateRecord<
-    "open-mic-2",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-3": CardStateRecord<
-    "open-mic-3",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-4": CardStateRecord<
-    "open-mic-4",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-5": CardStateRecord<
-    "open-mic-5",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-6": CardStateRecord<
-    "open-mic-6",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "open-mic-7": CardStateRecord<
-    "open-mic-7",
-    "sketchbook-cards",
-    "open-mic",
-    SketchbookCardsOpenMicCardProperties
-  >;
-  "sketch-1": CardStateRecord<
-    "sketch-1",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-10": CardStateRecord<
-    "sketch-10",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-11": CardStateRecord<
-    "sketch-11",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-12": CardStateRecord<
-    "sketch-12",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-13": CardStateRecord<
-    "sketch-13",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-14": CardStateRecord<
-    "sketch-14",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-15": CardStateRecord<
-    "sketch-15",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-16": CardStateRecord<
-    "sketch-16",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-17": CardStateRecord<
-    "sketch-17",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-18": CardStateRecord<
-    "sketch-18",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-19": CardStateRecord<
-    "sketch-19",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-2": CardStateRecord<
-    "sketch-2",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-20": CardStateRecord<
-    "sketch-20",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-21": CardStateRecord<
-    "sketch-21",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-22": CardStateRecord<
-    "sketch-22",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-23": CardStateRecord<
-    "sketch-23",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-24": CardStateRecord<
-    "sketch-24",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-25": CardStateRecord<
-    "sketch-25",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-26": CardStateRecord<
-    "sketch-26",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-27": CardStateRecord<
-    "sketch-27",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-28": CardStateRecord<
-    "sketch-28",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-29": CardStateRecord<
-    "sketch-29",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-3": CardStateRecord<
-    "sketch-3",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-30": CardStateRecord<
-    "sketch-30",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-31": CardStateRecord<
-    "sketch-31",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-32": CardStateRecord<
-    "sketch-32",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-33": CardStateRecord<
-    "sketch-33",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-34": CardStateRecord<
-    "sketch-34",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-35": CardStateRecord<
-    "sketch-35",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-36": CardStateRecord<
-    "sketch-36",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-37": CardStateRecord<
-    "sketch-37",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-38": CardStateRecord<
-    "sketch-38",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-39": CardStateRecord<
-    "sketch-39",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-4": CardStateRecord<
-    "sketch-4",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-40": CardStateRecord<
-    "sketch-40",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-5": CardStateRecord<
-    "sketch-5",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-6": CardStateRecord<
-    "sketch-6",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-7": CardStateRecord<
-    "sketch-7",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-8": CardStateRecord<
-    "sketch-8",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketch-9": CardStateRecord<
-    "sketch-9",
-    "sketchbook-cards",
-    "sketch",
-    SketchbookCardsSketchCardProperties
-  >;
-  "sketchpad-1": CardStateRecord<
-    "sketchpad-1",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-2": CardStateRecord<
-    "sketchpad-2",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-3": CardStateRecord<
-    "sketchpad-3",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-4": CardStateRecord<
-    "sketchpad-4",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-5": CardStateRecord<
-    "sketchpad-5",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-6": CardStateRecord<
-    "sketchpad-6",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "sketchpad-7": CardStateRecord<
-    "sketchpad-7",
-    "sketchbook-cards",
-    "sketchpad",
-    SketchbookCardsSketchpadCardProperties
-  >;
-  "smudge-1": CardStateRecord<
-    "smudge-1",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-10": CardStateRecord<
-    "smudge-10",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-2": CardStateRecord<
-    "smudge-2",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-3": CardStateRecord<
-    "smudge-3",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-4": CardStateRecord<
-    "smudge-4",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-5": CardStateRecord<
-    "smudge-5",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-6": CardStateRecord<
-    "smudge-6",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-7": CardStateRecord<
-    "smudge-7",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-8": CardStateRecord<
-    "smudge-8",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "smudge-9": CardStateRecord<
-    "smudge-9",
-    "sketchbook-cards",
-    "smudge",
-    SketchbookCardsSmudgeCardProperties
-  >;
-  "studio-1": CardStateRecord<
-    "studio-1",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-2": CardStateRecord<
-    "studio-2",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-3": CardStateRecord<
-    "studio-3",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-4": CardStateRecord<
-    "studio-4",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-5": CardStateRecord<
-    "studio-5",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-6": CardStateRecord<
-    "studio-6",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-7": CardStateRecord<
-    "studio-7",
-    "sketchbook-cards",
-    "studio",
-    SketchbookCardsStudioCardProperties
-  >;
-  "studio-visit-1": CardStateRecord<
-    "studio-visit-1",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-2": CardStateRecord<
-    "studio-visit-2",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-3": CardStateRecord<
-    "studio-visit-3",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-4": CardStateRecord<
-    "studio-visit-4",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-5": CardStateRecord<
-    "studio-visit-5",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-6": CardStateRecord<
-    "studio-visit-6",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
-  "studio-visit-7": CardStateRecord<
-    "studio-visit-7",
-    "sketchbook-cards",
-    "studio-visit",
-    SketchbookCardsStudioVisitCardProperties
-  >;
+  "brainstorm-1": CardStateRecord<"brainstorm-1", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-2": CardStateRecord<"brainstorm-2", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-3": CardStateRecord<"brainstorm-3", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-4": CardStateRecord<"brainstorm-4", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-5": CardStateRecord<"brainstorm-5", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-6": CardStateRecord<"brainstorm-6", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-7": CardStateRecord<"brainstorm-7", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "brainstorm-8": CardStateRecord<"brainstorm-8", "sketchbook-cards", "brainstorm", SketchbookCardsBrainstormCardProperties>;
+  "concept-1": CardStateRecord<"concept-1", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-2": CardStateRecord<"concept-2", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-3": CardStateRecord<"concept-3", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-4": CardStateRecord<"concept-4", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-5": CardStateRecord<"concept-5", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-6": CardStateRecord<"concept-6", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-7": CardStateRecord<"concept-7", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "concept-8": CardStateRecord<"concept-8", "sketchbook-cards", "concept", SketchbookCardsConceptCardProperties>;
+  "doodle-1": CardStateRecord<"doodle-1", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-10": CardStateRecord<"doodle-10", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-11": CardStateRecord<"doodle-11", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-12": CardStateRecord<"doodle-12", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-13": CardStateRecord<"doodle-13", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-14": CardStateRecord<"doodle-14", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-15": CardStateRecord<"doodle-15", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-16": CardStateRecord<"doodle-16", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-17": CardStateRecord<"doodle-17", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-18": CardStateRecord<"doodle-18", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-19": CardStateRecord<"doodle-19", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-2": CardStateRecord<"doodle-2", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-20": CardStateRecord<"doodle-20", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-21": CardStateRecord<"doodle-21", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-22": CardStateRecord<"doodle-22", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-23": CardStateRecord<"doodle-23", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-24": CardStateRecord<"doodle-24", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-25": CardStateRecord<"doodle-25", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-26": CardStateRecord<"doodle-26", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-27": CardStateRecord<"doodle-27", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-28": CardStateRecord<"doodle-28", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-29": CardStateRecord<"doodle-29", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-3": CardStateRecord<"doodle-3", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-30": CardStateRecord<"doodle-30", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-31": CardStateRecord<"doodle-31", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-32": CardStateRecord<"doodle-32", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-33": CardStateRecord<"doodle-33", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-34": CardStateRecord<"doodle-34", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-35": CardStateRecord<"doodle-35", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-36": CardStateRecord<"doodle-36", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-37": CardStateRecord<"doodle-37", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-38": CardStateRecord<"doodle-38", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-39": CardStateRecord<"doodle-39", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-4": CardStateRecord<"doodle-4", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-40": CardStateRecord<"doodle-40", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-41": CardStateRecord<"doodle-41", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-42": CardStateRecord<"doodle-42", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-43": CardStateRecord<"doodle-43", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-44": CardStateRecord<"doodle-44", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-5": CardStateRecord<"doodle-5", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-6": CardStateRecord<"doodle-6", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-7": CardStateRecord<"doodle-7", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-8": CardStateRecord<"doodle-8", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "doodle-9": CardStateRecord<"doodle-9", "sketchbook-cards", "doodle", SketchbookCardsDoodleCardProperties>;
+  "eraser-1": CardStateRecord<"eraser-1", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-2": CardStateRecord<"eraser-2", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-3": CardStateRecord<"eraser-3", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-4": CardStateRecord<"eraser-4", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-5": CardStateRecord<"eraser-5", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-6": CardStateRecord<"eraser-6", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-7": CardStateRecord<"eraser-7", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "eraser-8": CardStateRecord<"eraser-8", "sketchbook-cards", "eraser", SketchbookCardsEraserCardProperties>;
+  "gallery-1": CardStateRecord<"gallery-1", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-2": CardStateRecord<"gallery-2", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-3": CardStateRecord<"gallery-3", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-4": CardStateRecord<"gallery-4", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-5": CardStateRecord<"gallery-5", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-6": CardStateRecord<"gallery-6", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-7": CardStateRecord<"gallery-7", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "gallery-8": CardStateRecord<"gallery-8", "sketchbook-cards", "gallery", SketchbookCardsGalleryCardProperties>;
+  "idea-1": CardStateRecord<"idea-1", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-10": CardStateRecord<"idea-10", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-11": CardStateRecord<"idea-11", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-12": CardStateRecord<"idea-12", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-13": CardStateRecord<"idea-13", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-14": CardStateRecord<"idea-14", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-2": CardStateRecord<"idea-2", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-3": CardStateRecord<"idea-3", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-4": CardStateRecord<"idea-4", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-5": CardStateRecord<"idea-5", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-6": CardStateRecord<"idea-6", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-7": CardStateRecord<"idea-7", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-8": CardStateRecord<"idea-8", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "idea-9": CardStateRecord<"idea-9", "sketchbook-cards", "idea", SketchbookCardsIdeaCardProperties>;
+  "inkwork-1": CardStateRecord<"inkwork-1", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-10": CardStateRecord<"inkwork-10", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-11": CardStateRecord<"inkwork-11", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-12": CardStateRecord<"inkwork-12", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-2": CardStateRecord<"inkwork-2", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-3": CardStateRecord<"inkwork-3", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-4": CardStateRecord<"inkwork-4", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-5": CardStateRecord<"inkwork-5", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-6": CardStateRecord<"inkwork-6", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-7": CardStateRecord<"inkwork-7", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-8": CardStateRecord<"inkwork-8", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "inkwork-9": CardStateRecord<"inkwork-9", "sketchbook-cards", "inkwork", SketchbookCardsInkworkCardProperties>;
+  "masterpiece-1": CardStateRecord<"masterpiece-1", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-2": CardStateRecord<"masterpiece-2", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-3": CardStateRecord<"masterpiece-3", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-4": CardStateRecord<"masterpiece-4", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-5": CardStateRecord<"masterpiece-5", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-6": CardStateRecord<"masterpiece-6", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-7": CardStateRecord<"masterpiece-7", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "masterpiece-8": CardStateRecord<"masterpiece-8", "sketchbook-cards", "masterpiece", SketchbookCardsMasterpieceCardProperties>;
+  "sketch-1": CardStateRecord<"sketch-1", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-10": CardStateRecord<"sketch-10", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-11": CardStateRecord<"sketch-11", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-12": CardStateRecord<"sketch-12", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-13": CardStateRecord<"sketch-13", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-14": CardStateRecord<"sketch-14", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-15": CardStateRecord<"sketch-15", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-16": CardStateRecord<"sketch-16", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-17": CardStateRecord<"sketch-17", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-18": CardStateRecord<"sketch-18", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-19": CardStateRecord<"sketch-19", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-2": CardStateRecord<"sketch-2", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-20": CardStateRecord<"sketch-20", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-3": CardStateRecord<"sketch-3", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-4": CardStateRecord<"sketch-4", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-5": CardStateRecord<"sketch-5", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-6": CardStateRecord<"sketch-6", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-7": CardStateRecord<"sketch-7", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-8": CardStateRecord<"sketch-8", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "sketch-9": CardStateRecord<"sketch-9", "sketchbook-cards", "sketch", SketchbookCardsSketchCardProperties>;
+  "studio-1": CardStateRecord<"studio-1", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-2": CardStateRecord<"studio-2", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-3": CardStateRecord<"studio-3", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-4": CardStateRecord<"studio-4", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-5": CardStateRecord<"studio-5", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-6": CardStateRecord<"studio-6", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-7": CardStateRecord<"studio-7", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-8": CardStateRecord<"studio-8", "sketchbook-cards", "studio", SketchbookCardsStudioCardProperties>;
+  "studio-visit-1": CardStateRecord<"studio-visit-1", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-2": CardStateRecord<"studio-visit-2", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-3": CardStateRecord<"studio-visit-3", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-4": CardStateRecord<"studio-visit-4", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-5": CardStateRecord<"studio-visit-5", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-6": CardStateRecord<"studio-visit-6", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-7": CardStateRecord<"studio-visit-7", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
+  "studio-visit-8": CardStateRecord<"studio-visit-8", "sketchbook-cards", "studio-visit", SketchbookCardsStudioVisitCardProperties>;
 };
 
 export type PieceStateRecord<
@@ -2423,4456 +981,24 @@ export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
 export type CardIdsBySharedZoneId = {
-  "supply-brainstorm": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-concept": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-critic": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-doodle": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-eraser": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-gallery": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-idea": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-inkwork": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-masterpiece": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-open-mic": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-sketch": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-sketchpad": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-smudge": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-studio": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  "supply-studio-visit": Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
-  trash: Array<
-    | "brainstorm-1"
-    | "brainstorm-2"
-    | "brainstorm-3"
-    | "brainstorm-4"
-    | "brainstorm-5"
-    | "brainstorm-6"
-    | "brainstorm-7"
-    | "concept-1"
-    | "concept-2"
-    | "concept-3"
-    | "concept-4"
-    | "concept-5"
-    | "concept-6"
-    | "concept-7"
-    | "concept-8"
-    | "critic-1"
-    | "critic-2"
-    | "critic-3"
-    | "critic-4"
-    | "critic-5"
-    | "critic-6"
-    | "critic-7"
-    | "doodle-1"
-    | "doodle-10"
-    | "doodle-11"
-    | "doodle-12"
-    | "doodle-13"
-    | "doodle-14"
-    | "doodle-15"
-    | "doodle-16"
-    | "doodle-17"
-    | "doodle-18"
-    | "doodle-19"
-    | "doodle-2"
-    | "doodle-20"
-    | "doodle-21"
-    | "doodle-22"
-    | "doodle-23"
-    | "doodle-24"
-    | "doodle-25"
-    | "doodle-26"
-    | "doodle-27"
-    | "doodle-28"
-    | "doodle-29"
-    | "doodle-3"
-    | "doodle-30"
-    | "doodle-31"
-    | "doodle-32"
-    | "doodle-33"
-    | "doodle-34"
-    | "doodle-35"
-    | "doodle-36"
-    | "doodle-37"
-    | "doodle-38"
-    | "doodle-39"
-    | "doodle-4"
-    | "doodle-40"
-    | "doodle-41"
-    | "doodle-42"
-    | "doodle-43"
-    | "doodle-44"
-    | "doodle-45"
-    | "doodle-46"
-    | "doodle-47"
-    | "doodle-48"
-    | "doodle-49"
-    | "doodle-5"
-    | "doodle-50"
-    | "doodle-51"
-    | "doodle-52"
-    | "doodle-53"
-    | "doodle-54"
-    | "doodle-55"
-    | "doodle-56"
-    | "doodle-57"
-    | "doodle-58"
-    | "doodle-59"
-    | "doodle-6"
-    | "doodle-60"
-    | "doodle-7"
-    | "doodle-8"
-    | "doodle-9"
-    | "eraser-1"
-    | "eraser-2"
-    | "eraser-3"
-    | "eraser-4"
-    | "eraser-5"
-    | "eraser-6"
-    | "eraser-7"
-    | "gallery-1"
-    | "gallery-2"
-    | "gallery-3"
-    | "gallery-4"
-    | "gallery-5"
-    | "gallery-6"
-    | "gallery-7"
-    | "idea-1"
-    | "idea-2"
-    | "idea-3"
-    | "idea-4"
-    | "idea-5"
-    | "idea-6"
-    | "idea-7"
-    | "idea-8"
-    | "inkwork-1"
-    | "inkwork-10"
-    | "inkwork-11"
-    | "inkwork-12"
-    | "inkwork-13"
-    | "inkwork-14"
-    | "inkwork-15"
-    | "inkwork-16"
-    | "inkwork-17"
-    | "inkwork-18"
-    | "inkwork-19"
-    | "inkwork-2"
-    | "inkwork-20"
-    | "inkwork-21"
-    | "inkwork-22"
-    | "inkwork-23"
-    | "inkwork-24"
-    | "inkwork-25"
-    | "inkwork-26"
-    | "inkwork-27"
-    | "inkwork-28"
-    | "inkwork-29"
-    | "inkwork-3"
-    | "inkwork-30"
-    | "inkwork-4"
-    | "inkwork-5"
-    | "inkwork-6"
-    | "inkwork-7"
-    | "inkwork-8"
-    | "inkwork-9"
-    | "masterpiece-1"
-    | "masterpiece-2"
-    | "masterpiece-3"
-    | "masterpiece-4"
-    | "masterpiece-5"
-    | "masterpiece-6"
-    | "masterpiece-7"
-    | "masterpiece-8"
-    | "open-mic-1"
-    | "open-mic-2"
-    | "open-mic-3"
-    | "open-mic-4"
-    | "open-mic-5"
-    | "open-mic-6"
-    | "open-mic-7"
-    | "sketch-1"
-    | "sketch-10"
-    | "sketch-11"
-    | "sketch-12"
-    | "sketch-13"
-    | "sketch-14"
-    | "sketch-15"
-    | "sketch-16"
-    | "sketch-17"
-    | "sketch-18"
-    | "sketch-19"
-    | "sketch-2"
-    | "sketch-20"
-    | "sketch-21"
-    | "sketch-22"
-    | "sketch-23"
-    | "sketch-24"
-    | "sketch-25"
-    | "sketch-26"
-    | "sketch-27"
-    | "sketch-28"
-    | "sketch-29"
-    | "sketch-3"
-    | "sketch-30"
-    | "sketch-31"
-    | "sketch-32"
-    | "sketch-33"
-    | "sketch-34"
-    | "sketch-35"
-    | "sketch-36"
-    | "sketch-37"
-    | "sketch-38"
-    | "sketch-39"
-    | "sketch-4"
-    | "sketch-40"
-    | "sketch-5"
-    | "sketch-6"
-    | "sketch-7"
-    | "sketch-8"
-    | "sketch-9"
-    | "sketchpad-1"
-    | "sketchpad-2"
-    | "sketchpad-3"
-    | "sketchpad-4"
-    | "sketchpad-5"
-    | "sketchpad-6"
-    | "sketchpad-7"
-    | "smudge-1"
-    | "smudge-10"
-    | "smudge-2"
-    | "smudge-3"
-    | "smudge-4"
-    | "smudge-5"
-    | "smudge-6"
-    | "smudge-7"
-    | "smudge-8"
-    | "smudge-9"
-    | "studio-1"
-    | "studio-2"
-    | "studio-3"
-    | "studio-4"
-    | "studio-5"
-    | "studio-6"
-    | "studio-7"
-    | "studio-visit-1"
-    | "studio-visit-2"
-    | "studio-visit-3"
-    | "studio-visit-4"
-    | "studio-visit-5"
-    | "studio-visit-6"
-    | "studio-visit-7"
-  >;
+  "supply-brainstorm": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-concept": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-doodle": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-eraser": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-gallery": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-idea": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-inkwork": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-masterpiece": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-sketch": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-studio": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "supply-studio-visit": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
+  "trash": Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">;
 };
 export type CardIdsByPlayerZoneId = {
-  deck: PerPlayer<
-    Array<
-      | "brainstorm-1"
-      | "brainstorm-2"
-      | "brainstorm-3"
-      | "brainstorm-4"
-      | "brainstorm-5"
-      | "brainstorm-6"
-      | "brainstorm-7"
-      | "concept-1"
-      | "concept-2"
-      | "concept-3"
-      | "concept-4"
-      | "concept-5"
-      | "concept-6"
-      | "concept-7"
-      | "concept-8"
-      | "critic-1"
-      | "critic-2"
-      | "critic-3"
-      | "critic-4"
-      | "critic-5"
-      | "critic-6"
-      | "critic-7"
-      | "doodle-1"
-      | "doodle-10"
-      | "doodle-11"
-      | "doodle-12"
-      | "doodle-13"
-      | "doodle-14"
-      | "doodle-15"
-      | "doodle-16"
-      | "doodle-17"
-      | "doodle-18"
-      | "doodle-19"
-      | "doodle-2"
-      | "doodle-20"
-      | "doodle-21"
-      | "doodle-22"
-      | "doodle-23"
-      | "doodle-24"
-      | "doodle-25"
-      | "doodle-26"
-      | "doodle-27"
-      | "doodle-28"
-      | "doodle-29"
-      | "doodle-3"
-      | "doodle-30"
-      | "doodle-31"
-      | "doodle-32"
-      | "doodle-33"
-      | "doodle-34"
-      | "doodle-35"
-      | "doodle-36"
-      | "doodle-37"
-      | "doodle-38"
-      | "doodle-39"
-      | "doodle-4"
-      | "doodle-40"
-      | "doodle-41"
-      | "doodle-42"
-      | "doodle-43"
-      | "doodle-44"
-      | "doodle-45"
-      | "doodle-46"
-      | "doodle-47"
-      | "doodle-48"
-      | "doodle-49"
-      | "doodle-5"
-      | "doodle-50"
-      | "doodle-51"
-      | "doodle-52"
-      | "doodle-53"
-      | "doodle-54"
-      | "doodle-55"
-      | "doodle-56"
-      | "doodle-57"
-      | "doodle-58"
-      | "doodle-59"
-      | "doodle-6"
-      | "doodle-60"
-      | "doodle-7"
-      | "doodle-8"
-      | "doodle-9"
-      | "eraser-1"
-      | "eraser-2"
-      | "eraser-3"
-      | "eraser-4"
-      | "eraser-5"
-      | "eraser-6"
-      | "eraser-7"
-      | "gallery-1"
-      | "gallery-2"
-      | "gallery-3"
-      | "gallery-4"
-      | "gallery-5"
-      | "gallery-6"
-      | "gallery-7"
-      | "idea-1"
-      | "idea-2"
-      | "idea-3"
-      | "idea-4"
-      | "idea-5"
-      | "idea-6"
-      | "idea-7"
-      | "idea-8"
-      | "inkwork-1"
-      | "inkwork-10"
-      | "inkwork-11"
-      | "inkwork-12"
-      | "inkwork-13"
-      | "inkwork-14"
-      | "inkwork-15"
-      | "inkwork-16"
-      | "inkwork-17"
-      | "inkwork-18"
-      | "inkwork-19"
-      | "inkwork-2"
-      | "inkwork-20"
-      | "inkwork-21"
-      | "inkwork-22"
-      | "inkwork-23"
-      | "inkwork-24"
-      | "inkwork-25"
-      | "inkwork-26"
-      | "inkwork-27"
-      | "inkwork-28"
-      | "inkwork-29"
-      | "inkwork-3"
-      | "inkwork-30"
-      | "inkwork-4"
-      | "inkwork-5"
-      | "inkwork-6"
-      | "inkwork-7"
-      | "inkwork-8"
-      | "inkwork-9"
-      | "masterpiece-1"
-      | "masterpiece-2"
-      | "masterpiece-3"
-      | "masterpiece-4"
-      | "masterpiece-5"
-      | "masterpiece-6"
-      | "masterpiece-7"
-      | "masterpiece-8"
-      | "open-mic-1"
-      | "open-mic-2"
-      | "open-mic-3"
-      | "open-mic-4"
-      | "open-mic-5"
-      | "open-mic-6"
-      | "open-mic-7"
-      | "sketch-1"
-      | "sketch-10"
-      | "sketch-11"
-      | "sketch-12"
-      | "sketch-13"
-      | "sketch-14"
-      | "sketch-15"
-      | "sketch-16"
-      | "sketch-17"
-      | "sketch-18"
-      | "sketch-19"
-      | "sketch-2"
-      | "sketch-20"
-      | "sketch-21"
-      | "sketch-22"
-      | "sketch-23"
-      | "sketch-24"
-      | "sketch-25"
-      | "sketch-26"
-      | "sketch-27"
-      | "sketch-28"
-      | "sketch-29"
-      | "sketch-3"
-      | "sketch-30"
-      | "sketch-31"
-      | "sketch-32"
-      | "sketch-33"
-      | "sketch-34"
-      | "sketch-35"
-      | "sketch-36"
-      | "sketch-37"
-      | "sketch-38"
-      | "sketch-39"
-      | "sketch-4"
-      | "sketch-40"
-      | "sketch-5"
-      | "sketch-6"
-      | "sketch-7"
-      | "sketch-8"
-      | "sketch-9"
-      | "sketchpad-1"
-      | "sketchpad-2"
-      | "sketchpad-3"
-      | "sketchpad-4"
-      | "sketchpad-5"
-      | "sketchpad-6"
-      | "sketchpad-7"
-      | "smudge-1"
-      | "smudge-10"
-      | "smudge-2"
-      | "smudge-3"
-      | "smudge-4"
-      | "smudge-5"
-      | "smudge-6"
-      | "smudge-7"
-      | "smudge-8"
-      | "smudge-9"
-      | "studio-1"
-      | "studio-2"
-      | "studio-3"
-      | "studio-4"
-      | "studio-5"
-      | "studio-6"
-      | "studio-7"
-      | "studio-visit-1"
-      | "studio-visit-2"
-      | "studio-visit-3"
-      | "studio-visit-4"
-      | "studio-visit-5"
-      | "studio-visit-6"
-      | "studio-visit-7"
-    >
-  >;
-  discard: PerPlayer<
-    Array<
-      | "brainstorm-1"
-      | "brainstorm-2"
-      | "brainstorm-3"
-      | "brainstorm-4"
-      | "brainstorm-5"
-      | "brainstorm-6"
-      | "brainstorm-7"
-      | "concept-1"
-      | "concept-2"
-      | "concept-3"
-      | "concept-4"
-      | "concept-5"
-      | "concept-6"
-      | "concept-7"
-      | "concept-8"
-      | "critic-1"
-      | "critic-2"
-      | "critic-3"
-      | "critic-4"
-      | "critic-5"
-      | "critic-6"
-      | "critic-7"
-      | "doodle-1"
-      | "doodle-10"
-      | "doodle-11"
-      | "doodle-12"
-      | "doodle-13"
-      | "doodle-14"
-      | "doodle-15"
-      | "doodle-16"
-      | "doodle-17"
-      | "doodle-18"
-      | "doodle-19"
-      | "doodle-2"
-      | "doodle-20"
-      | "doodle-21"
-      | "doodle-22"
-      | "doodle-23"
-      | "doodle-24"
-      | "doodle-25"
-      | "doodle-26"
-      | "doodle-27"
-      | "doodle-28"
-      | "doodle-29"
-      | "doodle-3"
-      | "doodle-30"
-      | "doodle-31"
-      | "doodle-32"
-      | "doodle-33"
-      | "doodle-34"
-      | "doodle-35"
-      | "doodle-36"
-      | "doodle-37"
-      | "doodle-38"
-      | "doodle-39"
-      | "doodle-4"
-      | "doodle-40"
-      | "doodle-41"
-      | "doodle-42"
-      | "doodle-43"
-      | "doodle-44"
-      | "doodle-45"
-      | "doodle-46"
-      | "doodle-47"
-      | "doodle-48"
-      | "doodle-49"
-      | "doodle-5"
-      | "doodle-50"
-      | "doodle-51"
-      | "doodle-52"
-      | "doodle-53"
-      | "doodle-54"
-      | "doodle-55"
-      | "doodle-56"
-      | "doodle-57"
-      | "doodle-58"
-      | "doodle-59"
-      | "doodle-6"
-      | "doodle-60"
-      | "doodle-7"
-      | "doodle-8"
-      | "doodle-9"
-      | "eraser-1"
-      | "eraser-2"
-      | "eraser-3"
-      | "eraser-4"
-      | "eraser-5"
-      | "eraser-6"
-      | "eraser-7"
-      | "gallery-1"
-      | "gallery-2"
-      | "gallery-3"
-      | "gallery-4"
-      | "gallery-5"
-      | "gallery-6"
-      | "gallery-7"
-      | "idea-1"
-      | "idea-2"
-      | "idea-3"
-      | "idea-4"
-      | "idea-5"
-      | "idea-6"
-      | "idea-7"
-      | "idea-8"
-      | "inkwork-1"
-      | "inkwork-10"
-      | "inkwork-11"
-      | "inkwork-12"
-      | "inkwork-13"
-      | "inkwork-14"
-      | "inkwork-15"
-      | "inkwork-16"
-      | "inkwork-17"
-      | "inkwork-18"
-      | "inkwork-19"
-      | "inkwork-2"
-      | "inkwork-20"
-      | "inkwork-21"
-      | "inkwork-22"
-      | "inkwork-23"
-      | "inkwork-24"
-      | "inkwork-25"
-      | "inkwork-26"
-      | "inkwork-27"
-      | "inkwork-28"
-      | "inkwork-29"
-      | "inkwork-3"
-      | "inkwork-30"
-      | "inkwork-4"
-      | "inkwork-5"
-      | "inkwork-6"
-      | "inkwork-7"
-      | "inkwork-8"
-      | "inkwork-9"
-      | "masterpiece-1"
-      | "masterpiece-2"
-      | "masterpiece-3"
-      | "masterpiece-4"
-      | "masterpiece-5"
-      | "masterpiece-6"
-      | "masterpiece-7"
-      | "masterpiece-8"
-      | "open-mic-1"
-      | "open-mic-2"
-      | "open-mic-3"
-      | "open-mic-4"
-      | "open-mic-5"
-      | "open-mic-6"
-      | "open-mic-7"
-      | "sketch-1"
-      | "sketch-10"
-      | "sketch-11"
-      | "sketch-12"
-      | "sketch-13"
-      | "sketch-14"
-      | "sketch-15"
-      | "sketch-16"
-      | "sketch-17"
-      | "sketch-18"
-      | "sketch-19"
-      | "sketch-2"
-      | "sketch-20"
-      | "sketch-21"
-      | "sketch-22"
-      | "sketch-23"
-      | "sketch-24"
-      | "sketch-25"
-      | "sketch-26"
-      | "sketch-27"
-      | "sketch-28"
-      | "sketch-29"
-      | "sketch-3"
-      | "sketch-30"
-      | "sketch-31"
-      | "sketch-32"
-      | "sketch-33"
-      | "sketch-34"
-      | "sketch-35"
-      | "sketch-36"
-      | "sketch-37"
-      | "sketch-38"
-      | "sketch-39"
-      | "sketch-4"
-      | "sketch-40"
-      | "sketch-5"
-      | "sketch-6"
-      | "sketch-7"
-      | "sketch-8"
-      | "sketch-9"
-      | "sketchpad-1"
-      | "sketchpad-2"
-      | "sketchpad-3"
-      | "sketchpad-4"
-      | "sketchpad-5"
-      | "sketchpad-6"
-      | "sketchpad-7"
-      | "smudge-1"
-      | "smudge-10"
-      | "smudge-2"
-      | "smudge-3"
-      | "smudge-4"
-      | "smudge-5"
-      | "smudge-6"
-      | "smudge-7"
-      | "smudge-8"
-      | "smudge-9"
-      | "studio-1"
-      | "studio-2"
-      | "studio-3"
-      | "studio-4"
-      | "studio-5"
-      | "studio-6"
-      | "studio-7"
-      | "studio-visit-1"
-      | "studio-visit-2"
-      | "studio-visit-3"
-      | "studio-visit-4"
-      | "studio-visit-5"
-      | "studio-visit-6"
-      | "studio-visit-7"
-    >
-  >;
-  hand: PerPlayer<
-    Array<
-      | "brainstorm-1"
-      | "brainstorm-2"
-      | "brainstorm-3"
-      | "brainstorm-4"
-      | "brainstorm-5"
-      | "brainstorm-6"
-      | "brainstorm-7"
-      | "concept-1"
-      | "concept-2"
-      | "concept-3"
-      | "concept-4"
-      | "concept-5"
-      | "concept-6"
-      | "concept-7"
-      | "concept-8"
-      | "critic-1"
-      | "critic-2"
-      | "critic-3"
-      | "critic-4"
-      | "critic-5"
-      | "critic-6"
-      | "critic-7"
-      | "doodle-1"
-      | "doodle-10"
-      | "doodle-11"
-      | "doodle-12"
-      | "doodle-13"
-      | "doodle-14"
-      | "doodle-15"
-      | "doodle-16"
-      | "doodle-17"
-      | "doodle-18"
-      | "doodle-19"
-      | "doodle-2"
-      | "doodle-20"
-      | "doodle-21"
-      | "doodle-22"
-      | "doodle-23"
-      | "doodle-24"
-      | "doodle-25"
-      | "doodle-26"
-      | "doodle-27"
-      | "doodle-28"
-      | "doodle-29"
-      | "doodle-3"
-      | "doodle-30"
-      | "doodle-31"
-      | "doodle-32"
-      | "doodle-33"
-      | "doodle-34"
-      | "doodle-35"
-      | "doodle-36"
-      | "doodle-37"
-      | "doodle-38"
-      | "doodle-39"
-      | "doodle-4"
-      | "doodle-40"
-      | "doodle-41"
-      | "doodle-42"
-      | "doodle-43"
-      | "doodle-44"
-      | "doodle-45"
-      | "doodle-46"
-      | "doodle-47"
-      | "doodle-48"
-      | "doodle-49"
-      | "doodle-5"
-      | "doodle-50"
-      | "doodle-51"
-      | "doodle-52"
-      | "doodle-53"
-      | "doodle-54"
-      | "doodle-55"
-      | "doodle-56"
-      | "doodle-57"
-      | "doodle-58"
-      | "doodle-59"
-      | "doodle-6"
-      | "doodle-60"
-      | "doodle-7"
-      | "doodle-8"
-      | "doodle-9"
-      | "eraser-1"
-      | "eraser-2"
-      | "eraser-3"
-      | "eraser-4"
-      | "eraser-5"
-      | "eraser-6"
-      | "eraser-7"
-      | "gallery-1"
-      | "gallery-2"
-      | "gallery-3"
-      | "gallery-4"
-      | "gallery-5"
-      | "gallery-6"
-      | "gallery-7"
-      | "idea-1"
-      | "idea-2"
-      | "idea-3"
-      | "idea-4"
-      | "idea-5"
-      | "idea-6"
-      | "idea-7"
-      | "idea-8"
-      | "inkwork-1"
-      | "inkwork-10"
-      | "inkwork-11"
-      | "inkwork-12"
-      | "inkwork-13"
-      | "inkwork-14"
-      | "inkwork-15"
-      | "inkwork-16"
-      | "inkwork-17"
-      | "inkwork-18"
-      | "inkwork-19"
-      | "inkwork-2"
-      | "inkwork-20"
-      | "inkwork-21"
-      | "inkwork-22"
-      | "inkwork-23"
-      | "inkwork-24"
-      | "inkwork-25"
-      | "inkwork-26"
-      | "inkwork-27"
-      | "inkwork-28"
-      | "inkwork-29"
-      | "inkwork-3"
-      | "inkwork-30"
-      | "inkwork-4"
-      | "inkwork-5"
-      | "inkwork-6"
-      | "inkwork-7"
-      | "inkwork-8"
-      | "inkwork-9"
-      | "masterpiece-1"
-      | "masterpiece-2"
-      | "masterpiece-3"
-      | "masterpiece-4"
-      | "masterpiece-5"
-      | "masterpiece-6"
-      | "masterpiece-7"
-      | "masterpiece-8"
-      | "open-mic-1"
-      | "open-mic-2"
-      | "open-mic-3"
-      | "open-mic-4"
-      | "open-mic-5"
-      | "open-mic-6"
-      | "open-mic-7"
-      | "sketch-1"
-      | "sketch-10"
-      | "sketch-11"
-      | "sketch-12"
-      | "sketch-13"
-      | "sketch-14"
-      | "sketch-15"
-      | "sketch-16"
-      | "sketch-17"
-      | "sketch-18"
-      | "sketch-19"
-      | "sketch-2"
-      | "sketch-20"
-      | "sketch-21"
-      | "sketch-22"
-      | "sketch-23"
-      | "sketch-24"
-      | "sketch-25"
-      | "sketch-26"
-      | "sketch-27"
-      | "sketch-28"
-      | "sketch-29"
-      | "sketch-3"
-      | "sketch-30"
-      | "sketch-31"
-      | "sketch-32"
-      | "sketch-33"
-      | "sketch-34"
-      | "sketch-35"
-      | "sketch-36"
-      | "sketch-37"
-      | "sketch-38"
-      | "sketch-39"
-      | "sketch-4"
-      | "sketch-40"
-      | "sketch-5"
-      | "sketch-6"
-      | "sketch-7"
-      | "sketch-8"
-      | "sketch-9"
-      | "sketchpad-1"
-      | "sketchpad-2"
-      | "sketchpad-3"
-      | "sketchpad-4"
-      | "sketchpad-5"
-      | "sketchpad-6"
-      | "sketchpad-7"
-      | "smudge-1"
-      | "smudge-10"
-      | "smudge-2"
-      | "smudge-3"
-      | "smudge-4"
-      | "smudge-5"
-      | "smudge-6"
-      | "smudge-7"
-      | "smudge-8"
-      | "smudge-9"
-      | "studio-1"
-      | "studio-2"
-      | "studio-3"
-      | "studio-4"
-      | "studio-5"
-      | "studio-6"
-      | "studio-7"
-      | "studio-visit-1"
-      | "studio-visit-2"
-      | "studio-visit-3"
-      | "studio-visit-4"
-      | "studio-visit-5"
-      | "studio-visit-6"
-      | "studio-visit-7"
-    >
-  >;
-  "in-play": PerPlayer<
-    Array<
-      | "brainstorm-1"
-      | "brainstorm-2"
-      | "brainstorm-3"
-      | "brainstorm-4"
-      | "brainstorm-5"
-      | "brainstorm-6"
-      | "brainstorm-7"
-      | "concept-1"
-      | "concept-2"
-      | "concept-3"
-      | "concept-4"
-      | "concept-5"
-      | "concept-6"
-      | "concept-7"
-      | "concept-8"
-      | "critic-1"
-      | "critic-2"
-      | "critic-3"
-      | "critic-4"
-      | "critic-5"
-      | "critic-6"
-      | "critic-7"
-      | "doodle-1"
-      | "doodle-10"
-      | "doodle-11"
-      | "doodle-12"
-      | "doodle-13"
-      | "doodle-14"
-      | "doodle-15"
-      | "doodle-16"
-      | "doodle-17"
-      | "doodle-18"
-      | "doodle-19"
-      | "doodle-2"
-      | "doodle-20"
-      | "doodle-21"
-      | "doodle-22"
-      | "doodle-23"
-      | "doodle-24"
-      | "doodle-25"
-      | "doodle-26"
-      | "doodle-27"
-      | "doodle-28"
-      | "doodle-29"
-      | "doodle-3"
-      | "doodle-30"
-      | "doodle-31"
-      | "doodle-32"
-      | "doodle-33"
-      | "doodle-34"
-      | "doodle-35"
-      | "doodle-36"
-      | "doodle-37"
-      | "doodle-38"
-      | "doodle-39"
-      | "doodle-4"
-      | "doodle-40"
-      | "doodle-41"
-      | "doodle-42"
-      | "doodle-43"
-      | "doodle-44"
-      | "doodle-45"
-      | "doodle-46"
-      | "doodle-47"
-      | "doodle-48"
-      | "doodle-49"
-      | "doodle-5"
-      | "doodle-50"
-      | "doodle-51"
-      | "doodle-52"
-      | "doodle-53"
-      | "doodle-54"
-      | "doodle-55"
-      | "doodle-56"
-      | "doodle-57"
-      | "doodle-58"
-      | "doodle-59"
-      | "doodle-6"
-      | "doodle-60"
-      | "doodle-7"
-      | "doodle-8"
-      | "doodle-9"
-      | "eraser-1"
-      | "eraser-2"
-      | "eraser-3"
-      | "eraser-4"
-      | "eraser-5"
-      | "eraser-6"
-      | "eraser-7"
-      | "gallery-1"
-      | "gallery-2"
-      | "gallery-3"
-      | "gallery-4"
-      | "gallery-5"
-      | "gallery-6"
-      | "gallery-7"
-      | "idea-1"
-      | "idea-2"
-      | "idea-3"
-      | "idea-4"
-      | "idea-5"
-      | "idea-6"
-      | "idea-7"
-      | "idea-8"
-      | "inkwork-1"
-      | "inkwork-10"
-      | "inkwork-11"
-      | "inkwork-12"
-      | "inkwork-13"
-      | "inkwork-14"
-      | "inkwork-15"
-      | "inkwork-16"
-      | "inkwork-17"
-      | "inkwork-18"
-      | "inkwork-19"
-      | "inkwork-2"
-      | "inkwork-20"
-      | "inkwork-21"
-      | "inkwork-22"
-      | "inkwork-23"
-      | "inkwork-24"
-      | "inkwork-25"
-      | "inkwork-26"
-      | "inkwork-27"
-      | "inkwork-28"
-      | "inkwork-29"
-      | "inkwork-3"
-      | "inkwork-30"
-      | "inkwork-4"
-      | "inkwork-5"
-      | "inkwork-6"
-      | "inkwork-7"
-      | "inkwork-8"
-      | "inkwork-9"
-      | "masterpiece-1"
-      | "masterpiece-2"
-      | "masterpiece-3"
-      | "masterpiece-4"
-      | "masterpiece-5"
-      | "masterpiece-6"
-      | "masterpiece-7"
-      | "masterpiece-8"
-      | "open-mic-1"
-      | "open-mic-2"
-      | "open-mic-3"
-      | "open-mic-4"
-      | "open-mic-5"
-      | "open-mic-6"
-      | "open-mic-7"
-      | "sketch-1"
-      | "sketch-10"
-      | "sketch-11"
-      | "sketch-12"
-      | "sketch-13"
-      | "sketch-14"
-      | "sketch-15"
-      | "sketch-16"
-      | "sketch-17"
-      | "sketch-18"
-      | "sketch-19"
-      | "sketch-2"
-      | "sketch-20"
-      | "sketch-21"
-      | "sketch-22"
-      | "sketch-23"
-      | "sketch-24"
-      | "sketch-25"
-      | "sketch-26"
-      | "sketch-27"
-      | "sketch-28"
-      | "sketch-29"
-      | "sketch-3"
-      | "sketch-30"
-      | "sketch-31"
-      | "sketch-32"
-      | "sketch-33"
-      | "sketch-34"
-      | "sketch-35"
-      | "sketch-36"
-      | "sketch-37"
-      | "sketch-38"
-      | "sketch-39"
-      | "sketch-4"
-      | "sketch-40"
-      | "sketch-5"
-      | "sketch-6"
-      | "sketch-7"
-      | "sketch-8"
-      | "sketch-9"
-      | "sketchpad-1"
-      | "sketchpad-2"
-      | "sketchpad-3"
-      | "sketchpad-4"
-      | "sketchpad-5"
-      | "sketchpad-6"
-      | "sketchpad-7"
-      | "smudge-1"
-      | "smudge-10"
-      | "smudge-2"
-      | "smudge-3"
-      | "smudge-4"
-      | "smudge-5"
-      | "smudge-6"
-      | "smudge-7"
-      | "smudge-8"
-      | "smudge-9"
-      | "studio-1"
-      | "studio-2"
-      | "studio-3"
-      | "studio-4"
-      | "studio-5"
-      | "studio-6"
-      | "studio-7"
-      | "studio-visit-1"
-      | "studio-visit-2"
-      | "studio-visit-3"
-      | "studio-visit-4"
-      | "studio-visit-5"
-      | "studio-visit-6"
-      | "studio-visit-7"
-    >
-  >;
+  "deck": PerPlayer<Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">>;
+  "discard": PerPlayer<Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">>;
+  "hand": PerPlayer<Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">>;
+  "in-play": PerPlayer<Array<"brainstorm-1" | "brainstorm-2" | "brainstorm-3" | "brainstorm-4" | "brainstorm-5" | "brainstorm-6" | "brainstorm-7" | "brainstorm-8" | "concept-1" | "concept-2" | "concept-3" | "concept-4" | "concept-5" | "concept-6" | "concept-7" | "concept-8" | "doodle-1" | "doodle-10" | "doodle-11" | "doodle-12" | "doodle-13" | "doodle-14" | "doodle-15" | "doodle-16" | "doodle-17" | "doodle-18" | "doodle-19" | "doodle-2" | "doodle-20" | "doodle-21" | "doodle-22" | "doodle-23" | "doodle-24" | "doodle-25" | "doodle-26" | "doodle-27" | "doodle-28" | "doodle-29" | "doodle-3" | "doodle-30" | "doodle-31" | "doodle-32" | "doodle-33" | "doodle-34" | "doodle-35" | "doodle-36" | "doodle-37" | "doodle-38" | "doodle-39" | "doodle-4" | "doodle-40" | "doodle-41" | "doodle-42" | "doodle-43" | "doodle-44" | "doodle-5" | "doodle-6" | "doodle-7" | "doodle-8" | "doodle-9" | "eraser-1" | "eraser-2" | "eraser-3" | "eraser-4" | "eraser-5" | "eraser-6" | "eraser-7" | "eraser-8" | "gallery-1" | "gallery-2" | "gallery-3" | "gallery-4" | "gallery-5" | "gallery-6" | "gallery-7" | "gallery-8" | "idea-1" | "idea-10" | "idea-11" | "idea-12" | "idea-13" | "idea-14" | "idea-2" | "idea-3" | "idea-4" | "idea-5" | "idea-6" | "idea-7" | "idea-8" | "idea-9" | "inkwork-1" | "inkwork-10" | "inkwork-11" | "inkwork-12" | "inkwork-2" | "inkwork-3" | "inkwork-4" | "inkwork-5" | "inkwork-6" | "inkwork-7" | "inkwork-8" | "inkwork-9" | "masterpiece-1" | "masterpiece-2" | "masterpiece-3" | "masterpiece-4" | "masterpiece-5" | "masterpiece-6" | "masterpiece-7" | "masterpiece-8" | "sketch-1" | "sketch-10" | "sketch-11" | "sketch-12" | "sketch-13" | "sketch-14" | "sketch-15" | "sketch-16" | "sketch-17" | "sketch-18" | "sketch-19" | "sketch-2" | "sketch-20" | "sketch-3" | "sketch-4" | "sketch-5" | "sketch-6" | "sketch-7" | "sketch-8" | "sketch-9" | "studio-1" | "studio-2" | "studio-3" | "studio-4" | "studio-5" | "studio-6" | "studio-7" | "studio-8" | "studio-visit-1" | "studio-visit-2" | "studio-visit-3" | "studio-visit-4" | "studio-visit-5" | "studio-visit-6" | "studio-visit-7" | "studio-visit-8">>;
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -6944,14 +1070,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -7028,14 +1154,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -7060,14 +1186,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -7088,23 +1214,24 @@ export type TiledBoardStateRecord =
   | HexBoardStateRecord
   | SquareBoardStateRecord;
 
-export type BoardStateById = {};
+export type BoardStateById = {
+
+};
 
 export type HexBoardStateById = Record<string, never>;
 
 export type SquareBoardStateById = Record<string, never>;
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -7161,29 +1288,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -7193,8 +1317,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -7204,10 +1329,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -7217,10 +1341,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -7230,10 +1353,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -7249,19 +1371,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = never;
 
@@ -7305,18 +1427,12 @@ const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {
   "sketchbook-cards:inkwork": SketchbookCardsInkworkCardPropertiesSchema,
   "sketchbook-cards:idea": SketchbookCardsIdeaCardPropertiesSchema,
   "sketchbook-cards:concept": SketchbookCardsConceptCardPropertiesSchema,
-  "sketchbook-cards:masterpiece":
-    SketchbookCardsMasterpieceCardPropertiesSchema,
-  "sketchbook-cards:smudge": SketchbookCardsSmudgeCardPropertiesSchema,
+  "sketchbook-cards:masterpiece": SketchbookCardsMasterpieceCardPropertiesSchema,
   "sketchbook-cards:brainstorm": SketchbookCardsBrainstormCardPropertiesSchema,
   "sketchbook-cards:studio": SketchbookCardsStudioCardPropertiesSchema,
   "sketchbook-cards:gallery": SketchbookCardsGalleryCardPropertiesSchema,
-  "sketchbook-cards:open-mic": SketchbookCardsOpenMicCardPropertiesSchema,
-  "sketchbook-cards:critic": SketchbookCardsCriticCardPropertiesSchema,
   "sketchbook-cards:eraser": SketchbookCardsEraserCardPropertiesSchema,
-  "sketchbook-cards:sketchpad": SketchbookCardsSketchpadCardPropertiesSchema,
-  "sketchbook-cards:studio-visit":
-    SketchbookCardsStudioVisitCardPropertiesSchema,
+  "sketchbook-cards:studio-visit": SketchbookCardsStudioVisitCardPropertiesSchema,
 };
 function createCardStateSchema<CardIdValue extends CardId>(
   cardId: CardIdValue,
@@ -7451,13 +1567,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -7514,11 +1625,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -7563,590 +1674,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({
-        "supply-brainstorm": [],
-        "supply-concept": [],
-        "supply-critic": [],
-        "supply-doodle": [],
-        "supply-eraser": [],
-        "supply-gallery": [],
-        "supply-idea": [],
-        "supply-inkwork": [],
-        "supply-masterpiece": [],
-        "supply-open-mic": [],
-        "supply-sketch": [],
-        "supply-sketchpad": [],
-        "supply-smudge": [],
-        "supply-studio": [],
-        "supply-studio-visit": [],
-        trash: [],
-      }),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({
-        deck: "ownerOnly",
-        discard: "public",
-        hand: "ownerOnly",
-        "in-play": "public",
-        "supply-brainstorm": "public",
-        "supply-concept": "public",
-        "supply-critic": "public",
-        "supply-doodle": "public",
-        "supply-eraser": "public",
-        "supply-gallery": "public",
-        "supply-idea": "public",
-        "supply-inkwork": "public",
-        "supply-masterpiece": "public",
-        "supply-open-mic": "public",
-        "supply-sketch": "public",
-        "supply-sketchpad": "public",
-        "supply-smudge": "public",
-        "supply-studio": "public",
-        "supply-studio-visit": "public",
-        trash: "public",
-      }),
-      cardSetIdsByZoneId: cloneManifestDefault({
-        deck: ["sketchbook-cards"],
-        discard: ["sketchbook-cards"],
-        hand: ["sketchbook-cards"],
-        "in-play": ["sketchbook-cards"],
-        "supply-brainstorm": ["sketchbook-cards"],
-        "supply-concept": ["sketchbook-cards"],
-        "supply-critic": ["sketchbook-cards"],
-        "supply-doodle": ["sketchbook-cards"],
-        "supply-eraser": ["sketchbook-cards"],
-        "supply-gallery": ["sketchbook-cards"],
-        "supply-idea": ["sketchbook-cards"],
-        "supply-inkwork": ["sketchbook-cards"],
-        "supply-masterpiece": ["sketchbook-cards"],
-        "supply-open-mic": ["sketchbook-cards"],
-        "supply-sketch": ["sketchbook-cards"],
-        "supply-sketchpad": ["sketchbook-cards"],
-        "supply-smudge": ["sketchbook-cards"],
-        "supply-studio": ["sketchbook-cards"],
-        "supply-studio-visit": ["sketchbook-cards"],
-        trash: ["sketchbook-cards"],
-      }),
-    }) as TableState["zones"],
-  decks: () =>
-    cloneManifestDefault({
-      "supply-brainstorm": [],
-      "supply-concept": [],
-      "supply-critic": [],
-      "supply-doodle": [],
-      "supply-eraser": [],
-      "supply-gallery": [],
-      "supply-idea": [],
-      "supply-inkwork": [],
-      "supply-masterpiece": [],
-      "supply-open-mic": [],
-      "supply-sketch": [],
-      "supply-sketchpad": [],
-      "supply-smudge": [],
-      "supply-studio": [],
-      "supply-studio-visit": [],
-      trash: [],
-    }) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({"supply-brainstorm":[],"supply-concept":[],"supply-doodle":[],"supply-eraser":[],"supply-gallery":[],"supply-idea":[],"supply-inkwork":[],"supply-masterpiece":[],"supply-sketch":[],"supply-studio":[],"supply-studio-visit":[],"trash":[]}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({"deck":"hidden","discard":"public","hand":"ownerOnly","in-play":"public","supply-brainstorm":"public","supply-concept":"public","supply-doodle":"public","supply-eraser":"public","supply-gallery":"public","supply-idea":"public","supply-inkwork":"public","supply-masterpiece":"public","supply-sketch":"public","supply-studio":"public","supply-studio-visit":"public","trash":"public"}),
+    cardSetIdsByZoneId: cloneManifestDefault({"deck":["sketchbook-cards"],"discard":["sketchbook-cards"],"hand":["sketchbook-cards"],"in-play":["sketchbook-cards"],"supply-brainstorm":["sketchbook-cards"],"supply-concept":["sketchbook-cards"],"supply-doodle":["sketchbook-cards"],"supply-eraser":["sketchbook-cards"],"supply-gallery":["sketchbook-cards"],"supply-idea":["sketchbook-cards"],"supply-inkwork":["sketchbook-cards"],"supply-masterpiece":["sketchbook-cards"],"supply-sketch":["sketchbook-cards"],"supply-studio":["sketchbook-cards"],"supply-studio-visit":["sketchbook-cards"],"trash":["sketchbook-cards"]}),
+  }) as TableState["zones"],
+  decks: () => cloneManifestDefault({"supply-brainstorm":[],"supply-concept":[],"supply-doodle":[],"supply-eraser":[],"supply-gallery":[],"supply-idea":[],"supply-inkwork":[],"supply-masterpiece":[],"supply-sketch":[],"supply-studio":[],"supply-studio-visit":[],"trash":[]}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({
-      deck: "ownerOnly",
-      discard: "public",
-      hand: "ownerOnly",
-      "in-play": "public",
-    }) as TableState["handVisibility"],
-  ownerOfCard: () =>
-    cloneManifestDefault({
-      "brainstorm-1": null,
-      "brainstorm-2": null,
-      "brainstorm-3": null,
-      "brainstorm-4": null,
-      "brainstorm-5": null,
-      "brainstorm-6": null,
-      "brainstorm-7": null,
-      "concept-1": null,
-      "concept-2": null,
-      "concept-3": null,
-      "concept-4": null,
-      "concept-5": null,
-      "concept-6": null,
-      "concept-7": null,
-      "concept-8": null,
-      "critic-1": null,
-      "critic-2": null,
-      "critic-3": null,
-      "critic-4": null,
-      "critic-5": null,
-      "critic-6": null,
-      "critic-7": null,
-      "doodle-1": null,
-      "doodle-10": null,
-      "doodle-11": null,
-      "doodle-12": null,
-      "doodle-13": null,
-      "doodle-14": null,
-      "doodle-15": null,
-      "doodle-16": null,
-      "doodle-17": null,
-      "doodle-18": null,
-      "doodle-19": null,
-      "doodle-2": null,
-      "doodle-20": null,
-      "doodle-21": null,
-      "doodle-22": null,
-      "doodle-23": null,
-      "doodle-24": null,
-      "doodle-25": null,
-      "doodle-26": null,
-      "doodle-27": null,
-      "doodle-28": null,
-      "doodle-29": null,
-      "doodle-3": null,
-      "doodle-30": null,
-      "doodle-31": null,
-      "doodle-32": null,
-      "doodle-33": null,
-      "doodle-34": null,
-      "doodle-35": null,
-      "doodle-36": null,
-      "doodle-37": null,
-      "doodle-38": null,
-      "doodle-39": null,
-      "doodle-4": null,
-      "doodle-40": null,
-      "doodle-41": null,
-      "doodle-42": null,
-      "doodle-43": null,
-      "doodle-44": null,
-      "doodle-45": null,
-      "doodle-46": null,
-      "doodle-47": null,
-      "doodle-48": null,
-      "doodle-49": null,
-      "doodle-5": null,
-      "doodle-50": null,
-      "doodle-51": null,
-      "doodle-52": null,
-      "doodle-53": null,
-      "doodle-54": null,
-      "doodle-55": null,
-      "doodle-56": null,
-      "doodle-57": null,
-      "doodle-58": null,
-      "doodle-59": null,
-      "doodle-6": null,
-      "doodle-60": null,
-      "doodle-7": null,
-      "doodle-8": null,
-      "doodle-9": null,
-      "eraser-1": null,
-      "eraser-2": null,
-      "eraser-3": null,
-      "eraser-4": null,
-      "eraser-5": null,
-      "eraser-6": null,
-      "eraser-7": null,
-      "gallery-1": null,
-      "gallery-2": null,
-      "gallery-3": null,
-      "gallery-4": null,
-      "gallery-5": null,
-      "gallery-6": null,
-      "gallery-7": null,
-      "idea-1": null,
-      "idea-2": null,
-      "idea-3": null,
-      "idea-4": null,
-      "idea-5": null,
-      "idea-6": null,
-      "idea-7": null,
-      "idea-8": null,
-      "inkwork-1": null,
-      "inkwork-10": null,
-      "inkwork-11": null,
-      "inkwork-12": null,
-      "inkwork-13": null,
-      "inkwork-14": null,
-      "inkwork-15": null,
-      "inkwork-16": null,
-      "inkwork-17": null,
-      "inkwork-18": null,
-      "inkwork-19": null,
-      "inkwork-2": null,
-      "inkwork-20": null,
-      "inkwork-21": null,
-      "inkwork-22": null,
-      "inkwork-23": null,
-      "inkwork-24": null,
-      "inkwork-25": null,
-      "inkwork-26": null,
-      "inkwork-27": null,
-      "inkwork-28": null,
-      "inkwork-29": null,
-      "inkwork-3": null,
-      "inkwork-30": null,
-      "inkwork-4": null,
-      "inkwork-5": null,
-      "inkwork-6": null,
-      "inkwork-7": null,
-      "inkwork-8": null,
-      "inkwork-9": null,
-      "masterpiece-1": null,
-      "masterpiece-2": null,
-      "masterpiece-3": null,
-      "masterpiece-4": null,
-      "masterpiece-5": null,
-      "masterpiece-6": null,
-      "masterpiece-7": null,
-      "masterpiece-8": null,
-      "open-mic-1": null,
-      "open-mic-2": null,
-      "open-mic-3": null,
-      "open-mic-4": null,
-      "open-mic-5": null,
-      "open-mic-6": null,
-      "open-mic-7": null,
-      "sketch-1": null,
-      "sketch-10": null,
-      "sketch-11": null,
-      "sketch-12": null,
-      "sketch-13": null,
-      "sketch-14": null,
-      "sketch-15": null,
-      "sketch-16": null,
-      "sketch-17": null,
-      "sketch-18": null,
-      "sketch-19": null,
-      "sketch-2": null,
-      "sketch-20": null,
-      "sketch-21": null,
-      "sketch-22": null,
-      "sketch-23": null,
-      "sketch-24": null,
-      "sketch-25": null,
-      "sketch-26": null,
-      "sketch-27": null,
-      "sketch-28": null,
-      "sketch-29": null,
-      "sketch-3": null,
-      "sketch-30": null,
-      "sketch-31": null,
-      "sketch-32": null,
-      "sketch-33": null,
-      "sketch-34": null,
-      "sketch-35": null,
-      "sketch-36": null,
-      "sketch-37": null,
-      "sketch-38": null,
-      "sketch-39": null,
-      "sketch-4": null,
-      "sketch-40": null,
-      "sketch-5": null,
-      "sketch-6": null,
-      "sketch-7": null,
-      "sketch-8": null,
-      "sketch-9": null,
-      "sketchpad-1": null,
-      "sketchpad-2": null,
-      "sketchpad-3": null,
-      "sketchpad-4": null,
-      "sketchpad-5": null,
-      "sketchpad-6": null,
-      "sketchpad-7": null,
-      "smudge-1": null,
-      "smudge-10": null,
-      "smudge-2": null,
-      "smudge-3": null,
-      "smudge-4": null,
-      "smudge-5": null,
-      "smudge-6": null,
-      "smudge-7": null,
-      "smudge-8": null,
-      "smudge-9": null,
-      "studio-1": null,
-      "studio-2": null,
-      "studio-3": null,
-      "studio-4": null,
-      "studio-5": null,
-      "studio-6": null,
-      "studio-7": null,
-      "studio-visit-1": null,
-      "studio-visit-2": null,
-      "studio-visit-3": null,
-      "studio-visit-4": null,
-      "studio-visit-5": null,
-      "studio-visit-6": null,
-      "studio-visit-7": null,
-    }) as TableState["ownerOfCard"],
-  visibility: () =>
-    cloneManifestDefault({
-      "brainstorm-1": { faceUp: true },
-      "brainstorm-2": { faceUp: true },
-      "brainstorm-3": { faceUp: true },
-      "brainstorm-4": { faceUp: true },
-      "brainstorm-5": { faceUp: true },
-      "brainstorm-6": { faceUp: true },
-      "brainstorm-7": { faceUp: true },
-      "concept-1": { faceUp: true },
-      "concept-2": { faceUp: true },
-      "concept-3": { faceUp: true },
-      "concept-4": { faceUp: true },
-      "concept-5": { faceUp: true },
-      "concept-6": { faceUp: true },
-      "concept-7": { faceUp: true },
-      "concept-8": { faceUp: true },
-      "critic-1": { faceUp: true },
-      "critic-2": { faceUp: true },
-      "critic-3": { faceUp: true },
-      "critic-4": { faceUp: true },
-      "critic-5": { faceUp: true },
-      "critic-6": { faceUp: true },
-      "critic-7": { faceUp: true },
-      "doodle-1": { faceUp: true },
-      "doodle-10": { faceUp: true },
-      "doodle-11": { faceUp: true },
-      "doodle-12": { faceUp: true },
-      "doodle-13": { faceUp: true },
-      "doodle-14": { faceUp: true },
-      "doodle-15": { faceUp: true },
-      "doodle-16": { faceUp: true },
-      "doodle-17": { faceUp: true },
-      "doodle-18": { faceUp: true },
-      "doodle-19": { faceUp: true },
-      "doodle-2": { faceUp: true },
-      "doodle-20": { faceUp: true },
-      "doodle-21": { faceUp: true },
-      "doodle-22": { faceUp: true },
-      "doodle-23": { faceUp: true },
-      "doodle-24": { faceUp: true },
-      "doodle-25": { faceUp: true },
-      "doodle-26": { faceUp: true },
-      "doodle-27": { faceUp: true },
-      "doodle-28": { faceUp: true },
-      "doodle-29": { faceUp: true },
-      "doodle-3": { faceUp: true },
-      "doodle-30": { faceUp: true },
-      "doodle-31": { faceUp: true },
-      "doodle-32": { faceUp: true },
-      "doodle-33": { faceUp: true },
-      "doodle-34": { faceUp: true },
-      "doodle-35": { faceUp: true },
-      "doodle-36": { faceUp: true },
-      "doodle-37": { faceUp: true },
-      "doodle-38": { faceUp: true },
-      "doodle-39": { faceUp: true },
-      "doodle-4": { faceUp: true },
-      "doodle-40": { faceUp: true },
-      "doodle-41": { faceUp: true },
-      "doodle-42": { faceUp: true },
-      "doodle-43": { faceUp: true },
-      "doodle-44": { faceUp: true },
-      "doodle-45": { faceUp: true },
-      "doodle-46": { faceUp: true },
-      "doodle-47": { faceUp: true },
-      "doodle-48": { faceUp: true },
-      "doodle-49": { faceUp: true },
-      "doodle-5": { faceUp: true },
-      "doodle-50": { faceUp: true },
-      "doodle-51": { faceUp: true },
-      "doodle-52": { faceUp: true },
-      "doodle-53": { faceUp: true },
-      "doodle-54": { faceUp: true },
-      "doodle-55": { faceUp: true },
-      "doodle-56": { faceUp: true },
-      "doodle-57": { faceUp: true },
-      "doodle-58": { faceUp: true },
-      "doodle-59": { faceUp: true },
-      "doodle-6": { faceUp: true },
-      "doodle-60": { faceUp: true },
-      "doodle-7": { faceUp: true },
-      "doodle-8": { faceUp: true },
-      "doodle-9": { faceUp: true },
-      "eraser-1": { faceUp: true },
-      "eraser-2": { faceUp: true },
-      "eraser-3": { faceUp: true },
-      "eraser-4": { faceUp: true },
-      "eraser-5": { faceUp: true },
-      "eraser-6": { faceUp: true },
-      "eraser-7": { faceUp: true },
-      "gallery-1": { faceUp: true },
-      "gallery-2": { faceUp: true },
-      "gallery-3": { faceUp: true },
-      "gallery-4": { faceUp: true },
-      "gallery-5": { faceUp: true },
-      "gallery-6": { faceUp: true },
-      "gallery-7": { faceUp: true },
-      "idea-1": { faceUp: true },
-      "idea-2": { faceUp: true },
-      "idea-3": { faceUp: true },
-      "idea-4": { faceUp: true },
-      "idea-5": { faceUp: true },
-      "idea-6": { faceUp: true },
-      "idea-7": { faceUp: true },
-      "idea-8": { faceUp: true },
-      "inkwork-1": { faceUp: true },
-      "inkwork-10": { faceUp: true },
-      "inkwork-11": { faceUp: true },
-      "inkwork-12": { faceUp: true },
-      "inkwork-13": { faceUp: true },
-      "inkwork-14": { faceUp: true },
-      "inkwork-15": { faceUp: true },
-      "inkwork-16": { faceUp: true },
-      "inkwork-17": { faceUp: true },
-      "inkwork-18": { faceUp: true },
-      "inkwork-19": { faceUp: true },
-      "inkwork-2": { faceUp: true },
-      "inkwork-20": { faceUp: true },
-      "inkwork-21": { faceUp: true },
-      "inkwork-22": { faceUp: true },
-      "inkwork-23": { faceUp: true },
-      "inkwork-24": { faceUp: true },
-      "inkwork-25": { faceUp: true },
-      "inkwork-26": { faceUp: true },
-      "inkwork-27": { faceUp: true },
-      "inkwork-28": { faceUp: true },
-      "inkwork-29": { faceUp: true },
-      "inkwork-3": { faceUp: true },
-      "inkwork-30": { faceUp: true },
-      "inkwork-4": { faceUp: true },
-      "inkwork-5": { faceUp: true },
-      "inkwork-6": { faceUp: true },
-      "inkwork-7": { faceUp: true },
-      "inkwork-8": { faceUp: true },
-      "inkwork-9": { faceUp: true },
-      "masterpiece-1": { faceUp: true },
-      "masterpiece-2": { faceUp: true },
-      "masterpiece-3": { faceUp: true },
-      "masterpiece-4": { faceUp: true },
-      "masterpiece-5": { faceUp: true },
-      "masterpiece-6": { faceUp: true },
-      "masterpiece-7": { faceUp: true },
-      "masterpiece-8": { faceUp: true },
-      "open-mic-1": { faceUp: true },
-      "open-mic-2": { faceUp: true },
-      "open-mic-3": { faceUp: true },
-      "open-mic-4": { faceUp: true },
-      "open-mic-5": { faceUp: true },
-      "open-mic-6": { faceUp: true },
-      "open-mic-7": { faceUp: true },
-      "sketch-1": { faceUp: true },
-      "sketch-10": { faceUp: true },
-      "sketch-11": { faceUp: true },
-      "sketch-12": { faceUp: true },
-      "sketch-13": { faceUp: true },
-      "sketch-14": { faceUp: true },
-      "sketch-15": { faceUp: true },
-      "sketch-16": { faceUp: true },
-      "sketch-17": { faceUp: true },
-      "sketch-18": { faceUp: true },
-      "sketch-19": { faceUp: true },
-      "sketch-2": { faceUp: true },
-      "sketch-20": { faceUp: true },
-      "sketch-21": { faceUp: true },
-      "sketch-22": { faceUp: true },
-      "sketch-23": { faceUp: true },
-      "sketch-24": { faceUp: true },
-      "sketch-25": { faceUp: true },
-      "sketch-26": { faceUp: true },
-      "sketch-27": { faceUp: true },
-      "sketch-28": { faceUp: true },
-      "sketch-29": { faceUp: true },
-      "sketch-3": { faceUp: true },
-      "sketch-30": { faceUp: true },
-      "sketch-31": { faceUp: true },
-      "sketch-32": { faceUp: true },
-      "sketch-33": { faceUp: true },
-      "sketch-34": { faceUp: true },
-      "sketch-35": { faceUp: true },
-      "sketch-36": { faceUp: true },
-      "sketch-37": { faceUp: true },
-      "sketch-38": { faceUp: true },
-      "sketch-39": { faceUp: true },
-      "sketch-4": { faceUp: true },
-      "sketch-40": { faceUp: true },
-      "sketch-5": { faceUp: true },
-      "sketch-6": { faceUp: true },
-      "sketch-7": { faceUp: true },
-      "sketch-8": { faceUp: true },
-      "sketch-9": { faceUp: true },
-      "sketchpad-1": { faceUp: true },
-      "sketchpad-2": { faceUp: true },
-      "sketchpad-3": { faceUp: true },
-      "sketchpad-4": { faceUp: true },
-      "sketchpad-5": { faceUp: true },
-      "sketchpad-6": { faceUp: true },
-      "sketchpad-7": { faceUp: true },
-      "smudge-1": { faceUp: true },
-      "smudge-10": { faceUp: true },
-      "smudge-2": { faceUp: true },
-      "smudge-3": { faceUp: true },
-      "smudge-4": { faceUp: true },
-      "smudge-5": { faceUp: true },
-      "smudge-6": { faceUp: true },
-      "smudge-7": { faceUp: true },
-      "smudge-8": { faceUp: true },
-      "smudge-9": { faceUp: true },
-      "studio-1": { faceUp: true },
-      "studio-2": { faceUp: true },
-      "studio-3": { faceUp: true },
-      "studio-4": { faceUp: true },
-      "studio-5": { faceUp: true },
-      "studio-6": { faceUp: true },
-      "studio-7": { faceUp: true },
-      "studio-visit-1": { faceUp: true },
-      "studio-visit-2": { faceUp: true },
-      "studio-visit-3": { faceUp: true },
-      "studio-visit-4": { faceUp: true },
-      "studio-visit-5": { faceUp: true },
-      "studio-visit-6": { faceUp: true },
-      "studio-visit-7": { faceUp: true },
-    }) as TableState["visibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({"deck":"hidden","discard":"public","hand":"ownerOnly","in-play":"public"}) as TableState["handVisibility"],
+  ownerOfCard: () => cloneManifestDefault({"brainstorm-1":null,"brainstorm-2":null,"brainstorm-3":null,"brainstorm-4":null,"brainstorm-5":null,"brainstorm-6":null,"brainstorm-7":null,"brainstorm-8":null,"concept-1":null,"concept-2":null,"concept-3":null,"concept-4":null,"concept-5":null,"concept-6":null,"concept-7":null,"concept-8":null,"doodle-1":null,"doodle-10":null,"doodle-11":null,"doodle-12":null,"doodle-13":null,"doodle-14":null,"doodle-15":null,"doodle-16":null,"doodle-17":null,"doodle-18":null,"doodle-19":null,"doodle-2":null,"doodle-20":null,"doodle-21":null,"doodle-22":null,"doodle-23":null,"doodle-24":null,"doodle-25":null,"doodle-26":null,"doodle-27":null,"doodle-28":null,"doodle-29":null,"doodle-3":null,"doodle-30":null,"doodle-31":null,"doodle-32":null,"doodle-33":null,"doodle-34":null,"doodle-35":null,"doodle-36":null,"doodle-37":null,"doodle-38":null,"doodle-39":null,"doodle-4":null,"doodle-40":null,"doodle-41":null,"doodle-42":null,"doodle-43":null,"doodle-44":null,"doodle-5":null,"doodle-6":null,"doodle-7":null,"doodle-8":null,"doodle-9":null,"eraser-1":null,"eraser-2":null,"eraser-3":null,"eraser-4":null,"eraser-5":null,"eraser-6":null,"eraser-7":null,"eraser-8":null,"gallery-1":null,"gallery-2":null,"gallery-3":null,"gallery-4":null,"gallery-5":null,"gallery-6":null,"gallery-7":null,"gallery-8":null,"idea-1":null,"idea-10":null,"idea-11":null,"idea-12":null,"idea-13":null,"idea-14":null,"idea-2":null,"idea-3":null,"idea-4":null,"idea-5":null,"idea-6":null,"idea-7":null,"idea-8":null,"idea-9":null,"inkwork-1":null,"inkwork-10":null,"inkwork-11":null,"inkwork-12":null,"inkwork-2":null,"inkwork-3":null,"inkwork-4":null,"inkwork-5":null,"inkwork-6":null,"inkwork-7":null,"inkwork-8":null,"inkwork-9":null,"masterpiece-1":null,"masterpiece-2":null,"masterpiece-3":null,"masterpiece-4":null,"masterpiece-5":null,"masterpiece-6":null,"masterpiece-7":null,"masterpiece-8":null,"sketch-1":null,"sketch-10":null,"sketch-11":null,"sketch-12":null,"sketch-13":null,"sketch-14":null,"sketch-15":null,"sketch-16":null,"sketch-17":null,"sketch-18":null,"sketch-19":null,"sketch-2":null,"sketch-20":null,"sketch-3":null,"sketch-4":null,"sketch-5":null,"sketch-6":null,"sketch-7":null,"sketch-8":null,"sketch-9":null,"studio-1":null,"studio-2":null,"studio-3":null,"studio-4":null,"studio-5":null,"studio-6":null,"studio-7":null,"studio-8":null,"studio-visit-1":null,"studio-visit-2":null,"studio-visit-3":null,"studio-visit-4":null,"studio-visit-5":null,"studio-visit-6":null,"studio-visit-7":null,"studio-visit-8":null}) as TableState["ownerOfCard"],
+  visibility: () => cloneManifestDefault({"brainstorm-1":{"faceUp":true},"brainstorm-2":{"faceUp":true},"brainstorm-3":{"faceUp":true},"brainstorm-4":{"faceUp":true},"brainstorm-5":{"faceUp":true},"brainstorm-6":{"faceUp":true},"brainstorm-7":{"faceUp":true},"brainstorm-8":{"faceUp":true},"concept-1":{"faceUp":true},"concept-2":{"faceUp":true},"concept-3":{"faceUp":true},"concept-4":{"faceUp":true},"concept-5":{"faceUp":true},"concept-6":{"faceUp":true},"concept-7":{"faceUp":true},"concept-8":{"faceUp":true},"doodle-1":{"faceUp":true},"doodle-10":{"faceUp":true},"doodle-11":{"faceUp":true},"doodle-12":{"faceUp":true},"doodle-13":{"faceUp":true},"doodle-14":{"faceUp":true},"doodle-15":{"faceUp":true},"doodle-16":{"faceUp":true},"doodle-17":{"faceUp":true},"doodle-18":{"faceUp":true},"doodle-19":{"faceUp":true},"doodle-2":{"faceUp":true},"doodle-20":{"faceUp":true},"doodle-21":{"faceUp":true},"doodle-22":{"faceUp":true},"doodle-23":{"faceUp":true},"doodle-24":{"faceUp":true},"doodle-25":{"faceUp":true},"doodle-26":{"faceUp":true},"doodle-27":{"faceUp":true},"doodle-28":{"faceUp":true},"doodle-29":{"faceUp":true},"doodle-3":{"faceUp":true},"doodle-30":{"faceUp":true},"doodle-31":{"faceUp":true},"doodle-32":{"faceUp":true},"doodle-33":{"faceUp":true},"doodle-34":{"faceUp":true},"doodle-35":{"faceUp":true},"doodle-36":{"faceUp":true},"doodle-37":{"faceUp":true},"doodle-38":{"faceUp":true},"doodle-39":{"faceUp":true},"doodle-4":{"faceUp":true},"doodle-40":{"faceUp":true},"doodle-41":{"faceUp":true},"doodle-42":{"faceUp":true},"doodle-43":{"faceUp":true},"doodle-44":{"faceUp":true},"doodle-5":{"faceUp":true},"doodle-6":{"faceUp":true},"doodle-7":{"faceUp":true},"doodle-8":{"faceUp":true},"doodle-9":{"faceUp":true},"eraser-1":{"faceUp":true},"eraser-2":{"faceUp":true},"eraser-3":{"faceUp":true},"eraser-4":{"faceUp":true},"eraser-5":{"faceUp":true},"eraser-6":{"faceUp":true},"eraser-7":{"faceUp":true},"eraser-8":{"faceUp":true},"gallery-1":{"faceUp":true},"gallery-2":{"faceUp":true},"gallery-3":{"faceUp":true},"gallery-4":{"faceUp":true},"gallery-5":{"faceUp":true},"gallery-6":{"faceUp":true},"gallery-7":{"faceUp":true},"gallery-8":{"faceUp":true},"idea-1":{"faceUp":true},"idea-10":{"faceUp":true},"idea-11":{"faceUp":true},"idea-12":{"faceUp":true},"idea-13":{"faceUp":true},"idea-14":{"faceUp":true},"idea-2":{"faceUp":true},"idea-3":{"faceUp":true},"idea-4":{"faceUp":true},"idea-5":{"faceUp":true},"idea-6":{"faceUp":true},"idea-7":{"faceUp":true},"idea-8":{"faceUp":true},"idea-9":{"faceUp":true},"inkwork-1":{"faceUp":true},"inkwork-10":{"faceUp":true},"inkwork-11":{"faceUp":true},"inkwork-12":{"faceUp":true},"inkwork-2":{"faceUp":true},"inkwork-3":{"faceUp":true},"inkwork-4":{"faceUp":true},"inkwork-5":{"faceUp":true},"inkwork-6":{"faceUp":true},"inkwork-7":{"faceUp":true},"inkwork-8":{"faceUp":true},"inkwork-9":{"faceUp":true},"masterpiece-1":{"faceUp":true},"masterpiece-2":{"faceUp":true},"masterpiece-3":{"faceUp":true},"masterpiece-4":{"faceUp":true},"masterpiece-5":{"faceUp":true},"masterpiece-6":{"faceUp":true},"masterpiece-7":{"faceUp":true},"masterpiece-8":{"faceUp":true},"sketch-1":{"faceUp":true},"sketch-10":{"faceUp":true},"sketch-11":{"faceUp":true},"sketch-12":{"faceUp":true},"sketch-13":{"faceUp":true},"sketch-14":{"faceUp":true},"sketch-15":{"faceUp":true},"sketch-16":{"faceUp":true},"sketch-17":{"faceUp":true},"sketch-18":{"faceUp":true},"sketch-19":{"faceUp":true},"sketch-2":{"faceUp":true},"sketch-20":{"faceUp":true},"sketch-3":{"faceUp":true},"sketch-4":{"faceUp":true},"sketch-5":{"faceUp":true},"sketch-6":{"faceUp":true},"sketch-7":{"faceUp":true},"sketch-8":{"faceUp":true},"sketch-9":{"faceUp":true},"studio-1":{"faceUp":true},"studio-2":{"faceUp":true},"studio-3":{"faceUp":true},"studio-4":{"faceUp":true},"studio-5":{"faceUp":true},"studio-6":{"faceUp":true},"studio-7":{"faceUp":true},"studio-8":{"faceUp":true},"studio-visit-1":{"faceUp":true},"studio-visit-2":{"faceUp":true},"studio-visit-3":{"faceUp":true},"studio-visit-4":{"faceUp":true},"studio-visit-5":{"faceUp":true},"studio-visit-6":{"faceUp":true},"studio-visit-7":{"faceUp":true},"studio-visit-8":{"faceUp":true}}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -8181,6 +1746,13 @@ export function createInitialTable(
   table.componentLocations = componentLocations;
   return tableSchema.parse(table);
 }
+
+export const normalSetup = {
+  minPlayers: 2,
+  maxPlayers: 2,
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
 
 export const schemas = {
   table: tableSchema,
@@ -8225,10 +1797,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -8238,22 +1814,48 @@ export const manifestContract: ReducerManifestContract<
   createGameStateSchema,
 };
 
-const boardIdsByLayoutLookup = {} as const;
-const boardBaseIdsByLayoutLookup = {} as const;
-const boardIdsByBaseIdLookup = {} as const;
-const boardBaseIdsByTemplateIdLookup = {} as const;
-const boardLayoutByIdLookup = {} as const;
-const boardTemplateLayoutByIdLookup = {} as const;
-const boardIdsByTypeIdLookup = {} as const;
-const spaceIdsByBoardIdLookup = {} as const;
+const boardIdsByLayoutLookup = {
+
+} as const;
+const boardBaseIdsByLayoutLookup = {
+
+} as const;
+const boardIdsByBaseIdLookup = {
+
+} as const;
+const boardBaseIdsByTemplateIdLookup = {
+
+} as const;
+const boardLayoutByIdLookup = {
+
+} as const;
+const boardTemplateLayoutByIdLookup = {
+
+} as const;
+const boardIdsByTypeIdLookup = {
+
+} as const;
+const spaceIdsByBoardIdLookup = {
+
+} as const;
 const spaceTypeIdByBoardIdLookup = {} as const;
-const spaceIdsByTypeIdLookup = {} as const;
-const containerIdsByBoardIdLookup = {} as const;
+const spaceIdsByTypeIdLookup = {
+
+} as const;
+const containerIdsByBoardIdLookup = {
+
+} as const;
 const containerHostByBoardIdLookup = {} as const;
-const relationTypeIdsByBoardIdLookup = {} as const;
-const edgeIdsByTypeIdLookup = {} as const;
+const relationTypeIdsByBoardIdLookup = {
+
+} as const;
+const edgeIdsByTypeIdLookup = {
+
+} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {} as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {} as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -8281,9 +1883,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -8291,7 +1893,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -8325,7 +1929,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -8386,7 +1993,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -8396,7 +2006,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -8419,8 +2031,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -8520,9 +2131,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -8603,7 +2214,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -8620,8 +2234,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -8665,10 +2278,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -8712,8 +2322,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -8742,7 +2351,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

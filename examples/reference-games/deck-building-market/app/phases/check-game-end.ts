@@ -1,49 +1,71 @@
-import { definePhase } from "@dreamboard-games/sdk/reducer";
-import {
-  checkGameEndPhaseStateSchema,
-  type GameContract,
-} from "../game-contract";
-import { vpTotalsByPlayer, winnerOf } from "../derived";
-import { edit } from "../reducer-support";
+import { definePhase, type GameOutcome } from "@dreamboard-games/sdk/reducer";
+import type { PlayerId } from "../../shared/manifest-contract";
+import { sketchbookPhaseStateSchema, type GameContract } from "../game-contract";
+import { portfolioScores, supplyEnding } from "../derived";
+import { appendHistory, edit } from "../reducer-support";
+import { FRESH_TURN } from "./player-turn/state";
 
 export const checkGameEnd = definePhase<GameContract>()({
   kind: "auto",
-  state: checkGameEndPhaseStateSchema,
-  initialState: () => ({}),
-  enter({ state, accept, derived, fx, q }) {
-    const winningPlayerId = derived(winnerOf);
-
-    if (winningPlayerId) {
-      const vpTotals = derived(vpTotalsByPlayer);
-      const tx = edit(state);
-      tx.patchPublicState({
-        outcome: {
-          reason: {
-            code: "SKETCHBOOK_FILLED",
-            message: "The sketchbook is filled.",
-          },
-          standings: q.player.order().map((playerId) => ({
-            playerId,
-            rank: playerId === winningPlayerId ? 1 : 2,
-            result: playerId === winningPlayerId ? "win" : "loss",
-            score: vpTotals[playerId] ?? 0,
-          })),
+  state: sketchbookPhaseStateSchema,
+  initialState: () => ({ ...FRESH_TURN }),
+  enter({ state, accept, endGame, derived, fx, q }) {
+    const ending = derived(supplyEnding);
+    let next = appendHistory(state, {
+      kind: "endCheck",
+      actorPlayerId: null,
+      cardId: null,
+      summary: ending ? `Supply ending observed: ${ending}.` : "No supply ending.",
+    });
+    if (ending) {
+      const scores = derived(portfolioScores);
+      const highest = Math.max(...Object.values(scores));
+      const winners = q.player
+        .order()
+        .filter((playerId) => scores[playerId] === highest);
+      const outcome: GameOutcome<PlayerId> = {
+        reason: {
+          code:
+            ending === "both"
+              ? "SIMULTANEOUS_SUPPLY_END"
+              : ending === "masterpiece"
+                ? "MASTERPIECE_SUPPLY_EMPTY"
+                : "THREE_SUPPLY_PILES_EMPTY",
+          message:
+            ending === "both"
+              ? "The Masterpiece pile and at least three supply piles are empty."
+              : ending === "masterpiece"
+                ? "The Masterpiece pile is empty."
+                : "At least three supply piles are empty.",
         },
-      });
+        standings: q.player.order().map((playerId) => ({
+          playerId,
+          rank: winners.includes(playerId) ? 1 : 2,
+          result:
+            winners.length > 1
+              ? "draw"
+              : winners[0] === playerId
+                ? "win"
+                : "loss",
+          score: scores[playerId],
+        })),
+      };
+      const tx = edit(next);
+      tx.patchPublicState({ outcome });
       tx.setActivePlayers([]);
-      return accept(tx.state, { instructions: [fx.transition("gameOver")] });
+      next = tx.state;
+      return endGame(next, outcome, {
+        instructions: [fx.transition("gameOver")],
+      });
     }
 
-    const currentPlayer = state.flow.activePlayers[0];
-    const nextPlayer = currentPlayer
-      ? (q.player.nextInOrder(currentPlayer) ?? q.player.order()[0])
+    const currentPlayerId = state.flow.activePlayers[0];
+    const nextPlayerId = currentPlayerId
+      ? (q.player.nextInOrder(currentPlayerId) ?? q.player.order()[0])
       : q.player.order()[0];
-    if (!nextPlayer) {
-      throw new Error("Sketchbook requires at least one player.");
-    }
-
-    const tx = edit(state);
-    tx.setActivePlayers([nextPlayer]);
+    if (!nextPlayerId) throw new Error("Sketchbook requires two players.");
+    const tx = edit(next);
+    tx.setActivePlayers([nextPlayerId]);
     return accept(tx.state, { instructions: [fx.transition("playerTurn")] });
   },
 });

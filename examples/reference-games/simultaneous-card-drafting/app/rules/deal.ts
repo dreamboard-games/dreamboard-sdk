@@ -1,16 +1,22 @@
 import type { PlayerId } from "../../shared/manifest-contract";
+import type { GameState } from "../game-contract";
+import { edit } from "../reducer-support";
 
-/** Hand size dealt at the start of each round by player count. */
-export function handSizeForPlayerCount(playerCount: number): number {
-  if (playerCount <= 2) return 10;
-  if (playerCount === 3) return 9;
-  if (playerCount === 4) return 8;
-  return 7;
-}
+export const PICKS_PER_ROUND = 6;
+export const ROUND_COUNT = 2;
 
-export function allHandsEmpty(
-  playerIds: readonly PlayerId[],
-  handCounts: Readonly<Record<string, number>>,
-): boolean {
-  return playerIds.every((id) => (handCounts[id] ?? 0) === 0);
+/** Deal one card per seat repeatedly, preserving the one seeded deck order. */
+export function dealRound(state: GameState, playerIds: readonly PlayerId[]) {
+  const tx = edit(state);
+  for (let pick = 0; pick < PICKS_PER_ROUND; pick += 1) {
+    for (const playerId of playerIds) {
+      tx.dealCardsToPlayerZone({
+        fromZoneId: "market-deck",
+        playerId,
+        toZoneId: "hand",
+        count: 1,
+      });
+    }
+  }
+  return tx.state;
 }

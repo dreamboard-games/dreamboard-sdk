@@ -1,4 +1,12 @@
 {
-  "assets": [],
-  "notes": "Harbor Fair uses no binary or third-party art assets in this anchor reference package."
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "path": "thumbnail.svg",
+      "license": "Repository-owned original artwork; use governed by the repository license.",
+      "source": "Original Harbor Fair SVG created for this repository.",
+      "copyright": "Copyright 2026 Dreamboard"
+    }
+  ],
+  "note": "No third-party artwork is used."
 }

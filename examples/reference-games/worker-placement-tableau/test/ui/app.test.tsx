@@ -1,50 +1,52 @@
-import { readFile } from "node:fs/promises";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("worker placement is authored target-first with worker follow-up", async () => {
-  const workerPlacement = await readFile(
-    new URL("../../app/phases/placement/worker-placement.ts", import.meta.url),
+test("Mosaic Workshop binds the atomic placement form to one action-board target", async () => {
+  const app = await readFile(
+    new URL("../../ui/App.tsx", import.meta.url),
     "utf8",
   );
   const routes = await readFile(
     new URL("../../ui/interaction-routes.tsx", import.meta.url),
     "utf8",
   );
-
-  assert.match(
-    workerPlacement,
-    /const spaceId = input\.add\(\s*"spaceId",\s*boardInput\.space/s,
-  );
-  assert.match(workerPlacement, /dependsOn: \[spaceId\]/);
-  assert.match(workerPlacement, /evaluatePlacement\(state, playerId, pieceId/);
-  assert.match(routes, /<placeWorkerForm\.State unavailable=\{null\}>/);
-  assert.match(routes, /state\.draft\.spaceId/);
-  assert.match(routes, /title="Choose worker"/);
+  assert.match(app, /data-reference-game="worker-placement-tableau"/);
+  assert.match(app, /Board\.surface\("action-board"\)/);
+  assert.match(app, /Mosaic Workshop/);
+  assert.match(app, /Authoritative final scoring/);
+  assert.match(routes, /"placement\.placeWorker"/);
+  assert.match(routes, /spaceId: actionBoard\.slot\.space/);
+  for (const field of ["workerId", "give", "receive", "itemType", "cellId"]) {
+    assert.match(routes, new RegExp(`${field}: placeWorker\\.slot\\.${field}`));
+  }
+  assert.match(routes, /"placement\.passPlacement"/);
+  assert.doesNotMatch(routes, /chooseExchange|chooseItem|chooseCell/);
 });
 
-test("pending form choices use dialog presentation", async () => {
-  const routes = await readFile(
-    new URL("../../ui/interaction-routes.tsx", import.meta.url),
-    "utf8",
+test("six UI checkpoints use one behavior path and numeric replay coordinates", async () => {
+  const names = [
+    "mosaic.initial.mobile.scenario.ts",
+    "mosaic.first-craft.desktop.scenario.ts",
+    "mosaic.season-transition.desktop.scenario.ts",
+    "mosaic.developed.mobile.scenario.ts",
+    "mosaic.contention.desktop.scenario.ts",
+    "mosaic.outcome.mobile.scenario.ts",
+  ];
+  const sources = await Promise.all(
+    names.map((name) =>
+      readFile(new URL(`../ui-scenarios/${name}`, import.meta.url), "utf8"),
+    ),
   );
-
-  assert.match(routes, /title="Resolve market"/);
-  assert.match(routes, /title="Resolve trade post"/);
-  assert.match(routes, /title="Discard library card"/);
-  assert.match(routes, /title="Recall worker"/);
-  assert.match(routes, /title="Choose worker"/);
-  assert.match(routes, /Reassign destination/);
-});
-
-test("pending action chrome exposes cancel through Game.Chrome", async () => {
-  const layout = await readFile(
-    new URL("../../ui/components/game-ui.tsx", import.meta.url),
-    "utf8",
-  );
-
-  assert.match(layout, /<Game\.Chrome>/);
-  assert.match(layout, /activeAction\.pendingInput\?\.title/);
-  assert.match(layout, /onClick=\{cancel\}/);
-  assert.match(layout, />\s*Cancel\s*<\/button>/);
+  for (const source of sources) {
+    assert.match(
+      source,
+      /behaviorScenario: "test\/scenarios\/complete-game\.scenario\.ts"/,
+    );
+    assert.match(
+      source,
+      /at: \{ segment: "(?:setup|given|when)", completed: \d+ \}/,
+    );
+    assert.doesNotMatch(source, /import behaviorScenario/);
+  }
 });

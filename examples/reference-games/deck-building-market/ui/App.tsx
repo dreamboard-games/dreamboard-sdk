@@ -1,4 +1,4 @@
-import { Game, Phase, UI } from "../shared/generated/ui-contract.ts";
+import { Game, Phase, UI } from "../shared/generated/ui-contract";
 import { GameUI } from "./components/game-ui";
 import { useSketchbookSurfaces } from "./surfaces";
 import "./style.css";

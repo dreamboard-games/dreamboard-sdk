@@ -33,6 +33,11 @@
       "fallback marks when no legal match remains",
       "terminal scoring from rows columns regions and penalties"
     ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when every player marks a player-owned board from the same public random result.",
+      "Expose legal cells as a state-derived target domain, including any fallback mark when the preferred result has no legal cell.",
+      "Keep row, column, region, and penalty scoring as pure terminal calculations with visible breakdowns."
+    ],
     "readFirst": ["README.md", "rule.md", "app/game.ts"]
   },
   "demoRelease": {
@@ -54,31 +59,9 @@
       "public-scorecards"
     ],
     "categories": ["puzzle", "scorecard"],
-    "heroImageUrl": "/demos/roll-and-write-scorecard/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 8,
-    "demoPlayerCount": 3,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 3
   },
   "mechanics": [
     "roll-and-write",

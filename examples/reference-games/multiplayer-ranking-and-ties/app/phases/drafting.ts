@@ -1,47 +1,95 @@
-import { z } from "zod";
-import { defineInteraction, definePhase } from "@dreamboard-games/sdk/reducer";
-import { ids } from "../../shared/manifest-contract";
-import type { CardId } from "../../shared/manifest-contract";
-import type { DraftingPhaseState, GameContract } from "../game-contract";
-import { edit } from "../reducer-support";
-import { activePlayerId, draftStall } from "./draft-flow";
+import {
+  cardInput,
+  cardTarget,
+  defineInteraction,
+  definePhase,
+} from "@dreamboard-games/sdk/reducer";
+import {
+  draftingPhaseStateSchema,
+  type CardId,
+  type GameContract,
+  type GameState,
+} from "../game-contract";
+import { activePlayerId, draftStall } from "../rules";
 
-export const draftStallInteraction = defineInteraction<
+const MARKET_ZONES = ["market"] as const;
+const marketStallTarget = cardTarget
+  .zones<GameState, CardId, typeof MARKET_ZONES>(MARKET_ZONES)
+  .where({
+    id: "current-market-stall",
+    errorCode: "CARD_NOT_AVAILABLE",
+    message: "Choose a face-up stall currently in the market.",
+    test: ({ state, targetId }) => state.publicState.market.includes(targetId),
+  })
+  .build();
+
+const draftStallInteraction = defineInteraction<
   GameContract,
-  DraftingPhaseState
+  typeof draftingPhaseStateSchema
 >()({
-  inputs: {},
-  paramsSchema: z.object({
-    cardId: ids.cardId,
-  }),
-  reduce({ state, input, accept, reject, fx }) {
-    const params = input.params as { cardId: CardId };
-    const result = draftStall(state.publicState, {
+  presentation: {
+    label: "Draft stall",
+    help: "Add one face-up market stall to your public festival row.",
+  },
+  inputs: {
+    stallId: cardInput<GameState, CardId, typeof MARKET_ZONES>({
+      target: marketStallTarget,
+    }),
+  },
+  reduce({ state, input, accept, edit, endGame, fx, reject }) {
+    const result = draftStall({
+      publicState: state.publicState,
+      hiddenState: state.hiddenState,
       playerId: input.playerId,
-      cardId: params.cardId,
+      stallId: input.params.stallId,
     });
     if (!result.accepted) {
-      return reject(result.validation.errorCode, result.validation.message);
+      return reject(result.errorCode, result.message);
     }
 
     const tx = edit(state);
-    tx.patchPublicState(result.state);
+    tx.moveCardFromSharedZoneToPlayerZone({
+      playerId: input.playerId,
+      fromZoneId: "market",
+      toZoneId: "festival-row",
+      cardId: result.draftedCardId,
+    });
+    for (const move of result.refillMoves) {
+      tx.moveCardBetweenSharedZones({
+        fromZoneId: "draw-pile",
+        toZoneId: move.destination,
+        cardId: move.cardId,
+      });
+    }
+    tx.patchPublicState(result.publicState);
+    tx.patchHiddenState(result.hiddenState);
+    tx.setActivePlayers([]);
 
-    if (result.state.completed) {
-      tx.setActivePlayers([]);
-      return accept(tx.state, { instructions: [fx.transition("gameOver")] });
+    if (result.publicState.completed) {
+      const outcome = result.publicState.outcome;
+      if (!outcome) {
+        throw new Error("Harbor Fair completed without an outcome.");
+      }
+      return endGame(tx.state, outcome, {
+        instructions: [fx.transition("gameOver")],
+      });
     }
 
-    tx.setActivePlayers([activePlayerId(result.state)]);
+    tx.setActivePlayers([activePlayerId(result.publicState)]);
     return accept(tx.state);
   },
 });
 
 export const drafting = definePhase<GameContract>()({
   kind: "player",
-  state: z.object({}),
+  state: draftingPhaseStateSchema,
   initialState: () => ({}),
-  actor: ({ state }) => [activePlayerId(state.publicState)],
+  actor: ({ state }) => activePlayerId(state.publicState),
+  enter({ state, accept, edit }) {
+    const tx = edit(state);
+    tx.setActivePlayers([activePlayerId(state.publicState)]);
+    return accept(tx.state);
+  },
   interactions: {
     draftStall: draftStallInteraction,
   },

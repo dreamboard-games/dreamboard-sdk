@@ -1,46 +1,60 @@
-import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
 import {
   defineGameContract,
   type ErrorCodeOfContract,
+  type GameOutcome,
   type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
+import { z } from "zod";
+import { ids, manifestContract } from "../shared/manifest-contract";
 
-const perPlayerCount = z.partialRecord(ids.playerId, z.number().int().min(0));
+export const suitSchema = z.enum(["clubs", "diamonds", "spades", "hearts"]);
 
 export const trickPlaySchema = z.object({
   playerId: ids.playerId,
   cardId: ids.cardId,
 });
 
+export const completedTrickSchema = z.object({
+  number: z.number().int().min(1).max(13),
+  leadSuit: suitSchema,
+  plays: z.array(trickPlaySchema).length(4),
+  winnerPlayerId: ids.playerId,
+  heartsCaptured: z.number().int().min(0).max(4),
+  queenOfSpadesCaptured: z.boolean(),
+});
+
+const perPlayerCountSchema = z.partialRecord(
+  ids.playerId,
+  z.number().int().min(0),
+);
+
+const standingSchema = z.object({
+  playerId: ids.playerId,
+  rank: z.number().int().min(1).max(4),
+  result: z.enum(["win", "draw", "loss"]),
+  score: z.number().int().min(0).max(26),
+});
+
+export const heartsOutcomeSchema = z.object({
+  reason: z.object({
+    code: z.literal("HAND_COMPLETE"),
+    message: z.string().optional(),
+  }),
+  standings: z.array(standingSchema).length(4),
+}) satisfies z.ZodType<GameOutcome<string>>;
+
 export const publicStateSchema = z.object({
-  // One-indexed hand counter. The production demo loops into a second hand
-  // after scoring so visitors can verify restart-free round progression.
-  roundNumber: z.number().int().min(1).default(1),
-
-  // Hand-scoped scoring counters. Refreshed at hand start; read by
-  // `scoreHand` to compute final hand points incl. shoot-the-moon.
-  heartsTakenByPlayer: perPlayerCount.default({}),
-  queenTakenBy: ids.playerId.nullable().default(null),
-  tricksWonByPlayer: perPlayerCount.default({}),
-
-  // Cross-trick legality flag. Once any heart hits the trick pile, hearts
-  // can be led on subsequent tricks.
-  heartsBroken: z.boolean().default(false),
-
-  // First-trick guard ("no penalty cards on the opening trick").
-  isFirstTrick: z.boolean().default(true),
-
-  // Per-hand running points. Computed at hand end inside `scoreHand`.
-  pointsThisHand: perPlayerCount.default({}),
-
-  // Cumulative Hearts score across hands. The game ends when any player
-  // reaches the conventional 100-point threshold.
-  totalPointsByPlayer: perPlayerCount.default({}),
-
-  // Last hand's moon-shooter, surfaced in the game-over view once cumulative
-  // scoring reaches the end threshold.
-  moonShooter: ids.playerId.nullable().default(null),
+  playerIds: z.array(ids.playerId).length(4),
+  heartsBroken: z.boolean(),
+  tricksCompleted: z.number().int().min(0).max(13),
+  capturedHeartsByPlayer: perPlayerCountSchema,
+  queenOfSpadesCapturedBy: ids.playerId.nullable(),
+  tricksWonByPlayer: perPlayerCountSchema,
+  trickHistory: z.array(completedTrickSchema).max(13),
+  pointsByPlayer: perPlayerCountSchema,
+  moonShooter: ids.playerId.nullable(),
+  completed: z.boolean(),
+  outcome: heartsOutcomeSchema.nullable(),
 });
 
 export const privateStateSchema = z.object({});
@@ -49,9 +63,8 @@ export const hiddenStateSchema = z.object({});
 export const setupPhaseStateSchema = z.object({});
 export const passingPhaseStateSchema = z.object({});
 export const playingPhaseStateSchema = z.object({
-  leadSuit: z.enum(["clubs", "diamonds", "spades", "hearts"]).nullable(),
-  plays: z.array(trickPlaySchema),
-  tricksPlayed: z.number().int().min(0).max(13),
+  leadSuit: suitSchema.nullable(),
+  plays: z.array(trickPlaySchema).max(3),
 });
 export const scoreHandPhaseStateSchema = z.object({});
 export const gameOverPhaseStateSchema = z.object({});
@@ -72,12 +85,12 @@ export const gameContract = defineGameContract({
   },
   errors: {
     HEARTS_NOT_BROKEN: "Hearts have not been broken.",
-    INVALID_CARD_PLAY: "Card is not legal right now.",
+    INVALID_CARD_PLAY: "That card is not legal in the current trick.",
     MUST_FOLLOW_SUIT: "You must follow the lead suit.",
     MUST_LEAD_TWO_OF_CLUBS: "The 2 of Clubs must lead the first trick.",
-    NOT_YOUR_TURN: "Not your turn.",
+    NOT_YOUR_TURN: "Only the active player may play a card.",
     NO_PENALTIES_FIRST_TRICK:
-      "Penalty cards may not be played on the first trick.",
+      "A non-penalty card must be discarded on the first trick when possible.",
   },
 });
 
@@ -86,5 +99,7 @@ export type GameState = GameStateOf<GameContract>;
 export type GameErrorCode = ErrorCodeOfContract<GameContract>;
 export type PublicState = z.infer<typeof publicStateSchema>;
 export type TrickPlay = z.infer<typeof trickPlaySchema>;
+export type CompletedTrick = z.infer<typeof completedTrickSchema>;
 export type PlayingPhaseState = z.infer<typeof playingPhaseStateSchema>;
-export type Suit = "clubs" | "diamonds" | "spades" | "hearts";
+export type HeartsOutcome = z.infer<typeof heartsOutcomeSchema>;
+export type Suit = z.infer<typeof suitSchema>;

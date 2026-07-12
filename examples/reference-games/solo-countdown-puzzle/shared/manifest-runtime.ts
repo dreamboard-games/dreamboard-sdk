@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -86,69 +86,123 @@ export { literals };
 // the "total-record" assumption the refactor is meant to eliminate. Runtime
 // roster validation is done through perPlayerSchema(runtimePlayerIds, ...)
 // instead, which can be bound to the actual active roster.
-const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
+const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(
   markManifestScopedSchema(
     z
       .string()
       .min(1)
       .transform((value) => asPlayerId(value)),
+    "playerId",
   ),
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
 const boardLayoutSchema = createManifestStringLiteralSchema(
   literals.boardLayouts,
+  "boardLayout",
 );
 const setupOptionIdSchema = createManifestStringLiteralSchema(
   literals.setupOptionIds,
+  "setupOptionId",
 );
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
 const sharedZoneIdSchema = createManifestStringLiteralSchema(
   literals.sharedZoneIds,
+  "sharedZoneId",
 );
 const playerZoneIdSchema = createManifestStringLiteralSchema(
   literals.playerZoneIds,
+  "playerZoneId",
 );
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
 const resourceIdSchema = createManifestStringLiteralSchema(
   literals.resourceIds,
+  "resourceId",
 );
 const pieceTypeIdSchema = createManifestStringLiteralSchema(
   literals.pieceTypeIds,
+  "pieceTypeId",
 );
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
+  "boardTypeId",
 );
 const boardBaseIdSchema = createManifestStringLiteralSchema(
   literals.boardBaseIds,
+  "boardBaseId",
 );
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
 const relationTypeIdSchema = createManifestStringLiteralSchema(
   literals.relationTypeIds,
+  "relationTypeId",
 );
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
 const edgeTypeIdSchema = createManifestStringLiteralSchema(
   literals.edgeTypeIds,
+  "edgeTypeId",
 );
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
 const vertexTypeIdSchema = createManifestStringLiteralSchema(
   literals.vertexTypeIds,
+  "vertexTypeId",
 );
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
 const spaceTypeIdSchema = createManifestStringLiteralSchema(
   literals.spaceTypeIds,
+  "spaceTypeId",
 );
 
 export const ids = {
@@ -159,9 +213,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: assumeManifestSchema<CardId>(cardIdSchema),
-  deckId: assumeManifestSchema<DeckId>(deckIdSchema),
-  handId: assumeManifestSchema<HandId>(handIdSchema),
+  cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),
+  deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),
+  handId: assumeManifestSchema<HandId, "handId">(handIdSchema),
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -213,9 +267,13 @@ export type VertexTypeId = (typeof literals.vertexTypeIds)[number];
 export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
-export const cardTypes = {} as const satisfies Record<string, CardType>;
+export const cardTypes = {
 
-export const zones = {} as const satisfies Record<string, ZoneId>;
+} as const satisfies Record<string, CardType>;
+
+export const zones = {
+
+} as const satisfies Record<string, ZoneId>;
 
 export const records = {
   boardLayouts<Value>(
@@ -474,11 +532,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -532,8 +586,12 @@ export const idGuards = {
 export type SharedZoneRecord<T> = Record<SharedZoneId, T>;
 export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
-export type ComponentIdsBySharedZoneId = {};
-export type ComponentIdsByPlayerZoneId = {};
+export type ComponentIdsBySharedZoneId = {
+
+};
+export type ComponentIdsByPlayerZoneId = {
+
+};
 export type SetupOptionChoice = {
   id: string;
   label: string;
@@ -552,35 +610,39 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {} as const;
-export const setupProfilesById = {
-  standard: {
-    id: "standard",
-    name: "Standard",
-    description: "Solo Last Light setup with deterministic weather.",
-    optionValues: null,
-    guidance: {
-      summary: "Repair all three beacons before storm or countdown defeat.",
-      steps: [
-        {
-          id: "repair",
-          label: "Repair a beacon",
-          description: "Spend one energy and raise a beacon by one level.",
-        },
-        {
-          id: "weather",
-          label: "Resolve weather",
-          description: "Reveal the next deterministic weather card.",
-        },
-        {
-          id: "countdown",
-          label: "Advance countdown",
-          description: "Lose if the countdown reaches zero.",
-        },
-      ],
-    },
-  },
+export const setupChoiceIdsByOptionId = {
+
 } as const;
+export const setupProfilesById = {
+  "standard": {
+    "id": "standard",
+    "name": "Standard watch",
+    "description": "One keeper begins a seeded eight-turn lighthouse watch.",
+    "optionValues": null,
+    "guidance": {
+      "summary": "Charge, repair, or reinforce once per turn; then weather and countdown resolve automatically.",
+      "steps": [
+        {
+          "id": "keeper-action",
+          "label": "Choose one keeper action",
+          "description": "Gain two energy, spend one to repair a beacon stage, or spend two to store one reinforcement."
+        },
+        {
+          "id": "weather",
+          "label": "Resolve weather",
+          "description": "Reveal the next seeded card; reinforcement prevents one entire Gale or Squall."
+        },
+        {
+          "id": "countdown",
+          "label": "Advance countdown",
+          "description": "If the storm has not reached six, dawn advances by one turn."
+        }
+      ]
+    }
+  }
+} as const;
+
+
 
 export type BeaconGridBoardFields = RuntimeRecord;
 
@@ -596,10 +658,7 @@ export const BeaconGridRelationFieldsSchema = z.record(z.string(), z.unknown());
 
 export type BeaconGridContainerFields = RuntimeRecord;
 
-export const BeaconGridContainerFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const BeaconGridContainerFieldsSchema = z.record(z.string(), z.unknown());
 
 export type BeaconGridEdgeFields = RuntimeRecord;
 
@@ -688,8 +747,12 @@ export type DieStateRecord<
 export type PieceStateById = Record<string, never>;
 
 export type DieStateById = Record<string, never>;
-export type CardIdsBySharedZoneId = {};
-export type CardIdsByPlayerZoneId = {};
+export type CardIdsBySharedZoneId = {
+
+};
+export type CardIdsByPlayerZoneId = {
+
+};
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
 export interface BoardSpaceStateRecord<
@@ -760,14 +823,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -844,14 +907,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -876,14 +939,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -905,65 +968,7 @@ export type TiledBoardStateRecord =
   | SquareBoardStateRecord;
 
 export type BoardStateById = {
-  "beacon-grid": SquareBoardStateRecord<
-    "beacon-grid",
-    | "beacon-harbor"
-    | "beacon-north"
-    | "beacon-south"
-    | "empty-east"
-    | "empty-ne"
-    | "empty-nw"
-    | "empty-se"
-    | "empty-sw"
-    | "empty-west",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::1,3"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::2,3"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::3,3"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,2::3,3",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3",
-    BeaconGridBoardFields,
-    BeaconGridSpaceFields,
-    BeaconGridRelationFields,
-    BeaconGridContainerFields,
-    BeaconGridEdgeFields,
-    BeaconGridVertexFields
-  >;
+  "beacon-grid": SquareBoardStateRecord<"beacon-grid", "beacon-harbor" | "beacon-north" | "beacon-south" | "empty-east" | "empty-ne" | "empty-nw" | "empty-se" | "empty-sw" | "empty-west", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::0,3" | "square-edge:0,2::1,2" | "square-edge:0,3::1,3" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::1,3" | "square-edge:1,2::2,2" | "square-edge:1,3::2,3" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::2,3" | "square-edge:2,2::3,2" | "square-edge:2,3::3,3" | "square-edge:3,0::3,1" | "square-edge:3,1::3,2" | "square-edge:3,2::3,3", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:0,3" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:1,3" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:2,3" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2" | "square-vertex:3,3", BeaconGridBoardFields, BeaconGridSpaceFields, BeaconGridRelationFields, BeaconGridContainerFields, BeaconGridEdgeFields, BeaconGridVertexFields>;
 };
 
 export type HexBoardStateById = Record<string, never>;
@@ -973,16 +978,15 @@ export type SquareBoardStateById = {
 };
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1039,29 +1043,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1071,8 +1072,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1082,10 +1084,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1095,10 +1096,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1108,10 +1108,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1127,19 +1126,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = BoardStateById[BoardId];
 
@@ -1177,7 +1176,9 @@ const cardStateSchema = z.object({
   text: z.string().optional(),
   properties: unknownRecordSchema,
 });
-const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {};
+const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {
+
+};
 
 const cardStateByIdSchema = z.object({});
 const pieceStateByIdSchema = z.object({});
@@ -1400,13 +1401,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -1463,11 +1459,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -1512,64 +1508,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({}),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({}),
-      cardSetIdsByZoneId: cloneManifestDefault({}),
-    }) as TableState["zones"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({}),
+    cardSetIdsByZoneId: cloneManifestDefault({}),
+  }) as TableState["zones"],
   decks: () => cloneManifestDefault({}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({}) as TableState["handVisibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({}) as TableState["handVisibility"],
   ownerOfCard: () => cloneManifestDefault({}) as TableState["ownerOfCard"],
   visibility: () => cloneManifestDefault({}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -1604,6 +1580,13 @@ export function createInitialTable(
   table.componentLocations = componentLocations;
   return tableSchema.parse(table);
 }
+
+export const normalSetup = {
+  minPlayers: 1,
+  maxPlayers: 1,
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
 
 export const schemas = {
   table: tableSchema,
@@ -1648,10 +1631,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -1662,34 +1649,28 @@ export const manifestContract: ReducerManifestContract<
 };
 
 const boardIdsByLayoutLookup = {
-  square: ["beacon-grid"] as const,
+  "square": ["beacon-grid"] as const,
 } as const;
 const boardBaseIdsByLayoutLookup = {
-  square: ["beacon-grid"] as const,
+  "square": ["beacon-grid"] as const,
 } as const;
 const boardIdsByBaseIdLookup = {
   "beacon-grid": ["beacon-grid"] as const,
 } as const;
-const boardBaseIdsByTemplateIdLookup = {} as const;
+const boardBaseIdsByTemplateIdLookup = {
+
+} as const;
 const boardLayoutByIdLookup = {
   "beacon-grid": "square",
 } as const;
-const boardTemplateLayoutByIdLookup = {} as const;
+const boardTemplateLayoutByIdLookup = {
+
+} as const;
 const boardIdsByTypeIdLookup = {
   "beacon-grid": ["beacon-grid"] as const,
 } as const;
 const spaceIdsByBoardIdLookup = {
-  "beacon-grid": [
-    "beacon-harbor",
-    "beacon-north",
-    "beacon-south",
-    "empty-east",
-    "empty-ne",
-    "empty-nw",
-    "empty-se",
-    "empty-sw",
-    "empty-west",
-  ] as const,
+  "beacon-grid": ["beacon-harbor", "beacon-north", "beacon-south", "empty-east", "empty-ne", "empty-nw", "empty-se", "empty-sw", "empty-west"] as const,
 } as const;
 const spaceTypeIdByBoardIdLookup = {
   "beacon-grid": {
@@ -1701,28 +1682,32 @@ const spaceTypeIdByBoardIdLookup = {
     "empty-nw": null,
     "empty-se": null,
     "empty-sw": null,
-    "empty-west": null,
-  },
+    "empty-west": null
+  }
 } as const;
 const spaceIdsByTypeIdLookup = {
-  beacon: ["beacon-harbor", "beacon-north", "beacon-south"] as const,
+  "beacon": ["beacon-harbor", "beacon-north", "beacon-south"] as const,
 } as const;
 const containerIdsByBoardIdLookup = {
   "beacon-grid": [] as const,
 } as const;
 const containerHostByBoardIdLookup = {
-  "beacon-grid": {},
+  "beacon-grid": {}
 } as const;
 const relationTypeIdsByBoardIdLookup = {
   "beacon-grid": ["adjacent"] as const,
 } as const;
-const edgeIdsByTypeIdLookup = {} as const;
-const edgeIdsByBoardIdAndTypeIdLookup = {
-  "beacon-grid": {},
+const edgeIdsByTypeIdLookup = {
+
 } as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const edgeIdsByBoardIdAndTypeIdLookup = {
+  "beacon-grid": {}
+} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {
-  "beacon-grid": {},
+  "beacon-grid": {}
 } as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -1750,9 +1735,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -1760,7 +1745,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -1794,7 +1781,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -1855,7 +1845,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -1865,7 +1858,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -1888,8 +1883,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -1989,9 +1983,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -2072,7 +2066,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -2089,8 +2086,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2134,10 +2130,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -2181,8 +2174,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -2211,7 +2203,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

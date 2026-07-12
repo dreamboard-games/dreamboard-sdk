@@ -1,134 +1,52 @@
-import React, { type ReactNode } from "react";
-import {
-  Interaction,
-  type InteractionRoutes,
-} from "../shared/generated/ui-contract.ts";
-import {
-  ACTION_BUTTON_CLASS,
-  PRIMARY_BUTTON_CLASS,
-} from "./components/surfaces";
-import type { SushiGoSurfaces } from "./types";
+import { Interaction } from "../shared/generated/ui-contract";
+import { PRIMARY_BUTTON_CLASS } from "./components/surfaces";
+import type { LanternMarketSurfaces } from "./surfaces";
 
-function ActionPanel({
-  title,
-  detail,
-  children,
-}: {
-  title: string;
-  detail?: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="grid gap-2 rounded-lg border-2 border-[#2d2d2d] bg-[#fdfbf7] p-2">
-      <div>
-        <div className="text-sm font-bold">{title}</div>
-        {detail ? (
-          <div className="text-[11px] text-slate-500">{detail}</div>
-        ) : null}
-      </div>
-      <div className="grid gap-2">{children}</div>
-    </div>
-  );
-}
-
-export function SushiGoInteractionRoutes({
+export function LanternMarketInteractionRoutes({
   hand,
   draftingForm,
-  canUseChopsticks,
-  renderDraftingSubmit = true,
-}: Pick<SushiGoSurfaces, "hand" | "draftingForm"> & {
-  canUseChopsticks: boolean;
-  renderDraftingSubmit?: boolean;
+  renderSubmit = true,
+}: Pick<LanternMarketSurfaces, "hand" | "draftingForm"> & {
+  renderSubmit?: boolean;
 }) {
-  const setupForm = Interaction.useForm("setup.submit");
-  const scoreRoundForm = Interaction.useForm("scoreRound.submit");
-  const gameOverForm = Interaction.useForm("gameOver.submit");
-
-  const routes = {
-    "setup.submit": {
-      collect: {},
-    },
-    "drafting.submit": {
-      collect: {
-        cardIds: hand.slot.card,
-        useChopsticks: draftingForm.slot.useChopsticks,
-      },
-    },
-    "scoreRound.submit": {
-      collect: {},
-    },
-    "gameOver.submit": {
-      collect: {},
-    },
-  } satisfies InteractionRoutes;
-
   return (
     <>
-      <Interaction.Routes routes={routes} />
-      <setupForm.State unavailable={null}>
-        {(state) =>
-          state.available ? (
-            <setupForm.Submit className={ACTION_BUTTON_CLASS}>
-              Continue
-            </setupForm.Submit>
-          ) : null
-        }
-      </setupForm.State>
-      {renderDraftingSubmit ? (
-        <SushiGoDraftingActions
-          draftingForm={draftingForm}
-          canUseChopsticks={canUseChopsticks}
-        />
+      <Interaction.Routes
+        routes={{
+          "setup.submit": { collect: {} },
+          "drafting.submit": {
+            collect: { cardId: hand.slot.card },
+          },
+          "scoreRound.submit": { collect: {} },
+          "gameOver.submit": { collect: {} },
+        }}
+      />
+      {renderSubmit ? (
+        <LanternMarketDraftingAction draftingForm={draftingForm} />
       ) : null}
-      <scoreRoundForm.State unavailable={null}>
-        {(state) =>
-          state.available ? (
-            <scoreRoundForm.Submit className={ACTION_BUTTON_CLASS}>
-              Continue
-            </scoreRoundForm.Submit>
-          ) : null
-        }
-      </scoreRoundForm.State>
-      <gameOverForm.State unavailable={null}>
-        {(state) =>
-          state.available ? (
-            <gameOverForm.Submit className={ACTION_BUTTON_CLASS}>
-              Finish
-            </gameOverForm.Submit>
-          ) : null
-        }
-      </gameOverForm.State>
     </>
   );
 }
 
-export function SushiGoDraftingActions({
+export function LanternMarketDraftingAction({
   draftingForm,
-  canUseChopsticks,
-}: Pick<SushiGoSurfaces, "draftingForm"> & {
-  canUseChopsticks: boolean;
-}) {
+}: Pick<LanternMarketSurfaces, "draftingForm">) {
   return (
     <draftingForm.State unavailable={null}>
       {(state) =>
         state.available ? (
-          <ActionPanel
-            title="Make your pick"
-            detail={
-              canUseChopsticks
-                ? "Choose one card, or use chopsticks to choose two."
-                : "Choose one card to keep."
-            }
-          >
-            {canUseChopsticks ? (
-              <draftingForm.slot.useChopsticks.Field />
-            ) : (
-              <draftingForm.slot.useChopsticks.Default />
-            )}
+          <div className="grid min-w-[190px] gap-2 rounded-xl border-2 border-[#40251b] bg-[#fffaf0] p-3 shadow-[4px_4px_0_#40251b]">
+            <p className="m-0 text-xs font-bold uppercase tracking-[0.14em] text-[#9b3f2f]">
+              Sealed choice
+            </p>
+            <p className="m-0 text-xs leading-5 text-[#68483b]">
+              Select one card. It stays private until every stall owner locks a
+              choice.
+            </p>
             <draftingForm.Submit className={PRIMARY_BUTTON_CLASS}>
-              Confirm pick
+              Lock card
             </draftingForm.Submit>
-          </ActionPanel>
+          </div>
         ) : null
       }
     </draftingForm.State>

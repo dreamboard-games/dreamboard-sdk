@@ -1,20 +1,24 @@
-import { authoring } from "./authoring";
-import { createInitialPublicState } from "./phases/draft-flow";
+import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { gameContract, type PlayerId } from "./game-contract";
 import { phases } from "./phases";
-import { playerView } from "./player-view";
-import setupProfiles from "./setup-profiles";
+import { playerView, sharedView } from "./player-view";
+import { createInitialHiddenState, createInitialPublicState } from "./rules";
 
-export default authoring.game({
+export default defineGame({
+  contract: gameContract,
   initial: {
-    public: ({ playerIds }) => createInitialPublicState({ playerIds }),
+    public: ({ playerIds }) =>
+      createInitialPublicState(playerIds as readonly PlayerId[]),
     private: () => ({}),
-    hidden: () => ({}),
+    hidden: createInitialHiddenState,
   },
   initialPhase: "setup",
-  setupProfiles,
+  setupProfiles: {
+    standard: { initialPhase: "setup", bootstrap: [] },
+  },
   phases,
   views: {
-    shared: authoring.emptyView(),
+    shared: sharedView,
     player: playerView,
   },
 });

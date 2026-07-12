@@ -6,6 +6,11 @@
     "#dreamboard/ui-contract": "./shared/generated/ui-contract.ts"
   },
   "scripts": {
+    "materialize": "dreamboard-sdk-materialize --project-root . --manifest manifest.ts",
+    "predev": "pnpm materialize",
+    "pretypecheck": "pnpm materialize",
+    "pretest": "pnpm materialize",
+    "pretest:ui": "pnpm materialize",
     "dev": "dreamboard dev",
     "typecheck": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",

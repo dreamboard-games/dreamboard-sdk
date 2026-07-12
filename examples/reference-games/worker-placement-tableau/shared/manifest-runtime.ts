@@ -62,10 +62,7 @@ import {
 } from "@dreamboard-games/sdk/reducer/advanced";
 import staticBoardsData from "./manifest-static.json";
 import { literals } from "./manifest-literals";
-import type {
-  PlayerId as PublicPlayerId,
-  TableState as PublicTableState,
-} from "./manifest-types";
+import type { PlayerId as PublicPlayerId, TableState as PublicTableState } from "./manifest-types";
 
 const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
   z.record(z.string(), z.unknown()),
@@ -74,7 +71,10 @@ const unknownRecordSchema = assumeManifestSchema<RuntimeRecord>(
 function resolveDefaultPlayerIds(
   playerIds: readonly string[] | undefined,
 ): readonly PlayerId[] {
-  return resolveManifestPlayerIds(literals.playerIds, playerIds);
+  return resolveManifestPlayerIds(
+    literals.playerIds,
+    playerIds,
+  );
 }
 
 export { literals };
@@ -86,69 +86,123 @@ export { literals };
 // the "total-record" assumption the refactor is meant to eliminate. Runtime
 // roster validation is done through perPlayerSchema(runtimePlayerIds, ...)
 // instead, which can be bound to the actual active roster.
-const playerIdSchema = assumeManifestSchema<PublicPlayerId>(
+const playerIdSchema = assumeManifestSchema<PublicPlayerId, "playerId">(
   markManifestScopedSchema(
     z
       .string()
       .min(1)
       .transform((value) => asPlayerId(value)),
+    "playerId",
   ),
 );
-const phaseNameSchema = markManifestScopedSchema(z.string());
+const phaseNameSchema = markManifestScopedSchema(z.string(), "phaseName");
 const boardLayoutSchema = createManifestStringLiteralSchema(
   literals.boardLayouts,
+  "boardLayout",
 );
 const setupOptionIdSchema = createManifestStringLiteralSchema(
   literals.setupOptionIds,
+  "setupOptionId",
 );
 const setupProfileIdSchema = createManifestStringLiteralSchema(
   literals.setupProfileIds,
+  "setupProfileId",
 );
-const cardSetIdSchema = createManifestStringLiteralSchema(literals.cardSetIds);
-const cardTypeSchema = createManifestStringLiteralSchema(literals.cardTypes);
-const cardIdSchema = createManifestStringLiteralSchema(literals.cardIds);
-const deckIdSchema = createManifestStringLiteralSchema(literals.deckIds);
-const handIdSchema = createManifestStringLiteralSchema(literals.handIds);
+const cardSetIdSchema = createManifestStringLiteralSchema(
+  literals.cardSetIds,
+  "cardSetId",
+);
+const cardTypeSchema = createManifestStringLiteralSchema(
+  literals.cardTypes,
+  "cardType",
+);
+const cardIdSchema = createManifestStringLiteralSchema(
+  literals.cardIds,
+  "cardId",
+);
+const deckIdSchema = createManifestStringLiteralSchema(
+  literals.deckIds,
+  "deckId",
+);
+const handIdSchema = createManifestStringLiteralSchema(
+  literals.handIds,
+  "handId",
+);
 const sharedZoneIdSchema = createManifestStringLiteralSchema(
   literals.sharedZoneIds,
+  "sharedZoneId",
 );
 const playerZoneIdSchema = createManifestStringLiteralSchema(
   literals.playerZoneIds,
+  "playerZoneId",
 );
-const zoneIdSchema = createManifestStringLiteralSchema(literals.zoneIds);
+const zoneIdSchema = createManifestStringLiteralSchema(
+  literals.zoneIds,
+  "zoneId",
+);
 const resourceIdSchema = createManifestStringLiteralSchema(
   literals.resourceIds,
+  "resourceId",
 );
 const pieceTypeIdSchema = createManifestStringLiteralSchema(
   literals.pieceTypeIds,
+  "pieceTypeId",
 );
-const pieceIdSchema = createManifestStringLiteralSchema(literals.pieceIds);
-const dieTypeIdSchema = createManifestStringLiteralSchema(literals.dieTypeIds);
-const dieIdSchema = createManifestStringLiteralSchema(literals.dieIds);
+const pieceIdSchema = createManifestStringLiteralSchema(
+  literals.pieceIds,
+  "pieceId",
+);
+const dieTypeIdSchema = createManifestStringLiteralSchema(
+  literals.dieTypeIds,
+  "dieTypeId",
+);
+const dieIdSchema = createManifestStringLiteralSchema(
+  literals.dieIds,
+  "dieId",
+);
 const boardTypeIdSchema = createManifestStringLiteralSchema(
   literals.boardTypeIds,
+  "boardTypeId",
 );
 const boardBaseIdSchema = createManifestStringLiteralSchema(
   literals.boardBaseIds,
+  "boardBaseId",
 );
-const boardIdSchema = createManifestStringLiteralSchema(literals.boardIds);
+const boardIdSchema = createManifestStringLiteralSchema(
+  literals.boardIds,
+  "boardId",
+);
 const boardContainerIdSchema = createManifestStringLiteralSchema(
   literals.boardContainerIds,
+  "boardContainerId",
 );
 const relationTypeIdSchema = createManifestStringLiteralSchema(
   literals.relationTypeIds,
+  "relationTypeId",
 );
-const edgeIdSchema = createManifestStringLiteralSchema(literals.edgeIds);
+const edgeIdSchema = createManifestStringLiteralSchema(
+  literals.edgeIds,
+  "edgeId",
+);
 const edgeTypeIdSchema = createManifestStringLiteralSchema(
   literals.edgeTypeIds,
+  "edgeTypeId",
 );
-const vertexIdSchema = createManifestStringLiteralSchema(literals.vertexIds);
+const vertexIdSchema = createManifestStringLiteralSchema(
+  literals.vertexIds,
+  "vertexId",
+);
 const vertexTypeIdSchema = createManifestStringLiteralSchema(
   literals.vertexTypeIds,
+  "vertexTypeId",
 );
-const spaceIdSchema = createManifestStringLiteralSchema(literals.spaceIds);
+const spaceIdSchema = createManifestStringLiteralSchema(
+  literals.spaceIds,
+  "spaceId",
+);
 const spaceTypeIdSchema = createManifestStringLiteralSchema(
   literals.spaceTypeIds,
+  "spaceTypeId",
 );
 
 export const ids = {
@@ -159,9 +213,9 @@ export const ids = {
   setupProfileId: setupProfileIdSchema,
   cardSetId: cardSetIdSchema,
   cardType: cardTypeSchema,
-  cardId: assumeManifestSchema<CardId>(cardIdSchema),
-  deckId: assumeManifestSchema<DeckId>(deckIdSchema),
-  handId: assumeManifestSchema<HandId>(handIdSchema),
+  cardId: assumeManifestSchema<CardId, "cardId">(cardIdSchema),
+  deckId: assumeManifestSchema<DeckId, "deckId">(deckIdSchema),
+  handId: assumeManifestSchema<HandId, "handId">(handIdSchema),
   sharedZoneId: sharedZoneIdSchema,
   playerZoneId: playerZoneIdSchema,
   zoneId: zoneIdSchema,
@@ -214,36 +268,11 @@ export type SpaceId = (typeof literals.spaceIds)[number];
 export type SpaceTypeId = (typeof literals.spaceTypeIds)[number];
 
 export const cardTypes = {
-  apprenticeTrial: "apprentice-trial",
-  architectsPlan: "architects-plan",
-  foreman: "foreman",
-  forgeOrder: "forge-order",
-  furnitureCommission: "furniture-commission",
-  grandAtelier: "grand-atelier",
-  guildScholar: "guild-scholar",
-  inspiration: "inspiration",
-  lumberStash: "lumber-stash",
-  mastersDisplay: "masters-display",
-  mixedSet: "mixed-set",
-  patronsFavor: "patrons-favor",
-  quickDelivery: "quick-delivery",
-  reassign: "reassign",
-  rowOfPride: "row-of-pride",
-  spareHands: "spare-hands",
-  stoneCache: "stone-cache",
-  stoneSculpture: "stone-sculpture",
-  tirelessMaster: "tireless-master",
-  weaversRequest: "weavers-request",
+
 } as const satisfies Record<string, CardType>;
 
 export const zones = {
-  apprenticeDeck: "apprentice-deck",
-  apprenticeDiscard: "apprentice-discard",
-  apprenticeHand: "apprentice-hand",
-  apprenticeTableau: "apprentice-tableau",
-  orderDeck: "order-deck",
-  orderDiscard: "order-discard",
-  orderHand: "order-hand",
+
 } as const satisfies Record<string, ZoneId>;
 
 export const records = {
@@ -503,11 +532,7 @@ export const idGuards = {
     return isTypedId(literals.boardContainerIds, value);
   },
   expectBoardContainerId(value: string): BoardContainerId {
-    return expectTypedId(
-      literals.boardContainerIds,
-      value,
-      "board container id",
-    );
+    return expectTypedId(literals.boardContainerIds, value, "board container id");
   },
   isRelationTypeId(value: string): value is RelationTypeId {
     return isTypedId(literals.relationTypeIds, value);
@@ -562,15 +587,10 @@ export type SharedZoneRecord<T> = Record<SharedZoneId, T>;
 export type PlayerZoneRecord<T> = Record<PlayerZoneId, PerPlayer<T>>;
 export type ComponentId = CardId | PieceId | DieId;
 export type ComponentIdsBySharedZoneId = {
-  "apprentice-deck": ComponentId[];
-  "apprentice-discard": ComponentId[];
-  "order-deck": ComponentId[];
-  "order-discard": ComponentId[];
+
 };
 export type ComponentIdsByPlayerZoneId = {
-  "apprentice-hand": PerPlayer<ComponentId[]>;
-  "apprentice-tableau": PerPlayer<ComponentId[]>;
-  "order-hand": PerPlayer<ComponentId[]>;
+
 };
 export type SetupOptionChoice = {
   id: string;
@@ -590,171 +610,40 @@ export type SetupProfile = {
   optionValues?: Partial<Record<SetupOptionId, string>> | null;
 };
 export const setupOptionsById = {} as const;
-export const setupChoiceIdsByOptionId = {} as const;
+export const setupChoiceIdsByOptionId = {
+
+} as const;
 export const setupProfilesById = {
-  standard: {
-    id: "standard",
-    name: "Standard",
-    description:
-      "Standard Artisans' Guild setup: 6 fixed action spaces + 3 randomly-drawn variable spaces.",
-    optionValues: null,
-  },
-  "test-end-game": {
-    id: "test-end-game",
-    name: "Test end-game",
-    description:
-      "Reducer-test profile that pre-seeds a near-end-of-season-6 state for scoring tests.",
-    optionValues: null,
-  },
-  "test-fixed-spaces": {
-    id: "test-fixed-spaces",
-    name: "Test fixed spaces",
-    description:
-      "Reducer-test profile that activates a deterministic set of 3 variable action spaces.",
-    optionValues: null,
-  },
+  "standard": {
+    "id": "standard",
+    "name": "Standard",
+    "description": "Two public workshops, five fixed action spaces, and no setup entropy.",
+    "optionValues": null,
+    "guidance": null
+  }
 } as const;
 
-export type OrderCardsCardProperties = {
-  orderId:
-    | "furniture-commission"
-    | "stone-sculpture"
-    | "masters-display"
-    | "forge-order"
-    | "weavers-request"
-    | "apprentice-trial"
-    | "mixed-set"
-    | "architects-plan"
-    | "row-of-pride"
-    | "grand-atelier";
-  rewardVP: number;
-  rewardCoin: number;
-};
 
-export const OrderCardsCardPropertiesSchema = z.object({
-  orderId: z.enum([
-    "furniture-commission",
-    "stone-sculpture",
-    "masters-display",
-    "forge-order",
-    "weavers-request",
-    "apprentice-trial",
-    "mixed-set",
-    "architects-plan",
-    "row-of-pride",
-    "grand-atelier",
-  ]),
-  rewardVP: z.number().int(),
-  rewardCoin: z.number().int(),
-});
-
-export type OrderCardsCardId =
-  | "furniture-commission"
-  | "stone-sculpture"
-  | "masters-display"
-  | "forge-order"
-  | "weavers-request"
-  | "apprentice-trial"
-  | "mixed-set"
-  | "architects-plan"
-  | "row-of-pride"
-  | "grand-atelier";
-
-export type ApprenticeCardsCardProperties = {
-  apprenticeId:
-    | "quick-delivery"
-    | "lumber-stash"
-    | "stone-cache"
-    | "spare-hands"
-    | "inspiration"
-    | "reassign"
-    | "foreman"
-    | "tireless-master"
-    | "guild-scholar"
-    | "patrons-favor";
-  lifecycle: "oneShot" | "persistent";
-};
-
-export const ApprenticeCardsCardPropertiesSchema = z.object({
-  apprenticeId: z.enum([
-    "quick-delivery",
-    "lumber-stash",
-    "stone-cache",
-    "spare-hands",
-    "inspiration",
-    "reassign",
-    "foreman",
-    "tireless-master",
-    "guild-scholar",
-    "patrons-favor",
-  ]),
-  lifecycle: z.enum(["oneShot", "persistent"]),
-});
-
-export type ApprenticeCardsCardId =
-  | "quick-delivery"
-  | "lumber-stash"
-  | "stone-cache"
-  | "spare-hands"
-  | "inspiration"
-  | "reassign"
-  | "foreman"
-  | "tireless-master"
-  | "guild-scholar"
-  | "patrons-favor";
 
 export type ActionBoardBoardFields = RuntimeRecord;
 
 export const ActionBoardBoardFieldsSchema = z.record(z.string(), z.unknown());
 
 export type ActionBoardSpaceFields = {
-  actionId:
-    | "lumberyard"
-    | "quarry"
-    | "market"
-    | "guild-hall"
-    | "training-hall"
-    | "workshop"
-    | "masons-lodge"
-    | "trade-post"
-    | "patrons-estate"
-    | "forge"
-    | "library"
-    | "apothecary";
-  poolKind: "fixed" | "variable";
+  "actionId": "timberYard" | "stoneYard" | "patronSquare" | "exchangeHouse" | "mosaicBench";
 };
 
 export const ActionBoardSpaceFieldsSchema = z.object({
-  actionId: z.enum([
-    "lumberyard",
-    "quarry",
-    "market",
-    "guild-hall",
-    "training-hall",
-    "workshop",
-    "masons-lodge",
-    "trade-post",
-    "patrons-estate",
-    "forge",
-    "library",
-    "apothecary",
-  ]),
-  poolKind: z.enum(["fixed", "variable"]),
+  "actionId": z.enum(["timberYard", "stoneYard", "patronSquare", "exchangeHouse", "mosaicBench"]),
 });
 
 export type ActionBoardRelationFields = RuntimeRecord;
 
-export const ActionBoardRelationFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const ActionBoardRelationFieldsSchema = z.record(z.string(), z.unknown());
 
 export type ActionBoardContainerFields = RuntimeRecord;
 
-export const ActionBoardContainerFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const ActionBoardContainerFieldsSchema = z.record(z.string(), z.unknown());
 
 export type ActionBoardEdgeFields = RuntimeRecord;
 
@@ -764,108 +653,60 @@ export type ActionBoardVertexFields = RuntimeRecord;
 
 export const ActionBoardVertexFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackBoardFields = RuntimeRecord;
+export type WorkshopTableauBoardFields = RuntimeRecord;
 
-export const WakeUpTrackBoardFieldsSchema = z.record(z.string(), z.unknown());
+export const WorkshopTableauBoardFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackSpaceFields = {
-  slotIndex: number;
-  turnOrder: "first" | "second";
-  bonusKind: "none" | "coin" | "apprentice-card" | "wood-stone";
-};
+export type WorkshopTableauSpaceFields = RuntimeRecord;
 
-export const WakeUpTrackSpaceFieldsSchema = z.object({
-  slotIndex: z.number().int(),
-  turnOrder: z.enum(["first", "second"]),
-  bonusKind: z.enum(["none", "coin", "apprentice-card", "wood-stone"]),
-});
+export const WorkshopTableauSpaceFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackRelationFields = RuntimeRecord;
+export type WorkshopTableauRelationFields = RuntimeRecord;
 
-export const WakeUpTrackRelationFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const WorkshopTableauRelationFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackContainerFields = RuntimeRecord;
+export type WorkshopTableauContainerFields = RuntimeRecord;
 
-export const WakeUpTrackContainerFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const WorkshopTableauContainerFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackEdgeFields = RuntimeRecord;
+export type WorkshopTableauEdgeFields = RuntimeRecord;
 
-export const WakeUpTrackEdgeFieldsSchema = z.record(z.string(), z.unknown());
+export const WorkshopTableauEdgeFieldsSchema = z.record(z.string(), z.unknown());
 
-export type WakeUpTrackVertexFields = RuntimeRecord;
+export type WorkshopTableauVertexFields = RuntimeRecord;
 
-export const WakeUpTrackVertexFieldsSchema = z.record(z.string(), z.unknown());
-
-export type WorkshopMatBoardFields = RuntimeRecord;
-
-export const WorkshopMatBoardFieldsSchema = z.record(z.string(), z.unknown());
-
-export type WorkshopMatSpaceFields = RuntimeRecord;
-
-export const WorkshopMatSpaceFieldsSchema = z.record(z.string(), z.unknown());
-
-export type WorkshopMatRelationFields = RuntimeRecord;
-
-export const WorkshopMatRelationFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
-
-export type WorkshopMatContainerFields = RuntimeRecord;
-
-export const WorkshopMatContainerFieldsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
-
-export type WorkshopMatEdgeFields = RuntimeRecord;
-
-export const WorkshopMatEdgeFieldsSchema = z.record(z.string(), z.unknown());
-
-export type WorkshopMatVertexFields = RuntimeRecord;
-
-export const WorkshopMatVertexFieldsSchema = z.record(z.string(), z.unknown());
-
-export type ApprenticePieceFields = RuntimeRecord;
-
-export const ApprenticePieceFieldsSchema = z.record(z.string(), z.unknown());
+export const WorkshopTableauVertexFieldsSchema = z.record(z.string(), z.unknown());
 
 export type MasterPieceFields = RuntimeRecord;
 
 export const MasterPieceFieldsSchema = z.record(z.string(), z.unknown());
 
+export type OrdinaryPieceFields = RuntimeRecord;
+
+export const OrdinaryPieceFieldsSchema = z.record(z.string(), z.unknown());
+
 export type BoardFieldsByBoardId = {
   "action-board": ActionBoardBoardFields;
-  "wake-up-track": WakeUpTrackBoardFields;
-  "workshop-mat:player-1": WorkshopMatBoardFields;
-  "workshop-mat:player-2": WorkshopMatBoardFields;
+  "workshop-tableau:player-1": WorkshopTableauBoardFields;
+  "workshop-tableau:player-2": WorkshopTableauBoardFields;
 };
 
 export type BoardSpaceFieldsByBoardId = {
   "action-board": ActionBoardSpaceFields;
-  "wake-up-track": WakeUpTrackSpaceFields;
-  "workshop-mat:player-1": WorkshopMatSpaceFields;
-  "workshop-mat:player-2": WorkshopMatSpaceFields;
+  "workshop-tableau:player-1": WorkshopTableauSpaceFields;
+  "workshop-tableau:player-2": WorkshopTableauSpaceFields;
 };
 
 export type BoardRelationFieldsByBoardId = {
   "action-board": ActionBoardRelationFields;
-  "wake-up-track": WakeUpTrackRelationFields;
-  "workshop-mat:player-1": WorkshopMatRelationFields;
-  "workshop-mat:player-2": WorkshopMatRelationFields;
+  "workshop-tableau:player-1": WorkshopTableauRelationFields;
+  "workshop-tableau:player-2": WorkshopTableauRelationFields;
 };
 
 export type BoardContainerFieldsByBoardId = {
   "action-board": ActionBoardContainerFields;
-  "wake-up-track": WakeUpTrackContainerFields;
-  "workshop-mat:player-1": WorkshopMatContainerFields;
-  "workshop-mat:player-2": WorkshopMatContainerFields;
+  "workshop-tableau:player-1": WorkshopTableauContainerFields;
+  "workshop-tableau:player-2": WorkshopTableauContainerFields;
 };
 
 export type HexEdgeFieldsByBoardId = Record<string, never>;
@@ -874,42 +715,36 @@ export type HexVertexFieldsByBoardId = Record<string, never>;
 
 export type SquareEdgeFieldsByBoardId = {
   "action-board": ActionBoardEdgeFields;
-  "wake-up-track": WakeUpTrackEdgeFields;
-  "workshop-mat:player-1": WorkshopMatEdgeFields;
-  "workshop-mat:player-2": WorkshopMatEdgeFields;
+  "workshop-tableau:player-1": WorkshopTableauEdgeFields;
+  "workshop-tableau:player-2": WorkshopTableauEdgeFields;
 };
 
 export type SquareVertexFieldsByBoardId = {
   "action-board": ActionBoardVertexFields;
-  "wake-up-track": WakeUpTrackVertexFields;
-  "workshop-mat:player-1": WorkshopMatVertexFields;
-  "workshop-mat:player-2": WorkshopMatVertexFields;
+  "workshop-tableau:player-1": WorkshopTableauVertexFields;
+  "workshop-tableau:player-2": WorkshopTableauVertexFields;
 };
 
 export type TiledEdgeFieldsByBoardId = {
   "action-board": ActionBoardEdgeFields;
-  "wake-up-track": WakeUpTrackEdgeFields;
-  "workshop-mat:player-1": WorkshopMatEdgeFields;
-  "workshop-mat:player-2": WorkshopMatEdgeFields;
+  "workshop-tableau:player-1": WorkshopTableauEdgeFields;
+  "workshop-tableau:player-2": WorkshopTableauEdgeFields;
 };
 
 export type TiledVertexFieldsByBoardId = {
   "action-board": ActionBoardVertexFields;
-  "wake-up-track": WakeUpTrackVertexFields;
-  "workshop-mat:player-1": WorkshopMatVertexFields;
-  "workshop-mat:player-2": WorkshopMatVertexFields;
+  "workshop-tableau:player-1": WorkshopTableauVertexFields;
+  "workshop-tableau:player-2": WorkshopTableauVertexFields;
 };
 
 export type PieceFieldsByTypeId = {
-  apprentice: ApprenticePieceFields;
-  master: MasterPieceFields;
+  "master": MasterPieceFields;
+  "ordinary": OrdinaryPieceFields;
 };
 
 export type DieFieldsByTypeId = Record<string, RuntimeRecord>;
 
-export type CardProperties =
-  | OrderCardsCardProperties
-  | ApprenticeCardsCardProperties;
+export type CardProperties = RuntimeRecord;
 
 export type CardStateRecord<
   CardIdValue extends CardId = CardId,
@@ -923,128 +758,7 @@ export type CardStateRecord<
   properties: Properties;
 };
 
-export type CardStateById = {
-  "apprentice-trial": CardStateRecord<
-    "apprentice-trial",
-    "order-cards",
-    "apprentice-trial",
-    OrderCardsCardProperties
-  >;
-  "architects-plan": CardStateRecord<
-    "architects-plan",
-    "order-cards",
-    "architects-plan",
-    OrderCardsCardProperties
-  >;
-  foreman: CardStateRecord<
-    "foreman",
-    "apprentice-cards",
-    "foreman",
-    ApprenticeCardsCardProperties
-  >;
-  "forge-order": CardStateRecord<
-    "forge-order",
-    "order-cards",
-    "forge-order",
-    OrderCardsCardProperties
-  >;
-  "furniture-commission": CardStateRecord<
-    "furniture-commission",
-    "order-cards",
-    "furniture-commission",
-    OrderCardsCardProperties
-  >;
-  "grand-atelier": CardStateRecord<
-    "grand-atelier",
-    "order-cards",
-    "grand-atelier",
-    OrderCardsCardProperties
-  >;
-  "guild-scholar": CardStateRecord<
-    "guild-scholar",
-    "apprentice-cards",
-    "guild-scholar",
-    ApprenticeCardsCardProperties
-  >;
-  inspiration: CardStateRecord<
-    "inspiration",
-    "apprentice-cards",
-    "inspiration",
-    ApprenticeCardsCardProperties
-  >;
-  "lumber-stash": CardStateRecord<
-    "lumber-stash",
-    "apprentice-cards",
-    "lumber-stash",
-    ApprenticeCardsCardProperties
-  >;
-  "masters-display": CardStateRecord<
-    "masters-display",
-    "order-cards",
-    "masters-display",
-    OrderCardsCardProperties
-  >;
-  "mixed-set": CardStateRecord<
-    "mixed-set",
-    "order-cards",
-    "mixed-set",
-    OrderCardsCardProperties
-  >;
-  "patrons-favor": CardStateRecord<
-    "patrons-favor",
-    "apprentice-cards",
-    "patrons-favor",
-    ApprenticeCardsCardProperties
-  >;
-  "quick-delivery": CardStateRecord<
-    "quick-delivery",
-    "apprentice-cards",
-    "quick-delivery",
-    ApprenticeCardsCardProperties
-  >;
-  reassign: CardStateRecord<
-    "reassign",
-    "apprentice-cards",
-    "reassign",
-    ApprenticeCardsCardProperties
-  >;
-  "row-of-pride": CardStateRecord<
-    "row-of-pride",
-    "order-cards",
-    "row-of-pride",
-    OrderCardsCardProperties
-  >;
-  "spare-hands": CardStateRecord<
-    "spare-hands",
-    "apprentice-cards",
-    "spare-hands",
-    ApprenticeCardsCardProperties
-  >;
-  "stone-cache": CardStateRecord<
-    "stone-cache",
-    "apprentice-cards",
-    "stone-cache",
-    ApprenticeCardsCardProperties
-  >;
-  "stone-sculpture": CardStateRecord<
-    "stone-sculpture",
-    "order-cards",
-    "stone-sculpture",
-    OrderCardsCardProperties
-  >;
-  "tireless-master": CardStateRecord<
-    "tireless-master",
-    "apprentice-cards",
-    "tireless-master",
-    ApprenticeCardsCardProperties
-  >;
-  "weavers-request": CardStateRecord<
-    "weavers-request",
-    "order-cards",
-    "weavers-request",
-    OrderCardsCardProperties
-  >;
-};
+export type CardStateById = Record<string, never>;
 
 export type PieceStateRecord<
   PieceIdValue extends PieceId = PieceId,
@@ -1067,144 +781,20 @@ export type DieStateRecord<
 };
 
 export type PieceStateById = {
-  "apprentice-p1-1": PieceStateRecord<
-    "apprentice-p1-1",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p1-2": PieceStateRecord<
-    "apprentice-p1-2",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p1-3": PieceStateRecord<
-    "apprentice-p1-3",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p1-4": PieceStateRecord<
-    "apprentice-p1-4",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p2-1": PieceStateRecord<
-    "apprentice-p2-1",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p2-2": PieceStateRecord<
-    "apprentice-p2-2",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p2-3": PieceStateRecord<
-    "apprentice-p2-3",
-    "apprentice",
-    ApprenticePieceFields
-  >;
-  "apprentice-p2-4": PieceStateRecord<
-    "apprentice-p2-4",
-    "apprentice",
-    ApprenticePieceFields
-  >;
   "master-p1": PieceStateRecord<"master-p1", "master", MasterPieceFields>;
   "master-p2": PieceStateRecord<"master-p2", "master", MasterPieceFields>;
+  "ordinary-p1-1": PieceStateRecord<"ordinary-p1-1", "ordinary", OrdinaryPieceFields>;
+  "ordinary-p1-2": PieceStateRecord<"ordinary-p1-2", "ordinary", OrdinaryPieceFields>;
+  "ordinary-p2-1": PieceStateRecord<"ordinary-p2-1", "ordinary", OrdinaryPieceFields>;
+  "ordinary-p2-2": PieceStateRecord<"ordinary-p2-2", "ordinary", OrdinaryPieceFields>;
 };
 
 export type DieStateById = Record<string, never>;
 export type CardIdsBySharedZoneId = {
-  "apprentice-deck": Array<
-    | "foreman"
-    | "guild-scholar"
-    | "inspiration"
-    | "lumber-stash"
-    | "patrons-favor"
-    | "quick-delivery"
-    | "reassign"
-    | "spare-hands"
-    | "stone-cache"
-    | "tireless-master"
-  >;
-  "apprentice-discard": Array<
-    | "foreman"
-    | "guild-scholar"
-    | "inspiration"
-    | "lumber-stash"
-    | "patrons-favor"
-    | "quick-delivery"
-    | "reassign"
-    | "spare-hands"
-    | "stone-cache"
-    | "tireless-master"
-  >;
-  "order-deck": Array<
-    | "apprentice-trial"
-    | "architects-plan"
-    | "forge-order"
-    | "furniture-commission"
-    | "grand-atelier"
-    | "masters-display"
-    | "mixed-set"
-    | "row-of-pride"
-    | "stone-sculpture"
-    | "weavers-request"
-  >;
-  "order-discard": Array<
-    | "apprentice-trial"
-    | "architects-plan"
-    | "forge-order"
-    | "furniture-commission"
-    | "grand-atelier"
-    | "masters-display"
-    | "mixed-set"
-    | "row-of-pride"
-    | "stone-sculpture"
-    | "weavers-request"
-  >;
+
 };
 export type CardIdsByPlayerZoneId = {
-  "apprentice-hand": PerPlayer<
-    Array<
-      | "foreman"
-      | "guild-scholar"
-      | "inspiration"
-      | "lumber-stash"
-      | "patrons-favor"
-      | "quick-delivery"
-      | "reassign"
-      | "spare-hands"
-      | "stone-cache"
-      | "tireless-master"
-    >
-  >;
-  "apprentice-tableau": PerPlayer<
-    Array<
-      | "foreman"
-      | "guild-scholar"
-      | "inspiration"
-      | "lumber-stash"
-      | "patrons-favor"
-      | "quick-delivery"
-      | "reassign"
-      | "spare-hands"
-      | "stone-cache"
-      | "tireless-master"
-    >
-  >;
-  "order-hand": PerPlayer<
-    Array<
-      | "apprentice-trial"
-      | "architects-plan"
-      | "forge-order"
-      | "furniture-commission"
-      | "grand-atelier"
-      | "masters-display"
-      | "mixed-set"
-      | "row-of-pride"
-      | "stone-sculpture"
-      | "weavers-request"
-    >
-  >;
+
 };
 export type CardIdsByDeckId = CardIdsBySharedZoneId;
 
@@ -1276,14 +866,14 @@ export interface GenericBoardStateRecord<
   RelationFields = RuntimeRecord,
   ContainerFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "generic";
   spaces: Record<
     SpaceIdValue,
@@ -1360,14 +950,14 @@ export interface HexBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  never,
-  BoardFields,
-  SpaceFields,
-  RuntimeRecord,
-  RuntimeRecord
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    never,
+    BoardFields,
+    SpaceFields,
+    RuntimeRecord,
+    RuntimeRecord
+  > {
   layout: "hex";
   spaces: Record<SpaceIdValue, HexSpaceStateRecord<SpaceIdValue, SpaceFields>>;
   relations: Array<BoardRelationStateRecord<SpaceIdValue, RuntimeRecord>>;
@@ -1392,14 +982,14 @@ export interface SquareBoardStateRecord<
   EdgeFields = RuntimeRecord,
   VertexFields = RuntimeRecord,
 > extends BoardStateRecordBase<
-  BoardIdValue,
-  SpaceIdValue,
-  ContainerIdValue,
-  BoardFields,
-  SpaceFields,
-  RelationFields,
-  ContainerFields
-> {
+    BoardIdValue,
+    SpaceIdValue,
+    ContainerIdValue,
+    BoardFields,
+    SpaceFields,
+    RelationFields,
+    ContainerFields
+  > {
   layout: "square";
   spaces: Record<
     SpaceIdValue,
@@ -1421,281 +1011,29 @@ export type TiledBoardStateRecord =
   | SquareBoardStateRecord;
 
 export type BoardStateById = {
-  "action-board": SquareBoardStateRecord<
-    "action-board",
-    | "apothecary"
-    | "forge"
-    | "guild-hall"
-    | "library"
-    | "lumberyard"
-    | "market"
-    | "masons-lodge"
-    | "patrons-estate"
-    | "quarry"
-    | "trade-post"
-    | "training-hall"
-    | "workshop",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::0,4"
-    | "square-edge:0,3::1,3"
-    | "square-edge:0,4::1,4"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::1,4"
-    | "square-edge:1,3::2,3"
-    | "square-edge:1,4::2,4"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::2,4"
-    | "square-edge:2,3::3,3"
-    | "square-edge:2,4::3,4"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,3::3,4",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:0,4"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:1,4"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:2,4"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:3,4",
-    ActionBoardBoardFields,
-    ActionBoardSpaceFields,
-    ActionBoardRelationFields,
-    ActionBoardContainerFields,
-    ActionBoardEdgeFields,
-    ActionBoardVertexFields
-  >;
-  "wake-up-track": SquareBoardStateRecord<
-    "wake-up-track",
-    "wake-up-1" | "wake-up-2" | "wake-up-3" | "wake-up-4",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::1,1"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::2,1"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::3,1"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::4,1"
-    | "square-edge:4,0::4,1",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1",
-    WakeUpTrackBoardFields,
-    WakeUpTrackSpaceFields,
-    WakeUpTrackRelationFields,
-    WakeUpTrackContainerFields,
-    WakeUpTrackEdgeFields,
-    WakeUpTrackVertexFields
-  >;
-  "workshop-mat:player-1": SquareBoardStateRecord<
-    "workshop-mat:player-1",
-    | "cell-r0-c0"
-    | "cell-r0-c1"
-    | "cell-r0-c2"
-    | "cell-r0-c3"
-    | "cell-r1-c0"
-    | "cell-r1-c1"
-    | "cell-r1-c2"
-    | "cell-r1-c3"
-    | "cell-r2-c0"
-    | "cell-r2-c1"
-    | "cell-r2-c2"
-    | "cell-r2-c3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::1,3"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::2,3"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::3,3"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::4,3"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3",
-    WorkshopMatBoardFields,
-    WorkshopMatSpaceFields,
-    WorkshopMatRelationFields,
-    WorkshopMatContainerFields,
-    WorkshopMatEdgeFields,
-    WorkshopMatVertexFields
-  >;
-  "workshop-mat:player-2": SquareBoardStateRecord<
-    "workshop-mat:player-2",
-    | "cell-r0-c0"
-    | "cell-r0-c1"
-    | "cell-r0-c2"
-    | "cell-r0-c3"
-    | "cell-r1-c0"
-    | "cell-r1-c1"
-    | "cell-r1-c2"
-    | "cell-r1-c3"
-    | "cell-r2-c0"
-    | "cell-r2-c1"
-    | "cell-r2-c2"
-    | "cell-r2-c3",
-    never,
-    | "square-edge:0,0::0,1"
-    | "square-edge:0,0::1,0"
-    | "square-edge:0,1::0,2"
-    | "square-edge:0,1::1,1"
-    | "square-edge:0,2::0,3"
-    | "square-edge:0,2::1,2"
-    | "square-edge:0,3::1,3"
-    | "square-edge:1,0::1,1"
-    | "square-edge:1,0::2,0"
-    | "square-edge:1,1::1,2"
-    | "square-edge:1,1::2,1"
-    | "square-edge:1,2::1,3"
-    | "square-edge:1,2::2,2"
-    | "square-edge:1,3::2,3"
-    | "square-edge:2,0::2,1"
-    | "square-edge:2,0::3,0"
-    | "square-edge:2,1::2,2"
-    | "square-edge:2,1::3,1"
-    | "square-edge:2,2::2,3"
-    | "square-edge:2,2::3,2"
-    | "square-edge:2,3::3,3"
-    | "square-edge:3,0::3,1"
-    | "square-edge:3,0::4,0"
-    | "square-edge:3,1::3,2"
-    | "square-edge:3,1::4,1"
-    | "square-edge:3,2::3,3"
-    | "square-edge:3,2::4,2"
-    | "square-edge:3,3::4,3"
-    | "square-edge:4,0::4,1"
-    | "square-edge:4,1::4,2"
-    | "square-edge:4,2::4,3",
-    | "square-vertex:0,0"
-    | "square-vertex:0,1"
-    | "square-vertex:0,2"
-    | "square-vertex:0,3"
-    | "square-vertex:1,0"
-    | "square-vertex:1,1"
-    | "square-vertex:1,2"
-    | "square-vertex:1,3"
-    | "square-vertex:2,0"
-    | "square-vertex:2,1"
-    | "square-vertex:2,2"
-    | "square-vertex:2,3"
-    | "square-vertex:3,0"
-    | "square-vertex:3,1"
-    | "square-vertex:3,2"
-    | "square-vertex:3,3"
-    | "square-vertex:4,0"
-    | "square-vertex:4,1"
-    | "square-vertex:4,2"
-    | "square-vertex:4,3",
-    WorkshopMatBoardFields,
-    WorkshopMatSpaceFields,
-    WorkshopMatRelationFields,
-    WorkshopMatContainerFields,
-    WorkshopMatEdgeFields,
-    WorkshopMatVertexFields
-  >;
+  "action-board": SquareBoardStateRecord<"action-board", "exchangeHouse" | "mosaicBench" | "patronSquare" | "stoneYard" | "timberYard", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::1,1" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::2,1" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::3,1" | "square-edge:3,0::3,1" | "square-edge:3,0::4,0" | "square-edge:3,1::4,1" | "square-edge:4,0::4,1" | "square-edge:4,0::5,0" | "square-edge:4,1::5,1" | "square-edge:5,0::5,1", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:4,0" | "square-vertex:4,1" | "square-vertex:5,0" | "square-vertex:5,1", ActionBoardBoardFields, ActionBoardSpaceFields, ActionBoardRelationFields, ActionBoardContainerFields, ActionBoardEdgeFields, ActionBoardVertexFields>;
+  "workshop-tableau:player-1": SquareBoardStateRecord<"workshop-tableau:player-1", "cell-r0-c0" | "cell-r0-c1" | "cell-r0-c2" | "cell-r1-c0" | "cell-r1-c1" | "cell-r1-c2", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::1,2" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::2,2" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::3,2" | "square-edge:3,0::3,1" | "square-edge:3,1::3,2", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2", WorkshopTableauBoardFields, WorkshopTableauSpaceFields, WorkshopTableauRelationFields, WorkshopTableauContainerFields, WorkshopTableauEdgeFields, WorkshopTableauVertexFields>;
+  "workshop-tableau:player-2": SquareBoardStateRecord<"workshop-tableau:player-2", "cell-r0-c0" | "cell-r0-c1" | "cell-r0-c2" | "cell-r1-c0" | "cell-r1-c1" | "cell-r1-c2", never, "square-edge:0,0::0,1" | "square-edge:0,0::1,0" | "square-edge:0,1::0,2" | "square-edge:0,1::1,1" | "square-edge:0,2::1,2" | "square-edge:1,0::1,1" | "square-edge:1,0::2,0" | "square-edge:1,1::1,2" | "square-edge:1,1::2,1" | "square-edge:1,2::2,2" | "square-edge:2,0::2,1" | "square-edge:2,0::3,0" | "square-edge:2,1::2,2" | "square-edge:2,1::3,1" | "square-edge:2,2::3,2" | "square-edge:3,0::3,1" | "square-edge:3,1::3,2", "square-vertex:0,0" | "square-vertex:0,1" | "square-vertex:0,2" | "square-vertex:1,0" | "square-vertex:1,1" | "square-vertex:1,2" | "square-vertex:2,0" | "square-vertex:2,1" | "square-vertex:2,2" | "square-vertex:3,0" | "square-vertex:3,1" | "square-vertex:3,2", WorkshopTableauBoardFields, WorkshopTableauSpaceFields, WorkshopTableauRelationFields, WorkshopTableauContainerFields, WorkshopTableauEdgeFields, WorkshopTableauVertexFields>;
 };
 
 export type HexBoardStateById = Record<string, never>;
 
 export type SquareBoardStateById = {
   "action-board": BoardStateById["action-board"];
-  "wake-up-track": BoardStateById["wake-up-track"];
-  "workshop-mat:player-1": BoardStateById["workshop-mat:player-1"];
-  "workshop-mat:player-2": BoardStateById["workshop-mat:player-2"];
+  "workshop-tableau:player-1": BoardStateById["workshop-tableau:player-1"];
+  "workshop-tableau:player-2": BoardStateById["workshop-tableau:player-2"];
 };
 
 type ManifestRecordValue<T> = T[keyof T];
-type ManifestArrayElement<T> = T extends readonly (infer Item)[]
-  ? Item
-  : T extends (infer Item)[]
+type ManifestArrayElement<T> =
+  T extends readonly (infer Item)[]
     ? Item
-    : never;
+    : T extends (infer Item)[]
+      ? Item
+      : never;
 
 export type BoardState<BoardIdValue extends BoardId = BoardId> =
-  BoardIdValue extends keyof BoardStateById
-    ? BoardStateById[BoardIdValue]
-    : never;
+  BoardIdValue extends keyof BoardStateById ? BoardStateById[BoardIdValue] : never;
 
 export type BoardFields<BoardIdValue extends BoardId = BoardId> =
   BoardState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
@@ -1752,29 +1090,26 @@ type HexAuthoredEdgesByBoardId = typeof authoredHexEdgesByBoardIdLookup;
 type HexAuthoredVerticesByBoardId = typeof authoredHexVerticesByBoardIdLookup;
 
 export type HexAuthoredEdgeState<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredEdgesByBoardId
   ? ManifestArrayElement<HexAuthoredEdgesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredEdgeRef<
-  BoardIdValue extends keyof HexAuthoredEdgesByBoardId =
-    keyof HexAuthoredEdgesByBoardId,
+  BoardIdValue extends keyof HexAuthoredEdgesByBoardId = keyof HexAuthoredEdgesByBoardId,
 > = HexAuthoredEdgeState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
 
 export type HexAuthoredVertexState<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
 > = BoardIdValue extends keyof HexAuthoredVerticesByBoardId
   ? ManifestArrayElement<HexAuthoredVerticesByBoardId[BoardIdValue]>
   : never;
 
 export type HexAuthoredVertexRef<
-  BoardIdValue extends keyof HexAuthoredVerticesByBoardId =
-    keyof HexAuthoredVerticesByBoardId,
-> =
-  HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref } ? Ref : never;
+  BoardIdValue extends keyof HexAuthoredVerticesByBoardId = keyof HexAuthoredVerticesByBoardId,
+> = HexAuthoredVertexState<BoardIdValue> extends { ref: infer Ref }
+  ? Ref
+  : never;
 
 export type HexEdgeState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1784,8 +1119,9 @@ export type HexEdgeState<
 
 export type HexEdgeFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexEdgeState<BoardIdValue> extends { fields: infer Fields } ? Fields : never;
+> = HexEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type HexVertexState<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
@@ -1795,10 +1131,9 @@ export type HexVertexState<
 
 export type HexVertexFields<
   BoardIdValue extends keyof HexBoardStateById = keyof HexBoardStateById,
-> =
-  HexVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = HexVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareEdgeState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1808,10 +1143,9 @@ export type SquareEdgeState<
 
 export type SquareEdgeFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareEdgeState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type SquareVertexState<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
@@ -1821,10 +1155,9 @@ export type SquareVertexState<
 
 export type SquareVertexFields<
   BoardIdValue extends keyof SquareBoardStateById = keyof SquareBoardStateById,
-> =
-  SquareVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = SquareVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type TiledBoardId = keyof HexBoardStateById | keyof SquareBoardStateById;
 
@@ -1840,19 +1173,19 @@ export type TiledEdgeFields<BoardIdValue extends TiledBoardId = TiledBoardId> =
     ? Fields
     : never;
 
-export type TiledVertexState<BoardIdValue extends TiledBoardId = TiledBoardId> =
-  BoardIdValue extends keyof HexBoardStateById
-    ? HexVertexState<BoardIdValue>
-    : BoardIdValue extends keyof SquareBoardStateById
-      ? SquareVertexState<BoardIdValue>
-      : never;
+export type TiledVertexState<
+  BoardIdValue extends TiledBoardId = TiledBoardId,
+> = BoardIdValue extends keyof HexBoardStateById
+  ? HexVertexState<BoardIdValue>
+  : BoardIdValue extends keyof SquareBoardStateById
+    ? SquareVertexState<BoardIdValue>
+    : never;
 
 export type TiledVertexFields<
   BoardIdValue extends TiledBoardId = TiledBoardId,
-> =
-  TiledVertexState<BoardIdValue> extends { fields: infer Fields }
-    ? Fields
-    : never;
+> = TiledVertexState<BoardIdValue> extends { fields: infer Fields }
+  ? Fields
+  : never;
 
 export type BoardStateRecord = BoardStateById[BoardId];
 
@@ -1891,97 +1224,11 @@ const cardStateSchema = z.object({
   properties: unknownRecordSchema,
 });
 const cardPropertiesSchemaByCardSetId: Record<string, z.ZodType<unknown>> = {
-  "order-cards": OrderCardsCardPropertiesSchema,
-  "apprentice-cards": ApprenticeCardsCardPropertiesSchema,
+
 };
-function createCardStateSchema<CardIdValue extends CardId>(
-  cardId: CardIdValue,
-): z.ZodType<CardStateById[CardIdValue]> {
-  const cardSetId = literals.cardSetIdByCardId[cardId];
-  const cardType = literals.cardTypeByCardId[cardId];
-  const cardPropertiesSchema =
-    cardPropertiesSchemaByCardSetId[cardSetId + ":" + cardType] ??
-    cardPropertiesSchemaByCardSetId[cardSetId] ??
-    unknownRecordSchema;
-  return assumeManifestSchema<CardStateById[CardIdValue]>(
-    cardStateSchema.extend({
-      id: z.literal(cardId),
-      cardSetId: z.literal(cardSetId),
-      cardType: z.literal(cardType),
-      properties: cardPropertiesSchema,
-    }),
-  );
-}
-const cardStateByIdSchema = z.object(
-  Object.fromEntries(
-    literals.cardIds.map((cardId) => [cardId, createCardStateSchema(cardId)]),
-  ) as Record<CardId, z.ZodType<unknown>>,
-);
+
+const cardStateByIdSchema = z.object({});
 const pieceStateByIdSchema = z.object({
-  "apprentice-p1-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p1-1"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p1-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p1-2"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p1-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p1-3"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p1-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p1-4"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p2-1": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p2-1"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p2-2": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p2-2"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p2-3": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p2-3"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
-  "apprentice-p2-4": z.object({
-    componentType: z.string().optional(),
-    id: z.literal("apprentice-p2-4"),
-    pieceTypeId: z.literal("apprentice"),
-    pieceName: z.string().nullable().optional(),
-    ownerId: ids.playerId.nullable().optional(),
-    properties: ApprenticePieceFieldsSchema,
-  }),
   "master-p1": z.object({
     componentType: z.string().optional(),
     id: z.literal("master-p1"),
@@ -1997,6 +1244,38 @@ const pieceStateByIdSchema = z.object({
     pieceName: z.string().nullable().optional(),
     ownerId: ids.playerId.nullable().optional(),
     properties: MasterPieceFieldsSchema,
+  }),
+  "ordinary-p1-1": z.object({
+    componentType: z.string().optional(),
+    id: z.literal("ordinary-p1-1"),
+    pieceTypeId: z.literal("ordinary"),
+    pieceName: z.string().nullable().optional(),
+    ownerId: ids.playerId.nullable().optional(),
+    properties: OrdinaryPieceFieldsSchema,
+  }),
+  "ordinary-p1-2": z.object({
+    componentType: z.string().optional(),
+    id: z.literal("ordinary-p1-2"),
+    pieceTypeId: z.literal("ordinary"),
+    pieceName: z.string().nullable().optional(),
+    ownerId: ids.playerId.nullable().optional(),
+    properties: OrdinaryPieceFieldsSchema,
+  }),
+  "ordinary-p2-1": z.object({
+    componentType: z.string().optional(),
+    id: z.literal("ordinary-p2-1"),
+    pieceTypeId: z.literal("ordinary"),
+    pieceName: z.string().nullable().optional(),
+    ownerId: ids.playerId.nullable().optional(),
+    properties: OrdinaryPieceFieldsSchema,
+  }),
+  "ordinary-p2-2": z.object({
+    componentType: z.string().optional(),
+    id: z.literal("ordinary-p2-2"),
+    pieceTypeId: z.literal("ordinary"),
+    pieceName: z.string().nullable().optional(),
+    ownerId: ids.playerId.nullable().optional(),
+    properties: OrdinaryPieceFieldsSchema,
   }),
 });
 const dieStateByIdSchema = z.object({});
@@ -2055,69 +1334,15 @@ const boardStateByIdSchema = z.object({
       }),
     ),
   }),
-  "wake-up-track": z.object({
-    id: z.literal("wake-up-track"),
-    baseId: z.literal("wake-up-track"),
-    layout: z.literal("square"),
-    typeId: ids.boardTypeId.nullable().optional(),
-    scope: z.literal("shared"),
-    playerId: ids.playerId.nullable().optional(),
-    templateId: z.string().nullable().optional(),
-    fields: WakeUpTrackBoardFieldsSchema,
-    // T220: see generic-board comment on the loose-keying choice.
-    spaces: z.record(
-      z.string(),
-      z.object({
-        id: ids.spaceId,
-        name: z.string().nullable().optional(),
-        typeId: ids.spaceTypeId.nullable().optional(),
-        row: z.number().int(),
-        col: z.number().int(),
-        fields: WakeUpTrackSpaceFieldsSchema,
-        zoneId: z.string().nullable().optional(),
-      }),
-    ),
-    relations: z.array(
-      z.object({
-        id: z.string().nullable().optional(),
-        typeId: ids.relationTypeId,
-        fromSpaceId: ids.spaceId,
-        toSpaceId: ids.spaceId,
-        directed: z.boolean(),
-        fields: WakeUpTrackRelationFieldsSchema,
-      }),
-    ),
-    containers: z.object({}),
-    edges: z.array(
-      z.object({
-        id: ids.edgeId,
-        spaceIds: z.array(ids.spaceId).min(1).max(2),
-        typeId: ids.edgeTypeId.nullable().optional(),
-        label: z.string().nullable().optional(),
-        ownerId: ids.playerId.nullable().optional(),
-        fields: WakeUpTrackEdgeFieldsSchema,
-      }),
-    ),
-    vertices: z.array(
-      z.object({
-        id: ids.vertexId,
-        spaceIds: z.array(ids.spaceId).min(1).max(4),
-        typeId: ids.vertexTypeId.nullable().optional(),
-        label: z.string().nullable().optional(),
-        ownerId: ids.playerId.nullable().optional(),
-        fields: WakeUpTrackVertexFieldsSchema,
-      }),
-    ),
-  }),
-  "workshop-mat:player-1": z.object({
-    id: z.literal("workshop-mat:player-1"),
-    baseId: z.literal("workshop-mat"),
+  "workshop-tableau:player-1": z.object({
+    id: z.literal("workshop-tableau:player-1"),
+    baseId: z.literal("workshop-tableau"),
     layout: z.literal("square"),
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.literal("perPlayer"),
     playerId: z.literal("player-1"),
     templateId: z.string().nullable().optional(),
-    fields: WorkshopMatBoardFieldsSchema,
+    fields: WorkshopTableauBoardFieldsSchema,
     // T220: see generic-board comment on the loose-keying choice.
     spaces: z.record(
       z.string(),
@@ -2127,7 +1352,7 @@ const boardStateByIdSchema = z.object({
         typeId: ids.spaceTypeId.nullable().optional(),
         row: z.number().int(),
         col: z.number().int(),
-        fields: WorkshopMatSpaceFieldsSchema,
+        fields: WorkshopTableauSpaceFieldsSchema,
         zoneId: z.string().nullable().optional(),
       }),
     ),
@@ -2138,7 +1363,7 @@ const boardStateByIdSchema = z.object({
         fromSpaceId: ids.spaceId,
         toSpaceId: ids.spaceId,
         directed: z.boolean(),
-        fields: WorkshopMatRelationFieldsSchema,
+        fields: WorkshopTableauRelationFieldsSchema,
       }),
     ),
     containers: z.object({}),
@@ -2149,7 +1374,7 @@ const boardStateByIdSchema = z.object({
         typeId: ids.edgeTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatEdgeFieldsSchema,
+        fields: WorkshopTableauEdgeFieldsSchema,
       }),
     ),
     vertices: z.array(
@@ -2159,19 +1384,19 @@ const boardStateByIdSchema = z.object({
         typeId: ids.vertexTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatVertexFieldsSchema,
+        fields: WorkshopTableauVertexFieldsSchema,
       }),
     ),
   }),
-  "workshop-mat:player-2": z.object({
-    id: z.literal("workshop-mat:player-2"),
-    baseId: z.literal("workshop-mat"),
+  "workshop-tableau:player-2": z.object({
+    id: z.literal("workshop-tableau:player-2"),
+    baseId: z.literal("workshop-tableau"),
     layout: z.literal("square"),
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.literal("perPlayer"),
     playerId: z.literal("player-2"),
     templateId: z.string().nullable().optional(),
-    fields: WorkshopMatBoardFieldsSchema,
+    fields: WorkshopTableauBoardFieldsSchema,
     // T220: see generic-board comment on the loose-keying choice.
     spaces: z.record(
       z.string(),
@@ -2181,7 +1406,7 @@ const boardStateByIdSchema = z.object({
         typeId: ids.spaceTypeId.nullable().optional(),
         row: z.number().int(),
         col: z.number().int(),
-        fields: WorkshopMatSpaceFieldsSchema,
+        fields: WorkshopTableauSpaceFieldsSchema,
         zoneId: z.string().nullable().optional(),
       }),
     ),
@@ -2192,7 +1417,7 @@ const boardStateByIdSchema = z.object({
         fromSpaceId: ids.spaceId,
         toSpaceId: ids.spaceId,
         directed: z.boolean(),
-        fields: WorkshopMatRelationFieldsSchema,
+        fields: WorkshopTableauRelationFieldsSchema,
       }),
     ),
     containers: z.object({}),
@@ -2203,7 +1428,7 @@ const boardStateByIdSchema = z.object({
         typeId: ids.edgeTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatEdgeFieldsSchema,
+        fields: WorkshopTableauEdgeFieldsSchema,
       }),
     ),
     vertices: z.array(
@@ -2213,7 +1438,7 @@ const boardStateByIdSchema = z.object({
         typeId: ids.vertexTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatVertexFieldsSchema,
+        fields: WorkshopTableauVertexFieldsSchema,
       }),
     ),
   }),
@@ -2274,69 +1499,15 @@ const squareBoardStateByIdSchema = z.object({
       }),
     ),
   }),
-  "wake-up-track": z.object({
-    id: z.literal("wake-up-track"),
-    baseId: z.literal("wake-up-track"),
-    layout: z.literal("square"),
-    typeId: ids.boardTypeId.nullable().optional(),
-    scope: z.literal("shared"),
-    playerId: ids.playerId.nullable().optional(),
-    templateId: z.string().nullable().optional(),
-    fields: WakeUpTrackBoardFieldsSchema,
-    // T220: see generic-board comment on the loose-keying choice.
-    spaces: z.record(
-      z.string(),
-      z.object({
-        id: ids.spaceId,
-        name: z.string().nullable().optional(),
-        typeId: ids.spaceTypeId.nullable().optional(),
-        row: z.number().int(),
-        col: z.number().int(),
-        fields: WakeUpTrackSpaceFieldsSchema,
-        zoneId: z.string().nullable().optional(),
-      }),
-    ),
-    relations: z.array(
-      z.object({
-        id: z.string().nullable().optional(),
-        typeId: ids.relationTypeId,
-        fromSpaceId: ids.spaceId,
-        toSpaceId: ids.spaceId,
-        directed: z.boolean(),
-        fields: WakeUpTrackRelationFieldsSchema,
-      }),
-    ),
-    containers: z.object({}),
-    edges: z.array(
-      z.object({
-        id: ids.edgeId,
-        spaceIds: z.array(ids.spaceId).min(1).max(2),
-        typeId: ids.edgeTypeId.nullable().optional(),
-        label: z.string().nullable().optional(),
-        ownerId: ids.playerId.nullable().optional(),
-        fields: WakeUpTrackEdgeFieldsSchema,
-      }),
-    ),
-    vertices: z.array(
-      z.object({
-        id: ids.vertexId,
-        spaceIds: z.array(ids.spaceId).min(1).max(4),
-        typeId: ids.vertexTypeId.nullable().optional(),
-        label: z.string().nullable().optional(),
-        ownerId: ids.playerId.nullable().optional(),
-        fields: WakeUpTrackVertexFieldsSchema,
-      }),
-    ),
-  }),
-  "workshop-mat:player-1": z.object({
-    id: z.literal("workshop-mat:player-1"),
-    baseId: z.literal("workshop-mat"),
+  "workshop-tableau:player-1": z.object({
+    id: z.literal("workshop-tableau:player-1"),
+    baseId: z.literal("workshop-tableau"),
     layout: z.literal("square"),
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.literal("perPlayer"),
     playerId: z.literal("player-1"),
     templateId: z.string().nullable().optional(),
-    fields: WorkshopMatBoardFieldsSchema,
+    fields: WorkshopTableauBoardFieldsSchema,
     // T220: see generic-board comment on the loose-keying choice.
     spaces: z.record(
       z.string(),
@@ -2346,7 +1517,7 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.spaceTypeId.nullable().optional(),
         row: z.number().int(),
         col: z.number().int(),
-        fields: WorkshopMatSpaceFieldsSchema,
+        fields: WorkshopTableauSpaceFieldsSchema,
         zoneId: z.string().nullable().optional(),
       }),
     ),
@@ -2357,7 +1528,7 @@ const squareBoardStateByIdSchema = z.object({
         fromSpaceId: ids.spaceId,
         toSpaceId: ids.spaceId,
         directed: z.boolean(),
-        fields: WorkshopMatRelationFieldsSchema,
+        fields: WorkshopTableauRelationFieldsSchema,
       }),
     ),
     containers: z.object({}),
@@ -2368,7 +1539,7 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.edgeTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatEdgeFieldsSchema,
+        fields: WorkshopTableauEdgeFieldsSchema,
       }),
     ),
     vertices: z.array(
@@ -2378,19 +1549,19 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.vertexTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatVertexFieldsSchema,
+        fields: WorkshopTableauVertexFieldsSchema,
       }),
     ),
   }),
-  "workshop-mat:player-2": z.object({
-    id: z.literal("workshop-mat:player-2"),
-    baseId: z.literal("workshop-mat"),
+  "workshop-tableau:player-2": z.object({
+    id: z.literal("workshop-tableau:player-2"),
+    baseId: z.literal("workshop-tableau"),
     layout: z.literal("square"),
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.literal("perPlayer"),
     playerId: z.literal("player-2"),
     templateId: z.string().nullable().optional(),
-    fields: WorkshopMatBoardFieldsSchema,
+    fields: WorkshopTableauBoardFieldsSchema,
     // T220: see generic-board comment on the loose-keying choice.
     spaces: z.record(
       z.string(),
@@ -2400,7 +1571,7 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.spaceTypeId.nullable().optional(),
         row: z.number().int(),
         col: z.number().int(),
-        fields: WorkshopMatSpaceFieldsSchema,
+        fields: WorkshopTableauSpaceFieldsSchema,
         zoneId: z.string().nullable().optional(),
       }),
     ),
@@ -2411,7 +1582,7 @@ const squareBoardStateByIdSchema = z.object({
         fromSpaceId: ids.spaceId,
         toSpaceId: ids.spaceId,
         directed: z.boolean(),
-        fields: WorkshopMatRelationFieldsSchema,
+        fields: WorkshopTableauRelationFieldsSchema,
       }),
     ),
     containers: z.object({}),
@@ -2422,7 +1593,7 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.edgeTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatEdgeFieldsSchema,
+        fields: WorkshopTableauEdgeFieldsSchema,
       }),
     ),
     vertices: z.array(
@@ -2432,7 +1603,7 @@ const squareBoardStateByIdSchema = z.object({
         typeId: ids.vertexTypeId.nullable().optional(),
         label: z.string().nullable().optional(),
         ownerId: ids.playerId.nullable().optional(),
-        fields: WorkshopMatVertexFieldsSchema,
+        fields: WorkshopTableauVertexFieldsSchema,
       }),
     ),
   }),
@@ -2542,13 +1713,8 @@ const rawTableSchema = z.object({
   zones: z.object({
     shared: sharedZoneSchema,
     perPlayer: playerZoneSchema,
-    visibility: z.record(
-      zoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cardSetIdsByZoneId: z
-      .record(zoneIdSchema, z.array(ids.cardSetId))
-      .optional(),
+    visibility: z.record(zoneIdSchema, z.enum(["all", "ownerOnly", "public", "hidden"])),
+    cardSetIdsByZoneId: z.record(zoneIdSchema, z.array(ids.cardSetId)).optional(),
   }),
   decks: sharedZoneSchema,
   hands: playerZoneSchema,
@@ -2605,11 +1771,11 @@ const rawTableSchema = z.object({
         position: z.number().int().nullable().optional(),
       }),
       z.object({
-        type: z.literal("InSlot"),
-        host: z.never(),
-        slotId: z.never(),
-        position: z.number().int().nullable().optional(),
-      }),
+      type: z.literal("InSlot"),
+      host: z.never(),
+      slotId: z.never(),
+      position: z.number().int().nullable().optional(),
+    }),
     ]),
   ),
   ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
@@ -2654,139 +1820,44 @@ function buildPerPlayerCardIds(
 function buildPlayerResources(
   playerIds: readonly PlayerId[],
 ): PerPlayer<Record<ResourceId, number>> {
-  return perPlayer(
-    playerIds,
-    () =>
-      Object.fromEntries(
-        literals.resourceIds.map((resourceId) => [resourceId, 0]),
-      ) as Record<ResourceId, number>,
+  return perPlayer(playerIds, () =>
+    Object.fromEntries(
+      literals.resourceIds.map((resourceId) => [resourceId, 0]),
+    ) as Record<ResourceId, number>,
   );
 }
 
 export const defaults = {
-  zones: (playerIds?: readonly string[]) =>
-    ({
-      shared: cloneManifestDefault({
-        "apprentice-deck": [],
-        "apprentice-discard": [],
-        "order-deck": [],
-        "order-discard": [],
-      }),
-      perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
-      visibility: cloneManifestDefault({
-        "apprentice-deck": "hidden",
-        "apprentice-discard": "public",
-        "apprentice-hand": "ownerOnly",
-        "apprentice-tableau": "public",
-        "order-deck": "hidden",
-        "order-discard": "public",
-        "order-hand": "ownerOnly",
-      }),
-      cardSetIdsByZoneId: cloneManifestDefault({
-        "apprentice-deck": ["apprentice-cards"],
-        "apprentice-discard": ["apprentice-cards"],
-        "apprentice-hand": ["apprentice-cards"],
-        "apprentice-tableau": ["apprentice-cards"],
-        "order-deck": ["order-cards"],
-        "order-discard": ["order-cards"],
-        "order-hand": ["order-cards"],
-      }),
-    }) as TableState["zones"],
-  decks: () =>
-    cloneManifestDefault({
-      "apprentice-deck": [],
-      "apprentice-discard": [],
-      "order-deck": [],
-      "order-discard": [],
-    }) as TableState["decks"],
+  zones: (playerIds?: readonly string[]) => ({
+    shared: cloneManifestDefault({}),
+    perPlayer: buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)),
+    visibility: cloneManifestDefault({}),
+    cardSetIdsByZoneId: cloneManifestDefault({}),
+  }) as TableState["zones"],
+  decks: () => cloneManifestDefault({}) as TableState["decks"],
   hands: (playerIds?: readonly string[]) =>
-    buildPerPlayerCardIds(
-      resolveDefaultPlayerIds(playerIds),
-    ) as TableState["hands"],
-  handVisibility: () =>
-    cloneManifestDefault({
-      "apprentice-hand": "ownerOnly",
-      "apprentice-tableau": "public",
-      "order-hand": "ownerOnly",
-    }) as TableState["handVisibility"],
-  ownerOfCard: () =>
-    cloneManifestDefault({
-      "apprentice-trial": null,
-      "architects-plan": null,
-      foreman: null,
-      "forge-order": null,
-      "furniture-commission": null,
-      "grand-atelier": null,
-      "guild-scholar": null,
-      inspiration: null,
-      "lumber-stash": null,
-      "masters-display": null,
-      "mixed-set": null,
-      "patrons-favor": null,
-      "quick-delivery": null,
-      reassign: null,
-      "row-of-pride": null,
-      "spare-hands": null,
-      "stone-cache": null,
-      "stone-sculpture": null,
-      "tireless-master": null,
-      "weavers-request": null,
-    }) as TableState["ownerOfCard"],
-  visibility: () =>
-    cloneManifestDefault({
-      "apprentice-trial": { faceUp: true },
-      "architects-plan": { faceUp: true },
-      foreman: { faceUp: true },
-      "forge-order": { faceUp: true },
-      "furniture-commission": { faceUp: true },
-      "grand-atelier": { faceUp: true },
-      "guild-scholar": { faceUp: true },
-      inspiration: { faceUp: true },
-      "lumber-stash": { faceUp: true },
-      "masters-display": { faceUp: true },
-      "mixed-set": { faceUp: true },
-      "patrons-favor": { faceUp: true },
-      "quick-delivery": { faceUp: true },
-      reassign: { faceUp: true },
-      "row-of-pride": { faceUp: true },
-      "spare-hands": { faceUp: true },
-      "stone-cache": { faceUp: true },
-      "stone-sculpture": { faceUp: true },
-      "tireless-master": { faceUp: true },
-      "weavers-request": { faceUp: true },
-    }) as TableState["visibility"],
+    buildPerPlayerCardIds(resolveDefaultPlayerIds(playerIds)) as TableState["hands"],
+  handVisibility: () => cloneManifestDefault({}) as TableState["handVisibility"],
+  ownerOfCard: () => cloneManifestDefault({}) as TableState["ownerOfCard"],
+  visibility: () => cloneManifestDefault({}) as TableState["visibility"],
   resources: (playerIds?: readonly string[]) =>
     buildPlayerResources(resolveDefaultPlayerIds(playerIds)),
 } as const;
 
-type GeneratedStaticBoards = Pick<
-  PublicTableState["boards"],
-  "byId" | "hex" | "square"
->;
-type GeneratedStaticBoardsJsonEnvelope = Omit<
-  StaticBoardsJsonEnvelope<TableState>,
-  "boards"
-> & {
+type GeneratedStaticBoards = Pick<PublicTableState["boards"], "byId" | "hex" | "square">;
+type GeneratedStaticBoardsJsonEnvelope = Omit<StaticBoardsJsonEnvelope<TableState>, "boards"> & {
   boards: GeneratedStaticBoards;
 };
-const manifestStaticData =
-  staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
+const manifestStaticData = staticBoardsData as unknown as GeneratedStaticBoardsJsonEnvelope;
 export const staticBoards = manifestStaticData.boards;
 
-const baseInitialTable = cloneManifestDefault<TableState>(
-  manifestStaticData.initialTable,
-);
-const baseDeckCardsByZoneId = baseInitialTable.decks as Record<
-  SharedZoneId,
-  readonly CardId[]
->;
+const baseInitialTable = cloneManifestDefault<TableState>(manifestStaticData.initialTable);
+const baseDeckCardsByZoneId = baseInitialTable.decks as Record<SharedZoneId, readonly CardId[]>;
 
-export function createInitialTable(
-  options: {
-    playerIds?: readonly string[];
-    shuffleItems?: <Value>(values: readonly Value[]) => Value[];
-  } = {},
-): TableState {
+export function createInitialTable(options: {
+  playerIds?: readonly string[];
+  shuffleItems?: <Value>(values: readonly Value[]) => Value[];
+} = {}): TableState {
   const resolvedPlayerIds = resolveDefaultPlayerIds(options.playerIds);
   const shuffleItems =
     options.shuffleItems ?? (<Value>(values: readonly Value[]) => [...values]);
@@ -2821,6 +1892,13 @@ export function createInitialTable(
   table.componentLocations = componentLocations;
   return tableSchema.parse(table);
 }
+
+export const normalSetup = {
+  minPlayers: 2,
+  maxPlayers: 2,
+  createInitialTable: (options: { readonly playerIds: readonly string[] }) =>
+    createInitialTable({ playerIds: options.playerIds }),
+} as const;
 
 export const schemas = {
   table: tableSchema,
@@ -2865,10 +1943,14 @@ export const manifestContract: ReducerManifestContract<
   DeckId,
   HandId,
   CardId
-> = {
+> & {
+  readonly ids: typeof ids;
+  readonly normalSetup: typeof normalSetup;
+} = {
   literals,
   ids,
   defaults,
+  normalSetup,
   staticBoards,
   setupOptionsById,
   setupChoiceIdsByOptionId,
@@ -2879,202 +1961,95 @@ export const manifestContract: ReducerManifestContract<
 };
 
 const boardIdsByLayoutLookup = {
-  square: [
-    "action-board",
-    "wake-up-track",
-    "workshop-mat:player-1",
-    "workshop-mat:player-2",
-  ] as const,
+  "square": ["action-board", "workshop-tableau:player-1", "workshop-tableau:player-2"] as const,
 } as const;
 const boardBaseIdsByLayoutLookup = {
-  square: ["action-board", "wake-up-track", "workshop-mat"] as const,
+  "square": ["action-board", "workshop-tableau"] as const,
 } as const;
 const boardIdsByBaseIdLookup = {
   "action-board": ["action-board"] as const,
-  "wake-up-track": ["wake-up-track"] as const,
-  "workshop-mat": ["workshop-mat:player-1", "workshop-mat:player-2"] as const,
+  "workshop-tableau": ["workshop-tableau:player-1", "workshop-tableau:player-2"] as const,
 } as const;
 const boardBaseIdsByTemplateIdLookup = {
   "action-board-template": ["action-board"] as const,
-  "wake-up-track-template": ["wake-up-track"] as const,
-  "workshop-mat-template": ["workshop-mat"] as const,
+  "workshop-tableau-template": ["workshop-tableau"] as const,
 } as const;
 const boardLayoutByIdLookup = {
   "action-board": "square",
-  "wake-up-track": "square",
-  "workshop-mat:player-1": "square",
-  "workshop-mat:player-2": "square",
+  "workshop-tableau:player-1": "square",
+  "workshop-tableau:player-2": "square",
 } as const;
 const boardTemplateLayoutByIdLookup = {
   "action-board-template": "square",
-  "wake-up-track-template": "square",
-  "workshop-mat-template": "square",
+  "workshop-tableau-template": "square",
 } as const;
-const boardIdsByTypeIdLookup = {} as const;
+const boardIdsByTypeIdLookup = {
+
+} as const;
 const spaceIdsByBoardIdLookup = {
-  "action-board": [
-    "apothecary",
-    "forge",
-    "guild-hall",
-    "library",
-    "lumberyard",
-    "market",
-    "masons-lodge",
-    "patrons-estate",
-    "quarry",
-    "trade-post",
-    "training-hall",
-    "workshop",
-  ] as const,
-  "wake-up-track": [
-    "wake-up-1",
-    "wake-up-2",
-    "wake-up-3",
-    "wake-up-4",
-  ] as const,
-  "workshop-mat:player-1": [
-    "cell-r0-c0",
-    "cell-r0-c1",
-    "cell-r0-c2",
-    "cell-r0-c3",
-    "cell-r1-c0",
-    "cell-r1-c1",
-    "cell-r1-c2",
-    "cell-r1-c3",
-    "cell-r2-c0",
-    "cell-r2-c1",
-    "cell-r2-c2",
-    "cell-r2-c3",
-  ] as const,
-  "workshop-mat:player-2": [
-    "cell-r0-c0",
-    "cell-r0-c1",
-    "cell-r0-c2",
-    "cell-r0-c3",
-    "cell-r1-c0",
-    "cell-r1-c1",
-    "cell-r1-c2",
-    "cell-r1-c3",
-    "cell-r2-c0",
-    "cell-r2-c1",
-    "cell-r2-c2",
-    "cell-r2-c3",
-  ] as const,
+  "action-board": ["exchangeHouse", "mosaicBench", "patronSquare", "stoneYard", "timberYard"] as const,
+  "workshop-tableau:player-1": ["cell-r0-c0", "cell-r0-c1", "cell-r0-c2", "cell-r1-c0", "cell-r1-c1", "cell-r1-c2"] as const,
+  "workshop-tableau:player-2": ["cell-r0-c0", "cell-r0-c1", "cell-r0-c2", "cell-r1-c0", "cell-r1-c1", "cell-r1-c2"] as const,
 } as const;
 const spaceTypeIdByBoardIdLookup = {
   "action-board": {
-    apothecary: "variable",
-    forge: "variable",
-    "guild-hall": "fixed",
-    library: "variable",
-    lumberyard: "fixed",
-    market: "fixed",
-    "masons-lodge": "variable",
-    "patrons-estate": "variable",
-    quarry: "fixed",
-    "trade-post": "variable",
-    "training-hall": "fixed",
-    workshop: "fixed",
+    "exchangeHouse": "action-space",
+    "mosaicBench": "action-space",
+    "patronSquare": "action-space",
+    "stoneYard": "action-space",
+    "timberYard": "action-space"
   },
-  "wake-up-track": {
-    "wake-up-1": "wake-up-slot",
-    "wake-up-2": "wake-up-slot",
-    "wake-up-3": "wake-up-slot",
-    "wake-up-4": "wake-up-slot",
+  "workshop-tableau:player-1": {
+    "cell-r0-c0": "mosaic-cell",
+    "cell-r0-c1": "mosaic-cell",
+    "cell-r0-c2": "mosaic-cell",
+    "cell-r1-c0": "mosaic-cell",
+    "cell-r1-c1": "mosaic-cell",
+    "cell-r1-c2": "mosaic-cell"
   },
-  "workshop-mat:player-1": {
-    "cell-r0-c0": "cell",
-    "cell-r0-c1": "cell",
-    "cell-r0-c2": "cell",
-    "cell-r0-c3": "cell",
-    "cell-r1-c0": "cell",
-    "cell-r1-c1": "cell",
-    "cell-r1-c2": "cell",
-    "cell-r1-c3": "cell",
-    "cell-r2-c0": "cell",
-    "cell-r2-c1": "cell",
-    "cell-r2-c2": "cell",
-    "cell-r2-c3": "cell",
-  },
-  "workshop-mat:player-2": {
-    "cell-r0-c0": "cell",
-    "cell-r0-c1": "cell",
-    "cell-r0-c2": "cell",
-    "cell-r0-c3": "cell",
-    "cell-r1-c0": "cell",
-    "cell-r1-c1": "cell",
-    "cell-r1-c2": "cell",
-    "cell-r1-c3": "cell",
-    "cell-r2-c0": "cell",
-    "cell-r2-c1": "cell",
-    "cell-r2-c2": "cell",
-    "cell-r2-c3": "cell",
-  },
+  "workshop-tableau:player-2": {
+    "cell-r0-c0": "mosaic-cell",
+    "cell-r0-c1": "mosaic-cell",
+    "cell-r0-c2": "mosaic-cell",
+    "cell-r1-c0": "mosaic-cell",
+    "cell-r1-c1": "mosaic-cell",
+    "cell-r1-c2": "mosaic-cell"
+  }
 } as const;
 const spaceIdsByTypeIdLookup = {
-  cell: [
-    "cell-r0-c0",
-    "cell-r0-c1",
-    "cell-r0-c2",
-    "cell-r0-c3",
-    "cell-r1-c0",
-    "cell-r1-c1",
-    "cell-r1-c2",
-    "cell-r1-c3",
-    "cell-r2-c0",
-    "cell-r2-c1",
-    "cell-r2-c2",
-    "cell-r2-c3",
-  ] as const,
-  fixed: [
-    "guild-hall",
-    "lumberyard",
-    "market",
-    "quarry",
-    "training-hall",
-    "workshop",
-  ] as const,
-  variable: [
-    "apothecary",
-    "forge",
-    "library",
-    "masons-lodge",
-    "patrons-estate",
-    "trade-post",
-  ] as const,
-  "wake-up-slot": ["wake-up-1", "wake-up-2", "wake-up-3", "wake-up-4"] as const,
+  "action-space": ["exchangeHouse", "mosaicBench", "patronSquare", "stoneYard", "timberYard"] as const,
+  "mosaic-cell": ["cell-r0-c0", "cell-r0-c1", "cell-r0-c2", "cell-r1-c0", "cell-r1-c1", "cell-r1-c2"] as const,
 } as const;
 const containerIdsByBoardIdLookup = {
   "action-board": [] as const,
-  "wake-up-track": [] as const,
-  "workshop-mat:player-1": [] as const,
-  "workshop-mat:player-2": [] as const,
+  "workshop-tableau:player-1": [] as const,
+  "workshop-tableau:player-2": [] as const,
 } as const;
 const containerHostByBoardIdLookup = {
   "action-board": {},
-  "wake-up-track": {},
-  "workshop-mat:player-1": {},
-  "workshop-mat:player-2": {},
+  "workshop-tableau:player-1": {},
+  "workshop-tableau:player-2": {}
 } as const;
 const relationTypeIdsByBoardIdLookup = {
   "action-board": ["adjacent"] as const,
-  "wake-up-track": ["adjacent"] as const,
-  "workshop-mat:player-1": ["adjacent"] as const,
-  "workshop-mat:player-2": ["adjacent"] as const,
+  "workshop-tableau:player-1": ["adjacent"] as const,
+  "workshop-tableau:player-2": ["adjacent"] as const,
 } as const;
-const edgeIdsByTypeIdLookup = {} as const;
+const edgeIdsByTypeIdLookup = {
+
+} as const;
 const edgeIdsByBoardIdAndTypeIdLookup = {
   "action-board": {},
-  "wake-up-track": {},
-  "workshop-mat:player-1": {},
-  "workshop-mat:player-2": {},
+  "workshop-tableau:player-1": {},
+  "workshop-tableau:player-2": {}
 } as const;
-const vertexIdsByTypeIdLookup = {} as const;
+const vertexIdsByTypeIdLookup = {
+
+} as const;
 const vertexIdsByBoardIdAndTypeIdLookup = {
   "action-board": {},
-  "wake-up-track": {},
-  "workshop-mat:player-1": {},
-  "workshop-mat:player-2": {},
+  "workshop-tableau:player-1": {},
+  "workshop-tableau:player-2": {}
 } as const;
 const authoredHexEdgesByBoardIdLookup = {} as const;
 const authoredHexVerticesByBoardIdLookup = {} as const;
@@ -3102,9 +2077,9 @@ function flattenBoardScopedIds<
 }
 
 export const boardHelpers = {
-  boardIdsForLayout<LayoutValue extends keyof typeof boardIdsByLayoutLookup>(
-    layout: LayoutValue,
-  ): (typeof boardIdsByLayoutLookup)[LayoutValue] {
+  boardIdsForLayout<
+    LayoutValue extends keyof typeof boardIdsByLayoutLookup,
+  >(layout: LayoutValue): (typeof boardIdsByLayoutLookup)[LayoutValue] {
     return boardIdsByLayoutLookup[layout];
   },
   boardBaseIdsForLayout<
@@ -3112,7 +2087,9 @@ export const boardHelpers = {
   >(layout: LayoutValue): (typeof boardBaseIdsByLayoutLookup)[LayoutValue] {
     return boardBaseIdsByLayoutLookup[layout];
   },
-  boardIdsForBase<BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup>(
+  boardIdsForBase<
+    BoardBaseIdValue extends keyof typeof boardIdsByBaseIdLookup,
+  >(
     boardBaseId: BoardBaseIdValue,
   ): (typeof boardIdsByBaseIdLookup)[BoardBaseIdValue] {
     return boardIdsByBaseIdLookup[boardBaseId];
@@ -3146,7 +2123,10 @@ export const boardHelpers = {
   ): (typeof spaceIdsByBoardIdLookup)[BoardIdValue] {
     return spaceIdsByBoardIdLookup[boardId];
   },
-  spaceRecord<BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup, Value>(
+  spaceRecord<
+    BoardIdValue extends keyof typeof spaceIdsByBoardIdLookup,
+    Value,
+  >(
     boardId: BoardIdValue,
     initial:
       | Value
@@ -3207,7 +2187,10 @@ export const boardHelpers = {
       | ((
           containerId: (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
         ) => Value),
-  ): Record<(typeof containerIdsByBoardIdLookup)[BoardIdValue][number], Value> {
+  ): Record<
+    (typeof containerIdsByBoardIdLookup)[BoardIdValue][number],
+    Value
+  > {
     const containerIds = containerIdsByBoardIdLookup[boardId];
     if (!containerIds) {
       throw new Error(`Unknown board '${String(boardId)}'.`);
@@ -3217,7 +2200,9 @@ export const boardHelpers = {
       Value
     >;
   },
-  isContainerId<BoardIdValue extends keyof typeof containerIdsByBoardIdLookup>(
+  isContainerId<
+    BoardIdValue extends keyof typeof containerIdsByBoardIdLookup,
+  >(
     boardId: BoardIdValue,
     value: string,
   ): value is (typeof containerIdsByBoardIdLookup)[BoardIdValue][number] {
@@ -3240,8 +2225,7 @@ export const boardHelpers = {
   },
   containerHost<
     BoardIdValue extends keyof typeof containerHostByBoardIdLookup,
-    ContainerIdValue extends
-      keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
+    ContainerIdValue extends keyof (typeof containerHostByBoardIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     containerId: ContainerIdValue,
@@ -3341,9 +2325,9 @@ export const boardHelpers = {
       throw new Error(`Unknown hex board '${String(boardId)}'.`);
     }
     const edgeRef = ref as { spaces: readonly string[] };
-    const edgeId = (
-      boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>
-    )[authoredHexRefKey(edgeRef.spaces)];
+    const edgeId = (boardEdges as Record<string, HexEdgeState<BoardIdValue>["id"]>)[
+      authoredHexRefKey(edgeRef.spaces)
+    ];
     if (!edgeId) {
       throw new Error(
         `Unknown authored hex edge ref '${edgeRef.spaces.join(", ")}' on board '${String(boardId)}'.`,
@@ -3424,7 +2408,10 @@ export const boardHelpers = {
   >(
     boardId: BoardIdValue,
     value: string,
-  ): BoardLookupIdValue<typeof edgeIdsByBoardIdAndTypeIdLookup, BoardIdValue> {
+  ): BoardLookupIdValue<
+    typeof edgeIdsByBoardIdAndTypeIdLookup,
+    BoardIdValue
+  > {
     const boardEdges = edgeIdsByBoardIdAndTypeIdLookup[boardId];
     const edgeIds = boardEdges
       ? flattenBoardScopedIds(edgeIdsByBoardIdAndTypeIdLookup, boardId)
@@ -3441,8 +2428,7 @@ export const boardHelpers = {
   },
   edgeIds<
     BoardIdValue extends keyof typeof edgeIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof edgeIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3486,10 +2472,7 @@ export const boardHelpers = {
       throw new Error(`Unknown board '${String(boardId)}'.`);
     }
     return buildTypedRecord(vertexIds, initial) as Record<
-      BoardLookupIdValue<
-        typeof vertexIdsByBoardIdAndTypeIdLookup,
-        BoardIdValue
-      >,
+      BoardLookupIdValue<typeof vertexIdsByBoardIdAndTypeIdLookup, BoardIdValue>,
       Value
     >;
   },
@@ -3533,8 +2516,7 @@ export const boardHelpers = {
   },
   vertexIds<
     BoardIdValue extends keyof typeof vertexIdsByBoardIdAndTypeIdLookup,
-    TypeIdValue extends
-      keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
+    TypeIdValue extends keyof (typeof vertexIdsByBoardIdAndTypeIdLookup)[BoardIdValue],
   >(
     boardId: BoardIdValue,
     typeId: TypeIdValue,
@@ -3563,7 +2545,9 @@ export const boardHelpers = {
       PlayerId
     >;
   },
-  sharedBoardRef(boardBaseId: BoardBaseId): SharedBoardRef<BoardBaseId> {
+  sharedBoardRef(
+    boardBaseId: BoardBaseId,
+  ): SharedBoardRef<BoardBaseId> {
     return boardRef(boardBaseId) as SharedBoardRef<BoardBaseId>;
   },
 } as const;

@@ -7,32 +7,57 @@
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/smoke-initial-hand.scenario.ts",
-      "test/scenarios/smoke-initial-turn.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/setup-and-pass.scenario.ts",
+      "test/scenarios/card-legality-first-lead.scenario.ts",
+      "test/scenarios/card-legality-follow-suit.scenario.ts",
+      "test/scenarios/card-legality-first-trick-penalty.scenario.ts",
+      "test/scenarios/card-legality-first-trick-all-penalty.scenario.ts",
+      "test/scenarios/card-legality-off-suit.scenario.ts",
+      "test/scenarios/card-legality-hearts-not-broken.scenario.ts",
+      "test/scenarios/card-legality-all-hearts.scenario.ts",
+      "test/scenarios/card-legality-stale.scenario.ts",
+      "test/scenarios/trick-resolution.scenario.ts",
+      "test/scenarios/scoring-and-outcome-ordinary-penalty.scenario.ts",
+      "test/scenarios/scoring-and-outcome-shoot-the-moon.scenario.ts",
+      "test/scenarios/scoring-and-outcome-sole-winner.scenario.ts",
+      "test/scenarios/scoring-and-outcome-tied-lowest.scenario.ts",
+      "test/scenarios/scoring-and-outcome-lower-place.scenario.ts",
+      "test/scenarios/projection-privacy.scenario.ts"
     ],
-    "uiScenarios": ["test/ui-scenarios/pass-three.mobile.scenario.ts"]
+    "uiScenarios": [
+      "test/ui-scenarios/dealt-hand.desktop.scenario.ts",
+      "test/ui-scenarios/sealed-pass.mobile.scenario.ts",
+      "test/ui-scenarios/first-trick.desktop.scenario.ts",
+      "test/ui-scenarios/mid-hand.desktop.scenario.ts",
+      "test/ui-scenarios/final-outcome.mobile.scenario.ts"
+    ]
   },
   "teaching": {
     "whatThisTeaches": [
       "private player views",
       "simultaneous card passing",
-      "follow-suit legality"
+      "contextual card legality",
+      "competition-ranked low-score outcomes"
     ],
     "whenToCopyThisPattern": [
       "Use this pattern when each player needs a private hand and a shared trick area.",
       "Use simultaneous passing when actions must be hidden until every player commits.",
-      "Use reducer-owned legality to keep follow-suit and first-trick constraints consistent across UI and tests."
+      "Use reducer-owned target domains to keep follow-suit, first-trick, and hearts-broken constraints consistent across UI, inspect, explore, and submission.",
+      "Use one legal complete-game scenario as the source for behavior proof and product-demo checkpoints."
     ],
     "readFirst": [
       "rule.md",
       "manifest.ts",
       "app/game.ts",
+      "app/rules.ts",
       "app/phases/passing.ts",
       "app/phases/playing.ts",
       "ui/App.tsx",
       "ui/interaction-routes.tsx",
-      "test/scenarios/smoke-initial-hand.scenario.ts",
-      "test/ui-scenarios/pass-three.mobile.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/setup-and-pass.scenario.ts",
+      "test/ui-scenarios/dealt-hand.desktop.scenario.ts"
     ]
   },
   "demoRelease": {
@@ -52,31 +77,9 @@
       "hidden-information"
     ],
     "categories": ["card-game", "classic"],
-    "heroImageUrl": "/demos/hearts/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 10,
-    "demoPlayerCount": 4,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 4
   },
   "mechanics": [
     "trick-taking",

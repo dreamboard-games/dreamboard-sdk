@@ -7,8 +7,7 @@ simultaneous passing, follow-suit legality, and shared trick resolution.
 
 [`rule.md`](rule.md) is the approved gameplay and theme contract. The reducer,
 tests, generated fixtures, and screenshots must conform to it; they do not amend
-it. During the rule-first rewrite, existing implementation behavior may still
-reflect the superseded multi-hand game.
+it. The implementation now plays exactly one complete 13-trick hand.
 
 ## What To Learn Here
 
@@ -23,8 +22,10 @@ reflect the superseded multi-hand game.
 - `manifest.ts`
 - `app/phases/passing.ts`
 - `app/phases/playing.ts`
+- `app/rules.ts`
 - `ui/interaction-routes.tsx`
-- `test/scenarios/smoke-initial-hand.scenario.ts`
+- `test/scenarios/complete-game.scenario.ts`
+- `test/scenarios/setup-and-pass.scenario.ts`
 
 ## Verification
 

@@ -6,10 +6,10 @@
 export { literals } from "./manifest-literals";
 export type * from "./manifest-types";
 export {
+  BanditsPieceFieldsSchema,
   boardHelpers,
   CampPieceFieldsSchema,
   cardTypes,
-  CharterCardsCardPropertiesSchema,
   createGameStateSchema,
   createInitialTable,
   D6DieFieldsSchema,
@@ -23,6 +23,7 @@ export {
   idGuards,
   ids,
   manifestContract,
+  normalSetup,
   records,
   runtimeSchema,
   schemas,
@@ -34,9 +35,7 @@ export {
   setupProfilesById,
   shuffle,
   staticBoards,
-  StormPieceFieldsSchema,
   tableSchema,
-  TownPieceFieldsSchema,
   TrailPieceFieldsSchema,
   zones,
 } from "./manifest-runtime";

@@ -1,9 +1,8 @@
-import behaviorScenario from "../scenarios/complete-game.scenario.ts";
-
 export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.terminal.mobile",
   title: "Cloudline Survey: terminal mobile scoring evidence",
-  behaviorScenario,
+  behaviorScenario: "../scenarios/complete-game.scenario.ts",
+  at: { segment: "when", completed: 3 },
   contracts: ["Panel", "SquareGrid"],
   capabilities: ["scorecard-grid", "terminal-outcome"],
   sourceFiles: [

@@ -1,13 +1,23 @@
-import type { CardId } from "../shared/manifest-contract";
-import { Interaction } from "@dreamboard-games/sdk/runtime/primitives";
+import {
+  Interaction,
+  type CardCollectionSurface,
+} from "../shared/generated/ui-contract";
 
-export function DraftInteractionRoutes({ cardId }: { cardId: CardId }) {
+export function HarborFairInteractionRoutes({
+  market,
+}: {
+  market: CardCollectionSurface<readonly ["market"]>;
+}) {
   return (
-    <section className="draft-action">
-      <h2>Draft Action</h2>
-      <Interaction.Root interaction="drafting.draftStall">
-        <Interaction.Submit params={{ cardId }}>Draft stall</Interaction.Submit>
-      </Interaction.Root>
-    </section>
+    <Interaction.Routes
+      routes={{
+        "setup.submit": { collect: {} },
+        "drafting.draftStall": {
+          collect: { stallId: market.slot.card },
+        },
+        "drafting.submit": { collect: {} },
+        "gameOver.submit": { collect: {} },
+      }}
+    />
   );
 }

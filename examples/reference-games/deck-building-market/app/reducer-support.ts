@@ -1,33 +1,79 @@
 import {
   createReducerEdit,
-  createStateQueries,
-  formInput,
+  type TableQueriesOfState,
 } from "@dreamboard-games/sdk/reducer";
-import type { GameState } from "./game-contract";
+import type {
+  CardId,
+  PlayerId,
+  SharedZoneId,
+} from "../shared/manifest-contract";
+import type { GameState, HistoryEntry } from "./game-contract";
+import { supplyZoneForCardType } from "./model";
 
-/**
- * Small, SDK-shaped reducer helpers belong here.
- *
- * Keep schema and contract declarations in app/game-contract.ts.
- * Keep initial state callbacks and defineGame wiring in app/game.ts.
- * Keep memoized aggregates (winner checks, VP totals, longest-road,
- * largest-army) in app/derived.ts via `defineDerived`.
- * Keep phase files focused on one game-flow state.
- *
- * When this file starts collecting real game rules, split them by domain
- * under app/rules/ instead, for example app/rules/board.ts,
- * app/rules/resources.ts, or app/rules/scoring.ts.
- *
- * Recommended authoring pattern inside a phase reducer:
- *
- *   const tx = edit(state);
- *   tx.setActivePlayers([q.players.order()[0]]);
- *   return accept(tx.state);
- */
-
+export type Q = TableQueriesOfState<GameState>;
 export const edit = createReducerEdit<GameState>();
-export const gameFormInput = formInput.forState<GameState>();
 
-export function stateQueries(state: GameState) {
-  return createStateQueries(state);
+export function appendHistory(
+  state: GameState,
+  entry: Omit<HistoryEntry, "turn">,
+): GameState {
+  return {
+    ...state,
+    publicState: {
+      ...state.publicState,
+      history: [
+        ...state.publicState.history,
+        { ...entry, turn: state.publicState.turnNumber },
+      ],
+    },
+  };
+}
+
+export function inspirationOf(q: Q, cardId: CardId): number | null {
+  const properties = q.card.get(cardId).properties;
+  const value =
+    "inspiration" in properties ? properties.inspiration : undefined;
+  return typeof value === "number" ? value : null;
+}
+
+export function costOf(q: Q, cardId: CardId): number {
+  return q.card.get(cardId).properties.cost;
+}
+
+export function pileForCard(q: Q, cardId: CardId): SharedZoneId {
+  return supplyZoneForCardType(q.card.get(cardId).cardType);
+}
+
+export function prepareMidTurnDraw(options: {
+  state: GameState;
+  q: Q;
+  playerId: PlayerId;
+  count: number;
+}): { state: GameState; shuffleDrawCount: number } {
+  const { state, q, playerId, count } = options;
+  const deckCards = q.zone.playerCards(playerId, "deck");
+  const immediate = Math.min(count, deckCards.length);
+  const remaining = count - immediate;
+  const discardCards = q.zone.playerCards(playerId, "discard");
+  const shuffleDrawCount = Math.min(remaining, discardCards.length);
+  const tx = edit(state);
+  if (immediate > 0) {
+    tx.dealCardsBetweenPlayerZones({
+      playerId,
+      fromZoneId: "deck",
+      toZoneId: "hand",
+      count: immediate,
+    });
+  }
+  if (shuffleDrawCount > 0) {
+    for (const cardId of discardCards) {
+      tx.moveCardBetweenPlayerZones({
+        playerId,
+        fromZoneId: "discard",
+        toZoneId: "deck",
+        cardId,
+      });
+    }
+  }
+  return { state: tx.state, shuffleDrawCount };
 }

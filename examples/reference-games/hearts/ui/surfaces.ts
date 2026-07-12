@@ -1,4 +1,4 @@
-import { UI, Zone } from "../shared/generated/ui-contract.ts";
+import { UI, Zone } from "../shared/generated/ui-contract";
 
 export const useHeartsSurfaces = UI.defineSurfaces({
   handSurface: Zone.hand("hand", {

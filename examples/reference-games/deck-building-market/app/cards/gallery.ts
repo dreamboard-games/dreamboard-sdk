@@ -1,21 +1,22 @@
 import { defineCardAction } from "@dreamboard-games/sdk/reducer";
 import { cardTypes } from "../../shared/manifest-contract";
 import type { GameContract, PlayerTurnPhaseState } from "../game-contract";
-import { edit } from "../reducer-support";
-import { validateActionPlay } from "./support";
+import { shuffleDeckForDraw } from "../effects/deck";
+import { appendHistory, edit, prepareMidTurnDraw } from "../reducer-support";
+import { validateTechniquePlay } from "./support";
 
-// Gallery: +1 card, +1 action, +1 buy, +$1. The all-rounder Market.
 export const gallery = defineCardAction<GameContract, PlayerTurnPhaseState>()({
   cardType: cardTypes.gallery,
   playFrom: "hand",
   rules: [
     {
-      id: "action-card-playable",
+      id: "technique-playable",
       errorCode: "ACTION_CARD_NOT_PLAYABLE",
-      validate: ({ state, input }) => validateActionPlay(state, input.playerId),
+      validate: ({ state, input }) =>
+        validateTechniquePlay(state, input.playerId),
     },
   ],
-  reduce({ state, input, accept, q }) {
+  reduce({ state, input, accept, q, fx }) {
     const tx = edit(state);
     tx.moveCardBetweenPlayerZones({
       playerId: input.playerId,
@@ -26,14 +27,35 @@ export const gallery = defineCardAction<GameContract, PlayerTurnPhaseState>()({
     tx.patchPhaseState({
       ...state.phase,
       buysLeft: state.phase.buysLeft + 1,
-      coins: state.phase.coins + 1,
+      inspiration: state.phase.inspiration + 1,
     });
-    tx.dealCardsBetweenPlayerZones({
+    const draw = prepareMidTurnDraw({
+      state: tx.state,
+      q,
       playerId: input.playerId,
-      fromZoneId: "deck",
-      toZoneId: "hand",
       count: 1,
     });
-    return accept(tx.state);
+    const next = appendHistory(draw.state, {
+      kind: "technique",
+      actorPlayerId: input.playerId,
+      cardId: input.params.cardId,
+      summary: "Gallery drew one card and granted an action, buy, and inspiration.",
+    });
+    return accept(next, {
+      instructions:
+        draw.shuffleDrawCount > 0
+          ? [
+              fx.effect(shuffleDeckForDraw, {
+                playerId: input.playerId,
+                zoneId: "deck",
+                context: {
+                  playerId: input.playerId,
+                  drawCount: draw.shuffleDrawCount,
+                  checkEndAfterDraw: false,
+                },
+              }),
+            ]
+          : [],
+    });
   },
 });

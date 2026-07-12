@@ -1,14 +1,15 @@
-import { z } from "zod";
 import type { CardId } from "../../shared/manifest-contract";
-import type { GameContract, GameState } from "../game-contract";
+import {
+  passingPhaseStateSchema,
+  type GameContract,
+  type GameState,
+} from "../game-contract";
 import {
   cardInput,
   cardTarget,
   definePhase,
   many,
 } from "@dreamboard-games/sdk/reducer";
-
-const passingPhaseStateSchema = z.object({});
 
 // `cardTarget.zones(["hand"])` filters eligible cards to the actor's own
 // per-player hand zone, so each seated player can only nominate a card they
@@ -30,6 +31,10 @@ export const passing = definePhase<GameContract>()({
   actors: ({ q }) => q.player.order(),
   zones: ["hand"],
   submit: {
+    presentation: {
+      label: "Pass three cards left",
+      help: "Commit exactly three distinct cards from your original hand.",
+    },
     commit: { mode: "manual" },
     inputs: {
       cardIds: many(
@@ -61,6 +66,7 @@ export const passing = definePhase<GameContract>()({
       cardIdsByPlayer,
     });
 
+    tx.setActivePlayers([]);
     return accept(tx.state, { instructions: [fx.transition("playing")] });
   },
 });

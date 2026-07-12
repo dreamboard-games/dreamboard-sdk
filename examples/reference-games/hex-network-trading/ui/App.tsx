@@ -1,432 +1,338 @@
 import {
-  DiceRoller,
-  OutcomeDialog,
-  type ViewCard,
-} from "@dreamboard-games/sdk/ui";
-import React, { type ReactNode } from "react";
-import "./style.css";
-import {
-  Dice,
+  Board,
   Game,
-  Phase,
-  PlayerRoster,
   UI,
-  type GameMe,
-  type GamePlayers,
-  type GameTurn,
+  type BoardSurface,
   type GameView,
-  type PhaseName,
-} from "../shared/generated/ui-contract.ts";
-import type { CardId, CardType } from "../shared/manifest-contract";
-import { FrontierResourceCounter } from "./components/resource-counter";
-import { FrontierTrailsBoard } from "./frontier-trails-board";
-import { FrontierInteractionRoutes } from "./interaction-routes";
-import { useFrontierSurfaces } from "./surfaces";
-import { PANEL_CLASS, SECTION_HEADING_CLASS } from "./styles";
-import type { CharterHandSurface, FrontierSurfaces } from "./types";
+} from "../shared/generated/ui-contract";
+import { idGuards, type PlayerId } from "../shared/manifest-contract";
+import { StormtrailInteractionRoutes } from "./interaction-routes";
 
-const CHARTER_CARD_LABEL: Record<string, string> = {
-  landmark: "Landmark",
-  scout: "Scout",
-  surveyGrant: "Survey Grant",
-  claimMarker: "Claim Marker",
-  shortcut: "Shortcut",
+const useStormtrailSurfaces = UI.defineSurfaces({
+  frontier: Board.surface("frontier"),
+});
+
+const PLAYER_STYLE: Record<
+  PlayerId,
+  { label: string; color: string; pale: string }
+> = {
+  "player-1": { label: "Northwind", color: "#dc2626", pale: "#fee2e2" },
+  "player-2": { label: "Riverstone", color: "#2563eb", pale: "#dbeafe" },
+  "player-3": { label: "Sunmeadow", color: "#ca8a04", pale: "#fef9c3" },
 };
 
-const CHARTER_CARD_ICON: Record<string, string> = {
-  landmark: "✨",
-  scout: "🧭",
-  surveyGrant: "📜",
-  claimMarker: "📍",
-  shortcut: "🥾",
-};
+const TERRAIN_STYLE = {
+  pineForest: { label: "Pine Forest", icon: "🌲", fill: "#bbd4b4" },
+  clayFlats: { label: "Clay Flats", icon: "🧱", fill: "#e6b59a" },
+  grainFields: { label: "Grain Fields", icon: "🌾", fill: "#eadb8d" },
+  barrens: { label: "Barrens", icon: "⛰️", fill: "#c9c3b7" },
+} as const;
 
-const CHARTER_CARD_EFFECT: Record<string, string> = {
-  landmark: "1 Renown",
-  scout: "Move storm, seize a supply",
-  surveyGrant: "Claim any 2 supplies",
-  claimMarker: "Claim all of one supply",
-  shortcut: "Build 2 free trails",
-};
-
-type CharterCardView = ViewCard<CardId, CardType>;
-
-function isCharterCardView<Card>(card: Card): card is Card & CharterCardView {
-  return (
-    !!card &&
-    typeof card === "object" &&
-    "cardType" in card &&
-    "properties" in card
-  );
-}
-
-function CharterCardFace({ card }: { card: CharterCardView }) {
-  const type = card.cardType;
-  const icon = CHARTER_CARD_ICON[type] ?? "🎴";
-  const label = CHARTER_CARD_LABEL[type] ?? type;
-  const effect = CHARTER_CARD_EFFECT[type] ?? "";
-  return (
-    <div className="flex h-full flex-col items-center justify-between p-2 text-center">
-      <span className="text-2xl" aria-hidden>
-        {icon}
-      </span>
-      <span className="text-[11px] font-bold leading-tight text-slate-800">
-        {label}
-      </span>
-      <span className="text-[9px] leading-tight text-slate-500">{effect}</span>
-    </div>
-  );
-}
-
-function CharterCardVisual({ card }: { card: CharterCardView }) {
+function StormtrailBoard({
+  view,
+  board,
+}: {
+  view: GameView;
+  board: BoardSurface<"frontier">;
+}) {
+  const hexById = new Map(view.hexes.map((hex) => [hex.id, hex]));
   return (
     <div
-      className="relative h-32 w-20 overflow-hidden rounded-[18px_6px_18px_6px/6px_18px_6px_18px] border-[3px] border-slate-900 bg-[#fdfbf7] shadow-[4px_4px_0_#111] sm:h-36 sm:w-24"
-      aria-hidden
+      className="h-[32rem] min-h-[26rem] overflow-hidden rounded-3xl border-2 border-stone-800 bg-[#eef2e4] shadow-[0_14px_35px_-18px_rgba(28,25,23,.75)]"
+      data-stormtrail-board="frontier"
     >
-      <CharterCardFace card={card} />
+      <board.Root>
+        <Board.HexGrid
+          board="frontier"
+          spaces={view.hexes}
+          width="100%"
+          height="100%"
+          hexSize={74}
+          enablePanZoom
+          initialZoom={0.9}
+          minZoom={0.65}
+          maxZoom={1.35}
+          interactiveEdgeSize={16}
+          interactiveVertexSize={18}
+          renderTile={(tile, geometry) => {
+            const hex = idGuards.isSpaceId(tile.id)
+              ? hexById.get(tile.id)
+              : undefined;
+            if (!hex) return null;
+            const terrain = TERRAIN_STYLE[hex.terrain];
+            return (
+              <g data-stormtrail-hex={hex.id}>
+                <polygon
+                  points={geometry.points({ inset: 4 })}
+                  fill={terrain.fill}
+                  stroke="#44403c"
+                  strokeWidth={2.5}
+                  strokeLinejoin="round"
+                />
+                <text y={-19} textAnchor="middle" fontSize={25}>
+                  {terrain.icon}
+                </text>
+                <text
+                  y={15}
+                  textAnchor="middle"
+                  fontSize={hex.number === null ? 10 : 20}
+                  fontWeight={800}
+                  fill="#292524"
+                >
+                  {hex.number ?? "BARRENS"}
+                </text>
+                <text y={34} textAnchor="middle" fontSize={8} fill="#57534e">
+                  {terrain.label.toUpperCase()}
+                </text>
+                {view.banditsHexId === hex.id ? (
+                  <text y={-42} textAnchor="middle" fontSize={22} aria-label="Bandits">
+                    🥷
+                  </text>
+                ) : null}
+              </g>
+            );
+          }}
+          renderEdge={(edge, position) => {
+            const owner = idGuards.isEdgeId(edge.id)
+              ? view.trailsByEdgeId[edge.id]
+              : undefined;
+            return (
+              <line
+                x1={position.x1}
+                y1={position.y1}
+                x2={position.x2}
+                y2={position.y2}
+                stroke={owner ? PLAYER_STYLE[owner].color : "#78716c"}
+                strokeWidth={owner ? 8 : 2}
+                strokeLinecap="round"
+                opacity={owner ? 1 : 0.35}
+                data-trail-owner={owner ?? undefined}
+              />
+            );
+          }}
+          renderVertex={(vertex, position) => {
+            const owner = idGuards.isVertexId(vertex.id)
+              ? view.campsByIntersectionId[vertex.id]
+              : undefined;
+            return owner ? (
+              <g data-camp-owner={owner}>
+                <circle
+                  cx={position.x}
+                  cy={position.y}
+                  r={13}
+                  fill={PLAYER_STYLE[owner].pale}
+                  stroke={PLAYER_STYLE[owner].color}
+                  strokeWidth={4}
+                />
+                <text
+                  x={position.x}
+                  y={position.y + 5}
+                  textAnchor="middle"
+                  fontSize={15}
+                >
+                  ⛺
+                </text>
+              </g>
+            ) : (
+              <circle
+                cx={position.x}
+                cy={position.y}
+                r={3}
+                fill="#78716c"
+                opacity={0.6}
+              />
+            );
+          }}
+          renderInteractiveSpace={(_space, state) =>
+            state.selectable ? (
+              <circle
+                r={52}
+                fill="none"
+                stroke={state.hovered ? "#f59e0b" : "#78350f"}
+                strokeWidth={state.hovered ? 5 : 3}
+                strokeDasharray="8 6"
+              />
+            ) : null
+          }
+          renderInteractiveEdge={(_edge, position, state) =>
+            state.selectable ? (
+              <line
+                x1={position.x1}
+                y1={position.y1}
+                x2={position.x2}
+                y2={position.y2}
+                stroke={state.hovered ? "#f59e0b" : "#0f766e"}
+                strokeWidth={state.hovered ? 12 : 9}
+                strokeLinecap="round"
+                opacity={0.72}
+              />
+            ) : null
+          }
+          renderInteractiveVertex={(_vertex, position, state) =>
+            state.selectable ? (
+              <circle
+                cx={position.x}
+                cy={position.y}
+                r={state.hovered ? 17 : 14}
+                fill="#fef3c7"
+                stroke="#92400e"
+                strokeWidth={4}
+              />
+            ) : null
+          }
+        />
+      </board.Root>
     </div>
   );
 }
 
-function CharterCardItem({
-  card,
-  viewCard,
-  charterHand,
-}: {
-  card: Parameters<CharterHandSurface["Card"]>[0]["card"];
-  viewCard: CharterCardView;
-  charterHand: CharterHandSurface;
-}) {
+function Supplies({ view }: { view: GameView }) {
+  const supply = [
+    ["timber", "🌲", "Timber"],
+    ["brick", "🧱", "Brick"],
+    ["provisions", "🌾", "Provisions"],
+  ] as const;
   return (
-    <charterHand.Card
-      card={card}
-      className="border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-55"
-      aria-label={`Play ${CHARTER_CARD_LABEL[viewCard.cardType] ?? viewCard.cardType}`}
-    >
-      <CharterCardVisual card={viewCard} />
-    </charterHand.Card>
-  );
-}
-
-function CharterCardHand({
-  cardCount,
-  charterHand,
-}: {
-  cardCount: number;
-  charterHand: CharterHandSurface;
-}) {
-  return (
-    <section
-      className="flex flex-col gap-2"
-      aria-label={`Charter cards, ${cardCount} in hand`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <h2 className={SECTION_HEADING_CLASS}>Charter cards</h2>
-        <span className="text-xs font-semibold text-slate-500">
-          {cardCount}
-        </span>
-      </div>
-      <charterHand.Hand
-        className="flex min-h-[118px] flex-wrap gap-3"
-        empty={<span className="text-sm text-slate-500">No charter cards</span>}
-      >
-        <charterHand.Cards>
-          {(card) => {
-            const viewCard = isCharterCardView(card) ? card : null;
-            return viewCard ? (
-              <CharterCardItem
-                key={card.id}
-                card={card}
-                viewCard={viewCard}
-                charterHand={charterHand}
-              />
-            ) : null;
-          }}
-        </charterHand.Cards>
-      </charterHand.Hand>
-    </section>
-  );
-}
-
-function FrontierSurfaceProvider({
-  children,
-}: {
-  children: (surfaces: FrontierSurfaces) => ReactNode;
-}) {
-  const surfaces = useFrontierSurfaces();
-
-  return <>{children(surfaces)}</>;
-}
-
-type PhaseTitleContext = {
-  setupPlacedCamp: boolean;
-  stormActive: boolean;
-  isMyTurn: boolean;
-  diceRolled: boolean;
-  currentPlayerName: string | undefined;
-};
-
-type PhaseRouteConfig = {
-  gameplayPhase: PhaseName;
-  badgeLabel: (view: GameView) => string;
-  title: (context: PhaseTitleContext) => string | undefined;
-};
-
-function FrontierLayout({
-  route,
-  surfaces,
-  view,
-  players,
-  me,
-  turn,
-}: {
-  route: PhaseRouteConfig;
-  surfaces: FrontierSurfaces;
-  view: GameView;
-  players: GamePlayers;
-  me: GameMe;
-  turn: GameTurn;
-}) {
-  const influenceByPlayer = view.influenceByPlayerId;
-  const scoutsByPlayer = view.scoutsByPlayerId;
-  const stormActive =
-    view.stormPending && view.discardPending.length === 0 && turn.isMine;
-  const setupPlacedCamp = view.setup?.placedCamp ?? false;
-  const currentPlayerName = turn.currentPlayerId
-    ? (players.byId.get(turn.currentPlayerId)?.name ?? turn.currentPlayerId)
-    : undefined;
-  const titleSub = view.outcome
-    ? "Game over"
-    : route.title({
-        setupPlacedCamp,
-        stormActive,
-        isMyTurn: turn.isMine,
-        diceRolled: view.diceRolled,
-        currentPlayerName,
-      });
-
-  return (
-    <>
-      <div className="flex min-h-screen flex-col bg-[#fdfbf7] text-slate-900">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-slate-900 bg-white px-4 py-3">
-          <div>
-            <h1 className="text-2xl font-black tracking-normal">
-              Frontier Trails
-            </h1>
-            <p className="text-sm font-semibold text-slate-600">
-              {titleSub ?? "Frontier command is watching the board."}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className="rounded border-2 border-slate-900 bg-[#fff9c4] px-2 py-1 text-xs font-bold uppercase text-slate-900 shadow-[2px_2px_0_#111]">
-              {route.badgeLabel(view)}
-            </span>
-            <Dice.Root values={view.diceValues} count={2}>
-              <Dice.Values>
-                {({ values, sum }) =>
-                  values ? (
-                    <DiceRoller
-                      values={values}
-                      render={({ values: renderedValues }) => (
-                        <span
-                          className="rounded border-2 border-slate-900 bg-white px-2 py-1 text-sm font-bold tabular-nums shadow-[2px_2px_0_#111]"
-                          aria-label={`Dice: ${renderedValues?.[0]} plus ${renderedValues?.[1]} equals ${sum ?? 0}`}
-                        >
-                          🎲 {renderedValues?.[0]} + {renderedValues?.[1]} ={" "}
-                          {sum}
-                        </span>
-                      )}
-                    />
-                  ) : null
-                }
-              </Dice.Values>
-            </Dice.Root>
-          </div>
-        </header>
-
-        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 p-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <section className="min-h-[520px] overflow-hidden rounded-lg border-2 border-slate-900 bg-white shadow-[3px_3px_0_#111] xl:min-h-[min(720px,calc(100vh-170px))]">
-            <FrontierTrailsBoard
-              board={surfaces.frontierBoard}
-              view={view}
-              players={players.byId}
-              controllingPlayerId={me.playerId}
-              isMyTurn={turn.isMine}
-              gameplayPhase={route.gameplayPhase}
-            />
-          </section>
-
-          <aside className="flex min-h-0 flex-col gap-4">
-            <PlayerRoster.Root
-              score={(playerId) => influenceByPlayer[playerId] ?? 0}
-              scoreLabel="Renown"
-              badges={(playerId) => [
-                view.tradeNetworkOwner === playerId
-                  ? {
-                      key: "trade-network",
-                      icon: "🛤️",
-                      tooltip: "Trade network",
-                    }
-                  : null,
-                view.explorerGuildOwner === playerId
-                  ? {
-                      key: "explorer-guild",
-                      icon: "🧭",
-                      label: scoutsByPlayer[playerId] ?? 0,
-                      tooltip: "Explorer guild",
-                    }
-                  : null,
-              ]}
-            >
-              <section className={PANEL_CLASS}>
-                <h2 className={SECTION_HEADING_CLASS}>Captains</h2>
-                <PlayerRoster.List className="mt-2 flex flex-col gap-2">
-                  {(player) => (
-                    <div
-                      key={player.playerId}
-                      className="flex items-center justify-between rounded border-2 border-l-8 border-slate-900 bg-[#fdfbf7] px-2 py-1 text-left text-sm font-semibold"
-                      style={{ borderLeftColor: player.color }}
-                    >
-                      <span className="flex items-center gap-2">
-                        <PlayerRoster.Name player={player} />
-                        <PlayerRoster.Badges
-                          player={player}
-                          className="flex items-center gap-1 text-xs"
-                        />
-                        {player.isActive ? (
-                          <span className="text-xs text-red-600">active</span>
-                        ) : null}
-                      </span>
-                      <PlayerRoster.Score player={player} />
-                    </div>
-                  )}
-                </PlayerRoster.List>
-              </section>
-            </PlayerRoster.Root>
-
-            <section className={PANEL_CLASS}>
-              <h2 className={`${SECTION_HEADING_CLASS} mb-2`}>Resources</h2>
-              <FrontierResourceCounter counts={view.myResources} showZero />
-            </section>
-
-            <section className={PANEL_CLASS}>
-              <h2 className={SECTION_HEADING_CLASS}>Actions</h2>
-              <div className="mt-3 grid gap-2 lg:grid-cols-2">
-                <FrontierInteractionRoutes
-                  {...surfaces}
-                  diceValues={view.diceValues}
-                  pendingTrade={view.pendingTrade}
-                />
-              </div>
-            </section>
-          </aside>
+    <dl className="grid grid-cols-3 gap-2" aria-label="Your private supplies">
+      {supply.map(([resourceId, icon, label]) => (
+        <div key={resourceId} className="rounded-xl bg-stone-100 p-2 text-center">
+          <dt className="text-xs text-stone-500">{icon} {label}</dt>
+          <dd className="text-xl font-black">{view.mySupplies[resourceId]}</dd>
         </div>
-
-        <section className="border-t-2 border-slate-900 bg-white px-4 py-3">
-          <CharterCardHand
-            cardCount={view.myCharterCardIds.length}
-            charterHand={surfaces.charterHand}
-          />
-        </section>
-      </div>
-
-      <OutcomeDialog
-        outcome={view.outcome}
-        playerName={(playerId) => players.byId.get(playerId)?.name ?? playerId}
-      />
-    </>
+      ))}
+    </dl>
   );
 }
 
-function PhaseGameUI({ route }: { route: PhaseRouteConfig }) {
+function Roster({ view }: { view: GameView }) {
+  return (
+    <div className="grid gap-2" aria-label="Expedition crews">
+      {(Object.keys(PLAYER_STYLE) as PlayerId[]).map((playerId) => {
+        const style = PLAYER_STYLE[playerId];
+        const active = view.activePlayerId === playerId;
+        return (
+          <article
+            key={playerId}
+            className="rounded-xl border p-3"
+            style={{ borderColor: style.color, backgroundColor: active ? style.pale : "#fafaf9" }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <strong>{style.label}{view.playerId === playerId ? " · you" : ""}</strong>
+              <span className="text-xs font-bold uppercase tracking-wide">
+                {active ? "Active" : "Waiting"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-stone-600">
+              {view.supplyCountByPlayerId[playerId]} supplies · {4 - view.remainingCampsByPlayerId[playerId]}/4 camps · {10 - view.remainingTrailsByPlayerId[playerId]}/10 trails
+            </p>
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
+function PhaseSummary({ view }: { view: GameView }) {
+  if (view.outcome) return view.outcome.reason.message ?? "The expedition is complete.";
+  if (view.currentPhase === "discardBarrier") {
+    return view.myDiscardRequired > 0
+      ? `Return exactly ${view.myDiscardRequired} supplies.`
+      : "Overloaded crews are returning supplies.";
+  }
+  if (view.currentPhase === "pendingTrade") return "A bilateral offer awaits one crew's response.";
+  if (view.currentPhase === "moveBandits") return "The active crew must relocate the Bandits.";
+  if (view.currentPhase === "roll") return "Roll both dice to begin production.";
+  if (view.currentPhase === "main") return "Build, trade, or end the turn.";
+  return "Place one camp-and-trail pair in seat order.";
+}
+
+function StormtrailGame() {
+  const { frontier } = useStormtrailSurfaces();
   return (
     <Game.Root>
-      {({ view, players, me, turn }) => (
-        <FrontierSurfaceProvider>
-          {(surfaces) => (
-            <FrontierLayout
-              route={route}
-              surfaces={surfaces}
-              view={view}
-              players={players}
-              me={me}
-              turn={turn}
-            />
-          )}
-        </FrontierSurfaceProvider>
-      )}
+      {(state) => {
+        const view = state.view;
+        const latestHistory = view.history.slice(-8).reverse();
+        return (
+          <main
+            className="min-h-screen bg-[#e8e2d3] p-4 text-stone-900 sm:p-6"
+            data-reference-game="hex-network-trading"
+          >
+            <div className="mx-auto grid max-w-7xl gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+              <div className="grid gap-4">
+                <header className="rounded-3xl border-2 border-stone-800 bg-[#fffaf0] p-5 shadow-[5px_5px_0_#292524]">
+                  <p className="text-xs font-black uppercase tracking-[.22em] text-amber-800">
+                    Compact frontier strategy
+                  </p>
+                  <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h1 className="text-4xl font-black tracking-tight">Stormtrail</h1>
+                      <p className="mt-1 text-sm text-stone-600" data-reference-phase={view.currentPhase}>
+                        {PhaseSummary({ view })}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-stone-900 px-4 py-2 text-right text-stone-50">
+                      <span className="block text-xs uppercase tracking-wide">Turn {view.turnNumber}</span>
+                      <strong>{view.lastRoll ? `${view.lastRoll.dice[0]} + ${view.lastRoll.dice[1]} = ${view.lastRoll.total}` : "Awaiting roll"}</strong>
+                    </div>
+                  </div>
+                </header>
+                <StormtrailBoard view={view} board={frontier} />
+              </div>
+
+              <aside className="grid content-start gap-4">
+                <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
+                  <h2 className="text-lg font-black">Crews</h2>
+                  <div className="mt-3"><Roster view={view} /></div>
+                </section>
+                <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
+                  <h2 className="text-lg font-black">Your supplies</h2>
+                  <p className="mb-3 text-xs text-stone-500">Only you can see this breakdown.</p>
+                  <Supplies view={view} />
+                </section>
+                {view.currentTrade ? (
+                  <section className="rounded-2xl border-2 border-sky-700 bg-sky-50 p-4">
+                    <h2 className="font-black">Pending offer</h2>
+                    <p className="mt-1 text-sm">
+                      {PLAYER_STYLE[view.currentTrade.offerorPlayerId].label} offers {JSON.stringify(view.currentTrade.give)} for {JSON.stringify(view.currentTrade.want)} from {PLAYER_STYLE[view.currentTrade.targetPlayerId].label}.
+                    </p>
+                  </section>
+                ) : null}
+                <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
+                  <h2 className="text-lg font-black">Available actions</h2>
+                  <div className="mt-3">
+                    <StormtrailInteractionRoutes board={frontier} />
+                  </div>
+                </section>
+                <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
+                  <h2 className="text-lg font-black">Trail log</h2>
+                  <ol className="mt-2 max-h-72 space-y-2 overflow-auto text-sm" aria-live="polite">
+                    {latestHistory.length === 0 ? (
+                      <li className="text-stone-500">Setup is beginning.</li>
+                    ) : latestHistory.map((entry, index) => (
+                      <li key={`${entry.turn}-${entry.kind}-${index}`} className="border-l-2 border-amber-700 pl-2">
+                        <span className="font-bold">Turn {entry.turn}</span> · {entry.summary}
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              </aside>
+            </div>
+          </main>
+        );
+      }}
     </Game.Root>
   );
 }
 
-function GameUI() {
-  return (
-    <Phase.Switch
-      routes={{
-        setup: () => (
-          <PhaseGameUI
-            route={{
-              gameplayPhase: "setup",
-              badgeLabel: () => "Setup",
-              title: ({ setupPlacedCamp }) =>
-                setupPlacedCamp
-                  ? "Stake a route from your new camp."
-                  : "Pick a coastal camp site.",
-            }}
-          />
-        ),
-        playerTurn: () => (
-          <PhaseGameUI
-            route={{
-              gameplayPhase: "playerTurn",
-              badgeLabel: (view) =>
-                view.diceRolled ? "Main actions" : "Roll dice",
-              title: ({
-                stormActive,
-                isMyTurn,
-                diceRolled,
-                currentPlayerName,
-              }) =>
-                stormActive
-                  ? "The storm is loose - click a hex to relocate it."
-                  : isMyTurn
-                    ? diceRolled
-                      ? "Build, trade, or end your turn."
-                      : "Roll to start your turn."
-                    : currentPlayerName
-                      ? `Waiting for ${currentPlayerName}.`
-                      : undefined,
-            }}
-          />
-        ),
-        checkGameEnd: () => (
-          <PhaseGameUI
-            route={{
-              gameplayPhase: "checkGameEnd",
-              badgeLabel: () => "Checking score",
-              title: () => "Checking frontier influence.",
-            }}
-          />
-        ),
-        gameOver: () => (
-          <PhaseGameUI
-            route={{
-              gameplayPhase: "gameOver",
-              badgeLabel: () => "Game over",
-              title: () => "Game over",
-            }}
-          />
-        ),
-      }}
-    />
-  );
+export function App() {
+  return <StormtrailGame />;
 }
 
-export default function App() {
+export default function RuntimeApp() {
   return (
     <UI.Root>
-      <GameUI />
+      <App />
     </UI.Root>
   );
 }

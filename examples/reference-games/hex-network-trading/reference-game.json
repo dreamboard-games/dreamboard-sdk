@@ -1,67 +1,67 @@
 {
   "schemaVersion": 3,
   "id": "hex-network-trading",
-  "displayName": "Hex Network Trading",
+  "displayName": "Stormtrail",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
     "ui": "ui/index.tsx",
     "behaviorScenarios": [
-      "test/scenarios/bank-trade-ready.scenario.ts",
-      "test/scenarios/build-camp-ready.scenario.ts",
-      "test/scenarios/build-trail-ready.scenario.ts",
-      "test/scenarios/buy-charter-card.scenario.ts",
-      "test/scenarios/charter-claim-marker-ready.scenario.ts",
-      "test/scenarios/charter-landmark-ready.scenario.ts",
-      "test/scenarios/charter-scout-ready.scenario.ts",
-      "test/scenarios/charter-shortcut-ready.scenario.ts",
-      "test/scenarios/charter-survey-grant-ready.scenario.ts",
-      "test/scenarios/every-action-authorization.scenario.ts",
-      "test/scenarios/player-turn-roll.scenario.ts",
-      "test/scenarios/port-trade-ready.scenario.ts",
-      "test/scenarios/post-roll-action-availability.scenario.ts",
-      "test/scenarios/relay-edge-rates.scenario.ts",
-      "test/scenarios/relay-nearby-vertex-no-rate.scenario.ts",
-      "test/scenarios/setup-place.scenario.ts",
-      "test/scenarios/smoke-initial-turn.scenario.ts",
-      "test/scenarios/storm.scenario.ts",
-      "test/scenarios/terminal-winner-after-endturn.scenario.ts",
-      "test/scenarios/trade-full-lifecycle.scenario.ts",
-      "test/scenarios/trade-offer-pending-dialog.scenario.ts",
-      "test/scenarios/trade-offer-sparse.scenario.ts",
-      "test/scenarios/trade-offer-unaffordable-dialog.scenario.ts",
-      "test/scenarios/upgrade-town-ready.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/topology-and-setup.scenario.ts",
+      "test/scenarios/production.scenario.ts",
+      "test/scenarios/discard-barrier.scenario.ts",
+      "test/scenarios/bandits.scenario.ts",
+      "test/scenarios/network-and-costs.scenario.ts",
+      "test/scenarios/depot-trades.scenario.ts",
+      "test/scenarios/bilateral-trade.scenario.ts",
+      "test/scenarios/projection-privacy.scenario.ts"
     ],
-    "uiScenarios": ["test/ui-scenarios/build-trail.desktop.scenario.ts"]
+    "uiScenarios": [
+      "test/ui-scenarios/setup.desktop.scenario.ts",
+      "test/ui-scenarios/production.desktop.scenario.ts",
+      "test/ui-scenarios/discard-barrier.mobile.scenario.ts",
+      "test/ui-scenarios/pending-trade.mobile.scenario.ts",
+      "test/ui-scenarios/growing-network.desktop.scenario.ts",
+      "test/ui-scenarios/terminal.mobile.scenario.ts"
+    ]
   },
   "teaching": {
     "whatThisTeaches": [
-      "hex board topology with vertex and edge placement targets",
-      "setup snake order with camp and trail placement",
-      "resource production and bank or port trade availability",
-      "typed interaction routes for board, hand, and dialog surfaces"
+      "fixed hex topology with vertex camps and connected edge trails",
+      "seeded 2d6 production and an outcome-dependent seven path",
+      "engine-derived multi-player discard and targeted-response scheduling",
+      "private inventories, private discards, and participant-only random steals",
+      "repeated main actions, 3:1 depot exchanges, and bilateral offers",
+      "a complete normal-setup replay through immediate fourth-camp victory"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern for topology-driven games where placement legality depends on a growing connected network.",
+      "Represent roll-dependent branches as ordinary phases so inspect exposes only the decisions created by the actual result.",
+      "Use engine-derived barriers for multi-player obligations such as discards, then resume the interrupted turn after every response."
     ],
     "readFirst": [
       "rule.md",
       "manifest.ts",
       "app/game.ts",
-      "app/phases/setup.ts",
-      "app/phases/player-turn/index.ts",
+      "app/phases/roll.ts",
+      "app/phases/discard-barrier.ts",
+      "app/phases/main.ts",
       "ui/App.tsx",
       "ui/interaction-routes.tsx",
-      "test/scenarios/build-trail-ready.scenario.ts"
+      "test/scenarios/complete-game.scenario.ts"
     ]
   },
   "demoRelease": {
     "slug": "hex-network-trading",
-    "name": "Hex Network Trading",
-    "description": "A network-building trading game with hex placement, resource production, and negotiated routes.",
-    "overview": "Settle camps, build trails, gather resources, and trade through ports and banks to grow the strongest route network.",
+    "name": "Stormtrail",
+    "description": "A compact three-crew frontier game of seeded production, connected trails, camps, Bandits, and direct trade.",
+    "overview": "Build a trail network across the fixed Stormtrail frontier, barter Timber, Brick, and Provisions, survive Bandits, and establish the first fourth camp.",
     "creator": "Dreamboard",
     "minPlayers": 3,
-    "maxPlayers": 4,
-    "playTimeMinMinutes": 60,
-    "playTimeMaxMinutes": 120,
+    "maxPlayers": 3,
+    "playTimeMinMinutes": 10,
+    "playTimeMaxMinutes": 20,
     "difficulty": 3,
     "mechanics": [
       "hex-grid",
@@ -70,31 +70,9 @@
       "trading"
     ],
     "categories": ["strategy", "network-building"],
-    "heroImageUrl": "/demos/hex-network-trading/desktop.png",
+    "thumbnailPath": "assets/thumbnail.svg",
     "estimatedMinutes": 15,
-    "demoPlayerCount": 4,
-    "screenshot": {
-      "presets": {
-        "desktop": {
-          "viewport": [1440, 1000],
-          "theme": "paper",
-          "stagePadding": 32,
-          "frame": "shadow"
-        },
-        "mobile": {
-          "viewport": [390, 844],
-          "theme": "paper",
-          "stagePadding": 16,
-          "frame": "shadow"
-        },
-        "thumb": {
-          "viewport": [800, 600],
-          "theme": "paper",
-          "stagePadding": 24,
-          "frame": "shadow"
-        }
-      }
-    }
+    "demoPlayerCount": 3
   },
   "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
   "uiPatterns": [

@@ -36,3 +36,9 @@ pnpm reference-games:bundle
 Reference games with a valid `demoRelease` block are packageable demo
 candidates. Product-owned release sets decide whether any packageable candidate
 is admitted to preview or production.
+
+Packageable games declare `demoRelease.thumbnailPath` as a game-relative path
+under `assets/`. The file must exist and have a matching entry in the
+game-local `assets/LICENSES.json`. Release assembly owns the public thumbnail
+URL; reference metadata must not use the retired `heroImageUrl` or
+`demoRelease.screenshot` fields.

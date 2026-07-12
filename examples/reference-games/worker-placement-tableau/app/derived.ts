@@ -1,3 +1,3 @@
-// Derived selectors over GameState live here. T040 leaves this empty;
-// adjacency-bonus and final-score computations land in T150 (scoring).
+// This compact game keeps reusable occupancy, craft, and scoring selectors
+// under app/rules so reducer phases and player views share one implementation.
 export {};

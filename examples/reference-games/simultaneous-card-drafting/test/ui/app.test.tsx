@@ -1,3 +1,3 @@
 import test from "node:test";
 
-test("simultaneous card drafting ui runtime stub", () => {});
+test("Lantern Market UI runtime stub", () => {});
