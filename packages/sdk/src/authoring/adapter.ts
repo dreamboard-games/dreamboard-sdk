@@ -19,7 +19,6 @@ import {
 } from "./manifest-conformance-cases.js";
 import type {
   AuthoringValidationResultV1,
-  GenerateTestArtifactsInputV1,
   GeneratedArtifactV1,
   ProjectAuthoringAdapterV1,
 } from "./types.js";
@@ -156,23 +155,9 @@ export function generateWorkspaceArtifacts(
   return artifacts;
 }
 
-export function generateTestArtifacts(
-  input: GenerateTestArtifactsInputV1,
-): readonly GeneratedArtifactV1[] {
-  const materialized = materializeManifest(input.manifest);
-  return [
-    normalizeArtifact(
-      "test/generated/base-state.json",
-      `${stableJson(materialized)}\n`,
-      "derived-test",
-    ),
-  ];
-}
-
 export const GENERATED_WORKSPACE_PATHS = [
   ...AUTHORITATIVE_GENERATED_FILES,
   ...SEED_FILES,
-  "test/generated/base-state.json",
 ] as const;
 
 export type GeneratedWorkspacePathPattern = {
@@ -194,7 +179,6 @@ export const projectAuthoringAdapter: ProjectAuthoringAdapterV1 = {
   validateManifest,
   materializeManifest,
   generateWorkspaceArtifacts,
-  generateTestArtifacts,
 };
 
 export { diagnosticCodesForValidationErrors, stableJson };

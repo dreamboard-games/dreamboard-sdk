@@ -95,22 +95,14 @@ describe("projectAuthoringAdapter conformance", () => {
     const workspaceSecond = projectAuthoringAdapter.generateWorkspaceArtifacts(
       fixture.manifest,
     );
-    const testFirst = projectAuthoringAdapter.generateTestArtifacts({
-      manifest: fixture.manifest,
-    });
-    const testSecond = projectAuthoringAdapter.generateTestArtifacts({
-      manifest: fixture.manifest,
-    });
-
     expect(workspaceFirst).toEqual(workspaceSecond);
-    expect(testFirst).toEqual(testSecond);
     expect(workspaceFirst.map((artifact) => artifact.path)).toEqual(
       [...workspaceFirst]
         .map((artifact) => artifact.path)
         .sort((left, right) => left.localeCompare(right)),
     );
 
-    const allArtifacts = [...workspaceFirst, ...testFirst];
+    const allArtifacts = [...workspaceFirst];
     expect(new Set(allArtifacts.map((artifact) => artifact.path)).size).toBe(
       allArtifacts.length,
     );
@@ -127,9 +119,6 @@ describe("projectAuthoringAdapter conformance", () => {
     );
     expect(staticManifest).toBeDefined();
     expect(JSON.parse(staticManifest!.content).initialTable).toEqual(
-      JSON.parse(stableJson(materialized)),
-    );
-    expect(JSON.parse(testFirst[0]!.content)).toEqual(
       JSON.parse(stableJson(materialized)),
     );
   });

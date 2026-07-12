@@ -70,11 +70,6 @@ export async function materializeWorkspace(
     readonly sha256: `sha256:${string}`;
   }> = [];
   for (const artifact of artifacts) {
-    if (artifact.ownership === "derived-test") {
-      throw new Error(
-        "Workspace materialization must not emit derived test state.",
-      );
-    }
     const destination = resolveProjectPath(projectRoot, artifact.path);
     if (artifact.ownership === "seed") {
       if (!options.writeMissingSeeds || (await isFile(destination))) {

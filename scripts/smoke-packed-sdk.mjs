@@ -197,17 +197,14 @@ async function main() {
             }
             const workspaceFirst = projectAuthoringAdapter.generateWorkspaceArtifacts(testCase.manifest);
             const workspaceSecond = projectAuthoringAdapter.generateWorkspaceArtifacts(testCase.manifest);
-            const testFirst = projectAuthoringAdapter.generateTestArtifacts({ manifest: testCase.manifest });
-            const testSecond = projectAuthoringAdapter.generateTestArtifacts({ manifest: testCase.manifest });
-            if (stableJson(workspaceFirst) !== stableJson(workspaceSecond) ||
-                stableJson(testFirst) !== stableJson(testSecond)) {
+            if (stableJson(workspaceFirst) !== stableJson(workspaceSecond)) {
               throw new Error(testCase.id + " artifact generation is not deterministic");
             }
             const paths = workspaceFirst.map((artifact) => artifact.path);
             if (stableJson(paths) !== stableJson([...paths].sort((left, right) => left.localeCompare(right)))) {
               throw new Error(testCase.id + " workspace artifacts are not sorted");
             }
-            const allArtifacts = [...workspaceFirst, ...testFirst];
+            const allArtifacts = [...workspaceFirst];
             if (new Set(allArtifacts.map((artifact) => artifact.path)).size !== allArtifacts.length) {
               throw new Error(testCase.id + " emitted duplicate artifact paths");
             }

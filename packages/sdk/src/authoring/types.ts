@@ -18,7 +18,7 @@ export type AuthoringValidationResultV1 = {
 
 export type GeneratedArtifactV1 = {
   path: string;
-  ownership: "authoritative" | "seed" | "derived-test";
+  ownership: "authoritative" | "seed";
   content: string;
   contentSha256: string;
 };
@@ -26,10 +26,6 @@ export type GeneratedArtifactV1 = {
 export type GeneratedPathPatternV1 = {
   prefix: string;
   suffix: string;
-};
-
-export type GenerateTestArtifactsInputV1 = {
-  manifest: GameTopologyManifest;
 };
 
 export type AuthoringManifestConformanceCaseV1 = {
@@ -57,7 +53,4 @@ export type ProjectAuthoringAdapterV1 = {
   validateManifest(manifest: unknown): AuthoringValidationResultV1;
   materializeManifest(manifest: unknown): JsonValue;
   generateWorkspaceArtifacts(manifest: unknown): readonly GeneratedArtifactV1[];
-  generateTestArtifacts(
-    input: GenerateTestArtifactsInputV1,
-  ): readonly GeneratedArtifactV1[];
 };

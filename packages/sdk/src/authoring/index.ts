@@ -3,7 +3,6 @@ export {
   GENERATED_WORKSPACE_PATH_PATTERNS,
   MANIFEST_CONFORMANCE_CASES,
   diagnosticCodesForValidationErrors,
-  generateTestArtifacts,
   generateWorkspaceArtifacts,
   materializeManifest,
   projectAuthoringAdapter,
@@ -12,7 +11,6 @@ export {
 export type {
   AuthoringManifestConformanceCaseV1,
   AuthoringValidationResultV1,
-  GenerateTestArtifactsInputV1,
   GeneratedArtifactV1,
   GeneratedAuthoringMetadataV1,
   GeneratedPathPatternV1,
