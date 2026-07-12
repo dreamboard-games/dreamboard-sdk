@@ -361,13 +361,35 @@ type EngineSampledCollectorKeys<
 // shape clients pass to `submitInteraction` / `handle.submit` — the bundle
 // fills the engine-sampled fields before handing the merged record to
 // `reduce`.
+type ClientCollectorValue<Collector> =
+  Collector extends InputCollector<infer S>
+    ? S extends SchemaLike<infer V>
+      ? V
+      : never
+    : never;
+
+type ClientCollectorKeys<Collectors extends Record<string, InputCollector>> =
+  Exclude<keyof Collectors, EngineSampledCollectorKeys<Collectors>>;
+
+type OptionalClientCollectorKeys<
+  Collectors extends Record<string, InputCollector>,
+> = {
+  [K in ClientCollectorKeys<Collectors>]: undefined extends ClientCollectorValue<
+    Collectors[K]
+  >
+    ? K
+    : never;
+}[ClientCollectorKeys<Collectors>];
+
 export type ClientParamsOf<Collectors extends Record<string, InputCollector>> =
   {
-    [K in keyof Collectors as K extends EngineSampledCollectorKeys<Collectors>
-      ? never
-      : K]: Collectors[K] extends InputCollector<infer S>
-      ? S extends SchemaLike<infer V>
-        ? V
-        : never
-      : never;
+    [K in Exclude<
+      ClientCollectorKeys<Collectors>,
+      OptionalClientCollectorKeys<Collectors>
+    >]: ClientCollectorValue<Collectors[K]>;
+  } & {
+    [K in OptionalClientCollectorKeys<Collectors>]?: Exclude<
+      ClientCollectorValue<Collectors[K]>,
+      undefined
+    >;
   };

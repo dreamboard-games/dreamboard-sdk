@@ -1353,6 +1353,7 @@ test("generateManifestContractSources split runtime module executes generated ru
   expect(sources["shared/manifest-runtime.ts"]).not.toContain(
     "const baseInitialTable = {",
   );
+  expect(sources["shared/manifest-runtime.ts"]).not.toMatch(/[ \t]+$/m);
 
   await withGeneratedSplitContractModule({
     tempPrefix: ".tmp-split-runtime-contract-",

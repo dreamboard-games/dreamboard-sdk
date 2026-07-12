@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { computeReferenceGameSourceDigest } from "./canonical.js";
+import { computeReferenceGameSourceFingerprint } from "./canonical.js";
 
-export const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 2;
+export const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 3;
 export const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 3;
 
 export const referenceGameSha256DigestSchema = z
@@ -35,8 +35,18 @@ export const referenceGameSourceEntrySchema = z
   })
   .strict();
 
+export const referenceGameSourceInventoryPolicySchema = z
+  .object({
+    schemaVersion: z.literal(1),
+    workspaceOwnershipVersion: z.number().int().positive(),
+    excludedGameRelativePaths: z.array(z.string().min(1)),
+    excludedGameRelativePrefixes: z.array(z.string().min(1)),
+  })
+  .strict();
+
 export const referenceGameSourceManifestPayloadSchema = z
   .object({
+    inventoryPolicy: referenceGameSourceInventoryPolicySchema,
     games: z.array(referenceGameSourceEntrySchema).min(1),
     objects: z.array(referenceGameSourceObjectSchema).min(1),
   })
@@ -60,24 +70,33 @@ export const referenceGameSourceManifestSchema = z
   .object({
     schemaVersion: z.literal(REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION),
     manifestType: z.literal("dreamboard.reference-game-source"),
-    bundleDigest: referenceGameSha256DigestSchema,
+    sourceFingerprint: referenceGameSha256DigestSchema,
     payload: referenceGameSourceManifestPayloadSchema,
     provenance: referenceGameSourceProvenanceSchema,
   })
   .strict()
   .superRefine((value, context) => {
-    const digest = computeReferenceGameSourceDigest(value.payload);
-    if (value.bundleDigest !== digest) {
+    const fingerprint = computeReferenceGameSourceFingerprint(value.payload);
+    if (value.sourceFingerprint !== fingerprint) {
       context.addIssue({
         code: "custom",
-        path: ["bundleDigest"],
-        message: "bundleDigest must match the canonical payload digest",
+        path: ["sourceFingerprint"],
+        message:
+          "sourceFingerprint must match the canonical authored-object inventory",
       });
     }
   });
 
 const referenceGameIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*$/);
 const referenceGameWorkspacePathSchema = z.string().min(1);
+const referenceGameAssetPathSchema = z
+  .string()
+  .regex(/^assets\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+$/)
+  .refine(
+    (value) =>
+      value.split("/").every((segment) => segment !== "." && segment !== ".."),
+    { message: "asset path must stay inside the game assets directory" },
+  );
 
 export const referenceGameWorkspaceSchema = z
   .object({
@@ -97,18 +116,6 @@ export const referenceGameTeachingSchema = z
   })
   .strict();
 
-const referenceGameDemoScreenshotPresetSchema = z
-  .object({
-    viewport: z.tuple([
-      z.number().int().positive(),
-      z.number().int().positive(),
-    ]),
-    theme: z.string().min(1),
-    stagePadding: z.number().int().nonnegative(),
-    frame: z.string().min(1),
-  })
-  .strict();
-
 export const referenceGameDemoReleaseSchema = z
   .object({
     slug: referenceGameIdSchema,
@@ -123,18 +130,9 @@ export const referenceGameDemoReleaseSchema = z
     difficulty: z.number().int().min(1).max(5),
     mechanics: z.array(z.string().min(1)).min(1),
     categories: z.array(z.string().min(1)).min(1),
-    heroImageUrl: z.string().min(1),
+    thumbnailPath: referenceGameAssetPathSchema,
     estimatedMinutes: z.number().int().positive(),
     demoPlayerCount: z.number().int().positive(),
-    screenshot: z
-      .object({
-        presets: z
-          .record(z.string().min(1), referenceGameDemoScreenshotPresetSchema)
-          .refine((value) => Object.keys(value).length > 0, {
-            message: "screenshot.presets must include at least one preset",
-          }),
-      })
-      .strict(),
   })
   .strict()
   .superRefine((value, context) => {
@@ -200,6 +198,9 @@ export type ReferenceGameSourceEntry = z.infer<
 >;
 export type ReferenceGameSourceManifestPayload = z.infer<
   typeof referenceGameSourceManifestPayloadSchema
+>;
+export type ReferenceGameSourceInventoryPolicy = z.infer<
+  typeof referenceGameSourceInventoryPolicySchema
 >;
 export type ReferenceGameSourceProvenance = z.infer<
   typeof referenceGameSourceProvenanceSchema

@@ -115,7 +115,7 @@ export function inspectScenarioReplayNode<Game>(options: {
     : [];
   const actions = actor
     ? authority.interactions.flatMap(
-        ({ descriptor, explanation, actionability }): InspectAction[] => {
+        ({ explanation, actionability }): InspectAction[] => {
           if (
             !actionability.found ||
             !actionability.visible ||

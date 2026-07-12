@@ -6,6 +6,11 @@ import {
 import type { ScenarioDefinitionGameLike } from "./testing/scenario-definition-validation.js";
 import { assertScenario, replayScenario } from "./testing/scenario-replay.js";
 
+export {
+  materializeScenarioRuntimeCheckpoint,
+  type ScenarioRuntimeCheckpointMaterialization,
+} from "./testing/scenario-replay.js";
+
 // Internal published seam for CLI scenario loading and backend parity. These
 // helpers intentionally do not appear on the author-facing `/testing` facade.
 export { resolveScenarioCommandParams } from "./testing/scenario-player-refs.js";

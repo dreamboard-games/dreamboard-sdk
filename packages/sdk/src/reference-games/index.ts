@@ -1,6 +1,7 @@
 export {
   canonicalizeReferenceGameSourcePayload,
-  computeReferenceGameSourceDigest,
+  compareReferenceGameCanonicalStrings,
+  computeReferenceGameSourceFingerprint,
 } from "./canonical.js";
 export {
   REFERENCE_GAME_MANIFEST_SCHEMA_VERSION,
@@ -14,6 +15,7 @@ export {
   referenceGameSha256DigestSchema,
   referenceGameSdkPolicySchema,
   referenceGameSourceEntrySchema,
+  referenceGameSourceInventoryPolicySchema,
   referenceGameSourceManifestPayloadSchema,
   referenceGameSourceManifestSchema,
   referenceGameSourceObjectSchema,
@@ -25,6 +27,7 @@ export {
   type ReferenceGameRights,
   type ReferenceGameSdkPolicy,
   type ReferenceGameSourceEntry,
+  type ReferenceGameSourceInventoryPolicy,
   type ReferenceGameSourceManifest,
   type ReferenceGameSourceManifestPayload,
   type ReferenceGameSourceObject,

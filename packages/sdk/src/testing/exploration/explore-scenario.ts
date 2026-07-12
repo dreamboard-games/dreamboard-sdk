@@ -21,12 +21,7 @@ import {
   inspectScenarioReplayNode,
   type InspectScenarioOptions,
 } from "../inspection/inspect-scenario.js";
-import type {
-  PerspectiveSelector,
-  InspectNode,
-  ScenarioIdentity,
-  Sha256Digest,
-} from "../inspection/types.js";
+import type { InspectNode, Sha256Digest } from "../inspection/types.js";
 import { createExploreCursor, readExploreCursor } from "./cursor.js";
 import type {
   ExploreScenarioResult,

@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
 
 import {
-  computeReferenceGameSourceDigest,
+  compareReferenceGameCanonicalStrings,
+  computeReferenceGameSourceFingerprint,
   isPackageableReferenceGame,
   parseReferenceGameManifestV3,
   parseReferenceGameSourceManifest,
@@ -18,6 +19,12 @@ function payload(
   overrides: Partial<ReferenceGameSourceManifestPayload> = {},
 ): ReferenceGameSourceManifestPayload {
   return {
+    inventoryPolicy: {
+      schemaVersion: 1,
+      workspaceOwnershipVersion: 31,
+      excludedGameRelativePaths: ["shared/manifest-runtime.ts", "app/index.ts"],
+      excludedGameRelativePrefixes: ["test/generated/", "test/bases/"],
+    },
     games: [
       {
         id: "hearts",
@@ -121,32 +128,42 @@ function demoRelease(): NonNullable<ReferenceGameManifestV3["demoRelease"]> {
     difficulty: 2,
     mechanics: ["trick-taking", "hidden-information"],
     categories: ["card-game", "classic"],
-    heroImageUrl: "/demos/hearts/desktop.png",
+    thumbnailPath: "assets/thumbnail.svg",
     estimatedMinutes: 10,
     demoPlayerCount: 4,
-    screenshot: {
-      presets: {
-        desktop: {
-          viewport: [1440, 1000],
-          theme: "paper",
-          stagePadding: 32,
-          frame: "shadow",
-        },
-      },
-    },
   };
 }
 
 describe("reference game source manifest", () => {
-  test("digest is independent of game and object ordering", () => {
+  test("canonical ordering is locale-independent UTF-16 code-unit order", () => {
+    const values = ["z", "ä", "a", "😀", "\uffff"];
+    expect(values.sort(compareReferenceGameCanonicalStrings)).toEqual([
+      "a",
+      "z",
+      "ä",
+      "😀",
+      "\uffff",
+    ]);
+  });
+
+  test("fingerprint is independent of game, object, and policy ordering", () => {
     const first = payload();
     const second = payload({
+      inventoryPolicy: {
+        ...first.inventoryPolicy,
+        excludedGameRelativePaths: [
+          ...first.inventoryPolicy.excludedGameRelativePaths,
+        ].reverse(),
+        excludedGameRelativePrefixes: [
+          ...first.inventoryPolicy.excludedGameRelativePrefixes,
+        ].reverse(),
+      },
       games: [...first.games].reverse(),
       objects: [...first.objects].reverse(),
     });
 
-    expect(computeReferenceGameSourceDigest(first)).toBe(
-      computeReferenceGameSourceDigest(second),
+    expect(computeReferenceGameSourceFingerprint(first)).toBe(
+      computeReferenceGameSourceFingerprint(second),
     );
   });
 
@@ -156,8 +173,8 @@ describe("reference game source manifest", () => {
       games: [{ ...first.games[0], reducer: "app/other-game.ts" }],
     });
 
-    expect(computeReferenceGameSourceDigest(first)).not.toBe(
-      computeReferenceGameSourceDigest(second),
+    expect(computeReferenceGameSourceFingerprint(first)).not.toBe(
+      computeReferenceGameSourceFingerprint(second),
     );
   });
 
@@ -167,49 +184,49 @@ describe("reference game source manifest", () => {
       objects: [{ ...first.objects[0], sha256: digestD }],
     });
 
-    expect(computeReferenceGameSourceDigest(first)).not.toBe(
-      computeReferenceGameSourceDigest(second),
+    expect(computeReferenceGameSourceFingerprint(first)).not.toBe(
+      computeReferenceGameSourceFingerprint(second),
     );
   });
 
   test("parse rejects mismatched bundle digest", () => {
     expect(() =>
       parseReferenceGameSourceManifest({
-        schemaVersion: 2,
+        schemaVersion: 3,
         manifestType: "dreamboard.reference-game-source",
-        bundleDigest: digestA,
+        sourceFingerprint: digestA,
         payload: payload(),
         provenance: { kind: "worktree" },
       }),
-    ).toThrow("bundleDigest must match");
+    ).toThrow("sourceFingerprint must match");
   });
 
   test("worktree and git provenance do not affect the bundle digest", () => {
     const source = payload();
-    const bundleDigest = computeReferenceGameSourceDigest(source);
+    const sourceFingerprint = computeReferenceGameSourceFingerprint(source);
 
     expect(
       parseReferenceGameSourceManifest({
-        schemaVersion: 2,
+        schemaVersion: 3,
         manifestType: "dreamboard.reference-game-source",
-        bundleDigest,
+        sourceFingerprint,
         payload: source,
         provenance: { kind: "worktree" },
-      }).bundleDigest,
-    ).toBe(bundleDigest);
+      }).sourceFingerprint,
+    ).toBe(sourceFingerprint);
     expect(
       parseReferenceGameSourceManifest({
-        schemaVersion: 2,
+        schemaVersion: 3,
         manifestType: "dreamboard.reference-game-source",
-        bundleDigest,
+        sourceFingerprint,
         payload: source,
         provenance: {
           kind: "git",
           repository: "dreamboard-games/dreamboard-sdk",
           revision: "1".repeat(40),
         },
-      }).bundleDigest,
-    ).toBe(bundleDigest);
+      }).sourceFingerprint,
+    ).toBe(sourceFingerprint);
   });
 });
 
@@ -256,5 +273,48 @@ describe("reference game manifest v3", () => {
         }),
       ),
     ).toThrow();
+  });
+
+  test("rejects removed hero and screenshot media fields", () => {
+    expect(() =>
+      parseReferenceGameManifestV3(
+        referenceGameManifest({
+          demoRelease: {
+            ...demoRelease(),
+            heroImageUrl: "/demos/hearts/desktop.png",
+          } as ReferenceGameManifestV3["demoRelease"],
+        }),
+      ),
+    ).toThrow();
+    expect(() =>
+      parseReferenceGameManifestV3(
+        referenceGameManifest({
+          demoRelease: {
+            ...demoRelease(),
+            screenshot: { presets: {} },
+          } as ReferenceGameManifestV3["demoRelease"],
+        }),
+      ),
+    ).toThrow();
+  });
+
+  test("requires a safe game-relative thumbnail asset path", () => {
+    for (const thumbnailPath of [
+      "/assets/thumbnail.svg",
+      "../thumbnail.svg",
+      "assets/../thumbnail.svg",
+      "thumbnail.svg",
+    ]) {
+      expect(() =>
+        parseReferenceGameManifestV3(
+          referenceGameManifest({
+            demoRelease: {
+              ...demoRelease(),
+              thumbnailPath,
+            },
+          }),
+        ),
+      ).toThrow();
+    }
   });
 });

@@ -5,6 +5,10 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js",
+    "dreamboard-reference-games-source-manifest": "./dist/reference-game-source-manifest-cli.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -104,6 +108,21 @@
       "import": "./dist/testing-runtime.js",
       "default": "./dist/testing-runtime.js"
     },
+    "./testing-compiler": {
+      "types": "./dist/testing-compiler.d.ts",
+      "import": "./dist/testing-compiler.js",
+      "default": "./dist/testing-compiler.js"
+    },
+    "./authoring-compiler": {
+      "types": "./dist/authoring-compiler.d.ts",
+      "import": "./dist/authoring-compiler.js",
+      "default": "./dist/authoring-compiler.js"
+    },
+    "./reference-game-compiler": {
+      "types": "./dist/reference-game-compiler.d.ts",
+      "import": "./dist/reference-game-compiler.js",
+      "default": "./dist/reference-game-compiler.js"
+    },
     "./browser-interaction": {
       "types": "./dist/browser-interaction.d.ts",
       "import": "./dist/browser-interaction.js",
@@ -140,6 +159,7 @@
     "@noble/hashes": "^2.2.0",
     "@use-gesture/react": "^10.3.1",
     "clsx": "^2.1.1",
+    "esbuild": "^0.28.1",
     "lucide-react": "^1.20.0",
     "vaul": "^1.1.2",
     "zustand": "^5.0.14"

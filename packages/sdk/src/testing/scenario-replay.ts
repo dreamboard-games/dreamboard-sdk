@@ -24,7 +24,6 @@ import {
   type ScenarioCheckpoint,
   type ScenarioCommandOf,
   type ScenarioCommandTraceEntry,
-  type ScenarioDefinition,
   type ScenarioDiagnostics,
   type ScenarioProbeResult,
   type ScenarioReplay,
@@ -40,20 +39,6 @@ import {
   resolveScenarioCommandParams,
   resolveScenarioSeatRef,
 } from "./scenario-player-refs.js";
-
-type ScenarioGame = ScenarioDefinitionGameLike & {
-  readonly contract: ScenarioDefinitionGameLike["contract"] & {
-    readonly manifest: ScenarioDefinitionGameLike["contract"]["manifest"] & {
-      readonly normalSetup?: {
-        readonly minPlayers: number;
-        readonly maxPlayers: number;
-        createInitialTable(options: {
-          readonly playerIds: readonly string[];
-        }): unknown;
-      };
-    };
-  };
-};
 
 type ScenarioBundle = ReducerBundleTestingRuntime;
 
@@ -156,6 +141,33 @@ export async function replayScenario<
   });
   await runtime.replayTo(checkpoint);
   return runtime;
+}
+
+export type ScenarioRuntimeCheckpointMaterialization = {
+  readonly checkpoint: ScenarioCheckpoint;
+  readonly checkpointDigest: string;
+  readonly playerIds: readonly string[];
+  readonly state: Wire.ReducerSessionState;
+};
+
+/**
+ * Trusted tool-side materialization for CLI, Workbench, and backend adapters.
+ * The returned reducer snapshot must never cross a player/browser boundary.
+ */
+export async function materializeScenarioRuntimeCheckpoint<
+  const Game extends ScenarioDefinitionGameLike,
+>(
+  options: ReplayScenarioOptions<Game>,
+): Promise<ScenarioRuntimeCheckpointMaterialization> {
+  const replay = requireScenarioReplayImplementation(
+    await replayScenario(options),
+  );
+  return {
+    checkpoint: structuredClone(replay.checkpoint),
+    checkpointDigest: replay.checkpointDigest,
+    playerIds: [...replay.playerIds],
+    state: structuredClone(replay.reducerState),
+  };
 }
 
 function cloneReplayDefinition<Game>(

@@ -103,6 +103,22 @@ export const SeatProjectionBundleSchema = z
     currentStage: z.string().nullable().optional(),
     stageSeats: z.array(z.string()).optional(),
     simultaneousPhase: z.unknown().nullable().optional(),
+    schedulerFlow: z
+      .object({
+        version: z.literal(1),
+        activePlayerIds: z.array(z.string()),
+        pendingPlayerIds: z.array(z.string()),
+        continuationDependencies: z.array(
+          z
+            .object({
+              waiterPlayerId: z.string(),
+              blockerPlayerIds: z.array(z.string()),
+            })
+            .strict(),
+        ),
+      })
+      .strict()
+      .optional(),
     guidance: GameGuidanceProjectionSchema.nullable().optional(),
     recentEvents: z.array(ProjectedGameEventSchema).optional(),
     sharedView: z.unknown().optional(),

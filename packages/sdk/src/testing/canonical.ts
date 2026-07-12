@@ -16,7 +16,7 @@ export function compareCanonicalScenarioJson(
   left: unknown,
   right: unknown,
 ): number {
-  return canonicalScenarioJson(left).localeCompare(
-    canonicalScenarioJson(right),
-  );
+  const leftJson = canonicalScenarioJson(left);
+  const rightJson = canonicalScenarioJson(right);
+  return leftJson === rightJson ? 0 : leftJson < rightJson ? -1 : 1;
 }

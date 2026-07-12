@@ -3949,6 +3949,9 @@ function renderGenericBoardStateSchema(
       })`,
     )
     .join(",\n      ");
+  const renderedContainers = containerEntries
+    ? `\n      ${containerEntries}\n    `
+    : "";
   return `z.object({
     id: z.literal(${quote(runtimeBoardId)}),
     baseId: z.literal(${quote(board.board.id)}),
@@ -3995,9 +3998,7 @@ function renderGenericBoardStateSchema(
         fields: ${`${boardRelationFieldsTypeName(board.board.id)}Schema`},
       }),
     ),
-    containers: z.object({
-      ${containerEntries}
-    }),
+    containers: z.object({${renderedContainers}}),
   })`;
 }
 
@@ -4097,6 +4098,9 @@ function renderSquareBoardStateSchema(
       })`,
     )
     .join(",\n      ");
+  const renderedContainers = containerEntries
+    ? `\n      ${containerEntries}\n    `
+    : "";
   return `z.object({
     id: z.literal(${quote(runtimeBoardId)}),
     baseId: z.literal(${quote(board.board.id)}),
@@ -4137,9 +4141,7 @@ function renderSquareBoardStateSchema(
         fields: ${`${boardRelationFieldsTypeName(board.board.id)}Schema`},
       }),
     ),
-    containers: z.object({
-      ${containerEntries}
-    }),
+    containers: z.object({${renderedContainers}}),
     edges: z.array(
       z.object({
         id: ids.edgeId,

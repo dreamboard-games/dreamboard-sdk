@@ -907,9 +907,9 @@ export type InteractionRoute<Key extends InteractionKey> = {
   readonly collect: InteractionCollectSlots<Key>;
 };
 
-export type InteractionRoutes = {
+export type InteractionRoutes = Partial<{
   [Key in InteractionKey]: InteractionRoute<Key>;
-};
+}>;
 
 export type InteractionRoutesProps = {
   routes: InteractionRoutes;

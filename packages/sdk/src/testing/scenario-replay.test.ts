@@ -227,7 +227,10 @@ function createScenarioGame() {
       chooseTogether: z.object({}),
       finish: z.object({}),
     },
-    errors: { COUNT_TOO_LARGE: "The count cannot exceed five." },
+    errors: {
+      COUNT_TOO_LARGE: "The count cannot exceed five.",
+      RECIPIENT_REQUIRED: "Choose a recipient for targeted mode.",
+    },
   });
   const phaseState = z.object({});
   const ownSurveyCell = boardTarget
@@ -318,6 +321,60 @@ function createScenarioGame() {
               cell: boardInput.playerSpace({ target: ownSurveyCell }),
             },
             reduce: ({ state, accept }) => accept(state),
+          }),
+          optionalRecipient: defineInteraction<
+            typeof contract,
+            typeof phaseState
+          >()({
+            inputs: defineInputs((input) => {
+              const mode = input.add(
+                "mode",
+                formInput.choice({
+                  choices: [
+                    { value: "solo", label: "Solo" },
+                    { value: "targeted", label: "Targeted" },
+                  ],
+                  defaultValue: () => undefined,
+                }),
+              );
+              const recipient = formInput.choice({
+                dependsOn: [mode],
+                choices: ({ values }) =>
+                  values.mode === "targeted"
+                    ? [{ value: "player-2" as const, label: "Player 2" }]
+                    : [],
+                defaultValue: ({ choices }) => choices[0]?.value,
+              });
+              return {
+                mode,
+                recipient: input.add("recipient", {
+                  ...recipient,
+                  schema: playerIdSchema.optional(),
+                }),
+              };
+            }),
+            paramsSchema: z.object({
+              mode: z.enum(["solo", "targeted"]),
+              recipient: playerIdSchema.optional(),
+            }),
+            rules: [
+              {
+                id: "targeted-recipient",
+                errorCode: "RECIPIENT_REQUIRED",
+                validate: ({ input }) =>
+                  input.params.mode === "solo" || input.params.recipient
+                    ? null
+                    : { errorCode: "RECIPIENT_REQUIRED" },
+              },
+            ],
+            reduce: ({ state, input, accept }) =>
+              accept({
+                ...state,
+                publicState: {
+                  ...state.publicState,
+                  target: input.params.recipient ?? null,
+                },
+              }),
           }),
           increment: defineInteraction<typeof contract, typeof phaseState>()({
             inputs: { amount: formInput.number({ min: 1, max: 5 }) },
@@ -835,6 +892,44 @@ describe("scenario inspection and exploration", () => {
       game,
       scenario: defineScenario({
         id: "replay-explored-player-board-command",
+        setup: scenario.setup,
+        given: [],
+        when: [command as never],
+        then: () => {},
+      }),
+    });
+    expect(replayed.complete).toBe(true);
+    expect(replayed.trace[0]?.command).toEqual(command);
+  });
+
+  test("omits an optional dependent input and replays the explored command", async () => {
+    const explored = await exploreScenario({
+      game,
+      scenario,
+      identity,
+      perspective: { kind: "player", seat: 0 },
+      limit: 50,
+      maxEvaluations: 200,
+    });
+    expect(explored.mode).toBe("transitions");
+    if (explored.mode !== "transitions") return;
+    const command = explored.candidates.find(
+      ({ command: candidate }) =>
+        candidate.interactionId === "optionalRecipient" &&
+        candidate.params.mode === "solo",
+    )?.command;
+    expect(command).toEqual({
+      actor: { seat: 0 },
+      interactionId: "optionalRecipient",
+      params: { mode: "solo" },
+    });
+    expect(command?.params).not.toHaveProperty("recipient");
+    if (!command) return;
+
+    const replayed = await replayScenario({
+      game,
+      scenario: defineScenario({
+        id: "replay-explored-optional-dependent-command",
         setup: scenario.setup,
         given: [],
         when: [command as never],

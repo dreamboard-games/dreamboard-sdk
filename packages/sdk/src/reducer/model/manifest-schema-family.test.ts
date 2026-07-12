@@ -45,7 +45,14 @@ test("manifest schemas retain optional semantic ID families", () => {
   type _Familyless = Assert<
     Equal<FamilyOf<typeof familylessSchema>, undefined>
   >;
+  const typeAssertions: [
+    _GeneratedFamily,
+    _MarkedFamily,
+    _AssumedFamily,
+    _Familyless,
+  ] = [true, true, true, true];
 
+  expect(typeAssertions).toEqual([true, true, true, true]);
   expect(isManifestScopedSchema(playerIdSchema)).toBe(true);
   expect(manifestSchemaFamily(playerIdSchema)).toBe("playerId");
   expect(manifestSchemaFamily(assumedPlayerIdSchema)).toBe("playerId");

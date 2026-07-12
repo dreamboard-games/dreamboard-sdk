@@ -22,6 +22,9 @@ const facades = {
   ui: () => import("./ui.js"),
   types: () => import("./types.js"),
   testing: () => import("./testing.js"),
+  "testing-compiler": () => import("./testing-compiler.js"),
+  "authoring-compiler": () => import("./authoring-compiler.js"),
+  "reference-game-compiler": () => import("./reference-game-compiler.js"),
   "browser-interaction": () => import("./browser-interaction.js"),
 } as const;
 

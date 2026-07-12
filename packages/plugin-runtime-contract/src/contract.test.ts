@@ -239,6 +239,12 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       } as unknown as ReducerBoardStaticProjection,
       dynamicProjection: {
         currentStage: "play",
+        schedulerFlow: {
+          version: 1,
+          activePlayerIds: ["player-1"],
+          pendingPlayerIds: [],
+          continuationDependencies: [],
+        },
         interactionsByRef: {
           "claim-ref": {
             ...claimDescriptor,
@@ -283,6 +289,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       type: "choice",
       choices: [{ value: "card-1", label: "Card 1" }],
     });
+    expect(JSON.stringify(frame)).not.toContain("schedulerFlow");
   });
 
   test("materialization rejects undefined array entries in reducer projections", () => {

@@ -263,7 +263,7 @@ describe("scenario authoring types", () => {
   });
 
   test("keeps compile-time negative examples next to the public contract", () => {
-    if (false) {
+    const assertNegativeTypes = () => {
       // @ts-expect-error semantic player ids are authored as seat refs.
       const wrongPlayer: ScenarioSchemaOutput<typeof playerIdSchema> =
         "player-1";
@@ -274,7 +274,8 @@ describe("scenario authoring types", () => {
       // @ts-expect-error actor identity is a seat ref, not a runtime player id.
       const wrongActor: ScenarioSeatRef = "player-1";
       expect([wrongPlayer, wrongString, wrongActor]).toBeDefined();
-    }
+    };
+    expect(typeof assertNegativeTypes).toBe("function");
     expect(true).toBe(true);
   });
 });

@@ -15,6 +15,10 @@ type CanonicalJson =
 
 const sha256DigestPattern = /^sha256:[a-f0-9]{64}$/;
 
+function compareCanonicalStrings(left: string, right: string): number {
+  return left === right ? 0 : left < right ? -1 : 1;
+}
+
 export function isSha256Digest(value: string): boolean {
   return sha256DigestPattern.test(value);
 }
@@ -43,7 +47,7 @@ export function canonicalizeUIFixtureJson(value: unknown): CanonicalJson {
       return Object.fromEntries(
         entries
           .filter(([, item]) => item !== undefined)
-          .sort(([left], [right]) => left.localeCompare(right))
+          .sort(([left], [right]) => compareCanonicalStrings(left, right))
           .map(([key, item]) => [key, canonicalizeUIFixtureJson(item)]),
       );
     }

@@ -63,6 +63,8 @@ type ValueSource = {
   readonly values: () => Iterable<unknown>;
 };
 
+const ABSENT_COLLECTOR_VALUE = Symbol("absentCollectorValue");
+
 type SolverContext = {
   readonly interaction: AnyInteractionSpec<
     CollectorState,
@@ -182,7 +184,12 @@ export function enumerateCollectorInputAssignments<
     }
     for (const value of source.values()) {
       accountEvaluation(inputKey);
-      visit(collectorIndex + 1, { ...assignment, [inputKey]: value });
+      visit(
+        collectorIndex + 1,
+        value === ABSENT_COLLECTOR_VALUE
+          ? assignment
+          : { ...assignment, [inputKey]: value },
+      );
     }
   };
 
@@ -277,10 +284,13 @@ function findFirstAssignment(
   );
   let sawUnknown = !source.complete;
   for (const value of source.values()) {
-    const result = findFirstAssignment(context, collectorIndex + 1, {
-      ...assignment,
-      [inputKey]: value,
-    });
+    const result = findFirstAssignment(
+      context,
+      collectorIndex + 1,
+      value === ABSENT_COLLECTOR_VALUE
+        ? assignment
+        : { ...assignment, [inputKey]: value },
+    );
     if (result.status === "yes") return result;
     if (result.status === "notEnumerable") sawUnknown = true;
   }
@@ -421,7 +431,23 @@ function resolveCollectorValueSource(
     context,
     dependencyValues,
   );
-  return applySelection(base, collector.selection ?? domain.selection);
+  const selected = applySelection(
+    base,
+    collector.selection ?? domain.selection,
+  );
+  return collector.schema.safeParse(undefined).success
+    ? withAbsentCollectorValue(selected)
+    : selected;
+}
+
+function withAbsentCollectorValue(source: ValueSource): ValueSource {
+  return {
+    complete: source.complete,
+    values: function* () {
+      yield ABSENT_COLLECTOR_VALUE;
+      yield* source.values();
+    },
+  };
 }
 
 function baseValuesForDomain(

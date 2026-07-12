@@ -228,6 +228,15 @@ export interface ReducerSeatProjectionBundle {
   readonly currentStage?: string | null;
   readonly stageSeats?: readonly string[];
   readonly simultaneousPhase?: SimultaneousPhaseSnapshot | null;
+  readonly schedulerFlow?: {
+    readonly version: 1;
+    readonly activePlayerIds: readonly string[];
+    readonly pendingPlayerIds: readonly string[];
+    readonly continuationDependencies: readonly {
+      readonly waiterPlayerId: string;
+      readonly blockerPlayerIds: readonly string[];
+    }[];
+  };
   readonly guidance?: GameGuidanceProjection | null;
   readonly recentEvents?: readonly ProjectedGameEvent[];
   readonly sharedView?: unknown;

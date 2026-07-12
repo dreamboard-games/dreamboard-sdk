@@ -207,7 +207,8 @@ exports[`public export surface reference-games export names are stable 1`] = `
   "REFERENCE_GAME_MANIFEST_SCHEMA_VERSION",
   "REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION",
   "canonicalizeReferenceGameSourcePayload",
-  "computeReferenceGameSourceDigest",
+  "compareReferenceGameCanonicalStrings",
+  "computeReferenceGameSourceFingerprint",
   "isPackageableReferenceGame",
   "parseReferenceGameManifestV3",
   "parseReferenceGameSourceManifest",
@@ -217,6 +218,7 @@ exports[`public export surface reference-games export names are stable 1`] = `
   "referenceGameSdkPolicySchema",
   "referenceGameSha256DigestSchema",
   "referenceGameSourceEntrySchema",
+  "referenceGameSourceInventoryPolicySchema",
   "referenceGameSourceManifestPayloadSchema",
   "referenceGameSourceManifestSchema",
   "referenceGameSourceObjectSchema",
@@ -501,5 +503,30 @@ exports[`public export surface browser-interaction export names are stable 1`] =
   "resolveBrowserPointerTarget",
   "targetIdentityKey",
   "validateBrowserInteractionSnapshot",
+]
+`;
+
+exports[`public export surface testing-compiler export names are stable 1`] = `
+[
+  "compileScenarioReplay",
+]
+`;
+
+exports[`public export surface authoring-compiler export names are stable 1`] = `
+[
+  "materializeWorkspace",
+]
+`;
+
+exports[`public export surface reference-game-compiler export names are stable 1`] = `
+[
+  "CANONICAL_REFERENCE_GAME_IDS",
+  "REFERENCE_GAME_SOURCE_INVENTORY_POLICY",
+  "classifyReferenceGameSourcePath",
+  "collectReferenceGameSourceManifest",
+  "collectReferenceGameSourceObjects",
+  "isReferenceGameSourceObject",
+  "referenceGamePathIdentity",
+  "shouldDescendIntoReferenceGameDirectory",
 ]
 `;

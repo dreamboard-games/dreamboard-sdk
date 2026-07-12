@@ -11,7 +11,7 @@ type CanonicalReferenceGameJson =
   | CanonicalReferenceGameJson[]
   | { [key: string]: CanonicalReferenceGameJson };
 
-export function computeReferenceGameSourceDigest(
+export function computeReferenceGameSourceFingerprint(
   payload: ReferenceGameSourceManifestPayload,
 ): `sha256:${string}` {
   const canonical = canonicalizeReferenceGameSourcePayload(payload);
@@ -25,12 +25,29 @@ export function canonicalizeReferenceGameSourcePayload(
   return canonicalizeJson({
     ...payload,
     games: [...payload.games].sort((left, right) =>
-      left.id.localeCompare(right.id),
+      compareReferenceGameCanonicalStrings(left.id, right.id),
     ),
     objects: [...payload.objects].sort((left, right) =>
-      left.path.localeCompare(right.path),
+      compareReferenceGameCanonicalStrings(left.path, right.path),
     ),
+    inventoryPolicy: {
+      ...payload.inventoryPolicy,
+      excludedGameRelativePaths: [
+        ...payload.inventoryPolicy.excludedGameRelativePaths,
+      ].sort(),
+      excludedGameRelativePrefixes: [
+        ...payload.inventoryPolicy.excludedGameRelativePrefixes,
+      ].sort(),
+    },
   });
+}
+
+/** Locale-independent UTF-16 code-unit order, equivalent to Java String.compareTo. */
+export function compareReferenceGameCanonicalStrings(
+  left: string,
+  right: string,
+): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function canonicalizeJson(value: unknown): CanonicalReferenceGameJson {
@@ -61,7 +78,9 @@ function canonicalizeJson(value: unknown): CanonicalReferenceGameJson {
     return Object.fromEntries(
       entries
         .map(([key, item]) => [key.normalize("NFC"), item] as const)
-        .sort(([left], [right]) => left.localeCompare(right))
+        .sort(([left], [right]) =>
+          compareReferenceGameCanonicalStrings(left, right),
+        )
         .map(([key, item]) => [key, canonicalizeJson(item)]),
     );
   }

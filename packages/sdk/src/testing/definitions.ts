@@ -194,7 +194,7 @@ export type ScenarioSchemaOutput<Schema extends z.core.SomeType> =
                                   ScenarioSchemaOutput<Right>
                               : Schema extends z.ZodPipe<
                                     infer Input,
-                                    infer _Output
+                                    z.ZodType
                                   >
                                 ? ScenarioSchemaOutput<Input>
                                 : Schema extends z.ZodLazy<infer Inner>

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import path from "node:path";
 import { z } from "zod";
 import {
   defineEmptyView,
@@ -11,8 +12,10 @@ import type { RuntimeTableRecord } from "./reducer/advanced";
 import { asPlayerId, perPlayer } from "./reducer/per-player";
 import {
   type CandidateVerificationInput,
+  materializeScenarioRuntimeCheckpoint,
   runCandidateVerification,
 } from "./testing-runtime.js";
+import { compileScenarioReplay } from "./testing-compiler.js";
 import { createScenarioAuthoring } from "./testing/definitions";
 
 function createTable(playerIds: readonly string[]): RuntimeTableRecord {
@@ -315,7 +318,7 @@ describe("runCandidateVerification", () => {
   });
 
   test("rejects legacy bases and snapshots at both type and runtime boundaries", async () => {
-    if (false) {
+    const assertRemovedTypes = () => {
       const cannotSupplyBases: CandidateVerificationInput<typeof game> = {
         reducer: game,
         scenarios: [passingScenario],
@@ -329,7 +332,8 @@ describe("runCandidateVerification", () => {
         snapshot: {},
       };
       expect([cannotSupplyBases, cannotSupplySnapshot]).toBeDefined();
-    }
+    };
+    expect(typeof assertRemovedTypes).toBe("function");
 
     await expect(
       runCandidateVerification({
@@ -345,5 +349,83 @@ describe("runCandidateVerification", () => {
         snapshot: {},
       } as never),
     ).rejects.toThrow("unsupported field 'snapshot'");
+  });
+
+  test("materializes a trusted runtime snapshot at an authored checkpoint", async () => {
+    const scenario = defineScenario({
+      id: "materialized-checkpoint",
+      setup: { players: 2, seed: 19 },
+      given: [{ actor: { seat: 0 }, interactionId: "score", params: {} }],
+      when: [{ actor: { seat: 0 }, interactionId: "score", params: {} }],
+      then: () => undefined,
+    });
+
+    const materialized = await materializeScenarioRuntimeCheckpoint({
+      game,
+      scenario,
+      at: { segment: "given", completed: 1 },
+    });
+
+    expect(materialized.checkpoint).toEqual({
+      segment: "given",
+      completed: 1,
+    });
+    expect(materialized.checkpointDigest).toStartWith("sha256:");
+    expect(materialized.playerIds).toEqual(["player-1", "player-2"]);
+    expect(materialized.state.domain.publicState).toEqual({ score: 1 });
+    expect(materialized.state.runtime.rng.seed).toBe(19);
+  });
+});
+
+describe("compileScenarioReplay", () => {
+  test("compiles one source-bound trusted DTO without assertion or projection payloads", async () => {
+    const scenarioPath = path.resolve(
+      import.meta.dirname,
+      "../../..",
+      "examples",
+      "reference-games",
+      "roll-and-write-scorecard",
+      "test/scenarios/complete-game.scenario.ts",
+    );
+    const [setup, repeated, developed] = await Promise.all([
+      compileScenarioReplay({
+        scenarioPath,
+        at: { segment: "setup", completed: 0 },
+      }),
+      compileScenarioReplay({
+        scenarioPath,
+        at: { segment: "setup", completed: 0 },
+      }),
+      compileScenarioReplay({
+        scenarioPath,
+        at: { segment: "given", completed: 21 },
+      }),
+    ]);
+
+    expect(setup.schemaVersion).toBe(1);
+    expect(setup.scenario.path).toBe(
+      "test/scenarios/complete-game.scenario.ts",
+    );
+    expect(setup.scenario.sourceDigest).toMatch(/^sha256:[a-f0-9]{64}$/);
+    expect(repeated.scenario.sourceDigest).toBe(setup.scenario.sourceDigest);
+    expect(developed.scenario.sourceDigest).toBe(setup.scenario.sourceDigest);
+    expect(setup.checkpoint).toEqual({ segment: "setup", completed: 0 });
+    expect(developed.checkpoint).toEqual({
+      segment: "given",
+      completed: 21,
+    });
+    expect(developed.expected.checkpointDigest).not.toBe(
+      setup.expected.checkpointDigest,
+    );
+    expect(developed.expected.publicProjectionDigest).not.toBe(
+      setup.expected.publicProjectionDigest,
+    );
+    expect(setup.definition.given).toHaveLength(21);
+    expect(setup.definition.when).toHaveLength(3);
+    expect(Object.hasOwn(setup.definition, "then")).toBe(false);
+    const serialized = JSON.stringify(setup);
+    expect(serialized).not.toContain("publicState");
+    expect(serialized).not.toContain("privateState");
+    expect(serialized).not.toContain("player-1");
   });
 });
