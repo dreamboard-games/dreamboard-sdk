@@ -114,6 +114,7 @@ async function loadManifest(options: {
   readonly manifestPath: string;
   readonly projectRoot: string;
 }): Promise<unknown> {
+  const typesEntry = await resolveCurrentSdkTypesFacade();
   const entryPath = path.join(
     options.projectRoot,
     "node_modules/.cache/dreamboard-workspace-compiler",
@@ -129,7 +130,9 @@ async function loadManifest(options: {
       format: "esm",
       platform: "node",
       target: "node24",
-      packages: "external",
+      alias: {
+        "@dreamboard-games/sdk/types": typesEntry,
+      },
       sourcemap: "inline",
       logLevel: "silent",
     });
@@ -145,6 +148,19 @@ async function loadManifest(options: {
   } finally {
     await rm(entryPath, { force: true });
   }
+}
+
+async function resolveCurrentSdkTypesFacade(): Promise<string> {
+  const candidates = [
+    path.resolve(import.meta.dirname, "../types.ts"),
+    path.resolve(import.meta.dirname, "types.js"),
+  ];
+  for (const candidate of candidates) {
+    if (await isFile(candidate)) return candidate;
+  }
+  throw new Error(
+    `Could not resolve the current @dreamboard-games/sdk/types facade from ${import.meta.dirname}.`,
+  );
 }
 
 async function writeAuthoritativeFile(

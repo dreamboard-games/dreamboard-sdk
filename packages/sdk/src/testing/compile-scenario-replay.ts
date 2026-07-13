@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { createRequire } from "node:module";
 import {
   lstat,
   mkdtemp,
@@ -106,6 +107,7 @@ export async function compileScenarioReplay(
       "@dreamboard-games/sdk/testing": testingEntry,
       "@dreamboard-games/sdk/testing-runtime": testingRuntimeEntry,
       "@dreamboard-games/sdk/types": typesEntry,
+      zod: createRequire(import.meta.url).resolve("zod"),
     },
     format: "esm",
     platform: "node",
