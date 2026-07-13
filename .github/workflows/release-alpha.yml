@@ -34,7 +34,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm install --frozen-lockfile
         working-directory: dreamboard
-      - run: pnpm --dir packages/ui-workbench exec playwright install --with-deps chromium
+      - run: pnpm --dir packages/ui-workbench exec playwright install --with-deps chromium webkit
       - run: pnpm check
       - name: Create UI release proof
         run: pnpm ui:release-proof
