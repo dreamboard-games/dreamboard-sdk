@@ -9,9 +9,9 @@ their subject only by replaying canonical `passing.submit` and
 inspect/explore checks, and UI/demo checkpoints all use that path or a separate
 legal seed/path for a mutually exclusive scoring or legality branch.
 
-`test/bases/**` and `test/generated/**` are preserved byte-for-byte only for the
-Phase 07 deletion boundary. They are excluded from typecheck, test discovery,
-dev, and scenario authority; do not import or regenerate them.
+Generated workspace contracts, projections, and Workbench checkpoints are
+ignored local outputs. They are not scenario authority and must not be edited
+or committed.
 
 Run the focused gate from this package:
 

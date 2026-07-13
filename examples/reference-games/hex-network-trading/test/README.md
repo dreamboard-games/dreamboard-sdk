@@ -13,9 +13,9 @@ checkpoint, probe, explore, scheduler, and privacy assertions.
 `test/ui-scenarios/` contains derived Workbench checkpoints for setup,
 production, discard, pending trade, a growing network, and terminal victory.
 
-`test/bases/**` and `test/generated/**` are preserved only for the coordinated
-Phase 07 deletion. They are unused by package scripts, scenario discovery,
-Workbench checkpoints, and verification; they are not assertion authority.
+Generated workspace contracts, projections, and Workbench fixtures are ignored
+local outputs. They are not assertion authority and must not be edited or
+committed.
 
 Run:
 

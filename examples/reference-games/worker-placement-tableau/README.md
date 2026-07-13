@@ -7,8 +7,8 @@ personal spatial tableau.
 ## Rules Authority
 
 [`rule.md`](rule.md) is the approved gameplay and theme contract. Existing
-wake-up tracks, variable spaces, worker growth, orders, cards, reducers, tests,
-and generated fixtures belong to the superseded larger game.
+wake-up tracks, variable spaces, worker growth, orders, and cards belong to the
+superseded larger game and are deliberate exclusions, not alternate authority.
 
 ## What To Learn Here
 
@@ -26,7 +26,7 @@ and generated fixtures belong to the superseded larger game.
 - `test/scenarios/action-spaces.scenario.ts`
 - `test/scenarios/complete-game.scenario.ts`
 
-## Agent authoring workflow
+## Agent Authoring Workflow
 
 Start from the canonical normal-setup replay. Use `inspect` to understand the
 actor, public workshop state, and progressive input descriptors; use `explore`
@@ -55,5 +55,5 @@ not author system-player commands or state snapshots.
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/worker-placement-tableau verify
+pnpm verify
 ```

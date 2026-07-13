@@ -30,6 +30,16 @@ read-only from a clean checkout.
 `@dreamboard-games/sdk` owns the supported authoring, generated runtime,
 testing, reducer-contract, browser-interaction, and UI subpaths.
 
+## Reference Games
+
+The nine isolated workspaces under
+[`examples/reference-games/`](examples/reference-games/README.md) are complete
+multi-turn teaching games and packed public-package consumers. Start with the
+[canonical example map](docs/reference/canonical-examples.md), then read the
+selected game-local `rule.md` and typed scenario source. Generated workspace
+contracts and Workbench fixtures are local outputs; the nine per-game lockfiles
+are intentionally checked in as exact public-package provenance.
+
 ## Local Registry
 
 Local SDK snapshots can be published to a local Verdaccio registry:

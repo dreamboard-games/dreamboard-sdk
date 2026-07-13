@@ -27,8 +27,17 @@ tests, fixtures, and screenshots are evidence only and cannot override it.
 - `test/scenarios/barrier-actionability.scenario.ts`
 - `test/scenarios.test.ts`
 
+## Agent Authoring Workflow
+
+Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Use
+`dreamboard test inspect` from each relevant player perspective to distinguish
+private hands, locked choices, and the pending barrier. Use
+`dreamboard test explore` to obtain concrete replay-accepted drafts as JSON,
+then add them to the typed scenario. All Workbench checkpoints remain prefixes
+of that complete two-round replay; no generated hand state is authored.
+
 ## Verification
 
 ```sh
-mise exec node@24 -- pnpm --dir examples/reference-games/simultaneous-card-drafting verify
+pnpm verify
 ```

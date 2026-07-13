@@ -28,15 +28,10 @@ For card selection scenarios, model the behavior explicitly:
 - intermediate screenshots that show staged/selected state;
 - final projection, semantic, and submission digests.
 
-For example, a "pass three cards" scenario should not only click the submit
-button. It should select three concrete card actuators and then submit:
-
-```text
-hearts.pass-three.mobile.select-01
-hearts.pass-three.mobile.select-02
-hearts.pass-three.mobile.select-03
-hearts.pass-three.mobile.commit
-```
+For example, `hearts.sealed-pass.mobile` must not prove a sealed pass by only
+clicking its submit button. Its executable replay recipe selects three concrete
+card actuators before committing. Treat the generated step IDs as local
+materialized output, not a second authored scenario API.
 
 ## Mobile Touch Targets
 
@@ -56,9 +51,9 @@ events from also bubbling into the parent hand gesture layer.
 
 ## Expected Evidence Path
 
-Fixture expected digests should be produced through the same actuator path the
-browser replay uses. Do not generate expected commit evidence with a shortcut
-runtime submit if the Workbench will click a DOM submit actuator.
+Generated fixture expectations should be produced through the same actuator
+path the browser replay uses. Do not generate expected commit evidence with a
+shortcut runtime submit if the Workbench will click a DOM submit actuator.
 
 When replay behavior looks surprising, inspect the semantic browser snapshot
 before changing digests:

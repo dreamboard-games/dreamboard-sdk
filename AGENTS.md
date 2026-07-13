@@ -19,9 +19,9 @@ belongs in `docs/`.
 
 - `packages/sdk` owns the only published package. Other workspace packages are
   private implementation inputs.
-- Reference-game source lives under
-  `examples/reference-games/<game>/src/` and
-  `examples/reference-games/shared/`.
+- Each `examples/reference-games/<game>/` root is one isolated authored game
+  workspace. Its `rule.md` is gameplay authority; generated workspace
+  contracts beneath that root are ignored local build products.
 - UI fixture compiler code lives under `scripts/ui-fixtures/`.
 - Workbench runtime and presentation live under `packages/ui-workbench/`.
 - UI orchestration, catalog generation, parity, and release-proof scripts live
@@ -32,25 +32,49 @@ belongs in `docs/`.
 
 ## Generated UI Workflow
 
-Do not hand-edit generated UI fixtures, fixture indexes, scenario catalogs, or
-generated UI docs. Change the owning reference source or generator, then run:
+Do not hand-edit generated workspace contracts, Workbench fixtures, fixture
+indexes, scenario catalogs, or generated docs. Change the authored source or
+owning generator. Materialize before any consumer reads the Workbench catalog;
+the canonical commands enforce that order:
 
 ```sh
-pnpm ui:fixtures:compile
+pnpm ui:workbench:materialize
 pnpm ui:catalog:generate
 pnpm docs:generate
 ```
 
 Generated surfaces include:
 
-- `fixtures/ui/reference-games/`
+- `examples/reference-games/<game>/shared/generated/` (ignored)
+- `build/ui-workbench/generated/` (ignored)
 - `fixtures/ui/component-scenario-index.json`
-- `packages/ui-workbench/src/catalog.ts`
 - `docs/ui-agent-iteration.md`
 - `docs/reference-games.md`
+- `docs/reference/agent-api.md`
+- `packages/sdk/REFERENCE.md`
 
-Run `pnpm ui:fixtures:check`, `pnpm ui:catalog:check`, and `pnpm docs:check` to
-detect stale generated output.
+Run `pnpm ui:catalog:check`, `pnpm docs:check`, and `pnpm generate:check` to
+detect stale generated output. Never stage ignored materialized output.
+
+## Coding-Agent Scenario Loop
+
+1. Read the game-local `rule.md` and one typed source under
+   `test/scenarios/`; do not start from a base state or generated projection.
+2. Run `dreamboard test inspect <scenario> --perspective player:<seat>` to
+   understand the selected checkpoint, actor views, blockers, and action input
+   descriptors as JSON.
+3. Run `dreamboard test explore <scenario> --perspective player:<seat>` and
+   copy a returned concrete replay-accepted `candidate.command` into the same
+   typed scenario source.
+4. Run `pnpm verify` in the isolated game workspace. Use its authored UI
+   scenario checkpoints in the Workbench; do not check in projected state.
+5. Launch the same authored source with `dreamboard dev` when host-level
+   iteration is needed.
+
+All nine reference games are complete multi-turn teaching games. Their stable
+directory IDs, manifest IDs, and release slugs may differ from public display
+names. All nine isolated `pnpm-lock.yaml` files are intentional public-package
+provenance; landing-page selection is owned by the product repository.
 
 ## Coding-Agent UI Loop
 
@@ -94,9 +118,9 @@ lessons about semantic evidence, mobile card targets, and screenshot limits.
   `fixture.expected`.
 - Preserve screenshots and measured evidence in the run receipt. A browser test
   that passes without writing measured evidence is a failure.
-- The required Workbench scenarios are `hearts.pass-three.mobile`,
-  `hex-network-trading.place-route.desktop`, and
-  `worker-placement-tableau.place-worker.desktop`. Together they cover mouse
+- The required Workbench scenarios are `hearts.sealed-pass.mobile`,
+  `hex-network-trading.growing-network.desktop`, and
+  `worker-placement-tableau.first-craft.desktop`. Together they cover mouse
   click, browser touch tap, physical pointer drag, runtime draft mutation,
   Chromium/WebKit phone layout, Axe, submission, semantic snapshots, and digest
   evidence.

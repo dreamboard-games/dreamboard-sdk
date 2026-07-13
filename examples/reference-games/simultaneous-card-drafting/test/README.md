@@ -14,15 +14,14 @@ Run the focused source proof:
 pnpm test
 ```
 
-From the game directory, use the packed public CLI for the agent-authoring
-loop. Both commands emit one JSON envelope; there is no output-format flag.
+From the game directory, use the public CLI for the agent-authoring loop. Both
+commands emit one JSON envelope; there is no output-format flag.
 
 ```sh
-"$DREAMBOARD_CLI_BIN" test inspect test/scenarios/complete-game.scenario.ts --perspective player:0
-"$DREAMBOARD_CLI_BIN" test explore test/scenarios/complete-game.scenario.ts --perspective player:0
+dreamboard test inspect test/scenarios/complete-game.scenario.ts --perspective player:0
+dreamboard test explore test/scenarios/complete-game.scenario.ts --perspective player:0
 ```
 
-The retained `bases/` and `generated/` trees are migration artifacts only.
-They are excluded from TypeScript, scenario discovery, package tests, and UI
-scenario authority, and remain byte-retained until the coordinated deletion
-phase.
+Generated workspace contracts, projections, and Workbench checkpoints are
+ignored local outputs. They are excluded from scenario authority and must not
+be edited or committed.

@@ -7,8 +7,8 @@ ordered system events.
 ## Rules Authority
 
 [`rule.md`](rule.md) is the approved gameplay and theme contract. The current
-reducer, generated artifacts, scenarios, and screenshots are implementations
-of that contract; they do not amend it.
+reducer, local generated artifacts, scenarios, and screenshots are evidence for
+that contract; they do not amend it.
 
 ## What To Learn Here
 
@@ -35,15 +35,17 @@ The canonical demo replay charges once, repairs all six beacon stages, and
 wins on the seventh decision. The final repair ends immediately, so no seventh
 weather card or countdown step is resolved.
 
+## Agent Authoring Workflow
+
+Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Use
+`dreamboard test inspect` from `player:0` to see beacon state, public procedure
+events, and available decisions, then use `dreamboard test explore` to obtain
+concrete replay-accepted commands as JSON. Add a returned command to the typed
+scenario. Weather and countdown procedures settle automatically; agents never
+author a system player, deck order, or mid-game state.
+
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/solo-countdown-puzzle verify
-```
-
-From this game directory, the public CLI's JSON-only authoring workflow is:
-
-```sh
-"$DREAMBOARD_CLI_BIN" test inspect test/scenarios/complete-game.scenario.ts --perspective player:0
-"$DREAMBOARD_CLI_BIN" test explore test/scenarios/complete-game.scenario.ts --perspective player:0
+pnpm verify
 ```

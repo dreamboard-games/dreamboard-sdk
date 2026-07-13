@@ -30,6 +30,16 @@ serialized base states are not gameplay authority.
 - `test/scenarios/complete-game.scenario.ts`
 - `test/scenarios/discard-barrier.scenario.ts`
 
+## Agent Authoring Workflow
+
+Read `rule.md` and the closest typed file under `test/scenarios/`. Use
+`dreamboard test inspect` to see perspective-visible inventory, the current
+actor or barrier, blockers, and progressive inputs. Use
+`dreamboard test explore` to obtain concrete replay-accepted commands as JSON,
+then add one command to the typed scenario. Normal rolls, sevens, discards,
+Bandit movement, trades, and network growth all use this one path; scenarios do
+not inject dice, resources, or mid-game state.
+
 ## Verification
 
 ```sh

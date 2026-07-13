@@ -19,7 +19,5 @@ Agent workflow:
 
 `complete-game.scenario.ts` is a normal growing-deck playthrough, not a fixture.
 The six UI scenarios select checkpoints from that same replay and carry no
-editable state of their own.
-
-The checked-in `bases/` and `generated/` trees are obsolete compatibility
-material awaiting Phase 07 deletion. Do not import, regenerate, or extend them.
+editable state of their own. Generated workspace contracts, projections, and
+Workbench checkpoints are ignored local outputs; do not edit or commit them.

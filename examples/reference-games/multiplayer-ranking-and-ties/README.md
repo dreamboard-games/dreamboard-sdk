@@ -7,7 +7,7 @@ cancellation across a complete six-round public draft.
 ## Rules Authority
 
 [`rule.md`](rule.md) is the approved gameplay and theme contract. Current
-reducers, tests, generated fixtures, and screenshots must conform to it and
+reducers, tests, local generated fixtures, and screenshots are evidence and
 cannot silently choose cancellation or ranking precedence.
 
 ## What To Learn Here
@@ -35,15 +35,17 @@ The canonical demo uses four organizers, seed 2, and 24 accepted drafts. Its
 reusable setup, early-refill, mid-game, and terminal checkpoints are all
 prefixes of the same normal replay.
 
+## Agent Authoring Workflow
+
+Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Run
+`dreamboard test inspect` for a player perspective to understand the public
+market, standings evidence, and active draft, then run
+`dreamboard test explore` to obtain concrete replay-accepted commands as JSON.
+Add a returned command to the typed scenario. Uncommon ranking and cancellation
+branches remain legal replay paths rather than authored terminal state.
+
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/multiplayer-ranking-and-ties verify
-```
-
-The public CLI exposes the same replay as JSON for agent inspection:
-
-```sh
-"$DREAMBOARD_CLI_BIN" test inspect test/scenarios/complete-game.scenario.ts --perspective player:0
-"$DREAMBOARD_CLI_BIN" test explore test/scenarios/complete-game.scenario.ts --perspective player:0
+pnpm verify
 ```

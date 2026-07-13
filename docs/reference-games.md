@@ -21,6 +21,16 @@ catalog.
 | `solo-countdown-puzzle`        | Required foundation | Last Light       | `resource-management`, `repeated-turn-state`, `square-grid`                                         | `square-board-targets`, `turn-summary`, `event-log`                                   | `solo-countdown-puzzle.developing.mobile`, `solo-countdown-puzzle.initial.desktop`, `solo-countdown-puzzle.reinforcement-hit.desktop`, `solo-countdown-puzzle.terminal.mobile`                                                                                                                  |
 | `automa-river-rival`           | Required foundation | River Guild      | `automa-rival`, `open-market`, `cooperative-scoring`, `deterministic-procedure`                     | `market-row`, `event-log`, `cooperative-outcome`, `compact-mobile-history`            | `automa-river-rival.river.early.desktop`, `automa-river-rival.river.midgame.desktop`, `automa-river-rival.river.opening.mobile`, `automa-river-rival.river.terminal.mobile`                                                                                                                     |
 
+## Agent Authoring Workflow
+
+Read the game-local `rule.md` and one typed source under `test/scenarios/`.
+Use `dreamboard test inspect` to understand a selected checkpoint and
+`dreamboard test explore` to obtain concrete replay-accepted commands as JSON.
+Add a returned command to that typed scenario and run `pnpm verify` in the
+isolated game package. Reducer tests, Workbench checkpoints, and product-demo
+replay derive from the same scenario source; there is no checked-in base-state
+or generated-projection authoring mode.
+
 ## Packed Verification
 
 Run `pnpm reference-games:check` for source validation and

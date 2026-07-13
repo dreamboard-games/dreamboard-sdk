@@ -34,8 +34,17 @@ The complete game is also the product-demo authority. UI checkpoints select
 ordinary legal prefixes for the opening hand, first purchase, acquired-card
 recycle, Technique chain, depleted supply, and final outcome.
 
+## Agent Authoring Workflow
+
+Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Use
+`dreamboard test inspect` on a player perspective to understand the current
+hand, supply, blockers, and dependent inputs, then use `dreamboard test explore`
+to obtain concrete replay-accepted commands as JSON. Add a returned command to
+the typed scenario and keep the UI checkpoints as ordinary prefixes of that
+same replay; do not author a base state or generated projection.
+
 ## Verification
 
 ```sh
-pnpm --dir examples/reference-games/deck-building-market verify
+pnpm verify
 ```

@@ -20,8 +20,8 @@ proof that the framework matches a real `dreamboard` host.
 - **Prove behavior in the Workbench.** It runs the **real**
   `createPluginRuntimeClient` and the **real** `@dreamboard-games/sdk/ui`
   components; the only thing swapped for "no backend" is the transport, which
-  replays a `PluginProtocolTape` _compiled from the reference game's actual
-  reducer_. Use [`fixtures/ui/component-scenario-index.json`](../../fixtures/ui/component-scenario-index.json)
+  replays a local projected fixture compiled from the reference game's actual
+  reducer and typed scenario. Use [`fixtures/ui/component-scenario-index.json`](../../fixtures/ui/component-scenario-index.json)
   to map a changed component to its scenarios.
 - **Keep runtime visual baselines small.** They cover a few representative
   composed states that semantic digests cannot review visually: selected mobile
@@ -42,7 +42,7 @@ from **source** so component edits hot-reload in the Workbench too:
 
 ```sh
 # Root: source mode + scenario route printing
-pnpm ui:workbench:src --scenario hearts.pass-three.mobile
+pnpm ui:workbench:src --scenario hearts.sealed-pass.mobile
 
 # Or directly in the workbench package
 pnpm --filter @dreamboard-games/ui-workbench dev:src
@@ -88,7 +88,8 @@ three-way digest triangle ([`scripts/ui/run-ui-parity.mjs`](../../scripts/ui/run
 where three independently materialized observations must agree on projection,
 semantic, and submission digests plus actuator identity:
 
-1. **Fixture expectation** — baked at compile time.
+1. **Generated fixture expectation** — measured while materializing the local
+   fixture.
 2. **Source-Workbench observation** — measured by driving the real Workbench in a
    browser.
 3. **Real-host observation** — the private monorepo runs the same fixture against

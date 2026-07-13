@@ -19,7 +19,5 @@ The matrix proves:
 
 The four UI scenarios select setup, early, midgame, and terminal prefixes from
 `scenarios/complete-game.scenario.ts`. They do not check in presentation state
-or add checkpoint metadata to the behavior scenario.
-
-`test/generated/**` is intentionally retained byte-for-byte for the Phase 07
-coordinated deletion. It is excluded from TypeScript and has no runtime reader.
+or add checkpoint metadata to the behavior scenario. Projected test and
+Workbench state is generated locally, ignored, and disposable.

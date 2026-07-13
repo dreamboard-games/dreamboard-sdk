@@ -38,7 +38,7 @@ are visible to every perspective.
 - `test/scenarios/no-fake-player.scenario.ts` — identity-boundary proof
 - `ui/App.tsx` — responsive river, warehouse, event, and outcome UI
 
-## Agent authoring workflow
+## Agent Authoring Workflow
 
 From this package root, inspect the opening node, enumerate its concrete legal
 claims, then copy a returned `candidate.command` into the scenario source:
@@ -67,7 +67,3 @@ no rival command to author.
 ```sh
 pnpm verify
 ```
-
-The retained `test/generated/**` projection is legacy deletion-ready evidence.
-It is excluded from compilation and is not read by any scenario or runtime
-path; Phase 07 owns its coordinated deletion.

@@ -1,12 +1,13 @@
 # Dreamboard Reference Games
 
-This directory contains SDK-owned reference games used to verify public package
-consumption and future UI fixture coverage. They are intentionally outside the
-root pnpm workspace and must remain isolated consumers of `@dreamboard-games/sdk`.
+This directory contains nine SDK-owned, complete multi-turn teaching games.
+They verify public package consumption, typed scenario authoring, Workbench UI
+behavior, and product-demo replay. They are intentionally outside the root pnpm
+workspace and must remain isolated consumers of `@dreamboard-games/sdk`.
 
-The approved game-local `rule.md` files are gameplay authority. Their
-base-free scenario, on-demand generation, and cross-repository migration is
-defined by the
+The approved game-local `rule.md` files are gameplay authority. Reducers, tests,
+screenshots, and generated output are evidence only. Their base-free scenario,
+on-demand generation, and cross-repository migration are defined by the
 [Reference Game Rule Conformance And Agent Testing Hard Cut](../../docs/exec-plans/reference-game-rule-conformance-hard-cut/README.md).
 
 Reference IDs describe mechanics and UI patterns rather than product names:
@@ -23,14 +24,30 @@ Reference IDs describe mechanics and UI patterns rather than product names:
 
 Each game has a `reference-game.json` provenance manifest, its own
 `package.json`, its own `pnpm-lock.yaml`, workspace source, and scenario
-coverage under `test/`.
+coverage under `test/`. All nine lockfiles are intentionally checked in: each
+records the exact public SDK artifact consumed by that isolated game. Do not
+consolidate or hand-edit them.
 
-Run the Phase 1 gates from the repository root:
+## Agent Authoring Loop
+
+Read `rule.md` and a typed file under `test/scenarios/`. Use
+`dreamboard test inspect` to understand a checkpoint and
+`dreamboard test explore` to obtain concrete replay-accepted commands as JSON.
+Add the chosen command to the typed scenario, then run `pnpm verify` from that
+game's package root. Workbench checkpoints, inspection, exploration, reducer
+tests, and demo replay all derive from that one scenario source; do not author
+or commit base states, generated projections, catalogs, fixtures, or
+checkpoints.
+
+Repository tools materialize ignored workspace contracts and Workbench output
+before consuming them. Run the SDK gates from the repository root:
 
 ```bash
 pnpm reference-games:check
 pnpm reference-games:test:packed
 pnpm reference-games:bundle
+pnpm ui:catalog:check
+pnpm docs:check
 ```
 
 Reference games with a valid `demoRelease` block are packageable demo

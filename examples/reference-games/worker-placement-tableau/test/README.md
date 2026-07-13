@@ -7,8 +7,8 @@ shared-rank draw branch. Focused scenarios and probes cover occupancy,
 pass/skip/cleanup, every action space, exchanges, crafting domains, scoring,
 inspection, and exploration.
 
-`test/bases/**` and `test/generated/**` are intentionally frozen legacy
-fixtures during the conformance phases. They are excluded from verification
-and will be removed together in the fixture-deletion phase.
+Generated workspace contracts, projections, and Workbench checkpoints are
+ignored local outputs. They are excluded from scenario authority and must not
+be edited or committed.
 
 Run `pnpm test`, `pnpm test:ui`, or `pnpm verify` from this package.

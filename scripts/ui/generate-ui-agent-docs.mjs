@@ -106,7 +106,8 @@ async function renderUiAgentIterationDoc({ scenarios, componentIndex }) {
 
 This guide is generated on demand from the authored UI scenarios and root
 command map. The generated catalog and projected fixtures are local build
-products; do not commit them.
+products; do not commit them. \`pnpm docs:generate\` and \`pnpm docs:check\`
+materialize and validate the Workbench catalog before this guide reads it.
 
 ## Command Tiers
 
@@ -188,6 +189,16 @@ Landing-page selection remains product-owned and does not change this SDK
 catalog.
 
 ${table(["Game", "Release role", "Display name", "Mechanics", "UI patterns", "Scenarios"], rows)}
+
+## Agent Authoring Workflow
+
+Read the game-local \`rule.md\` and one typed source under \`test/scenarios/\`.
+Use \`dreamboard test inspect\` to understand a selected checkpoint and
+\`dreamboard test explore\` to obtain concrete replay-accepted commands as JSON.
+Add a returned command to that typed scenario and run \`pnpm verify\` in the
+isolated game package. Reducer tests, Workbench checkpoints, and product-demo
+replay derive from the same scenario source; there is no checked-in base-state
+or generated-projection authoring mode.
 
 ## Packed Verification
 

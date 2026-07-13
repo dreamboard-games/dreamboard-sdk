@@ -4,7 +4,8 @@
 
 This guide is generated on demand from the authored UI scenarios and root
 command map. The generated catalog and projected fixtures are local build
-products; do not commit them.
+products; do not commit them. `pnpm docs:generate` and `pnpm docs:check`
+materialize and validate the Workbench catalog before this guide reads it.
 
 ## Command Tiers
 
