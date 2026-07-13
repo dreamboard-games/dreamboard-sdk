@@ -1,6 +1,8 @@
 # Phase 08: Docs, Release, And Merge Closeout
 
-Status: proposed.
+Status: in progress. Phase 07 is complete for local and packed-public scope;
+final documentation, repository gates, CI, and mergeability remain. Staging and
+production were not run.
 
 Depends on Phases 00-07.
 

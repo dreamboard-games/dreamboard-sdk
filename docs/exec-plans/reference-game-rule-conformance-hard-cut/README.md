@@ -1,7 +1,7 @@
 # Reference Game Rule Conformance And Agent Testing Hard Cut
 
-Status: blocked in Phase 07 public authoring release proof (local implementation
-and proof complete)
+Status: Phase 07 complete for local and packed-public scope; Phase 08 in
+progress. Staging and production were not run.
 
 Planned at SDK commit: `05509e395bb5b6ec28cac4b7724a649ea9e56988`
 

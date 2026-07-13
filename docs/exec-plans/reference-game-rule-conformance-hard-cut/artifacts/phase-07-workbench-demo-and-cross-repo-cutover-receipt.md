@@ -2,10 +2,10 @@
 
 Recorded: 2026-07-13 (Australia/Sydney)
 
-Status: **blocked at public authoring release proof**. The derived-free SDK,
-local demo, landing, browser, and replacement perf paths pass. Phase 07 is not
-closed because the requested public CLI/dev-host tuple reuses immutable npm
-versions whose published bytes target older SDK releases.
+Status: **complete for local and packed-public scope**. The derived-free SDK,
+local demo, landing, browser, replacement perf, immutable public authoring
+tuple, internal repin, and internal package gate pass. Staging and production
+were not run and are not implied by this receipt.
 
 ## Source And Package Identity
 
@@ -13,8 +13,8 @@ versions whose published bytes target older SDK releases.
 | ------------------------------- | ------------------------------------------------------------------------------------------------- |
 | SDK public package source       | `a4b575437bbe79ecc95735c54cda51e197db7d60`                                                        |
 | SDK integrated reference source | `006467423597b5ef9d883201013b2ca90bf1b5bd`                                                        |
-| Public Dreamboard source        | `0fa78d467e94d58af8d21b3f4df9dd8fa51f067a`                                                        |
-| Internal local-proof head       | `1770e3e4aeab9247dbed6bd84f199641ed1aaec8`                                                        |
+| Public Dreamboard source        | `1b30dd40c94a25fc74a798b94e69532861084f2c`                                                        |
+| Internal integration source     | `628095d71b0c88f9eae19a173b789c1cf55b508b`                                                        |
 | SDK package                     | `@dreamboard-games/sdk@0.4.0-alpha.9`                                                             |
 | SDK tarball SHA-256             | `cb962b14d5e4efdd6309a5fbd8d016b2f23dc9b815730c5e2aa3eb19a44bbf30`                                |
 | npm integrity                   | `sha512-VD198fMcKQEKLP5Sn8Sc1Jcnj+9HRerusWPkqSEH3i0dIj0MATY06GUOB0Ll7ZeoNHxE6PYMvsCJWwBOe+rofg==` |
@@ -114,35 +114,41 @@ field in protocol v4. Local-AWS-only actor/deadline allowances are likewise
 marked with explicit removal conditions; staging and production profiles were
 not changed.
 
-## Blocking Public Release Proof
+## Packed Public Authoring Release Proof
 
-The strict packed public-authoring receipt correctly rejects the requested
-tuple:
+The immutable public authoring tuple is:
 
-| Package                    | Requested source identity  | Immutable published identity |
-| -------------------------- | -------------------------- | ---------------------------- |
-| CLI `0.1.30-alpha.43`      | embeds SDK `0.4.0-alpha.9` | embeds SDK `0.4.0-alpha.7`   |
-| Dev-host `0.1.30-alpha.27` | peers SDK `0.4.0-alpha.9`  | peers SDK `0.4.0-alpha.6`    |
+| Package                        | Version           | Tarball SHA-256                                                    | npm integrity                                                                                     |
+| ------------------------------ | ----------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
+| `@dreamboard-games/cli`        | `0.1.30-alpha.44` | `6d7d8cbdad7db4935c1818464248cd39eb07f8e01921a5fcb06f6a59a52a231b` | `sha512-wk5AApMDE7OS9lHyPzMCJbUwm6/7xFd7ofHzYyeDGZVmDEw3Uyuxt1TSSc+eVmfz2HAMezsQ41iswJ/OqP9zwQ==` |
+| `@dreamboard-games/sdk`        | `0.4.0-alpha.9`   | `cb962b14d5e4efdd6309a5fbd8d016b2f23dc9b815730c5e2aa3eb19a44bbf30` | `sha512-VD198fMcKQEKLP5Sn8Sc1Jcnj+9HRerusWPkqSEH3i0dIj0MATY06GUOB0Ll7ZeoNHxE6PYMvsCJWwBOe+rofg==` |
+| `@dreamboard-games/api-client` | `0.3.0-alpha.4`   | `81808ca92eb66bde8aef52e93452efa3ef066ebb57232cb7a8a903488172ea4c` | `sha512-krDow9P1hFcsnl4fa8ptM+iwMjwcGSI/gxP2FhVn8LIUfPGovLhERvmeIFboJUA9jFImWEnT3cEinikuVagUUA==` |
+| `@dreamboard-games/dev-host`   | `0.1.30-alpha.28` | `83d8722a791f72a5e51d9e47324f60a456d604623cd2eb3aa894b0de58452277` | `sha512-yad4pzk4XcXzpQjqxxqG9oVIbdnUUKDEoaExhDk5I/VOQ/wNbU4LwJUMgmFgMthslT8mLa0PB9IUMMlFTyIV3A==` |
 
-The requested source release-set ID is
-`sha256:4b86e9538ee2aacfb27f55e866c57e88b2bed84a1968af61c0cc31b3a7ca1a8d`;
-the published CLI embeds
-`sha256:461f152ae56dcf724e1c963034fccfa49c01eac4cf05e26569eed487f990e17e`.
-CLI/dev-host stage and pack dry runs passed, but npm provenance and release-set
-identity cannot both pass under already-published versions. Internal repin
-correctly rejected the blocked receipt with
-`PUBLIC_ARTIFACT_RELEASE_SET_MISMATCH`.
+The tuple's release-set ID is
+`sha256:b772236f87619a0cd1f215cc50ff372ebbff39a686361736ec88eefa6198b3c4`.
+The packed compatibility receipt is retained at
+`/Users/mac/code/dreamboard/build/authoring-compatibility/2026-07-13T07-07-21-3NZ/receipt.json`
+with SHA-256
+`d50e7b58f38de52d1e6829b59e7e633ae6d23a194715ac66f0194ddbc90ada6d`.
+All nine checks passed: public registry metadata and tarball bytes, release-set
+identity, pre-install scaffold, frozen install and integrity, project-local
+adapter, manifest conformance, deterministic generation, generated workspace
+typecheck, and packed reducer scenarios.
 
-Required continuation:
+Internal `pnpm repin authoring <receipt>` accepted that exact release set. The
+subsequent `pnpm verify:package` gate passed and retained
+`build/verification/2026-07-13T07-33-46-445Z-cd6c5bfb/package/receipt.json`
+(SHA-256
+`552cc35b247a6825bd85dbb5135b236ee36ad87cae713ba1120d6b58d46ac2a1`).
+The internal integration source closes at
+`628095d71b0c88f9eae19a173b789c1cf55b508b`.
 
-1. assign never-published CLI and dev-host versions (the natural next versions
-   are `0.1.30-alpha.44` and `0.1.30-alpha.28`);
-2. obtain explicit authorization and publish both immutable npm artifacts;
-3. download and verify their registry bytes;
-4. rerun packed compatibility; and
-5. repin internal from the resulting all-passed receipt.
-
-Phase 07 and Phase 08 must remain open until that sequence passes.
+Registry metadata marks `@dreamboard-games/api-client@0.3.0-alpha.4` as
+deprecated because its generated API surface was mismatched. That immutable
+artifact is nevertheless the exact byte-proven member of this passing tuple;
+the deprecation is a release-hygiene follow-up requiring a coordinated
+successor tuple, not a reason to rewrite or invalidate this receipt.
 
 ## Environment Boundary
 

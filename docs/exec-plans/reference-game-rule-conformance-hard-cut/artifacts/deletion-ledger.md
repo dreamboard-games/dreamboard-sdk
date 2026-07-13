@@ -86,10 +86,14 @@ scenario-author package, its root command/workspace entry, fixture adapters,
 and private perf regeneration path to `deleted`; the successor hard-cut guard,
 298 perf tests, and the SDK-compiled Stormtrail live replay all passed.
 
-The phase itself remains blocked rather than complete because the public
-authoring compatibility tuple cannot be made immutable from the already-used
-CLI `0.1.30-alpha.43` and dev-host `0.1.30-alpha.27` versions. That release
-blocker does not roll back the deletion states above.
+Phase 07 is complete for local and packed-public scope. Fresh immutable CLI
+`0.1.30-alpha.44` and dev-host `0.1.30-alpha.28` artifacts, together with SDK
+`0.4.0-alpha.9` and API client `0.3.0-alpha.4`, passed all nine compatibility
+checks under release-set
+`sha256:b772236f87619a0cd1f215cc50ff372ebbff39a686361736ec88eefa6198b3c4`.
+Internal repin accepted that receipt and the package gate passed. The API
+client alpha.4 deprecation remains a coordinated-release hygiene follow-up; it
+does not change the proven bytes or roll back the deletion states above.
 
 ## Framework Base And Snapshot Surface
 

@@ -1,8 +1,7 @@
 # Phase 07: Workbench, Demo, Derived Deletion, And Cross-Repository Cutover
 
-Status: local implementation and proof complete; blocked at the public
-authoring release proof because already-published CLI and dev-host versions do
-not contain the frozen SDK release.
+Status: complete for local and packed-public scope. Staging and production were
+not run and are not implied by this closeout.
 
 Depends on Phases 00-06.
 
