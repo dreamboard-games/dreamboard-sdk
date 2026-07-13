@@ -18,8 +18,8 @@ importers:
   .:
     dependencies:
       '@dreamboard-games/sdk':
-        specifier: 0.4.0-alpha.8
-        version: 0.4.0-alpha.8(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
+        specifier: 0.4.0-alpha.9
+        version: 0.4.0-alpha.9(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
       framer-motion:
         specifier: 12.38.0
         version: 12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -57,8 +57,9 @@ importers:
 
 packages:
 
-  '@dreamboard-games/sdk@0.4.0-alpha.8':
-    resolution: {integrity: sha512-dECOu2izBDCWH0vAybvATnu6iLcBtEcl2hTXiIY33FpUumaCgJUw1dV8FXVpJVUo8yXibrH44mojOXJl4yeFgA==}
+  '@dreamboard-games/sdk@0.4.0-alpha.9':
+    resolution: {integrity: sha512-VD198fMcKQEKLP5Sn8Sc1Jcnj+9HRerusWPkqSEH3i0dIj0MATY06GUOB0Ll7ZeoNHxE6PYMvsCJWwBOe+rofg==}
+    hasBin: true
     peerDependencies:
       framer-motion: 12.38.0
       react: 19.2.6
@@ -754,7 +755,7 @@ packages:
 
 snapshots:
 
-  '@dreamboard-games/sdk@0.4.0-alpha.8(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)':
+  '@dreamboard-games/sdk@0.4.0-alpha.9(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)':
     dependencies:
       '@noble/hashes': 2.2.0
       '@radix-ui/react-accordion': 1.2.14(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -765,6 +766,7 @@ snapshots:
       '@radix-ui/react-tooltip': 1.2.10(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@use-gesture/react': 10.3.1(react@19.2.6)
       clsx: 2.1.1
+      esbuild: 0.28.1
       framer-motion: 12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       lucide-react: 1.21.0(react@19.2.6)
       react: 19.2.6
