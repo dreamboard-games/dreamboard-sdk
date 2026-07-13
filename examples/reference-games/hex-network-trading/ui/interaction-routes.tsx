@@ -7,7 +7,7 @@ import {
 const buttonClass =
   "min-h-11 rounded-xl border border-amber-700/70 bg-amber-950 px-4 py-2 text-sm font-black text-amber-50 shadow-sm transition enabled:hover:bg-amber-900 enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-45";
 const fieldPanelClass =
-  "grid gap-3 rounded-xl border border-stone-300 bg-stone-50 p-3";
+  "grid gap-2 rounded-xl border border-stone-300 bg-stone-50 p-2";
 
 function AvailabilityNote({
   available,
@@ -97,7 +97,7 @@ export function StormtrailInteractionRoutes({
   } satisfies InteractionRoutes;
 
   return (
-    <div className="grid gap-3" data-stormtrail-actions="">
+    <div className="grid gap-2" data-stormtrail-actions="">
       <Interaction.Routes routes={routes} />
 
       <placeStartingCamp.State unavailable={null}>

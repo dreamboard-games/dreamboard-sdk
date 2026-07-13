@@ -201,6 +201,7 @@ input {
   background: #cf7b16;
 }
 .action-form {
+  position: relative;
   margin-top: 16px;
   padding: 14px;
   border-radius: 14px;
@@ -214,6 +215,25 @@ input {
 .form-fields > p,
 .form-fields > button {
   grid-column: 1 / -1;
+}
+@media (min-width: 901px) {
+  .form-fields {
+    grid-template-columns: minmax(9rem, 0.65fr) repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .form-fields > p {
+    grid-column: 1 / -1;
+  }
+  .form-fields > button {
+    grid-column: auto;
+    align-self: end;
+  }
+  .pass-button {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    margin-top: 0;
+  }
 }
 .primary-button,
 .pass-button {

@@ -7,6 +7,7 @@ import {
 } from "../shared/generated/ui-contract";
 import { idGuards, type PlayerId } from "../shared/manifest-contract";
 import { StormtrailInteractionRoutes } from "./interaction-routes";
+import "./style.css";
 
 const useStormtrailSurfaces = UI.defineSurfaces({
   frontier: Board.surface("frontier"),
@@ -314,6 +315,12 @@ function StormtrailGame() {
               </div>
 
               <aside className="grid content-start gap-4">
+                <section className="rounded-2xl border border-stone-300 bg-white p-3 shadow-sm">
+                  <h2 className="text-lg font-black">Available actions</h2>
+                  <div className="mt-2">
+                    <StormtrailInteractionRoutes board={frontier} />
+                  </div>
+                </section>
                 <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
                   <h2 className="text-lg font-black">Crews</h2>
                   <div className="mt-3">
@@ -338,12 +345,6 @@ function StormtrailGame() {
                     </p>
                   </section>
                 ) : null}
-                <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
-                  <h2 className="text-lg font-black">Available actions</h2>
-                  <div className="mt-3">
-                    <StormtrailInteractionRoutes board={frontier} />
-                  </div>
-                </section>
                 <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
                   <h2 className="text-lg font-black">Trail log</h2>
                   <ol

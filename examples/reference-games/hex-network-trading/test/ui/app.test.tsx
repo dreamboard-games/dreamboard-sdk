@@ -15,7 +15,7 @@ test("Stormtrail UI binds every canonical phase through typed surfaces", () => {
   );
   assert.match(app, /<Board\.HexGrid/);
   assert.match(app, /data-reference-game="hex-network-trading"/);
-  assert.match(app, />Stormtrail</);
+  assert.match(app, />\s*Stormtrail\s*</);
   assert.match(routes, /satisfies InteractionRoutes/);
   for (const interaction of [
     "setupCamp.placeStartingCamp",
