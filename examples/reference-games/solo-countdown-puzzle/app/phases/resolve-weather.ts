@@ -14,10 +14,7 @@ export const resolveWeather = definePhase<GameContract>()({
     if (!playerId) {
       throw new Error("Last Light requires exactly one human player.");
     }
-    const resolution = resolveNextWeather(
-      state.publicState,
-      state.hiddenState,
-    );
+    const resolution = resolveNextWeather(state.publicState, state.hiddenState);
     const tx = edit(state);
     tx.patchPublicState(resolution.publicState);
     tx.patchHiddenState(resolution.hiddenState);

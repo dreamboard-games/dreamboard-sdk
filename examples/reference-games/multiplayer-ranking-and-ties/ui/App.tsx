@@ -31,8 +31,20 @@ const fallbackView: HarborPlayerView = {
   activePlayerId: "player-1",
   market: [
     { kind: "stall", id: "food-p1-c1-1", guild: "food", prestige: 1, coins: 1 },
-    { kind: "stall", id: "craft-p2-c0-1", guild: "craft", prestige: 2, coins: 0 },
-    { kind: "stall", id: "music-p2-c1-1", guild: "music", prestige: 2, coins: 1 },
+    {
+      kind: "stall",
+      id: "craft-p2-c0-1",
+      guild: "craft",
+      prestige: 2,
+      coins: 0,
+    },
+    {
+      kind: "stall",
+      id: "music-p2-c1-1",
+      guild: "music",
+      prestige: 2,
+      coins: 1,
+    },
     { kind: "stall", id: "food-p3-c0-1", guild: "food", prestige: 3, coins: 0 },
   ],
   legalMarketCardIds: [
@@ -56,7 +68,11 @@ const fallbackView: HarborPlayerView = {
   isActivePlayer: true,
 };
 
-function OutcomeTable({ outcome }: { outcome: NonNullable<GameView["outcome"]> }) {
+function OutcomeTable({
+  outcome,
+}: {
+  outcome: NonNullable<GameView["outcome"]>;
+}) {
   const cancellation = outcome.reason.code === "FESTIVAL_CANCELLED";
   return (
     <div className="outcome-scroll">
@@ -107,13 +123,17 @@ function HarborFairLayout({
   const cancellation = view.outcome?.reason.code === "FESTIVAL_CANCELLED";
 
   return (
-    <main className="harbor-fair" data-reference-game="multiplayer-ranking-and-ties">
+    <main
+      className="harbor-fair"
+      data-reference-game="multiplayer-ranking-and-ties"
+    >
       <header className="harbor-header">
         <div>
           <p className="eyebrow">Harbor Fair</p>
           <h1>Build a festival worth celebrating</h1>
           <p className="subtitle">
-            Draft one public stall per round. Balanced guilds, prestige, and coins decide the final ranking.
+            Draft one public stall per round. Balanced guilds, prestige, and
+            coins decide the final ranking.
           </p>
         </div>
         <div className="round-badge">
@@ -125,7 +145,11 @@ function HarborFairLayout({
       <section className="status-strip" aria-label="Fair status">
         <div>
           <span>Now organizing</span>
-          <strong>{view.activePlayerId ? playerName(view.activePlayerId) : "Fair complete"}</strong>
+          <strong>
+            {view.activePlayerId
+              ? playerName(view.activePlayerId)
+              : "Fair complete"}
+          </strong>
         </div>
         <div>
           <span>Storms revealed</span>
@@ -133,11 +157,18 @@ function HarborFairLayout({
         </div>
         <div>
           <span>Your turn</span>
-          <strong>{"isActivePlayer" in view && view.isActivePlayer ? "Choose a stall" : "Watch the market"}</strong>
+          <strong>
+            {"isActivePlayer" in view && view.isActivePlayer
+              ? "Choose a stall"
+              : "Watch the market"}
+          </strong>
         </div>
       </section>
 
-      <section aria-labelledby="market-heading" className="harbor-panel market-panel">
+      <section
+        aria-labelledby="market-heading"
+        className="harbor-panel market-panel"
+      >
         <div className="section-heading">
           <div>
             <p className="eyebrow">Four public awnings</p>
@@ -207,7 +238,11 @@ function HarborFairLayout({
               craft: cards.filter(({ guild }) => guild === "craft").length,
               music: cards.filter(({ guild }) => guild === "music").length,
             };
-            const completeSets = Math.min(counts.food, counts.craft, counts.music);
+            const completeSets = Math.min(
+              counts.food,
+              counts.craft,
+              counts.music,
+            );
             return (
               <article className="festival-row" key={playerId}>
                 <div className="festival-row-title">
@@ -219,14 +254,20 @@ function HarborFairLayout({
                   <span>Craft {counts.craft}</span>
                   <span>Music {counts.music}</span>
                 </div>
-                <p>{completeSets} complete guild set{completeSets === 1 ? "" : "s"}</p>
+                <p>
+                  {completeSets} complete guild set
+                  {completeSets === 1 ? "" : "s"}
+                </p>
               </article>
             );
           })}
         </div>
       </section>
 
-      <section aria-labelledby="history-heading" className="harbor-panel history-panel">
+      <section
+        aria-labelledby="history-heading"
+        className="harbor-panel history-panel"
+      >
         <div>
           <p className="eyebrow">Refill history</p>
           <h2 id="history-heading">Harbor log</h2>
@@ -235,17 +276,23 @@ function HarborFairLayout({
           {view.events.length === 0 ? (
             <li>The market is ready for its first organizer.</li>
           ) : (
-            view.events.slice(-10).map((event, index) => (
-              <li key={`${event.kind}-${index}`}>{eventLabel(event)}</li>
-            ))
+            view.events
+              .slice(-10)
+              .map((event, index) => (
+                <li key={`${event.kind}-${index}`}>{eventLabel(event)}</li>
+              ))
           )}
         </ol>
       </section>
 
       {view.outcome ? (
-        <section className={`harbor-panel outcome-panel ${cancellation ? "cancelled" : "judged"}`}>
+        <section
+          className={`harbor-panel outcome-panel ${cancellation ? "cancelled" : "judged"}`}
+        >
           <p className="eyebrow">Authoritative outcome</p>
-          <h2>{cancellation ? "The fair is cancelled" : "Festival standings"}</h2>
+          <h2>
+            {cancellation ? "The fair is cancelled" : "Festival standings"}
+          </h2>
           <p>{view.outcome.reason.message}</p>
           <OutcomeTable outcome={view.outcome} />
         </section>
@@ -302,11 +349,7 @@ function HarborFairGame() {
   return (
     <Game.Root>
       {(state) => (
-        <HarborFairLayout
-          view={state.view}
-          runtime
-          marketSurface={market}
-        />
+        <HarborFairLayout view={state.view} runtime marketSurface={market} />
       )}
     </Game.Root>
   );

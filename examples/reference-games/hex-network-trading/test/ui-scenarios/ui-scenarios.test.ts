@@ -8,7 +8,14 @@ import setup from "./setup.desktop.scenario.ts";
 import terminal from "./terminal.mobile.scenario.ts";
 
 test("Stormtrail UI checkpoints all derive from ordinary legal behavior scenarios", () => {
-  const scenarios = [setup, production, discard, pendingTrade, growing, terminal];
+  const scenarios = [
+    setup,
+    production,
+    discard,
+    pendingTrade,
+    growing,
+    terminal,
+  ];
   assert.deepEqual(
     scenarios.map(({ behaviorScenario }) => behaviorScenario),
     [

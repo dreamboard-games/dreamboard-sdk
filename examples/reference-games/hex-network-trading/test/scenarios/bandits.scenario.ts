@@ -1,8 +1,5 @@
 import { defineScenario } from "../testing-types.ts";
-import {
-  BANDITS_PREFIX_COMMANDS,
-  bandits,
-} from "../scenario-commands.ts";
+import { BANDITS_PREFIX_COMMANDS, bandits } from "../scenario-commands.ts";
 
 export default defineScenario({
   id: "stormtrail.bandits",

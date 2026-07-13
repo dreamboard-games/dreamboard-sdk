@@ -19,7 +19,9 @@ export const setup = definePhase<GameContract>()({
   enter({ state, accept, edit, endGame, fx, q, random }) {
     const playerIds = q.player.order() as readonly PlayerId[];
     assertPlayerCount(playerIds);
-    const tableDeck = q.zone.sharedCards("draw-pile") as readonly typeof festivalCardIds[number][];
+    const tableDeck = q.zone.sharedCards(
+      "draw-pile",
+    ) as readonly (typeof festivalCardIds)[number][];
     assertFestivalDeckComposition(tableDeck);
     const shuffledDeck = random.subset({
       from: festivalCardIds,

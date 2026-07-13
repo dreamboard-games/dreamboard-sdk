@@ -11,12 +11,7 @@ import type {
   PlayerTurnPhaseState,
 } from "../game-contract";
 import { SUPPLY_ZONE_IDS } from "../model";
-import {
-  appendHistory,
-  costOf,
-  edit,
-  pileForCard,
-} from "../reducer-support";
+import { appendHistory, costOf, edit, pileForCard } from "../reducer-support";
 import { validateTechniquePlay } from "./support";
 
 function hasEligibleSupply(q: Parameters<typeof costOf>[0]): boolean {
@@ -63,7 +58,8 @@ export const studioVisit = defineCardAction<
         kind: "technique",
         actorPlayerId: input.playerId,
         cardId: input.params.cardId,
-        summary: "Studio Visit is waiting for a supply card costing at most four.",
+        summary:
+          "Studio Visit is waiting for a supply card costing at most four.",
       }),
     );
   },

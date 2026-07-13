@@ -13,8 +13,8 @@ export default defineScenario({
     expect(state().publicState.turnNumber).toBe(93);
     expect(state().publicState.lastRoll).toEqual({ dice: [1, 1], total: 2 });
     expect(state().publicState.lastProduction).toEqual([]);
-    const productionSummaries = state().publicState.history
-      .filter(({ kind }) => kind === "production")
+    const productionSummaries = state()
+      .publicState.history.filter(({ kind }) => kind === "production")
       .map(({ summary }) => summary);
     expect(productionSummaries).toContain("Roll 4 produced 1 supplies.");
     expect(productionSummaries).toContain("Roll 5 produced 1 supplies.");

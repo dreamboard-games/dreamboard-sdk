@@ -39,7 +39,8 @@ export const gallery = defineCardAction<GameContract, PlayerTurnPhaseState>()({
       kind: "technique",
       actorPlayerId: input.playerId,
       cardId: input.params.cardId,
-      summary: "Gallery drew one card and granted an action, buy, and inspiration.",
+      summary:
+        "Gallery drew one card and granted an action, buy, and inspiration.",
     });
     return accept(next, {
       instructions:

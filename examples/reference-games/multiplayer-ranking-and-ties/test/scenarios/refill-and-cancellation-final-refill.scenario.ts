@@ -17,7 +17,9 @@ export default defineScenario({
       kind: "storm-revealed",
       stormsRevealed: 2,
     });
-    expect(final.events.some(({ kind }) => kind === "festival-scored")).toBe(false);
+    expect(final.events.some(({ kind }) => kind === "festival-scored")).toBe(
+      false,
+    );
     expect(final.outcome?.reason.code).toBe("FESTIVAL_CANCELLED");
   },
 });

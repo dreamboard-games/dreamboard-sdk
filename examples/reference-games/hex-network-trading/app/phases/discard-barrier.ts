@@ -79,11 +79,13 @@ const discardSupplies = discardBarrierAuthoring.interaction({
       actorPlayerId: input.playerId,
       summary: `${input.playerId} discarded ${count} supplies.`,
     });
-    const remaining = q.player.order().filter(
-      (playerId) =>
-        next.phase.requiredByPlayerId?.[playerId] !== undefined &&
-        !(next.phase.completedPlayerIds ?? []).includes(playerId),
-    );
+    const remaining = q.player
+      .order()
+      .filter(
+        (playerId) =>
+          next.phase.requiredByPlayerId?.[playerId] !== undefined &&
+          !(next.phase.completedPlayerIds ?? []).includes(playerId),
+      );
     return accept(next, {
       ...(remaining.length === 0
         ? { instructions: [fx.transition("moveBandits")] }
@@ -106,9 +108,7 @@ export const discardBarrier = discardBarrierAuthoring.define({
     requiredByPlayerId: Object.fromEntries(
       playerIds.flatMap((playerId) => {
         const total = resourceTotalFromState(state, playerId);
-        return total > 7
-          ? [[playerId, Math.floor(total / 2)] as const]
-          : [];
+        return total > 7 ? [[playerId, Math.floor(total / 2)] as const] : [];
       }),
     ),
     completedPlayerIds: [],

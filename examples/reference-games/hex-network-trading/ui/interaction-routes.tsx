@@ -17,7 +17,13 @@ function AvailabilityNote({
   children: string;
 }) {
   return (
-    <p className={available ? "text-sm font-bold text-emerald-800" : "text-sm text-stone-500"}>
+    <p
+      className={
+        available
+          ? "text-sm font-bold text-emerald-800"
+          : "text-sm text-stone-500"
+      }
+    >
       {children}
     </p>
   );
@@ -28,16 +34,12 @@ export function StormtrailInteractionRoutes({
 }: {
   board: BoardSurface<"frontier">;
 }) {
-  const placeStartingCamp = Interaction.useForm(
-    "setupCamp.placeStartingCamp",
-  );
+  const placeStartingCamp = Interaction.useForm("setupCamp.placeStartingCamp");
   const placeStartingTrail = Interaction.useForm(
     "setupTrail.placeStartingTrail",
   );
   const rollDice = Interaction.useForm("roll.rollDice");
-  const discardSupplies = Interaction.useForm(
-    "discardBarrier.discardSupplies",
-  );
+  const discardSupplies = Interaction.useForm("discardBarrier.discardSupplies");
   const moveBandits = Interaction.useForm("moveBandits.moveBandits");
   const buildTrail = Interaction.useForm("main.buildTrail");
   const buildCamp = Interaction.useForm("main.buildCamp");
@@ -130,7 +132,10 @@ export function StormtrailInteractionRoutes({
           <div className={fieldPanelClass}>
             <strong>Return the required supplies</strong>
             <discardSupplies.slot.resources.Field />
-            <discardSupplies.Submit className={buttonClass} disabled={!state.available}>
+            <discardSupplies.Submit
+              className={buttonClass}
+              disabled={!state.available}
+            >
               Commit private discard
             </discardSupplies.Submit>
           </div>
@@ -142,10 +147,14 @@ export function StormtrailInteractionRoutes({
           <div className={fieldPanelClass}>
             <strong>Move the Bandits</strong>
             <p className="text-sm text-stone-600">
-              Choose a highlighted district, then select a victim only when one is required.
+              Choose a highlighted district, then select a victim only when one
+              is required.
             </p>
             <moveBandits.slot.targetPlayerId.Field />
-            <moveBandits.Submit className={buttonClass} disabled={!state.available}>
+            <moveBandits.Submit
+              className={buttonClass}
+              disabled={!state.available}
+            >
               Move Bandits
             </moveBandits.Submit>
           </div>
@@ -155,14 +164,16 @@ export function StormtrailInteractionRoutes({
       <buildTrail.State unavailable={null}>
         {(state) => (
           <AvailabilityNote available={state.available}>
-            Build Trail: select a highlighted connected edge (1 Timber + 1 Brick).
+            Build Trail: select a highlighted connected edge (1 Timber + 1
+            Brick).
           </AvailabilityNote>
         )}
       </buildTrail.State>
       <buildCamp.State unavailable={null}>
         {(state) => (
           <AvailabilityNote available={state.available}>
-            Build Camp: select a highlighted connected intersection (1 of each supply).
+            Build Camp: select a highlighted connected intersection (1 of each
+            supply).
           </AvailabilityNote>
         )}
       </buildCamp.State>
@@ -173,7 +184,10 @@ export function StormtrailInteractionRoutes({
             <strong>Supply Depot · 3:1</strong>
             <depotTrade.slot.giveResource.Field />
             <depotTrade.slot.receiveResource.Field />
-            <depotTrade.Submit className={buttonClass} disabled={!state.available}>
+            <depotTrade.Submit
+              className={buttonClass}
+              disabled={!state.available}
+            >
               Exchange supplies
             </depotTrade.Submit>
           </div>
@@ -187,7 +201,10 @@ export function StormtrailInteractionRoutes({
             <offerTrade.slot.targetPlayerId.Field />
             <offerTrade.slot.give.Field />
             <offerTrade.slot.want.Field />
-            <offerTrade.Submit className={buttonClass} disabled={!state.available}>
+            <offerTrade.Submit
+              className={buttonClass}
+              disabled={!state.available}
+            >
               Send offer
             </offerTrade.Submit>
           </div>
@@ -204,14 +221,20 @@ export function StormtrailInteractionRoutes({
 
       <acceptTrade.State unavailable={null}>
         {(state) => (
-          <acceptTrade.Submit className={buttonClass} disabled={!state.available}>
+          <acceptTrade.Submit
+            className={buttonClass}
+            disabled={!state.available}
+          >
             Accept trade
           </acceptTrade.Submit>
         )}
       </acceptTrade.State>
       <rejectTrade.State unavailable={null}>
         {(state) => (
-          <rejectTrade.Submit className={buttonClass} disabled={!state.available}>
+          <rejectTrade.Submit
+            className={buttonClass}
+            disabled={!state.available}
+          >
             Reject trade
           </rejectTrade.Submit>
         )}

@@ -1,6 +1,9 @@
 import { definePhase, type GameOutcome } from "@dreamboard-games/sdk/reducer";
 import type { PlayerId } from "../../shared/manifest-contract";
-import { sketchbookPhaseStateSchema, type GameContract } from "../game-contract";
+import {
+  sketchbookPhaseStateSchema,
+  type GameContract,
+} from "../game-contract";
 import { portfolioScores, supplyEnding } from "../derived";
 import { appendHistory, edit } from "../reducer-support";
 import { FRESH_TURN } from "./player-turn/state";
@@ -15,7 +18,9 @@ export const checkGameEnd = definePhase<GameContract>()({
       kind: "endCheck",
       actorPlayerId: null,
       cardId: null,
-      summary: ending ? `Supply ending observed: ${ending}.` : "No supply ending.",
+      summary: ending
+        ? `Supply ending observed: ${ending}.`
+        : "No supply ending.",
     });
     if (ending) {
       const scores = derived(portfolioScores);

@@ -5,7 +5,11 @@ import {
 } from "@dreamboard-games/sdk/reducer";
 import type { PlayerId } from "../shared/manifest-contract";
 import { portfolioScores } from "./derived";
-import type { GameContract, GameState, PlayerTurnPhaseState } from "./game-contract";
+import type {
+  GameContract,
+  GameState,
+  PlayerTurnPhaseState,
+} from "./game-contract";
 import { SUPPLY_ZONE_IDS } from "./model";
 
 function publicProjection(

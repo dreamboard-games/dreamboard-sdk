@@ -19,7 +19,11 @@ export function camp(
   intersectionId: VertexId,
   interactionId: "placeStartingCamp" | "buildCamp" = "buildCamp",
 ) {
-  return command({ actor: { seat }, interactionId, params: { intersectionId } });
+  return command({
+    actor: { seat },
+    interactionId,
+    params: { intersectionId },
+  });
 }
 
 export function trail(
@@ -38,11 +42,7 @@ export function end(seat: number) {
   return command({ actor: { seat }, interactionId: "endTurn", params: {} });
 }
 
-export function bandits(
-  seat: number,
-  hexId: SpaceId,
-  targetSeat?: number,
-) {
+export function bandits(seat: number, hexId: SpaceId, targetSeat?: number) {
   return command({
     actor: { seat },
     interactionId: "moveBandits",

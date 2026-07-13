@@ -12,7 +12,9 @@ export default defineScenario({
     expect(final.energy).toBe(3);
     expect(final.reinforcement).toBe(true);
     expect(final.storm).toBe(0);
-    expect(final.weatherHistory.map(({ cardId }) => cardId)).toEqual(["calm-1"]);
+    expect(final.weatherHistory.map(({ cardId }) => cardId)).toEqual([
+      "calm-1",
+    ]);
     expect(final.events.map(({ id }) => id)).toEqual([
       "weather-calm",
       "countdown-advanced",

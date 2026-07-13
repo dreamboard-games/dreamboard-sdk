@@ -34,5 +34,8 @@ test("six Sketchbook UI checkpoints derive from the canonical legal replay", () 
       { segment: "when", completed: 1 },
     ],
   );
-  assert.equal(scenarios.every(({ replay }) => replay.length === 0), true);
+  assert.equal(
+    scenarios.every(({ replay }) => replay.length === 0),
+    true,
+  );
 });

@@ -10,14 +10,8 @@ import {
 } from "../../shared/manifest-contract";
 import { mainAuthoring } from "../authoring";
 import { buildCampTarget, buildTrailTarget } from "../eligibility";
-import {
-  resourceCountsSchema,
-  type ResourceCounts,
-} from "../game-contract";
-import {
-  hasPositiveResource,
-  resourceMapsOverlap,
-} from "../model";
+import { resourceCountsSchema, type ResourceCounts } from "../game-contract";
+import { hasPositiveResource, resourceMapsOverlap } from "../model";
 import {
   appendHistory,
   campCount,
@@ -86,8 +80,7 @@ const buildCamp = mainAuthoring.interaction({
     {
       id: "camp-cost",
       errorCode: "INSUFFICIENT_RESOURCES",
-      validate: ({ input, q }) =>
-        q.player.canAfford(input.playerId, CAMP_COST),
+      validate: ({ input, q }) => q.player.canAfford(input.playerId, CAMP_COST),
     },
   ],
   reduce({ state, input, accept, endGame, fx, q }) {
@@ -132,7 +125,9 @@ const tradeWithSupplyDepot = mainAuthoring.interaction({
       mainAuthoring.inputs.form.choice<ResourceId>({
         choices: ({ q, playerId }) =>
           literals.resourceIds
-            .filter((resourceId) => q.player.resource(playerId, resourceId) >= 3)
+            .filter(
+              (resourceId) => q.player.resource(playerId, resourceId) >= 3,
+            )
             .map((resourceId) => ({ value: resourceId, label: resourceId })),
         defaultValue: ({ choices }) => choices[0]?.value,
       }),

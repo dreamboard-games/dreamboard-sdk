@@ -54,10 +54,7 @@ for (const scenario of scenarios) {
   });
 }
 
-function identity(
-  scenario: (typeof scenarios)[number],
-  filename: string,
-) {
+function identity(scenario: (typeof scenarios)[number], filename: string) {
   return {
     id: scenario.id,
     path: `test/scenarios/${filename}`,
@@ -80,7 +77,9 @@ function assertEveryPhysicalCardExactlyOnce(
     Awaited<ReturnType<typeof replayScenario<typeof game>>>["state"]
   >,
 ) {
-  const deckCards = Object.values(state.table.decks).flat() as readonly string[];
+  const deckCards = Object.values(
+    state.table.decks,
+  ).flat() as readonly string[];
   const hands = Object.values(state.table.hands) as unknown as readonly {
     readonly entries: readonly (readonly [unknown, readonly string[]])[];
   }[];
@@ -90,10 +89,7 @@ function assertEveryPhysicalCardExactlyOnce(
   const allContainerCards = [...deckCards, ...playerZoneCards];
   assert.equal(allContainerCards.length, literals.cardIds.length);
   assert.equal(new Set(allContainerCards).size, literals.cardIds.length);
-  assert.deepEqual(
-    [...allContainerCards].sort(),
-    [...literals.cardIds].sort(),
-  );
+  assert.deepEqual([...allContainerCards].sort(), [...literals.cardIds].sort());
   assert.deepEqual(
     Object.keys(state.table.componentLocations).sort(),
     [...literals.cardIds].sort(),
@@ -108,8 +104,9 @@ function scoreOwnedPortfolio(
   const scores = { "player-1": 0, "player-2": 0 };
   for (const [cardId, playerId] of Object.entries(state.table.ownerOfCard)) {
     if (playerId !== "player-1" && playerId !== "player-2") continue;
-    const properties = state.table.cards[cardId as keyof typeof state.table.cards]
-      .properties as { readonly portfolioValue?: number };
+    const properties = state.table.cards[
+      cardId as keyof typeof state.table.cards
+    ].properties as { readonly portfolioValue?: number };
     scores[playerId] += properties.portfolioValue ?? 0;
   }
   return scores;
@@ -120,7 +117,8 @@ function collectStringValues(value: unknown, values = new Set<string>()) {
   else if (Array.isArray(value)) {
     for (const child of value) collectStringValues(child, values);
   } else if (value && typeof value === "object") {
-    for (const child of Object.values(value)) collectStringValues(child, values);
+    for (const child of Object.values(value))
+      collectStringValues(child, values);
   }
   return values;
 }
@@ -167,9 +165,15 @@ test("normal setup matches the complete physical card and supply contract", asyn
   for (const playerId of ["player-1", "player-2"] as const) {
     const owned = Object.entries(state.table.ownerOfCard)
       .filter(([, owner]) => owner === playerId)
-      .map(([cardId]) => state.table.cards[cardId as keyof typeof state.table.cards]);
+      .map(
+        ([cardId]) =>
+          state.table.cards[cardId as keyof typeof state.table.cards],
+      );
     assert.equal(owned.length, 10);
-    assert.equal(owned.filter(({ cardType }) => cardType === "doodle").length, 7);
+    assert.equal(
+      owned.filter(({ cardType }) => cardType === "doodle").length,
+      7,
+    );
     assert.equal(owned.filter(({ cardType }) => cardType === "idea").length, 3);
   }
   assertEveryPhysicalCardExactlyOnce(state);
@@ -206,17 +210,23 @@ test("the two opening shuffles are deterministic, independent, and projection-sa
     }),
   ]);
   assert.equal(first.checkpointDigest, second.checkpointDigest);
-  assert.notDeepEqual(first.view({ seat: 0 }).myHand, first.view({ seat: 1 }).myHand);
+  assert.notDeepEqual(
+    first.view({ seat: 0 }).myHand,
+    first.view({ seat: 1 }).myHand,
+  );
   assert.equal(playerOne.node.entropy.draws.length, 18);
   assert.deepEqual(
     playerOne.node.entropy.draws.map(({ operation }) => operation.parameters),
-    [...Array.from({ length: 9 }, (_, index) => ({
-      minInclusive: 0,
-      maxInclusive: 9 - index,
-    })), ...Array.from({ length: 9 }, (_, index) => ({
-      minInclusive: 0,
-      maxInclusive: 9 - index,
-    }))],
+    [
+      ...Array.from({ length: 9 }, (_, index) => ({
+        minInclusive: 0,
+        maxInclusive: 9 - index,
+      })),
+      ...Array.from({ length: 9 }, (_, index) => ({
+        minInclusive: 0,
+        maxInclusive: 9 - index,
+      })),
+    ],
   );
 
   const firstState = first.state();
@@ -268,10 +278,12 @@ test("turn sequencing is action, buy, cleanup, end check, then rotation", async 
   assert.equal(buy.state().phase.step, "buy");
   const noReturnDigest = buy.checkpointDigest;
   assert.equal(
-    (await probeScenarioCommand({
-      replay: buy,
-      command: command(0, "endActionStep"),
-    })).kind,
+    (
+      await probeScenarioCommand({
+        replay: buy,
+        command: command(0, "endActionStep"),
+      })
+    ).kind,
     "rejected",
   );
   assert.equal(buy.checkpointDigest, noReturnDigest);
@@ -283,16 +295,23 @@ test("turn sequencing is action, buy, cleanup, end check, then rotation", async 
   });
   assert.equal(afterBuy.state().phase.step, "buy");
   assert.deepEqual(afterBuy.state().flow.activePlayers, ["player-1"]);
-  assert.deepEqual(afterBuy.view({ seat: 0 }).discardCardsByPlayerId["player-1"], [
-    "studio-1",
-  ]);
+  assert.deepEqual(
+    afterBuy.view({ seat: 0 }).discardCardsByPlayerId["player-1"],
+    ["studio-1"],
+  );
 
   const afterCleanup = await replayScenario({ game, scenario: turnOrdering });
   assert.equal(afterCleanup.state().phase.step, "action");
   assert.deepEqual(afterCleanup.state().flow.activePlayers, ["player-2"]);
-  assert.equal(afterCleanup.view({ seat: 0 }).handCountByPlayerId["player-1"], 5);
+  assert.equal(
+    afterCleanup.view({ seat: 0 }).handCountByPlayerId["player-1"],
+    5,
+  );
   assert.deepEqual(
-    afterCleanup.state().publicState.history.slice(-2).map(({ kind }) => kind),
+    afterCleanup
+      .state()
+      .publicState.history.slice(-2)
+      .map(({ kind }) => kind),
     ["cleanup", "endCheck"],
   );
 
@@ -314,9 +333,15 @@ test("Technique effects spend and grant the exact resources needed for chains", 
     scenario: techniqueBrainstorm,
     at: { segment: "given", completed: 26 },
   });
-  assert.equal(beforeBrainstorm.view({ seat: 0 }).myHand.includes("brainstorm-1"), true);
+  assert.equal(
+    beforeBrainstorm.view({ seat: 0 }).myHand.includes("brainstorm-1"),
+    true,
+  );
   assert.equal(beforeBrainstorm.view({ seat: 0 }).myHand.length, 5);
-  const afterBrainstorm = await replayScenario({ game, scenario: techniqueBrainstorm });
+  const afterBrainstorm = await replayScenario({
+    game,
+    scenario: techniqueBrainstorm,
+  });
   assert.equal(afterBrainstorm.view({ seat: 0 }).myHand.length, 7);
   assert.equal(afterBrainstorm.state().phase.actionsLeft, 0);
 
@@ -338,8 +363,14 @@ test("Technique effects spend and grant the exact resources needed for chains", 
     scenario: techniqueGallery,
     at: { segment: "given", completed: 124 },
   });
-  const afterGallery = await replayScenario({ game, scenario: techniqueGallery });
-  assert.equal(afterGallery.view({ seat: 1 }).myHand.length, beforeGallery.view({ seat: 1 }).myHand.length);
+  const afterGallery = await replayScenario({
+    game,
+    scenario: techniqueGallery,
+  });
+  assert.equal(
+    afterGallery.view({ seat: 1 }).myHand.length,
+    beforeGallery.view({ seat: 1 }).myHand.length,
+  );
   assert.equal(afterGallery.state().phase.actionsLeft, 1);
   assert.equal(afterGallery.state().phase.buysLeft, 2);
   assert.equal(afterGallery.state().phase.inspiration, 1);
@@ -353,7 +384,10 @@ test("Eraser discovery is exclusive and enumerates every zero-to-four subset", a
   });
   assert.deepEqual(availableInteractionIds(pending, 0), ["resolveEraser"]);
   assert.deepEqual(availableInteractionIds(pending, 1), []);
-  const eraserIdentity = identity(techniqueEraser, "technique-eraser.scenario.ts");
+  const eraserIdentity = identity(
+    techniqueEraser,
+    "technique-eraser.scenario.ts",
+  );
   const inspected = await inspectScenario({
     game,
     scenario: techniqueEraser,
@@ -362,9 +396,10 @@ test("Eraser discovery is exclusive and enumerates every zero-to-four subset", a
     at: { segment: "given", completed: 85 },
   });
   assert.deepEqual(inspected.node.flow.blockedBy, []);
-  assert.deepEqual(inspected.node.actions.map(({ interactionId }) => interactionId), [
-    "resolveEraser",
-  ]);
+  assert.deepEqual(
+    inspected.node.actions.map(({ interactionId }) => interactionId),
+    ["resolveEraser"],
+  );
   const explored = await exploreScenario({
     game,
     scenario: techniqueEraser,
@@ -385,8 +420,19 @@ test("Eraser discovery is exclusive and enumerates every zero-to-four subset", a
     const cardIds = candidateCommand.params.cardIds ?? [];
     lengths.add(cardIds.length);
     assert.equal(new Set(cardIds).size, cardIds.length);
-    assert.equal(cardIds.every((cardId) => hand.has(cardId)), true);
-    assert.equal((await probeScenarioCommand({ replay: pending, command: candidateCommand })).kind, "accepted");
+    assert.equal(
+      cardIds.every((cardId) => hand.has(cardId)),
+      true,
+    );
+    assert.equal(
+      (
+        await probeScenarioCommand({
+          replay: pending,
+          command: candidateCommand,
+        })
+      ).kind,
+      "accepted",
+    );
   }
   assert.deepEqual([...lengths].sort(), [0, 1, 2, 3, 4]);
 
@@ -426,7 +472,10 @@ test("Eraser discovery is exclusive and enumerates every zero-to-four subset", a
       "INVALID_INPUT_COUNT",
     ],
   ] as const) {
-    const result = await probeScenarioCommand({ replay: pending, command: probe });
+    const result = await probeScenarioCommand({
+      replay: pending,
+      command: probe,
+    });
     assert.equal(result.kind, "rejected");
     if (result.kind === "rejected") assert.equal(result.errorCode, errorCode);
     assert.equal(pending.checkpointDigest, sourceDigest);
@@ -469,13 +518,24 @@ test("Studio Visit discovery exposes only current nonempty top cards costing at 
     "studio-visit-3",
   ]);
   for (const candidate of explored.candidates) {
-    assert.equal((await probeScenarioCommand({ replay: pending, command: candidate.command as SketchbookCommand })).kind, "accepted");
+    assert.equal(
+      (
+        await probeScenarioCommand({
+          replay: pending,
+          command: candidate.command as SketchbookCommand,
+        })
+      ).kind,
+      "accepted",
+    );
   }
   for (const [probe, errorCode] of [
     [command(0, "resolveStudioVisit", "masterpiece-1"), "OVER_COST_LIMIT"],
     [command(0, "resolveStudioVisit", "sketch-4"), "NOT_TOP_CARD"],
   ] as const) {
-    const result = await probeScenarioCommand({ replay: pending, command: probe });
+    const result = await probeScenarioCommand({
+      replay: pending,
+      command: probe,
+    });
     assert.equal(result.kind, "rejected");
     if (result.kind === "rejected") assert.equal(result.errorCode, errorCode);
   }
@@ -516,14 +576,24 @@ test("buy discovery is affordable, repeatable, top-card-only, and has no bulk ac
     ],
   );
   for (const candidate of explored.candidates) {
-    assert.equal((await probeScenarioCommand({ replay: ready, command: candidate.command as SketchbookCommand })).kind, "accepted");
+    assert.equal(
+      (
+        await probeScenarioCommand({
+          replay: ready,
+          command: candidate.command as SketchbookCommand,
+        })
+      ).kind,
+      "accepted",
+    );
   }
   assert.equal(
-    ready.interactions({ seat: 0 }).some(({ interactionId }) =>
-      ["playAll", "playAllInspiration", "playTreasures"].includes(
-        String(interactionId),
+    ready
+      .interactions({ seat: 0 })
+      .some(({ interactionId }) =>
+        ["playAll", "playAllInspiration", "playTreasures"].includes(
+          String(interactionId),
+        ),
       ),
-    ),
     false,
   );
 
@@ -559,9 +629,20 @@ test("acquisitions, cleanup, and mid-turn reshuffles preserve every card exactly
     scenario: completeGame,
     at: { segment: "given", completed: 6 },
   });
-  assert.equal(beforePurchase.view({ seat: 0 }).supplyTopCardByZoneId["supply-studio"], "studio-1");
-  assert.deepEqual(afterPurchase.view({ seat: 0 }).discardCardsByPlayerId["player-1"], ["studio-1"]);
-  assert.equal(afterCleanup.view({ seat: 0 }).discardCardsByPlayerId["player-1"].includes("studio-1"), true);
+  assert.equal(
+    beforePurchase.view({ seat: 0 }).supplyTopCardByZoneId["supply-studio"],
+    "studio-1",
+  );
+  assert.deepEqual(
+    afterPurchase.view({ seat: 0 }).discardCardsByPlayerId["player-1"],
+    ["studio-1"],
+  );
+  assert.equal(
+    afterCleanup
+      .view({ seat: 0 })
+      .discardCardsByPlayerId["player-1"].includes("studio-1"),
+    true,
+  );
 
   const beforeRecycle = await replayScenario({
     game,
@@ -573,8 +654,16 @@ test("acquisitions, cleanup, and mid-turn reshuffles preserve every card exactly
     scenario: completeGame,
     at: { segment: "given", completed: 27 },
   });
-  assert.equal(beforeRecycle.view({ seat: 0 }).myHand.includes("brainstorm-1"), true);
-  assert.equal(afterRecycle.view({ seat: 0 }).inPlayCardsByPlayerId["player-1"].includes("brainstorm-1"), true);
+  assert.equal(
+    beforeRecycle.view({ seat: 0 }).myHand.includes("brainstorm-1"),
+    true,
+  );
+  assert.equal(
+    afterRecycle
+      .view({ seat: 0 })
+      .inPlayCardsByPlayerId["player-1"].includes("brainstorm-1"),
+    true,
+  );
 
   const beforeMidTurnShuffle = await replayScenario({
     game,
@@ -590,12 +679,21 @@ test("acquisitions, cleanup, and mid-turn reshuffles preserve every card exactly
     .view({ seat: 0 })
     .myHand.filter((cardId) => cardId !== "studio-1");
   assert.equal(
-    retainedHand.every((cardId) => afterMidTurnShuffle.view({ seat: 0 }).myHand.includes(cardId)),
+    retainedHand.every((cardId) =>
+      afterMidTurnShuffle.view({ seat: 0 }).myHand.includes(cardId),
+    ),
     true,
   );
-  assert.equal(afterMidTurnShuffle.view({ seat: 0 }).inPlayCardsByPlayerId["player-1"].includes("studio-1"), true);
   assert.equal(
-    afterMidTurnShuffle.trace.at(-1)?.trace.some(({ kind }) => kind === "rngConsumption"),
+    afterMidTurnShuffle
+      .view({ seat: 0 })
+      .inPlayCardsByPlayerId["player-1"].includes("studio-1"),
+    true,
+  );
+  assert.equal(
+    afterMidTurnShuffle.trace
+      .at(-1)
+      ?.trace.some(({ kind }) => kind === "rngConsumption"),
     true,
   );
 
@@ -623,14 +721,22 @@ test("all supply endings wait for cleanup and score every owned zone", async () 
     assert.equal(terminal.state().flow.currentPhase, "gameOver");
     assert.equal(terminal.state().publicState.outcome?.reason.code, reasonCode);
     assert.deepEqual(
-      terminal.state().publicState.history.slice(-2).map(({ kind }) => kind),
+      terminal
+        .state()
+        .publicState.history.slice(-2)
+        .map(({ kind }) => kind),
       ["cleanup", "endCheck"],
     );
     assert.deepEqual(
       terminal.view({ seat: 0 }).portfolioScores,
       scoreOwnedPortfolio(terminal.state()),
     );
-    assert.equal(terminal.view({ seat: 0 }).handCountByPlayerId[terminal.state().publicState.history.at(-2)?.actorPlayerId ?? "player-1"], 5);
+    assert.equal(
+      terminal.view({ seat: 0 }).handCountByPlayerId[
+        terminal.state().publicState.history.at(-2)?.actorPlayerId ?? "player-1"
+      ],
+      5,
+    );
     assert.deepEqual(terminal.interactions({ seat: 0 }), []);
     assert.deepEqual(terminal.interactions({ seat: 1 }), []);
   }
@@ -643,9 +749,13 @@ test("the canonical growing-deck game is deterministic and exercises every Techn
   ]);
   assert.equal(first.checkpointDigest, second.checkpointDigest);
   const techniqueIds = new Set(
-    first.state().publicState.history.flatMap(({ kind, cardId }) =>
-      kind === "technique" && cardId ? [cardId.split("-").slice(0, -1).join("-")] : [],
-    ),
+    first
+      .state()
+      .publicState.history.flatMap(({ kind, cardId }) =>
+        kind === "technique" && cardId
+          ? [cardId.split("-").slice(0, -1).join("-")]
+          : [],
+      ),
   );
   assert.deepEqual([...techniqueIds].sort(), [
     "brainstorm",
@@ -654,12 +764,16 @@ test("the canonical growing-deck game is deterministic and exercises every Techn
     "studio",
     "studio-visit",
   ]);
-  const acquisition = first.state().publicState.history.findIndex(
-    ({ kind, cardId }) => kind === "cardGained" && cardId === "brainstorm-1",
-  );
-  const laterPlay = first.state().publicState.history.findIndex(
-    ({ kind, cardId }) => kind === "technique" && cardId === "brainstorm-1",
-  );
+  const acquisition = first
+    .state()
+    .publicState.history.findIndex(
+      ({ kind, cardId }) => kind === "cardGained" && cardId === "brainstorm-1",
+    );
+  const laterPlay = first
+    .state()
+    .publicState.history.findIndex(
+      ({ kind, cardId }) => kind === "technique" && cardId === "brainstorm-1",
+    );
   assert.equal(acquisition >= 0, true);
   assert.equal(laterPlay > acquisition, true);
   assert.equal(first.state().publicState.turnNumber > 2, true);

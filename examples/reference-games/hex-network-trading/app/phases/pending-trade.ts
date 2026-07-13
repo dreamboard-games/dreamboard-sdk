@@ -1,9 +1,5 @@
 import { pendingTradeAuthoring } from "../authoring";
-import {
-  appendHistory,
-  edit,
-  systemEvent,
-} from "../reducer-support";
+import { appendHistory, edit, systemEvent } from "../reducer-support";
 
 const acceptTrade = pendingTradeAuthoring.interaction({
   to: ({ state }) => state.publicState.currentTrade?.targetPlayerId,

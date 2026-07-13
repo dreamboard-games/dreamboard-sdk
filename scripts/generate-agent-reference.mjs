@@ -20,7 +20,7 @@ const AGENT_API_PATH = path.join(
 );
 const LLMS_PATH = path.join(REPO_ROOT, "docs", "reference", "llms.txt");
 const LLMS_BUDGET_BYTES = 32 * 1024;
-const LLMS_ENTRY_SUMMARY_BUDGET = 16;
+const LLMS_ENTRY_SUMMARY_BUDGET = 12;
 const SIGNATURE_BUDGET = 400;
 const LLMS_OMITTED_EXPORTS = new Set([
   "testing.activate",

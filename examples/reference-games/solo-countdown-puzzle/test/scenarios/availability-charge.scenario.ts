@@ -10,6 +10,8 @@ export default defineScenario({
   when: [charge],
   then: async ({ expect, probe, state }) => {
     expect(state().publicState.energy).toBe(7);
-    await expect(await probe(charge)).toRejectWith({ errorCode: "ENERGY_AT_CAP" });
+    await expect(await probe(charge)).toRejectWith({
+      errorCode: "ENERGY_AT_CAP",
+    });
   },
 });

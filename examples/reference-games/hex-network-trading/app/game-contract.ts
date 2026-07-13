@@ -124,17 +124,22 @@ export const gameContract = defineGameContract({
     BANDITS_DESTINATION_REQUIRED: "Choose a different Bandits destination.",
     CAMP_NOT_CONNECTED: "Build the camp beside one of your trails.",
     CAMP_PIECES_EXHAUSTED: "You have placed all four camps.",
-    DISCARD_COUNT_INCORRECT: "Discard exactly half your supplies, rounded down.",
+    DISCARD_COUNT_INCORRECT:
+      "Discard exactly half your supplies, rounded down.",
     EDGE_OCCUPIED: "That edge already has a trail.",
     GIVE_AND_WANT_OVERLAP: "A resource cannot be both offered and requested.",
     INSUFFICIENT_RESOURCES: "You cannot afford that action.",
-    INVALID_DEPOT_TRADE: "Return exactly three matching supplies for one different supply.",
+    INVALID_DEPOT_TRADE:
+      "Return exactly three matching supplies for one different supply.",
     INVALID_TRADE_OFFER: "Offer and request at least one positive supply.",
     NOT_REQUIRED_TO_DISCARD: "This crew has no discard obligation.",
     SETUP_CAMP_OCCUPIED: "That intersection already has a camp.",
-    SETUP_TRAIL_NOT_ADJACENT: "The starting trail must touch the camp just placed.",
-    STEAL_TARGET_FORBIDDEN: "Omit a target when no adjacent opponent can be robbed.",
-    STEAL_TARGET_REQUIRED: "Choose an adjacent opponent with at least one supply.",
+    SETUP_TRAIL_NOT_ADJACENT:
+      "The starting trail must touch the camp just placed.",
+    STEAL_TARGET_FORBIDDEN:
+      "Omit a target when no adjacent opponent can be robbed.",
+    STEAL_TARGET_REQUIRED:
+      "Choose an adjacent opponent with at least one supply.",
     TRADE_OFFER_STALE: "The offeror can no longer pay the offered supplies.",
     TRADE_TARGET_CANNOT_PAY: "The target cannot pay the requested supplies.",
     TRADE_TARGET_INVALID: "Choose exactly one other crew.",

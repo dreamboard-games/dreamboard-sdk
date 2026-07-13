@@ -85,7 +85,12 @@ function StormtrailBoard({
                   {terrain.label.toUpperCase()}
                 </text>
                 {view.banditsHexId === hex.id ? (
-                  <text y={-42} textAnchor="middle" fontSize={22} aria-label="Bandits">
+                  <text
+                    y={-42}
+                    textAnchor="middle"
+                    fontSize={22}
+                    aria-label="Bandits"
+                  >
                     🥷
                   </text>
                 ) : null}
@@ -195,8 +200,13 @@ function Supplies({ view }: { view: GameView }) {
   return (
     <dl className="grid grid-cols-3 gap-2" aria-label="Your private supplies">
       {supply.map(([resourceId, icon, label]) => (
-        <div key={resourceId} className="rounded-xl bg-stone-100 p-2 text-center">
-          <dt className="text-xs text-stone-500">{icon} {label}</dt>
+        <div
+          key={resourceId}
+          className="rounded-xl bg-stone-100 p-2 text-center"
+        >
+          <dt className="text-xs text-stone-500">
+            {icon} {label}
+          </dt>
           <dd className="text-xl font-black">{view.mySupplies[resourceId]}</dd>
         </div>
       ))}
@@ -214,16 +224,24 @@ function Roster({ view }: { view: GameView }) {
           <article
             key={playerId}
             className="rounded-xl border p-3"
-            style={{ borderColor: style.color, backgroundColor: active ? style.pale : "#fafaf9" }}
+            style={{
+              borderColor: style.color,
+              backgroundColor: active ? style.pale : "#fafaf9",
+            }}
           >
             <div className="flex items-center justify-between gap-3">
-              <strong>{style.label}{view.playerId === playerId ? " · you" : ""}</strong>
+              <strong>
+                {style.label}
+                {view.playerId === playerId ? " · you" : ""}
+              </strong>
               <span className="text-xs font-bold uppercase tracking-wide">
                 {active ? "Active" : "Waiting"}
               </span>
             </div>
             <p className="mt-1 text-xs text-stone-600">
-              {view.supplyCountByPlayerId[playerId]} supplies · {4 - view.remainingCampsByPlayerId[playerId]}/4 camps · {10 - view.remainingTrailsByPlayerId[playerId]}/10 trails
+              {view.supplyCountByPlayerId[playerId]} supplies ·{" "}
+              {4 - view.remainingCampsByPlayerId[playerId]}/4 camps ·{" "}
+              {10 - view.remainingTrailsByPlayerId[playerId]}/10 trails
             </p>
           </article>
         );
@@ -233,15 +251,19 @@ function Roster({ view }: { view: GameView }) {
 }
 
 function PhaseSummary({ view }: { view: GameView }) {
-  if (view.outcome) return view.outcome.reason.message ?? "The expedition is complete.";
+  if (view.outcome)
+    return view.outcome.reason.message ?? "The expedition is complete.";
   if (view.currentPhase === "discardBarrier") {
     return view.myDiscardRequired > 0
       ? `Return exactly ${view.myDiscardRequired} supplies.`
       : "Overloaded crews are returning supplies.";
   }
-  if (view.currentPhase === "pendingTrade") return "A bilateral offer awaits one crew's response.";
-  if (view.currentPhase === "moveBandits") return "The active crew must relocate the Bandits.";
-  if (view.currentPhase === "roll") return "Roll both dice to begin production.";
+  if (view.currentPhase === "pendingTrade")
+    return "A bilateral offer awaits one crew's response.";
+  if (view.currentPhase === "moveBandits")
+    return "The active crew must relocate the Bandits.";
+  if (view.currentPhase === "roll")
+    return "Roll both dice to begin production.";
   if (view.currentPhase === "main") return "Build, trade, or end the turn.";
   return "Place one camp-and-trail pair in seat order.";
 }
@@ -266,14 +288,25 @@ function StormtrailGame() {
                   </p>
                   <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
                     <div>
-                      <h1 className="text-4xl font-black tracking-tight">Stormtrail</h1>
-                      <p className="mt-1 text-sm text-stone-600" data-reference-phase={view.currentPhase}>
+                      <h1 className="text-4xl font-black tracking-tight">
+                        Stormtrail
+                      </h1>
+                      <p
+                        className="mt-1 text-sm text-stone-600"
+                        data-reference-phase={view.currentPhase}
+                      >
                         {PhaseSummary({ view })}
                       </p>
                     </div>
                     <div className="rounded-xl bg-stone-900 px-4 py-2 text-right text-stone-50">
-                      <span className="block text-xs uppercase tracking-wide">Turn {view.turnNumber}</span>
-                      <strong>{view.lastRoll ? `${view.lastRoll.dice[0]} + ${view.lastRoll.dice[1]} = ${view.lastRoll.total}` : "Awaiting roll"}</strong>
+                      <span className="block text-xs uppercase tracking-wide">
+                        Turn {view.turnNumber}
+                      </span>
+                      <strong>
+                        {view.lastRoll
+                          ? `${view.lastRoll.dice[0]} + ${view.lastRoll.dice[1]} = ${view.lastRoll.total}`
+                          : "Awaiting roll"}
+                      </strong>
                     </div>
                   </div>
                 </header>
@@ -283,18 +316,25 @@ function StormtrailGame() {
               <aside className="grid content-start gap-4">
                 <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
                   <h2 className="text-lg font-black">Crews</h2>
-                  <div className="mt-3"><Roster view={view} /></div>
+                  <div className="mt-3">
+                    <Roster view={view} />
+                  </div>
                 </section>
                 <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
                   <h2 className="text-lg font-black">Your supplies</h2>
-                  <p className="mb-3 text-xs text-stone-500">Only you can see this breakdown.</p>
+                  <p className="mb-3 text-xs text-stone-500">
+                    Only you can see this breakdown.
+                  </p>
                   <Supplies view={view} />
                 </section>
                 {view.currentTrade ? (
                   <section className="rounded-2xl border-2 border-sky-700 bg-sky-50 p-4">
                     <h2 className="font-black">Pending offer</h2>
                     <p className="mt-1 text-sm">
-                      {PLAYER_STYLE[view.currentTrade.offerorPlayerId].label} offers {JSON.stringify(view.currentTrade.give)} for {JSON.stringify(view.currentTrade.want)} from {PLAYER_STYLE[view.currentTrade.targetPlayerId].label}.
+                      {PLAYER_STYLE[view.currentTrade.offerorPlayerId].label}{" "}
+                      offers {JSON.stringify(view.currentTrade.give)} for{" "}
+                      {JSON.stringify(view.currentTrade.want)} from{" "}
+                      {PLAYER_STYLE[view.currentTrade.targetPlayerId].label}.
                     </p>
                   </section>
                 ) : null}
@@ -306,14 +346,23 @@ function StormtrailGame() {
                 </section>
                 <section className="rounded-2xl border border-stone-300 bg-white p-4 shadow-sm">
                   <h2 className="text-lg font-black">Trail log</h2>
-                  <ol className="mt-2 max-h-72 space-y-2 overflow-auto text-sm" aria-live="polite">
+                  <ol
+                    className="mt-2 max-h-72 space-y-2 overflow-auto text-sm"
+                    aria-live="polite"
+                  >
                     {latestHistory.length === 0 ? (
                       <li className="text-stone-500">Setup is beginning.</li>
-                    ) : latestHistory.map((entry, index) => (
-                      <li key={`${entry.turn}-${entry.kind}-${index}`} className="border-l-2 border-amber-700 pl-2">
-                        <span className="font-bold">Turn {entry.turn}</span> · {entry.summary}
-                      </li>
-                    ))}
+                    ) : (
+                      latestHistory.map((entry, index) => (
+                        <li
+                          key={`${entry.turn}-${entry.kind}-${index}`}
+                          className="border-l-2 border-amber-700 pl-2"
+                        >
+                          <span className="font-bold">Turn {entry.turn}</span> ·{" "}
+                          {entry.summary}
+                        </li>
+                      ))
+                    )}
                   </ol>
                 </section>
               </aside>

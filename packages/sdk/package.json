@@ -1,6 +1,6 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.4.0-alpha.8",
+  "version": "0.4.0-alpha.9",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",

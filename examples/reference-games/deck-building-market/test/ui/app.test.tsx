@@ -20,7 +20,8 @@ test("Sketchbook UI routes only the eleven canonical interactions", () => {
     "playerTurn.buyCard",
     "playerTurn.endTurn",
   ];
-  for (const interaction of canonical) assert.match(routes, new RegExp(interaction));
+  for (const interaction of canonical)
+    assert.match(routes, new RegExp(interaction));
   assert.doesNotMatch(routes, /playAll|Treasure|Sketchpad|Critic|Open Mic/);
   assert.match(routes, /cardIds: hand\.slot\.card/);
   assert.match(routes, /cardId: market\.slot\.card/);

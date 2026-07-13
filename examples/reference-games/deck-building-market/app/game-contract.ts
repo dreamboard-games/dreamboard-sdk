@@ -62,8 +62,7 @@ export const gameContract = defineGameContract({
     INVALID_BUY: "That supply card cannot be bought now.",
     NOT_AN_INSPIRATION_CARD: "Choose an Inspiration card.",
     NOT_RESOLVING_ERASER: "Eraser is not waiting for a selection.",
-    NOT_RESOLVING_STUDIO_VISIT:
-      "Studio Visit is not waiting for a selection.",
+    NOT_RESOLVING_STUDIO_VISIT: "Studio Visit is not waiting for a selection.",
     NOT_TOP_CARD: "Choose the top card of a nonempty supply pile.",
     NOT_YOUR_TURN: "Not your turn.",
     NO_ACTIONS: "No actions remain.",
@@ -78,9 +77,7 @@ export type GameContract = typeof gameContract;
 export type GameState = GameStateOf<GameContract>;
 export type GameErrorCode = ErrorCodeOfContract<GameContract>;
 export type PlayerId = z.infer<typeof ids.playerId>;
-export type PlayerTurnPhaseState = z.infer<
-  typeof sketchbookPhaseStateSchema
->;
+export type PlayerTurnPhaseState = z.infer<typeof sketchbookPhaseStateSchema>;
 export type HistoryEntry = z.infer<typeof historyEntrySchema>;
 
 export { ids };

@@ -8,14 +8,14 @@ below. This receipt does not represent staging or production proof.
 
 ## Exact Source And Package Identity
 
-| Boundary | Identity |
-| --- | --- |
-| SDK implementation commit | `4850e06` (`feat: add agent-first scenario inspection`) |
-| Public Dreamboard implementation commit | `898cb2d` (`feat(cli): add JSON scenario inspect and explore`) |
-| Exact SDK candidate | `/private/tmp/dreamboard-sdk-phase02-final.ZzGw4k/dreamboard-games-sdk-0.4.0-alpha.8.tgz` |
-| Candidate SHA-256 | `a23ddfc4e6d87ce0b9139e543c4e8f3a7f5f8e60bf8be638e67d6f249f5be5f7` |
-| SDK package version | `0.4.0-alpha.8` |
-| Reducer contract version | `0.4.0` |
+| Boundary                                | Identity                                                                                  |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| SDK implementation commit               | `4850e06` (`feat: add agent-first scenario inspection`)                                   |
+| Public Dreamboard implementation commit | `898cb2d` (`feat(cli): add JSON scenario inspect and explore`)                            |
+| Exact SDK candidate                     | `/private/tmp/dreamboard-sdk-phase02-final.ZzGw4k/dreamboard-games-sdk-0.4.0-alpha.8.tgz` |
+| Candidate SHA-256                       | `a23ddfc4e6d87ce0b9139e543c4e8f3a7f5f8e60bf8be638e67d6f249f5be5f7`                        |
+| SDK package version                     | `0.4.0-alpha.8`                                                                           |
+| Reducer contract version                | `0.4.0`                                                                                   |
 
 The Cloudline and public CLI test installations resolved the isolated unpacked
 candidate corresponding to that tarball. The packed-consumer gate separately
@@ -46,7 +46,23 @@ context path.
 Plain test result:
 
 ```json
-{"schemaVersion":2,"ok":true,"command":"test","result":{"schemaVersion":1,"summary":{"total":1,"passed":1,"failed":0},"scenarios":[{"id":"cloudline.complete-game","path":"test/scenarios/complete-game.scenario.ts","status":"passed"}]},"nextActions":[]}
+{
+  "schemaVersion": 2,
+  "ok": true,
+  "command": "test",
+  "result": {
+    "schemaVersion": 1,
+    "summary": { "total": 1, "passed": 1, "failed": 0 },
+    "scenarios": [
+      {
+        "id": "cloudline.complete-game",
+        "path": "test/scenarios/complete-game.scenario.ts",
+        "status": "passed"
+      }
+    ]
+  },
+  "nextActions": []
+}
 ```
 
 Cloudline setup inspection, reduced to the contract-bearing fields:
@@ -78,15 +94,33 @@ Cloudline setup inspection, reduced to the contract-bearing fields:
         {
           "actor": { "seat": 0, "playerId": "player-1" },
           "interactionId": "markCell",
-          "inputs": [{ "key": "cell", "kind": "board-space", "eligibleCount": 2 }],
+          "inputs": [
+            { "key": "cell", "kind": "board-space", "eligibleCount": 2 }
+          ],
           "hasConcreteCommand": true
         }
       ],
       "entropy": {
         "seed": 3,
         "draws": [
-          { "index": 0, "cursorBefore": 0, "cursorAfter": 1, "operation": { "kind": "integer", "parameters": { "minInclusive": 1, "maxInclusive": 6 } } },
-          { "index": 1, "cursorBefore": 1, "cursorAfter": 2, "operation": { "kind": "integer", "parameters": { "minInclusive": 1, "maxInclusive": 6 } } }
+          {
+            "index": 0,
+            "cursorBefore": 0,
+            "cursorAfter": 1,
+            "operation": {
+              "kind": "integer",
+              "parameters": { "minInclusive": 1, "maxInclusive": 6 }
+            }
+          },
+          {
+            "index": 1,
+            "cursorBefore": 1,
+            "cursorAfter": 2,
+            "operation": {
+              "kind": "integer",
+              "parameters": { "minInclusive": 1, "maxInclusive": 6 }
+            }
+          }
         ]
       }
     },
@@ -153,9 +187,39 @@ used for shuffled decks and any other reducer-owned entropy:
   "mode": "seeds",
   "checkpoint": { "segment": "setup", "completed": 0 },
   "variants": [
-    { "seed": 1, "status": "replayed", "signature": { "phase": "markSurvey", "step": null, "actions": [{ "seat": 0, "interactionId": "markCell", "concreteOptionCount": 1 }] } },
-    { "seed": 2, "status": "replayed", "signature": { "phase": "markSurvey", "step": null, "actions": [{ "seat": 0, "interactionId": "markCell", "concreteOptionCount": 2 }] } },
-    { "seed": 3, "status": "replayed", "signature": { "phase": "markSurvey", "step": null, "actions": [{ "seat": 0, "interactionId": "markCell", "concreteOptionCount": 2 }] } }
+    {
+      "seed": 1,
+      "status": "replayed",
+      "signature": {
+        "phase": "markSurvey",
+        "step": null,
+        "actions": [
+          { "seat": 0, "interactionId": "markCell", "concreteOptionCount": 1 }
+        ]
+      }
+    },
+    {
+      "seed": 2,
+      "status": "replayed",
+      "signature": {
+        "phase": "markSurvey",
+        "step": null,
+        "actions": [
+          { "seat": 0, "interactionId": "markCell", "concreteOptionCount": 2 }
+        ]
+      }
+    },
+    {
+      "seed": 3,
+      "status": "replayed",
+      "signature": {
+        "phase": "markSurvey",
+        "step": null,
+        "actions": [
+          { "seat": 0, "interactionId": "markCell", "concreteOptionCount": 2 }
+        ]
+      }
+    }
   ]
 }
 ```
@@ -189,19 +253,19 @@ to redact stack traces and private exception text behind `TEST_UNEXPECTED`.
 
 ## Cloudline Rule Proof
 
-| Approved obligation | Executable proof | Result |
-| --- | --- | --- |
-| Normal setup uses real seeded 2d6 | `app/phases/roll.ts`; structured-entropy test | two `random.integer(1..6)` draws per round |
-| Same seed and path reproduce | two independent replays plus two-process receipt digest | identical state, views, events and normalized digest |
-| One through four players and strict seat order | four `seat-order-*.scenario.ts` files | pass |
-| Every board is public | all three player inspections at live `given:3` | identical public state and `marksByPlayer` |
-| Multiple, one and no match branches | three focused scenarios | pass |
-| Reducer chooses surveyed/failed | match and fallback scenario assertions | pass |
-| Wrong actor, board and cell rejection | `legality-probes.scenario.ts` clone probes | `NOT_YOUR_TURN`, `PLAYER_NOT_ACTIVE`, `CELL_DOES_NOT_MATCH_ROLL`, `CELL_ALREADY_MARKED` |
-| Scoring | `test/unit/scoring.test.ts` | rows, columns, orthogonal region, diagonal exclusion and failure penalty pass |
-| Unique/tied/lower/solo outcomes | complete, tied and solo scenarios plus pure ranking edges | pass |
-| Complete eight-round normal game | three-player and solo complete-game scenarios | pass |
-| Desktop/mobile source checkpoints | four UI scenarios | module/type proof passes; shared browser gate remains deferred below |
+| Approved obligation                            | Executable proof                                          | Result                                                                                  |
+| ---------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Normal setup uses real seeded 2d6              | `app/phases/roll.ts`; structured-entropy test             | two `random.integer(1..6)` draws per round                                              |
+| Same seed and path reproduce                   | two independent replays plus two-process receipt digest   | identical state, views, events and normalized digest                                    |
+| One through four players and strict seat order | four `seat-order-*.scenario.ts` files                     | pass                                                                                    |
+| Every board is public                          | all three player inspections at live `given:3`            | identical public state and `marksByPlayer`                                              |
+| Multiple, one and no match branches            | three focused scenarios                                   | pass                                                                                    |
+| Reducer chooses surveyed/failed                | match and fallback scenario assertions                    | pass                                                                                    |
+| Wrong actor, board and cell rejection          | `legality-probes.scenario.ts` clone probes                | `NOT_YOUR_TURN`, `PLAYER_NOT_ACTIVE`, `CELL_DOES_NOT_MATCH_ROLL`, `CELL_ALREADY_MARKED` |
+| Scoring                                        | `test/unit/scoring.test.ts`                               | rows, columns, orthogonal region, diagonal exclusion and failure penalty pass           |
+| Unique/tied/lower/solo outcomes                | complete, tied and solo scenarios plus pure ranking edges | pass                                                                                    |
+| Complete eight-round normal game               | three-player and solo complete-game scenarios             | pass                                                                                    |
+| Desktop/mobile source checkpoints              | four UI scenarios                                         | module/type proof passes; shared browser gate remains deferred below                    |
 
 The package gate ran 19 behavior/unit tests and four UI scenario modules. Pure
 score/connectivity tests construct typed algorithm inputs only; they do not
@@ -213,15 +277,15 @@ hydrate reducer state or substitute for the complete reducer replay.
 three `when` commands.
 
 | Round | Dice | Total | Cumulative structured draws |
-| ---: | --- | ---: | ---: |
-| 1 | 5, 1 | 6 | 2 |
-| 2 | 3, 6 | 9 | 4 |
-| 3 | 1, 4 | 5 | 6 |
-| 4 | 6, 4 | 10 | 8 |
-| 5 | 2, 1 | 3 | 10 |
-| 6 | 4, 2 | 6 | 12 |
-| 7 | 4, 3 | 7 | 14 |
-| 8 | 1, 3 | 4 | 16 |
+| ----: | ---- | ----: | --------------------------: |
+|     1 | 5, 1 |     6 |                           2 |
+|     2 | 3, 6 |     9 |                           4 |
+|     3 | 1, 4 |     5 |                           6 |
+|     4 | 6, 4 |    10 |                           8 |
+|     5 | 2, 1 |     3 |                          10 |
+|     6 | 4, 2 |     6 |                          12 |
+|     7 | 4, 3 |     7 |                          14 |
+|     8 | 1, 3 |     4 |                          16 |
 
 The game ends in `gameOver` with exactly eight marks per player, scores
 `14 / 4 / 4`, and standings `rank 1 win / rank 2 loss / rank 2 loss`. The solo
@@ -294,10 +358,10 @@ Phase 02 intentionally retained workspace-generated and old generated fixture
 paths until downstream consumers are cut over. Consequently the tracked game
 root grew while the authored complete-game proof was added:
 
-| Commit | Paths | Logical lines | Blob bytes |
-| --- | ---: | ---: | ---: |
-| Phase 01 `1c59f02` | 49 | 20,242 | 608,530 |
-| Phase 02 `4850e06` | 52 | 23,786 | 678,368 |
+| Commit             | Paths | Logical lines | Blob bytes |
+| ------------------ | ----: | ------------: | ---------: |
+| Phase 01 `1c59f02` |    49 |        20,242 |    608,530 |
+| Phase 02 `4850e06` |    52 |        23,786 |    678,368 |
 
 This is not the final size result. Phase 06 makes generation on-demand and
 Phase 07 deletes tracked workspace/test output under the strict 75,000-line
@@ -305,20 +369,20 @@ nine-game budget while retaining all nine lockfiles.
 
 ## Verification
 
-| Gate | Result |
-| --- | --- |
-| reducer-contract generate check, typecheck, 90 tests | pass |
-| SDK typecheck, 630 tests, 20 snapshots, build | pass |
-| SDK pack consumer (20 JS exports + CSS) | pass |
-| Cloudline typecheck, 19 tests, four UI modules | pass |
-| Cloudline inspect, transition explore and seed explore from package root | pass |
-| Public CLI typecheck, full focused suites and build | pass |
-| Public CLI seven process-boundary families / 186 assertions | pass |
-| Published CLI package test/inspect/explore smoke | pass |
-| Skill-source synchronization | pass and idempotent (`4d80503a...`) |
-| Reference-game metadata check | passed before the coordinated Phase 03 edits; rerun at repository closeout |
-| Shared Workbench fixtures/browser | deferred: legacy games still import the retired base runtime; Phase 07 regenerates all nine together |
-| Live backend/browser digest | deferred to required Phase 07 local-stack publication gate |
+| Gate                                                                     | Result                                                                                               |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| reducer-contract generate check, typecheck, 90 tests                     | pass                                                                                                 |
+| SDK typecheck, 630 tests, 20 snapshots, build                            | pass                                                                                                 |
+| SDK pack consumer (20 JS exports + CSS)                                  | pass                                                                                                 |
+| Cloudline typecheck, 19 tests, four UI modules                           | pass                                                                                                 |
+| Cloudline inspect, transition explore and seed explore from package root | pass                                                                                                 |
+| Public CLI typecheck, full focused suites and build                      | pass                                                                                                 |
+| Public CLI seven process-boundary families / 186 assertions              | pass                                                                                                 |
+| Published CLI package test/inspect/explore smoke                         | pass                                                                                                 |
+| Skill-source synchronization                                             | pass and idempotent (`4d80503a...`)                                                                  |
+| Reference-game metadata check                                            | passed before the coordinated Phase 03 edits; rerun at repository closeout                           |
+| Shared Workbench fixtures/browser                                        | deferred: legacy games still import the retired base runtime; Phase 07 regenerates all nine together |
+| Live backend/browser digest                                              | deferred to required Phase 07 local-stack publication gate                                           |
 
 No dice-specific framework branch, authored decision field, authored
 `requiredActions`, authored `blockedBy`, base state, snapshot hydration, state

@@ -20,13 +20,21 @@ const PHASE_LABEL: Record<PhaseName, string> = {
   gameOver: "Portfolio complete",
 };
 
-function Stat({ label, value }: { readonly label: string; readonly value: string | number }) {
+function Stat({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string | number;
+}) {
   return (
     <div className="rounded-xl border border-stone-400 bg-amber-50 px-3 py-2">
       <div className="text-[9px] font-bold uppercase tracking-widest text-stone-500">
         {label}
       </div>
-      <div className="text-xl font-black tabular-nums text-stone-900">{value}</div>
+      <div className="text-xl font-black tabular-nums text-stone-900">
+        {value}
+      </div>
     </div>
   );
 }
@@ -42,7 +50,9 @@ function SupplyGroup({
 }) {
   return (
     <section>
-      <h3 className="mb-2 font-serif text-lg font-bold text-stone-800">{label}</h3>
+      <h3 className="mb-2 font-serif text-lg font-bold text-stone-800">
+        {label}
+      </h3>
       <div className="flex flex-wrap gap-2">
         <surface.Collection>
           {(card) => {
@@ -139,13 +149,21 @@ export function GameUI({
         <header className="border-b-2 border-stone-800 bg-[#fffdf7]/95 px-4 py-3">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="font-serif text-3xl font-black tracking-tight">Sketchbook</h1>
+              <h1 className="font-serif text-3xl font-black tracking-tight">
+                Sketchbook
+              </h1>
               <p className="text-sm text-stone-600">{instruction}</p>
             </div>
             <div className="text-right text-sm font-bold">
-              <div>Turn {view.turnNumber} · {PHASE_LABEL[phase]}</div>
+              <div>
+                Turn {view.turnNumber} · {PHASE_LABEL[phase]}
+              </div>
               <div className="text-stone-500">
-                {turn.isMine ? "Your page" : activeName ? `${activeName}'s page` : "Final page"}
+                {turn.isMine
+                  ? "Your page"
+                  : activeName
+                    ? `${activeName}'s page`
+                    : "Final page"}
               </div>
             </div>
           </div>
@@ -154,12 +172,17 @@ export function GameUI({
         <div className="mx-auto grid max-w-7xl gap-4 px-3 py-4 lg:grid-cols-[230px_minmax(0,1fr)_250px]">
           <aside className="space-y-4">
             <section className={`${PANEL} p-3`} aria-label="Turn resources">
-              <h2 className="mb-2 font-serif text-xl font-bold">Working palette</h2>
+              <h2 className="mb-2 font-serif text-xl font-bold">
+                Working palette
+              </h2>
               <div className="grid grid-cols-2 gap-2">
                 <Stat label="Actions" value={view.actionsLeft} />
                 <Stat label="Buys" value={view.buysLeft} />
                 <Stat label="Inspiration" value={view.inspiration} />
-                <Stat label="Draw deck" value={view.deckCountByPlayerId[playerId] ?? 0} />
+                <Stat
+                  label="Draw deck"
+                  value={view.deckCountByPlayerId[playerId] ?? 0}
+                />
               </div>
             </section>
             <section className={`${PANEL} p-3`} aria-label="Your card cycle">
@@ -167,18 +190,30 @@ export function GameUI({
               <p className="mb-2 text-xs text-stone-500">
                 Discard {discard.length} · In play {inPlay.length}
               </p>
-              <h3 className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">In play</h3>
+              <h3 className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                In play
+              </h3>
               <CardStrip cardIds={inPlay} empty="Nothing played yet." />
-              <h3 className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-widest text-stone-500">Public discard</h3>
-              <CardStrip cardIds={discard.slice(-4)} empty="Discard is empty." />
+              <h3 className="mb-1 mt-3 text-[10px] font-bold uppercase tracking-widest text-stone-500">
+                Public discard
+              </h3>
+              <CardStrip
+                cardIds={discard.slice(-4)}
+                empty="Discard is empty."
+              />
             </section>
           </aside>
 
-          <section className={`${PANEL} space-y-5 p-4`} aria-label="Shared supply">
+          <section
+            className={`${PANEL} space-y-5 p-4`}
+            aria-label="Shared supply"
+          >
             <div className="flex items-end justify-between gap-3 border-b border-dashed border-stone-400 pb-2">
               <div>
                 <h2 className="font-serif text-2xl font-black">Studio shelf</h2>
-                <p className="text-xs text-stone-500">Top cards and pile counts are public.</p>
+                <p className="text-xs text-stone-500">
+                  Top cards and pile counts are public.
+                </p>
               </div>
               <span className="text-xs font-bold uppercase tracking-widest text-stone-500">
                 {view.step ?? "complete"}
@@ -216,7 +251,9 @@ export function GameUI({
                         <PlayerRoster.Score player={player} />
                       </div>
                       <div className="text-[10px] uppercase tracking-wider text-stone-500">
-                        {view.handCountByPlayerId[player.playerId] ?? 0} in hand · {view.deckCountByPlayerId[player.playerId] ?? 0} in deck
+                        {view.handCountByPlayerId[player.playerId] ?? 0} in hand
+                        · {view.deckCountByPlayerId[player.playerId] ?? 0} in
+                        deck
                       </div>
                     </div>
                   )}
@@ -224,10 +261,15 @@ export function GameUI({
               </PlayerRoster.Root>
             </section>
             <section className={`${PANEL} p-3`} aria-label="Recent events">
-              <h2 className="mb-2 font-serif text-xl font-bold">Margin notes</h2>
+              <h2 className="mb-2 font-serif text-xl font-bold">
+                Margin notes
+              </h2>
               <ol className="space-y-2 text-xs text-stone-600">
                 {view.history.slice(-6).map((entry, index) => (
-                  <li key={`${entry.turn}-${entry.kind}-${index}`} className="border-l-2 border-sky-300 pl-2">
+                  <li
+                    key={`${entry.turn}-${entry.kind}-${index}`}
+                    className="border-l-2 border-sky-300 pl-2"
+                  >
                     {entry.summary}
                   </li>
                 ))}
@@ -236,19 +278,22 @@ export function GameUI({
           </aside>
         </div>
 
-        <section className="sticky bottom-0 z-20 border-t-2 border-stone-800 bg-[#fffdf7]/95 px-3 py-3 backdrop-blur" aria-label="Your hand">
+        <section
+          className="sticky bottom-0 z-20 border-t-2 border-stone-800 bg-[#fffdf7]/95 px-3 py-3 backdrop-blur"
+          aria-label="Your hand"
+        >
           <div className="mx-auto max-w-7xl">
             <hand.Hand className="min-h-[138px]" cardSize="md">
-              <hand.Actions>
-                {() => <SketchbookActions />}
-              </hand.Actions>
+              <hand.Actions>{() => <SketchbookActions />}</hand.Actions>
               <hand.Staging label="Selected for Eraser" cardSize="md">
                 {(card) => (
                   <CardFace
                     card={card}
                     size="md"
                     selected
-                    renderContent={(value) => <SketchCardContent card={value} />}
+                    renderContent={(value) => (
+                      <SketchCardContent card={value} />
+                    )}
                   />
                 )}
               </hand.Staging>
@@ -257,14 +302,19 @@ export function GameUI({
                   card.hidden ? (
                     <hand.Card card={card} />
                   ) : (
-                    <hand.Card card={card} className="border-0 bg-transparent p-0">
+                    <hand.Card
+                      card={card}
+                      className="border-0 bg-transparent p-0"
+                    >
                       <CardFace
                         card={card}
                         size="md"
                         eligible={state.distinctlyEligible}
                         selected={state.selected}
                         invalid={state.invalid}
-                        renderContent={(value) => <SketchCardContent card={value} />}
+                        renderContent={(value) => (
+                          <SketchCardContent card={value} />
+                        )}
                       />
                     </hand.Card>
                   )

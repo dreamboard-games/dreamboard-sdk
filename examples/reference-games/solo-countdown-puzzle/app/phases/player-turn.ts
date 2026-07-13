@@ -105,7 +105,10 @@ const repairBeacon = defineInteraction<
       return reject("GAME_ALREADY_COMPLETE", "The lighthouse result is final.");
     }
     if (state.publicState.energy < 1) {
-      return reject("NOT_ENOUGH_ENERGY", "Repairing a beacon requires one energy.");
+      return reject(
+        "NOT_ENOUGH_ENERGY",
+        "Repairing a beacon requires one energy.",
+      );
     }
     const beaconId = input.params.beaconId as BeaconId;
     if (!beaconIds.includes(beaconId)) {

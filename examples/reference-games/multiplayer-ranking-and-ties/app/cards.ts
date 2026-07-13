@@ -17,7 +17,10 @@ export type StormCard = {
 export type HarborCard = StallCard | StormCard;
 
 export const festivalCardIds = [...literals.cardIds] as readonly CardId[];
-export const stormIds = ["storm-1", "storm-2"] as const satisfies readonly StormId[];
+export const stormIds = [
+  "storm-1",
+  "storm-2",
+] as const satisfies readonly StormId[];
 
 function parseCard(cardId: CardId): HarborCard {
   if (cardId === "storm-1" || cardId === "storm-2") {

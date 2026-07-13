@@ -452,8 +452,7 @@ test("Bandits exploration derives no-victim, one-victim, and multi-victim comman
   );
   assert.equal(
     explored.candidates.some(
-      ({ command }) =>
-        command.params.hexId === "centralBarrens",
+      ({ command }) => command.params.hexId === "centralBarrens",
     ),
     false,
   );
@@ -525,10 +524,10 @@ test("seeded stolen supply type is participant-only and reproducible", async () 
   });
   assert.equal(JSON.stringify(spectator.node).includes("myLastStolen"), false);
   assert.equal(JSON.stringify(spectator.node).includes("provisions"), true);
-  assert.deepEqual(
-    (spectator.node.view as { lastSteal: unknown }).lastSteal,
-    { thiefPlayerId: "player-1", victimPlayerId: "player-2" },
-  );
+  assert.deepEqual((spectator.node.view as { lastSteal: unknown }).lastSteal, {
+    thiefPlayerId: "player-1",
+    victimPlayerId: "player-2",
+  });
 });
 
 test("privacy projection exposes exact inventories only to their owners", async () => {
@@ -634,21 +633,20 @@ test("fixed Stormtrail topology is exactly the approved seven-hex graph", () => 
     },
   );
   assert.deepEqual(
-    new Set(Object.values(INTERSECTIONS_BY_HEX_ID).map((vertices) => vertices.length)),
+    new Set(
+      Object.values(INTERSECTIONS_BY_HEX_ID).map((vertices) => vertices.length),
+    ),
     new Set([6]),
   );
-  assert.deepEqual(
-    Object.keys(FRONTIER.spaces).sort(),
-    [
-      "centralBarrens",
-      "northEastClay",
-      "northForest",
-      "northWestFields",
-      "southEastFields",
-      "southForest",
-      "southWestClay",
-    ],
-  );
+  assert.deepEqual(Object.keys(FRONTIER.spaces).sort(), [
+    "centralBarrens",
+    "northEastClay",
+    "northForest",
+    "northWestFields",
+    "southEastFields",
+    "southForest",
+    "southWestClay",
+  ]);
 });
 
 test("setup action discovery follows seat order and adjacent trail domains", async () => {
@@ -743,7 +741,10 @@ test("roll, no-discard seven, and main discovery stay scoped to the legal actor"
   });
   assert.equal(noDiscardSeven.state().publicState.lastRoll?.total, 7);
   assert.equal(noDiscardSeven.state().flow.currentPhase, "moveBandits");
-  assert.deepEqual(noDiscardSeven.state().publicState.discardCountsByPlayerId, {});
+  assert.deepEqual(
+    noDiscardSeven.state().publicState.discardCountsByPlayerId,
+    {},
+  );
   assert.deepEqual(
     noDiscardSeven
       .interactions({ seat: 0 })
@@ -822,11 +823,7 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
   });
   const occupiedTrail = await probeScenarioCommand({
     replay: afterSecondCamp,
-    command: trail(
-      1,
-      "hex-edge:1,1,-2::2,2,-4",
-      "placeStartingTrail",
-    ),
+    command: trail(1, "hex-edge:1,1,-2::2,2,-4", "placeStartingTrail"),
   });
   assert.equal(occupiedTrail.kind, "rejected");
   if (occupiedTrail.kind === "rejected") {
@@ -836,9 +833,19 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
 
 test("seeded production covers every terrain number and all no-token totals", async () => {
   const checkpoints = [
-    { completed: 7, total: 8, resourceId: "provisions", hexId: "southEastFields" },
+    {
+      completed: 7,
+      total: 8,
+      resourceId: "provisions",
+      hexId: "southEastFields",
+    },
     { completed: 9, total: 5, resourceId: "timber", hexId: "northForest" },
-    { completed: 11, total: 10, resourceId: "provisions", hexId: "northWestFields" },
+    {
+      completed: 11,
+      total: 10,
+      resourceId: "provisions",
+      hexId: "northWestFields",
+    },
     { completed: 27, total: 9, resourceId: "timber", hexId: "southForest" },
     { completed: 70, total: 6, resourceId: "brick", hexId: "northEastClay" },
     { completed: 78, total: 4, resourceId: "brick", hexId: "southWestClay" },
@@ -994,7 +1001,10 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
     provisions: 0,
     timber: 1,
   });
-  assert.equal(beforeLast.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"], 1);
+  assert.equal(
+    beforeLast.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"],
+    1,
+  );
 
   const exhausted = await replayScenario({ game, scenario: networkAndCosts });
   assert.deepEqual(exhausted.view({ seat: 0 }).mySupplies, {
@@ -1002,12 +1012,15 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
     provisions: 0,
     timber: 0,
   });
-  assert.equal(exhausted.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"], 0);
+  assert.equal(
+    exhausted.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"],
+    0,
+  );
   assert.equal(
     exhausted
       .interactions({ seat: 0 })
-      .find(({ interactionId }) => interactionId === "buildTrail")
-      ?.availability?.status,
+      .find(({ interactionId }) => interactionId === "buildTrail")?.availability
+      ?.status,
     "blocked",
   );
   const digest = exhausted.checkpointDigest;
@@ -1117,10 +1130,16 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
     provisions: 0,
     timber: 0,
   });
-  assert.equal(afterBuild.view({ seat: 1 }).remainingCampsByPlayerId["player-2"], 2);
+  assert.equal(
+    afterBuild.view({ seat: 1 }).remainingCampsByPlayerId["player-2"],
+    2,
+  );
 
   const terminal = await replayScenario({ game, scenario: completeGame });
-  assert.equal(terminal.view({ seat: 1 }).remainingCampsByPlayerId["player-2"], 0);
+  assert.equal(
+    terminal.view({ seat: 1 }).remainingCampsByPlayerId["player-2"],
+    0,
+  );
   assert.equal(terminal.state().flow.currentPhase, "gameOver");
   assert.deepEqual(terminal.interactions({ seat: 1 }), []);
 });

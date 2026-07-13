@@ -24,7 +24,10 @@ export const studio = defineCardAction<GameContract, PlayerTurnPhaseState>()({
       toZoneId: "in-play",
       cardId: input.params.cardId,
     });
-    tx.patchPhaseState({ ...state.phase, actionsLeft: state.phase.actionsLeft + 1 });
+    tx.patchPhaseState({
+      ...state.phase,
+      actionsLeft: state.phase.actionsLeft + 1,
+    });
     const draw = prepareMidTurnDraw({
       state: tx.state,
       q,

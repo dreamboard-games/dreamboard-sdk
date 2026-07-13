@@ -37,7 +37,9 @@ export default defineScenario({
       "gale-1",
     ]);
     expect(final.events).toHaveLength(12);
-    expect(final.events[final.events.length - 1]?.id).toBe("countdown-advanced");
+    expect(final.events[final.events.length - 1]?.id).toBe(
+      "countdown-advanced",
+    );
     expect(final.outcome?.reason.code).toBe("ALL_BEACONS_LIT");
     expect(final.outcome?.standings).toEqual([
       { playerId: "player-1", rank: 1, result: "win" },

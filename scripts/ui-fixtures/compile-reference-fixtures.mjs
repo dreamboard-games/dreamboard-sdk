@@ -239,7 +239,9 @@ async function compileReferenceFixturePartitions(outputRoot, gameIds) {
       );
       const partition = await readJson(path.join(partitionRoot, "index.json"));
       fixtures.push(...partition.fixtures);
-      for (const entry of await readdir(partitionRoot, { withFileTypes: true })) {
+      for (const entry of await readdir(partitionRoot, {
+        withFileTypes: true,
+      })) {
         if (entry.name === "index.json") continue;
         await cp(
           path.join(partitionRoot, entry.name),

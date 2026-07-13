@@ -9,7 +9,10 @@ function read(path: string) {
 test("Stormtrail UI binds every canonical phase through typed surfaces", () => {
   const app = read("../../ui/App.tsx");
   const routes = read("../../ui/interaction-routes.tsx");
-  assert.match(app, /UI\.defineSurfaces\(\{\s*frontier: Board\.surface\("frontier"\)/);
+  assert.match(
+    app,
+    /UI\.defineSurfaces\(\{\s*frontier: Board\.surface\("frontier"\)/,
+  );
   assert.match(app, /<Board\.HexGrid/);
   assert.match(app, /data-reference-game="hex-network-trading"/);
   assert.match(app, />Stormtrail</);

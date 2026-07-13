@@ -1,7 +1,4 @@
-import type {
-  GameTopologyManifest,
-  JsonValue,
-} from "@dreamboard-games/sdk-types";
+import type { JsonValue } from "@dreamboard-games/sdk-types";
 
 export type GeneratedAuthoringMetadataV1 = {
   sdkVersion: string;

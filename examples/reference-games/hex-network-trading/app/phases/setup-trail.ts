@@ -1,7 +1,4 @@
-import type {
-  EdgeId,
-  ResourceId,
-} from "../../shared/manifest-contract";
+import type { EdgeId, ResourceId } from "../../shared/manifest-contract";
 import { setupTrailAuthoring } from "../authoring";
 import { startingTrailTarget } from "../eligibility";
 import { producingHexesAtIntersection } from "../model";
@@ -32,7 +29,9 @@ const placeStartingTrail = setupTrailAuthoring.interaction({
     const setup = state.publicState.setup;
     const intersectionId = setup?.pendingIntersectionId;
     if (!trailId || !setup || !intersectionId) {
-      throw new Error("Starting trail requires a pending camp and trail piece.");
+      throw new Error(
+        "Starting trail requires a pending camp and trail piece.",
+      );
     }
     const grants = producingHexesAtIntersection(intersectionId).reduce<
       Partial<Record<ResourceId, number>>
@@ -69,9 +68,7 @@ const placeStartingTrail = setupTrailAuthoring.interaction({
       summary: `${input.playerId} completed a starting camp-and-trail pair.`,
     });
     return accept(next, {
-      instructions: [
-        fx.transition(finalPlacement ? "roll" : "setupCamp"),
-      ],
+      instructions: [fx.transition(finalPlacement ? "roll" : "setupCamp")],
       events: [
         systemEvent({
           procedureId: "stormtrail-setup",

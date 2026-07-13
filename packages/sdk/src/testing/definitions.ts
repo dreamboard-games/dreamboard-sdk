@@ -192,10 +192,7 @@ export type ScenarioSchemaOutput<Schema extends z.core.SomeType> =
                                 >
                               ? ScenarioSchemaOutput<Left> &
                                   ScenarioSchemaOutput<Right>
-                              : Schema extends z.ZodPipe<
-                                    infer Input,
-                                    z.ZodType
-                                  >
+                              : Schema extends z.ZodPipe<infer Input, z.ZodType>
                                 ? ScenarioSchemaOutput<Input>
                                 : Schema extends z.ZodLazy<infer Inner>
                                   ? ScenarioSchemaOutput<Inner>

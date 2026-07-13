@@ -33,15 +33,12 @@ const moveBandits = moveBanditsAuthoring.interaction({
         if (!parsedHexId.success) {
           return [];
         }
-        return eligibleBanditVictims(
-          state,
-          q,
-          playerId,
-          parsedHexId.data,
-        ).map((targetPlayerId) => ({
-          value: targetPlayerId,
-          label: targetPlayerId,
-        }));
+        return eligibleBanditVictims(state, q, playerId, parsedHexId.data).map(
+          (targetPlayerId) => ({
+            value: targetPlayerId,
+            label: targetPlayerId,
+          }),
+        );
       },
       defaultValue: ({ choices }) => choices[0]?.value,
     });

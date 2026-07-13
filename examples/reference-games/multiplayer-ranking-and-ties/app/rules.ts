@@ -14,7 +14,11 @@ import type {
   TieBreak,
 } from "./game-contract";
 
-export const guilds = ["food", "craft", "music"] as const satisfies readonly Guild[];
+export const guilds = [
+  "food",
+  "craft",
+  "music",
+] as const satisfies readonly Guild[];
 export const MAX_ROUNDS = 6;
 export const MARKET_SIZE = 4;
 
@@ -106,7 +110,11 @@ export function refillMarketPositions(options: {
   const procedureEvents: PublicEvent[] = [];
 
   for (const marketIndex of options.marketIndices) {
-    if (!Number.isInteger(marketIndex) || marketIndex < 0 || marketIndex >= MARKET_SIZE) {
+    if (
+      !Number.isInteger(marketIndex) ||
+      marketIndex < 0 ||
+      marketIndex >= MARKET_SIZE
+    ) {
       throw new Error(`Invalid Harbor Fair market index ${marketIndex}.`);
     }
     if (market[marketIndex] !== null) continue;
@@ -132,7 +140,9 @@ export function refillMarketPositions(options: {
           stormsRevealed,
         });
         if (stormsRevealed === 2) {
-          const outcome = createCancellationOutcome(options.publicState.playerIds);
+          const outcome = createCancellationOutcome(
+            options.publicState.playerIds,
+          );
           return {
             moves,
             procedureEvents,
@@ -370,11 +380,7 @@ function scoreComponent(
   return { id, label, value };
 }
 
-function tieBreak(
-  id: TieBreak["id"],
-  label: string,
-  value: number,
-): TieBreak {
+function tieBreak(id: TieBreak["id"], label: string, value: number): TieBreak {
   return { id, label, value };
 }
 
@@ -386,10 +392,14 @@ export function assertOutcomePlayerCoverage(
   const seen = new Set<PlayerId>();
   for (const standing of outcome.standings) {
     if (!expected.has(standing.playerId)) {
-      throw new Error(`Harbor Fair outcome contains unknown player '${standing.playerId}'.`);
+      throw new Error(
+        `Harbor Fair outcome contains unknown player '${standing.playerId}'.`,
+      );
     }
     if (seen.has(standing.playerId)) {
-      throw new Error(`Harbor Fair outcome contains duplicate player '${standing.playerId}'.`);
+      throw new Error(
+        `Harbor Fair outcome contains duplicate player '${standing.playerId}'.`,
+      );
     }
     seen.add(standing.playerId);
   }
@@ -441,11 +451,19 @@ export function createRankedOutcome(options: {
       score: row.total,
       scoreBreakdown: [
         scoreComponent("stall-prestige", "Stall prestige", row.prestige),
-        scoreComponent("guild-set-points", "Guild set points", row.guildSetPoints),
+        scoreComponent(
+          "guild-set-points",
+          "Guild set points",
+          row.guildSetPoints,
+        ),
         scoreComponent("coin-bonus", "Coin bonus", row.coins),
       ],
       tieBreaks: [
-        tieBreak("complete-guild-sets", "Complete guild sets", row.completeGuildSets),
+        tieBreak(
+          "complete-guild-sets",
+          "Complete guild sets",
+          row.completeGuildSets,
+        ),
         tieBreak("coins", "Coins", row.coins),
       ],
     };

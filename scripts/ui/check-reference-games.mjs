@@ -54,12 +54,7 @@ function checkArraySubset({ values, allowed, label, errors, gameId }) {
   }
 }
 
-function checkDependencies({
-  packageJson,
-  gameId,
-  expectedSdkVersion,
-  errors,
-}) {
+function checkDependencies({ packageJson, gameId, errors }) {
   const dependencyGroups = [
     ["dependencies", packageJson.dependencies ?? {}],
     ["devDependencies", packageJson.devDependencies ?? {}],
@@ -86,11 +81,10 @@ function checkDependencies({
     errors.push(
       `${gameId}: dependencies.${sdkPackage} must be exact, received ${sdkVersion}`,
     );
-  } else if (sdkVersion !== expectedSdkVersion) {
-    errors.push(
-      `${gameId}: dependencies.${sdkPackage} must match packages/sdk version ${expectedSdkVersion}, received ${sdkVersion}`,
-    );
   }
+  // Source validation also runs before a candidate SDK exists on npm. The
+  // post-publication publishable check owns equality with packages/sdk and
+  // lockfile integrity after the tool-managed repin.
 }
 
 async function checkWorkspacePath({ gameDir, gameId, label, value, errors }) {
@@ -463,7 +457,7 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
   }
 }
 
-async function validateGame(gameId, errors, expectedSdkVersion) {
+async function validateGame(gameId, errors) {
   const gameDir = path.join(referenceGamesRoot, gameId);
   const packagePath = path.join(gameDir, "package.json");
   const lockfilePath = path.join(gameDir, "pnpm-lock.yaml");
@@ -482,7 +476,7 @@ async function validateGame(gameId, errors, expectedSdkVersion) {
   if (packageJson.private !== true) {
     errors.push(`${gameId}: package.json must set private true`);
   }
-  checkDependencies({ packageJson, gameId, expectedSdkVersion, errors });
+  checkDependencies({ packageJson, gameId, errors });
 
   if (manifest.schemaVersion !== 3) {
     errors.push(`${gameId}: manifest schemaVersion must be 3`);
@@ -619,16 +613,9 @@ async function main() {
   await checkLegacyFixtureSidecarInventory(errors);
 
   const receipts = [];
-  const sdkPackageJson = await readJson(
-    path.join(root, "packages/sdk/package.json"),
-  );
   for (const gameId of selectedGameIds) {
     if (gameDirs.includes(gameId)) {
-      const receipt = await validateGame(
-        gameId,
-        errors,
-        sdkPackageJson.version,
-      );
+      const receipt = await validateGame(gameId, errors);
       if (receipt) {
         receipts.push(receipt);
       }

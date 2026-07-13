@@ -157,7 +157,9 @@ test("inspect distinguishes visible interactions from currently performable acti
 
   const [atChargeCap, atZeroEnergy, withStoredDefense, belowDefenseCost] =
     checkpoints;
-  assert.ok(atChargeCap && atZeroEnergy && withStoredDefense && belowDefenseCost);
+  assert.ok(
+    atChargeCap && atZeroEnergy && withStoredDefense && belowDefenseCost,
+  );
   assert.deepEqual(
     atChargeCap.node.actions.map(({ interactionId }) => interactionId),
     ["repairBeacon", "reinforce"],
@@ -216,8 +218,7 @@ test("explore enumerates five accepted opening commands from the player perspect
   assert.equal(
     explored.candidates.every(
       ({ after }) =>
-        after.flow.phase === "playerTurn" &&
-        after.flow.blockedBy.length === 0,
+        after.flow.phase === "playerTurn" && after.flow.blockedBy.length === 0,
     ),
     true,
   );

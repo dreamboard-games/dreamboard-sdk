@@ -20,7 +20,9 @@ export default defineScenario({
     expect(final.events[final.events.length - 2]?.kind).toBe("market-refilled");
     expect(final.events[final.events.length - 1]?.kind).toBe("festival-scored");
     expect(final.outcome?.reason.code).toBe("SIX_ROUNDS_COMPLETE");
-    expect(final.outcome?.standings.map(({ rank }) => rank)).toEqual([1, 2, 3, 4]);
+    expect(final.outcome?.standings.map(({ rank }) => rank)).toEqual([
+      1, 2, 3, 4,
+    ]);
     expect(final.outcome?.standings[0]).toMatchObject({
       playerId: "player-1",
       rank: 1,

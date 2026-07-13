@@ -11,11 +11,7 @@ import type { ResourceCounts } from "./game-contract";
 
 export const BOARD_ID = "frontier" as const;
 
-export type Terrain =
-  | "pineForest"
-  | "clayFlats"
-  | "grainFields"
-  | "barrens";
+export type Terrain = "pineForest" | "clayFlats" | "grainFields" | "barrens";
 
 export type HexRule = {
   readonly terrain: Terrain;
@@ -119,7 +115,9 @@ export function resourceTotal(resources: Readonly<ResourceCounts>): number {
   );
 }
 
-export function hasPositiveResource(resources: Readonly<ResourceCounts>): boolean {
+export function hasPositiveResource(
+  resources: Readonly<ResourceCounts>,
+): boolean {
   return Object.values(resources).some((count) => (count ?? 0) > 0);
 }
 
@@ -128,7 +126,6 @@ export function resourceMapsOverlap(
   right: Readonly<ResourceCounts>,
 ): boolean {
   return RESOURCE_IDS.some(
-    (resourceId) =>
-      (left[resourceId] ?? 0) > 0 && (right[resourceId] ?? 0) > 0,
+    (resourceId) => (left[resourceId] ?? 0) > 0 && (right[resourceId] ?? 0) > 0,
   );
 }

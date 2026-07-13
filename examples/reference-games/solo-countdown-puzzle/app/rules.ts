@@ -76,14 +76,14 @@ export function assertWeatherComposition(deck: readonly WeatherCardId[]): void {
     deck.length !== weatherCardIds.length ||
     [...deck].sort().join("|") !== [...weatherCardIds].sort().join("|")
   ) {
-    throw new Error("Last Light setup requires the exact eight-card weather deck.");
+    throw new Error(
+      "Last Light setup requires the exact eight-card weather deck.",
+    );
   }
 }
 
 export function allBeaconsLit(beacons: Record<BeaconId, number>): boolean {
-  return beaconIds.every(
-    (beaconId) => beacons[beaconId] >= MAX_BEACON_LEVEL,
-  );
+  return beaconIds.every((beaconId) => beacons[beaconId] >= MAX_BEACON_LEVEL);
 }
 
 export function repairableBeaconIds(state: PublicState): BeaconId[] {
@@ -110,9 +110,7 @@ export function makeOutcome(
   };
 }
 
-function event(
-  values: Omit<SystemEvent, "kind">,
-): SystemEvent {
+function event(values: Omit<SystemEvent, "kind">): SystemEvent {
   return { kind: "systemAction", ...values };
 }
 

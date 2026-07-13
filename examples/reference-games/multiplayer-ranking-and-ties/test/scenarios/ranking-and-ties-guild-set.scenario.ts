@@ -3,8 +3,7 @@ import { defineScenario } from "../testing-types.ts";
 
 export default defineScenario({
   id: "harbor-fair.ranking-and-ties-guild-set",
-  description:
-    "Equal total scores are separated first by complete guild sets.",
+  description: "Equal total scores are separated first by complete guild sets.",
   setup: { players: 3, seed: 27 },
   given: guildTieBreakPath.slice(0, 17),
   when: [guildTieBreakPath[17]],

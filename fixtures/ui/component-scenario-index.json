@@ -43,13 +43,8 @@
       ],
       "storyIds": ["panels--compact-panel", "panels--focus-order"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Board.HexGrid": {
       "id": "Board.HexGrid",
@@ -69,15 +64,13 @@
         "runtime-draft",
         "runtime-submit"
       ],
-      "scenarioIds": ["hex-network-trading.build-trail.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "scenarioIds": [
+        "hex-network-trading.growing-network.desktop",
+        "hex-network-trading.production.desktop",
+        "hex-network-trading.setup.desktop",
+        "hex-network-trading.terminal.mobile"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "Board.Space": {
       "id": "Board.Space",
@@ -95,13 +88,18 @@
         "runtime-submit"
       ],
       "scenarioIds": [
-        "roll-and-write-scorecard.mark-cell.drafted.mobile",
-        "roll-and-write-scorecard.mark-cell.invalid.mobile",
+        "roll-and-write-scorecard.mark-cell.desktop",
         "roll-and-write-scorecard.mark-cell.mobile",
-        "roll-and-write-scorecard.mark-cell.rolled.mobile",
-        "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
-        "worker-placement-tableau.place-worker.desktop"
+        "solo-countdown-puzzle.developing.mobile",
+        "solo-countdown-puzzle.initial.desktop",
+        "solo-countdown-puzzle.reinforcement-hit.desktop",
+        "solo-countdown-puzzle.terminal.mobile",
+        "worker-placement-tableau.contention.desktop",
+        "worker-placement-tableau.developed.mobile",
+        "worker-placement-tableau.first-craft.desktop",
+        "worker-placement-tableau.initial.mobile",
+        "worker-placement-tableau.outcome.mobile",
+        "worker-placement-tableau.season-transition.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -123,9 +121,12 @@
       "storyIds": [],
       "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
       "scenarioIds": [
-        "deck-building-market.buy-flow.desktop",
-        "hearts.pass-three.mobile",
-        "multiplayer-ranking-and-ties.draft-stall.desktop"
+        "deck-building-market.acquired-card-recycle.mobile",
+        "deck-building-market.opening-hand.desktop",
+        "deck-building-market.technique-chain.desktop",
+        "hearts.dealt-hand.desktop",
+        "hearts.first-trick.desktop",
+        "hearts.mid-hand.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -146,15 +147,14 @@
       "storyIds": [],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
       "scenarioIds": [
-        "deck-building-market.buy-flow.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.desktop"
+        "automa-river-rival.river.early.desktop",
+        "automa-river-rival.river.midgame.desktop",
+        "automa-river-rival.river.opening.mobile",
+        "automa-river-rival.river.terminal.mobile",
+        "deck-building-market.depleted-supply.desktop",
+        "deck-building-market.first-purchase.desktop"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "CardDragSurface": {
       "id": "CardDragSurface",
@@ -207,17 +207,8 @@
         "cards-cardface--state-attributes-present"
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.cards-hand.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "CostDisplay": {
       "id": "CostDisplay",
@@ -230,13 +221,8 @@
       ],
       "storyIds": ["resource-status--cost"],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": ["ui-scenarios.resources-cost.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Dialog": {
       "id": "Dialog",
@@ -249,13 +235,8 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": ["ui-scenarios.dice-result.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Drawer": {
       "id": "Drawer",
@@ -285,11 +266,10 @@
       "storyIds": [],
       "requiredCapabilities": ["responsive-layout"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.mobile",
-        "automa-river-rival.claim-cargo.reconnect.mobile",
-        "automa-river-rival.claim-cargo.terminal.mobile",
-        "solo-countdown-puzzle.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile"
+        "hex-network-trading.production.desktop",
+        "solo-countdown-puzzle.developing.mobile",
+        "solo-countdown-puzzle.reinforcement-hit.desktop",
+        "solo-countdown-puzzle.terminal.mobile"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -333,7 +313,16 @@
         "runtime-draft",
         "runtime-submit"
       ],
-      "scenarioIds": ["hearts.pass-three.mobile"],
+      "scenarioIds": [
+        "deck-building-market.acquired-card-recycle.mobile",
+        "deck-building-market.first-purchase.desktop",
+        "deck-building-market.opening-hand.desktop",
+        "deck-building-market.technique-chain.desktop",
+        "hearts.dealt-hand.desktop",
+        "hearts.first-trick.desktop",
+        "hearts.mid-hand.desktop",
+        "hearts.sealed-pass.mobile"
+      ],
       "capabilities": [
         "accessibility-scan",
         "click",
@@ -370,16 +359,11 @@
         "touch-drag"
       ],
       "scenarioIds": [
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.cards-hand.desktop"
+        "simultaneous-card-drafting.drafting.mid-round.mobile",
+        "simultaneous-card-drafting.drafting.opening.mobile",
+        "simultaneous-card-drafting.drafting.round-transition.mobile"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "Input": {
       "id": "Input",
@@ -392,13 +376,8 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["keyboard"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "InteractionInput": {
       "id": "InteractionInput",
@@ -410,8 +389,15 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["keyboard", "runtime-draft"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "worker-placement-tableau.contention.desktop",
+        "worker-placement-tableau.developed.mobile",
+        "worker-placement-tableau.first-craft.desktop",
+        "worker-placement-tableau.initial.mobile",
+        "worker-placement-tableau.outcome.mobile",
+        "worker-placement-tableau.season-transition.desktop"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "InteractionSubmit": {
       "id": "InteractionSubmit",
@@ -423,22 +409,34 @@
       "storyIds": [],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.mobile",
-        "automa-river-rival.claim-cargo.reconnect.mobile",
-        "automa-river-rival.claim-cargo.terminal.mobile",
-        "deck-building-market.buy-flow.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.build-trail.desktop",
-        "multiplayer-ranking-and-ties.draft-stall.desktop",
-        "roll-and-write-scorecard.mark-cell.drafted.mobile",
-        "roll-and-write-scorecard.mark-cell.invalid.mobile",
+        "automa-river-rival.river.early.desktop",
+        "automa-river-rival.river.midgame.desktop",
+        "automa-river-rival.river.opening.mobile",
+        "automa-river-rival.river.terminal.mobile",
+        "deck-building-market.depleted-supply.desktop",
+        "deck-building-market.first-purchase.desktop",
+        "deck-building-market.opening-hand.desktop",
+        "deck-building-market.technique-chain.desktop",
+        "hearts.dealt-hand.desktop",
+        "hex-network-trading.discard-barrier.mobile",
+        "hex-network-trading.pending-trade.mobile",
+        "hex-network-trading.setup.desktop",
+        "multiplayer-ranking-and-ties.early-refill.mobile",
+        "multiplayer-ranking-and-ties.opening.desktop",
+        "roll-and-write-scorecard.mark-cell.desktop",
         "roll-and-write-scorecard.mark-cell.mobile",
-        "roll-and-write-scorecard.mark-cell.rolled.mobile",
-        "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "solo-countdown-puzzle.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
-        "worker-placement-tableau.place-worker.desktop"
+        "simultaneous-card-drafting.drafting.mid-round.mobile",
+        "simultaneous-card-drafting.drafting.opening.mobile",
+        "solo-countdown-puzzle.developing.mobile",
+        "solo-countdown-puzzle.initial.desktop",
+        "solo-countdown-puzzle.reinforcement-hit.desktop",
+        "solo-countdown-puzzle.terminal.mobile",
+        "worker-placement-tableau.contention.desktop",
+        "worker-placement-tableau.developed.mobile",
+        "worker-placement-tableau.first-craft.desktop",
+        "worker-placement-tableau.initial.mobile",
+        "worker-placement-tableau.outcome.mobile",
+        "worker-placement-tableau.season-transition.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -460,13 +458,8 @@
       ],
       "storyIds": ["misc--toast-notifications"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Outcome": {
       "id": "Outcome",
@@ -478,7 +471,12 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["runtime-submit"],
-      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "scenarioIds": [
+        "deck-building-market.terminal-outcome.mobile",
+        "hearts.final-outcome.mobile",
+        "multiplayer-ranking-and-ties.cancellation.mobile",
+        "multiplayer-ranking-and-ties.terminal.mobile"
+      ],
       "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "OutcomeDialog": {
@@ -507,29 +505,40 @@
       "storyIds": ["panels--compound-panel"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.mobile",
-        "automa-river-rival.claim-cargo.reconnect.mobile",
-        "automa-river-rival.claim-cargo.terminal.mobile",
-        "multiplayer-ranking-and-ties.draft-stall.desktop",
-        "multiplayer-ranking-and-ties.tie-break.desktop",
-        "roll-and-write-scorecard.mark-cell.drafted.mobile",
+        "automa-river-rival.river.early.desktop",
+        "automa-river-rival.river.midgame.desktop",
+        "automa-river-rival.river.opening.mobile",
+        "automa-river-rival.river.terminal.mobile",
+        "deck-building-market.acquired-card-recycle.mobile",
+        "deck-building-market.depleted-supply.desktop",
+        "deck-building-market.first-purchase.desktop",
+        "deck-building-market.technique-chain.desktop",
+        "deck-building-market.terminal-outcome.mobile",
+        "hearts.final-outcome.mobile",
+        "hearts.first-trick.desktop",
+        "hearts.mid-hand.desktop",
+        "hearts.sealed-pass.mobile",
+        "hex-network-trading.discard-barrier.mobile",
+        "hex-network-trading.growing-network.desktop",
+        "hex-network-trading.pending-trade.mobile",
+        "hex-network-trading.terminal.mobile",
+        "multiplayer-ranking-and-ties.cancellation.mobile",
+        "multiplayer-ranking-and-ties.early-refill.mobile",
+        "multiplayer-ranking-and-ties.growing-rows.desktop",
+        "multiplayer-ranking-and-ties.opening.desktop",
+        "multiplayer-ranking-and-ties.terminal.mobile",
+        "roll-and-write-scorecard.mark-cell.desktop",
         "roll-and-write-scorecard.mark-cell.initial.mobile",
-        "roll-and-write-scorecard.mark-cell.invalid.mobile",
         "roll-and-write-scorecard.mark-cell.mobile",
-        "roll-and-write-scorecard.mark-cell.rolled.mobile",
-        "roll-and-write-scorecard.mark-cell.submitted.mobile",
         "roll-and-write-scorecard.mark-cell.terminal.mobile",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "solo-countdown-puzzle.reconnect.mobile",
-        "solo-countdown-puzzle.repair-beacon.mobile",
-        "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.cards-hand.desktop",
-        "ui-scenarios.dice-result.desktop",
-        "ui-scenarios.game-shell.desktop",
-        "ui-scenarios.prompts-choice.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "ui-scenarios.zones-staging.desktop",
-        "worker-placement-tableau.place-worker.desktop"
+        "simultaneous-card-drafting.drafting.mid-round.mobile",
+        "simultaneous-card-drafting.drafting.opening.mobile",
+        "simultaneous-card-drafting.drafting.round-transition.mobile",
+        "simultaneous-card-drafting.drafting.terminal.mobile",
+        "solo-countdown-puzzle.developing.mobile",
+        "solo-countdown-puzzle.initial.desktop",
+        "solo-countdown-puzzle.reinforcement-hit.desktop",
+        "solo-countdown-puzzle.terminal.mobile"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -550,7 +559,13 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "scenarioIds": [
+        "deck-building-market.terminal-outcome.mobile",
+        "hearts.final-outcome.mobile",
+        "hearts.mid-hand.desktop",
+        "multiplayer-ranking-and-ties.growing-rows.desktop",
+        "multiplayer-ranking-and-ties.terminal.mobile"
+      ],
       "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "PluginRuntime": {
@@ -565,23 +580,37 @@
       "storyIds": [],
       "requiredCapabilities": ["runtime-draft", "runtime-submit"],
       "scenarioIds": [
-        "automa-river-rival.claim-cargo.mobile",
-        "deck-building-market.buy-flow.desktop",
-        "hearts.pass-three.mobile",
-        "hex-network-trading.build-trail.desktop",
-        "simultaneous-card-drafting.lock-choice.mobile",
-        "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.cards-hand.desktop",
-        "ui-scenarios.dice-result.desktop",
-        "ui-scenarios.prompts-choice.desktop",
-        "ui-scenarios.resources-cost.desktop",
-        "ui-scenarios.zones-staging.desktop",
-        "worker-placement-tableau.place-worker.desktop"
+        "automa-river-rival.river.early.desktop",
+        "automa-river-rival.river.midgame.desktop",
+        "automa-river-rival.river.opening.mobile",
+        "automa-river-rival.river.terminal.mobile",
+        "deck-building-market.acquired-card-recycle.mobile",
+        "deck-building-market.depleted-supply.desktop",
+        "deck-building-market.opening-hand.desktop",
+        "deck-building-market.terminal-outcome.mobile",
+        "hearts.dealt-hand.desktop",
+        "hearts.sealed-pass.mobile",
+        "hex-network-trading.discard-barrier.mobile",
+        "hex-network-trading.growing-network.desktop",
+        "hex-network-trading.pending-trade.mobile",
+        "hex-network-trading.production.desktop",
+        "hex-network-trading.setup.desktop",
+        "hex-network-trading.terminal.mobile",
+        "multiplayer-ranking-and-ties.early-refill.mobile",
+        "simultaneous-card-drafting.drafting.mid-round.mobile",
+        "simultaneous-card-drafting.drafting.opening.mobile",
+        "simultaneous-card-drafting.drafting.round-transition.mobile",
+        "simultaneous-card-drafting.drafting.terminal.mobile",
+        "worker-placement-tableau.contention.desktop",
+        "worker-placement-tableau.developed.mobile",
+        "worker-placement-tableau.first-craft.desktop",
+        "worker-placement-tableau.initial.mobile",
+        "worker-placement-tableau.outcome.mobile",
+        "worker-placement-tableau.season-transition.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
         "click",
-        "keyboard",
         "reduced-motion",
         "runtime-draft",
         "runtime-submit"
@@ -598,13 +627,8 @@
       ],
       "storyIds": ["buttons--primary-action-dock"],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
-      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "PrimaryButton": {
       "id": "PrimaryButton",
@@ -617,13 +641,8 @@
       ],
       "storyIds": ["buttons--themed-variants"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Resource": {
       "id": "Resource",
@@ -636,13 +655,8 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": ["deck-building-market.buy-flow.desktop"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "ResourceCounter": {
       "id": "ResourceCounter",
@@ -658,18 +672,8 @@
         "resource-status--resource-zero-hidden"
       ],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": [
-        "hex-network-trading.build-trail.desktop",
-        "ui-scenarios.resources-cost.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "Select": {
       "id": "Select",
@@ -716,16 +720,8 @@
         "board-targets--eligible-targets"
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [
-        "ui-scenarios.boards-slot.desktop",
-        "ui-scenarios.zones-staging.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "SquareGrid": {
       "id": "SquareGrid",
@@ -747,13 +743,11 @@
         "runtime-submit"
       ],
       "scenarioIds": [
-        "roll-and-write-scorecard.mark-cell.drafted.mobile",
+        "roll-and-write-scorecard.mark-cell.desktop",
         "roll-and-write-scorecard.mark-cell.initial.mobile",
-        "roll-and-write-scorecard.mark-cell.invalid.mobile",
         "roll-and-write-scorecard.mark-cell.mobile",
-        "roll-and-write-scorecard.mark-cell.rolled.mobile",
-        "roll-and-write-scorecard.mark-cell.submitted.mobile",
-        "roll-and-write-scorecard.mark-cell.terminal.mobile"
+        "roll-and-write-scorecard.mark-cell.terminal.mobile",
+        "solo-countdown-puzzle.initial.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -775,16 +769,8 @@
       ],
       "storyIds": ["hand-stagingzone--removes-on-click"],
       "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
-      "scenarioIds": [
-        "ui-scenarios.cards-hand.desktop",
-        "ui-scenarios.zones-staging.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     },
     "StandingsTable": {
       "id": "StandingsTable",
@@ -810,7 +796,13 @@
       ],
       "storyIds": [],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": ["multiplayer-ranking-and-ties.tie-break.desktop"],
+      "scenarioIds": [
+        "hearts.final-outcome.mobile",
+        "hearts.first-trick.desktop",
+        "hearts.mid-hand.desktop",
+        "multiplayer-ranking-and-ties.cancellation.mobile",
+        "multiplayer-ranking-and-ties.terminal.mobile"
+      ],
       "capabilities": ["accessibility-scan", "reduced-motion"]
     },
     "ThemedButton": {
@@ -828,158 +820,252 @@
         "buttons--themed-variants"
       ],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [
-        "ui-scenarios.dice-result.desktop",
-        "ui-scenarios.game-shell.desktop"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ]
+      "scenarioIds": [],
+      "capabilities": []
     }
   },
   "scenarios": {
-    "automa-river-rival.claim-cargo.mobile": {
-      "id": "automa-river-rival.claim-cargo.mobile",
-      "title": "Automa River Rival: claim cargo resolves rival procedure",
+    "automa-river-rival.river.early.desktop": {
+      "id": "automa-river-rival.river.early.desktop",
+      "title": "River Guild: first cargo claimed",
       "gameId": "automa-river-rival",
       "sourceFiles": [
         "examples/reference-games/automa-river-rival/app/game.ts",
         "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
         "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/app/player-view.ts",
         "examples/reference-games/automa-river-rival/manifest.ts",
         "examples/reference-games/automa-river-rival/reference-game.json",
         "examples/reference-games/automa-river-rival/rule.md",
-        "examples/reference-games/automa-river-rival/test/scenarios/claim-cargo.scenario.ts",
-        "examples/reference-games/automa-river-rival/test/ui-scenarios/claim-cargo.mobile.scenario.ts",
+        "examples/reference-games/automa-river-rival/test/scenarios/complete-game.scenario.ts",
         "examples/reference-games/automa-river-rival/ui/App.tsx",
-        "examples/reference-games/automa-river-rival/ui/interaction-routes.tsx"
+        "examples/reference-games/automa-river-rival/ui/style.css"
       ],
       "contracts": [
-        "GameEventLog",
+        "CardCollection",
         "InteractionSubmit",
         "Panel",
         "PluginRuntime"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.mobile.mjs",
-      "fixtureDigest": "sha256:5ca635b1df021faf57a410c80d9e73d48619f032eccf1e75c373fcfdff015a20",
-      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "automa-river-rival.river.early.desktop.fixture.json",
+      "renderModule": "modules/automa-river-rival.river.early.desktop.mjs",
+      "fixtureDigest": "sha256:b9dc7f5effe8cbe2723f325af70140884057ed103a0c34c1fd9c2c515db31961",
+      "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
-    "automa-river-rival.claim-cargo.reconnect.mobile": {
-      "id": "automa-river-rival.claim-cargo.reconnect.mobile",
-      "title": "Automa River Rival: reconnect restores rival event history",
-      "gameId": "automa-river-rival",
-      "sourceFiles": [
-        "examples/reference-games/automa-river-rival/app/game.ts",
-        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
-        "examples/reference-games/automa-river-rival/manifest.ts",
-        "examples/reference-games/automa-river-rival/reference-game.json",
-        "examples/reference-games/automa-river-rival/rule.md",
-        "examples/reference-games/automa-river-rival/test/scenarios/reconnect.scenario.ts",
-        "examples/reference-games/automa-river-rival/test/ui-scenarios/reconnect.mobile.scenario.ts",
-        "examples/reference-games/automa-river-rival/ui/App.tsx"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.reconnect.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.reconnect.mobile.mjs",
-      "fixtureDigest": "sha256:5c9a6c4b6bf9558640a69d955a4a7ff2312d78c84ae1a80ed7b0c18ae2ec4324",
-      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
-    },
-    "automa-river-rival.claim-cargo.terminal.mobile": {
-      "id": "automa-river-rival.claim-cargo.terminal.mobile",
-      "title": "Automa River Rival: terminal cooperative outcome evidence",
+    "automa-river-rival.river.midgame.desktop": {
+      "id": "automa-river-rival.river.midgame.desktop",
+      "title": "River Guild: mid-race instruction history",
       "gameId": "automa-river-rival",
       "sourceFiles": [
         "examples/reference-games/automa-river-rival/app/game.ts",
         "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
         "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/app/player-view.ts",
         "examples/reference-games/automa-river-rival/manifest.ts",
         "examples/reference-games/automa-river-rival/reference-game.json",
         "examples/reference-games/automa-river-rival/rule.md",
-        "examples/reference-games/automa-river-rival/test/scenarios/terminal.scenario.ts",
-        "examples/reference-games/automa-river-rival/test/ui-scenarios/terminal.mobile.scenario.ts",
-        "examples/reference-games/automa-river-rival/ui/App.tsx"
-      ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "automa-river-rival.claim-cargo.terminal.mobile.fixture.json",
-      "renderModule": "modules/automa-river-rival.claim-cargo.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:bbdb3e32a9bc8f2fa8450f26c7010c233ab0d7ff3e5567893fa8a9badc882833",
-      "renderModuleDigest": "sha256:75fab1f2c59873703c2bb5ac6c2c12c8105fbdb8ed140533198f93e20ae56644"
-    },
-    "deck-building-market.buy-flow.desktop": {
-      "id": "deck-building-market.buy-flow.desktop",
-      "title": "Deck Building Market: desktop market buy flow",
-      "gameId": "deck-building-market",
-      "sourceFiles": [
-        "examples/reference-games/deck-building-market/app/game.ts",
-        "examples/reference-games/deck-building-market/app/phases/player-turn/index.ts",
-        "examples/reference-games/deck-building-market/app/phases/player-turn/interactions/buy.ts",
-        "examples/reference-games/deck-building-market/manifest.ts",
-        "examples/reference-games/deck-building-market/reference-game.json",
-        "examples/reference-games/deck-building-market/rule.md",
-        "examples/reference-games/deck-building-market/test/scenarios/player-two-buy-ready.scenario.ts",
-        "examples/reference-games/deck-building-market/test/ui-scenarios/buy-flow.desktop.scenario.ts",
-        "examples/reference-games/deck-building-market/ui/App.tsx",
-        "examples/reference-games/deck-building-market/ui/interaction-routes.tsx",
-        "examples/reference-games/deck-building-market/ui/surfaces.ts"
+        "examples/reference-games/automa-river-rival/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx",
+        "examples/reference-games/automa-river-rival/ui/style.css"
       ],
       "contracts": [
-        "Card",
         "CardCollection",
         "InteractionSubmit",
-        "PluginRuntime",
-        "Resource"
+        "Panel",
+        "PluginRuntime"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["desktop"],
-      "fixtureFile": "deck-building-market.buy-flow.desktop.fixture.json",
-      "renderModule": "modules/deck-building-market.buy-flow.desktop.mjs",
-      "fixtureDigest": "sha256:e597d3b316b741001a5ecbdf84e5049a3a7fd53f0e0fe24bc0d87fd5473147ce",
-      "renderModuleDigest": "sha256:01e50fb548d0fb0b425b0e57efd419a960c3dc530dfb65f22665ec12b1e18019"
+      "fixtureFile": "automa-river-rival.river.midgame.desktop.fixture.json",
+      "renderModule": "modules/automa-river-rival.river.midgame.desktop.mjs",
+      "fixtureDigest": "sha256:3531ea7e45ab0cc0156d3ab88784e4a26e8b20c396d7044d532c07834332f024",
+      "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
-    "hearts.pass-three.mobile": {
-      "id": "hearts.pass-three.mobile",
-      "title": "Hearts: mobile pass-three hand action",
+    "automa-river-rival.river.opening.mobile": {
+      "id": "automa-river-rival.river.opening.mobile",
+      "title": "River Guild: opening river",
+      "gameId": "automa-river-rival",
+      "sourceFiles": [
+        "examples/reference-games/automa-river-rival/app/game.ts",
+        "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
+        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/app/player-view.ts",
+        "examples/reference-games/automa-river-rival/manifest.ts",
+        "examples/reference-games/automa-river-rival/reference-game.json",
+        "examples/reference-games/automa-river-rival/rule.md",
+        "examples/reference-games/automa-river-rival/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx",
+        "examples/reference-games/automa-river-rival/ui/style.css"
+      ],
+      "contracts": [
+        "CardCollection",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "automa-river-rival.river.opening.mobile.fixture.json",
+      "renderModule": "modules/automa-river-rival.river.opening.mobile.mjs",
+      "fixtureDigest": "sha256:e4be8ff524fcf6b34f469882cdac53597054b2127f2ffa725b510db438f15904",
+      "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
+    },
+    "automa-river-rival.river.terminal.mobile": {
+      "id": "automa-river-rival.river.terminal.mobile",
+      "title": "River Guild: cooperative outcome",
+      "gameId": "automa-river-rival",
+      "sourceFiles": [
+        "examples/reference-games/automa-river-rival/app/game.ts",
+        "examples/reference-games/automa-river-rival/app/phases/human-turn.ts",
+        "examples/reference-games/automa-river-rival/app/phases/rival-procedure.ts",
+        "examples/reference-games/automa-river-rival/app/player-view.ts",
+        "examples/reference-games/automa-river-rival/manifest.ts",
+        "examples/reference-games/automa-river-rival/reference-game.json",
+        "examples/reference-games/automa-river-rival/rule.md",
+        "examples/reference-games/automa-river-rival/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/automa-river-rival/ui/App.tsx",
+        "examples/reference-games/automa-river-rival/ui/style.css"
+      ],
+      "contracts": [
+        "CardCollection",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "automa-river-rival.river.terminal.mobile.fixture.json",
+      "renderModule": "modules/automa-river-rival.river.terminal.mobile.mjs",
+      "fixtureDigest": "sha256:9353fe8008c0e9a34e7e5825e2358a172397624d6d70f71afd3352a9ae95820c",
+      "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
+    },
+    "deck-building-market.acquired-card-recycle.mobile": {
+      "id": "deck-building-market.acquired-card-recycle.mobile",
+      "title": "Sketchbook: acquired Brainstorm returns in a later hand",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/effects/deck.ts",
+        "examples/reference-games/deck-building-market/app/player-view.ts",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Card", "Hand", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "deck-building-market.acquired-card-recycle.mobile.fixture.json",
+      "renderModule": "modules/deck-building-market.acquired-card-recycle.mobile.mjs",
+      "fixtureDigest": "sha256:e0835ed3099c4a8e52f7ed2d4bd988881f8513ec9aaf8f7bede30d5d39d15e83",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "deck-building-market.depleted-supply.desktop": {
+      "id": "deck-building-market.depleted-supply.desktop",
+      "title": "Sketchbook: depleted supplies wait for cleanup",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/phases/check-game-end.ts",
+        "examples/reference-games/deck-building-market/app/player-view.ts",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/components/game-ui.tsx"
+      ],
+      "contracts": [
+        "CardCollection",
+        "InteractionSubmit",
+        "Panel",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "deck-building-market.depleted-supply.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.depleted-supply.desktop.mjs",
+      "fixtureDigest": "sha256:d2e162928cd368b50b5402d1012f8fd4278473386988a3ba87ada3f0f352e7f5",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "deck-building-market.first-purchase.desktop": {
+      "id": "deck-building-market.first-purchase.desktop",
+      "title": "Sketchbook: first Studio enters the public discard",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/phases/player-turn/interactions/buy.ts",
+        "examples/reference-games/deck-building-market/app/player-view.ts",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["CardCollection", "Hand", "InteractionSubmit", "Panel"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "deck-building-market.first-purchase.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.first-purchase.desktop.mjs",
+      "fixtureDigest": "sha256:d3e6497e586973307c2e33728b3a656e6781047de7fd040457a3c20010a47759",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "deck-building-market.opening-hand.desktop": {
+      "id": "deck-building-market.opening-hand.desktop",
+      "title": "Sketchbook: private opening hand and full studio shelf",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/phases/setup.ts",
+        "examples/reference-games/deck-building-market/manifest.ts",
+        "examples/reference-games/deck-building-market/rule.md",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/App.tsx"
+      ],
+      "contracts": ["Card", "Hand", "InteractionSubmit", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "deck-building-market.opening-hand.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.opening-hand.desktop.mjs",
+      "fixtureDigest": "sha256:d91b78122bb3d5e65c42a40a05015560987b35af9bd416acd77d870b4362bd43",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "deck-building-market.technique-chain.desktop": {
+      "id": "deck-building-market.technique-chain.desktop",
+      "title": "Sketchbook: Studio chains into Brainstorm",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/cards/brainstorm.ts",
+        "examples/reference-games/deck-building-market/app/cards/studio.ts",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/interaction-routes.tsx"
+      ],
+      "contracts": ["Card", "Hand", "InteractionSubmit", "Panel"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "deck-building-market.technique-chain.desktop.fixture.json",
+      "renderModule": "modules/deck-building-market.technique-chain.desktop.mjs",
+      "fixtureDigest": "sha256:15fe84241a3e3527e11576b1fa4e2e809305ecf5bcfce81fbc8afccba9a7618e",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "deck-building-market.terminal-outcome.mobile": {
+      "id": "deck-building-market.terminal-outcome.mobile",
+      "title": "Sketchbook: final ranked portfolios",
+      "gameId": "deck-building-market",
+      "sourceFiles": [
+        "examples/reference-games/deck-building-market/app/phases/check-game-end.ts",
+        "examples/reference-games/deck-building-market/app/phases/game-over.ts",
+        "examples/reference-games/deck-building-market/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/deck-building-market/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Outcome", "Panel", "PlayerScore", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "deck-building-market.terminal-outcome.mobile.fixture.json",
+      "renderModule": "modules/deck-building-market.terminal-outcome.mobile.mjs",
+      "fixtureDigest": "sha256:1ca95892d147c04ffd62a66433c2d18d0d13aa25e627988c7adde1fb594538f1",
+      "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
+    },
+    "hearts.dealt-hand.desktop": {
+      "id": "hearts.dealt-hand.desktop",
+      "title": "Hearts: private dealt hand and pass selection",
       "gameId": "hearts",
       "sourceFiles": [
-        "examples/reference-games/hearts/app/game.ts",
         "examples/reference-games/hearts/app/phases/passing.ts",
+        "examples/reference-games/hearts/app/phases/setup.ts",
         "examples/reference-games/hearts/manifest.ts",
-        "examples/reference-games/hearts/reference-game.json",
         "examples/reference-games/hearts/rule.md",
-        "examples/reference-games/hearts/test/scenarios/smoke-initial-hand.scenario.ts",
-        "examples/reference-games/hearts/test/ui-scenarios/pass-three.mobile.scenario.ts",
-        "examples/reference-games/hearts/ui/App.tsx",
-        "examples/reference-games/hearts/ui/interaction-routes.tsx"
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hearts/ui/App.tsx"
       ],
       "contracts": ["Card", "Hand", "InteractionSubmit", "PluginRuntime"],
       "capabilities": [
@@ -989,106 +1075,310 @@
         "runtime-draft",
         "runtime-submit"
       ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "hearts.pass-three.mobile.fixture.json",
-      "renderModule": "modules/hearts.pass-three.mobile.mjs",
-      "fixtureDigest": "sha256:d898e13206ea0007901589c5750a439c762c7790fce3d405ba3fb35f1f4ca8db",
-      "renderModuleDigest": "sha256:dd84e73c64f555c56b4ebf3fb3eac67218322046e192aea45417bddcde9d9730"
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hearts.dealt-hand.desktop.fixture.json",
+      "renderModule": "modules/hearts.dealt-hand.desktop.mjs",
+      "fixtureDigest": "sha256:68c293901e164d3ab08c065c92550f38a98b7beae891f0f78b2cb2427590568d",
+      "renderModuleDigest": "sha256:f184fffbe029ea97b958192a656ce93e2f09f1e7c8e3800625841b272dc07d6f"
     },
-    "hex-network-trading.build-trail.desktop": {
-      "id": "hex-network-trading.build-trail.desktop",
-      "title": "Hex Network Trading: desktop trail build target",
+    "hearts.final-outcome.mobile": {
+      "id": "hearts.final-outcome.mobile",
+      "title": "Hearts: one-hand final standings",
+      "gameId": "hearts",
+      "sourceFiles": [
+        "examples/reference-games/hearts/app/phases/scoreHand.ts",
+        "examples/reference-games/hearts/app/player-view.ts",
+        "examples/reference-games/hearts/rule.md",
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hearts/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Outcome", "Panel", "PlayerScore", "Table"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hearts.final-outcome.mobile.fixture.json",
+      "renderModule": "modules/hearts.final-outcome.mobile.mjs",
+      "fixtureDigest": "sha256:6ad10a2cb85036ed8eec5e56058b4976cb34ad9da1157c85296520a8445f45cd",
+      "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
+    },
+    "hearts.first-trick.desktop": {
+      "id": "hearts.first-trick.desktop",
+      "title": "Hearts: first completed trick",
+      "gameId": "hearts",
+      "sourceFiles": [
+        "examples/reference-games/hearts/app/phases/playing.ts",
+        "examples/reference-games/hearts/app/player-view.ts",
+        "examples/reference-games/hearts/rule.md",
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hearts/ui/components/game-ui.tsx",
+        "examples/reference-games/hearts/ui/components/trick-area.tsx"
+      ],
+      "contracts": ["Card", "Hand", "Panel", "Table"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hearts.first-trick.desktop.fixture.json",
+      "renderModule": "modules/hearts.first-trick.desktop.mjs",
+      "fixtureDigest": "sha256:4ee9a0d881e798dbfeab57bda3b2a1d3b1eff13518ae96850bd2e9895f465c57",
+      "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
+    },
+    "hearts.mid-hand.desktop": {
+      "id": "hearts.mid-hand.desktop",
+      "title": "Hearts: seven-trick mid-hand table",
+      "gameId": "hearts",
+      "sourceFiles": [
+        "examples/reference-games/hearts/app/phases/playing.ts",
+        "examples/reference-games/hearts/app/player-view.ts",
+        "examples/reference-games/hearts/rule.md",
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hearts/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Card", "Hand", "Panel", "PlayerScore", "Table"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hearts.mid-hand.desktop.fixture.json",
+      "renderModule": "modules/hearts.mid-hand.desktop.mjs",
+      "fixtureDigest": "sha256:04f5f228d5e812dc2fe66a23fc4d8b2c4d71a3b33816f0ff3af98f06f5080fda",
+      "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
+    },
+    "hearts.sealed-pass.mobile": {
+      "id": "hearts.sealed-pass.mobile",
+      "title": "Hearts: sealed pass in progress",
+      "gameId": "hearts",
+      "sourceFiles": [
+        "examples/reference-games/hearts/app/phases/passing.ts",
+        "examples/reference-games/hearts/app/player-view.ts",
+        "examples/reference-games/hearts/rule.md",
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hearts/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Hand", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hearts.sealed-pass.mobile.fixture.json",
+      "renderModule": "modules/hearts.sealed-pass.mobile.mjs",
+      "fixtureDigest": "sha256:ad06262cecc9b5e74d53c20a719ba426bbd168fe3d4d62af9c69728d2fe1a281",
+      "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
+    },
+    "hex-network-trading.discard-barrier.mobile": {
+      "id": "hex-network-trading.discard-barrier.mobile",
+      "title": "Stormtrail: private overloaded-supply discard",
       "gameId": "hex-network-trading",
       "sourceFiles": [
-        "examples/reference-games/hex-network-trading/app/game.ts",
-        "examples/reference-games/hex-network-trading/app/phases/player-turn/build.ts",
-        "examples/reference-games/hex-network-trading/app/phases/player-turn/index.ts",
-        "examples/reference-games/hex-network-trading/manifest.ts",
-        "examples/reference-games/hex-network-trading/reference-game.json",
-        "examples/reference-games/hex-network-trading/rule.md",
-        "examples/reference-games/hex-network-trading/test/scenarios/build-trail-ready.scenario.ts",
-        "examples/reference-games/hex-network-trading/test/ui-scenarios/build-trail.desktop.scenario.ts",
-        "examples/reference-games/hex-network-trading/ui/App.tsx",
-        "examples/reference-games/hex-network-trading/ui/frontier-trails-board.tsx",
+        "examples/reference-games/hex-network-trading/app/phases/discard-barrier.ts",
+        "examples/reference-games/hex-network-trading/app/player-view.ts",
+        "examples/reference-games/hex-network-trading/test/scenarios/discard-barrier.scenario.ts",
         "examples/reference-games/hex-network-trading/ui/interaction-routes.tsx"
       ],
-      "contracts": [
-        "Board.HexGrid",
-        "InteractionSubmit",
-        "PluginRuntime",
-        "ResourceCounter"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "hex-network-trading.build-trail.desktop.fixture.json",
-      "renderModule": "modules/hex-network-trading.build-trail.desktop.mjs",
-      "fixtureDigest": "sha256:6a4fc2b5709056ea22de4689d137c46a11ce11d57bdf52ca526eeb63a21ad57b",
-      "renderModuleDigest": "sha256:2a62242024d1471f27a98496a9f29bddbcbf99b8357121658eb8d92a23632ec2"
+      "contracts": ["InteractionSubmit", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hex-network-trading.discard-barrier.mobile.fixture.json",
+      "renderModule": "modules/hex-network-trading.discard-barrier.mobile.mjs",
+      "fixtureDigest": "sha256:c4bd4f95b8c55e27f28cfbb78da99ac569437813a59d314a3a9d7c723fb534e8",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
-    "multiplayer-ranking-and-ties.draft-stall.desktop": {
-      "id": "multiplayer-ranking-and-ties.draft-stall.desktop",
-      "title": "Multiplayer Ranking And Ties: draft a stall from the market",
+    "hex-network-trading.growing-network.desktop": {
+      "id": "hex-network-trading.growing-network.desktop",
+      "title": "Stormtrail: three-camp network under construction",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/app/phases/main.ts",
+        "examples/reference-games/hex-network-trading/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx"
+      ],
+      "contracts": ["Board.HexGrid", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hex-network-trading.growing-network.desktop.fixture.json",
+      "renderModule": "modules/hex-network-trading.growing-network.desktop.mjs",
+      "fixtureDigest": "sha256:ed69177d08ba9cac6183677df4b9b931431d16db652df2cd741aa3804058c930",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
+    },
+    "hex-network-trading.pending-trade.mobile": {
+      "id": "hex-network-trading.pending-trade.mobile",
+      "title": "Stormtrail: respond to one bilateral offer",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/app/phases/pending-trade.ts",
+        "examples/reference-games/hex-network-trading/test/scenarios/bilateral-trade.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx",
+        "examples/reference-games/hex-network-trading/ui/interaction-routes.tsx"
+      ],
+      "contracts": ["InteractionSubmit", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hex-network-trading.pending-trade.mobile.fixture.json",
+      "renderModule": "modules/hex-network-trading.pending-trade.mobile.mjs",
+      "fixtureDigest": "sha256:8ef3b5d50c2fd003587f35fe4f07ba734675c38821166de82c18d8d0462105a0",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
+    },
+    "hex-network-trading.production.desktop": {
+      "id": "hex-network-trading.production.desktop",
+      "title": "Stormtrail: first provisions production",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/app/phases/roll.ts",
+        "examples/reference-games/hex-network-trading/app/player-view.ts",
+        "examples/reference-games/hex-network-trading/test/scenarios/production.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx"
+      ],
+      "contracts": ["Board.HexGrid", "GameEventLog", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hex-network-trading.production.desktop.fixture.json",
+      "renderModule": "modules/hex-network-trading.production.desktop.mjs",
+      "fixtureDigest": "sha256:1ea6cdf61b81d646ae0782a3cd838c61f657f584ce433075c43682bc92dfd157",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
+    },
+    "hex-network-trading.setup.desktop": {
+      "id": "hex-network-trading.setup.desktop",
+      "title": "Stormtrail: choose an opening camp",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/app/phases/setup-camp.ts",
+        "examples/reference-games/hex-network-trading/rule.md",
+        "examples/reference-games/hex-network-trading/test/scenarios/topology-and-setup.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx",
+        "examples/reference-games/hex-network-trading/ui/interaction-routes.tsx"
+      ],
+      "contracts": ["Board.HexGrid", "InteractionSubmit", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "hex-network-trading.setup.desktop.fixture.json",
+      "renderModule": "modules/hex-network-trading.setup.desktop.mjs",
+      "fixtureDigest": "sha256:54072c373bab4567891fdf3c2647873e6d9f3426177c6c33316701bb7be7bb8d",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
+    },
+    "hex-network-trading.terminal.mobile": {
+      "id": "hex-network-trading.terminal.mobile",
+      "title": "Stormtrail: fourth-camp victory",
+      "gameId": "hex-network-trading",
+      "sourceFiles": [
+        "examples/reference-games/hex-network-trading/app/phases/game-over.ts",
+        "examples/reference-games/hex-network-trading/app/phases/main.ts",
+        "examples/reference-games/hex-network-trading/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/hex-network-trading/ui/App.tsx"
+      ],
+      "contracts": ["Board.HexGrid", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "hex-network-trading.terminal.mobile.fixture.json",
+      "renderModule": "modules/hex-network-trading.terminal.mobile.mjs",
+      "fixtureDigest": "sha256:2110683be1b14b14ca1dff9be874b7045923116ccbf3053eff9399edc61ec729",
+      "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
+    },
+    "multiplayer-ranking-and-ties.cancellation.mobile": {
+      "id": "multiplayer-ranking-and-ties.cancellation.mobile",
+      "title": "Harbor Fair: scoreless final-refill cancellation",
       "gameId": "multiplayer-ranking-and-ties",
       "sourceFiles": [
         "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/draft-flow.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/rules.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+        "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/refill-and-cancellation-final-refill.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/cancellation.mobile.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
+      ],
+      "contracts": ["Outcome", "Panel", "Table"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "multiplayer-ranking-and-ties.cancellation.mobile.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.cancellation.mobile.mjs",
+      "fixtureDigest": "sha256:a7da2c11991aa36e7c01ce3532ea5dbed335f020500384a2674558aaf455842d",
+      "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
+    },
+    "multiplayer-ranking-and-ties.early-refill.mobile": {
+      "id": "multiplayer-ranking-and-ties.early-refill.mobile",
+      "title": "Harbor Fair: draft and automatic refill",
+      "gameId": "multiplayer-ranking-and-ties",
+      "sourceFiles": [
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/app/phases/drafting.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/scenarios.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/manifest.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
         "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
-        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/draft-stall-ready.scenario.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/draft-stall.desktop.scenario.tsx",
-        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx",
-        "examples/reference-games/multiplayer-ranking-and-ties/ui/interaction-routes.tsx"
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/early-refill.mobile.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
       ],
-      "contracts": ["Card", "CardCollection", "InteractionSubmit", "Panel"],
+      "contracts": ["InteractionSubmit", "Panel", "PluginRuntime"],
       "capabilities": [
         "accessibility-scan",
         "click",
         "reduced-motion",
         "runtime-submit"
       ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.draft-stall.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.draft-stall.desktop.mjs",
-      "fixtureDigest": "sha256:34fe94012cddc1421a62145912c9353ee541e08c4858cb984826bff233dc4c58",
-      "renderModuleDigest": "sha256:45f22c85a209346966f3501872ea6a3f688c15f1649a1bc6e0d4da925237c084"
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "multiplayer-ranking-and-ties.early-refill.mobile.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.early-refill.mobile.mjs",
+      "fixtureDigest": "sha256:9d58c8db57ca7f6162670b7c6c314a3b9b3887b7468450e9b223b0bbb4122171",
+      "renderModuleDigest": "sha256:e201f5a6132f0bbd14ff012102b108bee41058c64ac5575680f898e86a0d27cd"
     },
-    "multiplayer-ranking-and-ties.tie-break.desktop": {
-      "id": "multiplayer-ranking-and-ties.tie-break.desktop",
-      "title": "Multiplayer Ranking And Ties: tie-break outcome evidence",
+    "multiplayer-ranking-and-ties.growing-rows.desktop": {
+      "id": "multiplayer-ranking-and-ties.growing-rows.desktop",
+      "title": "Harbor Fair: public festival rows after three rounds",
       "gameId": "multiplayer-ranking-and-ties",
       "sourceFiles": [
-        "examples/reference-games/multiplayer-ranking-and-ties/app/game-contract.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/draft-flow.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/app/phases/scenarios.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+        "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/growing-rows.desktop.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
+      ],
+      "contracts": ["Panel", "PlayerScore"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "multiplayer-ranking-and-ties.growing-rows.desktop.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.growing-rows.desktop.mjs",
+      "fixtureDigest": "sha256:c148bcefd71d2eb348bef0060676e26d8ba4fefbcc1102e407201627b9cb17fb",
+      "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
+    },
+    "multiplayer-ranking-and-ties.opening.desktop": {
+      "id": "multiplayer-ranking-and-ties.opening.desktop",
+      "title": "Harbor Fair: opening four-stall market",
+      "gameId": "multiplayer-ranking-and-ties",
+      "sourceFiles": [
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/manifest.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
         "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
-        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/outcomes.scenario.ts",
-        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/tie-break.desktop.scenario.tsx",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/opening.desktop.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
+      ],
+      "contracts": ["InteractionSubmit", "Panel"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "multiplayer-ranking-and-ties.opening.desktop.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.opening.desktop.mjs",
+      "fixtureDigest": "sha256:2689fabb3955a19c0e641673e5142b256d350b30e0898f7e11f1412e65e76007",
+      "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
+    },
+    "multiplayer-ranking-and-ties.terminal.mobile": {
+      "id": "multiplayer-ranking-and-ties.terminal.mobile",
+      "title": "Harbor Fair: ranked terminal evidence",
+      "gameId": "multiplayer-ranking-and-ties",
+      "sourceFiles": [
+        "examples/reference-games/multiplayer-ranking-and-ties/app/game.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/app/rules.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/reference-game.json",
+        "examples/reference-games/multiplayer-ranking-and-ties/rule.md",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/multiplayer-ranking-and-ties/test/ui-scenarios/terminal.mobile.scenario.ts",
         "examples/reference-games/multiplayer-ranking-and-ties/ui/App.tsx"
       ],
       "contracts": ["Outcome", "Panel", "PlayerScore", "Table"],
       "capabilities": ["accessibility-scan", "reduced-motion"],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "multiplayer-ranking-and-ties.tie-break.desktop.fixture.json",
-      "renderModule": "modules/multiplayer-ranking-and-ties.tie-break.desktop.mjs",
-      "fixtureDigest": "sha256:f8646f0b3b9f47053bf8ba8e6c92528f9941d26f108239d5e7aa25fa89d11cff",
-      "renderModuleDigest": "sha256:fffe26bc297dfadff32f7ba1d6c3967c99689b71944cd83bbf96a65c27796ebb"
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "multiplayer-ranking-and-ties.terminal.mobile.fixture.json",
+      "renderModule": "modules/multiplayer-ranking-and-ties.terminal.mobile.mjs",
+      "fixtureDigest": "sha256:630cbce23349aeb78a167a9e81bf21be433ca89f7ed4f2ee1a3ac2acfcf6f8da",
+      "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
-    "roll-and-write-scorecard.mark-cell.drafted.mobile": {
-      "id": "roll-and-write-scorecard.mark-cell.drafted.mobile",
-      "title": "Roll And Write Scorecard: drafted mobile mark preview",
+    "roll-and-write-scorecard.mark-cell.desktop": {
+      "id": "roll-and-write-scorecard.mark-cell.desktop",
+      "title": "Cloudline Survey: desktop survey-cell selection",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
         "examples/reference-games/roll-and-write-scorecard/app/game.ts",
@@ -1097,8 +1387,8 @@
         "examples/reference-games/roll-and-write-scorecard/manifest.ts",
         "examples/reference-games/roll-and-write-scorecard/reference-game.json",
         "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/drafted.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.drafted.mobile.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.desktop.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
       "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
@@ -1110,15 +1400,15 @@
         "runtime-draft",
         "runtime-submit"
       ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "roll-and-write-scorecard.mark-cell.drafted.mobile.fixture.json",
-      "renderModule": "modules/roll-and-write-scorecard.mark-cell.drafted.mobile.mjs",
-      "fixtureDigest": "sha256:99a4524a6989d6e0626ef996ebaa18b6c7de7b9154524bc755017dead89321f9",
-      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
+      "viewportTags": ["desktop"],
+      "fixtureFile": "roll-and-write-scorecard.mark-cell.desktop.fixture.json",
+      "renderModule": "modules/roll-and-write-scorecard.mark-cell.desktop.mjs",
+      "fixtureDigest": "sha256:e708cd8f2c8e75c9d5632e74c474bb02cfb4ec81b5a953ba513cc6a4b63c2978",
+      "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.initial.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.initial.mobile",
-      "title": "Roll And Write Scorecard: initial mobile scorecard",
+      "title": "Cloudline Survey: initial mobile survey grids",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
         "examples/reference-games/roll-and-write-scorecard/app/game.ts",
@@ -1126,7 +1416,7 @@
         "examples/reference-games/roll-and-write-scorecard/manifest.ts",
         "examples/reference-games/roll-and-write-scorecard/reference-game.json",
         "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/initial.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
@@ -1135,35 +1425,12 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
-      "fixtureDigest": "sha256:fc416877f87e6235c26f2aa10a9657f20863a3a52f4732c6d3b01d9986487463",
-      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
-    },
-    "roll-and-write-scorecard.mark-cell.invalid.mobile": {
-      "id": "roll-and-write-scorecard.mark-cell.invalid.mobile",
-      "title": "Roll And Write Scorecard: mobile invalid target boundary",
-      "gameId": "roll-and-write-scorecard",
-      "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
-        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
-        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
-        "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/invalid.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.invalid.mobile.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
-      ],
-      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": ["accessibility-scan", "reduced-motion"],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "roll-and-write-scorecard.mark-cell.invalid.mobile.fixture.json",
-      "renderModule": "modules/roll-and-write-scorecard.mark-cell.invalid.mobile.mjs",
-      "fixtureDigest": "sha256:cd508b7f3f93605becbc7b0dfd2525b290772db558d3be025ef69d3216ced82c",
-      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
+      "fixtureDigest": "sha256:c009fe6d0ff80451b38c12f9b2aa0d67d9ba780cd0a6a59ab363171f1dc52054",
+      "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
     "roll-and-write-scorecard.mark-cell.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.mobile",
-      "title": "Roll And Write Scorecard: mobile scorecard mark cell",
+      "title": "Cloudline Survey: mobile survey-cell selection",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
         "examples/reference-games/roll-and-write-scorecard/app/game.ts",
@@ -1172,7 +1439,7 @@
         "examples/reference-games/roll-and-write-scorecard/manifest.ts",
         "examples/reference-games/roll-and-write-scorecard/reference-game.json",
         "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/multiple-matches.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.mobile.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
@@ -1188,72 +1455,12 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-      "fixtureDigest": "sha256:d5604d816427b08c85fbb6927a9ff05a0d21e665426156ff65873cda273ac3b9",
-      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
-    },
-    "roll-and-write-scorecard.mark-cell.rolled.mobile": {
-      "id": "roll-and-write-scorecard.mark-cell.rolled.mobile",
-      "title": "Roll And Write Scorecard: rolled mobile legal targets",
-      "gameId": "roll-and-write-scorecard",
-      "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
-        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
-        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
-        "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/rolled.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.rolled.mobile.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
-      ],
-      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "roll-and-write-scorecard.mark-cell.rolled.mobile.fixture.json",
-      "renderModule": "modules/roll-and-write-scorecard.mark-cell.rolled.mobile.mjs",
-      "fixtureDigest": "sha256:1f300f9158b3dd599744a3b7796fc6eb694011ae75734838a7899fe757cc1ef7",
-      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
-    },
-    "roll-and-write-scorecard.mark-cell.submitted.mobile": {
-      "id": "roll-and-write-scorecard.mark-cell.submitted.mobile",
-      "title": "Roll And Write Scorecard: submitted mobile mark evidence",
-      "gameId": "roll-and-write-scorecard",
-      "sourceFiles": [
-        "examples/reference-games/roll-and-write-scorecard/app/game.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/model.ts",
-        "examples/reference-games/roll-and-write-scorecard/app/phases/mark-survey.ts",
-        "examples/reference-games/roll-and-write-scorecard/manifest.ts",
-        "examples/reference-games/roll-and-write-scorecard/reference-game.json",
-        "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/submitted.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.submitted.mobile.scenario.ts",
-        "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
-      ],
-      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "roll-and-write-scorecard.mark-cell.submitted.mobile.fixture.json",
-      "renderModule": "modules/roll-and-write-scorecard.mark-cell.submitted.mobile.mjs",
-      "fixtureDigest": "sha256:ab45f4bd3f14015bf035ce9f22cb6714db1413c880704c9a7f78e67a5a26a92f",
-      "renderModuleDigest": "sha256:804310d4b6fb815d53a79371c11f0916bdd81fc38324e3886f1b44ac36084001"
+      "fixtureDigest": "sha256:d15f31a03fe488ae25ea1f85cb158cbd5ec57cb7e1ba7292c9dc19edd7ae5927",
+      "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.terminal.mobile": {
       "id": "roll-and-write-scorecard.mark-cell.terminal.mobile",
-      "title": "Roll And Write Scorecard: terminal mobile scoring evidence",
+      "title": "Cloudline Survey: terminal mobile scoring evidence",
       "gameId": "roll-and-write-scorecard",
       "sourceFiles": [
         "examples/reference-games/roll-and-write-scorecard/app/game.ts",
@@ -1261,7 +1468,7 @@
         "examples/reference-games/roll-and-write-scorecard/manifest.ts",
         "examples/reference-games/roll-and-write-scorecard/reference-game.json",
         "examples/reference-games/roll-and-write-scorecard/rule.md",
-        "examples/reference-games/roll-and-write-scorecard/test/scenarios/terminal.scenario.ts",
+        "examples/reference-games/roll-and-write-scorecard/test/scenarios/complete-game.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts",
         "examples/reference-games/roll-and-write-scorecard/ui/App.tsx"
       ],
@@ -1270,48 +1477,152 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:6d3d253d51e27bfc195207f936f2cf9a34741621259d7a17f488641b0b62aca9",
-      "renderModuleDigest": "sha256:ddba990fd4eda3a475f010663c350f2eae546319e0c620bab64df2e17c897ba7"
+      "fixtureDigest": "sha256:3c6a855c0effc837152ec1a1c0c2622cb00e67aa9e7932011b9660d12abfe1b8",
+      "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
-    "simultaneous-card-drafting.lock-choice.mobile": {
-      "id": "simultaneous-card-drafting.lock-choice.mobile",
-      "title": "Simultaneous Card Drafting: mobile locked draft choice",
+    "simultaneous-card-drafting.drafting.mid-round.mobile": {
+      "id": "simultaneous-card-drafting.drafting.mid-round.mobile",
+      "title": "Lantern Market: sealed choice waiting mid-round",
       "gameId": "simultaneous-card-drafting",
       "sourceFiles": [
         "examples/reference-games/simultaneous-card-drafting/app/game.ts",
         "examples/reference-games/simultaneous-card-drafting/app/phases/drafting.ts",
-        "examples/reference-games/simultaneous-card-drafting/app/rules/scoring.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/player-view.ts",
+        "examples/reference-games/simultaneous-card-drafting/reference-game.json",
+        "examples/reference-games/simultaneous-card-drafting/rule.md",
+        "examples/reference-games/simultaneous-card-drafting/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/drafting.mid-round.mobile.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/ui/App.tsx",
+        "examples/reference-games/simultaneous-card-drafting/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["HandView", "InteractionSubmit", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "simultaneous-card-drafting.drafting.mid-round.mobile.fixture.json",
+      "renderModule": "modules/simultaneous-card-drafting.drafting.mid-round.mobile.mjs",
+      "fixtureDigest": "sha256:8cebeb79b4a0434412a2da2084163099df96cfcfff35c745418b25bfb5ad7f24",
+      "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
+    },
+    "simultaneous-card-drafting.drafting.opening.mobile": {
+      "id": "simultaneous-card-drafting.drafting.opening.mobile",
+      "title": "Lantern Market: opening sealed draft",
+      "gameId": "simultaneous-card-drafting",
+      "sourceFiles": [
+        "examples/reference-games/simultaneous-card-drafting/app/game.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/phases/drafting.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/player-view.ts",
         "examples/reference-games/simultaneous-card-drafting/manifest.ts",
         "examples/reference-games/simultaneous-card-drafting/reference-game.json",
         "examples/reference-games/simultaneous-card-drafting/rule.md",
-        "examples/reference-games/simultaneous-card-drafting/test/scenarios/draft-one-pick.scenario.ts",
-        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/lock-choice.mobile.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/drafting.opening.mobile.scenario.ts",
         "examples/reference-games/simultaneous-card-drafting/ui/App.tsx",
-        "examples/reference-games/simultaneous-card-drafting/ui/interaction-routes.tsx"
+        "examples/reference-games/simultaneous-card-drafting/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["HandView", "InteractionSubmit", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "simultaneous-card-drafting.drafting.opening.mobile.fixture.json",
+      "renderModule": "modules/simultaneous-card-drafting.drafting.opening.mobile.mjs",
+      "fixtureDigest": "sha256:a76cf441cf09bbe7398f8719c87117af9342a2c6e13f18f4c539e6c49efc6767",
+      "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
+    },
+    "simultaneous-card-drafting.drafting.round-transition.mobile": {
+      "id": "simultaneous-card-drafting.drafting.round-transition.mobile",
+      "title": "Lantern Market: round two opens with preserved scores",
+      "gameId": "simultaneous-card-drafting",
+      "sourceFiles": [
+        "examples/reference-games/simultaneous-card-drafting/app/game.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/phases/scoreRound.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/player-view.ts",
+        "examples/reference-games/simultaneous-card-drafting/reference-game.json",
+        "examples/reference-games/simultaneous-card-drafting/rule.md",
+        "examples/reference-games/simultaneous-card-drafting/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/drafting.round-transition.mobile.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/ui/App.tsx",
+        "examples/reference-games/simultaneous-card-drafting/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["HandView", "Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "simultaneous-card-drafting.drafting.round-transition.mobile.fixture.json",
+      "renderModule": "modules/simultaneous-card-drafting.drafting.round-transition.mobile.mjs",
+      "fixtureDigest": "sha256:f95537418a71dd745788c08a566dda384c1074e83cbf1bdcafa2daa02d56ef59",
+      "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
+    },
+    "simultaneous-card-drafting.drafting.terminal.mobile": {
+      "id": "simultaneous-card-drafting.drafting.terminal.mobile",
+      "title": "Lantern Market: terminal two-round standings",
+      "gameId": "simultaneous-card-drafting",
+      "sourceFiles": [
+        "examples/reference-games/simultaneous-card-drafting/app/game.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/phases/scoreRound.ts",
+        "examples/reference-games/simultaneous-card-drafting/app/rules/scoring.ts",
+        "examples/reference-games/simultaneous-card-drafting/reference-game.json",
+        "examples/reference-games/simultaneous-card-drafting/rule.md",
+        "examples/reference-games/simultaneous-card-drafting/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/test/ui-scenarios/drafting.terminal.mobile.scenario.ts",
+        "examples/reference-games/simultaneous-card-drafting/ui/App.tsx",
+        "examples/reference-games/simultaneous-card-drafting/ui/components/game-ui.tsx"
+      ],
+      "contracts": ["Panel", "PluginRuntime"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "simultaneous-card-drafting.drafting.terminal.mobile.fixture.json",
+      "renderModule": "modules/simultaneous-card-drafting.drafting.terminal.mobile.mjs",
+      "fixtureDigest": "sha256:7a6458bcc7ace063e84e02da36e672d8adb2eb2cd7b6e682fd8af98565b20e7c",
+      "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
+    },
+    "solo-countdown-puzzle.developing.mobile": {
+      "id": "solo-countdown-puzzle.developing.mobile",
+      "title": "Last Light: developing beacon puzzle",
+      "gameId": "solo-countdown-puzzle",
+      "sourceFiles": [
+        "examples/reference-games/solo-countdown-puzzle/app/game.ts",
+        "examples/reference-games/solo-countdown-puzzle/manifest.ts",
+        "examples/reference-games/solo-countdown-puzzle/reference-game.json",
+        "examples/reference-games/solo-countdown-puzzle/rule.md",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/complete-game-loss-storm.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/developing.mobile.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
       ],
       "contracts": [
-        "CardFace",
-        "HandView",
+        "Board.Space",
+        "GameEventLog",
         "InteractionSubmit",
-        "Panel",
-        "PluginRuntime"
+        "Panel"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["phone", "touch"],
-      "fixtureFile": "simultaneous-card-drafting.lock-choice.mobile.fixture.json",
-      "renderModule": "modules/simultaneous-card-drafting.lock-choice.mobile.mjs",
-      "fixtureDigest": "sha256:a5abb3fc23b04b45c2531d79f9a4f447cd72c51eddd9324933665696f7ec9625",
-      "renderModuleDigest": "sha256:db7509d3babb583215bd302f68e18c69af8cf566cd58d862dd9a9f308b1a4237"
+      "fixtureFile": "solo-countdown-puzzle.developing.mobile.fixture.json",
+      "renderModule": "modules/solo-countdown-puzzle.developing.mobile.mjs",
+      "fixtureDigest": "sha256:f70260d1b28ba5cf2f14fb25ec75acd02e17c2688eb7ef21427a82f2fa9d4487",
+      "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
     },
-    "solo-countdown-puzzle.reconnect.mobile": {
-      "id": "solo-countdown-puzzle.reconnect.mobile",
-      "title": "Solo Countdown Puzzle: reconnect event history",
+    "solo-countdown-puzzle.initial.desktop": {
+      "id": "solo-countdown-puzzle.initial.desktop",
+      "title": "Last Light: opening lighthouse watch",
+      "gameId": "solo-countdown-puzzle",
+      "sourceFiles": [
+        "examples/reference-games/solo-countdown-puzzle/app/game.ts",
+        "examples/reference-games/solo-countdown-puzzle/manifest.ts",
+        "examples/reference-games/solo-countdown-puzzle/reference-game.json",
+        "examples/reference-games/solo-countdown-puzzle/rule.md",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/weather-procedure-calm.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/initial.desktop.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
+      ],
+      "contracts": ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "solo-countdown-puzzle.initial.desktop.fixture.json",
+      "renderModule": "modules/solo-countdown-puzzle.initial.desktop.mjs",
+      "fixtureDigest": "sha256:b39611e0513c67d051427ea20c418aed5c76e4b649eb441fe360df3e2506b637",
+      "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
+    },
+    "solo-countdown-puzzle.reinforcement-hit.desktop": {
+      "id": "solo-countdown-puzzle.reinforcement-hit.desktop",
+      "title": "Last Light: sea-wall reinforcement holds",
       "gameId": "solo-countdown-puzzle",
       "sourceFiles": [
         "examples/reference-games/solo-countdown-puzzle/app/game.ts",
@@ -1319,30 +1630,39 @@
         "examples/reference-games/solo-countdown-puzzle/manifest.ts",
         "examples/reference-games/solo-countdown-puzzle/reference-game.json",
         "examples/reference-games/solo-countdown-puzzle/rule.md",
-        "examples/reference-games/solo-countdown-puzzle/test/scenarios/reconnect.scenario.ts",
-        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/reconnect.mobile.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/reinforcement-hit.desktop.scenario.ts",
         "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
       ],
-      "contracts": ["GameEventLog", "InteractionSubmit", "Panel"],
-      "capabilities": ["accessibility-scan", "reduced-motion"],
-      "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.reconnect.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.reconnect.mobile.mjs",
-      "fixtureDigest": "sha256:e402606a720feff412cd7ab14ba89d0dfb5b2a38437fbf432b24a3080eb85dfd",
-      "renderModuleDigest": "sha256:948015301625184e71cbfb7fba8c66a36e42da9814d9f45d8e393210f925f0f8"
+      "contracts": [
+        "Board.Space",
+        "GameEventLog",
+        "InteractionSubmit",
+        "Panel"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "solo-countdown-puzzle.reinforcement-hit.desktop.fixture.json",
+      "renderModule": "modules/solo-countdown-puzzle.reinforcement-hit.desktop.mjs",
+      "fixtureDigest": "sha256:6827b7e9c357fb9e42eb3bdfc3b4e0775ca7c0ea003380b3bfd8a070e76f30b2",
+      "renderModuleDigest": "sha256:547e2499a270da0ef0f31f6d04ef0fa57bb3c5012eaf7956a211aa8771bfb83a"
     },
-    "solo-countdown-puzzle.repair-beacon.mobile": {
-      "id": "solo-countdown-puzzle.repair-beacon.mobile",
-      "title": "Solo Countdown Puzzle: repair beacon",
+    "solo-countdown-puzzle.terminal.mobile": {
+      "id": "solo-countdown-puzzle.terminal.mobile",
+      "title": "Last Light: all coastal beacons lit",
       "gameId": "solo-countdown-puzzle",
       "sourceFiles": [
         "examples/reference-games/solo-countdown-puzzle/app/game.ts",
-        "examples/reference-games/solo-countdown-puzzle/app/phases/player-turn.ts",
         "examples/reference-games/solo-countdown-puzzle/manifest.ts",
         "examples/reference-games/solo-countdown-puzzle/reference-game.json",
         "examples/reference-games/solo-countdown-puzzle/rule.md",
-        "examples/reference-games/solo-countdown-puzzle/test/scenarios/repair-beacon.scenario.ts",
-        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/repair-beacon.mobile.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/solo-countdown-puzzle/test/ui-scenarios/terminal.mobile.scenario.ts",
         "examples/reference-games/solo-countdown-puzzle/ui/App.tsx"
       ],
       "contracts": [
@@ -1360,218 +1680,154 @@
         "runtime-submit"
       ],
       "viewportTags": ["phone", "touch"],
-      "fixtureFile": "solo-countdown-puzzle.repair-beacon.mobile.fixture.json",
-      "renderModule": "modules/solo-countdown-puzzle.repair-beacon.mobile.mjs",
-      "fixtureDigest": "sha256:553d2e49dad5de457096e1dcda47422423f9b6667b4b3b3ff000b2e2877073cc",
-      "renderModuleDigest": "sha256:67a9edb8fd53b7b87766a080c7a32dca2b6b11790f627478c027d373150b183e"
+      "fixtureFile": "solo-countdown-puzzle.terminal.mobile.fixture.json",
+      "renderModule": "modules/solo-countdown-puzzle.terminal.mobile.mjs",
+      "fixtureDigest": "sha256:aa5db1c60ec694f3055f8fc20884aff5824c71474d33d32972f5e50b7f972c57",
+      "renderModuleDigest": "sha256:55607962dd2d3c039da24d22a1c5893f044e718c9843e6898260f3153cd5f10b"
     },
-    "ui-scenarios.boards-slot.desktop": {
-      "id": "ui-scenarios.boards-slot.desktop",
-      "title": "Boards: slot targeting",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/boards/slot-targeting.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": ["Panel", "PluginRuntime", "SlotSystem"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-      "fixtureDigest": "sha256:59e181a11cd6ffd52cb4a6ab775d0f7320074f52174e2fba38a5ac02bf6757f3",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.cards-hand.desktop": {
-      "id": "ui-scenarios.cards-hand.desktop",
-      "title": "Cards and hands: selection and hidden state",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/cards/hand-selection.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": [
-        "CardFace",
-        "HandView",
-        "Panel",
-        "PluginRuntime",
-        "StagingZone"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-      "fixtureDigest": "sha256:76a8e6ad67a02adc72fd96056caeab9e607b597a49f8cd351719199dacafb235",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.dice-result.desktop": {
-      "id": "ui-scenarios.dice-result.desktop",
-      "title": "Dice: result state",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/dice/result-state.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": ["Dialog", "Panel", "PluginRuntime", "ThemedButton"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
-      "fixtureDigest": "sha256:ee1e07de1cf931711bc2e45b3b4581ecb2b3f4a5c0c00ac597ff54cead476d61",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.game-shell.desktop": {
-      "id": "ui-scenarios.game-shell.desktop",
-      "title": "Game shell: phase, roster, and terminal outcome",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/game-shell/phase-roster-terminal.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": ["MoreActions", "Panel", "PrimaryButton", "ThemedButton"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
-      "fixtureDigest": "sha256:4775a4c356fc7f482d15db741acd1ad5f372a4b4ead1ee079062cfa4ed1eb4d5",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.prompts-choice.desktop": {
-      "id": "ui-scenarios.prompts-choice.desktop",
-      "title": "Prompts: choice validation",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/prompts/choice-validation.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": [
-        "ActionPanel",
-        "Input",
-        "Panel",
-        "PluginRuntime",
-        "PrimaryActionButton"
-      ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
-      "fixtureDigest": "sha256:7a15a30fbba61d55688b05395d02573e1f7fb409a083605396c0fe1ae9f4b0f3",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.resources-cost.desktop": {
-      "id": "ui-scenarios.resources-cost.desktop",
-      "title": "Resources and costs: affordability",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/resources/affordability.scenario.mjs",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs"
-      ],
-      "contracts": ["CostDisplay", "Panel", "PluginRuntime", "ResourceCounter"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
-      "fixtureDigest": "sha256:d3a62c6f6f63640921f823cda2799ce0c81a923a79c9f06e4365acd66130b8cf",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "ui-scenarios.zones-staging.desktop": {
-      "id": "ui-scenarios.zones-staging.desktop",
-      "title": "Zones and collections: staging transfer",
-      "gameId": "ui-scenarios",
-      "sourceFiles": [
-        "examples/ui-scenarios/package.json",
-        "examples/ui-scenarios/src/scenario-helper.mjs",
-        "examples/ui-scenarios/src/ui.mjs",
-        "examples/ui-scenarios/src/zones/staging-transfer.scenario.mjs"
-      ],
-      "contracts": ["Panel", "PluginRuntime", "SlotSystem", "StagingZone"],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "reduced-motion",
-        "runtime-submit"
-      ],
-      "viewportTags": ["desktop"],
-      "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
-      "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
-      "fixtureDigest": "sha256:512df9dc07f1533e4e9ac4244a1c841d0723574e2ebd8dc979c1138205c56a1c",
-      "renderModuleDigest": "sha256:58dc4d136b3e3d51b81c08f3282fc0863a06d3a36c3a39b21d72f472ba214f60"
-    },
-    "worker-placement-tableau.place-worker.desktop": {
-      "id": "worker-placement-tableau.place-worker.desktop",
-      "title": "Worker Placement Tableau: place a worker on an action space",
+    "worker-placement-tableau.contention.desktop": {
+      "id": "worker-placement-tableau.contention.desktop",
+      "title": "Mosaic Workshop: master shares the bench",
       "gameId": "worker-placement-tableau",
       "sourceFiles": [
-        "examples/reference-games/worker-placement-tableau/app/game.ts",
-        "examples/reference-games/worker-placement-tableau/app/phases/placement/worker-placement.ts",
+        "examples/reference-games/worker-placement-tableau/app/phases/placement/index.ts",
         "examples/reference-games/worker-placement-tableau/manifest.ts",
-        "examples/reference-games/worker-placement-tableau/reference-game.json",
         "examples/reference-games/worker-placement-tableau/rule.md",
-        "examples/reference-games/worker-placement-tableau/test/scenarios/placement-ready-lumberyard.scenario.ts",
-        "examples/reference-games/worker-placement-tableau/test/ui-scenarios/place-worker.desktop.scenario.ts",
-        "examples/reference-games/worker-placement-tableau/ui/App.tsx",
-        "examples/reference-games/worker-placement-tableau/ui/interaction-routes.tsx"
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
       ],
       "contracts": [
         "Board.Space",
+        "InteractionInput",
         "InteractionSubmit",
-        "Panel",
         "PluginRuntime"
       ],
-      "capabilities": [
-        "accessibility-scan",
-        "click",
-        "keyboard",
-        "reduced-motion",
-        "runtime-draft",
-        "runtime-submit"
-      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
       "viewportTags": ["desktop"],
-      "fixtureFile": "worker-placement-tableau.place-worker.desktop.fixture.json",
-      "renderModule": "modules/worker-placement-tableau.place-worker.desktop.mjs",
-      "fixtureDigest": "sha256:2da852245eaabaaaacded2bc2ea06b967e34d2ec47242a01510db45b9f146a6e",
-      "renderModuleDigest": "sha256:3c909126cc7e9924170b0014f70655e473bf7f71761af58c1e5c6367e74cb580"
+      "fixtureFile": "worker-placement-tableau.contention.desktop.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.contention.desktop.mjs",
+      "fixtureDigest": "sha256:f2ef85dc6a3da0f490fbf400bb9581ab006b5fe9d2345d372d32bfd7bf64787f",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
+    },
+    "worker-placement-tableau.developed.mobile": {
+      "id": "worker-placement-tableau.developed.mobile",
+      "title": "Mosaic Workshop: developed tableau",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/app/player-view.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
+      ],
+      "contracts": [
+        "Board.Space",
+        "InteractionInput",
+        "InteractionSubmit",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "worker-placement-tableau.developed.mobile.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.developed.mobile.mjs",
+      "fixtureDigest": "sha256:3ee13a3369fc7ecf125e42b681ccc8fd5631847687651b52124efa989fa2c5b7",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
+    },
+    "worker-placement-tableau.first-craft.desktop": {
+      "id": "worker-placement-tableau.first-craft.desktop",
+      "title": "Mosaic Workshop: first crafted frame",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/app/game.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
+      ],
+      "contracts": [
+        "Board.Space",
+        "InteractionInput",
+        "InteractionSubmit",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "worker-placement-tableau.first-craft.desktop.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.first-craft.desktop.mjs",
+      "fixtureDigest": "sha256:d8839b75744c7212d113e51592c30791292938c057730e632e16ec7f4ce58504",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
+    },
+    "worker-placement-tableau.initial.mobile": {
+      "id": "worker-placement-tableau.initial.mobile",
+      "title": "Mosaic Workshop: opening supplies",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/app/game.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
+      ],
+      "contracts": [
+        "Board.Space",
+        "InteractionInput",
+        "InteractionSubmit",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "worker-placement-tableau.initial.mobile.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.initial.mobile.mjs",
+      "fixtureDigest": "sha256:bca61687f584b8bee17a6ec40dee5f12e35fbd45e8aed19bca81c3546c3c1bc6",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
+    },
+    "worker-placement-tableau.outcome.mobile": {
+      "id": "worker-placement-tableau.outcome.mobile",
+      "title": "Mosaic Workshop: final Prestige",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/app/phases/scoring.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
+      ],
+      "contracts": [
+        "Board.Space",
+        "InteractionInput",
+        "InteractionSubmit",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["phone", "touch"],
+      "fixtureFile": "worker-placement-tableau.outcome.mobile.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.outcome.mobile.mjs",
+      "fixtureDigest": "sha256:aa76c9681351a5bf12265429884068a53c4d742f1738b5cab002e6297a3eb743",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
+    },
+    "worker-placement-tableau.season-transition.desktop": {
+      "id": "worker-placement-tableau.season-transition.desktop",
+      "title": "Mosaic Workshop: second season begins",
+      "gameId": "worker-placement-tableau",
+      "sourceFiles": [
+        "examples/reference-games/worker-placement-tableau/app/phases/cleanup.ts",
+        "examples/reference-games/worker-placement-tableau/manifest.ts",
+        "examples/reference-games/worker-placement-tableau/rule.md",
+        "examples/reference-games/worker-placement-tableau/test/scenarios/complete-game.scenario.ts",
+        "examples/reference-games/worker-placement-tableau/ui/App.tsx"
+      ],
+      "contracts": [
+        "Board.Space",
+        "InteractionInput",
+        "InteractionSubmit",
+        "PluginRuntime"
+      ],
+      "capabilities": ["accessibility-scan", "reduced-motion"],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "worker-placement-tableau.season-transition.desktop.fixture.json",
+      "renderModule": "modules/worker-placement-tableau.season-transition.desktop.mjs",
+      "fixtureDigest": "sha256:4478f3612821250aea5cfe5542c0c6db52533761bdb2f4711c89edd2c26a3a1f",
+      "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     }
   },
   "sharedFallbacks": [

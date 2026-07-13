@@ -10,6 +10,10 @@ export default defineScenario({
   then: ({ expect, state }) => {
     const standings = state().publicState.outcome?.standings ?? [];
     expect(standings.filter(({ result }) => result === "win")).toHaveLength(1);
-    expect(standings[0]).toMatchObject({ playerId: "player-1", rank: 1, score: 22 });
+    expect(standings[0]).toMatchObject({
+      playerId: "player-1",
+      rank: 1,
+      score: 22,
+    });
   },
 });

@@ -15,8 +15,5 @@
     "../shared/**/*.ts",
     "../shared/**/*.d.ts"
   ],
-  "exclude": [
-    "./bases/**",
-    "./generated/**"
-  ]
+  "exclude": ["./bases/**", "./generated/**"]
 }

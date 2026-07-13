@@ -52,7 +52,8 @@ const beaconNames: Record<BeaconId, string> = {
 function projectSharedState(
   state: Pick<GameState, "flow" | "publicState">,
 ): SharedView {
-  const activePlayerId = (state.flow.activePlayers[0] ?? null) as PlayerId | null;
+  const activePlayerId = (state.flow.activePlayers[0] ??
+    null) as PlayerId | null;
   return {
     currentPhase: state.flow.currentPhase,
     turnsRemaining: state.publicState.turnsRemaining,
@@ -75,7 +76,8 @@ function projectSharedState(
     events: state.publicState.events,
     completed: state.publicState.completed,
     outcomeCode:
-      (state.publicState.outcome?.reason.code as OutcomeCode | undefined) ?? null,
+      (state.publicState.outcome?.reason.code as OutcomeCode | undefined) ??
+      null,
     outcome: state.publicState.outcome,
     activePlayerId,
   };

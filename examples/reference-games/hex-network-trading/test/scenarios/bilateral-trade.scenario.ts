@@ -1,8 +1,5 @@
 import { defineScenario } from "../testing-types.ts";
-import {
-  COMPLETE_GAME_COMMANDS,
-  reject,
-} from "../scenario-commands.ts";
+import { COMPLETE_GAME_COMMANDS, reject } from "../scenario-commands.ts";
 
 export const affordableTradePrefix = COMPLETE_GAME_COMMANDS.slice(0, 10);
 

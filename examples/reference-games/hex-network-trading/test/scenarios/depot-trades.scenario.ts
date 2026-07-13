@@ -27,8 +27,8 @@ export default defineScenario({
       timber: 0,
     });
     expect(
-      state().publicState.history
-        .slice(-3)
+      state()
+        .publicState.history.slice(-3)
         .map(({ kind }) => kind),
     ).toEqual(["depotTrade", "depotTrade", "depotTrade"]);
   },

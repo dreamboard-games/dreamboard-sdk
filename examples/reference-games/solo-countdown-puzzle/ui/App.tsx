@@ -130,9 +130,13 @@ function LastLightLayout({
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
               Last Light
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-slate-300" data-reference-phase={view.currentPhase}>
+            <p
+              className="mt-2 max-w-2xl text-sm text-slate-300"
+              data-reference-phase={view.currentPhase}
+            >
               {view.completed
-                ? view.outcome?.reason.message ?? `Outcome: ${view.outcomeCode}`
+                ? (view.outcome?.reason.message ??
+                  `Outcome: ${view.outcomeCode}`)
                 : "Relight every coastal beacon before the storm reaches the lighthouse or dawn arrives."}
             </p>
           </header>
@@ -163,7 +167,11 @@ function LastLightLayout({
                 {view.beacons.filter(({ lit }) => lit).length}/3 lit
               </span>
             </div>
-            {beaconGrid ? <beaconGrid.Root>{beacons}</beaconGrid.Root> : beacons}
+            {beaconGrid ? (
+              <beaconGrid.Root>{beacons}</beaconGrid.Root>
+            ) : (
+              beacons
+            )}
           </section>
 
           <section aria-labelledby="actions-heading" className={panelClass}>
@@ -171,13 +179,18 @@ function LastLightLayout({
               Keeper action
             </h2>
             <p className="mb-3 text-sm text-slate-400">
-              Choose exactly one action. Weather and countdown then resolve automatically.
+              Choose exactly one action. Weather and countdown then resolve
+              automatically.
             </p>
             {runtime && beaconGrid ? (
               <LastLightInteractionRoutes beaconGrid={beaconGrid} />
             ) : (
               <div className="grid gap-2 sm:grid-cols-3">
-                <button type="button" onClick={onCharge} disabled={view.energy >= 7}>
+                <button
+                  type="button"
+                  onClick={onCharge}
+                  disabled={view.energy >= 7}
+                >
                   Charge +2
                 </button>
                 <button type="button" disabled={view.energy < 1}>
@@ -201,7 +214,8 @@ function LastLightLayout({
               Weather front
             </h2>
             <p className="mt-1 text-sm text-slate-400">
-              {view.weatherRemaining} hidden card{view.weatherRemaining === 1 ? "" : "s"} remain.
+              {view.weatherRemaining} hidden card
+              {view.weatherRemaining === 1 ? "" : "s"} remain.
             </p>
             <ol className="mt-3 space-y-2" aria-label="Revealed weather">
               {view.weatherHistory.length === 0 ? (
@@ -231,9 +245,14 @@ function LastLightLayout({
             <h2 id="history-heading" className="text-xl font-bold">
               Event history
             </h2>
-            <ol className="mt-3 max-h-96 space-y-3 overflow-auto" aria-live="polite">
+            <ol
+              className="mt-3 max-h-96 space-y-3 overflow-auto"
+              aria-live="polite"
+            >
               {view.events.length === 0 ? (
-                <li className="text-sm text-slate-400">No weather has resolved yet.</li>
+                <li className="text-sm text-slate-400">
+                  No weather has resolved yet.
+                </li>
               ) : (
                 view.events.map((event, index) => (
                   <li
@@ -269,7 +288,9 @@ function Status({
       <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">
         {label}
       </dt>
-      <dd className={`mt-1 text-xl font-black ${danger ? "text-rose-300" : "text-slate-100"}`}>
+      <dd
+        className={`mt-1 text-xl font-black ${danger ? "text-rose-300" : "text-slate-100"}`}
+      >
         {value}
       </dd>
     </div>

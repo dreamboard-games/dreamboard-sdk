@@ -46,11 +46,13 @@ const rollDice = rollAuthoring.interaction({
     ];
 
     if (total === 7) {
-      next = q.player.order().reduce(
-        (current, playerId) =>
-          patchPrivateState(current, playerId, { lastDiscard: null }),
-        next,
-      );
+      next = q.player
+        .order()
+        .reduce(
+          (current, playerId) =>
+            patchPrivateState(current, playerId, { lastDiscard: null }),
+          next,
+        );
       const hasDiscards = q.player
         .order()
         .some((playerId) => q.player.resourceTotal(playerId) > 7);

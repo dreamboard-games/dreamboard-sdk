@@ -156,7 +156,10 @@ test("inspect derives active-only drafting actions and no scheduler blockers", a
     ["draftStall"],
   );
   assert.equal(seatZero.node.actions[0]?.inputs[0]?.eligibleCount, 4);
-  assert.equal(others.every(({ node }) => node.actions.length === 0), true);
+  assert.equal(
+    others.every(({ node }) => node.actions.length === 0),
+    true,
+  );
 });
 
 test("explore emits exactly the four current-market commands", async () => {
@@ -171,12 +174,7 @@ test("explore emits exactly the four current-market commands", async () => {
   if (explored.mode !== "transitions") return;
   assert.deepEqual(
     explored.candidates.map(({ command }) => command.params.stallId).sort(),
-    [
-      "craft-p2-c1-1",
-      "craft-p3-c0-2",
-      "food-p3-c0-1",
-      "music-p2-c0-2",
-    ],
+    ["craft-p2-c1-1", "craft-p3-c0-2", "food-p3-c0-1", "music-p2-c0-2"],
   );
   assert.equal(
     explored.candidates.every(
@@ -205,8 +203,9 @@ test("post-refill and mid-game inspections stay public, actor-correct, and block
     ["draftStall"],
   );
   assert.equal(
-    (afterRefill.node.publicState as { events: Array<{ kind: string }> }).events
-      .at(-1)?.kind,
+    (
+      afterRefill.node.publicState as { events: Array<{ kind: string }> }
+    ).events.at(-1)?.kind,
     "market-refilled",
   );
 
@@ -232,7 +231,10 @@ test("post-refill and mid-game inspections stay public, actor-correct, and block
   assert.ok(first);
   for (const inspected of rest) {
     assert.deepEqual(inspected.node.publicState, first.node.publicState);
-    assert.equal(JSON.stringify(inspected.node).includes("festivalDeck"), false);
+    assert.equal(
+      JSON.stringify(inspected.node).includes("festivalDeck"),
+      false,
+    );
   }
 });
 
@@ -246,7 +248,10 @@ test("normal complete replay is byte-stable and every score equals its component
   const standings = first.state().publicState.outcome?.standings ?? [];
   for (const standing of standings) {
     assert.equal(
-      standing.scoreBreakdown?.reduce((sum, component) => sum + component.value, 0),
+      standing.scoreBreakdown?.reduce(
+        (sum, component) => sum + component.value,
+        0,
+      ),
       standing.score,
     );
     assert.deepEqual(

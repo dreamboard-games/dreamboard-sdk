@@ -13,10 +13,7 @@ import {
   trailsByEdgeId,
 } from "./reducer-support";
 
-function projectPublic(
-  state: GameState,
-  q: TableQueriesOfState<GameState>,
-) {
+function projectPublic(state: GameState, q: TableQueriesOfState<GameState>) {
   return {
     currentPhase: state.flow.currentPhase,
     activePlayerId: state.flow.activePlayers[0] ?? null,
@@ -42,16 +39,20 @@ function projectPublic(
         .map((playerId) => [playerId, q.player.resourceTotal(playerId)]),
     ) as Record<PlayerId, number>,
     remainingCampsByPlayerId: Object.fromEntries(
-      q.player.order().map((playerId) => [
-        playerId,
-        remainingPieceCount(state, playerId, "camp"),
-      ]),
+      q.player
+        .order()
+        .map((playerId) => [
+          playerId,
+          remainingPieceCount(state, playerId, "camp"),
+        ]),
     ) as Record<PlayerId, number>,
     remainingTrailsByPlayerId: Object.fromEntries(
-      q.player.order().map((playerId) => [
-        playerId,
-        remainingPieceCount(state, playerId, "trail"),
-      ]),
+      q.player
+        .order()
+        .map((playerId) => [
+          playerId,
+          remainingPieceCount(state, playerId, "trail"),
+        ]),
     ) as Record<PlayerId, number>,
     outcome: state.publicState.outcome,
   };

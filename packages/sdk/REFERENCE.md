@@ -47,7 +47,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.7";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.9";
 };
 ```
 
@@ -56,7 +56,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.7";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.9";
 ```
 
 _No JSDoc summary is available yet._
@@ -95,7 +95,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.7";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.9";
 };
 ```
 
@@ -104,7 +104,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.7";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.9";
 ```
 
 _No JSDoc summary is available yet._
@@ -141,10 +141,21 @@ function canonicalizeReferenceGameSourcePayload(
 
 _No JSDoc summary is available yet._
 
-### computeReferenceGameSourceDigest
+### compareReferenceGameCanonicalStrings
 
 ```ts
-function computeReferenceGameSourceDigest(
+function compareReferenceGameCanonicalStrings(
+  left: string,
+  right: string,
+): number;
+```
+
+Locale-independent UTF-16 code-unit order, equivalent to Java String.compareTo.
+
+### computeReferenceGameSourceFingerprint
+
+```ts
+function computeReferenceGameSourceFingerprint(
   payload: ReferenceGameSourceManifestPayload,
 ): `sha256:${string}`;
 ```
@@ -188,7 +199,7 @@ _No JSDoc summary is available yet._
 ### REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION
 
 ```ts
-const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 2;
+const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 3;
 ```
 
 _No JSDoc summary is available yet._
@@ -311,6 +322,32 @@ declare const referenceGameSourceEntrySchema: z.ZodObject<
     uiScenarios: z.ZodArray<z.ZodString>;
     mechanics: z.ZodArray<z.ZodString>;
     readFirst: z.ZodArray<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourceInventoryPolicy
+
+```ts
+type ReferenceGameSourceInventoryPolicy = z.infer<
+  typeof referenceGameSourceInventoryPolicySchema
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGameSourceInventoryPolicySchema
+
+```ts
+const referenceGameSourceInventoryPolicySchema: z.ZodObject<
+  {
+    schemaVersion: z.ZodLiteral<1>;
+    workspaceOwnershipVersion: z.ZodNumber;
+    excludedGameRelativePaths: z.ZodArray<z.ZodString>;
+    excludedGameRelativePrefixes: z.ZodArray<z.ZodString>;
   },
   z.core.$strict
 >;
@@ -2811,8 +2848,9 @@ type DispatchTraceSummaryEntry =
     }
   | {
       kind: "rngConsumption";
+      version: 2;
       operation: string;
-      traceEntry: string;
+      drawIndex: number;
     };
 ```
 
@@ -2845,6 +2883,7 @@ const FrameworkErrorCodes: {
   readonly NOT_YOUR_TURN: "NOT_YOUR_TURN";
   readonly WRONG_PHASE: "WRONG_PHASE";
   readonly WRONG_STEP: "WRONG_STEP";
+  readonly NO_LEGAL_INPUT: "NO_LEGAL_INPUT";
   readonly INVALID_PARAMS: "INVALID_PARAMS";
   readonly UNKNOWN_INTERACTION: "UNKNOWN_INTERACTION";
   readonly INTERNAL_ERROR: "INTERNAL_ERROR";
@@ -3644,7 +3683,7 @@ _No JSDoc summary is available yet._
 ### StaleContractArtifactKind
 
 ```ts
-type StaleContractArtifactKind = "base-states" | "session-state";
+type StaleContractArtifactKind = "session-state";
 ```
 
 _No JSDoc summary is available yet._
@@ -3928,7 +3967,8 @@ _No JSDoc summary is available yet._
 ### assumeManifestSchema
 
 ```ts
-function assumeManifestSchema<Output>(schema: z.ZodTypeAny): z.ZodType<Output>;
+assumeManifestSchema<Output, Family extends ManifestIdFamily | undefined>(schema: ManifestIdSchema<unknown, Family>): ManifestIdSchema<Output, Family>;
+assumeManifestSchema<Output>(schema: z.ZodTypeAny): z.ZodType<Output>;
 ```
 
 _No JSDoc summary is available yet._
@@ -4406,13 +4446,15 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ClientParamsOf<Collectors extends Record<string, InputCollector>> = {
-  [K in keyof Collectors as K extends EngineSampledCollectorKeys<Collectors>
-    ? never
-    : K]: Collectors[K] extends InputCollector<infer S>
-    ? S extends SchemaLike<infer V>
-      ? V
-      : never
-    : never;
+  [K in Exclude<
+    ClientCollectorKeys<Collectors>,
+    OptionalClientCollectorKeys<Collectors>
+  >]: ClientCollectorValue<Collectors[K]>;
+} & {
+  [K in OptionalClientCollectorKeys<Collectors>]?: Exclude<
+    ClientCollectorValue<Collectors[K]>,
+    undefined
+  >;
 };
 ```
 
@@ -4652,9 +4694,16 @@ _No JSDoc summary is available yet._
 ### createManifestStringLiteralSchema
 
 ```ts
-function createManifestStringLiteralSchema<Values extends readonly string[]>(
+function createManifestStringLiteralSchema<
+  Values extends readonly string[],
+  const Family extends ManifestIdFamily | undefined = undefined,
+>(
   values: Values,
-): ManifestIdSchema<Values[number] extends never ? string : Values[number]>;
+  family?: Family,
+): ManifestIdSchema<
+  Values[number] extends never ? string : Values[number],
+  Family
+>;
 ```
 
 _No JSDoc summary is available yet._
@@ -4998,6 +5047,7 @@ const FrameworkErrorCodes: {
   readonly NOT_YOUR_TURN: "NOT_YOUR_TURN";
   readonly WRONG_PHASE: "WRONG_PHASE";
   readonly WRONG_STEP: "WRONG_STEP";
+  readonly NO_LEGAL_INPUT: "NO_LEGAL_INPUT";
   readonly INVALID_PARAMS: "INVALID_PARAMS";
   readonly UNKNOWN_INTERACTION: "UNKNOWN_INTERACTION";
   readonly INTERNAL_ERROR: "INTERNAL_ERROR";
@@ -5760,6 +5810,20 @@ type ManifestDefaults = ...;
 
 _No JSDoc summary is available yet._
 
+### ManifestIdFamily
+
+```ts
+type ManifestIdFamily = keyof ManifestIds<
+  string,
+  string,
+  string,
+  string,
+  string
+>;
+```
+
+_No JSDoc summary is available yet._
+
 ### ManifestIds
 
 ```ts
@@ -5771,8 +5835,11 @@ _No JSDoc summary is available yet._
 ### ManifestIdSchema
 
 ```ts
-type ManifestIdSchema<Output = unknown> = z.ZodType<Output> & {
-  readonly [manifestIdSchemaBrand]: true;
+type ManifestIdSchema<
+  Output = unknown,
+  Family extends ManifestIdFamily | undefined = ManifestIdFamily | undefined,
+> = z.ZodType<Output> & {
+  readonly [manifestIdSchemaBrand]: Family;
 };
 ```
 
@@ -5782,6 +5849,20 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ManifestLiterals = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ManifestNormalSetup
+
+```ts
+type ManifestNormalSetup<Table extends RuntimeTableRecord> = {
+  readonly minPlayers: number;
+  readonly maxPlayers: number;
+  readonly createInitialTable: (options: {
+    readonly playerIds: readonly string[];
+  }) => Table;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -5802,12 +5883,24 @@ type ManifestOf<Source> = Source extends {
 
 _No JSDoc summary is available yet._
 
+### manifestSchemaFamily
+
+```ts
+function manifestSchemaFamily(schema: unknown): ManifestIdFamily | undefined;
+```
+
+_No JSDoc summary is available yet._
+
 ### markManifestScopedSchema
 
 ```ts
-function markManifestScopedSchema<Schema extends z.ZodTypeAny>(
+function markManifestScopedSchema<
+  Schema extends z.ZodTypeAny,
+  const Family extends ManifestIdFamily | undefined = undefined,
+>(
   schema: Schema,
-): Schema & ManifestIdSchema<z.infer<Schema>>;
+  family?: Family,
+): Schema & ManifestIdSchema<z.infer<Schema>, Family>;
 ```
 
 _No JSDoc summary is available yet._
@@ -6330,6 +6423,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 type RandomHelpers = {
+  integer(options: { minInclusive: number; maxInclusive: number }): number;
   subset<const Values extends readonly unknown[]>(options: {
     from: Values;
     count: number;
@@ -7155,6 +7249,38 @@ type RuntimeResourceMap = PerPlayer<RuntimeRecord>;
 
 _No JSDoc summary is available yet._
 
+### RuntimeRngDraw
+
+```ts
+type RuntimeRngDraw = {
+  index: number;
+  cursorBefore: number;
+  cursorAfter: number;
+  operation: RuntimeRngOperation;
+};
+```
+
+Public, persisted identity for one deterministic RNG cursor advance.
+
+### RuntimeRngOperation
+
+```ts
+type RuntimeRngOperation = {
+  kind: string;
+  parameters: Record<string, RuntimeRngOperationParameter>;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeRngOperationParameter
+
+```ts
+type RuntimeRngOperationParameter = string | number | boolean;
+```
+
+_No JSDoc summary is available yet._
+
 ### RuntimeRngState
 
 ```ts
@@ -7162,6 +7288,7 @@ type RuntimeRngState = {
   seed?: number | null;
   cursor: number;
   trace: string[];
+  draws: RuntimeRngDraw[];
 };
 ```
 
@@ -20336,10 +20463,7 @@ _No JSDoc summary is available yet._
 ### GENERATED_WORKSPACE_PATHS
 
 ```ts
-const GENERATED_WORKSPACE_PATHS: readonly [
-  ...string[],
-  "test/generated/base-state.json",
-];
+const GENERATED_WORKSPACE_PATHS: readonly string[];
 ```
 
 _No JSDoc summary is available yet._
@@ -20349,7 +20473,7 @@ _No JSDoc summary is available yet._
 ```ts
 type GeneratedArtifactV1 = {
   path: string;
-  ownership: "authoritative" | "seed" | "derived-test";
+  ownership: "authoritative" | "seed";
   content: string;
   contentSha256: string;
 };
@@ -20376,26 +20500,6 @@ _No JSDoc summary is available yet._
 type GeneratedPathPatternV1 = {
   prefix: string;
   suffix: string;
-};
-```
-
-_No JSDoc summary is available yet._
-
-### generateTestArtifacts
-
-```ts
-function generateTestArtifacts(
-  input: GenerateTestArtifactsInputV1,
-): readonly GeneratedArtifactV1[];
-```
-
-_No JSDoc summary is available yet._
-
-### GenerateTestArtifactsInputV1
-
-```ts
-type GenerateTestArtifactsInputV1 = {
-  manifest: GameTopologyManifest;
 };
 ```
 
@@ -20476,7 +20580,7 @@ _No JSDoc summary is available yet._
 ### REDUCER_CONTRACT_VERSION
 
 ```ts
-const REDUCER_CONTRACT_VERSION: "0.3.0";
+const REDUCER_CONTRACT_VERSION: "0.4.0";
 ```
 
 The wire-protocol version this package implements. Bumped in lockstep with any breaking change to schema/reducer-runtime.schema.json. At bundle load time hosts refuse bundles whose major version differs.
@@ -20515,6 +20619,17 @@ function activate(options: ReplayStepOptions): UIScenarioReplayStep;
 
 _No JSDoc summary is available yet._
 
+### ActorRef
+
+```ts
+type ActorRef = {
+  readonly seat: number;
+  readonly playerId: string;
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### assertDeterministicUIScenarioFixture
 
 ```ts
@@ -20522,6 +20637,27 @@ function assertDeterministicUIScenarioFixture(
   first: UIScenarioFixture,
   second: UIScenarioFixture,
 ): void;
+```
+
+_No JSDoc summary is available yet._
+
+### assertScenario
+
+```ts
+function assertScenario<Game>(
+  options: AssertScenarioOptions<Game>,
+): Promise<void>;
+```
+
+_No JSDoc summary is available yet._
+
+### AssertScenarioOptions
+
+```ts
+type AssertScenarioOptions<Game> = {
+  readonly replay: ScenarioReplay<Game>;
+  readonly assertion: ScenarioDefinition<Game>["then"];
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -20564,43 +20700,6 @@ function assertUniqueReplayIdentity(
   step: Pick<PortableSemanticReplayStep, "stepId" | "expectedIdentity">,
   candidates: readonly UIReplayIdentityCandidate[],
 ): UIReplayIdentityCandidate;
-```
-
-_No JSDoc summary is available yet._
-
-### BaseContext
-
-```ts
-interface BaseContext<PlayerId extends string = string> {
-  game: {
-    start(): Promise<void>;
-    patchState?(
-      mutator: (state: Record<string, unknown>) => void,
-    ): Promise<void>;
-    submit(
-      playerId: PlayerId,
-      interactionId: string,
-      params?: unknown,
-    ): Promise<void>;
-  };
-  players(): readonly PlayerId[];
-  seat(index: number): PlayerId;
-}
-```
-
-_No JSDoc summary is available yet._
-
-### BaseDefinition
-
-```ts
-interface BaseDefinition {
-  id: string;
-  seed?: number;
-  players?: number;
-  setupProfileId?: string | null;
-  extends?: string;
-  setup: (ctx: BaseContext) => void | Promise<void>;
-}
 ```
 
 _No JSDoc summary is available yet._
@@ -20689,14 +20788,6 @@ function createDeterministicIdFactory(seed: string): DeterministicIdFactory;
 
 _No JSDoc summary is available yet._
 
-### CreatedTestRuntime
-
-```ts
-type CreatedTestRuntime = ...;
-```
-
-_No JSDoc summary is available yet._
-
 ### createExpectApi
 
 ```ts
@@ -20756,32 +20847,12 @@ interface CreateReducerScenarioRunnerOptions {
 
 _No JSDoc summary is available yet._
 
-### createTestRuntime
+### createScenarioAuthoring
 
 ```ts
-function createTestRuntime(
-  options: CreateTestRuntimeOptions,
-): CreatedTestRuntime;
-```
-
-_No JSDoc summary is available yet._
-
-### CreateTestRuntimeOptions
-
-```ts
-type CreateTestRuntimeOptions = {
-  baseId: string;
-  baseStates: Record<string, BaseStateArtifact>;
-  bundle: ReducerBundleLike;
-  phase?: string;
-  playerIds?: readonly string[];
-  sessionId?: string;
-  userId?: string | null;
-  gameId?: string;
-  displayNameByPlayerId?: Record<string, string>;
-  contractFingerprint?: string;
-  expectedBaseStateFingerprint?: string;
-};
+function createScenarioAuthoring<const Game extends ScenarioDefinitionGameLike>(
+  game: Game,
+): ScenarioAuthoring<Game>;
 ```
 
 _No JSDoc summary is available yet._
@@ -20805,30 +20876,6 @@ _No JSDoc summary is available yet._
 
 ```ts
 const defaultFixtureEnvironmentInit: FixtureEnvironmentInit;
-```
-
-_No JSDoc summary is available yet._
-
-### defineBase
-
-```ts
-function defineBase<const Definition extends BaseDefinition>(
-  definition: Definition,
-): Definition;
-```
-
-_No JSDoc summary is available yet._
-
-### defineScenario
-
-```ts
-function defineScenario<
-  const Runners extends readonly TestRunner[] = readonly ["reducer"],
-  const PhaseName extends string = string,
-  const StageName extends string = string,
->(
-  definition: ScenarioDefinition<Runners, PhaseName, StageName>,
-): ScenarioDefinition<Runners, PhaseName, StageName>;
 ```
 
 _No JSDoc summary is available yet._
@@ -20924,6 +20971,57 @@ type ExpectMatchers = ...;
 
 _No JSDoc summary is available yet._
 
+### exploreScenario
+
+```ts
+function exploreScenario<const Game extends ScenarioDefinitionGameLike>(
+  options: ExploreScenarioOptions<Game>,
+): Promise<ExploreScenarioResult>;
+```
+
+_No JSDoc summary is available yet._
+
+### ExploreScenarioOptions
+
+```ts
+type ExploreScenarioOptions<Game extends ScenarioDefinitionGameLike> = Omit<
+  InspectScenarioOptions<Game>,
+  "seed"
+> & {
+  readonly seed?: number;
+  readonly seedRange?: SeedRange;
+  readonly limit?: number;
+  readonly maxEvaluations?: number;
+  readonly cursor?: string;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ExploreScenarioResult
+
+```ts
+type ExploreScenarioResult = ExploreTransitionResult | ExploreSeedResult;
+```
+
+_No JSDoc summary is available yet._
+
+### ExploreSeedResult
+
+```ts
+type ExploreSeedResult = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ExploreTransitionResult
+
+```ts
+type ExploreTransitionResult = ...;
+```
+
+_No JSDoc summary is available yet._
+
 ### fill
 
 ```ts
@@ -21013,6 +21111,113 @@ function FixturePluginRuntime({
 
 _No JSDoc summary is available yet._
 
+### FlowDiagnostic
+
+```ts
+type FlowDiagnostic = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InspectAction
+
+```ts
+type InspectAction = {
+  readonly actor: ActorRef;
+  readonly interactionId: string;
+  readonly inputs: readonly InspectInteractionInput[];
+  readonly explanation: InteractionExplanationLike;
+  readonly hasConcreteCommand: true;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### InspectEntropy
+
+```ts
+type InspectEntropy = {
+  readonly seed: number;
+  readonly draws: readonly {
+    readonly index: number;
+    readonly cursorBefore: number;
+    readonly cursorAfter: number;
+    readonly operation: {
+      readonly kind: string;
+      readonly parameters: Readonly<Record<string, string | number | boolean>>;
+    };
+  }[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### InspectInteraction
+
+```ts
+type InspectInteraction = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InspectInteractionInput
+
+```ts
+type InspectInteractionInput = {
+  readonly key: string;
+  readonly kind: string;
+  readonly eligibleCount: number | "lazy";
+};
+```
+
+_No JSDoc summary is available yet._
+
+### InspectNode
+
+```ts
+type InspectNode = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### inspectScenario
+
+```ts
+function inspectScenario<const Game extends ScenarioDefinitionGameLike>(
+  options: InspectScenarioOptions<Game>,
+): Promise<InspectScenarioResult>;
+```
+
+_No JSDoc summary is available yet._
+
+### InspectScenarioOptions
+
+```ts
+type InspectScenarioOptions<Game extends ScenarioDefinitionGameLike> = {
+  readonly game: Game;
+  readonly scenario: ScenarioReplayDefinition<Game>;
+  readonly identity: ScenarioIdentity;
+  readonly perspective: PerspectiveSelector;
+  readonly at?: ScenarioCheckpoint;
+  readonly seed?: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### InspectScenarioResult
+
+```ts
+type InspectScenarioResult = {
+  readonly schemaVersion: 1;
+  readonly scenario: ScenarioIdentity;
+  readonly node: InspectNode;
+  readonly seedSource: "scenario" | "override";
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### InteractionAvailabilityLike
 
 ```ts
@@ -21032,6 +21237,7 @@ type InteractionAvailabilityLike =
   | {
       status: "blocked";
       reason: string;
+      code?: string;
     };
 ```
 
@@ -21105,6 +21311,36 @@ function parseUIScenarioFixtureBundleIndex(
 
 _No JSDoc summary is available yet._
 
+### PerspectiveRef
+
+```ts
+type PerspectiveRef =
+  | {
+      readonly kind: "player";
+      readonly actor: ActorRef;
+    }
+  | {
+      readonly kind: "spectator";
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### PerspectiveSelector
+
+```ts
+type PerspectiveSelector =
+  | {
+      readonly kind: "player";
+      readonly seat: number;
+    }
+  | {
+      readonly kind: "spectator";
+    };
+```
+
+_No JSDoc summary is available yet._
+
 ### PluginProtocolTape
 
 ```ts
@@ -21147,6 +21383,17 @@ _No JSDoc summary is available yet._
 
 ```ts
 function press(options: ReplayStepOptions): UIScenarioReplayStep;
+```
+
+_No JSDoc summary is available yet._
+
+### probeScenarioCommand
+
+```ts
+function probeScenarioCommand<Game>(options: {
+  readonly replay: ScenarioReplay<Game>;
+  readonly command: ScenarioCommandOf<Game>;
+}): Promise<ScenarioProbeResult<Game>>;
 ```
 
 _No JSDoc summary is available yet._
@@ -21291,10 +21538,354 @@ type RejectionExpectation = {
 
 _No JSDoc summary is available yet._
 
+### replayScenario
+
+```ts
+function replayScenario<const Game extends ScenarioDefinitionGameLike>(
+  options: ReplayScenarioOptions<Game>,
+): Promise<ScenarioReplay<Game>>;
+```
+
+_No JSDoc summary is available yet._
+
+### ReplayScenarioOptions
+
+```ts
+type ReplayScenarioOptions<Game> = {
+  readonly game: Game;
+  readonly scenario: ScenarioReplayDefinition<Game>;
+  readonly at?: ScenarioCheckpoint;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeParamsOfScenarioCommand
+
+```ts
+type RuntimeParamsOfScenarioCommand<
+  Game,
+  Phase extends PhaseNamesOfDefinition<Game>,
+  InteractionId extends InteractionIdOfDefinitionPhase<Game, Phase>,
+> = ClientParamsOfInteractionOfDefinition<Game, Phase, InteractionId>;
+```
+
+Production params remain available for runtime implementors and diagnostics.
+
+### ScenarioActor
+
+```ts
+type ScenarioActor = ScenarioSeatRef;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioAssertionContext
+
+```ts
+type ScenarioAssertionContext = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioAssertionError
+
+```ts
+class ScenarioAssertionError(message: string): ScenarioAssertionError;
+```
+
+A failed SDK matcher or probe expectation authored in `scenario.then`.
+
+### ScenarioAuthoring
+
+```ts
+type ScenarioAuthoring<Game> = {
+  defineScenario<const Definition extends ScenarioDefinition<Game>>(
+    definition: Definition &
+      NoExtraScenarioFields<Definition, ScenarioDefinition<Game>>,
+  ): Definition;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioCheckpoint
+
+```ts
+type ScenarioCheckpoint =
+  | {
+      readonly segment: "setup";
+      readonly completed: 0;
+    }
+  | {
+      readonly segment: "given";
+      readonly completed: number;
+    }
+  | {
+      readonly segment: "when";
+      readonly completed: number;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioCommand
+
+```ts
+type ScenarioCommand<
+  InteractionId extends string = string,
+  Params = Record<string, unknown>,
+> = {
+  readonly actor: ScenarioActor;
+  readonly interactionId: InteractionId;
+  readonly params: Params;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioCommandOf
+
+```ts
+type ScenarioCommandOf<Game> = {
+  [Phase in PhaseNamesOfDefinition<Game>]: ScenarioCommandForPhase<Game, Phase>;
+}[PhaseNamesOfDefinition<Game>];
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioCommandTraceEntry
+
+```ts
+type ScenarioCommandTraceEntry<Game> = {
+  readonly segment: ScenarioReplaySegment;
+  readonly index: number;
+  readonly command: ScenarioCommandOf<Game>;
+  readonly trace: readonly DispatchTraceSummaryEntry[];
+};
+```
+
+_No JSDoc summary is available yet._
+
 ### ScenarioDefinition
 
 ```ts
-interface ScenarioDefinition { ... }
+type ScenarioDefinition<Game> = ScenarioReplayDefinition<Game> & {
+  readonly then: (
+    context: ScenarioAssertionContext<Game>,
+  ) => void | Promise<void>;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioDefinitionValidationCode
+
+```ts
+type ScenarioDefinitionValidationCode =
+  | "INVALID_TYPE"
+  | "UNKNOWN_FIELD"
+  | "INVALID_VALUE"
+  | "UNSAFE_INTEGER"
+  | "OUT_OF_RANGE"
+  | "UNKNOWN_SETUP_PROFILE"
+  | "UNKNOWN_INTERACTION"
+  | "INVALID_COMMAND_PARAMS"
+  | "NON_SERIALIZABLE"
+  | "NORMAL_SETUP_UNAVAILABLE";
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioDefinitionValidationError
+
+```ts
+class ScenarioDefinitionValidationError(options: { readonly code: ScenarioDefinitionValidationCode; readonly path: string; readonly reason: string; }): ScenarioDefinitionValidationError;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioDiagnostics
+
+```ts
+type ScenarioDiagnostics = {
+  readonly events: readonly ReducerDiagnosticEvent[];
+  readonly lastDispatch: {
+    readonly submissionId: string;
+    readonly trace: readonly DispatchTraceSummaryEntry[];
+  } | null;
+  readonly flow: ScenarioFlowDiagnostics;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioDispatchTraceEntry
+
+```ts
+type ScenarioDispatchTraceEntry =
+  | {
+      readonly kind: "acceptedCommand";
+      readonly actor: ActorRef;
+      readonly interactionId: string;
+    }
+  | {
+      readonly kind: "appliedInstruction";
+      readonly instructionKind: string;
+    }
+  | {
+      readonly kind: "entropyDraw";
+      readonly drawIndex: number;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioFlowDiagnostics
+
+```ts
+type ScenarioFlowDiagnostics = {
+  readonly currentPhase: string | null;
+  readonly currentStage: string | null;
+  readonly activeSeats: readonly ScenarioSeatRef[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioIdentity
+
+```ts
+type ScenarioIdentity = {
+  readonly id: string;
+  readonly path: string;
+  readonly sourceDigest: Sha256Digest;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioProbeAccepted
+
+```ts
+type ScenarioProbeAccepted<Game> = {
+  readonly kind: "accepted";
+  readonly command: ScenarioCommandOf<Game>;
+  readonly checkpointDigest: string;
+  readonly trace: readonly DispatchTraceSummaryEntry[];
+  toBeAccepted(): void;
+  toRejectWith(expected: RejectionExpectation): never;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioProbeRejected
+
+```ts
+type ScenarioProbeRejected<Game> = {
+  readonly kind: "rejected";
+  readonly command: ScenarioCommandOf<Game>;
+  readonly errorCode: string;
+  readonly message?: string;
+  readonly trace: readonly DispatchTraceSummaryEntry[];
+  toBeAccepted(): never;
+  toRejectWith(expected: RejectionExpectation): void;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioProbeResult
+
+```ts
+type ScenarioProbeResult<Game> =
+  | ScenarioProbeAccepted<Game>
+  | ScenarioProbeRejected<Game>;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioReplay
+
+```ts
+type ScenarioReplay = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioReplayDefinition
+
+```ts
+type ScenarioReplayDefinition<Game> = {
+  readonly id: string;
+  readonly description?: string;
+  readonly setup: ScenarioSetup;
+  readonly given: readonly ScenarioCommandOf<Game>[];
+  readonly when: readonly ScenarioCommandOf<Game>[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioReplayError
+
+```ts
+class ScenarioReplayError(options: ScenarioReplayErrorOptions): ScenarioReplayError;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioReplayErrorOptions
+
+```ts
+type ScenarioReplayErrorOptions = {
+  readonly scenarioId: string;
+  readonly segment: ScenarioReplaySegment;
+  readonly index: number;
+  readonly interactionId: string;
+  readonly errorCode: string;
+  readonly reducerMessage?: string;
+  readonly trace?: readonly DispatchTraceSummaryEntry[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioReplaySegment
+
+```ts
+type ScenarioReplaySegment = "given" | "when";
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioSchemaOutput
+
+```ts
+type ScenarioSchemaOutput = ...;
+```
+
+Authoring projection of an input schema. Only semantic player-id leaves are replaced; ordinary strings retain their original type.
+
+### ScenarioSeatRef
+
+```ts
+type ScenarioSeatRef = {
+  readonly seat: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioSetup
+
+```ts
+type ScenarioSetup = {
+  readonly players: number;
+  readonly seed: number;
+  readonly setupProfileId?: string | null;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -21307,10 +21898,10 @@ function serializeUIScenarioFixture(fixture: UIScenarioFixture): string;
 
 _No JSDoc summary is available yet._
 
-### SharedScenarioContext
+### Sha256Digest
 
 ```ts
-interface SharedScenarioContext { ... }
+type Sha256Digest = `sha256:${string}`;
 ```
 
 _No JSDoc summary is available yet._
@@ -21350,7 +21941,7 @@ _No JSDoc summary is available yet._
 ### StaleContractArtifactKind
 
 ```ts
-type StaleContractArtifactKind = "base-states" | "session-state";
+type StaleContractArtifactKind = "session-state";
 ```
 
 _No JSDoc summary is available yet._
@@ -21363,13 +21954,15 @@ function submit(options: ReplayStepOptions): UIScenarioReplayStep;
 
 _No JSDoc summary is available yet._
 
-### TestRunner
+### toScenarioReplayDefinition
 
 ```ts
-type TestRunner = "reducer" | "remote" | "browser";
+function toScenarioReplayDefinition<Game>(
+  definition: ScenarioDefinition<Game>,
+): ScenarioReplayDefinition<Game>;
 ```
 
-_No JSDoc summary is available yet._
+Select and clone the only serializable portion of a loaded scenario.
 
 ### UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION
 
@@ -21648,12 +22241,13 @@ _No JSDoc summary is available yet._
 
 ## @dreamboard-games/sdk/testing-runtime
 
-### CandidateVerificationBase
+### CandidateVerificationAssertionDiagnostic
 
 ```ts
-type CandidateVerificationBase =
-  | BaseStateArtifact
-  | (BaseDefinition & Partial<BaseStateArtifact>);
+type CandidateVerificationAssertionDiagnostic = {
+  readonly kind: "assertion";
+  readonly message: string;
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -21661,7 +22255,46 @@ _No JSDoc summary is available yet._
 ### CandidateVerificationInput
 
 ```ts
-type CandidateVerificationInput = ...;
+type CandidateVerificationInput<Game extends ScenarioDefinitionGameLike> = {
+  /** The authored reducer game definition used by production dispatch. */
+  readonly reducer: Game;
+  readonly scenarios:
+    | Readonly<Record<string, CandidateVerificationScenario<Game>>>
+    | readonly CandidateVerificationScenario<Game>[];
+  readonly maxScenarios?: number;
+  readonly maxStepsPerScenario?: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationLimitDiagnostic
+
+```ts
+type CandidateVerificationLimitDiagnostic = {
+  readonly kind: "limit";
+  readonly message: string;
+  readonly actualSteps: number;
+  readonly maxStepsPerScenario: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### CandidateVerificationReplayDiagnostic
+
+```ts
+type CandidateVerificationReplayDiagnostic = {
+  readonly kind: "replay";
+  readonly message: string;
+  readonly scenarioId?: string;
+  readonly segment?: "given" | "when";
+  readonly index?: number;
+  readonly interactionId?: string;
+  readonly errorCode?: string;
+  readonly reducerMessage?: string;
+  readonly trace?: readonly DispatchTraceSummaryEntry[];
+};
 ```
 
 _No JSDoc summary is available yet._
@@ -21685,7 +22318,8 @@ _No JSDoc summary is available yet._
 ### CandidateVerificationScenario
 
 ```ts
-type CandidateVerificationScenario = ScenarioDefinition;
+type CandidateVerificationScenario<Game extends ScenarioDefinitionGameLike> =
+  ScenarioDefinition<Game>;
 ```
 
 _No JSDoc summary is available yet._
@@ -21696,11 +22330,48 @@ _No JSDoc summary is available yet._
 type CandidateVerificationScenarioResult = {
   readonly id: string;
   readonly status: "passed" | "failed";
-  readonly diagnostic?: {
-    readonly kind: "assertion";
-    readonly message: string;
-  };
+  readonly diagnostic?:
+    | CandidateVerificationReplayDiagnostic
+    | CandidateVerificationAssertionDiagnostic
+    | CandidateVerificationLimitDiagnostic;
 };
+```
+
+_No JSDoc summary is available yet._
+
+### digestScenarioProjection
+
+```ts
+function digestScenarioProjection(
+  projection: ScenarioProjectionParity,
+): Sha256Digest;
+```
+
+_No JSDoc summary is available yet._
+
+### materializeScenarioRuntimeCheckpoint
+
+```ts
+function materializeScenarioRuntimeCheckpoint<
+  const Game extends ScenarioDefinitionGameLike,
+>(
+  options: ReplayScenarioOptions<Game>,
+): Promise<ScenarioRuntimeCheckpointMaterialization>;
+```
+
+Trusted tool-side materialization for CLI, Workbench, and backend adapters. The returned reducer snapshot must never cross a player/browser boundary.
+
+### resolveScenarioCommandParams
+
+```ts
+function resolveScenarioCommandParams(options: {
+  readonly game: GameLike;
+  readonly phase: string;
+  readonly interactionId: string;
+  readonly params: unknown;
+  readonly playerIds: readonly string[];
+  readonly path: string;
+}): Record<string, unknown>;
 ```
 
 _No JSDoc summary is available yet._
@@ -21708,9 +22379,241 @@ _No JSDoc summary is available yet._
 ### runCandidateVerification
 
 ```ts
-function runCandidateVerification(
-  input: CandidateVerificationInput,
+function runCandidateVerification<
+  const Game extends ScenarioDefinitionGameLike,
+>(
+  input: CandidateVerificationInput<Game>,
 ): Promise<CandidateVerificationResult>;
+```
+
+_No JSDoc summary is available yet._
+
+### scenarioProjectionInputMetadata
+
+```ts
+function scenarioProjectionInputMetadata(
+  input: ScenarioProjectionInteractionInput,
+): {
+  readonly key: string;
+  readonly kind: string;
+  readonly eligibleCount: number | "lazy";
+};
+```
+
+Shared SDK normalization for inspect DTOs and backend parity projections.
+
+### ScenarioProjectionInteractionInput
+
+```ts
+type ScenarioProjectionInteractionInput = {
+  readonly key: string;
+  readonly kind: string;
+  readonly domain: unknown;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioProjectionParity
+
+```ts
+type ScenarioProjectionParity = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### scenarioProjectionParityFromInspectNode
+
+```ts
+function scenarioProjectionParityFromInspectNode(
+  node: InspectNode,
+): ScenarioProjectionParity;
+```
+
+Canonical local/backend parity authority. It deliberately excludes raw reducer public/private state, interaction explanations, entropy, and trace: backend gameplay frames expose the selected projection, not reducer state.
+
+### ScenarioRuntimeCheckpointMaterialization
+
+```ts
+type ScenarioRuntimeCheckpointMaterialization = {
+  readonly checkpoint: ScenarioCheckpoint;
+  readonly checkpointDigest: string;
+  readonly playerIds: readonly string[];
+  readonly state: wire.ReducerSessionState;
+};
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/testing-compiler
+
+### CompiledScenarioReplay
+
+```ts
+type CompiledScenarioReplay = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### compileScenarioReplay
+
+```ts
+function compileScenarioReplay(
+  options: CompileScenarioReplayOptions,
+): Promise<CompiledScenarioReplay>;
+```
+
+Compile one authored scenario into the trusted, serializable replay DTO used by dev-host, Workbench, demo, and performance adapters.
+
+### CompileScenarioReplayOptions
+
+```ts
+type CompileScenarioReplayOptions = {
+  readonly scenarioPath: string;
+  readonly at?: ScenarioCheckpoint;
+};
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/authoring-compiler
+
+### MaterializedWorkspaceReceipt
+
+```ts
+type MaterializedWorkspaceReceipt = {
+  readonly schemaVersion: 1;
+  readonly projectRoot: string;
+  readonly authoritativeFiles: number;
+  readonly seededFiles: number;
+  readonly artifacts: readonly {
+    readonly path: string;
+    readonly ownership: "authoritative";
+    readonly sha256: `sha256:${string}`;
+  }[];
+  readonly digest: `sha256:${string}`;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### materializeWorkspace
+
+```ts
+function materializeWorkspace(
+  options: MaterializeWorkspaceOptions,
+): Promise<MaterializedWorkspaceReceipt>;
+```
+
+Materialize SDK-owned workspace contracts from authored manifest source. Authoritative files are always replaced. Seed files are untouched unless a scaffolding caller explicitly opts in. No test state or projection artifact is emitted.
+
+### MaterializeWorkspaceOptions
+
+```ts
+type MaterializeWorkspaceOptions = {
+  readonly manifestPath: string;
+  readonly projectRoot?: string;
+  /** Scaffolding-only. Existing build/test paths leave seed files untouched. */
+  readonly writeMissingSeeds?: boolean;
+};
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/reference-game-compiler
+
+### CANONICAL_REFERENCE_GAME_IDS
+
+```ts
+const CANONICAL_REFERENCE_GAME_IDS: readonly string[];
+```
+
+_No JSDoc summary is available yet._
+
+### classifyReferenceGameSourcePath
+
+```ts
+function classifyReferenceGameSourcePath(
+  repositoryPath: string,
+): ReferenceGameSourcePathClass;
+```
+
+_No JSDoc summary is available yet._
+
+### collectReferenceGameSourceManifest
+
+```ts
+function collectReferenceGameSourceManifest(options: {
+  readonly sourceRoot: string;
+  readonly provenance: ReferenceGameSourceProvenance;
+}): Promise<ReferenceGameSourceManifest>;
+```
+
+_No JSDoc summary is available yet._
+
+### collectReferenceGameSourceObjects
+
+```ts
+function collectReferenceGameSourceObjects(options: {
+  readonly referenceGamesRoot: string;
+  readonly sourceRoot: string;
+}): Promise<
+  Array<{
+    readonly path: string;
+    readonly sha256: string;
+    readonly byteLength: number;
+  }>
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### isReferenceGameSourceObject
+
+```ts
+function isReferenceGameSourceObject(repositoryPath: string): boolean;
+```
+
+_No JSDoc summary is available yet._
+
+### REFERENCE_GAME_SOURCE_INVENTORY_POLICY
+
+```ts
+const REFERENCE_GAME_SOURCE_INVENTORY_POLICY: ReferenceGameSourceInventoryPolicy;
+```
+
+_No JSDoc summary is available yet._
+
+### referenceGamePathIdentity
+
+```ts
+function referenceGamePathIdentity(
+  repositoryPath: string,
+): { readonly gameId: string; readonly relativePath: string } | null;
+```
+
+_No JSDoc summary is available yet._
+
+### ReferenceGameSourcePathClass
+
+```ts
+type ReferenceGameSourcePathClass =
+  | "included"
+  | "workspace-generated"
+  | "test-generated"
+  | "test-base"
+  | "obsolete-screenshot"
+  | "derived-output";
+```
+
+_No JSDoc summary is available yet._
+
+### shouldDescendIntoReferenceGameDirectory
+
+```ts
+function shouldDescendIntoReferenceGameDirectory(
+  repositoryPath: string,
+): boolean;
 ```
 
 _No JSDoc summary is available yet._
@@ -22655,6 +23558,7 @@ _No JSDoc summary is available yet._
 ```ts
 const gameplayBrowserInteractionSurface: BrowserInteractionSurfaceDefinition<
   "gameplay",
+  | "fill"
   | "arm"
   | "reveal"
   | "invoke"
@@ -22662,7 +23566,6 @@ const gameplayBrowserInteractionSurface: BrowserInteractionSurfaceDefinition<
   | "toggle"
   | "increment"
   | "decrement"
-  | "fill"
   | "submit",
   string
 >;

@@ -10,11 +10,13 @@ import {
   studio,
   studioVisit,
 } from "../../cards";
+import { shuffleDeckForDraw, shuffleOpeningDeck } from "../../effects/deck";
 import {
-  shuffleDeckForDraw,
-  shuffleOpeningDeck,
-} from "../../effects/deck";
-import { buyCard, endActionStep, endTurn, playInspiration } from "./interactions";
+  buyCard,
+  endActionStep,
+  endTurn,
+  playInspiration,
+} from "./interactions";
 import { FRESH_TURN } from "./state";
 
 export const playerTurn = defineStepPhase<GameContract>()({
