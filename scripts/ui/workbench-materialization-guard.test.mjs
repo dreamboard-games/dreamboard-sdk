@@ -7,7 +7,10 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { replaceDirectoryAtomically } from "./workbench-materialization-guard.mjs";
-import { releaseProofPreparationSteps } from "./create-ui-release-proof.mjs";
+import {
+  releaseParityProofMode,
+  releaseProofPreparationSteps,
+} from "./create-ui-release-proof.mjs";
 import {
   createMeasuredObservation,
   paritySourceScenarioArgs,
@@ -213,4 +216,16 @@ test("assert-only parity checkpoints omit runner sentinels", () => {
   });
   assert.equal(observation.checkpoints[0].interactionId, undefined);
   assert.equal(observation.checkpoints[0].submissionDigest, digest);
+});
+
+test("release parity requires real-host proof only when supplied", () => {
+  assert.equal(releaseParityProofMode({}, {}), "source");
+  assert.equal(
+    releaseParityProofMode({}, { UI_REAL_HOST_PARITY_RECEIPT: "receipt.json" }),
+    "real-host",
+  );
+  assert.equal(
+    releaseParityProofMode({ "real-host-parity-receipt": "receipt.json" }, {}),
+    "real-host",
+  );
 });

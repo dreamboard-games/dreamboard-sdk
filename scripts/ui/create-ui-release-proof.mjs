@@ -445,7 +445,134 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     );
   }
   evidencePaths.push(parityInputPath);
-  return { ...result, evidencePaths };
+  return { ...result, evidencePaths, realHost: true };
+}
+
+export function releaseParityProofMode(options, env = process.env) {
+  return options["real-host-parity-receipt"] ||
+    env.UI_REAL_HOST_PARITY_RECEIPT ||
+    env.DREAMBOARD_INTERNAL_REPO
+    ? "real-host"
+    : "source";
+}
+
+async function readSourceParityReceipt(expected, runRequired) {
+  await runRequired("node", ["scripts/ui/run-ui-parity.mjs", "--skip-build"]);
+  const result = await readReceipt(
+    await requireLatestReceipt("artifacts/ui-parity"),
+    "Source Workbench parity",
+  );
+  const receipt = result.receipt;
+  if (
+    receipt.schemaVersion !== 1 ||
+    receipt.kind !== "dreamboard-ui-real-host-parity" ||
+    receipt.mode !== "real-host-parity" ||
+    receipt.source?.result !== "passed" ||
+    receipt.internal?.result !== "skipped" ||
+    receipt.realHostExecutor !== false
+  ) {
+    throw new Error(
+      `${path.relative(root, result.path)} is not a passing source-Workbench parity receipt.`,
+    );
+  }
+  assertDigest(
+    "Source parity SDK tarball",
+    receipt.sdkTarballSha256,
+    expected.sdkTarballSha256,
+  );
+  assertDigest(
+    "Source parity fixture bundle",
+    receipt.fixtureBundleSha256,
+    expected.fixtureBundleSha256,
+  );
+  const scenarioIds = Array.isArray(receipt.scenarios)
+    ? receipt.scenarios.map((scenario) => scenario?.id)
+    : [];
+  if (
+    !sameStringArray(scenarioIds, requiredParityScenarioIds) ||
+    receipt.source.comparisons?.length !== requiredParityScenarioIds.length
+  ) {
+    throw new Error(
+      `Source parity receipt must contain passing comparisons for: ${requiredParityScenarioIds.join(", ")}.`,
+    );
+  }
+  if (typeof receipt.input !== "string") {
+    throw new Error("Source parity receipt is missing its input contract.");
+  }
+  const parityInputPath = path.resolve(root, receipt.input);
+  const parityInput = JSON.parse(await readFile(parityInputPath, "utf8"));
+  assertDigest(
+    "Source parity input SDK tarball",
+    parityInput.sdk?.sha256,
+    expected.sdkTarballSha256,
+  );
+  assertDigest(
+    "Source parity input fixture bundle",
+    parityInput.fixtureBundle?.sha256,
+    expected.fixtureBundleSha256,
+  );
+
+  const evidencePaths = [parityInputPath];
+  for (const scenario of receipt.scenarios) {
+    const source = receipt.source.comparisons.find(
+      (candidate) => candidate.scenarioId === scenario.id,
+    );
+    const expectation = parityInput.observations?.find(
+      (candidate) => candidate.scenarioId === scenario.id,
+    )?.expectation;
+    if (
+      !source ||
+      source.status !== "passed" ||
+      typeof source.actual !== "string" ||
+      typeof source.comparison !== "string" ||
+      typeof source.evidence !== "string" ||
+      typeof expectation !== "string"
+    ) {
+      throw new Error(
+        `Source parity receipt is missing evidence for '${scenario.id}'.`,
+      );
+    }
+    const expectationPath = path.resolve(root, expectation);
+    const sourcePath = path.resolve(root, source.actual);
+    const comparisonPath = path.resolve(root, source.comparison);
+    const sourceEvidencePath = path.resolve(root, source.evidence);
+    if (expectationPath === sourcePath) {
+      throw new Error(
+        `Source parity for '${scenario.id}' must use independent expectation and measured files.`,
+      );
+    }
+    const [expectationObservation, sourceObservation, comparison] =
+      await Promise.all(
+        [expectationPath, sourcePath, comparisonPath].map(async (filePath) =>
+          JSON.parse(await readFile(filePath, "utf8")),
+        ),
+      );
+    if (
+      expectationObservation.provenance?.kind !== "fixture-expectation" ||
+      sourceObservation.provenance?.kind !== "source-workbench" ||
+      sourceObservation.provenance?.evidence !== source.evidence ||
+      comparison.ok !== true
+    ) {
+      throw new Error(
+        `Source parity for '${scenario.id}' is missing independent measured provenance.`,
+      );
+    }
+    await stat(sourceEvidencePath);
+    await runRequired("node", [
+      "scripts/ui/compare-ui-parity.mjs",
+      "--expected",
+      expectation,
+      "--actual",
+      source.actual,
+    ]);
+    evidencePaths.push(
+      expectationPath,
+      sourcePath,
+      comparisonPath,
+      sourceEvidencePath,
+    );
+  }
+  return { ...result, evidencePaths, realHost: false };
 }
 
 function assertStepPassed(step) {
@@ -500,11 +627,10 @@ async function main() {
   const sdkTarballSha256 = `sha256:${await sha256File(sdkTarball)}`;
   const fixtureBundleSha256 = `sha256:${await sha256File(fixtureIndexPath)}`;
   const expectedDigests = { sdkTarballSha256, fixtureBundleSha256 };
-  const realHostParity = await readRealHostParityReceipt(
-    options,
-    expectedDigests,
-    runRequired,
-  );
+  const parityProof =
+    releaseParityProofMode(options) === "real-host"
+      ? await readRealHostParityReceipt(options, expectedDigests, runRequired)
+      : await readSourceParityReceipt(expectedDigests, runRequired);
   const deviceCanary = await readDeviceCanaryReceipt(options, expectedDigests);
   await writeTranscript(artifactRoot, steps);
 
@@ -535,8 +661,8 @@ async function main() {
     await requireLatestReceipt("artifacts/ui-visual"),
     await requireLatestReceipt("artifacts/ui"),
     path.join(buildRoot, "packed-consumer-receipt.json"),
-    realHostParity.path,
-    ...realHostParity.evidencePaths,
+    parityProof.path,
+    ...parityProof.evidencePaths,
     ...(deviceCanary ? [deviceCanary.path, ...deviceCanary.evidencePaths] : []),
   ];
   const evidence = await Promise.all(
@@ -563,10 +689,11 @@ async function main() {
       storybookVisuals: "passed",
       workbenchMatrix: "passed",
       packedReferenceConsumers: "passed",
-      realHostParity: "passed",
+      runtimeParity: "passed",
+      realHostParity: parityProof.realHost ? "passed" : "not-required",
       realDeviceCanary: deviceCanary ? "passed" : "not-required",
     },
-    parityScenarios: realHostParity.receipt.scenarios.map(
+    parityScenarios: parityProof.receipt.scenarios.map(
       (scenario) => scenario.id,
     ),
     deviceCanary: deviceCanary
