@@ -1,6 +1,7 @@
 # Reference Game Rule Conformance And Agent Testing Hard Cut
 
-Status: implementation in progress (Phases 00-06 complete; Phase 07 in progress)
+Status: blocked in Phase 07 public authoring release proof (local implementation
+and proof complete)
 
 Planned at SDK commit: `05509e395bb5b6ec28cac4b7724a649ea9e56988`
 
@@ -45,7 +46,7 @@ after every consumer generates or materializes them on demand.
 
 Keep each game's `pnpm-lock.yaml`. A reference game is an isolated external
 consumer of the public SDK, and its lockfile is part of package provenance and
-internal admission. The nine lockfiles account for only 12,323 lines, or 4.9%
+internal admission. The nine lockfiles account for only 13,681 lines, or 5.5%
 of the current game roots; they are not the source-size problem.
 
 Treat the approved rules as authority. Existing implementations and tests are
@@ -89,7 +90,7 @@ derived material checked in beside authored source:
 | Authored source, docs, and tests      |     492 |          36,378 | Keep and rewrite against `rule.md`     |
 | Generated workspace files             |      76 |          92,907 | Generate on demand; never track        |
 | Generated test states and projections |      76 |         103,911 | Delete; replay scenarios instead       |
-| Per-game lockfiles                    |       9 |          12,323 | Keep as isolated-consumer provenance   |
+| Per-game lockfiles                    |       9 |          13,681 | Keep as isolated-consumer provenance   |
 | Workbench fixtures outside game roots | derived |          26,872 | Generate/cache/upload; never track     |
 | Generated Workbench catalog           |       1 |             597 | Generate during build/dev; never track |
 | Old Mosaic screenshots                |      11 | binary, 1.17 MB | Delete; capture named scenarios in CI  |
@@ -472,10 +473,10 @@ structural budgets:
   authored tests, UI, and all nine lockfiles, unless a reviewed receipt proves
   why authored gameplay—not generated duplication—requires an increase.
 
-The measured stable footprint after deleting current derived material is about
-48,701 lines including lockfiles, before conformance rewrites. The 75,000-line
-ceiling leaves room for complete games while preventing a return to a
-quarter-million-line teaching corpus.
+The pre-rewrite projection was about 48,701 lines including lockfiles. The
+integrated Phase 07 tree is 47,475 lines across 526 tracked game-root paths,
+including 13,681 lock lines. The 75,000-line ceiling leaves room for complete
+games while preventing a return to a quarter-million-line teaching corpus.
 
 ## Hard-Cut Invariants
 

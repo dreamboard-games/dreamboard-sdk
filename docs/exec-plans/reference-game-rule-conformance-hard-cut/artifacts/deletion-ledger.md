@@ -58,6 +58,39 @@ This evidence does not advance the rows below to `deleted`. The ordinary
 internal archive admission/compiler comparison from this committed candidate
 and the identical integration tree remains the authorization boundary.
 
+## Integrated Phase 07 State
+
+The integration commit `2288f89` applied the reviewed 229-path deletion to the
+SDK branch. Ordinary internal admission subsequently consumed SDK revision
+`006467423597b5ef9d883201013b2ca90bf1b5bd` through its own Git archive,
+materialized the exact public SDK `0.4.0-alpha.9`, compiled all nine games, and
+published the local release
+`sha256:54f6d64aea4181560db0fadf5288cfaae659837ea74941a83420e156837ce3b0`.
+
+Strict final inventory:
+
+| Category                                          | Paths |  Lines |     Bytes |
+| ------------------------------------------------- | ----: | -----: | --------: |
+| All tracked reference-game source                 |   526 | 47,475 | 1,612,766 |
+| Authored source                                   |   517 | 33,794 | 1,099,273 |
+| Retained lockfiles                                |     9 | 13,681 |   513,493 |
+| Forbidden generated/base/fixture/screenshot paths |     0 |      0 |         0 |
+
+The inventory digest is
+`sha256:51f68cd46857ed906b579cd23682e777755de1412b6302c6e89b3239014dcf2b`.
+The integrated deletion advances these families to `deleted`: checked
+workspace-codegen output, checked generated test state/projections, authored
+base files, checked Workbench reference fixtures/catalog, and obsolete Mosaic
+screenshots. Internal commit `c33931f94` also advances the private
+scenario-author package, its root command/workspace entry, fixture adapters,
+and private perf regeneration path to `deleted`; the successor hard-cut guard,
+298 perf tests, and the SDK-compiled Stormtrail live replay all passed.
+
+The phase itself remains blocked rather than complete because the public
+authoring compatibility tuple cannot be made immutable from the already-used
+CLI `0.1.30-alpha.43` and dev-host `0.1.30-alpha.27` versions. That release
+blocker does not roll back the deletion states above.
+
 ## Framework Base And Snapshot Surface
 
 | Deletion                                                                                                                    | Current location                                                | Replacement                                                                                        | Owner | Downstream consumers                                                            | Clean-clone proof                                                                           | Final guard                                                                                             | State                   |
