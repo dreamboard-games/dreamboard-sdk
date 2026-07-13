@@ -158,12 +158,12 @@ export function isValidExchange(
 }
 
 export function adjacentCellIds(cellId: SpaceId): readonly SpaceId[] {
-  const match = /^cell-r([01])-c([012])$/.exec(cellId);
+  const match = cellId.match(/^cell-r([01])-c([012])$/);
   if (!match) return [];
   const row = Number(match[1]);
   const col = Number(match[2]);
   return CELL_IDS.filter((candidate) => {
-    const candidateMatch = /^cell-r([01])-c([012])$/.exec(candidate)!;
+    const candidateMatch = candidate.match(/^cell-r([01])-c([012])$/)!;
     const candidateRow = Number(candidateMatch[1]);
     const candidateCol = Number(candidateMatch[2]);
     return Math.abs(candidateRow - row) + Math.abs(candidateCol - col) === 1;
