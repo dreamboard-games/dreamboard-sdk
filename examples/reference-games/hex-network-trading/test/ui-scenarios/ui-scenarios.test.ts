@@ -33,5 +33,5 @@ test("Stormtrail UI checkpoints all derive from ordinary legal behavior scenario
   );
   assert.equal(discard.viewer.playerId, "player-2");
   assert.equal(pendingTrade.viewer.playerId, "player-1");
-  assert.equal(terminal.at.segment, "when");
+  assert.equal(terminal.at, "game-over");
 });

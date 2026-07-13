@@ -23,7 +23,7 @@ test("River Guild UI uses the generated contract for river choices and public pr
   assert.doesNotMatch(routesSource, /claimId/);
 });
 
-test("River Guild UI checkpoints reference one source scenario by path and numeric prefix", async () => {
+test("River Guild UI checkpoints reference one source scenario by named checkpoint", async () => {
   const sources = await Promise.all(
     [
       "river.opening.mobile.scenario.ts",
@@ -40,10 +40,7 @@ test("River Guild UI checkpoints reference one source scenario by path and numer
       source,
       /behaviorScenario: "test\/scenarios\/complete-game\.scenario\.ts"/,
     );
-    assert.match(
-      source,
-      /at: \{ segment: "(?:setup|given|when)", completed: \d+ \}/,
-    );
+    assert.match(source, /at: "[a-z0-9]+(?:-[a-z0-9]+)*"/);
     assert.doesNotMatch(source, /import behaviorScenario/);
   }
 });

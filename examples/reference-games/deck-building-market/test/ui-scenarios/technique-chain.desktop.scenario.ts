@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.technique-chain.desktop",
   title: "Sketchbook: Studio chains into Brainstorm",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 62 },
+  at: "technique-chain",
   contracts: ["Card", "Hand", "InteractionSubmit", "Panel"],
   capabilities: ["action-chain", "card-draw", "public-in-play"],
   sourceFiles: [

@@ -1,29 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "worker-placement-tableau",
   "displayName": "Mosaic Workshop",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/worker-occupancy.scenario.ts",
-      "test/scenarios/turn-and-cleanup.scenario.ts",
-      "test/scenarios/action-spaces.scenario.ts",
-      "test/scenarios/crafting-and-domains.scenario.ts",
-      "test/scenarios/scoring-and-outcome-win.scenario.ts",
-      "test/scenarios/scoring-and-outcome-draw.scenario.ts",
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/complete-game-draw.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/mosaic.initial.mobile.scenario.ts",
-      "test/ui-scenarios/mosaic.first-craft.desktop.scenario.ts",
-      "test/ui-scenarios/mosaic.season-transition.desktop.scenario.ts",
-      "test/ui-scenarios/mosaic.developed.mobile.scenario.ts",
-      "test/ui-scenarios/mosaic.contention.desktop.scenario.ts",
-      "test/ui-scenarios/mosaic.outcome.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

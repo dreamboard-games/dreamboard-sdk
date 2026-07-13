@@ -1,36 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "multiplayer-ranking-and-ties",
   "displayName": "Harbor Fair",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/supported-player-count-2.scenario.ts",
-      "test/scenarios/supported-player-count-3.scenario.ts",
-      "test/scenarios/supported-player-count-4.scenario.ts",
-      "test/scenarios/refill-and-cancellation-initial-first-storm.scenario.ts",
-      "test/scenarios/refill-and-cancellation-initial-second-storm.scenario.ts",
-      "test/scenarios/refill-and-cancellation-ordinary-first-storm.scenario.ts",
-      "test/scenarios/refill-and-cancellation-final-refill.scenario.ts",
-      "test/scenarios/draft-actionability.scenario.ts",
-      "test/scenarios/ranking-and-ties-unique-winner.scenario.ts",
-      "test/scenarios/ranking-and-ties-guild-set.scenario.ts",
-      "test/scenarios/ranking-and-ties-coin.scenario.ts",
-      "test/scenarios/ranking-and-ties-true-first.scenario.ts",
-      "test/scenarios/ranking-and-ties-lower-place.scenario.ts",
-      "test/scenarios/scoreless-cancellation.scenario.ts",
-      "test/scenarios/projection-privacy.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/opening.desktop.scenario.ts",
-      "test/ui-scenarios/early-refill.mobile.scenario.ts",
-      "test/ui-scenarios/growing-rows.desktop.scenario.ts",
-      "test/ui-scenarios/terminal.mobile.scenario.ts",
-      "test/ui-scenarios/cancellation.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

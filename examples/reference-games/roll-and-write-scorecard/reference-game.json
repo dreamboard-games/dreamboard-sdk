@@ -1,30 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "roll-and-write-scorecard",
   "displayName": "Cloudline Survey",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/solo-complete-game.scenario.ts",
-      "test/scenarios/tied-complete-game.scenario.ts",
-      "test/scenarios/seat-order-one.scenario.ts",
-      "test/scenarios/seat-order-two.scenario.ts",
-      "test/scenarios/seat-order-three.scenario.ts",
-      "test/scenarios/seat-order-four.scenario.ts",
-      "test/scenarios/multiple-matches.scenario.ts",
-      "test/scenarios/one-match.scenario.ts",
-      "test/scenarios/no-match-fallback.scenario.ts",
-      "test/scenarios/legality-probes.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/mark-cell.desktop.scenario.ts",
-      "test/ui-scenarios/mark-cell.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.initial.mobile.scenario.ts",
-      "test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

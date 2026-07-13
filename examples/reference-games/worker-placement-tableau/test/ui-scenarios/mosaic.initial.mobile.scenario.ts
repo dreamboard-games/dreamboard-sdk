@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.initial.mobile",
   title: "Mosaic Workshop: opening supplies",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

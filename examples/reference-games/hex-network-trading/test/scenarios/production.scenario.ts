@@ -6,6 +6,9 @@ export default defineScenario({
   description:
     "A legal seeded replay exercises every numbered terrain, all four no-token totals, and Bandits suppression without injected dice.",
   setup: { players: 3, seed: 1 },
+  checkpoints: {
+    produced: { segment: "given", completed: 7 },
+  },
   given: PRODUCTION_COMMANDS.slice(0, -1),
   when: PRODUCTION_COMMANDS.slice(-1),
   then: ({ expect, state }) => {

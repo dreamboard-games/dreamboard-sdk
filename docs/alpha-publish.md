@@ -1,7 +1,6 @@
 # Alpha Publish Checklist
 
-Use this checklist for the first manual alpha publish of
-`@dreamboard-games/sdk`.
+Use this checklist to publish an alpha release of `@dreamboard-games/sdk`.
 
 ## Package
 
@@ -114,10 +113,10 @@ git add examples/reference-games
 git commit -m "Repin reference games to SDK $SDK_VERSION"
 ```
 
-## Trusted Publishing Follow-Up
+## Trusted Publishing Setup
 
-After the package exists on npm, configure Trusted Publishing for the GitHub
-Actions workflow:
+For a new package, or when restoring its trust configuration, configure Trusted
+Publishing for the GitHub Actions workflow after the package exists on npm:
 
 ```sh
 npm trust github @dreamboard-games/sdk \

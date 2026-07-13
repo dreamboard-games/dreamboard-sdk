@@ -7,13 +7,12 @@ import opening from "./opening.desktop.scenario.ts";
 import terminal from "./terminal.mobile.scenario.ts";
 
 test("UI evidence derives opening, refill, growing, ranked, and cancellation checkpoints from legal replays", () => {
-  assert.deepEqual(opening.at, { segment: "setup", completed: 0 });
-  assert.deepEqual(growingRows.at, { segment: "given", completed: 12 });
-  assert.deepEqual(terminal.at, { segment: "when", completed: 1 });
+  assert.equal(opening.at, "opening");
+  assert.equal(growingRows.at, "growing-rows");
+  assert.equal(terminal.at, "game-over");
   assert.equal(earlyRefill.replay[0]?.interactionId, "draftStall");
   assert.equal(
     cancellation.behaviorScenario,
     "../scenarios/refill-and-cancellation-final-refill.scenario.ts",
   );
-  assert.deepEqual(earlyRefill.environment.input, ["touch", "keyboard"]);
 });

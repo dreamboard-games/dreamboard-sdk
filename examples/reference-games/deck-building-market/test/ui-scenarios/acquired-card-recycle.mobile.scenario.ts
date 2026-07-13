@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.acquired-card-recycle.mobile",
   title: "Sketchbook: acquired Brainstorm returns in a later hand",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 26 },
+  at: "recycled-card",
   contracts: ["Card", "Hand", "Panel", "PluginRuntime"],
   capabilities: ["growing-deck", "private-hand", "seeded-reshuffle", "touch"],
   sourceFiles: [

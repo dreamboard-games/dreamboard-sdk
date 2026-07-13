@@ -2,7 +2,7 @@ export const scenario = {
   id: "multiplayer-ranking-and-ties.terminal.mobile",
   title: "Harbor Fair: ranked terminal evidence",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 1 },
+  at: "game-over",
   contracts: ["Outcome", "Panel", "PlayerScore", "Table"],
   capabilities: ["standings-table", "tie-break-evidence", "competition-ranks"],
   sourceFiles: [

@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.first-craft.desktop",
   title: "Mosaic Workshop: first crafted frame",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 3 },
+  at: "first-craft",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

@@ -4,6 +4,7 @@ import path from "node:path";
 
 import {
   REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION,
+  parseReferenceGameManifestV4,
   parseReferenceGameSourceManifest,
   type ReferenceGameSourceManifest,
   type ReferenceGameSourceProvenance,
@@ -46,8 +47,8 @@ export async function collectReferenceGameSourceManifest(options: {
   const games = await Promise.all(
     gameIds.map(async (gameId) => {
       const gameRoot = path.join(referenceGamesRoot, gameId);
-      const metadata = await readJson(
-        path.join(gameRoot, "reference-game.json"),
+      const metadata = parseReferenceGameManifestV4(
+        await readJson(path.join(gameRoot, "reference-game.json")),
       );
       return buildGameEntry({
         gameId,
@@ -121,7 +122,7 @@ async function buildGameEntry(options: {
   readonly gameId: string;
   readonly gameRoot: string;
   readonly sourceRoot: string;
-  readonly metadata: Record<string, unknown>;
+  readonly metadata: ReturnType<typeof parseReferenceGameManifestV4>;
   readonly objects: readonly {
     readonly path: string;
     readonly sha256: string;
@@ -129,7 +130,7 @@ async function buildGameEntry(options: {
   }[];
 }) {
   const root = `examples/reference-games/${options.gameId}`;
-  const workspace = objectValue(options.metadata.workspace);
+  const workspace = options.metadata.workspace;
   const packageJsonPath = path.join(options.gameRoot, "package.json");
   const lockfilePath = path.join(options.gameRoot, "pnpm-lock.yaml");
   const packageJson = await readJson(packageJsonPath);
@@ -137,11 +138,11 @@ async function buildGameEntry(options: {
   if (!sdkSpecifier) {
     throw new Error(`${root}/package.json must declare @dreamboard-games/sdk.`);
   }
-  const mechanics = stringArray(options.metadata.mechanics);
+  const mechanics = options.metadata.mechanics;
   if (mechanics.length === 0) {
     throw new Error(`${root}/reference-game.json must declare mechanics.`);
   }
-  const teaching = objectValue(options.metadata.teaching);
+  const teaching = options.metadata.teaching;
   const entry = {
     id: options.gameId,
     root,
@@ -150,30 +151,30 @@ async function buildGameEntry(options: {
     lockfileSha256: `sha256:${await sha256File(lockfilePath)}`,
     sdkSpecifier,
     manifest: await firstExistingRelative(options.gameRoot, [
-      stringValue(workspace.manifest),
+      workspace.manifest,
       "manifest.ts",
       "reference-game.json",
     ]),
     reducer: await firstExistingRelative(options.gameRoot, [
-      stringValue(workspace.reducer),
+      workspace.reducer,
       "app/game.ts",
     ]),
     ui: await firstExistingRelative(options.gameRoot, [
-      stringValue(workspace.ui),
+      workspace.ui,
       "ui/index.tsx",
     ]),
-    behaviorScenarios:
-      stringArray(workspace.behaviorScenarios).length > 0
-        ? stringArray(workspace.behaviorScenarios)
-        : await collectScenarioEntries(options.gameRoot, ["test/scenarios"]),
-    uiScenarios:
-      stringArray(workspace.uiScenarios).length > 0
-        ? stringArray(workspace.uiScenarios)
-        : await collectScenarioEntries(options.gameRoot, ["test/ui-scenarios"]),
+    behaviorScenarios: await collectScenarioEntries(
+      options.gameRoot,
+      "test/scenarios",
+    ),
+    uiScenarios: await collectScenarioEntries(
+      options.gameRoot,
+      "test/ui-scenarios",
+    ),
     mechanics,
     readFirst:
-      stringArray(teaching.readFirst).length > 0
-        ? stringArray(teaching.readFirst)
+      teaching.readFirst.length > 0
+        ? teaching.readFirst
         : await deriveReadFirst(options.gameRoot, options.sourceRoot),
   };
   assertGameEntryPathsAreSourceObjects(entry, options.objects);
@@ -285,20 +286,51 @@ async function firstExistingRelative(root: string, candidates: unknown[]) {
   throw new Error(`${root} must provide one of: ${paths.join(", ")}`);
 }
 
-async function collectScenarioEntries(gameRoot: string, directories: string[]) {
-  for (const directory of directories) {
-    const absolute = path.join(gameRoot, directory);
-    if (!(await isDirectory(absolute))) continue;
-    const files = (await walkFiles(absolute))
-      .filter(
-        (relative) =>
-          relative.endsWith(".scenario.ts") ||
-          relative.endsWith(".scenario.mjs"),
-      )
-      .map((relative) => path.posix.join(directory, toPosix(relative)));
-    if (files.length > 0) return files;
+async function collectScenarioEntries(gameRoot: string, directory: string) {
+  const absolute = path.join(gameRoot, directory);
+  if (!(await isDirectory(absolute))) {
+    throw new Error(`${gameRoot} must provide ${directory}.`);
   }
-  throw new Error(`${gameRoot} must provide at least one scenario entry.`);
+  const files: string[] = [];
+  const rejectedDirectories = new Set([
+    "build",
+    "dist",
+    "generated",
+    "node_modules",
+  ]);
+  async function visit(current: string): Promise<void> {
+    const entries = await readdir(current, { withFileTypes: true });
+    for (const entry of entries.sort((left, right) =>
+      compareReferenceGameCanonicalStrings(left.name, right.name),
+    )) {
+      const entryPath = path.join(current, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(`${entryPath} must not be a symbolic link.`);
+      }
+      if (entry.isDirectory()) {
+        if (rejectedDirectories.has(entry.name)) {
+          throw new Error(
+            `${entryPath} is not an authored scenario directory.`,
+          );
+        }
+        await visit(entryPath);
+      } else if (entry.isFile() && entry.name.endsWith(".scenario.ts")) {
+        files.push(
+          path.posix.join(
+            directory,
+            toPosix(path.relative(absolute, entryPath)),
+          ),
+        );
+      }
+    }
+  }
+  await visit(absolute);
+  if (files.length === 0) {
+    throw new Error(
+      `${gameRoot} must provide at least one ${directory}/**/*.scenario.ts entry.`,
+    );
+  }
+  return files.sort(compareReferenceGameCanonicalStrings);
 }
 
 async function walkFiles(
@@ -345,16 +377,6 @@ function objectValue(value: unknown): Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
     ? (value as Record<string, unknown>)
     : {};
-}
-
-function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" && value.length > 0 ? value : undefined;
-}
-
-function stringArray(value: unknown): string[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "string")
-    ? value
-    : [];
 }
 
 async function sha256File(filePath: string): Promise<string> {

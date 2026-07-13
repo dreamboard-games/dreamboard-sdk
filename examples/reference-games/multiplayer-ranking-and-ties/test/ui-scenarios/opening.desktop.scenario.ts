@@ -2,7 +2,7 @@ export const scenario = {
   id: "multiplayer-ranking-and-ties.opening.desktop",
   title: "Harbor Fair: opening four-stall market",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["InteractionSubmit", "Panel"],
   capabilities: ["market-row", "public-information"],
   sourceFiles: [

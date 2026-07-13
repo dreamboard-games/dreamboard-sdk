@@ -4,9 +4,9 @@ import {
   compareReferenceGameCanonicalStrings,
   computeReferenceGameSourceFingerprint,
   isPackageableReferenceGame,
-  parseReferenceGameManifestV3,
+  parseReferenceGameManifestV4,
   parseReferenceGameSourceManifest,
-  type ReferenceGameManifestV3,
+  type ReferenceGameManifestV4,
   type ReferenceGameSourceManifestPayload,
 } from "./index.js";
 
@@ -74,18 +74,16 @@ function payload(
 }
 
 function referenceGameManifest(
-  overrides: Partial<ReferenceGameManifestV3> = {},
-): ReferenceGameManifestV3 {
+  overrides: Partial<ReferenceGameManifestV4> = {},
+): ReferenceGameManifestV4 {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     id: "hearts",
     displayName: "Hearts",
     workspace: {
       manifest: "manifest.ts",
       reducer: "app/game.ts",
       ui: "ui/index.tsx",
-      behaviorScenarios: ["test/scenarios/smoke-initial-turn.scenario.ts"],
-      uiScenarios: ["test/ui-scenarios/pass-three.mobile.scenario.ts"],
     },
     teaching: {
       whatThisTeaches: ["hidden hands"],
@@ -114,7 +112,7 @@ function referenceGameManifest(
   };
 }
 
-function demoRelease(): NonNullable<ReferenceGameManifestV3["demoRelease"]> {
+function demoRelease(): NonNullable<ReferenceGameManifestV4["demoRelease"]> {
   return {
     slug: "hearts",
     name: "Hearts",
@@ -230,10 +228,28 @@ describe("reference game source manifest", () => {
   });
 });
 
-describe("reference game manifest v3", () => {
+describe("reference game manifest v4", () => {
+  test("rejects the v3 authoring manifest and explicit scenario inventories", () => {
+    expect(() =>
+      parseReferenceGameManifestV4({
+        ...referenceGameManifest(),
+        schemaVersion: 3,
+      }),
+    ).toThrow();
+    expect(() =>
+      parseReferenceGameManifestV4({
+        ...referenceGameManifest(),
+        workspace: {
+          ...referenceGameManifest().workspace,
+          behaviorScenarios: ["test/scenarios/example.scenario.ts"],
+          uiScenarios: ["test/ui-scenarios/example.scenario.ts"],
+        },
+      }),
+    ).toThrow();
+  });
   test("rejects the removed publishToDemoGallery field", () => {
     expect(() =>
-      parseReferenceGameManifestV3({
+      parseReferenceGameManifestV4({
         ...referenceGameManifest(),
         publishToDemoGallery: true,
       }),
@@ -242,7 +258,7 @@ describe("reference game manifest v3", () => {
 
   test("rejects release channel policy", () => {
     expect(() =>
-      parseReferenceGameManifestV3({
+      parseReferenceGameManifestV4({
         ...referenceGameManifest(),
         releaseChannels: ["preview"],
       }),
@@ -250,13 +266,13 @@ describe("reference game manifest v3", () => {
   });
 
   test("keeps teaching-only games valid and non-packageable", () => {
-    const manifest = parseReferenceGameManifestV3(referenceGameManifest());
+    const manifest = parseReferenceGameManifestV4(referenceGameManifest());
 
     expect(isPackageableReferenceGame(manifest)).toBe(false);
   });
 
   test("recognizes complete demoRelease metadata as packageable", () => {
-    const manifest = parseReferenceGameManifestV3(
+    const manifest = parseReferenceGameManifestV4(
       referenceGameManifest({ demoRelease: demoRelease() }),
     );
 
@@ -265,11 +281,11 @@ describe("reference game manifest v3", () => {
 
   test("rejects malformed demoRelease metadata", () => {
     expect(() =>
-      parseReferenceGameManifestV3(
+      parseReferenceGameManifestV4(
         referenceGameManifest({
           demoRelease: {
             slug: "hearts",
-          } as ReferenceGameManifestV3["demoRelease"],
+          } as ReferenceGameManifestV4["demoRelease"],
         }),
       ),
     ).toThrow();
@@ -277,22 +293,22 @@ describe("reference game manifest v3", () => {
 
   test("rejects removed hero and screenshot media fields", () => {
     expect(() =>
-      parseReferenceGameManifestV3(
+      parseReferenceGameManifestV4(
         referenceGameManifest({
           demoRelease: {
             ...demoRelease(),
             heroImageUrl: "/demos/hearts/desktop.png",
-          } as ReferenceGameManifestV3["demoRelease"],
+          } as ReferenceGameManifestV4["demoRelease"],
         }),
       ),
     ).toThrow();
     expect(() =>
-      parseReferenceGameManifestV3(
+      parseReferenceGameManifestV4(
         referenceGameManifest({
           demoRelease: {
             ...demoRelease(),
             screenshot: { presets: {} },
-          } as ReferenceGameManifestV3["demoRelease"],
+          } as ReferenceGameManifestV4["demoRelease"],
         }),
       ),
     ).toThrow();
@@ -306,7 +322,7 @@ describe("reference game manifest v3", () => {
       "thumbnail.svg",
     ]) {
       expect(() =>
-        parseReferenceGameManifestV3(
+        parseReferenceGameManifestV4(
           referenceGameManifest({
             demoRelease: {
               ...demoRelease(),

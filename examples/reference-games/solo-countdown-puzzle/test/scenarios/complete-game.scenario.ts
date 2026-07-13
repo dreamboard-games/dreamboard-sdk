@@ -6,6 +6,10 @@ export default defineScenario({
   description:
     "One keeper charges the station and lights all three beacons before the seventh weather reveal.",
   setup: { players: 1, seed: 3 },
+  checkpoints: {
+    developed: { segment: "given", completed: 6 },
+    "game-over": { segment: "when", completed: 1 },
+  },
   given: [
     charge,
     repair("beacon-north"),

@@ -60,10 +60,11 @@ detect stale generated output. Never stage ignored materialized output.
 
 1. Read the game-local `rule.md` and one typed source under
    `test/scenarios/`; do not start from a base state or generated projection.
-2. Run `dreamboard test inspect <scenario> --perspective player:<seat>` to
-   understand the selected checkpoint, actor views, blockers, and action input
-   descriptors as JSON.
-3. Run `dreamboard test explore <scenario> --perspective player:<seat>` and
+2. Run `dreamboard test inspect <scenario> --perspective player:<seat> --at
+<checkpoint>` to observe one state, its views, blockers, action inputs, and
+   sorted checkpoint catalog as JSON.
+3. Run `dreamboard test explore <scenario> --perspective player:<seat> --at
+<checkpoint>` and
    copy a returned concrete replay-accepted `candidate.command` into the same
    typed scenario source.
 4. Run `pnpm verify` in the isolated game workspace. Use its authored UI
@@ -85,9 +86,10 @@ provenance; landing-page selection is owned by the product repository.
    The normal loop is backend-free: protocol scenarios exercise primitive
    contracts, and reference-game scenarios replay real reducer output through
    the fixture transport.
-3. Rebuild `@dreamboard-games/sdk` before inspecting Workbench changes because
-   the Workbench consumes SDK build output. For a no-rebuild dev inner loop, use
-   `pnpm ui:workbench:src` to resolve the SDK from source (dev server only; every
+3. The root wrapper builds the SDK once and focused Workbench runs materialize
+   only the owning game. Source changes rebuild that selected partition and
+   retain the last good output after errors. Use `pnpm ui:workbench:src` to
+   resolve the SDK from source (dev server only; every
    `vite build` and the proof path still consume `dist`).
 4. Run the narrowest focused check, such as
    `pnpm ui:test --component <name>` or
@@ -100,10 +102,11 @@ provenance; landing-page selection is owned by the product repository.
 
 See `docs/reference/ui-iteration-loops.md` for the two-loop model (Storybook
 proves pixels, Workbench proves behavior) and the motion-gate rule.
-See `docs/ui-agent-iteration.md` for generated command selection and
-`docs/exec-plans/ui-agent-iteration-workbench/README.md` for the full workflow.
+See `docs/ui-agent-iteration.md` for generated command selection.
 See `docs/reference/ui-workbench-behavioral-proof.md` for Workbench replay
 lessons about semantic evidence, mobile card targets, and screenshot limits.
+See `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md` for controlled
+hand layout, pointer arbitration, drag ownership, and mobile accessibility.
 
 ## UI Evidence Invariants
 
@@ -160,5 +163,5 @@ suite.
   `--require-device-canary` is supplied.
 
 See `docs/ui-agent-iteration.md` for generated command selection and
-`docs/exec-plans/ui-agent-iteration-workbench/` for the full architecture and
-phase history.
+`docs/architecture/ui-test-surfaces.md` for the durable test-surface
+architecture.

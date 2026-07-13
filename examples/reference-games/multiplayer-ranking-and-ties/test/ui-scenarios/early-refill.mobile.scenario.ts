@@ -2,7 +2,7 @@ export const scenario = {
   id: "multiplayer-ranking-and-ties.early-refill.mobile",
   title: "Harbor Fair: draft and automatic refill",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["runtime-submit", "touch", "keyboard", "market-row"],
   sourceFiles: [

@@ -6,9 +6,10 @@ behavior, and product-demo replay. They are intentionally outside the root pnpm
 workspace and must remain isolated consumers of `@dreamboard-games/sdk`.
 
 The approved game-local `rule.md` files are gameplay authority. Reducers, tests,
-screenshots, and generated output are evidence only. Their base-free scenario,
-on-demand generation, and cross-repository migration are defined by the
-[Reference Game Rule Conformance And Agent Testing Hard Cut](../../docs/exec-plans/reference-game-rule-conformance-hard-cut/README.md).
+screenshots, and generated output are evidence only. See the
+[source-authority decision](../../docs/architecture/reference-game-source-authority.md)
+and [canonical example map](../../docs/reference/canonical-examples.md) for the
+durable authoring and verification contract.
 
 Reference IDs describe mechanics and UI patterns rather than product names:
 
@@ -30,9 +31,12 @@ consolidate or hand-edit them.
 
 ## Agent Authoring Loop
 
-Read `rule.md` and a typed file under `test/scenarios/`. Use
-`dreamboard test inspect` to understand a checkpoint and
-`dreamboard test explore` to obtain concrete replay-accepted commands as JSON.
+Read `rule.md` and a typed file under `test/scenarios/`. Scenario files may
+declare named checkpoints such as `developed` and `game-over`; inspect and
+explore report the sorted checkpoint catalog in their JSON scenario metadata.
+Use `dreamboard test inspect` to observe one checkpoint and
+`dreamboard test explore` to enumerate concrete replay-accepted transitions or
+seed variants from it.
 Add the chosen command to the typed scenario, then run `pnpm verify` from that
 game's package root. Workbench checkpoints, inspection, exploration, reducer
 tests, and demo replay all derive from that one scenario source; do not author
@@ -43,12 +47,25 @@ Repository tools materialize ignored workspace contracts and Workbench output
 before consuming them. Run the SDK gates from the repository root:
 
 ```bash
-pnpm reference-games:check
+pnpm --dir examples/reference-games/hex-network-trading exec dreamboard \
+  test inspect test/scenarios/complete-game.scenario.ts \
+  --perspective player:1 --at developed
+pnpm --dir examples/reference-games/hex-network-trading exec dreamboard \
+  test explore test/scenarios/complete-game.scenario.ts \
+  --perspective player:1 --at developed
+pnpm --dir examples/reference-games/hex-network-trading verify
+pnpm ui:workbench -- --scenario hex-network-trading.growing-network.desktop
+pnpm reference-games:check -- --game hex-network-trading
 pnpm reference-games:test:packed
 pnpm reference-games:bundle
 pnpm ui:catalog:check
 pnpm docs:check
 ```
+
+Use `dreamboard dev --from-scenario ... --at developed` only for real-host
+integration proof. The root-pinned CLI is the only CLI installation used by
+these isolated games; their dependencies and lockfiles contain the SDK and
+their genuine consumer dependencies, never the CLI.
 
 Reference games with a valid `demoRelease` block are packageable demo
 candidates. Product-owned release sets decide whether any packageable candidate

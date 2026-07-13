@@ -76,6 +76,16 @@ function generatedScenarioPlugin(generatedRoot: string): Plugin {
   return {
     name: "dreamboard-generated-scenarios",
     enforce: "pre",
+    configureServer(server) {
+      server.watcher.add(generatedRoot);
+      server.watcher.on("all", (_event, changedPath) => {
+        if (
+          path.resolve(changedPath).startsWith(`${generatedRoot}${path.sep}`)
+        ) {
+          server.ws.send({ type: "full-reload" });
+        }
+      });
+    },
     resolveId(source) {
       if (source === scenarioCatalogId) {
         return catalogPath;

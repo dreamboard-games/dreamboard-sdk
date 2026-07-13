@@ -2,7 +2,7 @@ export const scenario = {
   id: "hearts.dealt-hand.desktop",
   title: "Hearts: private dealt hand and pass selection",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["Card", "Hand", "InteractionSubmit", "PluginRuntime"],
   capabilities: ["private-hand", "multi-select", "runtime-submit"],
   sourceFiles: [

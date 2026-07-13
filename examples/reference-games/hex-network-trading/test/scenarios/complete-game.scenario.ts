@@ -8,6 +8,11 @@ export default defineScenario({
   description:
     "Three crews play a complete fixed-map game through production, trading, network growth, and an immediate fourth-camp victory.",
   setup: completeGameSetup,
+  checkpoints: {
+    "growing-network": { segment: "given", completed: 85 },
+    developed: { segment: "given", completed: 110 },
+    "game-over": { segment: "when", completed: 1 },
+  },
   given: COMPLETE_GAME_COMMANDS.slice(0, -1),
   when: COMPLETE_GAME_COMMANDS.slice(-1),
   then: ({ expect, interactions, state, view }) => {

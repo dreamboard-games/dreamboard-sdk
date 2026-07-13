@@ -48,7 +48,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.9";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.10";
 };
 ```
 
@@ -57,7 +57,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.9";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.10";
 ```
 
 _No JSDoc summary is available yet._
@@ -96,7 +96,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.9";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.10";
 };
 ```
 
@@ -105,7 +105,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.9";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.10";
 ```
 
 _No JSDoc summary is available yet._
@@ -166,15 +166,15 @@ _No JSDoc summary is available yet._
 ### isPackageableReferenceGame
 
 ```ts
-function isPackageableReferenceGame(game: ReferenceGameManifestV3): boolean;
+function isPackageableReferenceGame(game: ReferenceGameManifestV4): boolean;
 ```
 
 _No JSDoc summary is available yet._
 
-### parseReferenceGameManifestV3
+### parseReferenceGameManifestV4
 
 ```ts
-function parseReferenceGameManifestV3(value: unknown): ReferenceGameManifestV3;
+function parseReferenceGameManifestV4(value: unknown): ReferenceGameManifestV4;
 ```
 
 _No JSDoc summary is available yet._
@@ -192,7 +192,7 @@ _No JSDoc summary is available yet._
 ### REFERENCE_GAME_MANIFEST_SCHEMA_VERSION
 
 ```ts
-const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 3;
+const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 4;
 ```
 
 _No JSDoc summary is available yet._
@@ -221,18 +221,18 @@ declare const referenceGameDemoReleaseSchema: ...;
 
 _No JSDoc summary is available yet._
 
-### ReferenceGameManifestV3
+### ReferenceGameManifestV4
 
 ```ts
-type ReferenceGameManifestV3 = z.infer<typeof referenceGameManifestV3Schema>;
+type ReferenceGameManifestV4 = z.infer<typeof referenceGameManifestV4Schema>;
 ```
 
 _No JSDoc summary is available yet._
 
-### referenceGameManifestV3Schema
+### referenceGameManifestV4Schema
 
 ```ts
-declare const referenceGameManifestV3Schema: ...;
+declare const referenceGameManifestV4Schema: ...;
 ```
 
 _No JSDoc summary is available yet._
@@ -492,8 +492,6 @@ const referenceGameWorkspaceSchema: z.ZodObject<
     manifest: z.ZodString;
     reducer: z.ZodString;
     ui: z.ZodString;
-    behaviorScenarios: z.ZodArray<z.ZodString>;
-    uiScenarios: z.ZodArray<z.ZodString>;
   },
   z.core.$strict
 >;
@@ -21561,6 +21559,20 @@ type ReplayScenarioOptions<Game> = {
 
 _No JSDoc summary is available yet._
 
+### resolveScenarioCheckpoint
+
+```ts
+function resolveScenarioCheckpoint<Game>(
+  definition: Pick<
+    ScenarioDefinition<Game>,
+    "checkpoints" | "given" | "id" | "when"
+  >,
+  selector: ScenarioCheckpointSelector,
+): ScenarioCheckpoint;
+```
+
+Resolve authored names while keeping replay DTOs structurally checkpointed.
+
 ### RuntimeParamsOfScenarioCommand
 
 ```ts
@@ -21630,6 +21642,22 @@ type ScenarioCheckpoint =
 
 _No JSDoc summary is available yet._
 
+### ScenarioCheckpointId
+
+```ts
+type ScenarioCheckpointId = string;
+```
+
+_No JSDoc summary is available yet._
+
+### ScenarioCheckpointSelector
+
+```ts
+type ScenarioCheckpointSelector = ScenarioCheckpoint | ScenarioCheckpointId;
+```
+
+_No JSDoc summary is available yet._
+
 ### ScenarioCommand
 
 ```ts
@@ -21672,6 +21700,10 @@ _No JSDoc summary is available yet._
 
 ```ts
 type ScenarioDefinition<Game> = ScenarioReplayDefinition<Game> & {
+  /** Named authored states for CLI, Workbench, demo, and test adapters. */
+  readonly checkpoints?: Readonly<
+    Record<ScenarioCheckpointId, ScenarioCheckpoint>
+  >;
   readonly then: (
     context: ScenarioAssertionContext<Game>,
   ) => void | Promise<void>;
@@ -22471,7 +22503,7 @@ Compile one authored scenario into the trusted, serializable replay DTO used by 
 ```ts
 type CompileScenarioReplayOptions = {
   readonly scenarioPath: string;
-  readonly at?: ScenarioCheckpoint;
+  readonly at?: ScenarioCheckpointSelector;
 };
 ```
 

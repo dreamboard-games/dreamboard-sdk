@@ -12,6 +12,13 @@ export default defineScenario({
   description:
     "Two stall owners complete twelve sealed picks across both rounds from one seeded deck.",
   setup: completeGameSetup,
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "mid-round": { segment: "given", completed: 9 },
+    "round-transition": { segment: "given", completed: 12 },
+    developed: { segment: "given", completed: 22 },
+    "game-over": { segment: "when", completed: 2 },
+  },
   given: COMPLETE_GAME_COMMANDS.slice(0, 22),
   when: COMPLETE_GAME_COMMANDS.slice(22),
   then: ({ expect, interactions, state, view }) => {

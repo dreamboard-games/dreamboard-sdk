@@ -6,6 +6,14 @@ export default defineScenario({
   description:
     "A complete two-artist game grows and reshuffles both decks, resolves all five Techniques, and reaches a supply ending after many alternating turns.",
   setup: { players: 2, seed: 1 },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "first-purchase": { segment: "given", completed: 5 },
+    "recycled-card": { segment: "given", completed: 26 },
+    "technique-chain": { segment: "given", completed: 62 },
+    developed: { segment: "given", completed: 361 },
+    "game-over": { segment: "when", completed: 1 },
+  },
   given: COMPLETE_GAME_COMMANDS.slice(0, -1),
   when: COMPLETE_GAME_COMMANDS.slice(-1),
   then: ({ expect, interactions, state, view }) => {

@@ -2,7 +2,7 @@ export default {
   id: "hex-network-trading.growing-network.desktop",
   title: "Stormtrail: three-camp network under construction",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 85 },
+  at: "growing-network",
   contracts: ["Board.HexGrid", "Panel", "PluginRuntime"],
   capabilities: ["multi-turn-history", "network-growth", "public-board"],
   sourceFiles: [

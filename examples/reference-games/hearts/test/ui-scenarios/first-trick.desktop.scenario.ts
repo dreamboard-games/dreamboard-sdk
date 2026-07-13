@@ -2,7 +2,7 @@ export const scenario = {
   id: "hearts.first-trick.desktop",
   title: "Hearts: first completed trick",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 8 },
+  at: "first-trick",
   contracts: ["Card", "Hand", "Panel", "Table"],
   capabilities: ["trick-history", "card-eligibility", "public-information"],
   sourceFiles: [

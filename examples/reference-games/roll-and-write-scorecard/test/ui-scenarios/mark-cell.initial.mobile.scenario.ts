@@ -2,7 +2,7 @@ export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.initial.mobile",
   title: "Cloudline Survey: initial mobile survey grids",
   behaviorScenario: "../scenarios/multiple-matches.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["Panel", "SquareGrid"],
   capabilities: ["scorecard-grid"],
   sourceFiles: [

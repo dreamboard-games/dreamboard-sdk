@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.opening-hand.desktop",
   title: "Sketchbook: private opening hand and full studio shelf",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["Card", "Hand", "InteractionSubmit", "PluginRuntime"],
   capabilities: ["private-hand", "normal-setup", "public-supply"],
   sourceFiles: [

@@ -2,7 +2,7 @@ export const scenario = {
   id: "automa-river-rival.river.midgame.desktop",
   title: "River Guild: mid-race instruction history",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 6 },
+  at: "midgame",
   contracts: ["CardCollection", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: [
     "pointer",

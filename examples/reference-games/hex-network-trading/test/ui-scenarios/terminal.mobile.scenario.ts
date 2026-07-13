@@ -2,7 +2,7 @@ export default {
   id: "hex-network-trading.terminal.mobile",
   title: "Stormtrail: fourth-camp victory",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 1 },
+  at: "game-over",
   contracts: ["Board.HexGrid", "Panel", "PluginRuntime"],
   capabilities: ["competition-ranking", "terminal-outcome", "touch"],
   sourceFiles: [

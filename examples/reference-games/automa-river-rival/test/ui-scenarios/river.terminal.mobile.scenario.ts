@@ -2,7 +2,7 @@ export const scenario = {
   id: "automa-river-rival.river.terminal.mobile",
   title: "River Guild: cooperative outcome",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 2 },
+  at: "game-over",
   contracts: ["CardCollection", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["touch", "keyboard", "cooperative-outcome", "score-breakdown"],
   sourceFiles: [

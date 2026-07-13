@@ -11,11 +11,11 @@ theme, information boundaries, complete game arc, and deliberate exclusions.
 Reducer code, tests, generated fixtures, screenshots, and historical base
 states cannot define or amend the rules implicitly.
 
-Implementation and migration follow the
-[Reference Game Rule Conformance And Agent Testing Hard Cut](../exec-plans/reference-game-rule-conformance-hard-cut/README.md).
-The nine current reducers and complete-game scenarios implement the approved
-briefs. Generated projections and Workbench fixtures remain disposable evidence
-derived from that authored source, never a second authority.
+The [reference-game source-authority decision](../architecture/reference-game-source-authority.md)
+defines the durable implementation and migration boundary. The nine current
+reducers and complete-game scenarios implement the approved briefs. Generated
+projections and Workbench fixtures remain disposable evidence derived from that
+authored source, never a second authority.
 
 Read every brief in the same order: teaching scope, theme, players and
 objective, information visibility, components and setup, complete game arc,
@@ -52,14 +52,16 @@ appear between those common boundaries; they do not create new SDK concepts.
 Every game uses the same loop:
 
 1. Read `rule.md`, then open the closest typed source under `test/scenarios/`.
-2. Run `dreamboard test inspect <scenario> --perspective player:<seat>` to read
-   the selected checkpoint, actor views, blockers, and action inputs as JSON.
-3. Run `dreamboard test explore <scenario> --perspective player:<seat>` to
-   obtain concrete replay-accepted commands for that perspective.
+2. Run `dreamboard test inspect <scenario> --perspective player:<seat> --at
+<checkpoint>` to observe that one state as JSON. Its scenario metadata lists
+   every named checkpoint and structural location.
+3. Run `dreamboard test explore <scenario> --perspective player:<seat> --at
+<checkpoint>` to enumerate concrete replay-accepted transitions or seed
+   variants from the same state.
 4. Copy one returned `candidate.command` into the typed scenario and keep
    cross-checkpoint, rejection, privacy, or uniqueness assertions in the
    package's scenario test.
-5. Run `pnpm verify` in the game package, then use the authored UI checkpoint
+5. Run `pnpm verify` in the game package (one materialization), then use the authored UI checkpoint
    with `pnpm ui:workbench --scenario <id>` or launch the same source with
    `dreamboard dev`.
 
@@ -68,6 +70,11 @@ mode. Inspection and exploration discover what can be replayed; the typed
 scenario remains the single authored test and demo path. Generated workspace
 contracts, projections, catalogs, fixtures, and checkpoints stay local and
 untracked.
+
+The canonical complete-game scenario in every game names `developed` at the
+end of its multi-action `given` prelude and `game-over` at the end of its
+terminal `when` arc. Committed UI sidecars reference names; structural selectors
+such as `given:2` remain a low-level interactive CLI escape hatch.
 
 All nine examples are complete multi-turn games. Stable technical IDs and
 release slugs remain the table values above even when their public display name
@@ -105,6 +112,6 @@ mise exec node@24 -- pnpm reference-games:check
 mise exec node@24 -- pnpm reference-games:test:packed --required
 ```
 
-Whole-plan closeout additionally requires the exact public SDK release, public
-CLI/dev documentation, internal real-host proof, and cross-repository
-mergeability described by Phase 08.
+For release closure, run the authoritative `pnpm check` gate and publish only
+the exact SDK artifact verified by the `release-alpha` workflow. Real-host
+parity remains a separate integration proof owned by the consuming host.

@@ -16,6 +16,7 @@ import {
 } from "./materialize-workbench.mjs";
 import { repoCommandEnv, root } from "./reference-games-lib.mjs";
 import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
+import { selectWorkbenchSources } from "./workbench-selection.mjs";
 
 const fixturesRoot = path.join(
   defaultGeneratedWorkbenchRoot,
@@ -26,6 +27,7 @@ function parseArgs(argv) {
   const options = { changed: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
+    if (arg === "--") continue;
     if (arg === "--changed") {
       options.changed = true;
       continue;
@@ -36,6 +38,10 @@ function parseArgs(argv) {
     }
     if (arg === "--explain") {
       options.explain = true;
+      continue;
+    }
+    if (arg === "--reuse-materialization") {
+      options.reuseMaterialization = true;
       continue;
     }
     if (
@@ -231,25 +237,58 @@ function projectsForScenario(fixture, requestedProject) {
 }
 
 async function main() {
-  const materialization = await materializeWorkbench({
-    outputRoot: defaultGeneratedWorkbenchRoot,
-  });
   const options = parseArgs(process.argv.slice(2));
-  const bundle = await readJson(path.join(fixturesRoot, "index.json"));
-  const index = await readComponentScenarioIndex();
   const files = options.changed
     ? await changedFiles(options.base ?? "origin/main")
     : [];
+  const sourceSelection = await selectWorkbenchSources(options, {
+    changedFiles: files,
+  });
+  const index = sourceSelection.index;
+  if (options.explain) {
+    const fixtures = Object.values(index.scenarios ?? {});
+    const selection = selectScenarios({
+      options,
+      fixtures,
+      index,
+      changed: files,
+    });
+    console.log(
+      JSON.stringify(
+        {
+          changedFiles: files,
+          selectedGames: sourceSelection.gameIds,
+          ...selection,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
+  }
+  if (sourceSelection.focused && sourceSelection.scenarioIds.length === 0) {
+    console.log("No UI Workbench scenarios selected.");
+    return;
+  }
+  const materialization = options.reuseMaterialization
+    ? await readJson(
+        path.join(
+          defaultGeneratedWorkbenchRoot,
+          "materialization-receipt.json",
+        ),
+      )
+    : await materializeWorkbench({
+        outputRoot: defaultGeneratedWorkbenchRoot,
+        gameIds: sourceSelection.gameIds,
+        verifyDeterminism: !sourceSelection.focused,
+      });
+  const bundle = await readJson(path.join(fixturesRoot, "index.json"));
   const selection = selectScenarios({
     options,
     fixtures: bundle.fixtures,
     index,
     changed: files,
   });
-  if (options.explain) {
-    console.log(JSON.stringify({ changedFiles: files, ...selection }, null, 2));
-    return;
-  }
   if (selection.scenarioIds.length === 0) {
     console.log("No UI Workbench scenarios selected.");
     return;

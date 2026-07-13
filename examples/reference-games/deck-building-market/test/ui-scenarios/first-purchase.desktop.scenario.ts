@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.first-purchase.desktop",
   title: "Sketchbook: first Studio enters the public discard",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 5 },
+  at: "first-purchase",
   contracts: ["CardCollection", "Hand", "InteractionSubmit", "Panel"],
   capabilities: ["individual-inspiration", "purchase", "public-discard"],
   sourceFiles: [

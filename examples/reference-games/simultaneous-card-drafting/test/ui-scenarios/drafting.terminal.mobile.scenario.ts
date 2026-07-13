@@ -2,7 +2,7 @@ export const scenario = {
   id: "simultaneous-card-drafting.drafting.terminal.mobile",
   title: "Lantern Market: terminal two-round standings",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 2 },
+  at: "game-over",
   contracts: ["Panel", "PluginRuntime"],
   capabilities: [
     "touch",

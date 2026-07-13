@@ -1,33 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "deck-building-market",
   "displayName": "Sketchbook",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/setup-and-visibility.scenario.ts",
-      "test/scenarios/turn-ordering.scenario.ts",
-      "test/scenarios/technique-brainstorm.scenario.ts",
-      "test/scenarios/technique-studio.scenario.ts",
-      "test/scenarios/technique-gallery.scenario.ts",
-      "test/scenarios/technique-eraser.scenario.ts",
-      "test/scenarios/technique-studio-visit.scenario.ts",
-      "test/scenarios/zone-and-reshuffle.scenario.ts",
-      "test/scenarios/buying-and-actionability.scenario.ts",
-      "test/scenarios/ending-and-outcome-masterpiece.scenario.ts",
-      "test/scenarios/ending-and-outcome-three-piles.scenario.ts",
-      "test/scenarios/complete-game.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/opening-hand.desktop.scenario.ts",
-      "test/ui-scenarios/first-purchase.desktop.scenario.ts",
-      "test/ui-scenarios/acquired-card-recycle.mobile.scenario.ts",
-      "test/ui-scenarios/technique-chain.desktop.scenario.ts",
-      "test/ui-scenarios/depleted-supply.desktop.scenario.ts",
-      "test/ui-scenarios/terminal-outcome.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

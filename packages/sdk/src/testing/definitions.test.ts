@@ -3,6 +3,7 @@ import { z } from "zod";
 import { markManifestScopedSchema } from "../reducer/model/manifest";
 import {
   createScenarioAuthoring,
+  resolveScenarioCheckpoint,
   ScenarioDefinitionValidationError,
   ScenarioReplayError,
   toScenarioReplayDefinition,
@@ -78,6 +79,10 @@ function validScenario() {
       },
     ],
     when: [],
+    checkpoints: {
+      opening: { segment: "setup", completed: 0 },
+      developed: { segment: "given", completed: 1 },
+    },
     then: () => {},
   } as const;
 }
@@ -111,8 +116,59 @@ describe("createScenarioAuthoring", () => {
       when: [],
     });
     expect("then" in replay).toBe(false);
+    expect("checkpoints" in replay).toBe(false);
     expect(replay).not.toBe(definition);
     expect(replay.given).not.toBe(definition.given);
+  });
+
+  test("resolves named checkpoints without adding them to replay DTOs", () => {
+    const definition = defineScenario(validScenario());
+    expect(resolveScenarioCheckpoint(definition, "developed")).toEqual({
+      segment: "given",
+      completed: 1,
+    });
+    expect(
+      resolveScenarioCheckpoint(definition, {
+        segment: "given",
+        completed: 0,
+      }),
+    ).toEqual({ segment: "given", completed: 0 });
+    expect(() => resolveScenarioCheckpoint(definition, "missing")).toThrow(
+      /available checkpoints: developed, opening/,
+    );
+  });
+
+  test("rejects invalid, out-of-range, reserved, and duplicate checkpoints", () => {
+    expectValidationError(
+      () =>
+        defineScenario({
+          ...validScenario(),
+          checkpoints: { setup: { segment: "setup", completed: 0 } },
+        }),
+      { code: "INVALID_VALUE", path: "scenario.checkpoints.setup" },
+    );
+    expectValidationError(
+      () =>
+        defineScenario({
+          ...validScenario(),
+          checkpoints: { late: { segment: "given", completed: 2 } },
+        }),
+      {
+        code: "OUT_OF_RANGE",
+        path: "scenario.checkpoints.late.completed",
+      },
+    );
+    expectValidationError(
+      () =>
+        defineScenario({
+          ...validScenario(),
+          checkpoints: {
+            first: { segment: "given", completed: 1 },
+            second: { segment: "given", completed: 1 },
+          },
+        }),
+      { code: "INVALID_VALUE", path: "scenario.checkpoints.second" },
+    );
   });
 
   test("reports stable paths for setup validation", () => {

@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.terminal-outcome.mobile",
   title: "Sketchbook: final ranked portfolios",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 1 },
+  at: "game-over",
   contracts: ["Outcome", "Panel", "PlayerScore", "PluginRuntime"],
   capabilities: ["competition-ranking", "supply-ending", "touch"],
   sourceFiles: [

@@ -188,8 +188,8 @@ function isPackageableReferenceGameManifest(manifest) {
 }
 
 function validatePackageableCandidateManifest({ gameId, manifest, errors }) {
-  if (manifest.schemaVersion !== 3) {
-    errors.push(`${gameId}: reference-game.json schemaVersion must be 3`);
+  if (manifest.schemaVersion !== 4) {
+    errors.push(`${gameId}: reference-game.json schemaVersion must be 4`);
   }
   if (Object.hasOwn(manifest, "publishToDemoGallery")) {
     errors.push(`${gameId}: publishToDemoGallery is forbidden`);

@@ -6,6 +6,9 @@ export default defineScenario({
   description:
     "The sixth unblocked dangerous card is a South Squall whose dimming finishes before storm loss and before any final countdown step.",
   setup: { players: 1, seed: 4 },
+  checkpoints: {
+    developing: { segment: "given", completed: 7 },
+  },
   given: [
     charge,
     repair("beacon-harbor"),

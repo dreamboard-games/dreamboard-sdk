@@ -6,6 +6,9 @@ export default defineScenario({
   description:
     "The fixed seven-hex map receives one adjacent camp-and-trail pair per crew in seat order and grants adjacent starting supplies.",
   setup: { players: 3, seed: 1 },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+  },
   given: STANDARD_SETUP_COMMANDS.slice(0, -1),
   when: STANDARD_SETUP_COMMANDS.slice(-1),
   then: ({ expect, state, view }) => {

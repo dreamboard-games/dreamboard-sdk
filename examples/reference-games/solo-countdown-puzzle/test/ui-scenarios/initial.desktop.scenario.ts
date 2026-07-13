@@ -2,7 +2,7 @@ export const scenario = {
   id: "solo-countdown-puzzle.initial.desktop",
   title: "Last Light: opening lighthouse watch",
   behaviorScenario: "../scenarios/weather-procedure-calm.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
   capabilities: ["keyboard", "lighthouse-status", "weather-timeline"],
   sourceFiles: [

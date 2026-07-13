@@ -2,7 +2,7 @@ export const scenario = {
   id: "multiplayer-ranking-and-ties.growing-rows.desktop",
   title: "Harbor Fair: public festival rows after three rounds",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 12 },
+  at: "growing-rows",
   contracts: ["Panel", "PlayerScore"],
   capabilities: ["festival-rows", "guild-sets", "public-information"],
   sourceFiles: [

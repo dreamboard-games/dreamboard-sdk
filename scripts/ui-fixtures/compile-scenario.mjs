@@ -618,6 +618,7 @@ function behaviorScenarioCoverageMetadata(scenario) {
     setup: _setup,
     given: _given,
     when: _when,
+    checkpoints: _checkpoints,
     then: _then,
     ...metadata
   } = scenario;
@@ -666,27 +667,22 @@ export function assertReducerNativeReferenceUIScenario({
 }
 
 function reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario) {
-  if (uiScenario.at === undefined) {
-    return {
-      segment: "given",
-      completed: behaviorScenario.given.length,
-    };
-  }
-  if (
-    !isObject(uiScenario.at) ||
-    !["setup", "given", "when"].includes(uiScenario.at.segment) ||
-    !Number.isSafeInteger(uiScenario.at.completed) ||
-    uiScenario.at.completed < 0 ||
-    (uiScenario.at.segment === "setup" && uiScenario.at.completed !== 0)
-  ) {
+  if (typeof uiScenario.at !== "string" || uiScenario.at.length === 0) {
     throw new Error(
-      `${uiScenario.id}.at must be { segment: "setup" | "given" | "when", completed: non-negative integer }.`,
+      `${uiScenario.id}.at must name one checkpoint declared by its behavior scenario.`,
     );
   }
-  return {
-    segment: uiScenario.at.segment,
-    completed: uiScenario.at.completed,
-  };
+  if (!isObject(behaviorScenario.checkpoints)) {
+    throw new Error(
+      `${uiScenario.id} behavior scenario declares no named checkpoints.`,
+    );
+  }
+  if (!isObject(behaviorScenario.checkpoints[uiScenario.at])) {
+    throw new Error(
+      `${uiScenario.id}.at references unknown checkpoint '${uiScenario.at}'; available checkpoints: ${Object.keys(behaviorScenario.checkpoints).sort().join(", ") || "none"}.`,
+    );
+  }
+  return uiScenario.at;
 }
 
 async function materializeBundledReducerNativeCheckpoint({
@@ -694,7 +690,7 @@ async function materializeBundledReducerNativeCheckpoint({
   metadata,
   uiScenario,
   behaviorScenarioPath,
-  checkpoint,
+  checkpointSelector,
 }) {
   const reducerPath = resolveWorkspaceEntry(
     gameDir,
@@ -712,7 +708,7 @@ async function materializeBundledReducerNativeCheckpoint({
 
   const compiled = await compileScenarioReplay({
     scenarioPath: behaviorScenarioPath,
-    at: checkpoint,
+    at: checkpointSelector,
   });
 
   const reducerSpecifier = toModuleSpecifier(
@@ -894,9 +890,9 @@ async function materializeWorkspaceScenario({
   metadata,
   scenario,
 }) {
-  if (metadata.schemaVersion !== 3) {
+  if (metadata.schemaVersion !== 4) {
     throw new Error(
-      `${scenario.id} reference-game UI compilation requires reference-game.json schemaVersion 3.`,
+      `${scenario.id} reference-game UI compilation requires reference-game.json schemaVersion 4.`,
     );
   }
 
@@ -916,7 +912,10 @@ async function materializeWorkspaceScenario({
     metadata,
     uiScenario: scenario,
     behaviorScenarioPath,
-    checkpoint: reducerNativeScenarioCheckpoint(scenario, behaviorScenario),
+    checkpointSelector: reducerNativeScenarioCheckpoint(
+      scenario,
+      behaviorScenario,
+    ),
   });
   const initialState = materialized.state;
   const resolvedPlayerIds = materialized.playerIds;
@@ -950,9 +949,22 @@ async function materializeWorkspaceScenario({
     id: game.id,
     interactions: interactionId ? [{ id: interactionId }] : [],
   };
+  const defaultSourceFiles = [
+    path.relative(root, path.join(gameDir, "reference-game.json")),
+    ...Object.values(metadata.workspace).map((relativePath) =>
+      path.relative(root, path.join(gameDir, relativePath)),
+    ),
+    path.relative(root, behaviorScenarioPath),
+    ...(scenario.__modulePath
+      ? [path.relative(root, scenario.__modulePath)]
+      : []),
+  ].map((sourceFile) => sourceFile.split(path.sep).join("/"));
 
   return {
     ...scenario,
+    contracts: scenario.contracts ?? [],
+    sourceFiles:
+      scenario.sourceFiles ?? [...new Set(defaultSourceFiles)].sort(),
     ...(materialized.compiledReplayEvidence
       ? { __compiledReplayEvidence: materialized.compiledReplayEvidence }
       : {}),
@@ -1046,12 +1058,12 @@ export async function compileScenarioModule({
       })
     : scenario;
   const workspaceUiPath =
-    metadata?.schemaVersion === 3
+    metadata?.schemaVersion === 4
       ? path.join(gameDir, metadata.workspace.ui)
       : path.join(gameDir, "src", "ui.mjs");
   const workspaceAppPath = path.join(gameDir, "ui/App.tsx");
   const sourceModulePath =
-    metadata?.schemaVersion === 3 && existsSync(workspaceAppPath)
+    metadata?.schemaVersion === 4 && existsSync(workspaceAppPath)
       ? workspaceAppPath
       : workspaceUiPath;
   const referenceGame = materializedScenario.authority.referenceGame ?? game;

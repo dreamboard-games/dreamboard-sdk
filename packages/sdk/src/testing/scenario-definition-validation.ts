@@ -65,8 +65,79 @@ type ScenarioDefinitionLike = {
   };
   readonly given: readonly unknown[];
   readonly when: readonly unknown[];
+  readonly checkpoints?: Readonly<
+    Record<
+      string,
+      | { readonly segment: "setup"; readonly completed: 0 }
+      | { readonly segment: "given" | "when"; readonly completed: number }
+    >
+  >;
   readonly then: (...args: never[]) => unknown;
 };
+
+const checkpointIdPattern = /^[a-z0-9][a-z0-9-]*$/u;
+
+function validateCheckpoints(definition: Record<string, unknown>): void {
+  if (!Object.prototype.hasOwnProperty.call(definition, "checkpoints")) return;
+  const checkpoints = requireObject(
+    definition.checkpoints,
+    "scenario.checkpoints",
+  );
+  assertJsonSerializable(checkpoints, "scenario.checkpoints");
+  const occupied = new Map<string, string>();
+  for (const [id, candidate] of Object.entries(checkpoints)) {
+    const path = appendScenarioPath("scenario.checkpoints", id);
+    if (!checkpointIdPattern.test(id) || id === "setup") {
+      fail({
+        code: "INVALID_VALUE",
+        path,
+        reason:
+          "checkpoint ids must be lowercase kebab-case and cannot be 'setup'",
+      });
+    }
+    const checkpoint = requireObject(candidate, path);
+    assertExactKeys(checkpoint, ["segment", "completed"], path);
+    assertOwn(checkpoint, "segment", path);
+    assertOwn(checkpoint, "completed", path);
+    if (!["setup", "given", "when"].includes(String(checkpoint.segment))) {
+      fail({
+        code: "INVALID_VALUE",
+        path: appendScenarioPath(path, "segment"),
+        reason: "expected setup, given, or when",
+      });
+    }
+    const completed = assertSafeInteger(
+      checkpoint.completed,
+      appendScenarioPath(path, "completed"),
+    );
+    const segment = checkpoint.segment as "setup" | "given" | "when";
+    const maximum =
+      segment === "setup"
+        ? 0
+        : (definition[segment] as readonly unknown[]).length;
+    if (
+      completed < 0 ||
+      completed > maximum ||
+      (segment === "setup" && completed !== 0)
+    ) {
+      fail({
+        code: "OUT_OF_RANGE",
+        path: appendScenarioPath(path, "completed"),
+        reason: `expected 0 through ${maximum} for ${segment}`,
+      });
+    }
+    const coordinate = `${segment}:${completed}`;
+    const previous = occupied.get(coordinate);
+    if (previous !== undefined) {
+      fail({
+        code: "INVALID_VALUE",
+        path,
+        reason: `duplicates checkpoint '${previous}' at ${coordinate}`,
+      });
+    }
+    occupied.set(coordinate, id);
+  }
+}
 
 function fail(options: {
   readonly code: ScenarioDefinitionValidationCode;
@@ -370,7 +441,7 @@ export function validateScenarioDefinition(
   const definition = requireObject(value, "scenario");
   assertExactKeys(
     definition,
-    ["id", "description", "setup", "given", "when", "then"],
+    ["id", "description", "setup", "given", "when", "checkpoints", "then"],
     "scenario",
   );
   for (const field of ["id", "setup", "given", "when", "then"] as const) {
@@ -478,6 +549,8 @@ export function validateScenarioDefinition(
       reason: "expected an assertion function",
     });
   }
+
+  validateCheckpoints(definition);
 
   const playerIds = playerIdsForDefinition(game, players);
   definition.given.forEach((command, index) =>

@@ -6,6 +6,9 @@ export default defineScenario({
   description:
     "The second Storm revealed by the last draft of round six cancels before normal scoring.",
   setup: { players: 2, seed: 48 },
+  checkpoints: {
+    cancelled: { segment: "when", completed: 1 },
+  },
   given: finalRefillCancellationPath.slice(0, 11),
   when: [finalRefillCancellationPath[11]],
   then: ({ expect, state }) => {

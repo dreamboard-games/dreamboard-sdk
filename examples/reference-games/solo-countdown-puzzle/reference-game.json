@@ -1,37 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "solo-countdown-puzzle",
   "displayName": "Last Light",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/complete-game-loss-storm.scenario.ts",
-      "test/scenarios/complete-game-loss-dawn.scenario.ts",
-      "test/scenarios/availability-charge.scenario.ts",
-      "test/scenarios/availability-repair-beacon.scenario.ts",
-      "test/scenarios/availability-repair-no-energy.scenario.ts",
-      "test/scenarios/availability-reinforce-stored.scenario.ts",
-      "test/scenarios/availability-reinforce-no-energy.scenario.ts",
-      "test/scenarios/weather-procedure-calm.scenario.ts",
-      "test/scenarios/weather-procedure-gale.scenario.ts",
-      "test/scenarios/weather-procedure-gale-reinforced.scenario.ts",
-      "test/scenarios/weather-procedure-north-squall.scenario.ts",
-      "test/scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
-      "test/scenarios/weather-procedure-harbor-squall.scenario.ts",
-      "test/scenarios/weather-procedure-harbor-squall-reinforced.scenario.ts",
-      "test/scenarios/weather-procedure-south-squall.scenario.ts",
-      "test/scenarios/weather-procedure-south-squall-reinforced.scenario.ts",
-      "test/scenarios/determinism-and-actors.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/initial.desktop.scenario.ts",
-      "test/ui-scenarios/developing.mobile.scenario.ts",
-      "test/ui-scenarios/reinforcement-hit.desktop.scenario.ts",
-      "test/ui-scenarios/terminal.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

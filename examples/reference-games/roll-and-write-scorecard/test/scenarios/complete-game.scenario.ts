@@ -5,6 +5,10 @@ export default defineScenario({
   description:
     "Three crews resolve eight seeded weather readings; one completes a row and the lower crews tie.",
   setup: { players: 3, seed: 3, setupProfileId: "standard" },
+  checkpoints: {
+    developed: { segment: "given", completed: 21 },
+    "game-over": { segment: "when", completed: 3 },
+  },
   given: [
     {
       actor: { seat: 0 },

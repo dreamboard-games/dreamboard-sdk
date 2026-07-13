@@ -15,6 +15,7 @@ import {
   sha256File,
   walkFiles,
 } from "./reference-games-lib.mjs";
+import { compileScenarioReplay } from "../../packages/sdk/dist/testing-compiler.js";
 
 const sdkPackage = "@dreamboard-games/sdk";
 const exactVersionPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?$/;
@@ -103,31 +104,10 @@ async function checkWorkspacePath({ gameDir, gameId, label, value, errors }) {
   return true;
 }
 
-async function checkWorkspacePathList({
-  gameDir,
-  gameId,
-  label,
-  values,
-  errors,
-}) {
-  if (!Array.isArray(values) || values.length === 0) {
-    errors.push(`${gameId}: workspace.${label} must be a non-empty array`);
-    return;
-  }
-  const seen = new Set();
-  for (const value of values) {
-    if (seen.has(value)) {
-      errors.push(`${gameId}: duplicated workspace.${label} entry ${value}`);
-    }
-    seen.add(value);
-    await checkWorkspacePath({ gameDir, gameId, label, value, errors });
-  }
-}
-
 async function checkWorkspaceManifest({ manifest, gameId, gameDir, errors }) {
   const workspace = manifest.workspace;
   if (!workspace || typeof workspace !== "object") {
-    errors.push(`${gameId}: schemaVersion 3 requires workspace`);
+    errors.push(`${gameId}: schemaVersion 4 requires workspace`);
     return;
   }
   await checkWorkspacePath({
@@ -151,20 +131,26 @@ async function checkWorkspaceManifest({ manifest, gameId, gameDir, errors }) {
     value: workspace.ui,
     errors,
   });
-  await checkWorkspacePathList({
-    gameDir,
-    gameId,
-    label: "behaviorScenarios",
-    values: workspace.behaviorScenarios,
-    errors,
-  });
-  await checkWorkspacePathList({
-    gameDir,
-    gameId,
-    label: "uiScenarios",
-    values: workspace.uiScenarios,
-    errors,
-  });
+  for (const removed of ["behaviorScenarios", "uiScenarios"]) {
+    if (Object.hasOwn(workspace, removed)) {
+      errors.push(
+        `${gameId}: workspace.${removed} is removed in schemaVersion 4`,
+      );
+    }
+  }
+  for (const [label, directory] of [
+    ["behavior scenarios", "test/scenarios"],
+    ["UI scenarios", "test/ui-scenarios"],
+  ]) {
+    const files = await walkFiles(path.join(gameDir, directory), {
+      excludeDirs: new Set(["build", "dist", "generated", "node_modules"]),
+    }).catch(() => []);
+    if (!files.some((file) => file.endsWith(".scenario.ts"))) {
+      errors.push(
+        `${gameId}: ${label} must provide at least one **/*.scenario.ts file`,
+      );
+    }
+  }
 
   const readFirst = manifest.teaching?.readFirst;
   if (!Array.isArray(readFirst) || readFirst.length === 0) {
@@ -219,10 +205,10 @@ function checkStringArray({ values, label, gameId, errors }) {
   }
 }
 
-async function checkDemoReleaseV3({ manifest, gameId, gameDir, errors }) {
+async function checkDemoReleaseV4({ manifest, gameId, gameDir, errors }) {
   if (Object.hasOwn(manifest, "publishToDemoGallery")) {
     errors.push(
-      `${gameId}: publishToDemoGallery is forbidden in schemaVersion 3`,
+      `${gameId}: publishToDemoGallery is forbidden in schemaVersion 4`,
     );
   }
   if (Object.hasOwn(manifest, "releaseChannels")) {
@@ -418,29 +404,15 @@ async function checkDemoRegistryAbsence({ gameId, errors }) {
   const unexpectedFiles = [];
   for (const relative of repoFiles) {
     if (
-      relative.startsWith("docs/exec-plans/ui-agent-iteration-workbench/") ||
-      relative.startsWith(
-        "docs/exec-plans/ui-primitive-coverage-and-agent-loop-hard-cut/",
-      ) ||
-      relative.startsWith(
-        "docs/exec-plans/reference-game-teaching-source-and-admission-hard-cut/",
-      ) ||
-      relative.startsWith(
-        "docs/exec-plans/competition-game-authoring-capability-hard-cut/",
-      ) ||
-      relative.startsWith(
-        "docs/exec-plans/reference-game-rule-conformance-hard-cut/",
-      ) ||
+      relative.startsWith("docs/exec-plans/") ||
       relative === "docs/reference/canonical-examples.md" ||
       relative.startsWith("packages/sdk/src/reference-games/") ||
-      relative.startsWith(
-        "docs/capability-research/competition-game-authoring/",
-      ) ||
       relative.startsWith("fixtures/ui/reference-games/") ||
       relative.startsWith("artifacts/ui/") ||
       relative === "fixtures/ui/component-scenario-index.json" ||
       relative === "scripts/ui-fixtures/authority/authority.test.mjs" ||
       relative === "scripts/ui/generate-component-scenario-index.mjs" ||
+      relative === "scripts/ui/workbench-selection.test.mjs" ||
       relative.startsWith("examples/reference-games/")
     ) {
       continue;
@@ -478,8 +450,8 @@ async function validateGame(gameId, errors) {
   }
   checkDependencies({ packageJson, gameId, errors });
 
-  if (manifest.schemaVersion !== 3) {
-    errors.push(`${gameId}: manifest schemaVersion must be 3`);
+  if (manifest.schemaVersion !== 4) {
+    errors.push(`${gameId}: manifest schemaVersion must be 4`);
   }
   if (manifest.id !== gameId) {
     errors.push(
@@ -487,7 +459,47 @@ async function validateGame(gameId, errors) {
     );
   }
   await checkWorkspaceManifest({ manifest, gameId, gameDir, errors });
-  await checkDemoReleaseV3({ manifest, gameId, gameDir, errors });
+  await checkDemoReleaseV4({ manifest, gameId, gameDir, errors });
+
+  const lockfile = await readFile(lockfilePath, "utf8").catch(() => "");
+  if (lockfile.includes("@dreamboard-games/cli")) {
+    errors.push(
+      `${gameId}: isolated lockfile must not contain @dreamboard-games/cli`,
+    );
+  }
+
+  const completeGamePath = path.join(
+    gameDir,
+    "test/scenarios/complete-game.scenario.ts",
+  );
+  if (await pathExists(completeGamePath)) {
+    try {
+      const developed = await compileScenarioReplay({
+        scenarioPath: completeGamePath,
+        at: "developed",
+      });
+      const gameOver = await compileScenarioReplay({
+        scenarioPath: completeGamePath,
+        at: "game-over",
+      });
+      if (
+        developed.checkpoint.segment !== "given" ||
+        developed.checkpoint.completed !== developed.definition.given.length
+      ) {
+        errors.push(`${gameId}: developed must resolve to the end of given`);
+      }
+      if (
+        gameOver.checkpoint.segment !== "when" ||
+        gameOver.checkpoint.completed !== gameOver.definition.when.length
+      ) {
+        errors.push(`${gameId}: game-over must resolve to the end of when`);
+      }
+    } catch (error) {
+      errors.push(
+        `${gameId}: complete-game named checkpoints failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
   checkArraySubset({
     values: manifest.mechanics,
     allowed: knownMechanics,

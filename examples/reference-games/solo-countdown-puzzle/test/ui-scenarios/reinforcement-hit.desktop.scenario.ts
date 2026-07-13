@@ -3,7 +3,7 @@ export const scenario = {
   title: "Last Light: sea-wall reinforcement holds",
   behaviorScenario:
     "../scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
-  at: { segment: "given", completed: 1 },
+  at: "reinforcement-hit",
   contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
   capabilities: ["event-history", "keyboard", "runtime-submit"],
   sourceFiles: [

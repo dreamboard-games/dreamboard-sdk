@@ -15,6 +15,9 @@ export default defineScenario({
   description:
     "A legal hoarding replay reaches a turn-owner total of 8 and opponent total of 9 before both independently commit private exact-half discards.",
   setup: discardBarrierSetup,
+  checkpoints: {
+    "ready-to-discard": { segment: "given", completed: 179 },
+  },
   given: DISCARD_BARRIER_PREFIX_COMMANDS,
   when: DISCARD_BARRIER_RESPONSES,
   then: ({ expect, interactions, state, view }) => {

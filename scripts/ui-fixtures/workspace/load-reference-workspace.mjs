@@ -5,9 +5,9 @@ import { readJson } from "../../ui/reference-games-lib.mjs";
 export async function loadReferenceGameWorkspace(gameRoot) {
   const root = path.resolve(gameRoot);
   const metadata = await readJson(path.join(root, "reference-game.json"));
-  if (metadata.schemaVersion !== 3) {
+  if (metadata.schemaVersion !== 4) {
     throw new Error(
-      `${path.relative(process.cwd(), root)} reference-game.json must use schemaVersion 3.`,
+      `${path.relative(process.cwd(), root)} reference-game.json must use schemaVersion 4.`,
     );
   }
   const workspace = metadata.workspace;
@@ -19,12 +19,11 @@ export async function loadReferenceGameWorkspace(gameRoot) {
 
   const reducerPath = resolveWorkspacePath(root, workspace.reducer, "reducer");
   const uiEntry = resolveWorkspacePath(root, workspace.ui, "ui");
-  const behaviorScenarioPaths = workspace.behaviorScenarios.map((entry) =>
-    resolveWorkspacePath(root, entry, "behaviorScenarios"),
+  const behaviorScenarioPaths = await collectScenarioPaths(
+    root,
+    "test/scenarios",
   );
-  const uiScenarioPaths = workspace.uiScenarios.map((entry) =>
-    resolveWorkspacePath(root, entry, "uiScenarios"),
-  );
+  const uiScenarioPaths = await collectScenarioPaths(root, "test/ui-scenarios");
 
   const reducerModule = await importModule(reducerPath);
   const reducerBundle =
@@ -72,6 +71,33 @@ export async function loadReferenceGameWorkspace(gameRoot) {
     behaviorScenarios,
     uiScenarios,
   };
+}
+
+async function collectScenarioPaths(gameRoot, relativeRoot) {
+  const { readdir } = await import("node:fs/promises");
+  const root = path.join(gameRoot, relativeRoot);
+  const files = [];
+  async function visit(directory) {
+    const entries = await readdir(directory, { withFileTypes: true });
+    for (const entry of entries.sort((left, right) =>
+      left.name.localeCompare(right.name, "en"),
+    )) {
+      const absolute = path.join(directory, entry.name);
+      if (entry.isSymbolicLink()) {
+        throw new Error(`${absolute} must not be a symbolic link.`);
+      }
+      if (entry.isDirectory()) await visit(absolute);
+      else if (entry.isFile() && entry.name.endsWith(".scenario.ts"))
+        files.push(absolute);
+    }
+  }
+  await visit(root);
+  if (files.length === 0) {
+    throw new Error(
+      `${gameRoot} must provide ${relativeRoot}/**/*.scenario.ts.`,
+    );
+  }
+  return files;
 }
 
 function resolveWorkspacePath(gameRoot, entry, label) {

@@ -1,41 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "automa-river-rival",
   "displayName": "River Guild",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/claim-actionability.scenario.ts",
-      "test/scenarios/complete-game-solo-draw.scenario.ts",
-      "test/scenarios/complete-game-solo-loss.scenario.ts",
-      "test/scenarios/complete-game-solo-win.scenario.ts",
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/cooperative-outcome-1.scenario.ts",
-      "test/scenarios/cooperative-outcome-2.scenario.ts",
-      "test/scenarios/no-fake-player.scenario.ts",
-      "test/scenarios/procedure-events.scenario.ts",
-      "test/scenarios/rival-instruction-claim-highest-tie.scenario.ts",
-      "test/scenarios/rival-instruction-claim-highest-unique.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-grain-absent.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-grain-highest.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-grain-tie.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-ore-absent.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-ore-highest.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-ore-tie.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-timber-absent.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-timber-highest.scenario.ts",
-      "test/scenarios/rival-instruction-claim-kind-timber-tie.scenario.ts",
-      "test/scenarios/rival-instruction-sweep-left.scenario.ts",
-      "test/scenarios/setup-and-determinism.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/river.opening.mobile.scenario.ts",
-      "test/ui-scenarios/river.early.desktop.scenario.ts",
-      "test/ui-scenarios/river.midgame.desktop.scenario.ts",
-      "test/ui-scenarios/river.terminal.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

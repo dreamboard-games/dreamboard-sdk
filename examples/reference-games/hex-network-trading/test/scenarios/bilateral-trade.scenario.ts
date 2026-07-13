@@ -8,6 +8,9 @@ export default defineScenario({
   description:
     "Player 2 makes an affordable one-opponent offer; only Player 1 may respond, and rejection returns Player 2 to the same main phase.",
   setup: { players: 3, seed: 1 },
+  checkpoints: {
+    "pending-trade": { segment: "given", completed: 10 },
+  },
   given: affordableTradePrefix,
   when: [reject(0)],
   then: ({ expect, state, view }) => {

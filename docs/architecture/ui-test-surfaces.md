@@ -1,10 +1,10 @@
 # UI Test Surfaces
 
-Status: accepted for Phase 00 of the UI Agent Iteration Workbench plan.
+Status: accepted
 
 The SDK owns multiple UI verification surfaces. Each surface has one canonical
-responsibility so Storybook, the future UI Workbench, reducer tests, and real
-host parity do not become overlapping partial emulators.
+responsibility so Storybook, the UI Workbench, reducer tests, and real-host
+parity do not become overlapping partial emulators.
 
 | Concern                       | Canonical owner                             |
 | ----------------------------- | ------------------------------------------- |

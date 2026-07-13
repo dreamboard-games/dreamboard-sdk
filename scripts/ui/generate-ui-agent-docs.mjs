@@ -193,8 +193,10 @@ ${table(["Game", "Release role", "Display name", "Mechanics", "UI patterns", "Sc
 ## Agent Authoring Workflow
 
 Read the game-local \`rule.md\` and one typed source under \`test/scenarios/\`.
-Use \`dreamboard test inspect\` to understand a selected checkpoint and
-\`dreamboard test explore\` to obtain concrete replay-accepted commands as JSON.
+Use \`dreamboard test inspect --at <checkpoint>\` to observe one state and its
+sorted checkpoint catalog as JSON. Use \`dreamboard test explore --at
+<checkpoint>\` to enumerate concrete replay-accepted transitions or seed
+variants from that same state.
 Add a returned command to that typed scenario and run \`pnpm verify\` in the
 isolated game package. Reducer tests, Workbench checkpoints, and product-demo
 replay derive from the same scenario source; there is no checked-in base-state
@@ -208,6 +210,10 @@ packed-consumer proof. The packed proof covers the ${sentenceList(
       requiredGameNames,
     )} consumers and must install the SDK tarball rather than workspace source
 links.
+
+The canonical complete-game scenario names \`developed\` at the end of its
+multi-action prelude and \`game-over\` at the terminal state. Run a selective
+gate with \`pnpm reference-games:check -- --game <id>\`.
 
 ## Generated Outputs
 

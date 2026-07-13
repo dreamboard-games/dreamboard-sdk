@@ -2,7 +2,7 @@ export const scenario = {
   id: "hearts.final-outcome.mobile",
   title: "Hearts: one-hand final standings",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 1 },
+  at: "game-over",
   contracts: ["Outcome", "Panel", "PlayerScore", "Table"],
   capabilities: ["competition-ranking", "low-score-winner", "touch"],
   sourceFiles: [

@@ -5,6 +5,9 @@ export default defineScenario({
   id: "last-light.weather-procedure-calm",
   description: "Calm reveals normally and preserves stored reinforcement.",
   setup: { players: 1, seed: 1 },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+  },
   given: [],
   when: [reinforce],
   then: ({ expect, state }) => {

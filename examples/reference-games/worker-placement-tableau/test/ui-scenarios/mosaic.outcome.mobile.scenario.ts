@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.outcome.mobile",
   title: "Mosaic Workshop: final Prestige",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 8 },
+  at: "game-over",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

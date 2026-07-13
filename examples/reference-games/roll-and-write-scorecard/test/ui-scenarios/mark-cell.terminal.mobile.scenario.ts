@@ -2,7 +2,7 @@ export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.terminal.mobile",
   title: "Cloudline Survey: terminal mobile scoring evidence",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 3 },
+  at: "game-over",
   contracts: ["Panel", "SquareGrid"],
   capabilities: ["scorecard-grid", "terminal-outcome"],
   sourceFiles: [

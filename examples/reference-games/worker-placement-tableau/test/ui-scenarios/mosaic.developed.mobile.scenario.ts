@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.developed.mobile",
   title: "Mosaic Workshop: developed tableau",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 6 },
+  at: "late-game",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

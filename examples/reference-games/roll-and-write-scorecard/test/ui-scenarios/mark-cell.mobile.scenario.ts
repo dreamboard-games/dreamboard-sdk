@@ -2,7 +2,7 @@ export const scenario = {
   id: "roll-and-write-scorecard.mark-cell.mobile",
   title: "Cloudline Survey: mobile survey-cell selection",
   behaviorScenario: "../scenarios/multiple-matches.scenario.ts",
-  at: { segment: "given", completed: 0 },
+  at: "ready-to-mark",
   contracts: ["Board.Space", "InteractionSubmit", "Panel", "SquareGrid"],
   capabilities: ["touch", "runtime-submit", "square-board-targets"],
   sourceFiles: [

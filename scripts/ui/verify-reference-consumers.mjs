@@ -150,7 +150,7 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
   });
   const testedSourceSha256 = await sha256Directory(sandbox);
   const testedScenarioSha256 = await sha256Directory(
-    path.join(sandbox, manifest.schemaVersion === 3 ? "test" : "scenarios"),
+    path.join(sandbox, "test"),
   );
 
   await rewriteSdkDependency(sandbox, sdkTarballPath);
@@ -179,22 +179,11 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     ],
     { cwd: sandbox, stdio: "inherit" },
   );
-  const sandboxPackage = await readJson(path.join(sandbox, "package.json"));
-  const scripts = sandboxPackage.scripts ?? {};
-  const v3 = manifest.schemaVersion === 3;
-  if (v3) {
-    if (scripts.verify) {
-      run("pnpm", ["verify"], { cwd: sandbox, stdio: "inherit" });
-    } else {
-      run("pnpm", ["typecheck"], { cwd: sandbox, stdio: "inherit" });
-      run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
-      if (scripts["test:ui"]) {
-        run("pnpm", ["test:ui"], { cwd: sandbox, stdio: "inherit" });
-      }
-    }
-  } else {
-    run("pnpm", ["build"], { cwd: sandbox, stdio: "inherit" });
-    run("pnpm", ["test"], { cwd: sandbox, stdio: "inherit" });
+  if (manifest.schemaVersion !== 4) {
+    throw new Error(`${gameId} must use reference-game schemaVersion 4.`);
+  }
+  for (const script of ["typecheck:raw", "test:raw", "test:ui:raw"]) {
+    run("pnpm", ["run", script], { cwd: sandbox, stdio: "inherit" });
   }
 
   const dependencyResolution = await assertNoWorkspaceLink(sandbox, sdkPackage);
@@ -206,16 +195,9 @@ async function verifyGame(gameId, tempRoot, sdkTarballPath) {
     lockfileSha256: await sha256File(path.join(sourceDir, "pnpm-lock.yaml")),
     sourceSha256: testedSourceSha256,
     scenarioSha256: testedScenarioSha256,
-    ...(v3
-      ? {
-          typecheck: "passed",
-          test: "passed",
-          uiTest: scripts["test:ui"] ? "passed" : "not-declared",
-        }
-      : {
-          build: "passed",
-          test: "passed",
-        }),
+    typecheck: "passed",
+    test: "passed",
+    uiTest: "passed",
     dependencyResolution,
     dependencyGraph: graph,
   };

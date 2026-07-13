@@ -12,6 +12,13 @@ export default defineScenario({
   description:
     "Two guild members claim cargo in seat order through all six rival rounds.",
   setup: completeGameSetup,
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "first-cargo": { segment: "given", completed: 1 },
+    midgame: { segment: "given", completed: 6 },
+    developed: { segment: "given", completed: 10 },
+    "game-over": { segment: "when", completed: 2 },
+  },
   given: COMPLETE_GAME_COMMANDS.slice(0, 10),
   when: COMPLETE_GAME_COMMANDS.slice(10),
   then: ({ expect, interactions, state, view }) => {

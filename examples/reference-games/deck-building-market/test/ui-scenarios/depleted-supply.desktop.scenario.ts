@@ -2,7 +2,7 @@ export default {
   id: "deck-building-market.depleted-supply.desktop",
   title: "Sketchbook: depleted supplies wait for cleanup",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 361 },
+  at: "developed",
   contracts: ["CardCollection", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["depleted-piles", "deferred-ending", "supply-counts"],
   sourceFiles: [

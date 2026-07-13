@@ -2,7 +2,7 @@ export const scenario = {
   id: "simultaneous-card-drafting.drafting.opening.mobile",
   title: "Lantern Market: opening sealed draft",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["HandView", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: [
     "touch",

@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.season-transition.desktop",
   title: "Mosaic Workshop: second season begins",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 4 },
+  at: "season-two",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

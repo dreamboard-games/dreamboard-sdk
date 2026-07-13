@@ -15,6 +15,7 @@ import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import type {
   ScenarioCheckpoint,
+  ScenarioCheckpointSelector,
   ScenarioReplayDefinition,
 } from "./definitions.js";
 import type { ScenarioDefinitionGameLike } from "./scenario-definition-validation.js";
@@ -39,7 +40,7 @@ export type CompiledScenarioReplay<
 
 export type CompileScenarioReplayOptions = {
   readonly scenarioPath: string;
-  readonly at?: ScenarioCheckpoint;
+  readonly at?: ScenarioCheckpointSelector;
 };
 
 type SyntheticCompileResult = Omit<
@@ -49,7 +50,7 @@ type SyntheticCompileResult = Omit<
 
 type SyntheticCompileModule = {
   readonly compile: (options: {
-    readonly at?: ScenarioCheckpoint;
+    readonly at?: ScenarioCheckpointSelector;
     readonly scenarioPath: string;
     readonly sourceDigest: `sha256:${string}`;
   }) => Promise<SyntheticCompileResult>;
@@ -77,6 +78,19 @@ export async function compileScenarioReplay(
 ): Promise<CompiledScenarioReplay> {
   const source = await resolveScenarioSource(options.scenarioPath);
   const syntheticSource = buildSyntheticSource(source);
+  const [
+    reducerEntry,
+    reducerAdvancedEntry,
+    testingEntry,
+    testingRuntimeEntry,
+    typesEntry,
+  ] = await Promise.all([
+    resolveCurrentSdkFacade("reducer"),
+    resolveCurrentSdkFacade("reducer/advanced"),
+    resolveCurrentSdkFacade("testing"),
+    resolveCurrentSdkFacade("testing-runtime"),
+    resolveCurrentSdkFacade("types"),
+  ]);
   const bundled = await build({
     absWorkingDir: source.projectRoot,
     stdin: {
@@ -86,6 +100,13 @@ export async function compileScenarioReplay(
       sourcefile: syntheticSourceFile,
     },
     bundle: true,
+    alias: {
+      "@dreamboard-games/sdk/reducer": reducerEntry,
+      "@dreamboard-games/sdk/reducer/advanced": reducerAdvancedEntry,
+      "@dreamboard-games/sdk/testing": testingEntry,
+      "@dreamboard-games/sdk/testing-runtime": testingRuntimeEntry,
+      "@dreamboard-games/sdk/types": typesEntry,
+    },
     format: "esm",
     platform: "node",
     target: "node24",
@@ -134,6 +155,19 @@ export async function compileScenarioReplay(
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }
+}
+
+async function resolveCurrentSdkFacade(name: string): Promise<string> {
+  const candidates = [
+    path.resolve(import.meta.dirname, `../${name}.ts`),
+    path.resolve(import.meta.dirname, `${name}.js`),
+  ];
+  for (const candidate of candidates) {
+    if (await isFile(candidate)) return candidate;
+  }
+  throw new Error(
+    `Could not resolve the current @dreamboard-games/sdk/${name} facade from ${import.meta.dirname}.`,
+  );
 }
 
 async function resolveScenarioSource(
@@ -221,6 +255,11 @@ function buildSyntheticSource(source: ScenarioSource): string {
     '    throw new Error("Compiled scenario entry is missing game or scenario authority.");',
     "  }",
     "  const definition = toScenarioReplayDefinition(scenario);",
+    "  const checkpoint = typeof options.at === 'string' ? scenario.checkpoints?.[options.at] : options.at;",
+    "  if (typeof options.at === 'string' && checkpoint === undefined) {",
+    "    const available = Object.keys(scenario.checkpoints ?? {}).sort();",
+    "    throw new Error(`Unknown checkpoint '${options.at}'; available checkpoints: ${available.join(', ') || 'none'}.`);",
+    "  }",
     "  const inspected = await inspectScenario({",
     "    game,",
     "    scenario: definition,",
@@ -230,7 +269,7 @@ function buildSyntheticSource(source: ScenarioSource): string {
     "      sourceDigest: options.sourceDigest,",
     "    },",
     '    perspective: { kind: "spectator" },',
-    "    ...(options.at === undefined ? {} : { at: options.at }),",
+    "    ...(checkpoint === undefined ? {} : { at: checkpoint }),",
     "  });",
     "  return {",
     "    definition,",

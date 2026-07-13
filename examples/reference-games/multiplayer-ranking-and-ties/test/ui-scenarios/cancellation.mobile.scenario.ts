@@ -3,7 +3,7 @@ export const scenario = {
   title: "Harbor Fair: scoreless final-refill cancellation",
   behaviorScenario:
     "../scenarios/refill-and-cancellation-final-refill.scenario.ts",
-  at: { segment: "when", completed: 1 },
+  at: "cancelled",
   contracts: ["Outcome", "Panel", "Table"],
   capabilities: ["scoreless-outcome", "storm-history", "touch"],
   sourceFiles: [

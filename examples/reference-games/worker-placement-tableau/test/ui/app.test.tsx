@@ -24,7 +24,7 @@ test("Mosaic Workshop binds the atomic placement form to one action-board target
   assert.doesNotMatch(routes, /chooseExchange|chooseItem|chooseCell/);
 });
 
-test("six UI checkpoints use one behavior path and numeric replay coordinates", async () => {
+test("six UI checkpoints use one behavior path and named checkpoints", async () => {
   const names = [
     "mosaic.initial.mobile.scenario.ts",
     "mosaic.first-craft.desktop.scenario.ts",
@@ -43,10 +43,7 @@ test("six UI checkpoints use one behavior path and numeric replay coordinates", 
       source,
       /behaviorScenario: "test\/scenarios\/complete-game\.scenario\.ts"/,
     );
-    assert.match(
-      source,
-      /at: \{ segment: "(?:setup|given|when)", completed: \d+ \}/,
-    );
+    assert.match(source, /at: "[a-z0-9]+(?:-[a-z0-9]+)*"/);
     assert.doesNotMatch(source, /import behaviorScenario/);
   }
 });

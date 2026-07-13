@@ -6,6 +6,14 @@ export default defineScenario({
   description:
     "Four players pass left and legally play all thirteen tricks before one automatic ordinary-score outcome.",
   setup: { players: 4, seed: 1, setupProfileId: "default" },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "sealed-pass": { segment: "given", completed: 2 },
+    "first-trick": { segment: "given", completed: 8 },
+    "mid-hand": { segment: "given", completed: 32 },
+    developed: { segment: "given", completed: 55 },
+    "game-over": { segment: "when", completed: 1 },
+  },
   given: completeGamePath.slice(0, 55),
   when: [completeGamePath[55]],
   then: ({ expect, interactions, state, view }) => {

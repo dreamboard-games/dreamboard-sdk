@@ -12,6 +12,7 @@ artifacts/ui-stories/
 artifacts/ui-visual/
 artifacts/ui-release-proof/
 artifacts/
+/docs/exec-plans/
 # BEGIN reference-game workspace-codegen outputs
 /examples/reference-games/*/app/index.ts
 /examples/reference-games/*/app/tsconfig.framework.json
@@ -23,9 +24,3 @@ artifacts/
 /examples/reference-games/*/shared/manifest-types.ts
 /examples/reference-games/*/ui/tsconfig.framework.json
 # END reference-game workspace-codegen outputs
-!docs/exec-plans/competition-game-authoring-capability-hard-cut/artifacts/
-!docs/exec-plans/competition-game-authoring-capability-hard-cut/artifacts/phase-05-release-receipt.md
-!docs/exec-plans/reference-game-teaching-source-and-admission-hard-cut/artifacts/
-!docs/exec-plans/reference-game-teaching-source-and-admission-hard-cut/artifacts/phase-00-baseline.md
-!docs/exec-plans/reference-game-rule-conformance-hard-cut/artifacts/
-!docs/exec-plans/reference-game-rule-conformance-hard-cut/artifacts/**

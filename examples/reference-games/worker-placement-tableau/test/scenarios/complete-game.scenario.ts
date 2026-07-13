@@ -28,6 +28,15 @@ export default defineScenario({
   id: "mosaic-workshop.complete-game",
   description: "A deterministic four-season arc ends in a scored unique win.",
   setup: { players: 2, seed: 1, setupProfileId: "standard" },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "first-craft": { segment: "given", completed: 3 },
+    "season-two": { segment: "given", completed: 4 },
+    developed: { segment: "given", completed: 8 },
+    "late-game": { segment: "when", completed: 6 },
+    contention: { segment: "when", completed: 7 },
+    "game-over": { segment: "when", completed: 8 },
+  },
   given: COMPLETE_GAME_COMMANDS.slice(0, 8),
   when: COMPLETE_GAME_COMMANDS.slice(8),
   then: ({ expect, interactions, state, view }) => {

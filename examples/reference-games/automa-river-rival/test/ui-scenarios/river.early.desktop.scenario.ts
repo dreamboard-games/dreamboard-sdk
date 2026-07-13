@@ -2,7 +2,7 @@ export const scenario = {
   id: "automa-river-rival.river.early.desktop",
   title: "River Guild: first cargo claimed",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 1 },
+  at: "first-cargo",
   contracts: ["CardCollection", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["pointer", "keyboard", "exact-position-refill", "seat-order"],
   sourceFiles: [

@@ -2,7 +2,7 @@ export const scenario = {
   id: "simultaneous-card-drafting.drafting.round-transition.mobile",
   title: "Lantern Market: round two opens with preserved scores",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 12 },
+  at: "round-transition",
   contracts: ["HandView", "Panel", "PluginRuntime"],
   capabilities: [
     "touch",

@@ -2,7 +2,7 @@ export default {
   id: "hex-network-trading.setup.desktop",
   title: "Stormtrail: choose an opening camp",
   behaviorScenario: "../scenarios/topology-and-setup.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["Board.HexGrid", "InteractionSubmit", "PluginRuntime"],
   capabilities: ["hex-board-targets", "keyboard", "normal-setup"],
   sourceFiles: [

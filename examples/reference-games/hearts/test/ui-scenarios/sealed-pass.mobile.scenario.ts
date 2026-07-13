@@ -2,7 +2,7 @@ export const scenario = {
   id: "hearts.sealed-pass.mobile",
   title: "Hearts: sealed pass in progress",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 2 },
+  at: "sealed-pass",
   contracts: ["Hand", "Panel", "PluginRuntime"],
   capabilities: ["sealed-commitment", "derived-blocking", "touch"],
   sourceFiles: [

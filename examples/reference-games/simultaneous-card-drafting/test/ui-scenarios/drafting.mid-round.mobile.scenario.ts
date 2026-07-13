@@ -2,7 +2,7 @@ export const scenario = {
   id: "simultaneous-card-drafting.drafting.mid-round.mobile",
   title: "Lantern Market: sealed choice waiting mid-round",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 9 },
+  at: "mid-round",
   contracts: ["HandView", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: [
     "touch",

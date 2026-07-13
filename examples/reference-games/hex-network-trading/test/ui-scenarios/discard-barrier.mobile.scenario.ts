@@ -2,10 +2,7 @@ export default {
   id: "hex-network-trading.discard-barrier.mobile",
   title: "Stormtrail: private overloaded-supply discard",
   behaviorScenario: "../scenarios/discard-barrier.scenario.ts",
-  at: {
-    segment: "given",
-    completed: 179,
-  },
+  at: "ready-to-discard",
   contracts: ["InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["multi-actor-barrier", "private-resources", "touch"],
   sourceFiles: [

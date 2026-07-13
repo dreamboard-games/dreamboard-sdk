@@ -14,6 +14,7 @@ import type {
   ReducerDiagnosticEvent,
 } from "../reducer/diagnostics.js";
 import {
+  ScenarioDefinitionValidationError,
   validateScenarioDefinition,
   type ScenarioDefinitionGameLike,
 } from "./scenario-definition-validation.js";
@@ -341,6 +342,10 @@ export type ScenarioAssertionContext<Game> = {
 };
 
 export type ScenarioDefinition<Game> = ScenarioReplayDefinition<Game> & {
+  /** Named authored states for CLI, Workbench, demo, and test adapters. */
+  readonly checkpoints?: Readonly<
+    Record<ScenarioCheckpointId, ScenarioCheckpoint>
+  >;
   readonly then: (
     context: ScenarioAssertionContext<Game>,
   ) => void | Promise<void>;
@@ -350,6 +355,39 @@ export type ScenarioCheckpoint =
   | { readonly segment: "setup"; readonly completed: 0 }
   | { readonly segment: "given"; readonly completed: number }
   | { readonly segment: "when"; readonly completed: number };
+
+export type ScenarioCheckpointId = string;
+
+export type ScenarioCheckpointSelector =
+  | ScenarioCheckpoint
+  | ScenarioCheckpointId;
+
+/** Resolve authored names while keeping replay DTOs structurally checkpointed. */
+export function resolveScenarioCheckpoint<Game>(
+  definition: Pick<
+    ScenarioDefinition<Game>,
+    "checkpoints" | "given" | "id" | "when"
+  >,
+  selector: ScenarioCheckpointSelector,
+): ScenarioCheckpoint {
+  if (typeof selector !== "string") {
+    return structuredClone(selector);
+  }
+  const checkpoint = definition.checkpoints?.[selector];
+  if (checkpoint === undefined) {
+    const available = Object.keys(definition.checkpoints ?? {}).sort();
+    throw new ScenarioDefinitionValidationError({
+      code: "INVALID_VALUE",
+      path: "scenario.checkpoints",
+      reason:
+        `checkpoint '${selector}' is not declared by scenario '${definition.id}'` +
+        (available.length === 0
+          ? "; no named checkpoints are available"
+          : `; available checkpoints: ${available.join(", ")}`),
+    });
+  }
+  return structuredClone(checkpoint);
+}
 
 export type ScenarioReplaySegment = "given" | "when";
 

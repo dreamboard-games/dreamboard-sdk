@@ -1,4 +1,5 @@
 packages/reducer-contract/generated/**
+docs/exec-plans/
 packages/reducer-contract/src/bundle.ts
 fixtures/ui/reference-games/*.fixture.json
 fixtures/ui/reference-games/index.json

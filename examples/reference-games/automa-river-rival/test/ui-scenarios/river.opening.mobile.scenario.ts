@@ -2,7 +2,7 @@ export const scenario = {
   id: "automa-river-rival.river.opening.mobile",
   title: "River Guild: opening river",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "setup", completed: 0 },
+  at: "opening",
   contracts: ["CardCollection", "InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["touch", "keyboard", "public-river", "cooperative-score"],
   sourceFiles: [

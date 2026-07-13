@@ -1,37 +1,11 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "id": "hearts",
   "displayName": "Hearts",
   "workspace": {
     "manifest": "manifest.ts",
     "reducer": "app/game.ts",
-    "ui": "ui/index.tsx",
-    "behaviorScenarios": [
-      "test/scenarios/complete-game.scenario.ts",
-      "test/scenarios/setup-and-pass.scenario.ts",
-      "test/scenarios/card-legality-first-lead.scenario.ts",
-      "test/scenarios/card-legality-follow-suit.scenario.ts",
-      "test/scenarios/card-legality-first-trick-penalty.scenario.ts",
-      "test/scenarios/card-legality-first-trick-all-penalty.scenario.ts",
-      "test/scenarios/card-legality-off-suit.scenario.ts",
-      "test/scenarios/card-legality-hearts-not-broken.scenario.ts",
-      "test/scenarios/card-legality-all-hearts.scenario.ts",
-      "test/scenarios/card-legality-stale.scenario.ts",
-      "test/scenarios/trick-resolution.scenario.ts",
-      "test/scenarios/scoring-and-outcome-ordinary-penalty.scenario.ts",
-      "test/scenarios/scoring-and-outcome-shoot-the-moon.scenario.ts",
-      "test/scenarios/scoring-and-outcome-sole-winner.scenario.ts",
-      "test/scenarios/scoring-and-outcome-tied-lowest.scenario.ts",
-      "test/scenarios/scoring-and-outcome-lower-place.scenario.ts",
-      "test/scenarios/projection-privacy.scenario.ts"
-    ],
-    "uiScenarios": [
-      "test/ui-scenarios/dealt-hand.desktop.scenario.ts",
-      "test/ui-scenarios/sealed-pass.mobile.scenario.ts",
-      "test/ui-scenarios/first-trick.desktop.scenario.ts",
-      "test/ui-scenarios/mid-hand.desktop.scenario.ts",
-      "test/ui-scenarios/final-outcome.mobile.scenario.ts"
-    ]
+    "ui": "ui/index.tsx"
   },
   "teaching": {
     "whatThisTeaches": [

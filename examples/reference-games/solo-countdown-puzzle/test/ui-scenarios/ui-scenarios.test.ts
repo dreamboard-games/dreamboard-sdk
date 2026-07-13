@@ -17,8 +17,6 @@ test("UI checkpoints derive opening, developing, reinforcement, and terminal sta
       "../scenarios/complete-game.scenario.ts",
     ],
   );
-  assert.deepEqual(developing.environment.viewport, "phone");
-  assert.deepEqual(developing.environment.input, ["touch", "keyboard"]);
   assert.equal(reinforcementHit.replay[0]?.interactionId, "reinforce");
   assert.equal(terminal.replay[0]?.spaceId, "beacon-south");
 });

@@ -2,7 +2,7 @@ export const scenario = {
   id: "hearts.mid-hand.desktop",
   title: "Hearts: seven-trick mid-hand table",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 32 },
+  at: "mid-hand",
   contracts: ["Card", "Hand", "Panel", "PlayerScore", "Table"],
   capabilities: ["trick-history", "captured-penalties", "private-hand"],
   sourceFiles: [

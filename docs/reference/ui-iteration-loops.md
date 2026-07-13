@@ -7,11 +7,11 @@ proof that the framework matches a real `dreamboard` host.
 
 ## Two surfaces, split by what they prove
 
-| Surface            | Command                          | Proves                                                           | Sees the SDK as               | Speed              |
-| ------------------ | -------------------------------- | ---------------------------------------------------------------- | ----------------------------- | ------------------ |
-| **Storybook**      | `pnpm ui:storybook`              | _Presentation_ — pixels, layout, focus/hover, motion, a11y       | **source** (`packages/sdk`)   | HMR, instant       |
-| **Workbench**      | `pnpm ui:workbench --scenario X` | _Behavior_ — semantics, actuator identity, projection/submission | **build** (`dist`) by default | rebuild, then live |
-| **Runtime visual** | `pnpm ui:test:runtime-visual`    | _Stable composed states_ — selected runtime screenshots          | **build** (`dist`)            | explicit snapshots |
+| Surface            | Command                          | Proves                                                           | Sees the SDK as               | Speed                          |
+| ------------------ | -------------------------------- | ---------------------------------------------------------------- | ----------------------------- | ------------------------------ |
+| **Storybook**      | `pnpm ui:storybook`              | _Presentation_ — pixels, layout, focus/hover, motion, a11y       | **source** (`packages/sdk`)   | HMR, instant                   |
+| **Workbench**      | `pnpm ui:workbench --scenario X` | _Behavior_ — semantics, actuator identity, projection/submission | **build** (`dist`) by default | selected compile, then watched |
+| **Runtime visual** | `pnpm ui:test:runtime-visual`    | _Stable composed states_ — selected runtime screenshots          | **build** (`dist`)            | explicit snapshots             |
 
 - **Build presentation in Storybook.** It reads SDK source, so component edits
   hot-reload with no rebuild. This is where "pretty, accessible, responsive"
@@ -34,8 +34,11 @@ theme motion-gate (below) is the membrane between them.**
 ## Inner loop without SDK rebuilds
 
 By default the Workbench consumes the SDK's built `dist` so that what you inspect
-is the exact artifact the parity proof and a real host ship. That costs a
-`pnpm --filter @dreamboard-games/sdk build` before each inspection.
+is the exact artifact the parity proof and a real host ship. The root wrapper
+builds once, resolves a focused scenario's owning game before materialization,
+and caches exact content hits under ignored `build/`. It watches that game's
+manifest, reducer, UI, assets, and scenarios; a failed rebuild retains the last
+good output and recovery triggers a full reload.
 
 For a tight presentation/behavior inner loop you can opt into resolving the SDK
 from **source** so component edits hot-reload in the Workbench too:
@@ -122,9 +125,13 @@ Use real-host parity only when proving the private product host integration.
 | Runtime visual baselines          | `pnpm ui:test:runtime-visual`                             |
 | Update runtime visual baselines   | `pnpm ui:test:runtime-visual:update`                      |
 | Changed-only gate                 | `pnpm ui:test:changed --base origin/main`                 |
+| Explain selection without a build | `pnpm ui:test --scenario <id> --explain`                  |
 | Real-host parity proof            | `pnpm ui:test:parity --require-internal`                  |
 
 See [`ui-workbench-behavioral-proof.md`](./ui-workbench-behavioral-proof.md) for
 how to earn a scenario capability with a replay recipe (and the mobile
-single-tap / nested-gesture lesson), and [`../ui-agent-iteration.md`](../ui-agent-iteration.md)
-for the generated command tiers and component→scenario map.
+single-tap / nested-gesture lesson),
+[`ui-sdk-mobile-hand-and-card-interactions.md`](./ui-sdk-mobile-hand-and-card-interactions.md)
+for hand layout and pointer ownership, and
+[`../ui-agent-iteration.md`](../ui-agent-iteration.md) for the generated command
+tiers and component→scenario map.

@@ -10,7 +10,7 @@ materialize and validate the Workbench catalog before this guide reads it.
 ## Command Tiers
 
 - PR fast gate: `pnpm --filter @dreamboard-games/sdk build && node scripts/ui/run-ui-scenarios.mjs --changed`
-- Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required`
+- Main full gate: `pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required --reuse-materialization`
 - Runtime visual gate: `pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/ui-workbench test tests/runtime-visual.spec.ts`
 - Release proof: `node scripts/ui/create-ui-release-proof.mjs`
 - Focused Workbench route: `pnpm ui:workbench --scenario <scenario-id>`

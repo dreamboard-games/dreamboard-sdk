@@ -30,6 +30,7 @@ const receipt =
     ? { generatedRoot: inheritedRoot }
     : await materializeWorkbench({
         outputRoot: defaultGeneratedWorkbenchRoot,
+        reuseExisting: true,
       });
 const child = spawn("pnpm", [...commands[command], ...args], {
   cwd: path.join(root, "packages/ui-workbench"),

@@ -2,7 +2,7 @@ export const scenario = {
   id: "solo-countdown-puzzle.terminal.mobile",
   title: "Last Light: all coastal beacons lit",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
-  at: { segment: "given", completed: 6 },
+  at: "developed",
   contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
   capabilities: ["terminal-outcome", "touch", "weather-timeline"],
   sourceFiles: [

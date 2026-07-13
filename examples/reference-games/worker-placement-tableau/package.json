@@ -9,18 +9,18 @@
   "scripts": {
     "materialize": "dreamboard-sdk-materialize --project-root . --manifest manifest.ts",
     "predev": "pnpm materialize",
-    "pretypecheck": "pnpm materialize",
-    "pretest": "pnpm materialize",
-    "pretest:ui": "pnpm materialize",
     "dev": "dreamboard dev",
-    "typecheck": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
+    "typecheck": "pnpm materialize && pnpm typecheck:raw",
+    "typecheck:raw": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
     "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
     "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
     "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
-    "test": "tsx --tsconfig test/tsconfig.json --test test/scenarios.test.ts test/unit/*.test.ts",
-    "test:ui": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx test/ui-scenarios/**/*.scenario.ts",
-    "verify": "pnpm typecheck && pnpm test && pnpm test:ui"
+    "test": "pnpm materialize && pnpm test:raw",
+    "test:raw": "tsx --tsconfig test/tsconfig.json --test test/scenarios.test.ts test/unit/*.test.ts",
+    "test:ui": "pnpm materialize && pnpm test:ui:raw",
+    "test:ui:raw": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx test/ui-scenarios/**/*.scenario.ts",
+    "verify": "pnpm materialize && pnpm typecheck:raw && pnpm test:raw && pnpm test:ui:raw"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "0.4.0-alpha.9",

@@ -405,7 +405,7 @@ describe("compileScenarioReplay", () => {
         }),
         compileScenarioReplay({
           scenarioPath,
-          at: { segment: "given", completed: 21 },
+          at: "developed",
         }),
         materializeWorkspace({ projectRoot, manifestPath: "manifest.ts" }),
         materializeWorkspace({ projectRoot, manifestPath: "manifest.ts" }),

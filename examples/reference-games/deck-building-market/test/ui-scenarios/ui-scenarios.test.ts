@@ -26,12 +26,12 @@ test("six Sketchbook UI checkpoints derive from the canonical legal replay", () 
   assert.deepEqual(
     scenarios.map(({ at }) => at),
     [
-      { segment: "setup", completed: 0 },
-      { segment: "given", completed: 5 },
-      { segment: "given", completed: 26 },
-      { segment: "given", completed: 62 },
-      { segment: "given", completed: 361 },
-      { segment: "when", completed: 1 },
+      "opening",
+      "first-purchase",
+      "recycled-card",
+      "technique-chain",
+      "developed",
+      "game-over",
     ],
   );
   assert.equal(

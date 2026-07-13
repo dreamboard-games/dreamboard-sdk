@@ -4,6 +4,10 @@ export default defineScenario({
   id: "cloudline.multiple-matches",
   description: "The first seeded total of six offers both matching cells.",
   setup: { players: 1, seed: 3, setupProfileId: "standard" },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "ready-to-mark": { segment: "given", completed: 0 },
+  },
   given: [],
   when: [],
   then: ({ expect, interactions, view }) => {

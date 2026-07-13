@@ -6,6 +6,9 @@ export default defineScenario({
   description:
     "A stored reinforcement prevents every effect of a North Squall and is consumed.",
   setup: { players: 1, seed: 6 },
+  checkpoints: {
+    "reinforcement-hit": { segment: "given", completed: 1 },
+  },
   given: [repair("beacon-north")],
   when: [reinforce],
   then: ({ expect, state }) => {

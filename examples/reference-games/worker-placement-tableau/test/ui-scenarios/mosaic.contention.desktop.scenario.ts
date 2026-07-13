@@ -2,7 +2,7 @@ export default {
   id: "worker-placement-tableau.contention.desktop",
   title: "Mosaic Workshop: master shares the bench",
   behaviorScenario: "test/scenarios/complete-game.scenario.ts",
-  at: { segment: "when", completed: 7 },
+  at: "contention",
   contracts: [
     "Board.Space",
     "InteractionSubmit",

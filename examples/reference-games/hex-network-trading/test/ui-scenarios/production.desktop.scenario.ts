@@ -2,7 +2,7 @@ export default {
   id: "hex-network-trading.production.desktop",
   title: "Stormtrail: first provisions production",
   behaviorScenario: "../scenarios/production.scenario.ts",
-  at: { segment: "given", completed: 7 },
+  at: "produced",
   contracts: ["Board.HexGrid", "GameEventLog", "PluginRuntime"],
   capabilities: ["production-history", "private-resources", "seeded-dice"],
   sourceFiles: [

@@ -6,6 +6,12 @@ export default defineScenario({
   description:
     "Four organizers complete six seeded rounds with public rows, a final refill, score components, tie-break evidence, and competition ranks.",
   setup: { players: 4, seed: 2 },
+  checkpoints: {
+    opening: { segment: "setup", completed: 0 },
+    "growing-rows": { segment: "given", completed: 12 },
+    developed: { segment: "given", completed: 23 },
+    "game-over": { segment: "when", completed: 1 },
+  },
   given: fourPlayerCompletePath.slice(0, 23),
   when: [fourPlayerCompletePath[23]],
   then: ({ expect, interactions, state, view }) => {

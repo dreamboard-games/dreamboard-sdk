@@ -2,7 +2,7 @@ export default {
   id: "hex-network-trading.pending-trade.mobile",
   title: "Stormtrail: respond to one bilateral offer",
   behaviorScenario: "../scenarios/bilateral-trade.scenario.ts",
-  at: { segment: "given", completed: 10 },
+  at: "pending-trade",
   contracts: ["InteractionSubmit", "Panel", "PluginRuntime"],
   capabilities: ["pending-response", "public-trade-terms", "touch"],
   sourceFiles: [

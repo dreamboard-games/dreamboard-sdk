@@ -40,17 +40,6 @@ selected game-local `rule.md` and typed scenario source. Generated workspace
 contracts and Workbench fixtures are local outputs; the nine per-game lockfiles
 are intentionally checked in as exact public-package provenance.
 
-## Local Registry
-
-Local SDK snapshots can be published to a local Verdaccio registry:
-
-```sh
-pnpm local-registry:publish
-```
-
-By default the command publishes to Verdaccio at `http://127.0.0.1:4873` and
-writes `.dreamboard-dev/local-registry/sdk-package-set.json`.
-
 ## Alpha Publishing
 
 Manual alpha dry-run:
@@ -68,6 +57,8 @@ pnpm publish:alpha
 
 This publishes only `@dreamboard-games/sdk` with the `alpha` npm dist-tag. See
 [`docs/alpha-publish.md`](docs/alpha-publish.md) for the full checklist.
+The current public changes are summarized in
+[`docs/release-notes-0.4.0-alpha.10.md`](docs/release-notes-0.4.0-alpha.10.md).
 
 The `release-alpha` GitHub Actions workflow publishes the SDK package with
 provenance and the `alpha` npm dist-tag after npm Trusted Publishing is

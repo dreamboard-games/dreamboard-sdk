@@ -3,7 +3,7 @@ import { z } from "zod";
 import { computeReferenceGameSourceFingerprint } from "./canonical.js";
 
 export const REFERENCE_GAME_SOURCE_MANIFEST_SCHEMA_VERSION = 3;
-export const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 3;
+export const REFERENCE_GAME_MANIFEST_SCHEMA_VERSION = 4;
 
 export const referenceGameSha256DigestSchema = z
   .string()
@@ -103,8 +103,6 @@ export const referenceGameWorkspaceSchema = z
     manifest: referenceGameWorkspacePathSchema,
     reducer: referenceGameWorkspacePathSchema,
     ui: referenceGameWorkspacePathSchema,
-    behaviorScenarios: z.array(referenceGameWorkspacePathSchema).min(1),
-    uiScenarios: z.array(referenceGameWorkspacePathSchema).min(1),
   })
   .strict();
 
@@ -175,7 +173,7 @@ export const referenceGameSdkPolicySchema = z
   })
   .strict();
 
-export const referenceGameManifestV3Schema = z
+export const referenceGameManifestV4Schema = z
   .object({
     schemaVersion: z.literal(REFERENCE_GAME_MANIFEST_SCHEMA_VERSION),
     id: referenceGameIdSchema,
@@ -219,8 +217,8 @@ export type ReferenceGameRights = z.infer<typeof referenceGameRightsSchema>;
 export type ReferenceGameSdkPolicy = z.infer<
   typeof referenceGameSdkPolicySchema
 >;
-export type ReferenceGameManifestV3 = z.infer<
-  typeof referenceGameManifestV3Schema
+export type ReferenceGameManifestV4 = z.infer<
+  typeof referenceGameManifestV4Schema
 >;
 
 export function parseReferenceGameSourceManifest(
@@ -229,14 +227,14 @@ export function parseReferenceGameSourceManifest(
   return referenceGameSourceManifestSchema.parse(value);
 }
 
-export function parseReferenceGameManifestV3(
+export function parseReferenceGameManifestV4(
   value: unknown,
-): ReferenceGameManifestV3 {
-  return referenceGameManifestV3Schema.parse(value);
+): ReferenceGameManifestV4 {
+  return referenceGameManifestV4Schema.parse(value);
 }
 
 export function isPackageableReferenceGame(
-  game: ReferenceGameManifestV3,
+  game: ReferenceGameManifestV4,
 ): boolean {
   return game.demoRelease !== undefined;
 }

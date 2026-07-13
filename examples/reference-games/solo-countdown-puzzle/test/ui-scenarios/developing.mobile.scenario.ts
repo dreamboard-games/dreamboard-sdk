@@ -2,7 +2,7 @@ export const scenario = {
   id: "solo-countdown-puzzle.developing.mobile",
   title: "Last Light: developing beacon puzzle",
   behaviorScenario: "../scenarios/complete-game-loss-storm.scenario.ts",
-  at: { segment: "given", completed: 7 },
+  at: "developing",
   contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
   capabilities: ["event-history", "resource-pressure", "touch"],
   sourceFiles: [

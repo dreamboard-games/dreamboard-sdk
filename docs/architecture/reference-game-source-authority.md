@@ -7,8 +7,8 @@ Date: 2026-06-19
 ## Decision
 
 The root of each SDK reference game is the sole editable teaching workspace.
-After the reference-game teaching-source hard cut, game rules, manifests,
-reducers, projections, UI, behavior scenarios, and UI scenarios all live under:
+Game rules, manifests, reducers, projections, UI, behavior scenarios, and UI
+scenarios all live under:
 
 ```text
 examples/reference-games/<game-id>/
@@ -49,9 +49,8 @@ Demo release and agent-runner consume the same source admission. Neither layer
 may independently clone, identify, or edit SDK reference-game source after the
 hard cut.
 
-No compatibility fallback is permitted after Phase 03 of the hard cut. Legacy
-fixture-sidecar source and private runner-owned examples must be deleted rather
-than retained as shadow authorities.
+No compatibility fallback is permitted. Legacy fixture-sidecar source and
+private runner-owned examples must not be retained as shadow authorities.
 
 ## Consequences
 

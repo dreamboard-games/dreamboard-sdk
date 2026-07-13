@@ -37,10 +37,12 @@ function validateScenarioDefinition(scenario, modulePath) {
   if (typeof scenario.id !== "string" || scenario.id.length === 0) {
     throw new Error(`${modulePath} scenario.id must be a non-empty string.`);
   }
-  if (!Array.isArray(scenario.sourceFiles)) {
-    throw new Error(`${modulePath} scenario.sourceFiles must be an array.`);
+  if (scenario.sourceFiles && !Array.isArray(scenario.sourceFiles)) {
+    throw new Error(
+      `${modulePath} scenario.sourceFiles must be an array when provided.`,
+    );
   }
-  for (const sourceFile of scenario.sourceFiles) {
+  for (const sourceFile of scenario.sourceFiles ?? []) {
     if (typeof sourceFile !== "string" || sourceFile.length === 0) {
       throw new Error(
         `${modulePath} scenario.sourceFiles entries must be non-empty strings.`,
@@ -55,8 +57,10 @@ function validateScenarioDefinition(scenario, modulePath) {
       );
     }
   }
-  if (!Array.isArray(scenario.contracts)) {
-    throw new Error(`${modulePath} scenario.contracts must be an array.`);
+  if (scenario.contracts && !Array.isArray(scenario.contracts)) {
+    throw new Error(
+      `${modulePath} scenario.contracts must be an array when provided.`,
+    );
   }
   if (scenario.capabilities && !Array.isArray(scenario.capabilities)) {
     throw new Error(`${modulePath} scenario.capabilities must be an array.`);
@@ -65,17 +69,9 @@ function validateScenarioDefinition(scenario, modulePath) {
     throw new Error(`${modulePath} scenario.replay must be an array.`);
   }
   if (scenario.at !== undefined) {
-    assertObject(scenario.at, `${modulePath} scenario.at must be an object.`);
-    const atKeys = Object.keys(scenario.at).sort();
-    if (
-      atKeys.join(",") !== "completed,segment" ||
-      !["setup", "given", "when"].includes(scenario.at.segment) ||
-      !Number.isSafeInteger(scenario.at.completed) ||
-      scenario.at.completed < 0 ||
-      (scenario.at.segment === "setup" && scenario.at.completed !== 0)
-    ) {
+    if (typeof scenario.at !== "string" || scenario.at.length === 0) {
       throw new Error(
-        `${modulePath} scenario.at must be { segment: "setup" | "given" | "when", completed: non-negative integer }.`,
+        `${modulePath} scenario.at must be a named behavior-scenario checkpoint.`,
       );
     }
   }
