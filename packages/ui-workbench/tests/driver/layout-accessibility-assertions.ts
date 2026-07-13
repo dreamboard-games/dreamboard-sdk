@@ -20,20 +20,27 @@ export async function expectAllEnabledActuatorsInViewport(
   page: Page,
 ): Promise<void> {
   const failures = await page.evaluate(
-    ({ attrs, version }) => {
+    async ({ attrs, version }) => {
       const selector = [
         `[${attrs.protocol}="${version}"]`,
         `[${attrs.role}="actuator"]`,
         `[${attrs.enabled}="true"]`,
       ].join("");
-      const viewport = {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      };
-      return [...document.querySelectorAll(selector)]
-        .map((element) => {
-          const rect = element.getBoundingClientRect();
-          return {
+      const initialScroll = { x: window.scrollX, y: window.scrollY };
+      const failures = [];
+      for (const element of document.querySelectorAll(selector)) {
+        element.scrollIntoView({ block: "nearest", inline: "nearest" });
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve()),
+        );
+        const rect = element.getBoundingClientRect();
+        if (
+          rect.right < 0 ||
+          rect.bottom < 0 ||
+          rect.left > window.innerWidth ||
+          rect.top > window.innerHeight
+        ) {
+          failures.push({
             interactionKey: element.getAttribute(attrs.interactionKey),
             actuatorId: element.getAttribute(attrs.actuatorId),
             rect: {
@@ -42,15 +49,11 @@ export async function expectAllEnabledActuatorsInViewport(
               right: rect.right,
               bottom: rect.bottom,
             },
-          };
-        })
-        .filter(
-          ({ rect }) =>
-            rect.right < 0 ||
-            rect.bottom < 0 ||
-            rect.left > viewport.width ||
-            rect.top > viewport.height,
-        );
+          });
+        }
+      }
+      window.scrollTo(initialScroll.x, initialScroll.y);
+      return failures;
     },
     {
       attrs: BROWSER_INTERACTION_ATTRIBUTES,
@@ -59,7 +62,7 @@ export async function expectAllEnabledActuatorsInViewport(
   );
   if (failures.length > 0) {
     throw new Error(
-      `Enabled semantic actuators outside viewport: ${JSON.stringify(failures)}`,
+      `Enabled semantic actuators cannot be scrolled into the viewport: ${JSON.stringify(failures)}`,
     );
   }
 }

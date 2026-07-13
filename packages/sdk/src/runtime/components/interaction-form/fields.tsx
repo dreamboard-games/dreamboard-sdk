@@ -386,7 +386,8 @@ function ChoiceField<
                   }).semanticEffects,
                 })}
                 onClick={() => setValue(choice.value as Params[Key])}
-                className="h-8 px-3 text-sm"
+                className="h-11 px-3 text-sm"
+                style={{ minHeight: 44 }}
               >
                 <ChoiceOptionLabel choice={choice} />
               </ThemedButton>
@@ -582,7 +583,8 @@ function ChoiceListField<
                 }).semanticEffects,
               })}
               onClick={() => toggle(value)}
-              className="h-8 px-3 text-sm"
+              className="h-11 px-3 text-sm"
+              style={{ minHeight: 44 }}
             >
               <ChoiceOptionLabel choice={choice} />
             </ThemedButton>
@@ -906,7 +908,8 @@ function StepperButton({
       disabled={disabled}
       {...browserAttributes}
       onClick={onClick}
-      className="h-8 w-8 text-sm"
+      className="h-11 w-11 text-sm"
+      style={{ minHeight: 44, minWidth: 44 }}
     >
       {children}
     </ThemedButton>

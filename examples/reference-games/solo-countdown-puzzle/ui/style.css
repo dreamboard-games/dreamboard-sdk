@@ -1,0 +1,21 @@
+@import "tailwindcss";
+@import "@dreamboard-games/sdk/ui/plugin-styles.css";
+
+@source "../ui/**/*.{ts,tsx}";
+@source "../shared/**/*.{ts,tsx}";
+
+.last-light-layout {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+}
+
+.last-light-status {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+}
+
+.last-light-beacons {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.last-light-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}

@@ -7,6 +7,7 @@ import {
   type GameView,
 } from "../shared/generated/ui-contract";
 import { LastLightInteractionRoutes } from "./interaction-routes";
+import "./style.css";
 
 type AppProps = {
   view?: PlayerView;
@@ -65,7 +66,7 @@ function LastLightLayout({
   const canRepair = (beaconId: (typeof view.beacons)[number]["id"]) =>
     view.repairableBeaconIds.includes(beaconId);
   const beacons = (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="last-light-beacons grid gap-3">
       {view.beacons.map((beacon) => {
         const content = (
           <span className="flex w-full items-center justify-between gap-3">
@@ -121,7 +122,7 @@ function LastLightLayout({
 
   return (
     <main className={shellClass} data-reference-game="solo-countdown-puzzle">
-      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+      <div className="last-light-layout mx-auto grid max-w-6xl gap-4">
         <div className="space-y-4">
           <header className={panelClass}>
             <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-300">
@@ -142,7 +143,7 @@ function LastLightLayout({
           </header>
 
           <section aria-label="Lighthouse status" className={panelClass}>
-            <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <dl className="last-light-status grid gap-3">
               <Status label="Turns to dawn" value={view.turnsRemaining} />
               <Status label="Energy" value={`${view.energy}/7`} />
               <Status label="Storm" value={`${view.storm}/6`} danger />
@@ -185,7 +186,7 @@ function LastLightLayout({
             {runtime && beaconGrid ? (
               <LastLightInteractionRoutes beaconGrid={beaconGrid} />
             ) : (
-              <div className="grid gap-2 sm:grid-cols-3">
+              <div className="last-light-actions grid gap-2">
                 <button
                   type="button"
                   onClick={onCharge}

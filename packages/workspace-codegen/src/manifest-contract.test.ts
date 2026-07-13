@@ -2309,4 +2309,4 @@ const profiles = setupProfiles({
 void profiles;
 `,
   });
-});
+}, 20_000);

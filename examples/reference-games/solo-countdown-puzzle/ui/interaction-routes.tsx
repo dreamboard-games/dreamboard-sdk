@@ -31,7 +31,7 @@ export function LastLightInteractionRoutes({
           "gameOver.submit": { collect: {} },
         }}
       />
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="last-light-actions grid gap-2">
         <chargeForm.State unavailable={null}>
           {(state) =>
             state.available ? (
