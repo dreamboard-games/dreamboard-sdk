@@ -26,7 +26,7 @@ function parseCard(cardId: CardId): HarborCard {
   if (cardId === "storm-1" || cardId === "storm-2") {
     return { kind: "storm", id: cardId };
   }
-  const match = /^(food|craft|music)-p([123])-c([01])-([1-4])$/.exec(cardId);
+  const match = cardId.match(/^(food|craft|music)-p([123])-c([01])-([1-4])$/);
   if (!match) {
     throw new Error(`Unknown Harbor Fair card '${cardId}'.`);
   }
