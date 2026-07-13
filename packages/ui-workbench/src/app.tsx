@@ -73,7 +73,7 @@ function CatalogPage({
           <p>Dreamboard SDK</p>
           <h1>UI Workbench</h1>
         </div>
-        <a href="/scenario/hearts.pass-three.mobile?mode=test">Test route</a>
+        <a href="/scenario/hearts.sealed-pass.mobile?mode=test">Test route</a>
       </header>
 
       <section className="filters" aria-label="Scenario filters">

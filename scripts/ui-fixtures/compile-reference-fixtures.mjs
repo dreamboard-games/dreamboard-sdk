@@ -281,7 +281,9 @@ export async function compileReferenceFixtures({
   try {
     let fixtureCount = 0;
     const selectedGameIds =
-      gameIds.length > 0 ? gameIds : expectedReferenceGames.map(({ id }) => id);
+      gameIds.length > 0
+        ? gameIds
+        : [...expectedReferenceGames.map(({ id }) => id), "ui-scenarios"];
     if (selectedGameIds.length === 1) {
       await withTemporaryNodeModuleLinks(async () => {
         fixtureCount = await compileAllReferenceFixtures(first, {

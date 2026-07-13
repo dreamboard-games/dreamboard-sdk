@@ -8,9 +8,9 @@ import {
 } from "./scenario-catalog-lib.mjs";
 
 export const smokeWorkbenchScenarioIds = [
-  "hearts.pass-three.mobile",
-  "hex-network-trading.build-trail.desktop",
-  "worker-placement-tableau.place-worker.desktop",
+  "hearts.sealed-pass.mobile",
+  "hex-network-trading.growing-network.desktop",
+  "worker-placement-tableau.first-craft.desktop",
 ];
 
 const ownedUIFallbackPrefixes = [

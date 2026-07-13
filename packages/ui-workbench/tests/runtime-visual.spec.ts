@@ -17,26 +17,26 @@ interface RuntimeVisualBaseline {
 
 const baselines: readonly RuntimeVisualBaseline[] = [
   {
-    name: "hearts phone with three selected cards",
-    scenarioId: "hearts.pass-three.mobile",
+    name: "hearts sealed pass",
+    scenarioId: "hearts.sealed-pass.mobile",
     project: "chromium-touch-phone",
-    replaySteps: 3,
-    snapshotName: "hearts-phone-three-selected.png",
+    replaySteps: 0,
+    snapshotName: "hearts-sealed-pass.png",
   },
   {
-    name: "hex trail draft",
-    scenarioId: "hex-network-trading.build-trail.desktop",
+    name: "Stormtrail growing network",
+    scenarioId: "hex-network-trading.growing-network.desktop",
     project: "chromium-desktop",
-    replaySteps: 1,
-    snapshotName: "hex-trail-draft.png",
+    replaySteps: 0,
+    snapshotName: "stormtrail-growing-network.png",
     stageWidth: 820,
   },
   {
-    name: "worker placement form draft",
-    scenarioId: "worker-placement-tableau.place-worker.desktop",
+    name: "Mosaic first craft",
+    scenarioId: "worker-placement-tableau.first-craft.desktop",
     project: "chromium-desktop",
-    replaySteps: 1,
-    snapshotName: "worker-placement-form-draft.png",
+    replaySteps: 0,
+    snapshotName: "mosaic-first-craft.png",
     stageWidth: 820,
   },
   {
@@ -99,7 +99,7 @@ for (const baseline of baselines) {
       .first();
     const visualSurface =
       (await nestedSurface.count()) > 0
-        ? nestedSurface.locator(":scope > *").first()
+        ? nestedSurface
         : runtimeSurface.locator(":scope > *").first();
     await expect(visualSurface).toBeVisible();
 

@@ -43,8 +43,13 @@
       ],
       "storyIds": ["panels--compact-panel", "panels--focus-order"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Board.HexGrid": {
       "id": "Board.HexGrid",
@@ -207,8 +212,13 @@
         "cards-cardface--state-attributes-present"
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.cards-hand.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "CostDisplay": {
       "id": "CostDisplay",
@@ -221,8 +231,13 @@
       ],
       "storyIds": ["resource-status--cost"],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.resources-cost.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Dialog": {
       "id": "Dialog",
@@ -235,8 +250,13 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.dice-result.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Drawer": {
       "id": "Drawer",
@@ -361,9 +381,15 @@
       "scenarioIds": [
         "simultaneous-card-drafting.drafting.mid-round.mobile",
         "simultaneous-card-drafting.drafting.opening.mobile",
-        "simultaneous-card-drafting.drafting.round-transition.mobile"
+        "simultaneous-card-drafting.drafting.round-transition.mobile",
+        "ui-scenarios.cards-hand.desktop"
       ],
-      "capabilities": ["accessibility-scan", "reduced-motion"]
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Input": {
       "id": "Input",
@@ -376,8 +402,13 @@
       ],
       "storyIds": ["panels--dialog-standard"],
       "requiredCapabilities": ["keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "InteractionInput": {
       "id": "InteractionInput",
@@ -458,8 +489,13 @@
       ],
       "storyIds": ["misc--toast-notifications"],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Outcome": {
       "id": "Outcome",
@@ -538,7 +574,14 @@
         "solo-countdown-puzzle.developing.mobile",
         "solo-countdown-puzzle.initial.desktop",
         "solo-countdown-puzzle.reinforcement-hit.desktop",
-        "solo-countdown-puzzle.terminal.mobile"
+        "solo-countdown-puzzle.terminal.mobile",
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop",
+        "ui-scenarios.prompts-choice.desktop",
+        "ui-scenarios.resources-cost.desktop",
+        "ui-scenarios.zones-staging.desktop"
       ],
       "capabilities": [
         "accessibility-scan",
@@ -601,6 +644,12 @@
         "simultaneous-card-drafting.drafting.opening.mobile",
         "simultaneous-card-drafting.drafting.round-transition.mobile",
         "simultaneous-card-drafting.drafting.terminal.mobile",
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.prompts-choice.desktop",
+        "ui-scenarios.resources-cost.desktop",
+        "ui-scenarios.zones-staging.desktop",
         "worker-placement-tableau.contention.desktop",
         "worker-placement-tableau.developed.mobile",
         "worker-placement-tableau.first-craft.desktop",
@@ -627,8 +676,13 @@
       ],
       "storyIds": ["buttons--primary-action-dock"],
       "requiredCapabilities": ["click", "keyboard", "runtime-submit"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.prompts-choice.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "PrimaryButton": {
       "id": "PrimaryButton",
@@ -641,8 +695,13 @@
       ],
       "storyIds": ["buttons--themed-variants"],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.game-shell.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Resource": {
       "id": "Resource",
@@ -672,8 +731,13 @@
         "resource-status--resource-zero-hidden"
       ],
       "requiredCapabilities": ["responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": ["ui-scenarios.resources-cost.desktop"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "Select": {
       "id": "Select",
@@ -720,8 +784,16 @@
         "board-targets--eligible-targets"
       ],
       "requiredCapabilities": ["click", "keyboard", "responsive-layout"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.boards-slot.desktop",
+        "ui-scenarios.zones-staging.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "SquareGrid": {
       "id": "SquareGrid",
@@ -769,8 +841,16 @@
       ],
       "storyIds": ["hand-stagingzone--removes-on-click"],
       "requiredCapabilities": ["click", "keyboard", "runtime-draft"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.cards-hand.desktop",
+        "ui-scenarios.zones-staging.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     },
     "StandingsTable": {
       "id": "StandingsTable",
@@ -820,8 +900,16 @@
         "buttons--themed-variants"
       ],
       "requiredCapabilities": ["click", "keyboard"],
-      "scenarioIds": [],
-      "capabilities": []
+      "scenarioIds": [
+        "ui-scenarios.dice-result.desktop",
+        "ui-scenarios.game-shell.desktop"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ]
     }
   },
   "scenarios": {
@@ -851,7 +939,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "automa-river-rival.river.early.desktop.fixture.json",
       "renderModule": "modules/automa-river-rival.river.early.desktop.mjs",
-      "fixtureDigest": "sha256:b9dc7f5effe8cbe2723f325af70140884057ed103a0c34c1fd9c2c515db31961",
+      "fixtureDigest": "sha256:cd951435a991606ead3333a24b8213c84bc354a6c516d98a462d6d3b43dc3ea0",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.midgame.desktop": {
@@ -880,7 +968,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "automa-river-rival.river.midgame.desktop.fixture.json",
       "renderModule": "modules/automa-river-rival.river.midgame.desktop.mjs",
-      "fixtureDigest": "sha256:3531ea7e45ab0cc0156d3ab88784e4a26e8b20c396d7044d532c07834332f024",
+      "fixtureDigest": "sha256:70a41377d3ced030852d9e64f0c64be485f1d83e98d77fe16b460c05346e7ac5",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.opening.mobile": {
@@ -909,7 +997,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.river.opening.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.river.opening.mobile.mjs",
-      "fixtureDigest": "sha256:e4be8ff524fcf6b34f469882cdac53597054b2127f2ffa725b510db438f15904",
+      "fixtureDigest": "sha256:02ae2b250f4f0f81262c36f65661c484f33faecd932cbf9b307a191ea87e1b3f",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.terminal.mobile": {
@@ -938,7 +1026,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.river.terminal.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.river.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:9353fe8008c0e9a34e7e5825e2358a172397624d6d70f71afd3352a9ae95820c",
+      "fixtureDigest": "sha256:a615dae55b5cfe39af086b6a66c13084adb19a1c500fd5c73fc6752b15e6d077",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "deck-building-market.acquired-card-recycle.mobile": {
@@ -956,7 +1044,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "deck-building-market.acquired-card-recycle.mobile.fixture.json",
       "renderModule": "modules/deck-building-market.acquired-card-recycle.mobile.mjs",
-      "fixtureDigest": "sha256:e0835ed3099c4a8e52f7ed2d4bd988881f8513ec9aaf8f7bede30d5d39d15e83",
+      "fixtureDigest": "sha256:21dd82efc5703a0b320fac65c2659c96d2c95366af1ac61f80aac887219616d9",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.depleted-supply.desktop": {
@@ -979,7 +1067,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.depleted-supply.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.depleted-supply.desktop.mjs",
-      "fixtureDigest": "sha256:d2e162928cd368b50b5402d1012f8fd4278473386988a3ba87ada3f0f352e7f5",
+      "fixtureDigest": "sha256:a1ebf1be8f91c516f6256f2410212214d5ac4855b9c699cc95dfdf9f12c14090",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.first-purchase.desktop": {
@@ -997,7 +1085,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.first-purchase.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.first-purchase.desktop.mjs",
-      "fixtureDigest": "sha256:d3e6497e586973307c2e33728b3a656e6781047de7fd040457a3c20010a47759",
+      "fixtureDigest": "sha256:84894c0b8f8e4a4e385a731b051b626c9e96359de8dac3cf1a15b880a9face4d",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.opening-hand.desktop": {
@@ -1016,7 +1104,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.opening-hand.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.opening-hand.desktop.mjs",
-      "fixtureDigest": "sha256:d91b78122bb3d5e65c42a40a05015560987b35af9bd416acd77d870b4362bd43",
+      "fixtureDigest": "sha256:6095ede412056e29e1e208171671d062d31b4ecf1423dadf51109524cc8ea133",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.technique-chain.desktop": {
@@ -1034,7 +1122,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.technique-chain.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.technique-chain.desktop.mjs",
-      "fixtureDigest": "sha256:15fe84241a3e3527e11576b1fa4e2e809305ecf5bcfce81fbc8afccba9a7618e",
+      "fixtureDigest": "sha256:825ab18fd8ce61d65dee9f41a717c968bbea1e01fe7e71903eb4e4ceac688cfd",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.terminal-outcome.mobile": {
@@ -1052,7 +1140,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "deck-building-market.terminal-outcome.mobile.fixture.json",
       "renderModule": "modules/deck-building-market.terminal-outcome.mobile.mjs",
-      "fixtureDigest": "sha256:1ca95892d147c04ffd62a66433c2d18d0d13aa25e627988c7adde1fb594538f1",
+      "fixtureDigest": "sha256:de6f9c550d9d8f6050c9b60ece8488500c0faf236eced2506a10a21f9a6e1572",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "hearts.dealt-hand.desktop": {
@@ -1078,7 +1166,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.dealt-hand.desktop.fixture.json",
       "renderModule": "modules/hearts.dealt-hand.desktop.mjs",
-      "fixtureDigest": "sha256:68c293901e164d3ab08c065c92550f38a98b7beae891f0f78b2cb2427590568d",
+      "fixtureDigest": "sha256:7d14d190b772b68e681243d04e13d8e0fbcde1dcdd3ef23a1eb50713a74be6dd",
       "renderModuleDigest": "sha256:f184fffbe029ea97b958192a656ce93e2f09f1e7c8e3800625841b272dc07d6f"
     },
     "hearts.final-outcome.mobile": {
@@ -1097,7 +1185,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.final-outcome.mobile.fixture.json",
       "renderModule": "modules/hearts.final-outcome.mobile.mjs",
-      "fixtureDigest": "sha256:6ad10a2cb85036ed8eec5e56058b4976cb34ad9da1157c85296520a8445f45cd",
+      "fixtureDigest": "sha256:261be8fd2a1c4b1df551ed1a21c10410f3353ca98fa40879cde2da3bd0c16f34",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.first-trick.desktop": {
@@ -1117,7 +1205,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.first-trick.desktop.fixture.json",
       "renderModule": "modules/hearts.first-trick.desktop.mjs",
-      "fixtureDigest": "sha256:4ee9a0d881e798dbfeab57bda3b2a1d3b1eff13518ae96850bd2e9895f465c57",
+      "fixtureDigest": "sha256:15787bee59b23433ac8179870d8fa79a5d1f7c8d0c5a71197b26dc06430ac89b",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.mid-hand.desktop": {
@@ -1136,7 +1224,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.mid-hand.desktop.fixture.json",
       "renderModule": "modules/hearts.mid-hand.desktop.mjs",
-      "fixtureDigest": "sha256:04f5f228d5e812dc2fe66a23fc4d8b2c4d71a3b33816f0ff3af98f06f5080fda",
+      "fixtureDigest": "sha256:560c2de0e7a549e41e5dd769da7f2223be18a8e534101e0f67778cf1c9e5d722",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.sealed-pass.mobile": {
@@ -1155,7 +1243,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.sealed-pass.mobile.fixture.json",
       "renderModule": "modules/hearts.sealed-pass.mobile.mjs",
-      "fixtureDigest": "sha256:ad06262cecc9b5e74d53c20a719ba426bbd168fe3d4d62af9c69728d2fe1a281",
+      "fixtureDigest": "sha256:c28b76fd7b1f31d90e5467e61937f303955861949276d270f00121794cc9cef8",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hex-network-trading.discard-barrier.mobile": {
@@ -1173,7 +1261,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.discard-barrier.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.discard-barrier.mobile.mjs",
-      "fixtureDigest": "sha256:c4bd4f95b8c55e27f28cfbb78da99ac569437813a59d314a3a9d7c723fb534e8",
+      "fixtureDigest": "sha256:de9ea269aa6b13dc2983f8e01b57bab4c0e3ab5d4587a83e130d8946c852d57a",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.growing-network.desktop": {
@@ -1190,7 +1278,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.growing-network.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.growing-network.desktop.mjs",
-      "fixtureDigest": "sha256:ed69177d08ba9cac6183677df4b9b931431d16db652df2cd741aa3804058c930",
+      "fixtureDigest": "sha256:7983ab7d76885e4295a403178e6c2f9410359e2df3acd29a3b6b097066a609fb",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.pending-trade.mobile": {
@@ -1208,7 +1296,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.pending-trade.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.pending-trade.mobile.mjs",
-      "fixtureDigest": "sha256:8ef3b5d50c2fd003587f35fe4f07ba734675c38821166de82c18d8d0462105a0",
+      "fixtureDigest": "sha256:7b1695edcc484bf3854e3b8af382ed208eb31a6c7e98829b58ddce08819a7d2a",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.production.desktop": {
@@ -1226,7 +1314,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.production.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.production.desktop.mjs",
-      "fixtureDigest": "sha256:1ea6cdf61b81d646ae0782a3cd838c61f657f584ce433075c43682bc92dfd157",
+      "fixtureDigest": "sha256:756dd231a6217b7c891f54683ce678a030e812a92a1cd724760d9c31abe0dcd7",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.setup.desktop": {
@@ -1245,7 +1333,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.setup.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.setup.desktop.mjs",
-      "fixtureDigest": "sha256:54072c373bab4567891fdf3c2647873e6d9f3426177c6c33316701bb7be7bb8d",
+      "fixtureDigest": "sha256:450e6d3d4fbf227f51d72a2528e19dcf972244395ec3000312b475ad842400e8",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.terminal.mobile": {
@@ -1263,7 +1351,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.terminal.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:2110683be1b14b14ca1dff9be874b7045923116ccbf3053eff9399edc61ec729",
+      "fixtureDigest": "sha256:fa6dd8e587e9d4f936aa02fe85ecc6f593cd4a5706f3df39380ada219eef3a2b",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "multiplayer-ranking-and-ties.cancellation.mobile": {
@@ -1284,7 +1372,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.cancellation.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.cancellation.mobile.mjs",
-      "fixtureDigest": "sha256:a7da2c11991aa36e7c01ce3532ea5dbed335f020500384a2674558aaf455842d",
+      "fixtureDigest": "sha256:2e3e1ef093a30faf8c0e4d736b753339e44ef21d3100cdb2fef53ef1d1bf8acc",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.early-refill.mobile": {
@@ -1311,7 +1399,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.early-refill.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.early-refill.mobile.mjs",
-      "fixtureDigest": "sha256:9d58c8db57ca7f6162670b7c6c314a3b9b3887b7468450e9b223b0bbb4122171",
+      "fixtureDigest": "sha256:27833dcf4d70d743dfa029453f14d1e0ee2b68326f81ee5d116872f6de742280",
       "renderModuleDigest": "sha256:e201f5a6132f0bbd14ff012102b108bee41058c64ac5575680f898e86a0d27cd"
     },
     "multiplayer-ranking-and-ties.growing-rows.desktop": {
@@ -1331,7 +1419,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "multiplayer-ranking-and-ties.growing-rows.desktop.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.growing-rows.desktop.mjs",
-      "fixtureDigest": "sha256:c148bcefd71d2eb348bef0060676e26d8ba4fefbcc1102e407201627b9cb17fb",
+      "fixtureDigest": "sha256:b0b5ebe1227adb965f92eb131d2b6775366488428ef210b025d81ae6e500e0b1",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.opening.desktop": {
@@ -1352,7 +1440,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "multiplayer-ranking-and-ties.opening.desktop.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.opening.desktop.mjs",
-      "fixtureDigest": "sha256:2689fabb3955a19c0e641673e5142b256d350b30e0898f7e11f1412e65e76007",
+      "fixtureDigest": "sha256:d5059d77dcbfb14f1d0fec9014f2a7969db7b603c489e252c0e4278078996da3",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.terminal.mobile": {
@@ -1373,7 +1461,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.terminal.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:630cbce23349aeb78a167a9e81bf21be433ca89f7ed4f2ee1a3ac2acfcf6f8da",
+      "fixtureDigest": "sha256:42f7b8a5d8d1df9b16acffcb5ec52fa96db7d568c8fe97706d249fbb51255508",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "roll-and-write-scorecard.mark-cell.desktop": {
@@ -1403,7 +1491,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.desktop.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.desktop.mjs",
-      "fixtureDigest": "sha256:e708cd8f2c8e75c9d5632e74c474bb02cfb4ec81b5a953ba513cc6a4b63c2978",
+      "fixtureDigest": "sha256:b6e280b7412f876dc40ce856ffe2fba4e688a2309a4c5bd1272dee4e277b9dbb",
       "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.initial.mobile": {
@@ -1425,7 +1513,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
-      "fixtureDigest": "sha256:c009fe6d0ff80451b38c12f9b2aa0d67d9ba780cd0a6a59ab363171f1dc52054",
+      "fixtureDigest": "sha256:1b2a0f08bb9ab9f451e39fa91562167051a1186fad78c2c3462dd432757d2dad",
       "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
     "roll-and-write-scorecard.mark-cell.mobile": {
@@ -1455,7 +1543,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-      "fixtureDigest": "sha256:d15f31a03fe488ae25ea1f85cb158cbd5ec57cb7e1ba7292c9dc19edd7ae5927",
+      "fixtureDigest": "sha256:adab47daa02ee834e27ca02006f350e0baacd8f98e7b5fb7ba33eb464a857dc9",
       "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.terminal.mobile": {
@@ -1477,7 +1565,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:3c6a855c0effc837152ec1a1c0c2622cb00e67aa9e7932011b9660d12abfe1b8",
+      "fixtureDigest": "sha256:5d030906d48c4e83db922dbf4ef0f1695cc584b5e4eb6c00394ebf939adbc94a",
       "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
     "simultaneous-card-drafting.drafting.mid-round.mobile": {
@@ -1500,7 +1588,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.mid-round.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.mid-round.mobile.mjs",
-      "fixtureDigest": "sha256:8cebeb79b4a0434412a2da2084163099df96cfcfff35c745418b25bfb5ad7f24",
+      "fixtureDigest": "sha256:20b50cb102b1fb999b4f04eff788387f79829598724ccd4116203093d6ab01f4",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.opening.mobile": {
@@ -1524,7 +1612,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.opening.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.opening.mobile.mjs",
-      "fixtureDigest": "sha256:a76cf441cf09bbe7398f8719c87117af9342a2c6e13f18f4c539e6c49efc6767",
+      "fixtureDigest": "sha256:950d632123c0ef45a66f5a0c3c48db396e586204781a928ac8dff8093942052b",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.round-transition.mobile": {
@@ -1547,7 +1635,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.round-transition.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.round-transition.mobile.mjs",
-      "fixtureDigest": "sha256:f95537418a71dd745788c08a566dda384c1074e83cbf1bdcafa2daa02d56ef59",
+      "fixtureDigest": "sha256:90522fd11bf69040c8e6397182e9071d73787ab9ffb0d4507bcb642b5e1caf75",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.terminal.mobile": {
@@ -1570,7 +1658,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.terminal.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:7a6458bcc7ace063e84e02da36e672d8adb2eb2cd7b6e682fd8af98565b20e7c",
+      "fixtureDigest": "sha256:19b316b84fa2c10e76d1db5eb7e38f3463dc8b19ee10c965bcd9922f28d0fee0",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "solo-countdown-puzzle.developing.mobile": {
@@ -1596,7 +1684,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "solo-countdown-puzzle.developing.mobile.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.developing.mobile.mjs",
-      "fixtureDigest": "sha256:f70260d1b28ba5cf2f14fb25ec75acd02e17c2688eb7ef21427a82f2fa9d4487",
+      "fixtureDigest": "sha256:0d36eb3d1774ca15b7d05c37b26612e18c54d818263a579b64422e6380702669",
       "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
     },
     "solo-countdown-puzzle.initial.desktop": {
@@ -1617,7 +1705,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "solo-countdown-puzzle.initial.desktop.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.initial.desktop.mjs",
-      "fixtureDigest": "sha256:b39611e0513c67d051427ea20c418aed5c76e4b649eb441fe360df3e2506b637",
+      "fixtureDigest": "sha256:284f03f6c72b0c6a34f1f6d3fe2ba8aea8b3bc70c3c25df4b0341c3be6a50dff",
       "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
     },
     "solo-countdown-puzzle.reinforcement-hit.desktop": {
@@ -1649,7 +1737,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "solo-countdown-puzzle.reinforcement-hit.desktop.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.reinforcement-hit.desktop.mjs",
-      "fixtureDigest": "sha256:6827b7e9c357fb9e42eb3bdfc3b4e0775ca7c0ea003380b3bfd8a070e76f30b2",
+      "fixtureDigest": "sha256:d5979acf0ba8b6d7810bcd846e55ec59dad6f85e0a112ad7583b5e5830484838",
       "renderModuleDigest": "sha256:547e2499a270da0ef0f31f6d04ef0fa57bb3c5012eaf7956a211aa8771bfb83a"
     },
     "solo-countdown-puzzle.terminal.mobile": {
@@ -1682,8 +1770,181 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "solo-countdown-puzzle.terminal.mobile.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:aa5db1c60ec694f3055f8fc20884aff5824c71474d33d32972f5e50b7f972c57",
+      "fixtureDigest": "sha256:ea6296b380ebc02289001ca7ece1e447533780c5da564fc7f7e7611ac3c2f17c",
       "renderModuleDigest": "sha256:55607962dd2d3c039da24d22a1c5893f044e718c9843e6898260f3153cd5f10b"
+    },
+    "ui-scenarios.boards-slot.desktop": {
+      "id": "ui-scenarios.boards-slot.desktop",
+      "title": "Boards: slot targeting",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/boards/slot-targeting.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["Panel", "PluginRuntime", "SlotSystem"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
+      "fixtureDigest": "sha256:c7204a74cbe5ae5b15a547acc1ad2b4a4554f1424364c048c339f0006ffaa9c3",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.cards-hand.desktop": {
+      "id": "ui-scenarios.cards-hand.desktop",
+      "title": "Cards and hands: selection and hidden state",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/cards/hand-selection.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": [
+        "CardFace",
+        "HandView",
+        "Panel",
+        "PluginRuntime",
+        "StagingZone"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
+      "fixtureDigest": "sha256:8e7c5ecdc925850d34bfc3631e164a63098cab47bc87482586231f56c3b5a6cb",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.dice-result.desktop": {
+      "id": "ui-scenarios.dice-result.desktop",
+      "title": "Dice: result state",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/dice/result-state.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["Dialog", "Panel", "PluginRuntime", "ThemedButton"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
+      "fixtureDigest": "sha256:c45e9fc2ebaf7c479b15e7eab4bb1e1301c3c744a561e03f0f8f3851373b04b4",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.game-shell.desktop": {
+      "id": "ui-scenarios.game-shell.desktop",
+      "title": "Game shell: phase, roster, and terminal outcome",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/game-shell/phase-roster-terminal.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["MoreActions", "Panel", "PrimaryButton", "ThemedButton"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
+      "fixtureDigest": "sha256:8df3df0e45530e6c54e42fe1e1aab96f1b4e635f56fdf40e1dc2921de6bfedba",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.prompts-choice.desktop": {
+      "id": "ui-scenarios.prompts-choice.desktop",
+      "title": "Prompts: choice validation",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/prompts/choice-validation.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": [
+        "ActionPanel",
+        "Input",
+        "Panel",
+        "PluginRuntime",
+        "PrimaryActionButton"
+      ],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
+      "fixtureDigest": "sha256:46bf4ad30111c40d465641d254651986e12e38edf0d4b50c3e6ed24df51aed6c",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.resources-cost.desktop": {
+      "id": "ui-scenarios.resources-cost.desktop",
+      "title": "Resources and costs: affordability",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/resources/affordability.scenario.mjs",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs"
+      ],
+      "contracts": ["CostDisplay", "Panel", "PluginRuntime", "ResourceCounter"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
+      "fixtureDigest": "sha256:633426dc0ea8c6b800b455db36a1b6906aa8ec5cdf3b6e4b35f97ff217dd6c9e",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
+    },
+    "ui-scenarios.zones-staging.desktop": {
+      "id": "ui-scenarios.zones-staging.desktop",
+      "title": "Zones and collections: staging transfer",
+      "gameId": "ui-scenarios",
+      "sourceFiles": [
+        "examples/ui-scenarios/package.json",
+        "examples/ui-scenarios/src/scenario-helper.mjs",
+        "examples/ui-scenarios/src/ui.mjs",
+        "examples/ui-scenarios/src/zones/staging-transfer.scenario.mjs"
+      ],
+      "contracts": ["Panel", "PluginRuntime", "SlotSystem", "StagingZone"],
+      "capabilities": [
+        "accessibility-scan",
+        "click",
+        "reduced-motion",
+        "runtime-submit"
+      ],
+      "viewportTags": ["desktop"],
+      "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
+      "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
+      "fixtureDigest": "sha256:dfbf29afc7e6b2d43d4450e487c5fb5837961a6cb0f3c92f0ee0d42c1832be6d",
+      "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "worker-placement-tableau.contention.desktop": {
       "id": "worker-placement-tableau.contention.desktop",
@@ -1706,7 +1967,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.contention.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.contention.desktop.mjs",
-      "fixtureDigest": "sha256:f2ef85dc6a3da0f490fbf400bb9581ab006b5fe9d2345d372d32bfd7bf64787f",
+      "fixtureDigest": "sha256:dae1739c09b5d0c0ffad0ff3178fb649816c4659000ae69efce74975bd1d4a44",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.developed.mobile": {
@@ -1730,7 +1991,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.developed.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.developed.mobile.mjs",
-      "fixtureDigest": "sha256:3ee13a3369fc7ecf125e42b681ccc8fd5631847687651b52124efa989fa2c5b7",
+      "fixtureDigest": "sha256:43dcc104f0cb6c6c0bf5078fe11f417e72eb993aaa79b3f482f355839860bcf4",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.first-craft.desktop": {
@@ -1754,7 +2015,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.first-craft.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.first-craft.desktop.mjs",
-      "fixtureDigest": "sha256:d8839b75744c7212d113e51592c30791292938c057730e632e16ec7f4ce58504",
+      "fixtureDigest": "sha256:18e1e2e45689462c5a4ea998beeacaf9c464b5f85ae7b0d60073b869c53aee29",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.initial.mobile": {
@@ -1778,7 +2039,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.initial.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.initial.mobile.mjs",
-      "fixtureDigest": "sha256:bca61687f584b8bee17a6ec40dee5f12e35fbd45e8aed19bca81c3546c3c1bc6",
+      "fixtureDigest": "sha256:626e6e05745328fad02ddf182ee50a4655752e0dac1d1b5daaf576b2b49790a8",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.outcome.mobile": {
@@ -1802,7 +2063,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.outcome.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.outcome.mobile.mjs",
-      "fixtureDigest": "sha256:aa76c9681351a5bf12265429884068a53c4d742f1738b5cab002e6297a3eb743",
+      "fixtureDigest": "sha256:a64c04205e1af099ae24cebb372490fa47c212c6f8952e14120d9d609ebc2f24",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.season-transition.desktop": {
@@ -1826,7 +2087,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.season-transition.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.season-transition.desktop.mjs",
-      "fixtureDigest": "sha256:4478f3612821250aea5cfe5542c0c6db52533761bdb2f4711c89edd2c26a3a1f",
+      "fixtureDigest": "sha256:1a975bf6fd2449bce0adbdfba2b61a9ebee68ae9ecae993d5862857459b65bfe",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     }
   },

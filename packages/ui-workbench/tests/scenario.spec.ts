@@ -34,7 +34,7 @@ function readScenarioMatrix(): readonly ScenarioMatrixEntry[] {
   if (!matrixPath) {
     return [
       {
-        scenarioId: process.env.UI_SCENARIO_ID ?? "hearts.pass-three.mobile",
+        scenarioId: process.env.UI_SCENARIO_ID ?? "hearts.sealed-pass.mobile",
         evidencePath: process.env.UI_SCENARIO_EVIDENCE_PATH,
       },
     ];

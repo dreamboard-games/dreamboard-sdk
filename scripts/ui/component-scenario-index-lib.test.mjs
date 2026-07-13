@@ -20,18 +20,18 @@ const index = {
       sourceFiles: ["examples/ui-scenarios/src/cards/drag-between-zones.ts"],
       capabilities: ["pointer-drag"],
     },
-    "hearts.pass-three.mobile": {
-      id: "hearts.pass-three.mobile",
+    "hearts.sealed-pass.mobile": {
+      id: "hearts.sealed-pass.mobile",
       sourceFiles: [],
       capabilities: ["touch-drag"],
     },
-    "hex-network-trading.place-route.desktop": {
-      id: "hex-network-trading.place-route.desktop",
+    "hex-network-trading.growing-network.desktop": {
+      id: "hex-network-trading.growing-network.desktop",
       sourceFiles: [],
       capabilities: ["pointer-drag"],
     },
-    "worker-placement-tableau.place-worker.desktop": {
-      id: "worker-placement-tableau.place-worker.desktop",
+    "worker-placement-tableau.first-craft.desktop": {
+      id: "worker-placement-tableau.first-craft.desktop",
       sourceFiles: [],
       capabilities: ["runtime-draft"],
     },
@@ -63,9 +63,9 @@ test("selects the smoke matrix for shared fixture sources", () => {
       "packages/sdk/src/testing/ui-fixture/compiler.ts",
     ]).scenarioIds,
     [
-      "hearts.pass-three.mobile",
-      "hex-network-trading.place-route.desktop",
-      "worker-placement-tableau.place-worker.desktop",
+      "hearts.sealed-pass.mobile",
+      "hex-network-trading.growing-network.desktop",
+      "worker-placement-tableau.first-craft.desktop",
     ],
   );
 });
@@ -76,9 +76,9 @@ test("selects the smoke matrix for unknown owned UI sources", () => {
       "packages/ui-workbench/src/new-runtime-surface.ts",
     ]).scenarioIds,
     [
-      "hearts.pass-three.mobile",
-      "hex-network-trading.place-route.desktop",
-      "worker-placement-tableau.place-worker.desktop",
+      "hearts.sealed-pass.mobile",
+      "hex-network-trading.growing-network.desktop",
+      "worker-placement-tableau.first-craft.desktop",
     ],
   );
 });
@@ -95,6 +95,6 @@ test("queries scenarios by contract and capability", () => {
     "cards.drag.mobile",
   ]);
   assert.deepEqual(scenariosForCapability(index, "runtime-draft"), [
-    "worker-placement-tableau.place-worker.desktop",
+    "worker-placement-tableau.first-craft.desktop",
   ]);
 });

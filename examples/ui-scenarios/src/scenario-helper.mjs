@@ -46,6 +46,7 @@ function frame({ id, scenarioId, version, view }) {
         version,
       }),
       perspectivePlayerId: playerId,
+      sharedView: { boardStatic: null, dynamicView: {} },
       view,
       flow: {
         currentPhase: view.phase ?? "inspect",
