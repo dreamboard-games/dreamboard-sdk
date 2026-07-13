@@ -153,6 +153,9 @@ test("workspace fixture compilation materializes reducer authority from v2 sourc
     const outputRoot = await mkdtemp(
       path.join(os.tmpdir(), "dreamboard-authority-test-"),
     );
+    const repeatedOutputRoot = await mkdtemp(
+      path.join(os.tmpdir(), "dreamboard-authority-repeat-test-"),
+    );
     const fixture = await compileScenarioModule({
       game: {
         id: metadata.id,
@@ -165,8 +168,25 @@ test("workspace fixture compilation materializes reducer authority from v2 sourc
       outputRoot,
       sdkCommit: "test",
     });
+    const repeatedFixture = await compileScenarioModule({
+      game: {
+        id: metadata.id,
+        displayName: metadata.displayName,
+        mechanics: metadata.mechanics,
+        uiPatterns: metadata.uiPatterns,
+      },
+      gameDir,
+      scenario,
+      outputRoot: repeatedOutputRoot,
+      sdkCommit: "different-provenance-commit",
+    });
 
     assert.equal(fixture.id, "hearts.sealed-pass.mobile");
+    assert.equal(
+      repeatedFixture.sha256,
+      fixture.sha256,
+      "fixture digests must not depend on bundle commit provenance",
+    );
     assert.ok(fixture.capabilities.includes("accessibility-scan"));
     const fixtureJson = JSON.parse(
       await readFile(path.join(outputRoot, fixture.file), "utf8"),

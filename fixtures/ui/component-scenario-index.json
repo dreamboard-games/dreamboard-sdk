@@ -939,7 +939,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "automa-river-rival.river.early.desktop.fixture.json",
       "renderModule": "modules/automa-river-rival.river.early.desktop.mjs",
-      "fixtureDigest": "sha256:cd951435a991606ead3333a24b8213c84bc354a6c516d98a462d6d3b43dc3ea0",
+      "fixtureDigest": "sha256:4c0fb219488067feb8b4a5c6a40602a45127acf2bb7603e1efb13502aa9e4a06",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.midgame.desktop": {
@@ -968,7 +968,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "automa-river-rival.river.midgame.desktop.fixture.json",
       "renderModule": "modules/automa-river-rival.river.midgame.desktop.mjs",
-      "fixtureDigest": "sha256:70a41377d3ced030852d9e64f0c64be485f1d83e98d77fe16b460c05346e7ac5",
+      "fixtureDigest": "sha256:2f275e05d0ae3877c456def17d1c65e593dfb65a409f5232facbf2b4a9be5411",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.opening.mobile": {
@@ -997,7 +997,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.river.opening.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.river.opening.mobile.mjs",
-      "fixtureDigest": "sha256:02ae2b250f4f0f81262c36f65661c484f33faecd932cbf9b307a191ea87e1b3f",
+      "fixtureDigest": "sha256:7573396faecf67b4a51f21f8bd1ec4c3b2378a37c6495fee604536dd054a3d54",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "automa-river-rival.river.terminal.mobile": {
@@ -1026,7 +1026,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "automa-river-rival.river.terminal.mobile.fixture.json",
       "renderModule": "modules/automa-river-rival.river.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:a615dae55b5cfe39af086b6a66c13084adb19a1c500fd5c73fc6752b15e6d077",
+      "fixtureDigest": "sha256:bb122f8b7f532f7f2bf272a453ae98ddf118eae1c9ca67fc30f8b8cd590d2b7f",
       "renderModuleDigest": "sha256:6da07736beb71e9519c0bf16174d4a808a40587b26090d1b58cbca6f446a3a7a"
     },
     "deck-building-market.acquired-card-recycle.mobile": {
@@ -1044,7 +1044,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "deck-building-market.acquired-card-recycle.mobile.fixture.json",
       "renderModule": "modules/deck-building-market.acquired-card-recycle.mobile.mjs",
-      "fixtureDigest": "sha256:21dd82efc5703a0b320fac65c2659c96d2c95366af1ac61f80aac887219616d9",
+      "fixtureDigest": "sha256:797b3f2f7b67f861c551258fedad552967de89be79aad69664523a4bfa6f8394",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.depleted-supply.desktop": {
@@ -1067,7 +1067,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.depleted-supply.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.depleted-supply.desktop.mjs",
-      "fixtureDigest": "sha256:a1ebf1be8f91c516f6256f2410212214d5ac4855b9c699cc95dfdf9f12c14090",
+      "fixtureDigest": "sha256:dbd69f64d0c033fa39b17bd2ab198a88396b3cf6b6237299ab8de45a23d8c001",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.first-purchase.desktop": {
@@ -1085,7 +1085,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.first-purchase.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.first-purchase.desktop.mjs",
-      "fixtureDigest": "sha256:84894c0b8f8e4a4e385a731b051b626c9e96359de8dac3cf1a15b880a9face4d",
+      "fixtureDigest": "sha256:7e979cab985a29ec69ed2e1d7ff912d64d6dd21f38c24ca5b78bd26df9be97d9",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.opening-hand.desktop": {
@@ -1104,7 +1104,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.opening-hand.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.opening-hand.desktop.mjs",
-      "fixtureDigest": "sha256:6095ede412056e29e1e208171671d062d31b4ecf1423dadf51109524cc8ea133",
+      "fixtureDigest": "sha256:a249fe72c2ba59dab3e43080fb905fa06c9672351bfb67f40599db4fb2222a5d",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.technique-chain.desktop": {
@@ -1122,7 +1122,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "deck-building-market.technique-chain.desktop.fixture.json",
       "renderModule": "modules/deck-building-market.technique-chain.desktop.mjs",
-      "fixtureDigest": "sha256:825ab18fd8ce61d65dee9f41a717c968bbea1e01fe7e71903eb4e4ceac688cfd",
+      "fixtureDigest": "sha256:efa2373e39508bfdeb1a1327859b63adb762ff27157c81ebc42ffc90c28de112",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "deck-building-market.terminal-outcome.mobile": {
@@ -1140,7 +1140,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "deck-building-market.terminal-outcome.mobile.fixture.json",
       "renderModule": "modules/deck-building-market.terminal-outcome.mobile.mjs",
-      "fixtureDigest": "sha256:de6f9c550d9d8f6050c9b60ece8488500c0faf236eced2506a10a21f9a6e1572",
+      "fixtureDigest": "sha256:65a07aa2b6d3533bd2c6e5b582c5a02578954e1a84e7083dbda04f5bb75c9799",
       "renderModuleDigest": "sha256:a7074ad1baf263645463103cd31fb315b802d7320fa279b301f7ddda9a2c44a2"
     },
     "hearts.dealt-hand.desktop": {
@@ -1166,7 +1166,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.dealt-hand.desktop.fixture.json",
       "renderModule": "modules/hearts.dealt-hand.desktop.mjs",
-      "fixtureDigest": "sha256:7d14d190b772b68e681243d04e13d8e0fbcde1dcdd3ef23a1eb50713a74be6dd",
+      "fixtureDigest": "sha256:9acbab52227e11bb738c618a2f1f58c63f8817e00d6186da385d477b596a696b",
       "renderModuleDigest": "sha256:f184fffbe029ea97b958192a656ce93e2f09f1e7c8e3800625841b272dc07d6f"
     },
     "hearts.final-outcome.mobile": {
@@ -1185,7 +1185,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.final-outcome.mobile.fixture.json",
       "renderModule": "modules/hearts.final-outcome.mobile.mjs",
-      "fixtureDigest": "sha256:261be8fd2a1c4b1df551ed1a21c10410f3353ca98fa40879cde2da3bd0c16f34",
+      "fixtureDigest": "sha256:494794df2baf7a5a1108c14bd41c05bab63368c6a34c66e878c8d5f64dd5ddc3",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.first-trick.desktop": {
@@ -1205,7 +1205,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.first-trick.desktop.fixture.json",
       "renderModule": "modules/hearts.first-trick.desktop.mjs",
-      "fixtureDigest": "sha256:15787bee59b23433ac8179870d8fa79a5d1f7c8d0c5a71197b26dc06430ac89b",
+      "fixtureDigest": "sha256:f4fa98dccf0ea07da98aa050f971804d996635b89d45237f2bfed2c9ea38251f",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.mid-hand.desktop": {
@@ -1224,7 +1224,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hearts.mid-hand.desktop.fixture.json",
       "renderModule": "modules/hearts.mid-hand.desktop.mjs",
-      "fixtureDigest": "sha256:560c2de0e7a549e41e5dd769da7f2223be18a8e534101e0f67778cf1c9e5d722",
+      "fixtureDigest": "sha256:c8fff37d9b2c79f998fc28f5b39c8afe6e492ca7b7b9e8bc02bd1ada5043ec27",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hearts.sealed-pass.mobile": {
@@ -1243,7 +1243,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hearts.sealed-pass.mobile.fixture.json",
       "renderModule": "modules/hearts.sealed-pass.mobile.mjs",
-      "fixtureDigest": "sha256:c28b76fd7b1f31d90e5467e61937f303955861949276d270f00121794cc9cef8",
+      "fixtureDigest": "sha256:6a0b2daa4e5c8086364189961e6be41e7b2e00f42861203bf80a0356ec1e8039",
       "renderModuleDigest": "sha256:6519ac64ca07616641962e71832a0677b455a00ad2b244bae64795402d464e1e"
     },
     "hex-network-trading.discard-barrier.mobile": {
@@ -1261,7 +1261,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.discard-barrier.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.discard-barrier.mobile.mjs",
-      "fixtureDigest": "sha256:de9ea269aa6b13dc2983f8e01b57bab4c0e3ab5d4587a83e130d8946c852d57a",
+      "fixtureDigest": "sha256:fc61a84ac5167dbacb29c7a8833076c454aee768ffd4be1cd3a386cafb60d523",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.growing-network.desktop": {
@@ -1278,7 +1278,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.growing-network.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.growing-network.desktop.mjs",
-      "fixtureDigest": "sha256:7983ab7d76885e4295a403178e6c2f9410359e2df3acd29a3b6b097066a609fb",
+      "fixtureDigest": "sha256:76c90c47037818e975180d799d9a1a655693c00f404aba02c63f919c6307ca28",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.pending-trade.mobile": {
@@ -1296,7 +1296,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.pending-trade.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.pending-trade.mobile.mjs",
-      "fixtureDigest": "sha256:7b1695edcc484bf3854e3b8af382ed208eb31a6c7e98829b58ddce08819a7d2a",
+      "fixtureDigest": "sha256:3276ec5b6d741961e8ba1c05e4806bfb847850f5e4fa0e32fa3f17a422b59d0b",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.production.desktop": {
@@ -1314,7 +1314,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.production.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.production.desktop.mjs",
-      "fixtureDigest": "sha256:756dd231a6217b7c891f54683ce678a030e812a92a1cd724760d9c31abe0dcd7",
+      "fixtureDigest": "sha256:6eb857526860028bac2d4de18edcfd0e1240d8ad31fe6410443ec693fbc096f1",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.setup.desktop": {
@@ -1333,7 +1333,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "hex-network-trading.setup.desktop.fixture.json",
       "renderModule": "modules/hex-network-trading.setup.desktop.mjs",
-      "fixtureDigest": "sha256:450e6d3d4fbf227f51d72a2528e19dcf972244395ec3000312b475ad842400e8",
+      "fixtureDigest": "sha256:faed456a9da22b8caa046f5f5734aa316300d1a3174f966318a446090f0bff34",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "hex-network-trading.terminal.mobile": {
@@ -1351,7 +1351,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "hex-network-trading.terminal.mobile.fixture.json",
       "renderModule": "modules/hex-network-trading.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:fa6dd8e587e9d4f936aa02fe85ecc6f593cd4a5706f3df39380ada219eef3a2b",
+      "fixtureDigest": "sha256:fba15be8a24240ebfe681f57ff5f42c7e60a7b3708c2923b9662aa6ad75dd28c",
       "renderModuleDigest": "sha256:33574f168af04cd4201df318a169964e9f4e121f171046a05f365df7cf55169a"
     },
     "multiplayer-ranking-and-ties.cancellation.mobile": {
@@ -1372,7 +1372,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.cancellation.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.cancellation.mobile.mjs",
-      "fixtureDigest": "sha256:2e3e1ef093a30faf8c0e4d736b753339e44ef21d3100cdb2fef53ef1d1bf8acc",
+      "fixtureDigest": "sha256:6eec7641644d53970a89d5a3fd6d837e58200dd70cbc4f1236bccb18ed033618",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.early-refill.mobile": {
@@ -1399,7 +1399,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.early-refill.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.early-refill.mobile.mjs",
-      "fixtureDigest": "sha256:27833dcf4d70d743dfa029453f14d1e0ee2b68326f81ee5d116872f6de742280",
+      "fixtureDigest": "sha256:a8d9d51bdbf6a36337e5b5c1c5bb8b8cdaba4e0b77a84e539b0deb7ac6de9e9e",
       "renderModuleDigest": "sha256:e201f5a6132f0bbd14ff012102b108bee41058c64ac5575680f898e86a0d27cd"
     },
     "multiplayer-ranking-and-ties.growing-rows.desktop": {
@@ -1419,7 +1419,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "multiplayer-ranking-and-ties.growing-rows.desktop.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.growing-rows.desktop.mjs",
-      "fixtureDigest": "sha256:b0b5ebe1227adb965f92eb131d2b6775366488428ef210b025d81ae6e500e0b1",
+      "fixtureDigest": "sha256:283ca14c21c7bc1f207b17b0191274dac1adc3c50a4e757b4aba3e371ceb9019",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.opening.desktop": {
@@ -1440,7 +1440,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "multiplayer-ranking-and-ties.opening.desktop.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.opening.desktop.mjs",
-      "fixtureDigest": "sha256:d5059d77dcbfb14f1d0fec9014f2a7969db7b603c489e252c0e4278078996da3",
+      "fixtureDigest": "sha256:886ed152c3180dd98509b9dd19b3f7c5d4410edb91da3f087a95439d1f9a16bb",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "multiplayer-ranking-and-ties.terminal.mobile": {
@@ -1461,7 +1461,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "multiplayer-ranking-and-ties.terminal.mobile.fixture.json",
       "renderModule": "modules/multiplayer-ranking-and-ties.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:42f7b8a5d8d1df9b16acffcb5ec52fa96db7d568c8fe97706d249fbb51255508",
+      "fixtureDigest": "sha256:437fb269e88130332859bb7960c1c7ed821fbe8a08327e9e0794035270a13d89",
       "renderModuleDigest": "sha256:1c8fd1a78bd534a3346b5e24bb0758a5f5f722afe522a1d90eec60fe65ae3086"
     },
     "roll-and-write-scorecard.mark-cell.desktop": {
@@ -1491,7 +1491,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.desktop.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.desktop.mjs",
-      "fixtureDigest": "sha256:b6e280b7412f876dc40ce856ffe2fba4e688a2309a4c5bd1272dee4e277b9dbb",
+      "fixtureDigest": "sha256:25715ad28a22bf366b2fe0bb9e28c9d07af0d2f1c9ea259a939dc69599edc825",
       "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.initial.mobile": {
@@ -1513,7 +1513,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.initial.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.initial.mobile.mjs",
-      "fixtureDigest": "sha256:1b2a0f08bb9ab9f451e39fa91562167051a1186fad78c2c3462dd432757d2dad",
+      "fixtureDigest": "sha256:668c177fb31bb34348fb47a25c3c53fbdf64b9a758e03a9a851831c7ec281207",
       "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
     "roll-and-write-scorecard.mark-cell.mobile": {
@@ -1543,7 +1543,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.mobile.mjs",
-      "fixtureDigest": "sha256:adab47daa02ee834e27ca02006f350e0baacd8f98e7b5fb7ba33eb464a857dc9",
+      "fixtureDigest": "sha256:c9b68d4bedf974afd27462a9fcf4e3192e18a21fc63c5b8ec74b107583e8f067",
       "renderModuleDigest": "sha256:65441068d649cb7dc52b8c38b01d3b585c8bb32500b9617921e11451593e1fb7"
     },
     "roll-and-write-scorecard.mark-cell.terminal.mobile": {
@@ -1565,7 +1565,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "roll-and-write-scorecard.mark-cell.terminal.mobile.fixture.json",
       "renderModule": "modules/roll-and-write-scorecard.mark-cell.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:5d030906d48c4e83db922dbf4ef0f1695cc584b5e4eb6c00394ebf939adbc94a",
+      "fixtureDigest": "sha256:306e5fa80b27f1b82a86a09f6fabce10ca0b3d5e79cd3e7de15b08747135df66",
       "renderModuleDigest": "sha256:556f4d46883a765e0e566dc6c745997953ddd93f7b17fc986b891446f6ed8004"
     },
     "simultaneous-card-drafting.drafting.mid-round.mobile": {
@@ -1588,7 +1588,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.mid-round.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.mid-round.mobile.mjs",
-      "fixtureDigest": "sha256:20b50cb102b1fb999b4f04eff788387f79829598724ccd4116203093d6ab01f4",
+      "fixtureDigest": "sha256:fb131e92c573d74e0a86caa0dc8d149447c8b591c10b011597aedbd1675ef0ae",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.opening.mobile": {
@@ -1612,7 +1612,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.opening.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.opening.mobile.mjs",
-      "fixtureDigest": "sha256:950d632123c0ef45a66f5a0c3c48db396e586204781a928ac8dff8093942052b",
+      "fixtureDigest": "sha256:f9172ad508a599710e5c5b4add1a94b6a01571d52f0427ddb39bf417859378c8",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.round-transition.mobile": {
@@ -1635,7 +1635,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.round-transition.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.round-transition.mobile.mjs",
-      "fixtureDigest": "sha256:90522fd11bf69040c8e6397182e9071d73787ab9ffb0d4507bcb642b5e1caf75",
+      "fixtureDigest": "sha256:adf94ff01711c9a17d828aa9369129f70008b0f0a214b58843604441e5cce997",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "simultaneous-card-drafting.drafting.terminal.mobile": {
@@ -1658,7 +1658,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "simultaneous-card-drafting.drafting.terminal.mobile.fixture.json",
       "renderModule": "modules/simultaneous-card-drafting.drafting.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:19b316b84fa2c10e76d1db5eb7e38f3463dc8b19ee10c965bcd9922f28d0fee0",
+      "fixtureDigest": "sha256:22ce45ae802e9a25d6e0aa7b7a60fd20e399a734b8e0477414f98ddbe61c7a0a",
       "renderModuleDigest": "sha256:1f927d0a0a329753cffd9ab14b5d88424d2ac65e2320b9aec50fad10cc26dae9"
     },
     "solo-countdown-puzzle.developing.mobile": {
@@ -1684,7 +1684,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "solo-countdown-puzzle.developing.mobile.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.developing.mobile.mjs",
-      "fixtureDigest": "sha256:0d36eb3d1774ca15b7d05c37b26612e18c54d818263a579b64422e6380702669",
+      "fixtureDigest": "sha256:2228118daf151f3cc79f119c8452dd3b7490c691ad42344a4f1b265865ef6b8c",
       "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
     },
     "solo-countdown-puzzle.initial.desktop": {
@@ -1705,7 +1705,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "solo-countdown-puzzle.initial.desktop.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.initial.desktop.mjs",
-      "fixtureDigest": "sha256:284f03f6c72b0c6a34f1f6d3fe2ba8aea8b3bc70c3c25df4b0341c3be6a50dff",
+      "fixtureDigest": "sha256:bf67e8049834bd1d1deb93d1a3865cc48c48ee13858ba25ef9809eb3d791e810",
       "renderModuleDigest": "sha256:e3e582034415120287b438713ba9d0e9ca236dadbfc5d2acb5d8a50c32c3f461"
     },
     "solo-countdown-puzzle.reinforcement-hit.desktop": {
@@ -1737,7 +1737,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "solo-countdown-puzzle.reinforcement-hit.desktop.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.reinforcement-hit.desktop.mjs",
-      "fixtureDigest": "sha256:d5979acf0ba8b6d7810bcd846e55ec59dad6f85e0a112ad7583b5e5830484838",
+      "fixtureDigest": "sha256:66a01c2811ef94e0a4ee461a34c7c19cef0f2a917ee835b855582bc76b8995c2",
       "renderModuleDigest": "sha256:547e2499a270da0ef0f31f6d04ef0fa57bb3c5012eaf7956a211aa8771bfb83a"
     },
     "solo-countdown-puzzle.terminal.mobile": {
@@ -1770,7 +1770,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "solo-countdown-puzzle.terminal.mobile.fixture.json",
       "renderModule": "modules/solo-countdown-puzzle.terminal.mobile.mjs",
-      "fixtureDigest": "sha256:ea6296b380ebc02289001ca7ece1e447533780c5da564fc7f7e7611ac3c2f17c",
+      "fixtureDigest": "sha256:64dcbd2849b70b403669c82c1882b76f6f1a051385de240aca3d05f9b8f1a2f8",
       "renderModuleDigest": "sha256:55607962dd2d3c039da24d22a1c5893f044e718c9843e6898260f3153cd5f10b"
     },
     "ui-scenarios.boards-slot.desktop": {
@@ -1793,7 +1793,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.boards-slot.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.boards-slot.desktop.mjs",
-      "fixtureDigest": "sha256:c7204a74cbe5ae5b15a547acc1ad2b4a4554f1424364c048c339f0006ffaa9c3",
+      "fixtureDigest": "sha256:cb96a7dc9333ae800528a1a23ed741fe2c487a59e52849e009d97131dac5e9e2",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.cards-hand.desktop": {
@@ -1822,7 +1822,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.cards-hand.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.cards-hand.desktop.mjs",
-      "fixtureDigest": "sha256:8e7c5ecdc925850d34bfc3631e164a63098cab47bc87482586231f56c3b5a6cb",
+      "fixtureDigest": "sha256:bebdfe738d9231101777102e7b60e6cff47d4385f6d9f8c363ad199edd8ae198",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.dice-result.desktop": {
@@ -1845,7 +1845,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.dice-result.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.dice-result.desktop.mjs",
-      "fixtureDigest": "sha256:c45e9fc2ebaf7c479b15e7eab4bb1e1301c3c744a561e03f0f8f3851373b04b4",
+      "fixtureDigest": "sha256:459dc15b3b556f25fac8b8b26e4e6bbc2d10c2cd89264b8c2b0b7114a95935a6",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.game-shell.desktop": {
@@ -1868,7 +1868,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.game-shell.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.game-shell.desktop.mjs",
-      "fixtureDigest": "sha256:8df3df0e45530e6c54e42fe1e1aab96f1b4e635f56fdf40e1dc2921de6bfedba",
+      "fixtureDigest": "sha256:166fb2e51212da6d68f713830fae16d4bc33aab8ca00bfe0c50452e7e43f568c",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.prompts-choice.desktop": {
@@ -1897,7 +1897,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.prompts-choice.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.prompts-choice.desktop.mjs",
-      "fixtureDigest": "sha256:46bf4ad30111c40d465641d254651986e12e38edf0d4b50c3e6ed24df51aed6c",
+      "fixtureDigest": "sha256:f45f9652894153fceca7a16677f2f3ad790b012e1061a30f65b7282a17f49469",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.resources-cost.desktop": {
@@ -1920,7 +1920,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.resources-cost.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.resources-cost.desktop.mjs",
-      "fixtureDigest": "sha256:633426dc0ea8c6b800b455db36a1b6906aa8ec5cdf3b6e4b35f97ff217dd6c9e",
+      "fixtureDigest": "sha256:bfd7c525ff56bb58d2af7d77f4653d9c9b3023933a01013e99cbb5c717bb7690",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "ui-scenarios.zones-staging.desktop": {
@@ -1943,7 +1943,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "ui-scenarios.zones-staging.desktop.fixture.json",
       "renderModule": "modules/ui-scenarios.zones-staging.desktop.mjs",
-      "fixtureDigest": "sha256:dfbf29afc7e6b2d43d4450e487c5fb5837961a6cb0f3c92f0ee0d42c1832be6d",
+      "fixtureDigest": "sha256:b994b79bf348cf9063ab3adec11d66824307c53ff31e1460b1e4863ca252026e",
       "renderModuleDigest": "sha256:ae1aba874a28ab05bc518bd81e179a5a4672c33d43bb64739d44aba2ecad0f66"
     },
     "worker-placement-tableau.contention.desktop": {
@@ -1967,7 +1967,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.contention.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.contention.desktop.mjs",
-      "fixtureDigest": "sha256:dae1739c09b5d0c0ffad0ff3178fb649816c4659000ae69efce74975bd1d4a44",
+      "fixtureDigest": "sha256:dd3cfad16eebd9ff434fca21e35487c934aa6959b1c4f7c21537d35ff6dc61d0",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.developed.mobile": {
@@ -1991,7 +1991,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.developed.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.developed.mobile.mjs",
-      "fixtureDigest": "sha256:43dcc104f0cb6c6c0bf5078fe11f417e72eb993aaa79b3f482f355839860bcf4",
+      "fixtureDigest": "sha256:026a4453e7caa0d4c4a9294275abf36c5fd62acf86f72bfed1b3e425fb642b95",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.first-craft.desktop": {
@@ -2015,7 +2015,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.first-craft.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.first-craft.desktop.mjs",
-      "fixtureDigest": "sha256:18e1e2e45689462c5a4ea998beeacaf9c464b5f85ae7b0d60073b869c53aee29",
+      "fixtureDigest": "sha256:c6a62b9ca140ae4b1edc51d930bd9eff5b716e96fc487825f57aee756fddd0ac",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.initial.mobile": {
@@ -2039,7 +2039,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.initial.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.initial.mobile.mjs",
-      "fixtureDigest": "sha256:626e6e05745328fad02ddf182ee50a4655752e0dac1d1b5daaf576b2b49790a8",
+      "fixtureDigest": "sha256:356c324c66d53f7225dbd0a2f1b4cb51a8d069c9f5f98c640fa3a7c530363241",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.outcome.mobile": {
@@ -2063,7 +2063,7 @@
       "viewportTags": ["phone", "touch"],
       "fixtureFile": "worker-placement-tableau.outcome.mobile.fixture.json",
       "renderModule": "modules/worker-placement-tableau.outcome.mobile.mjs",
-      "fixtureDigest": "sha256:a64c04205e1af099ae24cebb372490fa47c212c6f8952e14120d9d609ebc2f24",
+      "fixtureDigest": "sha256:88c8e8ee3ff03712d1ac105858f3a1a2f0c7dc5c08bcda4c98f3a92ebe3e3dcb",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     },
     "worker-placement-tableau.season-transition.desktop": {
@@ -2087,7 +2087,7 @@
       "viewportTags": ["desktop"],
       "fixtureFile": "worker-placement-tableau.season-transition.desktop.fixture.json",
       "renderModule": "modules/worker-placement-tableau.season-transition.desktop.mjs",
-      "fixtureDigest": "sha256:1a975bf6fd2449bce0adbdfba2b61a9ebee68ae9ecae993d5862857459b65bfe",
+      "fixtureDigest": "sha256:29d62ce1eb75d75516db6105c6c7ed0e39a6b031773f3ee876120b068b285f3c",
       "renderModuleDigest": "sha256:fc83ef2dfa0d8d9d75bf55ff613cd46a79f123cdaf47a6bc6b4eb2054e2c98b9"
     }
   },

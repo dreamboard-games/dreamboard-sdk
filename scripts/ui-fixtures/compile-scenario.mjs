@@ -1251,6 +1251,9 @@ export async function compileScenarioModule({
   outputRoot,
   sdkCommit,
 }) {
+  // The bundle index records commit provenance. Keep it out of the semantic
+  // fixture digest so an unrelated repository commit cannot stale the catalog.
+  void sdkCommit;
   const fixtureId = scenario.id;
   const renderModule = `modules/${fixtureId}.mjs`;
   const metadataPath = path.join(gameDir, "reference-game.json");
@@ -1329,7 +1332,6 @@ export async function compileScenarioModule({
         uiScenarioId: fixtureId,
         sourceFiles: materializedScenario.sourceFiles,
         authority: materializedScenario.authority.kind,
-        sdkCommit,
       }),
       sourceFiles: [...materializedScenario.sourceFiles],
     },

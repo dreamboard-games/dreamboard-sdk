@@ -1,14 +1,6 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
-import {
-  cp,
-  mkdir,
-  mkdtemp,
-  readFile,
-  readdir,
-  rm,
-  writeFile,
-} from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -19,6 +11,10 @@ import { materializeReferenceGameWorkspaces } from "../reference-games/materiali
 import { generateScenarioCatalog } from "./generate-scenario-catalog.mjs";
 import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
 import { compareCanonicalStrings, root } from "./reference-games-lib.mjs";
+import {
+  replaceDirectoryAtomically,
+  withWorkbenchMaterializationLock,
+} from "./workbench-materialization-guard.mjs";
 
 export const defaultGeneratedWorkbenchRoot = path.join(
   root,
@@ -30,6 +26,20 @@ export async function materializeWorkbench({
   verifyDeterminism = true,
   checkComponentIndex = false,
 } = {}) {
+  return withWorkbenchMaterializationLock(() =>
+    materializeWorkbenchUnlocked({
+      outputRoot,
+      verifyDeterminism,
+      checkComponentIndex,
+    }),
+  );
+}
+
+async function materializeWorkbenchUnlocked({
+  outputRoot,
+  verifyDeterminism,
+  checkComponentIndex,
+}) {
   const resolvedOutputRoot = path.resolve(outputRoot);
   const firstWorkspace = await materializeReferenceGameWorkspaces();
   const secondWorkspace = verifyDeterminism
@@ -72,9 +82,6 @@ export async function materializeWorkbench({
       }
     }
 
-    await rm(resolvedOutputRoot, { recursive: true, force: true });
-    await mkdir(path.dirname(resolvedOutputRoot), { recursive: true });
-    await cp(first, resolvedOutputRoot, { recursive: true });
     const receipt = {
       schemaVersion: 1,
       generatedRoot: resolvedOutputRoot,
@@ -84,9 +91,10 @@ export async function materializeWorkbench({
       workspaceDigests: firstWorkspaceDigests,
     };
     await writeFile(
-      path.join(resolvedOutputRoot, "materialization-receipt.json"),
+      path.join(first, "materialization-receipt.json"),
       `${JSON.stringify(receipt, null, 2)}\n`,
     );
+    await replaceDirectoryAtomically(first, resolvedOutputRoot);
     return receipt;
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
