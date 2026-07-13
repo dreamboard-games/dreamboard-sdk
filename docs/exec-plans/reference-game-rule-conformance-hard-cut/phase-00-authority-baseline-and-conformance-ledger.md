@@ -1,5 +1,7 @@
 # Phase 00: Authority, Baseline, And Conformance Ledger
 
+Status: complete
+
 ## Objective
 
 Freeze the decisions, repository baselines, consumer graph, rule-conformance

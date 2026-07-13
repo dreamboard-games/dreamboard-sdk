@@ -1,6 +1,6 @@
 # Phase 06: On-Demand Derived Artifacts And Public Release Checkpoint
 
-Status: proposed.
+Status: complete.
 
 Depends on Phases 00-05. Those phases must leave all nine implementations and
 their authored scenarios conforming to the approved `rule.md` files before this

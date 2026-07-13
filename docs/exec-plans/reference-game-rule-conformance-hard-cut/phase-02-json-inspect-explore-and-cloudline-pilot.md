@@ -1,6 +1,6 @@
 # Phase 02: JSON Inspect/Explore And Cloudline Survey Pilot
 
-Status: implementation in progress
+Status: complete
 
 Depends on: Phase 01
 

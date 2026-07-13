@@ -1,6 +1,6 @@
 # Phase 04: Outcome And Automa Pilots
 
-Status: proposed
+Status: complete
 
 Depends on: Phases 00-03
 

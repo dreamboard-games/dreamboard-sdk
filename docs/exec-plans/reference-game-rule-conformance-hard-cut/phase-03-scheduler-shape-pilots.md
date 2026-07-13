@@ -1,6 +1,6 @@
 # Phase 03: Scheduler-Shape Pilots
 
-Status: proposed
+Status: complete
 
 Depends on: Phases 00-02
 

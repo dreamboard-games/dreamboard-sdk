@@ -1,6 +1,6 @@
 # Phase 07: Workbench, Demo, Derived Deletion, And Cross-Repository Cutover
 
-Status: proposed.
+Status: implementation in progress.
 
 Depends on Phases 00-06.
 

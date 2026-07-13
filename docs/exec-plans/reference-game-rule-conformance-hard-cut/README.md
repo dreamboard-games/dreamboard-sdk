@@ -1,6 +1,6 @@
 # Reference Game Rule Conformance And Agent Testing Hard Cut
 
-Status: implementation in progress (Phases 00-01 complete; Phase 02 in progress)
+Status: implementation in progress (Phases 00-06 complete; Phase 07 in progress)
 
 Planned at SDK commit: `05509e395bb5b6ec28cac4b7724a649ea9e56988`
 

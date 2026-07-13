@@ -1,6 +1,6 @@
 # Phase 05: Remaining Adapted-Game Conformance
 
-Status: proposed
+Status: complete
 
 Depends on: Phases 00-04
 
