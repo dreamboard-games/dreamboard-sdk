@@ -1,9 +1,0 @@
-{
-  "currentStage": "humanTurn",
-  "stageSeats": ["player-1"],
-  "view": {
-    "currentPhase": "humanTurn",
-    "eventLog": [],
-    "availableActions": ["claimCargo"]
-  }
-}

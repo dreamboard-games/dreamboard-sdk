@@ -9,7 +9,10 @@ import { compileReferenceFixtures } from "../ui-fixtures/compile-reference-fixtu
 import { checkReferenceFixtures } from "../ui-fixtures/check-fixtures.mjs";
 import { materializeReferenceGameWorkspaces } from "../reference-games/materialize-workspace.mjs";
 import { generateScenarioCatalog } from "./generate-scenario-catalog.mjs";
-import { requiredWorkbenchScenarioIds } from "./required-ui-scenarios.mjs";
+import {
+  requiredGenericUIScenarioIds,
+  requiredWorkbenchScenarioIds,
+} from "./required-ui-scenarios.mjs";
 import { compareCanonicalStrings, root } from "./reference-games-lib.mjs";
 import {
   replaceDirectoryAtomically,
@@ -125,6 +128,18 @@ async function materializeProduct(generatedRoot, { checkComponentIndex }) {
   if (missingRequired.length > 0) {
     throw new Error(
       `Required Workbench scenarios are missing: ${missingRequired.join(", ")}.`,
+    );
+  }
+  const genericScenarioIds = bundle.fixtures
+    .map(({ id }) => id)
+    .filter((id) => id.startsWith("ui-scenarios."))
+    .sort(compareCanonicalStrings);
+  if (
+    JSON.stringify(genericScenarioIds) !==
+    JSON.stringify(requiredGenericUIScenarioIds)
+  ) {
+    throw new Error(
+      `Generic UI scenario IDs must be exactly: ${requiredGenericUIScenarioIds.join(", ")}; found: ${genericScenarioIds.join(", ") || "(none)"}.`,
     );
   }
   return {

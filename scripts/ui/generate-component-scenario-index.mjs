@@ -118,10 +118,6 @@ function buildScenarioIndex(entries) {
         contracts: sortUnique(entry.components ?? []),
         capabilities: sortUnique(entry.capabilities ?? []),
         viewportTags: sortUnique(entry.viewportTags ?? []),
-        fixtureFile: entry.fixtureFile,
-        renderModule: entry.renderModule,
-        fixtureDigest: entry.fixtureDigest,
-        renderModuleDigest: entry.renderModuleDigest,
       },
     ]),
   );
@@ -178,7 +174,7 @@ export async function generateComponentScenarioIndex({
 
   const contractIndex = buildContractIndex({ contracts, entries });
   const index = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     contracts: contractIndex,
     scenarios: buildScenarioIndex(entries),
     sharedFallbacks,

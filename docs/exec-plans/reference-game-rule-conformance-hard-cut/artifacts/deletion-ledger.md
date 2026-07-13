@@ -37,6 +37,27 @@ proof succeeds.
 7. Phase 08 regenerates or rewrites stale documentation and proves no active
    old vocabulary or path remains.
 
+## Phase 07 Disposable SDK Candidate
+
+The disposable SDK candidate rooted at Phase 06 closeout
+`89222b32ce1ccc17e11e15af1b6f6e6bd0c271f0` retains the canonical
+`https://github.com/dreamboard-games/dreamboard-sdk.git` origin and applies the
+complete SDK-side deletion slice without changing any `rule.md`, game behavior,
+or stable game ID.
+
+Its staged Git index removes exactly 229 forbidden paths: 76 workspace-codegen
+outputs, 76 generated test outputs, 12 test bases, 11 obsolete screenshots, 53
+checked Workbench fixture files, and one generated Workbench catalog. All nine
+per-game locks remain. Strict `reference-games:source-size:check` reports zero
+forbidden paths and zero violations at 526 game-root paths, 47,435 text lines,
+and 1,611,049 bytes; the authored/lock split is 517/9 paths and 33,754/13,681
+lines. The inventory digest is
+`sha256:1741e60e82679cd8625c88f5c40043b5c9ae894ed91ac9d5b345dd0961eeba51`.
+
+This evidence does not advance the rows below to `deleted`. The ordinary
+internal archive admission/compiler comparison from this committed candidate
+and the identical integration tree remains the authorization boundary.
+
 ## Framework Base And Snapshot Surface
 
 | Deletion                                                                                                                    | Current location                                                | Replacement                                                                                        | Owner | Downstream consumers                                                            | Clean-clone proof                                                                           | Final guard                                                                                             | State                   |

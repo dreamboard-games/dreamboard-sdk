@@ -51,6 +51,10 @@ async function withPackageLinks(gameDirs, callback) {
       link: path.join(packageRoot, "node_modules/react-dom"),
       target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
     },
+    {
+      link: path.join(packageRoot, "node_modules/zod"),
+      target: path.dirname(sdkRequire.resolve("zod/package.json")),
+    },
   ]);
   const restore = [];
   for (const item of links) {
@@ -143,7 +147,7 @@ test("protocol authority materializes protocol fixture inputs", async () => {
   ]);
 });
 
-test("workspace fixture compilation materializes reducer authority from v2 source", async () => {
+test("workspace fixture compilation materializes reducer authority from a reducer-native replay", async () => {
   const gameDir = path.join(root, "examples/reference-games/hearts");
   await withPackageLinks([gameDir], async () => {
     const metadata = await readJson(path.join(gameDir, "reference-game.json"));

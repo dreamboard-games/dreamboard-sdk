@@ -10,7 +10,6 @@ import { executeProtocolAuthority } from "./authority/protocol-authority.mjs";
 import { executeReducerAuthority } from "./authority/reducer-authority.mjs";
 import {
   compileUIScenarioFixture,
-  createExpectApi,
   digestUIFixtureJson,
   digestUIScenarioFixture,
   serializeUIScenarioFixture,
@@ -586,11 +585,10 @@ function resolveScenarioReference({ gameDir, modulePath, reference }) {
 }
 
 async function loadBehaviorScenario({ gameDir, scenario }) {
-  if (isObject(scenario.behaviorScenario)) {
-    return {
-      definition: behaviorScenarioMetadata(scenario.behaviorScenario),
-      sourcePath: null,
-    };
+  if (typeof scenario.behaviorScenario !== "string") {
+    throw new Error(
+      `${scenario.id} must reference a reducer-native behaviorScenario by relative source path.`,
+    );
   }
   const modulePath = scenario.__modulePath;
   const resolved = resolveScenarioReference({
@@ -598,7 +596,11 @@ async function loadBehaviorScenario({ gameDir, scenario }) {
     modulePath,
     reference: scenario.behaviorScenario,
   });
-  if (!resolved) return null;
+  if (!resolved) {
+    throw new Error(
+      `${scenario.id} must reference a reducer-native behaviorScenario by relative source path.`,
+    );
+  }
   const module = await importFresh(resolved, "behavior");
   return {
     definition: behaviorScenarioMetadata(module.scenario ?? module.default),
@@ -631,6 +633,38 @@ function isReducerNativeBehaviorScenario(scenario) {
   );
 }
 
+export function assertReducerNativeReferenceUIScenario({
+  uiScenario,
+  behaviorScenario,
+}) {
+  const legacyStateFields = ["baseId", "initialState", "authority"].filter(
+    (field) => uiScenario[field] !== undefined,
+  );
+  if (legacyStateFields.length > 0) {
+    throw new Error(
+      `${uiScenario.id} reference-game UI scenarios cannot author ${legacyStateFields.join(", ")}; use behaviorScenario plus an at checkpoint from normal reducer setup.`,
+    );
+  }
+  if (typeof uiScenario.behaviorScenario !== "string") {
+    throw new Error(
+      `${uiScenario.id} must reference a reducer-native behaviorScenario by relative source path.`,
+    );
+  }
+  if (!isReducerNativeBehaviorScenario(behaviorScenario)) {
+    throw new Error(
+      `${uiScenario.id} behaviorScenario must use reducer-native setup/given/when arrays; function when, initialState, baseId, and from are not supported.`,
+    );
+  }
+  const legacyBehaviorFields = ["initialState", "baseId", "from"].filter(
+    (field) => behaviorScenario[field] !== undefined,
+  );
+  if (legacyBehaviorFields.length > 0) {
+    throw new Error(
+      `${uiScenario.id} behaviorScenario cannot author ${legacyBehaviorFields.join(", ")}; reducer-native setup is the only state authority.`,
+    );
+  }
+}
+
 function reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario) {
   if (uiScenario.at === undefined) {
     return {
@@ -653,192 +687,6 @@ function reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario) {
     segment: uiScenario.at.segment,
     completed: uiScenario.at.completed,
   };
-}
-
-async function loadGeneratedBaseState({ gameDir, baseId }) {
-  if (!baseId) return null;
-  const baseStatesPath = path.join(
-    gameDir,
-    "test/generated/base-states.generated.ts",
-  );
-  if (!existsSync(baseStatesPath)) return null;
-  const module = await importFresh(baseStatesPath, "base");
-  const baseState = module.BASE_STATES?.[baseId];
-  if (!baseState?.snapshot) {
-    throw new Error(`No generated base state '${baseId}'.`);
-  }
-  return structuredClone(baseState.snapshot);
-}
-
-function playerIdsFromState(state) {
-  const playerOrder = state?.domain?.table?.playerOrder;
-  return Array.isArray(playerOrder) && playerOrder.length > 0
-    ? [...playerOrder]
-    : null;
-}
-
-function readFlowPhase(state) {
-  return state?.domain?.flow?.currentPhase ?? null;
-}
-
-function hydrateProjectedInteractions(projection, playerId) {
-  const seat = projection?.seats?.[playerId] ?? {};
-  const refs = Array.isArray(seat.availableInteractionRefs)
-    ? seat.availableInteractionRefs
-    : [];
-  return refs
-    .map((ref) => projection?.interactionsByRef?.[ref])
-    .filter(Boolean);
-}
-
-function createBehaviorScenarioContext({ bundle, initialState, playerIds }) {
-  let state = structuredClone(initialState);
-  const diagnostics = [];
-  let lastDispatch = null;
-
-  const players = () => [...playerIds];
-  const seat = (index) => {
-    if (!Number.isInteger(index) || index < 0 || index >= playerIds.length) {
-      throw new Error(`seat(${index}) is out of range for behavior scenario.`);
-    }
-    return playerIds[index];
-  };
-  const project = (playerId) =>
-    bundle.projectSeatsDynamic({
-      state,
-      playerIds: [playerId],
-    });
-
-  const lastDiagnosticRejection = () =>
-    [...diagnostics]
-      .reverse()
-      .find((event) => event.type === "submitRejected") ?? null;
-
-  const context = {
-    game: {
-      async start() {},
-      async patchState(mutator) {
-        mutator(state);
-      },
-      async submit(playerId, interactionId, params = {}) {
-        const input = {
-          kind: "interaction",
-          playerId,
-          interactionId,
-          params,
-        };
-        diagnostics.push({
-          type: "submitReceived",
-          playerId,
-          interactionId,
-          phase: readFlowPhase(state) ?? "",
-        });
-        const validation = await bundle.validateInput({ state, input });
-        if (!validation.valid) {
-          diagnostics.push({
-            type: "submitRejected",
-            errorCode: validation.errorCode ?? "invalid-action-params",
-            ...(validation.message ? { message: validation.message } : {}),
-          });
-          throw new Error(
-            validation.message ?? validation.errorCode ?? "invalid",
-          );
-        }
-        const result = await bundle.dispatch({ state, input });
-        if (result.kind === "reject") {
-          diagnostics.push({
-            type: "submitRejected",
-            errorCode: result.errorCode,
-            ...(result.message ? { message: result.message } : {}),
-          });
-          throw new Error(result.message ?? result.errorCode);
-        }
-        state = structuredClone(result.state);
-        const trace = Array.isArray(result.trace) ? result.trace : [];
-        lastDispatch = {
-          submissionId: `behavior-${diagnostics.length}`,
-          trace,
-        };
-        diagnostics.push({
-          type: "submitAccepted",
-          playerId,
-          interactionId,
-          trace,
-        });
-      },
-    },
-    players,
-    seat,
-    state: () => readFlowPhase(state),
-    view: (playerId) => project(playerId).seats?.[playerId]?.view,
-    interactions: (playerId) =>
-      hydrateProjectedInteractions(project(playerId), playerId),
-    explain: (playerId, interactionId) => {
-      if (typeof bundle.explainInteraction !== "function") {
-        throw new Error("Reducer bundle does not expose explainInteraction().");
-      }
-      return bundle.explainInteraction({
-        state,
-        playerId,
-        interactionId,
-      });
-    },
-    diagnostics: {
-      get events() {
-        return diagnostics;
-      },
-      get lastDispatch() {
-        return lastDispatch;
-      },
-      clear() {
-        diagnostics.length = 0;
-        lastDispatch = null;
-      },
-    },
-    expect: createExpectApi({ lastDiagnosticRejection }),
-  };
-
-  return {
-    context,
-    getState: () => structuredClone(state),
-  };
-}
-
-async function materializeBehaviorScenarioState({
-  gameDir,
-  metadata,
-  uiScenario,
-  behaviorScenario,
-  behaviorScenarioPath,
-  initialState,
-  bundle,
-  playerIds,
-}) {
-  if (isReducerNativeBehaviorScenario(behaviorScenario)) {
-    return materializeBundledReducerNativeCheckpoint({
-      gameDir,
-      metadata,
-      uiScenario,
-      behaviorScenarioPath,
-      checkpoint: reducerNativeScenarioCheckpoint(uiScenario, behaviorScenario),
-    });
-  }
-  if (
-    !isObject(behaviorScenario) ||
-    typeof behaviorScenario.when !== "function"
-  ) {
-    return { state: initialState, playerIds };
-  }
-  const runtime = createBehaviorScenarioContext({
-    bundle,
-    initialState,
-    playerIds,
-  });
-  await behaviorScenario.when(runtime.context);
-  if (typeof behaviorScenario.then === "function") {
-    await behaviorScenario.then(runtime.context);
-  }
-  return { state: runtime.getState(), playerIds };
 }
 
 async function materializeBundledReducerNativeCheckpoint({
@@ -945,43 +793,6 @@ async function materializeBundledReducerNativeCheckpoint({
   };
 }
 
-async function initializeWorkspaceState({ gameDir, bundle, playerIds }) {
-  const manifestPath = path.join(gameDir, "shared/manifest-contract.ts");
-  const manifest = existsSync(manifestPath)
-    ? await importFresh(manifestPath, "manifest")
-    : {};
-  const createInitialTable =
-    manifest.createInitialTable ?? manifest.createEmptyTable;
-  const ids =
-    playerIds ??
-    (Array.isArray(manifest.literals?.playerIds)
-      ? [...manifest.literals.playerIds]
-      : ["player-1"]);
-  let table = {};
-  if (typeof createInitialTable === "function") {
-    for (const createTable of [
-      () => createInitialTable(ids),
-      () => createInitialTable({ playerIds: ids }),
-    ]) {
-      try {
-        const candidate = createTable();
-        if (Array.isArray(candidate?.playerOrder)) {
-          table = candidate;
-          break;
-        }
-      } catch {
-        // Try the next generated helper calling convention.
-      }
-    }
-  }
-  return bundle.initialize({
-    table,
-    playerIds: ids,
-    rngSeed: 42,
-    setup: { profileId: "standard", optionValues: {} },
-  });
-}
-
 function replayForScenario(scenario, coverage, operations) {
   const replay = scenario.replay?.[0] ?? scenario.replay ?? coverage?.replay;
   if (replay) return replay;
@@ -1083,70 +894,40 @@ async function materializeWorkspaceScenario({
   metadata,
   scenario,
 }) {
-  if (metadata.schemaVersion !== 3) return scenario;
+  if (metadata.schemaVersion !== 3) {
+    throw new Error(
+      `${scenario.id} reference-game UI compilation requires reference-game.json schemaVersion 3.`,
+    );
+  }
 
   const bundle = await loadWorkspaceReducerBundle({ gameDir, metadata });
   const loadedBehaviorScenario = await loadBehaviorScenario({
     gameDir,
     scenario,
   });
-  const behaviorScenario = loadedBehaviorScenario?.definition ?? null;
-  const behaviorScenarioPath = loadedBehaviorScenario?.sourcePath ?? null;
-  const reducerNativeBehavior =
-    isReducerNativeBehaviorScenario(behaviorScenario);
-  const baseId = reducerNativeBehavior
-    ? null
-    : (scenario.baseId ??
-      scenario.authority?.baseId ??
-      behaviorScenario?.from ??
-      behaviorScenario?.baseId);
-  const baseState = await loadGeneratedBaseState({ gameDir, baseId });
-  const playerIds =
-    scenario.authority?.playerIds ??
-    scenario.playerIds ??
-    playerIdsFromState(baseState) ??
-    behaviorScenario?.playerIds;
-  const baseInitialState = reducerNativeBehavior
-    ? null
-    : scenario.authority?.initialState &&
-        !scenario.authority.initialState.scenario
-      ? scenario.authority.initialState
-      : (baseState ??
-        (await initializeWorkspaceState({
-          gameDir,
-          bundle,
-          playerIds,
-        })));
-  const initialPlayerIds = reducerNativeBehavior
-    ? []
-    : (scenario.authority?.playerIds ??
-      scenario.playerIds ??
-      playerIdsFromState(baseInitialState) ??
-      playerIds ?? ["player-1"]);
-  const materialized = await materializeBehaviorScenarioState({
+  const behaviorScenario = loadedBehaviorScenario.definition;
+  const behaviorScenarioPath = loadedBehaviorScenario.sourcePath;
+  assertReducerNativeReferenceUIScenario({
+    uiScenario: scenario,
+    behaviorScenario,
+  });
+  const materialized = await materializeBundledReducerNativeCheckpoint({
     gameDir,
     metadata,
     uiScenario: scenario,
-    behaviorScenario,
     behaviorScenarioPath,
-    initialState: baseInitialState,
-    bundle,
-    playerIds: initialPlayerIds,
+    checkpoint: reducerNativeScenarioCheckpoint(scenario, behaviorScenario),
   });
   const initialState = materialized.state;
   const resolvedPlayerIds = materialized.playerIds;
   const viewer = scenario.viewer ??
-    scenario.authority?.viewer ??
-    behaviorScenario?.viewer ?? {
+    behaviorScenario.viewer ?? {
       seatId: resolvedPlayerIds[0] ?? "player-1",
       playerId: resolvedPlayerIds[0] ?? "player-1",
     };
   const existingCoverage =
-    scenario.authority?.coverage ??
-    behaviorScenarioCoverageMetadata(behaviorScenario) ??
-    {};
-  const operationsSource =
-    scenario.authority?.operations ?? scenario.operations ?? [];
+    behaviorScenarioCoverageMetadata(behaviorScenario) ?? {};
+  const operationsSource = scenario.operations ?? [];
   const replay = replayForScenario(
     scenario,
     existingCoverage,
@@ -1166,9 +947,6 @@ async function materializeWorkspaceScenario({
     ...(interactionKey ? { interactionKey } : {}),
   };
   const referenceGame = {
-    ...(isObject(scenario.authority?.referenceGame)
-      ? scenario.authority.referenceGame
-      : {}),
     id: game.id,
     interactions: interactionId ? [{ id: interactionId }] : [],
   };
