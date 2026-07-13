@@ -9,6 +9,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   buildRoot,
   readJson,
@@ -25,6 +26,24 @@ if (!requiredGoldenScenario) {
     "requiredParityScenarioIds must contain at least one scenario.",
   );
 }
+
+export const releaseProofPreparationSteps = Object.freeze([
+  { command: "pnpm", args: ["ui:hard-cut:check"] },
+  { command: "pnpm", args: ["ui:coverage:check"] },
+  { command: "pnpm", args: ["ui:workbench:materialize"] },
+  {
+    command: "node",
+    args: ["scripts/ui/generate-scenario-catalog.mjs", "--check"],
+  },
+  { command: "node", args: ["scripts/ui-fixtures/check-fixtures.mjs"] },
+  { command: "pnpm", args: ["ui:test:stories"] },
+  { command: "pnpm", args: ["ui:test:visual"] },
+  {
+    command: "pnpm",
+    args: ["ui:test", "--required", "--reuse-materialization"],
+  },
+  { command: "node", args: ["scripts/ui/build-reference-bundle.mjs"] },
+]);
 
 function sameStringArray(left, right) {
   return (
@@ -462,14 +481,9 @@ async function main() {
     return step;
   }
 
-  await runRequired("pnpm", ["ui:hard-cut:check"]);
-  await runRequired("pnpm", ["ui:coverage:check"]);
-  await runRequired("pnpm", ["ui:catalog:check"]);
-  await runRequired("pnpm", ["ui:fixtures:check"]);
-  await runRequired("pnpm", ["ui:test:stories"]);
-  await runRequired("pnpm", ["ui:test:visual"]);
-  await runRequired("pnpm", ["ui:test", "--required"]);
-  await runRequired("pnpm", ["reference-games:bundle"]);
+  for (const step of releaseProofPreparationSteps) {
+    await runRequired(step.command, step.args);
+  }
 
   const sdkTarball = await findBuiltSdkTarball();
   await runRequired("node", [
@@ -577,7 +591,12 @@ async function main() {
   console.log(`wrote ${path.relative(root, artifactRoot)}/receipt.json`);
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}

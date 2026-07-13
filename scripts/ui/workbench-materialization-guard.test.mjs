@@ -7,6 +7,12 @@ import test from "node:test";
 import { pathToFileURL } from "node:url";
 
 import { replaceDirectoryAtomically } from "./workbench-materialization-guard.mjs";
+import { releaseProofPreparationSteps } from "./create-ui-release-proof.mjs";
+import {
+  createMeasuredObservation,
+  paritySourceScenarioArgs,
+  parityWorkbenchMaterializationOptions,
+} from "./run-ui-parity.mjs";
 
 const helperUrl = pathToFileURL(
   path.resolve("scripts/ui/workbench-materialization-guard.mjs"),
@@ -111,4 +117,100 @@ test("publishes a complete generated directory without retaining old files", asy
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }
+});
+
+test("release proof materializes once and reuses the generated receipt", () => {
+  assert.deepEqual(releaseProofPreparationSteps, [
+    { command: "pnpm", args: ["ui:hard-cut:check"] },
+    { command: "pnpm", args: ["ui:coverage:check"] },
+    { command: "pnpm", args: ["ui:workbench:materialize"] },
+    {
+      command: "node",
+      args: ["scripts/ui/generate-scenario-catalog.mjs", "--check"],
+    },
+    { command: "node", args: ["scripts/ui-fixtures/check-fixtures.mjs"] },
+    { command: "pnpm", args: ["ui:test:stories"] },
+    { command: "pnpm", args: ["ui:test:visual"] },
+    {
+      command: "pnpm",
+      args: ["ui:test", "--required", "--reuse-materialization"],
+    },
+    { command: "node", args: ["scripts/ui/build-reference-bundle.mjs"] },
+  ]);
+});
+
+test("release parity reuses the full Workbench materialization", () => {
+  assert.deepEqual(parityWorkbenchMaterializationOptions({ build: false }), {
+    outputRoot: path.resolve("build/ui-workbench/generated"),
+    reuseExisting: true,
+  });
+  assert.deepEqual(
+    paritySourceScenarioArgs({
+      fixtureId: "hearts.sealed-pass.mobile",
+      project: "webkit-phone",
+      outputRoot: "/tmp/parity",
+    }),
+    [
+      "scripts/ui/run-ui-scenarios.mjs",
+      "--scenario",
+      "hearts.sealed-pass.mobile",
+      "--project",
+      "webkit-phone",
+      "--out",
+      "/tmp/parity",
+      "--reuse-materialization",
+    ],
+  );
+});
+
+test("assert-only parity checkpoints omit runner sentinels", () => {
+  const digest = `sha256:${"a".repeat(64)}`;
+  const observation = createMeasuredObservation({
+    fixture: {
+      id: "hearts.sealed-pass.mobile",
+      replay: [
+        {
+          kind: "assert",
+          stepId: "opening.assert",
+          expect: { frameId: "frame-1" },
+        },
+      ],
+      expected: { submissionDigest: digest },
+      environment: { viewportTags: ["phone"] },
+      protocol: {
+        frames: [
+          {
+            id: "frame-1",
+            frame: {
+              gameVersion: 1,
+              actionSetVersion: digest,
+              perspectivePlayerId: "player-1",
+            },
+          },
+        ],
+      },
+      pluginRuntimeProtocol: "3.0.0",
+      browserInteractionProtocol: "3.0.0",
+    },
+    fixtureDigest: digest,
+    sdkCandidateDigest: digest,
+    project: "webkit-phone",
+    evidencePath: "artifacts/evidence.json",
+    evidence: {
+      kind: "dreamboard-ui-scenario-evidence",
+      scenarioId: "hearts.sealed-pass.mobile",
+      project: "webkit-phone",
+      steps: [
+        {
+          stepId: "opening.assert",
+          interactionId: "assert",
+          frameId: "frame-1",
+          projectionDigest: digest,
+          semanticDigest: digest,
+        },
+      ],
+    },
+  });
+  assert.equal(observation.checkpoints[0].interactionId, undefined);
+  assert.equal(observation.checkpoints[0].submissionDigest, digest);
 });

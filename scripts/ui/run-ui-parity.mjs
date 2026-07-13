@@ -2,6 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { readdir, readFile, stat, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import {
   createUIParityObservationFromFixture,
   digestUIScenarioFixture,
@@ -194,7 +195,7 @@ async function writeFixtureExpectation({
   };
 }
 
-function createMeasuredObservation({
+export function createMeasuredObservation({
   fixture,
   fixtureDigest,
   sdkCandidateDigest,
@@ -230,11 +231,19 @@ function createMeasuredObservation({
       );
     }
     const identity = replayStep.expectedIdentity;
+    if (
+      identity?.interactionId &&
+      measured.interactionId !== identity.interactionId
+    ) {
+      throw new Error(
+        `Measured source replay step '${replayStep.stepId}' resolved interaction '${measured.interactionId ?? "<missing>"}' instead of '${identity.interactionId}'.`,
+      );
+    }
     const isFinal = index === fixture.replay.length - 1;
     return {
       stepId: measured.stepId,
       interactionKey: identity?.interactionKey,
-      interactionId: measured.interactionId,
+      interactionId: identity?.interactionId,
       actuatorId: identity?.actuatorId,
       descriptorDigest: identity?.descriptorDigest,
       draftDigest: measured.draftDigest,
@@ -245,7 +254,7 @@ function createMeasuredObservation({
       semanticDigest: measured.semanticDigest,
       submissionDigest:
         replayStep.expect.submissionDigest ??
-        (isFinal ? measured.submissionDigest : undefined),
+        (isFinal ? fixture.expected.submissionDigest : undefined),
     };
   });
   return {
@@ -268,9 +277,29 @@ function createMeasuredObservation({
   };
 }
 
+export function parityWorkbenchMaterializationOptions(options) {
+  return {
+    outputRoot: defaultGeneratedWorkbenchRoot,
+    reuseExisting: !options.build,
+  };
+}
+
+export function paritySourceScenarioArgs({ fixtureId, project, outputRoot }) {
+  return [
+    "scripts/ui/run-ui-scenarios.mjs",
+    "--scenario",
+    fixtureId,
+    "--project",
+    project,
+    "--out",
+    outputRoot,
+    "--reuse-materialization",
+  ];
+}
+
 async function main() {
-  await materializeWorkbench({ outputRoot: defaultGeneratedWorkbenchRoot });
   const options = parseArgs(process.argv.slice(2));
+  await materializeWorkbench(parityWorkbenchMaterializationOptions(options));
   if (options.build) {
     run("node", ["scripts/ui/build-reference-bundle.mjs"], {
       cwd: root,
@@ -325,15 +354,11 @@ async function main() {
     const sourceRunRoot = path.join(artifactRoot, "source", fixture.id);
     run(
       "node",
-      [
-        "scripts/ui/run-ui-scenarios.mjs",
-        "--scenario",
-        fixture.id,
-        "--project",
+      paritySourceScenarioArgs({
+        fixtureId: fixture.id,
         project,
-        "--out",
-        sourceRunRoot,
-      ],
+        outputRoot: sourceRunRoot,
+      }),
       { cwd: root, stdio: "inherit" },
     );
     const sourceReceipt = await readJson(
@@ -596,7 +621,12 @@ async function main() {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exit(1);
-});
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exit(1);
+  });
+}
