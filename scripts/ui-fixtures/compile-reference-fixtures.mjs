@@ -2,17 +2,7 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import {
-  cp,
-  lstat,
-  mkdir,
-  mkdtemp,
-  readlink,
-  readdir,
-  rm,
-  symlink,
-  unlink,
-} from "node:fs/promises";
+import { cp, mkdir, mkdtemp, readdir, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -29,6 +19,7 @@ import { compileScenarioModule } from "./compile-scenario.mjs";
 import { discoverAllScenarioModules } from "./discover-scenarios.mjs";
 import { loadScenarioModule } from "./load-scenario-module.mjs";
 import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/plugin-runtime-contract/dist/index.js";
+import { withTemporaryReferenceGamePackageLinks } from "../reference-games/temporary-package-links.mjs";
 
 const sdkRequire = createRequire(
   new URL("../../packages/sdk/package.json", import.meta.url),
@@ -42,99 +33,6 @@ const defaultFixturesRoot = path.join(
 const browserInteractionProtocolVersion = "3.0.0";
 GlobalRegistrator.register();
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
-
-export async function withTemporaryNodeModuleLinks(callback) {
-  const linkTargets = [
-    {
-      link: path.join(root, "node_modules/@dreamboard-games/sdk"),
-      target: path.join(root, "packages/sdk"),
-    },
-    {
-      link: path.join(
-        root,
-        "node_modules/@dreamboard-games/plugin-runtime-contract",
-      ),
-      target: path.join(root, "packages/plugin-runtime-contract"),
-    },
-    {
-      link: path.join(root, "node_modules/react"),
-      target: path.dirname(sdkRequire.resolve("react/package.json")),
-    },
-    {
-      link: path.join(root, "node_modules/react-dom"),
-      target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
-    },
-  ];
-  for (const game of expectedReferenceGames) {
-    const gameNodeModules = path.join(
-      root,
-      "examples/reference-games",
-      game.id,
-      "node_modules",
-    );
-    linkTargets.push(
-      {
-        link: path.join(gameNodeModules, "@dreamboard-games/sdk"),
-        target: path.join(root, "packages/sdk"),
-      },
-      {
-        link: path.join(
-          gameNodeModules,
-          "@dreamboard-games/plugin-runtime-contract",
-        ),
-        target: path.join(root, "packages/plugin-runtime-contract"),
-      },
-      {
-        link: path.join(gameNodeModules, "react"),
-        target: path.dirname(sdkRequire.resolve("react/package.json")),
-      },
-      {
-        link: path.join(gameNodeModules, "react-dom"),
-        target: path.dirname(sdkRequire.resolve("react-dom/package.json")),
-      },
-    );
-  }
-
-  const restore = [];
-  for (const item of linkTargets) {
-    try {
-      await mkdir(path.dirname(item.link), { recursive: true });
-      const stat = await lstat(item.link).catch((error) => {
-        if (error?.code === "ENOENT") return null;
-        throw error;
-      });
-      if (stat) {
-        if (!stat.isSymbolicLink()) {
-          throw new Error(
-            `${item.link} exists and is not a symlink; refusing to replace it for fixture compilation.`,
-          );
-        }
-        const previousTarget = await readlink(item.link);
-        await unlink(item.link);
-        restore.push(async () => {
-          await rm(item.link, { force: true });
-          await symlink(previousTarget, item.link, "dir");
-        });
-      } else {
-        restore.push(async () => {
-          await rm(item.link, { force: true });
-        });
-      }
-      await symlink(item.target, item.link, "dir");
-    } catch (error) {
-      if (error?.code !== "EEXIST") {
-        throw error;
-      }
-    }
-  }
-  try {
-    return await callback();
-  } finally {
-    for (const restoreLink of restore.reverse()) {
-      await restoreLink();
-    }
-  }
-}
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
@@ -285,16 +183,23 @@ export async function compileReferenceFixtures({
         ? gameIds
         : [...expectedReferenceGames.map(({ id }) => id), "ui-scenarios"];
     if (selectedGameIds.length === 1) {
-      await withTemporaryNodeModuleLinks(async () => {
-        fixtureCount = await compileAllReferenceFixtures(first, {
-          gameIds: selectedGameIds,
-        });
-        if (verifyDeterminism) {
-          await compileAllReferenceFixtures(second, {
+      await withTemporaryReferenceGamePackageLinks(
+        {
+          gameRoots: expectedReferenceGames
+            .filter(({ id }) => selectedGameIds.includes(id))
+            .map(({ id }) => path.join(root, "examples/reference-games", id)),
+        },
+        async () => {
+          fixtureCount = await compileAllReferenceFixtures(first, {
             gameIds: selectedGameIds,
           });
-        }
-      });
+          if (verifyDeterminism) {
+            await compileAllReferenceFixtures(second, {
+              gameIds: selectedGameIds,
+            });
+          }
+        },
+      );
     } else {
       fixtureCount = await compileReferenceFixturePartitions(
         first,

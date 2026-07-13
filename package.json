@@ -60,7 +60,7 @@
     "ui:test:runtime-visual:update": "pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/ui-workbench test tests/runtime-visual.spec.ts --update-snapshots",
     "ui:test:packed": "node scripts/ui/run-packed-ui-scenarios.mjs",
     "ui:test:parity": "pnpm --filter @dreamboard-games/sdk build && node scripts/ui/run-ui-parity.mjs",
-    "ui:hard-cut:check": "node --test scripts/ui/workbench-materialization-guard.test.mjs && node scripts/ui/check-ui-hard-cut.mjs",
+    "ui:hard-cut:check": "node --test scripts/ui/workbench-materialization-guard.test.mjs scripts/ui/materialize-workspace-bootstrap.test.mjs && node scripts/ui/check-ui-hard-cut.mjs",
     "ui:runtime:test": "pnpm --filter @dreamboard-games/sdk build && pnpm --filter @dreamboard-games/sdk test src/testing/ui-fixture && pnpm --filter @dreamboard-games/ui-workbench typecheck && pnpm --filter @dreamboard-games/ui-workbench test:runtime",
     "ui:check:baseline": "pnpm ui:workbench:materialize && pnpm ui:coverage:check && node scripts/ui/generate-scenario-catalog.mjs --check && node scripts/ui-fixtures/check-fixtures.mjs && pnpm ui:test:stories && pnpm ui:test:visual && pnpm ui:test:runtime-visual",
     "ui:check": "pnpm ui:hard-cut:check && pnpm ui:check:baseline && pnpm ui:test --required",

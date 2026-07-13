@@ -148,6 +148,14 @@ function sdkAliases(useSource: boolean) {
       : path.join(sdkRoot, "dist", `${subpath}.js`);
   const aliases = [
     {
+      find: /^@dreamboard-games\/sdk\/reducer\/advanced$/,
+      replacement: target("reducer/advanced"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/reducer$/,
+      replacement: target("reducer"),
+    },
+    {
       find: /^@dreamboard-games\/sdk\/runtime\/workspace-contract$/,
       replacement: target("runtime/workspace-contract"),
     },
@@ -166,6 +174,10 @@ function sdkAliases(useSource: boolean) {
     {
       find: /^@dreamboard-games\/sdk\/package-set$/,
       replacement: target("package-set"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/types$/,
+      replacement: target("types"),
     },
   ];
   // `testing` and `browser-interaction` resolve to `dist` via package exports in
@@ -245,6 +257,10 @@ export default defineConfig(({ command }) => {
         {
           find: /^react-dom\/client$/,
           replacement: path.join(__dirname, "node_modules/react-dom/client.js"),
+        },
+        {
+          find: /^zod$/,
+          replacement: path.join(__dirname, "node_modules/zod/index.js"),
         },
         ...sdkAliases(useSdkSource),
         {

@@ -7,25 +7,32 @@ import {
   expectedReferenceGameIds,
   referenceGamesRoot,
 } from "../ui/reference-games-lib.mjs";
+import { withTemporaryReferenceGamePackageLinks } from "./temporary-package-links.mjs";
 
-export async function materializeReferenceGameWorkspaces({ gameIds } = {}) {
+export async function materializeReferenceGameWorkspaces({
+  gameIds,
+  gamesRoot = referenceGamesRoot,
+} = {}) {
   const selected = normalizeGameIds(gameIds);
-  const games = [];
-  for (const gameId of selected) {
-    const projectRoot = path.join(referenceGamesRoot, gameId);
-    const receipt = await materializeWorkspace({
-      projectRoot,
-      manifestPath: "manifest.ts",
-    });
-    games.push({
-      id: gameId,
-      authoritativeFiles: receipt.authoritativeFiles,
-      seededFiles: receipt.seededFiles,
-      artifacts: receipt.artifacts,
-      digest: receipt.digest,
-    });
-  }
-  return { schemaVersion: 1, games };
+  const gameRoots = selected.map((gameId) => path.join(gamesRoot, gameId));
+  return withTemporaryReferenceGamePackageLinks({ gameRoots }, async () => {
+    const games = [];
+    for (const gameId of selected) {
+      const projectRoot = path.join(gamesRoot, gameId);
+      const receipt = await materializeWorkspace({
+        projectRoot,
+        manifestPath: "manifest.ts",
+      });
+      games.push({
+        id: gameId,
+        authoritativeFiles: receipt.authoritativeFiles,
+        seededFiles: receipt.seededFiles,
+        artifacts: receipt.artifacts,
+        digest: receipt.digest,
+      });
+    }
+    return { schemaVersion: 1, games };
+  });
 }
 
 function normalizeGameIds(gameIds) {
