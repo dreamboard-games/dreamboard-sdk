@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { WORKSPACE_CODEGEN_OWNERSHIP } from "@dreamboard-games/workspace-codegen";
@@ -59,10 +59,6 @@ export async function materializeWorkspace(
   );
   assertExactAuthoritativeInventory(emittedAuthoritative);
 
-  for (const relativePath of authoritativePaths) {
-    await rm(resolveProjectPath(projectRoot, relativePath), { force: true });
-  }
-
   let seededFiles = 0;
   const records: Array<{
     readonly path: string;
@@ -77,7 +73,11 @@ export async function materializeWorkspace(
       }
     }
     await mkdir(path.dirname(destination), { recursive: true });
-    await writeFile(destination, artifact.content);
+    if (artifact.ownership === "authoritative") {
+      await writeAuthoritativeFile(destination, artifact.content);
+    } else {
+      await writeFile(destination, artifact.content);
+    }
     if (artifact.ownership === "seed") {
       seededFiles += 1;
       continue;
@@ -116,30 +116,51 @@ async function loadManifest(options: {
 }): Promise<unknown> {
   const entryPath = path.join(
     options.projectRoot,
-    "node_modules/.cache/dreamboard-workspace-compiler/manifest.mjs",
+    "node_modules/.cache/dreamboard-workspace-compiler",
+    `manifest-${process.pid}-${randomUUID()}.mjs`,
   );
   await mkdir(path.dirname(entryPath), { recursive: true });
-  const result = await build({
-    entryPoints: [options.manifestPath],
-    outfile: entryPath,
-    absWorkingDir: options.projectRoot,
-    bundle: true,
-    format: "esm",
-    platform: "node",
-    target: "node24",
-    packages: "external",
-    sourcemap: "inline",
-    logLevel: "silent",
-  });
-  void result;
-  const loaded = (await import(
-    `${pathToFileURL(entryPath).href}?source=${Date.now()}`
-  )) as ManifestModule;
-  const manifest = loaded.manifest ?? loaded.default;
-  if (!manifest || typeof manifest !== "object") {
-    throw new Error("Manifest source must export a manifest object.");
+  try {
+    const result = await build({
+      entryPoints: [options.manifestPath],
+      outfile: entryPath,
+      absWorkingDir: options.projectRoot,
+      bundle: true,
+      format: "esm",
+      platform: "node",
+      target: "node24",
+      packages: "external",
+      sourcemap: "inline",
+      logLevel: "silent",
+    });
+    void result;
+    const loaded = (await import(
+      pathToFileURL(entryPath).href
+    )) as ManifestModule;
+    const manifest = loaded.manifest ?? loaded.default;
+    if (!manifest || typeof manifest !== "object") {
+      throw new Error("Manifest source must export a manifest object.");
+    }
+    return manifest;
+  } finally {
+    await rm(entryPath, { force: true });
   }
-  return manifest;
+}
+
+async function writeAuthoritativeFile(
+  destination: string,
+  content: string,
+): Promise<void> {
+  const temporaryPath = path.join(
+    path.dirname(destination),
+    `.${path.basename(destination)}.${process.pid}.${randomUUID()}.tmp`,
+  );
+  try {
+    await writeFile(temporaryPath, content);
+    await rename(temporaryPath, destination);
+  } finally {
+    await rm(temporaryPath, { force: true });
+  }
 }
 
 function assertExactAuthoritativeInventory(emitted: ReadonlySet<string>): void {

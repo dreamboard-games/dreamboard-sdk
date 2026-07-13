@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import { z } from "zod";
+import { materializeWorkspace } from "./authoring/materialize-workspace.js";
 import {
   defineEmptyView,
   defineGame,
@@ -387,22 +388,31 @@ describe("compileScenarioReplay", () => {
       "roll-and-write-scorecard",
       "test/scenarios/complete-game.scenario.ts",
     );
-    const [setup, repeated, developed] = await Promise.all([
-      compileScenarioReplay({
-        scenarioPath,
-        at: { segment: "setup", completed: 0 },
-      }),
-      compileScenarioReplay({
-        scenarioPath,
-        at: { segment: "setup", completed: 0 },
-      }),
-      compileScenarioReplay({
-        scenarioPath,
-        at: { segment: "given", completed: 21 },
-      }),
-    ]);
+    const projectRoot = path.resolve(path.dirname(scenarioPath), "../..");
+    await materializeWorkspace({
+      projectRoot,
+      manifestPath: "manifest.ts",
+    });
+    const [setup, repeated, developed, firstWorkspace, secondWorkspace] =
+      await Promise.all([
+        compileScenarioReplay({
+          scenarioPath,
+          at: { segment: "setup", completed: 0 },
+        }),
+        compileScenarioReplay({
+          scenarioPath,
+          at: { segment: "setup", completed: 0 },
+        }),
+        compileScenarioReplay({
+          scenarioPath,
+          at: { segment: "given", completed: 21 },
+        }),
+        materializeWorkspace({ projectRoot, manifestPath: "manifest.ts" }),
+        materializeWorkspace({ projectRoot, manifestPath: "manifest.ts" }),
+      ]);
 
     expect(setup.schemaVersion).toBe(1);
+    expect(firstWorkspace.digest).toBe(secondWorkspace.digest);
     expect(setup.scenario.path).toBe(
       "test/scenarios/complete-game.scenario.ts",
     );
