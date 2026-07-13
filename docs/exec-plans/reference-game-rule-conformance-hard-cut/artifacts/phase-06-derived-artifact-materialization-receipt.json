@@ -10,7 +10,8 @@
     "derivedTestAuthorityRemovalCommit": "441f574cdbb679c2bd6ac204a63aea348f4694a0",
     "dreamboardDerivedTestAuthorityRemovalCommit": "6769576cf89dc8895bba826c5d2033f80aa28cf1",
     "internalCompatibilityCommit": "4b6eca8a5f4a32640a67d2d314d966774ccd2590",
-    "releasePreparationCommit": null
+    "releasePreparationCommit": "ba75f483bb34fcdb44f038d7701e1f504805dc92",
+    "finalAuthoredSourceCommit": "189ca1b10aa857b9f396b1443ca7dccdd1bef286"
   },
   "inventorySnapshots": [
     {
@@ -71,24 +72,42 @@
     },
     {
       "stage": "phase-06-final-pre-deletion",
-      "status": "pending",
+      "status": "audit-passed-with-expected-phase-07-violations",
       "command": "pnpm reference-games:source-size:check --audit",
-      "trackedPathCount": null,
-      "trackedTextLineCount": null,
-      "trackedBytes": null,
-      "authored": null,
-      "retainedLocks": null,
-      "forbiddenTracked": null,
-      "inventoryDigest": null
+      "trackedPathCount": 701,
+      "trackedTextLineCount": 216306,
+      "trackedBytes": 7950435,
+      "authored": {
+        "pathCount": 517,
+        "textLineCount": 33754,
+        "bytes": 1097557
+      },
+      "retainedLocks": {
+        "pathCount": 9,
+        "textLineCount": 12323,
+        "bytes": 471532,
+        "requiredPathCount": 9,
+        "lineLimit": 15000
+      },
+      "forbiddenTracked": {
+        "pathCount": 229
+      },
+      "inventoryDigest": "sha256:9d08533d75fbc47533e49043beefde53dfc3aec66ff9cd19ce8472f05f142c69"
     }
   ],
   "sourceManifest": {
     "schemaVersion": 3,
-    "provenance": "worktree",
+    "provenance": {
+      "kind": "git",
+      "repository": "dreamboard-games/dreamboard-sdk",
+      "revision": "189ca1b10aa857b9f396b1443ca7dccdd1bef286"
+    },
     "gameCount": 9,
     "objectCount": 527,
-    "sourceFingerprint": "sha256:5790676e9a59341f141a688702249523f3199b0a0360930225759dbe3bbf7462",
-    "status": "current-worktree-proof-not-final-git-provenance"
+    "sourceFingerprint": "sha256:934a10ca00cdba112f5d835e7d96e579e3e082d25ea6110296f16c65cc24c655",
+    "manifestSha256": "sha256:400051e4031a9d31bb56ad50b535f8e83ffea5fcaa8b5fa12175891c0e2277ba",
+    "archiveSha256": "sha256:22eb970b5e4df11ed24d3f50283d547f8f6b1f5ed71dcaba3a18d25b9a341432",
+    "status": "final-git-provenance-recorded"
   },
   "materialization": {
     "workspaceCompiler": {
@@ -123,7 +142,7 @@
       "latestProof": {
         "result": "passed",
         "fixtureAndScenarioCount": 44,
-        "digest": "sha256:f9bc2f2710ec9c6e1622fbb9e321b1db68aa479a1184732e76fb66036b290cdd",
+        "digest": "sha256:b4e5b7ad32de79157296170c4db9684c077abff8a808509ae6f00b89879e59d4",
         "workspaceDigestCount": 9
       }
     },
@@ -132,20 +151,31 @@
       "commit": "12aff8943680582ab532a6526f924c18cc2e0b4f",
       "behavior": "compiles and validates the replay DTO before backend replay and verifies checkpoint/public-projection digests"
     },
+    "dreamboardPackedCandidateCompatibility": {
+      "status": "passed",
+      "dreamboardCommit": "b80ff9e4634822cc4b713ac2e727d2c751d53f87",
+      "candidateSha256": "3ccb4376d35df28c5cea603b8d5c982e4dc1291566851875f4c74a16c7474532",
+      "result": "fresh disposable clone passed root typecheck, dev-host build and 4 tests, full 171-test CLI suite, version authority, offline test/inspect/explore smoke, and 16-fixture API-client candidate proof"
+    },
     "internalCompatibility": {
       "status": "passed",
-      "candidatePath": "/tmp/dreamboard-sdk-phase06-candidate-v2/dreamboard-games-sdk-0.4.0-alpha.8.tgz",
-      "candidateSha256": "1e18fe648fad0f3d8aad880b82eba97df9812eb632ab77a79f756d6e2352674d",
-      "command": "DREAMBOARD_SDK_TARBALL=/tmp/dreamboard-sdk-phase06-candidate-v2/dreamboard-games-sdk-0.4.0-alpha.8.tgz ./gradlew :packages:demo-release-core:test --tests '*PackedSdkCandidateCompatibilityTest' --rerun-tasks",
+      "candidatePath": "/tmp/dreamboard-sdk-alpha9.uInAM7/dreamboard-games-sdk-0.4.0-alpha.9.tgz",
+      "candidateSha256": "3ccb4376d35df28c5cea603b8d5c982e4dc1291566851875f4c74a16c7474532",
+      "command": "DREAMBOARD_SDK_TARBALL=/tmp/dreamboard-sdk-alpha9.uInAM7/dreamboard-games-sdk-0.4.0-alpha.9.tgz ./gradlew :packages:demo-release-core:test --tests '*PackedSdkCandidateCompatibilityTest' --rerun-tasks",
       "result": "BUILD SUCCESSFUL; 19 tasks",
       "scope": "all nine games, strict source manifest, replay translation, and perspective-safe projection parity"
     }
   },
   "finalPublicSdk": {
     "version": "0.4.0-alpha.9",
-    "status": "version-prepared-publication-pending",
-    "tarballPath": null,
-    "tarballSha256": null,
+    "status": "exact-candidate-built-publication-pending",
+    "tarballPath": "/tmp/dreamboard-sdk-alpha9.uInAM7/dreamboard-games-sdk-0.4.0-alpha.9.tgz",
+    "tarballSha256": "3ccb4376d35df28c5cea603b8d5c982e4dc1291566851875f4c74a16c7474532",
+    "requiredExports": [
+      "./testing-compiler",
+      "./authoring-compiler",
+      "./reference-game-compiler"
+    ],
     "npmIntegrity": null,
     "npmPublishedAt": null,
     "repinCommand": null,
@@ -156,9 +186,9 @@
     "derivedFreeSdkPublicWorkbenchProof": "pending-final-rerun",
     "sourceFingerprintInvariance": "pending-final-receipt",
     "bundleFingerprintSeparation": "pending-final-receipt",
-    "allNinePackedReferenceConsumers": "pending-final-alpha9",
+    "allNinePackedReferenceConsumers": "passed-exact-alpha9-candidate-9-of-9",
     "workbenchDeterministicMaterialization": "passed-44-fixtures-and-scenarios",
-    "workbenchBuildAndBrowserTest": "production-build-passed-browser-test-pending",
+    "workbenchBuildAndBrowserTest": "passed-required-browser-matrix-5-of-5-artifacts/ui/2026-07-13T00-20-02-535Z/receipt.json",
     "cleanCheckoutSecondRun": "pending",
     "publicRepinAndPublishableVerification": "pending"
   },
