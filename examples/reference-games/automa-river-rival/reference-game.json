@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 4,
+  "id": "automa-river-rival",
+  "displayName": "River Guild",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "base-free normal setup with two independently seeded hidden decks",
+      "active-seat action discovery over an exact public card domain",
+      "deterministic non-human procedures modeled as ordinary reducer state",
+      "ordered public procedure events and cooperative outcome breakdowns"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when one or two humans cooperate against a predictable rival that must not occupy a player seat.",
+      "Let automatic phases reveal, resolve, refill, and advance until the next genuine human decision.",
+      "Keep retry and reconnect idempotency in the engine rather than adding request identifiers to gameplay state."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/human-turn.ts",
+      "app/phases/rival-procedure.ts",
+      "app/phases/advance-river-round.ts",
+      "app/player-view.ts",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/claim-actionability.scenario.ts",
+      "test/scenarios/procedure-events.scenario.ts",
+      "test/scenarios/no-fake-player.scenario.ts",
+      "ui/App.tsx"
+    ]
+  },
+  "demoRelease": {
+    "slug": "automa-river-rival",
+    "name": "River Guild",
+    "description": "A one- or two-player cooperative cargo race against a deterministic rival guild.",
+    "overview": "Claim timber, grain, and ore from four river moorings while public rival orders reshape the cargo race across six complete rounds.",
+    "creator": "Dreamboard",
+    "minPlayers": 1,
+    "maxPlayers": 2,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 25,
+    "difficulty": 2,
+    "mechanics": [
+      "automa-rival",
+      "open-market",
+      "cooperative-scoring",
+      "deterministic-procedure"
+    ],
+    "categories": ["cooperative", "strategy"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 2
+  },
+  "mechanics": [
+    "automa-rival",
+    "open-market",
+    "cooperative-scoring",
+    "deterministic-procedure"
+  ],
+  "uiPatterns": [
+    "market-row",
+    "event-log",
+    "cooperative-outcome",
+    "compact-mobile-history"
+  ],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-18"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

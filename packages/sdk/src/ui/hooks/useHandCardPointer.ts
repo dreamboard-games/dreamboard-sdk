@@ -26,7 +26,7 @@ import {
   type PointerEngineCardSnapshot,
   type PointerEngineThresholds,
 } from "../components/hand-pointer-engine.js";
-import type { CardDragSurfaceController } from "../components/CardDragSurface.js";
+import type { CardDragSurfaceController } from "../components/card-drag/index.js";
 import type { CardIntent } from "../types/visual-state.js";
 import type { ReactNode } from "react";
 

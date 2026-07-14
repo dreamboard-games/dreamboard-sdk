@@ -29,6 +29,7 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   choiceTarget,
+  defineEmptyView,
   createReducerBundle,
   defineGame,
   defineGameContract,
@@ -37,8 +38,8 @@ import {
   defineStepPhase,
   pipe,
   promptInput,
-  type RuntimeTableRecord,
 } from "../reducer";
+import type { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 
 function getAvailableInteractions(
@@ -231,6 +232,10 @@ describe("addressee-based prompt authorization", () => {
           },
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     return createReducerBundle(game);
@@ -377,7 +382,10 @@ describe("phase actor, step, and cost resolution", () => {
           },
         }),
       },
-      views: {},
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     return createReducerBundle(game);
   }
@@ -580,6 +588,10 @@ describe("default action-kind authorization", () => {
           },
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     return createReducerBundle(game);
@@ -748,6 +760,10 @@ describe("closed prompt (`to` resolves to empty set)", () => {
           },
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     return createReducerBundle(game);
@@ -847,6 +863,10 @@ describe("action-kind interactions with a `to` selector", () => {
           },
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
 
     const bundle = createReducerBundle(game);
@@ -919,6 +939,10 @@ describe("author `available` predicate composes with authorization", () => {
             }),
           },
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 

@@ -4,10 +4,11 @@ import type {
   InteractionRule,
   InteractionSpec,
   PlayerZoneIdOfManifest,
-  ScopedPhaseState,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
+  ContractErrorCode,
   ContractManifest,
   ContractState,
   InferPhaseState,
@@ -23,12 +24,14 @@ export function defineInteraction<
     definition: InteractionSpec<
       Collectors,
       ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-      ContractManifest<Contract>
+      ContractManifest<Contract>,
+      ContractErrorCode<Contract>
     >,
   ): InteractionSpec<
     Collectors,
     ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-    ContractManifest<Contract>
+    ContractManifest<Contract>,
+    ContractErrorCode<Contract>
   > => {
     validateInteractionLikeDefinition(
       definition as {
@@ -55,12 +58,14 @@ export function defineInteractionRule<
     definition: InteractionRule<
       Collectors,
       ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-      ContractManifest<Contract>
+      ContractManifest<Contract>,
+      ContractErrorCode<Contract>
     >,
   ): InteractionRule<
     Collectors,
     ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-    ContractManifest<Contract>
+    ContractManifest<Contract>,
+    ContractErrorCode<Contract>
   > => definition;
 }
 
@@ -77,13 +82,15 @@ export function defineCardAction<
       Collectors,
       ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
       ContractManifest<Contract>,
-      PlayFrom
+      PlayFrom,
+      ContractErrorCode<Contract>
     >,
   ): CardActionSpec<
     Collectors,
     ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
     ContractManifest<Contract>,
-    PlayFrom
+    PlayFrom,
+    ContractErrorCode<Contract>
   > => {
     validateInteractionLikeDefinition(
       definition as {

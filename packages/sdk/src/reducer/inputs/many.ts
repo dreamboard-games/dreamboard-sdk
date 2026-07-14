@@ -48,7 +48,7 @@ export type ManyInputCollector<
     InputCollector["kind"],
     "rng"
   >,
-> = InputCollector<z.ZodType<ReadonlyArray<z.infer<Schema>>>, State, Kind> & {
+> = InputCollector<z.ZodArray<Schema>, State, Kind> & {
   readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
 };
 
@@ -99,17 +99,22 @@ export function many<Collector extends NonRngCollector>(
     throw new Error("many(...) cannot wrap rngInput collectors.");
   }
   const selection = normalizeManyOptions(options);
-  const {
-    schema: _schema,
-    selection: _selection,
-    defaultValue: _defaultValue,
-    ...rest
-  } = collector;
+  const rest = { ...collector } as Omit<
+    Collector,
+    "schema" | "selection" | "defaultValue"
+  > & {
+    schema?: unknown;
+    selection?: unknown;
+    defaultValue?: unknown;
+  };
+  delete rest.schema;
+  delete rest.selection;
+  delete rest.defaultValue;
   return {
     ...rest,
-    schema: z.array(collector.schema as z.ZodTypeAny) as unknown as z.ZodType<
-      ReadonlyArray<z.infer<CollectorSchema<Collector>>>
-    >,
+    schema: z.array(
+      collector.schema as CollectorSchema<Collector>,
+    ) as z.ZodArray<CollectorSchema<Collector>>,
     selection,
   } as unknown as ManyInputCollector<
     CollectorSchema<Collector>,

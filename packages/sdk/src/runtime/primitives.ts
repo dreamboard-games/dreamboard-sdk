@@ -1,1 +1,1 @@
-export * from "../runtime-internal/primitives/index.js";
+export * from "./primitives/index.js";

@@ -1,4 +1,8 @@
-import type { RuntimeRngState } from "./model";
+import type {
+  RuntimeRngDraw,
+  RuntimeRngOperation,
+  RuntimeRngState,
+} from "./model";
 
 /**
  * Deterministic pseudo-random integer generator for reducer-native games.
@@ -25,13 +29,26 @@ import type { RuntimeRngState } from "./model";
 export function nextRandomInt(
   bound: number,
   rng: RuntimeRngState,
-): [number, RuntimeRngState] {
-  if (bound <= 0) {
-    throw new Error("Random bound must be positive.");
+  operation: RuntimeRngOperation = {
+    kind: "integer",
+    parameters: { minInclusive: 0, maxInclusive: bound - 1 },
+  },
+): [number, RuntimeRngState, RuntimeRngDraw] {
+  if (!Number.isSafeInteger(bound) || bound <= 0) {
+    throw new Error("Random bound must be a positive safe integer.");
   }
   const seed = rng.seed ?? 1;
   const raw = hashSeedCursor(seed, rng.cursor);
   const value = raw % bound;
+  const draw: RuntimeRngDraw = {
+    index: rng.draws.length,
+    cursorBefore: rng.cursor,
+    cursorAfter: rng.cursor + 1,
+    operation: {
+      kind: operation.kind,
+      parameters: { ...operation.parameters },
+    },
+  };
   return [
     value,
     {
@@ -41,7 +58,9 @@ export function nextRandomInt(
         ...rng.trace,
         `cursor=${rng.cursor};bound=${bound};value=${value}`,
       ],
+      draws: [...rng.draws, draw],
     },
+    draw,
   ];
 }
 

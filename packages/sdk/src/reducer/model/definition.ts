@@ -27,16 +27,14 @@ import type {
 import type {
   EffectMap,
   CardActionMap,
-  CardActionSpec,
   InputCollector,
   InteractionMap,
-  InteractionSpec,
   PhaseDefinition,
   PhaseZoneList,
-  SimultaneousSubmitSpec,
+  PlayerViewDefinition,
+  SharedViewDefinition,
   StageMap,
   StaticViewDefinition,
-  ViewDefinition,
 } from "./spec";
 
 export type ReducerGameContract<
@@ -53,10 +51,12 @@ export type ReducerGameContract<
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
+  Errors extends Record<string, string> | undefined = undefined,
 > = {
   manifest: Manifest;
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
+  errors?: Errors;
   /** Derived from `phases`; retained as an internal runtime convenience. */
   phaseNames: readonly string[];
 };
@@ -167,12 +167,9 @@ export type PhaseStateMapOfDefinitions<
     >
   >,
 > = Partial<{
-  [Name in keyof Definitions &
-    string]: Definitions[Name] extends PhaseDefinition<
-    infer PhaseStateSchema,
-    infer _State,
-    infer _Manifest
-  >
+  [Name in keyof Definitions & string]: Definitions[Name] extends {
+    state: infer PhaseStateSchema extends SchemaLike<object>;
+  }
     ? z.infer<PhaseStateSchema>
     : never;
 }>;
@@ -193,12 +190,9 @@ export type PhaseStateOfDefinitions<
     >
   >,
 > = {
-  [Name in keyof Definitions &
-    string]: Definitions[Name] extends PhaseDefinition<
-    infer PhaseStateSchema,
-    infer _State,
-    infer _Manifest
-  >
+  [Name in keyof Definitions & string]: Definitions[Name] extends {
+    state: infer PhaseStateSchema extends SchemaLike<object>;
+  }
     ? z.infer<PhaseStateSchema>
     : never;
 }[keyof Definitions & string];
@@ -213,11 +207,9 @@ export type ResolvedGameStateOf<
     z.infer<PublicSchemaOfContract<Contract>>,
     z.infer<PrivateSchemaOfContract<Contract>>,
     z.infer<HiddenSchemaOfContract<Contract>>,
-    Definitions[Name] extends PhaseDefinition<
-      infer PhaseStateSchema,
-      infer _State,
-      infer _Manifest
-    >
+    Definitions[Name] extends {
+      state: infer PhaseStateSchema extends SchemaLike<object>;
+    }
       ? z.infer<PhaseStateSchema>
       : never,
     PhaseNameOfContract<Contract>
@@ -243,14 +235,23 @@ export type ResolvedGameSessionOf<
   RuntimeSetupSelection<ManifestContractOf<Contract>>
 >;
 
-export type ViewMapOf<Contract> = Record<
-  string,
-  ViewDefinition<
+export type ViewMapOf<
+  Contract,
+  SharedProjection = unknown,
+  PlayerProjection = unknown,
+> = {
+  shared: SharedViewDefinition<
     BaseGameStateOfContract<Contract>,
     ManifestContractOf<Contract>,
-    unknown
-  >
->;
+    SharedProjection
+  >;
+  player: PlayerViewDefinition<
+    BaseGameStateOfContract<Contract>,
+    ManifestContractOf<Contract>,
+    SharedProjection,
+    PlayerProjection
+  >;
+};
 
 type PhasesOfDefinition<Definition> = Definition extends {
   phases: infer Definitions extends Record<string, unknown>;
@@ -259,9 +260,9 @@ type PhasesOfDefinition<Definition> = Definition extends {
   : never;
 
 export type ViewsOfDefinition<Definition> = Definition extends {
-  views?: infer Views;
+  views: infer Views;
 }
-  ? NonNullable<Views>
+  ? Views
   : never;
 
 type NonNeverKeys<Registry> = {
@@ -282,11 +283,9 @@ export type ViewOfDefinition<
   Definition,
   ViewName extends ViewNamesOfDefinition<Definition>,
 > =
-  ViewDefinitionByName<Definition, ViewName> extends ViewDefinition<
-    infer _State,
-    infer _Manifest,
-    infer Projection
-  >
+  ViewDefinitionByName<Definition, ViewName> extends {
+    project: (...args: never[]) => infer Projection;
+  }
     ? Projection
     : never;
 
@@ -318,16 +317,16 @@ export type EffectIdsOfDefinition<Definition> =
     : never;
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type GameStateOf<Source> =
-  Source extends ReducerGameDefinition<
-    infer Contract,
-    infer Definitions,
-    infer _Views
-  >
+export type GameStateOf<Source> = Source extends {
+  contract: infer Contract extends ReducerGameContractLike;
+  phases: infer Definitions;
+}
+  ? Definitions extends PhaseMapOf<Contract>
     ? ResolvedGameStateOf<Contract, Definitions>
-    : Source extends ReducerGameContract<any, any, any, any, any, any>
-      ? BaseGameStateOfContract<Source>
-      : never;
+    : never
+  : Source extends ReducerGameContract<any, any, any, any, any, any, any>
+    ? BaseGameStateOfContract<Source>
+    : never;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
@@ -373,7 +372,7 @@ export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
 export type ReducerGameDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract> = Record<string, never>,
+  Views extends ViewMapOf<Contract>,
 > = {
   contract: Contract;
   initial?: InitialStateCallbacks<NoInfer<Contract>>;
@@ -386,7 +385,7 @@ export type ReducerGameDefinition<
     >
   >;
   phases: Definitions;
-  views?: Views;
+  views: Views;
   /**
    * Optional session-scoped static projection. Authored via
    * {@link StaticViewDefinition}; computed once per reducer session from the
@@ -625,6 +624,67 @@ type CollectorCardZoneIds<Collectors, Input extends string> =
       : never
     : never;
 
+type CollectorsOfInteractionDefinition<Spec> = Spec extends {
+  readonly inputs?: infer Collectors;
+}
+  ? NonNullable<Collectors> extends Record<string, InputCollector>
+    ? NonNullable<Collectors>
+    : Record<string, never>
+  : Record<string, never>;
+
+type CollectorKindsOfInteractionDefinition<Spec> =
+  | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
+      ? "card"
+      : never)
+  | CollectorKindsOf<CollectorsOfInteractionDefinition<Spec>>;
+
+type InputKeysWithCollectorKindOfInteractionDefinition<
+  Spec,
+  Kind extends string,
+> =
+  | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
+      ? Extract<"card", Kind> extends never
+        ? never
+        : "cardId"
+      : never)
+  | (CollectorKeysWithKind<CollectorsOfInteractionDefinition<Spec>, Kind> &
+      string);
+
+type CardInputZoneIdsOfInteractionDefinition<
+  Spec,
+  Input extends string,
+> = Input extends "cardId"
+  ? Spec extends { readonly playFrom: infer PlayFrom extends string }
+    ? PlayFrom
+    : CollectorCardZoneIds<CollectorsOfInteractionDefinition<Spec>, Input>
+  : CollectorCardZoneIds<CollectorsOfInteractionDefinition<Spec>, Input>;
+
+type ParamsOfCollectors<Collectors> =
+  Collectors extends Record<string, InputCollector>
+    ? {
+        [K in keyof Collectors]: Collectors[K] extends InputCollector<infer S>
+          ? S extends SchemaLike<infer V>
+            ? V
+            : never
+          : never;
+      }
+    : never;
+
+type ClientParamsOfCollectors<Collectors> =
+  Collectors extends Record<string, InputCollector>
+    ? {
+        [K in keyof Collectors as Collectors[K] extends {
+          readonly kind: "rng";
+        }
+          ? never
+          : K]: Collectors[K] extends InputCollector<infer S>
+          ? S extends SchemaLike<infer V>
+            ? V
+            : never
+          : never;
+      }
+    : never;
+
 type InteractionIdsWithCollectorKindOfDefinitionPhase<
   Definition,
   PhaseName extends PhaseNamesOfDefinition<Definition>,
@@ -637,35 +697,11 @@ type InteractionIdsWithCollectorKindOfDefinitionPhase<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? Extract<CollectorKindsOf<Collectors>, Kind> extends never
+  > extends infer Spec
+    ? Extract<CollectorKindsOfInteractionDefinition<Spec>, Kind> extends never
       ? never
       : InteractionId
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
-        >
-      ? Extract<"card" | CollectorKindsOf<Collectors>, Kind> extends never
-        ? never
-        : InteractionId
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? Extract<CollectorKindsOf<Collectors>, Kind> extends never
-          ? never
-          : InteractionId
-        : never;
+    : never;
 }[InteractionIdOfDefinitionPhase<Definition, PhaseName>];
 
 type QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
@@ -715,31 +751,9 @@ export type InputKeysWithCollectorKindOfDefinition<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? CollectorKeysWithKind<Collectors, Kind> & string
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
-        >
-      ?
-          | (Extract<"card", Kind> extends never ? never : "cardId")
-          | (CollectorKeysWithKind<Collectors, Kind> & string)
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? CollectorKeysWithKind<Collectors, Kind> & string
-        : never;
+  > extends infer Spec
+    ? InputKeysWithCollectorKindOfInteractionDefinition<Spec, Kind>
+    : never;
 
 export type CardInputZoneIdsOfDefinition<
   Definition,
@@ -751,37 +765,9 @@ export type CardInputZoneIdsOfDefinition<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? CollectorCardZoneIds<Collectors, Input>
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
-        >
-      ? Input extends "cardId"
-        ? InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends { readonly playFrom: infer PlayFrom extends string }
-          ? PlayFrom
-          : never
-        : CollectorCardZoneIds<Collectors, Input>
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? CollectorCardZoneIds<Collectors, Input>
-        : never;
+  > extends infer Spec
+    ? CardInputZoneIdsOfInteractionDefinition<Spec, Input>
+    : never;
 
 export type ParamsOfInteractionOfDefinition<
   Definition,
@@ -792,64 +778,13 @@ export type ParamsOfInteractionOfDefinition<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? Collectors extends Record<string, InputCollector>
-      ? {
-          [K in keyof Collectors]: Collectors[K] extends InputCollector<
-            infer S,
-            infer _S2
-          >
-            ? S extends SchemaLike<infer V>
-              ? V
-              : never
-            : never;
-        }
-      : never
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
+  > extends infer Spec
+    ? Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
+      ? { cardId: string } & ParamsOfCollectors<
+          CollectorsOfInteractionDefinition<Spec>
         >
-      ? Collectors extends Record<string, InputCollector>
-        ? {
-            cardId: string;
-          } & {
-            [K in keyof Collectors]: Collectors[K] extends InputCollector<
-              infer S,
-              infer _S2
-            >
-              ? S extends SchemaLike<infer V>
-                ? V
-                : never
-              : never;
-          }
-        : { cardId: string }
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? Collectors extends Record<string, InputCollector>
-          ? {
-              [K in keyof Collectors]: Collectors[K] extends InputCollector<
-                infer S,
-                infer _S2
-              >
-                ? S extends SchemaLike<infer V>
-                  ? V
-                  : never
-                : never;
-            }
-          : never
-        : never;
+      : ParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
+    : never;
 
 /**
  * Client-facing params shape for an interaction. Omits engine-sampled
@@ -871,85 +806,19 @@ export type ClientParamsOfInteractionOfDefinition<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? Collectors extends Record<string, InputCollector>
-      ? {
-          [K in keyof Collectors as Collectors[K] extends InputCollector<
-            infer _S,
-            infer _S2
-          > & {
-            kind: "rng";
-          }
-            ? never
-            : K]: Collectors[K] extends InputCollector<infer S, infer _S2>
-            ? S extends SchemaLike<infer V>
-              ? V
-              : never
-            : never;
-        }
-      : never
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
+  > extends infer Spec
+    ? Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
+      ? { cardId: string } & ClientParamsOfCollectors<
+          CollectorsOfInteractionDefinition<Spec>
         >
-      ? Collectors extends Record<string, InputCollector>
-        ? {
-            cardId: string;
-          } & {
-            [K in keyof Collectors as Collectors[K] extends InputCollector<
-              infer _S,
-              infer _S2
-            > & {
-              kind: "rng";
-            }
-              ? never
-              : K]: Collectors[K] extends InputCollector<infer S, infer _S2>
-              ? S extends SchemaLike<infer V>
-                ? V
-                : never
-              : never;
-          }
-        : { cardId: string }
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? Collectors extends Record<string, InputCollector>
-          ? {
-              [K in keyof Collectors as Collectors[K] extends InputCollector<
-                infer _S,
-                infer _S2
-              > & {
-                kind: "rng";
-              }
-                ? never
-                : K]: Collectors[K] extends InputCollector<infer S, infer _S2>
-                ? S extends SchemaLike<infer V>
-                  ? V
-                  : never
-                : never;
-            }
-          : never
-        : never;
+      : ClientParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
+    : never;
 
 type DefaultedClientCollectorKeys<
   Collectors extends Record<string, InputCollector>,
 > = {
-  [K in keyof Collectors]: Collectors[K] extends InputCollector<
-    infer _S,
-    infer _S2
-  > & {
-    kind: "rng";
+  [K in keyof Collectors]: Collectors[K] extends {
+    readonly kind: "rng";
   }
     ? never
     : Collectors[K] extends { readonly defaultValue: unknown }
@@ -966,35 +835,10 @@ export type DefaultedClientParamKeysOfInteractionOfDefinition<
     Definition,
     PhaseName,
     InteractionId
-  > extends InteractionSpec<infer Collectors, infer _State, infer _Manifest>
-    ? Collectors extends Record<string, InputCollector>
-      ? DefaultedClientCollectorKeys<Collectors> & string
-      : never
-    : InteractionSpecByNameOfDefinitionPhase<
-          Definition,
-          PhaseName,
-          InteractionId
-        > extends CardActionSpec<
-          infer Collectors,
-          infer _State,
-          infer _Manifest
-        >
-      ? Collectors extends Record<string, InputCollector>
-        ? DefaultedClientCollectorKeys<Collectors> & string
-        : never
-      : InteractionSpecByNameOfDefinitionPhase<
-            Definition,
-            PhaseName,
-            InteractionId
-          > extends SimultaneousSubmitSpec<
-            infer Collectors,
-            infer _State,
-            infer _Manifest
-          >
-        ? Collectors extends Record<string, InputCollector>
-          ? DefaultedClientCollectorKeys<Collectors> & string
-          : never
-        : never;
+  > extends infer Spec
+    ? DefaultedClientCollectorKeys<CollectorsOfInteractionDefinition<Spec>> &
+        string
+    : never;
 
 type StageRegistryOfDefinitionPhase<
   Definition,

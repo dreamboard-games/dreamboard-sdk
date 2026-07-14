@@ -13,7 +13,7 @@
 
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
-import type { ViewCard } from "../../types/index.js";
+import type { ViewCard } from "@dreamboard-games/sdk-types";
 import { useTheme } from "../theme/ThemeProvider.js";
 
 export interface StagingZoneProps<CardData extends ViewCard = ViewCard> {

@@ -104,5 +104,6 @@ test("HandView tray mode renders safe-area padding", () => {
     </ThemeProvider>,
   );
   expect(html).toContain('data-mode="tray"');
+  expect(html).toContain('role="row" tabindex="0"');
   expect(html).toContain("env(safe-area-inset-bottom");
 });

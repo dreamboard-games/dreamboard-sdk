@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Drift check for the reducer-contract package: regenerates TypeScript
-// artifacts from schema/reducer-runtime.schema.json and fails if the result
-// differs from what is currently on disk.
+// Drift check for the reducer-contract package: generates TypeScript artifacts
+// into a temp directory and fails if the result differs from what is currently
+// tracked on disk.
 //
 // This catches the "I edited the schema but forgot to regenerate" class of
 // drift at pnpm fin / CI time, before the wire contract can diverge silently.
@@ -19,20 +19,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = path.resolve(__dirname, "..");
 const REPO_ROOT = path.resolve(PKG_ROOT, "..", "..");
 
-const TRACKED_OUTPUT_PATHS = [
-  path.join(PKG_ROOT, "generated"),
-  path.join(PKG_ROOT, "src", "bundle.ts"),
-  path.join(REPO_ROOT, "packages", "sdk", "src", "generated", "reducer-contract"),
-  path.join(
-    REPO_ROOT,
-    "packages",
-    "sdk",
-    "src",
-    "infrastructure",
-    "reducer-contract",
-    "bundle.ts",
-  ),
-];
+const TRACKED_GENERATED_DIR = path.join(PKG_ROOT, "generated");
+const TRACKED_BUNDLE_PATH = path.join(PKG_ROOT, "src", "bundle.ts");
 
 function run(cmd, args, opts = {}) {
   const result = spawnSync(cmd, args, {
@@ -41,18 +29,18 @@ function run(cmd, args, opts = {}) {
     ...opts,
   });
   if (result.status !== 0) {
-    process.exit(result.status ?? 1);
+    throw new Error(
+      `${cmd} ${args.join(" ")} failed with status ${result.status ?? 1}.`,
+    );
   }
 }
 
-function captureDiff(relativePath) {
-  const beforePath = path.join(snapshotRoot, relativePath);
-  const afterPath = path.join(REPO_ROOT, relativePath);
+function diffPaths(expectedPath, actualPath) {
   const res = spawnSync(
     "git",
-    ["--no-pager", "diff", "--no-index", "--", beforePath, afterPath],
+    ["--no-pager", "diff", "--no-index", "--", expectedPath, actualPath],
     {
-      cwd: snapshotRoot,
+      cwd: REPO_ROOT,
       encoding: "utf8",
     },
   );
@@ -61,9 +49,7 @@ function captureDiff(relativePath) {
     .join("\n");
 }
 
-function isClean(relativePath) {
-  const beforePath = path.join(snapshotRoot, relativePath);
-  const afterPath = path.join(REPO_ROOT, relativePath);
+function pathsMatch(expectedPath, actualPath) {
   const res = spawnSync(
     "git",
     [
@@ -72,22 +58,38 @@ function isClean(relativePath) {
       "--quiet",
       "--exit-code",
       "--",
-      beforePath,
-      afterPath,
+      expectedPath,
+      actualPath,
     ],
-    { cwd: snapshotRoot },
+    { cwd: REPO_ROOT },
   );
   return res.status === 0;
 }
 
-function snapshotTrackedOutputs() {
-  for (const outputPath of TRACKED_OUTPUT_PATHS) {
-    if (!fs.existsSync(outputPath)) continue;
-    const rel = path.relative(REPO_ROOT, outputPath);
-    const destination = path.join(snapshotRoot, rel);
-    fs.mkdirSync(path.dirname(destination), { recursive: true });
-    fs.cpSync(outputPath, destination, { recursive: true });
-  }
+function comparePath(label, expectedPath, actualPath, drift) {
+  if (pathsMatch(expectedPath, actualPath)) return;
+  drift.push({
+    label,
+    diff: diffPaths(expectedPath, actualPath),
+  });
+}
+
+function compareTrees(expectedPath, actualPath, drift) {
+  comparePath(
+    path.relative(REPO_ROOT, actualPath),
+    expectedPath,
+    actualPath,
+    drift,
+  );
+}
+
+function compareFiles(expectedPath, actualPath, drift) {
+  comparePath(
+    path.relative(REPO_ROOT, actualPath),
+    expectedPath,
+    actualPath,
+    drift,
+  );
 }
 
 function collectTrackedFiles(outputPath) {
@@ -110,26 +112,25 @@ function collectTrackedFiles(outputPath) {
   return files.sort();
 }
 
-const snapshotRoot = fs.mkdtempSync(
+const generatedRoot = fs.mkdtempSync(
   path.join(os.tmpdir(), "reducer-contract-generate-check-"),
 );
+let exitCode = 0;
 
 try {
-  snapshotTrackedOutputs();
-
-  // Regenerate the TypeScript SDK-side reducer contract.
-  run("node", ["scripts/generate-ts.mjs"]);
+  run("node", ["scripts/generate-ts.mjs", "--output-root", generatedRoot]);
 
   const drift = [];
-  for (const outputPath of TRACKED_OUTPUT_PATHS) {
-    const rel = path.relative(REPO_ROOT, outputPath);
-    const existedBefore = fs.existsSync(path.join(snapshotRoot, rel));
-    const existsAfter = fs.existsSync(outputPath);
-    if (!existedBefore && !existsAfter) continue;
-    if (!isClean(rel)) {
-      drift.push(rel);
-    }
-  }
+  compareTrees(
+    path.join(generatedRoot, "generated"),
+    TRACKED_GENERATED_DIR,
+    drift,
+  );
+  compareFiles(
+    path.join(generatedRoot, "src", "bundle.ts"),
+    TRACKED_BUNDLE_PATH,
+    drift,
+  );
 
   if (drift.length > 0) {
     console.error("");
@@ -138,37 +139,45 @@ try {
     );
     console.error("");
     console.error("Drift detected in:");
-    for (const rel of drift) {
-      console.error(`  - ${rel}`);
+    for (const entry of drift) {
+      console.error(`  - ${entry.label}`);
     }
     console.error("");
     console.error("Diff:");
-    for (const rel of drift) {
-      console.error(captureDiff(rel));
+    for (const entry of drift) {
+      console.error(entry.diff);
     }
     console.error("");
     console.error(
       "Fix: run `pnpm --filter=@dreamboard-games/reducer-contract generate` and commit the regenerated files.",
     );
-    process.exit(1);
-  }
-
-  // Echo the detected fingerprint so CI logs show *something* happened.
-  const trackedFiles = TRACKED_OUTPUT_PATHS.flatMap(collectTrackedFiles);
-  const hash = trackedFiles.length
-    ? spawnSync("git", ["hash-object", ...trackedFiles], {
-        cwd: REPO_ROOT,
-        encoding: "utf8",
-      })
-    : null;
-  const sha = hash?.status === 0 ? hash.stdout.trim().split("\n")[0] : "";
-  if (sha) {
-    console.log(
-      `✓ reducer-contract generated artifacts are clean (first-file sha: ${sha}).`,
-    );
+    exitCode = 1;
   } else {
-    console.log("✓ reducer-contract generated artifacts are clean.");
+    // Echo the detected fingerprint so CI logs show *something* happened.
+    const trackedFiles = [
+      ...collectTrackedFiles(TRACKED_GENERATED_DIR),
+      ...collectTrackedFiles(TRACKED_BUNDLE_PATH),
+    ];
+    const hash = trackedFiles.length
+      ? spawnSync("git", ["hash-object", ...trackedFiles], {
+          cwd: REPO_ROOT,
+          encoding: "utf8",
+        })
+      : null;
+    const sha = hash?.status === 0 ? hash.stdout.trim().split("\n")[0] : "";
+    if (sha) {
+      console.log(
+        `✓ reducer-contract generated artifacts are clean (first-file sha: ${sha}).`,
+      );
+    } else {
+      console.log("✓ reducer-contract generated artifacts are clean.");
+    }
   }
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  exitCode = 1;
 } finally {
-  fs.rmSync(snapshotRoot, { recursive: true, force: true });
+  fs.rmSync(generatedRoot, { recursive: true, force: true });
 }
+
+process.exitCode = exitCode;

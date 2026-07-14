@@ -6,7 +6,11 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
+  type Dispatch,
   type ReactNode,
+  type RefObject,
+  type SetStateAction,
 } from "react";
 import { useDrag } from "@use-gesture/react";
 import { clsx } from "clsx";
@@ -32,17 +36,18 @@ interface MobileHandTrayContextValue {
   registerHand: (hand: MobileHandRegistration) => () => void;
 }
 
+interface OverlayInsetContextValue {
+  bottomInset: number;
+  registerBottomOverlayInset: (id: string, height: number) => () => void;
+}
+
 const MobileHandTrayContext = createContext<MobileHandTrayContextValue | null>(
   null,
 );
 
-// Kept separate from the registration context on purpose: this value changes
-// whenever the tray opens/closes or hands (de)register, whereas `registerHand`
-// must stay referentially stable so `useRegisterMobileHand`'s effect does not
-// re-run and thrash registrations.
-const MobileHandTrayStateContext = createContext<{ active: boolean }>({
-  active: false,
-});
+const OverlayInsetContext = createContext<OverlayInsetContextValue | null>(
+  null,
+);
 
 const ROLE_PRIORITY: Record<HandRole, number> = {
   task: 0,
@@ -64,6 +69,9 @@ const DOCK_SNAP_MAX_HEIGHT: Record<DockSnap, number | string> = {
 export function MobileHandTrayProvider({ children }: { children: ReactNode }) {
   const [handsById, setHandsById] = useState<
     ReadonlyMap<string, MobileHandRegistration>
+  >(() => new Map());
+  const [bottomOverlayInsets, setBottomOverlayInsets] = useState<
+    ReadonlyMap<string, number>
   >(() => new Map());
   const isMobile = useIsMobile();
   const registerHand = useCallback((hand: MobileHandRegistration) => {
@@ -99,6 +107,39 @@ export function MobileHandTrayProvider({ children }: { children: ReactNode }) {
     () => ({ registerHand }),
     [registerHand],
   );
+  const registerBottomOverlayInset = useCallback(
+    (id: string, height: number) => {
+      const normalizedHeight = Math.max(0, Math.ceil(height));
+      setBottomOverlayInsets((current) => {
+        if (current.get(id) === normalizedHeight) return current;
+        const next = new Map(current);
+        if (normalizedHeight === 0) next.delete(id);
+        else next.set(id, normalizedHeight);
+        return next;
+      });
+      return () => {
+        setBottomOverlayInsets((current) => {
+          if (!current.has(id)) return current;
+          const next = new Map(current);
+          next.delete(id);
+          return next;
+        });
+      };
+    },
+    [],
+  );
+  const bottomInset = useMemo(
+    () =>
+      [...bottomOverlayInsets.values()].reduce(
+        (total, height) => total + height,
+        0,
+      ),
+    [bottomOverlayInsets],
+  );
+  const overlayValue = useMemo<OverlayInsetContextValue>(
+    () => ({ bottomInset, registerBottomOverlayInset }),
+    [bottomInset, registerBottomOverlayInset],
+  );
   const hands = useMemo(
     () =>
       [...handsById.values()].sort(
@@ -112,26 +153,20 @@ export function MobileHandTrayProvider({ children }: { children: ReactNode }) {
   );
 
   const trayActive = isMobile && hands.length > 0;
-  const stateValue = useMemo(() => ({ active: trayActive }), [trayActive]);
 
   return (
     <MobileHandTrayContext.Provider value={value}>
-      <MobileHandTrayStateContext.Provider value={stateValue}>
+      <OverlayInsetContext.Provider value={overlayValue}>
         <div
           data-dreamboard-mobile-hand-shell=""
           data-mobile-hand-count={hands.length}
           data-mobile-hand-tray-active={trayActive ? "true" : undefined}
-          style={{
-            minHeight: "100%",
-            paddingBottom: trayActive
-              ? "calc(92px + env(safe-area-inset-bottom, 0px))"
-              : undefined,
-          }}
+          style={{ minHeight: "100%" }}
         >
           {children}
         </div>
         {trayActive ? <MobileHandTray hands={hands} /> : null}
-      </MobileHandTrayStateContext.Provider>
+      </OverlayInsetContext.Provider>
     </MobileHandTrayContext.Provider>
   );
 }
@@ -146,15 +181,20 @@ export function useRegisterMobileHand(hand: MobileHandRegistration): void {
   useEffect(() => context.registerHand(hand), [context, hand]);
 }
 
-/**
- * Whether the mobile hand tray is currently presenting hands — i.e. the
- * viewport is below the mobile breakpoint and at least one primary/auxiliary
- * hand has registered. Authors can use this to drop redundant inline hand
- * chrome (labels, framing) that the tray already provides, instead of guessing
- * the breakpoint with a CSS media query. Returns `false` outside `<UI.Root>`.
- */
-export function useMobileHandTrayActive(): boolean {
-  return useContext(MobileHandTrayStateContext).active;
+export function useOverlayInsets(): { bottom: number } {
+  const context = useContext(OverlayInsetContext);
+  return { bottom: context?.bottomInset ?? 0 };
+}
+
+export function useRegisterBottomOverlayInset(
+  id: string,
+  height: number,
+): void {
+  const context = useContext(OverlayInsetContext);
+  useEffect(() => {
+    if (!context) return undefined;
+    return context.registerBottomOverlayInset(id, height);
+  }, [context, height, id]);
 }
 
 function MobileHandTray({
@@ -181,6 +221,7 @@ function MobileHandTray({
   }, []);
   const [activeId, setActiveId] = useState<string | null>(null);
   const themeCssVars = useThemeCssVars();
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   const preferredHand =
     hands.find((hand) => hand.id === activeId) ??
@@ -235,6 +276,63 @@ function MobileHandTray({
   );
 
   return (
+    <MobileHandTrayFrame
+      panelRef={panelRef}
+      snap={snap}
+      selectedHand={selectedHand}
+      hands={hands}
+      open={open}
+      active={active}
+      activeBadges={activeBadges}
+      bindDrag={bindDrag}
+      setSnap={setSnap}
+      setActiveId={setActiveId}
+      themeCssVars={themeCssVars}
+    />
+  );
+}
+
+function MobileHandTrayFrame({
+  panelRef,
+  snap,
+  selectedHand,
+  hands,
+  open,
+  active,
+  activeBadges,
+  bindDrag,
+  setSnap,
+  setActiveId,
+  themeCssVars,
+}: {
+  panelRef: RefObject<HTMLDivElement | null>;
+  snap: DockSnap;
+  selectedHand: MobileHandRegistration;
+  hands: readonly MobileHandRegistration[];
+  open: boolean;
+  active: boolean;
+  activeBadges: readonly MobileHandRegistration[];
+  bindDrag: ReturnType<typeof useDrag>;
+  setSnap: Dispatch<SetStateAction<DockSnap>>;
+  setActiveId: Dispatch<SetStateAction<string | null>>;
+  themeCssVars: CSSProperties;
+}) {
+  const [measuredHeight, setMeasuredHeight] = useState(0);
+  useEffect(() => {
+    const node = panelRef.current;
+    if (!node) {
+      setMeasuredHeight(0);
+      return undefined;
+    }
+    const update = () => setMeasuredHeight(node.getBoundingClientRect().height);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [panelRef, snap, selectedHand.id, hands.length]);
+  useRegisterBottomOverlayInset("dreamboard-mobile-hand-tray", measuredHeight);
+
+  return (
     <div
       data-dreamboard-mobile-hand-tray=""
       data-state={snap}
@@ -254,6 +352,7 @@ function MobileHandTray({
       }}
     >
       <div
+        ref={panelRef}
         className="flex w-full flex-col overflow-hidden rounded-t-2xl"
         style={{
           pointerEvents: "auto",
@@ -369,7 +468,7 @@ function MobileHandTray({
           <div
             className="px-3 pt-2 sm:px-4"
             style={{
-              paddingBottom: "calc(20px + env(safe-area-inset-bottom, 0px))",
+              paddingBottom: 20,
             }}
           >
             {selectedHand.content}

@@ -11,18 +11,18 @@ import type {
   PlayerIdOfState,
   RuntimeTableRecord,
   SchemaLike,
-  ScopedPhaseState,
   SetupSelectionOfManifest,
   StageMap,
   TableOfState,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractManifest,
   ContractState,
 } from "./types";
 
-type StepPhaseState<
+export type StepPhaseState<
   PhaseStateSchema extends SchemaLike<object>,
   Steps extends readonly string[],
 > = z.infer<PhaseStateSchema> & { step: Steps[number] };
@@ -37,7 +37,7 @@ type StepPhaseCardActionEntry<Step extends string, Action> = {
   action: Action;
 };
 
-type StepPhaseInteractionMap<
+export type StepPhaseInteractionMap<
   Step extends string,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
@@ -46,7 +46,7 @@ type StepPhaseInteractionMap<
   StepPhaseInteractionEntry<Step, AnyInteractionSpec<State, Manifest>>
 >;
 
-type StepPhaseCardActionMap<
+export type StepPhaseCardActionMap<
   Step extends string,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
@@ -55,7 +55,7 @@ type StepPhaseCardActionMap<
   StepPhaseCardActionEntry<Step, AnyCardActionSpec<State, Manifest>>
 >;
 
-type UnwrappedStepInteractions<
+export type UnwrappedStepInteractions<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
   Interactions extends Record<
@@ -66,7 +66,7 @@ type UnwrappedStepInteractions<
   [Key in keyof Interactions]: Interactions[Key]["interaction"];
 };
 
-type UnwrappedStepCardActions<
+export type UnwrappedStepCardActions<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
   CardActions extends Record<

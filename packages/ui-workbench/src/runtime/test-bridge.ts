@@ -1,0 +1,80 @@
+import type {
+  BrowserFixtureHostEvent,
+  BrowserFixtureHostHarness,
+  BrowserUIReplayStep,
+} from "./browser-fixture-runtime.js";
+import type { PluginRuntimeClient } from "@dreamboard-games/sdk/runtime";
+
+export interface UIFixtureTestBridge {
+  getScenarioId(): string;
+  getFrameId(): string;
+  getHostEvents(): readonly BrowserFixtureHostEvent[];
+  getRuntimeEvents(): readonly BrowserFixtureHostEvent[];
+  getProjectionDigest(): string;
+  getReplaySteps(): readonly BrowserUIReplayStep[];
+  flush(): Promise<void>;
+  validateInteraction(interactionId: string): Promise<void>;
+  reset(): Promise<void>;
+  assertConsumed(): void;
+}
+
+declare global {
+  interface Window {
+    __dreamboardUIFixture?: UIFixtureTestBridge;
+  }
+}
+
+export function installUIFixtureTestBridge(options: {
+  readonly scenarioId: string;
+  readonly harness: BrowserFixtureHostHarness;
+  readonly runtime: PluginRuntimeClient;
+  readonly replay: readonly BrowserUIReplayStep[];
+  readonly enabled: boolean;
+}): void {
+  if (!options.enabled) {
+    return;
+  }
+  window.__dreamboardUIFixture = {
+    getScenarioId: () => options.scenarioId,
+    getFrameId: () => options.harness.getCurrentFrameId(),
+    getHostEvents: () => options.harness.getEvents(),
+    getRuntimeEvents: () => options.harness.getEvents(),
+    getReplaySteps: () => options.replay,
+    flush: () => options.harness.flush(),
+    validateInteraction: async (interactionId) => {
+      const result = await options.runtime.validateInteraction(
+        interactionId,
+        {},
+      );
+      if (!result.valid) {
+        throw new Error(
+          result.message ??
+            `Interaction '${interactionId}' failed fixture validation.`,
+        );
+      }
+    },
+    getProjectionDigest: () => {
+      const frameId = options.harness.getCurrentFrameId();
+      const frame = options.harness.tape.frames.find(
+        (candidate) => candidate.id === frameId,
+      );
+      if (!frame) {
+        throw new Error(`Current fixture frame '${frameId}' is missing.`);
+      }
+      return frame.projectionDigest;
+    },
+    reset: async () => {
+      options.harness.reset();
+      await options.harness.flush();
+    },
+    assertConsumed: () => {
+      options.harness.assertConsumed();
+    },
+  };
+}
+
+export function uninstallUIFixtureTestBridge(): void {
+  delete window.__dreamboardUIFixture;
+}
+
+export {};

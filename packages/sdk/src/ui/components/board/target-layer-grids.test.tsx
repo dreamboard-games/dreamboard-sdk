@@ -106,6 +106,41 @@ test("HexGrid target layers make only eligible targets interactive", () => {
   expect(vertexStates.every((state) => !state.isHovered)).toBe(true);
 });
 
+test("HexGrid target layers render browser interaction attributes", () => {
+  const html = renderToString(
+    <HexGrid
+      tiles={hexTiles}
+      edges={hexEdges}
+      vertices={hexVertices}
+      hexSize={40}
+      enablePanZoom={false}
+      interactiveVertices={{
+        eligible: new Set(["vertex-eligible"]),
+        selectTargetId: () => undefined,
+        targetState: (targetId) =>
+          targetId === "vertex-eligible"
+            ? {
+                browserAttributes: {
+                  "data-dreamboard-browser-role": "actuator",
+                  "data-dreamboard-browser-intent": "select",
+                  "data-dreamboard-candidate-value": '"vertex-eligible"',
+                },
+              }
+            : {},
+      }}
+      renderTile={() => null}
+      renderEdge={() => null}
+      renderVertex={() => null}
+    />,
+  );
+
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain('data-dreamboard-browser-intent="select"');
+  expect(html).toContain(
+    'data-dreamboard-candidate-value="&quot;vertex-eligible&quot;"',
+  );
+});
+
 test("HexGrid target layers treat missing eligible set as all targets eligible", () => {
   const html = renderToString(
     <HexGrid

@@ -10,8 +10,14 @@ import type {
   TableOfState,
   TableQueriesOfState,
 } from "./model";
-import { createReducerOps, type ReducerOps } from "./ops";
+import {
+  createReducerOps,
+  getReducerOpsInternal,
+  type ReducerOpsInternal,
+  type ReducerOps,
+} from "./ops";
 import { createStateQueries } from "./table-queries";
+import { cloneRuntimeTable } from "./table/clone";
 
 export type RotatePlayerZoneArgs<
   State extends { table: RuntimeTableRecord },
@@ -69,52 +75,151 @@ export type ReducerEdit<State extends { table: RuntimeTableRecord }> = <
   state: DraftState,
 ) => ReducerTransaction<DraftState>;
 
+const transactionContext = Symbol("dreamboard.reducerTransactionContext");
+
+type TransactionContext<State extends { table: RuntimeTableRecord }> = {
+  currentState: State;
+  currentQueries: TableQueriesOfState<State> | null;
+  internalOps: ReducerOpsInternal<State>;
+  methodCache: Record<string, (...args: readonly unknown[]) => State>;
+  applyMethod?: (op: Op<State>) => State;
+};
+
+type TransactionHost<State extends { table: RuntimeTableRecord }> = {
+  [transactionContext]: TransactionContext<State>;
+};
+
+function getTransactionContext<State extends { table: RuntimeTableRecord }>(
+  host: unknown,
+): TransactionContext<State> {
+  const context = (host as Partial<TransactionHost<State>>)[transactionContext];
+  if (!context) {
+    throw new TypeError("Reducer transaction method called without a receiver");
+  }
+  return context;
+}
+
+function invalidate<State extends { table: RuntimeTableRecord }>(
+  context: TransactionContext<State>,
+): void {
+  context.currentQueries = null;
+}
+
+function applyTransactionOp<State extends { table: RuntimeTableRecord }>(
+  context: TransactionContext<State>,
+  op: Op<State>,
+): State {
+  context.currentState = op(context.currentState);
+  invalidate(context);
+  return context.currentState;
+}
+
+function runInternal<State extends { table: RuntimeTableRecord }>(
+  context: TransactionContext<State>,
+  key: keyof ReducerOps<State>,
+  args: readonly unknown[],
+): State {
+  context.currentState = (
+    context.internalOps[key] as unknown as (
+      state: State,
+      ...args: readonly unknown[]
+    ) => State
+  )(context.currentState, ...args);
+  invalidate(context);
+  return context.currentState;
+}
+
+function createReducerTransactionSurface<
+  State extends { table: RuntimeTableRecord },
+>(ops: ReducerOps<State>) {
+  const surface = {};
+  const descriptors: PropertyDescriptorMap = {
+    state: {
+      enumerable: true,
+      get(this: unknown) {
+        return getTransactionContext<State>(this).currentState;
+      },
+    },
+    q: {
+      enumerable: true,
+      get(this: unknown) {
+        const context = getTransactionContext<State>(this);
+        context.currentQueries ??= createStateQueries(context.currentState);
+        return context.currentQueries;
+      },
+    },
+    apply: {
+      enumerable: true,
+      get(this: unknown) {
+        const context = getTransactionContext<State>(this);
+        context.applyMethod ??= (op: Op<State>) =>
+          applyTransactionOp(context, op);
+        return context.applyMethod;
+      },
+    },
+  };
+
+  for (const key of Object.keys(ops) as Array<keyof ReducerOps<State>>) {
+    descriptors[String(key)] = {
+      enumerable: true,
+      get(this: unknown) {
+        const context = getTransactionContext<State>(this);
+        const cacheKey = String(key);
+        context.methodCache[cacheKey] ??= (...args: readonly unknown[]) =>
+          runInternal(context, key, args);
+        return context.methodCache[cacheKey];
+      },
+    };
+  }
+
+  Object.defineProperties(surface, descriptors);
+  return surface;
+}
+
+function createReducerTransactionFromSurface<
+  State extends { table: RuntimeTableRecord },
+>(
+  initialState: State,
+  internalOps: ReducerOpsInternal<State>,
+  surface: object,
+): ReducerTransaction<State> {
+  const transaction = Object.create(surface) as ReducerTransaction<State> &
+    TransactionHost<State>;
+  Object.defineProperty(transaction, transactionContext, {
+    value: {
+      currentState: {
+        ...initialState,
+        table: cloneRuntimeTable(initialState.table),
+      },
+      currentQueries: null,
+      internalOps,
+      methodCache: {},
+    } satisfies TransactionContext<State>,
+  });
+  return transaction;
+}
+
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
 >(initialState: State, ops: ReducerOps<State> = createReducerOps<State>()) {
-  let currentState = initialState;
-  let currentQueries = createStateQueries(currentState);
-
-  const refresh = (nextState: State): State => {
-    currentState = nextState;
-    currentQueries = createStateQueries(currentState);
-    return currentState;
-  };
-
-  const apply = (op: Op<State>): State => refresh(op(currentState));
-
-  const base = {
-    get state() {
-      return currentState;
-    },
-    get q() {
-      return currentQueries;
-    },
-    apply,
-  };
-
-  return new Proxy(base, {
-    get(target, property, receiver) {
-      if (property in target) {
-        return Reflect.get(target, property, receiver);
-      }
-      const opFactory = ops[property as keyof ReducerOps<State>];
-      if (typeof opFactory !== "function") {
-        return undefined;
-      }
-      return (...args: readonly unknown[]) => {
-        const op = (opFactory as (...args: readonly unknown[]) => Op<State>)(
-          ...args,
-        );
-        return apply(op);
-      };
-    },
-  }) as ReducerTransaction<State>;
+  const internalOps = getReducerOpsInternal(ops);
+  const surface = createReducerTransactionSurface(ops);
+  return createReducerTransactionFromSurface(
+    initialState,
+    internalOps,
+    surface,
+  );
 }
 
 export function createReducerEdit<State extends { table: RuntimeTableRecord }>(
   ops: ReducerOps<State> = createReducerOps<State>(),
 ): ReducerEdit<State> {
+  const internalOps = getReducerOpsInternal(ops);
+  const surface = createReducerTransactionSurface(ops);
   return <DraftState extends State>(state: DraftState) =>
-    createReducerTransaction(state, ops as unknown as ReducerOps<DraftState>);
+    createReducerTransactionFromSurface(
+      state,
+      internalOps as unknown as ReducerOpsInternal<DraftState>,
+      surface,
+    );
 }

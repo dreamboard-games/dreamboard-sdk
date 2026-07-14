@@ -3,18 +3,28 @@ import { z } from "zod";
 import {
   createReducerBundle,
   defineDerived,
+  defineEmptyView,
   defineEffect,
   defineGame,
   defineGameContract,
   defineInteraction,
+  definePlayerView,
   definePhase,
+  defineSharedView,
   defineStepPhase,
-  defineView,
+  gameEvent,
+  pipe,
   rngInput,
+} from "../reducer";
+import {
   type InputCollector,
   type RuntimeTableRecord,
-} from "../reducer";
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
+import {
+  getCloneRuntimeTableCallCount,
+  resetCloneRuntimeTableCallCount,
+} from "./table/clone";
 
 function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
   const ids = playerIds.map((id) => asPlayerId(id));
@@ -148,7 +158,117 @@ function createManifestContract() {
   };
 }
 
+function expectProjectionTiming(timing: {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+}) {
+  for (const value of Object.values(timing)) {
+    expect(Number.isFinite(value)).toBe(true);
+    expect(value >= 0).toBe(true);
+  }
+}
+
 describe("runtime-owned reducer effects", () => {
+  test("reduce and dispatch materialize reducer-authored game events", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          count: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ count: 0 }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          interactions: {
+            advance: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ state, accept, ops }) {
+                return accept(
+                  pipe(
+                    state,
+                    ops.patchPublicState({
+                      count: state.publicState.count + 1,
+                    }),
+                  ),
+                  {
+                    events: [
+                      gameEvent.systemAction({
+                        procedureId: "count-advance",
+                        title: "The count advanced",
+                        details: [
+                          {
+                            label: "Count",
+                            value: state.publicState.count + 1,
+                          },
+                        ],
+                      }),
+                    ],
+                  },
+                );
+              },
+            }),
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const input = {
+      kind: "interaction" as const,
+      playerId: "player-1",
+      interactionId: "advance",
+      params: {},
+    };
+
+    const reduced = await bundle.reduce({ state: initial, input });
+    expect(reduced).toMatchObject({
+      kind: "accept",
+      events: [
+        {
+          kind: "systemAction",
+          procedureId: "count-advance",
+          title: "The count advanced",
+          details: [{ label: "Count", value: 1 }],
+        },
+      ],
+    });
+
+    const dispatched = await bundle.dispatch({ state: initial, input });
+    expect(dispatched).toMatchObject({
+      kind: "accept",
+      events: [
+        {
+          kind: "systemAction",
+          procedureId: "count-advance",
+          title: "The count advanced",
+          details: [{ label: "Count", value: 1 }],
+        },
+      ],
+    });
+  });
+
   test("bundle projectSeatsDynamic returns a plain view synchronously", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -184,7 +304,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ state }) {
             return {
               counter: state.publicState.counter,
@@ -212,9 +333,180 @@ describe("runtime-owned reducer effects", () => {
       secret: "eel",
     });
     expect(typeof (view as { then?: unknown }).then).toBe("undefined");
+    expectProjectionTiming(projection.timing);
+    expect(
+      Object.prototype.propertyIsEnumerable.call(projection, "timing"),
+    ).toBe(false);
+    expect(JSON.stringify(projection)).not.toContain("descriptorHashMs");
   });
 
-  test("projectSeatViewDynamic returns a single view without descriptor work", async () => {
+  test("projectSeatsDynamic actionsOnly projects interaction refs and timing", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          counter: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({
+          counter: 3,
+        }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          interactions: {
+            advance: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          },
+        }),
+      },
+      views: {
+        shared: defineSharedView<typeof contract>()({
+          project({ state }) {
+            return { counter: state.publicState.counter };
+          },
+        }),
+        player: definePlayerView<typeof contract>()({
+          project({ shared }) {
+            return shared;
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const session = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const projection = bundle.projectSeatsDynamic({
+      state: session,
+      playerIds: ["player-1"],
+      projectionMode: "actionsOnly",
+    });
+    const seat = projection.seats["player-1"];
+    const refs = seat?.availableInteractionRefs;
+
+    expect(seat).toBeDefined();
+    expect("sharedView" in projection).toBe(false);
+    expect("view" in seat!).toBe(false);
+    expect("zones" in seat!).toBe(false);
+    expect(Array.isArray(refs)).toBe(true);
+    expect((refs as string[]).length).toBe(1);
+    expect(projection.interactionsByRef[(refs as string[])[0]!]).toMatchObject({
+      interactionId: "advance",
+    });
+    expectProjectionTiming(projection.timing);
+    expect(projection.timing.resolveViewMs).toBe(0);
+    expect(projection.timing.resolveZoneHandlesMs).toBe(0);
+
+    const runtime = bundle.createInProcessRuntime();
+    await runtime.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const runtimeProjection = runtime.projectSeatsDynamic({
+      playerIds: ["player-1"],
+      projectionMode: "actionsOnly",
+    });
+    const runtimeSeat = runtimeProjection.seats["player-1"];
+
+    expect(runtimeSeat).toBeDefined();
+    expect("sharedView" in runtimeProjection).toBe(false);
+    expect("view" in runtimeSeat!).toBe(false);
+    expect("zones" in runtimeSeat!).toBe(false);
+    expectProjectionTiming(runtimeProjection.timing);
+    expect(runtimeProjection.timing.resolveViewMs).toBe(0);
+    expect(runtimeProjection.timing.resolveZoneHandlesMs).toBe(0);
+  });
+
+  test("projectSeatsDynamic projects shared once and passes it to player views", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          counter: z.number().int(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    let sharedCalls = 0;
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({
+          counter: 3,
+        }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+        }),
+      },
+      views: {
+        shared: defineSharedView<typeof contract>()({
+          project({ state }) {
+            sharedCalls++;
+            return { counter: state.publicState.counter };
+          },
+        }),
+        player: definePlayerView<typeof contract>()({
+          project({ playerId, shared }) {
+            return { playerId, shared };
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const session = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const projection = bundle.projectSeatsDynamic({
+      state: session,
+      playerIds: ["player-1", "player-2"],
+    });
+
+    expect(sharedCalls).toBe(1);
+    expect(projection.sharedView).toEqual({ counter: 3 });
+    expect(projection.seats["player-1"]?.view).toEqual({
+      playerId: "player-1",
+      shared: { counter: 3 },
+    });
+    expect(projection.seats["player-2"]?.view).toEqual({
+      playerId: "player-2",
+      shared: { counter: 3 },
+    });
+  });
+
+  test("projectSeatsDynamic full projection resolves descriptors and views", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -262,7 +554,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ state, playerId }) {
             return {
               playerId,
@@ -279,13 +572,16 @@ describe("runtime-owned reducer effects", () => {
       playerIds: ["player-1", "player-2"],
     });
 
-    const view = bundle.projectSeatViewDynamic({
+    const projection = bundle.projectSeatsDynamic({
       state: session,
-      playerId: "player-1",
+      playerIds: ["player-1"],
     });
 
-    expect(view).toEqual({ playerId: "player-1", counter: 3 });
-    expect(availableCalls).toBe(0);
+    expect(projection.seats["player-1"]?.view).toEqual({
+      playerId: "player-1",
+      counter: 3,
+    });
+    expect(availableCalls).toBe(1);
   });
 
   test("projectSeatsDynamic shares derived values across seats and descriptors", async () => {
@@ -334,7 +630,8 @@ describe("runtime-owned reducer effects", () => {
         }),
       },
       views: {
-        player: defineView<typeof contract>()({
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
           project({ derived }) {
             return { total: derived(expensiveTotal) };
           },
@@ -420,6 +717,10 @@ describe("runtime-owned reducer effects", () => {
             },
           },
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
 
@@ -703,12 +1004,14 @@ describe("runtime-owned reducer effects", () => {
             rollVisibleDie: defineInteraction<typeof contract>()({
               inputs: {},
               reduce({ state, accept, fx }) {
-                return accept(state, [
-                  fx.effect(rollDieEffect, {
-                    dieId: "die-1",
-                    context: { reason: "action" },
-                  }),
-                ]);
+                return accept(state, {
+                  instructions: [
+                    fx.effect(rollDieEffect, {
+                      dieId: "die-1",
+                      context: { reason: "action" },
+                    }),
+                  ],
+                });
               },
             }),
           },
@@ -818,9 +1121,11 @@ describe("runtime-owned reducer effects", () => {
             rollSilently: defineInteraction<typeof contract>()({
               inputs: {},
               reduce({ state, accept, fx }) {
-                return accept(state, [
-                  fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                ]);
+                return accept(state, {
+                  instructions: [
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                  ],
+                });
               },
             }),
           },
@@ -898,6 +1203,87 @@ describe("runtime-owned reducer effects", () => {
           !("resume" in entry.effect),
       ),
     ).toBe(true);
+  });
+
+  test("dispatch resolves multiple engine instructions with one table clone", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+
+    const fireAndForgetRollEffect = defineEffect<typeof contract>()({
+      type: "rollDie",
+      id: "fireAndForgetRoll",
+    });
+
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          effects: {
+            fireAndForgetRollEffect,
+          },
+          interactions: {
+            rollTwice: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ state, accept, fx }) {
+                return accept(state, {
+                  instructions: [
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
+                  ],
+                });
+              },
+            }),
+          },
+        }),
+      },
+    });
+
+    const bundle = createReducerBundle(game);
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+      rngSeed: 42,
+    });
+
+    resetCloneRuntimeTableCallCount();
+    const dispatched = await bundle.dispatch({
+      state: initial,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "rollTwice",
+        params: {},
+      },
+    });
+
+    expect(dispatched.kind).toBe("accept");
+    if (dispatched.kind !== "accept") {
+      throw new Error("Expected rollTwice dispatch to be accepted.");
+    }
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    expect(dispatched.state.runtime?.rng?.cursor).toBe(2);
+    expect(
+      dispatched.trace.filter(
+        (entry) =>
+          entry.kind === "appliedEffect" && entry.effect.type === "rollDie",
+      ),
+    ).toHaveLength(2);
   });
 
   // Regression: presentation3/catan surfaced this via `POST .../inputs` with
@@ -1149,6 +1535,234 @@ describe("runtime-owned reducer effects", () => {
         authentic.state.domain.publicState as { lastRoll: number[] }
       ).lastRoll;
       expect(forcedRoll).toEqual(authenticRoll);
+    });
+  });
+
+  describe("random.integer mutation helper", () => {
+    function defineIntegerGame() {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({
+            results: z.array(z.number().int()),
+          }),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+
+      return defineGame({
+        contract,
+        initial: {
+          public: () => ({ results: [] }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            enter({ state, accept, random }) {
+              const result = random.integer({
+                minInclusive: 1,
+                maxInclusive: 6,
+              });
+              return accept({
+                ...state,
+                publicState: {
+                  results: [...state.publicState.results, result],
+                },
+              });
+            },
+            interactions: {
+              drawAndReenter: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ state, accept, fx, random }) {
+                  const result = random.integer({
+                    minInclusive: 10,
+                    maxInclusive: 12,
+                  });
+                  return accept(
+                    {
+                      ...state,
+                      publicState: {
+                        results: [...state.publicState.results, result],
+                      },
+                    },
+                    { instructions: [fx.transition("takeTurn")] },
+                  );
+                },
+              }),
+            },
+          }),
+        },
+      });
+    }
+
+    test("records initialization, dispatch, and lifecycle draws with structured trace identity", async () => {
+      const diagnosticEvents: Array<{
+        type: string;
+        trace?: readonly unknown[];
+      }> = [];
+      const bundle = createReducerBundle(defineIntegerGame(), {
+        diagnostics: {
+          event(event) {
+            diagnosticEvents.push(event);
+          },
+        },
+      });
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+
+      expect(initialized.runtime.rng.draws).toEqual([
+        {
+          index: 0,
+          cursorBefore: 0,
+          cursorAfter: 1,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 1, maxInclusive: 6 },
+          },
+        },
+      ]);
+
+      const dispatched = await bundle.dispatch({
+        state: initialized,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "drawAndReenter",
+          params: {},
+        },
+      });
+      if (dispatched.kind !== "accept") {
+        throw new Error("Expected drawAndReenter to accept.");
+      }
+
+      expect(dispatched.state.runtime.rng.draws).toEqual([
+        initialized.runtime.rng.draws[0],
+        {
+          index: 1,
+          cursorBefore: 1,
+          cursorAfter: 2,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 10, maxInclusive: 12 },
+          },
+        },
+        {
+          index: 2,
+          cursorBefore: 2,
+          cursorAfter: 3,
+          operation: {
+            kind: "integer",
+            parameters: { minInclusive: 1, maxInclusive: 6 },
+          },
+        },
+      ]);
+      expect(
+        dispatched.trace.filter((entry) => entry.kind === "rngConsumption"),
+      ).toEqual([
+        expect.objectContaining({
+          version: 2,
+          operation: "random.integer",
+          drawIndex: 1,
+        }),
+        expect.objectContaining({
+          version: 2,
+          operation: "random.integer",
+          drawIndex: 2,
+        }),
+      ]);
+
+      const acceptedDiagnostic = diagnosticEvents.find(
+        (event) => event.type === "submitAccepted",
+      );
+      expect(acceptedDiagnostic?.trace).toEqual([
+        expect.objectContaining({ kind: "acceptedClientInput" }),
+        expect.objectContaining({
+          kind: "rngConsumption",
+          version: 2,
+          drawIndex: 1,
+        }),
+        expect.objectContaining({
+          kind: "appliedInstruction",
+          instruction: "flow.transition",
+        }),
+        expect.objectContaining({
+          kind: "rngConsumption",
+          version: 2,
+          drawIndex: 2,
+        }),
+      ]);
+      const diagnosticJson = JSON.stringify(acceptedDiagnostic);
+      expect(diagnosticJson).not.toContain("traceEntry");
+      expect(diagnosticJson).not.toContain("value=");
+    });
+
+    test("rejects invalid inclusive integer ranges before consuming RNG", async () => {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({}),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+      const game = defineGame({
+        contract,
+        initial: {
+          public: () => ({}),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            interactions: {
+              invalid: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ state, accept, random }) {
+                  random.integer({ minInclusive: 7, maxInclusive: 6 });
+                  return accept(state);
+                },
+              }),
+            },
+          }),
+        },
+      });
+      const bundle = createReducerBundle(game);
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+
+      await expect(
+        bundle.dispatch({
+          state: initialized,
+          input: {
+            kind: "interaction",
+            playerId: "player-1",
+            interactionId: "invalid",
+            params: {},
+          },
+        }),
+      ).rejects.toThrow(
+        "random.integer minInclusive must be less than or equal to maxInclusive",
+      );
+      expect(initialized.runtime.rng.cursor).toBe(0);
+      expect(initialized.runtime.rng.draws).toEqual([]);
     });
   });
 

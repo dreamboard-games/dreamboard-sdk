@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 4,
+  "id": "multiplayer-ranking-and-ties",
+  "displayName": "Harbor Fair",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "ranked multiplayer outcomes",
+      "shared market drafting",
+      "tie-break evidence",
+      "scoreless cancellation"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when several players draft from shared rows and final rank needs explicit tie-break evidence.",
+      "Keep refill and cancellation rules in automatic phases so players only see genuine draft decisions.",
+      "Separate a valid tied outcome from a cancelled scoreless game in the terminal result."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/game-contract.ts",
+      "app/phases/setup.ts",
+      "app/phases/drafting.ts",
+      "app/rules.ts",
+      "ui/App.tsx",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios.test.ts"
+    ]
+  },
+  "demoRelease": {
+    "slug": "multiplayer-ranking-and-ties",
+    "name": "Harbor Fair",
+    "description": "Build a public harbor festival across six rounds, then resolve prestige, guild sets, coins, ties, or storm cancellation authoritatively.",
+    "overview": "Two to four organizers draft food, craft, and music stalls from four shared awnings while storms threaten a dramatic scoreless ending.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 30,
+    "difficulty": 2,
+    "mechanics": [
+      "card-drafting",
+      "market-row",
+      "set-collection",
+      "shared-card-play"
+    ],
+    "categories": ["card-game", "ranking"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 4
+  },
+  "mechanics": [
+    "card-drafting",
+    "market-row",
+    "set-collection",
+    "shared-card-play"
+  ],
+  "uiPatterns": [
+    "market-row",
+    "turn-summary",
+    "standings-table",
+    "outcome-dialog"
+  ],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-18"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

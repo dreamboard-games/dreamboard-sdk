@@ -2,11 +2,16 @@ import type {
   DreamboardUI as RuntimeDreamboardUI,
   TypedGame as RuntimeTypedGame,
   UIContract as RuntimeUIContract,
-} from "./runtime-internal/index.js";
+} from "./runtime/index.js";
 
-export { PluginRuntime } from "./runtime-internal/index.js";
+export { PluginRuntime } from "./runtime/index.js";
+export { PluginRuntimeBoundary } from "./runtime/index.js";
+export { createPluginRuntimeClient } from "./runtime/index.js";
+export { createPostMessagePluginTransport } from "./runtime/index.js";
 
-export interface DreamboardUIRegister {}
+export interface DreamboardUIRegister {
+  readonly __dreamboardUIRegister?: never;
+}
 
 export type UIContract = RuntimeUIContract;
 
@@ -30,5 +35,53 @@ export type TypedGame<
 
 export type {
   InteractionDescriptor,
+  GameEvent,
+  GameEventDetail,
+  PluginRuntimeClient,
+  PluginRuntimeClientOptions,
+  PluginTransport,
   PluginRuntimeProps,
-} from "./runtime-internal/index.js";
+  PostMessagePluginTransportOptions,
+  ProjectedGameEvent,
+  RuntimeClock,
+  RuntimeIdFactory,
+  SystemActionEvent,
+} from "./runtime/index.js";
+
+// Workspace contract surface. Generated game UIs import these from
+// `@dreamboard-games/sdk/runtime` (the `declare module` augmentation target
+// for `DreamboardUIRegister` lives on this subpath as well).
+export { createWorkspaceUIContract } from "./runtime/workspace-contract.js";
+export type {
+  BoardGridInteractionFilter,
+  BoardHexGridProps,
+  BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
+  BoardSpaceTargetProps,
+  ClientParamSchemaMap,
+  GameMeState,
+  GamePlayersState,
+  GameRenderState,
+  GameTurnState,
+  ResourceCounterComponents,
+  UIRootProps,
+  WorkspaceBoardSurface,
+  WorkspaceBoardSurfaceDescriptor,
+  WorkspaceBoardTargetInputSlot,
+  WorkspaceCardCollectionSurface,
+  WorkspaceCardCollectionSurfaceDescriptor,
+  WorkspaceCardInputSlot,
+  WorkspaceFormInputSlot,
+  WorkspaceHandSurface,
+  WorkspaceHandSurfaceDescriptor,
+  WorkspaceInteractionFormDescriptor,
+  WorkspaceInteractionFormsDescriptor,
+  WorkspaceInteractionSlotComponent,
+  WorkspacePileSurface,
+  WorkspacePileSurfaceDescriptor,
+  WorkspacePilesSurfaceDescriptor,
+  WorkspaceSurfaceSpec,
+  ZoneCardRenderItem,
+  ZoneListProps,
+} from "./runtime/workspace-contract.js";

@@ -18,11 +18,33 @@
       "phase": {}
     },
     "runtime": {
-      "rng": { "seed": 1337, "cursor": 0, "trace": [] },
+      "rng": {
+        "seed": 1337,
+        "cursor": 1,
+        "trace": ["cursor=0;bound=6;value=3"],
+        "draws": [
+          {
+            "index": 0,
+            "cursorBefore": 0,
+            "cursorAfter": 1,
+            "operation": {
+              "kind": "integer",
+              "parameters": { "minInclusive": 1, "maxInclusive": 6 }
+            }
+          }
+        ]
+      },
       "setup": null,
       "simultaneous": { "current": null },
       "lastTransition": { "from": "main", "to": "takeTurn" }
     }
+  },
+  "terminal": {
+    "reason": { "code": "SECOND_STORM" },
+    "standings": [
+      { "playerId": "player-1", "rank": 1, "result": "draw" },
+      { "playerId": "player-2", "rank": 1, "result": "draw" }
+    ]
   },
   "trace": [
     {
@@ -56,8 +78,11 @@
     },
     {
       "kind": "rngConsumption",
+      "version": 2,
       "operation": "rollDie",
+      "drawIndex": 0,
       "traceEntry": "die-red:4"
     }
-  ]
+  ],
+  "events": []
 }

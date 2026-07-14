@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Hearts</title>
+  <desc id="desc">Four playing cards circle a crimson heart on a midnight plum table.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%"><stop stop-color="#24132f"/><stop offset="100%" stop-color="#5a183d"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-opacity=".28"/></filter>
+  </defs>
+  <rect width="1200" height="675" fill="#34152f"/>
+  <circle cx="870" cy="325" r="230" fill="#7f1d46" opacity=".45"/>
+  <g filter="url(#shadow)" transform="translate(730 122)">
+    <g transform="rotate(-18 120 180)"><rect x="0" y="0" width="190" height="285" rx="18" fill="#fff8ed"/><path d="M95 211C27 168 40 102 78 102c20 0 30 14 30 14s10-14 30-14c38 0 51 66-43 109Z" fill="#b4234d"/></g>
+    <g transform="translate(135 25) rotate(8 120 180)"><rect x="0" y="0" width="190" height="285" rx="18" fill="#f7ead9"/><path d="M95 211C27 168 40 102 78 102c20 0 30 14 30 14s10-14 30-14c38 0 51 66-43 109Z" fill="#d0345f"/></g>
+    <g transform="translate(265 75) rotate(24 120 180)"><rect x="0" y="0" width="190" height="285" rx="18" fill="#fff8ed"/><path d="M95 211C27 168 40 102 78 102c20 0 30 14 30 14s10-14 30-14c38 0 51 66-43 109Z" fill="#86183c"/></g>
+  </g>
+  <g fill="#fff7ed"><text x="86" y="255" font-family="Georgia,serif" font-size="92" font-weight="700">Hearts</text><text x="92" y="315" font-family="system-ui,sans-serif" font-size="28" letter-spacing="7">PASS · FOLLOW · EVADE</text></g>
+  <path d="M91 370h430" stroke="#e8a2b6" stroke-width="8" stroke-linecap="round"/>
+</svg>

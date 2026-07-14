@@ -3,15 +3,18 @@
  * All rendering controlled by parent via required render functions.
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { clsx } from "clsx";
-import { usePanZoom } from "../../hooks/usePanZoom.js";
 import { handleKeyboardActivation } from "./interaction-accessibility.js";
 import {
-  interactiveTargetRenderState,
-  isInteractiveTargetSelectable,
-  type InteractiveTargetLayer,
-  type InteractiveTargetRenderState,
+  GridZoomIndicator,
+  useGridSvgFrame,
+} from "./tiled-grid/use-grid-svg-frame.js";
+import { InteractiveTargetLayerGroup } from "./tiled-grid/interactive-layer.js";
+import { resolveBoardProp } from "./tiled-grid/resolve-board-prop.js";
+import type {
+  InteractiveTargetLayer,
+  InteractiveTargetRenderState,
 } from "./target-layer.js";
 import type { SquarePieceState } from "../../types/player-state.js";
 import {
@@ -648,48 +651,30 @@ function SquareGridImpl(
     renderInteractiveEdge,
     renderInteractiveVertex,
   } = props;
-  const board =
-    "board" in props
-      ? props.board
-      : (("spaces" in props
-          ? {
-              id: "__square-grid__",
-              spaces: props.spaces,
-              pieces: props.pieces ?? [],
-              edges: props.edges ?? [],
-              vertices: props.vertices ?? [],
-            }
-          : {
-              id: "__square-grid__",
-              rows: props.rows ?? 0,
-              cols: props.cols ?? 0,
-              cells: props.cells,
-              pieces: props.pieces ?? [],
-              edges: props.edges ?? [],
-              vertices: props.vertices ?? [],
-            }) satisfies AnySquareBoardInput);
-  const [hoveredInteractiveSpaceId, setHoveredInteractiveSpaceId] = useState<
-    string | null
-  >(null);
-  const [hoveredInteractiveEdgeId, setHoveredInteractiveEdgeId] = useState<
-    string | null
-  >(null);
-  const [hoveredInteractiveVertexId, setHoveredInteractiveVertexId] = useState<
-    string | null
-  >(null);
-
-  // Use the unified pan/zoom hook
-  const {
-    transform,
-    bind,
-    isDragging: isPanning,
-  } = usePanZoom({
-    enabled: enablePanZoom,
-    initialZoom,
-    minZoom,
-    maxZoom,
-    mode: "viewbox",
-  });
+  const board = resolveBoardProp<
+    AnySquareBoardInput,
+    SquareGridProps<SquareGridInputProps>
+  >(
+    props,
+    (inlineProps) =>
+      ("spaces" in inlineProps
+        ? {
+            id: "__square-grid__",
+            spaces: inlineProps.spaces,
+            pieces: inlineProps.pieces ?? [],
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }
+        : {
+            id: "__square-grid__",
+            rows: inlineProps.rows ?? 0,
+            cols: inlineProps.cols ?? 0,
+            cells: inlineProps.cells,
+            pieces: inlineProps.pieces ?? [],
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }) satisfies AnySquareBoardInput,
+  );
 
   // Coordinate label margin
   const labelMargin = showCoordinates && coordinateStyle !== "none" ? 24 : 0;
@@ -806,25 +791,35 @@ function SquareGridImpl(
     [cellSize, cellsById, labelMargin, resolvedVertices],
   );
 
-  // Calculate viewBox for pan/zoom
-  const viewBoxWidth = totalWidth / transform.zoom;
-  const viewBoxHeight = totalHeight / transform.zoom;
-  const viewBoxX = (totalWidth - viewBoxWidth) / 2 - transform.pan.x;
-  const viewBoxY = (totalHeight - viewBoxHeight) / 2 - transform.pan.y;
-
   // Determine SVG dimensions
   const svgWidth = width ?? totalWidth;
   const svgHeight = height ?? totalHeight;
+  // Shared SVG frame: pan/zoom wiring, viewBox, and target hover state
+  const {
+    transform,
+    bind,
+    isDragging: isPanning,
+    viewBox,
+    viewBoxX,
+    viewBoxY,
+    viewBoxHeight,
+    spaceHover,
+    edgeHover,
+    vertexHover,
+  } = useGridSvgFrame({
+    panZoomEnabled: enablePanZoom,
+    initialZoom,
+    minZoom,
+    maxZoom,
+    bounds: { minX: 0, minY: 0, width: totalWidth, height: totalHeight },
+    viewBoxMode: "static-when-disabled",
+  });
 
   return (
     <svg
       width={svgWidth}
       height={svgHeight}
-      viewBox={
-        enablePanZoom
-          ? `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`
-          : `0 0 ${totalWidth} ${totalHeight}`
-      }
+      viewBox={viewBox}
       className={clsx(
         "square-grid",
         enablePanZoom && "touch-none",
@@ -833,7 +828,7 @@ function SquareGridImpl(
         className,
       )}
       {...bind()}
-      role="img"
+      role="group"
       aria-label={`${rows}x${cols} game grid`}
     >
       <defs>
@@ -867,70 +862,37 @@ function SquareGridImpl(
       </g>
 
       {interactiveSpaces && (
-        <g className="interactive-spaces" aria-label="Interactive spaces">
-          {resolvedCells.map((space) => {
-            const state = interactiveTargetRenderState(
-              interactiveSpaces,
-              space.id,
-              hoveredInteractiveSpaceId === space.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveSpaces,
-              state,
-            );
-            const x = labelMargin + space.col * cellSize;
-            const y = space.row * cellSize;
-            return (
-              <g
-                key={space.id}
-                transform={`translate(${x}, ${y})`}
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void interactiveSpaces.selectTargetId?.(space.id);
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void interactiveSpaces.selectTargetId?.(space.id);
-                        }
-                      : undefined,
-                  )
-                }
-                onPointerEnter={() => setHoveredInteractiveSpaceId(space.id)}
-                onPointerLeave={() =>
-                  setHoveredInteractiveSpaceId((currentId) =>
-                    currentId === space.id ? null : currentId,
-                  )
-                }
-                className={clsx(isSelectable && "cursor-pointer")}
-                role={isSelectable ? "button" : undefined}
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={
-                  isSelectable ? `Select space ${space.id}` : undefined
-                }
-              >
-                {isSelectable && (
-                  <rect
-                    x={0}
-                    y={0}
-                    width={cellSize}
-                    height={cellSize}
-                    fill="rgba(255,255,255,0.001)"
-                    pointerEvents="all"
-                  />
-                )}
-                {renderInteractiveSpace
-                  ? renderInteractiveSpace(space, state)
-                  : null}
-              </g>
-            );
-          })}
-        </g>
+        <InteractiveTargetLayerGroup
+          layer={interactiveSpaces}
+          targets={resolvedCells}
+          getTargetId={(space) => space.id}
+          targetKind="space"
+          groupClassName="interactive-spaces"
+          groupAriaLabel="Interactive spaces"
+          browserAttributeOrder="after-transform"
+          selectMode="layer-direct"
+          hover={spaceHover}
+          getTargetTransform={(space) =>
+            `translate(${labelMargin + space.col * cellSize}, ${space.row * cellSize})`
+          }
+          renderTargetContent={(space, state, isSelectable) => (
+            <>
+              {isSelectable && (
+                <rect
+                  x={0}
+                  y={0}
+                  width={cellSize}
+                  height={cellSize}
+                  fill="rgba(255,255,255,0.001)"
+                  pointerEvents="all"
+                />
+              )}
+              {renderInteractiveSpace
+                ? renderInteractiveSpace(space, state)
+                : null}
+            </>
+          )}
+        />
       )}
 
       {renderEdge && resolvedEdgePositions.length > 0 && (
@@ -942,65 +904,32 @@ function SquareGridImpl(
       )}
 
       {interactiveEdges && (
-        <g className="interactive-edges" aria-label="Interactive edges">
-          {resolvedEdgePositions.map(({ interactiveEdge: edge }) => {
-            const state = interactiveTargetRenderState(
-              interactiveEdges,
-              edge.id,
-              hoveredInteractiveEdgeId === edge.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveEdges,
-              state,
-            );
-            return (
-              <g
-                key={edge.id}
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void interactiveEdges.selectTargetId?.(edge.id);
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void interactiveEdges.selectTargetId?.(edge.id);
-                        }
-                      : undefined,
-                  )
-                }
-                onPointerEnter={() => setHoveredInteractiveEdgeId(edge.id)}
-                onPointerLeave={() =>
-                  setHoveredInteractiveEdgeId((currentId) =>
-                    currentId === edge.id ? null : currentId,
-                  )
-                }
-                className={clsx(isSelectable && "cursor-pointer")}
-                role={isSelectable ? "button" : undefined}
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={isSelectable ? `Select edge ${edge.id}` : undefined}
-              >
-                {renderInteractiveEdge ? (
-                  renderInteractiveEdge(edge, edge.position, state)
-                ) : state.isEnabled && state.isEligible ? (
-                  <line
-                    x1={edge.position.x1}
-                    y1={edge.position.y1}
-                    x2={edge.position.x2}
-                    y2={edge.position.y2}
-                    stroke="rgba(255,255,255,0.001)"
-                    strokeWidth={Math.max(12, cellSize * 0.18)}
-                    pointerEvents="stroke"
-                  />
-                ) : null}
-              </g>
-            );
-          })}
-        </g>
+        <InteractiveTargetLayerGroup
+          layer={interactiveEdges}
+          targets={resolvedEdgePositions}
+          getTargetId={({ interactiveEdge }) => interactiveEdge.id}
+          targetKind="edge"
+          groupClassName="interactive-edges"
+          groupAriaLabel="Interactive edges"
+          browserAttributeOrder="after-transform"
+          selectMode="layer-direct"
+          hover={edgeHover}
+          renderTargetContent={({ interactiveEdge: edge }, state) =>
+            renderInteractiveEdge ? (
+              renderInteractiveEdge(edge, edge.position, state)
+            ) : state.isEnabled && state.isEligible ? (
+              <line
+                x1={edge.position.x1}
+                y1={edge.position.y1}
+                x2={edge.position.x2}
+                y2={edge.position.y2}
+                stroke="rgba(255,255,255,0.001)"
+                strokeWidth={Math.max(12, cellSize * 0.18)}
+                pointerEvents="stroke"
+              />
+            ) : null
+          }
+        />
       )}
 
       {renderVertex && resolvedVertexPositions.length > 0 && (
@@ -1014,65 +943,30 @@ function SquareGridImpl(
       )}
 
       {interactiveVertices && (
-        <g className="interactive-vertices" aria-label="Interactive vertices">
-          {resolvedVertexPositions.map(({ interactiveVertex: vertex }) => {
-            const state = interactiveTargetRenderState(
-              interactiveVertices,
-              vertex.id,
-              hoveredInteractiveVertexId === vertex.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveVertices,
-              state,
-            );
-            return (
-              <g
-                key={vertex.id}
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void interactiveVertices.selectTargetId?.(vertex.id);
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void interactiveVertices.selectTargetId?.(vertex.id);
-                        }
-                      : undefined,
-                  )
-                }
-                onPointerEnter={() => setHoveredInteractiveVertexId(vertex.id)}
-                onPointerLeave={() =>
-                  setHoveredInteractiveVertexId((currentId) =>
-                    currentId === vertex.id ? null : currentId,
-                  )
-                }
-                className={clsx(isSelectable && "cursor-pointer")}
-                role={isSelectable ? "button" : undefined}
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={
-                  isSelectable ? `Select vertex ${vertex.id}` : undefined
-                }
-              >
-                {renderInteractiveVertex ? (
-                  renderInteractiveVertex(vertex, vertex.position, state)
-                ) : state.isEnabled && state.isEligible ? (
-                  <circle
-                    cx={vertex.position.x}
-                    cy={vertex.position.y}
-                    r={Math.max(8, cellSize * 0.12)}
-                    fill="rgba(255,255,255,0.001)"
-                    pointerEvents="all"
-                  />
-                ) : null}
-              </g>
-            );
-          })}
-        </g>
+        <InteractiveTargetLayerGroup
+          layer={interactiveVertices}
+          targets={resolvedVertexPositions}
+          getTargetId={({ interactiveVertex }) => interactiveVertex.id}
+          targetKind="vertex"
+          groupClassName="interactive-vertices"
+          groupAriaLabel="Interactive vertices"
+          browserAttributeOrder="after-transform"
+          selectMode="layer-direct"
+          hover={vertexHover}
+          renderTargetContent={({ interactiveVertex: vertex }, state) =>
+            renderInteractiveVertex ? (
+              renderInteractiveVertex(vertex, vertex.position, state)
+            ) : state.isEnabled && state.isEligible ? (
+              <circle
+                cx={vertex.position.x}
+                cy={vertex.position.y}
+                r={Math.max(8, cellSize * 0.12)}
+                fill="rgba(255,255,255,0.001)"
+                pointerEvents="all"
+              />
+            ) : null
+          }
+        />
       )}
 
       {/* Coordinate labels */}
@@ -1142,21 +1036,12 @@ function SquareGridImpl(
 
       {/* Zoom indicator */}
       {enablePanZoom && transform.zoom !== 1 && (
-        <g
-          transform={`translate(${viewBoxX + 10}, ${viewBoxY + viewBoxHeight - 30})`}
-        >
-          <rect
-            x={0}
-            y={0}
-            width={60}
-            height={20}
-            rx={4}
-            fill="rgba(0,0,0,0.6)"
-          />
-          <text x={30} y={14} textAnchor="middle" fill="white" fontSize={12}>
-            {Math.round(transform.zoom * 100)}%
-          </text>
-        </g>
+        <GridZoomIndicator
+          viewBoxX={viewBoxX}
+          viewBoxY={viewBoxY}
+          viewBoxHeight={viewBoxHeight}
+          zoom={transform.zoom}
+        />
       )}
     </svg>
   );

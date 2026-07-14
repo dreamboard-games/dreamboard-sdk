@@ -1,5 +1,6 @@
 import type { RuntimeInstructionForState } from "./runtime-instruction";
 import type { TrustedRuntimeInput } from "./runtime-input";
+import type { GameEvent, GameOutcome } from "../model/runtime";
 
 export type DispatchTraceEntry<
   State,
@@ -16,7 +17,9 @@ export type DispatchTraceEntry<
     }
   | {
       type: "rngConsumption";
+      version: 2;
       operation: string;
+      drawIndex: number;
       traceEntry: string;
     };
 
@@ -30,6 +33,8 @@ export type TrustedReducerDispatchResult<State, PlayerId extends string> =
       type: "accept";
       state: State;
       trace: DispatchTraceEntry<State, PlayerId>[];
+      terminal?: GameOutcome<PlayerId>;
+      events?: readonly GameEvent[];
     };
 
 export type TrustedInstructionResolutionResult<

@@ -129,40 +129,6 @@
   }
 }
 
-.wobbly-border {
-  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
-}
-
-.wobbly-border-md {
-  border-radius: 25px 8px 25px 8px / 8px 25px 8px 25px;
-}
-
-.wobbly-border-lg {
-  border-radius: 45px 15px 45px 15px / 15px 45px 15px 45px;
-}
-
-.hard-shadow {
-  box-shadow: 4px 4px 0 0 #2d2d2d;
-}
-
-.hard-shadow-sm {
-  box-shadow: 2px 2px 0 0 #2d2d2d;
-}
-
-.hard-shadow-lg {
-  box-shadow: 8px 8px 0 0 #2d2d2d;
-}
-
-.hard-shadow-hover:hover {
-  box-shadow: 2px 2px 0 0 #2d2d2d;
-  transform: translate(2px, 2px);
-}
-
-.hard-shadow-active:active {
-  box-shadow: 0 0 0 0 #2d2d2d;
-  transform: translate(4px, 4px);
-}
-
 .scribble-underline {
   position: relative;
   display: inline-block;

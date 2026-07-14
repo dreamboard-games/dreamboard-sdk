@@ -1,3 +1,4 @@
+import type { Wire } from "@dreamboard-games/reducer-contract";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,
@@ -19,7 +20,7 @@ import {
   createProjectionContext,
   type ProjectionContext,
 } from "./projection-context";
-import { collectCardZoneIds } from "./interaction-collectors";
+import { collectCardZoneIds } from "./collector-introspection";
 import {
   isSimultaneousPhase,
   resolveSimultaneousActors,
@@ -28,10 +29,24 @@ import {
 } from "./simultaneous-player";
 
 type ProjectionMode = "full" | "actionsOnly";
+type ProjectionTimingMetadata = {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+};
 type DescriptorRegistry = {
-  add(descriptor: InteractionDescriptorShape): string;
+  add(descriptor: InteractionDescriptorShape, actorSeat: number): string;
   entries(): Record<string, InteractionDescriptorShape>;
 };
+
+type CanonicalJson =
+  | null
+  | boolean
+  | number
+  | string
+  | CanonicalJson[]
+  | { [key: string]: CanonicalJson };
 
 type InteractionResolverFor<
   Contract extends ReducerGameContractLike,
@@ -53,23 +68,31 @@ export function createProjectionBuilder<
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
 
-  function createDescriptorRegistry(): DescriptorRegistry {
+  function createDescriptorRegistry(
+    timing: ProjectionTimingMetadata,
+  ): DescriptorRegistry {
     const byRef: Record<string, InteractionDescriptorShape> = {};
     const byHash = new Map<string, string>();
     return {
-      add(descriptor) {
-        const fingerprint = stableStringify(descriptor);
-        const existing = byHash.get(fingerprint);
-        if (existing) return existing;
-        const base =
-          typeof descriptor.interactionId === "string" &&
-          descriptor.interactionId.length > 0
-            ? descriptor.interactionId
-            : "interaction";
-        const ref = `${base}:${fnv1a64(fingerprint)}`;
-        byHash.set(fingerprint, ref);
-        byRef[ref] = descriptor;
-        return ref;
+      add(descriptor, actorSeat) {
+        return measureProjectionTiming(timing, "descriptorHashMs", () => {
+          const enriched = descriptorWithBrowserReplayDigests(
+            descriptor,
+            actorSeat,
+          );
+          const fingerprint = stableStringify(enriched);
+          const existing = byHash.get(fingerprint);
+          if (existing) return existing;
+          const base =
+            typeof enriched.interactionId === "string" &&
+            enriched.interactionId.length > 0
+              ? enriched.interactionId
+              : "interaction";
+          const ref = `${base}:${fnv1a64(fingerprint)}`;
+          byHash.set(fingerprint, ref);
+          byRef[ref] = enriched;
+          return ref;
+        });
       },
       entries() {
         return byRef;
@@ -80,6 +103,7 @@ export function createProjectionBuilder<
   function resolveZoneHandlesFor(
     combinedState: State,
     playerId: PlayerId,
+    actorSeat: number,
     projection: ProjectionContext<DomainState, State>,
     registry: DescriptorRegistry,
   ) {
@@ -165,10 +189,13 @@ export function createProjectionBuilder<
             continue;
           }
           perCard.push(
-            registry.add({
-              ...decision.descriptor,
-              zoneId,
-            }),
+            registry.add(
+              {
+                ...decision.descriptor,
+                zoneId,
+              },
+              actorSeat,
+            ),
           );
         }
         playableByCardId[cardId] = perCard;
@@ -193,6 +220,67 @@ export function createProjectionBuilder<
     );
   }
 
+  function resolveGuidanceFor(combinedState: State) {
+    const phaseName = combinedState.flow.currentPhase as PhaseName;
+    const phase = scope.phaseByName(phaseName) as {
+      name?: unknown;
+      guidance?: { summary?: unknown; objective?: unknown };
+    };
+    const phaseSummary = normalizeGuidanceText(phase.guidance?.summary);
+    const phaseObjective = normalizeGuidanceText(phase.guidance?.objective);
+    const setupProfileId = combinedState.runtime.setup?.profileId;
+    const setupProfile =
+      setupProfileId == null
+        ? undefined
+        : scope.manifestSetupProfilesById[String(setupProfileId)];
+    const setupGuidance = setupProfile?.guidance;
+    const setupSummary = normalizeGuidanceText(setupGuidance?.summary);
+    const setup =
+      setupProfileId == null || !setupProfile
+        ? undefined
+        : {
+            profileId: String(setupProfileId),
+            name: setupProfile.name,
+            ...(setupSummary ? { summary: setupSummary } : {}),
+            steps: (setupGuidance?.steps ?? []).map((step) => ({
+              id: step.id,
+              label: step.label,
+              ...(step.description ? { description: step.description } : {}),
+            })),
+          };
+    return {
+      phase: {
+        id: String(phaseName),
+        label:
+          normalizeGuidanceText(phase.name) ??
+          humanizeGuidanceId(String(phaseName)),
+        ...(phaseSummary ? { summary: phaseSummary } : {}),
+        ...(phaseObjective ? { objective: phaseObjective } : {}),
+      },
+      ...(setup ? { setup } : {}),
+    };
+  }
+
+  function normalizeGuidanceText(value: unknown): string | undefined {
+    if (typeof value !== "string") return undefined;
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : undefined;
+  }
+
+  function humanizeGuidanceId(id: string): string {
+    if (!id) return id;
+    const withSpaces = id
+      .replace(/[-_]+/g, " ")
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+      .trim();
+    if (!withSpaces) return id;
+    return withSpaces
+      .split(/\s+/)
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  }
+
   function resolveStageSeatsFor(state: SessionState): string[] {
     const combinedState = scope.toCombinedState(state);
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -200,7 +288,213 @@ export function createProjectionBuilder<
     if (isSimultaneousPhase(phase)) {
       return resolveSimultaneousActors(scope, combinedState, phase).map(String);
     }
-    return [...state.domain.flow.activePlayers];
+    const stageAllowlist = interactions.resolveActiveStageAllowlist(
+      combinedState,
+      phaseName,
+    );
+    const actors = new Set<string>();
+    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
+      phaseName,
+    )) {
+      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
+        continue;
+      }
+      if (
+        !interactions.isInteractionAllowedInStep(combinedState, interaction)
+      ) {
+        continue;
+      }
+      const authorization = interactions.resolveInteractionActorAuthorization(
+        combinedState,
+        interaction,
+      );
+      if (authorization.mode === "addressees") {
+        for (const playerId of authorization.addressees) {
+          actors.add(String(playerId));
+        }
+        continue;
+      }
+      if (authorization.mode === "actors") {
+        for (const playerId of authorization.actors) {
+          actors.add(String(playerId));
+        }
+        continue;
+      }
+      const activePlayers = combinedState.flow
+        .activePlayers as readonly string[];
+      for (const playerId of activePlayers.length > 0
+        ? activePlayers
+        : (combinedState.table.playerOrder as readonly string[])) {
+        actors.add(String(playerId));
+      }
+    }
+    const seatByPlayer = new Map(
+      (combinedState.table.playerOrder as readonly string[]).map(
+        (playerId, seat) => [String(playerId), seat] as const,
+      ),
+    );
+    return [...actors].sort(
+      (left, right) =>
+        (seatByPlayer.get(left) ?? Number.MAX_SAFE_INTEGER) -
+        (seatByPlayer.get(right) ?? Number.MAX_SAFE_INTEGER),
+    );
+  }
+
+  function resolveSchedulerFlowFor(
+    state: SessionState,
+    projection?: ProjectionContext<DomainState, State>,
+  ): Wire.SchedulerFlowAuthorityProjection {
+    const combinedState = scope.toCombinedState(state);
+    const phaseName = combinedState.flow.currentPhase as PhaseName;
+    const phase = scope.phaseByName(phaseName);
+    if (phase.kind === "auto") {
+      return emptySchedulerFlow();
+    }
+
+    if (isSimultaneousPhase(phase)) {
+      const current = state.runtime.simultaneous?.current;
+      const actors = orderKnownPlayerIds(
+        combinedState,
+        current?.phaseName === phaseName
+          ? current.actors.map(String)
+          : resolveSimultaneousActors(
+              scope,
+              combinedState,
+              phase,
+              projection,
+            ).map(String),
+      );
+      const submissions =
+        current?.phaseName === phaseName ? current.submissions : {};
+      const sealedPlayerIds = actors.filter(
+        (playerId) =>
+          submissions[playerId as keyof typeof submissions] !== undefined,
+      );
+      const pendingPlayerIds = actors.filter(
+        (playerId) =>
+          submissions[playerId as keyof typeof submissions] === undefined,
+      );
+      const activePlayerIds =
+        (phase as { canResubmit?: boolean }).canResubmit === true
+          ? actors
+          : pendingPlayerIds;
+      return {
+        version: 1,
+        activePlayerIds,
+        pendingPlayerIds,
+        continuationDependencies: sealedPlayerIds.flatMap((waiterPlayerId) => {
+          const blockerPlayerIds = pendingPlayerIds.filter(
+            (playerId) => playerId !== waiterPlayerId,
+          );
+          return blockerPlayerIds.length > 0
+            ? [{ waiterPlayerId, blockerPlayerIds }]
+            : [];
+        }),
+      };
+    }
+
+    const stageAllowlist = interactions.resolveActiveStageAllowlist(
+      combinedState,
+      phaseName,
+      projection,
+    );
+    const activePlayerIds = new Set<string>();
+    const pendingPlayerIds = new Set<string>();
+    let sawScheduledInteraction = false;
+    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
+      phaseName,
+    )) {
+      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
+        continue;
+      }
+      if (
+        !interactions.isInteractionAllowedInStep(
+          combinedState,
+          interaction,
+          projection,
+        )
+      ) {
+        continue;
+      }
+      sawScheduledInteraction = true;
+      const actorAuthorization =
+        interactions.resolveInteractionActorAuthorization(
+          combinedState,
+          interaction,
+          projection,
+        );
+      if (actorAuthorization.mode === "addressees") {
+        for (const playerId of actorAuthorization.addressees) {
+          activePlayerIds.add(String(playerId));
+          pendingPlayerIds.add(String(playerId));
+        }
+        continue;
+      }
+      if (actorAuthorization.mode === "actors") {
+        for (const playerId of actorAuthorization.actors) {
+          activePlayerIds.add(String(playerId));
+        }
+        continue;
+      }
+      const active = combinedState.flow.activePlayers as readonly string[];
+      for (const playerId of active.length > 0
+        ? active
+        : (combinedState.table.playerOrder as readonly string[])) {
+        activePlayerIds.add(String(playerId));
+      }
+    }
+
+    if (!sawScheduledInteraction) {
+      for (const playerId of combinedState.flow
+        .activePlayers as readonly string[]) {
+        activePlayerIds.add(String(playerId));
+      }
+    }
+
+    const orderedActivePlayerIds = orderKnownPlayerIds(
+      combinedState,
+      activePlayerIds,
+    );
+    const orderedPendingPlayerIds = orderKnownPlayerIds(
+      combinedState,
+      pendingPlayerIds,
+    );
+    const continuationDependencies = orderKnownPlayerIds(
+      combinedState,
+      combinedState.flow.activePlayers as readonly string[],
+    ).flatMap((waiterPlayerId) => {
+      const blockerPlayerIds = orderedPendingPlayerIds.filter(
+        (playerId) => playerId !== waiterPlayerId,
+      );
+      return blockerPlayerIds.length > 0
+        ? [{ waiterPlayerId, blockerPlayerIds }]
+        : [];
+    });
+    return {
+      version: 1,
+      activePlayerIds: orderedActivePlayerIds,
+      pendingPlayerIds: orderedPendingPlayerIds,
+      continuationDependencies,
+    };
+  }
+
+  function emptySchedulerFlow(): Wire.SchedulerFlowAuthorityProjection {
+    return {
+      version: 1,
+      activePlayerIds: [],
+      pendingPlayerIds: [],
+      continuationDependencies: [],
+    };
+  }
+
+  function orderKnownPlayerIds(
+    state: State,
+    playerIds: Iterable<string>,
+  ): string[] {
+    const selected = new Set([...playerIds].map(String));
+    return (state.table.playerOrder as readonly string[])
+      .map(String)
+      .filter((playerId) => selected.has(playerId));
   }
 
   function resolveSimultaneousPhaseFor(state: SessionState) {
@@ -228,17 +522,29 @@ export function createProjectionBuilder<
     };
   }
 
-  function resolveViewFor(
+  function resolveSharedViewFor(
     combinedState: State,
-    playerId: PlayerId,
-    viewId: string,
     projection: ProjectionContext<DomainState, State>,
   ): unknown {
-    const views = scope.definition.views;
-    const view = views?.[viewId as keyof typeof views];
-    if (!view) {
-      return null;
-    }
+    const view = scope.definition.views.shared;
+    const viewArgs = {
+      ...scope.buildContext(combinedState),
+      ...scope.runtimeHelpers,
+      fx: projection.fx,
+      q: projection.q,
+      derived: projection.derived,
+      state: projection.domainState,
+    } as unknown as Parameters<typeof view.project>[0];
+    return view.project(viewArgs);
+  }
+
+  function resolvePlayerViewFor(
+    combinedState: State,
+    playerId: PlayerId,
+    sharedView: unknown,
+    projection: ProjectionContext<DomainState, State>,
+  ): unknown {
+    const view = scope.definition.views.player;
     const viewArgs = {
       ...scope.buildContext(combinedState),
       ...scope.runtimeHelpers,
@@ -247,19 +553,18 @@ export function createProjectionBuilder<
       derived: projection.derived,
       state: projection.domainState,
       playerId,
-    } as Parameters<typeof view.project>[0];
+      shared: sharedView,
+    } as unknown as Parameters<typeof view.project>[0];
     return view.project(viewArgs);
   }
 
   function projectSeatsDynamic({
     state,
     playerIds,
-    viewId = "player",
     projectionMode = "full",
   }: {
     state: SessionState;
     playerIds: PlayerId[];
-    viewId?: string;
     projectionMode?: ProjectionMode;
   }) {
     const combinedState = scope.toCombinedState(state);
@@ -267,68 +572,293 @@ export function createProjectionBuilder<
       combinedState,
       domainState: scope.toDomainState(combinedState),
     });
-    const registry = createDescriptorRegistry();
+    const timing = createProjectionTimingMetadata();
+    const registry = createDescriptorRegistry(timing);
     type SeatProjection = {
-      view?: ReturnType<typeof resolveViewFor>;
+      view?: ReturnType<typeof resolvePlayerViewFor>;
       availableInteractionRefs: string[];
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
     };
     const seats: Record<string, SeatProjection> = {};
-    for (const playerId of playerIds) {
-      const availableInteractionRefs = interactions
-        .resolveAvailableInteractionsFor(combinedState, playerId, {
-          projection,
-        })
-        .map((descriptor) => registry.add(descriptor));
-      seats[playerId as unknown as string] = {
-        ...(projectionMode === "full"
+    const sharedView =
+      projectionMode === "full"
+        ? measureProjectionTiming(timing, "resolveViewMs", () =>
+            resolveSharedViewFor(combinedState, projection),
+          )
+        : undefined;
+    for (const [actorSeat, playerId] of playerIds.entries()) {
+      const availableInteractions = measureProjectionTiming(
+        timing,
+        "resolveAvailableInteractionsMs",
+        () =>
+          interactions.resolveAvailableInteractionsFor(
+            combinedState,
+            playerId,
+            {
+              projection,
+            },
+          ),
+      );
+      const availableInteractionRefs = availableInteractions.map((descriptor) =>
+        registry.add(descriptor, actorSeat),
+      );
+      const fullProjection =
+        projectionMode === "full"
           ? {
-              view: resolveViewFor(combinedState, playerId, viewId, projection),
-              zones: resolveZoneHandlesFor(
-                combinedState,
-                playerId,
-                projection,
-                registry,
+              view: measureProjectionTiming(timing, "resolveViewMs", () =>
+                resolvePlayerViewFor(
+                  combinedState,
+                  playerId,
+                  sharedView,
+                  projection,
+                ),
+              ),
+              zones: measureProjectionTiming(
+                timing,
+                "resolveZoneHandlesMs",
+                () =>
+                  resolveZoneHandlesFor(
+                    combinedState,
+                    playerId,
+                    actorSeat,
+                    projection,
+                    registry,
+                  ),
               ),
             }
-          : {}),
+          : {};
+      seats[playerId as unknown as string] = {
+        ...fullProjection,
         availableInteractionRefs,
       };
     }
-    return {
-      currentStage: resolveCurrentStageFor(combinedState, projection),
-      stageSeats: resolveStageSeatsFor(state),
-      simultaneousPhase: resolveSimultaneousPhaseFor(state),
-      interactionsByRef: registry.entries(),
-      seats,
-    };
-  }
-
-  function projectSeatViewDynamic({
-    state,
-    playerId,
-    viewId = "player",
-  }: {
-    state: SessionState;
-    playerId: PlayerId;
-    viewId?: string;
-  }) {
-    const combinedState = scope.toCombinedState(state);
-    const projection = createProjectionContext({
-      combinedState,
-      domainState: scope.toDomainState(combinedState),
-    });
-    return resolveViewFor(combinedState, playerId, viewId, projection);
+    return withProjectionTiming(
+      {
+        currentStage: resolveCurrentStageFor(combinedState, projection),
+        stageSeats: resolveStageSeatsFor(state),
+        simultaneousPhase: resolveSimultaneousPhaseFor(state),
+        schedulerFlow: resolveSchedulerFlowFor(state, projection),
+        ...(projectionMode === "full" ? { sharedView } : {}),
+        guidance: resolveGuidanceFor(combinedState),
+        recentEvents: [],
+        interactionsByRef: registry.entries(),
+        seats,
+      },
+      timing,
+    );
   }
 
   return {
     projectSeatsDynamic,
-    projectSeatViewDynamic,
     resolveCurrentStageFor,
+    resolveSchedulerFlowFor,
     resolveStageSeatsFor,
-    resolveViewFor,
+    resolvePlayerViewFor,
+    resolveSharedViewFor,
     resolveZoneHandlesFor,
   };
+}
+
+function createProjectionTimingMetadata(): ProjectionTimingMetadata {
+  return {
+    resolveAvailableInteractionsMs: 0,
+    resolveViewMs: 0,
+    resolveZoneHandlesMs: 0,
+    descriptorHashMs: 0,
+  };
+}
+
+function measureProjectionTiming<T>(
+  timing: ProjectionTimingMetadata,
+  field: keyof ProjectionTimingMetadata,
+  block: () => T,
+): T {
+  const startedAt = performance.now();
+  try {
+    return block();
+  } finally {
+    timing[field] += performance.now() - startedAt;
+  }
+}
+
+function withProjectionTiming<T extends object>(
+  projection: T,
+  timing: ProjectionTimingMetadata,
+): T & { timing: ProjectionTimingMetadata } {
+  Object.defineProperty(projection, "timing", {
+    value: timing,
+    enumerable: false,
+    configurable: false,
+    writable: false,
+  });
+  return projection as T & { timing: ProjectionTimingMetadata };
+}
+
+function descriptorWithBrowserReplayDigests(
+  descriptor: InteractionDescriptorShape,
+  actorSeat: number,
+): InteractionDescriptorShape {
+  const descriptorDigestValue =
+    descriptor.descriptorDigest ?? interactionDescriptorDigest(descriptor);
+  return {
+    ...descriptor,
+    descriptorDigest: descriptorDigestValue,
+    actorSeat,
+    draftDigest:
+      descriptor.draftDigest ??
+      interactionDraftDigest({
+        actorSeat,
+        descriptor,
+        descriptorDigest: descriptorDigestValue,
+      }),
+  };
+}
+
+function interactionDescriptorDigest(
+  descriptor: InteractionDescriptorShape,
+): string {
+  return hashJson({
+    commitMode: descriptor.commit.mode,
+    defaults: toDescriptorDigestJson(defaultsForDescriptor(descriptor)),
+    inputKeys: descriptor.inputs.map((input) => input.key),
+    inputs: descriptor.inputs.map((input) => ({
+      key: input.key,
+      kind: input.kind,
+      domain: toDescriptorDigestJson(input.domain),
+      defaultValue:
+        input.defaultValue === undefined
+          ? null
+          : toDescriptorDigestJson(input.defaultValue),
+    })),
+    interactionId: descriptor.interactionId,
+    interactionKey: descriptor.interactionKey,
+    stableIdentity: `${descriptor.interactionKey}:${descriptor.interactionId}`,
+  });
+}
+
+function interactionDraftDigest({
+  actorSeat,
+  descriptor,
+  descriptorDigest,
+}: {
+  actorSeat: number;
+  descriptor: InteractionDescriptorShape;
+  descriptorDigest: string;
+}): string {
+  return hashJson({
+    digestVersion: "interaction-draft@2",
+    actorSeat,
+    descriptorDigest,
+    emitted: false,
+    interactionId: descriptor.interactionId,
+    interactionKey: descriptor.interactionKey,
+    values: defaultsForDescriptor(descriptor),
+  });
+}
+
+function toDescriptorDigestJson(value: unknown): CanonicalJson {
+  const canonical = toCanonicalJson(value);
+  return normalizeOrderInsensitiveDescriptorFields(canonical);
+}
+
+function normalizeOrderInsensitiveDescriptorFields(
+  value: CanonicalJson,
+): CanonicalJson {
+  if (Array.isArray(value)) {
+    return value.map(normalizeOrderInsensitiveDescriptorFields);
+  }
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, item]) => {
+      const normalized = normalizeOrderInsensitiveDescriptorFields(item);
+      if (
+        (key === "eligibleTargets" || key === "dependentCases") &&
+        Array.isArray(normalized)
+      ) {
+        return [
+          key,
+          [...normalized].sort((left, right) =>
+            compareCanonicalJson(canonicalJson(left), canonicalJson(right)),
+          ),
+        ];
+      }
+      return [key, normalized];
+    }),
+  );
+}
+
+function defaultsForDescriptor(
+  descriptor: InteractionDescriptorShape,
+): Record<string, CanonicalJson> {
+  return Object.fromEntries(
+    descriptor.inputs.flatMap((input) =>
+      input.defaultValue === undefined
+        ? []
+        : [[input.key, toCanonicalJson(input.defaultValue)]],
+    ),
+  );
+}
+
+function toCanonicalJson(value: unknown): CanonicalJson {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+  if (typeof value === "number") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => toCanonicalJson(item));
+  }
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, toCanonicalJson(item)]),
+    );
+  }
+  return null;
+}
+
+function hashJson(value: CanonicalJson): string {
+  return `sha256:${sha256Hex(canonicalJson(value))}`;
+}
+
+function canonicalJson(value: CanonicalJson): string {
+  return JSON.stringify(canonicalizeJson(value));
+}
+
+function canonicalizeJson(value: CanonicalJson): CanonicalJson {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new Error("canonical JSON contains a non-finite number");
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalizeJson(item));
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => [key, canonicalizeJson(item)]),
+  );
+}
+
+function compareCanonicalJson(left: string, right: string): number {
+  return left < right ? -1 : left > right ? 1 : 0;
 }
 
 function stableStringify(value: unknown): string {
@@ -353,4 +883,144 @@ function fnv1a64(value: string): string {
     hash = BigInt.asUintN(64, hash * prime);
   }
   return hash.toString(16).padStart(16, "0");
+}
+
+const SHA256_K = [
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
+  0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
+  0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
+  0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
+  0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
+  0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
+  0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
+  0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
+  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+];
+
+function sha256Hex(input: string): string {
+  const bytes = utf8Bytes(input);
+  const bitLength = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) {
+    bytes.push(0);
+  }
+  for (let shift = 56; shift >= 0; shift -= 8) {
+    bytes.push(Math.floor(bitLength / 2 ** shift) & 0xff);
+  }
+
+  let h0 = 0x6a09e667;
+  let h1 = 0xbb67ae85;
+  let h2 = 0x3c6ef372;
+  let h3 = 0xa54ff53a;
+  let h4 = 0x510e527f;
+  let h5 = 0x9b05688c;
+  let h6 = 0x1f83d9ab;
+  let h7 = 0x5be0cd19;
+  const words = new Array<number>(64);
+
+  for (let offset = 0; offset < bytes.length; offset += 64) {
+    for (let index = 0; index < 16; index += 1) {
+      const base = offset + index * 4;
+      words[index] =
+        ((bytes[base] << 24) |
+          (bytes[base + 1] << 16) |
+          (bytes[base + 2] << 8) |
+          bytes[base + 3]) >>>
+        0;
+    }
+    for (let index = 16; index < 64; index += 1) {
+      const s0 =
+        rotateRight(words[index - 15], 7) ^
+        rotateRight(words[index - 15], 18) ^
+        (words[index - 15] >>> 3);
+      const s1 =
+        rotateRight(words[index - 2], 17) ^
+        rotateRight(words[index - 2], 19) ^
+        (words[index - 2] >>> 10);
+      words[index] = (words[index - 16] + s0 + words[index - 7] + s1) >>> 0;
+    }
+
+    let a = h0;
+    let b = h1;
+    let c = h2;
+    let d = h3;
+    let e = h4;
+    let f = h5;
+    let g = h6;
+    let h = h7;
+
+    for (let index = 0; index < 64; index += 1) {
+      const s1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + s1 + ch + SHA256_K[index] + words[index]) >>> 0;
+      const s0 = rotateRight(a, 2) ^ rotateRight(a, 13) ^ rotateRight(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (s0 + maj) >>> 0;
+
+      h = g;
+      g = f;
+      f = e;
+      e = (d + temp1) >>> 0;
+      d = c;
+      c = b;
+      b = a;
+      a = (temp1 + temp2) >>> 0;
+    }
+
+    h0 = (h0 + a) >>> 0;
+    h1 = (h1 + b) >>> 0;
+    h2 = (h2 + c) >>> 0;
+    h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0;
+    h5 = (h5 + f) >>> 0;
+    h6 = (h6 + g) >>> 0;
+    h7 = (h7 + h) >>> 0;
+  }
+
+  return [h0, h1, h2, h3, h4, h5, h6, h7]
+    .map((word) => word.toString(16).padStart(8, "0"))
+    .join("");
+}
+
+function rotateRight(value: number, shift: number): number {
+  return (value >>> shift) | (value << (32 - shift));
+}
+
+function utf8Bytes(input: string): number[] {
+  const bytes: number[] = [];
+  for (let index = 0; index < input.length; index += 1) {
+    let codePoint = input.charCodeAt(index);
+    if (
+      codePoint >= 0xd800 &&
+      codePoint <= 0xdbff &&
+      index + 1 < input.length
+    ) {
+      const low = input.charCodeAt(index + 1);
+      if (low >= 0xdc00 && low <= 0xdfff) {
+        codePoint = 0x10000 + ((codePoint - 0xd800) << 10) + (low - 0xdc00);
+        index += 1;
+      }
+    }
+    if (codePoint < 0x80) {
+      bytes.push(codePoint);
+    } else if (codePoint < 0x800) {
+      bytes.push(0xc0 | (codePoint >>> 6), 0x80 | (codePoint & 0x3f));
+    } else if (codePoint < 0x10000) {
+      bytes.push(
+        0xe0 | (codePoint >>> 12),
+        0x80 | ((codePoint >>> 6) & 0x3f),
+        0x80 | (codePoint & 0x3f),
+      );
+    } else {
+      bytes.push(
+        0xf0 | (codePoint >>> 18),
+        0x80 | ((codePoint >>> 12) & 0x3f),
+        0x80 | ((codePoint >>> 6) & 0x3f),
+        0x80 | (codePoint & 0x3f),
+      );
+    }
+  }
+  return bytes;
 }

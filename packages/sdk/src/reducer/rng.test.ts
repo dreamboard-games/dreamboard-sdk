@@ -3,7 +3,7 @@ import { nextRandomInt } from "./rng";
 import type { RuntimeRngState } from "./model";
 
 function emptyRng(seed: number | null = 1337): RuntimeRngState {
-  return { seed, cursor: 0, trace: [] };
+  return { seed, cursor: 0, trace: [], draws: [] };
 }
 
 describe("nextRandomInt", () => {
@@ -35,6 +35,27 @@ describe("nextRandomInt", () => {
       expect(next.trace[i]).toBe(`cursor=${before};bound=6;value=${value}`);
       rng = next;
     }
+  });
+
+  test("persists structured draw identity without the sampled value", () => {
+    const [value, next, draw] = nextRandomInt(6, emptyRng(42), {
+      kind: "integer",
+      parameters: { minInclusive: 1, maxInclusive: 6 },
+    });
+
+    expect(value).toBeGreaterThanOrEqual(0);
+    expect(value).toBeLessThan(6);
+    expect(draw).toEqual({
+      index: 0,
+      cursorBefore: 0,
+      cursorAfter: 1,
+      operation: {
+        kind: "integer",
+        parameters: { minInclusive: 1, maxInclusive: 6 },
+      },
+    });
+    expect(next.draws).toEqual([draw]);
+    expect(JSON.stringify(next.draws)).not.toContain('"value"');
   });
 
   test("is deterministic: same (seed, cursor) always produces the same value", () => {
@@ -119,11 +140,12 @@ describe("nextRandomInt", () => {
       }
       return values;
     };
-    const withNull = streamOf({ seed: null, cursor: 0, trace: [] });
+    const withNull = streamOf({ seed: null, cursor: 0, trace: [], draws: [] });
     const withLargeNegative = streamOf({
       seed: -5_308_350_261_799_157_000,
       cursor: 0,
       trace: [],
+      draws: [],
     });
     // Neither stream should be all-zero (the previous implementation collapsed
     // to all-0 when seed overflowed uint31 precision).

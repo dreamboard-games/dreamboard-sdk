@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "paths": {
+      "@dreamboard/manifest-contract": ["../shared/manifest-contract.ts"],
+      "#dreamboard/ui-contract": ["../shared/generated/ui-contract.ts"],
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "include": [
+    "./**/*.ts",
+    "./**/*.tsx",
+    "./**/*.d.ts",
+    "../app/**/*.ts",
+    "../ui/**/*.ts",
+    "../ui/**/*.tsx",
+    "../shared/**/*.ts"
+  ]
+}

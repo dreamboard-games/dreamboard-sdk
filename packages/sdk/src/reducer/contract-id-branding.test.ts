@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
+import { defineGameContract } from "../reducer";
 import {
   createManifestStringLiteralSchema,
-  defineGameContract,
   type RuntimeTableRecord,
-} from "../reducer";
+} from "../reducer/advanced";
 import { perPlayer } from "./per-player";
 
 function buildMinimalManifest() {

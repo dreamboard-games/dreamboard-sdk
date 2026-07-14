@@ -1,0 +1,50 @@
+import { defineTopologyManifest } from "@dreamboard-games/sdk-types";
+
+defineTopologyManifest({
+  players: {
+    minPlayers: 2,
+    maxPlayers: 2,
+    optimalPlayers: 2,
+  },
+  cardSets: [
+    {
+      id: "main",
+      name: "Main",
+      type: "manual",
+      defaultHome: { type: "detached" },
+      cardSchema: {
+        properties: {},
+      },
+      cards: [],
+    },
+  ],
+  zones: [],
+  boardTemplates: [],
+  boards: [
+    {
+      id: "square-board",
+      name: "Square Board",
+      layout: "square",
+      scope: "shared",
+      spaces: [
+        { id: "square-a", row: 0, col: 0 },
+        { id: "square-b", row: 0, col: 1 },
+      ],
+      containers: [
+        {
+          id: "slot-a",
+          name: "Slot A",
+          host: { type: "space", spaceId: "missing-space" },
+          allowedCardSetIds: ["main"],
+        },
+      ],
+    },
+  ],
+  pieceTypes: [],
+  pieceSeeds: [],
+  dieTypes: [],
+  dieSeeds: [],
+  resources: [],
+  setupOptions: [],
+  setupProfiles: [],
+} as const);

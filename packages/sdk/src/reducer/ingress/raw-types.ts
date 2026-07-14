@@ -1,4 +1,4 @@
-import type * as Wire from "../../generated/reducer-contract/wire";
+import type { Wire } from "@dreamboard-games/reducer-contract";
 import type {
   ManifestContract,
   PlayerIdOfState,

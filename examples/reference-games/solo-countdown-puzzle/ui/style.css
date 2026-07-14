@@ -1,0 +1,51 @@
+@import "tailwindcss";
+@import "@dreamboard-games/sdk/ui/plugin-styles.css";
+
+@source "../ui/**/*.{ts,tsx}";
+@source "../shared/**/*.{ts,tsx}";
+
+.last-light-layout {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+}
+
+.last-light-status {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
+}
+
+.last-light-beacons {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+/*
+ * These surface colors stay unlayered so the game theme wins over the SDK's
+ * later Tailwind layer import in both the fallback and runtime renderers.
+ */
+.last-light-beacon {
+  cursor: pointer;
+  border-color: #475569;
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.last-light-beacon:enabled:hover {
+  border-color: #fcd34d;
+}
+
+.last-light-beacon:focus-visible {
+  outline: 2px solid #67e8f9;
+  outline-offset: 2px;
+}
+
+.last-light-beacon:disabled {
+  cursor: not-allowed;
+  border-color: #334155;
+  background-color: #0f172a;
+}
+
+.last-light-beacon-status {
+  color: #cbd5e1;
+}
+
+.last-light-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+}

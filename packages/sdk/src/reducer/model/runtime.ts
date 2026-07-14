@@ -35,7 +35,7 @@ export type ContinuationToken<
 };
 
 export type ContinuationResponseOf<Token> =
-  Token extends ContinuationToken<any, string, infer Response>
+  Token extends ContinuationToken<unknown, string, infer Response>
     ? Response
     : never;
 
@@ -88,6 +88,27 @@ export type RuntimeRngState = {
   seed?: number | null;
   cursor: number;
   trace: string[];
+  draws: RuntimeRngDraw[];
+};
+
+export type RuntimeRngOperationParameter = string | number | boolean;
+
+export type RuntimeRngOperation = {
+  kind: string;
+  parameters: Record<string, RuntimeRngOperationParameter>;
+};
+
+/**
+ * Public, persisted identity for one deterministic RNG cursor advance.
+ *
+ * Sampled values deliberately remain absent. Their consequences are exposed
+ * only through the normal public/player projections.
+ */
+export type RuntimeRngDraw = {
+  index: number;
+  cursorBefore: number;
+  cursorAfter: number;
+  operation: RuntimeRngOperation;
 };
 
 export type RuntimeSimultaneousSubmission = {
@@ -255,10 +276,63 @@ export type ReducerReject = {
   message?: string;
 };
 
+export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+
+export type OutcomeScoreComponent = {
+  id: string;
+  label: string;
+  value: number;
+};
+
+export type OutcomeTieBreak = {
+  id: string;
+  label: string;
+  value: number | string;
+};
+
+export type OutcomeStanding<PlayerId extends string = string> = {
+  playerId: PlayerId;
+  rank: number;
+  result: OutcomeResult;
+  score?: number;
+  scoreBreakdown?: readonly OutcomeScoreComponent[];
+  tieBreaks?: readonly OutcomeTieBreak[];
+};
+
+export type GameOutcome<PlayerId extends string = string> = {
+  reason: {
+    code: string;
+    message?: string;
+  };
+  standings: readonly OutcomeStanding<PlayerId>[];
+};
+
+export type GameEventDetail = {
+  label: string;
+  value: string | number | boolean;
+};
+
+export type SystemActionEvent = {
+  kind: "systemAction";
+  procedureId: string;
+  title: string;
+  summary?: string;
+  details?: readonly GameEventDetail[];
+};
+
+export type GameEvent = SystemActionEvent;
+
+export type ReducerAcceptOptions<State> = {
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
+};
+
 export type ReducerAccept<State> = {
   type: "accept";
   state: State;
-  instructions?: RuntimeInstructionForState<State>[];
+  instructions?: readonly RuntimeInstructionForState<State>[];
+  events?: readonly GameEvent[];
+  terminal?: GameOutcome<PlayerIdOfState<State>>;
 };
 
 export type ReducerResult<State> = ReducerAccept<State> | ReducerReject;

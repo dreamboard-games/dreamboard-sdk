@@ -68,8 +68,46 @@
       "additionalProperties": false
     },
 
+    "RngOperationParameter": {
+      "description": "One public, non-secret parameter that identifies the deterministic RNG operation without revealing its sampled value.",
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" }
+      ]
+    },
+
+    "RngOperation": {
+      "description": "Structured identity for a deterministic RNG operation. Sampled values are deliberately excluded.",
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RngOperationParameter"
+          }
+        }
+      },
+      "required": ["kind", "parameters"],
+      "additionalProperties": false
+    },
+
+    "RngDraw": {
+      "description": "Persisted metadata for one deterministic RNG cursor advance. The sampled value is never persisted in this structured projection.",
+      "type": "object",
+      "properties": {
+        "index": { "type": "integer", "minimum": 0 },
+        "cursorBefore": { "type": "integer", "minimum": 0 },
+        "cursorAfter": { "type": "integer", "minimum": 0 },
+        "operation": { "$ref": "#/$defs/RngOperation" }
+      },
+      "required": ["index", "cursorBefore", "cursorAfter", "operation"],
+      "additionalProperties": false
+    },
+
     "RngState": {
-      "description": "Deterministic RNG cursor state owned by the reducer runtime.",
+      "description": "Deterministic RNG cursor state owned by the reducer runtime. `trace` remains as a legacy compatibility field; new diagnostics consume structured `draws`.",
       "type": "object",
       "properties": {
         "seed": {
@@ -82,6 +120,11 @@
         "trace": {
           "type": "array",
           "items": { "type": "string" }
+        },
+        "draws": {
+          "description": "Structured draw metadata added in reducer contract 0.4. Older persisted states may omit it and are normalized by the SDK ingress codec.",
+          "type": "array",
+          "items": { "$ref": "#/$defs/RngDraw" }
         }
       },
       "required": ["seed", "cursor", "trace"],
@@ -206,10 +249,25 @@
       "additionalProperties": false
     },
 
+    "ReducerSessionMeta": {
+      "description": "Optional SDK-owned metadata for stale-artifact detection. Hosts may persist and echo this object without interpreting it.",
+      "type": "object",
+      "properties": {
+        "contractFingerprint": {
+          "description": "Versioned SDK contract fingerprint for the manifest and decoded state shape that produced this session.",
+          "type": "string",
+          "pattern": "^cfp[0-9]+:[a-f0-9]{16}$"
+        }
+      },
+      "required": ["contractFingerprint"],
+      "additionalProperties": false
+    },
+
     "ReducerSessionState": {
       "description": "Canonical session snapshot exchanged across the JS reducer bundle, host runtime, and persistence boundary.",
       "type": "object",
       "properties": {
+        "meta": { "$ref": "#/$defs/ReducerSessionMeta" },
         "domain": { "$ref": "#/$defs/ReducerDomainState" },
         "runtime": { "$ref": "#/$defs/ReducerRuntimeState" }
       },
@@ -395,13 +453,19 @@
       "properties": {
         "kind": { "const": "accept" },
         "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/GameOutcome" },
         "effects": {
           "type": "array",
           "items": { "$ref": "#/$defs/Effect" }
         },
-        "continuations": { "$ref": "#/$defs/ContinuationMap" }
+        "continuations": { "$ref": "#/$defs/ContinuationMap" },
+        "events": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/GameEvent" }
+        }
       },
-      "required": ["kind", "state", "effects", "continuations"],
+      "required": ["kind", "state", "effects", "continuations", "events"],
       "additionalProperties": false
     },
 
@@ -440,10 +504,12 @@
       "type": "object",
       "properties": {
         "kind": { "const": "rngConsumption" },
+        "version": { "const": 2 },
         "operation": { "type": "string", "minLength": 1 },
+        "drawIndex": { "type": "integer", "minimum": 0 },
         "traceEntry": { "type": "string" }
       },
-      "required": ["kind", "operation", "traceEntry"],
+      "required": ["kind", "version", "operation", "drawIndex", "traceEntry"],
       "additionalProperties": false
     },
 
@@ -471,12 +537,151 @@
       "properties": {
         "kind": { "const": "accept" },
         "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/GameOutcome" },
         "trace": {
           "type": "array",
           "items": { "$ref": "#/$defs/DispatchTrace" }
+        },
+        "events": {
+          "type": "array",
+          "maxItems": 32,
+          "items": { "$ref": "#/$defs/GameEvent" }
         }
       },
-      "required": ["kind", "state", "trace"],
+      "required": ["kind", "state", "trace", "events"],
+      "additionalProperties": false
+    },
+
+    "GameEventDetail": {
+      "description": "One bounded public detail in a reducer-authored game event.",
+      "type": "object",
+      "properties": {
+        "label": { "type": "string", "minLength": 1 },
+        "value": {
+          "anyOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "boolean" }
+          ]
+        }
+      },
+      "required": ["label", "value"],
+      "additionalProperties": false
+    },
+
+    "SystemActionEvent": {
+      "description": "Inspectable public event emitted by a deterministic reducer-owned procedure.",
+      "type": "object",
+      "properties": {
+        "kind": { "const": "systemAction" },
+        "procedureId": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "summary": { "type": "string", "minLength": 1 },
+        "details": {
+          "type": "array",
+          "maxItems": 16,
+          "items": { "$ref": "#/$defs/GameEventDetail" }
+        }
+      },
+      "required": ["kind", "procedureId", "title"],
+      "additionalProperties": false
+    },
+
+    "GameEvent": {
+      "description": "Bounded reducer-authored public game event.",
+      "oneOf": [{ "$ref": "#/$defs/SystemActionEvent" }]
+    },
+
+    "OutcomeResult": {
+      "description": "Reducer-declared player result in a terminal outcome.",
+      "type": "string",
+      "enum": ["win", "draw", "loss", "eliminated"]
+    },
+
+    "OutcomeScoreComponent": {
+      "description": "One numeric score contribution in an authoritative standing.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": ["id", "label", "value"],
+      "additionalProperties": false
+    },
+
+    "OutcomeTieBreak": {
+      "description": "One deterministic tie-break value used by an authoritative standing.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "anyOf": [{ "type": "number" }, { "type": "string" }]
+        }
+      },
+      "required": ["id", "label", "value"],
+      "additionalProperties": false
+    },
+
+    "OutcomeStanding": {
+      "description": "Authoritative terminal standing for exactly one player.",
+      "type": "object",
+      "properties": {
+        "playerId": { "type": "string", "minLength": 1 },
+        "rank": { "type": "integer", "minimum": 1 },
+        "result": { "$ref": "#/$defs/OutcomeResult" },
+        "score": { "type": "number" },
+        "scoreBreakdown": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/OutcomeScoreComponent" }
+        },
+        "tieBreaks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/OutcomeTieBreak" }
+        }
+      },
+      "required": ["playerId", "rank", "result"],
+      "additionalProperties": false
+    },
+
+    "GameOutcomeReason": {
+      "description": "Stable reducer-declared reason for game termination.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 }
+      },
+      "required": ["code"],
+      "additionalProperties": false
+    },
+
+    "GameOutcome": {
+      "description": "Reducer-declared authoritative game-end outcome. Absence means the transition is non-terminal.",
+      "type": "object",
+      "properties": {
+        "reason": { "$ref": "#/$defs/GameOutcomeReason" },
+        "standings": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/OutcomeStanding" }
+        }
+      },
+      "required": ["reason", "standings"],
       "additionalProperties": false
     },
 
@@ -521,6 +726,11 @@
         "kind": { "const": "rngConsumption" },
         "version": { "type": "integer" },
         "operation": { "type": "string", "minLength": 1 },
+        "drawIndex": {
+          "description": "Index into runtime.rng.draws for contract 0.4+ entries. Older persisted log entries omit it.",
+          "type": "integer",
+          "minimum": 0
+        },
         "traceEntry": { "type": "string" }
       },
       "required": ["kind", "version", "operation", "traceEntry"],
@@ -578,6 +788,47 @@
       "additionalProperties": false
     },
 
+    "SchedulerContinuationDependency": {
+      "description": "One scheduler-proven causal wait. Values contain public actor identities only; submitted params and private domain facts never cross this boundary.",
+      "type": "object",
+      "properties": {
+        "waiterPlayerId": { "type": "string", "minLength": 1 },
+        "blockerPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "required": ["waiterPlayerId", "blockerPlayerIds"],
+      "additionalProperties": false
+    },
+
+    "SchedulerFlowAuthorityProjection": {
+      "description": "Versioned, visibility-safe scheduler authority for inspect/dev parity. It exposes only public actor identities and causal relationships derived by trusted phase and interaction authorization machinery.",
+      "type": "object",
+      "properties": {
+        "version": { "const": 1 },
+        "activePlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pendingPlayerIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "continuationDependencies": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/SchedulerContinuationDependency" }
+        }
+      },
+      "required": [
+        "version",
+        "activePlayerIds",
+        "pendingPlayerIds",
+        "continuationDependencies"
+      ],
+      "additionalProperties": false
+    },
+
     "SeatProjectionBundle": {
       "description": "Result of `createReducerBundle(...).projectSeatsDynamic(...)`.",
       "type": "object",
@@ -595,13 +846,38 @@
             { "type": "null" }
           ]
         },
+        "schedulerFlow": {
+          "$ref": "#/$defs/SchedulerFlowAuthorityProjection"
+        },
+        "sharedView": { "$ref": "#/$defs/JsonValue" },
         "interactionsByRef": { "$ref": "#/$defs/JsonValue" },
         "seats": {
           "type": "object",
           "additionalProperties": { "$ref": "#/$defs/SeatProjection" }
+        },
+        "timing": {
+          "$ref": "#/$defs/ProjectionTimingMetadata"
         }
       },
       "required": ["seats"],
+      "additionalProperties": false
+    },
+
+    "ProjectionTimingMetadata": {
+      "description": "Optional SDK-owned diagnostics for projectSeatsDynamic internals. Hosts may record these values for profiling; reducer authors should not depend on them.",
+      "type": "object",
+      "properties": {
+        "resolveAvailableInteractionsMs": { "type": "number", "minimum": 0 },
+        "resolveViewMs": { "type": "number", "minimum": 0 },
+        "resolveZoneHandlesMs": { "type": "number", "minimum": 0 },
+        "descriptorHashMs": { "type": "number", "minimum": 0 }
+      },
+      "required": [
+        "resolveAvailableInteractionsMs",
+        "resolveViewMs",
+        "resolveZoneHandlesMs",
+        "descriptorHashMs"
+      ],
       "additionalProperties": false
     },
 
@@ -614,7 +890,6 @@
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         },
-        "viewId": { "type": "string", "minLength": 1 },
         "projectionMode": {
           "anyOf": [
             { "type": "string", "enum": ["full", "actionsOnly"] },

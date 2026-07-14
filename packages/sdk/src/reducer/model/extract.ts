@@ -1,4 +1,4 @@
-import type { StringKeyOf } from "./table";
+import type { RuntimeTableRecord, StringKeyOf } from "./table";
 import type {
   GeneratedManifestContractLike,
   ManifestContract,
@@ -6,12 +6,18 @@ import type {
 } from "./manifest";
 import type { z } from "zod";
 import type { SchemaLike } from "./table";
+import type { FrameworkErrorCode } from "./error-codes";
 
 export type TableOfState<State> = State extends { table: infer Table }
   ? Table
   : never;
-export type TableOfManifest<Manifest> =
-  Manifest extends GeneratedManifestContractLike<infer Table> ? Table : never;
+export type TableOfManifest<Manifest> = Manifest extends {
+  tableSchema: z.ZodType<infer Table extends RuntimeTableRecord>;
+}
+  ? Table
+  : Manifest extends GeneratedManifestContractLike<infer Table>
+    ? Table
+    : never;
 export type PhaseNameOfState<State> = State extends {
   flow: { currentPhase: infer PhaseName };
 }
@@ -33,6 +39,11 @@ export type PlayerIdOfManifest<Manifest> = Manifest extends {
   ? Extract<PlayerId, string>
   : string;
 export type PlayerIdOfState<State> = PlayerIdOfTable<TableOfState<State>>;
+export type ErrorCodeOfContract<Contract> = Contract extends {
+  errors: infer Errors extends Record<string, string>;
+}
+  ? (keyof Errors & string) | FrameworkErrorCode
+  : string;
 /**
  * Manifest-declared resource id union for a runtime table.
  *
@@ -648,23 +659,23 @@ export type PhaseStateMapOfContract<Contract> = {
 export type PublicSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
     infer PublicSchema,
-    infer _PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>,
+    SchemaLike<object>
   >
     ? PublicSchema
     : never;
 export type PrivateSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
+    SchemaLike<object>,
     infer PrivateSchema,
-    infer _HiddenSchema
+    SchemaLike<object>
   >
     ? PrivateSchema
     : never;
 export type HiddenSchemaOfContract<Contract> =
   StateDefinitionOfContract<Contract> extends StateDefinition<
-    infer _PublicSchema,
-    infer _PrivateSchema,
+    SchemaLike<object>,
+    SchemaLike<object>,
     infer HiddenSchema
   >
     ? HiddenSchema

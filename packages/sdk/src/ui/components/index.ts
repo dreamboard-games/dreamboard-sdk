@@ -19,7 +19,7 @@ export {
   type CardDragSurfaceContextValue,
   type CardDropTargetViewProps,
   type DragPhase,
-} from "./CardDragSurface.js";
+} from "./card-drag/index.js";
 export type { HandInteractionPolicy } from "./hand-pointer-engine.js";
 export {
   HandDock,
@@ -32,7 +32,8 @@ export {
 export {
   MobileHandTrayProvider,
   useRegisterMobileHand,
-  useMobileHandTrayActive,
+  useOverlayInsets,
+  useRegisterBottomOverlayInset,
   type HandRole,
   type MobileHandRegistration,
 } from "./MobileHandTray.js";
@@ -114,6 +115,20 @@ export { ActionButton, type ActionButtonProps } from "./ActionButton.js";
 export { PrimaryButton, type PrimaryButtonProps } from "./PrimaryButton.js";
 export { ThemedButton, type ThemedButtonProps } from "./ThemedButton.js";
 export {
+  Panel,
+  PanelActions,
+  PanelBody,
+  PanelDescription,
+  PanelHeader,
+  PanelRoot,
+  PanelTitle,
+  type PanelDescriptionProps,
+  type PanelPartProps,
+  type PanelRootProps,
+  type PanelTitleProps,
+  type PanelTone,
+} from "./Panel.js";
+export {
   PrimaryActionButton,
   type PrimaryActionButtonProps,
   type PrimaryActionAttention,
@@ -128,10 +143,31 @@ export { MoreActions, type MoreActionsProps } from "./MoreActions.js";
 export { DiceRoller, type DiceRollerProps } from "./DiceRoller.js";
 export { PhaseIndicator, type PhaseIndicatorProps } from "./PhaseIndicator.js";
 export {
-  GameEndDisplay,
-  type GameEndDisplayProps,
-  type PlayerScore,
-} from "./GameEndDisplay.js";
+  ActionHelp,
+  GuidancePanel,
+  SetupChecklist,
+  type ActionHelpProps,
+  type GuidanceAction,
+  type GuidancePanelProps,
+  type GuidancePhase,
+  type GuidanceSetupStep,
+  type SetupChecklistProps,
+  type SetupGuidance,
+} from "./Guidance.js";
+export {
+  OutcomeDialog,
+  StandingsTable,
+  type OutcomeDialogProps,
+  type StandingsTableProps,
+} from "./OutcomeDialog.js";
+export {
+  GameEventLog,
+  SystemActionSummary,
+  type GameEventLogProps,
+  type ProjectedGameEvent,
+  type SystemActionEvent,
+  type SystemActionSummaryProps,
+} from "./GameEventLog.js";
 
 // Board primitives (SDK v0.2.0+)
 export {
@@ -242,4 +278,7 @@ export type {
   SquarePieceState,
   SquareVertexState,
 } from "../types/player-state.js";
-export type { CardCollection, ViewSlotOccupant } from "../../types/index.js";
+export type {
+  CardCollection,
+  ViewSlotOccupant,
+} from "@dreamboard-games/sdk-types";

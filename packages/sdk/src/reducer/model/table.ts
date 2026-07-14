@@ -3,7 +3,7 @@ import type { PerPlayer } from "../per-player";
 
 export type RuntimeScalar = boolean | number | string | null;
 export interface RuntimeRecord {
-  [key: string]: RuntimePayload | undefined;
+  [key: string]: RuntimePayload;
 }
 export type RuntimePayload = RuntimeScalar | RuntimePayload[] | RuntimeRecord;
 export type RuntimeParams = RuntimeRecord;

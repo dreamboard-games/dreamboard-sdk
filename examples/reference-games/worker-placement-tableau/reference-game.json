@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 4,
+  "id": "worker-placement-tableau",
+  "displayName": "Mosaic Workshop",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "ordinary-worker blocking and master-worker sharing",
+      "one atomic action with worker, board, exchange, and craft inputs",
+      "permanent pass, finished-player skipping, and automatic cleanup",
+      "orthogonal tableau placement and Harmony scoring",
+      "deterministic four-season win and draw outcomes"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when workers claim shared action spaces and worker types have different blocking rules.",
+      "Submit placement, exchange, and craft inputs as one atomic action when they form one indivisible choice.",
+      "Let pass state and round cleanup advance automatically while tableau geometry remains a reducer-owned target domain."
+    ],
+    "readFirst": [
+      "README.md",
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/placement/index.ts",
+      "ui/App.tsx",
+      "test/scenarios/action-spaces.scenario.ts",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/ui-scenarios/mosaic.contention.desktop.scenario.ts"
+    ]
+  },
+  "demoRelease": {
+    "slug": "worker-placement-tableau",
+    "name": "Mosaic Workshop",
+    "description": "A compact worker-placement duel about contested sites, master-worker sharing, and spatial mosaic scoring.",
+    "overview": "Across four seasons, gather wood, stone, and coin; place ordinary and master workers; craft a six-cell mosaic; and score unlike orthogonal neighbors.",
+    "creator": "Dreamboard",
+    "minPlayers": 2,
+    "maxPlayers": 2,
+    "playTimeMinMinutes": 15,
+    "playTimeMaxMinutes": 25,
+    "difficulty": 2,
+    "mechanics": [
+      "worker-placement",
+      "resource-allocation",
+      "tableau-building",
+      "spatial-scoring"
+    ],
+    "categories": ["strategy", "tableau"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 15,
+    "demoPlayerCount": 2
+  },
+  "mechanics": [
+    "worker-placement",
+    "resource-allocation",
+    "tableau-building",
+    "spatial-scoring"
+  ],
+  "uiPatterns": [
+    "worker-targets",
+    "tableau-grid",
+    "resource-allocation-form",
+    "dependent-action-form"
+  ],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-16"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

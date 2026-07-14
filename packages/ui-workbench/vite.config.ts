@@ -1,0 +1,291 @@
+import { createReadStream, existsSync } from "node:fs";
+import { cp, mkdir, rm, stat } from "node:fs/promises";
+import path from "node:path";
+import tailwindcss from "@tailwindcss/vite";
+import { defineConfig, type Plugin } from "vite";
+
+const workspaceRoot = path.resolve(__dirname, "../..");
+const sdkRoot = path.join(workspaceRoot, "packages/sdk");
+const referenceGamesRoot = path.join(workspaceRoot, "examples/reference-games");
+const fixtureRequestPrefix = "/fixtures/";
+const manifestContractId = "@dreamboard/manifest-contract";
+const scenarioCatalogId = "virtual:dreamboard-scenario-catalog";
+const uiSourceModulePrefix = "virtual:dreamboard-ui-source:";
+
+function fixtureAssetPlugin(fixtureSourceRoot: string): Plugin {
+  return {
+    name: "dreamboard-fixture-assets",
+    configureServer(server) {
+      server.middlewares.use(async (request, response, next) => {
+        const url = request.url?.split("?")[0] ?? "";
+        if (!url.startsWith(fixtureRequestPrefix)) {
+          next();
+          return;
+        }
+
+        const relativePath = decodeURIComponent(
+          url.slice(fixtureRequestPrefix.length),
+        );
+        const absolutePath = path.resolve(fixtureSourceRoot, relativePath);
+        if (!absolutePath.startsWith(fixtureSourceRoot + path.sep)) {
+          response.statusCode = 403;
+          response.end("Forbidden fixture path.");
+          return;
+        }
+
+        try {
+          const stats = await stat(absolutePath);
+          if (!stats.isFile()) {
+            next();
+            return;
+          }
+          if (absolutePath.endsWith(".mjs")) {
+            const transformed = await server.transformRequest(
+              `/@fs/${absolutePath}`,
+            );
+            response.setHeader("Content-Type", "application/javascript");
+            response.end(transformed?.code ?? "");
+            return;
+          }
+          response.setHeader(
+            "Content-Type",
+            absolutePath.endsWith(".json")
+              ? "application/json"
+              : "application/octet-stream",
+          );
+          createReadStream(absolutePath).pipe(response);
+        } catch {
+          next();
+        }
+      });
+    },
+    async closeBundle() {
+      const outputRoot = path.join(__dirname, "dist/fixtures");
+      await rm(outputRoot, { recursive: true, force: true });
+      await mkdir(outputRoot, { recursive: true });
+      await cp(fixtureSourceRoot, outputRoot, {
+        recursive: true,
+        force: true,
+      });
+    },
+  };
+}
+
+function generatedScenarioPlugin(generatedRoot: string): Plugin {
+  const catalogPath = path.join(generatedRoot, "catalog.ts");
+  return {
+    name: "dreamboard-generated-scenarios",
+    enforce: "pre",
+    configureServer(server) {
+      server.watcher.add(generatedRoot);
+      server.watcher.on("all", (_event, changedPath) => {
+        if (
+          path.resolve(changedPath).startsWith(`${generatedRoot}${path.sep}`)
+        ) {
+          server.ws.send({ type: "full-reload" });
+        }
+      });
+    },
+    resolveId(source) {
+      if (source === scenarioCatalogId) {
+        return catalogPath;
+      }
+      if (!source.startsWith(uiSourceModulePrefix)) {
+        return null;
+      }
+      const relativePath = source.slice(uiSourceModulePrefix.length);
+      const absolutePath = path.resolve(workspaceRoot, relativePath);
+      if (!absolutePath.startsWith(`${workspaceRoot}${path.sep}`)) {
+        throw new Error(`Generated UI source escapes the workspace: ${source}`);
+      }
+      return absolutePath;
+    },
+  };
+}
+
+function referenceGameManifestContractPlugin(): Plugin {
+  return {
+    name: "dreamboard-reference-game-manifest-contract",
+    enforce: "pre",
+    resolveId(source, importer) {
+      if (source !== manifestContractId || !importer) {
+        return null;
+      }
+
+      const importerPath = importer.startsWith("/@fs/")
+        ? importer.slice("/@fs/".length)
+        : importer;
+      const relativeImporter = path.relative(referenceGamesRoot, importerPath);
+      if (
+        relativeImporter.startsWith("..") ||
+        path.isAbsolute(relativeImporter)
+      ) {
+        return null;
+      }
+
+      const [gameId] = relativeImporter.split(path.sep);
+      if (!gameId) {
+        return null;
+      }
+
+      return path.join(
+        referenceGamesRoot,
+        gameId,
+        "shared/manifest-contract.ts",
+      );
+    },
+  };
+}
+
+/**
+ * SDK module aliases.
+ *
+ * By default — and ALWAYS for `vite build`, which the Playwright proof path and
+ * `ui:workbench:build` use — the Workbench resolves `@dreamboard-games/sdk` from
+ * the built `dist` output, matching the exact artifact the parity proof and a
+ * real host ship.
+ *
+ * In the dev inner loop you can opt into resolving SDK *source* instead so that
+ * component edits hot-reload without a `pnpm --filter @dreamboard-games/sdk
+ * build` first. Enable it with `DREAMBOARD_WORKBENCH_SDK=source` (see the
+ * `ui:workbench:src` / `dev:src` scripts). This only ever affects the dev
+ * server; it never changes what the proof path measures.
+ */
+function sdkAliases(useSource: boolean) {
+  const target = (subpath: string) =>
+    useSource
+      ? path.join(sdkRoot, "src", `${subpath}.ts`)
+      : path.join(sdkRoot, "dist", `${subpath}.js`);
+  const aliases = [
+    {
+      find: /^@dreamboard-games\/sdk\/reducer\/advanced$/,
+      replacement: target("reducer/advanced"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/reducer$/,
+      replacement: target("reducer"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/runtime\/workspace-contract$/,
+      replacement: target("runtime/workspace-contract"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/runtime\/primitives$/,
+      replacement: target("runtime/primitives"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/runtime$/,
+      replacement: target("runtime"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/ui$/,
+      replacement: target("ui"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/package-set$/,
+      replacement: target("package-set"),
+    },
+    {
+      find: /^@dreamboard-games\/sdk\/types$/,
+      replacement: target("types"),
+    },
+  ];
+  // `testing` and `browser-interaction` resolve to `dist` via package exports in
+  // the default path; only override them when serving from source so the whole
+  // SDK surface hot-reloads as one consistent copy.
+  if (useSource) {
+    aliases.push(
+      {
+        find: /^@dreamboard-games\/sdk\/testing$/,
+        replacement: target("testing"),
+      },
+      {
+        find: /^@dreamboard-games\/sdk\/browser-interaction$/,
+        replacement: target("browser-interaction"),
+      },
+    );
+  }
+  return aliases;
+}
+
+export default defineConfig(({ command }) => {
+  const generatedRootValue = process.env.DREAMBOARD_WORKBENCH_GENERATED_ROOT;
+  if (!generatedRootValue || !path.isAbsolute(generatedRootValue)) {
+    throw new Error(
+      "DREAMBOARD_WORKBENCH_GENERATED_ROOT must be an explicit absolute materialization root. Run the Workbench through the repository wrapper.",
+    );
+  }
+  const generatedRoot = path.resolve(generatedRootValue);
+  const fixtureSourceRoot = path.join(generatedRoot, "fixtures");
+  for (const requiredPath of [
+    path.join(generatedRoot, "catalog.ts"),
+    path.join(fixtureSourceRoot, "reference-games/index.json"),
+  ]) {
+    if (!existsSync(requiredPath)) {
+      throw new Error(
+        `Workbench materialization is missing ${requiredPath}. Run pnpm ui:workbench:materialize.`,
+      );
+    }
+  }
+  // Source mode is dev-only and opt-in. The `command === "serve"` guard means
+  // every `vite build` (Playwright proof, `ui:workbench:build`) stays on `dist`
+  // regardless of the environment variable.
+  const useSdkSource =
+    command === "serve" && process.env.DREAMBOARD_WORKBENCH_SDK === "source";
+  if (useSdkSource) {
+    console.log(
+      "[ui-workbench] resolving @dreamboard-games/sdk from source (dev inner loop — not the proof artifact)",
+    );
+  }
+
+  return {
+    plugins: [
+      generatedScenarioPlugin(generatedRoot),
+      referenceGameManifestContractPlugin(),
+      tailwindcss(),
+      fixtureAssetPlugin(fixtureSourceRoot),
+    ],
+    build: {
+      target: "esnext",
+    },
+    oxc: {
+      target: "esnext",
+    },
+    resolve: {
+      alias: [
+        {
+          find: /^react$/,
+          replacement: path.join(__dirname, "node_modules/react/index.js"),
+        },
+        {
+          find: /^react\/jsx-runtime$/,
+          replacement: path.join(
+            __dirname,
+            "node_modules/react/jsx-runtime.js",
+          ),
+        },
+        {
+          find: /^react-dom\/client$/,
+          replacement: path.join(__dirname, "node_modules/react-dom/client.js"),
+        },
+        {
+          find: /^zod$/,
+          replacement: path.join(__dirname, "node_modules/zod/index.js"),
+        },
+        ...sdkAliases(useSdkSource),
+        {
+          find: /^@dreamboard-games\/plugin-runtime-contract$/,
+          replacement: path.join(
+            workspaceRoot,
+            "packages/plugin-runtime-contract/dist/index.js",
+          ),
+        },
+      ],
+    },
+    server: {
+      fs: {
+        allow: [workspaceRoot],
+      },
+    },
+  };
+});

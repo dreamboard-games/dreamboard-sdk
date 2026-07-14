@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 4,
+  "id": "hearts",
+  "displayName": "Hearts",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "private player views",
+      "simultaneous card passing",
+      "contextual card legality",
+      "competition-ranked low-score outcomes"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern when each player needs a private hand and a shared trick area.",
+      "Use simultaneous passing when actions must be hidden until every player commits.",
+      "Use reducer-owned target domains to keep follow-suit, first-trick, and hearts-broken constraints consistent across UI, inspect, explore, and submission.",
+      "Use one legal complete-game scenario as the source for behavior proof and product-demo checkpoints."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/rules.ts",
+      "app/phases/passing.ts",
+      "app/phases/playing.ts",
+      "ui/App.tsx",
+      "ui/interaction-routes.tsx",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios/setup-and-pass.scenario.ts",
+      "test/ui-scenarios/dealt-hand.desktop.scenario.ts"
+    ]
+  },
+  "demoRelease": {
+    "slug": "hearts",
+    "name": "Hearts",
+    "description": "A four-player trick-taking card game with passing, hidden hands, and point avoidance.",
+    "overview": "Pass three cards, follow suit when possible, and avoid taking hearts or the queen of spades.",
+    "creator": "Dreamboard",
+    "minPlayers": 4,
+    "maxPlayers": 4,
+    "playTimeMinMinutes": 20,
+    "playTimeMaxMinutes": 40,
+    "difficulty": 2,
+    "mechanics": [
+      "trick-taking",
+      "simultaneous-card-passing",
+      "hidden-information"
+    ],
+    "categories": ["card-game", "classic"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 10,
+    "demoPlayerCount": 4
+  },
+  "mechanics": [
+    "trick-taking",
+    "simultaneous-card-passing",
+    "hidden-information"
+  ],
+  "uiPatterns": [
+    "private-hand",
+    "multi-select",
+    "mobile-hand-actions",
+    "shared-trick-area"
+  ],
+  "rights": {
+    "mechanicsProvenance": "traditional-card-game",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-16"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

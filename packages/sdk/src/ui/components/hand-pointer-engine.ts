@@ -9,7 +9,7 @@
  * `liftEnd`/`liftCancel`, and a `horizontalBrowse` informational signal.
  *
  * The thresholds match
- * `docs/references/ui-sdk-mobile-hand-and-card-interactions.md`:
+ * `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md`:
  *
  * | Threshold                 | Default     |
  * | ------------------------- | ----------- |

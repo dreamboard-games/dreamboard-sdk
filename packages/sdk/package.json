@@ -1,182 +1,206 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.2.1-alpha.0",
+  "version": "0.4.0-alpha.10",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js",
+    "dreamboard-reference-games-source-manifest": "./dist/reference-game-source-manifest-cli.js"
+  },
   "exports": {
     ".": {
-      "bun": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./package-set": {
-      "bun": "./src/package-set.ts",
       "types": "./dist/package-set.d.ts",
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
     },
+    "./reference-games": {
+      "types": "./dist/reference-games/index.d.ts",
+      "import": "./dist/reference-games/index.js",
+      "default": "./dist/reference-games/index.js"
+    },
     "./types": {
-      "bun": "./src/types.ts",
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
       "default": "./dist/types.js"
     },
     "./reducer": {
-      "bun": "./src/reducer.ts",
       "types": "./dist/reducer.d.ts",
       "import": "./dist/reducer.js",
       "default": "./dist/reducer.js"
     },
+    "./reducer/advanced": {
+      "types": "./dist/reducer/advanced.d.ts",
+      "import": "./dist/reducer/advanced.js",
+      "default": "./dist/reducer/advanced.js"
+    },
     "./ui": {
-      "bun": "./src/ui.ts",
       "types": "./dist/ui.d.ts",
       "import": "./dist/ui.js",
       "default": "./dist/ui.js"
     },
     "./ui/components": {
-      "bun": "./src/ui/components.ts",
       "types": "./dist/ui/components.d.ts",
       "import": "./dist/ui/components.js",
       "default": "./dist/ui/components.js"
     },
     "./ui/defaults": {
-      "bun": "./src/ui/defaults.ts",
       "types": "./dist/ui/defaults.d.ts",
       "import": "./dist/ui/defaults.js",
       "default": "./dist/ui/defaults.js"
     },
-    "./ui/types/player-state": {
-      "bun": "./src/ui/types/player-state.ts",
-      "types": "./dist/ui/types/player-state.d.ts",
-      "import": "./dist/ui/types/player-state.js",
-      "default": "./dist/ui/types/player-state.js"
+    "./ui/player-state": {
+      "types": "./dist/ui/player-state.d.ts",
+      "import": "./dist/ui/player-state.js",
+      "default": "./dist/ui/player-state.js"
     },
     "./ui/plugin-styles.css": {
       "default": "./dist/ui/plugin-styles.css"
     },
     "./runtime": {
-      "bun": "./src/runtime.ts",
       "types": "./dist/runtime.d.ts",
       "import": "./dist/runtime.js",
       "default": "./dist/runtime.js"
     },
     "./runtime/primitives": {
-      "bun": "./src/runtime/primitives.ts",
       "types": "./dist/runtime/primitives.d.ts",
       "import": "./dist/runtime/primitives.js",
       "default": "./dist/runtime/primitives.js"
     },
     "./runtime/workspace-contract": {
-      "bun": "./src/runtime/workspace-contract.ts",
       "types": "./dist/runtime/workspace-contract.d.ts",
       "import": "./dist/runtime/workspace-contract.js",
       "default": "./dist/runtime/workspace-contract.js"
     },
-    "./runtime/types/runtime-api": {
-      "bun": "./src/runtime/types/runtime-api.ts",
-      "types": "./dist/runtime/types/runtime-api.d.ts",
-      "import": "./dist/runtime/types/runtime-api.js",
-      "default": "./dist/runtime/types/runtime-api.js"
+    "./runtime/runtime-api": {
+      "types": "./dist/runtime/runtime-api.d.ts",
+      "import": "./dist/runtime/runtime-api.js",
+      "default": "./dist/runtime/runtime-api.js"
     },
-    "./generated/runtime": {
-      "bun": "./src/generated/runtime.ts",
-      "types": "./dist/generated/runtime.d.ts",
-      "import": "./dist/generated/runtime.js",
-      "default": "./dist/generated/runtime.js"
+    "./codegen": {
+      "types": "./dist/codegen.d.ts",
+      "import": "./dist/codegen.js",
+      "default": "./dist/codegen.js"
     },
-    "./generated/runtime-api": {
-      "bun": "./src/generated/runtime-api.ts",
-      "types": "./dist/generated/runtime-api.d.ts",
-      "import": "./dist/generated/runtime-api.js",
-      "default": "./dist/generated/runtime-api.js"
+    "./authoring": {
+      "types": "./dist/authoring/index.d.ts",
+      "import": "./dist/authoring/index.js",
+      "default": "./dist/authoring/index.js"
     },
-    "./generated/runtime/primitives": {
-      "bun": "./src/generated/runtime/primitives.ts",
-      "types": "./dist/generated/runtime/primitives.d.ts",
-      "import": "./dist/generated/runtime/primitives.js",
-      "default": "./dist/generated/runtime/primitives.js"
-    },
-    "./generated/workspace-contract": {
-      "bun": "./src/generated/workspace-contract.ts",
-      "types": "./dist/generated/workspace-contract.d.ts",
-      "import": "./dist/generated/workspace-contract.js",
-      "default": "./dist/generated/workspace-contract.js"
-    },
-    "./infrastructure/reducer-bundle-abi": {
-      "bun": "./src/infrastructure/reducer-bundle-abi.ts",
-      "types": "./dist/infrastructure/reducer-bundle-abi.d.ts",
-      "import": "./dist/infrastructure/reducer-bundle-abi.js",
-      "default": "./dist/infrastructure/reducer-bundle-abi.js"
-    },
-    "./infrastructure/workspace-codegen": {
-      "bun": "./src/infrastructure/workspace-codegen.ts",
-      "types": "./dist/infrastructure/workspace-codegen.d.ts",
-      "import": "./dist/infrastructure/workspace-codegen.js",
-      "default": "./dist/infrastructure/workspace-codegen.js"
+    "./reducer-contract": {
+      "types": "./dist/reducer-contract.d.ts",
+      "import": "./dist/reducer-contract.js",
+      "default": "./dist/reducer-contract.js"
     },
     "./testing": {
-      "bun": "./src/testing.ts",
       "types": "./dist/testing.d.ts",
       "import": "./dist/testing.js",
       "default": "./dist/testing.js"
+    },
+    "./testing-runtime": {
+      "types": "./dist/testing-runtime.d.ts",
+      "import": "./dist/testing-runtime.js",
+      "default": "./dist/testing-runtime.js"
+    },
+    "./testing-compiler": {
+      "types": "./dist/testing-compiler.d.ts",
+      "import": "./dist/testing-compiler.js",
+      "default": "./dist/testing-compiler.js"
+    },
+    "./authoring-compiler": {
+      "types": "./dist/authoring-compiler.d.ts",
+      "import": "./dist/authoring-compiler.js",
+      "default": "./dist/authoring-compiler.js"
+    },
+    "./reference-game-compiler": {
+      "types": "./dist/reference-game-compiler.d.ts",
+      "import": "./dist/reference-game-compiler.js",
+      "default": "./dist/reference-game-compiler.js"
+    },
+    "./browser-interaction": {
+      "types": "./dist/browser-interaction.d.ts",
+      "import": "./dist/browser-interaction.js",
+      "default": "./dist/browser-interaction.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "LICENSE.md",
     "dist",
-    "src",
     "README.md",
-    "!src/**/*.test.ts",
-    "!src/**/*.test.tsx",
-    "!src/**/__fixtures__/**",
-    "!src/**/*.stories.ts",
-    "!src/**/*.stories.tsx",
-    "!src/stories/**",
-    "!visual/**",
+    "REFERENCE.md",
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "tsup && mkdir -p dist/ui && cp src/ui/plugin-styles.css dist/ui/plugin-styles.css",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint 'src/**/*.ts'",
-    "test": "bun test"
+    "build": "pnpm --dir ../.. authoring-metadata:generate && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json",
+    "lint": "eslint 'src/**/*.{ts,tsx}'",
+    "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
+    "storybook:build": "storybook build -o storybook-static",
+    "storybook:test": "concurrently -k -s first -n storybook,test \"http-server storybook-static -p 6006 -s --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",
+    "storybook:test:visual": "playwright test --config .storybook/visual-runner.config.ts",
+    "storybook:test:visual:update": "playwright test --config .storybook/visual-runner.config.ts --update-snapshots",
+    "test": "bun test src"
   },
   "dependencies": {
-    "@radix-ui/react-dialog": "^1.1.14",
-    "@radix-ui/react-accordion": "^1.2.12",
-    "@radix-ui/react-label": "^2.1.6",
-    "@radix-ui/react-select": "^2.2.5",
-    "@radix-ui/react-slot": "^1.1.2",
-    "@radix-ui/react-tooltip": "^1.2.8",
+    "@radix-ui/react-accordion": "^1.2.14",
+    "@radix-ui/react-dialog": "^1.1.17",
+    "@radix-ui/react-label": "^2.1.10",
+    "@radix-ui/react-select": "^2.3.1",
+    "@radix-ui/react-slot": "^1.3.0",
+    "@radix-ui/react-tooltip": "^1.2.10",
+    "@noble/hashes": "^2.2.0",
     "@use-gesture/react": "^10.3.1",
     "clsx": "^2.1.1",
-    "framer-motion": "^11.15.0",
-    "lucide-react": "^0.562.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.5",
+    "esbuild": "^0.28.1",
+    "lucide-react": "^1.20.0",
     "vaul": "^1.1.2",
-    "zod": "4.4.3",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@dreamboard-games/plugin-runtime-contract": "workspace:*",
+    "@dreamboard-games/reducer-contract": "workspace:*",
+    "@dreamboard-games/sdk-types": "workspace:*",
+    "@dreamboard-games/workspace-codegen": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
+    "@playwright/test": "1.60.0",
+    "@storybook/addon-a11y": "^10.4.6",
+    "@storybook/addon-themes": "^10.4.6",
+    "@storybook/react-vite": "^10.4.6",
+    "@storybook/test-runner": "^0.24.4",
+    "@tailwindcss/cli": "^4.3.1",
+    "@tailwindcss/vite": "^4.3.1",
     "@types/node": "^24.5.2",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "axe-playwright": "2.2.2",
+    "concurrently": "^9.1.0",
     "eslint": "^9.39.0",
+    "framer-motion": "^12.40.0",
+    "http-server": "^14.1.1",
+    "playwright": "1.60.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "storybook": "^10.4.6",
+    "tailwindcss": "^4.3.1",
     "tsup": "^8.5.0",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "8.0.16",
+    "wait-on": "^8.0.1",
+    "zod": "4.4.3"
   },
   "peerDependencies": {
     "framer-motion": "^11.0.0 || ^12.0.0",
     "react": "^19.0.0",
-    "zod": "4.4.3"
+    "react-dom": "^19.0.0",
+    "zod": "^4.4.3"
   },
   "publishConfig": {
     "access": "public"

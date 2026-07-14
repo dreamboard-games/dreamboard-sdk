@@ -1,0 +1,69 @@
+{
+  "name": "@dreamboard-games/plugin-runtime-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Browser-free plugin runtime frame, protocol, schema, and digest contract for Dreamboard game plugins.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./schema": {
+      "types": "./dist/schema.d.ts",
+      "import": "./dist/schema.js",
+      "default": "./dist/schema.js"
+    },
+    "./digest": {
+      "types": "./dist/digest.d.ts",
+      "import": "./dist/digest.js",
+      "default": "./dist/digest.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test src"
+  },
+  "files": [
+    "LICENSE.md",
+    "dist",
+    "src",
+    "!src/**/*.test.ts",
+    "!tsconfig.tsbuildinfo"
+  ],
+  "dependencies": {
+    "@noble/hashes": "^2.2.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.5.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  },
+  "peerDependencies": {
+    "zod": "4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git",
+    "directory": "packages/plugin-runtime-contract"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "plugin",
+    "runtime",
+    "contract"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

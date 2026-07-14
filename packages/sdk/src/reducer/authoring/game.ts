@@ -9,7 +9,7 @@ import {
 export function defineGame<
   const Contract extends AnyReducerGameContract,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract> = Record<string, never>,
+  Views extends ViewMapOf<Contract>,
 >(
   definition: { contract: Contract } & Omit<
     ReducerGameDefinition<NoInfer<Contract>, Definitions, Views>,

@@ -1,12 +1,13 @@
+import { createHash } from "node:crypto";
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   cardInput,
   cardTarget,
   choiceTarget,
-  createManifestStringLiteralSchema,
   createReducerBundle,
   defineCardAction,
+  defineEmptyView,
   defineGame,
   defineGameContract,
   defineInputs,
@@ -18,8 +19,11 @@ import {
   formInput,
   many,
   promptInput,
-  type RuntimeTableRecord,
 } from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type RuntimeTableRecord,
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer, perPlayerGet } from "../reducer/per-player";
 
 function buildManifest() {
@@ -244,6 +248,35 @@ function hydrateRefs<T>(
   return (refs ?? []).map((ref) => interactionsByRef[ref]).filter(Boolean);
 }
 
+function nodeSha256Digest(value: unknown): string {
+  return `sha256:${createHash("sha256")
+    .update(JSON.stringify(canonicalizeJson(value)))
+    .digest("hex")}`;
+}
+
+function canonicalizeJson(value: unknown): unknown {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "number" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalizeJson(item));
+  }
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, item]) => item !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, item]) => [key, canonicalizeJson(item)]),
+    );
+  }
+  return null;
+}
+
 function hydrateCardRefs<T>(
   projection: { interactionsByRef: Record<string, T> },
   refs: readonly string[] | undefined,
@@ -251,7 +284,7 @@ function hydrateCardRefs<T>(
   return hydrateRefs(projection.interactionsByRef, refs);
 }
 
-function makeBundle() {
+function makeBundle(options: { diagnostics?: "verbose" } = {}) {
   const contract = defineGameContract({
     manifest: buildManifest(),
     phases: { takeTurn: z.object({}) },
@@ -296,6 +329,20 @@ function makeBundle() {
             message: "Not enough gold.",
           },
   });
+  const stringGoldRule = defineInteractionRule<
+    typeof contract,
+    typeof phaseState
+  >()<{
+    amount: typeof ruleBidAmountInput;
+  }>({
+    id: "string-gold",
+    errorCode: "INSUFFICIENT_RESOURCES",
+    validate: ({ state, input }) =>
+      (perPlayerGet(state.table.resources, asPlayerId(input.playerId))?.gold ??
+        0) >= input.params.amount
+        ? null
+        : "Need that much gold.",
+  });
   const answerTarget = choiceTarget
     .options([{ id: "yes", label: "Yes" }] as const)
     .build();
@@ -310,11 +357,20 @@ function makeBundle() {
     phases: {
       takeTurn: defineStepPhase<typeof contract>()({
         kind: "player",
+        name: "Take turn",
+        guidance: {
+          summary: "Spend gold, answer prompts, or play a card.",
+          objective: "Use the best available action before passing priority.",
+        },
         steps: ["main", "blocked"],
         state: phaseState,
         interactions: {
           spendGold: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Spend gold",
+                help: "Spend exactly two gold from your current resource pool.",
+              },
               commit: { mode: "autoWhenReady" },
               inputs: {},
               cost: () => ({ gold: 2 }),
@@ -381,10 +437,26 @@ function makeBundle() {
           ),
           ruleGatedBid: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Bid gold",
+                help: "Choose a bid that your current gold can pay.",
+              },
               inputs: {
                 amount: ruleBidAmountInput,
               },
               rules: [enoughGoldRule],
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          ),
+          stringRuleBid: inMain(
+            defineInteraction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Choose mode",
+              },
+              inputs: {
+                amount: ruleBidAmountInput,
+              },
+              rules: [stringGoldRule],
               reduce: ({ state, accept }) => accept(state),
             }),
           ),
@@ -470,6 +542,10 @@ function makeBundle() {
           playCard: {
             steps: ["main"],
             action: defineCardAction<typeof contract, typeof phaseState>()({
+              presentation: {
+                label: "Play spell",
+                help: "Choose a spell from your play zone.",
+              },
               cardType: "spell",
               playFrom: "playZone",
               rules: [
@@ -501,6 +577,7 @@ function makeBundle() {
               "chooseMode",
               "chooseResource",
               "ruleGatedBid",
+              "stringRuleBid",
             ],
             when: () => true,
           }),
@@ -508,11 +585,161 @@ function makeBundle() {
         zones: ["playZone"],
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
-  return createReducerBundle(game);
+  return createReducerBundle(game, options);
 }
 
 describe("trusted interaction decision pipeline", () => {
+  test("dispatch hands explicit paramsSchema data to params-only reducers", async () => {
+    const manifest = buildManifest();
+    const contract = defineGameContract({
+      manifest,
+      state: {
+        public: z.object({
+          selectedCardId: manifest.ids.cardId.nullable(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: {
+        takeTurn: z.object({}),
+      },
+      errors: {},
+    });
+    const phaseState = z.object({});
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ selectedCardId: null }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: phaseState,
+          initialState: () => ({}),
+          interactions: {
+            chooseCard: defineInteraction<typeof contract, typeof phaseState>()(
+              {
+                inputs: {},
+                paramsSchema: z.object({
+                  cardId: manifest.ids.cardId,
+                }),
+                reduce({ state, input, accept }) {
+                  return accept({
+                    ...state,
+                    publicState: {
+                      ...state.publicState,
+                      selectedCardId: input.params.cardId,
+                    },
+                  });
+                },
+              },
+            ),
+          },
+        }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
+    });
+    const bundle = createReducerBundle(game);
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const result = await bundle.dispatch({
+      state,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "chooseCard",
+        params: { cardId: "card-a" },
+      },
+    });
+
+    expect(result.kind).toBe("accept");
+    if (result.kind !== "accept") return;
+    expect(result.state.domain.publicState).toMatchObject({
+      selectedCardId: "card-a",
+    });
+  });
+
+  test("projected descriptors carry stable descriptor digests and seat-scoped initial draft digests", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const oneSeatProjection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-1"],
+    });
+    const shiftedSeatProjection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-2", "player-1"],
+    });
+    const oneSeatDescriptor = hydrateRefs(
+      oneSeatProjection.interactionsByRef,
+      oneSeatProjection.seats["player-1"]?.availableInteractionRefs,
+    ).find((descriptor) => descriptor.interactionId === "stageBlocked");
+    const shiftedSeatDescriptor = hydrateRefs(
+      shiftedSeatProjection.interactionsByRef,
+      shiftedSeatProjection.seats["player-1"]?.availableInteractionRefs,
+    ).find((descriptor) => descriptor.interactionId === "stageBlocked");
+
+    expect(oneSeatDescriptor).toBeDefined();
+    const inputDefaults = Object.fromEntries(
+      (oneSeatDescriptor?.inputs ?? []).flatMap((input) =>
+        input.defaultValue === undefined
+          ? []
+          : [[input.key, input.defaultValue] as const],
+      ),
+    );
+    expect(oneSeatDescriptor?.descriptorDigest).toBe(
+      nodeSha256Digest({
+        commitMode: oneSeatDescriptor?.commit.mode,
+        defaults: inputDefaults,
+        inputKeys: oneSeatDescriptor?.inputs.map((input) => input.key),
+        inputs: oneSeatDescriptor?.inputs.map((input) => ({
+          key: input.key,
+          kind: input.kind,
+          domain: input.domain,
+          defaultValue:
+            input.defaultValue === undefined ? null : input.defaultValue,
+        })),
+        interactionId: oneSeatDescriptor?.interactionId,
+        interactionKey: oneSeatDescriptor?.interactionKey,
+        stableIdentity: `${oneSeatDescriptor?.interactionKey}:${oneSeatDescriptor?.interactionId}`,
+      }),
+    );
+    expect(oneSeatDescriptor?.draftDigest).toBe(
+      nodeSha256Digest({
+        digestVersion: "interaction-draft@2",
+        actorSeat: 0,
+        descriptorDigest: oneSeatDescriptor?.descriptorDigest,
+        emitted: false,
+        interactionId: oneSeatDescriptor?.interactionId,
+        interactionKey: oneSeatDescriptor?.interactionKey,
+        values: inputDefaults,
+      }),
+    );
+    expect(shiftedSeatDescriptor?.descriptorDigest).toBe(
+      oneSeatDescriptor?.descriptorDigest,
+    );
+    expect(shiftedSeatDescriptor?.draftDigest).not.toBe(
+      oneSeatDescriptor?.draftDigest,
+    );
+  });
+
   test("stage and step gating share descriptor and submit decisions", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -568,6 +795,60 @@ describe("trusted interaction decision pipeline", () => {
       valid: false,
       errorCode: "action-unavailable",
       message: "Interaction 'stepBlocked' is not allowed in the current step.",
+    });
+  });
+
+  test("descriptor projection carries authored presentation and fallback labels", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const descriptors = getAvailableInteractions(bundle, state, "player-1");
+
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "spendGold",
+      ),
+    ).toMatchObject({
+      label: "Spend gold",
+      help: "Spend exactly two gold from your current resource pool.",
+      availability: {
+        status: "insufficientResources",
+        reason: "INSUFFICIENT_RESOURCES",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "stageBlocked",
+      ),
+    ).toMatchObject({
+      label: "Stage Blocked",
+      availability: {
+        status: "blocked",
+        reason: "Interaction not allowed in current stage",
+      },
+    });
+  });
+
+  test("dynamic projection carries current phase guidance", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const projection = bundle.projectSeatsDynamic({
+      state,
+      playerIds: ["player-1"],
+    });
+
+    expect(projection.guidance).toEqual({
+      phase: {
+        id: "takeTurn",
+        label: "Take turn",
+        summary: "Spend gold, answer prompts, or play a card.",
+        objective: "Use the best available action before passing priority.",
+      },
     });
   });
 
@@ -719,6 +1000,99 @@ describe("trusted interaction decision pipeline", () => {
     });
   });
 
+  test("rule validation may return a dynamic message string", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable({ player1Gold: 2 }),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    await expect(
+      bundle.validateInput({
+        state,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "stringRuleBid",
+          params: { amount: 3 },
+        },
+      }),
+    ).resolves.toMatchObject({
+      valid: false,
+      errorCode: "INSUFFICIENT_RESOURCES",
+      message: "Need that much gold.",
+    });
+  });
+
+  test("explainInteraction reports structured rule and input diagnostics", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    expect(
+      bundle.explainInteraction({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleGatedBid",
+      }),
+    ).toMatchObject({
+      interactionId: "ruleGatedBid",
+      phase: "takeTurn",
+      step: "main",
+      availability: "blocked",
+      actor: { required: [], playerIsActor: true },
+      rules: [
+        {
+          ruleId: "enough-gold",
+          outcome: "failed",
+          errorCode: "INSUFFICIENT_RESOURCES",
+          message: "Need 2 gold.",
+        },
+      ],
+      inputs: [
+        {
+          key: "amount",
+          kind: "form",
+          eligibleCount: 11,
+        },
+      ],
+    });
+  });
+
+  test("verbose diagnostics opt in to descriptor reasons", async () => {
+    const defaultBundle = makeBundle();
+    const verboseBundle = makeBundle({ diagnostics: "verbose" });
+    const defaultState = await defaultBundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const verboseState = await verboseBundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+
+    const defaultDescriptor = getAvailableInteractions(
+      defaultBundle,
+      defaultState,
+      "player-1",
+    ).find((descriptor) => descriptor.interactionId === "ruleGatedBid");
+    expect(defaultDescriptor?.reasons).toBeUndefined();
+    expect(
+      getAvailableInteractions(verboseBundle, verboseState, "player-1").find(
+        (descriptor) => descriptor.interactionId === "ruleGatedBid",
+      ),
+    ).toMatchObject({
+      reasons: [
+        {
+          ruleId: "enough-gold",
+          errorCode: "INSUFFICIENT_RESOURCES",
+        },
+      ],
+    });
+  });
+
   test("hand zones derive card actions and preserve card-mode validation", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -815,6 +1189,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -899,6 +1277,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           zones: ["playZone"],
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1028,6 +1410,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1062,6 +1448,8 @@ describe("trusted interaction decision pipeline", () => {
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
 
+    expect(contract.phaseNames).toEqual(["takeTurn"]);
+    expect(phaseState.parse({})).toEqual({});
     expect(() =>
       defineInteraction<typeof contract, typeof phaseState>()({
         commit: { mode: "autoWhenReady" } as never,
@@ -1120,7 +1508,10 @@ describe("trusted interaction decision pipeline", () => {
                 const mode = input.add(
                   "mode",
                   formInput.choice({
-                    choices: [{ value: "enabled", label: "Enabled" }],
+                    choices: [
+                      { value: "disabled", label: "Disabled" },
+                      { value: "enabled", label: "Enabled" },
+                    ],
                     defaultValue: () => undefined,
                   }),
                 );
@@ -1141,6 +1532,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1159,6 +1554,20 @@ describe("trusted interaction decision pipeline", () => {
         },
       }),
     ).resolves.toMatchObject({ valid: true });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "playWithMode",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      inputSatisfiability: { status: "yes" },
+      enumeration: {
+        status: "enumerated",
+        assignments: [{ mode: "enabled", cardId: "card-a" }],
+      },
+    });
   });
 
   test("hand zones bind playable cards to the matching card input zone", async () => {
@@ -1205,6 +1614,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           zones: ["playZone", "discardZone"],
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1272,6 +1685,10 @@ describe("trusted interaction decision pipeline", () => {
           },
           resolve: ({ state, accept }) => accept(state),
         }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
       },
     });
     const bundle = createReducerBundle(game);
@@ -1398,6 +1815,10 @@ describe("trusted interaction decision pipeline", () => {
           zones: ["playZone"],
         }),
       },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
     });
     const bundle = createReducerBundle(game);
     const state = await bundle.initialize({
@@ -1464,6 +1885,10 @@ describe("trusted interaction decision pipeline", () => {
             zones: ["typo-zone" as never],
           }),
         },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
+        },
       }),
     ).toThrow(
       "defineGame: phases.takeTurn.zones[0] 'typo-zone' is not declared in manifest.literals.playerZoneIds.",
@@ -1502,6 +1927,10 @@ describe("trusted interaction decision pipeline", () => {
               } as never,
             } as never,
           }),
+        },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
         },
       }),
     ).toThrow(
@@ -1633,5 +2062,198 @@ describe("trusted interaction decision pipeline", () => {
         },
       }),
     ).resolves.toMatchObject({ valid: true });
+  });
+
+  test("synchronizes proven input emptiness with production descriptors", async () => {
+    const contract = defineGameContract({
+      manifest: buildManifest(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const phaseState = z.object({});
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: phaseState,
+          initialState: () => ({}),
+          interactions: {
+            noLegalInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                task: formInput.choice<string>({
+                  choices: () => [],
+                  defaultValue: () => undefined,
+                }),
+              },
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            ruleRejectedInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                task: formInput.choice({
+                  choices: [
+                    { value: "one", label: "One" },
+                    { value: "two", label: "Two" },
+                  ],
+                  defaultValue: () => undefined,
+                }),
+              },
+              rules: [
+                {
+                  id: "reject-every-task",
+                  errorCode: "TASK_REJECTED",
+                  validate: () => false,
+                },
+              ],
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            costFilteredInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                amount: formInput.number({ min: 1, max: 2, defaultValue: 2 }),
+              },
+              cost: ({ input }) => ({ gold: input.params.amount }),
+              reduce: ({ state, accept }) => accept(state),
+            }),
+            opaqueInput: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {},
+              paramsSchema: z.object({ answer: z.string() }) as never,
+              reduce: ({ state, accept }) => accept(state),
+            }),
+          },
+        }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
+    });
+    const bundle = createReducerBundle(game);
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    const descriptors = getAvailableInteractions(bundle, state, "player-1");
+
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "noLegalInput",
+      ),
+    ).toMatchObject({
+      availability: {
+        status: "blocked",
+        code: "NO_LEGAL_INPUT",
+        reason: "No legal input is currently available.",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "opaqueInput",
+      ),
+    ).toMatchObject({ availability: { status: "available" } });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "ruleRejectedInput",
+      ),
+    ).toMatchObject({
+      availability: {
+        status: "blocked",
+        code: "NO_LEGAL_INPUT",
+        reason: "No legal input is currently available.",
+      },
+    });
+    expect(
+      descriptors.find(
+        (descriptor) => descriptor.interactionId === "costFilteredInput",
+      ),
+    ).toMatchObject({ availability: { status: "available" } });
+    expect(
+      bundle.resolveInteractionActionability({
+        state,
+        playerId: "player-1",
+        interactionId: "noLegalInput",
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "no" },
+    });
+    expect(
+      bundle.resolveInteractionActionability({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleRejectedInput",
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      descriptor: {
+        availability: { status: "blocked", code: "NO_LEGAL_INPUT" },
+      },
+      inputSatisfiability: { status: "no" },
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "ruleRejectedInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "no" },
+      enumeration: null,
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "costFilteredInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "yes" },
+      enumeration: {
+        status: "enumerated",
+        assignments: [{ amount: 1 }],
+      },
+    });
+    expect(
+      bundle.enumerateInteractionParams({
+        state,
+        playerId: "player-1",
+        interactionId: "opaqueInput",
+        maxEvaluations: 100,
+      }),
+    ).toMatchObject({
+      found: true,
+      visible: true,
+      inputSatisfiability: { status: "notEnumerable" },
+      enumeration: { status: "notEnumerable", assignments: [] },
+    });
   });
 });

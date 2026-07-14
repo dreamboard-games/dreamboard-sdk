@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 4,
+  "id": "hex-network-trading",
+  "displayName": "Stormtrail",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "fixed hex topology with vertex camps and connected edge trails",
+      "seeded 2d6 production and an outcome-dependent seven path",
+      "engine-derived multi-player discard and targeted-response scheduling",
+      "private inventories, private discards, and participant-only random steals",
+      "repeated main actions, 3:1 depot exchanges, and bilateral offers",
+      "a complete normal-setup replay through immediate fourth-camp victory"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern for topology-driven games where placement legality depends on a growing connected network.",
+      "Represent roll-dependent branches as ordinary phases so inspect exposes only the decisions created by the actual result.",
+      "Use engine-derived barriers for multi-player obligations such as discards, then resume the interrupted turn after every response."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/roll.ts",
+      "app/phases/discard-barrier.ts",
+      "app/phases/main.ts",
+      "ui/App.tsx",
+      "ui/interaction-routes.tsx",
+      "test/scenarios/complete-game.scenario.ts"
+    ]
+  },
+  "demoRelease": {
+    "slug": "hex-network-trading",
+    "name": "Stormtrail",
+    "description": "A compact three-crew frontier game of seeded production, connected trails, camps, Bandits, and direct trade.",
+    "overview": "Build a trail network across the fixed Stormtrail frontier, barter Timber, Brick, and Provisions, survive Bandits, and establish the first fourth camp.",
+    "creator": "Dreamboard",
+    "minPlayers": 3,
+    "maxPlayers": 3,
+    "playTimeMinMinutes": 10,
+    "playTimeMaxMinutes": 20,
+    "difficulty": 3,
+    "mechanics": [
+      "hex-grid",
+      "route-building",
+      "resource-management",
+      "trading"
+    ],
+    "categories": ["strategy", "network-building"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 15,
+    "demoPlayerCount": 3
+  },
+  "mechanics": ["hex-grid", "route-building", "resource-management", "trading"],
+  "uiPatterns": [
+    "hex-board-targets",
+    "resource-hand",
+    "trade-controls",
+    "placement-confirmation"
+  ],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-16"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

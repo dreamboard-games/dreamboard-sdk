@@ -1,1 +1,1 @@
-export * from "./types/index.js";
+export * from "@dreamboard-games/sdk-types";

@@ -10,7 +10,7 @@
  */
 
 import { clsx } from "clsx";
-import type { ViewCard } from "../../types/index.js";
+import type { ViewCard } from "@dreamboard-games/sdk-types";
 import { useTheme } from "../theme/ThemeProvider.js";
 import { motionDuration } from "../theme/derive.js";
 import {
@@ -309,7 +309,6 @@ export function CardFace<CardData extends ViewCard = ViewCard>({
       data-face-down={faceDown ? "true" : undefined}
       className={clsx("relative", CARD_SIZE_CLASSES[size], className)}
       style={{
-        opacity: disabled ? 0.5 : submitted ? 0.85 : 1,
         transitionProperty: "transform, box-shadow, border-color",
         transitionDuration: motionDuration(theme, "normal"),
         transitionTimingFunction: theme.motion.easing.out,

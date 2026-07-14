@@ -10,63 +10,63 @@
 export const AllActivePlayerStateNames = [];
 export const ActionsByPhase = {};
 export const boardHelpers = {
-    boardIdsForLayout: ((_) => []),
-    boardBaseIdsForLayout: ((_) => []),
-    boardIdsForBase: ((_) => []),
-    boardBaseIdsForTemplate: ((_) => []),
-    boardIdsForType: ((_) => []),
-    boardLayout: ((_) => "generic"),
-    boardTemplateLayout: ((_) => "generic"),
-    spaceIds: ((_) => []),
-    spaceKinds: ((_) => ({})),
-    spaceIdsForType: ((_) => []),
-    containerIds: ((_) => []),
-    containerHost: ((_, __) => ({ type: "board" })),
-    relationTypeIds: ((_) => []),
-    edgeIdsForType: ((_) => []),
-    edgeIds: ((_, __) => []),
-    authoredHexEdges: ((_) => []),
-    resolveHexEdgeId: ((_, __) => ""),
-    vertexIdsForType: ((_) => []),
-    vertexIds: ((_, __) => []),
-    authoredHexVertices: ((_) => []),
-    resolveHexVertexId: ((_, __) => ""),
-    boardRefForPlayer: ((baseId, seat) => ({ baseId, seat })),
-    sharedBoardRef: ((baseId) => ({ baseId })),
+  boardIdsForLayout: (_) => [],
+  boardBaseIdsForLayout: (_) => [],
+  boardIdsForBase: (_) => [],
+  boardBaseIdsForTemplate: (_) => [],
+  boardIdsForType: (_) => [],
+  boardLayout: (_) => "generic",
+  boardTemplateLayout: (_) => "generic",
+  spaceIds: (_) => [],
+  spaceKinds: (_) => ({}),
+  spaceIdsForType: (_) => [],
+  containerIds: (_) => [],
+  containerHost: (_, __) => ({ type: "board" }),
+  relationTypeIds: (_) => [],
+  edgeIdsForType: (_) => [],
+  edgeIds: (_, __) => [],
+  authoredHexEdges: (_) => [],
+  resolveHexEdgeId: (_, __) => "",
+  vertexIdsForType: (_) => [],
+  vertexIds: (_, __) => [],
+  authoredHexVertices: (_) => [],
+  resolveHexVertexId: (_, __) => "",
+  boardRefForPlayer: (baseId, seat) => ({ baseId, seat }),
+  sharedBoardRef: (baseId) => ({ baseId }),
 };
 export function createInitialTable(_options) {
-    return {};
+  return {};
 }
 export function setupProfiles(profiles) {
-    return profiles;
+  return profiles;
 }
 export function shuffle(container) {
-    return {
-        type: "shuffle",
-        container,
-    };
+  return {
+    type: "shuffle",
+    container,
+  };
 }
 export function dealToPlayerZone(options) {
-    return {
-        type: "deal",
-        ...options,
-    };
+  return {
+    type: "deal",
+    ...options,
+  };
 }
 export function dealToPlayerBoardContainer(options) {
-    return {
-        type: "deal",
-        ...options,
-    };
+  return {
+    type: "deal",
+    ...options,
+  };
 }
 export function seedSharedBoardContainer(options) {
-    return {
-        type: "move",
-        ...options,
-    };
+  return {
+    type: "move",
+    ...options,
+  };
 }
 export function seedSharedBoardSpace(options) {
-    return {
-        type: "move",
-        ...options,
-    };
+  return {
+    type: "move",
+    ...options,
+  };
 }

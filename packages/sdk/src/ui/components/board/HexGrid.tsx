@@ -4,16 +4,19 @@
  * Pan/zoom enabled on mobile via @use-gesture.
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { clsx } from "clsx";
-import { usePanZoom, calculateViewBox } from "../../hooks/usePanZoom.js";
 import { useIsMobile } from "../../hooks/useIsMobile.js";
 import { handleKeyboardActivation } from "./interaction-accessibility.js";
 import {
-  interactiveTargetRenderState,
-  isInteractiveTargetSelectable,
-  type InteractiveTargetLayer,
-  type InteractiveTargetRenderState,
+  GridZoomIndicator,
+  useGridSvgFrame,
+} from "./tiled-grid/use-grid-svg-frame.js";
+import { InteractiveTargetLayerGroup } from "./tiled-grid/interactive-layer.js";
+import { resolveBoardProp } from "./tiled-grid/resolve-board-prop.js";
+import type {
+  InteractiveTargetLayer,
+  InteractiveTargetRenderState,
 } from "./target-layer.js";
 import {
   type AuthoredHexBoardInput,
@@ -633,6 +636,18 @@ export function DefaultInteractiveEdge({
 // Hex Math Utilities
 // ============================================================================
 
+const SVG_POINT_PRECISION = 12;
+
+function formatSvgNumber(value: number): string {
+  const rounded =
+    Math.round(value * 10 ** SVG_POINT_PRECISION) / 10 ** SVG_POINT_PRECISION;
+  return `${Object.is(rounded, -0) ? 0 : rounded}`;
+}
+
+function formatSvgPoint(point: { x: number; y: number }): string {
+  return `${formatSvgNumber(point.x)},${formatSvgNumber(point.y)}`;
+}
+
 export const hexUtils = {
   /** Convert axial coordinates to pixel position. */
   axialToPixel(
@@ -696,7 +711,7 @@ export const hexUtils = {
     orientation: HexOrientation,
   ): string {
     const corners = this.getHexCorners(centerX, centerY, size, orientation);
-    return corners.map((c) => `${c.x},${c.y}`).join(" ");
+    return corners.map(formatSvgPoint).join(" ");
   },
 
   getEdgePosition(
@@ -782,24 +797,28 @@ function HexGridImpl(
     interactiveVertexSize = 12,
     interactiveEdgeSize = 10,
   } = props;
-  const board =
-    "board" in props
-      ? props.board
-      : (("spaces" in props
-          ? {
-              id: "__hex-grid__",
-              orientation,
-              spaces: props.spaces,
-              edges: props.edges ?? [],
-              vertices: props.vertices ?? [],
-            }
-          : {
-              id: "__hex-grid__",
-              orientation,
-              tiles: props.tiles,
-              edges: props.edges ?? [],
-              vertices: props.vertices ?? [],
-            }) satisfies AnyHexBoardInput);
+  const board = resolveBoardProp<
+    AnyHexBoardInput,
+    HexGridProps<HexGridInputProps>
+  >(
+    props,
+    (inlineProps) =>
+      ("spaces" in inlineProps
+        ? {
+            id: "__hex-grid__",
+            orientation,
+            spaces: inlineProps.spaces,
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }
+        : {
+            id: "__hex-grid__",
+            orientation,
+            tiles: inlineProps.tiles,
+            edges: inlineProps.edges ?? [],
+            vertices: inlineProps.vertices ?? [],
+          }) satisfies AnyHexBoardInput,
+  );
   // Pan/zoom is only enabled on mobile devices when the prop is true
   const isMobile = useIsMobile();
   const effectivePanZoom = enablePanZoom && isMobile;
@@ -811,20 +830,6 @@ function HexGridImpl(
   const resolvedEdges = normalizedBoard.edges;
   const resolvedVertices = normalizedBoard.vertices;
   const resolvedOrientation = normalizedBoard.orientation ?? orientation;
-
-  // Hover state for interactive elements
-  const [hoveredSpaceId, setHoveredSpaceId] = useState<string | null>(null);
-  const [hoveredVertexId, setHoveredVertexId] = useState<string | null>(null);
-  const [hoveredEdgeId, setHoveredEdgeId] = useState<string | null>(null);
-
-  // Use the unified pan/zoom hook
-  const { transform, bind, isDragging } = usePanZoom({
-    enabled: effectivePanZoom,
-    initialZoom,
-    minZoom,
-    maxZoom,
-    mode: "viewbox",
-  });
 
   // Pre-compute tile positions
   const tilePositions = useMemo(() => {
@@ -852,9 +857,7 @@ function HexGridImpl(
           return hexUtils.getHexCorners(0, 0, radius, resolvedOrientation);
         };
         const points = (options?: { inset?: number }) =>
-          corners(options)
-            .map((corner) => `${corner.x},${corner.y}`)
-            .join(" ");
+          corners(options).map(formatSvgPoint).join(" ");
         const outer = corners();
         const xs = outer.map((corner) => corner.x);
         const ys = outer.map((corner) => corner.y);
@@ -962,14 +965,35 @@ function HexGridImpl(
     };
   }, [resolvedTiles, tilePositions, hexSize]);
 
-  // Calculate viewBox with pan and zoom
-  const viewBox = calculateViewBox(bounds, transform);
-
-  // Parse viewBox for zoom indicator positioning
-  const viewBoxParts = viewBox.split(" ").map(Number);
-  const viewBoxX = viewBoxParts[0] ?? 0;
-  const viewBoxY = viewBoxParts[1] ?? 0;
-  const viewBoxHeight = viewBoxParts[3] ?? 0;
+  // Interactive space targets paired with their resolved positions
+  const interactiveSpaceTargets = useMemo(
+    () =>
+      resolvedTiles.flatMap((space) => {
+        const pos = tilePositions.get(space.id);
+        return pos ? [{ space, pos }] : [];
+      }),
+    [resolvedTiles, tilePositions],
+  );
+  // Shared SVG frame: pan/zoom wiring, viewBox, and target hover state
+  const {
+    transform,
+    bind,
+    isDragging,
+    viewBox,
+    viewBoxX,
+    viewBoxY,
+    viewBoxHeight,
+    spaceHover,
+    edgeHover,
+    vertexHover,
+  } = useGridSvgFrame({
+    panZoomEnabled: effectivePanZoom,
+    initialZoom,
+    minZoom,
+    maxZoom,
+    bounds,
+    viewBoxMode: "transformed",
+  });
 
   return (
     <svg
@@ -984,7 +1008,7 @@ function HexGridImpl(
         className,
       )}
       {...bind()}
-      role="img"
+      role="group"
       aria-label="Hex grid game board"
     >
       <defs>
@@ -1021,73 +1045,34 @@ function HexGridImpl(
 
       {/* Interactive spaces layer */}
       {interactiveSpaces && resolvedTiles.length > 0 && (
-        <g
-          className="interactive-spaces"
-          role="list"
-          aria-label="Interactive spaces"
-        >
-          {resolvedTiles.map((space) => {
-            const pos = tilePositions.get(space.id);
-            if (!pos) return null;
-            const state = interactiveTargetRenderState(
-              interactiveSpaces,
-              space.id,
-              hoveredSpaceId === space.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveSpaces,
-              state,
-            );
-            return (
-              <g
-                key={space.id}
-                transform={`translate(${pos.x}, ${pos.y})`}
-                role={isSelectable ? "button" : undefined}
-                className={clsx(isSelectable && "cursor-pointer")}
-                onPointerEnter={() => setHoveredSpaceId(space.id)}
-                onPointerLeave={() =>
-                  setHoveredSpaceId((currentId) =>
-                    currentId === space.id ? null : currentId,
-                  )
-                }
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void state.select?.();
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void state.select?.();
-                        }
-                      : undefined,
-                  )
-                }
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={
-                  isSelectable ? `Select space ${space.id}` : undefined
-                }
-              >
-                {isSelectable && (
-                  <polygon
-                    points={buildTileGeometry(pos).points({
-                      inset: hexSize * 0.05,
-                    })}
-                    fill="rgba(255,255,255,0.001)"
-                    pointerEvents="all"
-                  />
-                )}
-                {renderInteractiveSpace
-                  ? renderInteractiveSpace(space, state)
-                  : null}
-              </g>
-            );
-          })}
-        </g>
+        <InteractiveTargetLayerGroup
+          layer={interactiveSpaces}
+          targets={interactiveSpaceTargets}
+          getTargetId={({ space }) => space.id}
+          targetKind="space"
+          groupClassName="interactive-spaces"
+          groupAriaLabel="Interactive spaces"
+          browserAttributeOrder="before-transform"
+          selectMode="render-state"
+          hover={spaceHover}
+          getTargetTransform={({ pos }) => `translate(${pos.x}, ${pos.y})`}
+          renderTargetContent={({ space, pos }, state, isSelectable) => (
+            <>
+              {isSelectable && (
+                <polygon
+                  points={buildTileGeometry(pos).points({
+                    inset: hexSize * 0.05,
+                  })}
+                  fill="rgba(255,255,255,0.001)"
+                  pointerEvents="all"
+                />
+              )}
+              {renderInteractiveSpace
+                ? renderInteractiveSpace(space, state)
+                : null}
+            </>
+          )}
+        />
       )}
 
       {/* Edges layer (for roads) */}
@@ -1118,56 +1103,27 @@ function HexGridImpl(
 
       {/* Interactive edges layer (for road placement) */}
       {interactiveEdges && resolvedEdgePositions.length > 0 && (
-        <g
-          className="interactive-edges"
-          role="list"
-          aria-label="Interactive edges for placement"
-        >
-          {resolvedEdgePositions.map(({ interactiveEdge: edge }) => {
-            const state = interactiveTargetRenderState(
-              interactiveEdges,
-              edge.id,
-              hoveredEdgeId === edge.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveEdges,
-              state,
-            );
+        <InteractiveTargetLayerGroup
+          layer={interactiveEdges}
+          targets={resolvedEdgePositions}
+          getTargetId={({ interactiveEdge }) => interactiveEdge.id}
+          targetKind="edge"
+          groupClassName="interactive-edges"
+          groupAriaLabel="Interactive edges for placement"
+          browserAttributeOrder="before-transform"
+          selectMode="render-state"
+          hover={edgeHover}
+          renderTargetContent={(
+            { interactiveEdge: edge },
+            state,
+            isSelectable,
+          ) => {
             const touchTargetLength = Math.hypot(
               edge.position.x2 - edge.position.x1,
               edge.position.y2 - edge.position.y1,
             );
             return (
-              <g
-                key={edge.id}
-                role={isSelectable ? "button" : undefined}
-                className={clsx(isSelectable && "cursor-pointer")}
-                onPointerEnter={() => setHoveredEdgeId(edge.id)}
-                onPointerLeave={() =>
-                  setHoveredEdgeId((currentId) =>
-                    currentId === edge.id ? null : currentId,
-                  )
-                }
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void state.select?.();
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void state.select?.();
-                        }
-                      : undefined,
-                  )
-                }
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={isSelectable ? `Select edge ${edge.id}` : undefined}
-              >
+              <>
                 {isSelectable && (
                   <rect
                     x={edge.position.midX - touchTargetLength / 2}
@@ -1189,103 +1145,61 @@ function HexGridImpl(
                     strokeWidth={interactiveEdgeSize * 0.6}
                   />
                 ) : null}
-              </g>
+              </>
             );
-          })}
-        </g>
+          }}
+        />
       )}
 
       {/* Interactive vertices layer (for settlement placement) */}
       {interactiveVertices && resolvedVertexPositions.length > 0 && (
-        <g
-          className="interactive-vertices"
-          role="list"
-          aria-label="Interactive vertices for placement"
-        >
-          {resolvedVertexPositions.map(({ interactiveVertex: vertex }) => {
-            const state = interactiveTargetRenderState(
-              interactiveVertices,
-              vertex.id,
-              hoveredVertexId === vertex.id,
-            );
-            const isSelectable = isInteractiveTargetSelectable(
-              interactiveVertices,
-              state,
-            );
-            return (
-              <g
-                key={vertex.id}
-                role={isSelectable ? "button" : undefined}
-                className={clsx(isSelectable && "cursor-pointer")}
-                onPointerEnter={() => setHoveredVertexId(vertex.id)}
-                onPointerLeave={() =>
-                  setHoveredVertexId((currentId) =>
-                    currentId === vertex.id ? null : currentId,
-                  )
-                }
-                onClick={
-                  isSelectable
-                    ? () => {
-                        void state.select?.();
-                      }
-                    : undefined
-                }
-                onKeyDown={(event) =>
-                  handleKeyboardActivation(
-                    event,
-                    isSelectable
-                      ? () => {
-                          void state.select?.();
-                        }
-                      : undefined,
-                  )
-                }
-                tabIndex={isSelectable ? 0 : undefined}
-                aria-label={
-                  isSelectable ? `Select vertex ${vertex.id}` : undefined
-                }
-              >
-                {isSelectable && (
-                  <circle
-                    cx={vertex.position.x}
-                    cy={vertex.position.y}
-                    r={interactiveVertexSize * 1.5}
-                    fill="rgba(255,255,255,0.001)"
-                    pointerEvents="all"
-                  />
-                )}
-                {renderInteractiveVertex ? (
-                  renderInteractiveVertex(vertex, vertex.position, state)
-                ) : state.isEnabled && state.isEligible ? (
-                  <DefaultInteractiveVertex
-                    position={vertex.position}
-                    isHovered={state.isHovered}
-                    size={interactiveVertexSize * 0.6}
-                  />
-                ) : null}
-              </g>
-            );
-          })}
-        </g>
+        <InteractiveTargetLayerGroup
+          layer={interactiveVertices}
+          targets={resolvedVertexPositions}
+          getTargetId={({ interactiveVertex }) => interactiveVertex.id}
+          targetKind="vertex"
+          groupClassName="interactive-vertices"
+          groupAriaLabel="Interactive vertices for placement"
+          browserAttributeOrder="before-transform"
+          selectMode="render-state"
+          hover={vertexHover}
+          renderTargetContent={(
+            { interactiveVertex: vertex },
+            state,
+            isSelectable,
+          ) => (
+            <>
+              {isSelectable && (
+                <circle
+                  cx={vertex.position.x}
+                  cy={vertex.position.y}
+                  r={interactiveVertexSize * 1.5}
+                  fill="rgba(255,255,255,0.001)"
+                  pointerEvents="all"
+                />
+              )}
+              {renderInteractiveVertex ? (
+                renderInteractiveVertex(vertex, vertex.position, state)
+              ) : state.isEnabled && state.isEligible ? (
+                <DefaultInteractiveVertex
+                  position={vertex.position}
+                  isHovered={state.isHovered}
+                  size={interactiveVertexSize * 0.6}
+                />
+              ) : null}
+            </>
+          )}
+        />
       )}
 
       {/* Zoom indicator (for mobile) */}
       {effectivePanZoom && transform.zoom !== 1 && (
-        <g
-          transform={`translate(${viewBoxX + 10}, ${viewBoxY + viewBoxHeight - 30})`}
-        >
-          <rect
-            x={0}
-            y={0}
-            width={60}
-            height={20}
-            rx={4}
-            fill="rgba(0,0,0,0.6)"
-          />
-          <text x={30} y={14} textAnchor="middle" fill="white" fontSize={12}>
-            {Math.round(transform.zoom * 100)}%
-          </text>
-        </g>
+        <GridZoomIndicator
+          viewBoxX={viewBoxX}
+          viewBoxY={viewBoxY}
+          viewBoxHeight={viewBoxHeight}
+          zoom={transform.zoom}
+        />
       )}
     </svg>
   );

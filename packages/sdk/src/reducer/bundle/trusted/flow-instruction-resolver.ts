@@ -63,7 +63,13 @@ export function createFlowInstructionResolver<
       state: initialized.state,
       queuedInputs: [],
       queuedInstructions: initialized.instructions,
-      trace: [],
+      trace: initialized.consumptions.map((consumption) => ({
+        type: "rngConsumption" as const,
+        version: 2 as const,
+        operation: consumption.operation,
+        drawIndex: consumption.drawIndex,
+        traceEntry: consumption.traceEntry,
+      })),
     };
   }
 
