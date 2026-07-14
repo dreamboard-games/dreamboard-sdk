@@ -7,20 +7,20 @@ const packagesDir = path.join(root, "packages");
 const publicPackageName = "@dreamboard-games/sdk";
 const removedLeafPackageNames = new Set([
   "@dreamboard-games/app-sdk",
+  "@dreamboard-games/plugin-runtime-contract",
   "@dreamboard-games/reducer-contract",
   "@dreamboard-games/sdk-types",
   "@dreamboard-games/testing",
   "@dreamboard-games/ui-runtime",
   "@dreamboard-games/ui-sdk",
+  "@dreamboard-games/ui-workbench",
   "@dreamboard-games/workspace-codegen",
 ]);
-const retiredSourcePackageDirs = [
-  "app-sdk",
-  "testing",
-  "ui-runtime",
-  "ui-sdk",
-  "workspace-codegen",
-];
+// `workspace-codegen` is intentionally absent: it exists again as a private
+// workspace package (packages/workspace-codegen). Its name stays in
+// `removedLeafPackageNames` above so the boundary check enforces it is
+// private and never published.
+const retiredSourcePackageDirs = ["app-sdk", "testing", "ui-runtime", "ui-sdk"];
 
 function fail(message) {
   throw new Error(`SDK publication boundary violation: ${message}`);
@@ -116,8 +116,29 @@ async function assertReleaseWorkflow() {
   if (/\bpnpm\s+-r\b/.test(workflow) && /\bpublish\b/.test(workflow)) {
     fail(`${relativePath} must not use recursive publish`);
   }
-  if (!workflow.includes("--filter @dreamboard-games/sdk publish")) {
-    fail(`${relativePath} must publish only ${publicPackageName}`);
+  const publishesSdkWorkspace = workflow.includes(
+    "--filter @dreamboard-games/sdk publish",
+  );
+  const publishesVerifiedTarball =
+    workflow.includes("find package -name '*.tgz'") &&
+    workflow.includes('npm publish "$sdk_tarball"') &&
+    workflow.includes(`metadata.name !== "${publicPackageName}"`);
+  if (!publishesSdkWorkspace && !publishesVerifiedTarball) {
+    fail(
+      `${relativePath} must publish only ${publicPackageName} or its verified tarball artifact`,
+    );
+  }
+  for (const requiredFragment of [
+    "pnpm verify:release",
+    'npm view "$SDK_NAME@$SDK_VERSION" version',
+    "candidate-receipt.json",
+    'test "$PUBLISHED_INTEGRITY" = "$EXPECTED_INTEGRITY"',
+  ]) {
+    if (!workflow.includes(requiredFragment)) {
+      fail(
+        `${relativePath} must prove the immutable candidate with ${JSON.stringify(requiredFragment)}`,
+      );
+    }
   }
 }
 

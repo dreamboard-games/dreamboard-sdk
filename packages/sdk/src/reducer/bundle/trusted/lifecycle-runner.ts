@@ -12,10 +12,9 @@ import type {
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import { isPerPlayer } from "../../per-player";
 import { normalizeResult } from "./runtime-scope";
-import { createMutableRandomHelpers } from "./rng-sampler";
+import { createMutableRandomHelpers, type RngConsumption } from "./rng-sampler";
 import type { createInteractionResolver } from "./interaction-resolver";
 import type {
-  TrustedDomainState,
   TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
@@ -38,7 +37,6 @@ export function createLifecycleRunner<
   scope: TrustedRuntimeScope<Contract, Definitions, Views>,
   interactions: InteractionResolverFor<Contract, Definitions, Views>,
 ) {
-  type DomainState = TrustedDomainState<Contract>;
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
   type Manifest = TrustedManifest<Contract>;
@@ -152,11 +150,13 @@ export function createLifecycleRunner<
   }): {
     state: State;
     instructions: RuntimeInstructionForState<State>[];
+    consumptions: RngConsumption[];
   } {
     const workingState = initPhaseState(state, phaseName, playerIds);
     const phase = scope.phaseByName(phaseName);
     let nextState: State = workingState;
     const instructions: RuntimeInstructionForState<State>[] = [];
+    const consumptions: RngConsumption[] = [];
     if (phase.enter) {
       const random = createMutableRandomHelpers(workingState.runtime.rng);
       const entered = normalizeResult(
@@ -184,6 +184,7 @@ export function createLifecycleRunner<
         ...entered.state,
         runtime: { ...workingState.runtime, rng: random.currentRng() },
       } as State;
+      consumptions.push(...random.consumptions());
       if (entered.instructions) instructions.push(...entered.instructions);
     }
 
@@ -215,11 +216,12 @@ export function createLifecycleRunner<
         ...stageEntered.state,
         runtime: { ...nextState.runtime, rng: random.currentRng() },
       } as State;
+      consumptions.push(...random.consumptions());
       if (stageEntered.instructions) {
         instructions.push(...stageEntered.instructions);
       }
     }
-    return { state: nextState, instructions };
+    return { state: nextState, instructions, consumptions };
   }
 
   function initializePhaseResult(
@@ -228,6 +230,7 @@ export function createLifecycleRunner<
   ): {
     state: State;
     instructions: RuntimeInstructionForState<State>[];
+    consumptions: RngConsumption[];
   } {
     return enterPhase({
       state,
@@ -320,6 +323,7 @@ export function createLifecycleRunner<
             seed: rngSeed ?? null,
             cursor: 0,
             trace: [],
+            draws: [],
           },
           setup: selectedSetup,
           simultaneous: { current: null },

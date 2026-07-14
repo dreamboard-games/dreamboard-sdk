@@ -2,34 +2,60 @@ import type { z } from "zod";
 import type {
   ExactManifestContractOf,
   SchemaLike,
-  ScopedPhaseState,
   StageSpec,
   StaticViewDefinition,
-  ViewDefinition,
+  EmptyViewDefinition,
+  PlayerViewDefinition,
+  SharedViewDefinition,
 } from "../model";
+import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractManifest,
   ContractState,
 } from "./types";
 
-export function defineView<Contract extends AnyReducerGameContract>() {
+export function defineSharedView<Contract extends AnyReducerGameContract>() {
   return <Projection>(
-    definition: ViewDefinition<
+    definition: SharedViewDefinition<
       ContractState<Contract>,
       ContractManifest<Contract>,
       Projection
     >,
-  ): ViewDefinition<
+  ): SharedViewDefinition<
     ContractState<Contract>,
     ContractManifest<Contract>,
     Projection
   > => definition;
 }
 
+export function definePlayerView<Contract extends AnyReducerGameContract>() {
+  return <SharedProjection = unknown, Projection = unknown>(
+    definition: PlayerViewDefinition<
+      ContractState<Contract>,
+      ContractManifest<Contract>,
+      SharedProjection,
+      Projection
+    >,
+  ): PlayerViewDefinition<
+    ContractState<Contract>,
+    ContractManifest<Contract>,
+    SharedProjection,
+    Projection
+  > => definition;
+}
+
+export function defineEmptyView<
+  Contract extends AnyReducerGameContract,
+>(): EmptyViewDefinition<ContractState<Contract>, ContractManifest<Contract>> {
+  return {
+    project: () => ({}),
+  } as EmptyViewDefinition<ContractState<Contract>, ContractManifest<Contract>>;
+}
+
 /**
  * Factory for the session-scoped static view (see {@link StaticViewDefinition}).
- * Kept separate from {@link defineView} because the argument shape is
+ * Kept separate from dynamic view helpers because the argument shape is
  * structurally different: it exposes only the manifest and generated static
  * queries, with no `state`, `playerId`, `runtime`, `fx`, `ops`, or
  * `accept/reject`. That shape is what prevents authors from accidentally

@@ -9,8 +9,8 @@ import {
   formInput,
   many,
   rngInput,
-  type RuntimeTableRecord,
 } from "../reducer";
+import type { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
 import { perPlayer } from "./per-player";
 import { createClientParamSchemasByPhase } from "./client-param-schemas";

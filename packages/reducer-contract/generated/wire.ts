@@ -15,7 +15,13 @@ export type JsonValue = string | number | boolean | null | JsonValue[] | { [key:
 
 export type ReducerSetupSelection = { "profileId": string; "optionValues": Record<string, string | null> };
 
-export type RngState = { "seed": number | null; "cursor": number; "trace": Array<string> };
+export type RngOperationParameter = string | number | boolean;
+
+export type RngOperation = { "kind": string; "parameters": Record<string, RngOperationParameter> };
+
+export type RngDraw = { "index": number; "cursorBefore": number; "cursorAfter": number; "operation": RngOperation };
+
+export type RngState = { "seed": number | null; "cursor": number; "trace": Array<string>; "draws"?: Array<RngDraw> };
 
 export type ReducerFlowState = { "currentPhase": string; "turn": number; "round": number; "activePlayers": Array<string> };
 
@@ -31,7 +37,9 @@ export type ReducerRuntimeState = { "rng": RngState; "setup": ReducerSetupSelect
 
 export type ReducerDomainState = { "table": JsonValue; "publicState": JsonValue; "privateState": Record<string, JsonValue>; "hiddenState": JsonValue; "flow": ReducerFlowState; "phase": JsonValue };
 
-export type ReducerSessionState = { "domain": ReducerDomainState; "runtime": ReducerRuntimeState };
+export type ReducerSessionMeta = { "contractFingerprint": string };
+
+export type ReducerSessionState = { "meta"?: ReducerSessionMeta; "domain": ReducerDomainState; "runtime": ReducerRuntimeState };
 
 export type GameInput = GameInputInteraction;
 
@@ -63,7 +71,7 @@ export type ReduceResult = ReduceResultReject | ReduceResultAccept;
 
 export type ReduceResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
 
-export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "effects": Array<Effect>; "continuations": ContinuationMap };
+export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "effects": Array<Effect>; "continuations": ContinuationMap; "events": Array<GameEvent> };
 
 export type DispatchTrace = DispatchTraceAcceptedClientInput | DispatchTraceAppliedEffect | DispatchTraceRngConsumption;
 
@@ -71,13 +79,31 @@ export type DispatchTraceAcceptedClientInput = { "kind": "acceptedClientInput"; 
 
 export type DispatchTraceAppliedEffect = { "kind": "appliedEffect"; "effect": Effect; "continuation"?: ContinuationToken };
 
-export type DispatchTraceRngConsumption = { "kind": "rngConsumption"; "operation": string; "traceEntry": string };
+export type DispatchTraceRngConsumption = { "kind": "rngConsumption"; "version": 2; "operation": string; "drawIndex": number; "traceEntry": string };
 
 export type DispatchResult = DispatchResultReject | DispatchResultAccept;
 
 export type DispatchResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
 
-export type DispatchResultAccept = { "kind": "accept"; "state": ReducerSessionState; "trace": Array<DispatchTrace> };
+export type DispatchResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "trace": Array<DispatchTrace>; "events": Array<GameEvent> };
+
+export type GameEventDetail = { "label": string; "value": string | number | boolean };
+
+export type SystemActionEvent = { "kind": "systemAction"; "procedureId": string; "title": string; "summary"?: string; "details"?: Array<GameEventDetail> };
+
+export type GameEvent = SystemActionEvent;
+
+export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+
+export type OutcomeScoreComponent = { "id": string; "label": string; "value": number };
+
+export type OutcomeTieBreak = { "id": string; "label": string; "value": number | string };
+
+export type OutcomeStanding = { "playerId": string; "rank": number; "result": OutcomeResult; "score"?: number; "scoreBreakdown"?: Array<OutcomeScoreComponent>; "tieBreaks"?: Array<OutcomeTieBreak> };
+
+export type GameOutcomeReason = { "code": string; "message"?: string };
+
+export type GameOutcome = { "reason": GameOutcomeReason; "standings": Array<OutcomeStanding> };
 
 export type ReducerRuntimeLogEntry = ReducerRuntimeLogEntryAcceptedClientInput | ReducerRuntimeLogEntryAppliedEffect | ReducerRuntimeLogEntryRngConsumption | ReducerRuntimeLogEntryStateCommit;
 
@@ -85,7 +111,7 @@ export type ReducerRuntimeLogEntryAcceptedClientInput = { "kind": "acceptedClien
 
 export type ReducerRuntimeLogEntryAppliedEffect = { "kind": "appliedEffect"; "version": number; "effect": Effect; "continuation": ContinuationToken | null };
 
-export type ReducerRuntimeLogEntryRngConsumption = { "kind": "rngConsumption"; "version": number; "operation": string; "traceEntry": string };
+export type ReducerRuntimeLogEntryRngConsumption = { "kind": "rngConsumption"; "version": number; "operation": string; "drawIndex"?: number; "traceEntry": string };
 
 export type ReducerRuntimeLogEntryStateCommit = { "kind": "stateCommit"; "version": number; "state": ReducerSessionState };
 
@@ -93,8 +119,14 @@ export type SeatProjection = { "view"?: JsonValue; "availableInteractionRefs"?: 
 
 export type SimultaneousPhaseProjection = { "phaseName": string; "interactionId": string; "actorIds": Array<string>; "sealedPlayerIds": Array<string>; "pendingPlayerIds": Array<string> };
 
-export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection> };
+export type SchedulerContinuationDependency = { "waiterPlayerId": string; "blockerPlayerIds": Array<string> };
 
-export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "viewId"?: string; "projectionMode"?: "full" | "actionsOnly" | null };
+export type SchedulerFlowAuthorityProjection = { "version": 1; "activePlayerIds": Array<string>; "pendingPlayerIds": Array<string>; "continuationDependencies": Array<SchedulerContinuationDependency> };
+
+export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "schedulerFlow"?: SchedulerFlowAuthorityProjection; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
+
+export type ProjectionTimingMetadata = { "resolveAvailableInteractionsMs": number; "resolveViewMs": number; "resolveZoneHandlesMs": number; "descriptorHashMs": number };
+
+export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "projectionMode"?: "full" | "actionsOnly" | null };
 
 export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manifestVersion": string };

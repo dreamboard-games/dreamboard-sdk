@@ -1,6 +1,7 @@
 import { z } from "zod";
-import * as ContractZod from "../../generated/reducer-contract/zod";
+import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { safeParseOrThrow } from "../parse-utils";
+import { runtimePayloadSchema } from "./runtime-payload";
 import type {
   BaseGameSessionOfContract,
   GameStateOf,
@@ -18,20 +19,12 @@ import type {
   TableOfManifest,
   ViewMapOf,
 } from "../model";
+import { contractFingerprint } from "../contract-fingerprint";
+import { StaleContractArtifactError } from "../stale-contract-artifact-error";
 import type { IngressRuntimeCodec, RawReducerSessionState } from "./raw-types";
 import { createRuntimeInputParser } from "./input-codec";
 import { collectIngressPhaseSchemas } from "./phase-schemas";
 
-const runtimePayloadSchema: z.ZodType<unknown> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    z.array(runtimePayloadSchema),
-    z.record(z.string(), runtimePayloadSchema),
-  ]),
-);
 const runtimeRecordSchema = z.record(z.string(), runtimePayloadSchema);
 const perPlayerSchema = <Value extends z.ZodTypeAny>(valueSchema: Value) =>
   z
@@ -230,6 +223,7 @@ export function createIngressRuntimeCodec<
   const { phaseNameSchema } = collectIngressPhaseSchemas(definition);
   const playerIdSchema = definition.contract.manifest.ids
     .playerId as z.ZodType<PlayerId>;
+  const liveContractFingerprint = contractFingerprint(definition).value;
 
   const flowSchema = z.object({
     currentPhase: phaseNameSchema,
@@ -242,6 +236,7 @@ export function createIngressRuntimeCodec<
       seed: z.number().int().nullable(),
       cursor: z.number().int(),
       trace: z.array(z.string()),
+      draws: z.array(ContractZod.RngDrawSchema).default([]),
     }),
     setup: z
       .object({
@@ -286,6 +281,7 @@ export function createIngressRuntimeCodec<
           seed,
           cursor: 0,
           trace: [],
+          draws: [],
         },
         setup,
         simultaneous: { current: null },
@@ -314,6 +310,19 @@ export function createIngressRuntimeCodec<
         rawState,
         "state",
       );
+      const encodedContractFingerprint = (
+        envelope as { meta?: { contractFingerprint?: string } }
+      ).meta?.contractFingerprint;
+      if (
+        encodedContractFingerprint &&
+        encodedContractFingerprint !== liveContractFingerprint
+      ) {
+        throw new StaleContractArtifactError({
+          artifact: "session-state",
+          expected: liveContractFingerprint,
+          found: encodedContractFingerprint,
+        });
+      }
       const table = safeParseOrThrow(
         definition.contract.manifest.tableSchema,
         envelope.domain.table,
@@ -378,9 +387,10 @@ export function createIngressRuntimeCodec<
     },
     serializeState(state: State) {
       return {
+        meta: { contractFingerprint: liveContractFingerprint },
         domain: { ...state.domain },
         runtime: state.runtime,
-      } as RawReducerSessionState;
+      } as unknown as RawReducerSessionState;
     },
     parsePlayerId(rawPlayerId: string) {
       return safeParseOrThrow(playerIdSchema, rawPlayerId, "playerId");

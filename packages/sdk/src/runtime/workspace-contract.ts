@@ -1,10 +1,14 @@
-export { createWorkspaceUIContract } from "../runtime-internal/workspace-contract.js";
-export type { DreamboardUI, TypedGame, UIContract } from "../runtime.js";
+export { createWorkspaceUIContract } from "./workspace-contract/index.js";
+export type { DreamboardUI, TypedGame, UIContract } from "./ui-contract.js";
 export type {
+  BoardGridInteractionFilter,
   BoardHexGridProps,
   BoardHexViewProps,
+  BoardSquareGridInteractionFilter,
+  BoardSquareGridProps,
   BoardSpaceTargetProps,
   ClientParamSchemaMap,
+  DefineGameUIConfig,
   GameMeState,
   GamePlayersState,
   GameRenderState,
@@ -20,6 +24,7 @@ export type {
   WorkspaceFormInputSlot,
   WorkspaceHandSurface,
   WorkspaceHandSurfaceDescriptor,
+  WorkspaceInteractionFormDialogProps,
   WorkspaceInteractionFormDescriptor,
   WorkspaceInteractionFormsDescriptor,
   WorkspaceInteractionSlotComponent,
@@ -29,4 +34,4 @@ export type {
   WorkspaceSurfaceSpec,
   ZoneCardRenderItem,
   ZoneListProps,
-} from "../runtime-internal/workspace-contract.js";
+} from "./workspace-contract/index.js";

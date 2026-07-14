@@ -11,6 +11,14 @@ const sdkPackageSetSourcePath = path.join(
   "src",
   "package-set.ts",
 );
+const generatedMetadataSourcePath = path.join(
+  root,
+  "packages",
+  "sdk",
+  "src",
+  "authoring",
+  "generated-metadata.ts",
+);
 
 for (const pkg of sdkPackages) {
   const packageJsonPath = path.join(root, pkg.dir, "package.json");
@@ -36,20 +44,30 @@ if (uniqueVersions.size !== 1) {
 
 const [fixedVersion] = uniqueVersions;
 const sdkPackageSetSource = await readFile(sdkPackageSetSourcePath, "utf8");
-const sourceVersionMatch = sdkPackageSetSource.match(
-  /export const DREAMBOARD_SDK_VERSION = "([^"]+)";/,
+const generatedMetadataSource = await readFile(
+  generatedMetadataSourcePath,
+  "utf8",
 );
-
-if (!sourceVersionMatch) {
+const generatedVersionMatch = generatedMetadataSource.match(
+  /sdkVersion: "([^"]+)"/,
+);
+if (!generatedVersionMatch) {
   throw new Error(
-    `${sdkPackageSetSourcePath} must export a literal DREAMBOARD_SDK_VERSION`,
+    `${generatedMetadataSourcePath} must contain generated sdkVersion metadata`,
   );
 }
-
-const sourceVersion = sourceVersionMatch[1];
-if (sourceVersion !== fixedVersion) {
+if (generatedVersionMatch[1] !== fixedVersion) {
   throw new Error(
-    `DREAMBOARD_SDK_VERSION drifted from packages/sdk/package.json: ${sourceVersion} !== ${fixedVersion}`,
+    `Generated sdkVersion drifted from packages/sdk/package.json: ${generatedVersionMatch[1]} !== ${fixedVersion}`,
+  );
+}
+if (
+  !sdkPackageSetSource.includes(
+    "export const DREAMBOARD_SDK_VERSION = GENERATED_AUTHORING_METADATA.sdkVersion;",
+  )
+) {
+  throw new Error(
+    `${sdkPackageSetSourcePath} must derive DREAMBOARD_SDK_VERSION from generated authoring metadata`,
   );
 }
 

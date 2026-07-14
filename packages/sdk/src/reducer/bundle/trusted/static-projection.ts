@@ -3,9 +3,9 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   RuntimeTableRecord,
-  StaticViewQueries,
   ViewMapOf,
 } from "../../model";
+import type { StaticViewQueries } from "../../model/spec/runtime-args";
 import type { TrustedRuntimeScope } from "./runtime-scope";
 
 function stableStringify(value: unknown): string {

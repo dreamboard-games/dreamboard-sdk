@@ -2,6 +2,7 @@ import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { RuntimePayload } from "../../model";
 import { createRuntimeInstructionEngine } from "../../engine/runtime-instruction-engine";
+import { cloneRuntimeTable } from "../../table";
 import type {
   InputCollector,
   PhaseMapOf,
@@ -17,6 +18,7 @@ import { createFlowInstructionResolver } from "./flow-instruction-resolver";
 import {
   createMutableRandomHelpers,
   sampleRngCollectorValue,
+  type RngConsumption,
 } from "./rng-sampler";
 import {
   isSimultaneousPhase,
@@ -29,7 +31,6 @@ import {
   rejectResult,
   type TrustedDomainState,
   type TrustedInput,
-  type TrustedManifest,
   type TrustedPhaseName,
   type TrustedPlayerId,
   type TrustedRuntimeScope,
@@ -58,20 +59,30 @@ export function createTrustedInstructionRunner<
   lifecycle: LifecycleRunnerFor<Contract, Definitions, Views>,
 ) {
   type DomainState = TrustedDomainState<Contract>;
-  type Manifest = TrustedManifest<Contract>;
   type State = TrustedState<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 
   const flowInstructions = createFlowInstructionResolver(lifecycle);
-  const engineInstructions = createEngineInstructionResolver<
-    Contract,
-    Definitions,
-    Views
-  >();
+  const engineInstructions = createEngineInstructionResolver<Contract>();
 
-  type RuntimeRngResult = { runtimeRng?: RuntimeRngState };
+  type RuntimeRngResult = {
+    runtimeRng?: RuntimeRngState;
+    rngConsumptions?: readonly RngConsumption[];
+  };
+
+  function rngTrace(
+    consumptions: readonly RngConsumption[],
+  ): DispatchTraceEntry<State, PlayerId, ReducerInput>[] {
+    return consumptions.map((consumption) => ({
+      type: "rngConsumption" as const,
+      version: 2 as const,
+      operation: consumption.operation,
+      drawIndex: consumption.drawIndex,
+      traceEntry: consumption.traceEntry,
+    }));
+  }
 
   function reduceInternal(
     state: State,
@@ -118,7 +129,11 @@ export function createTrustedInstructionRunner<
         scope.toDomainState(state),
       );
       return result.type === "accept"
-        ? { ...result, runtimeRng: random.currentRng() }
+        ? {
+            ...result,
+            runtimeRng: random.currentRng(),
+            rngConsumptions: random.consumptions(),
+          }
         : result;
     }
 
@@ -151,7 +166,11 @@ export function createTrustedInstructionRunner<
         scope.toDomainState(state),
       );
       return result.type === "accept"
-        ? { ...result, runtimeRng: random.currentRng() }
+        ? {
+            ...result,
+            runtimeRng: random.currentRng(),
+            rngConsumptions: random.consumptions(),
+          }
         : result;
     }
 
@@ -161,29 +180,42 @@ export function createTrustedInstructionRunner<
   function preSampleRngForAction(
     state: State,
     input: ReducerInput,
-  ): { state: State; input: ReducerInput } {
-    if (input.kind !== "interaction") return { state, input };
+  ): {
+    state: State;
+    input: ReducerInput;
+    consumptions: readonly {
+      operation: string;
+      drawIndex: number;
+      traceEntry: string;
+    }[];
+  } {
+    if (input.kind !== "interaction") {
+      return { state, input, consumptions: [] };
+    }
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(
       phaseName,
       input.interactionId,
     );
-    if (!interaction) return { state, input };
+    if (!interaction) return { state, input, consumptions: [] };
     const collectors = interaction.inputs as Record<string, InputCollector>;
     let nextRng = state.runtime.rng;
     const sampled: Record<string, unknown> = {};
+    const consumptions: RngConsumption[] = [];
     let anySampled = false;
     for (const [key, collector] of Object.entries(collectors)) {
       if (collector.kind !== "rng") continue;
-      const { value, nextRng: advanced } = sampleRngCollectorValue(
-        collector,
-        nextRng,
-      );
+      const {
+        value,
+        nextRng: advanced,
+        consumptions: collectorConsumptions,
+      } = sampleRngCollectorValue(collector, nextRng);
       sampled[key] = value;
       nextRng = advanced;
+      consumptions.push(...collectorConsumptions);
       anySampled = true;
     }
-    if (!anySampled) return { state, input };
+    if (!anySampled) return { state, input, consumptions: [] };
     const mergedParams: Record<string, unknown> = {
       ...((input.params ?? {}) as Record<string, unknown>),
       ...sampled,
@@ -194,6 +226,7 @@ export function createTrustedInstructionRunner<
         runtime: { ...state.runtime, rng: nextRng },
       } as State,
       input: { ...input, params: mergedParams } as ReducerInput,
+      consumptions,
     };
   }
 
@@ -210,7 +243,11 @@ export function createTrustedInstructionRunner<
   function reduceSimultaneousSubmit(
     state: State,
     input: ReducerInput,
-  ): ReducerResult<State> | null {
+  ):
+    | (ReducerResult<State> & {
+        trace?: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+      })
+    | null {
     if (
       input.kind !== "interaction" ||
       input.interactionId !== SIMULTANEOUS_SUBMIT_INTERACTION_ID
@@ -337,17 +374,27 @@ export function createTrustedInstructionRunner<
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
       } as State),
       instructions: resolved.instructions ?? [],
+      events: resolved.events ?? [],
+      trace: rngTrace(random.consumptions()),
     };
   }
 
-  function reduceOnce(state: State, input: ReducerInput): ReducerResult<State> {
+  function reduceOnce(state: State, input: ReducerInput) {
     const sampled = preSampleRngForAction(state, input);
     const simultaneousResult = reduceSimultaneousSubmit(
       sampled.state,
       sampled.input,
     );
     if (simultaneousResult) {
-      return simultaneousResult;
+      return simultaneousResult.type === "reject"
+        ? simultaneousResult
+        : {
+            ...simultaneousResult,
+            trace: [
+              ...rngTrace(sampled.consumptions),
+              ...(simultaneousResult.trace ?? []),
+            ],
+          };
     }
     const result = reduceInternal(sampled.state, sampled.input);
     if (result.type === "reject") {
@@ -363,6 +410,11 @@ export function createTrustedInstructionRunner<
         },
       } as State,
       instructions: result.instructions ?? [],
+      events: result.events ?? [],
+      trace: rngTrace([
+        ...sampled.consumptions,
+        ...(result.rngConsumptions ?? []),
+      ]),
     };
   }
 
@@ -393,6 +445,39 @@ export function createTrustedInstructionRunner<
     }
   }
 
+  function resolveInstructionForDrain(
+    state: State,
+    instruction: RuntimeInstructionForState<State>,
+  ): {
+    state: State;
+    queuedInputs: ReducerInput[];
+    queuedInstructions: RuntimeInstructionForState<State>[];
+    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+  } {
+    switch (instruction.kind) {
+      case "flow.transition":
+        return flowInstructions.resolveTransition(state, instruction);
+      case "engine.rollDie":
+        return engineInstructions.resolveRollDieDraft(state, instruction);
+      case "engine.shuffleSharedZone":
+        return engineInstructions.resolveShuffleSharedZoneDraft(
+          state,
+          instruction,
+        );
+      case "engine.shufflePlayerZone":
+        return engineInstructions.resolveShufflePlayerZoneDraft(
+          state,
+          instruction,
+        );
+      default: {
+        const _exhaustive: never = instruction;
+        throw new Error(
+          `Unknown runtime instruction kind: ${(_exhaustive as { kind: string }).kind}`,
+        );
+      }
+    }
+  }
+
   const instructionEngine = createRuntimeInstructionEngine<
     State,
     PlayerId,
@@ -401,7 +486,13 @@ export function createTrustedInstructionRunner<
     reduce(state, input) {
       return reduceOnce(state, input);
     },
-    resolveInstruction,
+    resolveInstruction: resolveInstructionForDrain,
+    prepareInstructionState(state) {
+      return {
+        ...state,
+        table: cloneRuntimeTable(state.table),
+      };
+    },
   });
 
   return {

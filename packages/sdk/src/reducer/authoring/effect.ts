@@ -1,12 +1,14 @@
 import { z } from "zod";
 import type {
   AnySchema,
-  ContinuationCallable,
   EffectRollDieDefinition,
   EffectShuffleDefinition,
   EffectShufflePlayerZoneDefinition,
-  ResumableEffectKind,
 } from "../model";
+import type {
+  ContinuationCallable,
+  ResumableEffectKind,
+} from "../model/spec/runtime-args";
 import type {
   AnyReducerGameContract,
   ContractManifest,

@@ -3,20 +3,20 @@ import type { DerivedResolver } from "../../derived";
 import { createReducerFx } from "../../effects";
 import { createStateQueries } from "../../table-queries";
 import type {
-  ActionContext,
   BaseGameStateOfContract,
   ManifestContractOf,
   PlayerIdOfState,
-  RandomHelpers,
   ReducerGameContractLike,
   TableQueriesOfState,
 } from "../../model";
+import type {
+  ActionContext,
+  RandomHelpers,
+} from "../../model/spec/runtime-args";
 import type { TrustedRuntimeHelpers, TrustedState } from "./runtime-scope";
 
-export function fxForState<Contract extends ReducerGameContractLike>(
-  state: TrustedState<Contract>,
-) {
-  return createReducerFx<TrustedState<Contract>>(state);
+export function fxForState<Contract extends ReducerGameContractLike>() {
+  return createReducerFx<TrustedState<Contract>>();
 }
 
 export function buildContext<Contract extends ReducerGameContractLike>(
@@ -52,11 +52,17 @@ export function buildContext<Contract extends ReducerGameContractLike>(
 function publicRuntime<Runtime extends { rng?: unknown }>(
   runtime: Runtime,
 ): Omit<Runtime, "rng"> {
-  const { rng: _rng, ...rest } = runtime;
+  const rest = { ...runtime } as Omit<Runtime, "rng"> & { rng?: unknown };
+  delete rest.rng;
   return rest;
 }
 
 const DISABLED_RANDOM_HELPERS: RandomHelpers = {
+  integer() {
+    throw new Error(
+      "random helpers are only available in reducer mutation callbacks.",
+    );
+  },
   subset() {
     throw new Error(
       "random helpers are only available in reducer mutation callbacks.",
@@ -87,7 +93,7 @@ export function buildRuntimeArgs<
   return {
     ...buildContext(state, manifest),
     ...helpers,
-    fx: options.fx ?? fxForState(state),
+    fx: options.fx ?? fxForState<Contract>(),
     q,
     derived: options.derived ?? createDerivedResolver(domainState, { q }),
     runtime: publicRuntime(state.runtime),

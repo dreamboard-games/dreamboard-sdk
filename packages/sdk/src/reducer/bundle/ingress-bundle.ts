@@ -1,8 +1,10 @@
 import { createTrustedReducerBundle } from "./trusted-bundle";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
-import * as Builders from "../../generated/reducer-contract/builders";
-import { REDUCER_CONTRACT_VERSION } from "../../generated/reducer-contract/version";
-import * as Wire from "../../generated/reducer-contract/wire";
+import {
+  Builders,
+  REDUCER_CONTRACT_VERSION,
+  type Wire,
+} from "@dreamboard-games/reducer-contract";
 import type {
   ManifestContractOf,
   PhaseMapOf,
@@ -17,9 +19,12 @@ import type { DispatchTraceEntry } from "../core/types";
 import type {
   UntrustedReducerSessionState,
   UntrustedRuntimeInput,
-  UntrustedRuntimeTable,
 } from "../ingress/types";
-import type { ReducerBundle } from "./types";
+import type {
+  ReducerBundle,
+  ReducerBundleOptions,
+  ReducerBundleTestingRuntime,
+} from "./types";
 
 /**
  * Pass the wire-validated `interaction` input through to the trusted
@@ -65,7 +70,7 @@ function routeInteraction(input: UntrustedRuntimeInput): {
 //
 // This module is the ONLY place in the SDK reducer that converts runtime
 // instructions into wire effects. It does so through
-// `@dreamboard-games/sdk/infrastructure/reducer-bundle-abi` (the single source of truth for
+// `@dreamboard-games/reducer-contract` (the single source of truth for
 // wire-effect construction) rather than hand-rolling the mapping locally —
 // hand-rolled mappings are how wire drift sneaks in (see the catan
 // rollDie regression).
@@ -141,6 +146,8 @@ function toWireReduceResult<State>(
         type: "accept";
         state: State;
         instructions?: InternalInstruction<State>[];
+        terminal?: Wire.GameOutcome;
+        events?: Wire.GameEvent[];
       },
   serializeState: (state: State) => UntrustedReducerSessionState,
 ): Wire.ReduceResult {
@@ -162,8 +169,10 @@ function toWireReduceResult<State>(
   return {
     kind: "accept",
     state: serializeState(result.state),
+    ...(result.terminal ? { terminal: result.terminal } : {}),
     effects,
     continuations,
+    events: result.events ?? [],
   };
 }
 
@@ -174,6 +183,8 @@ function toWireDispatchResult<State, PlayerId extends string>(
         type: "accept";
         state: State;
         trace: DispatchTraceEntry<State, PlayerId>[];
+        terminal?: Wire.GameOutcome;
+        events?: Wire.GameEvent[];
       },
   serializeState: (state: State) => UntrustedReducerSessionState,
 ): Wire.DispatchResult {
@@ -248,7 +259,9 @@ function toWireDispatchResult<State, PlayerId extends string>(
       case "rngConsumption":
         trace.push({
           kind: "rngConsumption",
+          version: entry.version,
           operation: entry.operation,
+          drawIndex: entry.drawIndex,
           traceEntry: entry.traceEntry,
         });
         break;
@@ -263,7 +276,9 @@ function toWireDispatchResult<State, PlayerId extends string>(
   return {
     kind: "accept",
     state: serializeState(result.state),
+    ...(result.terminal ? { terminal: result.terminal } : {}),
     trace,
+    events: result.events ?? [],
   };
 }
 
@@ -286,9 +301,10 @@ export function createReducerBundle<
   Views extends ViewMapOf<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  options: ReducerBundleOptions = {},
 ): ReducerBundle {
   type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
-  const trustedBundle = createTrustedReducerBundle(definition);
+  const trustedBundle = createTrustedReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   type Manifest = ManifestContractOf<Definition["contract"]>;
   type TrustedState = Awaited<ReturnType<typeof trustedBundle.initialize>>;
@@ -349,6 +365,33 @@ export function createReducerBundle<
         input: routed as never,
       });
     },
+    explainInteraction({ state, playerId, interactionId }) {
+      return trustedBundle.explainInteraction({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+      });
+    },
+    resolveInteractionActionability({ state, playerId, interactionId }) {
+      return trustedBundle.resolveInteractionActionability({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+      });
+    },
+    enumerateInteractionParams({
+      state,
+      playerId,
+      interactionId,
+      maxEvaluations,
+    }) {
+      return trustedBundle.enumerateInteractionParams({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+        maxEvaluations,
+      });
+    },
     async reduce({
       state,
       input,
@@ -386,31 +429,18 @@ export function createReducerBundle<
     projectStatic() {
       return trustedBundle.projectStatic() as Wire.BoardStaticProjection | null;
     },
-    /**
-     * Wire-side passthrough for per-tick seat projection. The seat views carry
-     * only the fields produced by `defineView`; static topology, when present,
-     * was served once via `projectStatic` and is re-merged on the client.
-     */
     projectSeatsDynamic({
       state,
       playerIds,
-      viewId = "player",
+      projectionMode,
     }: Wire.ProjectSeatsDynamicRequest) {
       const parsedState = parseTrustedState(state);
       const parsedPlayerIds = playerIds.map((pid) => codec.parsePlayerId(pid));
       return trustedBundle.projectSeatsDynamic({
         state: parsedState,
         playerIds: parsedPlayerIds,
-        viewId,
+        projectionMode: projectionMode ?? undefined,
       }) as Wire.SeatProjectionBundle;
-    },
-    projectSeatViewDynamic({ state, playerId, viewId = "player" }) {
-      const parsedState = parseTrustedState(state);
-      return trustedBundle.projectSeatViewDynamic({
-        state: parsedState,
-        playerId: parseRuntimePlayerId(playerId),
-        viewId,
-      });
     },
     createInProcessRuntime() {
       let state: TrustedState | null = null;
@@ -460,21 +490,40 @@ export function createReducerBundle<
             trace: toWireDispatchTrace(result as never),
           };
         },
-        projectSeatViewDynamic({ playerId, viewId = "player" }) {
-          return trustedBundle.projectSeatViewDynamic({
-            state: requireState(),
-            playerId: parseRuntimePlayerId(playerId),
-            viewId,
-          });
-        },
-        projectSeatsDynamic({ playerIds, viewId = "player" }) {
+        projectSeatsDynamic({ playerIds, projectionMode }) {
           const parsedPlayerIds = playerIds.map((pid) =>
             parseRuntimePlayerId(pid),
           );
           return trustedBundle.projectSeatsDynamic({
             state: requireState(),
             playerIds: parsedPlayerIds,
-            viewId,
+            projectionMode: projectionMode ?? undefined,
+          });
+        },
+        explainInteraction({ playerId, interactionId }) {
+          return trustedBundle.explainInteraction({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
+          });
+        },
+        resolveInteractionActionability({ playerId, interactionId }) {
+          return trustedBundle.resolveInteractionActionability({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
+          });
+        },
+        enumerateInteractionParams({
+          playerId,
+          interactionId,
+          maxEvaluations,
+        }) {
+          return trustedBundle.enumerateInteractionParams({
+            state: requireState(),
+            playerId: parseRuntimePlayerId(playerId),
+            interactionId,
+            maxEvaluations,
           });
         },
         snapshot() {
@@ -485,7 +534,7 @@ export function createReducerBundle<
         },
       };
     },
-  } satisfies ReducerBundle;
+  } satisfies ReducerBundleTestingRuntime;
 
   return bundle;
 }

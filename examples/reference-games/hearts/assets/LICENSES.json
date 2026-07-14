@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "path": "thumbnail.svg",
+      "license": "Repository-owned original artwork; use governed by the repository license.",
+      "source": "Original Hearts SVG created for this repository.",
+      "copyright": "Copyright 2026 Dreamboard"
+    }
+  ],
+  "note": "No third-party artwork is used."
+}

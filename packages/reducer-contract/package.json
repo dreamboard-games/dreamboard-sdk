@@ -1,18 +1,42 @@
 {
   "name": "@dreamboard-games/reducer-contract",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Single-source-of-truth TypeScript wire contract between the JS reducer bundle and the SDK-owned reducer bundle ABI. The JSON Schema in ./schema is authoritative.",
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "types": "./dist/src/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./bundle": "./src/bundle.ts",
-    "./wire": "./generated/wire.ts",
-    "./zod": "./generated/zod.ts",
-    "./builders": "./generated/builders.ts",
-    "./version": "./generated/version.ts",
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./bundle": {
+      "types": "./dist/src/bundle.d.ts",
+      "import": "./src/bundle.ts",
+      "default": "./src/bundle.ts"
+    },
+    "./wire": {
+      "types": "./dist/generated/wire.d.ts",
+      "import": "./generated/wire.ts",
+      "default": "./generated/wire.ts"
+    },
+    "./zod": {
+      "types": "./dist/generated/zod.d.ts",
+      "import": "./generated/zod.ts",
+      "default": "./generated/zod.ts"
+    },
+    "./builders": {
+      "types": "./dist/generated/builders.d.ts",
+      "import": "./generated/builders.ts",
+      "default": "./generated/builders.ts"
+    },
+    "./version": {
+      "types": "./dist/generated/version.d.ts",
+      "import": "./generated/version.ts",
+      "default": "./generated/version.ts"
+    },
     "./schema": "./schema/reducer-runtime.schema.json",
     "./fixtures": "./fixtures/index.ts"
   },
@@ -35,9 +59,9 @@
   "scripts": {
     "generate": "node scripts/generate-ts.mjs",
     "generate:check": "node scripts/generate-check.mjs",
-    "build": "pnpm generate && tsc --noEmit",
-    "typecheck": "pnpm generate && tsc --noEmit",
-    "test": "pnpm generate && bun test",
+    "build": "tsc --noEmit && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
@@ -46,6 +70,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.9.2",
     "zod": "4.4.3"
   },

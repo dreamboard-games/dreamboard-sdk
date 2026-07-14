@@ -1,3 +1,4 @@
+import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import type {
   AnySchema,
@@ -26,8 +27,19 @@ import type { TableQueriesOfState } from "./queries";
 
 declare const manifestIdSchemaBrand: unique symbol;
 
-export type ManifestIdSchema<Output = unknown> = z.ZodType<Output> & {
-  readonly [manifestIdSchemaBrand]: true;
+export type ManifestIdFamily = keyof ManifestIds<
+  string,
+  string,
+  string,
+  string,
+  string
+>;
+
+export type ManifestIdSchema<
+  Output = unknown,
+  Family extends ManifestIdFamily | undefined = ManifestIdFamily | undefined,
+> = z.ZodType<Output> & {
+  readonly [manifestIdSchemaBrand]: Family;
 };
 
 export type ManifestLiterals<
@@ -128,10 +140,27 @@ export type ManifestDefaults<Table extends RuntimeTableRecord> = {
   resources: (playerIds?: readonly string[]) => Table["resources"];
 };
 
+export type ManifestNormalSetup<Table extends RuntimeTableRecord> = {
+  readonly minPlayers: number;
+  readonly maxPlayers: number;
+  readonly createInitialTable: (options: {
+    readonly playerIds: readonly string[];
+  }) => Table;
+};
+
 export type StaticBoards<Table extends RuntimeTableRecord> = Pick<
   Table["boards"],
   "byId" | "hex" | "square"
 >;
+
+export type StaticBoardsJsonEnvelope<
+  Table extends RuntimeTableRecord = RuntimeTableRecord,
+> = {
+  formatVersion: 1;
+  generatedBy: "@dreamboard-games/sdk/codegen";
+  boards: StaticBoards<Table>;
+  initialTable: Table;
+};
 
 export type SetupOptionChoiceMetadata = {
   id: string;
@@ -151,6 +180,14 @@ export type SetupProfileMetadata = {
   name: string;
   description?: string | null;
   optionValues?: Record<string, string> | null;
+  guidance?: {
+    summary?: string | null;
+    steps: readonly {
+      id: string;
+      label: string;
+      description?: string | null;
+    }[];
+  } | null;
 };
 
 export type ReducerManifestContract<
@@ -164,6 +201,14 @@ export type ReducerManifestContract<
   literals: ManifestLiterals<PlayerId, DeckId, HandId, CardId, PhaseName>;
   ids: ManifestIds<PlayerId, DeckId, HandId, CardId, PhaseName>;
   defaults: ManifestDefaults<Table>;
+  /**
+   * Generic normal-session setup capability emitted by workspace codegen.
+   *
+   * This remains optional on the structural contract so small handwritten
+   * manifests can model focused reducer tests without recreating generated
+   * topology metadata. Generated workspace manifests always provide it.
+   */
+  normalSetup?: ManifestNormalSetup<Table>;
   staticBoards?: StaticBoards<Table>;
   setupOptionsById: Record<string, SetupOptionMetadata>;
   setupChoiceIdsByOptionId: Record<string, readonly string[]>;
@@ -215,16 +260,25 @@ function toNonEmptyStringTuple<Values extends readonly string[]>(
  * branded schemas (e.g. `manifest.ids.playerId`). When a manifest has zero
  * members for a given id family the underlying schema falls back to plain
  * `z.string()`, which is indistinguishable from an author-written
- * `z.string()` at runtime. This WeakSet lets `defineGameContract` recognise
- * the manifest-supplied case and not flag it as a raw string.
+ * `z.string()` at runtime. This WeakMap lets `defineGameContract` recognise
+ * the manifest-supplied case and lets schema-aware consumers distinguish
+ * semantic ID families without inferring them from authored field names. A
+ * schema marked without a family remains manifest-scoped for compatibility.
  */
-const manifestScopedSchemas = new WeakSet<object>();
+const manifestScopedSchemas = new WeakMap<
+  object,
+  ManifestIdFamily | undefined
+>();
 
-export function markManifestScopedSchema<Schema extends z.ZodTypeAny>(
+export function markManifestScopedSchema<
+  Schema extends z.ZodTypeAny,
+  const Family extends ManifestIdFamily | undefined = undefined,
+>(
   schema: Schema,
-): Schema & ManifestIdSchema<z.infer<Schema>> {
-  manifestScopedSchemas.add(schema as unknown as object);
-  return schema as Schema & ManifestIdSchema<z.infer<Schema>>;
+  family?: Family,
+): Schema & ManifestIdSchema<z.infer<Schema>, Family> {
+  manifestScopedSchemas.set(schema as unknown as object, family);
+  return schema as Schema & ManifestIdSchema<z.infer<Schema>, Family>;
 }
 
 export function isManifestScopedSchema(schema: unknown): boolean {
@@ -235,11 +289,25 @@ export function isManifestScopedSchema(schema: unknown): boolean {
   );
 }
 
+export function manifestSchemaFamily(
+  schema: unknown,
+): ManifestIdFamily | undefined {
+  if (typeof schema !== "object" || schema === null) {
+    return undefined;
+  }
+  return manifestScopedSchemas.get(schema as object);
+}
+
 export function createManifestStringLiteralSchema<
   Values extends readonly string[],
+  const Family extends ManifestIdFamily | undefined = undefined,
 >(
   values: Values,
-): ManifestIdSchema<Values[number] extends never ? string : Values[number]> {
+  family?: Family,
+): ManifestIdSchema<
+  Values[number] extends never ? string : Values[number],
+  Family
+> {
   const schema =
     values.length === 0
       ? (z.string() as z.ZodType<
@@ -248,9 +316,16 @@ export function createManifestStringLiteralSchema<
       : (z.enum(toNonEmptyStringTuple(values)) as z.ZodType<
           Values[number] extends never ? string : Values[number]
         >);
-  return markManifestScopedSchema(schema);
+  return markManifestScopedSchema(schema, family);
 }
 
+export function assumeManifestSchema<
+  Output,
+  Family extends ManifestIdFamily | undefined,
+>(schema: ManifestIdSchema<unknown, Family>): ManifestIdSchema<Output, Family>;
+export function assumeManifestSchema<Output>(
+  schema: z.ZodTypeAny,
+): z.ZodType<Output>;
 export function assumeManifestSchema<Output>(
   schema: z.ZodTypeAny,
 ): z.ZodType<Output> {
@@ -312,11 +387,13 @@ export function createManifestRuntimeSchema<
         seed: z.number().nullable().optional(),
         cursor: z.number().int().default(0),
         trace: z.array(z.string()).default([]),
+        draws: z.array(ContractZod.RngDrawSchema).default([]),
       })
       .default({
         seed: null,
         cursor: 0,
         trace: [],
+        draws: [],
       }),
     setup: z
       .object({

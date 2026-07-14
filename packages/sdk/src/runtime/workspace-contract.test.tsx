@@ -1,0 +1,994 @@
+import { expect, test } from "bun:test";
+import {
+  digestPluginGameplayFrame,
+  type PluginGameplayFrame,
+  type PluginSessionDescriptor,
+} from "@dreamboard-games/plugin-runtime-contract";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";
+import { InteractionForm } from "./components/interaction-form/index.js";
+import { createDreamboardUI } from "./ui-contract.js";
+import { createWorkspaceUIContract } from "./workspace-contract/index.js";
+import { Board } from "./primitives/board.js";
+import type { InteractionHandle } from "./hooks/useInteractionHandle.js";
+import type { PluginRuntimeClient } from "./core/types.js";
+import { interactionDraftDigestForValues } from "./utils/interaction-draft-digest.js";
+import { semanticProjectionDigestForFrame } from "./utils/semantic-projection-digest.js";
+
+const TEST_SESSION = {
+  sessionId: "session-1",
+  players: [{ playerId: "player-1", displayName: "Player One" }],
+} satisfies PluginSessionDescriptor;
+
+function makeSnapshot(): PluginGameplayFrame<
+  { ok: true },
+  "play",
+  string,
+  "play.placeCard"
+> {
+  return {
+    gameVersion: 1,
+    actionSetVersion:
+      "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+    perspectivePlayerId: "player-1",
+    view: { ok: true },
+    flow: {
+      currentPhase: "play",
+      currentStage: null,
+      activePlayers: ["player-1"],
+      simultaneousPhase: null,
+    },
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "cardId",
+            kind: "card",
+            domain: {
+              type: "cardTarget",
+              projection: "resolved",
+              eligibleTargets: ["card-1"],
+              zoneIds: ["hand"],
+            },
+          },
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["hex-a"],
+              dependencies: {
+                mode: "eager",
+                dependentCases: [
+                  {
+                    when: { cardId: "card-1" },
+                    domain: {
+                      type: "boardTarget",
+                      projection: "resolved",
+                      targetKind: "space",
+                      eligibleTargets: ["hex-a"],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+    zones: {
+      hand: {
+        cardIds: ["card-1"],
+        cardViewsById: {
+          "card-1": JSON.stringify({
+            id: "card-1",
+            cardType: "test-card",
+            name: "Test card",
+            properties: {},
+          }),
+        },
+        playableByCardId: {
+          "card-1": [
+            {
+              phaseName: "play",
+              interactionKey: "play.placeCard",
+              interactionId: "placeCard",
+              kind: "action",
+              descriptorDigest: "sha256:descriptor",
+              actorSeat: 0,
+              draftDigest: "sha256:draft",
+              inputs: [
+                {
+                  key: "cardId",
+                  kind: "card",
+                  domain: {
+                    type: "cardTarget",
+                    projection: "resolved",
+                    eligibleTargets: ["card-1"],
+                    zoneIds: ["hand"],
+                  },
+                },
+              ],
+              commit: { mode: "autoWhenReady" },
+              availability: { status: "available" },
+            },
+          ],
+        },
+      },
+    },
+  };
+}
+
+function makeRuntime(
+  frame: PluginGameplayFrame,
+  submit: (...args: unknown[]) => Promise<void>,
+): PluginRuntimeClient {
+  return {
+    getSession: () => TEST_SESSION,
+    subscribeSession: () => () => undefined,
+    getFrame: () => frame,
+    subscribeFrame: () => () => undefined,
+    validateInteraction: async () => ({ valid: true }),
+    submitInteraction: async (interactionId, params) => {
+      await submit(interactionId, params);
+    },
+    disconnect: () => undefined,
+  };
+}
+
+test("generated hand renders typed drop targets with kind-encoded ids", () => {
+  const snapshot = makeSnapshot();
+  const submit = async () => undefined;
+  const runtime = makeRuntime(snapshot, submit);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+    Zone: { useHand: typeof useHandFacade };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  interface ZoneCard {
+    id: string;
+  }
+  interface HandFacade {
+    Hand: (props: {
+      children?: unknown;
+      layout?: unknown;
+      mobileInteraction?: "direct-activate" | "drag-to-target";
+      dropTargets?: ReadonlyArray<{
+        target:
+          | { kind: "card"; card: string }
+          | { kind: "space" | "edge" | "vertex" | "tile"; target: string };
+        label: string;
+        render: () => unknown;
+      }>;
+    }) => unknown;
+    Cards: (props: {
+      children: (card: ZoneCard, state: { eligible?: boolean }) => unknown;
+    }) => unknown;
+  }
+  const useHandFacade = (
+    UI as unknown as {
+      Zone: {
+        useHand: (
+          name: string,
+          options: { zone: string; role: string; label: string },
+        ) => HandFacade;
+      };
+    }
+  ).Zone.useHand;
+
+  function HandHarness() {
+    const hand = useHandFacade("playerHand", {
+      zone: "hand",
+      role: "primary",
+      label: "Hand",
+    });
+    return createElement(
+      hand.Hand as unknown as React.FC<unknown>,
+      {
+        mobileInteraction: "drag-to-target",
+        dropTargets: [
+          {
+            target: { kind: "space", target: "hex-a" },
+            label: "Place at hex A",
+            render: () => createElement("div", { "data-marker": "drop-a" }),
+          },
+        ],
+      } as unknown,
+      createElement(
+        hand.Cards as unknown as React.FC<unknown>,
+        {
+          children: (card: ZoneCard, state: { eligible?: boolean }) =>
+            createElement("span", {
+              "data-card": card.id,
+              "data-card-eligible": state.eligible ? "true" : "false",
+            }),
+        } as unknown,
+      ),
+    );
+  }
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(HandHarness),
+      ),
+    ),
+  );
+
+  // The generated facade composes CardDragSurface + CardDropTargetView when
+  // dropTargets are present, and the runtime adapter encodes the typed kind
+  // into the opaque target id. Both signals must appear in the SSR output.
+  expect(html).toContain("data-dreamboard-card-drag-surface");
+  expect(html).toContain('data-target-id="dreamboard:drop:kind:space:hex-a"');
+  expect(html).toContain("Place at hex A");
+  // The generated children renderer must receive the projected visual
+  // state. card-1 is eligible for the placeCard descriptor's cardId
+  // input, so the SSR markup must reflect that through the children
+  // callback rather than dropping the state argument silently.
+  expect(html).toContain('data-card-eligible="true"');
+});
+
+test("defineGameUI composes root, routes, active phase, and interaction UI", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    defineSurfaces: (spec: unknown) => () => { readonly marker: "surface" };
+    defineGameUI: (config: {
+      useSurfaces: () => { readonly marker: "surface" };
+      interactionRoutes: (context: {
+        game: { phase: string | null };
+        surfaces: { readonly marker: "surface" };
+      }) => Record<string, { collect: Record<string, unknown> }>;
+      phases: Record<
+        string,
+        (context: {
+          game: { phase: string | null };
+          surfaces: { readonly marker: "surface" };
+        }) => unknown
+      >;
+      renderInteractions: (context: {
+        game: { phase: string | null };
+        surfaces: { readonly marker: "surface" };
+      }) => unknown;
+    }) => React.FC<{ theme?: "tabletop" }>;
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  const useSurfaces = () => ({ marker: "surface" as const });
+  const Defined = UI.defineGameUI({
+    useSurfaces,
+    interactionRoutes: ({ surfaces }) => ({
+      "play.placeCard": {
+        collect: {
+          cardId: surfaces.marker,
+          spaceId: "space",
+        },
+      },
+    }),
+    phases: {
+      play: ({ game, surfaces }) =>
+        createElement("section", {
+          "data-marker": "phase",
+          "data-phase": game.phase,
+          "data-surface": surfaces.marker,
+        }),
+    },
+    renderInteractions: ({ surfaces }) =>
+      createElement("aside", {
+        "data-marker": "interactions",
+        "data-surface": surfaces.marker,
+      }),
+  });
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(Defined, { theme: "tabletop" }),
+    ),
+  );
+
+  expect(html).toContain("--db-color-");
+  expect(html).toContain('data-marker="phase"');
+  expect(html).toContain('data-phase="play"');
+  expect(html).toContain('data-marker="interactions"');
+  expect(html).toContain('data-surface="surface"');
+});
+
+test("generated interaction arms render semantic browser replay digests", () => {
+  const snapshot = makeSnapshot();
+  const submit = async () => undefined;
+  const runtime = makeRuntime(snapshot, submit);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+  }>({
+    uiContract,
+    formInputKeysForInteraction: (interaction) =>
+      interaction === "play.placeCard"
+        ? new Set(["cardId", "spaceId"])
+        : new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const placeCardForm = UI.Interaction.useForm("play.placeCard");
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(placeCardForm.Arm, null, "Place card"),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-dreamboard-browser-role="interaction"');
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:');
+  expect(html).toContain("data-dreamboard-preparation-patterns=");
+});
+
+test("generated square grid board resolves topology from square static boards", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const squareStaticBoards = {
+    scorecard: {
+      id: "scorecard",
+      layout: "square" as const,
+      spaces: {
+        a1: { id: "a1", row: 0, col: 0, typeId: null, fields: {} },
+        a2: { id: "a2", row: 0, col: 1, typeId: null, fields: {} },
+      },
+      edges: [] as const,
+      vertices: [] as const,
+      pieces: [] as const,
+    },
+  } as const;
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Board: {
+      useSurface(name: string): {
+        Root(props: { children?: unknown }): ReactElement | null;
+      };
+      SquareGrid(props: {
+        board: "scorecard";
+        interactions?: false;
+        cellSize?: number;
+        renderCell(row: number, col: number): ReactElement;
+        renderPiece(): null;
+      }): ReactElement;
+    };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    squareStaticBoards,
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  function ScorecardHarness() {
+    const scorecard = UI.Board.useSurface("scorecard");
+    return createElement(
+      scorecard.Root,
+      null,
+      createElement(UI.Board.SquareGrid, {
+        board: "scorecard",
+        interactions: false,
+        cellSize: 24,
+        renderCell: (row, col) =>
+          createElement("rect", {
+            "data-cell": `${row},${col}`,
+            width: 24,
+            height: 24,
+          }),
+        renderPiece: () => null,
+      }),
+    );
+  }
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(ScorecardHarness),
+      ),
+    ),
+  );
+
+  expect(html).toContain('class="square-grid"');
+  expect(html).toContain('aria-label="1x2 game grid"');
+  expect(html).toContain('data-cell="0,0"');
+  expect(html).toContain('data-cell="0,1"');
+});
+
+test("UI root emits the semantic projection digest marker", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const digest = digestPluginGameplayFrame(snapshot);
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(UI.Root as unknown as React.FC<{ children?: unknown }>),
+    ),
+  );
+
+  expect(digest).toMatch(/^sha256:[a-f0-9]{64}$/);
+  expect(html).toContain('data-dreamboard-browser-role="projection"');
+  expect(html).toContain('data-dreamboard-browser-surface="gameplay"');
+  expect(html).toContain('data-dreamboard-browser-scope="runtime"');
+  expect(html).toContain(`data-dreamboard-projection-digest="${digest}"`);
+});
+
+test("semantic projection digest normalizes order-insensitive target domains", () => {
+  const digestFor = (targets: string[], dependentCases: unknown[]) => {
+    const snapshot = makeSnapshot();
+    const input = snapshot.availableInteractions[0]?.inputs.find(
+      (candidate) => candidate.key === "spaceId",
+    );
+    if (!input) {
+      throw new Error("Missing spaceId input.");
+    }
+    const domain = input.domain as {
+      eligibleTargets: string[];
+      dependencies?: { mode: string; dependentCases: unknown[] };
+    };
+    domain.eligibleTargets = targets;
+    domain.dependencies = {
+      mode: "eager",
+      dependentCases,
+    };
+    return semanticProjectionDigestForFrame(snapshot, TEST_SESSION);
+  };
+
+  const first = digestFor(
+    ["h-2-10", "h-2-2", "h-2-11"],
+    [
+      {
+        when: { stormSpaceId: "h-2-10" },
+        domain: {
+          type: "choice",
+          choices: [{ value: "none", label: "No eligible captain" }],
+        },
+      },
+      {
+        when: { stormSpaceId: "h-2-2" },
+        domain: {
+          type: "choice",
+          choices: [{ value: "player-2", label: "Player 2" }],
+        },
+      },
+    ],
+  );
+
+  expect(
+    digestFor(
+      ["h-2-2", "h-2-11", "h-2-10"],
+      [
+        {
+          when: { stormSpaceId: "h-2-2" },
+          domain: {
+            type: "choice",
+            choices: [{ value: "player-2", label: "Player 2" }],
+          },
+        },
+        {
+          when: { stormSpaceId: "h-2-10" },
+          domain: {
+            type: "choice",
+            choices: [{ value: "none", label: "No eligible captain" }],
+          },
+        },
+      ],
+    ),
+  ).toBe(first);
+});
+
+test("board targets render semantic browser replay select actuators", () => {
+  const snapshot = {
+    ...makeSnapshot(),
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["hex-a"],
+            },
+          },
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+  } satisfies PluginGameplayFrame;
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        Board.Root,
+        null,
+        createElement(Board.SpaceTarget, { value: "hex-a" }, "Hex A"),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain('data-dreamboard-browser-intent="select"');
+  expect(html).toContain('data-dreamboard-actuator-kind="click"');
+  expect(html).toContain('role="button"');
+  expect(html).toContain('tabindex="0"');
+  expect(html).toContain('data-dreamboard-interaction-key="play.placeCard"');
+  expect(html).toContain('data-dreamboard-interaction-id="placeCard"');
+  expect(html).toContain('data-dreamboard-input-key="spaceId"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
+  expect(html).toContain('data-dreamboard-draft-digest="sha256:');
+  expect(html).toContain('data-dreamboard-candidate-state="unselected"');
+  expect(html).toContain("data-dreamboard-candidate-value=");
+  expect(html).toContain("data-dreamboard-semantic-effects=");
+  expect(html).toContain("setCandidate");
+});
+
+test("generated square grids bind static boards and semantic replay actuators", () => {
+  const snapshot = {
+    ...makeSnapshot(),
+    availableInteractions: [
+      {
+        phaseName: "play",
+        interactionKey: "play.placeCard",
+        interactionId: "placeCard",
+        kind: "action",
+        descriptorDigest: "sha256:descriptor",
+        actorSeat: 0,
+        draftDigest: "sha256:draft",
+        inputs: [
+          {
+            key: "spaceId",
+            kind: "board-space",
+            domain: {
+              type: "boardTarget",
+              projection: "resolved",
+              targetKind: "space",
+              eligibleTargets: ["cell-a1"],
+            },
+          },
+        ],
+        commit: { mode: "autoWhenReady" },
+        availability: { status: "available" },
+      },
+    ],
+  } satisfies PluginGameplayFrame;
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const squareStaticBoards = {
+    "survey-grid": {
+      id: "survey-grid",
+      layout: "square" as const,
+      spaces: {
+        "cell-a1": {
+          id: "cell-a1",
+          row: 0,
+          col: 0,
+          typeId: null,
+          fields: {},
+        },
+        "cell-a2": {
+          id: "cell-a2",
+          row: 0,
+          col: 1,
+          typeId: null,
+          fields: {},
+        },
+      },
+      edges: [],
+      vertices: [],
+      pieces: [],
+    },
+  };
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Board: {
+      useSurface: () => {
+        Root: React.FC<{ children?: unknown }>;
+      };
+      SquareGrid: React.FC<{
+        board: "survey-grid";
+        renderCell: (row: number, col: number) => unknown;
+        renderPiece: (piece: unknown) => unknown;
+        cellSize?: number;
+        width?: number;
+        height?: number;
+      }>;
+    };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    squareStaticBoards,
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+  const board = UI.Board.useSurface();
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(
+          board.Root,
+          null,
+          createElement(UI.Board.SquareGrid, {
+            board: "survey-grid",
+            cellSize: 20,
+            width: 60,
+            height: 40,
+            renderCell: (row, col) =>
+              createElement("rect", {
+                "data-cell": `${row}:${col}`,
+                width: 20,
+                height: 20,
+              }),
+            renderPiece: () => null,
+          }),
+        ),
+      ),
+    ),
+  );
+
+  expect(html).toContain('data-cell="0:0"');
+  expect(html).toContain('aria-label="Select space cell-a1"');
+  expect(html).toContain('data-dreamboard-browser-role="actuator"');
+  expect(html).toContain('data-dreamboard-browser-intent="select"');
+  expect(html).toContain('data-dreamboard-actuator-kind="click"');
+  expect(html).toContain('data-dreamboard-interaction-key="play.placeCard"');
+  expect(html).toContain('data-dreamboard-input-key="spaceId"');
+  expect(html).toContain(
+    'data-dreamboard-descriptor-digest="sha256:descriptor"',
+  );
+});
+
+test("default interaction form controls emit exact semantic effects and bounded fill patterns", () => {
+  const descriptor = {
+    phaseName: "play",
+    interactionKey: "play.configure",
+    interactionId: "configure",
+    kind: "action",
+    descriptorDigest: "sha256:descriptor",
+    actorSeat: 0,
+    draftDigest: "sha256:draft",
+    inputs: [
+      {
+        key: "mode",
+        kind: "choice",
+        domain: {
+          type: "choice",
+          choices: [
+            { value: "fast", label: "Fast" },
+            { value: "slow", label: "Slow" },
+          ],
+        },
+      },
+      {
+        key: "bid",
+        kind: "number",
+        domain: {
+          type: "boundedNumber",
+          min: 1,
+          max: 5,
+          step: 1,
+        },
+      },
+    ],
+    commit: { mode: "manual" },
+    availability: { status: "available" },
+  } as const;
+  const handle = {
+    descriptor,
+    commit: descriptor.commit,
+    submit: async () => undefined,
+    validate: async () => undefined,
+    validateDraft: () => ({
+      ok: true,
+      params: { mode: "fast", bid: 2 },
+      fieldErrors: {},
+      formErrors: [],
+      missing: [],
+    }),
+    validateDraftServer: async () => undefined,
+    submitDraft: async () => undefined,
+    available: true,
+    status: "open",
+    draft: { mode: "fast", bid: 2 },
+    values: { mode: "fast", bid: 2 },
+    setInput: () => undefined,
+    clearInput: () => undefined,
+    isReady: true,
+    isArmed: false,
+    arm: () => undefined,
+    disarm: () => undefined,
+  } satisfies InteractionHandle<Record<string, unknown>>;
+
+  const html = renderToString(
+    createElement(InteractionForm, { descriptor, handle, accordion: false }),
+  );
+
+  expect(html).toContain("data-dreamboard-semantic-effects=");
+  expect(html).toContain("setCandidate");
+  expect(html).toContain("setScalar");
+  expect(html).toContain("commit");
+  expect(html).toContain("data-dreamboard-accepted-effect-patterns=");
+  expect(html).not.toContain('data-dreamboard-candidate-value="2"');
+});
+
+test("board target draft digests reflect live draft values", () => {
+  const descriptor = {
+    phaseName: "playerTurn",
+    interactionKey: "playerTurn.moveStorm",
+    interactionId: "moveStorm",
+    kind: "action",
+    descriptorDigest:
+      "sha256:842f2aedb8cb3e72e2239e9db8bcd26396a604c1c7293b4567819db201bea794",
+    actorSeat: 0,
+    draftDigest:
+      "sha256:40f0e338c62be1c29b502dcd949cff1297e61d9b3e13feaff5f3bd82a144b0f8",
+    inputs: [
+      {
+        key: "spaceId",
+        kind: "board-space",
+        domain: {
+          type: "boardTarget",
+          projection: "resolved",
+          targetKind: "space",
+          eligibleTargets: ["h-0-0"],
+        },
+      },
+      {
+        key: "stealFromPlayerId",
+        kind: "choice",
+        defaultValue: "none",
+        domain: {
+          type: "choice",
+          choices: [{ value: "none", label: "No eligible player" }],
+        },
+      },
+    ],
+    commit: { mode: "manual" },
+    availability: { status: "available" },
+  } as const;
+
+  expect(
+    interactionDraftDigestForValues(descriptor, {
+      stealFromPlayerId: "none",
+    }),
+  ).toBe(descriptor.draftDigest);
+  expect(
+    interactionDraftDigestForValues(descriptor, {
+      spaceId: "h-0-0",
+    }),
+  ).toBe(
+    "sha256:c50299355136b07c6dfaf14cf8f42b178e95f2addc9948ebd8ffe99dd45893de",
+  );
+});
+
+test("generated hand renders selection summary through the compound Summary slot", () => {
+  const snapshot = makeSnapshot();
+  const runtime = makeRuntime(snapshot, async () => undefined);
+
+  const uiContract = {
+    interactions: { "play.placeCard": {} },
+    zones: { hand: {} },
+    cards: { "card-1": {} },
+    phases: { play: {} },
+  } as const;
+  const UI = createWorkspaceUIContract<{
+    Root: ReturnType<typeof createDreamboardUI>["Root"];
+    Game: ReturnType<typeof createDreamboardUI>["Game"];
+    Zone: { useHand: typeof useHandFacade };
+  }>({
+    uiContract,
+    formInputKeysForInteraction: () => new Set(),
+    resourceIds: [],
+    hexStaticBoards: {},
+    cardIdFromZoneCard: (card: { id: string }) => card.id,
+    zoneIdFromZoneCard: () => "hand",
+  });
+
+  interface ZoneCard {
+    id: string;
+  }
+  interface SummaryShape {
+    selectedCount: number;
+    selectedIds: readonly string[];
+    hasInvalidSelection: boolean;
+  }
+  interface HandFacade {
+    Hand: (props: { children?: unknown }) => unknown;
+    Cards: (props: { children: (card: ZoneCard) => unknown }) => unknown;
+    Summary: (props: {
+      children: (summary: SummaryShape) => unknown;
+    }) => unknown;
+  }
+  const useHandFacade = (
+    UI as unknown as {
+      Zone: {
+        useHand: (
+          name: string,
+          options: { zone: string; role: string; label: string },
+        ) => HandFacade;
+      };
+    }
+  ).Zone.useHand;
+
+  function HandHarness() {
+    const hand = useHandFacade("playerHand", {
+      zone: "hand",
+      role: "primary",
+      label: "Hand",
+    });
+    return createElement(
+      hand.Hand as unknown as React.FC<unknown>,
+      null,
+      createElement(
+        hand.Cards as unknown as React.FC<unknown>,
+        {
+          children: (card: ZoneCard) =>
+            createElement("span", { "data-card": card.id }),
+        } as unknown,
+      ),
+      createElement(
+        hand.Summary as unknown as React.FC<unknown>,
+        {
+          children: (summary: SummaryShape) =>
+            createElement(
+              "span",
+              {
+                "data-marker": "summary",
+                "data-count": String(summary.selectedCount),
+              },
+              `${summary.selectedCount} selected`,
+            ),
+        } as unknown,
+      ),
+    );
+  }
+
+  const html = renderToString(
+    createElement(
+      PluginRuntimeBoundary,
+      { runtime },
+      createElement(
+        UI.Root as unknown as React.FC<{ children?: unknown }>,
+        null,
+        createElement(HandHarness),
+      ),
+    ),
+  );
+
+  // The generated facade composes the runtime hand-summary chrome and the
+  // author's compound Summary slot. With no draft mutations the count is 0
+  // and `hasInvalidSelection` is false; both are exposed via stable
+  // data attributes so authors can style around them.
+  expect(html).toContain("data-dreamboard-runtime-hand-summary");
+  expect(html).toContain('data-selection-count="0"');
+  expect(html).toContain('data-has-invalid-selection="false"');
+  expect(html).toContain('data-marker="summary"');
+  expect(html).toContain("0 selected");
+});

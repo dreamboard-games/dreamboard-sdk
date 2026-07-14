@@ -52,6 +52,15 @@ test("CardFace omits data attributes for false/undefined flags", () => {
   expect(html).not.toContain("data-selected=");
 });
 
+test("CardFace preserves text contrast for disabled and submitted states", () => {
+  const html = renderToString(
+    <ThemeProvider>
+      <CardFace card={card} disabled submitted />
+    </ThemeProvider>,
+  );
+  expect(html).not.toContain("opacity:");
+});
+
 test("CardFace renders submitted state with success accent", () => {
   const html = renderToString(
     <ThemeProvider>

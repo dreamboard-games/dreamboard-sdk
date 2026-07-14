@@ -5,7 +5,7 @@
 import { useMemo, type ReactNode } from "react";
 import { clsx } from "clsx";
 import { Users, Lock, Gift, Coins } from "lucide-react";
-import type { ViewSlotOccupant } from "../../../types/index.js";
+import type { ViewSlotOccupant } from "@dreamboard-games/sdk-types";
 import { useTheme } from "../../theme/ThemeProvider.js";
 import { handleKeyboardActivation } from "./interaction-accessibility.js";
 

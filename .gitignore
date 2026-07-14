@@ -1,4 +1,5 @@
 node_modules
+.idea/
 dist
 build
 .turbo
@@ -6,3 +7,21 @@ build
 storybook-static
 tsconfig.tsbuildinfo
 *.tgz
+packages/sdk/test-results/
+packages/ui-workbench/test-results/
+artifacts/ui-stories/
+artifacts/ui-visual/
+artifacts/ui-release-proof/
+artifacts/
+/docs/exec-plans/
+# BEGIN reference-game workspace-codegen outputs
+/examples/reference-games/*/app/index.ts
+/examples/reference-games/*/app/tsconfig.framework.json
+/examples/reference-games/*/shared/generated/ui-contract.ts
+/examples/reference-games/*/shared/manifest-contract.ts
+/examples/reference-games/*/shared/manifest-literals.ts
+/examples/reference-games/*/shared/manifest-runtime.ts
+/examples/reference-games/*/shared/manifest-static.json
+/examples/reference-games/*/shared/manifest-types.ts
+/examples/reference-games/*/ui/tsconfig.framework.json
+# END reference-game workspace-codegen outputs

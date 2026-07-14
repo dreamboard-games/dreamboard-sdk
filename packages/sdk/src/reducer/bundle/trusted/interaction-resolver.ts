@@ -5,13 +5,13 @@ import type {
   ReducerValidationResult,
   ViewMapOf,
 } from "../../model";
+import { collectEligibleTargets } from "./collector-eligibility";
 import {
-  collectEligibleTargets,
   collectFirstCardZoneId,
   findCardInputKey,
   findCardInputKeyForZone,
-  parseInteractionParams,
-} from "./interaction-collectors";
+} from "./collector-introspection";
+import { parseInteractionParams } from "./collector-params";
 import { createInteractionAuthorization } from "./interaction-authorization";
 import { createInteractionDecisionResolver } from "./interaction-decision";
 import { createStageResolver } from "./stage-resolver";
@@ -22,6 +22,7 @@ import {
   type TrustedRuntimeScope,
   type TrustedState,
 } from "./runtime-scope";
+import type { InteractionDiagnosticsMode } from "./interaction-types";
 
 export type { InteractionDescriptorShape } from "./interaction-types";
 
@@ -29,7 +30,10 @@ export function createInteractionResolver<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
->(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
+>(
+  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
+  options: { diagnostics?: InteractionDiagnosticsMode } = {},
+) {
   type State = TrustedState<Contract>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
@@ -40,6 +44,7 @@ export function createInteractionResolver<
     scope,
     stages,
     authorization,
+    options,
   );
 
   function validateClientInput(
@@ -77,7 +82,9 @@ export function createInteractionResolver<
   return {
     collectEligibleTargets,
     collectFirstCardZoneId,
+    enumerateInteractionParams: decisions.enumerateInteractionParams,
     evaluateInteractionCost: decisions.evaluateInteractionCost,
+    explainInteraction: decisions.explainInteraction,
     findCardInputKey,
     findCardInputKeyForZone,
     isActorAuthorized: authorization.isActorAuthorized,
@@ -86,6 +93,7 @@ export function createInteractionResolver<
     resolveActiveStage: stages.resolveActiveStage,
     resolveActiveStageAllowlist: stages.resolveActiveStageAllowlist,
     resolveAvailableInteractionsFor: decisions.resolveAvailableInteractionsFor,
+    resolveInteractionActionability: decisions.resolveInteractionActionability,
     resolveInteractionActorAuthorization:
       authorization.resolveInteractionActorAuthorization,
     resolveInteractionDecision: decisions.resolveInteractionDecision,

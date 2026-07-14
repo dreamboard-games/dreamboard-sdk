@@ -10,15 +10,6 @@
     "strict": true,
     "noEmit": true
   },
-  "include": [
-    "src/**/*",
-    "generated/**/*",
-    "fixtures/**/*",
-    "scripts/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "build",
-    "dist"
-  ]
+  "include": ["src/**/*", "generated/**/*", "fixtures/**/*", "scripts/**/*"],
+  "exclude": ["node_modules", "build", "dist"]
 }

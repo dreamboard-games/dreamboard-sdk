@@ -1,18 +1,72 @@
-import { isDeepStrictEqual } from "node:util";
 import type {
   ExpectFn,
   ExpectMatchers,
   InteractionDescriptorLike,
   RejectionExpectation,
+  InteractionExplanationLike,
   SnapshotMatcherHandler,
 } from "./definitions.js";
+import type { ReducerDiagnosticEvent } from "../reducer/diagnostics.js";
+import { scenarioAssertionFailure } from "./scenario-assertion-error.js";
 
 type CreateExpectApiOptions = {
   matchSnapshot?: SnapshotMatcherHandler;
+  lastDiagnosticRejection?: () =>
+    | Extract<ReducerDiagnosticEvent, { type: "submitRejected" }>
+    | null
+    | undefined;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isDeepStrictEqual(actual: unknown, expected: unknown): boolean {
+  if (Object.is(actual, expected)) return true;
+  if (typeof actual !== typeof expected) return false;
+  if (actual === null || expected === null) return false;
+  if (typeof actual !== "object" || typeof expected !== "object") return false;
+
+  if (actual instanceof Date || expected instanceof Date) {
+    return (
+      actual instanceof Date &&
+      expected instanceof Date &&
+      Object.is(actual.getTime(), expected.getTime())
+    );
+  }
+  if (actual instanceof RegExp || expected instanceof RegExp) {
+    return (
+      actual instanceof RegExp &&
+      expected instanceof RegExp &&
+      actual.source === expected.source &&
+      actual.flags === expected.flags
+    );
+  }
+  if (Array.isArray(actual) || Array.isArray(expected)) {
+    return (
+      Array.isArray(actual) &&
+      Array.isArray(expected) &&
+      actual.length === expected.length &&
+      actual.every((value, index) => isDeepStrictEqual(value, expected[index]))
+    );
+  }
+
+  const actualPrototype = Object.getPrototypeOf(actual);
+  const expectedPrototype = Object.getPrototypeOf(expected);
+  if (actualPrototype !== expectedPrototype) return false;
+
+  const actualRecord = actual as Record<string, unknown>;
+  const expectedRecord = expected as Record<string, unknown>;
+  const actualKeys = Object.keys(actualRecord);
+  const expectedKeys = Object.keys(expectedRecord);
+  return (
+    actualKeys.length === expectedKeys.length &&
+    actualKeys.every(
+      (key) =>
+        Object.prototype.hasOwnProperty.call(expectedRecord, key) &&
+        isDeepStrictEqual(actualRecord[key], expectedRecord[key]),
+    )
+  );
 }
 
 function matchPartial(
@@ -43,7 +97,7 @@ function matchPartial(
 
 function asDescriptorList(actual: unknown): InteractionDescriptorLike[] {
   if (!Array.isArray(actual)) {
-    throw new Error("Expected interaction descriptor array.");
+    scenarioAssertionFailure("Expected interaction descriptor array.");
   }
   return actual as InteractionDescriptorLike[];
 }
@@ -68,14 +122,45 @@ function assertDescriptorMatches(
   }
   const mismatch = matchPartial(descriptor, opts, "interaction");
   if (mismatch) {
-    throw new Error(mismatch);
+    scenarioAssertionFailure(mismatch);
   }
 }
 
 function createSubmissionErrorMatcher(
   actual: unknown,
   expected: RejectionExpectation,
+  options: CreateExpectApiOptions,
 ): Promise<void> {
+  if (
+    isRecord(actual) &&
+    (actual.kind === "accepted" || actual.kind === "rejected")
+  ) {
+    if (actual.kind === "accepted") {
+      scenarioAssertionFailure(
+        "Expected probe command to reject, but it was accepted.",
+      );
+    }
+    const errorCode =
+      typeof actual.errorCode === "string" ? actual.errorCode : undefined;
+    const message = typeof actual.message === "string" ? actual.message : "";
+    if (expected.errorCode !== undefined && errorCode !== expected.errorCode) {
+      scenarioAssertionFailure(
+        `Expected rejection errorCode '${expected.errorCode}', received '${errorCode ?? "undefined"}'.`,
+      );
+    }
+    if (typeof expected.message === "string" && message !== expected.message) {
+      scenarioAssertionFailure(
+        `Expected rejection message '${expected.message}', received '${message}'.`,
+      );
+    }
+    if (expected.message instanceof RegExp && !expected.message.test(message)) {
+      scenarioAssertionFailure(
+        `Expected rejection message '${message}' to match ${String(expected.message)}.`,
+      );
+    }
+    return Promise.resolve();
+  }
+
   const resolvePromise = (): Promise<unknown> => {
     if (typeof actual === "function") {
       return Promise.resolve().then(() => (actual as () => unknown)());
@@ -83,42 +168,55 @@ function createSubmissionErrorMatcher(
     return Promise.resolve(actual);
   };
 
-  return resolvePromise()
-    .then(() => {
-      throw new Error("Expected promise to reject.");
-    })
-    .catch((error: unknown) => {
+  return resolvePromise().then(
+    () => scenarioAssertionFailure("Expected promise to reject."),
+    (error: unknown) => {
       if (!(error instanceof Error)) {
-        throw new Error("Expected rejection to be an Error.");
+        scenarioAssertionFailure("Expected rejection to be an Error.");
       }
       if (
         expected.errorCode !== undefined &&
         (error as Error & { errorCode?: string }).errorCode !==
           expected.errorCode
       ) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected rejection errorCode '${expected.errorCode}', received '${
             (error as Error & { errorCode?: string }).errorCode ?? "undefined"
-          }'.`,
+          }'.${formatLastDiagnosticRejection(options)}`,
         );
       }
       if (
         typeof expected.message === "string" &&
         error.message !== expected.message
       ) {
-        throw new Error(
-          `Expected rejection message '${expected.message}', received '${error.message}'.`,
+        scenarioAssertionFailure(
+          `Expected rejection message '${expected.message}', received '${error.message}'.${formatLastDiagnosticRejection(
+            options,
+          )}`,
         );
       }
       if (
         expected.message instanceof RegExp &&
         !expected.message.test(error.message)
       ) {
-        throw new Error(
-          `Expected rejection message '${error.message}' to match ${String(expected.message)}.`,
+        scenarioAssertionFailure(
+          `Expected rejection message '${error.message}' to match ${String(
+            expected.message,
+          )}.${formatLastDiagnosticRejection(options)}`,
         );
       }
-    });
+    },
+  );
+}
+
+function formatLastDiagnosticRejection(
+  options: CreateExpectApiOptions,
+): string {
+  const rejection = options.lastDiagnosticRejection?.();
+  if (!rejection) return "";
+  const rule = rejection.ruleId ? ` ruleId=${rejection.ruleId}` : "";
+  const message = rejection.message ? ` message=${rejection.message}` : "";
+  return `\nlast rejection: errorCode=${rejection.errorCode}${rule}${message}`;
 }
 
 function assertLength(actual: unknown, expected: number): void {
@@ -127,12 +225,36 @@ function assertLength(actual: unknown, expected: number): void {
     actual === undefined ||
     typeof (actual as { length?: unknown }).length !== "number"
   ) {
-    throw new Error("toHaveLength expects a value with a numeric length.");
+    scenarioAssertionFailure(
+      "toHaveLength expects a value with a numeric length.",
+    );
   }
   const length = (actual as { length: number }).length;
   if (length !== expected) {
-    throw new Error(`Expected length ${expected}, received ${length}.`);
+    scenarioAssertionFailure(
+      `Expected length ${expected}, received ${length}.`,
+    );
   }
+}
+
+function formatInteractionExplanation(
+  explanation: InteractionExplanationLike | undefined,
+): string {
+  if (!explanation) {
+    return "";
+  }
+  const lines = [
+    `availability: ${explanation.availability}`,
+    ...explanation.rules.map((rule) => {
+      const code = rule.errorCode ? ` (${rule.errorCode})` : "";
+      const message = rule.message ? `: ${rule.message}` : "";
+      return `rule ${rule.ruleId} ${rule.outcome}${code}${message}`;
+    }),
+    ...explanation.inputs.map(
+      (input) => `input ${input.key} eligibleCount=${input.eligibleCount}`,
+    ),
+  ];
+  return `\n${lines.join("\n")}`;
 }
 
 function assertThrown(
@@ -140,33 +262,33 @@ function assertThrown(
   predicate?: string | RegExp | ((error: Error) => boolean),
 ): void {
   if (typeof actual !== "function") {
-    throw new Error("toThrow expects a function.");
+    scenarioAssertionFailure("toThrow expects a function.");
   }
   try {
     (actual as () => unknown)();
   } catch (error) {
     if (!(error instanceof Error)) {
-      throw new Error("Thrown value is not an Error.");
+      scenarioAssertionFailure("Thrown value is not an Error.");
     }
     if (predicate === undefined) {
       return;
     }
     if (typeof predicate === "string" && error.message !== predicate) {
-      throw new Error(
+      scenarioAssertionFailure(
         `Expected thrown message '${predicate}', received '${error.message}'.`,
       );
     }
     if (predicate instanceof RegExp && !predicate.test(error.message)) {
-      throw new Error(
+      scenarioAssertionFailure(
         `Expected thrown message '${error.message}' to match ${String(predicate)}.`,
       );
     }
     if (typeof predicate === "function" && !predicate(error)) {
-      throw new Error("Thrown error did not satisfy predicate.");
+      scenarioAssertionFailure("Thrown error did not satisfy predicate.");
     }
     return;
   }
-  throw new Error("Expected function to throw.");
+  scenarioAssertionFailure("Expected function to throw.");
 }
 
 export function createExpectApi(
@@ -175,37 +297,37 @@ export function createExpectApi(
   const buildMatchers = (actual: unknown): ExpectMatchers => ({
     toBe: (expected: unknown) => {
       if (actual !== expected) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected '${String(actual)}' to be '${String(expected)}'.`,
         );
       }
     },
     toEqual: (expected: unknown) => {
       if (!isDeepStrictEqual(actual, expected)) {
-        throw new Error("Expected values to be deeply equal.");
+        scenarioAssertionFailure("Expected values to be deeply equal.");
       }
     },
     toMatchObject: (expected: Record<string, unknown>) => {
       const mismatch = matchPartial(actual, expected);
       if (mismatch) {
-        throw new Error(mismatch);
+        scenarioAssertionFailure(mismatch);
       }
     },
     toBeDefined: () => {
       if (actual === undefined) {
-        throw new Error("Expected value to be defined.");
+        scenarioAssertionFailure("Expected value to be defined.");
       }
     },
     toBeUndefined: () => {
       if (actual !== undefined) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected value to be undefined, but received '${String(actual)}'.`,
         );
       }
     },
     toBeNull: () => {
       if (actual !== null) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected value to be null, but received '${String(actual)}'.`,
         );
       }
@@ -213,24 +335,28 @@ export function createExpectApi(
     toContain: (expected: unknown) => {
       if (Array.isArray(actual)) {
         if (!actual.includes(expected)) {
-          throw new Error("Expected array to contain value.");
+          scenarioAssertionFailure("Expected array to contain value.");
         }
         return;
       }
       if (typeof actual === "string") {
         if (!actual.includes(String(expected))) {
-          throw new Error("Expected string to contain value.");
+          scenarioAssertionFailure("Expected string to contain value.");
         }
         return;
       }
-      throw new Error("toContain expects an array or string actual value.");
+      scenarioAssertionFailure(
+        "toContain expects an array or string actual value.",
+      );
     },
     toContainEqual: (expected: unknown) => {
       if (!Array.isArray(actual)) {
-        throw new Error("toContainEqual expects an array actual value.");
+        scenarioAssertionFailure(
+          "toContainEqual expects an array actual value.",
+        );
       }
       if (!actual.some((value) => isDeepStrictEqual(value, expected))) {
-        throw new Error("Expected array to contain an equal value.");
+        scenarioAssertionFailure("Expected array to contain an equal value.");
       }
     },
     toHaveLength: (expected: number) => {
@@ -238,20 +364,22 @@ export function createExpectApi(
     },
     toBeGreaterThan: (expected: number) => {
       if (typeof actual !== "number") {
-        throw new Error("toBeGreaterThan expects a number actual value.");
+        scenarioAssertionFailure(
+          "toBeGreaterThan expects a number actual value.",
+        );
       }
       if (actual <= expected) {
-        throw new Error(`Expected ${actual} to be > ${expected}.`);
+        scenarioAssertionFailure(`Expected ${actual} to be > ${expected}.`);
       }
     },
     toBeGreaterThanOrEqual: (expected: number) => {
       if (typeof actual !== "number") {
-        throw new Error(
+        scenarioAssertionFailure(
           "toBeGreaterThanOrEqual expects a number actual value.",
         );
       }
       if (actual < expected) {
-        throw new Error(`Expected ${actual} to be >= ${expected}.`);
+        scenarioAssertionFailure(`Expected ${actual} to be >= ${expected}.`);
       }
     },
     toThrow: (predicate) => {
@@ -259,18 +387,21 @@ export function createExpectApi(
     },
     toMatchSnapshot: (filename) => {
       if (!options.matchSnapshot) {
-        throw new Error(
+        scenarioAssertionFailure(
           "Snapshot matching is not configured for this expect API.",
         );
       }
       options.matchSnapshot(filename, actual);
     },
-    toRejectWith: (expected) => createSubmissionErrorMatcher(actual, expected),
+    toRejectWith: (expected) =>
+      createSubmissionErrorMatcher(actual, expected, options),
     toHaveInteraction: (interactionId, opts) => {
       const descriptors = asDescriptorList(actual);
       const descriptor = findInteraction(descriptors, interactionId);
       if (!descriptor) {
-        throw new Error(`Expected interaction '${interactionId}' to exist.`);
+        scenarioAssertionFailure(
+          `Expected interaction '${interactionId}' to exist.`,
+        );
       }
       assertDescriptorMatches(descriptor, opts);
     },
@@ -278,7 +409,7 @@ export function createExpectApi(
       const descriptor = Array.isArray(actual)
         ? (() => {
             if (!opts?.interactionId) {
-              throw new Error(
+              scenarioAssertionFailure(
                 "toBeGatedBy on a descriptor array requires opts.interactionId.",
               );
             }
@@ -289,10 +420,10 @@ export function createExpectApi(
           })()
         : (actual as InteractionDescriptorLike | null);
       if (!descriptor) {
-        throw new Error("Expected interaction descriptor to exist.");
+        scenarioAssertionFailure("Expected interaction descriptor to exist.");
       }
       if (descriptor.availability?.status === "available") {
-        throw new Error("Expected interaction to be unavailable.");
+        scenarioAssertionFailure("Expected interaction to be unavailable.");
       }
       const actualReason =
         descriptor.availability?.status === "notYourTurn" ||
@@ -301,10 +432,39 @@ export function createExpectApi(
           ? descriptor.availability.reason
           : undefined;
       if (actualReason !== reason) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected unavailable reason '${reason}', received '${
             actualReason ?? "undefined"
           }'.`,
+        );
+      }
+    },
+    toBeAvailable: (explanation) => {
+      const descriptor = Array.isArray(actual)
+        ? (() => {
+            if (!explanation?.interactionId) {
+              scenarioAssertionFailure(
+                "toBeAvailable on a descriptor array requires an explanation.",
+              );
+            }
+            return findInteraction(
+              asDescriptorList(actual),
+              explanation.interactionId,
+            );
+          })()
+        : (actual as InteractionDescriptorLike | null);
+      if (!descriptor) {
+        scenarioAssertionFailure(
+          `Expected interaction descriptor to exist.${formatInteractionExplanation(
+            explanation,
+          )}`,
+        );
+      }
+      if (descriptor.availability?.status !== "available") {
+        scenarioAssertionFailure(
+          `Expected interaction '${descriptor.interactionId ?? "unknown"}' to be available.${formatInteractionExplanation(
+            explanation,
+          )}`,
         );
       }
     },
@@ -312,7 +472,7 @@ export function createExpectApi(
       const descriptor = Array.isArray(actual)
         ? (() => {
             if (!opts?.interactionId) {
-              throw new Error(
+              scenarioAssertionFailure(
                 "toBeActiveFor on a descriptor array requires opts.interactionId.",
               );
             }
@@ -323,24 +483,24 @@ export function createExpectApi(
           })()
         : (actual as InteractionDescriptorLike | null);
       if (!descriptor) {
-        throw new Error("Expected interaction descriptor to exist.");
+        scenarioAssertionFailure("Expected interaction descriptor to exist.");
       }
       if (descriptor.context?.to !== playerId) {
-        throw new Error(
+        scenarioAssertionFailure(
           `Expected interaction to target '${playerId}', received '${
             descriptor.context?.to ?? "undefined"
           }'.`,
         );
       }
       if (descriptor.availability?.status !== "available") {
-        throw new Error("Expected interaction to be available.");
+        scenarioAssertionFailure("Expected interaction to be available.");
       }
     },
     not: {
       toHaveInteraction: (interactionId) => {
         const descriptors = asDescriptorList(actual);
         if (findInteraction(descriptors, interactionId)) {
-          throw new Error(
+          scenarioAssertionFailure(
             `Expected interaction '${interactionId}' to be absent.`,
           );
         }

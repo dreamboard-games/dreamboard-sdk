@@ -8,7 +8,7 @@ import {
   defineInputs,
   formInput,
 } from "../reducer";
-import { collectInteractionInputs } from "./bundle/trusted/interaction-collectors";
+import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
 
 describe("interaction input projection", () => {
   test("rejects domainless form collectors instead of emitting opaque inputs", () => {
@@ -194,58 +194,57 @@ describe("interaction input projection", () => {
   });
 
   test("warns when a dependent choice selector has a concrete default", () => {
-    const originalWarn = console.warn;
-    const warn = mock(() => {});
-    console.warn = warn;
-    try {
-      const inputs = defineInputs((input) => {
-        const workerId = input.add(
-          "workerId",
-          formInput.choice({
-            choices: [
-              { value: "apprentice", label: "Apprentice" },
-              { value: "master", label: "Master" },
-            ],
-            defaultValue: "apprentice",
-          }),
-        );
-        const target = boardTarget
-          .space<
-            {
-              table: { playerOrder: string[] };
-              flow: { currentPhase: string };
-            },
-            "space-a" | "space-b"
-          >("action-board")
-          .build();
-        return {
-          workerId,
-          spaceId: input.add(
-            "spaceId",
-            boardInput.space({ target, dependsOn: [workerId] }),
-          ),
-        };
-      });
-
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: { playerOrder: ["player-1"] },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
-          } as never,
-        },
+    const warning = mock(() => {});
+    const inputs = defineInputs((input) => {
+      const workerId = input.add(
+        "workerId",
+        formInput.choice({
+          choices: [
+            { value: "apprentice", label: "Apprentice" },
+            { value: "master", label: "Master" },
+          ],
+          defaultValue: "apprentice",
+        }),
       );
-    } finally {
-      console.warn = originalWarn;
-    }
+      const target = boardTarget
+        .space<
+          {
+            table: { playerOrder: string[] };
+            flow: { currentPhase: string };
+          },
+          "space-a" | "space-b"
+        >("action-board")
+        .build();
+      return {
+        workerId,
+        spaceId: input.add(
+          "spaceId",
+          boardInput.space({ target, dependsOn: [workerId] }),
+        ),
+      };
+    });
 
-    expect(warn).toHaveBeenCalledTimes(1);
-    expect(warn.mock.calls[0]?.[0]).toContain(
+    collectInteractionInputs(
+      { inputs } as never,
+      {
+        table: { playerOrder: ["player-1"] },
+        flow: { currentPhase: "play" },
+      } as never,
+      "player-1" as never,
+      {
+        diagnostics: { event: warning },
+        queries: {
+          board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+        } as never,
+      },
+    );
+
+    expect(warning).toHaveBeenCalledTimes(1);
+    expect(warning.mock.calls[0]?.[0]).toMatchObject({
+      type: "authoringWarning",
+      code: "dependent-choice-concrete-default",
+    });
+    expect(warning.mock.calls[0]?.[0]?.message).toContain(
       'Form choice input "workerId" feeds another collector',
     );
   });

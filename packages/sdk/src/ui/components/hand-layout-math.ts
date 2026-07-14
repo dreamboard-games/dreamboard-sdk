@@ -3,7 +3,7 @@
  *
  * The functions here are independent of React and DOM measurement so they can
  * be unit-tested directly. {@link computeFanLayout} matches the algorithm
- * documented in `docs/references/ui-sdk-mobile-hand-and-card-interactions.md`,
+ * documented in `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md`,
  * and {@link chooseHandLayoutMode} translates a measured container width and a
  * caller policy into the actual presentation mode the hand should render.
  */

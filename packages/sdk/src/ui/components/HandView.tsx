@@ -22,7 +22,7 @@
  *   that does not commit. Drop emits an opaque `drop` intent.
  *
  * Layout, gesture, scroll arbitration and tray presentation are documented in
- * `docs/references/ui-sdk-mobile-hand-and-card-interactions.md`.
+ * `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md`.
  */
 
 import {
@@ -33,7 +33,7 @@ import {
   type ReactNode,
 } from "react";
 import { clsx } from "clsx";
-import type { ViewCard } from "../../types/index.js";
+import type { ViewCard } from "@dreamboard-games/sdk-types";
 import type {
   CardIntent,
   InteractionVisualState,
@@ -45,7 +45,7 @@ import type {
 import { useHandPresentation } from "../hooks/useHandPresentation.js";
 import { useHandCardPointer } from "../hooks/useHandCardPointer.js";
 import { useTheme } from "../theme/ThemeProvider.js";
-import { useCardDragSurface } from "./CardDragSurface.js";
+import { useCardDragSurface } from "./card-drag/index.js";
 import type { HandInteractionPolicy } from "./hand-pointer-engine.js";
 
 export type HandLayoutKind = HandPresentationMode | "stack";
@@ -388,9 +388,11 @@ export function HandView<CardData extends ViewCard = ViewCard>({
       >
         <div
           role="row"
+          tabIndex={0}
           className={clsx(
             "flex items-end gap-3 overflow-x-auto px-4",
             "snap-x scroll-px-4",
+            "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current",
           )}
           style={{
             touchAction: pointer.scrollLocked ? "none" : "pan-x",

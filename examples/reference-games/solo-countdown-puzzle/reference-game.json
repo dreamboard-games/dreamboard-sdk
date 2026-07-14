@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 4,
+  "id": "solo-countdown-puzzle",
+  "displayName": "Last Light",
+  "workspace": {
+    "manifest": "manifest.ts",
+    "reducer": "app/game.ts",
+    "ui": "ui/index.tsx"
+  },
+  "teaching": {
+    "whatThisTeaches": [
+      "one human action followed by actorless automatic procedures",
+      "seeded hidden-deck randomness and countdown pressure",
+      "state-derived action availability and ordered public events"
+    ],
+    "whenToCopyThisPattern": [
+      "Use this pattern for a solo puzzle where one human decision triggers deterministic automatic consequences.",
+      "Keep hidden deck order private while exposing enough public event history to explain each consequence.",
+      "Model distinct countdown and damage loss reasons explicitly so complete scenarios can prove every terminal branch."
+    ],
+    "readFirst": [
+      "rule.md",
+      "manifest.ts",
+      "app/game.ts",
+      "app/phases/setup.ts",
+      "app/phases/player-turn.ts",
+      "app/phases/resolve-weather.ts",
+      "app/phases/advance-countdown.ts",
+      "ui/App.tsx",
+      "test/scenarios/complete-game.scenario.ts",
+      "test/scenarios.test.ts"
+    ]
+  },
+  "demoRelease": {
+    "slug": "solo-countdown-puzzle",
+    "name": "Last Light",
+    "description": "Relight three coastal beacons while seeded weather, a rising storm, and the approach of dawn test every decision.",
+    "overview": "Charge the lighthouse, repair six beacon stages, and time one stored sea-wall reinforcement across a complete eight-turn solo puzzle.",
+    "creator": "Dreamboard",
+    "minPlayers": 1,
+    "maxPlayers": 1,
+    "playTimeMinMinutes": 10,
+    "playTimeMaxMinutes": 20,
+    "difficulty": 2,
+    "mechanics": ["resource-management", "repeated-turn-state", "square-grid"],
+    "categories": ["solo", "puzzle"],
+    "thumbnailPath": "assets/thumbnail.svg",
+    "estimatedMinutes": 8,
+    "demoPlayerCount": 1
+  },
+  "mechanics": ["resource-management", "repeated-turn-state", "square-grid"],
+  "uiPatterns": ["square-board-targets", "turn-summary", "event-log"],
+  "rights": {
+    "mechanicsProvenance": "original-public-safe-pattern",
+    "sourceCode": "original-for-this-repository",
+    "codeLicense": "PolyForm-Shield-1.0.0",
+    "ruleText": "original-summary",
+    "artwork": "repository-owned-or-licensed",
+    "assetLicenseManifest": "assets/LICENSES.json",
+    "thirdPartyMarks": [],
+    "reviewStatus": "approved",
+    "reviewedBy": "rights-owner-or-counsel",
+    "reviewedAt": "2026-06-18"
+  },
+  "sdk": {
+    "dependency": "@dreamboard-games/sdk",
+    "versionPolicy": "exact"
+  }
+}

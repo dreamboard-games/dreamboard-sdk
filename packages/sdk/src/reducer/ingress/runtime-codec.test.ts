@@ -11,6 +11,7 @@ import {
   runtimePayloadSchema,
   safeParseOrThrow,
 } from "./runtime-codec";
+import { StaleContractArtifactError } from "../stale-contract-artifact-error";
 import type { TrustedRuntimeInput } from "../core/types";
 import {
   createIngressRuntimeCodec as createInputCodec,
@@ -162,7 +163,11 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
   } as const;
 }
 
-function buildDefinition() {
+function buildDefinition(
+  options: {
+    playState?: z.ZodTypeAny;
+  } = {},
+) {
   const contract = defineGameContract({
     manifest: buildMinimalManifest(["setup", "play"] as const),
     phases: { setup: z.object({}), play: z.object({}) },
@@ -173,7 +178,8 @@ function buildDefinition() {
     },
   });
   const setupState = z.object({ selectedFirstPlayer: z.string().nullable() });
-  const playState = z.object({ actionCount: z.number().int() });
+  const playState =
+    options.playState ?? z.object({ actionCount: z.number().int() });
 
   return defineGame({
     contract,
@@ -315,17 +321,92 @@ describe("ingress runtime codec", () => {
         lastTransition: null,
       },
     });
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "takeAction",
+      } as never),
+    ).toThrow(/params/);
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "",
+        params: {},
+      }),
+    ).toThrow(/interactionId/);
+    expect(() =>
+      codec.parseInput({
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "takeAction",
+        params: {},
+        extra: true,
+      } as never),
+    ).toThrow(/Unrecognized key/);
     expect(
       codec.parseInput({
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
+        params: {},
       }),
     ).toEqual({
       kind: "interaction",
       playerId: "player-1",
       interactionId: "takeAction",
       params: {},
+    });
+  });
+
+  test("stamps session state fingerprints and rejects mismatched stamped sessions", () => {
+    const definition = buildDefinition();
+    const codec = createIngressRuntimeCodec(definition);
+    const parsed = codec.parseState({
+      domain: {
+        table: rawCanonicalTable(),
+        publicState: { score: 7 },
+        privateState: { "player-1": {}, "player-2": {} },
+        hiddenState: {},
+        flow: {
+          currentPhase: "play",
+          turn: 3,
+          round: 1,
+          activePlayers: ["player-1"],
+        },
+        phase: { actionCount: 2 },
+      },
+      runtime: {
+        rng: { seed: 42, cursor: 0, trace: [] },
+        setup: null,
+        simultaneous: { current: null },
+        lastTransition: null,
+      },
+    });
+    const encoded = codec.serializeState(parsed);
+
+    expect(encoded.meta?.contractFingerprint).toMatch(/^cfp1:[a-f0-9]{16}$/);
+    expect(codec.parseState(encoded).domain.phase).toEqual({ actionCount: 2 });
+
+    const changedCodec = createIngressRuntimeCodec(
+      buildDefinition({
+        playState: z.object({
+          actionCount: z.number().int(),
+          optionalNote: z.string().optional(),
+        }),
+      }),
+    );
+
+    expect(() => changedCodec.parseState(encoded)).toThrow(
+      StaleContractArtifactError,
+    );
+    const legacyEncoded = {
+      domain: encoded.domain,
+      runtime: encoded.runtime,
+    };
+    expect(changedCodec.parseState(legacyEncoded).domain.phase).toEqual({
+      actionCount: 2,
     });
   });
 

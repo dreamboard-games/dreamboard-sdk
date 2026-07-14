@@ -1,18 +1,18 @@
 // Private workspace entry point for @dreamboard-games/reducer-contract.
 //
-// SDK internals should import from the specific sub-entry that matches their need:
-//   - "@dreamboard-games/reducer-contract/wire"     — TS types only
-//   - "@dreamboard-games/reducer-contract/zod"      — runtime validators
-//   - "@dreamboard-games/reducer-contract/builders" — typed effect constructors
-//   - "@dreamboard-games/reducer-contract/bundle"   — erased callable bundle boundary
-//   - "@dreamboard-games/reducer-contract/version"  — protocol version constant
-//   - "@dreamboard-games/reducer-contract/fixtures" — canonical wire fixtures for tests
+// SDK internals must import from THIS root entry (not the sub-entries):
+// the SDK bundles this package's declarations into its published .d.ts, and
+// the declaration bundler can only resolve the package root (its `types`
+// field), not `exports`-map subpaths. Subpath imports would leak private
+// package specifiers into the published SDK tarball — caught by
+// scripts/assert-sdk-tarball-self-contained.mjs.
 //
-// Public consumers should use @dreamboard-games/sdk/infrastructure/reducer-bundle-abi.
+// The sub-entries ("./wire", "./zod", "./builders", "./bundle", "./version",
+// "./fixtures") remain for this package's own tests and tooling.
 //
-// Keep the callable reducer bundle boundary on the dedicated `./bundle`
-// sub-entry so SDK internals converge on one explicit import path.
+// Public consumers should use @dreamboard-games/sdk/reducer-contract.
 export * as Wire from "../generated/wire";
 export * as Zod from "../generated/zod";
 export * as Builders from "../generated/builders";
 export { REDUCER_CONTRACT_VERSION } from "../generated/version";
+export type { MaybePromise, ReducerBundleContract } from "./bundle";

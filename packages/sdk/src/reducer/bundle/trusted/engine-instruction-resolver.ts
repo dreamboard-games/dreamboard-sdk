@@ -1,15 +1,11 @@
 import type { DispatchTraceEntry, TrustedRuntimeInput } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
-import type {
-  PhaseMapOf,
-  ReducerGameContractLike,
-  ViewMapOf,
-} from "../../model";
+import type { ReducerGameContractLike } from "../../model";
 import {
   cloneRuntimeTable,
   ensureArray,
   shufflePlayerZoneCards,
-} from "../../table-ops";
+} from "../../table";
 import {
   sampleDieValue,
   shuffleWithRng,
@@ -21,6 +17,17 @@ import type {
   TrustedState,
 } from "./runtime-scope";
 
+type EngineInstructionResult<
+  State,
+  PlayerId extends string,
+  ReducerInput extends TrustedRuntimeInput<PlayerId>,
+> = {
+  state: State;
+  queuedInputs: ReducerInput[];
+  queuedInstructions: RuntimeInstructionForState<State>[];
+  trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+};
+
 function toRngTrace<
   State,
   PlayerId extends string,
@@ -30,32 +37,27 @@ function toRngTrace<
 ): DispatchTraceEntry<State, PlayerId, ReducerInput>[] {
   return consumptions.map((consumption) => ({
     type: "rngConsumption" as const,
+    version: 2 as const,
     operation: consumption.operation,
+    drawIndex: consumption.drawIndex,
     traceEntry: consumption.traceEntry,
   }));
 }
 
 export function createEngineInstructionResolver<
   Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
 >() {
   type State = TrustedState<Contract>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 
-  function resolveRollDie(
+  function resolveRollDieDraft(
     state: State,
     instruction: Extract<
       RuntimeInstructionForState<State>,
       { kind: "engine.rollDie" }
     >,
-  ): {
-    state: State;
-    queuedInputs: ReducerInput[];
-    queuedInstructions: RuntimeInstructionForState<State>[];
-    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
-  } {
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
     const die = state.table.dice[instruction.dieId];
     if (!die) {
       throw new Error(`Cannot roll unknown die '${instruction.dieId}'.`);
@@ -65,9 +67,8 @@ export function createEngineInstructionResolver<
         `Cannot roll die '${instruction.dieId}' with invalid sides '${die.sides}'.`,
       );
     }
-    const nextTable = cloneRuntimeTable(state.table);
     const sampled = sampleDieValue(die.sides, state.runtime.rng);
-    nextTable.dice[instruction.dieId] = {
+    state.table.dice[instruction.dieId] = {
       ...die,
       value: sampled.value,
     };
@@ -89,7 +90,6 @@ export function createEngineInstructionResolver<
     return {
       state: {
         ...state,
-        table: nextTable,
         runtime: {
           ...state.runtime,
           rng: sampled.nextRng,
@@ -101,27 +101,38 @@ export function createEngineInstructionResolver<
     };
   }
 
-  function resolveShuffleSharedZone(
+  function resolveRollDie(
+    state: State,
+    instruction: Extract<
+      RuntimeInstructionForState<State>,
+      { kind: "engine.rollDie" }
+    >,
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
+    const nextTable = cloneRuntimeTable(state.table);
+    return resolveRollDieDraft(
+      {
+        ...state,
+        table: nextTable,
+      },
+      instruction,
+    );
+  }
+
+  function resolveShuffleSharedZoneDraft(
     state: State,
     instruction: Extract<
       RuntimeInstructionForState<State>,
       { kind: "engine.shuffleSharedZone" }
     >,
-  ): {
-    state: State;
-    queuedInputs: ReducerInput[];
-    queuedInstructions: RuntimeInstructionForState<State>[];
-    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
-  } {
-    const nextTable = cloneRuntimeTable(state.table);
-    const deckCards = [...ensureArray(nextTable.decks[instruction.zoneId])];
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
+    const deckCards = [...ensureArray(state.table.decks[instruction.zoneId])];
     const shuffled = shuffleWithRng(deckCards, state.runtime.rng);
     const orderedCardIds = [...shuffled.orderedValues];
-    nextTable.decks[instruction.zoneId] = shuffled.orderedValues;
-    nextTable.zones.shared[instruction.zoneId] = [...shuffled.orderedValues];
+    state.table.decks[instruction.zoneId] = shuffled.orderedValues;
+    state.table.zones.shared[instruction.zoneId] = [...shuffled.orderedValues];
     for (const [index, cardId] of shuffled.orderedValues.entries()) {
-      const currentLocation = nextTable.componentLocations[cardId];
-      nextTable.componentLocations[cardId] =
+      const currentLocation = state.table.componentLocations[cardId];
+      state.table.componentLocations[cardId] =
         currentLocation?.type === "InDeck" || currentLocation?.type === "InZone"
           ? {
               ...currentLocation,
@@ -155,7 +166,6 @@ export function createEngineInstructionResolver<
     return {
       state: {
         ...state,
-        table: nextTable,
         runtime: {
           ...state.runtime,
           rng: shuffled.nextRng,
@@ -167,21 +177,32 @@ export function createEngineInstructionResolver<
     };
   }
 
-  function resolveShufflePlayerZone(
+  function resolveShuffleSharedZone(
+    state: State,
+    instruction: Extract<
+      RuntimeInstructionForState<State>,
+      { kind: "engine.shuffleSharedZone" }
+    >,
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
+    const nextTable = cloneRuntimeTable(state.table);
+    return resolveShuffleSharedZoneDraft(
+      {
+        ...state,
+        table: nextTable,
+      },
+      instruction,
+    );
+  }
+
+  function resolveShufflePlayerZoneDraft(
     state: State,
     instruction: Extract<
       RuntimeInstructionForState<State>,
       { kind: "engine.shufflePlayerZone" }
     >,
-  ): {
-    state: State;
-    queuedInputs: ReducerInput[];
-    queuedInstructions: RuntimeInstructionForState<State>[];
-    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
-  } {
-    const nextTable = cloneRuntimeTable(state.table);
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
     const zoneCards = shufflePlayerZoneCards(
-      nextTable,
+      state.table,
       instruction.zoneId,
       instruction.playerId,
     );
@@ -192,14 +213,14 @@ export function createEngineInstructionResolver<
     );
     const orderedCardIds = [...shuffled.orderedValues];
     shufflePlayerZoneCards(
-      nextTable,
+      state.table,
       instruction.zoneId,
       instruction.playerId,
       orderedCardIds,
     );
     for (const [index, cardId] of orderedCardIds.entries()) {
-      const currentLocation = nextTable.componentLocations[cardId];
-      nextTable.componentLocations[cardId] =
+      const currentLocation = state.table.componentLocations[cardId];
+      state.table.componentLocations[cardId] =
         currentLocation?.type === "InHand"
           ? {
               ...currentLocation,
@@ -234,7 +255,6 @@ export function createEngineInstructionResolver<
     return {
       state: {
         ...state,
-        table: nextTable,
         runtime: {
           ...state.runtime,
           rng: shuffled.nextRng,
@@ -246,9 +266,29 @@ export function createEngineInstructionResolver<
     };
   }
 
+  function resolveShufflePlayerZone(
+    state: State,
+    instruction: Extract<
+      RuntimeInstructionForState<State>,
+      { kind: "engine.shufflePlayerZone" }
+    >,
+  ): EngineInstructionResult<State, PlayerId, ReducerInput> {
+    const nextTable = cloneRuntimeTable(state.table);
+    return resolveShufflePlayerZoneDraft(
+      {
+        ...state,
+        table: nextTable,
+      },
+      instruction,
+    );
+  }
+
   return {
     resolveRollDie,
+    resolveRollDieDraft,
     resolveShuffleSharedZone,
+    resolveShuffleSharedZoneDraft,
     resolveShufflePlayerZone,
+    resolveShufflePlayerZoneDraft,
   };
 }

@@ -38,5 +38,36 @@
       "id": "afterShuffle",
       "data": {}
     }
+  },
+  "events": [],
+  "terminal": {
+    "reason": {
+      "code": "ROUND_LIMIT_REACHED",
+      "message": "The final round is complete."
+    },
+    "standings": [
+      {
+        "playerId": "player-1",
+        "rank": 1,
+        "result": "win",
+        "score": 18,
+        "scoreBreakdown": [
+          { "id": "routes", "label": "Routes", "value": 12 },
+          { "id": "bonuses", "label": "Bonuses", "value": 6 }
+        ],
+        "tieBreaks": [{ "id": "cards-left", "label": "Cards left", "value": 2 }]
+      },
+      {
+        "playerId": "player-2",
+        "rank": 2,
+        "result": "loss",
+        "score": 16,
+        "scoreBreakdown": [
+          { "id": "routes", "label": "Routes", "value": 10 },
+          { "id": "bonuses", "label": "Bonuses", "value": 6 }
+        ],
+        "tieBreaks": [{ "id": "cards-left", "label": "Cards left", "value": 1 }]
+      }
+    ]
   }
 }

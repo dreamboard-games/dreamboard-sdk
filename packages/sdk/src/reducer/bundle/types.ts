@@ -1,5 +1,7 @@
 import type { DispatchTraceEntry, TrustedRuntimeInput } from "../core/types";
 import type {
+  GameEvent,
+  GameOutcome,
   BaseGameStateOfContract,
   BaseGameSessionOfContract,
   ManifestContractOf,
@@ -14,22 +16,47 @@ import type {
   ViewMapOf,
 } from "../model";
 import type { RuntimeInstructionForState } from "../core/runtime-instruction";
-import type { ReducerBundleContract } from "../../infrastructure/reducer-contract/bundle.js";
+import type {
+  ReducerBundleContract,
+  Wire,
+} from "@dreamboard-games/reducer-contract";
+import type {
+  InteractionActionabilityResult,
+  InteractionExplanation,
+  InteractionInputEnumerationResult,
+} from "./trusted/interaction-types";
+import type { ReducerDiagnosticsSink } from "../diagnostics";
+import type { InteractionDiagnosticsMode } from "./trusted/interaction-types";
+
+export type ReducerBundleOptions = {
+  /**
+   * Host-owned reducer diagnostics sink. Events are summarized and must not
+   * contain reducer state.
+   *
+   * The legacy `"verbose"` value is retained as an additive alias for
+   * descriptorDiagnostics while existing callers migrate.
+   */
+  diagnostics?: ReducerDiagnosticsSink | InteractionDiagnosticsMode;
+  descriptorDiagnostics?: InteractionDiagnosticsMode;
+};
 
 type TrustedSessionState<Contract extends ReducerGameContractLike> =
   BaseGameSessionOfContract<Contract>;
 
-type TrustedCombinedState<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-> = BaseGameStateOfContract<Contract> & {
-  runtime: TrustedSessionState<Contract>["runtime"];
-};
+type TrustedCombinedState<Contract extends ReducerGameContractLike> =
+  BaseGameStateOfContract<Contract> & {
+    runtime: TrustedSessionState<Contract>["runtime"];
+  };
 
-type TrustedPlayerId<
-  Contract extends ReducerGameContractLike,
-  _Definitions extends PhaseMapOf<Contract>,
-> = PlayerIdOfState<BaseGameStateOfContract<Contract>>;
+type TrustedPlayerId<Contract extends ReducerGameContractLike> =
+  PlayerIdOfState<BaseGameStateOfContract<Contract>>;
+
+type ProjectionTimingMetadata = {
+  resolveAvailableInteractionsMs: number;
+  resolveViewMs: number;
+  resolveZoneHandlesMs: number;
+  descriptorHashMs: number;
+};
 
 export type TrustedReducerBundle<
   Contract extends ReducerGameContractLike,
@@ -38,7 +65,7 @@ export type TrustedReducerBundle<
 > = {
   initialize(input: {
     table: BaseGameStateOfContract<Contract>["table"];
-    playerIds: TrustedPlayerId<Contract, Definitions>[];
+    playerIds: TrustedPlayerId<Contract>[];
     rngSeed?: number | null;
     setup?: RuntimeSetupSelectionInput<ManifestContractOf<Contract>> | null;
   }): Promise<TrustedSessionState<Contract>>;
@@ -50,33 +77,53 @@ export type TrustedReducerBundle<
   }): Promise<TrustedSessionState<Contract>>;
   validateInput(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<ReducerValidationResult>;
+  explainInteraction(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+  }): InteractionExplanation;
+  resolveInteractionActionability(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+  }): InteractionActionabilityResult;
+  enumerateInteractionParams(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+    maxEvaluations: number;
+  }): InteractionInputEnumerationResult;
   reduce(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<
     | ReducerReject
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
-        instructions: RuntimeInstructionForState<
-          TrustedCombinedState<Contract, Definitions>
+        instructions: readonly RuntimeInstructionForState<
+          TrustedCombinedState<Contract>
         >[];
+        events: readonly GameEvent[];
+        terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }
   >;
   dispatch(input: {
     state: TrustedSessionState<Contract>;
-    input: TrustedRuntimeInput<TrustedPlayerId<Contract, Definitions>>;
+    input: TrustedRuntimeInput<TrustedPlayerId<Contract>>;
   }): Promise<
     | ReducerReject
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
-        trace: DispatchTraceEntry<
-          TrustedCombinedState<Contract, Definitions>,
-          TrustedPlayerId<Contract, Definitions>
+        trace: readonly DispatchTraceEntry<
+          TrustedCombinedState<Contract>,
+          TrustedPlayerId<Contract>
         >[];
+        events: readonly GameEvent[];
+        terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }
   >;
   projectStatic(): {
@@ -86,8 +133,7 @@ export type TrustedReducerBundle<
   } | null;
   projectSeatsDynamic(input: {
     state: TrustedSessionState<Contract>;
-    playerIds: TrustedPlayerId<Contract, Definitions>[];
-    viewId?: string;
+    playerIds: TrustedPlayerId<Contract>[];
     projectionMode?: "full" | "actionsOnly";
   }): {
     currentStage: string | null;
@@ -99,6 +145,8 @@ export type TrustedReducerBundle<
       sealedPlayerIds: string[];
       pendingPlayerIds: string[];
     } | null;
+    schedulerFlow: Wire.SchedulerFlowAuthorityProjection;
+    sharedView?: unknown;
     seats: Record<
       string,
       {
@@ -108,12 +156,8 @@ export type TrustedReducerBundle<
       }
     >;
     interactionsByRef: Record<string, unknown>;
+    timing: ProjectionTimingMetadata;
   };
-  projectSeatViewDynamic(input: {
-    state: TrustedSessionState<Contract>;
-    playerId: TrustedPlayerId<Contract, Definitions>;
-    viewId?: string;
-  }): unknown;
 };
 
 export type ReducerBundle = ReducerBundleContract & {
@@ -132,13 +176,8 @@ export type ReducerBundle = ReducerBundleContract & {
       | { kind: "accept"; state: unknown; trace: unknown[] }
       | { kind: "reject"; errorCode: string; message?: string }
     >;
-    projectSeatViewDynamic(input: {
-      playerId: unknown;
-      viewId?: string;
-    }): unknown;
     projectSeatsDynamic(input: {
       playerIds: unknown[];
-      viewId?: string;
       projectionMode?: "full" | "actionsOnly";
     }): {
       currentStage: string | null;
@@ -150,6 +189,8 @@ export type ReducerBundle = ReducerBundleContract & {
         sealedPlayerIds: string[];
         pendingPlayerIds: string[];
       } | null;
+      schedulerFlow: Wire.SchedulerFlowAuthorityProjection;
+      sharedView?: unknown;
       seats: Record<
         string,
         {
@@ -159,13 +200,52 @@ export type ReducerBundle = ReducerBundleContract & {
         }
       >;
       interactionsByRef: Record<string, unknown>;
+      timing: ProjectionTimingMetadata;
     };
+    explainInteraction(input: {
+      playerId: unknown;
+      interactionId: string;
+    }): InteractionExplanation;
     snapshot(): unknown;
     unsafeState(): unknown;
   };
-  projectSeatViewDynamic(input: {
+  explainInteraction(input: {
     state: unknown;
     playerId: unknown;
-    viewId?: string;
-  }): unknown;
+    interactionId: string;
+  }): InteractionExplanation;
+};
+
+/**
+ * SDK-internal extension used by scenario inspection and exploration.
+ * The runtime operations stay off the author-facing `ReducerBundle` type.
+ */
+export type ReducerBundleTestingRuntime = Omit<
+  ReducerBundle,
+  "createInProcessRuntime"
+> & {
+  createInProcessRuntime(): ReturnType<
+    ReducerBundle["createInProcessRuntime"]
+  > & {
+    resolveInteractionActionability(input: {
+      playerId: unknown;
+      interactionId: string;
+    }): InteractionActionabilityResult;
+    enumerateInteractionParams(input: {
+      playerId: unknown;
+      interactionId: string;
+      maxEvaluations: number;
+    }): InteractionInputEnumerationResult;
+  };
+  resolveInteractionActionability(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+  }): InteractionActionabilityResult;
+  enumerateInteractionParams(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+    maxEvaluations: number;
+  }): InteractionInputEnumerationResult;
 };

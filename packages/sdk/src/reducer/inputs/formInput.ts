@@ -35,6 +35,16 @@ type DomainNumber<State extends CollectorState> =
   | number
   | ((context: DomainContext<State>) => number);
 
+type ResourceMapInputOptions<State extends CollectorState> = {
+  resources: ReadonlyArray<{
+    resourceId: string;
+    label?: string;
+    icon?: string;
+    min?: DomainNumber<State>;
+    max: DomainNumber<State>;
+  }>;
+};
+
 type ChoiceValue = string | null;
 
 type FormInputDomainDescriptor =
@@ -43,7 +53,7 @@ type FormInputDomainDescriptor =
   | ChoiceDomainDescriptor
   | ChoiceListDomainDescriptor;
 
-type DomainChoice<Value extends ChoiceValue, State extends CollectorState> = {
+type DomainChoice<Value extends ChoiceValue> = {
   value: Value;
   label: string;
   icon?: string;
@@ -76,21 +86,19 @@ type ResourceMapChoiceSource<State extends CollectorState> =
     };
 
 type DomainChoices<Value extends ChoiceValue, State extends CollectorState> =
-  | ReadonlyArray<DomainChoice<Value, State>>
+  | ReadonlyArray<DomainChoice<Value>>
   | ResourceMapChoiceSource<State>
-  | ((
-      context: DomainContext<State>,
-    ) => ReadonlyArray<DomainChoice<Value, State>>);
+  | ((context: DomainContext<State>) => ReadonlyArray<DomainChoice<Value>>);
 
 type DependentDomainChoices<
   Value extends ChoiceValue,
   State extends CollectorState,
   Dependencies extends readonly InputFieldRef<string, unknown>[],
 > =
-  | ReadonlyArray<DomainChoice<Value, State>>
+  | ReadonlyArray<DomainChoice<Value>>
   | ((
       context: DomainContext<State, DependencyValues<Dependencies>>,
-    ) => ReadonlyArray<DomainChoice<Value, State>>);
+    ) => ReadonlyArray<DomainChoice<Value>>);
 
 type ChoiceListDefaultValue<
   Value extends string,
@@ -100,7 +108,7 @@ type ChoiceListDefaultValue<
   | "all"
   | ((
       context: DomainContext<State> & {
-        choices: ReadonlyArray<DomainChoice<Value, State>>;
+        choices: ReadonlyArray<DomainChoice<Value>>;
       },
     ) => Value[]);
 
@@ -112,7 +120,7 @@ type ChoiceDefaultValue<
   | Value
   | ((
       context: DomainContext<State, Values> & {
-        choices: ReadonlyArray<DomainChoice<Value, State>>;
+        choices: ReadonlyArray<DomainChoice<Value>>;
       },
     ) => Value);
 
@@ -122,7 +130,7 @@ type ChoiceDefaultResolver<
   Values extends Readonly<Record<string, unknown>> = Record<string, never>,
 > = (
   context: DomainContext<State, Values> & {
-    choices: ReadonlyArray<DomainChoice<Value, State>>;
+    choices: ReadonlyArray<DomainChoice<Value>>;
   },
 ) => Value | undefined;
 
@@ -226,8 +234,8 @@ function assertChoiceDefaultInChoices(
   );
 }
 
-function choiceSchema<Value extends ChoiceValue, State extends CollectorState>(
-  choices: ReadonlyArray<DomainChoice<Value, State>>,
+function choiceSchema<Value extends ChoiceValue>(
+  choices: ReadonlyArray<DomainChoice<Value>>,
 ): SchemaLike<Value> {
   const values = choices.map((choice) => choice.value);
   const stringValues = values.filter(
@@ -329,43 +337,21 @@ function baseFormInput<
   return createFormInput(schema, options);
 }
 
-function resourceMapInput<
-  State extends CollectorState = CollectorState,
->(options: {
-  resources: ReadonlyArray<{
-    resourceId: string;
-    label?: string;
-    icon?: string;
-    min?: DomainNumber<State>;
-    max: DomainNumber<State>;
-  }>;
-}): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form">;
-function resourceMapInput<
-  State extends CollectorState = CollectorState,
->(options: {
-  resources: ReadonlyArray<{
-    resourceId: string;
-    label?: string;
-    icon?: string;
-    min?: DomainNumber<State>;
-    max: DomainNumber<State>;
-  }>;
-  defaultValue: Record<string, number>;
-}): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> & {
+function resourceMapInput<State extends CollectorState = CollectorState>(
+  options: ResourceMapInputOptions<State>,
+): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form">;
+function resourceMapInput<State extends CollectorState = CollectorState>(
+  options: ResourceMapInputOptions<State> & {
+    defaultValue: Record<string, number>;
+  },
+): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> & {
   readonly defaultValue: Record<string, number>;
 };
-function resourceMapInput<
-  State extends CollectorState = CollectorState,
->(options: {
-  resources: ReadonlyArray<{
-    resourceId: string;
-    label?: string;
-    icon?: string;
-    min?: DomainNumber<State>;
-    max: DomainNumber<State>;
-  }>;
-  defaultValue?: Record<string, number>;
-}): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> {
+function resourceMapInput<State extends CollectorState = CollectorState>(
+  options: ResourceMapInputOptions<State> & {
+    defaultValue?: Record<string, number>;
+  },
+): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> {
   return {
     kind: "form",
     schema: z.record(z.string(), z.number().int().nonnegative()),
@@ -734,14 +720,43 @@ type FormInputForState<State extends CollectorState> = {
     readonly defaultValue: z.infer<Schema>;
   };
   resourceMap(
-    options: Parameters<typeof resourceMapInput<State>>[0],
-  ): ReturnType<typeof resourceMapInput<State>>;
+    options: ResourceMapInputOptions<State>,
+  ): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form">;
+  resourceMap(
+    options: ResourceMapInputOptions<State> & {
+      defaultValue: Record<string, number>;
+    },
+  ): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> & {
+    readonly defaultValue: Record<string, number>;
+  };
   resourceChoices(options?: {
     decorate?: ResourceMapChoiceDecorator<State>;
   }): ResourceMapChoiceSource<State>;
   number(
     options: Parameters<typeof numberInput<State>>[0],
   ): ReturnType<typeof numberInput<State>>;
+  choice<
+    Value extends ChoiceValue,
+    const Dependencies extends readonly InputFieldRef<string, unknown>[],
+  >(options: {
+    dependsOn: Dependencies;
+    choices: DependentDomainChoices<Value, State, Dependencies>;
+    defaultValue: Value;
+  }): InputCollector<SchemaLike<Value>, State, "form"> & {
+    readonly defaultValue: Value;
+  };
+  choice<
+    Value extends ChoiceValue,
+    const Dependencies extends readonly InputFieldRef<string, unknown>[],
+  >(options: {
+    dependsOn: Dependencies;
+    choices: DependentDomainChoices<Value, State, Dependencies>;
+    defaultValue: ChoiceDefaultResolver<
+      Value,
+      State,
+      DependencyValues<Dependencies>
+    >;
+  }): InputCollector<SchemaLike<Value>, State, "form">;
   choice<Value extends ChoiceValue>(options: {
     choices: DomainChoices<Value, State>;
     defaultValue: Value;
@@ -772,11 +787,16 @@ function formInputForState<
   State extends CollectorState,
 >(): FormInputForState<State> {
   return Object.assign(
-    ((schema: ManifestFormInputSchema & SchemaLike<unknown>, options?: {}) =>
-      baseFormInput(schema, options as never)) as FormInputForState<State>,
+    ((
+      schema: ManifestFormInputSchema & SchemaLike<unknown>,
+      options?: object,
+    ) => baseFormInput(schema, options as never)) as FormInputForState<State>,
     {
-      resourceMap: (options: Parameters<typeof resourceMapInput<State>>[0]) =>
-        resourceMapInput<State>(options),
+      resourceMap: (
+        options: ResourceMapInputOptions<State> & {
+          defaultValue?: Record<string, number>;
+        },
+      ) => resourceMapInput<State>(options),
       resourceChoices: (options?: {
         decorate?: ResourceMapChoiceDecorator<State>;
       }) => formInput.resourceChoices<State>(options),

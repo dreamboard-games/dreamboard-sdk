@@ -82,7 +82,7 @@ import {
   getTiledBoard,
   getVertex,
   getVerticesByTypeId,
-} from "./table-ops";
+} from "./table";
 
 export function createTableQueries<Table extends RuntimeTableRecord>(
   table: Table,

@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
-  createManifestStringLiteralSchema,
   createReducerBundle,
+  defineEmptyView,
   defineGame,
   defineGameContract,
   definePhase,
@@ -11,8 +11,11 @@ import {
   formInput,
   many,
   pipe,
-  type RuntimeTableRecord,
 } from "../reducer";
+import {
+  createManifestStringLiteralSchema,
+  type RuntimeTableRecord,
+} from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 
 function hydrateRefs<T>(
@@ -282,6 +285,10 @@ function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
         },
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
 }
 
@@ -344,6 +351,10 @@ function createCardPassGame(options?: {
         },
       }),
     },
+    views: {
+      shared: defineEmptyView<typeof contract>(),
+      player: defineEmptyView<typeof contract>(),
+    },
   });
 }
 
@@ -366,6 +377,56 @@ function submitCardsInput(playerId: string, cardIds: readonly string[]) {
 }
 
 describe("simultaneousPlayer phases", () => {
+  test("automatic phases expose no actor or causal scheduler metadata", async () => {
+    const manifest = createManifestContract();
+    const contract = defineGameContract({
+      manifest,
+      phases: { choose: z.object({}) },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({}),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "choose",
+      phases: {
+        choose: definePhase<typeof contract>()({
+          kind: "auto",
+          state: z.object({}),
+          initialState: () => ({}),
+        }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: defineEmptyView<typeof contract>(),
+      },
+    });
+    const bundle = createReducerBundle(game);
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2", "player-3"],
+    });
+
+    expect(
+      bundle.projectSeatsDynamic({
+        state,
+        playerIds: ["player-1"],
+      }).schedulerFlow,
+    ).toEqual({
+      version: 1,
+      activePlayerIds: [],
+      pendingPlayerIds: [],
+      continuationDependencies: [],
+    });
+  });
+
   test("collects sealed submissions and resolves once all actors are ready", async () => {
     const bundle = createReducerBundle(createGame());
     const initial = await bundle.initialize({
@@ -378,6 +439,12 @@ describe("simultaneousPlayer phases", () => {
       playerIds: ["player-1", "player-2", "player-3"],
     });
     expect(initialProjection.stageSeats).toEqual(["player-1", "player-2"]);
+    expect(initialProjection.schedulerFlow).toEqual({
+      version: 1,
+      activePlayerIds: ["player-1", "player-2"],
+      pendingPlayerIds: ["player-1", "player-2"],
+      continuationDependencies: [],
+    });
     expect(
       hydrateRefs(
         initialProjection.interactionsByRef,
@@ -406,6 +473,20 @@ describe("simultaneousPlayer phases", () => {
       state: first.state,
       playerIds: ["player-1", "player-2"],
     });
+    expect(afterFirstProjection.schedulerFlow).toEqual({
+      version: 1,
+      activePlayerIds: ["player-2"],
+      pendingPlayerIds: ["player-2"],
+      continuationDependencies: [
+        {
+          waiterPlayerId: "player-1",
+          blockerPlayerIds: ["player-2"],
+        },
+      ],
+    });
+    expect(JSON.stringify(afterFirstProjection.schedulerFlow)).not.toContain(
+      "params",
+    );
     expect(
       hydrateRefs(
         afterFirstProjection.interactionsByRef,

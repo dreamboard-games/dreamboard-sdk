@@ -1,24 +1,19 @@
 import type { z } from "zod";
 import type {
   BaseGameStateOfContract,
-  ManifestContract,
+  GeneratedManifestContractLike,
   ManifestContractOf,
+  ErrorCodeOfContract,
   PhaseDefinition,
+  PlayerViewDefinition,
   RuntimeTableRecord,
   SchemaLike,
+  SharedViewDefinition,
   StateDefinition,
-  ViewDefinition,
 } from "../model";
 
-/**
- * Structural upper bound for reducer game contracts accepted by the
- * authoring-level `define*` factories. The `manifest` slot admits any
- * contract-generated manifest shape (tables, players, decks, etc. vary per
- * contract); `state` is pinned to the base {@link StateDefinition} so the
- * authoring helpers can infer public/private/hidden schemas from it.
- */
 export type AnyReducerGameContract = {
-  manifest: ManifestContract<RuntimeTableRecord>;
+  manifest: GeneratedManifestContractLike<RuntimeTableRecord>;
   state: StateDefinition<
     SchemaLike<object>,
     SchemaLike<object>,
@@ -43,6 +38,9 @@ export type ContractState<Contract extends AnyReducerGameContract> =
 export type ContractManifest<Contract extends AnyReducerGameContract> =
   ManifestContractOf<Contract>;
 
+export type ContractErrorCode<Contract extends AnyReducerGameContract> =
+  ErrorCodeOfContract<Contract>;
+
 export type ScopedContractState<
   Contract extends AnyReducerGameContract,
   PhaseState extends object,
@@ -57,12 +55,23 @@ export type ReducerPhaseDefinition<
   ContractManifest<Contract>
 >;
 
-export type ReducerViewDefinition<
+export type ReducerSharedViewDefinition<
   Contract extends AnyReducerGameContract,
   Projection = unknown,
-> = ViewDefinition<
+> = SharedViewDefinition<
   ContractState<Contract>,
   ContractManifest<Contract>,
+  Projection
+>;
+
+export type ReducerPlayerViewDefinition<
+  Contract extends AnyReducerGameContract,
+  SharedProjection = unknown,
+  Projection = unknown,
+> = PlayerViewDefinition<
+  ContractState<Contract>,
+  ContractManifest<Contract>,
+  SharedProjection,
   Projection
 >;
 

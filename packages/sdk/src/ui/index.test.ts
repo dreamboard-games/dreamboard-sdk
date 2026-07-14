@@ -73,7 +73,6 @@ test("top-level ui-sdk exports the headless scaffold support surface", () => {
     "usePluginActions",
     "usePluginRuntime",
     "usePluginSession",
-    "usePluginState",
     "useRuntimeContext",
     "useSeatInbox",
     "useSquareBoard",
@@ -89,6 +88,8 @@ test("top-level ui-sdk is the canonical root for visual components", () => {
   expect("HexGrid" in sdk).toBe(true);
   expect("SquareGrid" in sdk).toBe(true);
   expect("ActionButton" in sdk).toBe(true);
+  expect("Panel" in sdk).toBe(true);
+  expect("Panel" in components).toBe(true);
   expect("Dialog" in sdk).toBe(true);
   expect("DialogContent" in sdk).toBe(true);
   expect("PromptDialogHost" in sdk).toBe(false);
@@ -183,7 +184,6 @@ test("top-level ui-sdk does not export internal coordination plumbing", () => {
     "shellSlotForSurface",
     "isGeneratedHexBoardInput",
     "isGeneratedSquareBoardInput",
-    "usePluginStateSnapshot",
     "useHexGrid",
     "useSquareGrid",
   ]) {

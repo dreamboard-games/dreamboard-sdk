@@ -1,0 +1,48 @@
+{
+  "name": "@dreamboard-games/workspace-codegen",
+  "version": "0.3.0-alpha.0",
+  "private": true,
+  "description": "Build-time codegen engine: generates manifest contracts, framework files, and seed scaffolds for Dreamboard game workspaces. Consumed by the public SDK's ./codegen subpath; never published on its own.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dreamboard-games/sdk-types": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^24.3.0",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "zod": "4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dreamboard-games/dreamboard-sdk.git",
+    "directory": "packages/workspace-codegen"
+  },
+  "bugs": {
+    "url": "https://github.com/dreamboard-games/dreamboard-sdk/issues"
+  },
+  "homepage": "https://github.com/dreamboard-games/dreamboard-sdk#readme",
+  "keywords": [
+    "dreamboard",
+    "sdk",
+    "codegen",
+    "workspace"
+  ],
+  "license": "SEE LICENSE IN LICENSE.md"
+}

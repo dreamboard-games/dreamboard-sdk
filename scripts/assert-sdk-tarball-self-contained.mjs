@@ -2,11 +2,13 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { assertPeerHygiene } from "./peer-hygiene-rules.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const sdkDir = path.join(root, "packages/sdk");
 const removedLeafSpecifiers = [
   "@dreamboard-games/app-sdk",
+  "@dreamboard-games/plugin-runtime-contract",
   "@dreamboard-games/reducer-contract",
   "@dreamboard-games/sdk-types",
   "@dreamboard-games/testing",
@@ -19,6 +21,10 @@ const specifierPattern = new RegExp(
     .map((specifier) => specifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|"),
 );
+const allowedMetadataReferencePatterns = [
+  /(\bgeneratedBy\s*:\s*)["@']@dreamboard-games\/workspace-codegen["@']/g,
+  /("generatedBy"\s*:\s*)"@dreamboard-games\/workspace-codegen"/g,
+];
 const scannedExtensions = new Set([
   ".css",
   ".cjs",
@@ -26,6 +32,8 @@ const scannedExtensions = new Set([
   ".js",
   ".json",
   ".mjs",
+  ".ts",
+  ".tsx",
 ]);
 
 function run(command, args, options = {}) {
@@ -49,6 +57,13 @@ function shouldScan(filePath) {
   return scannedExtensions.has(path.extname(filePath));
 }
 
+function stripAllowedMetadataReferences(content) {
+  return allowedMetadataReferencePatterns.reduce(
+    (current, pattern) => current.replace(pattern, '$1"workspace-codegen"'),
+    content,
+  );
+}
+
 async function collectFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
   const files = [];
@@ -64,32 +79,92 @@ async function collectFiles(dir) {
 }
 
 async function main() {
+  const suppliedTarball = process.argv[2]
+    ? path.resolve(root, process.argv[2])
+    : null;
   const tempRoot = await mkdtemp(path.join(tmpdir(), "dreamboard-sdk-pack-"));
   try {
-    const packResult = run(
-      "npm",
-      ["pack", "--json", "--pack-destination", tempRoot],
-      {
-        cwd: sdkDir,
-      },
-    );
-    const packOutput = JSON.parse(packResult.stdout);
-    const tarballName = packOutput[0]?.filename;
-    if (!tarballName) {
-      throw new Error(
-        `npm pack did not report a tarball\n${packResult.stdout}`,
+    let tarballPath = suppliedTarball;
+    if (!tarballPath) {
+      const packResult = run(
+        "npm",
+        ["pack", "--json", "--pack-destination", tempRoot],
+        {
+          cwd: sdkDir,
+        },
       );
+      const packOutput = JSON.parse(packResult.stdout);
+      const tarballName = packOutput[0]?.filename;
+      if (!tarballName) {
+        throw new Error(
+          `npm pack did not report a tarball\n${packResult.stdout}`,
+        );
+      }
+      tarballPath = path.join(tempRoot, tarballName);
     }
-    const tarballPath = path.join(tempRoot, tarballName);
     const extractDir = path.join(tempRoot, "extract");
     await readdir(tempRoot);
     run("mkdir", ["-p", extractDir]);
     run("tar", ["-xzf", tarballPath, "-C", extractDir]);
 
-    const files = await collectFiles(path.join(extractDir, "package"));
+    const packageDir = path.join(extractDir, "package");
+    const topLevelEntries = await readdir(packageDir);
+    if (topLevelEntries.includes("src")) {
+      throw new Error(
+        "SDK tarball must not ship src/; only dist/ is published. " +
+          'Remove "src" from packages/sdk/package.json "files".',
+      );
+    }
+    if (!topLevelEntries.includes("REFERENCE.md")) {
+      throw new Error(
+        "SDK tarball must ship REFERENCE.md so pinned workspaces have offline API docs.",
+      );
+    }
+
+    const packedReference = await readFile(
+      path.join(packageDir, "REFERENCE.md"),
+      "utf8",
+    );
+    if (!packedReference.includes("# Dreamboard SDK Agent Reference")) {
+      throw new Error(
+        "Packed REFERENCE.md does not look like the agent reference.",
+      );
+    }
+
+    const packedManifestPath = path.join(packageDir, "package.json");
+    const packedManifest = JSON.parse(
+      await readFile(packedManifestPath, "utf8"),
+    );
+    assertPeerHygiene(packedManifest, "packed SDK package.json");
+
+    const packedCssPath = path.join(packageDir, "dist/ui/plugin-styles.css");
+    const packedCss = await readFile(packedCssPath, "utf8");
+    const uncompiledTailwindDirectives = [
+      '@import "tailwindcss"',
+      "@import 'tailwindcss'",
+      "@source",
+      "@apply",
+    ].filter((directive) => packedCss.includes(directive));
+    if (uncompiledTailwindDirectives.length > 0) {
+      throw new Error(
+        `SDK tarball ships uncompiled Tailwind directives in dist/ui/plugin-styles.css: ${uncompiledTailwindDirectives.join(", ")}`,
+      );
+    }
+
+    const files = await collectFiles(packageDir);
     const violations = [];
     for (const filePath of files) {
-      const content = await readFile(filePath, "utf8");
+      let content = await readFile(filePath, "utf8");
+      if (path.relative(packageDir, filePath) === "package.json") {
+        // devDependencies are inert for consumers (never installed from a
+        // published tarball); private workspace devDeps are allowed there.
+        // npm also ignores package scripts for tarball dependency resolution.
+        const manifest = JSON.parse(content);
+        delete manifest.devDependencies;
+        delete manifest.scripts;
+        content = JSON.stringify(manifest);
+      }
+      content = stripAllowedMetadataReferences(content);
       if (specifierPattern.test(content)) {
         violations.push(
           path.relative(path.join(extractDir, "package"), filePath),
@@ -100,6 +175,47 @@ async function main() {
       throw new Error(
         `SDK tarball references removed leaf package specifiers:\n${violations
           .map((filePath) => `  ${filePath}`)
+          .join("\n")}`,
+      );
+    }
+
+    const danglingDeclarationImports = [];
+    for (const filePath of files) {
+      if (!filePath.endsWith(".d.ts")) {
+        continue;
+      }
+      const content = await readFile(filePath, "utf8");
+      // Skip comment lines so documentation snippets (e.g. `import App from
+      // './App';` in JSDoc examples) are not treated as module imports.
+      const codeLines = content
+        .split("\n")
+        .filter((line) => !/^\s*(\*|\/\/|\/\*)/.test(line))
+        .join("\n");
+      for (const match of codeLines.matchAll(
+        /(?:from|import\()\s*['"](\.\.?\/[^'"]+)['"]/g,
+      )) {
+        const specifier = match[1];
+        const resolvedBase = path.resolve(
+          path.dirname(filePath),
+          specifier.replace(/\.js$/, ""),
+        );
+        const candidates = [
+          `${resolvedBase}.d.ts`,
+          `${resolvedBase}.d.mts`,
+          path.join(resolvedBase, "index.d.ts"),
+        ];
+        const { existsSync } = await import("node:fs");
+        if (!candidates.some((candidate) => existsSync(candidate))) {
+          danglingDeclarationImports.push(
+            `${path.relative(packageDir, filePath)} -> ${specifier}`,
+          );
+        }
+      }
+    }
+    if (danglingDeclarationImports.length > 0) {
+      throw new Error(
+        `SDK tarball declarations import relative modules with no published .d.ts (type surface would degrade for consumers):\n${danglingDeclarationImports
+          .map((entry) => `  ${entry}`)
           .join("\n")}`,
       );
     }

@@ -1,12 +1,10 @@
 import { describe, expect, test } from "bun:test";
 import { z } from "zod";
+import { defineGame, defineGameContract, definePhase } from "../reducer";
 import {
   createManifestStringLiteralSchema,
-  defineGame,
-  defineGameContract,
-  definePhase,
   type RuntimeTableRecord,
-} from "../reducer";
+} from "../reducer/advanced";
 import { perPlayer } from "./per-player";
 
 function buildMinimalManifest() {
@@ -106,7 +104,7 @@ function buildContract<const PhaseNames extends readonly string[]>(
     },
     phases: Object.fromEntries(
       phaseNames.map((phaseName) => [phaseName, z.object({})]),
-    ) as { [Name in PhaseNames[number]]: z.ZodObject<{}> },
+    ) as { [Name in PhaseNames[number]]: z.ZodObject<Record<string, never>> },
   });
 }
 
