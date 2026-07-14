@@ -160,7 +160,6 @@ function buildSourcePlan(coverage, interactionId, protocolInteraction) {
           ...(replay.assertIntermediateSemantic === false
             ? { assertSemantic: false }
             : {}),
-          ...(autoSubmit ? { preValidate: true } : {}),
           request: {
             ...base,
             effect: {
@@ -206,7 +205,6 @@ function buildSourcePlan(coverage, interactionId, protocolInteraction) {
       sourceSteps: [
         {
           exercise: "activate",
-          ...(autoSubmit ? { preValidate: true } : {}),
           request: {
             ...base,
             effect: {

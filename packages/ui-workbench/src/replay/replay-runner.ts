@@ -14,7 +14,6 @@ import {
 
 export interface ReplayRunnerAdapter {
   readSnapshot(): Promise<BrowserInteractionSnapshot>;
-  validate?(instruction: ReplayExecutionInstruction): Promise<void>;
   execute(instruction: ReplayExecutionInstruction): Promise<void>;
   flush(): Promise<void>;
   waitForExpectedState?(step: WorkbenchScenarioReplayStep): Promise<void>;
@@ -96,9 +95,6 @@ export async function runReplayStep(
       );
     }
 
-    if (step.expect.submissionDigest) {
-      await adapter.validate?.(plan.instruction);
-    }
     await adapter.execute(plan.instruction);
     await adapter.flush();
     await adapter.waitForExpectedState?.(step);

@@ -131,6 +131,67 @@ async function main() {
     );
     run("node", [probePath], { cwd: consumerDir });
 
+    const contractProbePath = path.join(
+      consumerDir,
+      "check-plugin-runtime-contract.mjs",
+    );
+    await writeFile(
+      contractProbePath,
+      `
+        import {
+          DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+          HostToPluginEnvelopeSchema,
+          PluginGameplayFrameSchema,
+          SubmitInteractionCommandSchema,
+        } from "@dreamboard-games/sdk/plugin-runtime-contract";
+
+        const basis = {
+          generation: 1,
+          version: 7,
+          actionSetVersion: "sha256:actions",
+          perspectivePlayerId: "player-1",
+        };
+        const frame = PluginGameplayFrameSchema.parse({
+          basis,
+          view: { score: 3 },
+          flow: {
+            currentPhase: "play",
+            currentStage: "main",
+            activePlayers: ["player-1"],
+            simultaneousPhase: null,
+          },
+          availableInteractions: [],
+          recentEvents: [],
+          zones: {},
+        });
+        HostToPluginEnvelopeSchema.parse({
+          protocol: "dreamboard-plugin",
+          version: DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
+          channelId: "packed-consumer",
+          sequence: 1,
+          payload: { type: "gameplay.frame", frame },
+        });
+        SubmitInteractionCommandSchema.parse({
+          type: "interaction.submit",
+          clientActionId: "action-1",
+          basis,
+          interactionId: "claim",
+          params: "scalar",
+        });
+        if ("sharedView" in frame) {
+          throw new Error("Protocol v4 packed frame unexpectedly exposes sharedView");
+        }
+        const legacy = PluginGameplayFrameSchema.safeParse({
+          ...frame,
+          sharedView: { boardStatic: null, dynamicView: null },
+        });
+        if (legacy.success) {
+          throw new Error("Protocol v4 packed frame accepted legacy sharedView");
+        }
+      `,
+    );
+    run("node", [contractProbePath], { cwd: consumerDir });
+
     const authoringProbePath = path.join(
       consumerDir,
       "check-authoring-adapter.mjs",

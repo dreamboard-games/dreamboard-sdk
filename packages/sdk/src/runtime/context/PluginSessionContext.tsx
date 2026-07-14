@@ -43,7 +43,7 @@ function sessionStateFromClient(
   return {
     status: session ? "ready" : "loading",
     sessionId: session?.sessionId ?? null,
-    controllingPlayerId: frame?.perspectivePlayerId ?? null,
+    controllingPlayerId: frame?.basis.perspectivePlayerId ?? null,
   };
 }
 

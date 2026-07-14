@@ -216,9 +216,9 @@ export function createMeasuredObservation({
       actuatorId: identity?.actuatorId,
       descriptorDigest: identity?.descriptorDigest,
       draftDigest: measured.draftDigest,
-      gameVersion: frame.frame.gameVersion,
-      actionSetVersion: frame.frame.actionSetVersion,
-      perspectivePlayerId: frame.frame.perspectivePlayerId,
+      gameVersion: frame.frame.basis.version,
+      actionSetVersion: frame.frame.basis.actionSetVersion,
+      perspectivePlayerId: frame.frame.basis.perspectivePlayerId,
       projectionDigest: measured.projectionDigest,
       semanticDigest: measured.semanticDigest,
       submissionDigest:

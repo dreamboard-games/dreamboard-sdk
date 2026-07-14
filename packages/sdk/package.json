@@ -1,6 +1,6 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.4.0-alpha.10",
+  "version": "0.4.0-alpha.11",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,6 +19,11 @@
       "types": "./dist/package-set.d.ts",
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
+    },
+    "./plugin-runtime-contract": {
+      "types": "./dist/plugin-runtime-contract.d.ts",
+      "import": "./dist/plugin-runtime-contract.js",
+      "default": "./dist/plugin-runtime-contract.js"
     },
     "./reference-games": {
       "types": "./dist/reference-games/index.d.ts",

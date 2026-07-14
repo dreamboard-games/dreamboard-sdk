@@ -211,14 +211,17 @@ test("assert-only parity checkpoints omit runner sentinels", () => {
           {
             id: "frame-1",
             frame: {
-              gameVersion: 1,
-              actionSetVersion: digest,
-              perspectivePlayerId: "player-1",
+              basis: {
+                generation: 0,
+                version: 1,
+                actionSetVersion: digest,
+                perspectivePlayerId: "player-1",
+              },
             },
           },
         ],
       },
-      pluginRuntimeProtocol: "3.0.0",
+      pluginRuntimeProtocol: 4,
       browserInteractionProtocol: "3.0.0",
     },
     fixtureDigest: digest,

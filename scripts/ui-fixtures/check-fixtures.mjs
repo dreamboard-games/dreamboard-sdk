@@ -54,7 +54,9 @@ function assertRenderModuleExternalized(relativePath, source) {
       `${relativePath} must externalize the SDK runtime with an import.`,
     );
   }
-  if (!source.includes('from "@dreamboard-games/plugin-runtime-contract"')) {
+  if (
+    !source.includes('from "@dreamboard-games/sdk/plugin-runtime-contract"')
+  ) {
     throw new Error(
       `${relativePath} must externalize the plugin runtime contract with an import.`,
     );

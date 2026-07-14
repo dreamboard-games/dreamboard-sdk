@@ -49,7 +49,7 @@ export interface UIParityObservationV1 {
   readonly scenarioId: string;
   readonly fixtureDigest: string;
   readonly sdkCandidateDigest: string;
-  readonly pluginRuntimeProtocol: 3;
+  readonly pluginRuntimeProtocol: 4;
   readonly browserInteractionProtocol: string;
   readonly environment: UIParityObservationEnvironmentV1;
   readonly provenance: UIParityObservationProvenanceV1;
@@ -184,9 +184,9 @@ export function createUIParityObservationFromFixture({
       actuatorId: identity?.actuatorId,
       descriptorDigest: identity?.descriptorDigest,
       draftDigest: step.expect.draftDigest ?? identity?.draftDigest,
-      gameVersion: frame.frame.gameVersion,
-      actionSetVersion: frame.frame.actionSetVersion,
-      perspectivePlayerId: frame.frame.perspectivePlayerId,
+      gameVersion: frame.frame.basis.version,
+      actionSetVersion: frame.frame.basis.actionSetVersion,
+      perspectivePlayerId: frame.frame.basis.perspectivePlayerId,
       projectionDigest,
       semanticDigest,
       submissionDigest,
@@ -220,8 +220,8 @@ export function parseUIParityObservationV1(
   assertString(observation.scenarioId, "scenarioId");
   assertString(observation.fixtureDigest, "fixtureDigest");
   assertString(observation.sdkCandidateDigest, "sdkCandidateDigest");
-  if (observation.pluginRuntimeProtocol !== 3) {
-    throw new Error("UI parity observation pluginRuntimeProtocol must be 3.");
+  if (observation.pluginRuntimeProtocol !== 4) {
+    throw new Error("UI parity observation pluginRuntimeProtocol must be 4.");
   }
   assertString(
     observation.browserInteractionProtocol,

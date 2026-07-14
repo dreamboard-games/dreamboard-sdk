@@ -233,9 +233,6 @@ importers:
 
   packages/ui-workbench:
     dependencies:
-      '@dreamboard-games/plugin-runtime-contract':
-        specifier: workspace:*
-        version: link:../plugin-runtime-contract
       '@dreamboard-games/sdk':
         specifier: workspace:*
         version: link:../sdk

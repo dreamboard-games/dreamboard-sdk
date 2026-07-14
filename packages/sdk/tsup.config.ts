@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     "src/index.ts",
     "src/package-set.ts",
+    "src/plugin-runtime-contract.ts",
     "src/reference-games/index.ts",
     "src/types.ts",
     "src/reducer.ts",

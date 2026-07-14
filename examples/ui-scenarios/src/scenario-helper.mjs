@@ -39,14 +39,16 @@ function frame({ id, scenarioId, version, view }) {
       view,
     }),
     frame: {
-      gameVersion: version,
-      actionSetVersion: digest({
-        digestVersion: "primitive-protocol-action-set@1",
-        scenarioId,
+      basis: {
+        generation: 0,
         version,
-      }),
-      perspectivePlayerId: playerId,
-      sharedView: { boardStatic: null, dynamicView: {} },
+        actionSetVersion: digest({
+          digestVersion: "primitive-protocol-action-set@1",
+          scenarioId,
+          version,
+        }),
+        perspectivePlayerId: playerId,
+      },
       view,
       flow: {
         currentPhase: view.phase ?? "inspect",
@@ -85,11 +87,7 @@ function interactionDescriptor(scenarioId) {
 function transportDigest(operation, sourceFrame) {
   return digestUIFixtureTransportRequest({
     operation,
-    basis: {
-      gameVersion: sourceFrame.frame.gameVersion,
-      actionSetVersion: sourceFrame.frame.actionSetVersion,
-      perspectivePlayerId: sourceFrame.frame.perspectivePlayerId,
-    },
+    basis: sourceFrame.frame.basis,
     interactionId,
     payload: {},
   });
@@ -168,18 +166,15 @@ export function createPrimitiveScenario({
             frameId: initialFrame.id,
           },
           {
-            id: `${id}.validate`,
-            kind: "client.validate",
-            fromFrameId: initialFrame.id,
-            requestDigest: transportDigest("validate", initialFrame),
-            response: { valid: true },
-          },
-          {
             id: `${id}.submit`,
             kind: "client.submit",
             fromFrameId: initialFrame.id,
             requestDigest: transportDigest("submit", initialFrame),
-            response: { accepted: true },
+            response: {
+              type: "interaction.result",
+              clientActionId: `${id}.action`,
+              accepted: true,
+            },
           },
           {
             id: `${id}.submitted.host-frame`,

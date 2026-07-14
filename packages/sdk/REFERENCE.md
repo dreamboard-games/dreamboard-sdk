@@ -48,7 +48,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.10";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.11";
 };
 ```
 
@@ -57,7 +57,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.10";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.11";
 ```
 
 _No JSDoc summary is available yet._
@@ -96,7 +96,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.10";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.11";
 };
 ```
 
@@ -105,7 +105,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.10";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.11";
 ```
 
 _No JSDoc summary is available yet._
@@ -126,6 +126,1169 @@ type DreamboardSdkPackageSet = {
   sdkVersion: string;
   packages: Record<DreamboardSdkPackageName, string>;
 };
+```
+
+_No JSDoc summary is available yet._
+
+## @dreamboard-games/sdk/plugin-runtime-contract
+
+### ActionInteractionDescriptor
+
+```ts
+type ActionInteractionDescriptor<Interaction extends string = string> =
+  InteractionDescriptorBase<Interaction> & {
+    readonly kind: "action";
+  };
+```
+
+_No JSDoc summary is available yet._
+
+### ActionSetVersionInput
+
+```ts
+type ActionSetVersionInput = {
+  readonly version: number;
+  readonly availableInteractions: readonly InteractionDescriptor[];
+};
+```
+
+_No JSDoc summary is available yet._
+
+### BoardStaticProjectionSchema
+
+```ts
+const BoardStaticProjectionSchema: z.ZodObject<
+  {
+    view: z.ZodType<
+      RuntimeJson,
+      unknown,
+      z.core.$ZodTypeInternals<RuntimeJson, unknown>
+    >;
+    hash: z.ZodOptional<z.ZodString>;
+    manifestVersion: z.ZodOptional<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### canonicalizePluginRuntimeJson
+
+```ts
+function canonicalizePluginRuntimeJson(value: unknown): CanonicalJson;
+```
+
+_No JSDoc summary is available yet._
+
+### CanonicalJson
+
+```ts
+type CanonicalJson =
+  | null
+  | boolean
+  | number
+  | string
+  | CanonicalJson[]
+  | {
+      [key: string]: CanonicalJson;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### computePluginActionSetVersion
+
+```ts
+function computePluginActionSetVersion(input: ActionSetVersionInput): string;
+```
+
+_No JSDoc summary is available yet._
+
+### createPluginProtocolEnvelopeSchema
+
+```ts
+function createPluginProtocolEnvelopeSchema<Payload>(
+  payloadSchema: z.ZodType<Payload>,
+): z.ZodType<PluginProtocolEnvelope<Payload>>;
+```
+
+_No JSDoc summary is available yet._
+
+### digestPluginCommandRequest
+
+```ts
+function digestPluginCommandRequest(command: SubmitInteractionCommand): string;
+```
+
+_No JSDoc summary is available yet._
+
+### digestPluginGameplayFrame
+
+```ts
+function digestPluginGameplayFrame(frame: PluginGameplayFrame): string;
+```
+
+_No JSDoc summary is available yet._
+
+### digestPluginRuntimeJson
+
+```ts
+function digestPluginRuntimeJson(value: unknown): string;
+```
+
+_No JSDoc summary is available yet._
+
+### DREAMBOARD_PLUGIN_PROTOCOL
+
+```ts
+const DREAMBOARD_PLUGIN_PROTOCOL: "dreamboard-plugin";
+```
+
+_No JSDoc summary is available yet._
+
+### DREAMBOARD_PLUGIN_PROTOCOL_VERSION
+
+```ts
+const DREAMBOARD_PLUGIN_PROTOCOL_VERSION: 4;
+```
+
+_No JSDoc summary is available yet._
+
+### encodeCanonicalPluginRuntimeJson
+
+```ts
+function encodeCanonicalPluginRuntimeJson(value: unknown): string;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEvent
+
+```ts
+type GameEvent = SystemActionEvent;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventDetail
+
+```ts
+interface GameEventDetail {
+  readonly label: string;
+  readonly value: string | number | boolean;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventDetailSchema
+
+```ts
+const GameEventDetailSchema: z.ZodObject<
+  {
+    label: z.ZodString;
+    value: z.ZodUnion<readonly [z.ZodString, z.ZodNumber, z.ZodBoolean]>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameEventSchema
+
+```ts
+declare const GameEventSchema: z.ZodDiscriminatedUnion<
+  [
+    z.ZodObject<
+      {
+        kind: z.ZodLiteral<"systemAction">;
+        procedureId: z.ZodString;
+        title: z.ZodString;
+        summary: z.ZodOptional<z.ZodString>;
+        details: z.ZodOptional<
+          z.ZodArray<
+            z.ZodObject<
+              {
+                label: z.ZodString;
+                value: z.ZodUnion<
+                  readonly [z.ZodString, z.ZodNumber, z.ZodBoolean]
+                >;
+              },
+              z.core.$strict
+            >
+          >
+        >;
+      },
+      z.core.$strict
+    >,
+  ],
+  "kind"
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameOutcome
+
+```ts
+interface GameOutcome<Player extends string = string> {
+  readonly reason: {
+    readonly code: string;
+    readonly message?: string;
+  };
+  readonly standings: readonly OutcomeStanding<Player>[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GameOutcomeSchema
+
+```ts
+declare const GameOutcomeSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### GameplayBasis
+
+```ts
+interface GameplayBasis {
+  readonly generation: number;
+  readonly version: number;
+  readonly actionSetVersion: string;
+  readonly perspectivePlayerId: PlayerId;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### GameplayBasisSchema
+
+```ts
+const GameplayBasisSchema: z.ZodObject<
+  {
+    generation: z.ZodNumber;
+    version: z.ZodNumber;
+    actionSetVersion: z.ZodString;
+    perspectivePlayerId: z.ZodString;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### HostToPluginEnvelope
+
+```ts
+type HostToPluginEnvelope = PluginProtocolEnvelope<HostToPluginPayload>;
+```
+
+_No JSDoc summary is available yet._
+
+### HostToPluginEnvelopeSchema
+
+```ts
+const HostToPluginEnvelopeSchema: z.ZodType<
+  PluginProtocolEnvelope<HostToPluginPayload>,
+  unknown,
+  z.core.$ZodTypeInternals<PluginProtocolEnvelope<HostToPluginPayload>, unknown>
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### HostToPluginPayload
+
+```ts
+type HostToPluginPayload =
+  | {
+      readonly type: "runtime.init";
+      readonly session: PluginSessionDescriptor;
+    }
+  | {
+      readonly type: "gameplay.frame";
+      readonly frame: PluginGameplayFrame;
+    }
+  | InteractionResult;
+```
+
+_No JSDoc summary is available yet._
+
+### HostToPluginPayloadSchema
+
+```ts
+const HostToPluginPayloadSchema: z.ZodType<HostToPluginPayload>;
+```
+
+_No JSDoc summary is available yet._
+
+### InputDomain
+
+```ts
+interface InputDomain {
+  readonly type: string;
+  readonly selection?: InputSelection;
+  readonly dependencies?: InputDomainDependencies;
+  readonly [key: string]:
+    | RuntimeJson
+    | InputSelection
+    | InputDomainDependencies
+    | undefined;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InputDomainDependencies
+
+```ts
+type InputDomainDependencies =
+  | {
+      readonly mode: "eager";
+      readonly dependentCases: readonly InputDomainDependencyCase[];
+    }
+  | {
+      readonly mode: "lazy";
+      readonly dependsOn: readonly string[];
+      readonly resolver: {
+        readonly interactionKey?: string;
+        readonly inputKey: string;
+      };
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### InputDomainDependenciesSchema
+
+```ts
+declare const InputDomainDependenciesSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InputDomainDependencyCase
+
+```ts
+interface InputDomainDependencyCase {
+  readonly when: Readonly<Record<string, string>>;
+  readonly domain: InputDomain;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InputDomainSchema
+
+```ts
+declare const InputDomainSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InputSelection
+
+```ts
+type InputSelection =
+  | {
+      readonly mode: "single";
+    }
+  | {
+      readonly mode: "many";
+      readonly min: number;
+      readonly max?: number;
+      readonly distinct?: boolean;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionAvailability
+
+```ts
+type InteractionAvailability =
+  | {
+      readonly status: "available";
+    }
+  | {
+      readonly status: "notYourTurn";
+      readonly reason: string;
+    }
+  | {
+      readonly status: "insufficientResources";
+      readonly reason: string;
+      readonly missingResources: Readonly<Record<string, number>>;
+    }
+  | {
+      readonly status: "blocked";
+      readonly reason: string;
+      readonly code?: string;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionAvailabilitySchema
+
+```ts
+declare const InteractionAvailabilitySchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionChoiceOption
+
+```ts
+interface InteractionChoiceOption {
+  readonly value: string | null;
+  readonly label: string;
+  readonly icon?: string;
+  readonly badge?: string;
+  readonly description?: string;
+  readonly disabled?: boolean;
+  readonly disabledReason?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionCommitPolicy
+
+```ts
+interface InteractionCommitPolicy {
+  readonly mode: "manual" | "autoWhenReady";
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionCommitPolicySchema
+
+```ts
+const InteractionCommitPolicySchema: z.ZodDiscriminatedUnion<
+  [
+    z.ZodObject<
+      {
+        mode: z.ZodLiteral<"manual">;
+      },
+      z.core.$strict
+    >,
+    z.ZodObject<
+      {
+        mode: z.ZodLiteral<"autoWhenReady">;
+      },
+      z.core.$strict
+    >,
+  ],
+  "mode"
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionContext
+
+```ts
+interface InteractionContext {
+  readonly to: string;
+  readonly title?: string;
+  readonly payload?: Readonly<Record<string, RuntimeJson>>;
+  readonly options?: readonly InteractionContextOption[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionContextOption
+
+```ts
+interface InteractionContextOption {
+  readonly id: string;
+  readonly label?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionContextSchema
+
+```ts
+declare const InteractionContextSchema: z.ZodObject<
+  {
+    to: z.ZodString;
+    title: z.ZodOptional<z.ZodString>;
+    payload: z.ZodOptional<
+      z.ZodRecord<
+        z.ZodString,
+        z.ZodType<
+          RuntimeJson,
+          unknown,
+          z.core.$ZodTypeInternals<RuntimeJson, unknown>
+        >
+      >
+    >;
+    options: z.ZodOptional<
+      z.ZodArray<
+        z.ZodObject<
+          { id: z.ZodString; label: z.ZodOptional<z.ZodString> },
+          z.core.$strict
+        >
+      >
+    >;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionDescriptor
+
+```ts
+type InteractionDescriptor<Interaction extends string = string> =
+  | ActionInteractionDescriptor<Interaction>
+  | PromptInteractionDescriptor<Interaction>;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionDescriptorSchema
+
+```ts
+const InteractionDescriptorSchema: z.ZodType<InteractionDescriptor>;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionDiagnosticReason
+
+```ts
+interface InteractionDiagnosticReason {
+  readonly ruleId: string;
+  readonly errorCode: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionInputDescriptor
+
+```ts
+interface InteractionInputDescriptor {
+  readonly key: string;
+  readonly kind: string;
+  readonly domain: InputDomain;
+  readonly defaultValue?: RuntimeJson;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionInputDescriptorSchema
+
+```ts
+declare const InteractionInputDescriptorSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionResult
+
+```ts
+type InteractionResult =
+  | {
+      readonly type: "interaction.result";
+      readonly clientActionId: string;
+      readonly accepted: true;
+    }
+  | {
+      readonly type: "interaction.result";
+      readonly clientActionId: string;
+      readonly accepted: false;
+      readonly errorCode: string;
+      readonly message?: string;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### InteractionResultSchema
+
+```ts
+declare const InteractionResultSchema: z.ZodDiscriminatedUnion<
+  [
+    z.ZodObject<
+      {
+        type: z.ZodLiteral<"interaction.result">;
+        clientActionId: z.ZodString;
+        accepted: z.ZodLiteral<true>;
+      },
+      z.core.$strict
+    >,
+    z.ZodObject<
+      {
+        type: z.ZodLiteral<"interaction.result">;
+        clientActionId: z.ZodString;
+        accepted: z.ZodLiteral<false>;
+        errorCode: z.ZodString;
+        message: z.ZodOptional<z.ZodString>;
+      },
+      z.core.$strict
+    >,
+  ],
+  "accepted"
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### materializePluginGameplayFrame
+
+```ts
+function materializePluginGameplayFrame(
+  input: MaterializePluginGameplayFrameInput,
+): v;
+```
+
+_No JSDoc summary is available yet._
+
+### MaterializePluginGameplayFrameInput
+
+```ts
+interface MaterializePluginGameplayFrameInput {
+  readonly currentPhase: string | null;
+  readonly activePlayers: readonly P[];
+  readonly dynamicProjection: M;
+  readonly staticProjection?: R | null;
+  readonly perspectivePlayerId: P;
+  readonly generation: number;
+  readonly version: number;
+  readonly actionSetVersion: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeResult
+
+```ts
+type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeScoreComponent
+
+```ts
+interface OutcomeScoreComponent {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeStanding
+
+```ts
+interface OutcomeStanding<Player extends string = string> {
+  readonly playerId: Player;
+  readonly rank: number;
+  readonly result: OutcomeResult;
+  readonly score?: number;
+  readonly scoreBreakdown?: readonly OutcomeScoreComponent[];
+  readonly tieBreaks?: readonly OutcomeTieBreak[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### OutcomeTieBreak
+
+```ts
+interface OutcomeTieBreak {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number | string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### parseHostToPluginEnvelope
+
+```ts
+function parseHostToPluginEnvelope(
+  value: unknown,
+): PluginProtocolEnvelope<HostToPluginPayload>;
+```
+
+_No JSDoc summary is available yet._
+
+### parsePluginGameplayFrame
+
+```ts
+function parsePluginGameplayFrame(value: unknown): PluginGameplayFrame;
+```
+
+_No JSDoc summary is available yet._
+
+### parsePluginSessionDescriptor
+
+```ts
+function parsePluginSessionDescriptor(value: unknown): PluginSessionDescriptor;
+```
+
+_No JSDoc summary is available yet._
+
+### parsePluginToHostEnvelope
+
+```ts
+function parsePluginToHostEnvelope(
+  value: unknown,
+): PluginProtocolEnvelope<PluginToHostPayload>;
+```
+
+_No JSDoc summary is available yet._
+
+### PlayerId
+
+```ts
+type PlayerId = string;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginGameplayFrame
+
+```ts
+interface PluginGameplayFrame { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### PluginGameplayFrameSchema
+
+```ts
+const PluginGameplayFrameSchema: z.ZodType<PluginGameplayFrame>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginPlayerSummary
+
+```ts
+interface PluginPlayerSummary {
+  readonly playerId: PlayerId;
+  readonly displayName: string;
+  readonly color?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginPlayerSummarySchema
+
+```ts
+const PluginPlayerSummarySchema: z.ZodObject<
+  {
+    playerId: z.ZodString;
+    displayName: z.ZodString;
+    color: z.ZodOptional<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolEnvelope
+
+```ts
+interface PluginProtocolEnvelope<Payload> {
+  readonly protocol: typeof DREAMBOARD_PLUGIN_PROTOCOL;
+  readonly version: typeof DREAMBOARD_PLUGIN_PROTOCOL_VERSION;
+  readonly channelId: string;
+  /** Delivery order only. It is not a game revision. */
+  readonly sequence: number;
+  readonly payload: Payload;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolFrame
+
+```ts
+interface PluginProtocolFrame {
+  readonly id: string;
+  readonly frame: PluginGameplayFrame;
+  readonly projectionDigest: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolFrameSchema
+
+```ts
+const PluginProtocolFrameSchema: z.ZodObject<
+  {
+    id: z.ZodString;
+    frame: z.ZodType<
+      PluginGameplayFrame<unknown, string, string, string>,
+      unknown,
+      z.core.$ZodTypeInternals<
+        PluginGameplayFrame<unknown, string, string, string>,
+        unknown
+      >
+    >;
+    projectionDigest: z.ZodString;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolStep
+
+```ts
+type PluginProtocolStep =
+  | {
+      readonly id: string;
+      readonly kind: "host.frame";
+      readonly frameId: string;
+    }
+  | {
+      readonly id: string;
+      readonly kind: "client.submit";
+      readonly fromFrameId: string;
+      readonly requestDigest: string;
+      readonly response: InteractionResult;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolStepSchema
+
+```ts
+declare const PluginProtocolStepSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolTape
+
+```ts
+interface PluginProtocolTape {
+  readonly session: PluginSessionDescriptor;
+  readonly frames: readonly PluginProtocolFrame[];
+  readonly steps: readonly PluginProtocolStep[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginProtocolTapeSchema
+
+```ts
+const PluginProtocolTapeSchema: z.ZodType<PluginProtocolTape>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginSessionDescriptor
+
+```ts
+interface PluginSessionDescriptor {
+  readonly sessionId: string;
+  /** Turn order is the order of this array. */
+  readonly players: readonly PluginPlayerSummary[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### PluginSessionDescriptorSchema
+
+```ts
+const PluginSessionDescriptorSchema: z.ZodObject<
+  {
+    sessionId: z.ZodString;
+    players: z.ZodArray<
+      z.ZodObject<
+        {
+          playerId: z.ZodString;
+          displayName: z.ZodString;
+          color: z.ZodOptional<z.ZodString>;
+        },
+        z.core.$strict
+      >
+    >;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginToHostEnvelope
+
+```ts
+type PluginToHostEnvelope = PluginProtocolEnvelope<PluginToHostPayload>;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginToHostEnvelopeSchema
+
+```ts
+declare const PluginToHostEnvelopeSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginToHostPayload
+
+```ts
+type PluginToHostPayload = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### PluginToHostPayloadSchema
+
+```ts
+declare const PluginToHostPayloadSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectedGameEvent
+
+```ts
+type ProjectedGameEvent = GameEvent & {
+  readonly version: number;
+  readonly index: number;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### ProjectedGameEventSchema
+
+```ts
+declare const ProjectedGameEventSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### PromptInteractionDescriptor
+
+```ts
+type PromptInteractionDescriptor<Interaction extends string = string> =
+  InteractionDescriptorBase<Interaction> & {
+    readonly kind: "prompt";
+    readonly context: InteractionContext;
+  };
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerBoardStaticProjection
+
+```ts
+interface ReducerBoardStaticProjection {
+  readonly view: RuntimeJson;
+  readonly hash?: string;
+  readonly manifestVersion?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ReducerSeatProjectionBundle
+
+```ts
+interface ReducerSeatProjectionBundle { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeJson
+
+```ts
+type RuntimeJson =
+  | null
+  | boolean
+  | number
+  | string
+  | RuntimeJson[]
+  | {
+      [key: string]: RuntimeJson;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### RuntimeJsonSchema
+
+```ts
+const RuntimeJsonSchema: z.ZodType<RuntimeJson>;
+```
+
+_No JSDoc summary is available yet._
+
+### SeatProjectionBundleSchema
+
+```ts
+declare const SeatProjectionBundleSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### SimultaneousPhaseSnapshot
+
+```ts
+interface SimultaneousPhaseSnapshot {
+  readonly phaseName: string;
+  readonly interactionId: string;
+  readonly actorIds: readonly PlayerId[];
+  readonly sealedPlayerIds: readonly PlayerId[];
+  readonly pendingPlayerIds: readonly PlayerId[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SimultaneousPhaseSnapshotSchema
+
+```ts
+const SimultaneousPhaseSnapshotSchema: z.ZodObject<
+  {
+    phaseName: z.ZodString;
+    interactionId: z.ZodString;
+    actorIds: z.ZodArray<z.ZodString>;
+    sealedPlayerIds: z.ZodArray<z.ZodString>;
+    pendingPlayerIds: z.ZodArray<z.ZodString>;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### SubmitInteractionCommand
+
+```ts
+interface SubmitInteractionCommand {
+  readonly type: "interaction.submit";
+  readonly clientActionId: string;
+  readonly basis: GameplayBasis;
+  readonly interactionId: string;
+  readonly params: RuntimeJson;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SubmitInteractionCommandSchema
+
+```ts
+declare const SubmitInteractionCommandSchema: z.ZodObject<
+  {
+    type: z.ZodLiteral<"interaction.submit">;
+    clientActionId: z.ZodString;
+    basis: z.ZodObject<
+      {
+        generation: z.ZodNumber;
+        version: z.ZodNumber;
+        actionSetVersion: z.ZodString;
+        perspectivePlayerId: z.ZodString;
+      },
+      z.core.$strict
+    >;
+    interactionId: z.ZodString;
+    params: z.ZodType<
+      RuntimeJson,
+      unknown,
+      z.core.$ZodTypeInternals<RuntimeJson, unknown>
+    >;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionEvent
+
+```ts
+interface SystemActionEvent {
+  readonly kind: "systemAction";
+  readonly procedureId: string;
+  readonly title: string;
+  readonly summary?: string;
+  readonly details?: readonly GameEventDetail[];
+}
+```
+
+_No JSDoc summary is available yet._
+
+### SystemActionEventSchema
+
+```ts
+const SystemActionEventSchema: z.ZodObject<
+  {
+    kind: z.ZodLiteral<"systemAction">;
+    procedureId: z.ZodString;
+    title: z.ZodString;
+    summary: z.ZodOptional<z.ZodString>;
+    details: z.ZodOptional<
+      z.ZodArray<
+        z.ZodObject<
+          {
+            label: z.ZodString;
+            value: z.ZodUnion<
+              readonly [z.ZodString, z.ZodNumber, z.ZodBoolean]
+            >;
+          },
+          z.core.$strict
+        >
+      >
+    >;
+  },
+  z.core.$strict
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### ZoneHandlesSnapshot
+
+```ts
+interface ZoneHandlesSnapshot<Interaction extends string = string> {
+  readonly cardIds: readonly string[];
+  readonly cardViewsById: Readonly<Record<string, string>>;
+  readonly playableByCardId: Readonly<
+    Record<string, readonly InteractionDescriptor<Interaction>[]>
+  >;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### ZoneHandlesSnapshotSchema
+
+```ts
+const ZoneHandlesSnapshotSchema: z.ZodType<ZoneHandlesSnapshot>;
 ```
 
 _No JSDoc summary is available yet._
@@ -2923,13 +4086,7 @@ _No JSDoc summary is available yet._
 ### GameOutcome
 
 ```ts
-type GameOutcome<PlayerId extends string = string> = {
-  reason: {
-    code: string;
-    message?: string;
-  };
-  standings: readonly OutcomeStanding<PlayerId>[];
-};
+type GameOutcome<Player extends string = string> = d<Player>;
 ```
 
 _No JSDoc summary is available yet._
@@ -3092,7 +4249,7 @@ A state-preserving transformation.
 ### OutcomeResult
 
 ```ts
-type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+type OutcomeResult = O;
 ```
 
 _No JSDoc summary is available yet._
@@ -3100,11 +4257,7 @@ _No JSDoc summary is available yet._
 ### OutcomeScoreComponent
 
 ```ts
-type OutcomeScoreComponent = {
-  id: string;
-  label: string;
-  value: number;
-};
+type OutcomeScoreComponent = s;
 ```
 
 _No JSDoc summary is available yet._
@@ -3112,14 +4265,7 @@ _No JSDoc summary is available yet._
 ### OutcomeStanding
 
 ```ts
-type OutcomeStanding<PlayerId extends string = string> = {
-  playerId: PlayerId;
-  rank: number;
-  result: OutcomeResult;
-  score?: number;
-  scoreBreakdown?: readonly OutcomeScoreComponent[];
-  tieBreaks?: readonly OutcomeTieBreak[];
-};
+type OutcomeStanding<Player extends string = string> = t<Player>;
 ```
 
 _No JSDoc summary is available yet._
@@ -3127,11 +4273,7 @@ _No JSDoc summary is available yet._
 ### OutcomeTieBreak
 
 ```ts
-type OutcomeTieBreak = {
-  id: string;
-  label: string;
-  value: number | string;
-};
+type OutcomeTieBreak = u;
 ```
 
 _No JSDoc summary is available yet._
@@ -5077,13 +6219,7 @@ _No JSDoc summary is available yet._
 ### GameOutcome
 
 ```ts
-type GameOutcome<PlayerId extends string = string> = {
-  reason: {
-    code: string;
-    message?: string;
-  };
-  standings: readonly OutcomeStanding<PlayerId>[];
-};
+type GameOutcome<Player extends string = string> = d<Player>;
 ```
 
 _No JSDoc summary is available yet._
@@ -5925,7 +7061,7 @@ _No JSDoc summary is available yet._
 ### OutcomeResult
 
 ```ts
-type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+type OutcomeResult = O;
 ```
 
 _No JSDoc summary is available yet._
@@ -5933,11 +7069,7 @@ _No JSDoc summary is available yet._
 ### OutcomeScoreComponent
 
 ```ts
-type OutcomeScoreComponent = {
-  id: string;
-  label: string;
-  value: number;
-};
+type OutcomeScoreComponent = s;
 ```
 
 _No JSDoc summary is available yet._
@@ -5945,14 +7077,7 @@ _No JSDoc summary is available yet._
 ### OutcomeStanding
 
 ```ts
-type OutcomeStanding<PlayerId extends string = string> = {
-  playerId: PlayerId;
-  rank: number;
-  result: OutcomeResult;
-  score?: number;
-  scoreBreakdown?: readonly OutcomeScoreComponent[];
-  tieBreaks?: readonly OutcomeTieBreak[];
-};
+type OutcomeStanding<Player extends string = string> = t<Player>;
 ```
 
 _No JSDoc summary is available yet._
@@ -5960,11 +7085,7 @@ _No JSDoc summary is available yet._
 ### OutcomeTieBreak
 
 ```ts
-type OutcomeTieBreak = {
-  id: string;
-  label: string;
-  value: number | string;
-};
+type OutcomeTieBreak = u;
 ```
 
 _No JSDoc summary is available yet._
@@ -17028,11 +18149,10 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface PluginRuntimeClient {
-  getSession(): w | null;
+  getSession(): E | null;
   subscribeSession(listener: () => void): () => void;
-  getFrame(): p | null;
+  getFrame(): v | null;
   subscribeFrame(listener: () => void): () => void;
-  validateInteraction(interactionId: string, params: unknown): Promise<M>;
   submitInteraction(interactionId: string, params: unknown): Promise<void>;
   disconnect(): void;
 }
@@ -17066,7 +18186,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface PluginTransport {
   start(onMessage: (message: H) => void): () => void;
-  send(message: y): void;
+  send(message: J): void;
 }
 ```
 
@@ -20755,7 +21875,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface CompilePluginProtocolTapeOptions {
   readonly trace: ReducerScenarioTrace;
-  readonly session: w;
+  readonly session: E;
 }
 ```
 
@@ -20809,7 +21929,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 interface CreateFixtureHostHarnessOptions {
-  readonly tape: v;
+  readonly tape: B;
   readonly strict?: boolean;
   readonly latencyMs?: number;
   readonly channelId?: string;
@@ -20927,9 +22047,10 @@ _No JSDoc summary is available yet._
 function digestUIFixtureTransportRequest(request: {
   readonly operation: "validate" | "submit";
   readonly basis?: {
-    readonly gameVersion: number;
+    readonly generation: number;
+    readonly version: number;
     readonly actionSetVersion: string;
-    readonly perspectivePlayerId: string | null;
+    readonly perspectivePlayerId: string;
   };
   readonly interactionId?: string;
   readonly payload?: unknown;
@@ -21063,7 +22184,6 @@ interface FixtureHostEvent {
   readonly atMs: number;
   readonly kind:
     | "frame-sent"
-    | "validate-received"
     | "submit-received"
     | "ack-received"
     | "ready-received"
@@ -21082,7 +22202,7 @@ _No JSDoc summary is available yet._
 ```ts
 interface FixtureHostHarness {
   readonly transport: PluginTransport;
-  readonly tape: v;
+  readonly tape: B;
   reset(): void;
   flush(): Promise<void>;
   advanceHost(): Promise<void>;
@@ -21343,7 +22463,7 @@ _No JSDoc summary is available yet._
 ### PluginProtocolTape
 
 ```ts
-type PluginProtocolTape = v;
+type PluginProtocolTape = B;
 ```
 
 _No JSDoc summary is available yet._
@@ -21352,9 +22472,9 @@ _No JSDoc summary is available yet._
 
 ```ts
 const pluginProtocolTapeSchema: z.ZodType<
-  v,
+  B,
   unknown,
-  z.core.$ZodTypeInternals<v, unknown>
+  z.core.$ZodTypeInternals<B, unknown>
 >;
 ```
 
@@ -22008,7 +23128,7 @@ _No JSDoc summary is available yet._
 ### UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL
 
 ```ts
-const UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL: 3;
+const UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL: 4;
 ```
 
 _No JSDoc summary is available yet._
@@ -22032,7 +23152,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureFrame
 
 ```ts
-type UIFixtureFrame = t;
+type UIFixtureFrame = y;
 ```
 
 _No JSDoc summary is available yet._
@@ -22044,9 +23164,9 @@ const uiFixtureFrameSchema: z.ZodObject<
   {
     id: z.ZodString;
     frame: z.ZodType<
-      p<unknown, string, string, string>,
+      v<unknown, string, string, string>,
       unknown,
-      z.core.$ZodTypeInternals<p<unknown, string, string, string>, unknown>
+      z.core.$ZodTypeInternals<v<unknown, string, string, string>, unknown>
     >;
     projectionDigest: z.ZodString;
   },
@@ -22059,7 +23179,7 @@ _No JSDoc summary is available yet._
 ### UIFixtureProtocolStep
 
 ```ts
-type UIFixtureProtocolStep = u;
+type UIFixtureProtocolStep = z$1;
 ```
 
 _No JSDoc summary is available yet._

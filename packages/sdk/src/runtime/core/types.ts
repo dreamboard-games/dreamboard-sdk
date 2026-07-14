@@ -3,7 +3,6 @@ import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
   PluginToHostPayload,
-  ValidationResult,
 } from "@dreamboard-games/plugin-runtime-contract";
 
 export interface RuntimeClock {
@@ -24,10 +23,6 @@ export interface PluginRuntimeClient {
   subscribeSession(listener: () => void): () => void;
   getFrame(): PluginGameplayFrame | null;
   subscribeFrame(listener: () => void): () => void;
-  validateInteraction(
-    interactionId: string,
-    params: unknown,
-  ): Promise<ValidationResult>;
   submitInteraction(interactionId: string, params: unknown): Promise<void>;
   disconnect(): void;
 }

@@ -14,6 +14,7 @@ const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 const facades = {
   reducer: () => import("./reducer.js"),
+  "plugin-runtime-contract": () => import("./plugin-runtime-contract.js"),
   "reducer/advanced": () => import("./reducer/advanced.js"),
   runtime: () => import("./runtime.js"),
   "runtime/primitives": () => import("./runtime/primitives.js"),

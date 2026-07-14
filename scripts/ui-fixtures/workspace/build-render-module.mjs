@@ -9,7 +9,7 @@ export function buildReferenceWorkspaceRenderModule({
   const sourceModule = toModuleSpecifier(fromFile, uiEntry);
   return `import * as React from "react";
 import * as DreamboardRuntime from "@dreamboard-games/sdk/runtime/primitives";
-import * as PluginRuntimeContract from "@dreamboard-games/plugin-runtime-contract";
+import * as PluginRuntimeContract from "@dreamboard-games/sdk/plugin-runtime-contract";
 import * as ui from ${JSON.stringify(sourceModule)};
 
 void React;

@@ -2,6 +2,13 @@ import type { RuntimeJson } from "./json.js";
 
 export type PlayerId = string;
 
+export interface GameplayBasis {
+  readonly generation: number;
+  readonly version: number;
+  readonly actionSetVersion: string;
+  readonly perspectivePlayerId: PlayerId;
+}
+
 export interface PluginPlayerSummary {
   readonly playerId: PlayerId;
   readonly displayName: string;
@@ -196,19 +203,44 @@ export type ProjectedGameEvent = GameEvent & {
   readonly index: number;
 };
 
+export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+
+export interface OutcomeScoreComponent {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number;
+}
+
+export interface OutcomeTieBreak {
+  readonly id: string;
+  readonly label: string;
+  readonly value: number | string;
+}
+
+export interface OutcomeStanding<Player extends string = string> {
+  readonly playerId: Player;
+  readonly rank: number;
+  readonly result: OutcomeResult;
+  readonly score?: number;
+  readonly scoreBreakdown?: readonly OutcomeScoreComponent[];
+  readonly tieBreaks?: readonly OutcomeTieBreak[];
+}
+
+export interface GameOutcome<Player extends string = string> {
+  readonly reason: {
+    readonly code: string;
+    readonly message?: string;
+  };
+  readonly standings: readonly OutcomeStanding<Player>[];
+}
+
 export interface PluginGameplayFrame<
   View = unknown,
   Phase extends string = string,
   Stage extends string = string,
   Interaction extends string = string,
 > {
-  readonly gameVersion: number;
-  readonly actionSetVersion: string;
-  readonly perspectivePlayerId: PlayerId | null;
-  readonly sharedView: {
-    readonly boardStatic: RuntimeJson | null;
-    readonly dynamicView: RuntimeJson | null;
-  };
+  readonly basis: GameplayBasis;
   readonly view: View | null;
   readonly flow: {
     readonly currentPhase: Phase | null;

@@ -150,24 +150,6 @@ export function useBoundInteractionHandle<
     [requireDescriptor, status, store, values, runtime],
   );
 
-  const validate = useCallback(
-    async (params?: Params) => {
-      const activeDescriptor = requireDescriptor();
-      const finalParams = applyInteractionInputDefaults<Params>(
-        activeDescriptor,
-        params ?? values,
-      ) as Params;
-      const result = await runtime.validateInteraction(
-        activeDescriptor.interactionId,
-        finalParams as Record<string, unknown>,
-      );
-      if (!result.valid) {
-        throw new ValidationError(result.errorCode, result.message);
-      }
-    },
-    [requireDescriptor, values, runtime],
-  );
-
   const validateDraft = useCallback((): DraftValidation<Params> => {
     const activeDescriptor = requireDescriptor();
     const rawDraft = { ...values } as Record<string, unknown>;
@@ -241,10 +223,6 @@ export function useBoundInteractionHandle<
       missing,
     };
   }, [requireDescriptor, values, inputKeys, paramsSchema]);
-
-  const validateDraftServer = useCallback(async () => {
-    await validate({ ...values } as Params);
-  }, [values, validate]);
 
   const submitDraft = useCallback(async () => {
     const validation = validateDraft();
@@ -339,9 +317,7 @@ export function useBoundInteractionHandle<
     unavailableReason: interactionUnavailableReason(descriptor),
     status,
     submit,
-    validate,
     validateDraft,
-    validateDraftServer,
     submitDraft,
     draft,
     values,

@@ -28,7 +28,7 @@ export type DraftValidation<
 
 /**
  * Bound handle around an {@link InteractionDescriptor}. Surfaces call into
- * this hook to submit/validate an interaction, track draft input state for
+ * this hook to submit an interaction, track draft input state for
  * multi-step prompts, and arm/disarm themselves on a surface.
  *
  * Availability flags are mirrored from the authoritative descriptor; UI
@@ -53,12 +53,8 @@ export interface InteractionHandle<
    * the common case for multi-input prompts.
    */
   submit: (params?: Params) => Promise<void>;
-  /** Run server validation using `params` (or the current draft by default). */
-  validate: (params?: Params) => Promise<void>;
   /** Run local generated client-schema validation against the current draft. */
   validateDraft: () => DraftValidation<Params>;
-  /** Run server validation against the current draft. */
-  validateDraftServer: () => Promise<void>;
   /**
    * Validate the current draft locally, submit parsed params, then clear the
    * draft only when submission succeeds.

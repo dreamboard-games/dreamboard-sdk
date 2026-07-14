@@ -112,7 +112,7 @@ async function buildRenderModule({
 }) {
   return `import * as React from "react";
 import * as DreamboardRuntime from "@dreamboard-games/sdk/runtime/primitives";
-import * as PluginRuntimeContract from "@dreamboard-games/plugin-runtime-contract";
+import * as PluginRuntimeContract from "@dreamboard-games/sdk/plugin-runtime-contract";
 import * as ui from ${JSON.stringify(sourceModuleSpecifier)};
 
 void React;
@@ -276,19 +276,6 @@ async function exerciseRenderedScenario({
       }
       resolutions.push(resolution);
       resolvedRequests.push(actualRequest);
-      if (sourceStep.preValidate) {
-        const validationPromise = runtime.validateInteraction(
-          interactionId,
-          finalSubmit.params ?? {},
-        );
-        await settleFixtureRuntime(harness);
-        const validation = await validationPromise;
-        if (!validation.valid) {
-          throw new Error(
-            `${fixtureId} runtime pre-validation failed: ${validation.errorCode ?? "invalid"}`,
-          );
-        }
-      }
       if (sourceStep.exercise === "activate") {
         const actuator = findEnabledActuator(
           document.body,
@@ -331,18 +318,6 @@ async function exerciseRenderedScenario({
 
     let submitResolution;
     if (finalSubmit && finalSubmit.kind !== "auto-submit") {
-      const validationPromise = runtime.validateInteraction(
-        interactionId,
-        finalSubmit.params ?? {},
-      );
-      await settleFixtureRuntime(harness);
-      const validation = await validationPromise;
-      if (!validation.valid) {
-        throw new Error(
-          `${fixtureId} runtime validation failed: ${validation.errorCode ?? "invalid"}`,
-        );
-      }
-
       await act(async () => {
         if (finalSubmit.kind === "semantic-submit") {
           const snapshot = readBrowserInteractionSnapshot(document.body);
@@ -527,8 +502,6 @@ async function buildExerciseUiModule({ gameDir, sourceModulePath, fixtureId }) {
       "react-dom/client",
       "@dreamboard-games/sdk",
       "@dreamboard-games/sdk/*",
-      "@dreamboard-games/plugin-runtime-contract",
-      "@dreamboard-games/plugin-runtime-contract/*",
     ],
     logLevel: "silent",
   });

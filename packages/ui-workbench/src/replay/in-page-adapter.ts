@@ -72,9 +72,6 @@ function measureInPageReplayState(
           ?.getAttribute("data-dreamboard-interaction-key") ?? undefined)
       : undefined;
   const hostEvents = harness.getEvents();
-  const validation = [...hostEvents]
-    .reverse()
-    .find((event) => event.kind === "validate-received");
   const submission = [...hostEvents]
     .reverse()
     .find((event) => event.kind === "submit-received");
@@ -82,7 +79,7 @@ function measureInPageReplayState(
     frameId: harness.getCurrentFrameId(),
     projectionDigest: projectionDigestForCurrentFrame(harness),
     focusedInteractionKey,
-    validationState: validation?.result,
+    validationState: undefined,
     submissionState: submission?.result,
   };
 }

@@ -14,6 +14,7 @@ await mkdir(sdkDist, { recursive: true });
 const declarationChunks = (await readdir(pluginContractDist)).filter(
   (fileName) => /^[a-z0-9-]+-[A-Za-z0-9_-]+\.d\.ts$/.test(fileName),
 );
+const pluginContractDeclarationFacades = ["digest.d.ts", "schema.d.ts"];
 const sdkReducerContractChunk = (await readdir(sdkDist)).find((fileName) =>
   /^index\.d-.*\.d\.ts$/.test(fileName),
 );
@@ -42,7 +43,10 @@ if (
   );
 }
 
-for (const fileName of declarationChunks) {
+for (const fileName of [
+  ...declarationChunks,
+  ...pluginContractDeclarationFacades,
+]) {
   const sourcePath = path.join(pluginContractDist, fileName);
   const targetPath = path.join(sdkDist, fileName);
   const source = await readFile(sourcePath, "utf8");

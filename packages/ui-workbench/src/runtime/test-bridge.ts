@@ -13,7 +13,6 @@ export interface UIFixtureTestBridge {
   getProjectionDigest(): string;
   getReplaySteps(): readonly BrowserUIReplayStep[];
   flush(): Promise<void>;
-  validateInteraction(interactionId: string): Promise<void>;
   reset(): Promise<void>;
   assertConsumed(): void;
 }
@@ -41,18 +40,6 @@ export function installUIFixtureTestBridge(options: {
     getRuntimeEvents: () => options.harness.getEvents(),
     getReplaySteps: () => options.replay,
     flush: () => options.harness.flush(),
-    validateInteraction: async (interactionId) => {
-      const result = await options.runtime.validateInteraction(
-        interactionId,
-        {},
-      );
-      if (!result.valid) {
-        throw new Error(
-          result.message ??
-            `Interaction '${interactionId}' failed fixture validation.`,
-        );
-      }
-    },
     getProjectionDigest: () => {
       const frameId = options.harness.getCurrentFrameId();
       const frame = options.harness.tape.frames.find(

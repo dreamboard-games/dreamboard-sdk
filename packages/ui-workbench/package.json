@@ -12,7 +12,6 @@
     "test:runtime": "bun test src"
   },
   "dependencies": {
-    "@dreamboard-games/plugin-runtime-contract": "workspace:*",
     "@dreamboard-games/sdk": "workspace:*",
     "@radix-ui/react-accordion": "^1.2.14",
     "@radix-ui/react-dialog": "^1.1.17",

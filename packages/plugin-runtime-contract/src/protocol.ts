@@ -1,46 +1,32 @@
 import type {
+  GameplayBasis,
   InteractionDescriptor,
-  PlayerId,
   PluginGameplayFrame,
   PluginSessionDescriptor,
 } from "./frame.js";
 import type { RuntimeJson } from "./json.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
-export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 3 as const;
+export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 4 as const;
 
-export interface ValidationResult {
-  readonly valid: boolean;
-  readonly errorCode?: string;
-  readonly message?: string;
-}
-
-export type SubmissionResult =
-  | { readonly accepted: true }
+export type InteractionResult =
   | {
+      readonly type: "interaction.result";
+      readonly clientActionId: string;
+      readonly accepted: true;
+    }
+  | {
+      readonly type: "interaction.result";
+      readonly clientActionId: string;
       readonly accepted: false;
       readonly errorCode: string;
       readonly message?: string;
     };
 
-export interface PluginInteractionBasis {
-  readonly gameVersion: number;
-  readonly actionSetVersion: string;
-  readonly perspectivePlayerId: PlayerId | null;
-}
-
-export interface ValidateInteractionCommand {
-  readonly type: "interaction.validate";
-  readonly requestId: string;
-  readonly basis: PluginInteractionBasis;
-  readonly interactionId: string;
-  readonly params: RuntimeJson;
-}
-
 export interface SubmitInteractionCommand {
   readonly type: "interaction.submit";
-  readonly requestId: string;
-  readonly basis: PluginInteractionBasis;
+  readonly clientActionId: string;
+  readonly basis: GameplayBasis;
   readonly interactionId: string;
   readonly params: RuntimeJson;
 }
@@ -54,16 +40,7 @@ export type HostToPluginPayload =
       readonly type: "gameplay.frame";
       readonly frame: PluginGameplayFrame;
     }
-  | {
-      readonly type: "interaction.validation-result";
-      readonly requestId: string;
-      readonly result: ValidationResult;
-    }
-  | {
-      readonly type: "interaction.submit-result";
-      readonly requestId: string;
-      readonly result: SubmissionResult;
-    };
+  | InteractionResult;
 
 export type PluginToHostPayload =
   | { readonly type: "runtime.ready" }
@@ -74,7 +51,6 @@ export type PluginToHostPayload =
       readonly clientReceivedAtMs?: number;
       readonly clientRenderedAtMs?: number;
     }
-  | ValidateInteractionCommand
   | SubmitInteractionCommand
   | {
       readonly type: "runtime.error";
@@ -114,20 +90,13 @@ export type PluginProtocolStep =
     }
   | {
       readonly id: string;
-      readonly kind: "client.validate";
-      readonly fromFrameId: string;
-      readonly requestDigest: string;
-      readonly response: ValidationResult;
-    }
-  | {
-      readonly id: string;
       readonly kind: "client.submit";
       readonly fromFrameId: string;
       readonly requestDigest: string;
-      readonly response: SubmissionResult;
+      readonly response: InteractionResult;
     };
 
 export type ActionSetVersionInput = {
-  readonly gameVersion: number;
+  readonly version: number;
   readonly availableInteractions: readonly InteractionDescriptor[];
 };

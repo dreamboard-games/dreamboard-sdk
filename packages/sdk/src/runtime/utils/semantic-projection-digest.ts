@@ -22,7 +22,7 @@ export function semanticProjectionDigestForFrame(
   frame: PluginGameplayFrame,
   session: PluginSessionDescriptor,
 ): string | null {
-  const actorPlayerId = frame.perspectivePlayerId;
+  const actorPlayerId = frame.basis.perspectivePlayerId;
   if (!actorPlayerId) {
     return null;
   }
@@ -40,7 +40,7 @@ function semanticSeatProjection(
   const playerToSeat = new Map(
     seatOrder.map((playerId, index) => [playerId, index] as const),
   );
-  const actorPlayerId = frame.perspectivePlayerId;
+  const actorPlayerId = frame.basis.perspectivePlayerId;
   const actorSeat = actorPlayerId ? playerToSeat.get(actorPlayerId) : undefined;
   if (actorSeat === undefined) {
     throw new Error(
@@ -57,10 +57,6 @@ function semanticSeatProjection(
     ),
     guidance: canonicalizeSemanticProjectionValue(
       frame.guidance ?? null,
-      playerToSeat,
-    ),
-    sharedView: canonicalizeSemanticProjectionValue(
-      frame.sharedView,
       playerToSeat,
     ),
     recentEvents: canonicalizeSemanticProjectionValue(

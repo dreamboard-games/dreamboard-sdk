@@ -5,7 +5,6 @@ import {
   type PluginProtocolTape,
   type PluginToHostPayload,
   type SubmitInteractionCommand,
-  type ValidateInteractionCommand,
 } from "@dreamboard-games/plugin-runtime-contract";
 import type { PluginTransport } from "../../runtime/core/types.js";
 import { digestUIFixtureTransportRequest } from "./canonical.js";
@@ -15,7 +14,6 @@ export interface FixtureHostEvent {
   readonly atMs: number;
   readonly kind:
     | "frame-sent"
-    | "validate-received"
     | "submit-received"
     | "ack-received"
     | "ready-received"
@@ -174,9 +172,7 @@ export function createFixtureHostHarness(
     await new Promise<void>((resolve) => setTimeout(resolve, latencyMs));
   };
 
-  const consumeExpectedStep = <
-    Kind extends "client.validate" | "client.submit",
-  >(
+  const consumeExpectedStep = <Kind extends "client.submit">(
     kind: Kind,
     requestDigest: string,
   ): Extract<PluginProtocolTape["steps"][number], { kind: Kind }> => {
@@ -210,27 +206,6 @@ export function createFixtureHostHarness(
     return step as Extract<PluginProtocolTape["steps"][number], { kind: Kind }>;
   };
 
-  const handleValidate = async (command: ValidateInteractionCommand) => {
-    const requestDigest = digestUIFixtureTransportRequest({
-      operation: "validate",
-      basis: command.basis,
-      interactionId: command.interactionId,
-      payload: command.params,
-    });
-    const step = consumeExpectedStep("client.validate", requestDigest);
-    record({
-      kind: "validate-received",
-      requestDigest,
-      result: step.response.valid ? "accepted" : "rejected",
-    });
-    await waitForConfiguredLatency();
-    sendHostPayload({
-      type: "interaction.validation-result",
-      requestId: command.requestId,
-      result: step.response,
-    });
-  };
-
   const handleSubmit = async (command: SubmitInteractionCommand) => {
     const requestDigest = digestUIFixtureTransportRequest({
       operation: "submit",
@@ -246,9 +221,8 @@ export function createFixtureHostHarness(
     });
     await waitForConfiguredLatency();
     sendHostPayload({
-      type: "interaction.submit-result",
-      requestId: command.requestId,
-      result: step.response,
+      ...step.response,
+      clientActionId: command.clientActionId,
     });
     if (step.response.accepted) {
       await waitForConfiguredLatency();
@@ -274,9 +248,6 @@ export function createFixtureHostHarness(
         break;
       case "runtime.ack":
         record({ kind: "ack-received" });
-        break;
-      case "interaction.validate":
-        trackHandler(handleValidate(payload));
         break;
       case "interaction.submit":
         trackHandler(handleSubmit(payload));

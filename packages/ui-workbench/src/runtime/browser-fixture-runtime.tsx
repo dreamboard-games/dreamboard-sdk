@@ -5,7 +5,7 @@ import {
   type HostToPluginEnvelope,
   type PluginProtocolTape,
   type PluginToHostPayload,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "@dreamboard-games/sdk/plugin-runtime-contract";
 import {
   createPluginRuntimeClient,
   PluginRuntimeBoundary,
@@ -44,7 +44,6 @@ export interface BrowserFixtureHostEvent {
   readonly sequence: number;
   readonly kind:
     | "frame-sent"
-    | "validate-received"
     | "submit-received"
     | "ack-received"
     | "ready-received"
@@ -198,7 +197,7 @@ function createBrowserFixtureHostHarness(
     }
   }
 
-  function consume(kind: "client.validate" | "client.submit") {
+  function consume(kind: "client.submit") {
     const step = tape.steps[stepCursor];
     if (!step) {
       fail(`Plugin protocol tape has no remaining step for ${kind}.`);
@@ -229,22 +228,6 @@ function createBrowserFixtureHostHarness(
       case "runtime.error":
         record({ kind: "diagnostic" });
         break;
-      case "interaction.validate": {
-        const step = consume("client.validate") as Extract<
-          PluginProtocolTape["steps"][number],
-          { kind: "client.validate" }
-        >;
-        record({
-          kind: "validate-received",
-          result: step.response.valid ? "accepted" : "rejected",
-        });
-        send({
-          type: "interaction.validation-result",
-          requestId: payload.requestId,
-          result: step.response,
-        });
-        break;
-      }
       case "interaction.submit": {
         const step = consume("client.submit") as Extract<
           PluginProtocolTape["steps"][number],
@@ -255,9 +238,8 @@ function createBrowserFixtureHostHarness(
           result: step.response.accepted ? "accepted" : "rejected",
         });
         send({
-          type: "interaction.submit-result",
-          requestId: payload.requestId,
-          result: step.response,
+          ...step.response,
+          clientActionId: payload.clientActionId,
         });
         if (step.response.accepted) {
           drainHostFrames();

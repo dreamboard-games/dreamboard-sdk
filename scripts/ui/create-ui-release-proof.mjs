@@ -219,7 +219,7 @@ async function readDeviceCanaryReceipt(options, expected) {
   return { ...result, evidencePaths };
 }
 
-async function readRealHostParityReceipt(options, expected) {
+async function readRealHostParityReceipt(options, expected, runRequired) {
   const receiptPath =
     options["real-host-parity-receipt"] ??
     process.env.UI_REAL_HOST_PARITY_RECEIPT;
@@ -619,7 +619,7 @@ async function main() {
   const expectedDigests = { sdkTarballSha256, fixtureBundleSha256 };
   const parityProof =
     releaseParityProofMode(options) === "real-host"
-      ? await readRealHostParityReceipt(options, expectedDigests)
+      ? await readRealHostParityReceipt(options, expectedDigests, runRequired)
       : await readSourceParityReceipt(expectedDigests, runRequired, {
           artifactRoot,
           sdkTarball,

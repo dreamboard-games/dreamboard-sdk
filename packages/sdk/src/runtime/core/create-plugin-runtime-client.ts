@@ -1,12 +1,11 @@
 import {
   HostToPluginEnvelopeSchema,
   RuntimeJsonSchema,
+  type GameplayBasis,
   type HostToPluginEnvelope,
+  type InteractionResult,
   type PluginGameplayFrame,
-  type PluginInteractionBasis,
   type PluginSessionDescriptor,
-  type SubmissionResult,
-  type ValidationResult,
 } from "@dreamboard-games/plugin-runtime-contract";
 import type {
   PluginRuntimeClient,
@@ -40,7 +39,7 @@ const defaultIdFactory: RuntimeIdFactory = {
 };
 
 function createSubmissionError(
-  result: Extract<SubmissionResult, { accepted: false }>,
+  result: Extract<InteractionResult, { accepted: false }>,
 ): Error & { errorCode?: string } {
   const error = new Error(result.message ?? "Submission failed") as Error & {
     errorCode?: string;
@@ -48,14 +47,6 @@ function createSubmissionError(
   error.name = "SubmissionError";
   error.errorCode = result.errorCode;
   return error;
-}
-
-function disconnectedValidationResult(): ValidationResult {
-  return {
-    valid: false,
-    errorCode: "runtime-disconnected",
-    message: "Plugin runtime disconnected",
-  };
 }
 
 export function createPluginRuntimeClient(
@@ -70,10 +61,6 @@ export function createPluginRuntimeClient(
   let stopTransport: (() => void) | undefined;
   const sessionListeners = new Set<() => void>();
   const frameListeners = new Set<() => void>();
-  const pendingValidations = new Map<
-    string,
-    (result: ValidationResult) => void
-  >();
   const pendingSubmissions = new Map<
     string,
     {
@@ -94,15 +81,11 @@ export function createPluginRuntimeClient(
     }
   };
 
-  const currentBasis = (): PluginInteractionBasis => {
+  const currentBasis = (): GameplayBasis => {
     if (!frame) {
       throw new Error("Plugin runtime has not received a gameplay frame.");
     }
-    return {
-      gameVersion: frame.gameVersion,
-      actionSetVersion: frame.actionSetVersion,
-      perspectivePlayerId: frame.perspectivePlayerId,
-    };
+    return frame.basis;
   };
 
   const sendRuntimeError = (message: string, code?: string) => {
@@ -164,24 +147,16 @@ export function createPluginRuntimeClient(
         }
         break;
       }
-      case "interaction.validation-result": {
-        const resolve = pendingValidations.get(message.payload.requestId);
-        if (resolve) {
-          pendingValidations.delete(message.payload.requestId);
-          resolve(message.payload.result);
-        }
-        break;
-      }
-      case "interaction.submit-result": {
-        const pending = pendingSubmissions.get(message.payload.requestId);
+      case "interaction.result": {
+        const pending = pendingSubmissions.get(message.payload.clientActionId);
         if (!pending) {
           break;
         }
-        pendingSubmissions.delete(message.payload.requestId);
-        if (message.payload.result.accepted) {
+        pendingSubmissions.delete(message.payload.clientActionId);
+        if (message.payload.accepted) {
           pending.resolve();
         } else {
-          pending.reject(createSubmissionError(message.payload.result));
+          pending.reject(createSubmissionError(message.payload));
         }
         break;
       }
@@ -195,10 +170,6 @@ export function createPluginRuntimeClient(
   stopTransport = options.transport.start(handleHostMessage);
 
   const rejectPending = () => {
-    for (const resolve of pendingValidations.values()) {
-      resolve(disconnectedValidationResult());
-    }
-    pendingValidations.clear();
     for (const pending of pendingSubmissions.values()) {
       const error = new Error("Plugin runtime disconnected") as Error & {
         errorCode?: string;
@@ -225,55 +196,6 @@ export function createPluginRuntimeClient(
         frameListeners.delete(listener);
       };
     },
-    validateInteraction: async (interactionId, params) =>
-      new Promise((resolve) => {
-        if (disconnected) {
-          resolve(disconnectedValidationResult());
-          return;
-        }
-        let basis: PluginInteractionBasis;
-        try {
-          basis = currentBasis();
-        } catch (error) {
-          resolve({
-            valid: false,
-            errorCode: "runtime-not-ready",
-            message:
-              error instanceof Error
-                ? error.message
-                : "Plugin runtime is not ready.",
-          });
-          return;
-        }
-        const parsedParams = RuntimeJsonSchema.safeParse(params);
-        if (!parsedParams.success) {
-          resolve({
-            valid: false,
-            errorCode: "invalid-runtime-json",
-            message: "Interaction params must be runtime JSON.",
-          });
-          return;
-        }
-        const requestId = idFactory.nextId("validate");
-        pendingValidations.set(requestId, resolve);
-        options.transport.send({
-          type: "interaction.validate",
-          requestId,
-          basis,
-          interactionId,
-          params: parsedParams.data,
-        });
-        setTimeout(() => {
-          if (!pendingValidations.delete(requestId)) {
-            return;
-          }
-          resolve({
-            valid: false,
-            errorCode: "validation-timeout",
-            message: "Validation request timed out",
-          });
-        }, requestTimeoutMs);
-      }),
     submitInteraction: async (interactionId, params) =>
       new Promise((resolve, reject) => {
         if (disconnected) {
@@ -295,7 +217,7 @@ export function createPluginRuntimeClient(
           reject(error);
           return;
         }
-        let basis: PluginInteractionBasis;
+        let basis: GameplayBasis;
         try {
           basis = currentBasis();
         } catch (error) {
@@ -309,21 +231,21 @@ export function createPluginRuntimeClient(
           reject(submissionError);
           return;
         }
-        const requestId = idFactory.nextId("submit");
-        pendingSubmissions.set(requestId, { resolve, reject });
+        const clientActionId = idFactory.nextId("action");
+        pendingSubmissions.set(clientActionId, { resolve, reject });
         options.transport.send({
           type: "interaction.submit",
-          requestId,
+          clientActionId,
           basis,
           interactionId,
           params: parsedParams.data,
         });
         setTimeout(() => {
-          const pending = pendingSubmissions.get(requestId);
+          const pending = pendingSubmissions.get(clientActionId);
           if (!pending) {
             return;
           }
-          pendingSubmissions.delete(requestId);
+          pendingSubmissions.delete(clientActionId);
           const error = new Error("Submission request timed out") as Error & {
             errorCode?: string;
           };

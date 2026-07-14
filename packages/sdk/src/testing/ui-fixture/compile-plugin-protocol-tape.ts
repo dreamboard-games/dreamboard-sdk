@@ -45,17 +45,8 @@ export function compilePluginProtocolTape(
       );
     }
     if (exchange.operation === "validate") {
-      steps.push({
-        id: exchange.id,
-        kind: "client.validate",
-        fromFrameId: exchange.fromFrameId,
-        requestDigest: digestRuntimeCommand(exchange, fromFrame),
-        response: {
-          valid: exchange.result.valid,
-          errorCode: exchange.result.errorCode,
-          message: exchange.result.message,
-        },
-      });
+      // Reducer validation remains part of the authored scenario trace, but
+      // protocol v4 performs no live host validation round trip.
       continue;
     }
 
@@ -66,8 +57,14 @@ export function compilePluginProtocolTape(
       requestDigest: digestRuntimeCommand(exchange, fromFrame),
       response:
         exchange.result.kind === "accepted"
-          ? { accepted: true }
+          ? {
+              type: "interaction.result",
+              clientActionId: exchange.id,
+              accepted: true,
+            }
           : {
+              type: "interaction.result",
+              clientActionId: exchange.id,
               accepted: false,
               errorCode:
                 exchange.result.diagnostics[0]?.code ?? "fixture-rejected",
@@ -108,7 +105,8 @@ function materializeTraceFrame(
       dynamicProjection: frame.dynamicProjection,
       staticProjection: frame.staticProjection,
       perspectivePlayerId,
-      gameVersion: frame.gameVersion,
+      generation: 0,
+      version: frame.gameVersion,
       actionSetVersion: frame.actionSetVersion,
     }),
     projectionDigest: frame.projectionDigest,
@@ -121,11 +119,7 @@ function digestRuntimeCommand(
 ): string {
   return digestUIFixtureTransportRequest({
     operation: exchange.operation === "validate" ? "validate" : "submit",
-    basis: {
-      gameVersion: frame.frame.gameVersion,
-      actionSetVersion: frame.frame.actionSetVersion,
-      perspectivePlayerId: frame.frame.perspectivePlayerId,
-    },
+    basis: frame.frame.basis,
     interactionId: exchange.input.interactionId,
     payload: exchange.input.params,
   });
