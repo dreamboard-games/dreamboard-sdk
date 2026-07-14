@@ -178,6 +178,10 @@ function sdkAliases(useSource: boolean) {
       replacement: target("runtime"),
     },
     {
+      find: /^@dreamboard-games\/sdk\/plugin-runtime-contract$/,
+      replacement: target("plugin-runtime-contract"),
+    },
+    {
       find: /^@dreamboard-games\/sdk\/ui$/,
       replacement: target("ui"),
     },
