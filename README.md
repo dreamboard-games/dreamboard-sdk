@@ -66,7 +66,7 @@ pnpm publish:alpha
 This publishes only `@dreamboard-games/sdk` with the `alpha` npm dist-tag. See
 [`docs/alpha-publish.md`](docs/alpha-publish.md) for the full checklist.
 The current public changes are summarized in
-[`docs/release-notes-0.4.0-alpha.11.md`](docs/release-notes-0.4.0-alpha.11.md).
+[`docs/release-notes-0.4.0-alpha.12.md`](docs/release-notes-0.4.0-alpha.12.md).
 
 The `release-alpha` GitHub Actions workflow publishes the SDK package with
 provenance and the `alpha` npm dist-tag after npm Trusted Publishing is

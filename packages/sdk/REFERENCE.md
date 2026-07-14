@@ -48,7 +48,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.11";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.12";
 };
 ```
 
@@ -57,7 +57,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.11";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.12";
 ```
 
 _No JSDoc summary is available yet._
@@ -96,7 +96,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.11";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.12";
 };
 ```
 
@@ -105,7 +105,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.11";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.12";
 ```
 
 _No JSDoc summary is available yet._
@@ -20868,6 +20868,14 @@ type ClientParamSchemaMap = Readonly<
 
 _No JSDoc summary is available yet._
 
+### createGameUiContract
+
+```ts
+function createGameUiContract(...args: never[]): unknown;
+```
+
+_No JSDoc summary is available yet._
+
 ### createWorkspaceUIContract
 
 ```ts
@@ -20967,6 +20975,224 @@ interface GameTurnState<
   order: readonly PlayerIdValue[];
   isMine: boolean;
 }
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiBoardSurface
+
+```ts
+type GameUiBoardSurface<
+  Manifest extends GameUiManifestTypes,
+  _Board extends Manifest["BoardBaseId"] = Manifest["BoardBaseId"],
+> = WorkspaceBoardSurface<
+  Manifest["SpaceId"],
+  Manifest["EdgeId"],
+  Manifest["VertexId"],
+  Manifest["SpaceId"]
+> & {
+  readonly __board?: _Board;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiCardCollectionSurface
+
+```ts
+type GameUiCardCollectionSurface<
+  Manifest extends GameUiManifestTypes,
+  Zones extends readonly Manifest["ZoneId"][] = readonly Manifest["ZoneId"][],
+> = {
+  readonly Collection: ZoneCardsComponent<Manifest>;
+  readonly Card: ZoneCardComponent<Manifest>;
+  readonly slot: {
+    readonly card: GameUiInteractionSlot & {
+      readonly __zones?: Zones;
+    };
+  };
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiContract
+
+```ts
+type GameUiContract<Game, Manifest extends GameUiManifestTypes> = UiRegistry<
+  Game,
+  Manifest
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiGameRootState
+
+```ts
+type GameUiGameRootState<
+  Game,
+  Manifest extends GameUiManifestTypes,
+> = GameRenderState<
+  GameUiView<Game>,
+  Manifest["PlayerId"],
+  GameUiPhaseName<Game>
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiHandSurface
+
+```ts
+type GameUiHandSurface = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiInteractionDescriptor
+
+```ts
+type GameUiInteractionDescriptor<
+  Game,
+  Key extends GameUiInteractionKey<Game>,
+> = InteractionDescriptor<Key>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiInteractionFormSurface
+
+```ts
+type GameUiInteractionFormSurface = ...;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiInteractionKey
+
+```ts
+type GameUiInteractionKey<Game> = {
+  [Phase in GameUiPhaseName<Game>]: `${Phase}.${GameUiInteractionIdForPhase<Game, Phase>}`;
+}[GameUiPhaseName<Game>];
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiInteractionParamsOf
+
+```ts
+type GameUiInteractionParamsOf<
+  Game,
+  Key extends GameUiInteractionKey<Game>,
+> = ClientParamsOfInteractionOfDefinition<
+  Game,
+  PhaseOfInteractionKey<Game, Key>,
+  IdOfInteractionKey<Game, Key>
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiInteractionRoutes
+
+```ts
+type GameUiInteractionRoutes<Game> = Partial<{
+  [Key in GameUiInteractionKey<Game>]: {
+    readonly collect: {
+      [Input in GameUiInteractionInputKeys<Game, Key>]: GameUiCollectorSlot<
+        Game,
+        Key,
+        Input
+      >;
+    };
+  };
+}>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiManifestTypes
+
+```ts
+interface GameUiManifestTypes { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiMe
+
+```ts
+type GameUiMe<Manifest extends GameUiManifestTypes> = GameMeState<
+  Manifest["PlayerId"]
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiPhaseName
+
+```ts
+type GameUiPhaseName<Game> = PhaseNamesOfDefinition<Game>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiPileSurface
+
+```ts
+type GameUiPileSurface<Manifest extends GameUiManifestTypes> = {
+  readonly Pile: ZoneCardsComponent<Manifest>;
+  readonly Card: ZoneCardComponent<Manifest>;
+};
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiPlayers
+
+```ts
+type GameUiPlayers<Manifest extends GameUiManifestTypes> = GamePlayersState<
+  Manifest["PlayerId"]
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiTurn
+
+```ts
+type GameUiTurn<Game, Manifest extends GameUiManifestTypes> = GameTurnState<
+  Manifest["PlayerId"],
+  GameUiPhaseName<Game>
+>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiView
+
+```ts
+type GameUiView<Game> =
+  Extract<"player", GameUiViewName<Game>> extends never
+    ? never
+    : ViewOfDefinition<Game, Extract<"player", GameUiViewName<Game>>>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameUiViewName
+
+```ts
+type GameUiViewName<Game> = ViewNamesOfDefinition<Game>;
+```
+
+_No JSDoc summary is available yet._
+
+### GameWorkspaceUI
+
+```ts
+type GameWorkspaceUI = ...;
 ```
 
 _No JSDoc summary is available yet._

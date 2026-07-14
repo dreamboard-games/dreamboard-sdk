@@ -72,6 +72,55 @@ exports[`public export surface reducer export names are stable 1`] = `
 ]
 `;
 
+exports[`public export surface plugin-runtime-contract export names are stable 1`] = `
+[
+  "BoardStaticProjectionSchema",
+  "DREAMBOARD_PLUGIN_PROTOCOL",
+  "DREAMBOARD_PLUGIN_PROTOCOL_VERSION",
+  "GameEventDetailSchema",
+  "GameEventSchema",
+  "GameOutcomeSchema",
+  "GameplayBasisSchema",
+  "HostToPluginEnvelopeSchema",
+  "HostToPluginPayloadSchema",
+  "InputDomainDependenciesSchema",
+  "InputDomainSchema",
+  "InteractionAvailabilitySchema",
+  "InteractionCommitPolicySchema",
+  "InteractionContextSchema",
+  "InteractionDescriptorSchema",
+  "InteractionInputDescriptorSchema",
+  "InteractionResultSchema",
+  "PluginGameplayFrameSchema",
+  "PluginPlayerSummarySchema",
+  "PluginProtocolFrameSchema",
+  "PluginProtocolStepSchema",
+  "PluginProtocolTapeSchema",
+  "PluginSessionDescriptorSchema",
+  "PluginToHostEnvelopeSchema",
+  "PluginToHostPayloadSchema",
+  "ProjectedGameEventSchema",
+  "RuntimeJsonSchema",
+  "SeatProjectionBundleSchema",
+  "SimultaneousPhaseSnapshotSchema",
+  "SubmitInteractionCommandSchema",
+  "SystemActionEventSchema",
+  "ZoneHandlesSnapshotSchema",
+  "canonicalizePluginRuntimeJson",
+  "computePluginActionSetVersion",
+  "createPluginProtocolEnvelopeSchema",
+  "digestPluginCommandRequest",
+  "digestPluginGameplayFrame",
+  "digestPluginRuntimeJson",
+  "encodeCanonicalPluginRuntimeJson",
+  "materializePluginGameplayFrame",
+  "parseHostToPluginEnvelope",
+  "parsePluginGameplayFrame",
+  "parsePluginSessionDescriptor",
+  "parsePluginToHostEnvelope",
+]
+`;
+
 exports[`public export surface reducer/advanced export names are stable 1`] = `
 [
   "FrameworkErrorCodes",
@@ -198,6 +247,7 @@ exports[`public export surface runtime/primitives export names are stable 1`] = 
 
 exports[`public export surface runtime/workspace-contract export names are stable 1`] = `
 [
+  "createGameUiContract",
   "createWorkspaceUIContract",
 ]
 `;
@@ -446,6 +496,31 @@ exports[`public export surface testing export names are stable 1`] = `
 ]
 `;
 
+exports[`public export surface testing-compiler export names are stable 1`] = `
+[
+  "compileScenarioReplay",
+]
+`;
+
+exports[`public export surface authoring-compiler export names are stable 1`] = `
+[
+  "materializeWorkspace",
+]
+`;
+
+exports[`public export surface reference-game-compiler export names are stable 1`] = `
+[
+  "CANONICAL_REFERENCE_GAME_IDS",
+  "REFERENCE_GAME_SOURCE_INVENTORY_POLICY",
+  "classifyReferenceGameSourcePath",
+  "collectReferenceGameSourceManifest",
+  "collectReferenceGameSourceObjects",
+  "isReferenceGameSourceObject",
+  "referenceGamePathIdentity",
+  "shouldDescendIntoReferenceGameDirectory",
+]
+`;
+
 exports[`public export surface browser-interaction export names are stable 1`] = `
 [
   "BROWSER_INTERACTION_ACTUATOR_KINDS",
@@ -504,79 +579,5 @@ exports[`public export surface browser-interaction export names are stable 1`] =
   "resolveBrowserPointerTarget",
   "targetIdentityKey",
   "validateBrowserInteractionSnapshot",
-]
-`;
-
-exports[`public export surface testing-compiler export names are stable 1`] = `
-[
-  "compileScenarioReplay",
-]
-`;
-
-exports[`public export surface authoring-compiler export names are stable 1`] = `
-[
-  "materializeWorkspace",
-]
-`;
-
-exports[`public export surface reference-game-compiler export names are stable 1`] = `
-[
-  "CANONICAL_REFERENCE_GAME_IDS",
-  "REFERENCE_GAME_SOURCE_INVENTORY_POLICY",
-  "classifyReferenceGameSourcePath",
-  "collectReferenceGameSourceManifest",
-  "collectReferenceGameSourceObjects",
-  "isReferenceGameSourceObject",
-  "referenceGamePathIdentity",
-  "shouldDescendIntoReferenceGameDirectory",
-]
-`;
-
-exports[`public export surface plugin-runtime-contract export names are stable 1`] = `
-[
-  "BoardStaticProjectionSchema",
-  "DREAMBOARD_PLUGIN_PROTOCOL",
-  "DREAMBOARD_PLUGIN_PROTOCOL_VERSION",
-  "GameEventDetailSchema",
-  "GameEventSchema",
-  "GameOutcomeSchema",
-  "GameplayBasisSchema",
-  "HostToPluginEnvelopeSchema",
-  "HostToPluginPayloadSchema",
-  "InputDomainDependenciesSchema",
-  "InputDomainSchema",
-  "InteractionAvailabilitySchema",
-  "InteractionCommitPolicySchema",
-  "InteractionContextSchema",
-  "InteractionDescriptorSchema",
-  "InteractionInputDescriptorSchema",
-  "InteractionResultSchema",
-  "PluginGameplayFrameSchema",
-  "PluginPlayerSummarySchema",
-  "PluginProtocolFrameSchema",
-  "PluginProtocolStepSchema",
-  "PluginProtocolTapeSchema",
-  "PluginSessionDescriptorSchema",
-  "PluginToHostEnvelopeSchema",
-  "PluginToHostPayloadSchema",
-  "ProjectedGameEventSchema",
-  "RuntimeJsonSchema",
-  "SeatProjectionBundleSchema",
-  "SimultaneousPhaseSnapshotSchema",
-  "SubmitInteractionCommandSchema",
-  "SystemActionEventSchema",
-  "ZoneHandlesSnapshotSchema",
-  "canonicalizePluginRuntimeJson",
-  "computePluginActionSetVersion",
-  "createPluginProtocolEnvelopeSchema",
-  "digestPluginCommandRequest",
-  "digestPluginGameplayFrame",
-  "digestPluginRuntimeJson",
-  "encodeCanonicalPluginRuntimeJson",
-  "materializePluginGameplayFrame",
-  "parseHostToPluginEnvelope",
-  "parsePluginGameplayFrame",
-  "parsePluginSessionDescriptor",
-  "parsePluginToHostEnvelope",
 ]
 `;

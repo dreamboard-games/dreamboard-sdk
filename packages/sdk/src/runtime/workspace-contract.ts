@@ -1,4 +1,7 @@
-export { createWorkspaceUIContract } from "./workspace-contract/index.js";
+export {
+  createGameUiContract,
+  createWorkspaceUIContract,
+} from "./workspace-contract/index.js";
 export type { DreamboardUI, TypedGame, UIContract } from "./ui-contract.js";
 export type {
   BoardGridInteractionFilter,
@@ -13,6 +16,25 @@ export type {
   GamePlayersState,
   GameRenderState,
   GameTurnState,
+  GameUiBoardSurface,
+  GameUiCardCollectionSurface,
+  GameUiContract,
+  GameUiGameRootState,
+  GameUiHandSurface,
+  GameUiInteractionDescriptor,
+  GameUiInteractionFormSurface,
+  GameUiInteractionKey,
+  GameUiInteractionParamsOf,
+  GameUiInteractionRoutes,
+  GameUiManifestTypes,
+  GameUiMe,
+  GameUiPhaseName,
+  GameUiPileSurface,
+  GameUiPlayers,
+  GameUiTurn,
+  GameUiView,
+  GameUiViewName,
+  GameWorkspaceUI,
   ResourceCounterComponents,
   UIRootProps,
   WorkspaceBoardSurface,
