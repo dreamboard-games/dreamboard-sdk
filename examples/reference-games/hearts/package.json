@@ -22,7 +22,7 @@
     "verify": "pnpm materialize && pnpm typecheck:raw && pnpm test:raw && pnpm test:ui:raw"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.4.0-alpha.11",
+    "@dreamboard-games/sdk": "0.4.0-alpha.12",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "zod": "4.4.3"
