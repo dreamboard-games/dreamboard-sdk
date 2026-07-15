@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { mkdir, rm } from "node:fs/promises";
+import { copyFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 
 import {
@@ -17,6 +17,7 @@ function parseArgs(argv) {
     if (arg === "--") continue;
     if (
       arg === "--out" ||
+      arg === "--sdk-tarball" ||
       arg === "--device-canary-receipt" ||
       arg === "--real-host-parity-receipt"
     ) {
@@ -39,11 +40,12 @@ function parseArgs(argv) {
   return options;
 }
 
-function run(command, args) {
+function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     cwd: root,
     stdio: "inherit",
     env: process.env,
+    ...options,
   });
   if (result.status !== 0) {
     throw new Error(`${command} ${args.join(" ")} failed.`);
@@ -56,6 +58,15 @@ async function main() {
     root,
     options.out ?? "build/proofs/release/current",
   );
+  const suppliedSdkTarball = options["sdk-tarball"]
+    ? path.resolve(root, options["sdk-tarball"])
+    : null;
+  if (
+    suppliedSdkTarball &&
+    path.relative(outputRoot, suppliedSdkTarball).split(path.sep)[0] !== ".."
+  ) {
+    throw new Error("--sdk-tarball must be outside --out.");
+  }
   await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 
@@ -66,12 +77,31 @@ async function main() {
   }
 
   const candidateRoot = path.join(outputRoot, "candidate");
-  run("node", [
-    "scripts/pack-and-smoke-sdk.mjs",
-    "--skip-build",
-    "--out",
-    path.relative(root, candidateRoot),
-  ]);
+  if (suppliedSdkTarball) {
+    await mkdir(candidateRoot, { recursive: true });
+    const candidateTarball = path.join(
+      candidateRoot,
+      path.basename(suppliedSdkTarball),
+    );
+    await copyFile(suppliedSdkTarball, candidateTarball);
+    run("node", [
+      "scripts/assert-sdk-tarball-self-contained.mjs",
+      candidateTarball,
+    ]);
+    run("node", ["scripts/smoke-packed-sdk.mjs", candidateTarball], {
+      env: {
+        ...process.env,
+        AUTHORING_SMOKE_RECEIPT: path.join(candidateRoot, "receipt.json"),
+      },
+    });
+  } else {
+    run("node", [
+      "scripts/pack-and-smoke-sdk.mjs",
+      "--skip-build",
+      "--out",
+      path.relative(root, candidateRoot),
+    ]);
+  }
   const candidateReceiptPath = path.join(candidateRoot, "receipt.json");
   const candidateReceipt = await readJson(candidateReceiptPath);
   if (

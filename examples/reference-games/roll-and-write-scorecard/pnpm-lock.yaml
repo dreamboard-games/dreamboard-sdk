@@ -18,8 +18,8 @@ importers:
   .:
     dependencies:
       '@dreamboard-games/sdk':
-        specifier: 0.4.0-alpha.12
-        version: 0.4.0-alpha.12(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
+        specifier: 0.4.0-alpha.13
+        version: 0.4.0-alpha.13(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)
       framer-motion:
         specifier: 12.38.0
         version: 12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -60,8 +60,8 @@ importers:
 
 packages:
 
-  '@dreamboard-games/sdk@0.4.0-alpha.12':
-    resolution: {integrity: sha512-arWAh13sjVTEFRo8lIEnRbhMR2rgPOGXuIZfByHfVQf/oMItL0jH7ltwd6g0IZK+l24/YJCnMw2MWavYGkMktw==}
+  '@dreamboard-games/sdk@0.4.0-alpha.13':
+    resolution: {integrity: sha512-FCLuUQWVY0b/ReNgSKNWaLKfYbv5tfHef/8auIduuAlySyZdMpaJ/FhQwXeSJzhV4jWNQFqnf99pFXMtqyj8SQ==}
     hasBin: true
     peerDependencies:
       framer-motion: 12.38.0
@@ -764,7 +764,7 @@ packages:
 
 snapshots:
 
-  '@dreamboard-games/sdk@0.4.0-alpha.12(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)':
+  '@dreamboard-games/sdk@0.4.0-alpha.13(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(framer-motion@12.38.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(zod@4.4.3)':
     dependencies:
       '@noble/hashes': 2.2.0
       '@radix-ui/react-accordion': 1.2.14(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
