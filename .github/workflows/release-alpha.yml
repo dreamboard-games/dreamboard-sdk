@@ -98,7 +98,7 @@ jobs:
           if (metadata.name !== "@dreamboard-games/sdk") throw new Error(`Unexpected package name: ${metadata.name}`);
           if (!metadata.version.includes("-alpha.")) throw new Error(`Version is not alpha: ${metadata.version}`);
           if (metadata.distTag !== "alpha") throw new Error(`Unexpected dist-tag: ${metadata.distTag}`);
-          const candidate = JSON.parse(fs.readFileSync("package/candidate-receipt.json", "utf8"));
+          const candidate = JSON.parse(fs.readFileSync("package/package/candidate-receipt.json", "utf8"));
           if (candidate.package?.integrity !== metadata.integrity) throw new Error("Candidate receipt integrity does not match release metadata");
           const tarball = fs.readdirSync("package").find((entry) => entry.endsWith(".tgz"));
           const actual = `sha512-${require("node:crypto").createHash("sha512").update(fs.readFileSync(`package/${tarball}`)).digest("base64")}`;
