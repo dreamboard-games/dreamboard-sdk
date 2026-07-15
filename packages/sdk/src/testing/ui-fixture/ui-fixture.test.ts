@@ -22,6 +22,8 @@ import {
   digestUIScenarioFixture,
   parseUIScenarioFixture,
   parseUIScenarioFixtureBundleIndex,
+  parseUIParityRealHostReceipt,
+  parseUIParityRunInput,
   serializeUIScenarioFixture,
   type PluginProtocolTape,
   type UIScenarioFixture,
@@ -336,7 +338,7 @@ describe("UI scenario fixture contract", () => {
       },
     });
 
-    expect(observation.schemaVersion).toBe(1);
+    expect(observation.schemaVersion).toBe(2);
     expect(observation.scenarioId).toBe("hearts.pass-three.mobile");
     expect(observation.pluginRuntimeProtocol).toBe(
       DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
@@ -353,9 +355,12 @@ describe("UI scenario fixture contract", () => {
         actuatorId: "commit",
         draftDigest: undefined,
         descriptorDigest: undefined,
-        gameVersion: 2,
-        actionSetVersion: "sha256:".concat("2".padStart(64, "0")),
-        perspectivePlayerId: "player-1",
+        basis: {
+          generation: 0,
+          version: 2,
+          actionSetVersion: "sha256:".concat("2".padStart(64, "0")),
+          perspectivePlayerId: "player-1",
+        },
         projectionDigest: fixture.protocol.frames[1]!.projectionDigest,
         semanticDigest: fixture.expected.finalSemanticDigest,
         submissionDigest: fixture.expected.submissionDigest,
@@ -394,6 +399,36 @@ describe("UI scenario fixture contract", () => {
         actual: "sha256:".concat("2".repeat(64)),
         checkpointIndex: 0,
         stepId: "commit-pass",
+      },
+    });
+  });
+
+  test("detects a rewind generation mismatch when the version is unchanged", () => {
+    const expected = createUIParityObservationFromFixture({
+      fixture: makeFixture(),
+      sdkCandidateDigest: "sha256:".concat("1".repeat(64)),
+      environment: {
+        project: "chromium-touch-phone",
+        viewport: { width: 390, height: 844 },
+      },
+    });
+    const actual = {
+      ...expected,
+      checkpoints: [
+        {
+          ...expected.checkpoints[0]!,
+          basis: { ...expected.checkpoints[0]!.basis, generation: 1 },
+        },
+      ],
+    };
+
+    expect(compareUIParityObservations(expected, actual)).toMatchObject({
+      ok: false,
+      failure: {
+        code: "projection-mismatch",
+        path: "checkpoints[0].basis.generation",
+        expected: 0,
+        actual: 1,
       },
     });
   });
@@ -677,5 +712,103 @@ describe("UI scenario fixture contract", () => {
         { ...identity, actuatorId: "different" },
       ]),
     ).toThrow(/actuatorId/);
+  });
+
+  test("parses portable V2 run inputs and rejects path escape", () => {
+    const artifact = {
+      path: "artifacts/candidate.tgz",
+      sha256: digestUIFixtureJson("candidate"),
+    };
+    const input = {
+      schemaVersion: 2,
+      sdk: { tarball: artifact },
+      referenceBundle: { ...artifact, path: "artifacts/reference.tar.gz" },
+      fixtureBundle: {
+        index: { ...artifact, path: "fixtures/index.json" },
+        scenarios: [
+          {
+            id: "hearts.pass-three.mobile",
+            fixture: { ...artifact, path: "fixtures/hearts/fixture.json" },
+            renderModule: { ...artifact, path: "fixtures/hearts/render.mjs" },
+            expectation: {
+              ...artifact,
+              path: "observations/hearts.expectation.json",
+            },
+            source: { ...artifact, path: "observations/hearts.source.json" },
+          },
+        ],
+      },
+      project: "chromium-touch-phone",
+    };
+
+    expect(parseUIParityRunInput(input)).toEqual(input);
+    expect(() =>
+      parseUIParityRunInput({
+        ...input,
+        sdk: { tarball: { ...artifact, path: "../candidate.tgz" } },
+      }),
+    ).toThrow(/portable bundle/);
+    expect(() => parseUIParityRunInput({ ...input, schemaVersion: 1 })).toThrow(
+      /schemaVersion must be 2/,
+    );
+  });
+
+  test("parses only passing portable V2 real-host receipts", () => {
+    const receipt = {
+      schemaVersion: 2,
+      kind: "dreamboard-ui-real-host-parity",
+      mode: "real-host-parity",
+      result: "passed",
+      realHostExecutor: true,
+      input: {
+        path: "input-bundle/input.json",
+        sha256: digestUIFixtureJson("input"),
+      },
+      sdkTarballSha256: digestUIFixtureJson("candidate"),
+      fixtureBundleSha256: digestUIFixtureJson("fixtures"),
+      scenarios: [
+        {
+          id: "hearts.pass-three.mobile",
+          fixtureDigest: digestUIFixtureJson("fixture"),
+        },
+      ],
+      source: {
+        result: "passed",
+        comparisons: [
+          {
+            scenarioId: "hearts.pass-three.mobile",
+            actual: "input-bundle/observations/source.json",
+            comparison: "comparisons/expectation-source.json",
+          },
+        ],
+      },
+      internal: {
+        result: "passed",
+        comparisons: [
+          {
+            scenarioId: "hearts.pass-three.mobile",
+            actual: "observations/real-host.json",
+            expectationComparison: "comparisons/expectation-real.json",
+            sourceComparison: "comparisons/source-real.json",
+          },
+        ],
+      },
+      project: "chromium-touch-phone",
+      host: {
+        route: "/_dev/ui-parity/:scenarioId",
+        pluginIframe: true,
+        pluginSessionGateway: true,
+        playwright: "chromium",
+        webLogPath: "host/web.log",
+      },
+    };
+
+    expect(parseUIParityRealHostReceipt(receipt)).toEqual(receipt);
+    expect(() =>
+      parseUIParityRealHostReceipt({
+        ...receipt,
+        host: { ...receipt.host, webLogPath: "/tmp/web.log" },
+      }),
+    ).toThrow(/portable bundle/);
   });
 });

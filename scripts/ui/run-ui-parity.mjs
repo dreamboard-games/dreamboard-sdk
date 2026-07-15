@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawnSync } from "node:child_process";
-import { readdir, readFile, mkdir } from "node:fs/promises";
+import { copyFile, readdir, readFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -160,8 +160,53 @@ async function writeFixtureExpectation({
   await writeJson(observationPath, observation);
   return {
     observation,
-    path: path.relative(root, observationPath),
+    path: observationPath,
   };
+}
+
+async function stageArtifact(source, destination, inputRoot) {
+  const target = path.join(inputRoot, destination);
+  await mkdir(path.dirname(target), { recursive: true });
+  await copyFile(source, target);
+  return {
+    path: destination.split(path.sep).join("/"),
+    sha256: `sha256:${await sha256File(target)}`,
+  };
+}
+
+async function stagePortableSourceEvidence({
+  evidence,
+  evidencePath,
+  inputRoot,
+  scenarioId,
+}) {
+  const portable = structuredClone(evidence);
+  const screenshotMap = new Map();
+  for (const screenshot of evidence.screenshots ?? []) {
+    if (typeof screenshot !== "string" || !path.isAbsolute(screenshot)) {
+      throw new Error(
+        `Source evidence for '${scenarioId}' must bind absolute producer screenshot paths before portable staging.`,
+      );
+    }
+    const destination = path.join(
+      "evidence",
+      "screenshots",
+      scenarioId,
+      path.basename(screenshot),
+    );
+    const reference = await stageArtifact(screenshot, destination, inputRoot);
+    screenshotMap.set(screenshot, reference.path);
+  }
+  portable.screenshots = (evidence.screenshots ?? []).map((screenshot) =>
+    screenshotMap.get(screenshot),
+  );
+  portable.steps = (evidence.steps ?? []).map((step) => ({
+    ...step,
+    ...(typeof step.screenshotPath === "string"
+      ? { screenshotPath: screenshotMap.get(step.screenshotPath) }
+      : {}),
+  }));
+  await writeJson(evidencePath, portable);
 }
 
 export function createMeasuredObservation({
@@ -216,9 +261,7 @@ export function createMeasuredObservation({
       actuatorId: identity?.actuatorId,
       descriptorDigest: identity?.descriptorDigest,
       draftDigest: measured.draftDigest,
-      gameVersion: frame.frame.basis.version,
-      actionSetVersion: frame.frame.basis.actionSetVersion,
-      perspectivePlayerId: frame.frame.basis.perspectivePlayerId,
+      basis: frame.frame.basis,
       projectionDigest: measured.projectionDigest,
       semanticDigest: measured.semanticDigest,
       submissionDigest:
@@ -227,7 +270,7 @@ export function createMeasuredObservation({
     };
   });
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     scenarioId: fixture.id,
     fixtureDigest,
     sdkCandidateDigest,
@@ -308,9 +351,10 @@ async function main() {
     );
   }
   const fixtureIndexPath = path.join(fixturesRoot, "index.json");
+  const inputRoot = path.join(artifactRoot, "portable-input");
+  await mkdir(inputRoot, { recursive: true });
 
   const scenarioInputs = [];
-  const observations = [];
   const sourceComparisons = [];
   for (const selection of selected) {
     const entry = bundle.fixtures.find(
@@ -360,6 +404,18 @@ async function main() {
     const sourceEvidence = await readJson(
       path.resolve(root, sourceResult.evidenceFile),
     );
+    const portableEvidencePath = path.join(
+      inputRoot,
+      "evidence",
+      `${fixture.id}.source-evidence.json`,
+    );
+    await mkdir(path.dirname(portableEvidencePath), { recursive: true });
+    await stagePortableSourceEvidence({
+      evidence: sourceEvidence,
+      evidencePath: portableEvidencePath,
+      inputRoot,
+      scenarioId: fixture.id,
+    });
     const sourceObservationPath = path.join(
       artifactRoot,
       `${fixture.id}.source-observation.json`,
@@ -372,7 +428,7 @@ async function main() {
         sdkCandidateDigest: sdkTarballSha256,
         project,
         evidence: sourceEvidence,
-        evidencePath: sourceResult.evidenceFile,
+        evidencePath: path.relative(inputRoot, portableEvidencePath),
       }),
     );
     const sourceComparisonPath = path.join(
@@ -384,7 +440,7 @@ async function main() {
       [
         "scripts/ui/compare-ui-parity.mjs",
         "--expected",
-        expectation.path,
+        path.relative(root, expectation.path),
         "--actual",
         path.relative(root, sourceObservationPath),
         "--out",
@@ -399,38 +455,69 @@ async function main() {
       comparison: path.relative(root, sourceComparisonPath),
       evidence: sourceResult.evidenceFile,
     });
-    observations.push({
-      scenarioId: fixture.id,
-      expectation: expectation.path,
-      source: path.relative(root, sourceObservationPath),
-    });
     scenarioInputs.push({
       requestedId: selection.requestedId,
       id: fixture.id,
       sourceScenarioId: fixture.source.scenarioId,
       file: path.relative(root, path.join(fixturesRoot, entry.file)),
+      fixturePath: path.join(fixturesRoot, entry.file),
+      renderModulePath: path.join(fixturesRoot, entry.renderModule),
+      expectationPath: expectation.path,
+      sourcePath: sourceObservationPath,
       fixtureDigest,
       aliased: selection.aliased,
     });
   }
 
+  const portableSdk = await stageArtifact(
+    sdkTarball,
+    path.join("artifacts", "sdk.tgz"),
+    inputRoot,
+  );
+  const portableReferenceBundle = await stageArtifact(
+    path.resolve(root, referenceLock.referenceBundle.path),
+    path.join("artifacts", "reference-games.tar.gz"),
+    inputRoot,
+  );
+  const portableFixtureIndex = await stageArtifact(
+    fixtureIndexPath,
+    path.join("fixtures", "index.json"),
+    inputRoot,
+  );
+  const portableScenarios = [];
+  for (const scenario of scenarioInputs) {
+    portableScenarios.push({
+      id: scenario.id,
+      fixture: await stageArtifact(
+        scenario.fixturePath,
+        path.join("fixtures", scenario.id, "fixture.json"),
+        inputRoot,
+      ),
+      renderModule: await stageArtifact(
+        scenario.renderModulePath,
+        path.join("fixtures", scenario.id, "render-module.mjs"),
+        inputRoot,
+      ),
+      expectation: await stageArtifact(
+        scenario.expectationPath,
+        path.join("observations", `${scenario.id}.expectation.json`),
+        inputRoot,
+      ),
+      source: await stageArtifact(
+        scenario.sourcePath,
+        path.join("observations", `${scenario.id}.source.json`),
+        inputRoot,
+      ),
+    });
+  }
   const input = {
-    schemaVersion: 1,
-    sdk: {
-      tarball: path.relative(root, sdkTarball),
-      sha256: sdkTarballSha256,
-    },
-    referenceBundle: {
-      url: referenceLock.referenceBundle.url,
-      path: referenceLock.referenceBundle.path,
-      sha256: referenceLock.referenceBundle.sha256,
-    },
+    schemaVersion: 2,
+    sdk: { tarball: portableSdk },
+    referenceBundle: portableReferenceBundle,
     fixtureBundle: {
-      index: path.relative(root, fixtureIndexPath),
-      sha256: `sha256:${await sha256File(fixtureIndexPath)}`,
+      index: portableFixtureIndex,
+      scenarios: portableScenarios,
     },
-    scenarios: scenarioInputs.map((scenario) => scenario.id),
-    scenarioAliases: scenarioInputs.filter((scenario) => scenario.aliased),
     project:
       options.project ??
       (selected.length === 1
@@ -448,9 +535,8 @@ async function main() {
             ),
           )
         : "chromium-desktop"),
-    observations,
   };
-  const inputPath = path.join(artifactRoot, "input.json");
+  const inputPath = path.join(inputRoot, "input.json");
   await writeJson(inputPath, input);
 
   const internal = {
@@ -461,18 +547,53 @@ async function main() {
   };
 
   const receipt = {
-    schemaVersion: 1,
-    kind: "dreamboard-ui-real-host-parity",
-    mode: "real-host-parity",
-    result: internal.result,
-    realHostExecutor: internal.result === "passed",
-    input: path.relative(root, inputPath),
+    schemaVersion: 2,
+    kind: "dreamboard-ui-parity-source-preparation",
+    mode: "source-workbench",
+    result: "passed",
+    realHostExecutor: false,
+    input: {
+      path: path.relative(artifactRoot, inputPath).split(path.sep).join("/"),
+      sha256: `sha256:${await sha256File(inputPath)}`,
+    },
     sdkTarballSha256,
-    fixtureBundleSha256: input.fixtureBundle.sha256,
-    scenarios: scenarioInputs,
+    fixtureBundleSha256: portableFixtureIndex.sha256,
+    scenarios: scenarioInputs.map((scenario) => ({
+      id: scenario.id,
+      fixtureDigest: scenario.fixtureDigest,
+    })),
     source: {
       result: "passed",
-      comparisons: sourceComparisons,
+      comparisons: sourceComparisons.map((comparison) => ({
+        scenarioId: comparison.scenarioId,
+        actual: path
+          .relative(
+            artifactRoot,
+            path.resolve(
+              inputRoot,
+              portableScenarios.find(
+                (scenario) => scenario.id === comparison.scenarioId,
+              ).source.path,
+            ),
+          )
+          .split(path.sep)
+          .join("/"),
+        comparison: path
+          .relative(artifactRoot, path.resolve(root, comparison.comparison))
+          .split(path.sep)
+          .join("/"),
+        evidence: path
+          .relative(
+            artifactRoot,
+            path.join(
+              inputRoot,
+              "evidence",
+              `${comparison.scenarioId}.source-evidence.json`,
+            ),
+          )
+          .split(path.sep)
+          .join("/"),
+      })),
     },
     internal,
   };

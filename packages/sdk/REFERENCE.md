@@ -48,7 +48,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.12";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.13";
 };
 ```
 
@@ -57,7 +57,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.12";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.13";
 ```
 
 _No JSDoc summary is available yet._
@@ -96,7 +96,7 @@ _No JSDoc summary is available yet._
 
 ```ts
 const DREAMBOARD_SDK_PACKAGES: {
-  readonly "@dreamboard-games/sdk": "0.4.0-alpha.12";
+  readonly "@dreamboard-games/sdk": "0.4.0-alpha.13";
 };
 ```
 
@@ -105,7 +105,7 @@ _No JSDoc summary is available yet._
 ### DREAMBOARD_SDK_VERSION
 
 ```ts
-const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.12";
+const DREAMBOARD_SDK_VERSION: "0.4.0-alpha.13";
 ```
 
 _No JSDoc summary is available yet._
@@ -22079,8 +22079,8 @@ _No JSDoc summary is available yet._
 
 ```ts
 function compareUIParityObservations(
-  expected: UIParityObservationV1,
-  actual: UIParityObservationV1,
+  expected: UIParityObservation,
+  actual: UIParityObservation,
 ): UIParityComparisonResult;
 ```
 
@@ -22212,7 +22212,22 @@ function createUIParityObservationFromFixture({
   fixtureDigest,
   screenshotsByStepId,
   diagnostics,
-}: CreateUIParityObservationFromFixtureOptions): UIParityObservationV1;
+}: CreateUIParityObservationFromFixtureOptions): UIParityObservation;
+```
+
+_No JSDoc summary is available yet._
+
+### CreateUIParityObservationFromFixtureOptions
+
+```ts
+interface CreateUIParityObservationFromFixtureOptions {
+  readonly fixture: UIScenarioFixture;
+  readonly sdkCandidateDigest: string;
+  readonly environment: UIParityObservationEnvironment;
+  readonly fixtureDigest?: string;
+  readonly screenshotsByStepId?: Readonly<Record<string, string>>;
+  readonly diagnostics?: readonly UIParityDiagnostic[];
+}
 ```
 
 _No JSDoc summary is available yet._
@@ -22630,10 +22645,26 @@ function isStaleContractArtifactError(
 
 _No JSDoc summary is available yet._
 
-### parseUIParityObservationV1
+### parseUIParityObservation
 
 ```ts
-function parseUIParityObservationV1(value: unknown): UIParityObservationV1;
+function parseUIParityObservation(value: unknown): UIParityObservation;
+```
+
+_No JSDoc summary is available yet._
+
+### parseUIParityRealHostReceipt
+
+```ts
+function parseUIParityRealHostReceipt(value: unknown): UIParityRealHostReceipt;
+```
+
+_No JSDoc summary is available yet._
+
+### parseUIParityRunInput
+
+```ts
+function parseUIParityRunInput(value: unknown): UIParityRunInput;
 ```
 
 _No JSDoc summary is available yet._
@@ -23414,6 +23445,184 @@ _No JSDoc summary is available yet._
 
 ```ts
 declare const uiFixtureProtocolStepSchema: ...;
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityArtifactReference
+
+```ts
+interface UIParityArtifactReference {
+  readonly path: string;
+  readonly sha256: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityComparisonFailure
+
+```ts
+interface UIParityComparisonFailure {
+  readonly code: UIParityFailureCode;
+  readonly message: string;
+  readonly path: string;
+  readonly expected: unknown;
+  readonly actual: unknown;
+  readonly checkpointIndex?: number;
+  readonly stepId?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityComparisonResult
+
+```ts
+type UIParityComparisonResult =
+  | {
+      readonly ok: true;
+    }
+  | {
+      readonly ok: false;
+      readonly failure: UIParityComparisonFailure;
+    };
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityDiagnostic
+
+```ts
+interface UIParityDiagnostic {
+  readonly code: string;
+  readonly message: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityFailureCode
+
+```ts
+type UIParityFailureCode =
+  | "candidate-mismatch"
+  | "fixture-source-mismatch"
+  | "protocol-mismatch"
+  | "interaction-resolution-mismatch"
+  | "preparation-mismatch"
+  | "draft-mismatch"
+  | "submission-mismatch"
+  | "projection-mismatch"
+  | "semantic-snapshot-mismatch"
+  | "visual-mismatch"
+  | "host-setup-failure";
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityObservation
+
+```ts
+interface UIParityObservation { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityObservationCheckpoint
+
+```ts
+interface UIParityObservationCheckpoint { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityObservationEnvironment
+
+```ts
+interface UIParityObservationEnvironment {
+  readonly project: string;
+  readonly viewport: UIParityViewport;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityObservationProvenance
+
+```ts
+interface UIParityObservationProvenance {
+  readonly kind:
+    | "fixture-expectation"
+    | "source-workbench"
+    | "packed-real-host";
+  readonly evidence?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityRealHostReceipt
+
+```ts
+interface UIParityRealHostReceipt { ... }
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityReceiptComparison
+
+```ts
+interface UIParityReceiptComparison {
+  readonly scenarioId: string;
+  readonly actual: string;
+  readonly comparison: string;
+  readonly evidence?: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityRunInput
+
+```ts
+interface UIParityRunInput {
+  readonly schemaVersion: 2;
+  readonly sdk: {
+    readonly tarball: UIParityArtifactReference;
+  };
+  readonly referenceBundle: UIParityArtifactReference;
+  readonly fixtureBundle: {
+    readonly index: UIParityArtifactReference;
+    readonly scenarios: readonly UIParityRunScenario[];
+  };
+  readonly project: string;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityRunScenario
+
+```ts
+interface UIParityRunScenario {
+  readonly id: string;
+  readonly fixture: UIParityArtifactReference;
+  readonly renderModule: UIParityArtifactReference;
+  readonly expectation: UIParityArtifactReference;
+  readonly source: UIParityArtifactReference;
+}
+```
+
+_No JSDoc summary is available yet._
+
+### UIParityViewport
+
+```ts
+interface UIParityViewport {
+  readonly width: number;
+  readonly height: number;
+}
 ```
 
 _No JSDoc summary is available yet._

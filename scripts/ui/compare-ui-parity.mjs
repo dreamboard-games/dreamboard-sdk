@@ -3,7 +3,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import {
   compareUIParityObservations,
-  parseUIParityObservationV1,
+  parseUIParityObservation,
 } from "../../packages/sdk/dist/testing.js";
 import { root } from "./reference-games-lib.mjs";
 
@@ -27,7 +27,7 @@ function parseArgs(argv) {
 }
 
 async function readObservation(filePath) {
-  return parseUIParityObservationV1(
+  return parseUIParityObservation(
     JSON.parse(await readFile(path.resolve(root, filePath), "utf8")),
   );
 }

@@ -19,6 +19,11 @@ import {
   writeJson,
 } from "./reference-games-lib.mjs";
 import { requiredParityScenarioIds } from "./required-ui-scenarios.mjs";
+import {
+  parseUIParityObservation,
+  parseUIParityRealHostReceipt,
+  parseUIParityRunInput,
+} from "../../packages/sdk/dist/testing.js";
 
 const requiredGoldenScenario = requiredParityScenarioIds[0];
 if (!requiredGoldenScenario) {
@@ -116,6 +121,35 @@ async function readReceipt(receiptPath, label) {
     path: absolute,
     receipt: JSON.parse(await readFile(absolute, "utf8")),
   };
+}
+
+function resolvePortablePath(authorityPath, portablePath, label) {
+  if (typeof portablePath !== "string" || portablePath.length === 0) {
+    throw new Error(`${label} must be a non-empty relative path.`);
+  }
+  if (path.isAbsolute(portablePath)) {
+    throw new Error(`${label} must not be absolute: ${portablePath}`);
+  }
+  const authorityRoot = path.dirname(path.resolve(authorityPath));
+  const absolute = path.resolve(authorityRoot, portablePath);
+  const relative = path.relative(authorityRoot, absolute);
+  if (
+    relative === ".." ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(`${label} escapes its portable bundle: ${portablePath}`);
+  }
+  return absolute;
+}
+
+async function readPortableArtifact(authorityPath, reference, label) {
+  if (!reference || typeof reference.sha256 !== "string") {
+    throw new Error(`${label} must include path and sha256.`);
+  }
+  const absolute = resolvePortablePath(authorityPath, reference.path, label);
+  assertDigest(label, `sha256:${await sha256File(absolute)}`, reference.sha256);
+  return absolute;
 }
 
 function assertDigest(label, actual, expected) {
@@ -224,19 +258,7 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     options["real-host-parity-receipt"] ??
     process.env.UI_REAL_HOST_PARITY_RECEIPT;
   const result = await readReceipt(receiptPath, "Real-host parity");
-  const receipt = result.receipt;
-  if (
-    receipt.schemaVersion !== 1 ||
-    receipt.kind !== "dreamboard-ui-real-host-parity" ||
-    receipt.mode !== "real-host-parity" ||
-    receipt.result !== "passed" ||
-    receipt.realHostExecutor !== true ||
-    receipt.internal?.result !== "passed"
-  ) {
-    throw new Error(
-      `${path.relative(root, result.path)} is not a passing real-host parity receipt.`,
-    );
-  }
+  const receipt = parseUIParityRealHostReceipt(result.receipt);
   assertDigest(
     "Real-host parity SDK tarball",
     receipt.sdkTarballSha256,
@@ -254,30 +276,28 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     !sameStringArray(scenarioIds, requiredParityScenarioIds) ||
     receipt.source?.result !== "passed" ||
     receipt.source.comparisons?.length !== requiredParityScenarioIds.length ||
-    receipt.internal.comparisons?.length !== receipt.scenarios.length ||
-    receipt.internal.comparisons.some(
-      (comparison) =>
-        comparison.expectationStatus !== "passed" ||
-        comparison.sourceStatus !== "passed",
-    )
+    receipt.internal.comparisons?.length !== receipt.scenarios.length
   ) {
     throw new Error(
       `Real-host parity receipt must contain independently measured, passing source and internal comparisons for required scenarios: ${requiredParityScenarioIds.join(", ")}.`,
     );
   }
-  if (typeof receipt.input !== "string") {
-    throw new Error("Real-host parity receipt is missing its input contract.");
-  }
-  const parityInputPath = path.resolve(root, receipt.input);
-  const parityInput = JSON.parse(await readFile(parityInputPath, "utf8"));
+  const parityInputPath = await readPortableArtifact(
+    result.path,
+    receipt.input,
+    "Real-host parity input",
+  );
+  const parityInput = parseUIParityRunInput(
+    JSON.parse(await readFile(parityInputPath, "utf8")),
+  );
   assertDigest(
     "Real-host parity input SDK tarball",
-    parityInput.sdk?.sha256,
+    parityInput.sdk.tarball.sha256,
     expected.sdkTarballSha256,
   );
   assertDigest(
     "Real-host parity input fixture bundle",
-    parityInput.fixtureBundle?.sha256,
+    parityInput.fixtureBundle.index.sha256,
     expected.fixtureBundleSha256,
   );
   const evidencePaths = [];
@@ -301,24 +321,46 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
         `Real-host parity receipt is missing evidence paths for '${scenario.id}'.`,
       );
     }
-    const expectation = parityInput.observations?.find(
-      (candidate) => candidate.scenarioId === scenario.id,
-    )?.expectation;
-    if (typeof expectation !== "string") {
+    const inputScenario = parityInput.fixtureBundle.scenarios.find(
+      (candidate) => candidate.id === scenario.id,
+    );
+    if (!inputScenario) {
       throw new Error(
         `Real-host parity input is missing the fixture expectation for '${scenario.id}'.`,
       );
     }
+    const expectationPath = await readPortableArtifact(
+      parityInputPath,
+      inputScenario.expectation,
+      `${scenario.id} expectation`,
+    );
+    const sourcePath = await readPortableArtifact(
+      parityInputPath,
+      inputScenario.source,
+      `${scenario.id} source observation`,
+    );
+    const actualPath = resolvePortablePath(
+      result.path,
+      comparison.actual,
+      `${scenario.id} real-host observation`,
+    );
     await runRequired("node", [
       "scripts/ui/compare-ui-parity.mjs",
       "--expected",
-      expectation,
+      expectationPath,
       "--actual",
-      comparison.actual,
+      actualPath,
     ]);
-    const actualPath = path.resolve(root, comparison.actual);
-    const sourcePath = path.resolve(root, source.actual);
-    const expectationPath = path.resolve(root, expectation);
+    const receiptSourcePath = resolvePortablePath(
+      result.path,
+      source.actual,
+      `${scenario.id} receipt source observation`,
+    );
+    if (receiptSourcePath !== sourcePath) {
+      throw new Error(
+        `Real-host parity source path for '${scenario.id}' does not bind the portable input source.`,
+      );
+    }
     if (
       actualPath === sourcePath ||
       actualPath === expectationPath ||
@@ -331,7 +373,9 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
     const [expectationObservation, sourceObservation, actualObservation] =
       await Promise.all(
         [expectationPath, sourcePath, actualPath].map(async (filePath) =>
-          JSON.parse(await readFile(filePath, "utf8")),
+          parseUIParityObservation(
+            JSON.parse(await readFile(filePath, "utf8")),
+          ),
         ),
       );
     if (
@@ -355,37 +399,47 @@ async function readRealHostParityReceipt(options, expected, runRequired) {
         `Parity evidence for '${scenario.id}' must contain three independently materialized observations.`,
       );
     }
-    const provenanceEvidence = [
-      sourceObservation.provenance.evidence,
-      actualObservation.provenance.evidence,
-    ];
     if (
-      provenanceEvidence.some(
-        (filePath) => typeof filePath !== "string" || filePath.length === 0,
-      )
+      !sourceObservation.provenance.evidence ||
+      !actualObservation.provenance.evidence
     ) {
       throw new Error(
         `Measured parity observations for '${scenario.id}' must reference their execution evidence.`,
       );
     }
-    const provenanceEvidencePaths = provenanceEvidence.map((filePath) =>
-      path.resolve(root, filePath),
-    );
+    const provenanceEvidencePaths = [
+      resolvePortablePath(
+        parityInputPath,
+        sourceObservation.provenance.evidence,
+        `${scenario.id} source provenance evidence`,
+      ),
+      resolvePortablePath(
+        result.path,
+        actualObservation.provenance.evidence,
+        `${scenario.id} real-host provenance evidence`,
+      ),
+    ];
     await Promise.all(
       provenanceEvidencePaths.map((filePath) => stat(filePath)),
     );
     await runRequired("node", [
       "scripts/ui/compare-ui-parity.mjs",
       "--expected",
-      source.actual,
+      sourcePath,
       "--actual",
-      comparison.actual,
+      actualPath,
     ]);
     const comparisonPaths = [
       source.comparison,
       comparison.expectationComparison,
       comparison.sourceComparison,
-    ].map((filePath) => path.resolve(root, filePath));
+    ].map((filePath, index) =>
+      resolvePortablePath(
+        result.path,
+        filePath,
+        `${scenario.id} comparison ${index + 1}`,
+      ),
+    );
     for (const comparisonPath of comparisonPaths) {
       const comparisonResult = JSON.parse(
         await readFile(comparisonPath, "utf8"),
@@ -435,9 +489,10 @@ async function readSourceParityReceipt(
   );
   const receipt = result.receipt;
   if (
-    receipt.schemaVersion !== 1 ||
-    receipt.kind !== "dreamboard-ui-real-host-parity" ||
-    receipt.mode !== "real-host-parity" ||
+    receipt.schemaVersion !== 2 ||
+    receipt.kind !== "dreamboard-ui-parity-source-preparation" ||
+    receipt.mode !== "source-workbench" ||
+    receipt.result !== "passed" ||
     receipt.source?.result !== "passed" ||
     receipt.internal?.result !== "skipped" ||
     receipt.realHostExecutor !== false
@@ -467,19 +522,22 @@ async function readSourceParityReceipt(
       `Source parity receipt must contain passing comparisons for: ${requiredParityScenarioIds.join(", ")}.`,
     );
   }
-  if (typeof receipt.input !== "string") {
-    throw new Error("Source parity receipt is missing its input contract.");
-  }
-  const parityInputPath = path.resolve(root, receipt.input);
-  const parityInput = JSON.parse(await readFile(parityInputPath, "utf8"));
+  const parityInputPath = await readPortableArtifact(
+    result.path,
+    receipt.input,
+    "Source parity input",
+  );
+  const parityInput = parseUIParityRunInput(
+    JSON.parse(await readFile(parityInputPath, "utf8")),
+  );
   assertDigest(
     "Source parity input SDK tarball",
-    parityInput.sdk?.sha256,
+    parityInput.sdk.tarball.sha256,
     expected.sdkTarballSha256,
   );
   assertDigest(
     "Source parity input fixture bundle",
-    parityInput.fixtureBundle?.sha256,
+    parityInput.fixtureBundle.index.sha256,
     expected.fixtureBundleSha256,
   );
 
@@ -488,25 +546,50 @@ async function readSourceParityReceipt(
     const source = receipt.source.comparisons.find(
       (candidate) => candidate.scenarioId === scenario.id,
     );
-    const expectation = parityInput.observations?.find(
-      (candidate) => candidate.scenarioId === scenario.id,
-    )?.expectation;
+    const inputScenario = parityInput.fixtureBundle.scenarios.find(
+      (candidate) => candidate.id === scenario.id,
+    );
     if (
       !source ||
-      source.status !== "passed" ||
       typeof source.actual !== "string" ||
       typeof source.comparison !== "string" ||
       typeof source.evidence !== "string" ||
-      typeof expectation !== "string"
+      !inputScenario
     ) {
       throw new Error(
         `Source parity receipt is missing evidence for '${scenario.id}'.`,
       );
     }
-    const expectationPath = path.resolve(root, expectation);
-    const sourcePath = path.resolve(root, source.actual);
-    const comparisonPath = path.resolve(root, source.comparison);
-    const sourceEvidencePath = path.resolve(root, source.evidence);
+    const expectationPath = await readPortableArtifact(
+      parityInputPath,
+      inputScenario.expectation,
+      `${scenario.id} source expectation`,
+    );
+    const sourcePath = resolvePortablePath(
+      result.path,
+      source.actual,
+      `${scenario.id} source observation`,
+    );
+    const comparisonPath = resolvePortablePath(
+      result.path,
+      source.comparison,
+      `${scenario.id} source comparison`,
+    );
+    const sourceEvidencePath = resolvePortablePath(
+      result.path,
+      source.evidence,
+      `${scenario.id} source evidence`,
+    );
+    const inputSourcePath = await readPortableArtifact(
+      parityInputPath,
+      inputScenario.source,
+      `${scenario.id} source input observation`,
+    );
+    if (sourcePath !== inputSourcePath) {
+      throw new Error(
+        `Source parity receipt for '${scenario.id}' does not bind its portable input source.`,
+      );
+    }
     if (expectationPath === sourcePath) {
       throw new Error(
         `Source parity for '${scenario.id}' must use independent expectation and measured files.`,
@@ -515,13 +598,22 @@ async function readSourceParityReceipt(
     const [expectationObservation, sourceObservation, comparison] =
       await Promise.all(
         [expectationPath, sourcePath, comparisonPath].map(async (filePath) =>
-          JSON.parse(await readFile(filePath, "utf8")),
+          filePath === comparisonPath
+            ? JSON.parse(await readFile(filePath, "utf8"))
+            : parseUIParityObservation(
+                JSON.parse(await readFile(filePath, "utf8")),
+              ),
         ),
       );
     if (
       expectationObservation.provenance?.kind !== "fixture-expectation" ||
       sourceObservation.provenance?.kind !== "source-workbench" ||
-      sourceObservation.provenance?.evidence !== source.evidence ||
+      !sourceObservation.provenance?.evidence ||
+      resolvePortablePath(
+        parityInputPath,
+        sourceObservation.provenance.evidence,
+        `${scenario.id} source observation provenance`,
+      ) !== sourceEvidencePath ||
       comparison.ok !== true
     ) {
       throw new Error(
@@ -532,9 +624,9 @@ async function readSourceParityReceipt(
     await runRequired("node", [
       "scripts/ui/compare-ui-parity.mjs",
       "--expected",
-      expectation,
+      expectationPath,
       "--actual",
-      source.actual,
+      sourcePath,
     ]);
     evidencePaths.push(
       expectationPath,

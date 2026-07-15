@@ -3,6 +3,7 @@ import {
   digestUIFixtureJson,
   digestUIScenarioFixture,
 } from "./canonical.js";
+import type { GameplayBasis } from "@dreamboard-games/plugin-runtime-contract";
 import type { UIScenarioFixture } from "./schema.js";
 
 export interface UIParityViewport {
@@ -10,33 +11,31 @@ export interface UIParityViewport {
   readonly height: number;
 }
 
-export interface UIParityObservationEnvironmentV1 {
+export interface UIParityObservationEnvironment {
   readonly project: string;
   readonly viewport: UIParityViewport;
 }
 
-export interface UIParityDiagnosticV1 {
+export interface UIParityDiagnostic {
   readonly code: string;
   readonly message: string;
 }
 
-export interface UIParityObservationCheckpointV1 {
+export interface UIParityObservationCheckpoint {
   readonly stepId: string;
   readonly interactionKey?: string;
   readonly interactionId?: string;
   readonly actuatorId?: string;
   readonly descriptorDigest?: string;
   readonly draftDigest?: string;
-  readonly gameVersion: number;
-  readonly actionSetVersion: string;
-  readonly perspectivePlayerId: string | null;
+  readonly basis: GameplayBasis;
   readonly projectionDigest: string;
   readonly semanticDigest: string;
   readonly submissionDigest?: string;
   readonly screenshot?: string;
 }
 
-export interface UIParityObservationProvenanceV1 {
+export interface UIParityObservationProvenance {
   readonly kind:
     | "fixture-expectation"
     | "source-workbench"
@@ -44,17 +43,84 @@ export interface UIParityObservationProvenanceV1 {
   readonly evidence?: string;
 }
 
-export interface UIParityObservationV1 {
-  readonly schemaVersion: 1;
+export interface UIParityObservation {
+  readonly schemaVersion: 2;
   readonly scenarioId: string;
   readonly fixtureDigest: string;
   readonly sdkCandidateDigest: string;
   readonly pluginRuntimeProtocol: 4;
   readonly browserInteractionProtocol: string;
-  readonly environment: UIParityObservationEnvironmentV1;
-  readonly provenance: UIParityObservationProvenanceV1;
-  readonly checkpoints: readonly UIParityObservationCheckpointV1[];
-  readonly diagnostics: readonly UIParityDiagnosticV1[];
+  readonly environment: UIParityObservationEnvironment;
+  readonly provenance: UIParityObservationProvenance;
+  readonly checkpoints: readonly UIParityObservationCheckpoint[];
+  readonly diagnostics: readonly UIParityDiagnostic[];
+}
+
+export interface UIParityArtifactReference {
+  readonly path: string;
+  readonly sha256: string;
+}
+
+export interface UIParityRunScenario {
+  readonly id: string;
+  readonly fixture: UIParityArtifactReference;
+  readonly renderModule: UIParityArtifactReference;
+  readonly expectation: UIParityArtifactReference;
+  readonly source: UIParityArtifactReference;
+}
+
+export interface UIParityRunInput {
+  readonly schemaVersion: 2;
+  readonly sdk: { readonly tarball: UIParityArtifactReference };
+  readonly referenceBundle: UIParityArtifactReference;
+  readonly fixtureBundle: {
+    readonly index: UIParityArtifactReference;
+    readonly scenarios: readonly UIParityRunScenario[];
+  };
+  readonly project: string;
+}
+
+export interface UIParityReceiptComparison {
+  readonly scenarioId: string;
+  readonly actual: string;
+  readonly comparison: string;
+  readonly evidence?: string;
+}
+
+export interface UIParityRealHostReceipt {
+  readonly schemaVersion: 2;
+  readonly kind: "dreamboard-ui-real-host-parity";
+  readonly mode: "real-host-parity";
+  readonly result: "passed";
+  readonly realHostExecutor: true;
+  readonly input: UIParityArtifactReference;
+  readonly sdkTarballSha256: string;
+  readonly fixtureBundleSha256: string;
+  readonly scenarios: readonly {
+    readonly id: string;
+    readonly fixtureDigest: string;
+  }[];
+  readonly source: {
+    readonly result: "passed";
+    readonly comparisons: readonly UIParityReceiptComparison[];
+  };
+  readonly internal: {
+    readonly result: "passed";
+    readonly comparisons: ReadonlyArray<{
+      readonly scenarioId: string;
+      readonly actual: string;
+      readonly expectationComparison: string;
+      readonly sourceComparison: string;
+    }>;
+  };
+  readonly project: string;
+  readonly host: {
+    readonly route: string;
+    readonly pluginIframe: true;
+    readonly pluginSessionGateway: true;
+    readonly playwright: "chromium";
+    readonly webLogPath: string;
+  };
 }
 
 export type UIParityFailureCode =
@@ -95,10 +161,10 @@ type UIParityComparisonFailureInput = Omit<
 export interface CreateUIParityObservationFromFixtureOptions {
   readonly fixture: UIScenarioFixture;
   readonly sdkCandidateDigest: string;
-  readonly environment: UIParityObservationEnvironmentV1;
+  readonly environment: UIParityObservationEnvironment;
   readonly fixtureDigest?: string;
   readonly screenshotsByStepId?: Readonly<Record<string, string>>;
-  readonly diagnostics?: readonly UIParityDiagnosticV1[];
+  readonly diagnostics?: readonly UIParityDiagnostic[];
 }
 
 type ComparablePath = {
@@ -123,9 +189,10 @@ const checkpointComparisons: readonly ComparablePath[] = [
   { path: "interactionId", code: "interaction-resolution-mismatch" },
   { path: "actuatorId", code: "interaction-resolution-mismatch" },
   { path: "descriptorDigest", code: "interaction-resolution-mismatch" },
-  { path: "gameVersion", code: "projection-mismatch" },
-  { path: "actionSetVersion", code: "projection-mismatch" },
-  { path: "perspectivePlayerId", code: "projection-mismatch" },
+  { path: "basis.generation", code: "projection-mismatch" },
+  { path: "basis.version", code: "projection-mismatch" },
+  { path: "basis.actionSetVersion", code: "projection-mismatch" },
+  { path: "basis.perspectivePlayerId", code: "projection-mismatch" },
   { path: "projectionDigest", code: "projection-mismatch" },
   { path: "semanticDigest", code: "semantic-snapshot-mismatch" },
   { path: "draftDigest", code: "draft-mismatch" },
@@ -140,7 +207,7 @@ export function createUIParityObservationFromFixture({
   fixtureDigest = digestUIScenarioFixture(fixture),
   screenshotsByStepId = {},
   diagnostics = [],
-}: CreateUIParityObservationFromFixtureOptions): UIParityObservationV1 {
+}: CreateUIParityObservationFromFixtureOptions): UIParityObservation {
   const frameById = new Map(
     fixture.protocol.frames.map((frame) => [frame.id, frame]),
   );
@@ -184,18 +251,16 @@ export function createUIParityObservationFromFixture({
       actuatorId: identity?.actuatorId,
       descriptorDigest: identity?.descriptorDigest,
       draftDigest: step.expect.draftDigest ?? identity?.draftDigest,
-      gameVersion: frame.frame.basis.version,
-      actionSetVersion: frame.frame.basis.actionSetVersion,
-      perspectivePlayerId: frame.frame.basis.perspectivePlayerId,
+      basis: frame.frame.basis,
       projectionDigest,
       semanticDigest,
       submissionDigest,
       screenshot: screenshotsByStepId[step.stepId],
-    } satisfies UIParityObservationCheckpointV1;
+    } satisfies UIParityObservationCheckpoint;
   });
 
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     scenarioId: fixture.id,
     fixtureDigest,
     sdkCandidateDigest,
@@ -210,12 +275,10 @@ export function createUIParityObservationFromFixture({
   };
 }
 
-export function parseUIParityObservationV1(
-  value: unknown,
-): UIParityObservationV1 {
+export function parseUIParityObservation(value: unknown): UIParityObservation {
   const observation = assertRecord(value, "observation");
-  if (observation.schemaVersion !== 1) {
-    throw new Error("UI parity observation schemaVersion must be 1.");
+  if (observation.schemaVersion !== 2) {
+    throw new Error("UI parity observation schemaVersion must be 2.");
   }
   assertString(observation.scenarioId, "scenarioId");
   assertString(observation.fixtureDigest, "fixtureDigest");
@@ -246,6 +309,9 @@ export function parseUIParityObservationV1(
     );
   }
   assertOptionalString(provenance.evidence, "observation.provenance.evidence");
+  if (typeof provenance.evidence === "string") {
+    assertPortablePath(provenance.evidence, "observation.provenance.evidence");
+  }
   const checkpoints = assertArray(observation.checkpoints, "checkpoints");
   for (let index = 0; index < checkpoints.length; index += 1) {
     const checkpoint = assertRecord(
@@ -273,19 +339,7 @@ export function parseUIParityObservationV1(
       checkpoint.draftDigest,
       `checkpoints[${index}].draftDigest`,
     );
-    assertNumber(checkpoint.gameVersion, `checkpoints[${index}].gameVersion`);
-    assertString(
-      checkpoint.actionSetVersion,
-      `checkpoints[${index}].actionSetVersion`,
-    );
-    if (
-      checkpoint.perspectivePlayerId !== null &&
-      typeof checkpoint.perspectivePlayerId !== "string"
-    ) {
-      throw new Error(
-        `checkpoints[${index}].perspectivePlayerId must be a string or null.`,
-      );
-    }
+    parseGameplayBasis(checkpoint.basis, `checkpoints[${index}].basis`);
     assertString(
       checkpoint.projectionDigest,
       `checkpoints[${index}].projectionDigest`,
@@ -312,12 +366,12 @@ export function parseUIParityObservationV1(
     assertString(diagnostic.code, `diagnostics[${index}].code`);
     assertString(diagnostic.message, `diagnostics[${index}].message`);
   }
-  return observation as unknown as UIParityObservationV1;
+  return observation as unknown as UIParityObservation;
 }
 
 export function compareUIParityObservations(
-  expected: UIParityObservationV1,
-  actual: UIParityObservationV1,
+  expected: UIParityObservation,
+  actual: UIParityObservation,
 ): UIParityComparisonResult {
   for (const comparison of topLevelComparisons) {
     const result = comparePath(expected, actual, comparison);
@@ -365,6 +419,99 @@ export function compareUIParityObservations(
   }
 
   return { ok: true };
+}
+
+export function parseUIParityRunInput(value: unknown): UIParityRunInput {
+  const input = assertRecord(value, "input");
+  if (input.schemaVersion !== 2) {
+    throw new Error("UI parity run input schemaVersion must be 2.");
+  }
+  const sdk = assertRecord(input.sdk, "input.sdk");
+  parseArtifactReference(sdk.tarball, "input.sdk.tarball");
+  parseArtifactReference(input.referenceBundle, "input.referenceBundle");
+  const fixtureBundle = assertRecord(
+    input.fixtureBundle,
+    "input.fixtureBundle",
+  );
+  parseArtifactReference(fixtureBundle.index, "input.fixtureBundle.index");
+  const scenarios = assertArray(
+    fixtureBundle.scenarios,
+    "input.fixtureBundle.scenarios",
+  );
+  if (scenarios.length === 0) {
+    throw new Error("input.fixtureBundle.scenarios must not be empty.");
+  }
+  const ids = new Set<string>();
+  for (let index = 0; index < scenarios.length; index += 1) {
+    const path = `input.fixtureBundle.scenarios[${index}]`;
+    const scenario = assertRecord(scenarios[index], path);
+    assertString(scenario.id, `${path}.id`);
+    const id = scenario.id as string;
+    if (ids.has(id)) {
+      throw new Error(`${path}.id duplicates scenario '${id}'.`);
+    }
+    ids.add(id);
+    parseArtifactReference(scenario.fixture, `${path}.fixture`);
+    parseArtifactReference(scenario.renderModule, `${path}.renderModule`);
+    parseArtifactReference(scenario.expectation, `${path}.expectation`);
+    parseArtifactReference(scenario.source, `${path}.source`);
+  }
+  assertString(input.project, "input.project");
+  return input as unknown as UIParityRunInput;
+}
+
+export function parseUIParityRealHostReceipt(
+  value: unknown,
+): UIParityRealHostReceipt {
+  const receipt = assertRecord(value, "receipt");
+  if (receipt.schemaVersion !== 2) {
+    throw new Error("UI parity real-host receipt schemaVersion must be 2.");
+  }
+  if (
+    receipt.kind !== "dreamboard-ui-real-host-parity" ||
+    receipt.mode !== "real-host-parity" ||
+    receipt.result !== "passed" ||
+    receipt.realHostExecutor !== true
+  ) {
+    throw new Error(
+      "UI parity real-host receipt must be a passing real-host proof.",
+    );
+  }
+  parseArtifactReference(receipt.input, "receipt.input");
+  assertString(receipt.sdkTarballSha256, "receipt.sdkTarballSha256");
+  assertString(receipt.fixtureBundleSha256, "receipt.fixtureBundleSha256");
+  assertString(receipt.project, "receipt.project");
+  const scenarios = assertArray(receipt.scenarios, "receipt.scenarios");
+  if (scenarios.length === 0) {
+    throw new Error("receipt.scenarios must not be empty.");
+  }
+  for (let index = 0; index < scenarios.length; index += 1) {
+    const scenario = assertRecord(
+      scenarios[index],
+      `receipt.scenarios[${index}]`,
+    );
+    assertString(scenario.id, `receipt.scenarios[${index}].id`);
+    assertString(
+      scenario.fixtureDigest,
+      `receipt.scenarios[${index}].fixtureDigest`,
+    );
+  }
+  parseReceiptComparisonGroup(receipt.source, "receipt.source", false);
+  parseReceiptComparisonGroup(receipt.internal, "receipt.internal", true);
+  const host = assertRecord(receipt.host, "receipt.host");
+  assertString(host.route, "receipt.host.route");
+  assertString(host.webLogPath, "receipt.host.webLogPath");
+  assertPortablePath(host.webLogPath as string, "receipt.host.webLogPath");
+  if (
+    host.pluginIframe !== true ||
+    host.pluginSessionGateway !== true ||
+    host.playwright !== "chromium"
+  ) {
+    throw new Error(
+      "receipt.host must prove PluginIframe, PluginSessionGateway, and Chromium.",
+    );
+  }
+  return receipt as unknown as UIParityRealHostReceipt;
 }
 
 function comparePath(
@@ -423,6 +570,87 @@ function getPath(value: unknown, path: string): unknown {
   }, value);
 }
 
+function parseGameplayBasis(value: unknown, path: string): GameplayBasis {
+  const basis = assertRecord(value, path);
+  assertNonNegativeInteger(basis.generation, `${path}.generation`);
+  assertNonNegativeInteger(basis.version, `${path}.version`);
+  assertString(basis.actionSetVersion, `${path}.actionSetVersion`);
+  assertString(basis.perspectivePlayerId, `${path}.perspectivePlayerId`);
+  return basis as unknown as GameplayBasis;
+}
+
+function parseArtifactReference(
+  value: unknown,
+  path: string,
+): UIParityArtifactReference {
+  const reference = assertRecord(value, path);
+  assertString(reference.path, `${path}.path`);
+  assertPortablePath(reference.path as string, `${path}.path`);
+  assertString(reference.sha256, `${path}.sha256`);
+  if (!(reference.sha256 as string).startsWith("sha256:")) {
+    throw new Error(`${path}.sha256 must be a sha256 digest.`);
+  }
+  return reference as unknown as UIParityArtifactReference;
+}
+
+function parseReceiptComparisonGroup(
+  value: unknown,
+  path: string,
+  internal: boolean,
+): void {
+  const group = assertRecord(value, path);
+  if (group.result !== "passed") {
+    throw new Error(`${path}.result must be passed.`);
+  }
+  const comparisons = assertArray(group.comparisons, `${path}.comparisons`);
+  for (let index = 0; index < comparisons.length; index += 1) {
+    const itemPath = `${path}.comparisons[${index}]`;
+    const comparison = assertRecord(comparisons[index], itemPath);
+    assertString(comparison.scenarioId, `${itemPath}.scenarioId`);
+    assertString(comparison.actual, `${itemPath}.actual`);
+    assertPortablePath(comparison.actual as string, `${itemPath}.actual`);
+    if (internal) {
+      assertString(
+        comparison.expectationComparison,
+        `${itemPath}.expectationComparison`,
+      );
+      assertString(comparison.sourceComparison, `${itemPath}.sourceComparison`);
+      assertPortablePath(
+        comparison.expectationComparison as string,
+        `${itemPath}.expectationComparison`,
+      );
+      assertPortablePath(
+        comparison.sourceComparison as string,
+        `${itemPath}.sourceComparison`,
+      );
+    } else {
+      assertString(comparison.comparison, `${itemPath}.comparison`);
+      assertOptionalString(comparison.evidence, `${itemPath}.evidence`);
+      assertPortablePath(
+        comparison.comparison as string,
+        `${itemPath}.comparison`,
+      );
+      if (typeof comparison.evidence === "string") {
+        assertPortablePath(comparison.evidence, `${itemPath}.evidence`);
+      }
+    }
+  }
+}
+
+function assertPortablePath(value: string, path: string): void {
+  if (
+    value.length === 0 ||
+    value.startsWith("/") ||
+    value.startsWith("\\") ||
+    /^[a-zA-Z]:[\\/]/.test(value) ||
+    value.split(/[\\/]+/).includes("..")
+  ) {
+    throw new Error(
+      `${path} must be a relative path within its portable bundle.`,
+    );
+  }
+}
+
 function assertRecord(value: unknown, path: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     throw new Error(`${path} must be an object.`);
@@ -455,5 +683,11 @@ function assertOptionalString(value: unknown, path: string): void {
 function assertNumber(value: unknown, path: string): void {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new Error(`${path} must be a finite number.`);
+  }
+}
+
+function assertNonNegativeInteger(value: unknown, path: string): void {
+  if (!Number.isInteger(value) || (value as number) < 0) {
+    throw new Error(`${path} must be a non-negative integer.`);
   }
 }
