@@ -100,8 +100,11 @@ jobs:
           if (metadata.distTag !== "alpha") throw new Error(`Unexpected dist-tag: ${metadata.distTag}`);
           const candidate = JSON.parse(fs.readFileSync("package/package/candidate-receipt.json", "utf8"));
           if (candidate.package?.integrity !== metadata.integrity) throw new Error("Candidate receipt integrity does not match release metadata");
-          const tarball = fs.readdirSync("package").find((entry) => entry.endsWith(".tgz"));
-          const actual = `sha512-${require("node:crypto").createHash("sha512").update(fs.readFileSync(`package/${tarball}`)).digest("base64")}`;
+          const tarballs = fs.readdirSync("package", { recursive: true })
+            .filter((entry) => entry.endsWith(".tgz"))
+            .map((entry) => `package/${entry}`);
+          if (tarballs.length !== 1) throw new Error(`Expected one verified tarball, found ${tarballs.length}`);
+          const actual = `sha512-${require("node:crypto").createHash("sha512").update(fs.readFileSync(tarballs[0])).digest("base64")}`;
           if (actual !== metadata.integrity) throw new Error("Uploaded tarball integrity does not match the verified candidate");
           NODE
           test "$(find package -name '*.tgz' | wc -l | tr -d ' ')" = "1"
