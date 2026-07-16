@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 
+import type { AsyncCommandRunner } from "../lib/process.ts";
 import { discoverReferenceGames } from "./games.ts";
 import { pinReferenceGames, readSdkLockIdentity } from "./pin.ts";
-import type { CommandRunner } from "./process.ts";
 import { verifyReferenceGames } from "./verify.ts";
 
 const sdkPackage = "@dreamboard-games/sdk";
@@ -168,11 +168,11 @@ test("pin stages every game before replacing tracked files", async (context) => 
   );
   const before = await readFile(packagePath, "utf8");
   let installs = 0;
-  const failingRun: CommandRunner = (_command, _args, options) => {
+  const failingRun: AsyncCommandRunner = async (_command, _args, options) => {
     installs += 1;
     if (installs === 2) throw new Error("registry unavailable");
     writeFileSync(
-      path.join(options.cwd, "pnpm-lock.yaml"),
+      path.join(options?.cwd ?? "", "pnpm-lock.yaml"),
       lockfile(pinnedVersion, pinnedIntegrity),
     );
     return "";
@@ -199,9 +199,9 @@ test("pin stages every game before replacing tracked files", async (context) => 
 test("pin atomically replaces all package manifests and exact-integrity lockfiles", async (context) => {
   const root = await createRoot(["alpha", "beta"]);
   context.after(() => rm(root, { recursive: true, force: true }));
-  const run: CommandRunner = (_command, _args, options) => {
+  const run: AsyncCommandRunner = async (_command, _args, options) => {
     writeFileSync(
-      path.join(options.cwd, "pnpm-lock.yaml"),
+      path.join(options?.cwd ?? "", "pnpm-lock.yaml"),
       lockfile(pinnedVersion, pinnedIntegrity),
     );
     return "";
@@ -241,12 +241,12 @@ test("packed verification supports one selected game and all discovered games", 
   const tarball = path.join(root, "sdk.tgz");
   await writeFile(tarball, "candidate");
   const verified: string[] = [];
-  const run: CommandRunner = (_command, args, options) => {
+  const run: AsyncCommandRunner = async (_command, args, options) => {
     if (args.includes("--lockfile=false")) {
-      const gameId = path.basename(options.cwd);
+      const gameId = path.basename(options?.cwd ?? "");
       verified.push(gameId);
       const installed = path.join(
-        options.cwd,
+        options?.cwd ?? "",
         "node_modules",
         "@dreamboard-games",
         "sdk",
@@ -271,4 +271,100 @@ test("packed verification supports one selected game and all discovered games", 
   await verifyReferenceGames({ root, sdkTarball: tarball, run });
   assert.deepEqual(verified.sort(), ["alpha", "beta"]);
   assert.equal(existsSync(path.join(root, "build/reference-games")), false);
+});
+
+test("packed verification runs at most three games concurrently", async (context) => {
+  const root = await createRoot(["alpha", "beta", "delta", "epsilon", "gamma"]);
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const tarball = path.join(root, "sdk.tgz");
+  await writeFile(tarball, "candidate");
+  let active = 0;
+  let maximumActive = 0;
+  const started: string[] = [];
+  const run: AsyncCommandRunner = async (_command, args, options) => {
+    if (!args.includes("--lockfile=false")) return "";
+    const cwd = options?.cwd ?? "";
+    const gameId = path.basename(cwd);
+    started.push(gameId);
+    active += 1;
+    maximumActive = Math.max(maximumActive, active);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    active -= 1;
+    const installed = path.join(
+      cwd,
+      "node_modules",
+      "@dreamboard-games",
+      "sdk",
+    );
+    mkdirSync(installed, { recursive: true });
+    writeFileSync(
+      path.join(installed, "package.json"),
+      `${JSON.stringify({ name: sdkPackage, version: pinnedVersion })}\n`,
+    );
+    return "";
+  };
+
+  await verifyReferenceGames({ root, sdkTarball: tarball, run });
+
+  assert.equal(maximumActive, 3);
+  assert.equal(started.length, 5);
+});
+
+test("frozen lockfile failure prevents candidate verification", async (context) => {
+  const root = await createRoot(["alpha", "beta"]);
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const tarball = path.join(root, "sdk.tgz");
+  await writeFile(tarball, "candidate");
+  let candidateInstalls = 0;
+  const run: AsyncCommandRunner = async (_command, args) => {
+    if (args.includes("--frozen-lockfile")) {
+      throw new Error("frozen lockfile drift");
+    }
+    if (args.includes("--lockfile=false")) candidateInstalls += 1;
+    return "";
+  };
+
+  await assert.rejects(
+    verifyReferenceGames({ root, sdkTarball: tarball, run }),
+    /frozen lockfile drift/,
+  );
+  assert.equal(candidateInstalls, 0);
+});
+
+test("candidate failure stops scheduling and removes temporary state", async (context) => {
+  const root = await createRoot(["alpha", "beta", "delta", "epsilon", "gamma"]);
+  context.after(() => rm(root, { recursive: true, force: true }));
+  const tarball = path.join(root, "sdk.tgz");
+  await writeFile(tarball, "candidate");
+  const started: string[] = [];
+  let temporaryRoot = "";
+  const run: AsyncCommandRunner = async (_command, args, options) => {
+    if (!args.includes("--lockfile=false")) return "";
+    const cwd = options?.cwd ?? "";
+    const gameId = path.basename(cwd);
+    temporaryRoot = path.dirname(path.dirname(cwd));
+    started.push(gameId);
+    if (gameId === "alpha") throw new Error("candidate install failed");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const installed = path.join(
+      cwd,
+      "node_modules",
+      "@dreamboard-games",
+      "sdk",
+    );
+    mkdirSync(installed, { recursive: true });
+    writeFileSync(
+      path.join(installed, "package.json"),
+      `${JSON.stringify({ name: sdkPackage, version: pinnedVersion })}\n`,
+    );
+    return "";
+  };
+
+  await assert.rejects(
+    verifyReferenceGames({ root, sdkTarball: tarball, run }),
+    /\[reference:alpha\] failed[\s\S]*candidate install failed/,
+  );
+  assert.deepEqual(started.sort(), ["alpha", "beta", "delta"]);
+  assert.ok(temporaryRoot);
+  assert.equal(existsSync(temporaryRoot), false);
 });

@@ -113,3 +113,13 @@ file. It writes the immutable candidate description to
 
 Browser UI verification remains a separate CI lane. Run `pnpm ui test` for a
 pull request and `pnpm ui test --all` on the main branch.
+
+## Pull request handoff
+
+- Watch required checks to completion with `gh pr checks <pr> --watch`.
+- Inspect every unresolved review conversation. Resolve a thread only after
+  fixing the code or answering the feedback.
+- Before calling a pull request mergeable, run
+  `gh pr view <pr> --json isDraft,mergeable,mergeStateStatus` and require a
+  ready, `MERGEABLE`, `CLEAN` result.
+- Confirm the branch is pushed and the local tracked worktree is clean.
