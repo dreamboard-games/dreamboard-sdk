@@ -14,7 +14,6 @@ import {
 import { CommandError } from "./lib/process.ts";
 import { runReferenceCommand } from "./reference/index.ts";
 import { verifyRelease } from "./release.ts";
-import { runUi } from "./ui/index.ts";
 
 export const rootCommands = [
   "build",
@@ -155,9 +154,11 @@ export async function runCli(argv: readonly string[]): Promise<void> {
       requireNoArgs(parsed.command, parsed.args);
       typecheck();
       return;
-    case "ui":
+    case "ui": {
+      const { runUi } = await import("./ui/index.ts");
       await runUi(parsed.args);
       return;
+    }
   }
 }
 

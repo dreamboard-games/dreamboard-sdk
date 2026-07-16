@@ -8,25 +8,14 @@ import { compileReferenceFixtures } from "../ui-fixtures/compile-reference-fixtu
 import { materializeReferenceGameWorkspaces } from "../ui-fixtures/workspace/materialize-workspaces.ts";
 import { generateScenarioCatalog } from "./catalog.ts";
 import {
+  defaultGeneratedWorkbenchRoot,
+  defaultSmokeScenarioIds,
+} from "./config.ts";
+import {
   replaceDirectoryAtomically,
   withMaterializationLock,
 } from "./materialization.ts";
-import {
-  compareCanonicalStrings,
-  expectRecord,
-  readJson,
-  root,
-} from "./support.ts";
-
-export const defaultGeneratedWorkbenchRoot = path.join(
-  root,
-  "build/ui-workbench/generated",
-);
-
-export const defaultSmokeScenarioIds = Object.freeze([
-  "hearts.dealt-hand.desktop",
-  "roll-and-write-scorecard.mark-cell.mobile",
-] as const);
+import { compareCanonicalStrings, expectRecord, readJson } from "./support.ts";
 
 export interface MaterializeWorkbenchOptions {
   readonly outputRoot?: string;

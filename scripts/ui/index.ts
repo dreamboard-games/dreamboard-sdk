@@ -4,11 +4,8 @@ import path from "node:path";
 import {
   defaultGeneratedWorkbenchRoot,
   defaultSmokeScenarioIds,
-  materializeWorkbench,
-  readScenarioIds,
-} from "./materialize.ts";
-import { openWorkbench, spawnInherited } from "./workbench.ts";
-import { root } from "./support.ts";
+} from "./config.ts";
+import { root, spawnInherited } from "./support.ts";
 
 export class UIUsageError extends Error {
   readonly exitCode = 2;
@@ -83,6 +80,8 @@ async function runWorkbenchTests(options: {
   readonly all: boolean;
   readonly includeNormalLanes: boolean;
 }): Promise<void> {
+  const { materializeWorkbench, readScenarioIds } =
+    await import("./materialize.ts");
   const scenarioIds = selectUiScenarios(options);
   const gameIds = scenarioIds.map((id) => id.split(".", 1)[0] ?? id);
   const materialization = await materializeWorkbench({ gameIds });
@@ -164,6 +163,7 @@ export async function runUi(argv: readonly string[]): Promise<void> {
         source: { type: "boolean", default: false },
       });
       await buildSdk();
+      const { openWorkbench } = await import("./workbench.ts");
       await openWorkbench({
         ...(typeof values.scenario === "string"
           ? { scenario: values.scenario }

@@ -1,16 +1,12 @@
 #!/usr/bin/env node
-import { spawn } from "node:child_process";
 import { watch, type FSWatcher } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-import {
-  defaultGeneratedWorkbenchRoot,
-  materializeWorkbench,
-  readScenarioIds,
-} from "./materialize.ts";
-import { hasErrorCode, root } from "./support.ts";
+import { defaultGeneratedWorkbenchRoot } from "./config.ts";
+import { materializeWorkbench, readScenarioIds } from "./materialize.ts";
+import { hasErrorCode, root, spawnInherited } from "./support.ts";
 
 type WorkbenchCommand = "build" | "dev" | "test";
 
@@ -154,41 +150,6 @@ function installWatchers(options: {
       timer = setTimeout(() => void rebuild(changed), 175);
     }),
   );
-}
-
-export async function spawnInherited(
-  command: string,
-  args: readonly string[],
-  cwd = root,
-  env: NodeJS.ProcessEnv = {},
-): Promise<void> {
-  const child = spawn(command, args, {
-    cwd,
-    env: { ...process.env, ...env },
-    stdio: "inherit",
-  });
-  const forwardInterrupt = () => child.kill("SIGINT");
-  const forwardTermination = () => child.kill("SIGTERM");
-  process.once("SIGINT", forwardInterrupt);
-  process.once("SIGTERM", forwardTermination);
-  try {
-    const code = await new Promise<number>((resolve, reject) => {
-      child.once("error", reject);
-      child.once("exit", (exitCode, signal) => {
-        if (signal) {
-          reject(new Error(`${command} exited after ${signal}.`));
-        } else {
-          resolve(exitCode ?? 1);
-        }
-      });
-    });
-    if (code !== 0) {
-      throw new Error(`${command} ${args.join(" ")} exited with code ${code}.`);
-    }
-  } finally {
-    process.off("SIGINT", forwardInterrupt);
-    process.off("SIGTERM", forwardTermination);
-  }
 }
 
 if (

@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import {
   lstat,
@@ -175,4 +176,39 @@ export function repoCommandEnv(
     };
   }
   return env;
+}
+
+export async function spawnInherited(
+  command: string,
+  args: readonly string[],
+  cwd = root,
+  env: NodeJS.ProcessEnv = {},
+): Promise<void> {
+  const child = spawn(command, args, {
+    cwd,
+    env: { ...process.env, ...env },
+    stdio: "inherit",
+  });
+  const forwardInterrupt = () => child.kill("SIGINT");
+  const forwardTermination = () => child.kill("SIGTERM");
+  process.once("SIGINT", forwardInterrupt);
+  process.once("SIGTERM", forwardTermination);
+  try {
+    const code = await new Promise<number>((resolve, reject) => {
+      child.once("error", reject);
+      child.once("exit", (exitCode, signal) => {
+        if (signal) {
+          reject(new Error(`${command} exited after ${signal}.`));
+        } else {
+          resolve(exitCode ?? 1);
+        }
+      });
+    });
+    if (code !== 0) {
+      throw new Error(`${command} ${args.join(" ")} exited with code ${code}.`);
+    }
+  } finally {
+    process.off("SIGINT", forwardInterrupt);
+    process.off("SIGTERM", forwardTermination);
+  }
 }
