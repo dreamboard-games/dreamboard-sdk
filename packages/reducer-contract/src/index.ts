@@ -15,4 +15,5 @@ export * as Wire from "../generated/wire";
 export * as Zod from "../generated/zod";
 export * as Builders from "../generated/builders";
 export { REDUCER_CONTRACT_VERSION } from "../generated/version";
+export { assertReducerBundleContract } from "./bundle";
 export type { MaybePromise, ReducerBundleContract } from "./bundle";

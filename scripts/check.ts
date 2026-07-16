@@ -87,7 +87,9 @@ async function testRepositoryScripts(): Promise<void> {
   ).filter((filePath) => filePath.endsWith(".test.ts"));
   const tests = [...scriptTests, ...generatorTests];
   if (tests.length > 0) {
-    run(process.execPath, ["--test", ...tests], { cwd: rootDir });
+    run(process.execPath, ["--test", "--test-concurrency=1", ...tests], {
+      cwd: rootDir,
+    });
   }
 }
 
