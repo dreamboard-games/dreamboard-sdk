@@ -63,6 +63,7 @@ describe("SDK facade exports", () => {
     expect(typeof codegen.generateSeedFiles).toBe("function");
     expect(typeof codegen.materializeManifestTable).toBe("function");
     expect(typeof reducerContract.REDUCER_CONTRACT_VERSION).toBe("string");
+    expect(typeof reducerContract.assertReducerBundleContract).toBe("function");
     expect(typeof reducerContract.materializeManifestTable).toBe("function");
   });
 });

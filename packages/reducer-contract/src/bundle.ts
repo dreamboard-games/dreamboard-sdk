@@ -3,6 +3,7 @@
 
 /* eslint-disable */
 import type * as Wire from "../generated/wire";
+import { REDUCER_CONTRACT_VERSION } from "../generated/version";
 
 export type MaybePromise<T> = T | Promise<T>;
 
@@ -34,4 +35,41 @@ export interface ReducerBundleContract {
   projectSeatsDynamic(
     input: Wire.ProjectSeatsDynamicRequest,
   ): Wire.SeatProjectionBundle;
+}
+
+/**
+ * Validates an imported module value at the reducer host/guest boundary.
+ *
+ * The required callable members are generated from the same operation
+ * authority as `ReducerBundleContract`, so runtime admission cannot drift
+ * from the published TypeScript interface.
+ */
+export function assertReducerBundleContract(
+  value: unknown,
+  source: string,
+): asserts value is ReducerBundleContract {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Reducer bundle ${source} did not export an object.`);
+  }
+
+  const bundle = value as Record<string, unknown>;
+  if (bundle.reducerContractVersion !== REDUCER_CONTRACT_VERSION) {
+    throw new Error(
+      `Reducer bundle ${source} requires contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,
+    );
+  }
+
+  for (const method of [
+    "initialize",
+    "initializePhase",
+    "validateInput",
+    "reduce",
+    "dispatch",
+    "projectStatic",
+    "projectSeatsDynamic",
+  ] as const) {
+    if (typeof bundle[method] !== "function") {
+      throw new Error(`Reducer bundle ${source} is missing ${method}().`);
+    }
+  }
 }
