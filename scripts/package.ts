@@ -319,6 +319,22 @@ export function sha512Integrity(bytes: Uint8Array): string {
   return `sha512-${createHash("sha512").update(bytes).digest("base64")}`;
 }
 
+export function resolvePackedTarballPath(
+  outputDirectory: string,
+  reportedFilename: string,
+  createdTarballs: string[],
+): string {
+  if (
+    createdTarballs.length !== 1 ||
+    path.basename(reportedFilename) !== createdTarballs[0]
+  ) {
+    throw new Error(
+      `pnpm pack must create exactly one SDK tarball; created ${createdTarballs.join(", ") || "none"}.`,
+    );
+  }
+  return path.resolve(outputDirectory, createdTarballs[0]);
+}
+
 export async function packSdk(outputDirectory: string): Promise<PackedSdk> {
   await mkdir(outputDirectory, { recursive: true });
   const before = new Set(await readdir(outputDirectory));
@@ -339,18 +355,14 @@ export async function packSdk(outputDirectory: string): Promise<PackedSdk> {
   ) {
     throw new Error(`pnpm pack returned invalid SDK metadata:\n${output}`);
   }
-  const tarballPath = path.resolve(metadata.filename);
   const createdTarballs = (await readdir(outputDirectory)).filter(
     (name) => name.endsWith(".tgz") && !before.has(name),
   );
-  if (
-    createdTarballs.length !== 1 ||
-    path.basename(tarballPath) !== createdTarballs[0]
-  ) {
-    throw new Error(
-      `pnpm pack must create exactly one SDK tarball; created ${createdTarballs.join(", ") || "none"}.`,
-    );
-  }
+  const tarballPath = resolvePackedTarballPath(
+    outputDirectory,
+    metadata.filename,
+    createdTarballs,
+  );
   return {
     name: publicPackageName,
     version: metadata.version,

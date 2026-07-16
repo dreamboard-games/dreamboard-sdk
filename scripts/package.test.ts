@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
-import { assertPeerHygiene } from "./package.ts";
+import { assertPeerHygiene, resolvePackedTarballPath } from "./package.ts";
 
 const peers = {
   "framer-motion": "^12.0.0",
@@ -40,5 +41,12 @@ test("rejects build tools as runtime dependencies", () => {
         peerDependencies: peers,
       }),
     /build tools/,
+  );
+});
+
+test("resolves the packed tarball from its requested destination", () => {
+  assert.equal(
+    resolvePackedTarballPath("build/candidate", "sdk.tgz", ["sdk.tgz"]),
+    path.resolve("build/candidate/sdk.tgz"),
   );
 });
