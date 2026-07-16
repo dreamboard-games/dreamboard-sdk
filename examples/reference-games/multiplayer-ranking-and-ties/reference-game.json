@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "multiplayer-ranking-and-ties",
   "displayName": "Harbor Fair",
   "workspace": {
@@ -32,28 +32,6 @@
       "test/scenarios.test.ts"
     ]
   },
-  "demoRelease": {
-    "slug": "multiplayer-ranking-and-ties",
-    "name": "Harbor Fair",
-    "description": "Build a public harbor festival across six rounds, then resolve prestige, guild sets, coins, ties, or storm cancellation authoritatively.",
-    "overview": "Two to four organizers draft food, craft, and music stalls from four shared awnings while storms threaten a dramatic scoreless ending.",
-    "creator": "Dreamboard",
-    "minPlayers": 2,
-    "maxPlayers": 4,
-    "playTimeMinMinutes": 15,
-    "playTimeMaxMinutes": 30,
-    "difficulty": 2,
-    "mechanics": [
-      "card-drafting",
-      "market-row",
-      "set-collection",
-      "shared-card-play"
-    ],
-    "categories": ["card-game", "ranking"],
-    "thumbnailPath": "assets/thumbnail.svg",
-    "estimatedMinutes": 10,
-    "demoPlayerCount": 4
-  },
   "mechanics": [
     "card-drafting",
     "market-row",
@@ -71,15 +49,6 @@
     "sourceCode": "original-for-this-repository",
     "codeLicense": "PolyForm-Shield-1.0.0",
     "ruleText": "original-summary",
-    "artwork": "repository-owned-or-licensed",
-    "assetLicenseManifest": "assets/LICENSES.json",
-    "thirdPartyMarks": [],
-    "reviewStatus": "approved",
-    "reviewedBy": "rights-owner-or-counsel",
-    "reviewedAt": "2026-06-18"
-  },
-  "sdk": {
-    "dependency": "@dreamboard-games/sdk",
-    "versionPolicy": "exact"
+    "thirdPartyMarks": []
   }
 }

@@ -2,8 +2,8 @@
 import { materializeWorkspace } from "./authoring/materialize-workspace.js";
 
 const options = parseArgs(process.argv.slice(2));
-const receipt = await materializeWorkspace(options);
-console.log(JSON.stringify(receipt, null, 2));
+const result = await materializeWorkspace(options);
+console.log(JSON.stringify(result, null, 2));
 
 function parseArgs(argv: readonly string[]): {
   readonly manifestPath: string;

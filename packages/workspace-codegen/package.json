@@ -23,11 +23,11 @@
     "@dreamboard-games/sdk-types": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "latest",
-    "@types/node": "^24.3.0",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.2",
-    "zod": "4.4.3"
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "zod": "catalog:"
   },
   "repository": {
     "type": "git",

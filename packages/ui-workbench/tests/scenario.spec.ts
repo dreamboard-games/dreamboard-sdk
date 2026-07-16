@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
-import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
 import { digestUIFixtureJson } from "@dreamboard-games/sdk/testing";
 import { checkA11y, injectAxe } from "axe-playwright";
+
 import {
   expectAllEnabledActuatorsInViewport,
   expectBasicAccessibilityInvariants,
@@ -19,42 +19,94 @@ import {
   type WorkbenchScenarioReplayStep,
 } from "./driver/semantic-browser-driver.js";
 
+const defaultSmokeScenarioIds = [
+  "hearts.dealt-hand.desktop",
+  "roll-and-write-scorecard.mark-cell.mobile",
+] as const;
+
+interface FixtureIndexEntry {
+  readonly id: string;
+  readonly file: string;
+}
+
+interface FixtureIndex {
+  readonly fixtures: readonly FixtureIndexEntry[];
+}
+
+interface FixtureSelectionData {
+  readonly environment?: { readonly viewportTags?: readonly string[] };
+}
+
 test.beforeEach(async ({ page }) => {
   await installDeterministicWorkbenchEnvironment(page);
 });
 
-interface ScenarioMatrixEntry {
-  readonly scenarioId: string;
-  readonly project?: string;
-  readonly evidencePath?: string;
+function generatedRoot(): string {
+  const value = process.env.DREAMBOARD_WORKBENCH_GENERATED_ROOT;
+  if (!value || !path.isAbsolute(value)) {
+    throw new Error(
+      "DREAMBOARD_WORKBENCH_GENERATED_ROOT must point at a materialized Workbench.",
+    );
+  }
+  return value;
 }
 
-function readScenarioMatrix(): readonly ScenarioMatrixEntry[] {
-  const matrixPath = process.env.UI_SCENARIO_MATRIX_PATH;
-  if (!matrixPath) {
-    return [
-      {
-        scenarioId: process.env.UI_SCENARIO_ID ?? "hearts.sealed-pass.mobile",
-        evidencePath: process.env.UI_SCENARIO_EVIDENCE_PATH,
-      },
-    ];
-  }
-  const matrix = JSON.parse(readFileSync(matrixPath, "utf8"));
-  if (!Array.isArray(matrix.entries) || matrix.entries.length === 0) {
-    throw new Error(`${matrixPath} must contain a non-empty entries array.`);
-  }
-  return matrix.entries;
+function fixtureIndex(): FixtureIndex {
+  return JSON.parse(
+    readFileSync(
+      path.join(generatedRoot(), "fixtures/reference-games/index.json"),
+      "utf8",
+    ),
+  ) as FixtureIndex;
 }
 
-for (const entry of readScenarioMatrix()) {
-  test(`${entry.scenarioId} replays on ${entry.project ?? "selected project"}`, async ({
+function selectedScenarioIds(index: FixtureIndex): readonly string[] {
+  if (process.env.UI_SCENARIO_ALL === "1") {
+    return index.fixtures.map(({ id }) => id);
+  }
+  if (process.env.UI_SCENARIO_IDS) {
+    const ids = JSON.parse(process.env.UI_SCENARIO_IDS) as unknown;
+    if (
+      !Array.isArray(ids) ||
+      ids.length === 0 ||
+      ids.some((id) => typeof id !== "string")
+    ) {
+      throw new Error("UI_SCENARIO_IDS must be a non-empty JSON string array.");
+    }
+    return ids as string[];
+  }
+  return defaultSmokeScenarioIds;
+}
+
+function projectsForScenario(entry: FixtureIndexEntry): readonly string[] {
+  const fixture = JSON.parse(
+    readFileSync(
+      path.join(generatedRoot(), "fixtures/reference-games", entry.file),
+      "utf8",
+    ),
+  ) as FixtureSelectionData;
+  const tags = new Set(fixture.environment?.viewportTags ?? []);
+  return tags.has("phone") || tags.has("touch") || entry.id.endsWith(".mobile")
+    ? ["chromium-touch-phone", "webkit-phone"]
+    : ["chromium-desktop"];
+}
+
+const index = fixtureIndex();
+const entryById = new Map(index.fixtures.map((entry) => [entry.id, entry]));
+
+for (const scenarioId of selectedScenarioIds(index)) {
+  const entry = entryById.get(scenarioId);
+  if (!entry) {
+    throw new Error(`Unknown UI scenario '${scenarioId}'.`);
+  }
+  const projects = projectsForScenario(entry);
+  test(`${scenarioId} executes its authored browser replay`, async ({
     page,
   }, testInfo) => {
     test.skip(
-      Boolean(entry.project && entry.project !== testInfo.project.name),
-      `scenario selected for ${entry.project}`,
+      !projects.includes(testInfo.project.name),
+      `${scenarioId} targets ${projects.join(", ")}`,
     );
-    const scenarioId = entry.scenarioId;
     await page.goto(`/scenario/${scenarioId}?mode=test`);
     await waitForWorkbenchStablePage(page);
     const scenario = page.locator('[data-dreamboard-workbench="scenario"]');
@@ -69,86 +121,64 @@ for (const entry of readScenarioMatrix()) {
     await expect(
       scenario.locator("[data-reference-game]").first(),
     ).toBeVisible();
-    assertValidSemanticSnapshot(await readPageBrowserInteractionSnapshot(page));
 
-    const replay = await page.evaluate(() => {
+    const initial = await page.evaluate(() => {
       const bridge = window.__dreamboardUIFixture;
       if (!bridge) throw new Error("UI fixture test bridge is not installed.");
-      return bridge.getReplaySteps();
+      return {
+        projectionDigest: bridge.getProjectionDigest(),
+        expected: bridge.getExpected(),
+        replay: bridge.getReplaySteps(),
+      };
     });
-    expect(replay.length).toBeGreaterThan(0);
+    expect(initial.projectionDigest).toBe(
+      initial.expected.initialProjectionDigest,
+    );
+    expect(initial.replay.length).toBeGreaterThan(0);
+    assertValidSemanticSnapshot(await readPageBrowserInteractionSnapshot(page));
 
-    const screenshotDir = process.env.UI_SCENARIO_SCREENSHOT_DIR;
-    const screenshots: string[] = [];
     const steps = [];
-    for (const [index, step] of (
-      replay as readonly WorkbenchScenarioReplayStep[]
-    ).entries()) {
-      const evidence = await executeFixtureStep(page, step);
-      let screenshotPath: string | undefined;
-      if (screenshotDir) {
-        await mkdir(screenshotDir, { recursive: true });
-        screenshotPath = path.join(
-          screenshotDir,
-          `${scenarioId}.${testInfo.project.name}.${String(index + 1).padStart(2, "0")}-${step.stepId.replace(/[^a-zA-Z0-9.-]+/g, "-")}.png`,
-        );
-        await scenario.screenshot({
-          path: screenshotPath,
-          animations: "disabled",
-        });
-        screenshots.push(screenshotPath);
-      }
-      steps.push({ ...evidence, screenshotPath });
+    for (const step of initial.replay as readonly WorkbenchScenarioReplayStep[]) {
+      steps.push(await executeFixtureStep(page, step));
     }
-
     await page.evaluate(() => window.__dreamboardUIFixture?.assertConsumed());
+
     const finalSnapshot = await readPageBrowserInteractionSnapshot(page);
     assertValidSemanticSnapshot(finalSnapshot);
-    const reducedMotion = await page.evaluate(
-      () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
-    );
-    expect(reducedMotion).toBe(true);
     const measured = await page.evaluate(() => {
       const bridge = window.__dreamboardUIFixture;
       if (!bridge) throw new Error("UI fixture test bridge is not installed.");
       return {
         scenarioId: bridge.getScenarioId(),
-        frameId: bridge.getFrameId(),
         projectionDigest: bridge.getProjectionDigest(),
         hostEvents: bridge.getHostEvents(),
+        expected: bridge.getExpected(),
+        reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)")
+          .matches,
       };
     });
-    const finalStep = steps.at(-1);
-    const evidence = {
-      schemaVersion: 1,
-      kind: "dreamboard-ui-scenario-evidence",
-      scenarioId: measured.scenarioId,
-      project: testInfo.project.name,
-      attempt: testInfo.retry + 1,
-      frameId: measured.frameId,
-      projectionDigest: measured.projectionDigest,
-      semanticDigest: digestUIFixtureJson({
+    expect(measured.scenarioId).toBe(scenarioId);
+    expect(measured.projectionDigest).toBe(
+      measured.expected.finalProjectionDigest,
+    );
+    expect(
+      digestUIFixtureJson({
         digestVersion: "runtime-browser-interaction@2",
         snapshot: finalSnapshot,
       }),
-      semanticSnapshot: finalSnapshot,
-      submissionDigest: finalStep?.submissionDigest,
-      hostEvents: measured.hostEvents,
-      steps,
-      screenshots,
-    };
-
+    ).toBe(measured.expected.finalSemanticDigest);
+    if (initial.replay.some((step) => "resolve" in step)) {
+      expect(steps.at(-1)?.submissionDigest).toBe(
+        measured.expected.submissionDigest,
+      );
+    }
     expect(measured.hostEvents.length).toBeGreaterThan(0);
+    expect(measured.reducedMotion).toBe(true);
+
     await expectNoHorizontalOverflow(page);
     await expectAllEnabledActuatorsInViewport(page);
-    const layoutAssertions = [
-      "no-horizontal-overflow",
-      "enabled-actuators-in-viewport",
-      "basic-accessibility-invariants",
-    ];
     if (testInfo.project.name.includes("phone")) {
       await expectMinimumTouchTargetSize(page, { width: 44, height: 44 });
-      layoutAssertions.push("minimum-touch-target-size");
     }
     await expectBasicAccessibilityInvariants(page);
     await injectAxe(page);
@@ -156,28 +186,5 @@ for (const entry of readScenarioMatrix()) {
       detailedReport: true,
       detailedReportOptions: { html: true },
     });
-
-    const evidencePath =
-      entry.evidencePath ?? process.env.UI_SCENARIO_EVIDENCE_PATH;
-    if (evidencePath) {
-      await mkdir(path.dirname(evidencePath), { recursive: true });
-      await writeFile(
-        evidencePath,
-        `${JSON.stringify(
-          {
-            ...evidence,
-            proof: {
-              reducedMotion: "passed",
-              accessibility: {
-                axeScan: "passed",
-                layoutAssertions,
-              },
-            },
-          },
-          null,
-          2,
-        )}\n`,
-      );
-    }
   });
 }

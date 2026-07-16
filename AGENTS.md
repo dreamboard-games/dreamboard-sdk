@@ -1,162 +1,115 @@
 # Dreamboard SDK Agent Guide
 
-This repository is the source of truth for the public
-`@dreamboard-games/sdk` package, reference games, portable UI fixtures, and the
-SDK UI Workbench. Keep this file short and operational; durable design detail
-belongs in `docs/`.
+This repository owns the public `@dreamboard-games/sdk` package, nine reference
+games, UI fixtures, Storybook, and the SDK UI Workbench. Keep operational rules
+here; put durable design explanations in `docs/`.
 
-## Environment And Commands
+## Environment and commands
 
-- Use `pnpm`, not npm or yarn.
-- Target Node 24 or newer. The pinned package manager is `pnpm@10.4.1`.
+- Use `pnpm`, Node 24 or newer, and the pinned `pnpm@10.4.1`.
 - Install with `pnpm install --frozen-lockfile`.
-- `pnpm check` is the authoritative browser-free clean-checkout gate and must
-  remain read-only.
-- Prefer the narrowest focused check while iterating, then run the relevant
-  aggregate gate before handoff.
+- Use `pnpm check` as the authoritative browser-free clean-checkout gate. It
+  must not change tracked files.
+- Iterate with the narrowest command, then run the relevant aggregate gate.
 
-## Repository Boundaries
-
-- `packages/sdk` owns the only published package. Other workspace packages are
-  private implementation inputs.
-- Each `examples/reference-games/<game>/` root is one isolated authored game
-  workspace. Its `rule.md` is gameplay authority; generated workspace
-  contracts beneath that root are ignored local build products.
-- UI fixture compiler code lives under `scripts/ui-fixtures/`.
-- Workbench runtime and presentation live under `packages/ui-workbench/`.
-- UI orchestration, catalog generation, parity, and release-proof scripts live
-  under `scripts/ui/`.
-- A consuming product may execute real-host parity from immutable SDK outputs,
-  but the public SDK must never locate or invoke that consumer checkout.
-
-## Generated UI Workflow
-
-Do not hand-edit generated workspace contracts, Workbench fixtures, fixture
-indexes, scenario catalogs, or generated docs. Change the authored source or
-owning generator. Materialize before any consumer reads the Workbench catalog;
-the canonical commands enforce that order:
+The root command surface is intentionally small:
 
 ```sh
-pnpm ui:workbench:materialize
-pnpm ui:catalog:generate
-pnpm docs:generate
+pnpm build
+pnpm check
+pnpm format
+pnpm format:check
+pnpm lint
+pnpm test
+pnpm typecheck
+pnpm generate [--check]
+pnpm reference [game-id]
+pnpm reference pin <version>
+pnpm ui storybook
+pnpm ui workbench [--scenario <id>] [--source]
+pnpm ui test [--scenario <id>|--all]
+pnpm ui snapshots update
+pnpm release:verify
 ```
 
-Generated surfaces include:
+Do not add forwarding aliases. Extend the typed command implementation when a
+new behavior genuinely belongs in this repository.
 
-- `examples/reference-games/<game>/shared/generated/` (ignored)
-- `build/ui-workbench/generated/` (ignored)
-- `fixtures/ui/component-scenario-index.json`
-- `docs/ui-agent-iteration.md`
-- `docs/reference-games.md`
-- `docs/reference/agent-api.md`
-- `packages/sdk/REFERENCE.md`
+## Repository boundaries
 
-Run `pnpm ui:catalog:check`, `pnpm docs:check`, and `pnpm generate:check` to
-detect stale generated output. Never stage ignored materialized output.
+- `packages/sdk` is the only published package. The other root workspace
+  packages are unpublished implementation inputs.
+- The package declarations, export map, and authored package README define the
+  public API. Do not generate a second API reference.
+- `scripts/` is Node 24 TypeScript. Prefer shared typed helpers and
+  `node:util.parseArgs`; do not add a command framework for this small surface.
+- Each `examples/reference-games/<game>/` directory is an isolated authored
+  game. Its `rule.md` defines gameplay and its checked-in lockfile records the
+  exact published SDK dependency.
+- `reference-game.json` uses schema V5. It contains workspace, teaching,
+  mechanics, UI-pattern, and rights metadata only.
+- UI fixture compilation lives under `scripts/ui-fixtures/`, UI orchestration
+  under `scripts/ui/`, and Workbench runtime code under
+  `packages/ui-workbench/`.
 
-## Coding-Agent Scenario Loop
+## Generated output
 
-1. Read the game-local `rule.md` and one typed source under
-   `test/scenarios/`; do not start from a base state or generated projection.
-2. Run `dreamboard test inspect <scenario> --perspective player:<seat> --at
-<checkpoint>` to observe one state, its views, blockers, action inputs, and
-   sorted checkpoint catalog as JSON.
-3. Run `dreamboard test explore <scenario> --perspective player:<seat> --at
-<checkpoint>` and
-   copy a returned concrete replay-accepted `candidate.command` into the same
-   typed scenario source.
-4. Run `pnpm verify` in the isolated game workspace. Use its authored UI
-   scenario checkpoints in the Workbench; do not check in projected state.
-5. Launch the same authored source with `dreamboard dev` when host-level
-   iteration is needed.
+`pnpm generate` writes reducer-contract TypeScript. `pnpm generate --check`
+renders and compares without changing tracked files. Unsupported schema forms
+must fail with the input path; never weaken generated types to `unknown`.
 
-All nine reference games are complete multi-turn teaching games. Their stable
-directory IDs, manifest IDs, and release slugs may differ from public display
-names. All nine isolated `pnpm-lock.yaml` files are intentional public-package
-provenance; landing-page selection is owned by the product repository.
+Reference-game workspace contracts and Workbench materialization beneath
+`build/` are ignored local products. The UI commands materialize them when
+needed and preserve the last good Workbench output after a failed rebuild. Do
+not commit ignored materialization or hand-edit generated contracts.
 
-## Coding-Agent UI Loop
+## Reference-game workflow
 
-1. Use `fixtures/ui/component-scenario-index.json` to map the changed component
-   to representative scenarios.
-2. Use `pnpm ui:storybook` for isolated presentation and local component state.
-   Use `pnpm ui:workbench --scenario <scenario-id>` for runtime-generated UI.
-   The normal loop is backend-free: protocol scenarios exercise primitive
-   contracts, and reference-game scenarios replay real reducer output through
-   the fixture transport.
-3. The root wrapper builds the SDK once and focused Workbench runs materialize
-   only the owning game. Source changes rebuild that selected partition and
-   retain the last good output after errors. Use `pnpm ui:workbench:src` to
-   resolve the SDK from source (dev server only; every
-   `vite build` and the proof path still consume `dist`).
-4. Run the narrowest focused check, such as
-   `pnpm ui:test --component <name>` or
-   `pnpm ui:test --scenario <scenario-id>`.
-5. Run `pnpm ui:test:changed --base <ref>` and the relevant aggregate gate
-   before handoff. Preserve the generated evidence receipt.
+Read the game-local `rule.md`, then a typed source under `test/scenarios/`.
+Use `dreamboard test inspect` and `dreamboard test explore` to examine named
+checkpoints and obtain replay-accepted commands. Keep the typed scenario as the
+authored authority; generated projections and fixtures are disposable.
 
-See `docs/reference/ui-iteration-loops.md` for the two-loop model (Storybook
-proves pixels, Workbench proves behavior) and the motion-gate rule.
-See `docs/ui-agent-iteration.md` for generated command selection.
-See `docs/reference/ui-workbench-behavioral-proof.md` for Workbench replay
-lessons about semantic evidence, mobile card targets, and screenshot limits.
-See `docs/reference/ui-sdk-mobile-hand-and-card-interactions.md` for controlled
-hand layout, pointer arbitration, drag ownership, and mobile accessibility.
-
-## UI Evidence Invariants
-
-- A scenario capability is earned from an executable replay recipe. Do not add
-  catalog capability tags from descriptive metadata alone.
-- Fixture expected digests must come from compiling and executing the reference
-  runtime path.
-- Browser scenario tests must resolve the semantic request, validate actuator
-  identity, perform the physical browser action, flush the host, and compare
-  measured projection, semantic, and submission digests.
-- Never construct a passing evidence receipt by copying values from
-  `fixture.expected`.
-- Preserve screenshots and measured evidence in the run receipt. A browser test
-  that passes without writing measured evidence is a failure.
-- The required Workbench scenarios are `hearts.sealed-pass.mobile`,
-  `hex-network-trading.growing-network.desktop`, and
-  `worker-placement-tableau.first-craft.desktop`. Together they cover mouse
-  click, browser touch tap, physical pointer drag, runtime draft mutation,
-  Chromium/WebKit phone layout, Axe, submission, semantic snapshots, and digest
-  evidence.
-- Hearts remains the sole required packed real-host parity scenario. Physical
-  mobile touch-drag and real-device canaries remain follow-up coverage.
-
-## Verification
-
-For UI fixture, Workbench, or reference-game changes, run:
+From the repository root:
 
 ```sh
-pnpm ui:coverage:check
-pnpm ui:catalog:check
-pnpm ui:fixtures:check
-pnpm ui:runtime:test
-pnpm ui:test
-pnpm ui:hard-cut:check
-pnpm docs:check
+pnpm reference hearts
+pnpm reference
 ```
 
-Use `pnpm ui:test:changed --base <ref>`, `pnpm ui:test --component <name>`, or
-`pnpm ui:test --capability <name>` only for focused iteration. Shared runtime,
-fixture schema, browser-interaction, or evidence changes require the full UI
-suite.
+The focused form verifies one game. The default verifies all nine. Both validate
+the checked-in lockfile, pack the SDK once, install the selected game copies
+against that tarball, materialize, typecheck, and run reducer and UI tests.
+After publishing, run `pnpm reference pin <version>` to atomically repin every
+game manifest and lockfile to one exact npm version.
 
-## Parity And Release Proof
+## UI workflow
 
-- Fixture expectation, source Workbench, and packed real-host observations must
-  be independently materialized, carry explicit provenance, and match. Never
-  synthesize a measured observation from fixture metadata.
-- Real-host parity is consumer-owned. Supply its receipt explicitly with
-  `pnpm verify:release --real-host-parity-receipt <path>` when that proof is
-  required; the SDK validates it without invoking the consumer.
-- `pnpm verify:release` must pack once and verify the exact tarball intended for
-  publication. A physical iOS Safari and Android Chrome canary is optional
-  follow-up evidence unless `--require-device-canary` is supplied.
+- Use `pnpm ui storybook` for component presentation, responsive layout,
+  accessibility, and motion.
+- Use `pnpm ui workbench --scenario <id>` for reducer-backed runtime behavior.
+  Add `--source` only for the local HMR loop; proof paths consume the built SDK.
+- Use `pnpm ui test --scenario <id>` for one focused Workbench scenario.
+- Use `pnpm ui test` for Storybook checks, the complete browser-driver and
+  keyboard suites, and the two interaction smoke scenarios:
+  `hearts.dealt-hand.desktop` and
+  `roll-and-write-scorecard.mark-cell.mobile`.
+- Use `pnpm ui test --all` to add every authored Workbench scenario.
+- Use `pnpm ui snapshots update` only when intentionally accepting new tracked
+  Storybook baselines.
 
-See `docs/ui-agent-iteration.md` for generated command selection and
-`docs/architecture/ui-test-surfaces.md` for the durable test-surface
-architecture.
+Workbench browser tests must perform the physical action and assert measured
+projection, semantic, draft, submission, actuator, layout, motion, and Axe
+results directly. Touch-capable projects use `tap()`; desktop projects use
+`click()`. Drag coverage belongs to the browser-driver suite. Screenshots,
+traces, and video are ordinary failure artifacts.
+
+## Release verification
+
+`pnpm release:verify` runs the shared core checks, creates one SDK tarball,
+smokes that artifact, and verifies all nine reference games against the same
+file. It writes the immutable candidate description to
+`build/release/candidate/candidate.json`.
+
+Browser UI verification remains a separate CI lane. Run `pnpm ui test` for a
+pull request and `pnpm ui test --all` on the main branch.

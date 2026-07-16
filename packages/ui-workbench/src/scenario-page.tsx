@@ -93,6 +93,7 @@ export function ScenarioPage({
           harness: nextLoaded.harness,
           runtime: nextLoaded.runtime,
           replay: nextLoaded.fixture.replay,
+          expected: nextLoaded.fixture.expected,
           enabled: testMode,
         });
         unsubscribeFrame = nextLoaded.runtime.subscribeFrame(() => {
@@ -231,7 +232,7 @@ export function ScenarioPage({
               <span>{frame?.projectionDigest ?? "no projection"}</span>
             </div>
             {panel === "runtime" ? (
-              <JsonPanel title="Runtime transcript" value={events} />
+              <JsonPanel title="Runtime events" value={events} />
             ) : (
               <JsonPanel
                 title="Semantic snapshot"

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "automa-river-rival",
   "displayName": "River Guild",
   "workspace": {
@@ -34,28 +34,6 @@
       "ui/App.tsx"
     ]
   },
-  "demoRelease": {
-    "slug": "automa-river-rival",
-    "name": "River Guild",
-    "description": "A one- or two-player cooperative cargo race against a deterministic rival guild.",
-    "overview": "Claim timber, grain, and ore from four river moorings while public rival orders reshape the cargo race across six complete rounds.",
-    "creator": "Dreamboard",
-    "minPlayers": 1,
-    "maxPlayers": 2,
-    "playTimeMinMinutes": 15,
-    "playTimeMaxMinutes": 25,
-    "difficulty": 2,
-    "mechanics": [
-      "automa-rival",
-      "open-market",
-      "cooperative-scoring",
-      "deterministic-procedure"
-    ],
-    "categories": ["cooperative", "strategy"],
-    "thumbnailPath": "assets/thumbnail.svg",
-    "estimatedMinutes": 10,
-    "demoPlayerCount": 2
-  },
   "mechanics": [
     "automa-rival",
     "open-market",
@@ -73,15 +51,6 @@
     "sourceCode": "original-for-this-repository",
     "codeLicense": "PolyForm-Shield-1.0.0",
     "ruleText": "original-summary",
-    "artwork": "repository-owned-or-licensed",
-    "assetLicenseManifest": "assets/LICENSES.json",
-    "thirdPartyMarks": [],
-    "reviewStatus": "approved",
-    "reviewedBy": "rights-owner-or-counsel",
-    "reviewedAt": "2026-06-18"
-  },
-  "sdk": {
-    "dependency": "@dreamboard-games/sdk",
-    "versionPolicy": "exact"
+    "thirdPartyMarks": []
   }
 }

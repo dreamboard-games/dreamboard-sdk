@@ -1,4 +1,9 @@
+import { readFileSync } from "node:fs";
 import { defineConfig } from "tsup";
+
+const packageManifest = JSON.parse(
+  readFileSync(new URL("./package.json", import.meta.url), "utf8"),
+) as { version: string };
 
 export default defineConfig({
   entry: [
@@ -16,8 +21,6 @@ export default defineConfig({
     "src/testing.ts",
     "src/testing-runtime.ts",
     "src/testing-compiler.ts",
-    "src/reference-game-compiler.ts",
-    "src/reference-game-source-manifest-cli.ts",
     "src/authoring-compiler.ts",
     "src/authoring-materialize-cli.ts",
     "src/runtime.ts",
@@ -32,10 +35,12 @@ export default defineConfig({
   format: ["esm"],
   platform: "neutral",
   target: "node24",
+  define: {
+    __DREAMBOARD_SDK_VERSION__: JSON.stringify(packageManifest.version),
+  },
   outDir: "dist",
-  // Private workspace packages are inlined into the published bundle (JS and
-  // declarations) so the tarball stays self-contained — enforced by
-  // scripts/assert-sdk-tarball-self-contained.mjs.
+  // Private workspace packages are inlined into the published bundle so the
+  // package verifier can prove the tarball is self-contained.
   dts: {
     resolve: [
       /^@dreamboard-games\/(sdk-types|reducer-contract|workspace-codegen)(\/.*)?$/,

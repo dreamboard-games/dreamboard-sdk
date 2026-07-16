@@ -19,7 +19,6 @@ const jsSubpaths = [
   "@dreamboard-games/sdk/testing",
   "@dreamboard-games/sdk/testing-compiler",
   "@dreamboard-games/sdk/authoring-compiler",
-  "@dreamboard-games/sdk/reference-game-compiler",
   "@dreamboard-games/sdk/runtime",
   "@dreamboard-games/sdk/runtime/primitives",
   "@dreamboard-games/sdk/runtime/workspace-contract",

@@ -41,19 +41,28 @@ test("roll-and-write scorecard accepts keyboard activation for square board targ
 
   await expect
     .poll(async () => {
+      await page.evaluate(() => window.__dreamboardUIFixture?.flush());
       const snapshot = await readPageBrowserInteractionSnapshot(page);
       assertValidSemanticSnapshot(snapshot);
-      const interaction = snapshot.surfaces
-        .flatMap((surface) => surface.interactions)
-        .find((item) => item.interactionKey === "markSurvey.markCell");
-      const cellActuator = interaction?.actuators.find(
-        (actuator) => actuator.actuatorId === "board:space:cell-1-0",
-      );
-      return {
-        cellCandidateState: cellActuator?.candidateState,
-      };
+      return page.evaluate(() => {
+        const bridge = window.__dreamboardUIFixture;
+        if (!bridge)
+          throw new Error("UI fixture test bridge is not installed.");
+        return {
+          projectionMatches:
+            bridge.getProjectionDigest() ===
+            bridge.getExpected().finalProjectionDigest,
+          acceptedSubmission: bridge
+            .getHostEvents()
+            .some(
+              (event) =>
+                event.kind === "submit-received" && event.result === "accepted",
+            ),
+        };
+      });
     })
     .toEqual({
-      cellCandidateState: "selected",
+      projectionMatches: true,
+      acceptedSubmission: true,
     });
 });

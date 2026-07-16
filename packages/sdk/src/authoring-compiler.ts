@@ -1,5 +1,5 @@
 export {
   materializeWorkspace,
-  type MaterializedWorkspaceReceipt,
+  type MaterializedWorkspaceResult,
   type MaterializeWorkspaceOptions,
 } from "./authoring/materialize-workspace.js";

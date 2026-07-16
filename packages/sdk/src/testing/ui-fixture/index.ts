@@ -11,28 +11,6 @@ export {
   serializeUIScenarioFixture,
 } from "./canonical.js";
 export {
-  compareUIParityObservations,
-  createUIParityObservationFromFixture,
-  parseUIParityObservation,
-  parseUIParityRealHostReceipt,
-  parseUIParityRunInput,
-  type CreateUIParityObservationFromFixtureOptions,
-  type UIParityArtifactReference,
-  type UIParityComparisonFailure,
-  type UIParityComparisonResult,
-  type UIParityDiagnostic,
-  type UIParityFailureCode,
-  type UIParityObservation,
-  type UIParityObservationCheckpoint,
-  type UIParityObservationEnvironment,
-  type UIParityObservationProvenance,
-  type UIParityRealHostReceipt,
-  type UIParityReceiptComparison,
-  type UIParityRunInput,
-  type UIParityRunScenario,
-  type UIParityViewport,
-} from "./parity.js";
-export {
   createFixtureHostHarness,
   type CreateFixtureHostHarnessOptions,
   type FixtureHostEvent,

@@ -1,9 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": [
-    "scripts/copy-sdk-private-dts.mjs",
-    "scripts/generate-authoring-metadata.mjs"
-  ],
+  "globalDependencies": ["scripts/package.ts", "packages/sdk/package.json"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

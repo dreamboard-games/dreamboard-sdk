@@ -4,7 +4,6 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { WORKSPACE_CODEGEN_OWNERSHIP } from "@dreamboard-games/workspace-codegen";
 import { build } from "esbuild";
-import { compareReferenceGameCanonicalStrings } from "../reference-games/canonical.js";
 import { generateWorkspaceArtifacts } from "./adapter.js";
 
 export type MaterializeWorkspaceOptions = {
@@ -14,7 +13,7 @@ export type MaterializeWorkspaceOptions = {
   readonly writeMissingSeeds?: boolean;
 };
 
-export type MaterializedWorkspaceReceipt = {
+export type MaterializedWorkspaceResult = {
   readonly schemaVersion: 1;
   readonly projectRoot: string;
   readonly authoritativeFiles: number;
@@ -44,7 +43,7 @@ const authoritativePaths = new Set(
  */
 export async function materializeWorkspace(
   options: MaterializeWorkspaceOptions,
-): Promise<MaterializedWorkspaceReceipt> {
+): Promise<MaterializedWorkspaceResult> {
   const projectRoot = path.resolve(options.projectRoot ?? process.cwd());
   const manifestPath = resolveProjectPath(projectRoot, options.manifestPath);
   if (!(await isFile(manifestPath))) {
@@ -86,7 +85,7 @@ export async function materializeWorkspace(
     const actual = createHash("sha256").update(bytes).digest("hex");
     if (actual !== artifact.contentSha256) {
       throw new Error(
-        `Generated ${artifact.path} digest does not match its SDK receipt.`,
+        `Generated ${artifact.path} digest does not match its declared digest.`,
       );
     }
     records.push({
@@ -96,7 +95,7 @@ export async function materializeWorkspace(
     });
   }
   records.sort((left, right) =>
-    compareReferenceGameCanonicalStrings(left.path, right.path),
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
   );
   return {
     schemaVersion: 1,

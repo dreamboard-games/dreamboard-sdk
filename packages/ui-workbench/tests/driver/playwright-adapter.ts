@@ -171,7 +171,7 @@ async function activateResolvedActuator(
   }
   const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
   if (touchCapable) {
-    await locator.click();
+    await locator.tap();
     return;
   }
   await locator.click();

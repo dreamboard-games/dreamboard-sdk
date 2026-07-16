@@ -18,7 +18,7 @@ const scopeId = "runtime";
 const interactionKey = "play-card";
 const interactionId = "play-card:player-1";
 
-test("semantic driver activates a uniquely resolved actuator by protocol attributes", async ({
+test("semantic driver clicks on desktop and taps on touch projects", async ({
   page,
 }) => {
   await page.setContent(`
@@ -54,6 +54,7 @@ test("semantic driver activates a uniquely resolved actuator by protocol attribu
           }),
         )}
         onclick="window.activationCount = (window.activationCount ?? 0) + 1"
+        ontouchend="window.touchEndCount = (window.touchEndCount ?? 0) + 1"
       >Visible copy is not a selector</button>
     </main>
   `);
@@ -89,6 +90,10 @@ test("semantic driver activates a uniquely resolved actuator by protocol attribu
   await executeFixtureStep(page, step);
 
   await expect.poll(() => page.evaluate(() => window.activationCount)).toBe(1);
+  const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
+  await expect
+    .poll(() => page.evaluate(() => window.touchEndCount ?? 0))
+    .toBe(touchCapable ? 1 : 0);
 });
 
 test("semantic driver fills a uniquely resolved fill actuator", async ({
@@ -156,7 +161,7 @@ test("semantic driver drags from a pointer actuator to a pointer target", async 
 }) => {
   test.skip(
     browserName === "webkit",
-    "The WebKit phone lane is layout/tap smoke coverage; touch drag parity is Chromium CDP only.",
+    "The WebKit phone lane covers layout and tap; touch drag uses Chromium CDP.",
   );
 
   await page.setContent(`
@@ -345,6 +350,7 @@ function escapeHtml(value: string): string {
 declare global {
   interface Window {
     activationCount?: number;
+    touchEndCount?: number;
     dragFinished?: boolean;
   }
 }

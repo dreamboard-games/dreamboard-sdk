@@ -6,20 +6,6 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "schema/**", "scripts/**", "fixtures/**"],
       "outputs": ["generated/**", "src/bundle.ts", "dist/**"]
-    },
-    "generate": {
-      "inputs": ["schema/**", "scripts/**", "package.json"],
-      "outputs": ["generated/**", "src/bundle.ts"]
-    },
-    "generate:check": {
-      "inputs": [
-        "schema/**",
-        "scripts/**",
-        "generated/**",
-        "src/bundle.ts",
-        "package.json"
-      ],
-      "outputs": []
     }
   }
 }

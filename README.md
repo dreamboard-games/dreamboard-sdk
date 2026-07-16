@@ -1,88 +1,88 @@
 # Dreamboard SDK
 
-Public SDK package-set repository for Dreamboard game authoring.
+This repository publishes the public `@dreamboard-games/sdk` package and owns
+its reference games, UI fixtures, Storybook, and UI Workbench.
 
-## Packages
+## Develop
 
-This repository publishes one public author SDK package:
-
-- `@dreamboard-games/sdk`
-
-The leaf implementation packages in `packages/` are private implementation
-inputs. They are not published.
-
-The fixed-version guard runs in CI:
-
-```sh
-pnpm version:check
-```
-
-## Development
+Use Node 24 or newer and pnpm:
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm check
 ```
 
-`pnpm check` is the authoritative browser-free local and CI gate. It is
-expected to be read-only from a clean checkout. Package, browser, and release
-proofs are explicit so the daily gate never launches Playwright or rebuilds a
-publication candidate:
+`pnpm check` is the authoritative browser-free gate. It formats-checks, lints,
+typechecks, checks generated reducer contracts, builds, validates package
+exports, runs unit tests, and verifies all nine isolated reference games. It is
+read-only from a clean checkout.
 
-```sh
-pnpm verify:package
-pnpm verify:ui
-pnpm verify:release
-```
+The daily command surface is deliberately small:
 
-`@dreamboard-games/sdk` owns the supported authoring, generated runtime,
-testing, reducer-contract, browser-interaction, and UI subpaths.
+| Goal                                    | Command                                          |
+| --------------------------------------- | ------------------------------------------------ |
+| Build packages                          | `pnpm build`                                     |
+| Run the browser-free gate               | `pnpm check`                                     |
+| Format or check formatting              | `pnpm format` / `pnpm format:check`              |
+| Lint, typecheck, or unit test           | `pnpm lint` / `pnpm typecheck` / `pnpm test`     |
+| Write reducer-contract output           | `pnpm generate`                                  |
+| Check reducer-contract drift            | `pnpm generate --check`                          |
+| Verify one or all reference games       | `pnpm reference [game-id]`                       |
+| Repin reference games after publication | `pnpm reference pin <version>`                   |
+| Open Storybook                          | `pnpm ui storybook`                              |
+| Open the Workbench                      | `pnpm ui workbench [--scenario <id>] [--source]` |
+| Run UI tests                            | `pnpm ui test [--scenario <id>\|--all]`          |
+| Accept Storybook baselines              | `pnpm ui snapshots update`                       |
+| Build and verify a release candidate    | `pnpm release:verify`                            |
 
-## Reference Games
+## Public package
+
+`packages/sdk` is the only published workspace. Public capabilities are
+exposed through `@dreamboard-games/sdk` and its export-map subpaths. The shipped
+declarations, package export map, and [package README](packages/sdk/README.md)
+are the API authority.
+
+## Reference games
 
 The nine isolated workspaces under
 [`examples/reference-games/`](examples/reference-games/README.md) are complete
-multi-turn teaching games and packed public-package consumers. Start with the
-[canonical example map](docs/reference/canonical-examples.md), then read the
-selected game-local `rule.md` and typed scenario source. Generated workspace
-contracts and Workbench fixtures are local outputs; the nine per-game lockfiles
-are intentionally checked in as exact public-package provenance.
-
-## Alpha Publishing
-
-Manual alpha dry-run (this creates one release candidate and reuses it across
-package and UI proof):
+multi-turn teaching games and genuine packed-package consumers. Each game owns
+its `rule.md`, a schema-V5 `reference-game.json`, typed scenarios, and an exact
+lockfile. Start with the
+[canonical example map](docs/reference/canonical-examples.md), then run a
+focused proof such as:
 
 ```sh
-pnpm publish:alpha:dry-run
+pnpm reference hearts
 ```
 
-Manual alpha publish:
+## UI development
+
+Storybook is the presentation loop; the Workbench replays reducer-produced
+fixtures through the SDK runtime:
 
 ```sh
-pnpm publish:alpha
+pnpm ui storybook
+pnpm ui workbench --scenario hearts.dealt-hand.desktop
+pnpm ui test
 ```
 
-This publishes only `@dreamboard-games/sdk` with the `alpha` npm dist-tag. See
-[`docs/alpha-publish.md`](docs/alpha-publish.md) for the full checklist.
-The current public changes are summarized in
-[`docs/release-notes-0.4.0-alpha.13.md`](docs/release-notes-0.4.0-alpha.13.md).
+See [UI iteration loops](docs/reference/ui-iteration-loops.md) and
+[mobile hand and card interactions](docs/reference/ui-sdk-mobile-hand-and-card-interactions.md).
 
-The `release-alpha` GitHub Actions workflow publishes the SDK package with
-provenance and the `alpha` npm dist-tag after npm Trusted Publishing is
-configured. The workflow verifies the repository, packs one SDK tarball, and
-publishes that exact verified artifact.
+## Publishing
 
-Before using it, configure npm Trusted Publishing for the SDK package:
+Prepare the exact non-publishing candidate with:
 
-- owner: `dreamboard-games`
-- repository: `dreamboard-sdk`
-- package: `@dreamboard-games/sdk`
-- workflow: `release-alpha.yml`
-- environment: `npm-alpha`
+```sh
+pnpm release:verify
+```
 
-The workflow uses GitHub OIDC. Do not add npm tokens to this repo for Trusted
-Publishing.
+The candidate tarball and immutable manifest are written beneath
+`build/release/candidate/`. The `Release` GitHub Actions workflow publishes that
+verified artifact with npm provenance and derives `alpha`, `beta`, or `latest`
+from the package version. Browser UI verification remains a separate CI lane.
+See [the publishing checklist](docs/alpha-publish.md).
 
 ## License
 

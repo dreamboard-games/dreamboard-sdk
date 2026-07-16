@@ -12,7 +12,7 @@ export type {
   AuthoringManifestConformanceCaseV1,
   AuthoringValidationResultV1,
   GeneratedArtifactV1,
-  GeneratedAuthoringMetadataV1,
+  AuthoringMetadataV1,
   GeneratedPathPatternV1,
   ProjectAuthoringAdapterV1,
 } from "./types.js";

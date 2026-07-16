@@ -1,10 +1,7 @@
 import type { JsonValue } from "@dreamboard-games/sdk-types";
 
-export type GeneratedAuthoringMetadataV1 = {
+export type AuthoringMetadataV1 = {
   sdkVersion: string;
-  codegenVersion: string;
-  manifestSchemaVersion: number;
-  generatedArtifactSchemaVersion: number;
 };
 
 export type AuthoringValidationResultV1 = {
@@ -43,7 +40,7 @@ export type AuthoringManifestConformanceCaseV1 = {
 
 export type ProjectAuthoringAdapterV1 = {
   protocolVersion: 1;
-  metadata: GeneratedAuthoringMetadataV1;
+  metadata: AuthoringMetadataV1;
   generatedPaths: readonly string[];
   generatedPathPatterns: readonly GeneratedPathPatternV1[];
   manifestConformanceCases: readonly AuthoringManifestConformanceCaseV1[];

@@ -12,7 +12,7 @@ import {
   materializeManifestTable,
   validateManifestAuthoring,
 } from "@dreamboard-games/workspace-codegen";
-import { GENERATED_AUTHORING_METADATA } from "./generated-metadata.js";
+import { AUTHORING_METADATA } from "./metadata.js";
 import {
   createManifestConformanceCases,
   diagnosticCodesForValidationErrors,
@@ -172,7 +172,7 @@ export const MANIFEST_CONFORMANCE_CASES = createManifestConformanceCases();
 
 export const projectAuthoringAdapter: ProjectAuthoringAdapterV1 = {
   protocolVersion: 1,
-  metadata: GENERATED_AUTHORING_METADATA,
+  metadata: AUTHORING_METADATA,
   generatedPaths: GENERATED_WORKSPACE_PATHS,
   generatedPathPatterns: GENERATED_WORKSPACE_PATH_PATTERNS,
   manifestConformanceCases: MANIFEST_CONFORMANCE_CASES,

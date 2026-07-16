@@ -1,6 +1,7 @@
 import type {
   BrowserFixtureHostEvent,
   BrowserFixtureHostHarness,
+  BrowserUIScenarioFixture,
   BrowserUIReplayStep,
 } from "./browser-fixture-runtime.js";
 import type { PluginRuntimeClient } from "@dreamboard-games/sdk/runtime";
@@ -12,6 +13,7 @@ export interface UIFixtureTestBridge {
   getRuntimeEvents(): readonly BrowserFixtureHostEvent[];
   getProjectionDigest(): string;
   getReplaySteps(): readonly BrowserUIReplayStep[];
+  getExpected(): BrowserUIScenarioFixture["expected"];
   flush(): Promise<void>;
   reset(): Promise<void>;
   assertConsumed(): void;
@@ -28,6 +30,7 @@ export function installUIFixtureTestBridge(options: {
   readonly harness: BrowserFixtureHostHarness;
   readonly runtime: PluginRuntimeClient;
   readonly replay: readonly BrowserUIReplayStep[];
+  readonly expected: BrowserUIScenarioFixture["expected"];
   readonly enabled: boolean;
 }): void {
   if (!options.enabled) {
@@ -39,6 +42,7 @@ export function installUIFixtureTestBridge(options: {
     getHostEvents: () => options.harness.getEvents(),
     getRuntimeEvents: () => options.harness.getEvents(),
     getReplaySteps: () => options.replay,
+    getExpected: () => options.expected,
     flush: () => options.harness.flush(),
     getProjectionDigest: () => {
       const frameId = options.harness.getCurrentFrameId();
