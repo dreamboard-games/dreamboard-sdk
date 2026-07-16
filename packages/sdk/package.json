@@ -1,13 +1,12 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.4.0-alpha.10",
+  "version": "0.4.0-alpha.13",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js",
-    "dreamboard-reference-games-source-manifest": "./dist/reference-game-source-manifest-cli.js"
+    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js"
   },
   "exports": {
     ".": {
@@ -19,6 +18,11 @@
       "types": "./dist/package-set.d.ts",
       "import": "./dist/package-set.js",
       "default": "./dist/package-set.js"
+    },
+    "./plugin-runtime-contract": {
+      "types": "./dist/plugin-runtime-contract.d.ts",
+      "import": "./dist/plugin-runtime-contract.js",
+      "default": "./dist/plugin-runtime-contract.js"
     },
     "./reference-games": {
       "types": "./dist/reference-games/index.d.ts",
@@ -118,11 +122,6 @@
       "import": "./dist/authoring-compiler.js",
       "default": "./dist/authoring-compiler.js"
     },
-    "./reference-game-compiler": {
-      "types": "./dist/reference-game-compiler.d.ts",
-      "import": "./dist/reference-game-compiler.js",
-      "default": "./dist/reference-game-compiler.js"
-    },
     "./browser-interaction": {
       "types": "./dist/browser-interaction.d.ts",
       "import": "./dist/browser-interaction.js",
@@ -134,12 +133,11 @@
     "LICENSE.md",
     "dist",
     "README.md",
-    "REFERENCE.md",
     "!.turbo/**",
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "pnpm --dir ../.. authoring-metadata:generate && tsup && node ../../scripts/copy-sdk-private-dts.mjs && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
+    "build": "tsup && node ../../scripts/package.ts copy-declarations && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
@@ -150,19 +148,19 @@
     "test": "bun test src"
   },
   "dependencies": {
-    "@radix-ui/react-accordion": "^1.2.14",
-    "@radix-ui/react-dialog": "^1.1.17",
-    "@radix-ui/react-label": "^2.1.10",
-    "@radix-ui/react-select": "^2.3.1",
-    "@radix-ui/react-slot": "^1.3.0",
-    "@radix-ui/react-tooltip": "^1.2.10",
-    "@noble/hashes": "^2.2.0",
-    "@use-gesture/react": "^10.3.1",
-    "clsx": "^2.1.1",
-    "esbuild": "^0.28.1",
-    "lucide-react": "^1.20.0",
-    "vaul": "^1.1.2",
-    "zustand": "^5.0.14"
+    "@radix-ui/react-accordion": "catalog:",
+    "@radix-ui/react-dialog": "catalog:",
+    "@radix-ui/react-label": "catalog:",
+    "@radix-ui/react-select": "catalog:",
+    "@radix-ui/react-slot": "catalog:",
+    "@radix-ui/react-tooltip": "catalog:",
+    "@noble/hashes": "catalog:",
+    "@use-gesture/react": "catalog:",
+    "clsx": "catalog:",
+    "esbuild": "catalog:",
+    "lucide-react": "catalog:",
+    "vaul": "catalog:",
+    "zustand": "catalog:"
   },
   "devDependencies": {
     "@dreamboard-games/plugin-runtime-contract": "workspace:*",
@@ -170,31 +168,31 @@
     "@dreamboard-games/sdk-types": "workspace:*",
     "@dreamboard-games/workspace-codegen": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
-    "@playwright/test": "1.60.0",
+    "@playwright/test": "catalog:",
     "@storybook/addon-a11y": "^10.4.6",
     "@storybook/addon-themes": "^10.4.6",
     "@storybook/react-vite": "^10.4.6",
     "@storybook/test-runner": "^0.24.4",
     "@tailwindcss/cli": "^4.3.1",
-    "@tailwindcss/vite": "^4.3.1",
-    "@types/node": "^24.5.2",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "axe-playwright": "2.2.2",
+    "@tailwindcss/vite": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "axe-playwright": "catalog:",
     "concurrently": "^9.1.0",
-    "eslint": "^9.39.0",
-    "framer-motion": "^12.40.0",
+    "eslint": "catalog:",
+    "framer-motion": "catalog:",
     "http-server": "^14.1.1",
-    "playwright": "1.60.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "playwright": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "storybook": "^10.4.6",
-    "tailwindcss": "^4.3.1",
-    "tsup": "^8.5.0",
-    "typescript": "^5.9.2",
-    "vite": "8.0.16",
+    "tailwindcss": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "wait-on": "^8.0.1",
-    "zod": "4.4.3"
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "framer-motion": "^11.0.0 || ^12.0.0",

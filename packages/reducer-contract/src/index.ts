@@ -5,7 +5,7 @@
 // the declaration bundler can only resolve the package root (its `types`
 // field), not `exports`-map subpaths. Subpath imports would leak private
 // package specifiers into the published SDK tarball — caught by
-// scripts/assert-sdk-tarball-self-contained.mjs.
+// the repository package verifier.
 //
 // The sub-entries ("./wire", "./zod", "./builders", "./bundle", "./version",
 // "./fixtures") remain for this package's own tests and tooling.

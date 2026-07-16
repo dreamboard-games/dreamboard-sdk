@@ -9,7 +9,7 @@ import type { CollectorState, InputCollector } from "../model/spec";
  *
  * Determinism:
  *   Sampling happens inside `submitInteraction` only, never inside
- *   `validateInteraction`. This lets clients dry-run a submission without
+ *   reducer validation. This lets clients check a submission without
  *   burning RNG state.
  */
 

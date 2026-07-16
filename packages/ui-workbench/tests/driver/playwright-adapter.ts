@@ -23,7 +23,6 @@ interface Point {
 export function createPlaywrightReplayAdapter(page: Page): ReplayRunnerAdapter {
   return {
     readSnapshot: () => readPageBrowserInteractionSnapshot(page),
-    validate: (instruction) => validatePlaywrightInstruction(page, instruction),
     execute: (instruction) => executePlaywrightInstruction(page, instruction),
     flush: () => settleFixtureHost(page),
     waitForExpectedState: (step) => waitForExpectedFixtureState(page, step),
@@ -68,17 +67,6 @@ export async function waitForWorkbenchStablePage(page: Page): Promise<void> {
       requestAnimationFrame(() => resolve()),
     );
   });
-}
-
-async function validatePlaywrightInstruction(
-  page: Page,
-  instruction: ReplayExecutionInstruction,
-): Promise<void> {
-  await page.evaluate(
-    (interactionId) =>
-      window.__dreamboardUIFixture?.validateInteraction(interactionId),
-    instruction.source.interactionId,
-  );
 }
 
 async function executePlaywrightInstruction(
@@ -157,9 +145,6 @@ async function measurePlaywrightReplayState(
             ?.getAttribute("data-dreamboard-interaction-key") ?? undefined)
         : undefined;
     const hostEvents = bridge?.getHostEvents() ?? [];
-    const validation = [...hostEvents]
-      .reverse()
-      .find((event) => event.kind === "validate-received");
     const submission = [...hostEvents]
       .reverse()
       .find((event) => event.kind === "submit-received");
@@ -168,7 +153,7 @@ async function measurePlaywrightReplayState(
       projectionDigest: bridge?.getProjectionDigest(),
       scenarioId: bridge?.getScenarioId(),
       focusedInteractionKey,
-      validationState: validation?.result,
+      validationState: undefined,
       submissionState: submission?.result,
     };
   });
@@ -186,7 +171,7 @@ async function activateResolvedActuator(
   }
   const touchCapable = await page.evaluate(() => navigator.maxTouchPoints > 0);
   if (touchCapable) {
-    await locator.click();
+    await locator.tap();
     return;
   }
   await locator.click();

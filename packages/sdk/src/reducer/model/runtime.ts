@@ -276,36 +276,21 @@ export type ReducerReject = {
   message?: string;
 };
 
-export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
+import type {
+  GameOutcome as PluginGameOutcome,
+  OutcomeResult as PluginOutcomeResult,
+  OutcomeScoreComponent as PluginOutcomeScoreComponent,
+  OutcomeStanding as PluginOutcomeStanding,
+  OutcomeTieBreak as PluginOutcomeTieBreak,
+} from "@dreamboard-games/plugin-runtime-contract";
 
-export type OutcomeScoreComponent = {
-  id: string;
-  label: string;
-  value: number;
-};
-
-export type OutcomeTieBreak = {
-  id: string;
-  label: string;
-  value: number | string;
-};
-
-export type OutcomeStanding<PlayerId extends string = string> = {
-  playerId: PlayerId;
-  rank: number;
-  result: OutcomeResult;
-  score?: number;
-  scoreBreakdown?: readonly OutcomeScoreComponent[];
-  tieBreaks?: readonly OutcomeTieBreak[];
-};
-
-export type GameOutcome<PlayerId extends string = string> = {
-  reason: {
-    code: string;
-    message?: string;
-  };
-  standings: readonly OutcomeStanding<PlayerId>[];
-};
+export type OutcomeResult = PluginOutcomeResult;
+export type OutcomeScoreComponent = PluginOutcomeScoreComponent;
+export type OutcomeTieBreak = PluginOutcomeTieBreak;
+export type OutcomeStanding<Player extends string = string> =
+  PluginOutcomeStanding<Player>;
+export type GameOutcome<Player extends string = string> =
+  PluginGameOutcome<Player>;
 
 export type GameEventDetail = {
   label: string;

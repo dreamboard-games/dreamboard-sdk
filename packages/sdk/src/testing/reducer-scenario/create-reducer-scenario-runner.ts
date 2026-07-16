@@ -37,11 +37,12 @@ export function createReducerScenarioRunner(
           dynamicProjection,
           staticProjection,
           perspectivePlayerId: options.viewer.playerId,
-          gameVersion,
+          generation: 0,
+          version: gameVersion,
           actionSetVersion: "pending",
         });
         const actionSetVersion = computePluginActionSetVersion({
-          gameVersion,
+          version: gameVersion,
           availableInteractions: materialized.availableInteractions,
         });
         const frame = {

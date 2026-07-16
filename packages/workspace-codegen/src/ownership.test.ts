@@ -54,8 +54,8 @@ describe("workspace ownership path classification", () => {
     expect(isLibraryPath("shared/manifest-runtime.ts")).toBe(true);
   });
 
-  test("publishes ownership contract version 31", () => {
-    expect(WORKSPACE_CODEGEN_OWNERSHIP.version).toBe(31);
-    expect(WORKSPACE_OWNERSHIP_VERSION).toBe(31);
+  test("publishes ownership contract version 32", () => {
+    expect(WORKSPACE_CODEGEN_OWNERSHIP.version).toBe(32);
+    expect(WORKSPACE_OWNERSHIP_VERSION).toBe(32);
   });
 });

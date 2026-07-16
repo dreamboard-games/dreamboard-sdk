@@ -31,10 +31,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
-      - run: pnpm build
-      - run: pnpm ui:hard-cut:check
-      - run: pnpm ui:coverage:check
-      - run: pnpm ui:test:changed --base origin/main
+      - run: pnpm ui test
 
   ui-main-full-gate:
     if: github.event_name == 'push'
@@ -51,4 +48,4 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
-      - run: node scripts/verify-sdk-release.mjs --skip-check --out build/proofs/ui-main/current
+      - run: pnpm ui test --all

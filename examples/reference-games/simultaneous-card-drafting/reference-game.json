@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "simultaneous-card-drafting",
   "displayName": "Lantern Market",
   "workspace": {
@@ -32,28 +32,6 @@
       "ui/App.tsx"
     ]
   },
-  "demoRelease": {
-    "slug": "simultaneous-card-drafting",
-    "name": "Lantern Market",
-    "description": "A compact festival card draft with sealed choices, simultaneous reveals, hand passing, and set scoring.",
-    "overview": "Build a two-round festival stall from Lanterns, Tea Cups, and Festival Banners. Every pick stays sealed until all players commit, then the market reveals together and the remaining hands pass left.",
-    "creator": "Dreamboard",
-    "minPlayers": 2,
-    "maxPlayers": 5,
-    "playTimeMinMinutes": 10,
-    "playTimeMaxMinutes": 20,
-    "difficulty": 2,
-    "mechanics": [
-      "simultaneous-selection",
-      "card-drafting",
-      "hand-passing",
-      "set-collection"
-    ],
-    "categories": ["card-game", "drafting"],
-    "thumbnailPath": "assets/thumbnail.svg",
-    "estimatedMinutes": 8,
-    "demoPlayerCount": 2
-  },
   "mechanics": [
     "simultaneous-selection",
     "card-drafting",
@@ -71,15 +49,6 @@
     "sourceCode": "original-for-this-repository",
     "codeLicense": "PolyForm-Shield-1.0.0",
     "ruleText": "original-summary",
-    "artwork": "repository-owned-or-licensed",
-    "assetLicenseManifest": "assets/LICENSES.json",
-    "thirdPartyMarks": [],
-    "reviewStatus": "approved",
-    "reviewedBy": "rights-owner-or-counsel",
-    "reviewedAt": "2026-06-16"
-  },
-  "sdk": {
-    "dependency": "@dreamboard-games/sdk",
-    "versionPolicy": "exact"
+    "thirdPartyMarks": []
   }
 }

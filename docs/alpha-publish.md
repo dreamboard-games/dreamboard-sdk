@@ -1,134 +1,102 @@
-# Alpha Publish Checklist
+# Publishing checklist
 
-Use this checklist to publish an alpha release of `@dreamboard-games/sdk`.
+The `Release` GitHub Actions workflow is the supported publisher for
+`@dreamboard-games/sdk`. It uses npm Trusted Publishing and publishes the exact
+tarball produced by release verification.
 
-## Package
+## Prepare the version
 
-- Package: `@dreamboard-games/sdk`
-- Current version:
-  `SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"`
-- Dist-tag: `alpha`
-- Source directory: `packages/sdk`
+Use a package version whose suffix selects the intended npm tag:
 
-Publishing with `--tag alpha` keeps the package off the default `latest`
-channel. If a version is later promoted, use `npm dist-tag add` rather than
-republishing or deleting packages.
+| Version         | npm tag  |
+| --------------- | -------- |
+| `x.y.z-alpha.n` | `alpha`  |
+| `x.y.z-beta.n`  | `beta`   |
+| `x.y.z`         | `latest` |
 
-## Preflight
+Run the local gates from a clean checkout:
 
 ```sh
 pnpm install --frozen-lockfile
-pnpm verify:release
-SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
-case "$SDK_VERSION" in
-  *-alpha.*) ;;
-  *) echo "Version is not an alpha prerelease: $SDK_VERSION" >&2; exit 1 ;;
-esac
-```
-
-The browser-free `pnpm check` portion runs:
-
-- formatting, linting, typechecking, and reducer-contract drift checks;
-- publication boundary, fixed-version, and peer-hygiene guards;
-- build, source docs, unit tests, and exact export parity.
-
-The remaining release proof packs once, clean-installs that exact tarball, runs
-the full UI/reference-consumer proof, and writes the candidate beneath
-`build/proofs/release/current/`.
-
-For a local npm dry-run:
-
-```sh
-pnpm publish:alpha:dry-run
-```
-
-## Workflow Publish
-
-The preferred alpha path is the `release-alpha` GitHub Actions workflow. It
-uses npm Trusted Publishing, verifies with `pnpm check`, uploads the exact SDK
-tarball that passed verification, then publishes that artifact with provenance
-and the `alpha` dist-tag.
-
-Before dispatching the workflow:
-
-```sh
+pnpm release:verify
+pnpm ui test --all
 git status --short
+```
+
+`pnpm release:verify` runs the browser-free core checks, packs the SDK once,
+validates and smoke-installs that exact tarball, then verifies all nine
+reference games against it. UI browser proof is intentionally separate.
+
+The release candidate directory contains exactly one tarball and
+`build/release/candidate/candidate.json`:
+
+```json
+{
+  "schemaVersion": 1,
+  "release": { "gitTag": "v0.4.0-alpha.13", "npmTag": "alpha" },
+  "package": {
+    "name": "@dreamboard-games/sdk",
+    "version": "0.4.0-alpha.13",
+    "file": "dreamboard-games-sdk-0.4.0-alpha.13.tgz",
+    "integrity": "sha512-..."
+  }
+}
+```
+
+Do not repack after verification.
+
+## Publish
+
+Before dispatching the workflow, confirm the intended commit, version, and npm
+state:
+
+```sh
 git rev-parse HEAD
 SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
-test "$(git tag --points-at HEAD | grep -c \"^sdk-v$SDK_VERSION$\")" != "0"
 npm view "@dreamboard-games/sdk@$SDK_VERSION" version --registry=https://registry.npmjs.org/ || true
 ```
 
-Dispatch only from the intended clean SHA/tag pair.
+Dispatch the workflow from the default branch at the intended commit and
+version. It verifies the checkout, uploads the candidate, and publishes the
+verified tarball with provenance.
 
-## Manual Fallback
+If publishing fails, use GitHub's **Re-run failed jobs** action. The resumed
+job reuses the uploaded candidate and classifies the registry state:
 
-Manual publishing is a fallback if the workflow is unavailable. Confirm the npm
-account and registry:
+- an unpublished version is published;
+- a version with matching integrity is already complete;
+- a version with different integrity fails without changing npm.
 
-```sh
-npm whoami --registry=https://registry.npmjs.org/
-npm config get registry
-```
+A fresh workflow run creates a fresh candidate and is not the recovery path.
 
-Publish the alpha package:
+## Verify and repin
 
-```sh
-pnpm publish:alpha
-```
-
-If npm asks for 2FA, complete the prompt. Do not add npm tokens to this
-repository for the manual publish path.
-
-## Post-Publish Verification
+After publication:
 
 ```sh
-npm view @dreamboard-games/sdk@alpha version dist-tags license repository.url --registry=https://registry.npmjs.org/
 SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
 npm view "@dreamboard-games/sdk@$SDK_VERSION" version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
-npm view "@dreamboard-games/sdk" dist-tags --json --registry=https://registry.npmjs.org/
+npm view @dreamboard-games/sdk dist-tags --json --registry=https://registry.npmjs.org/
+pnpm reference pin "$SDK_VERSION"
+pnpm reference
 ```
 
-Then prove a disposable install:
+Commit the nine updated game manifests and lockfiles. If rollback is necessary,
+move the npm tag to a known-good published version; do not delete a published
+version.
 
-```sh
-tmpdir="$(mktemp -d)"
-cd "$tmpdir"
-npm init -y
-npm install @dreamboard-games/sdk@alpha --registry=https://registry.npmjs.org/
-node -e 'Promise.all([import("@dreamboard-games/sdk"), import("@dreamboard-games/sdk/types"), import("@dreamboard-games/sdk/reducer"), import("@dreamboard-games/sdk/reducer-contract"), import("@dreamboard-games/sdk/testing"), import("@dreamboard-games/sdk/runtime"), import("@dreamboard-games/sdk/ui")]).then(() => console.log("sdk alpha imports ok"))'
-```
+## Trusted Publishing setup
 
-If rollback is needed, move the `alpha` dist-tag to the prior known-good
-version. Do not delete published package versions.
-
-## Reference Game Repin
-
-After the exact SDK version is visible on public npm, repin the SDK-owned
-reference games and commit the package/lockfile changes before running private
-demo-release packaging:
-
-```sh
-SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
-pnpm reference-games:repin "$SDK_VERSION"
-pnpm reference-games:verify-publishable
-git add examples/reference-games
-git commit -m "Repin reference games to SDK $SDK_VERSION"
-```
-
-## Trusted Publishing Setup
-
-For a new package, or when restoring its trust configuration, configure Trusted
-Publishing for the GitHub Actions workflow after the package exists on npm:
+Configure the package for the repository's `release.yml` workflow and
+`release` environment:
 
 ```sh
 npm trust github @dreamboard-games/sdk \
   --repo dreamboard-games/dreamboard-sdk \
-  --file release-alpha.yml \
-  --environment npm-alpha \
+  --file release.yml \
+  --environment release \
   --allow-publish
 ```
 
 The publish job requests GitHub OIDC with `id-token: write` and uses Node 24.
-The verification job has no OIDC permission. Keep npm tokens out of repository
-secrets.
+Keep npm publish tokens out of repository secrets.

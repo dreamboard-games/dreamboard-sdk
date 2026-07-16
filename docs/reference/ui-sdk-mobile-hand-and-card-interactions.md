@@ -1,47 +1,43 @@
-# Mobile Hand And Card Interactions
+# Mobile hand and card interactions
 
-The SDK keeps hand layout, pointer recognition, drag lifecycle, and runtime
-submission as separate responsibilities. This preserves usable touch targets
-without making a presentational component depend on Dreamboard runtime state.
+The SDK separates hand layout, pointer recognition, drag lifecycle, and runtime
+submission. This keeps touch targets usable without coupling presentation to
+runtime state.
 
 ## Ownership
 
 - `HandView` is controlled presentation. Callers provide cards, visual state,
-  card rendering, layout policy, and an intent handler.
+  rendering, layout policy, and an intent handler.
 - `CardDragSurface` owns drag lifecycle, overlays, drop-target registration,
   and the final opaque `drop` intent.
-- The runtime adapter translates `activate` or `drop` intents into Dreamboard
-  submissions. `HandView` does not submit commands itself.
+- The runtime adapter translates `activate` and `drop` intents into
+  submissions. `HandView` does not submit commands.
 - Generated `UI.Root` composition provides the mobile hand tray context. Games
-  should use the generated hand surface rather than creating a parallel tray.
+  should use that surface instead of creating another tray protocol.
 
-## Layout Selection
+## Layout selection
 
 `HandView` supports `fan`, `compressed-fan`, `strip`, and `tray`. Selection is
-based on measured target exposure, not a device-name breakpoint:
+based on measured target exposure rather than a device-name breakpoint:
 
-1. Use the desktop preference when every card retains a comfortable visible
-   slice.
-2. Use `compressed-fan` when a fan still exposes at least the compressed slice.
-3. Fall back to the caller's mobile mode when targets would become too dense.
-
-The default fan geometry is:
+1. Use the desktop preference while every card has a comfortable visible slice.
+2. Use `compressed-fan` while the compressed slice remains available.
+3. Fall back to the configured mobile mode when targets would be too dense.
 
 | Mode             | Minimum visible slice | Maximum angle | Arc depth |
 | ---------------- | --------------------: | ------------: | --------: |
-| `fan`            |                  64px |            5° |      12px |
-| `compressed-fan` |                  44px |            4° |       8px |
+| `fan`            |                  64px |     5 degrees |      12px |
+| `compressed-fan` |                  44px |     4 degrees |       8px |
 
-These values are exported through the hand layout helpers and covered by unit
-tests. Change the implementation and this reference together.
+These values are exported by the hand-layout helpers and covered by unit tests.
+Update this reference with intentional implementation changes.
 
-## Interaction Policies
+## Interaction policies
 
-`direct-activate` treats a clean tap or keyboard activation as one `activate`
-intent. `drag-to-target` uses pointer or keyboard lift to enter the surrounding
-`CardDragSurface`; a tap only enters inspection and does not commit a command.
-
-The deterministic pointer recognizer uses these defaults:
+`direct-activate` treats a clean tap, click, or keyboard activation as one
+`activate` intent. `drag-to-target` uses pointer or keyboard lift to enter the
+surrounding `CardDragSurface`; a tap enters inspection without committing a
+command.
 
 | Threshold           | Default |
 | ------------------- | ------: |
@@ -51,35 +47,38 @@ The deterministic pointer recognizer uses these defaults:
 | Drag lift distance  |    28px |
 
 Horizontal movement yields to hand browsing. An eligible upward gesture that
-crosses the lift distance begins dragging. Disabled cards do not start pointer
-recognition. Cancellation must release pointer capture, scroll locking, preview
-state, and any active drag.
+crosses the lift distance begins dragging. Disabled cards do not begin pointer
+recognition. Cancellation releases pointer capture, scroll locking, preview
+state, and active drag state.
 
-## Nested Gesture Invariant
+## One-action invariant
 
-One physical action must produce one semantic mutation. When an interactive
-card is nested inside a hand cell, the card actuator must prevent its pointer,
-click, and keyboard events from also activating the parent hand gesture path.
-Browser evidence must resolve the semantic actuator before performing the
-physical action and compare the measured result afterward.
+One physical action must produce one semantic mutation. An interactive card
+nested inside a hand cell prevents its pointer, click, and keyboard events from
+also activating the parent gesture path. Browser tests resolve the semantic
+actuator, perform the physical action, and compare measured state afterward.
 
-## Motion And Accessibility
+Touch-capable Playwright projects use `tap()`; desktop projects use `click()`.
+The browser-driver suite covers pointer and touch drag, while the keyboard suite
+covers lift, traversal, commit, and cancellation.
 
-Animations must use the theme motion contract and must not change projection,
-semantic, draft, or submission digests. Preserve focus visibility, keyboard
-activation, readable card labels, safe-area tray padding, and non-overlapping
-touch targets. Runtime fixture compilation forces reduced motion; visual motion
-belongs in Storybook and deterministic visual tests.
+## Motion and accessibility
+
+Animations use the theme motion contract and must not change projection,
+semantic, draft, or submission state. Preserve visible focus, keyboard
+activation, readable labels, safe-area padding, and non-overlapping touch
+targets. Reduced-motion and Axe assertions run in the behavioral tests;
+Storybook owns tracked visual baselines.
 
 ## Verification
 
-Use the narrowest relevant checks while iterating:
+Use one scenario while iterating, then the aggregate UI gate:
 
 ```sh
-pnpm ui:test --component HandView
-pnpm ui:test:visual
-pnpm ui:test:changed --base origin/main
+pnpm ui test --scenario roll-and-write-scorecard.mark-cell.mobile
+pnpm ui test
 ```
 
-Changes to pointer semantics, browser interaction, or digest evidence require
-the full UI suite documented in `AGENTS.md`.
+Run `pnpm ui test --all` after shared pointer, semantic, fixture, or interaction
+changes. Use `pnpm ui snapshots update` only when intentionally changing
+Storybook visuals.

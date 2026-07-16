@@ -75,15 +75,16 @@ export function digestUIFixtureRequest(request: UIReplayRequest): string {
 export function digestUIFixtureTransportRequest(request: {
   readonly operation: "validate" | "submit";
   readonly basis?: {
-    readonly gameVersion: number;
+    readonly generation: number;
+    readonly version: number;
     readonly actionSetVersion: string;
-    readonly perspectivePlayerId: string | null;
+    readonly perspectivePlayerId: string;
   };
   readonly interactionId?: string;
   readonly payload?: unknown;
 }): string {
   return digestUIFixtureJson({
-    digestVersion: "ui-fixture-runtime-command@2",
+    digestVersion: "ui-fixture-runtime-command@3",
     request,
   });
 }

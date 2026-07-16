@@ -11,8 +11,6 @@ import type { RuntimeAPI } from "../types/runtime-api.js";
 
 function runtimeApiFromClient(runtime: PluginRuntimeClient): RuntimeAPI {
   return {
-    validateInteraction: (interactionId, params) =>
-      runtime.validateInteraction(interactionId, params),
     submitInteraction: (interactionId, params) =>
       runtime.submitInteraction(interactionId, params),
     getSessionState: () => {
@@ -21,7 +19,7 @@ function runtimeApiFromClient(runtime: PluginRuntimeClient): RuntimeAPI {
       return {
         status: session ? "ready" : "loading",
         sessionId: session?.sessionId ?? null,
-        controllingPlayerId: frame?.perspectivePlayerId ?? null,
+        controllingPlayerId: frame?.basis.perspectivePlayerId ?? null,
       };
     },
     disconnect: () => runtime.disconnect(),

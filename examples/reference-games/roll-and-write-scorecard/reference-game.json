@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "roll-and-write-scorecard",
   "displayName": "Cloudline Survey",
   "workspace": {
@@ -21,29 +21,6 @@
     ],
     "readFirst": ["README.md", "rule.md", "app/game.ts"]
   },
-  "demoRelease": {
-    "slug": "roll-and-write-scorecard",
-    "name": "Cloudline Survey",
-    "description": "Chart eight shared weather readings on public survey grids, complete formations, and manage failed observations.",
-    "overview": "Roll the weather dice, resolve each crew in seat order, and build rows, columns, and connected cloud regions across eight rounds.",
-    "creator": "Dreamboard",
-    "minPlayers": 1,
-    "maxPlayers": 4,
-    "playTimeMinMinutes": 15,
-    "playTimeMaxMinutes": 25,
-    "difficulty": 1,
-    "mechanics": [
-      "roll-and-write",
-      "square-grid",
-      "seeded-shared-dice",
-      "seat-order-resolution",
-      "public-scorecards"
-    ],
-    "categories": ["puzzle", "scorecard"],
-    "thumbnailPath": "assets/thumbnail.svg",
-    "estimatedMinutes": 8,
-    "demoPlayerCount": 3
-  },
   "mechanics": [
     "roll-and-write",
     "square-grid",
@@ -62,15 +39,6 @@
     "sourceCode": "original-for-this-repository",
     "codeLicense": "PolyForm-Shield-1.0.0",
     "ruleText": "original-summary",
-    "artwork": "repository-owned-or-licensed",
-    "assetLicenseManifest": "assets/LICENSES.json",
-    "thirdPartyMarks": [],
-    "reviewStatus": "approved",
-    "reviewedBy": "rights-owner-or-counsel",
-    "reviewedAt": "2026-06-18"
-  },
-  "sdk": {
-    "dependency": "@dreamboard-games/sdk",
-    "versionPolicy": "exact"
+    "thirdPartyMarks": []
   }
 }

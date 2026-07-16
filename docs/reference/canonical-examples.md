@@ -1,29 +1,20 @@
-# Canonical Examples
+# Canonical examples
 
-The SDK reference suite is the starting point for coding agents implementing
-designer briefs. Each example demonstrates the smallest public SDK shape for a
-common game family and has a packed consumer proof path.
+The nine reference games are complete multi-turn teaching examples and genuine
+consumers of the packed public SDK.
 
-## Rules Authority
+## Authority
 
-Each game-local `rule.md` is the sole authority for that game's mechanics,
-theme, information boundaries, complete game arc, and deliberate exclusions.
-Reducer code, tests, generated fixtures, screenshots, and historical base
-states cannot define or amend the rules implicitly.
+Each game-local `rule.md` defines its mechanics, theme, information boundaries,
+complete game arc, and deliberate exclusions. Reducers, tests, and generated
+fixtures prove that authored brief; they do not amend it.
 
-The [reference-game source-authority decision](../architecture/reference-game-source-authority.md)
-defines the durable implementation and migration boundary. The nine current
-reducers and complete-game scenarios implement the approved briefs. Generated
-projections and Workbench fixtures remain disposable evidence derived from that
-authored source, never a second authority.
+Each `reference-game.json` uses schema V5. It records the workspace and
+read-first paths, teaching purpose, mechanics, UI patterns, and substantive
+rights metadata. The directory list is the game registry; there is no second
+maintained inventory.
 
-Read every brief in the same order: teaching scope, theme, players and
-objective, information visibility, components and setup, complete game arc,
-canonical interactions, automatic procedures, scoring and outcome, deliberate
-exclusions, then acceptance obligations. Game-specific rule sections may
-appear between those common boundaries; they do not create new SDK concepts.
-
-| Reference id                   | Display name     | Rules and theme brief                                                            |
+| Reference id                   | Display name     | Rules                                                                            |
 | ------------------------------ | ---------------- | -------------------------------------------------------------------------------- |
 | `hearts`                       | Hearts           | [`rule.md`](../../examples/reference-games/hearts/rule.md)                       |
 | `simultaneous-card-drafting`   | Lantern Market   | [`rule.md`](../../examples/reference-games/simultaneous-card-drafting/rule.md)   |
@@ -35,83 +26,45 @@ appear between those common boundaries; they do not create new SDK concepts.
 | `solo-countdown-puzzle`        | Last Light       | [`rule.md`](../../examples/reference-games/solo-countdown-puzzle/rule.md)        |
 | `automa-river-rival`           | River Guild      | [`rule.md`](../../examples/reference-games/automa-river-rival/rule.md)           |
 
-| Author question                                                     | Start here                     | Canonical SDK concepts                                                                             | Smallest proof                                                         |
-| ------------------------------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Build a trick-taking game with private hands and follow-suit rules. | `hearts`                       | private player views, card zones, simultaneous passing, trick resolution                           | `pnpm reference-games:test:packed --game hearts`                       |
-| Build a simultaneous drafting game.                                 | `simultaneous-card-drafting`   | locked choices, reveal transitions, hand passing, mobile card hands                                | `pnpm reference-games:test:packed --game simultaneous-card-drafting`   |
-| Build a deck-building market.                                       | `deck-building-market`         | market zones, seeded deck refill, purchase actions, repeated turn state                            | `pnpm reference-games:test:packed --game deck-building-market`         |
-| Build a worker-placement game.                                      | `worker-placement-tableau`     | worker targets, resource costs, tableau state, confirmation flow                                   | `pnpm reference-games:test:packed --game worker-placement-tableau`     |
-| Build a route or network game.                                      | `hex-network-trading`          | hex board targets, route state, resource hands, trade controls                                     | `pnpm reference-games:test:packed --game hex-network-trading`          |
-| Build a roll-and-write scorecard.                                   | `roll-and-write-scorecard`     | square board topology, `Board.SquareGrid`, player-space collectors, mobile marking                 | `pnpm reference-games:test:packed --game roll-and-write-scorecard`     |
-| Build ranked multiplayer outcomes with ties.                        | `multiplayer-ranking-and-ties` | `GameOutcome`, standings, score breakdowns, tie-break evidence, guidance                           | `pnpm reference-games:test:packed --game multiplayer-ranking-and-ties` |
-| Build a solo countdown puzzle.                                      | `solo-countdown-puzzle`        | auto phases, deterministic `GameEvent` output, scoreless outcomes, recent event history            | `pnpm reference-games:test:packed --game solo-countdown-puzzle`        |
-| Build an automa rival.                                              | `automa-river-rival`           | deterministic rival state, system-action events, no fake player seat, cooperative outcome evidence | `pnpm reference-games:test:packed --game automa-river-rival`           |
+## Choose an example
 
-## One Agent Authoring Path
+| Authoring question                                   | Start with                     | Main SDK concepts                                                | Focused proof                                 |
+| ---------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------- | --------------------------------------------- |
+| Trick-taking with hidden hands and follow-suit rules | `hearts`                       | player views, card zones, simultaneous passing, trick resolution | `pnpm reference hearts`                       |
+| Simultaneous drafting                                | `simultaneous-card-drafting`   | locked choices, reveal transitions, hand passing, mobile hands   | `pnpm reference simultaneous-card-drafting`   |
+| A deck-building market                               | `deck-building-market`         | market zones, seeded refill, purchases, repeated turns           | `pnpm reference deck-building-market`         |
+| Worker placement and a tableau                       | `worker-placement-tableau`     | worker targets, costs, resources, confirmation                   | `pnpm reference worker-placement-tableau`     |
+| A route or network game                              | `hex-network-trading`          | hex targets, routes, resource hands, trading                     | `pnpm reference hex-network-trading`          |
+| A roll-and-write scorecard                           | `roll-and-write-scorecard`     | square topology, board collectors, mobile marking                | `pnpm reference roll-and-write-scorecard`     |
+| Ranked multiplayer outcomes with ties                | `multiplayer-ranking-and-ties` | outcomes, standings, score breakdowns, tie-breaks                | `pnpm reference multiplayer-ranking-and-ties` |
+| A solo countdown puzzle                              | `solo-countdown-puzzle`        | automatic phases, deterministic events, recent history           | `pnpm reference solo-countdown-puzzle`        |
+| An automated rival                                   | `automa-river-rival`           | deterministic rival state, system actions, cooperative outcomes  | `pnpm reference automa-river-rival`           |
 
-Every game uses the same loop:
+## Authoring loop
 
-1. Read `rule.md`, then open the closest typed source under `test/scenarios/`.
-2. Run `dreamboard test inspect <scenario> --perspective player:<seat> --at
-<checkpoint>` to observe that one state as JSON. Its scenario metadata lists
-   every named checkpoint and structural location.
-3. Run `dreamboard test explore <scenario> --perspective player:<seat> --at
-<checkpoint>` to enumerate concrete replay-accepted transitions or seed
-   variants from the same state.
-4. Copy one returned `candidate.command` into the typed scenario and keep
-   cross-checkpoint, rejection, privacy, or uniqueness assertions in the
-   package's scenario test.
-5. Run `pnpm verify` in the game package (one materialization), then use the authored UI checkpoint
-   with `pnpm ui:workbench --scenario <id>` or launch the same source with
-   `dreamboard dev`.
+1. Read `rule.md`, then open the closest typed file under `test/scenarios/`.
+2. Use `dreamboard test inspect <scenario> --perspective player:<seat> --at
+<checkpoint>` to inspect one authored state.
+3. Use `dreamboard test explore <scenario> --perspective player:<seat> --at
+<checkpoint>` to enumerate replay-accepted transitions.
+4. Copy the selected command into the typed scenario and keep privacy,
+   rejection, uniqueness, and cross-checkpoint assertions in its tests.
+5. Run `pnpm reference <game-id>`, then open an authored UI checkpoint with
+   `pnpm ui workbench --scenario <id>` when visual iteration is useful.
 
-There is no checked-in base-state mode and no second inspect-only authoring
-mode. Inspection and exploration discover what can be replayed; the typed
-scenario remains the single authored test and demo path. Generated workspace
-contracts, projections, catalogs, fixtures, and checkpoints stay local and
-untracked.
+Generated workspace contracts, projections, catalogs, and fixtures stay
+ignored. Every game intentionally keeps its own `pnpm-lock.yaml`, and its SDK
+dependency is one exact npm version.
 
-The canonical complete-game scenario in every game names `developed` at the
-end of its multi-action `given` prelude and `game-over` at the end of its
-terminal `when` arc. Committed UI sidecars reference names; structural selectors
-such as `given:2` remain a low-level interactive CLI escape hatch.
+## Suite proof
 
-All nine examples are complete multi-turn games. Stable technical IDs and
-release slugs remain the table values above even when their public display name
-and theme differ. Each isolated game intentionally retains its own
-`pnpm-lock.yaml`; product code, not this catalog, selects the landing-page
-subset.
-
-## Agent Selection Rules
-
-- Use board topology and board collectors for compact grids, tracks, maps, and
-  scorecards. Do not create a sheet runtime or a second target protocol.
-- Use `GameOutcome` for terminal results, including ties, draws, cancellation,
-  score breakdowns, and tie-break evidence. Do not infer winners from UI rows.
-- Use authored setup, phase, and interaction guidance for player-facing copy.
-  Disabled action copy comes from descriptor availability reasons.
-- Use auto phases and `gameEvent.systemAction` for deterministic solo or
-  automa procedures. Do not model an automa as a `PlayerId`, session actor, or
-  authenticated participant.
-- Keep physical component inventory as documentation or lint input. It must not
-  shape gameplay state, board topology, generated contracts, or host transport.
-
-## Release Proof
-
-All nine canonical games are release-required. The foundation Workbench suite is
-selected from `scripts/ui/required-ui-scenarios.mjs`, and the same list drives
-`pnpm reference-games:test:packed --required`.
-
-Run these before claiming SDK-side reference-suite readiness:
+Run every game with:
 
 ```sh
-mise exec node@24 -- pnpm ui:catalog:check
-mise exec node@24 -- pnpm docs:check
-mise exec node@24 -- pnpm ui:test --required
-mise exec node@24 -- pnpm reference-games:check
-mise exec node@24 -- pnpm reference-games:test:packed --required
+pnpm reference
 ```
 
-For release closure, run `pnpm verify:release` and publish only the exact SDK
-artifact named by its receipt. Real-host
-parity remains a separate integration proof owned by the consuming host.
+The command validates each V5 manifest and checked-in lockfile, packs the SDK
+once, installs temporary copies against that tarball, materializes, typechecks,
+and runs reducer and UI tests. `pnpm release:verify` applies the same all-game
+proof to the exact release candidate.

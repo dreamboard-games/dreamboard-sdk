@@ -11,7 +11,6 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { compareReferenceGameCanonicalStrings } from "../reference-games/canonical.js";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import type {
@@ -72,7 +71,7 @@ const syntheticSourceFile = "__dreamboard_compile_scenario_replay__.ts";
  * by dev-host, Workbench, demo, and performance adapters.
  *
  * The DTO may contain sealed/private command parameters. It must never cross a
- * player, spectator, browser, ordinary-log, or public-receipt boundary.
+ * player, spectator, browser, or ordinary-log boundary.
  */
 export async function compileScenarioReplay(
   options: CompileScenarioReplayOptions,
@@ -316,7 +315,7 @@ async function digestSourceClosure(options: {
     }),
   );
   inputs.sort((left, right) =>
-    compareReferenceGameCanonicalStrings(left.path, right.path),
+    left.path < right.path ? -1 : left.path > right.path ? 1 : 0,
   );
   return `sha256:${createHash("sha256")
     .update(

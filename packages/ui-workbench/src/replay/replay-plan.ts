@@ -15,7 +15,7 @@ import {
   type BrowserInteractionResolutionSuccess,
   type BrowserInteractionSnapshot,
 } from "@dreamboard-games/sdk/browser-interaction";
-import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
+import { digestPluginRuntimeJson } from "@dreamboard-games/sdk/plugin-runtime-contract";
 import type {
   UIReplayExecution,
   UIReplayRequest,

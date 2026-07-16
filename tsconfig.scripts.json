@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "isolatedModules": true
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "packages/reducer-contract/scripts/**/*.ts",
+    "packages/sdk/tsup.config.ts"
+  ]
+}

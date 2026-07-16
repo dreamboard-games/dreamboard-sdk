@@ -28,10 +28,13 @@ function makeSnapshot(): PluginGameplayFrame<
   "play.placeCard"
 > {
   return {
-    gameVersion: 1,
-    actionSetVersion:
-      "sha256:0000000000000000000000000000000000000000000000000000000000000001",
-    perspectivePlayerId: "player-1",
+    basis: {
+      generation: 0,
+      version: 1,
+      actionSetVersion:
+        "sha256:0000000000000000000000000000000000000000000000000000000000000001",
+      perspectivePlayerId: "player-1",
+    },
     view: { ok: true },
     flow: {
       currentPhase: "play",
@@ -140,7 +143,6 @@ function makeRuntime(
     subscribeSession: () => () => undefined,
     getFrame: () => frame,
     subscribeFrame: () => () => undefined,
-    validateInteraction: async () => ({ valid: true }),
     submitInteraction: async (interactionId, params) => {
       await submit(interactionId, params);
     },
@@ -812,7 +814,6 @@ test("default interaction form controls emit exact semantic effects and bounded 
       formErrors: [],
       missing: [],
     }),
-    validateDraftServer: async () => undefined,
     submitDraft: async () => undefined,
     available: true,
     status: "open",

@@ -49,6 +49,30 @@ export type { WorkspaceInteractionFormDialogProps } from "./forms.js";
 import { createSurfaceResolvers } from "./surfaces.js";
 import { createZoneNamespace } from "./zones.js";
 
+export {
+  createGameUiContract,
+  type CreateGameUiContractOptions,
+  type GameUiBoardSurface,
+  type GameUiCardCollectionSurface,
+  type GameUiContract,
+  type GameUiGameRootState,
+  type GameUiHandSurface,
+  type GameUiInteractionDescriptor,
+  type GameUiInteractionFormSurface,
+  type GameUiInteractionKey,
+  type GameUiInteractionParamsOf,
+  type GameUiInteractionRoutes,
+  type GameUiManifestTypes,
+  type GameUiMe,
+  type GameUiPhaseName,
+  type GameUiPileSurface,
+  type GameUiPlayers,
+  type GameUiTurn,
+  type GameUiView,
+  type GameUiViewName,
+  type GameWorkspaceUI,
+} from "./game-ui-contract.js";
+
 export type { BoardSpaceTargetProps } from "../primitives/board.js";
 export type { HandRole } from "../../ui/components.js";
 export type {

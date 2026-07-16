@@ -26,34 +26,21 @@ test("generated UI contract exposes square grid workspace board surface", () => 
   const files = generateFrameworkFiles(MINIMAL_MANIFEST);
   const uiContract = files["shared/generated/ui-contract.ts"];
 
-  expect(uiContract).toContain(
-    "type BoardSquareGridProps as BoardSquareGridPropsGeneric",
-  );
-  expect(uiContract).toContain("type BoardGridInteractionFilter");
-  expect(uiContract).toContain(
-    "const squareStaticBoards = staticBoards.square;",
-  );
-  expect(uiContract).toContain(
-    "export type SquareBoardId = keyof typeof squareStaticBoards & string;",
-  );
-  expect(uiContract).toContain(
-    "export type SquareBoardTopology<Id extends SquareBoardId> = (typeof squareStaticBoards)[Id];",
-  );
-  expect(uiContract).toContain(
-    "export type SquareBoardSpaceId<Id extends SquareBoardId> = BoardSpaceIdOf<",
-  );
-  expect(uiContract).toContain(
-    "export type SquareBoardGridProps<Id extends SquareBoardId> = Omit<",
-  );
-  expect(uiContract).toContain(
-    "BoardSquareGridPropsGeneric<SquareBoardTopology<Id>>",
-  );
-  expect(uiContract).toContain(
-    "interactions?: BoardGridInteractionFilter<InteractionKey>;",
-  );
-  expect(uiContract).toContain("SquareGrid<const Id extends SquareBoardId>(");
-  expect(uiContract).toContain("typeof squareStaticBoards");
-  expect(uiContract).toContain("squareStaticBoards,");
+  expect(uiContract).toContain("typeof staticBoards.square");
+  expect(uiContract).toContain("squareStaticBoards: staticBoards.square");
+});
+
+test("generated UI contract is a thin game specialization", () => {
+  const uiContract =
+    generateFrameworkFiles(MINIMAL_MANIFEST)["shared/generated/ui-contract.ts"];
+  const nonblankLines = uiContract
+    .split("\n")
+    .filter((line) => line.trim().length > 0);
+
+  expect(nonblankLines.length).toBeLessThanOrEqual(250);
+  expect(uiContract.match(/createGameUiContract</g)).toHaveLength(1);
+  expect(uiContract).not.toContain("createClientParamSchemasByPhase");
+  expect(uiContract).not.toContain("type InteractionCollectorKind");
 });
 
 test("generated reducer seeds use bound authoring factories", () => {

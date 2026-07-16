@@ -41,18 +41,18 @@ test("retired leaf package source directories stay removed", async () => {
   expect(offenders).toEqual([]);
 });
 
-test("workspace codegen emits SDK UI and runtime imports", async () => {
+test("workspace codegen emits only the thin SDK workspace contract", async () => {
   const seed = await readFile(
     path.join(repoRoot, "packages/workspace-codegen/src/seeds.ts"),
     "utf8",
   );
 
-  expect(seed).toContain('from "@dreamboard-games/sdk/ui";');
-  expect(seed).toContain('from "@dreamboard-games/sdk/runtime";');
   expect(seed).toContain(
     'from "@dreamboard-games/sdk/runtime/workspace-contract";',
   );
   expect(seed).toContain('declare module "@dreamboard-games/sdk/runtime"');
+  expect(seed).not.toContain("createClientParamSchemasByPhase");
+  expect(seed).not.toContain("createWorkspaceUIContract");
   // The retired facade namespaces must never re-enter emitted code.
   expect(seed).not.toContain("@dreamboard-games/sdk/generated/");
   expect(seed).not.toContain("@dreamboard-games/sdk/infrastructure/");

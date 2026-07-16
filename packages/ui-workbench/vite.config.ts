@@ -1,4 +1,4 @@
-import { createReadStream, existsSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { cp, mkdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import tailwindcss from "@tailwindcss/vite";
@@ -6,6 +6,14 @@ import { defineConfig, type Plugin } from "vite";
 
 const workspaceRoot = path.resolve(__dirname, "../..");
 const sdkRoot = path.join(workspaceRoot, "packages/sdk");
+const sdkManifest = JSON.parse(
+  readFileSync(path.join(sdkRoot, "package.json"), "utf8"),
+) as {
+  exports?: Record<
+    string,
+    string | { import?: string; default?: string; types?: string }
+  >;
+};
 const referenceGamesRoot = path.join(workspaceRoot, "examples/reference-games");
 const fixtureRequestPrefix = "/fixtures/";
 const manifestContractId = "@dreamboard/manifest-contract";
@@ -140,72 +148,43 @@ function referenceGameManifestContractPlugin(): Plugin {
 /**
  * SDK module aliases.
  *
- * By default — and ALWAYS for `vite build`, which the Playwright proof path and
- * `ui:workbench:build` use — the Workbench resolves `@dreamboard-games/sdk` from
- * the built `dist` output, matching the exact artifact the parity proof and a
- * real host ship.
+ * By default — and always for `vite build` — the Workbench resolves
+ * `@dreamboard-games/sdk` from the built `dist` output.
  *
  * In the dev inner loop you can opt into resolving SDK *source* instead so that
  * component edits hot-reload without a `pnpm --filter @dreamboard-games/sdk
  * build` first. Enable it with `DREAMBOARD_WORKBENCH_SDK=source` (see the
- * `ui:workbench:src` / `dev:src` scripts). This only ever affects the dev
- * server; it never changes what the proof path measures.
+ * `pnpm ui workbench --source`). This only affects the dev server.
  */
 function sdkAliases(useSource: boolean) {
-  const target = (subpath: string) =>
-    useSource
-      ? path.join(sdkRoot, "src", `${subpath}.ts`)
-      : path.join(sdkRoot, "dist", `${subpath}.js`);
-  const aliases = [
-    {
-      find: /^@dreamboard-games\/sdk\/reducer\/advanced$/,
-      replacement: target("reducer/advanced"),
+  return Object.entries(sdkManifest.exports ?? {}).flatMap(
+    ([subpath, target]) => {
+      const importTarget =
+        typeof target === "string" ? target : (target.import ?? target.default);
+      if (!importTarget?.endsWith(".js")) return [];
+      if (!importTarget.startsWith("./dist/")) {
+        throw new Error(
+          `SDK JavaScript export ${subpath} must resolve beneath ./dist/.`,
+        );
+      }
+
+      const specifier =
+        subpath === "."
+          ? "@dreamboard-games/sdk"
+          : `@dreamboard-games/sdk/${subpath.slice(2)}`;
+      const distRelativePath = importTarget.slice("./dist/".length);
+      const replacement = useSource
+        ? path.join(sdkRoot, "src", distRelativePath.replace(/\.js$/, ".ts"))
+        : path.join(sdkRoot, "dist", distRelativePath);
+      if (useSource && !existsSync(replacement)) {
+        throw new Error(
+          `SDK export ${subpath} has no source-mode entry at ${replacement}.`,
+        );
+      }
+      const escapedSpecifier = specifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      return [{ find: new RegExp(`^${escapedSpecifier}$`), replacement }];
     },
-    {
-      find: /^@dreamboard-games\/sdk\/reducer$/,
-      replacement: target("reducer"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/runtime\/workspace-contract$/,
-      replacement: target("runtime/workspace-contract"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/runtime\/primitives$/,
-      replacement: target("runtime/primitives"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/runtime$/,
-      replacement: target("runtime"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/ui$/,
-      replacement: target("ui"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/package-set$/,
-      replacement: target("package-set"),
-    },
-    {
-      find: /^@dreamboard-games\/sdk\/types$/,
-      replacement: target("types"),
-    },
-  ];
-  // `testing` and `browser-interaction` resolve to `dist` via package exports in
-  // the default path; only override them when serving from source so the whole
-  // SDK surface hot-reloads as one consistent copy.
-  if (useSource) {
-    aliases.push(
-      {
-        find: /^@dreamboard-games\/sdk\/testing$/,
-        replacement: target("testing"),
-      },
-      {
-        find: /^@dreamboard-games\/sdk\/browser-interaction$/,
-        replacement: target("browser-interaction"),
-      },
-    );
-  }
-  return aliases;
+  );
 }
 
 export default defineConfig(({ command }) => {
@@ -223,19 +202,17 @@ export default defineConfig(({ command }) => {
   ]) {
     if (!existsSync(requiredPath)) {
       throw new Error(
-        `Workbench materialization is missing ${requiredPath}. Run pnpm ui:workbench:materialize.`,
+        `Workbench materialization is missing ${requiredPath}. Run it through pnpm ui workbench.`,
       );
     }
   }
   // Source mode is dev-only and opt-in. The `command === "serve"` guard means
-  // every `vite build` (Playwright proof, `ui:workbench:build`) stays on `dist`
+  // every `vite build` stays on `dist`
   // regardless of the environment variable.
   const useSdkSource =
     command === "serve" && process.env.DREAMBOARD_WORKBENCH_SDK === "source";
   if (useSdkSource) {
-    console.log(
-      "[ui-workbench] resolving @dreamboard-games/sdk from source (dev inner loop — not the proof artifact)",
-    );
+    console.log("[ui-workbench] resolving @dreamboard-games/sdk from source");
   }
 
   return {

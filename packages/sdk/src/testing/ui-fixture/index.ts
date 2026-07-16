@@ -11,11 +11,6 @@ export {
   serializeUIScenarioFixture,
 } from "./canonical.js";
 export {
-  compareUIParityObservations,
-  createUIParityObservationFromFixture,
-  parseUIParityObservationV1,
-} from "./parity.js";
-export {
   createFixtureHostHarness,
   type CreateFixtureHostHarnessOptions,
   type FixtureHostEvent,

@@ -54,28 +54,13 @@ export interface PluginSessionState {
  */
 export interface RuntimeAPI {
   /**
-   * Validate a player interaction before submitting it. `params` is typed
-   * as `unknown` because a `promptInput` collector can declare a scalar
-   * response schema (`z.enum([...])`, `z.string()`, `z.number()`, ...)
-   * while ordinary collectors pass an object.
-   *
-   * @param interactionId - Identifier of the interaction
-   * @param params - Interaction-specific payload
-   * @returns Promise that resolves with validation result
-   */
-  validateInteraction: (
-    interactionId: string,
-    params: unknown,
-  ) => Promise<ValidationResult>;
-
-  /**
    * Submit a player interaction to the game server. `submitInteraction`
    * is the single submission verb for every interaction kind — authors
    * do not split between "action" and "prompt response" calls.
    *
    * @param interactionId - Identifier of the interaction
-   * @param params - Interaction-specific payload (see
-   *   {@link validateInteraction} for the `unknown` typing rationale)
+   * @param params - Interaction-specific runtime JSON payload; prompt
+   *   collectors may submit scalars while ordinary collectors submit objects.
    * @throws SubmissionError if submission is rejected by the authority.
    */
   submitInteraction: (interactionId: string, params: unknown) => Promise<void>;

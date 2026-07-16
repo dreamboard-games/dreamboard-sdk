@@ -1,6 +1,7 @@
 import type {
   BrowserFixtureHostEvent,
   BrowserFixtureHostHarness,
+  BrowserUIScenarioFixture,
   BrowserUIReplayStep,
 } from "./browser-fixture-runtime.js";
 import type { PluginRuntimeClient } from "@dreamboard-games/sdk/runtime";
@@ -12,8 +13,8 @@ export interface UIFixtureTestBridge {
   getRuntimeEvents(): readonly BrowserFixtureHostEvent[];
   getProjectionDigest(): string;
   getReplaySteps(): readonly BrowserUIReplayStep[];
+  getExpected(): BrowserUIScenarioFixture["expected"];
   flush(): Promise<void>;
-  validateInteraction(interactionId: string): Promise<void>;
   reset(): Promise<void>;
   assertConsumed(): void;
 }
@@ -29,6 +30,7 @@ export function installUIFixtureTestBridge(options: {
   readonly harness: BrowserFixtureHostHarness;
   readonly runtime: PluginRuntimeClient;
   readonly replay: readonly BrowserUIReplayStep[];
+  readonly expected: BrowserUIScenarioFixture["expected"];
   readonly enabled: boolean;
 }): void {
   if (!options.enabled) {
@@ -40,19 +42,8 @@ export function installUIFixtureTestBridge(options: {
     getHostEvents: () => options.harness.getEvents(),
     getRuntimeEvents: () => options.harness.getEvents(),
     getReplaySteps: () => options.replay,
+    getExpected: () => options.expected,
     flush: () => options.harness.flush(),
-    validateInteraction: async (interactionId) => {
-      const result = await options.runtime.validateInteraction(
-        interactionId,
-        {},
-      );
-      if (!result.valid) {
-        throw new Error(
-          result.message ??
-            `Interaction '${interactionId}' failed fixture validation.`,
-        );
-      }
-    },
     getProjectionDigest: () => {
       const frameId = options.harness.getCurrentFrameId();
       const frame = options.harness.tape.frames.find(

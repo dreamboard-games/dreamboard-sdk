@@ -3,7 +3,9 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
   HostToPluginEnvelopeSchema,
+  InteractionResultSchema,
   PluginGameplayFrameSchema,
+  SubmitInteractionCommandSchema,
   computePluginActionSetVersion,
   digestPluginGameplayFrame,
   digestPluginRuntimeJson,
@@ -40,12 +42,11 @@ const claimDescriptor = {
 
 function baseFrame() {
   return {
-    gameVersion: 42,
-    actionSetVersion: "sha256:actions",
-    perspectivePlayerId: "player-1",
-    sharedView: {
-      boardStatic: null,
-      dynamicView: null,
+    basis: {
+      generation: 0,
+      version: 42,
+      actionSetVersion: "sha256:actions",
+      perspectivePlayerId: "player-1",
     },
     view: { score: 7 },
     flow: {
@@ -71,9 +72,9 @@ function baseFrame() {
 }
 
 describe("@dreamboard-games/plugin-runtime-contract", () => {
-  test("strict frame and protocol schemas accept version 3 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 4 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
-    expect(frame.gameVersion).toBe(42);
+    expect(frame.basis.version).toBe(42);
 
     const envelope = HostToPluginEnvelopeSchema.parse({
       protocol: DREAMBOARD_PLUGIN_PROTOCOL,
@@ -86,7 +87,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(3);
+    expect(envelope.version).toBe(4);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
@@ -105,8 +106,11 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         type: "gameplay.frame",
         frame: {
           ...baseFrame(),
-          gameVersion: 3,
-          actionSetVersion: "sha256:frame-3-actions",
+          basis: {
+            ...baseFrame().basis,
+            version: 3,
+            actionSetVersion: "sha256:frame-3-actions",
+          },
         },
       },
     });
@@ -114,8 +118,8 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     expect(envelope.sequence).toBe(101);
     expect(envelope.payload.type).toBe("gameplay.frame");
     if (envelope.payload.type === "gameplay.frame") {
-      expect(envelope.payload.frame.gameVersion).toBe(3);
-      expect(envelope.payload.frame.actionSetVersion).toBe(
+      expect(envelope.payload.frame.basis.version).toBe(3);
+      expect(envelope.payload.frame.basis.actionSetVersion).toBe(
         "sha256:frame-3-actions",
       );
     }
@@ -123,14 +127,15 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
 
   test("materializes a plugin gameplay frame from reducer projection refs", () => {
     const actionSetVersion = computePluginActionSetVersion({
-      gameVersion: 8,
+      version: 8,
       availableInteractions: [claimDescriptor],
     });
     const frame = materializePluginGameplayFrame({
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
-      gameVersion: 8,
+      generation: 2,
+      version: 8,
       actionSetVersion,
       staticProjection: {
         view: { board: { id: "shared-board" } },
@@ -187,14 +192,16 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       },
     });
 
-    expect(frame.gameVersion).toBe(8);
-    expect(frame.actionSetVersion).toBe(actionSetVersion);
-    expect(frame.view).toEqual({
-      handSize: 1,
+    expect(frame.basis).toEqual({
+      generation: 2,
+      version: 8,
+      actionSetVersion,
+      perspectivePlayerId: "player-1",
     });
-    expect(frame.sharedView).toEqual({
-      boardStatic: { board: { id: "shared-board" } },
-      dynamicView: { market: ["card-1"] },
+    expect(frame.view).toEqual({
+      board: { id: "shared-board" },
+      market: ["card-1"],
+      handSize: 1,
     });
     expect(frame.availableInteractions).toEqual([claimDescriptor]);
     expect(frame.guidance).toEqual({
@@ -230,7 +237,8 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
-      gameVersion: 8,
+      generation: 0,
+      version: 8,
       actionSetVersion: "sha256:actions",
       staticProjection: {
         view: { board: { id: "shared-board", optional: undefined } },
@@ -279,11 +287,8 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     });
 
     expect(frame.view).toEqual({
+      board: { id: "shared-board" },
       handSize: 1,
-    });
-    expect(frame.sharedView).toEqual({
-      boardStatic: { board: { id: "shared-board" } },
-      dynamicView: null,
     });
     expect(frame.availableInteractions[0]?.inputs[0]?.domain).toEqual({
       type: "choice",
@@ -298,7 +303,8 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         currentPhase: "play",
         activePlayers: ["player-1"],
         perspectivePlayerId: "player-1",
-        gameVersion: 8,
+        generation: 0,
+        version: 8,
         actionSetVersion: "sha256:actions",
         dynamicProjection: {
           interactionsByRef: {},
@@ -325,21 +331,61 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     } satisfies InteractionDescriptor;
 
     const first = computePluginActionSetVersion({
-      gameVersion: 1,
+      version: 1,
       availableInteractions: [claimDescriptor],
     });
     const second = computePluginActionSetVersion({
-      gameVersion: 1,
+      version: 1,
       availableInteractions: [reorderedDescriptor],
     });
     const nextVersion = computePluginActionSetVersion({
-      gameVersion: 2,
+      version: 2,
       availableInteractions: [claimDescriptor],
     });
 
     expect(first).toBe(second);
     expect(first).toMatch(/^sha256:[a-f0-9]{64}$/);
     expect(nextVersion).not.toBe(first);
+  });
+
+  test("generation is part of the canonical frame basis", () => {
+    const first = PluginGameplayFrameSchema.parse(baseFrame());
+    const rewound = PluginGameplayFrameSchema.parse({
+      ...baseFrame(),
+      basis: { ...baseFrame().basis, generation: 1 },
+    });
+
+    expect(first.basis.version).toBe(rewound.basis.version);
+    expect(digestPluginGameplayFrame(first)).not.toBe(
+      digestPluginGameplayFrame(rewound),
+    );
+  });
+
+  test("canonical command and acknowledgement use one client action id", () => {
+    const command = SubmitInteractionCommandSchema.parse({
+      type: "interaction.submit",
+      clientActionId: "action-1",
+      basis: baseFrame().basis,
+      interactionId: claimDescriptor.interactionId,
+      params: "scalar-value",
+    });
+    const result = InteractionResultSchema.parse({
+      type: "interaction.result",
+      clientActionId: command.clientActionId,
+      accepted: true,
+    });
+
+    expect(result).toEqual({
+      type: "interaction.result",
+      clientActionId: "action-1",
+      accepted: true,
+    });
+    expect(() =>
+      PluginGameplayFrameSchema.parse({
+        ...baseFrame(),
+        sharedView: { boardStatic: null, dynamicView: null },
+      }),
+    ).toThrow();
   });
 
   test("canonical JSON omits undefined object fields but rejects undefined arrays", () => {

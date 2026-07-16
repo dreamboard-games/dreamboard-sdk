@@ -7,7 +7,7 @@ import type { PluginRuntimeClient } from "./core/types.js";
 export function makeTestGameplayFrame<View = unknown>(options: {
   gameVersion: number;
   view: View | null;
-  perspectivePlayerId?: string | null;
+  perspectivePlayerId?: string;
   currentPhase?: string | null;
   currentStage?: string | null;
   activePlayers?: readonly string[];
@@ -15,12 +15,11 @@ export function makeTestGameplayFrame<View = unknown>(options: {
   zones?: PluginGameplayFrame["zones"];
 }): PluginGameplayFrame<View> {
   return {
-    gameVersion: options.gameVersion,
-    actionSetVersion: `sha256:${options.gameVersion.toString(16).padStart(64, "0")}`,
-    perspectivePlayerId: options.perspectivePlayerId ?? "player-1",
-    sharedView: {
-      boardStatic: null,
-      dynamicView: null,
+    basis: {
+      generation: 0,
+      version: options.gameVersion,
+      actionSetVersion: `sha256:${options.gameVersion.toString(16).padStart(64, "0")}`,
+      perspectivePlayerId: options.perspectivePlayerId ?? "player-1",
     },
     view: options.view,
     flow: {
@@ -39,7 +38,6 @@ export function makeTestRuntimeHarness(
   initialFrame: PluginGameplayFrame,
   options: {
     session?: PluginSessionDescriptor;
-    validateInteraction?: PluginRuntimeClient["validateInteraction"];
     submitInteraction?: PluginRuntimeClient["submitInteraction"];
   } = {},
 ) {
@@ -58,9 +56,6 @@ export function makeTestRuntimeHarness(
     (async (interactionId, params) => {
       submitCalls.push({ interactionId, params });
     });
-  let validateImpl: PluginRuntimeClient["validateInteraction"] =
-    options.validateInteraction ?? (async () => ({ valid: true }));
-
   const runtime: PluginRuntimeClient = {
     getSession: () => session,
     subscribeSession: (listener) => {
@@ -76,7 +71,6 @@ export function makeTestRuntimeHarness(
         frameListeners.delete(listener);
       };
     },
-    validateInteraction: (...args) => validateImpl(...args),
     submitInteraction: (...args) => submitImpl(...args),
     disconnect: () => undefined,
   };
@@ -98,9 +92,6 @@ export function makeTestRuntimeHarness(
     },
     setSubmitImpl(impl: PluginRuntimeClient["submitInteraction"]) {
       submitImpl = impl;
-    },
-    setValidateImpl(impl: PluginRuntimeClient["validateInteraction"]) {
-      validateImpl = impl;
     },
   };
 }

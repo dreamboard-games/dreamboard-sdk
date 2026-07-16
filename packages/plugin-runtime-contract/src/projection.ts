@@ -21,8 +21,9 @@ export interface MaterializePluginGameplayFrameInput {
   readonly activePlayers: readonly PlayerId[];
   readonly dynamicProjection: ReducerSeatProjectionBundle;
   readonly staticProjection?: ReducerBoardStaticProjection | null;
-  readonly perspectivePlayerId: PlayerId | null;
-  readonly gameVersion: number;
+  readonly perspectivePlayerId: PlayerId;
+  readonly generation: number;
+  readonly version: number;
   readonly actionSetVersion: string;
 }
 
@@ -42,10 +43,7 @@ export function materializePluginGameplayFrame(
   const registry = parseInteractionRegistry(
     dynamicProjection.interactionsByRef,
   );
-  const seat =
-    input.perspectivePlayerId == null
-      ? null
-      : (dynamicProjection.seats[input.perspectivePlayerId] ?? null);
+  const seat = dynamicProjection.seats[input.perspectivePlayerId] ?? null;
 
   const availableInteractions =
     seat == null
@@ -59,17 +57,13 @@ export function materializePluginGameplayFrame(
     seat?.zones == null ? {} : hydrateZones(registry, seat.zones, "zones");
 
   const frame = {
-    gameVersion: input.gameVersion,
-    actionSetVersion: input.actionSetVersion,
-    perspectivePlayerId: input.perspectivePlayerId,
-    sharedView: {
-      boardStatic: staticProjection?.view ?? null,
-      dynamicView:
-        dynamicProjection.sharedView === undefined
-          ? null
-          : (dynamicProjection.sharedView as RuntimeJson | null),
+    basis: {
+      generation: input.generation,
+      version: input.version,
+      actionSetVersion: input.actionSetVersion,
+      perspectivePlayerId: input.perspectivePlayerId,
     },
-    view: seat?.view === undefined ? null : (seat.view as RuntimeJson | null),
+    view: materializeView(staticProjection, dynamicProjection, seat?.view),
     flow: {
       currentPhase: input.currentPhase,
       currentStage: dynamicProjection.currentStage ?? null,
@@ -83,6 +77,26 @@ export function materializePluginGameplayFrame(
   } satisfies PluginGameplayFrame;
 
   return PluginGameplayFrameSchema.parse(frame);
+}
+
+function materializeView(
+  staticProjection: ReducerBoardStaticProjection | null,
+  dynamicProjection: ReducerSeatProjectionBundle,
+  seatView: unknown,
+): RuntimeJson | null {
+  const parts = [
+    staticProjection?.view,
+    dynamicProjection.sharedView,
+    seatView,
+  ].filter((part) => part !== undefined && part !== null);
+  if (parts.length === 0) return null;
+  if (parts.every(isRecord)) {
+    return Object.assign({}, ...parts) as RuntimeJson;
+  }
+  return (seatView ??
+    dynamicProjection.sharedView ??
+    staticProjection?.view ??
+    null) as RuntimeJson | null;
 }
 
 function canonicalizeReducerProjection(value: unknown): unknown {

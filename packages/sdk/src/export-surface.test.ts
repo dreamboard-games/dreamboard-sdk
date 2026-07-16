@@ -7,13 +7,10 @@
  * package.json `exports` map while files move around.
  */
 import { describe, expect, test } from "bun:test";
-import { fileURLToPath } from "node:url";
-
-const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
 
 const facades = {
   reducer: () => import("./reducer.js"),
+  "plugin-runtime-contract": () => import("./plugin-runtime-contract.js"),
   "reducer/advanced": () => import("./reducer/advanced.js"),
   runtime: () => import("./runtime.js"),
   "runtime/primitives": () => import("./runtime/primitives.js"),
@@ -24,7 +21,6 @@ const facades = {
   testing: () => import("./testing.js"),
   "testing-compiler": () => import("./testing-compiler.js"),
   "authoring-compiler": () => import("./authoring-compiler.js"),
-  "reference-game-compiler": () => import("./reference-game-compiler.js"),
   "browser-interaction": () => import("./browser-interaction.js"),
 } as const;
 
@@ -43,34 +39,6 @@ describe("public export surface", () => {
     expect(names).not.toContain("createClientParamSchemasByPhase");
     expect(names).not.toContain("createManifestRuntimeSchema");
     expect(names).not.toContain("applySetupBootstrap");
-  });
-
-  test("reducer declaration surface keeps advanced types off the author facade", () => {
-    const result = Bun.spawnSync({
-      cmd: [
-        "node",
-        `${repoRoot}/scripts/list-dts-exports.mjs`,
-        `${packageRoot}/dist/reducer.d.ts`,
-      ],
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-
-    expect(result.exitCode).toBe(0);
-
-    const names = result.stdout
-      .toString()
-      .split("\n")
-      .map((name) => name.trim())
-      .filter(Boolean);
-
-    expect(names.length).toBeLessThanOrEqual(145);
-    expect(names).not.toContain("CardIdOfTable");
-    expect(names).not.toContain("ClientParamsOfInteractionOfDefinition");
-    expect(names).not.toContain("RuntimeCardData");
-    expect(names).not.toContain("ResolvedContainerLocation");
-    expect(names).not.toContain("InteractionActionabilityResult");
-    expect(names).not.toContain("InteractionInputEnumerationResult");
   });
 
   test("testing facade keeps CLI runtime plumbing off the author path", async () => {

@@ -5,6 +5,8 @@ import {
 } from "./protocol.js";
 import type { RuntimeJson } from "./json.js";
 import type {
+  GameOutcome,
+  GameplayBasis,
   InteractionDescriptor,
   PluginGameplayFrame,
   PluginSessionDescriptor,
@@ -12,11 +14,10 @@ import type {
 } from "./frame.js";
 import type {
   HostToPluginPayload,
+  InteractionResult,
   PluginProtocolEnvelope,
   PluginProtocolTape,
   PluginToHostPayload,
-  SubmissionResult,
-  ValidationResult,
 } from "./protocol.js";
 
 export const RuntimeJsonSchema: z.ZodType<RuntimeJson> = z.lazy(() =>
@@ -325,17 +326,61 @@ export const SimultaneousPhaseSnapshotSchema = z
   })
   .strict();
 
-export const PluginGameplayFrameSchema = z
+export const GameplayBasisSchema = z
   .object({
-    gameVersion: z.number().int().nonnegative(),
+    generation: z.number().int().nonnegative(),
+    version: z.number().int().nonnegative(),
     actionSetVersion: z.string().min(1),
-    perspectivePlayerId: PlayerIdSchema.nullable(),
-    sharedView: z
+    perspectivePlayerId: PlayerIdSchema,
+  })
+  .strict() satisfies z.ZodType<GameplayBasis>;
+
+export const GameOutcomeSchema = z
+  .object({
+    reason: z
       .object({
-        boardStatic: RuntimeJsonSchema.nullable(),
-        dynamicView: RuntimeJsonSchema.nullable(),
+        code: z.string().min(1),
+        message: z.string().optional(),
       })
       .strict(),
+    standings: z.array(
+      z
+        .object({
+          playerId: PlayerIdSchema,
+          rank: z.number().int().positive(),
+          result: z.enum(["win", "draw", "loss", "eliminated"]),
+          score: z.number().finite().optional(),
+          scoreBreakdown: z
+            .array(
+              z
+                .object({
+                  id: z.string().min(1),
+                  label: z.string().min(1),
+                  value: z.number().finite(),
+                })
+                .strict(),
+            )
+            .optional(),
+          tieBreaks: z
+            .array(
+              z
+                .object({
+                  id: z.string().min(1),
+                  label: z.string().min(1),
+                  value: z.union([z.number().finite(), z.string()]),
+                })
+                .strict(),
+            )
+            .optional(),
+        })
+        .strict(),
+    ),
+  })
+  .strict() satisfies z.ZodType<GameOutcome>;
+
+export const PluginGameplayFrameSchema = z
+  .object({
+    basis: GameplayBasisSchema,
     view: RuntimeJsonSchema.nullable(),
     flow: z
       .object({
@@ -352,48 +397,30 @@ export const PluginGameplayFrameSchema = z
   })
   .strict() as unknown as z.ZodType<PluginGameplayFrame>;
 
-export const ValidationResultSchema = z
-  .object({
-    valid: z.boolean(),
-    errorCode: z.string().optional(),
-    message: z.string().optional(),
-  })
-  .strict() satisfies z.ZodType<ValidationResult>;
-
-export const SubmissionResultSchema = z.discriminatedUnion("accepted", [
-  z.object({ accepted: z.literal(true) }).strict(),
+export const InteractionResultSchema = z.discriminatedUnion("accepted", [
   z
     .object({
+      type: z.literal("interaction.result"),
+      clientActionId: z.string().min(1),
+      accepted: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      type: z.literal("interaction.result"),
+      clientActionId: z.string().min(1),
       accepted: z.literal(false),
       errorCode: z.string().min(1),
       message: z.string().optional(),
     })
     .strict(),
-]) satisfies z.ZodType<SubmissionResult>;
-
-export const PluginInteractionBasisSchema = z
-  .object({
-    gameVersion: z.number().int().nonnegative(),
-    actionSetVersion: z.string().min(1),
-    perspectivePlayerId: PlayerIdSchema.nullable(),
-  })
-  .strict();
-
-export const ValidateInteractionCommandSchema = z
-  .object({
-    type: z.literal("interaction.validate"),
-    requestId: z.string().min(1),
-    basis: PluginInteractionBasisSchema,
-    interactionId: z.string().min(1),
-    params: RuntimeJsonSchema,
-  })
-  .strict();
+]) satisfies z.ZodType<InteractionResult>;
 
 export const SubmitInteractionCommandSchema = z
   .object({
     type: z.literal("interaction.submit"),
-    requestId: z.string().min(1),
-    basis: PluginInteractionBasisSchema,
+    clientActionId: z.string().min(1),
+    basis: GameplayBasisSchema,
     interactionId: z.string().min(1),
     params: RuntimeJsonSchema,
   })
@@ -412,20 +439,7 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
       frame: PluginGameplayFrameSchema,
     })
     .strict(),
-  z
-    .object({
-      type: z.literal("interaction.validation-result"),
-      requestId: z.string().min(1),
-      result: ValidationResultSchema,
-    })
-    .strict(),
-  z
-    .object({
-      type: z.literal("interaction.submit-result"),
-      requestId: z.string().min(1),
-      result: SubmissionResultSchema,
-    })
-    .strict(),
+  InteractionResultSchema,
 ]) as unknown as z.ZodType<HostToPluginPayload>;
 
 export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
@@ -438,7 +452,6 @@ export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
       clientRenderedAtMs: z.number().finite().optional(),
     })
     .strict(),
-  ValidateInteractionCommandSchema,
   SubmitInteractionCommandSchema,
   z
     .object({
@@ -490,19 +503,10 @@ export const PluginProtocolStepSchema = z.discriminatedUnion("kind", [
   z
     .object({
       id: z.string().min(1),
-      kind: z.literal("client.validate"),
-      fromFrameId: z.string().min(1),
-      requestDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-      response: ValidationResultSchema,
-    })
-    .strict(),
-  z
-    .object({
-      id: z.string().min(1),
       kind: z.literal("client.submit"),
       fromFrameId: z.string().min(1),
       requestDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-      response: SubmissionResultSchema,
+      response: InteractionResultSchema,
     })
     .strict(),
 ]);

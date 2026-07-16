@@ -170,8 +170,8 @@ function renderHeadline({
 
   return (
     <motion.div
-      initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
-      animate={reducedMotion ? { opacity: 1 } : { opacity: 1, y: 0 }}
+      initial={reducedMotion ? false : { opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
       style={{
         display: "flex",
         alignItems: "center",

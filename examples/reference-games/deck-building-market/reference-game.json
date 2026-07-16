@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "id": "deck-building-market",
   "displayName": "Sketchbook",
   "workspace": {
@@ -31,28 +31,6 @@
       "test/scenarios.test.ts"
     ]
   },
-  "demoRelease": {
-    "slug": "deck-building-market",
-    "name": "Sketchbook",
-    "description": "Two artists build and cycle growing decks of Inspiration, Portfolio, and Technique cards.",
-    "overview": "Develop a portfolio over many turns, chain studio Techniques, watch new work return after reshuffles, and finish when the shared supply runs out.",
-    "creator": "Dreamboard",
-    "minPlayers": 2,
-    "maxPlayers": 2,
-    "playTimeMinMinutes": 20,
-    "playTimeMaxMinutes": 30,
-    "difficulty": 2,
-    "mechanics": [
-      "deck-building",
-      "market-row",
-      "hand-management",
-      "repeated-turn-state"
-    ],
-    "categories": ["card-game", "strategy"],
-    "thumbnailPath": "assets/thumbnail.svg",
-    "estimatedMinutes": 12,
-    "demoPlayerCount": 2
-  },
   "mechanics": [
     "deck-building",
     "market-row",
@@ -70,15 +48,6 @@
     "sourceCode": "original-for-this-repository",
     "codeLicense": "PolyForm-Shield-1.0.0",
     "ruleText": "original-summary",
-    "artwork": "repository-owned-or-licensed",
-    "assetLicenseManifest": "assets/LICENSES.json",
-    "thirdPartyMarks": [],
-    "reviewStatus": "approved",
-    "reviewedBy": "rights-owner-or-counsel",
-    "reviewedAt": "2026-06-16"
-  },
-  "sdk": {
-    "dependency": "@dreamboard-games/sdk",
-    "versionPolicy": "exact"
+    "thirdPartyMarks": []
   }
 }

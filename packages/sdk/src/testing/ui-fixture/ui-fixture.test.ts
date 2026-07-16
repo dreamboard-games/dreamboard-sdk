@@ -13,9 +13,7 @@ import {
   assertDeterministicUIScenarioFixture,
   assertUniqueReplayIdentity,
   compileUIScenarioFixture,
-  compareUIParityObservations,
   createFixtureHostHarness,
-  createUIParityObservationFromFixture,
   digestUIFixtureJson,
   digestUIFixtureRequest,
   digestUIFixtureTransportRequest,
@@ -33,10 +31,12 @@ const BROWSER_HOST_ORIGIN = "https://host.dreamboard.test";
 
 function frame(gameVersion: number): PluginGameplayFrame {
   return {
-    gameVersion,
-    actionSetVersion: `sha256:${String(gameVersion).padStart(64, "0")}`,
-    perspectivePlayerId: "player-1",
-    sharedView: { boardStatic: null, dynamicView: { gameVersion } },
+    basis: {
+      generation: 0,
+      version: gameVersion,
+      actionSetVersion: `sha256:${String(gameVersion).padStart(64, "0")}`,
+      perspectivePlayerId: "player-1",
+    },
     view: { hand: ["card-a"], public: { trick: [] }, gameVersion },
     flow: {
       currentPhase: "play",
@@ -67,11 +67,7 @@ function requestDigest(
 ): string {
   return digestUIFixtureTransportRequest({
     operation,
-    basis: {
-      gameVersion: sourceFrame.gameVersion,
-      actionSetVersion: sourceFrame.actionSetVersion,
-      perspectivePlayerId: sourceFrame.perspectivePlayerId,
-    },
+    basis: sourceFrame.basis,
     interactionId,
     payload: {},
   });
@@ -112,18 +108,15 @@ function makeProtocol(): PluginProtocolTape {
         frameId: "initial",
       },
       {
-        id: "validate-pass-three",
-        kind: "client.validate",
-        fromFrameId: "initial",
-        requestDigest: requestDigest("validate", initialFrame),
-        response: { valid: true },
-      },
-      {
         id: "submit-pass-three",
         kind: "client.submit",
         fromFrameId: "initial",
         requestDigest: requestDigest("submit", initialFrame),
-        response: { accepted: true },
+        response: {
+          type: "interaction.result",
+          clientActionId: "action-1",
+          accepted: true,
+        },
       },
       {
         id: "submit-pass-three.host-frame",
@@ -199,8 +192,6 @@ type TransportRuntimeExercise = {
   readonly sessionId: string | undefined;
   readonly initialGameVersion: number | undefined;
   readonly initialFrameId: string;
-  readonly validationValid: boolean;
-  readonly afterValidationFrameId: string;
   readonly submittedGameVersion: number | undefined;
   readonly submittedFrameId: string;
   readonly events: ReadonlyArray<
@@ -240,28 +231,19 @@ async function exerciseRuntime(options: {
   try {
     await settleFixtureHarness(options.harness);
     const sessionId = options.runtime.getSession()?.sessionId;
-    const initialGameVersion = options.runtime.getFrame()?.gameVersion;
+    const initialGameVersion = options.runtime.getFrame()?.basis.version;
     const initialFrameId = options.harness.getCurrentFrameId();
-
-    const validation = await options.runtime.validateInteraction(
-      interactionId,
-      {},
-    );
-    await settleFixtureHarness(options.harness);
-    const afterValidationFrameId = options.harness.getCurrentFrameId();
 
     await options.runtime.submitInteraction(interactionId, {});
     await settleFixtureHarness(options.harness);
     const submittedFrameId = options.harness.getCurrentFrameId();
-    const submittedGameVersion = options.runtime.getFrame()?.gameVersion;
+    const submittedGameVersion = options.runtime.getFrame()?.basis.version;
 
     options.harness.assertConsumed();
     return {
       sessionId,
       initialGameVersion,
       initialFrameId,
-      validationValid: validation.valid,
-      afterValidationFrameId,
       submittedGameVersion,
       submittedFrameId,
       events: eventTranscript(options.harness),
@@ -335,84 +317,10 @@ describe("UI scenario fixture contract", () => {
     );
     expect(parsed.protocol.steps.map((step) => step.kind)).toEqual([
       "host.frame",
-      "client.validate",
       "client.submit",
       "host.frame",
     ]);
     expect(digestUIScenarioFixture(parsed)).toMatch(/^sha256:[a-f0-9]{64}$/);
-  });
-
-  test("creates the phase 7 parity observation contract from a fixture", () => {
-    const fixture = makeFixture();
-    const observation = createUIParityObservationFromFixture({
-      fixture,
-      sdkCandidateDigest: "sha256:".concat("1".repeat(64)),
-      environment: {
-        project: "chromium-touch-phone",
-        viewport: { width: 390, height: 844 },
-      },
-    });
-
-    expect(observation.schemaVersion).toBe(1);
-    expect(observation.scenarioId).toBe("hearts.pass-three.mobile");
-    expect(observation.pluginRuntimeProtocol).toBe(
-      DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-    );
-    expect(observation.browserInteractionProtocol).toBe(
-      DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION,
-    );
-    expect(observation.provenance).toEqual({ kind: "fixture-expectation" });
-    expect(observation.checkpoints).toEqual([
-      {
-        stepId: "commit-pass",
-        interactionKey: "play-card",
-        interactionId,
-        actuatorId: "commit",
-        draftDigest: undefined,
-        descriptorDigest: undefined,
-        gameVersion: 2,
-        actionSetVersion: "sha256:".concat("2".padStart(64, "0")),
-        perspectivePlayerId: "player-1",
-        projectionDigest: fixture.protocol.frames[1]!.projectionDigest,
-        semanticDigest: fixture.expected.finalSemanticDigest,
-        submissionDigest: fixture.expected.submissionDigest,
-        screenshot: undefined,
-      },
-    ]);
-  });
-
-  test("classifies the first divergent parity checkpoint", () => {
-    const fixture = makeFixture();
-    const expected = createUIParityObservationFromFixture({
-      fixture,
-      sdkCandidateDigest: "sha256:".concat("1".repeat(64)),
-      environment: {
-        project: "chromium-touch-phone",
-        viewport: { width: 390, height: 844 },
-      },
-    });
-    const actual = {
-      ...expected,
-      checkpoints: [
-        {
-          ...expected.checkpoints[0]!,
-          semanticDigest: "sha256:".concat("2".repeat(64)),
-        },
-      ],
-    };
-
-    expect(compareUIParityObservations(expected, actual)).toEqual({
-      ok: false,
-      failure: {
-        code: "semantic-snapshot-mismatch",
-        message: "semantic-snapshot-mismatch at checkpoints[0].semanticDigest",
-        path: "checkpoints[0].semanticDigest",
-        expected: expected.checkpoints[0]!.semanticDigest,
-        actual: "sha256:".concat("2".repeat(64)),
-        checkpointIndex: 0,
-        stepId: "commit-pass",
-      },
-    });
   });
 
   test("canonical fixture bytes are deterministic", () => {
@@ -425,7 +333,7 @@ describe("UI scenario fixture contract", () => {
     );
   });
 
-  test("fixture host harness drives the real runtime client without frame advance on validation", async () => {
+  test("fixture host harness drives the real runtime client", async () => {
     const fixture = makeFixture();
     const harness = createFixtureHostHarness({ tape: fixture.protocol });
     const runtime = createPluginRuntimeClient({
@@ -438,17 +346,12 @@ describe("UI scenario fixture contract", () => {
     await harness.flush();
     expect(runtime.getSession()?.sessionId).toBe("session-1");
     expect(harness.getCurrentFrameId()).toBe("initial");
-    expect(runtime.getFrame()?.gameVersion).toBe(1);
-
-    const validation = await runtime.validateInteraction(interactionId, {});
-    expect(validation.valid).toBe(true);
-    expect(harness.getCurrentFrameId()).toBe("initial");
-    expect(runtime.getFrame()?.gameVersion).toBe(1);
+    expect(runtime.getFrame()?.basis.version).toBe(1);
 
     await runtime.submitInteraction(interactionId, {});
     await harness.flush();
     expect(harness.getCurrentFrameId()).toBe("submitted");
-    expect(runtime.getFrame()?.gameVersion).toBe(2);
+    expect(runtime.getFrame()?.basis.version).toBe(2);
     harness.assertConsumed();
     runtime.disconnect();
   });
@@ -463,7 +366,6 @@ describe("UI scenario fixture contract", () => {
 
     expect(postMessageTransport).toEqual(fixtureTransport);
     expect(postMessageTransport.initialFrameId).toBe("initial");
-    expect(postMessageTransport.afterValidationFrameId).toBe("initial");
     expect(postMessageTransport.submittedFrameId).toBe("submitted");
   });
 
@@ -476,13 +378,13 @@ describe("UI scenario fixture contract", () => {
     });
 
     await settleFixtureHarness(harness);
-    const validation = runtime.validateInteraction(interactionId, {
+    const submission = runtime.submitInteraction(interactionId, {
       changed: true,
     });
 
     await expect(harness.flush()).rejects.toThrow(/digest mismatch/);
     runtime.disconnect();
-    await validation;
+    await expect(submission).rejects.toThrow();
   });
 
   test("fixture host reports wrong step kind and exhausted protocol tape", async () => {
@@ -499,16 +401,16 @@ describe("UI scenario fixture contract", () => {
       idFactory: { nextId: (prefix) => `${prefix}-1` },
     });
     await settleFixtureHarness(wrongStepHarness);
-    const wrongStepValidation = wrongStepRuntime.validateInteraction(
+    const wrongStepSubmission = wrongStepRuntime.submitInteraction(
       interactionId,
       {},
     );
 
     await expect(wrongStepHarness.flush()).rejects.toThrow(
-      /Expected protocol step 'client.submit' but received 'client.validate'/,
+      /Expected protocol step 'host.frame' but received 'client.submit'/,
     );
     wrongStepRuntime.disconnect();
-    await wrongStepValidation;
+    await expect(wrongStepSubmission).rejects.toThrow();
 
     const exhaustedProtocol = cloneProtocol(makeProtocol());
     exhaustedProtocol.steps = [exhaustedProtocol.steps[0]!];
@@ -520,20 +422,20 @@ describe("UI scenario fixture contract", () => {
       idFactory: { nextId: (prefix) => `${prefix}-1` },
     });
     await settleFixtureHarness(exhaustedHarness);
-    const exhaustedValidation = exhaustedRuntime.validateInteraction(
+    const exhaustedSubmission = exhaustedRuntime.submitInteraction(
       interactionId,
       {},
     );
 
     await expect(exhaustedHarness.flush()).rejects.toThrow(/no remaining step/);
     exhaustedRuntime.disconnect();
-    await exhaustedValidation;
+    await expect(exhaustedSubmission).rejects.toThrow();
   });
 
   test("fixture host rejects stale frame basis", async () => {
     const protocol = cloneProtocol(makeProtocol());
     protocol.steps = protocol.steps.map((step) =>
-      step.kind === "client.validate"
+      step.kind === "client.submit"
         ? { ...step, fromFrameId: "submitted" }
         : step,
     );
@@ -544,57 +446,22 @@ describe("UI scenario fixture contract", () => {
     });
 
     await settleFixtureHarness(harness);
-    const validation = runtime.validateInteraction(interactionId, {});
+    const submission = runtime.submitInteraction(interactionId, {});
 
     await expect(harness.flush()).rejects.toThrow(/current frame is 'initial'/);
     runtime.disconnect();
-    await validation;
+    await expect(submission).rejects.toThrow();
   });
 
-  test("rejected validation and submit do not publish frames", async () => {
-    const validationProtocol = cloneProtocol(makeProtocol());
-    validationProtocol.steps = validationProtocol.steps.map((step) =>
-      step.kind === "client.validate"
-        ? {
-            ...step,
-            response: {
-              valid: false,
-              errorCode: "not-allowed",
-              message: "Nope.",
-            },
-          }
-        : step,
-    );
-    const validationHarness = createFixtureHostHarness({
-      tape: validationProtocol,
-    });
-    const validationRuntime = createPluginRuntimeClient({
-      transport: validationHarness.transport,
-      idFactory: { nextId: (prefix) => `${prefix}-1` },
-    });
-
-    await settleFixtureHarness(validationHarness);
-    const validation = await validationRuntime.validateInteraction(
-      interactionId,
-      {},
-    );
-    await settleFixtureHarness(validationHarness);
-
-    expect(validation).toEqual({
-      valid: false,
-      errorCode: "not-allowed",
-      message: "Nope.",
-    });
-    expect(validationHarness.getCurrentFrameId()).toBe("initial");
-    expect(validationRuntime.getFrame()?.gameVersion).toBe(1);
-    validationRuntime.disconnect();
-
+  test("rejected submit does not publish a frame", async () => {
     const submitProtocol = cloneProtocol(makeProtocol());
     submitProtocol.steps = [
       submitProtocol.steps[0]!,
       {
-        ...submitProtocol.steps[2]!,
+        ...submitProtocol.steps[1]!,
         response: {
+          type: "interaction.result",
+          clientActionId: "action-1",
           accepted: false,
           errorCode: "not-allowed",
           message: "Nope.",
@@ -614,14 +481,14 @@ describe("UI scenario fixture contract", () => {
     await settleFixtureHarness(submitHarness);
 
     expect(submitHarness.getCurrentFrameId()).toBe("initial");
-    expect(submitRuntime.getFrame()?.gameVersion).toBe(1);
+    expect(submitRuntime.getFrame()?.basis.version).toBe(1);
     submitHarness.assertConsumed();
     submitRuntime.disconnect();
   });
 
   test("advanceHost delivers an independent host frame after initialization", async () => {
     const protocol = cloneProtocol(makeProtocol());
-    protocol.steps = [protocol.steps[0]!, protocol.steps[3]!];
+    protocol.steps = [protocol.steps[0]!, protocol.steps[2]!];
     const harness = createFixtureHostHarness({ tape: protocol });
     const runtime = createPluginRuntimeClient({
       transport: harness.transport,
@@ -630,13 +497,13 @@ describe("UI scenario fixture contract", () => {
 
     await settleFixtureHarness(harness);
     expect(harness.getCurrentFrameId()).toBe("initial");
-    expect(runtime.getFrame()?.gameVersion).toBe(1);
+    expect(runtime.getFrame()?.basis.version).toBe(1);
 
     await harness.advanceHost();
     await settleFixtureHarness(harness);
 
     expect(harness.getCurrentFrameId()).toBe("submitted");
-    expect(runtime.getFrame()?.gameVersion).toBe(2);
+    expect(runtime.getFrame()?.basis.version).toBe(2);
     harness.assertConsumed();
     runtime.disconnect();
   });

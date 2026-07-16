@@ -7,6 +7,7 @@ const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 const jsSubpaths = [
   "@dreamboard-games/sdk",
   "@dreamboard-games/sdk/package-set",
+  "@dreamboard-games/sdk/plugin-runtime-contract",
   "@dreamboard-games/sdk/reference-games",
   "@dreamboard-games/sdk/types",
   "@dreamboard-games/sdk/reducer",
@@ -18,7 +19,6 @@ const jsSubpaths = [
   "@dreamboard-games/sdk/testing",
   "@dreamboard-games/sdk/testing-compiler",
   "@dreamboard-games/sdk/authoring-compiler",
-  "@dreamboard-games/sdk/reference-game-compiler",
   "@dreamboard-games/sdk/runtime",
   "@dreamboard-games/sdk/runtime/primitives",
   "@dreamboard-games/sdk/runtime/workspace-contract",
