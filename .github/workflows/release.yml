@@ -102,7 +102,7 @@ jobs:
           version="$(jq -r '.package.version' "$candidate")"
           file="$(jq -r '.package.file' "$candidate")"
           expected_integrity="$(jq -r '.package.integrity' "$candidate")"
-          published_integrity="$(npm view "$name@$version" dist.integrity --json 2>/dev/null | jq -r . || true)"
+          published_integrity="$(npm view "$name@$version" dist.integrity 2>/dev/null || true)"
           if [ -n "$published_integrity" ]; then
             test "$published_integrity" = "$expected_integrity" || {
               echo "$name@$version exists with different integrity." >&2
