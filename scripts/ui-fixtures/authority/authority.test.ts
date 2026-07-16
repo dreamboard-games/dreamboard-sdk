@@ -8,6 +8,7 @@ import { executeProtocolAuthority } from "./protocol-authority.ts";
 import { expectRecord, root, readJson } from "../../ui/support.ts";
 import { compileScenarioModule } from "../compile-scenario.ts";
 import { loadScenarioModule } from "../load-scenario-module.ts";
+import { materializeReferenceGameWorkspaces } from "../workspace/materialize-workspaces.ts";
 import { withTemporarySourcePackageLinks } from "../workspace/package-links.ts";
 
 const sdkRequire = createRequire(
@@ -81,6 +82,7 @@ test("protocol authority materializes protocol fixture inputs", async () => {
 
 test("workspace fixture compilation materializes reducer authority from a reducer-native replay", async () => {
   const gameDir = path.join(root, "examples/reference-games/hearts");
+  await materializeReferenceGameWorkspaces(["hearts"]);
   await withTemporarySourcePackageLinks([gameDir], async () => {
     const metadata = expectRecord(
       await readJson(path.join(gameDir, "reference-game.json")),
@@ -157,6 +159,7 @@ test("workspace fixture compilation materializes a reducer-native checkpoint fro
     root,
     "examples/reference-games/roll-and-write-scorecard",
   );
+  await materializeReferenceGameWorkspaces(["roll-and-write-scorecard"]);
   await withTemporarySourcePackageLinks([gameDir], async () => {
     const metadata = expectRecord(
       await readJson(path.join(gameDir, "reference-game.json")),
