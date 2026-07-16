@@ -34,7 +34,22 @@ describe("assertReducerBundleContract", () => {
     expect(() =>
       assertReducerBundleContract(candidate, "candidate.mjs"),
     ).toThrow(
-      `Reducer bundle candidate.mjs requires contract ${REDUCER_CONTRACT_VERSION}; received 0.3.0.`,
+      `Reducer bundle candidate.mjs requires exact contract ${REDUCER_CONTRACT_VERSION}; received 0.3.0.`,
+    );
+  });
+
+  test("rejects a different contract version with the same major", () => {
+    const [major, minor, patch] = REDUCER_CONTRACT_VERSION.split(".");
+    const receivedVersion = `${major}.${minor}.${Number(patch) + 1}`;
+    const candidate = {
+      ...validBundle(),
+      reducerContractVersion: receivedVersion,
+    };
+
+    expect(() =>
+      assertReducerBundleContract(candidate, "candidate.mjs"),
+    ).toThrow(
+      `Reducer bundle candidate.mjs requires exact contract ${REDUCER_CONTRACT_VERSION}; received ${receivedVersion}.`,
     );
   });
 

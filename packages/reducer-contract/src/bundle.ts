@@ -43,6 +43,7 @@ export interface ReducerBundleContract {
  * The required callable members are generated from the same operation
  * authority as `ReducerBundleContract`, so runtime admission cannot drift
  * from the published TypeScript interface.
+ * The contract version must match exactly.
  */
 export function assertReducerBundleContract(
   value: unknown,
@@ -55,7 +56,7 @@ export function assertReducerBundleContract(
   const bundle = value as Record<string, unknown>;
   if (bundle.reducerContractVersion !== REDUCER_CONTRACT_VERSION) {
     throw new Error(
-      `Reducer bundle ${source} requires contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,
+      `Reducer bundle ${source} requires exact contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,
     );
   }
 

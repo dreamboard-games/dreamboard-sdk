@@ -1127,6 +1127,7 @@ export function renderReducerContract(
       ` * authority as \`ReducerBundleContract\`, so runtime admission cannot drift`,
     );
     bundleLines.push(` * from the published TypeScript interface.`);
+    bundleLines.push(` * The contract version must match exactly.`);
     bundleLines.push(` */`);
     bundleLines.push(`export function assertReducerBundleContract(`);
     bundleLines.push(`  value: unknown,`);
@@ -1146,7 +1147,7 @@ export function renderReducerContract(
     );
     bundleLines.push(`    throw new Error(`);
     bundleLines.push(
-      '      `Reducer bundle ${source} requires contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,',
+      '      `Reducer bundle ${source} requires exact contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,',
     );
     bundleLines.push(`    );`);
     bundleLines.push(`  }`);
@@ -1456,7 +1457,7 @@ export function renderReducerContract(
 /**
  * The wire-protocol version this package implements. Bumped in lockstep with
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
- * time hosts refuse bundles whose major version differs.
+ * time hosts require bundles to carry this exact version.
  */
 export const REDUCER_CONTRACT_VERSION = ${JSON.stringify(pkg.version)} as const;
 `,
