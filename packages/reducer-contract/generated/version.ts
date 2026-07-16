@@ -4,6 +4,6 @@
 /**
  * The wire-protocol version this package implements. Bumped in lockstep with
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
- * time hosts refuse bundles whose major version differs.
+ * time hosts require bundles to carry this exact version.
  */
 export const REDUCER_CONTRACT_VERSION = "0.4.0" as const;

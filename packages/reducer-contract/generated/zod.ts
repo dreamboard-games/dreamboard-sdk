@@ -2,13 +2,14 @@
 // DO NOT EDIT BY HAND. Edit schema/reducer-runtime.schema.json and rerun `pnpm generate`.
 
 /* eslint-disable */
+import type * as Wire from "./wire";
 import { z } from "zod";
 
 export const ReducerContractVersionSchema = z.string().regex(new RegExp("^[0-9]+\\.[0-9]+\\.[0-9]+$"));
 
 export const EffectIdSchema = z.string().min(1);
 
-let JsonValueSchemaInternal: z.ZodType<unknown>;
+let JsonValueSchemaInternal: z.ZodType<Wire.JsonValue>;
 JsonValueSchemaInternal = z.lazy(() => z.union([z.record(z.string(), JsonValueSchemaInternal), z.array(JsonValueSchemaInternal), z.string(), z.number(), z.boolean(), z.null()]));
 export const JsonValueSchema = JsonValueSchemaInternal;
 

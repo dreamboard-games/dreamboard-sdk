@@ -1079,6 +1079,9 @@ export function renderReducerContract(
     bundleLines.push(
       `import type * as Wire from ${JSON.stringify(wireImportPath)};`,
     );
+    bundleLines.push(
+      `import { REDUCER_CONTRACT_VERSION } from "../generated/version";`,
+    );
     bundleLines.push(``);
     bundleLines.push(`export type MaybePromise<T> = T | Promise<T>;`);
     bundleLines.push(``);
@@ -1112,6 +1115,56 @@ export function renderReducerContract(
     }
     bundleLines.push(`}`);
     bundleLines.push(``);
+    bundleLines.push(`/**`);
+    bundleLines.push(
+      ` * Validates an imported module value at the reducer host/guest boundary.`,
+    );
+    bundleLines.push(` *`);
+    bundleLines.push(
+      ` * The required callable members are generated from the same operation`,
+    );
+    bundleLines.push(
+      ` * authority as \`ReducerBundleContract\`, so runtime admission cannot drift`,
+    );
+    bundleLines.push(` * from the published TypeScript interface.`);
+    bundleLines.push(` * The contract version must match exactly.`);
+    bundleLines.push(` */`);
+    bundleLines.push(`export function assertReducerBundleContract(`);
+    bundleLines.push(`  value: unknown,`);
+    bundleLines.push(`  source: string,`);
+    bundleLines.push(`): asserts value is ReducerBundleContract {`);
+    bundleLines.push(
+      `  if (!value || typeof value !== "object" || Array.isArray(value)) {`,
+    );
+    bundleLines.push(
+      "    throw new Error(`Reducer bundle ${source} did not export an object.`);",
+    );
+    bundleLines.push(`  }`);
+    bundleLines.push(``);
+    bundleLines.push(`  const bundle = value as Record<string, unknown>;`);
+    bundleLines.push(
+      `  if (bundle.${operationsContract.versionProperty.name} !== REDUCER_CONTRACT_VERSION) {`,
+    );
+    bundleLines.push(`    throw new Error(`);
+    bundleLines.push(
+      '      `Reducer bundle ${source} requires exact contract ${REDUCER_CONTRACT_VERSION}; received ${String(bundle.reducerContractVersion ?? "missing")}.`,',
+    );
+    bundleLines.push(`    );`);
+    bundleLines.push(`  }`);
+    bundleLines.push(``);
+    bundleLines.push(`  for (const method of [`);
+    for (const operation of operationsContract.operations) {
+      bundleLines.push(`    ${JSON.stringify(operation.name)},`);
+    }
+    bundleLines.push(`  ] as const) {`);
+    bundleLines.push(`    if (typeof bundle[method] !== "function") {`);
+    bundleLines.push(
+      "      throw new Error(`Reducer bundle ${source} is missing ${method}().`);",
+    );
+    bundleLines.push(`    }`);
+    bundleLines.push(`  }`);
+    bundleLines.push(`}`);
+    bundleLines.push(``);
     return bundleLines.join("\n");
   }
 
@@ -1129,6 +1182,7 @@ export function renderReducerContract(
 
   const zodLines = [GENERATED_HEADER];
   zodLines.push(`/* eslint-disable */`);
+  zodLines.push(`import type * as Wire from "./wire";`);
   zodLines.push(`import { z } from "zod";`);
   zodLines.push(``);
 
@@ -1195,7 +1249,7 @@ export function renderReducerContract(
   for (const name of order) {
     const def = defs[name]!;
     if (name === "JsonValue") {
-      zodLines.push(`let JsonValueSchemaInternal: z.ZodType<unknown>;`);
+      zodLines.push(`let JsonValueSchemaInternal: z.ZodType<Wire.JsonValue>;`);
       zodLines.push(
         `JsonValueSchemaInternal = z.lazy(() => z.union([z.record(z.string(), JsonValueSchemaInternal), z.array(JsonValueSchemaInternal), z.string(), z.number(), z.boolean(), z.null()]));`,
       );
@@ -1403,7 +1457,7 @@ export function renderReducerContract(
 /**
  * The wire-protocol version this package implements. Bumped in lockstep with
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
- * time hosts refuse bundles whose major version differs.
+ * time hosts require bundles to carry this exact version.
  */
 export const REDUCER_CONTRACT_VERSION = ${JSON.stringify(pkg.version)} as const;
 `,

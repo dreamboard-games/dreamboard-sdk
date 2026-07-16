@@ -12,9 +12,10 @@ export interface MaterializedGame {
   readonly digest: string;
 }
 
-export async function materializeReferenceGameWorkspaces(
+export async function withMaterializedReferenceGameWorkspaces<T>(
   requestedGameIds: readonly string[] = [],
-): Promise<readonly MaterializedGame[]> {
+  callback: (games: readonly MaterializedGame[]) => Promise<T>,
+): Promise<T> {
   const gameIds = await resolveReferenceGameIds(requestedGameIds);
   const gameRoots = gameIds.map((id) => path.join(referenceGamesRoot, id));
   return withTemporarySourcePackageLinks(gameRoots, async () => {
@@ -26,6 +27,15 @@ export async function materializeReferenceGameWorkspaces(
       });
       materialized.push({ id, digest: result.digest });
     }
-    return materialized;
+    return callback(materialized);
   });
+}
+
+export async function materializeReferenceGameWorkspaces(
+  requestedGameIds: readonly string[] = [],
+): Promise<readonly MaterializedGame[]> {
+  return withMaterializedReferenceGameWorkspaces(
+    requestedGameIds,
+    async (materialized) => materialized,
+  );
 }

@@ -1,4 +1,4 @@
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 
 export type RunOptions = {
   cwd?: string;
@@ -6,6 +6,12 @@ export type RunOptions = {
   capture?: boolean;
   quiet?: boolean;
 };
+
+export type AsyncCommandRunner = (
+  command: string,
+  args: readonly string[],
+  options?: RunOptions,
+) => Promise<string>;
 
 export class CommandError extends Error {
   readonly exitCode: number;
@@ -46,6 +52,54 @@ export function run(
   }
   return typeof result.stdout === "string" ? result.stdout : "";
 }
+
+export const runAsync: AsyncCommandRunner = (command, args, options = {}) => {
+  const capture = options.capture === true || options.quiet === true;
+  return new Promise<string>((resolve, reject) => {
+    const child = spawn(command, [...args], {
+      cwd: options.cwd,
+      env: options.env ?? process.env,
+      stdio: capture ? ["ignore", "pipe", "pipe"] : "inherit",
+    });
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    child.stdout?.setEncoding("utf8");
+    child.stderr?.setEncoding("utf8");
+    child.stdout?.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr?.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => {
+      settled = true;
+      reject(
+        new CommandError(
+          `Unable to run ${formatCommand(command, args)}: ${error.message}`,
+        ),
+      );
+    });
+    child.on("close", (code, signal) => {
+      if (settled) return;
+      settled = true;
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+      const detail = [stdout, stderr]
+        .filter((value) => Boolean(value.trim()))
+        .join("\n")
+        .trim();
+      reject(
+        new CommandError(
+          `${formatCommand(command, args)} failed with ${signal ? `signal ${signal}` : `exit code ${code ?? 1}`}${detail ? `\n${detail}` : ""}`,
+          code ?? 1,
+        ),
+      );
+    });
+  });
+};
 
 export function formatCommand(
   command: string,

@@ -17,14 +17,16 @@ import {
   type PackageJson,
   type ReferenceGame,
 } from "./games.ts";
-import { runCommand, type CommandRunner } from "./process.ts";
+import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
 
 export type VerifyReferenceGamesOptions = {
   readonly root: string;
   readonly gameId?: string;
   readonly sdkTarball?: string;
-  readonly run?: CommandRunner;
+  readonly run?: AsyncCommandRunner;
 };
+
+const referenceGameConcurrency = 3;
 
 const isolatedInstallArgs = [
   "install",
@@ -35,18 +37,17 @@ const isolatedInstallArgs = [
 async function packSdk(
   root: string,
   destination: string,
-  run: CommandRunner,
+  run: AsyncCommandRunner,
 ): Promise<string> {
-  run(
+  await run(
     "pnpm",
     ["exec", "turbo", "run", "build", `--filter=${SDK_PACKAGE_NAME}`],
     {
       cwd: root,
-      stdio: "inherit",
     },
   );
   const before = new Set(await readdir(destination));
-  run(
+  await run(
     "pnpm",
     [
       "--dir",
@@ -55,7 +56,7 @@ async function packSdk(
       "--pack-destination",
       destination,
     ],
-    { cwd: root, stdio: "pipe" },
+    { cwd: root, capture: true },
   );
   const tarballs = (await readdir(destination)).filter(
     (name) => name.endsWith(".tgz") && !before.has(name),
@@ -70,11 +71,10 @@ async function packSdk(
 
 async function validateFrozenLockfile(
   game: ReferenceGame,
-  run: CommandRunner,
+  run: AsyncCommandRunner,
 ): Promise<void> {
-  run("pnpm", [...isolatedInstallArgs, "--frozen-lockfile"], {
+  await run("pnpm", [...isolatedInstallArgs, "--frozen-lockfile"], {
     cwd: game.dir,
-    stdio: "inherit",
   });
 }
 
@@ -105,7 +105,7 @@ async function installCandidate(
   game: ReferenceGame,
   sandbox: string,
   sdkTarball: string,
-  run: CommandRunner,
+  run: AsyncCommandRunner,
 ): Promise<void> {
   const packagePath = path.join(sandbox, "package.json");
   const packageJson = JSON.parse(
@@ -124,14 +124,17 @@ async function installCandidate(
     }
   });
 
-  run(
+  await run(
     "pnpm",
     [...isolatedInstallArgs, "--no-frozen-lockfile", "--lockfile=false"],
-    { cwd: sandbox, stdio: "inherit" },
+    { cwd: sandbox, capture: true },
   );
-  run("pnpm", ["run", "materialize"], { cwd: sandbox, stdio: "inherit" });
+  await run("pnpm", ["run", "materialize"], {
+    cwd: sandbox,
+    capture: true,
+  });
   for (const script of ["typecheck:raw", "test:raw", "test:ui:raw"]) {
-    run("pnpm", ["run", script], { cwd: sandbox, stdio: "inherit" });
+    await run("pnpm", ["run", script], { cwd: sandbox, capture: true });
   }
 
   const installedPackage = JSON.parse(
@@ -150,10 +153,38 @@ async function installCandidate(
   }
 }
 
+async function verifyGamesConcurrently(
+  games: readonly ReferenceGame[],
+  verify: (game: ReferenceGame) => Promise<void>,
+): Promise<void> {
+  let nextIndex = 0;
+  let failed = false;
+  let firstFailure: unknown;
+  const workers = Array.from(
+    { length: Math.min(referenceGameConcurrency, games.length) },
+    async () => {
+      while (!failed) {
+        const index = nextIndex;
+        nextIndex += 1;
+        const game = games[index];
+        if (!game) return;
+        try {
+          await verify(game);
+        } catch (error) {
+          if (!failed) firstFailure = error;
+          failed = true;
+        }
+      }
+    },
+  );
+  await Promise.all(workers);
+  if (failed) throw firstFailure;
+}
+
 export async function verifyReferenceGames(
   options: VerifyReferenceGamesOptions,
 ): Promise<void> {
-  const run = options.run ?? runCommand;
+  const run = options.run ?? runAsync;
   const games = await discoverReferenceGames({
     root: options.root,
     ...(options.gameId ? { gameId: options.gameId } : {}),
@@ -169,11 +200,20 @@ export async function verifyReferenceGames(
       : await packSdk(options.root, temporaryRoot, run);
     await readFile(sdkTarball);
 
-    for (const game of games) {
+    await verifyGamesConcurrently(games, async (game) => {
+      console.log(`[reference:${game.id}] verifying`);
       const sandbox = path.join(temporaryRoot, "games", game.id);
-      await copyGame(game.dir, sandbox);
-      await installCandidate(game, sandbox, sdkTarball, run);
-    }
+      try {
+        await copyGame(game.dir, sandbox);
+        await installCandidate(game, sandbox, sdkTarball, run);
+      } catch (error) {
+        throw new Error(
+          `[reference:${game.id}] failed\n${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
+        );
+      }
+      console.log(`[reference:${game.id}] passed`);
+    });
   } finally {
     await rm(temporaryRoot, { recursive: true, force: true });
   }

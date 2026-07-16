@@ -16,7 +16,7 @@ import {
   type PackageJson,
   type ReferenceGame,
 } from "./games.ts";
-import { runCommand, type CommandRunner } from "./process.ts";
+import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
 
 const PUBLIC_NPM_REGISTRY = "https://registry.npmjs.org/";
 
@@ -33,7 +33,7 @@ export type PinReferenceGamesOptions = {
   readonly root: string;
   readonly version: string;
   readonly fetchMetadata?: (version: string) => Promise<NpmVersionMetadata>;
-  readonly run?: CommandRunner;
+  readonly run?: AsyncCommandRunner;
 };
 
 type Replacement = {
@@ -146,7 +146,7 @@ async function stageGamePin(
   stageRoot: string,
   version: string,
   integrity: string,
-  run: CommandRunner,
+  run: AsyncCommandRunner,
 ): Promise<Replacement[]> {
   const packageJson = JSON.parse(
     await readFile(game.packageJsonPath, "utf8"),
@@ -163,7 +163,7 @@ async function stageGamePin(
     path.join(stageDir, "pnpm-lock.yaml"),
     await readFile(game.lockfilePath),
   );
-  run(
+  await run(
     "pnpm",
     [
       "install",
@@ -175,7 +175,6 @@ async function stageGamePin(
     ],
     {
       cwd: stageDir,
-      stdio: "inherit",
       env: {
         ...process.env,
         CI: "true",
@@ -245,7 +244,7 @@ export async function pinReferenceGames(
           stageRoot,
           options.version,
           integrity,
-          options.run ?? runCommand,
+          options.run ?? runAsync,
         )),
       );
     }

@@ -12,7 +12,7 @@
 
   "$defs": {
     "ReducerContractVersion": {
-      "description": "Semver-style major.minor.patch string. Major bumps are incompatible; hosts refuse bundles with a different major.",
+      "description": "Semver-style major.minor.patch string. Hosts require an exact match with REDUCER_CONTRACT_VERSION; mixed contract versions are not supported.",
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },

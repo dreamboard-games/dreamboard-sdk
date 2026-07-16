@@ -64,7 +64,7 @@ export function generate(write: boolean): void {
   );
 }
 
-export async function test(): Promise<void> {
+function testWorkspacePackages(): void {
   run(
     "pnpm",
     [
@@ -76,6 +76,9 @@ export async function test(): Promise<void> {
     ],
     { cwd: rootDir },
   );
+}
+
+async function testRepositoryScripts(): Promise<void> {
   const scriptTests = (await walkFiles(path.join(rootDir, "scripts"))).filter(
     (filePath) => filePath.endsWith(".test.ts"),
   );
@@ -84,8 +87,15 @@ export async function test(): Promise<void> {
   ).filter((filePath) => filePath.endsWith(".test.ts"));
   const tests = [...scriptTests, ...generatorTests];
   if (tests.length > 0) {
-    run(process.execPath, ["--test", ...tests], { cwd: rootDir });
+    run(process.execPath, ["--test", "--test-concurrency=1", ...tests], {
+      cwd: rootDir,
+    });
   }
+}
+
+export async function test(): Promise<void> {
+  testWorkspacePackages();
+  await testRepositoryScripts();
 }
 
 export async function runCoreCheck(
@@ -99,7 +109,8 @@ export async function runCoreCheck(
   build();
   await assertPublicationBoundary();
   await assertSdkExportParity();
-  await test();
+  await testRepositoryScripts();
+  testWorkspacePackages();
 
   if (!includeReferenceGames) return;
   const temporary = await mkdtemp(
