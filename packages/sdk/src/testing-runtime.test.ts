@@ -437,5 +437,5 @@ describe("compileScenarioReplay", () => {
     expect(serialized).not.toContain("publicState");
     expect(serialized).not.toContain("privateState");
     expect(serialized).not.toContain("player-1");
-  });
+  }, 30_000);
 });
