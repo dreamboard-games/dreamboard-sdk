@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
 import { materializeWorkspace } from "./authoring/materialize-workspace.js";
@@ -371,7 +371,7 @@ describe("runCandidateVerification", () => {
       segment: "given",
       completed: 1,
     });
-    expect(materialized.checkpointDigest).toStartWith("sha256:");
+    expect(materialized.checkpointDigest).toMatch(/^sha256:/);
     expect(materialized.playerIds).toEqual(["player-1", "player-2"]);
     expect(materialized.state.domain.publicState).toEqual({ score: 1 });
     expect(materialized.state.runtime.rng.seed).toBe(19);
@@ -437,5 +437,5 @@ describe("compileScenarioReplay", () => {
     expect(serialized).not.toContain("publicState");
     expect(serialized).not.toContain("privateState");
     expect(serialized).not.toContain("player-1");
-  });
+  }, 30_000);
 });

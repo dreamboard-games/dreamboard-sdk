@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { renderToString } from "react-dom/server";
 import { ThemeProvider } from "../theme/ThemeProvider.js";
 import { CardFace } from "./Card.js";

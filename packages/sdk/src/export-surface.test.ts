@@ -6,7 +6,7 @@
  * source files (not package subpaths) so the test is independent of the
  * package.json `exports` map while files move around.
  */
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 const facades = {
   reducer: () => import("./reducer.js"),

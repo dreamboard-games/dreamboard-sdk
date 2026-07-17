@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import {
   boardInput,
@@ -194,7 +194,7 @@ describe("interaction input projection", () => {
   });
 
   test("warns when a dependent choice selector has a concrete default", () => {
-    const warning = mock(() => {});
+    const warning = vi.fn(() => {});
     const inputs = defineInputs((input) => {
       const workerId = input.add(
         "workerId",
@@ -251,7 +251,7 @@ describe("interaction input projection", () => {
 
   test("does not warn when a dependent choice selector defaults to undefined", () => {
     const originalWarn = console.warn;
-    const warn = mock(() => {});
+    const warn = vi.fn(() => {});
     console.warn = warn;
     try {
       const inputs = defineInputs((input) => {

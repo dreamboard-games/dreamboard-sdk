@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION } from "@dreamboard-games/sdk/browser-interaction";
 import {
   UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL,

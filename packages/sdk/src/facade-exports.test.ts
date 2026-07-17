@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 const packageRoot = fileURLToPath(new URL("..", import.meta.url));
 

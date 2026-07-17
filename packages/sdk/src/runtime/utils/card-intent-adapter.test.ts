@@ -1,4 +1,4 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import type {
   InteractionDescriptor,
   ZoneHandlesSnapshot,
@@ -130,7 +130,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -169,7 +169,7 @@ describe("applyCardIntent", () => {
         "card-2": [descriptor],
       },
     };
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const r1 = await applyCardIntent(
       {
         store,
@@ -236,7 +236,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store, drafts } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const targetId = encodeRuntimeDropTargetId("spaceId", "hex-a");
     const result = await applyCardIntent(
       {
@@ -293,7 +293,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const targetId = encodeRuntimeDropTargetKind("space", "hex-a");
     const result = await applyCardIntent(
       {
@@ -325,7 +325,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -369,7 +369,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -411,7 +411,7 @@ describe("applyCardIntent", () => {
       },
     );
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -438,7 +438,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -540,7 +540,7 @@ describe("applyCardIntent", () => {
       playableByCardId: { "card-1": [cardOnly, cardPlusSpace] },
     };
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -648,7 +648,7 @@ describe("applyCardIntent", () => {
       playableByCardId: { "card-1": [variantA, variantB] },
     };
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -700,7 +700,7 @@ describe("applyCardIntent", () => {
       },
     );
     const { store, drafts } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     // Step 1: activate the card. The descriptor still needs the form
     // value, so the result must be pending — not submitted — and the
     // draft must hold the card id awaiting the form value.
@@ -746,7 +746,7 @@ describe("applyCardIntent", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const result = await applyCardIntent(
       {
         store,
@@ -866,7 +866,7 @@ describe("generated facade integration", () => {
       },
     ]);
     const { store } = makeStore();
-    const submit = mock(async () => {});
+    const submit = vi.fn(async () => {});
     const targetId = dropTargetIdFor("space", "hex-a");
     const result = await applyCardIntent(
       {

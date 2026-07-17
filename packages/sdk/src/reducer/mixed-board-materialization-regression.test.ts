@@ -1,4 +1,4 @@
-import { test, expect } from "bun:test";
+import { test, expect } from "vitest";
 import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
 
 test("materializeManifestTable rejects player-scoped seed homes without ownerId", async () => {

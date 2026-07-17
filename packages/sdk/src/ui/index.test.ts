@@ -1,6 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import * as components from "./components/index.js";
 import * as defaults from "./defaults/index.js";
 import * as sdk from "./index.js";
@@ -150,7 +150,7 @@ test("top-level ui-sdk hides generated-contract registration internals", () => {
 });
 
 test("ui-sdk source no longer ships an internal runtime entry point", async () => {
-  const sourceRoot = import.meta.dir;
+  const sourceRoot = import.meta.dirname;
   const internalPath = path.join(sourceRoot, "internal.ts");
   const internalExists = await readFile(internalPath, "utf8")
     .then(() => true)
@@ -215,7 +215,7 @@ test("defaults subpath exposes presentational Radix-style defaults only", () => 
 });
 
 test("ui-sdk source imports generated contracts only via canonical package specifiers", async () => {
-  const sourceRoot = import.meta.dir;
+  const sourceRoot = import.meta.dirname;
   const files = await walkFiles(sourceRoot);
   const offenders: string[] = [];
 
@@ -234,7 +234,7 @@ test("ui-sdk source imports generated contracts only via canonical package speci
 });
 
 test("ui-sdk source does not import the private UI package", async () => {
-  const sourceRoot = import.meta.dir;
+  const sourceRoot = import.meta.dirname;
   const files = await walkFiles(sourceRoot);
   const privateUiPackagePattern = new RegExp(
     `(?:from\\s+|import\\s+)["']${["@dreamboard", "ui"].join("/")}(?:["']|/)`,

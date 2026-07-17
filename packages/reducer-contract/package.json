@@ -59,17 +59,17 @@
   "scripts": {
     "build": "tsc --noEmit && tsup",
     "typecheck": "tsc --noEmit",
-    "test": "bun test",
+    "test": "vitest run src",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@dreamboard-games/sdk-types": "workspace:*"
   },
   "devDependencies": {
-    "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   },
   "peerDependencies": {

@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import {
   DREAMBOARD_SDK_PACKAGE_SET,
   DREAMBOARD_SDK_PACKAGES,

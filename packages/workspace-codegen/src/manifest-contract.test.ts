@@ -1,9 +1,10 @@
 import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
 import {
   generateManifestContractSource,
@@ -13,8 +14,8 @@ import {
 
 const require = createRequire(import.meta.url);
 const tscBin = require.resolve("typescript/bin/tsc");
-const workspaceCodegenRoot = path.resolve(import.meta.dir, "..");
-const repoRoot = path.resolve(import.meta.dir, "..", "..", "..");
+const workspaceCodegenRoot = path.resolve(import.meta.dirname, "..");
+const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..");
 const workspaceCodegenNodeModulesRoot = path.join(
   workspaceCodegenRoot,
   "node_modules",
@@ -511,8 +512,9 @@ async function expectGeneratedContractTypechecks(options: {
     await writeFile(contractPath, source, "utf8");
     await writeFile(usagePath, options.usageSource, "utf8");
 
-    const result = Bun.spawnSync({
-      cmd: [
+    const result = spawnSync(
+      process.execPath,
+      [
         tscBin,
         "--noEmit",
         "--strict",
@@ -526,15 +528,12 @@ async function expectGeneratedContractTypechecks(options: {
         contractPath,
         usagePath,
       ],
-      cwd: workspaceCodegenRoot,
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+      { cwd: workspaceCodegenRoot, encoding: "utf8" },
+    );
 
-    if (result.exitCode !== 0) {
-      const decoder = new TextDecoder();
+    if (result.status !== 0) {
       throw new Error(
-        `Typecheck failed for generated contract fixture\nstdout:\n${decoder.decode(result.stdout)}\nstderr:\n${decoder.decode(result.stderr)}`,
+        `Typecheck failed for generated contract fixture\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
       );
     }
   } finally {
@@ -557,8 +556,9 @@ async function expectGeneratedSplitContractTypechecks(options: {
     const usagePath = path.join(tempRoot, "usage.ts");
     await writeFile(usagePath, options.usageSource, "utf8");
 
-    const result = Bun.spawnSync({
-      cmd: [
+    const result = spawnSync(
+      process.execPath,
+      [
         tscBin,
         "--noEmit",
         "--strict",
@@ -573,15 +573,12 @@ async function expectGeneratedSplitContractTypechecks(options: {
         path.join(tempRoot, "manifest-contract.ts"),
         usagePath,
       ],
-      cwd: workspaceCodegenRoot,
-      stdout: "pipe",
-      stderr: "pipe",
-    });
+      { cwd: workspaceCodegenRoot, encoding: "utf8" },
+    );
 
-    if (result.exitCode !== 0) {
-      const decoder = new TextDecoder();
+    if (result.status !== 0) {
       throw new Error(
-        `Typecheck failed for generated split contract fixture\nstdout:\n${decoder.decode(result.stdout)}\nstderr:\n${decoder.decode(result.stderr)}`,
+        `Typecheck failed for generated split contract fixture\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
       );
     }
   } finally {
@@ -1412,8 +1409,10 @@ test("generateManifestContractSources split runtime module executes generated ru
         }),
       ).not.toThrow();
 
-      expect(module.manifestContract.defaults.zones).toBeFunction();
-      expect(module.manifestContract.createGameStateSchema).toBeFunction();
+      expect(module.manifestContract.defaults.zones).toBeTypeOf("function");
+      expect(module.manifestContract.createGameStateSchema).toBeTypeOf(
+        "function",
+      );
       expect(
         module.manifestContract.staticBoards.byId["track-board"].layout,
       ).toBe("generic");
