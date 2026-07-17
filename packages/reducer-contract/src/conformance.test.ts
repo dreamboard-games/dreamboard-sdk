@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { FIXTURES } from "../fixtures";
 import * as Builders from "../generated/builders";

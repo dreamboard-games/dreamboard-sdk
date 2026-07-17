@@ -1,10 +1,10 @@
 import { readdirSync } from "node:fs";
 import path from "node:path";
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import ts from "typescript";
 
-const fixtureRoot = path.join(import.meta.dir, "__fixtures__", "sdk-types");
-const workspaceCodegenRoot = path.resolve(import.meta.dir, "..");
+const fixtureRoot = path.join(import.meta.dirname, "__fixtures__", "sdk-types");
+const workspaceCodegenRoot = path.resolve(import.meta.dirname, "..");
 
 const FIXTURE_FILES: readonly string[] = readdirSync(fixtureRoot)
   .filter((name) => name.endsWith(".ts"))

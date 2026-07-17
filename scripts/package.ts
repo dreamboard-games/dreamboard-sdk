@@ -555,7 +555,7 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
         .join("\n")}\n`,
       "utf8",
     );
-    run("node", [probe], { cwd: consumer });
+    run(process.execPath, [probe], { cwd: consumer });
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }

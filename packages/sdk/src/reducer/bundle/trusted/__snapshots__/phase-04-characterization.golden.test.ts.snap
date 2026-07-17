@@ -1,6 +1,6 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`phase 4 trusted-bundle characterization dispatch accept/reject outcomes stay golden 1`] = `
+exports[`phase 4 trusted-bundle characterization > dispatch accept/reject outcomes stay golden 1`] = `
 {
   "accepted": {
     "kind": "accept",
@@ -17,7 +17,7 @@ exports[`phase 4 trusted-bundle characterization dispatch accept/reject outcomes
 }
 `;
 
-exports[`phase 4 trusted-bundle characterization lifecycle transition and phase reset stay golden 1`] = `
+exports[`phase 4 trusted-bundle characterization > lifecycle transition and phase reset stay golden 1`] = `
 {
   "lastTransition": {
     "from": "play",
@@ -34,7 +34,24 @@ exports[`phase 4 trusted-bundle characterization lifecycle transition and phase 
 }
 `;
 
-exports[`phase 4 trusted-bundle characterization seat projection digest stays golden 1`] = `
+exports[`phase 4 trusted-bundle characterization > rng effect traces and state digest stay golden 1`] = `
+{
+  "rngTrace": [
+    "cursor=0;bound=6;value=2",
+    "cursor=1;bound=6;value=4",
+  ],
+  "stateDigest": "afedcb857c1e9d9cb390604f0f8fbc937a160fe21c592bff0107f195d9b13e89",
+  "traceKinds": [
+    "acceptedClientInput",
+    "appliedEffect",
+    "rngConsumption",
+    "appliedEffect",
+    "rngConsumption",
+  ],
+}
+`;
+
+exports[`phase 4 trusted-bundle characterization > seat projection digest stays golden 1`] = `
 {
   "digest": "a6585f41312f77506d53c6893dcce0919f4ff246e2b15c776af3f082023b3039",
   "schedulerFlow": {
@@ -81,23 +98,6 @@ exports[`phase 4 trusted-bundle characterization seat projection digest stays go
   "stageSeats": [
     "player-1",
     "player-2",
-  ],
-}
-`;
-
-exports[`phase 4 trusted-bundle characterization rng effect traces and state digest stay golden 1`] = `
-{
-  "rngTrace": [
-    "cursor=0;bound=6;value=2",
-    "cursor=1;bound=6;value=4",
-  ],
-  "stateDigest": "afedcb857c1e9d9cb390604f0f8fbc937a160fe21c592bff0107f195d9b13e89",
-  "traceKinds": [
-    "acceptedClientInput",
-    "appliedEffect",
-    "rngConsumption",
-    "appliedEffect",
-    "rngConsumption",
   ],
 }
 `;

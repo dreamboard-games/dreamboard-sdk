@@ -1,6 +1,122 @@
-// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`public export surface reducer export names are stable 1`] = `
+exports[`public export surface > authoring-compiler export names are stable 1`] = `
+[
+  "materializeWorkspace",
+]
+`;
+
+exports[`public export surface > browser-interaction export names are stable 1`] = `
+[
+  "BROWSER_INTERACTION_ACTUATOR_KINDS",
+  "BROWSER_INTERACTION_ATTRIBUTES",
+  "BROWSER_INTERACTION_CANDIDATE_STATES",
+  "BROWSER_INTERACTION_READINESS_VALUES",
+  "BROWSER_INTERACTION_RECORD_ROLES",
+  "DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME",
+  "DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION",
+  "GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS",
+  "GAMEPLAY_BROWSER_INTERACTION_INTENTS",
+  "GAMEPLAY_BROWSER_INTERACTION_SURFACE",
+  "actuatorIdentityKey",
+  "assertBrowserInteractionEffectPattern",
+  "browserGameplayInteractionSchema",
+  "browserGameplaySurfaceSnapshotSchema",
+  "browserInteractionActuatorSchema",
+  "browserInteractionDiagnosticSchema",
+  "browserInteractionEffectPatternMatches",
+  "browserInteractionEffectPatternSchema",
+  "browserInteractionEffectSchema",
+  "browserInteractionPointerTargetSchema",
+  "browserInteractionSnapshotSchema",
+  "browserSemanticSurfaceSnapshotSchema",
+  "browserUnknownSurfaceSnapshotSchema",
+  "compareStableJson",
+  "createBrowserInteractionActuatorAttributes",
+  "createBrowserInteractionActuatorKey",
+  "createBrowserInteractionPointerTargetAttributes",
+  "createBrowserInteractionRegistry",
+  "createBrowserInteractionRootAttributes",
+  "createGameplayActuatorAttributes",
+  "createGameplayInteractionRootAttributes",
+  "createGameplayPointerTargetAttributes",
+  "decodeBrowserInteractionEffect",
+  "decodeBrowserInteractionEffectPattern",
+  "decodeCanonicalCandidateValue",
+  "defaultBrowserInteractionRegistry",
+  "defineBrowserInteractionSurface",
+  "encodeBrowserInteractionEffect",
+  "encodeBrowserInteractionEffectPattern",
+  "encodeCanonicalCandidateValue",
+  "gameplayAdjustResourceEffect",
+  "gameplayBrowserInteractionSurface",
+  "gameplayCommitEffect",
+  "gameplayInvokeEffect",
+  "gameplaySemanticEffectSchema",
+  "gameplaySetCandidateEffect",
+  "gameplaySetScalarEffect",
+  "isSemanticSurfaceSnapshot",
+  "normalizeBrowserInteractionRecords",
+  "pointerTargetIdentityKey",
+  "readBrowserInteractionSnapshot",
+  "resolveBrowserInteractionEffect",
+  "resolveBrowserInteractionIntent",
+  "resolveBrowserPointerTarget",
+  "targetIdentityKey",
+  "validateBrowserInteractionSnapshot",
+]
+`;
+
+exports[`public export surface > plugin-runtime-contract export names are stable 1`] = `
+[
+  "BoardStaticProjectionSchema",
+  "DREAMBOARD_PLUGIN_PROTOCOL",
+  "DREAMBOARD_PLUGIN_PROTOCOL_VERSION",
+  "GameEventDetailSchema",
+  "GameEventSchema",
+  "GameOutcomeSchema",
+  "GameplayBasisSchema",
+  "HostToPluginEnvelopeSchema",
+  "HostToPluginPayloadSchema",
+  "InputDomainDependenciesSchema",
+  "InputDomainSchema",
+  "InteractionAvailabilitySchema",
+  "InteractionCommitPolicySchema",
+  "InteractionContextSchema",
+  "InteractionDescriptorSchema",
+  "InteractionInputDescriptorSchema",
+  "InteractionResultSchema",
+  "PluginGameplayFrameSchema",
+  "PluginPlayerSummarySchema",
+  "PluginProtocolFrameSchema",
+  "PluginProtocolStepSchema",
+  "PluginProtocolTapeSchema",
+  "PluginSessionDescriptorSchema",
+  "PluginToHostEnvelopeSchema",
+  "PluginToHostPayloadSchema",
+  "ProjectedGameEventSchema",
+  "RuntimeJsonSchema",
+  "SeatProjectionBundleSchema",
+  "SimultaneousPhaseSnapshotSchema",
+  "SubmitInteractionCommandSchema",
+  "SystemActionEventSchema",
+  "ZoneHandlesSnapshotSchema",
+  "canonicalizePluginRuntimeJson",
+  "computePluginActionSetVersion",
+  "createPluginProtocolEnvelopeSchema",
+  "digestPluginCommandRequest",
+  "digestPluginGameplayFrame",
+  "digestPluginRuntimeJson",
+  "encodeCanonicalPluginRuntimeJson",
+  "materializePluginGameplayFrame",
+  "parseHostToPluginEnvelope",
+  "parsePluginGameplayFrame",
+  "parsePluginSessionDescriptor",
+  "parsePluginToHostEnvelope",
+]
+`;
+
+exports[`public export surface > reducer export names are stable 1`] = `
 [
   "FrameworkErrorCodes",
   "StaleContractArtifactError",
@@ -72,56 +188,7 @@ exports[`public export surface reducer export names are stable 1`] = `
 ]
 `;
 
-exports[`public export surface plugin-runtime-contract export names are stable 1`] = `
-[
-  "BoardStaticProjectionSchema",
-  "DREAMBOARD_PLUGIN_PROTOCOL",
-  "DREAMBOARD_PLUGIN_PROTOCOL_VERSION",
-  "GameEventDetailSchema",
-  "GameEventSchema",
-  "GameOutcomeSchema",
-  "GameplayBasisSchema",
-  "HostToPluginEnvelopeSchema",
-  "HostToPluginPayloadSchema",
-  "InputDomainDependenciesSchema",
-  "InputDomainSchema",
-  "InteractionAvailabilitySchema",
-  "InteractionCommitPolicySchema",
-  "InteractionContextSchema",
-  "InteractionDescriptorSchema",
-  "InteractionInputDescriptorSchema",
-  "InteractionResultSchema",
-  "PluginGameplayFrameSchema",
-  "PluginPlayerSummarySchema",
-  "PluginProtocolFrameSchema",
-  "PluginProtocolStepSchema",
-  "PluginProtocolTapeSchema",
-  "PluginSessionDescriptorSchema",
-  "PluginToHostEnvelopeSchema",
-  "PluginToHostPayloadSchema",
-  "ProjectedGameEventSchema",
-  "RuntimeJsonSchema",
-  "SeatProjectionBundleSchema",
-  "SimultaneousPhaseSnapshotSchema",
-  "SubmitInteractionCommandSchema",
-  "SystemActionEventSchema",
-  "ZoneHandlesSnapshotSchema",
-  "canonicalizePluginRuntimeJson",
-  "computePluginActionSetVersion",
-  "createPluginProtocolEnvelopeSchema",
-  "digestPluginCommandRequest",
-  "digestPluginGameplayFrame",
-  "digestPluginRuntimeJson",
-  "encodeCanonicalPluginRuntimeJson",
-  "materializePluginGameplayFrame",
-  "parseHostToPluginEnvelope",
-  "parsePluginGameplayFrame",
-  "parsePluginSessionDescriptor",
-  "parsePluginToHostEnvelope",
-]
-`;
-
-exports[`public export surface reducer/advanced export names are stable 1`] = `
+exports[`public export surface > reducer/advanced export names are stable 1`] = `
 [
   "FrameworkErrorCodes",
   "applySetupBootstrap",
@@ -143,7 +210,15 @@ exports[`public export surface reducer/advanced export names are stable 1`] = `
 ]
 `;
 
-exports[`public export surface runtime export names are stable 1`] = `
+exports[`public export surface > reference-games export names are stable 1`] = `
+[
+  "REFERENCE_GAME_MANIFEST_SCHEMA_VERSION",
+  "parseReferenceGameManifest",
+  "referenceGameManifestSchema",
+]
+`;
+
+exports[`public export surface > runtime export names are stable 1`] = `
 [
   "PluginRuntime",
   "PluginRuntimeBoundary",
@@ -153,7 +228,7 @@ exports[`public export surface runtime export names are stable 1`] = `
 ]
 `;
 
-exports[`public export surface runtime/primitives export names are stable 1`] = `
+exports[`public export surface > runtime/primitives export names are stable 1`] = `
 [
   "Board",
   "BoardEdgeTarget",
@@ -245,22 +320,94 @@ exports[`public export surface runtime/primitives export names are stable 1`] = 
 ]
 `;
 
-exports[`public export surface runtime/workspace-contract export names are stable 1`] = `
+exports[`public export surface > runtime/workspace-contract export names are stable 1`] = `
 [
   "createGameUiContract",
   "createWorkspaceUIContract",
 ]
 `;
 
-exports[`public export surface reference-games export names are stable 1`] = `
+exports[`public export surface > testing export names are stable 1`] = `
 [
-  "REFERENCE_GAME_MANIFEST_SCHEMA_VERSION",
-  "parseReferenceGameManifest",
-  "referenceGameManifestSchema",
+  "FixturePluginRuntime",
+  "ScenarioAssertionError",
+  "ScenarioDefinitionValidationError",
+  "ScenarioReplayError",
+  "StaleContractArtifactError",
+  "UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION",
+  "UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL",
+  "UI_SCENARIO_FIXTURE_SCHEMA_VERSION",
+  "UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR",
+  "activate",
+  "assertDeterministicUIScenarioFixture",
+  "assertScenario",
+  "assertStep",
+  "assertSupportedBrowserInteractionProtocol",
+  "assertUIStepExpectationSatisfied",
+  "assertUniqueReplayIdentity",
+  "canonicalUIFixtureJson",
+  "canonicalizeUIFixtureJson",
+  "canonicalizeUIScenarioFixture",
+  "compilePluginProtocolTape",
+  "compileUIScenarioFixture",
+  "createDeterministicIdFactory",
+  "createExpectApi",
+  "createFixtureHostHarness",
+  "createReducerScenarioRunner",
+  "createScenarioAuthoring",
+  "defaultFixtureEnvironmentInit",
+  "defineUIScenario",
+  "digestPluginProtocolTape",
+  "digestUIFixtureJson",
+  "digestUIFixtureRequest",
+  "digestUIFixtureTransportRequest",
+  "digestUIScenarioFixture",
+  "drag",
+  "exploreScenario",
+  "fill",
+  "fixtureEnvironmentInitFor",
+  "inspectScenario",
+  "isSha256Digest",
+  "isStaleContractArtifactError",
+  "parseUIScenarioFixture",
+  "parseUIScenarioFixtureBundleIndex",
+  "pluginProtocolTapeSchema",
+  "portableSemanticReplayStepSchema",
+  "press",
+  "probeScenarioCommand",
+  "replayScenario",
+  "resolveScenarioCheckpoint",
+  "serializeUIScenarioFixture",
+  "submit",
+  "toScenarioReplayDefinition",
+  "uiFixtureFrameSchema",
+  "uiFixtureProtocolStepSchema",
+  "uiReplayExecutionSchema",
+  "uiReplayRequestSchema",
+  "uiResolvedReplayIdentitySchema",
+  "uiScenarioFixtureBundleIndexSchema",
+  "uiScenarioFixtureSchema",
+  "uiScenarioReplayStepSchema",
+  "uiStepExpectationSchema",
 ]
 `;
 
-exports[`public export surface ui export names are stable 1`] = `
+exports[`public export surface > testing-compiler export names are stable 1`] = `
+[
+  "compileScenarioReplay",
+]
+`;
+
+exports[`public export surface > types export names are stable 1`] = `
+[
+  "buildTypedRecord",
+  "defineTopologyManifest",
+  "expectTypedId",
+  "isTypedId",
+]
+`;
+
+exports[`public export surface > ui export names are stable 1`] = `
 [
   "ActionButton",
   "ActionGroup",
@@ -398,152 +545,5 @@ exports[`public export surface ui export names are stable 1`] = `
   "useTheme",
   "useThemeCssVars",
   "visualStateDataAttributes",
-]
-`;
-
-exports[`public export surface types export names are stable 1`] = `
-[
-  "buildTypedRecord",
-  "defineTopologyManifest",
-  "expectTypedId",
-  "isTypedId",
-]
-`;
-
-exports[`public export surface testing export names are stable 1`] = `
-[
-  "FixturePluginRuntime",
-  "ScenarioAssertionError",
-  "ScenarioDefinitionValidationError",
-  "ScenarioReplayError",
-  "StaleContractArtifactError",
-  "UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION",
-  "UI_SCENARIO_FIXTURE_PLUGIN_RUNTIME_PROTOCOL",
-  "UI_SCENARIO_FIXTURE_SCHEMA_VERSION",
-  "UI_SCENARIO_FIXTURE_SUPPORTED_BROWSER_PROTOCOL_MAJOR",
-  "activate",
-  "assertDeterministicUIScenarioFixture",
-  "assertScenario",
-  "assertStep",
-  "assertSupportedBrowserInteractionProtocol",
-  "assertUIStepExpectationSatisfied",
-  "assertUniqueReplayIdentity",
-  "canonicalUIFixtureJson",
-  "canonicalizeUIFixtureJson",
-  "canonicalizeUIScenarioFixture",
-  "compilePluginProtocolTape",
-  "compileUIScenarioFixture",
-  "createDeterministicIdFactory",
-  "createExpectApi",
-  "createFixtureHostHarness",
-  "createReducerScenarioRunner",
-  "createScenarioAuthoring",
-  "defaultFixtureEnvironmentInit",
-  "defineUIScenario",
-  "digestPluginProtocolTape",
-  "digestUIFixtureJson",
-  "digestUIFixtureRequest",
-  "digestUIFixtureTransportRequest",
-  "digestUIScenarioFixture",
-  "drag",
-  "exploreScenario",
-  "fill",
-  "fixtureEnvironmentInitFor",
-  "inspectScenario",
-  "isSha256Digest",
-  "isStaleContractArtifactError",
-  "parseUIScenarioFixture",
-  "parseUIScenarioFixtureBundleIndex",
-  "pluginProtocolTapeSchema",
-  "portableSemanticReplayStepSchema",
-  "press",
-  "probeScenarioCommand",
-  "replayScenario",
-  "resolveScenarioCheckpoint",
-  "serializeUIScenarioFixture",
-  "submit",
-  "toScenarioReplayDefinition",
-  "uiFixtureFrameSchema",
-  "uiFixtureProtocolStepSchema",
-  "uiReplayExecutionSchema",
-  "uiReplayRequestSchema",
-  "uiResolvedReplayIdentitySchema",
-  "uiScenarioFixtureBundleIndexSchema",
-  "uiScenarioFixtureSchema",
-  "uiScenarioReplayStepSchema",
-  "uiStepExpectationSchema",
-]
-`;
-
-exports[`public export surface testing-compiler export names are stable 1`] = `
-[
-  "compileScenarioReplay",
-]
-`;
-
-exports[`public export surface authoring-compiler export names are stable 1`] = `
-[
-  "materializeWorkspace",
-]
-`;
-
-exports[`public export surface browser-interaction export names are stable 1`] = `
-[
-  "BROWSER_INTERACTION_ACTUATOR_KINDS",
-  "BROWSER_INTERACTION_ATTRIBUTES",
-  "BROWSER_INTERACTION_CANDIDATE_STATES",
-  "BROWSER_INTERACTION_READINESS_VALUES",
-  "BROWSER_INTERACTION_RECORD_ROLES",
-  "DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_NAME",
-  "DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION",
-  "GAMEPLAY_BROWSER_INTERACTION_EFFECT_KINDS",
-  "GAMEPLAY_BROWSER_INTERACTION_INTENTS",
-  "GAMEPLAY_BROWSER_INTERACTION_SURFACE",
-  "actuatorIdentityKey",
-  "assertBrowserInteractionEffectPattern",
-  "browserGameplayInteractionSchema",
-  "browserGameplaySurfaceSnapshotSchema",
-  "browserInteractionActuatorSchema",
-  "browserInteractionDiagnosticSchema",
-  "browserInteractionEffectPatternMatches",
-  "browserInteractionEffectPatternSchema",
-  "browserInteractionEffectSchema",
-  "browserInteractionPointerTargetSchema",
-  "browserInteractionSnapshotSchema",
-  "browserSemanticSurfaceSnapshotSchema",
-  "browserUnknownSurfaceSnapshotSchema",
-  "compareStableJson",
-  "createBrowserInteractionActuatorAttributes",
-  "createBrowserInteractionActuatorKey",
-  "createBrowserInteractionPointerTargetAttributes",
-  "createBrowserInteractionRegistry",
-  "createBrowserInteractionRootAttributes",
-  "createGameplayActuatorAttributes",
-  "createGameplayInteractionRootAttributes",
-  "createGameplayPointerTargetAttributes",
-  "decodeBrowserInteractionEffect",
-  "decodeBrowserInteractionEffectPattern",
-  "decodeCanonicalCandidateValue",
-  "defaultBrowserInteractionRegistry",
-  "defineBrowserInteractionSurface",
-  "encodeBrowserInteractionEffect",
-  "encodeBrowserInteractionEffectPattern",
-  "encodeCanonicalCandidateValue",
-  "gameplayAdjustResourceEffect",
-  "gameplayBrowserInteractionSurface",
-  "gameplayCommitEffect",
-  "gameplayInvokeEffect",
-  "gameplaySemanticEffectSchema",
-  "gameplaySetCandidateEffect",
-  "gameplaySetScalarEffect",
-  "isSemanticSurfaceSnapshot",
-  "normalizeBrowserInteractionRecords",
-  "pointerTargetIdentityKey",
-  "readBrowserInteractionSnapshot",
-  "resolveBrowserInteractionEffect",
-  "resolveBrowserInteractionIntent",
-  "resolveBrowserPointerTarget",
-  "targetIdentityKey",
-  "validateBrowserInteractionSnapshot",
 ]
 `;

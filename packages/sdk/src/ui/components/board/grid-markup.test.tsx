@@ -8,7 +8,7 @@
  * known behavioral divergences between the two grids (browser-attribute
  * spreading, select dispatch, pan/zoom gating).
  */
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { renderToString } from "react-dom/server";
 import { HexGrid } from "./HexGrid.js";
 import { SquareGrid } from "./SquareGrid.js";

@@ -25,7 +25,7 @@
 // submission attempt came back as `NOT_YOUR_TURN`. These tests prevent that
 // from regressing.
 
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   choiceTarget,

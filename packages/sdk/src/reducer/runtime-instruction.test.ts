@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createReducerFx } from "./effects";
 import { acceptResult } from "./bundle/trusted/trusted-runtime-result";
 import type { RuntimeInstructionForState } from "./core/runtime-instruction";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createFlowDiagnostic } from "./flow-diagnostic.js";
 
 const playerIds = ["player-1", "player-2", "player-3"];

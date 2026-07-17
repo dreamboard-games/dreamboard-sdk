@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createExpectApi } from "./create-expect-api.ts";
 import type { InteractionDescriptorLike } from "./definitions.ts";
 import {

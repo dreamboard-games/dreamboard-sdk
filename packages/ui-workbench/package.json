@@ -9,7 +9,7 @@
     "build": "node ../../scripts/ui/workbench.ts build",
     "typecheck": "tsc --noEmit",
     "test": "node ../../scripts/ui/workbench.ts test",
-    "test:runtime": "bun test src"
+    "test:runtime": "vitest run --config vitest.config.ts"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",
@@ -38,6 +38,7 @@
     "playwright": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

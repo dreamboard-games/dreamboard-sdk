@@ -145,7 +145,7 @@
     "storybook:test": "concurrently -k -s first -n storybook,test \"http-server storybook-static -p 6006 -s --silent\" \"wait-on tcp:6006 && test-storybook --url http://127.0.0.1:6006\"",
     "storybook:test:visual": "playwright test --config .storybook/visual-runner.config.ts",
     "storybook:test:visual:update": "playwright test --config .storybook/visual-runner.config.ts --update-snapshots",
-    "test": "bun test src"
+    "test": "vitest run src"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "catalog:",
@@ -191,6 +191,7 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vitest": "catalog:",
     "wait-on": "^8.0.1",
     "zod": "catalog:"
   },

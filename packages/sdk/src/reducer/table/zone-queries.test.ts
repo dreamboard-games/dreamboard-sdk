@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createStateQueries, createTableQueries } from "../../reducer";
 import { perPlayer, type PlayerId } from "../per-player";
 import {

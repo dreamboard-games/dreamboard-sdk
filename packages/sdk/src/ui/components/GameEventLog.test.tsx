@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 test("GameEventLog exposes controlled event presentation props", () => {
   const source = readFileSync(
-    join(import.meta.dir, "GameEventLog.tsx"),
+    join(import.meta.dirname, "GameEventLog.tsx"),
     "utf8",
   );
 
@@ -18,7 +18,7 @@ test("GameEventLog exposes controlled event presentation props", () => {
 
 test("GameEventLog renders passive system events without gameplay commands", () => {
   const source = readFileSync(
-    join(import.meta.dir, "GameEventLog.tsx"),
+    join(import.meta.dirname, "GameEventLog.tsx"),
     "utf8",
   );
 

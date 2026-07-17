@@ -1,8 +1,8 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 
-const repoRoot = path.resolve(import.meta.dir, "../../..");
+const repoRoot = path.resolve(import.meta.dirname, "../../..");
 // `workspace-codegen` exists again as a *private* workspace package, so it is
 // no longer a retired directory — but its specifier must still never appear
 // in emitted workspace code (generated games only talk to the public sdk).

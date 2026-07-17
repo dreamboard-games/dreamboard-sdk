@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   WORKSPACE_CODEGEN_OWNERSHIP,
   WORKSPACE_OWNERSHIP_VERSION,

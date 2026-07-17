@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import { routeCardInputIntent } from "./interaction-router.js";
 
