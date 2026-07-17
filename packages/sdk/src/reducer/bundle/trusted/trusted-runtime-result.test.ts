@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { acceptResult, endGameResult } from "./trusted-runtime-result";
 import { gameEvent } from "../../game-event";
 

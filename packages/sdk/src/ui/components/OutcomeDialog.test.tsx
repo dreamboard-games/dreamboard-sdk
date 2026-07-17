@@ -1,10 +1,10 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 test("OutcomeDialog uses dismissible shadcn dialog content", () => {
   const source = readFileSync(
-    join(import.meta.dir, "OutcomeDialog.tsx"),
+    join(import.meta.dirname, "OutcomeDialog.tsx"),
     "utf8",
   );
 
@@ -20,7 +20,7 @@ test("OutcomeDialog uses dismissible shadcn dialog content", () => {
 
 test("OutcomeDialog exposes controlled outcome presentation", () => {
   const source = readFileSync(
-    join(import.meta.dir, "OutcomeDialog.tsx"),
+    join(import.meta.dirname, "OutcomeDialog.tsx"),
     "utf8",
   );
 

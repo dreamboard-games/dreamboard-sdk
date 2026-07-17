@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -7,7 +7,7 @@ import { ThemeProvider } from "../theme/ThemeProvider.js";
 
 test("ErrorBoundary fallback derives styling from --db-* theme variables", () => {
   const source = readFileSync(
-    join(import.meta.dir, "ErrorBoundary.tsx"),
+    join(import.meta.dirname, "ErrorBoundary.tsx"),
     "utf8",
   );
 

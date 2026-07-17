@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { renderToString } from "react-dom/server";
 import { createHexBoardView } from "./hex-board-view.js";
 import { HexGrid, type HexGridBoardProps } from "./HexGrid.js";

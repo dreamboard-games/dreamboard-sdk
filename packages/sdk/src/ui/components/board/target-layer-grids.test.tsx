@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { renderToString } from "react-dom/server";
 import { HexGrid, hexUtils, type HexTileGeometry } from "./HexGrid.js";
 import {

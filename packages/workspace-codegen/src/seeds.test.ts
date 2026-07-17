@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
 import { generateFrameworkFiles, generateSeedFiles } from "./seeds.js";
 

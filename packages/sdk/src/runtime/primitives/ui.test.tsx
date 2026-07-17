@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { GameViewport } from "./game.js";

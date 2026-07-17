@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 import { REDUCER_CONTRACT_VERSION } from "../generated/version";
 import { assertReducerBundleContract } from "./bundle";
