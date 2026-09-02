@@ -22,7 +22,7 @@ export default defineConfig({
     "src/testing-runtime.ts",
     "src/testing-compiler.ts",
     "src/authoring-compiler.ts",
-    "src/authoring-materialize-cli.ts",
+    "src/authoring-generate-cli.ts",
     "src/runtime.ts",
     "src/runtime/primitives.ts",
     "src/runtime/workspace-contract.ts",

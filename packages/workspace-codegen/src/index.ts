@@ -16,12 +16,7 @@ import {
   SEED_FILE_PATTERNS,
   WORKSPACE_CODEGEN_OWNERSHIP,
 } from "./ownership.js";
-import {
-  generateFrameworkFiles,
-  generateSeedFiles,
-  isFrameworkOwnedSetupProfilesSeed,
-  SETUP_PROFILES_SEED_MARKER,
-} from "./seeds.js";
+import { generateFrameworkFiles, generateSeedFiles } from "./seeds.js";
 export {
   materializeCardSet,
   materializePresetCardSet,
@@ -51,7 +46,6 @@ export function generateAuthoritativeFiles(
 }
 
 export { generateSeedFiles };
-export { isFrameworkOwnedSetupProfilesSeed, SETUP_PROFILES_SEED_MARKER };
 export { validateManifestAuthoring };
 
 export function generateDynamicGeneratedFiles(

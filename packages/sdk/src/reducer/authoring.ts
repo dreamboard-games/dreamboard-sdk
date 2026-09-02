@@ -1,4 +1,8 @@
 export { defineGameContract } from "./authoring/contract";
+export type {
+  DefinedGameContract,
+  ReducerGameContractInput,
+} from "./authoring/contract";
 export {
   createContractAuthoring,
   type BoundInputBuilders,

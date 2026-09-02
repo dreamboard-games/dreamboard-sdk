@@ -43,13 +43,15 @@ test("generated UI contract is a thin game specialization", () => {
   expect(uiContract).not.toContain("type InteractionCollectorKind");
 });
 
-test("generated reducer seeds use bound authoring factories", () => {
+test("generated reducer seed uses one staged defineGame surface", () => {
   const files = generateSeedFiles(MINIMAL_MANIFEST);
 
-  expect(files["app/authoring.ts"]).toContain("createContractAuthoring");
-  expect(files["app/game.ts"]).toContain("authoring.game({");
-  expect(files["app/phases/setup.ts"]).toContain("setup.define({");
-  expect(files["app/phases/setup.ts"]).toContain("setup.interaction({");
+  expect(Object.keys(files).sort()).toEqual(["app/game.ts", "ui/App.tsx"]);
+  expect(files["app/game.ts"]).toContain("export default defineGame(");
+  expect(files["app/game.ts"]).toContain('game.phase("setup")');
+  expect(files["app/game.ts"]).toContain("setup.define({");
+  expect(files["app/game.ts"]).toContain("setup.interaction({");
+  expect(files["ui/App.tsx"]).toContain("satisfies InteractionRoutes");
 
   const appSeed = Object.entries(files)
     .filter(([path]) => path.startsWith("app/"))
@@ -59,6 +61,8 @@ test("generated reducer seeds use bound authoring factories", () => {
   expect(appSeed).not.toContain("definePhase<");
   expect(appSeed).not.toContain("defineStepPhase<");
   expect(appSeed).not.toContain("ReducerGameDefinition<");
+  expect(appSeed).not.toContain("createContractAuthoring");
+  expect(appSeed).not.toContain("defineGameContract");
 });
 
 test("generated framework tsconfigs admit manifest JSON artifacts", () => {

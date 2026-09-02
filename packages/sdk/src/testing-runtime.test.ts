@@ -1,10 +1,10 @@
+import { defineGameDefinition as defineGame } from "./reducer/authoring/game";
 import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
 import { materializeWorkspace } from "./authoring/materialize-workspace.js";
 import {
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePhase,

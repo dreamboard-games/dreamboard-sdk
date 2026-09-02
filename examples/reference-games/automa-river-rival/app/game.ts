@@ -1,4 +1,4 @@
-import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { defineGameDefinition as defineGame } from "@dreamboard-games/sdk/reducer/advanced";
 import { setupProfiles, shuffle } from "../shared/manifest-contract";
 import { gameContract } from "./game-contract";
 import { phases } from "./phases";

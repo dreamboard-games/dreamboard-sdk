@@ -6,20 +6,20 @@
     "#dreamboard/ui-contract": "./shared/generated/ui-contract.ts"
   },
   "scripts": {
-    "materialize": "dreamboard-sdk-materialize --project-root . --manifest manifest.ts",
-    "predev": "pnpm materialize",
+    "generate": "dreamboard-sdk-generate --project-root . --manifest manifest.ts",
+    "predev": "pnpm generate",
     "dev": "dreamboard dev",
-    "typecheck": "pnpm materialize && pnpm typecheck:raw",
+    "typecheck": "pnpm generate && pnpm typecheck:raw",
     "typecheck:raw": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
     "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
     "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
     "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
     "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
-    "test": "pnpm materialize && pnpm test:raw",
+    "test": "pnpm generate && pnpm test:raw",
     "test:raw": "tsx --test test/scenarios.test.ts test/unit/*.test.ts",
-    "test:ui": "pnpm materialize && pnpm test:ui:raw",
+    "test:ui": "pnpm generate && pnpm test:ui:raw",
     "test:ui:raw": "tsx --tsconfig test/tsconfig.json --test test/ui-scenarios/*.scenario.ts",
-    "verify": "pnpm materialize && pnpm typecheck:raw && pnpm test:raw && pnpm test:ui:raw"
+    "verify": "pnpm generate && pnpm typecheck:raw && pnpm test:raw && pnpm test:ui:raw"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "0.4.0-alpha.13",

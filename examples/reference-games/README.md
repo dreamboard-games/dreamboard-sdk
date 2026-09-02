@@ -58,7 +58,7 @@ pnpm reference hex-network-trading
 ```
 
 This validates the V5 manifest and frozen checked-in lockfile, packs the current
-SDK, installs a temporary game copy against that tarball, materializes, then
+SDK, installs a temporary game copy against that tarball, generates, then
 runs raw type, reducer, and UI tests. `pnpm reference` verifies all nine games
 against one packed SDK.
 
