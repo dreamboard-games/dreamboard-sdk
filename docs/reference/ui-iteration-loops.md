@@ -37,9 +37,9 @@ Run one authored scenario against the built SDK:
 pnpm ui workbench --scenario hearts.dealt-hand.desktop
 ```
 
-The command materializes the needed ignored fixture output automatically. It
+The command generates the needed ignored fixture output automatically. It
 uses a fixed build directory, atomic replacement, and the last good output when
-a rematerialization fails.
+a generation fails.
 
 For component HMR during local iteration, resolve SDK source explicitly:
 

@@ -1,6 +1,7 @@
+import { defineGameDefinition as defineGame } from "../authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { defineGame, defineGameContract, definePhase } from "../authoring";
+import { defineGameContract, definePhase } from "../authoring";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

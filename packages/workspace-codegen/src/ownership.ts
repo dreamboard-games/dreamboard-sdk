@@ -22,7 +22,7 @@ export type ScaffoldingOwnership = {
 };
 
 export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
-  version: 32,
+  version: 33,
   allowedPaths: {
     rootFiles: [
       ".npmrc",
@@ -47,21 +47,8 @@ export const WORKSPACE_CODEGEN_OWNERSHIP: ScaffoldingOwnership = {
       "app/tsconfig.framework.json",
       "ui/tsconfig.framework.json",
     ],
-    seedFiles: [
-      "app/README.md",
-      "ui/App.tsx",
-      "app/game-contract.ts",
-      "app/authoring.ts",
-      "app/game.ts",
-      "app/setup-profiles.ts",
-      "app/reducer-support.ts",
-      "app/derived.ts",
-      "ui/interaction-routes.tsx",
-      "ui/setup-screen.tsx",
-      "ui/styles.ts",
-      "ui/ui-contract-typing-smoke.tsx",
-    ],
-    seedFilePatterns: [{ prefix: "app/phases/", suffix: ".ts" }],
+    seedFiles: ["ui/App.tsx", "app/game.ts"],
+    seedFilePatterns: [],
   },
   cliStatic: {
     exactFiles: [
