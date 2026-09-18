@@ -12,7 +12,7 @@ import {
   pipe,
   type GameStateOf,
   type PlayerId,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,

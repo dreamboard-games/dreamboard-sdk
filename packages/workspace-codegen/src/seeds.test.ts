@@ -43,11 +43,12 @@ test("generated UI contract is a thin game specialization", () => {
   expect(uiContract).not.toContain("type InteractionCollectorKind");
 });
 
-test("generated reducer seed uses one staged defineGame surface", () => {
+test("generated reducer seed uses the bound createGame surface", () => {
   const files = generateSeedFiles(MINIMAL_MANIFEST);
 
   expect(Object.keys(files).sort()).toEqual(["app/game.ts", "ui/App.tsx"]);
-  expect(files["app/game.ts"]).toContain("export default defineGame(");
+  expect(files["app/game.ts"]).toContain("export const game = createGame(");
+  expect(files["app/game.ts"]).toContain("export default game.assemble(");
   expect(files["app/game.ts"]).toContain('game.phase("setup")');
   expect(files["app/game.ts"]).toContain("setup.define({");
   expect(files["app/game.ts"]).toContain("setup.interaction({");

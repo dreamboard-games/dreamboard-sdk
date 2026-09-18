@@ -6,7 +6,7 @@ import {
   defineGameContract,
   definePhase,
   defineStaticView,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

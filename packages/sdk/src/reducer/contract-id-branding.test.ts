@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { defineGameContract } from "../reducer";
+import { defineGameContract } from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

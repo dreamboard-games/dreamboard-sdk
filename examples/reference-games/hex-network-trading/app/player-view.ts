@@ -1,10 +1,5 @@
-import {
-  definePlayerView,
-  defineSharedView,
-  type TableQueriesOfState,
-} from "@dreamboard-games/sdk/reducer";
 import { literals, type PlayerId } from "../shared/manifest-contract";
-import type { GameContract, GameState } from "./game-contract";
+import { stormtrail, type GameState } from "./game-model";
 import { HEX_RULES } from "./model";
 import {
   banditsHexId,
@@ -13,7 +8,7 @@ import {
   trailsByEdgeId,
 } from "./reducer-support";
 
-function projectPublic(state: GameState, q: TableQueriesOfState<GameState>) {
+function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
   return {
     currentPhase: state.flow.currentPhase,
     activePlayerId: state.flow.activePlayers[0] ?? null,
@@ -58,13 +53,13 @@ function projectPublic(state: GameState, q: TableQueriesOfState<GameState>) {
   };
 }
 
-export const sharedView = defineSharedView<GameContract>()({
+export const sharedView = stormtrail.views.shared({
   project({ state, q }) {
     return projectPublic(state, q);
   },
 });
 
-export const playerView = definePlayerView<GameContract>()({
+export const playerView = stormtrail.views.player({
   project({ state, playerId, q }) {
     const privateState = state.privateState[playerId];
     const lastSteal = state.publicState.lastSteal;

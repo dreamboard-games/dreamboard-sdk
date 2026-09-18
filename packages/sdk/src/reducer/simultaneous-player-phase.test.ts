@@ -11,7 +11,7 @@ import {
   formInput,
   many,
   pipe,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

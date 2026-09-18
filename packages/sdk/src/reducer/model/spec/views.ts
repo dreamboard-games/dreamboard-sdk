@@ -3,7 +3,7 @@ import type { ManifestContract } from "../manifest";
 import type { PlayerIdOfState, TableOfState } from "../extract";
 import type {
   ActionContext,
-  RuntimeHelpers,
+  ReadHelpers,
   StaticViewQueries,
 } from "./runtime-args";
 
@@ -14,7 +14,7 @@ export type SharedViewDefinition<
 > = {
   project: (
     args: ActionContext<State, Manifest> &
-      RuntimeHelpers<State> & {
+      ReadHelpers<State> & {
         state: State;
       },
   ) => Projection;
@@ -28,7 +28,7 @@ export type PlayerViewDefinition<
 > = {
   project: (
     args: ActionContext<State, Manifest> &
-      RuntimeHelpers<State> & {
+      ReadHelpers<State> & {
         state: State;
         playerId: PlayerIdOfState<State>;
         shared: SharedProjection;

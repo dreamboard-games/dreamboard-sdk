@@ -1,7 +1,9 @@
-import { pendingTradeAuthoring } from "../authoring";
-import { appendHistory, edit, systemEvent } from "../reducer-support";
+import { appendHistory, systemEvent } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const acceptTrade = pendingTradeAuthoring.interaction({
+const pendingTrade = stormtrail.phase("pendingTrade");
+
+const acceptTrade = pendingTrade.interaction({
   to: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
   visibility: "actorsOnly",
   inputs: {},
@@ -31,10 +33,9 @@ const acceptTrade = pendingTradeAuthoring.interaction({
       },
     },
   ],
-  reduce({ state, accept, fx }) {
+  reduce({ state, tx }) {
     const trade = state.publicState.currentTrade;
     if (!trade) throw new Error("Trade response requires a pending offer.");
-    const tx = edit(state);
     tx.transferResources({
       fromPlayerId: trade.offerorPlayerId,
       toPlayerId: trade.targetPlayerId,
@@ -54,32 +55,29 @@ const acceptTrade = pendingTradeAuthoring.interaction({
       ],
     }));
     tx.setActivePlayers([trade.offerorPlayerId]);
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "tradeAccepted",
       actorPlayerId: trade.targetPlayerId,
       summary: `${trade.targetPlayerId} accepted ${trade.offerorPlayerId}'s trade.`,
     });
-    return accept(next, {
-      instructions: [fx.transition("main")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-trade",
-          title: "Trade accepted",
-          summary: `${trade.offerorPlayerId} and ${trade.targetPlayerId} exchanged supplies.`,
-        }),
-      ],
-    });
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-trade",
+        title: "Trade accepted",
+        summary: `${trade.offerorPlayerId} and ${trade.targetPlayerId} exchanged supplies.`,
+      }),
+    );
+    return tx.transition("main");
   },
 });
 
-const rejectTrade = pendingTradeAuthoring.interaction({
+const rejectTrade = pendingTrade.interaction({
   to: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
   visibility: "actorsOnly",
   inputs: {},
-  reduce({ state, accept, fx }) {
+  reduce({ state, tx }) {
     const trade = state.publicState.currentTrade;
     if (!trade) throw new Error("Trade response requires a pending offer.");
-    const tx = edit(state);
     tx.patchPublicState((publicState) => ({
       ...publicState,
       currentTrade: null,
@@ -89,33 +87,29 @@ const rejectTrade = pendingTradeAuthoring.interaction({
       ],
     }));
     tx.setActivePlayers([trade.offerorPlayerId]);
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "tradeRejected",
       actorPlayerId: trade.targetPlayerId,
       summary: `${trade.targetPlayerId} rejected ${trade.offerorPlayerId}'s trade.`,
     });
-    return accept(next, {
-      instructions: [fx.transition("main")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-trade",
-          title: "Trade rejected",
-          summary: `${trade.targetPlayerId} declined the offer.`,
-        }),
-      ],
-    });
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-trade",
+        title: "Trade rejected",
+        summary: `${trade.targetPlayerId} declined the offer.`,
+      }),
+    );
+    return tx.transition("main");
   },
 });
 
-export const pendingTrade = pendingTradeAuthoring.define({
+export default pendingTrade.define({
   kind: "player",
   initialState: () => ({}),
-  enter({ state, accept }) {
+  enter({ state, tx }) {
     const offerorPlayerId = state.publicState.currentTrade?.offerorPlayerId;
     if (!offerorPlayerId) throw new Error("Pending trade phase has no offer.");
-    const tx = edit(state);
     tx.setActivePlayers([offerorPlayerId]);
-    return accept(tx.state);
   },
   interactions: { acceptTrade, rejectTrade },
 });

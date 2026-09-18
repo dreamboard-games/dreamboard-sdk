@@ -1,3 +1,4 @@
+import { resultStateOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { RuntimePayload } from "../../model";
@@ -111,22 +112,21 @@ export function createTrustedInstructionRunner<
         return rejectResult("invalid-action-params", parsed.message);
       }
       const random = createMutableRandomHelpers(state.runtime.rng);
+      const reduceArgs = scope.buildRuntimeArgs(
+        state,
+        {
+          ...ctx,
+          state: scope.toDomainState(state),
+          input: {
+            playerId: input.playerId,
+            params: parsed.params,
+          },
+        },
+        { random: random.random },
+      );
       const result = normalizeResult(
-        interaction.reduce(
-          scope.buildRuntimeArgs(
-            state,
-            {
-              ...ctx,
-              state: scope.toDomainState(state),
-              input: {
-                playerId: input.playerId,
-                params: parsed.params,
-              },
-            },
-            { random: random.random },
-          ),
-        ) as ReducerResult<DomainState>,
-        scope.toDomainState(state),
+        interaction.reduce(reduceArgs) as ReducerResult<DomainState>,
+        resultStateOf(reduceArgs),
       );
       return result.type === "accept"
         ? {
@@ -146,24 +146,23 @@ export function createTrustedInstructionRunner<
         );
       }
       const random = createMutableRandomHelpers(state.runtime.rng);
+      const continuationArgs = scope.buildRuntimeArgs(
+        state,
+        {
+          ...ctx,
+          state: scope.toDomainState(state),
+          input: {
+            source: "effect" as const,
+            effectKind: input.effectKind,
+            data: input.resumeData,
+            response: input.response,
+          },
+        },
+        { random: random.random },
+      );
       const result = normalizeResult(
-        continuation.reduce(
-          scope.buildRuntimeArgs(
-            state,
-            {
-              ...ctx,
-              state: scope.toDomainState(state),
-              input: {
-                source: "effect" as const,
-                effectKind: input.effectKind,
-                data: input.resumeData,
-                response: input.response,
-              },
-            },
-            { random: random.random },
-          ),
-        ),
-        scope.toDomainState(state),
+        continuation.reduce(continuationArgs),
+        resultStateOf(continuationArgs),
       );
       return result.type === "accept"
         ? {
@@ -349,20 +348,19 @@ export function createTrustedInstructionRunner<
       ]),
     );
     const random = createMutableRandomHelpers(stateWithSubmission.runtime.rng);
+    const resolveArgs = scope.buildRuntimeArgs(
+      stateWithSubmission,
+      {
+        state: scope.toDomainState(stateWithSubmission),
+        submissions: resolvedSubmissions,
+        submittedPlayerIds: [...actors],
+        waitingPlayerIds: [],
+      },
+      { random: random.random },
+    );
     const resolved = normalizeResult(
-      resolve(
-        scope.buildRuntimeArgs(
-          stateWithSubmission,
-          {
-            state: scope.toDomainState(stateWithSubmission),
-            submissions: resolvedSubmissions,
-            submittedPlayerIds: [...actors],
-            waitingPlayerIds: [],
-          },
-          { random: random.random },
-        ),
-      ) as ReducerResult<DomainState>,
-      scope.toDomainState(stateWithSubmission),
+      resolve(resolveArgs) as ReducerResult<DomainState>,
+      resultStateOf(resolveArgs),
     );
     if (resolved.type === "reject") {
       return resolved;

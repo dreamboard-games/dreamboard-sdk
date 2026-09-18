@@ -15,7 +15,7 @@ import {
   gameEvent,
   pipe,
   rngInput,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   type InputCollector,
   type RuntimeTableRecord,

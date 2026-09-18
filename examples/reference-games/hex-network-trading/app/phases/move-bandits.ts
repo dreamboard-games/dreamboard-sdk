@@ -1,32 +1,30 @@
 import { defineInputs } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
-import {
-  ids,
-  type PlayerId,
-  type SpaceId,
-} from "../../shared/manifest-contract";
-import { moveBanditsAuthoring } from "../authoring";
-import { banditsDestinationTarget } from "../eligibility";
+import { ids } from "../../shared/manifest-contract";
+import { differentHex } from "../eligibility";
 import {
   appendHistory,
   clearStealSecrets,
-  edit,
   eligibleBanditVictims,
   patchPrivateState,
   resourceCards,
   systemEvent,
   turnOwnerPlayerId,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const moveBandits = moveBanditsAuthoring.interaction({
+const moveBanditsPhase = stormtrail.phase("moveBandits");
+
+const moveBandits = moveBanditsPhase.interaction({
   inputs: defineInputs((input) => {
     const hexId = input.add(
       "hexId",
-      moveBanditsAuthoring.inputs.board.space<SpaceId>({
-        target: banditsDestinationTarget,
+      moveBanditsPhase.inputs.board.space({
+        boardId: "frontier",
+        where: differentHex,
       }),
     );
-    const victimChoice = moveBanditsAuthoring.inputs.form.choice({
+    const victimChoice = moveBanditsPhase.inputs.form.choice({
       dependsOn: [hexId],
       choices: ({ state, playerId, q, values }) => {
         const parsedHexId = ids.spaceId.safeParse(values.hexId);
@@ -77,15 +75,14 @@ const moveBandits = moveBanditsAuthoring.interaction({
       },
     },
   ],
-  reduce({ state, input, accept, fx, q, random }) {
+  reduce({ state, tx, input, q, random }) {
     const ownerPlayerId = turnOwnerPlayerId(state, q);
-    const tx = edit(state);
     tx.moveComponentToSpace({
       componentId: "bandits",
       boardId: "frontier",
       spaceId: input.params.hexId,
     });
-    let next = clearStealSecrets(tx.state);
+    clearStealSecrets(tx);
     const victimPlayerId = input.params.targetPlayerId;
     if (victimPlayerId) {
       const cards = resourceCards(q.player.resources(victimPlayerId));
@@ -93,61 +90,53 @@ const moveBandits = moveBanditsAuthoring.interaction({
         throw new Error("Eligible Bandits victim has no supply cards.");
       }
       const resourceId = random.subset({ from: cards, count: 1 })[0]!;
-      const transferTx = edit(next);
-      transferTx.transferResources({
+      tx.transferResources({
         fromPlayerId: victimPlayerId,
         toPlayerId: ownerPlayerId,
         amounts: { [resourceId]: 1 },
       });
-      transferTx.patchPublicState({
+      tx.patchPublicState({
         lastSteal: {
           thiefPlayerId: ownerPlayerId,
           victimPlayerId,
         },
       });
-      next = patchPrivateState(transferTx.state, ownerPlayerId, {
+      patchPrivateState(tx, ownerPlayerId, {
         lastStolenResourceId: resourceId,
       });
-      next = patchPrivateState(next, victimPlayerId, {
+      patchPrivateState(tx, victimPlayerId, {
         lastStolenResourceId: resourceId,
       });
     } else {
-      const publicTx = edit(next);
-      publicTx.patchPublicState({ lastSteal: null });
-      next = publicTx.state;
+      tx.patchPublicState({ lastSteal: null });
     }
-    next = appendHistory(next, {
+    appendHistory(tx, {
       kind: "bandits",
       actorPlayerId: ownerPlayerId,
       summary: victimPlayerId
         ? `${ownerPlayerId} moved the Bandits and stole one supply from ${victimPlayerId}.`
         : `${ownerPlayerId} moved the Bandits without a victim.`,
     });
-    const finalTx = edit(next);
-    finalTx.setActivePlayers([ownerPlayerId]);
-    return accept(finalTx.state, {
-      instructions: [fx.transition("main")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-bandits",
-          title: "Bandits moved",
-          summary: victimPlayerId
-            ? `${ownerPlayerId} stole one hidden supply from ${victimPlayerId}.`
-            : `${ownerPlayerId} moved to ${input.params.hexId} without stealing.`,
-        }),
-      ],
-    });
+    tx.setActivePlayers([ownerPlayerId]);
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-bandits",
+        title: "Bandits moved",
+        summary: victimPlayerId
+          ? `${ownerPlayerId} stole one hidden supply from ${victimPlayerId}.`
+          : `${ownerPlayerId} moved to ${input.params.hexId} without stealing.`,
+      }),
+    );
+    return tx.transition("main");
   },
 });
 
-export const moveBanditsPhase = moveBanditsAuthoring.define({
+export default moveBanditsPhase.define({
   kind: "player",
   initialState: () => ({}),
   actor: ({ state, q }) => turnOwnerPlayerId(state, q),
-  enter({ state, accept, q }) {
-    const tx = edit(state);
+  enter({ state, tx, q }) {
     tx.setActivePlayers([turnOwnerPlayerId(state, q)]);
-    return accept(tx.state);
   },
   interactions: { moveBandits },
 });

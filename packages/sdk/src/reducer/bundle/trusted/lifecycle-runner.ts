@@ -1,3 +1,4 @@
+import { resultStateOf } from "./trusted-runtime-args";
 import { safeParseOrThrow } from "../../parse-utils";
 import { applySetupBootstrap } from "../../setup-bootstrap";
 import { createStateQueries } from "../../table-queries";
@@ -159,18 +160,17 @@ export function createLifecycleRunner<
     const consumptions: RngConsumption[] = [];
     if (phase.enter) {
       const random = createMutableRandomHelpers(workingState.runtime.rng);
+      const enterArgs = scope.buildRuntimeArgs(
+        workingState,
+        {
+          event,
+          state: scope.toDomainState(workingState),
+        },
+        { random: random.random },
+      );
       const entered = normalizeResult(
-        phase.enter(
-          scope.buildRuntimeArgs(
-            workingState,
-            {
-              event,
-              state: scope.toDomainState(workingState),
-            },
-            { random: random.random },
-          ),
-        ),
-        scope.toDomainState(workingState),
+        phase.enter(enterArgs),
+        resultStateOf(enterArgs),
       );
       if (entered.type === "reject") {
         throw new Error(
@@ -191,18 +191,17 @@ export function createLifecycleRunner<
     const activeStage = interactions.resolveActiveStage(nextState, phaseName);
     if (activeStage?.stage.onEnter) {
       const random = createMutableRandomHelpers(nextState.runtime.rng);
+      const stageArgs = scope.buildRuntimeArgs(
+        nextState,
+        {
+          event,
+          state: scope.toDomainState(nextState),
+        },
+        { random: random.random },
+      );
       const stageEntered = normalizeResult(
-        activeStage.stage.onEnter(
-          scope.buildRuntimeArgs(
-            nextState,
-            {
-              event,
-              state: scope.toDomainState(nextState),
-            },
-            { random: random.random },
-          ),
-        ),
-        scope.toDomainState(nextState),
+        activeStage.stage.onEnter(stageArgs),
+        resultStateOf(stageArgs),
       );
       if (stageEntered.type === "reject") {
         throw new Error(
