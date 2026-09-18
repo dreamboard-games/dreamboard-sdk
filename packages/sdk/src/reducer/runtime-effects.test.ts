@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -5,7 +6,6 @@ import {
   defineDerived,
   defineEmptyView,
   defineEffect,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePlayerView,

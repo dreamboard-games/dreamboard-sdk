@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -8,7 +9,6 @@ import {
   createReducerBundle,
   defineCardAction,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInputs,
   defineInteraction,

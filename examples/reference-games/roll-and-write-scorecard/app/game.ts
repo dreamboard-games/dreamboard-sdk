@@ -1,4 +1,4 @@
-import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { defineGameDefinition as defineGame } from "@dreamboard-games/sdk/reducer/advanced";
 import { gameContract } from "./game-contract";
 import { createInitialPublicState } from "./model";
 import { phases } from "./phases";

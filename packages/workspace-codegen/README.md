@@ -21,16 +21,14 @@ The integration tests run `tsc` against generated output in temp projects and
 symlink `packages/sdk` by repo path — they need the SDK's `dist/` built first
 (wired via this package's `turbo.json` test dependency).
 
-## Ownership And Materialization
+## Ownership And Generation
 
 The manifest and authored game, UI, and typed scenario files are source.
 Workspace contracts such as `shared/generated/**` are deterministic local
 build products owned by `ownership.ts`; consumers must regenerate them rather
 than edit or commit them. Reference-game `dev`, `typecheck`, and test commands
-run their package-local `materialize` prerequisite automatically. Repository
-tools that need all nine games call
-`scripts/reference-games/materialize-workspace.mjs` before reading generated
-contracts.
+run their package-local `generate` prerequisite automatically. Repository
+tools use the SDK generator before reading generated contracts.
 
 The public CLI reaches this engine only through the published SDK codegen
 surface. There is no separate testing generator and no generated base-state

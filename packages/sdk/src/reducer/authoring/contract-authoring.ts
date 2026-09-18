@@ -60,7 +60,7 @@ import type {
   ContractState,
   InferPhaseState,
 } from "./types";
-import { defineGame } from "./game";
+import { defineGameDefinition } from "./game";
 import {
   defineCardAction,
   defineInteraction,
@@ -593,7 +593,7 @@ export function createContractAuthoring<
   const phaseCache = new Map<string, unknown>();
   return {
     contract,
-    game: (definition) => defineGame({ contract, ...definition }),
+    game: (definition) => defineGameDefinition({ contract, ...definition }),
     sharedView: (definition) => defineSharedView<Contract>()(definition),
     playerView: (definition) => definePlayerView<Contract>()(definition),
     emptyView: () => defineEmptyView<Contract>(),

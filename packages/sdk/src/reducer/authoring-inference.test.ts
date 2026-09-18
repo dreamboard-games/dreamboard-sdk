@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   createContractAuthoring,
   defineEmptyView,
+  defineGame,
   defineGameContract,
   defineInteraction,
 } from "../reducer";
@@ -22,13 +23,13 @@ type Equal<Left, Right> =
     : false;
 type Expect<Value extends true> = Value;
 
-function createContract() {
+function createModel() {
   const playerIds = ["player-1", "player-2"] as const;
   const phaseNames = ["setup", "playerTurn"] as const;
   const cardIds = ["card-1"] as const;
   const cardTypes = ["standard"] as const;
   const handIds = ["hand"] as const;
-  return defineGameContract({
+  return {
     manifest: {
       literals: {
         playerIds,
@@ -130,8 +131,77 @@ function createContract() {
       setup: z.object({}),
       playerTurn: z.object({ rolled: z.boolean() }),
     },
-  });
+  };
 }
+
+function createContract() {
+  return defineGameContract(createModel());
+}
+
+describe("defineGame", () => {
+  test("stages model inference before contextually typing the implementation", () => {
+    const game = defineGame(createModel(), (authoring) => {
+      const setup = authoring.phase("setup");
+      const playerTurn = authoring.phase("playerTurn");
+
+      return {
+        initial: {
+          public: ({ playerIds }) => ({
+            currentPlayerId: playerIds[0] ?? null,
+          }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "setup",
+        phases: {
+          setup: setup.define({
+            kind: "player",
+            initialState: () => ({}),
+            interactions: {},
+          }),
+          playerTurn: playerTurn.define({
+            kind: "player",
+            initialState: () => ({ rolled: false }),
+            actor: ({ state }) => state.publicState.currentPlayerId,
+            interactions: {
+              chooseMood: playerTurn.interaction({
+                inputs: {
+                  mood: playerTurn.inputs.form.choice({
+                    choices: [
+                      { value: "ready", label: "Ready" },
+                      { value: "wait", label: "Wait" },
+                    ],
+                    defaultValue: "ready",
+                  }),
+                  dice: playerTurn.inputs.rng.d6(),
+                },
+                reduce: ({ state, accept }) => accept(state),
+              }),
+            },
+          }),
+        },
+        views: {
+          shared: authoring.emptyView(),
+          player: authoring.emptyView(),
+        },
+      };
+    });
+
+    type PhaseNames = PhaseNamesOfDefinition<typeof game>;
+    type Params = ClientParamsOfInteractionOfDefinition<
+      typeof game,
+      "playerTurn",
+      "chooseMood"
+    >;
+    const typeAssertions = [true, true] satisfies [
+      Expect<Equal<PhaseNames, "setup" | "playerTurn">>,
+      Expect<Equal<Params, { mood: "ready" | "wait" }>>,
+    ];
+
+    expect(game.contract.phaseNames).toEqual(["setup", "playerTurn"]);
+    expect(typeAssertions).toEqual([true, true]);
+  });
+});
 
 describe("createContractAuthoring", () => {
   test("delegates bound interaction factories to the curried implementation", () => {

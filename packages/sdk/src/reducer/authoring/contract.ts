@@ -20,7 +20,7 @@ import {
  * union and flows through `fx.transition`, `PhaseMapOf`, and the flow
  * state's `currentPhase`.
  */
-type NarrowManifestPhaseNames<
+export type NarrowManifestPhaseNames<
   Manifest,
   PhaseNames extends readonly string[],
 > = Manifest & {
@@ -32,7 +32,7 @@ type NarrowManifestPhaseNames<
     : { phaseName: z.ZodType<PhaseNames[number]> };
 };
 
-type ReducerGameContractInput<
+export type ReducerGameContractInput<
   Table extends RuntimeTableRecord,
   Manifest extends ReducerManifestContract<
     Table,
@@ -52,6 +52,41 @@ type ReducerGameContractInput<
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
   errors?: Errors;
+};
+
+export type DefinedGameContract<
+  Table extends RuntimeTableRecord,
+  Manifest extends ReducerManifestContract<
+    Table,
+    string,
+    string,
+    string,
+    string,
+    string
+  >,
+  PublicSchema extends SchemaLike<object>,
+  PrivateSchema extends SchemaLike<object>,
+  HiddenSchema extends SchemaLike<object>,
+  Phases extends Record<string, SchemaLike<object>>,
+  Errors extends Record<string, string> | undefined = undefined,
+> = ReducerGameContract<
+  Table,
+  NarrowManifestPhaseNames<Manifest, readonly (keyof Phases & string)[]>,
+  PublicSchema,
+  PrivateSchema,
+  HiddenSchema,
+  Phases,
+  Errors
+> & {
+  readonly phases: Phases;
+  readonly errors: Errors;
+  readonly phaseNames: readonly (keyof Phases & string)[];
+  readonly schemas: ManifestIdSchemasOf<
+    NarrowManifestPhaseNames<
+      Manifest,
+      readonly (keyof Phases & string)[]
+    >["ids"]
+  >;
 };
 
 function validateErrorMap(errors: Record<string, string> | undefined): void {
@@ -96,31 +131,15 @@ export function defineGameContract<
     Phases,
     Errors
   >,
-): ReducerGameContract<
+): DefinedGameContract<
   Table,
-  NarrowManifestPhaseNames<Manifest, readonly (keyof Phases & string)[]>,
+  Manifest,
   PublicSchema,
   PrivateSchema,
   HiddenSchema,
   Phases,
   Errors
-> & {
-  readonly phases: Phases;
-  readonly errors: Errors;
-  readonly phaseNames: readonly (keyof Phases & string)[];
-  /**
-   * Ergonomic shortcut to the manifest-backed Zod id schemas. Equivalent to
-   * `definition.manifest.ids`. Prefer `gameContract.schemas.playerId` etc.
-   * over re-importing the generated `ids` namespace so that every authored
-   * schema is anchored to the same SDK-guided source.
-   */
-  readonly schemas: ManifestIdSchemasOf<
-    NarrowManifestPhaseNames<
-      Manifest,
-      readonly (keyof Phases & string)[]
-    >["ids"]
-  >;
-} {
+> {
   validateStateSchemaIdBranding(definition.state.public, "public");
   validateStateSchemaIdBranding(definition.state.private, "private");
   validateStateSchemaIdBranding(definition.state.hidden, "hidden");
@@ -161,24 +180,14 @@ export function defineGameContract<
     errors: definition.errors,
     phaseNames,
     schemas: narrowedManifest.ids,
-  } as ReducerGameContract<
+  } as DefinedGameContract<
     Table,
-    NarrowManifestPhaseNames<Manifest, readonly (keyof Phases & string)[]>,
+    Manifest,
     PublicSchema,
     PrivateSchema,
     HiddenSchema,
     Phases,
     Errors
-  > & {
-    readonly phases: Phases;
-    readonly errors: Errors;
-    readonly phaseNames: readonly (keyof Phases & string)[];
-    readonly schemas: ManifestIdSchemasOf<
-      NarrowManifestPhaseNames<
-        Manifest,
-        readonly (keyof Phases & string)[]
-      >["ids"]
-    >;
-  };
+  >;
   return contract;
 }
