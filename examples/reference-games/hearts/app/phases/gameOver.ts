@@ -1,8 +1,8 @@
-import { gameOverPhaseStateSchema, type GameContract } from "../game-contract";
-import { definePhase } from "@dreamboard-games/sdk/reducer";
+import { hearts } from "../game-model";
 
-export const gameOver = definePhase<GameContract>()({
+const gameOver = hearts.phase("gameOver");
+
+export default gameOver.define({
   kind: "auto",
-  state: gameOverPhaseStateSchema,
   initialState: () => ({}),
 });

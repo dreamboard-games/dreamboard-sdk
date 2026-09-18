@@ -331,6 +331,18 @@ export function normalizeResult<State>(
   if (result === undefined || result === null) {
     return acceptResult(fallbackState);
   }
+  if (result.type === "accept") {
+    // Results built by `tx.accept()` / `tx.transition()` / `tx.endGame()`
+    // arrive raw; apply the same limits as the legacy `accept` helper.
+    return {
+      ...result,
+      instructions: [...(result.instructions ?? [])],
+      events: normalizeGameEvents(result.events),
+      ...(result.terminal
+        ? { terminal: normalizeGameOutcome(result.state, result.terminal) }
+        : {}),
+    };
+  }
   return result;
 }
 

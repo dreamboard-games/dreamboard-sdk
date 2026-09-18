@@ -109,10 +109,12 @@ export type ReducerStateBase = {
 type PipeTable<State extends ReducerStateBase> = TableOfState<State>;
 
 /**
- * A shallow patch for a slice of state. Either a partial object to merge
- * over the previous value, or a functional updater `(prev) => next`.
+ * Shallow patch or functional updater for one state slice. The updater is a
+ * method-style callable so a transaction over a phase-scoped state stays
+ * assignable to one over the base game state; a plain function type would be
+ * invariant in `T` under `strictFunctionTypes`.
  */
-export type StatePatch<T> = Partial<T> | ((prev: T) => T);
+export type StatePatch<T> = Partial<T> | { update(prev: T): T }["update"];
 
 /**
  * Curried writer namespace for a specific game state type.

@@ -6,7 +6,7 @@ import type {
   SpaceId,
   VertexId,
 } from "../shared/manifest-contract.ts";
-import type { ResourceCounts } from "../app/game-contract.ts";
+import type { ResourceCounts } from "../app/game-model.ts";
 
 export type StormtrailCommand = ScenarioCommandOf<typeof game>;
 

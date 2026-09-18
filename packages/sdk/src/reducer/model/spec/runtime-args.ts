@@ -10,16 +10,10 @@ import type {
 import type {
   AnyContinuationToken,
   ContinuationToken,
-  ReducerAccept,
-  ReducerAcceptOptions,
-  ReducerFx,
-  ReducerReject,
   ReducerResult,
   ReducerRuntimeStateForState,
-  GameOutcome,
 } from "../runtime";
 import type { TableQueriesOfState } from "../queries";
-import type { ReducerOps } from "../../ops";
 import type { ReducerTransaction } from "../../transaction";
 import type { DerivedResolver } from "../../derived";
 
@@ -160,25 +154,13 @@ export type ValidationIssue<ErrorCode extends string = string> = {
   message?: string;
 };
 
-export type RuntimeHelpers<
+/**
+ * Read-only helpers available to every callback, including views, actor
+ * selectors, and interaction rules.
+ */
+export type ReadHelpers<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  ErrorCode extends string = string,
 > = {
-  accept(
-    state: State,
-    options?: ReducerAcceptOptions<State>,
-  ): ReducerAccept<State>;
-  endGame(
-    state: State,
-    outcome: GameOutcome<PlayerIdOfState<State>>,
-    options?: ReducerAcceptOptions<State>,
-  ): ReducerAccept<State>;
-  reject: (errorCode: ErrorCode, message?: string) => ReducerReject;
-  fx: ReducerFx<State>;
-  ops: ReducerOps<State>;
-  edit<DraftState extends State>(
-    state: DraftState,
-  ): ReducerTransaction<DraftState>;
   q: TableQueriesOfState<State>;
   derived: DerivedResolver;
 };
@@ -191,16 +173,27 @@ export type RandomHelpers = {
   }): readonly Values[number][];
 };
 
-export type MutationRuntimeHelpers = {
+/**
+ * Helpers available only to mutation callbacks (`enter`, `reduce`, `resolve`,
+ * continuations). `tx` is the open transaction: mutate through it and end the
+ * callback with a bare `return`, `tx.transition(...)`, `tx.endGame(...)`, or
+ * `tx.reject(...)`.
+ */
+export type MutationHelpers<
+  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
+  ErrorCode extends string = string,
+> = {
+  tx: ReducerTransaction<State, ErrorCode>;
   random: RandomHelpers;
 };
 
 export type PhaseEnterArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
+  ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> &
-  MutationRuntimeHelpers &
+  ReadHelpers<State> &
+  MutationHelpers<State, ErrorCode> &
   PhaseEnterContext & {
     state: State;
   };
@@ -209,7 +202,7 @@ export type ActorSelectorArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> & {
+  ReadHelpers<State> & {
     state: State;
   };
 
@@ -235,8 +228,8 @@ export type ContinuationReduceArgs<
   Manifest extends ManifestContract<TableOfState<State>>,
   EffectType extends ResumableEffectKind = ResumableEffectKind,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> &
-  MutationRuntimeHelpers & {
+  ReadHelpers<State> &
+  MutationHelpers<State> & {
     state: State;
     input: ContinuationInputForSource<DataSchema, EffectType>;
   };

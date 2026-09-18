@@ -3,12 +3,22 @@
 The authored reducer is intentionally small and rule-shaped:
 
 ```text
-game-contract.ts   schemas, phase state, errors, and terminal outcome
-game.ts            initial state, setup profile, phases, and views
+game-model.ts      hearts = createGame({ manifest, state, phases, errors }); GameState = typeof hearts.types.State
+game.ts            hearts.assemble({ initial, setupProfiles, phases, views })
 rules.ts           pure card legality, trick comparison, scoring, and ranking
-phases/            automatic setup/scoring plus the two canonical interactions
-player-view.ts     public table projection and owner-only hand projection
+phases/            one file per phase: const x = hearts.phase("x"); export default x.define(...)
+player-view.ts     hearts.views.shared(...) and hearts.views.player(...)
 ```
+
+`game-model.ts` binds the model once. Every other module imports the `hearts`
+value from it: phase files call `hearts.phase("<name>")`, views call
+`hearts.views.*`, and rules name types through `typeof hearts.types.*`. Nothing
+imports `game.ts` except the test harness, so there is no import cycle.
+
+Reducers receive an open transaction `tx`, mutate through it, and finish with a
+bare `return` (accept), `tx.transition(...)`, or `tx.endGame(...)`. Card inputs
+name their zones and eligibility predicates directly:
+`playing.inputs.card({ from: ["hand"], where })`.
 
 Only `passing.submit` and `playing.playCard` are player decisions. Setup, pass
 resolution, trick resolution, scoring, and outcome publication remain automatic

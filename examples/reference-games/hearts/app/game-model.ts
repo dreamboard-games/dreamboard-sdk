@@ -1,9 +1,4 @@
-import {
-  defineGameContract,
-  type ErrorCodeOfContract,
-  type GameOutcome,
-  type GameStateOf,
-} from "@dreamboard-games/sdk/reducer";
+import { createGame, type GameOutcome } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { ids, manifestContract } from "../shared/manifest-contract";
 
@@ -69,7 +64,13 @@ export const playingPhaseStateSchema = z.object({
 export const scoreHandPhaseStateSchema = z.object({});
 export const gameOverPhaseStateSchema = z.object({});
 
-export const gameContract = defineGameContract({
+/**
+ * The Hearts game: manifest ids, state schemas, phase-state schemas, and error
+ * codes, bound once. Phase files call `hearts.phase("<name>")`, views call
+ * `hearts.views.*`, `game.ts` calls `hearts.assemble(...)`, and every module
+ * names types through `typeof hearts.types.*`.
+ */
+export const hearts = createGame({
   manifest: manifestContract,
   state: {
     public: publicStateSchema,
@@ -94,9 +95,8 @@ export const gameContract = defineGameContract({
   },
 });
 
-export type GameContract = typeof gameContract;
-export type GameState = GameStateOf<GameContract>;
-export type GameErrorCode = ErrorCodeOfContract<GameContract>;
+export type GameState = typeof hearts.types.State;
+export type GameErrorCode = typeof hearts.types.ErrorCode;
 export type PublicState = z.infer<typeof publicStateSchema>;
 export type TrickPlay = z.infer<typeof trickPlaySchema>;
 export type CompletedTrick = z.infer<typeof completedTrickSchema>;

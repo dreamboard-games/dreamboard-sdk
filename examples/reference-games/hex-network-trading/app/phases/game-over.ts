@@ -1,6 +1,8 @@
-import { gameOverAuthoring } from "../authoring";
+import { stormtrail } from "../game-model";
 
-export const gameOver = gameOverAuthoring.define({
+const gameOver = stormtrail.phase("gameOver");
+
+export default gameOver.define({
   kind: "auto",
   initialState: () => ({}),
 });

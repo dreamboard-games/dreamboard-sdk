@@ -12,9 +12,9 @@ import type {
   ActionContext,
   ActorSelector,
   BivariantCallback,
-  MutationRuntimeHelpers,
+  MutationHelpers,
   PhaseEnterArgs,
-  RuntimeHelpers,
+  ReadHelpers,
   ValidationIssue,
 } from "./runtime-args";
 import type { ClientParamsOf, InputCollector, ParamsOf } from "./inputs";
@@ -31,9 +31,8 @@ export type InteractionValidateArgs<
   Collectors extends Record<string, InputCollector>,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
-  ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State, ErrorCode> & {
+  ReadHelpers<State> & {
     state: State;
     input: InteractionReduceInput<Collectors, State>;
   };
@@ -43,14 +42,14 @@ export type InteractionReduceArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
-> = InteractionValidateArgs<Collectors, State, Manifest, ErrorCode> &
-  MutationRuntimeHelpers;
+> = InteractionValidateArgs<Collectors, State, Manifest> &
+  MutationHelpers<State, ErrorCode>;
 
 export type InteractionAvailabilityArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> & {
+  ReadHelpers<State> & {
     state: State;
     input: { playerId: PlayerIdOfState<State> };
   };
@@ -104,7 +103,7 @@ export type InteractionRule<
    * ValidationIssue, null, or undefined.
    */
   validate?: BivariantCallback<
-    InteractionValidateArgs<Collectors, State, Manifest, ErrorCode>,
+    InteractionValidateArgs<Collectors, State, Manifest>,
     InteractionRuleValidationResult<ErrorCode>
   >;
 };
@@ -217,7 +216,7 @@ export type InteractionSpec<
   visibility?: "all" | "actorsOnly";
   errorCodes?: readonly ErrorCode[];
   cost?: BivariantCallback<
-    InteractionValidateArgs<Collectors, State, Manifest, ErrorCode>,
+    InteractionValidateArgs<Collectors, State, Manifest>,
     Readonly<Record<string, number>>
   >;
   rules?: readonly InteractionRule<
@@ -228,7 +227,7 @@ export type InteractionSpec<
   >[];
   reduce: BivariantCallback<
     InteractionReduceArgs<Collectors, State, Manifest, ErrorCode>,
-    ReducerResult<State>
+    ReducerResult<State> | void
   >;
 };
 
@@ -272,8 +271,7 @@ export type CardActionSpec<
     InteractionValidateArgs<
       Collectors & { cardId: InputCollector<SchemaLike<CardIdOfState<State>>> },
       State,
-      Manifest,
-      ErrorCode
+      Manifest
     >,
     Readonly<Record<string, number>>
   >;
@@ -317,7 +315,7 @@ export type AnyCardActionSpec<
   actor?: BivariantCallback<any, any>;
   cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
   rules?: readonly AnyInteractionRule[];
-  reduce: BivariantCallback<any, ReducerResult<any>>;
+  reduce: BivariantCallback<any, ReducerResult<any> | void>;
 };
 
 export type CardActionMap<
@@ -341,7 +339,7 @@ export type AnyInteractionSpec<
   actor?: BivariantCallback<any, any>;
   cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
   rules?: readonly AnyInteractionRule[];
-  reduce: BivariantCallback<any, ReducerResult<any>>;
+  reduce: BivariantCallback<any, ReducerResult<any> | void>;
   to?: BivariantCallback<any, any>;
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */

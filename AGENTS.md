@@ -1,6 +1,6 @@
 # Dreamboard SDK Agent Guide
 
-This repository owns the public `@dreamboard-games/sdk` package, nine reference
+This repository owns the public `@dreamboard-games/sdk` package, the reference
 games, UI fixtures, Storybook, and the SDK UI Workbench. Keep operational rules
 here; put durable design explanations in `docs/`.
 
@@ -77,7 +77,11 @@ pnpm reference hearts
 pnpm reference
 ```
 
-The focused form verifies one game. The default verifies all nine. Both validate
+The focused form verifies one game. The default verifies every game that is not
+listed in `LEGACY_REFERENCE_GAMES` (`scripts/reference/games.ts`). The seven
+games on that list still use the removed contract-first authoring API; they
+stay on disk as conversion material, are skipped by `pnpm check` and the UI
+lane, and can be verified in isolation by id once converted. Both forms validate
 the checked-in lockfile, pack the SDK once, install the selected game copies
 against that tarball, materialize, typecheck, and run reducer and UI tests.
 After publishing, run `pnpm reference pin <version>` to atomically repin every
@@ -91,9 +95,9 @@ game manifest and lockfile to one exact npm version.
   Add `--source` only for the local HMR loop; proof paths consume the built SDK.
 - Use `pnpm ui test --scenario <id>` for one focused Workbench scenario.
 - Use `pnpm ui test` for Storybook checks, the complete browser-driver and
-  keyboard suites, and the two interaction smoke scenarios:
-  `hearts.dealt-hand.desktop` and
-  `roll-and-write-scorecard.mark-cell.mobile`.
+  keyboard suites, and the two smoke scenarios: `hearts.dealt-hand.desktop`
+  and `hearts.final-outcome.mobile`. The mobile smoke is a projection-only
+  scenario until a converted game provides a mobile interaction scenario.
 - Use `pnpm ui test --all` to add every authored Workbench scenario.
 - Use `pnpm ui snapshots update` only when intentionally accepting new tracked
   Storybook baselines.
@@ -107,8 +111,8 @@ traces, and video are ordinary failure artifacts.
 ## Release verification
 
 `pnpm release:verify` runs the shared core checks, creates one SDK tarball,
-smokes that artifact, and verifies all nine reference games against the same
-file. It writes the immutable candidate description to
+smokes that artifact, and verifies the non-legacy reference games against the
+same file. It writes the immutable candidate description to
 `build/release/candidate/candidate.json`.
 
 Browser UI verification remains a separate CI lane. Run `pnpm ui test` for a

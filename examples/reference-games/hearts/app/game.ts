@@ -1,12 +1,14 @@
-import { defineGameDefinition as defineGame } from "@dreamboard-games/sdk/reducer/advanced";
 import type { PlayerId } from "../shared/manifest-contract";
-import { gameContract } from "./game-contract";
-import { phases } from "./phases";
+import { hearts } from "./game-model";
+import gameOver from "./phases/gameOver";
+import passing from "./phases/passing";
+import playing from "./phases/playing";
+import scoreHand from "./phases/scoreHand";
+import setup from "./phases/setup";
 import { playerView, sharedView } from "./player-view";
 import setupProfiles from "./setup-profiles";
 
-export default defineGame({
-  contract: gameContract,
+export default hearts.assemble({
   initial: {
     public: ({ playerIds }) => ({
       playerIds: playerIds as PlayerId[],
@@ -32,9 +34,6 @@ export default defineGame({
   },
   initialPhase: "setup",
   setupProfiles,
-  phases,
-  views: {
-    shared: sharedView,
-    player: playerView,
-  },
+  phases: { setup, passing, playing, scoreHand, gameOver },
+  views: { shared: sharedView, player: playerView },
 });

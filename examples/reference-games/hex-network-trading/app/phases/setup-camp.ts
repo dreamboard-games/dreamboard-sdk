@@ -1,18 +1,19 @@
-import type { VertexId } from "../../shared/manifest-contract";
-import { setupCampAuthoring } from "../authoring";
-import { startingCampTarget } from "../eligibility";
+import { emptyIntersection } from "../eligibility";
 import {
   appendHistory,
   detachedPiece,
-  edit,
   setupPlayerId,
   systemEvent,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const placeStartingCamp = setupCampAuthoring.interaction({
+const setupCamp = stormtrail.phase("setupCamp");
+
+const placeStartingCamp = setupCamp.interaction({
   inputs: {
-    intersectionId: setupCampAuthoring.inputs.board.vertex<VertexId>({
-      target: startingCampTarget,
+    intersectionId: setupCamp.inputs.board.vertex({
+      boardId: "frontier",
+      where: emptyIntersection,
     }),
   },
   rules: [
@@ -23,10 +24,9 @@ const placeStartingCamp = setupCampAuthoring.interaction({
         detachedPiece(state, input.playerId, "camp") !== null,
     },
   ],
-  reduce({ state, input, accept, fx }) {
+  reduce({ state, tx, input }) {
     const campId = detachedPiece(state, input.playerId, "camp");
     if (!campId) throw new Error("Starting camp piece is unavailable.");
-    const tx = edit(state);
     tx.moveComponentToVertex({
       componentId: campId,
       boardId: "frontier",
@@ -41,30 +41,27 @@ const placeStartingCamp = setupCampAuthoring.interaction({
           }
         : null,
     }));
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "startingCamp",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} established a starting camp.`,
     });
-    return accept(next, {
-      instructions: [fx.transition("setupTrail")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-setup",
-          title: "Starting camp placed",
-          summary: `${input.playerId} chose ${input.params.intersectionId}.`,
-        }),
-      ],
-    });
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-setup",
+        title: "Starting camp placed",
+        summary: `${input.playerId} chose ${input.params.intersectionId}.`,
+      }),
+    );
+    return tx.transition("setupTrail");
   },
 });
 
-export const setupCamp = setupCampAuthoring.define({
+export default setupCamp.define({
   kind: "player",
   initialState: () => ({}),
   actor: ({ state, q }) => setupPlayerId(state, q),
-  enter({ state, accept, event, q }) {
-    const tx = edit(state);
+  enter({ tx, event, q }) {
     if (event === "initialize") {
       tx.moveComponentToSpace({
         componentId: "bandits",
@@ -73,7 +70,6 @@ export const setupCamp = setupCampAuthoring.define({
       });
     }
     tx.setActivePlayers([setupPlayerId(tx.state, q)]);
-    return accept(tx.state);
   },
   interactions: { placeStartingCamp },
 });

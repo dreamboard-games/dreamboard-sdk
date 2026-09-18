@@ -1,5 +1,6 @@
 import type {
   PhaseMapOf,
+  PhaseNameOfContract,
   ReducerGameDefinition,
   ReducerManifestContract,
   RuntimeTableRecord,
@@ -34,6 +35,66 @@ export function defineGameDefinition<
   validateDefineGameZoneWiring(definition);
   return definition;
 }
+
+/**
+ * Creates the bound authoring object for a model without assembling the game.
+ *
+ * This is the module-level primitive behind {@link defineGame}: the returned
+ * value is the type leaf (`typeof game.types.State`), the factory namespace
+ * (`game.phase(name)`, `game.views.*`), and the assembler (`game.assemble`).
+ * Phase files import it directly, so no factory wrappers or `*AuthoringOf`
+ * parameter types are needed.
+ */
+export function createGame<
+  Table extends RuntimeTableRecord,
+  const Manifest extends ReducerManifestContract<
+    Table,
+    string,
+    string,
+    string,
+    string,
+    string
+  >,
+  PublicSchema extends SchemaLike<object>,
+  PrivateSchema extends SchemaLike<object>,
+  HiddenSchema extends SchemaLike<object>,
+  const Phases extends Record<string, SchemaLike<object>>,
+  const Errors extends Record<string, string> | undefined = undefined,
+>(
+  model: ReducerGameContractInput<
+    Table,
+    Manifest,
+    PublicSchema,
+    PrivateSchema,
+    HiddenSchema,
+    Phases,
+    Errors
+  >,
+): import("./contract-authoring").GameAuthoring<
+  DefinedGameContract<
+    Table,
+    Manifest,
+    PublicSchema,
+    PrivateSchema,
+    HiddenSchema,
+    Phases,
+    Errors
+  >
+> {
+  return createContractAuthoring(defineGameContract(model));
+}
+
+/**
+ * Rejects phase keys that the model did not declare. `PhaseMapOf<Contract>`
+ * already requires every declared phase; this closes the other direction so
+ * an extra key fails at the `defineGame` return instead of at runtime.
+ */
+type NoUndeclaredPhases<Contract, Definitions> = {
+  [Name in Exclude<
+    keyof Definitions,
+    PhaseNameOfContract<Contract>
+  >]: `Phase '${Name & string}' is not declared in model.phases`;
+};
 
 /**
  * Defines the complete game through two deliberate inference stages.
@@ -88,13 +149,21 @@ export function defineGame<
     Errors
   >,
   implement: (
-    game: import("./contract-authoring").ContractAuthoring<Contract>,
-  ) => Omit<ReducerGameDefinition<Contract, Definitions, Views>, "contract">,
+    game: import("./contract-authoring").GameAuthoring<Contract>,
+  ) => Omit<ReducerGameDefinition<Contract, Definitions, Views>, "contract"> & {
+    phases: NoUndeclaredPhases<Contract, Definitions>;
+  },
 ): ReducerGameDefinition<Contract, Definitions, Views> {
   const contract = defineGameContract(model) as Contract;
   const authoring = createContractAuthoring(contract);
-  return defineGameDefinition({
+  // The intersection with `NoUndeclaredPhases` only exists to reject extra
+  // keys at the call site; the assembled definition keeps the inferred map.
+  const implemented: Omit<
+    ReducerGameDefinition<Contract, Definitions, Views>,
+    "contract"
+  > = implement(authoring);
+  return defineGameDefinition<Contract, Definitions, Views>({
     contract,
-    ...implement(authoring),
+    ...implemented,
   });
 }

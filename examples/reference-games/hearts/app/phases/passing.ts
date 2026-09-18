@@ -1,32 +1,16 @@
+import { many } from "@dreamboard-games/sdk/reducer";
 import type { CardId } from "../../shared/manifest-contract";
-import {
-  passingPhaseStateSchema,
-  type GameContract,
-  type GameState,
-} from "../game-contract";
-import {
-  cardInput,
-  cardTarget,
-  definePhase,
-  many,
-} from "@dreamboard-games/sdk/reducer";
-
-// `cardTarget.zones(["hand"])` filters eligible cards to the actor's own
-// per-player hand zone, so each seated player can only nominate a card they
-// actually hold. The trusted runtime evaluates the rule per-actor when
-// projecting eligible targets and again at submit-validation time.
-const handCardTarget = cardTarget
-  .zones<GameState, CardId, readonly ["hand"]>(["hand"])
-  .build();
+import { hearts } from "../game-model";
 
 // Simultaneous-pass barrier: every seated player picks three cards, the trusted
 // runtime seals each submission until all four are in, then `resolve` runs
 // once with every submission and we redistribute the cards atomically.
 // The pass direction is "left" — each player passes to the next seat in turn
 // order, with wrap-around.
-export const passing = definePhase<GameContract>()({
+const passing = hearts.phase("passing");
+
+export default passing.define({
   kind: "simultaneousPlayer",
-  state: passingPhaseStateSchema,
   initialState: () => ({}),
   actors: ({ q }) => q.player.order(),
   zones: ["hand"],
@@ -37,18 +21,16 @@ export const passing = definePhase<GameContract>()({
     },
     commit: { mode: "manual" },
     inputs: {
-      cardIds: many(
-        cardInput<GameState, CardId, readonly ["hand"]>({
-          target: handCardTarget,
-        }),
-        {
-          count: 3,
-          distinct: true,
-        },
-      ),
+      // `from: ["hand"]` limits candidates to the actor's own hand, so each
+      // seated player can only nominate cards they actually hold. The trusted
+      // runtime evaluates it per-actor for eligibility and again at submit.
+      cardIds: many(passing.inputs.card({ from: ["hand"] }), {
+        count: 3,
+        distinct: true,
+      }),
     },
   },
-  resolve({ state, submissions, accept, edit, fx, q }) {
+  resolve({ tx, submissions, q }) {
     const order = q.player.order();
     const cardIdsByPlayer: Partial<
       Record<(typeof order)[number], readonly CardId[]>
@@ -58,7 +40,6 @@ export const passing = definePhase<GameContract>()({
       cardIdsByPlayer[submission.playerId] = submission.params.cardIds;
     }
 
-    const tx = edit(state);
     tx.rotatePlayerZone({
       zoneId: "hand",
       direction: "left",
@@ -67,6 +48,6 @@ export const passing = definePhase<GameContract>()({
     });
 
     tx.setActivePlayers([]);
-    return accept(tx.state, { instructions: [fx.transition("playing")] });
+    return tx.transition("playing");
   },
 });

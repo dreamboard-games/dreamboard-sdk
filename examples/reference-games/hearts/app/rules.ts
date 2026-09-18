@@ -1,12 +1,14 @@
 import type { CardId, PlayerId } from "../shared/manifest-contract";
-import type {
-  GameErrorCode,
-  GameState,
-  HeartsOutcome,
-  PublicState,
-  Suit,
-} from "./game-contract";
-import type { TableQueriesOfState } from "@dreamboard-games/sdk/reducer";
+import {
+  hearts,
+  type GameErrorCode,
+  type GameState,
+  type HeartsOutcome,
+  type PublicState,
+  type Suit,
+} from "./game-model";
+
+type Q = typeof hearts.types.Queries;
 
 const RANK_VALUE: Readonly<Record<string, number>> = {
   "2": 2,
@@ -36,7 +38,7 @@ type CardPlayIssue = {
   readonly message: string;
 };
 
-function cardProperties(q: TableQueriesOfState<GameState>, cardId: CardId) {
+function cardProperties(q: Q, cardId: CardId) {
   const properties = q.card.get(cardId).properties;
   if (!properties.suit || !properties.rank) {
     throw new Error(`Hearts card ${cardId} is missing suit or rank metadata.`);
@@ -44,10 +46,7 @@ function cardProperties(q: TableQueriesOfState<GameState>, cardId: CardId) {
   return { suit: properties.suit, rank: properties.rank };
 }
 
-export function isPenaltyCard(
-  q: TableQueriesOfState<GameState>,
-  cardId: CardId,
-): boolean {
+export function isPenaltyCard(q: Q, cardId: CardId): boolean {
   const card = cardProperties(q, cardId);
   return (
     card.suit === "hearts" || (card.suit === "spades" && card.rank === "Q")
@@ -58,7 +57,7 @@ export function validateCardPlay(options: {
   readonly state: GameState;
   readonly playerId: PlayerId;
   readonly cardId: CardId;
-  readonly q: TableQueriesOfState<GameState>;
+  readonly q: Q;
 }): CardPlayIssue | null {
   const { state, playerId, cardId, q } = options;
   if (!state.flow.activePlayers.includes(playerId)) {
@@ -139,7 +138,7 @@ export function validateCardPlay(options: {
 export function legalCardIds(options: {
   readonly state: GameState;
   readonly playerId: PlayerId;
-  readonly q: TableQueriesOfState<GameState>;
+  readonly q: Q;
 }): readonly CardId[] {
   return (
     options.q.zone.playerCards(options.playerId, "hand") as readonly CardId[]
@@ -149,7 +148,7 @@ export function legalCardIds(options: {
 export function trickWinner(options: {
   readonly leadSuit: Suit;
   readonly plays: readonly { playerId: PlayerId; cardId: CardId }[];
-  readonly q: TableQueriesOfState<GameState>;
+  readonly q: Q;
 }): PlayerId {
   const eligible = options.plays.filter(
     ({ cardId }) => cardProperties(options.q, cardId).suit === options.leadSuit,

@@ -6,7 +6,7 @@ import {
   defineGame,
   defineGameContract,
   defineInteraction,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,
@@ -181,8 +181,8 @@ describe("defineGame", () => {
           }),
         },
         views: {
-          shared: authoring.emptyView(),
-          player: authoring.emptyView(),
+          shared: authoring.views.empty(),
+          player: authoring.views.empty(),
         },
       };
     });
@@ -261,7 +261,7 @@ describe("createContractAuthoring", () => {
       },
     });
 
-    const game = authoring.game({
+    const game = authoring.assemble({
       initial: {
         public: ({ playerIds }) => ({
           currentPlayerId: playerIds[0] ?? null,

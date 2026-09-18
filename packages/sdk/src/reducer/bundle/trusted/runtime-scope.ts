@@ -46,6 +46,7 @@ import {
   buildContext as buildTrustedContext,
   buildRuntimeArgs as buildTrustedRuntimeArgs,
   fxForState as trustedFxForState,
+  type RuntimeArgsWithTransaction,
 } from "./trusted-runtime-args";
 import { rejectResult, runtimeResultHelpers } from "./trusted-runtime-result";
 import {
@@ -205,7 +206,8 @@ export interface TrustedRuntimeScope<
       >;
       runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
       random: RandomHelpers;
-    } & Extra;
+    } & RuntimeArgsWithTransaction<TrustedDomainState<Contract>> &
+    Extra;
 }
 
 export function createTrustedRuntimeScope<

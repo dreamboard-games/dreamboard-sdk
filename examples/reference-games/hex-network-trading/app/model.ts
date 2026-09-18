@@ -7,7 +7,7 @@ import {
   type SpaceId,
   type VertexId,
 } from "../shared/manifest-contract";
-import type { ResourceCounts } from "./game-contract";
+import type { ResourceCounts } from "./game-model";
 
 export const BOARD_ID = "frontier" as const;
 

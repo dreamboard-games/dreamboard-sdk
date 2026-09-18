@@ -59,15 +59,15 @@ export function createInteractionAuthorization<
       };
     }
     if (interaction.actor) {
-      const resolved = interaction.actor({
-        ...scope.buildRuntimeArgs(
+      const resolved = interaction.actor(
+        scope.buildRuntimeArgs(
           state,
           {
             state: projection?.domainState ?? scope.toDomainState(state),
           },
           projection,
         ),
-      });
+      );
       return {
         mode: "actors",
         actors: resolvePromptToSet<PlayerId>(resolved),
@@ -83,15 +83,15 @@ export function createInteractionAuthorization<
       };
     }
     if (phase.actor) {
-      const resolved = phase.actor({
-        ...scope.buildRuntimeArgs(
+      const resolved = phase.actor(
+        scope.buildRuntimeArgs(
           state,
           {
             state: projection?.domainState ?? scope.toDomainState(state),
           },
           projection,
         ),
-      });
+      );
       return {
         mode: "actors",
         actors: resolvePromptToSet<PlayerId>(resolved),

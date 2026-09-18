@@ -1,8 +1,7 @@
-import type { GameContract } from "./game-contract";
-import { defineStaticView } from "@dreamboard-games/sdk/reducer";
 import { staticBoards } from "../shared/manifest-runtime";
+import { stormtrail } from "./game-model";
 
-export const boardStatic = defineStaticView<GameContract>()({
+export const boardStatic = stormtrail.views.static({
   project: () => {
     return staticBoards.hex.frontier;
   },

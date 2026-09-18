@@ -1,11 +1,11 @@
-import { definePhase } from "@dreamboard-games/sdk/reducer";
-import { setupPhaseStateSchema, type GameContract } from "../game-contract";
+import { hearts } from "../game-model";
 
-export const setup = definePhase<GameContract>()({
+const setup = hearts.phase("setup");
+
+export default setup.define({
   kind: "auto",
-  state: setupPhaseStateSchema,
   initialState: () => ({}),
-  enter({ state, accept, edit, fx, q }) {
+  enter({ tx, q }) {
     const playerIds = q.player.order();
     if (playerIds.length !== 4) {
       throw new Error(
@@ -13,7 +13,6 @@ export const setup = definePhase<GameContract>()({
       );
     }
 
-    const tx = edit(state);
     const zeroByPlayer = Object.fromEntries(
       playerIds.map((playerId) => [playerId, 0]),
     );
@@ -37,6 +36,6 @@ export const setup = definePhase<GameContract>()({
       }
     }
 
-    return accept(tx.state, { instructions: [fx.transition("passing")] });
+    return tx.transition("passing");
   },
 });

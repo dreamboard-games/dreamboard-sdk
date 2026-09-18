@@ -1,38 +1,38 @@
 import type { SpaceId } from "../../shared/manifest-contract";
 import type { ProductionGrant } from "../types";
-import { rollAuthoring } from "../authoring";
 import { HEX_RULES, INTERSECTIONS_BY_HEX_ID } from "../model";
 import {
   appendHistory,
   banditsHexId,
   campsByIntersectionId,
-  edit,
   patchPrivateState,
   systemEvent,
   turnOwnerPlayerId,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const rollDice = rollAuthoring.interaction({
-  inputs: { dice: rollAuthoring.inputs.rng.d6(2) },
-  reduce({ state, input, accept, fx, q }) {
+const roll = stormtrail.phase("roll");
+
+const rollDice = roll.interaction({
+  inputs: { dice: roll.inputs.rng.d6(2) },
+  reduce({ state, tx, input, q }) {
     const [first, second] = input.params.dice.values;
     if (first === undefined || second === undefined) {
       throw new Error("Stormtrail roll requires two dice.");
     }
     const total = first + second;
     const ownerPlayerId = turnOwnerPlayerId(state, q);
-    const tx = edit(state);
     tx.patchPublicState({
       lastRoll: { dice: [first, second], total },
       lastProduction: [],
       ...(total === 7 ? { discardCountsByPlayerId: {} } : {}),
     });
-    let next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "roll",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} rolled ${first} + ${second} = ${total}.`,
     });
-    const events = [
+    tx.emit(
       systemEvent({
         procedureId: "stormtrail-roll",
         title: "Stormtrail dice rolled",
@@ -43,35 +43,25 @@ const rollDice = rollAuthoring.interaction({
           { label: "Total", value: total },
         ],
       }),
-    ];
+    );
 
     if (total === 7) {
-      next = q.player
-        .order()
-        .reduce(
-          (current, playerId) =>
-            patchPrivateState(current, playerId, { lastDiscard: null }),
-          next,
-        );
+      for (const playerId of q.player.order()) {
+        patchPrivateState(tx, playerId, { lastDiscard: null });
+      }
       const hasDiscards = q.player
         .order()
         .some((playerId) => q.player.resourceTotal(playerId) > 7);
-      return accept(next, {
-        instructions: [
-          fx.transition(hasDiscards ? "discardBarrier" : "moveBandits"),
-        ],
-        events,
-      });
+      return tx.transition(hasDiscards ? "discardBarrier" : "moveBandits");
     }
 
     const grants: ProductionGrant[] = [];
-    const camps = campsByIntersectionId(next);
-    const productionTx = edit(next);
+    const camps = campsByIntersectionId(tx.state);
     for (const [hexId, rule] of Object.entries(HEX_RULES)) {
       if (
         rule.number !== total ||
         !rule.resourceId ||
-        hexId === banditsHexId(next)
+        hexId === banditsHexId(tx.state)
       ) {
         continue;
       }
@@ -81,7 +71,7 @@ const rollDice = rollAuthoring.interaction({
         if (playerId) counts.set(playerId, (counts.get(playerId) ?? 0) + 1);
       }
       for (const [playerId, count] of counts) {
-        productionTx.addResources({
+        tx.addResources({
           playerId: playerId as never,
           amounts: { [rule.resourceId]: count },
         });
@@ -93,8 +83,8 @@ const rollDice = rollAuthoring.interaction({
         });
       }
     }
-    productionTx.patchPublicState({ lastProduction: grants });
-    next = appendHistory(productionTx.state, {
+    tx.patchPublicState({ lastProduction: grants });
+    appendHistory(tx, {
       kind: "production",
       actorPlayerId: null,
       summary:
@@ -105,7 +95,7 @@ const rollDice = rollAuthoring.interaction({
               0,
             )} supplies.`,
     });
-    events.push(
+    tx.emit(
       systemEvent({
         procedureId: "stormtrail-production",
         title: "Production resolved",
@@ -115,23 +105,17 @@ const rollDice = rollAuthoring.interaction({
             : `${grants.reduce((sum, grant) => sum + grant.count, 0)} supplies produced.`,
       }),
     );
-    const finalTx = edit(next);
-    finalTx.setActivePlayers([ownerPlayerId]);
-    return accept(finalTx.state, {
-      instructions: [fx.transition("main")],
-      events,
-    });
+    tx.setActivePlayers([ownerPlayerId]);
+    return tx.transition("main");
   },
 });
 
-export const roll = rollAuthoring.define({
+export default roll.define({
   kind: "player",
   initialState: () => ({}),
   actor: ({ state, q }) => turnOwnerPlayerId(state, q),
-  enter({ state, accept, q }) {
-    const tx = edit(state);
+  enter({ state, tx, q }) {
     tx.setActivePlayers([turnOwnerPlayerId(state, q)]);
-    return accept(tx.state);
   },
   interactions: { rollDice },
 });

@@ -7,7 +7,7 @@ import {
   normalizeCommandParams,
   sparseCounts,
   sparseMap,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

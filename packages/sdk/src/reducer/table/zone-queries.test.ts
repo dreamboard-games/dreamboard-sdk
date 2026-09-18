@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { createStateQueries, createTableQueries } from "../../reducer";
+import { createStateQueries, createTableQueries } from "../../reducer/internal";
 import { perPlayer, type PlayerId } from "../per-player";
 import {
   getAdjacentSpaces,

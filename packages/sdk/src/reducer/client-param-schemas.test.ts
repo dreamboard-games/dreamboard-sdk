@@ -9,7 +9,7 @@ import {
   formInput,
   many,
   rngInput,
-} from "../reducer";
+} from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
 import { perPlayer } from "./per-player";

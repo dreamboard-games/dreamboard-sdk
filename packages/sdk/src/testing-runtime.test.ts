@@ -8,7 +8,7 @@ import {
   defineGameContract,
   defineInteraction,
   definePhase,
-} from "./reducer";
+} from "./reducer/internal";
 import type { RuntimeTableRecord } from "./reducer/advanced";
 import { asPlayerId, perPlayer } from "./reducer/per-player";
 import {
@@ -385,7 +385,7 @@ describe("compileScenarioReplay", () => {
       "../../..",
       "examples",
       "reference-games",
-      "roll-and-write-scorecard",
+      "hearts",
       "test/scenarios/complete-game.scenario.ts",
     );
     const projectRoot = path.resolve(path.dirname(scenarioPath), "../..");
@@ -422,7 +422,7 @@ describe("compileScenarioReplay", () => {
     expect(setup.checkpoint).toEqual({ segment: "setup", completed: 0 });
     expect(developed.checkpoint).toEqual({
       segment: "given",
-      completed: 21,
+      completed: 55,
     });
     expect(developed.expected.checkpointDigest).not.toBe(
       setup.expected.checkpointDigest,
@@ -430,8 +430,8 @@ describe("compileScenarioReplay", () => {
     expect(developed.expected.publicProjectionDigest).not.toBe(
       setup.expected.publicProjectionDigest,
     );
-    expect(setup.definition.given).toHaveLength(21);
-    expect(setup.definition.when).toHaveLength(3);
+    expect(setup.definition.given).toHaveLength(55);
+    expect(setup.definition.when).toHaveLength(1);
     expect(Object.hasOwn(setup.definition, "then")).toBe(false);
     const serialized = JSON.stringify(setup);
     expect(serialized).not.toContain("publicState");

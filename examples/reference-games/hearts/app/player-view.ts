@@ -1,8 +1,3 @@
-import {
-  definePlayerView,
-  defineSharedView,
-  type TableQueriesOfState,
-} from "@dreamboard-games/sdk/reducer";
 import type { ViewCard } from "@dreamboard-games/sdk/types";
 import type {
   CardId,
@@ -10,12 +5,12 @@ import type {
   PlayerId,
   PlayingCardsCardProperties,
 } from "../shared/manifest-contract";
-import type { GameContract, GameState } from "./game-contract";
+import { hearts, type GameState } from "./game-model";
 
 type PlayingCardView = ViewCard<CardId, CardType, PlayingCardsCardProperties>;
 
 function cardView(
-  q: TableQueriesOfState<GameState>,
+  q: typeof hearts.types.Queries,
   cardId: CardId,
 ): PlayingCardView {
   const card = q.card.get(cardId);
@@ -31,7 +26,7 @@ function cardView(
   };
 }
 
-function projectPublic(state: GameState, q: TableQueriesOfState<GameState>) {
+function projectPublic(state: GameState, q: typeof hearts.types.Queries) {
   const playerIds = q.player.order() as readonly PlayerId[];
   const playing = state.phase.get("playing");
   return {
@@ -62,13 +57,13 @@ function projectPublic(state: GameState, q: TableQueriesOfState<GameState>) {
   };
 }
 
-export const sharedView = defineSharedView<GameContract>()({
+export const sharedView = hearts.views.shared({
   project({ state, q }) {
     return projectPublic(state, q);
   },
 });
 
-export const playerView = definePlayerView<GameContract>()({
+export const playerView = hearts.views.player({
   project({ state, playerId, q }) {
     return {
       ...projectPublic(state, q),

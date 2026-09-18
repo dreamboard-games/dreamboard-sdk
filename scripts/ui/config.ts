@@ -9,5 +9,5 @@ export const defaultGeneratedWorkbenchRoot = path.join(
 
 export const defaultSmokeScenarioIds = Object.freeze([
   "hearts.dealt-hand.desktop",
-  "roll-and-write-scorecard.mark-cell.mobile",
+  "hearts.final-outcome.mobile",
 ] as const);
