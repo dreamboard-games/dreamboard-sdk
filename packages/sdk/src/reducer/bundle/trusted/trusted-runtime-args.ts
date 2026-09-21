@@ -9,6 +9,7 @@ import type {
   PlayerIdOfState,
   ReducerGameContractLike,
   RuntimeTableRecord,
+  ReducerAccept,
   TableQueriesOfState,
 } from "../../model";
 import type {
@@ -72,24 +73,23 @@ const DISABLED_RANDOM_HELPERS: RandomHelpers = {
   },
 };
 
-const resultStateSymbol = Symbol("dreamboard.resultState");
+const implicitResultSymbol = Symbol("dreamboard.implicitResult");
 
 export type RuntimeArgsWithTransaction<
   DomainState extends { table: RuntimeTableRecord },
 > = {
   tx: ReducerTransaction<DomainState>;
-  [resultStateSymbol]: () => DomainState;
+  [implicitResultSymbol]: () => ReducerAccept<DomainState>;
 };
 
 /**
- * The state a mutation callback accepted implicitly (bare `return`): the
- * transaction's current state when the callback opened one, otherwise the
- * untouched domain state. Never opens a transaction just to read it.
+ * Preserve the complete transaction on a bare return, without opening a
+ * transaction when the callback never used one.
  */
-export function resultStateOf<
+export function implicitResultOf<
   DomainState extends { table: RuntimeTableRecord },
->(args: RuntimeArgsWithTransaction<DomainState>): DomainState {
-  return args[resultStateSymbol]();
+>(args: RuntimeArgsWithTransaction<DomainState>): ReducerAccept<DomainState> {
+  return args[implicitResultSymbol]();
 }
 
 export function buildRuntimeArgs<
@@ -133,9 +133,10 @@ export function buildRuntimeArgs<
     enumerable: true,
     get: () => (transaction ??= helpers.edit(domainState)),
   });
-  Object.defineProperty(args, resultStateSymbol, {
+  Object.defineProperty(args, implicitResultSymbol, {
     enumerable: false,
-    value: () => (transaction ? transaction.state : domainState),
+    value: () =>
+      transaction ? transaction.accept() : helpers.accept(domainState),
   });
   return args as typeof args & RuntimeArgsWithTransaction<DomainState>;
 }

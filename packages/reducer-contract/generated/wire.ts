@@ -57,6 +57,8 @@ export type EffectShufflePlayerZone = { "effectId": EffectId; "type": "shufflePl
 
 export type ReducerInputValidationResult = { "valid": boolean; "errorCode"?: string; "message"?: string };
 
+export type InitializeResult = { "state": ReducerSessionState; "terminal"?: GameOutcome; "events"?: Array<GameEvent> };
+
 export type InitializeRequest = { "table": JsonValue; "playerIds": Array<string>; "rngSeed"?: number | null; "setup"?: ReducerSetupSelection | null };
 
 export type InitializePhaseRequest = { "state": ReducerSessionState; "to": string };
@@ -127,6 +129,6 @@ export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats
 
 export type ProjectionTimingMetadata = { "resolveAvailableInteractionsMs": number; "resolveViewMs": number; "resolveZoneHandlesMs": number; "descriptorHashMs": number };
 
-export type ProjectSeatsDynamicRequest = { "state": ReducerSessionState; "playerIds": Array<string>; "projectionMode"?: "full" | "actionsOnly" | null };
+export type ProjectRequest = { "state": ReducerSessionState; "playerIds": Array<string> };
 
 export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manifestVersion": string };

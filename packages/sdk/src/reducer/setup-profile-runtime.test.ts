@@ -1,8 +1,8 @@
 import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  createReducerBundle,
   defineEmptyView,
   defineGameContract,
   defineInteraction,
@@ -508,7 +508,7 @@ describe("setup profile runtime", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initialized = await bundle.initialize({
       table: createEmptyTable(),
       playerIds: ["player-1", "player-2"],
@@ -538,7 +538,7 @@ describe("setup profile runtime", () => {
       hiddenSetupProfileId: "draft-profile",
     });
     expect(
-      bundle.projectSeatsDynamic({
+      bundle.project({
         state: initialized,
         playerIds: ["player-1"],
       }).guidance,
@@ -619,7 +619,7 @@ describe("setup profile runtime", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initialized = await bundle.initialize({
       table: createEmptyTable(["player-1", "player-2"]),
       playerIds: ["player-1", "player-2"],
@@ -810,7 +810,7 @@ describe("setup profile runtime", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initialized = await bundle.initialize({
       table: {
         playerOrder: ["player-1", "player-2"],
@@ -968,13 +968,13 @@ describe("setup profile runtime", () => {
       },
     };
 
-    expect(() => createReducerBundle(mismatchedGame)).toThrow(
+    expect(() => createReducerTestingBundle(mismatchedGame)).toThrow(
       "Reducer setupProfiles must exactly match manifest setupProfiles. Manifest=[base-profile, draft-profile], reducer=[draft-profile].",
     );
   });
 
   test("bundle.initialize applies setup profile bootstrap shuffle steps", async () => {
-    const bundle = createReducerBundle(
+    const bundle = createReducerTestingBundle(
       createBootstrapGame([
         {
           type: "shuffle",
@@ -1008,7 +1008,7 @@ describe("setup profile runtime", () => {
   });
 
   test("bundle.initialize applies setup profile bootstrap deal steps", async () => {
-    const bundle = createReducerBundle(
+    const bundle = createReducerTestingBundle(
       createBootstrapGame([
         {
           type: "deal",
@@ -1453,7 +1453,7 @@ describe("setup profile runtime", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initialized = await bundle.initialize({
       table: createEmptyTable(["player-1", "player-2"]),
       playerIds: ["player-1", "player-2"],

@@ -427,8 +427,7 @@ function isObject(value) {
 function isReducerBundle(value) {
   return (
     isObject(value) &&
-    typeof value.projectSeatsDynamic === "function" &&
-    typeof value.validateInput === "function" &&
+    typeof value.project === "function" &&
     typeof value.dispatch === "function"
   );
 }

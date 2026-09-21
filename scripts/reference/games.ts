@@ -57,6 +57,7 @@ export type ReferenceGame = {
 export type DiscoverReferenceGamesOptions = {
   readonly root: string;
   readonly gameId?: string;
+  readonly includeLegacy?: boolean;
 };
 
 async function readJson(filePath: string): Promise<unknown> {
@@ -213,7 +214,9 @@ export async function discoverReferenceGames(
   }
   const selected = options.gameId
     ? [options.gameId]
-    : ids.filter((id) => !LEGACY_REFERENCE_GAMES.has(id));
+    : ids.filter(
+        (id) => options.includeLegacy || !LEGACY_REFERENCE_GAMES.has(id),
+      );
   if (selected.length === 0) throw new Error("No reference games were found.");
   return Promise.all(
     selected.map((id) => loadReferenceGame(path.join(gamesRoot, id), id)),

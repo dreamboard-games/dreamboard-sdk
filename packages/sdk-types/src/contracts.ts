@@ -1042,7 +1042,7 @@ export type HostSessionStatus = "active" | "ended";
  */
 export type HistoryEntrySummary = {
   id: string;
-  generation: number;
+
   version: number;
   timestamp: string;
   description: string;

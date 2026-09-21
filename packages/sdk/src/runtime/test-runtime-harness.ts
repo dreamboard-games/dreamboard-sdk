@@ -16,7 +16,6 @@ export function makeTestGameplayFrame<View = unknown>(options: {
 }): PluginGameplayFrame<View> {
   return {
     basis: {
-      generation: 0,
       version: options.gameVersion,
       actionSetVersion: `sha256:${options.gameVersion.toString(16).padStart(64, "0")}`,
       perspectivePlayerId: options.perspectivePlayerId ?? "player-1",

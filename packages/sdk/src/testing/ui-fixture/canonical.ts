@@ -75,7 +75,6 @@ export function digestUIFixtureRequest(request: UIReplayRequest): string {
 export function digestUIFixtureTransportRequest(request: {
   readonly operation: "validate" | "submit";
   readonly basis?: {
-    readonly generation: number;
     readonly version: number;
     readonly actionSetVersion: string;
     readonly perspectivePlayerId: string;

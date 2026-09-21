@@ -1,10 +1,12 @@
-import { resultStateOf } from "./trusted-runtime-args";
+import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { RuntimePayload } from "../../model";
 import { createRuntimeInstructionEngine } from "../../engine/runtime-instruction-engine";
 import { cloneRuntimeTable } from "../../table";
 import type {
+  GameEvent,
+  GameOutcome,
   InputCollector,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -126,7 +128,7 @@ export function createTrustedInstructionRunner<
       );
       const result = normalizeResult(
         interaction.reduce(reduceArgs) as ReducerResult<DomainState>,
-        resultStateOf(reduceArgs),
+        () => implicitResultOf(reduceArgs),
       );
       return result.type === "accept"
         ? {
@@ -162,7 +164,7 @@ export function createTrustedInstructionRunner<
       );
       const result = normalizeResult(
         continuation.reduce(continuationArgs),
-        resultStateOf(continuationArgs),
+        () => implicitResultOf(continuationArgs),
       );
       return result.type === "accept"
         ? {
@@ -360,7 +362,7 @@ export function createTrustedInstructionRunner<
     );
     const resolved = normalizeResult(
       resolve(resolveArgs) as ReducerResult<DomainState>,
-      resultStateOf(resolveArgs),
+      () => implicitResultOf(resolveArgs),
     );
     if (resolved.type === "reject") {
       return resolved;
@@ -372,6 +374,7 @@ export function createTrustedInstructionRunner<
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
       } as State),
       instructions: resolved.instructions ?? [],
+      ...(resolved.terminal ? { terminal: resolved.terminal } : {}),
       events: resolved.events ?? [],
       trace: rngTrace(random.consumptions()),
     };
@@ -408,6 +411,7 @@ export function createTrustedInstructionRunner<
         },
       } as State,
       instructions: result.instructions ?? [],
+      ...(result.terminal ? { terminal: result.terminal } : {}),
       events: result.events ?? [],
       trace: rngTrace([
         ...sampled.consumptions,
@@ -424,6 +428,8 @@ export function createTrustedInstructionRunner<
     queuedInputs: ReducerInput[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    terminal?: GameOutcome<PlayerId>;
+    events?: readonly GameEvent[];
   } {
     switch (instruction.kind) {
       case "flow.transition":
@@ -451,6 +457,8 @@ export function createTrustedInstructionRunner<
     queuedInputs: ReducerInput[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    terminal?: GameOutcome<PlayerId>;
+    events?: readonly GameEvent[];
   } {
     switch (instruction.kind) {
       case "flow.transition":
