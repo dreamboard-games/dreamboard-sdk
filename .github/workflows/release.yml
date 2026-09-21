@@ -116,11 +116,12 @@ jobs:
 
       - name: Verify registry convergence
         run: |
-          for attempt in 1 2 3 4 5 6; do
+          # npm may accept publication several minutes before registry reads converge.
+          for attempt in $(seq 1 30); do
             if node scripts/release.ts registry --expect published; then
               exit 0
             fi
-            test "$attempt" != 6 || exit 1
+            test "$attempt" != 30 || exit 1
             sleep 10
           done
 
