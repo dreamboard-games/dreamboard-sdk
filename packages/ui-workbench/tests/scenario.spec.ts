@@ -21,7 +21,7 @@ import {
 
 const defaultSmokeScenarioIds = [
   "hearts.dealt-hand.desktop",
-  "roll-and-write-scorecard.mark-cell.mobile",
+  "hearts.final-outcome.mobile",
 ] as const;
 
 interface FixtureIndexEntry {

@@ -14,30 +14,34 @@ test.beforeEach(async ({ page }) => {
   await installDeterministicWorkbenchEnvironment(page);
 });
 
-test("roll-and-write scorecard accepts keyboard activation for square board targets", async ({
+test("hearts accepts keyboard card selection and submission", async ({
   page,
 }) => {
-  await page.goto(
-    "/scenario/roll-and-write-scorecard.mark-cell.mobile?mode=test",
-  );
+  await page.goto("/scenario/hearts.dealt-hand.desktop?mode=test");
   await waitForWorkbenchStablePage(page);
   await expect(
     page.locator('[data-dreamboard-workbench="scenario"]'),
   ).toHaveAttribute("data-dreamboard-scenario-status", "ready");
 
   const attrs = BROWSER_INTERACTION_ATTRIBUTES;
-  const target = page.locator(
-    [
-      `[${attrs.protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"]`,
-      `[${attrs.role}="actuator"]`,
-      `[${attrs.actuatorId}="board:space:cell-1-0"]`,
-    ].join(""),
-  );
-  await expect(target).toHaveAttribute("role", "button");
-  await expect(target).toHaveAttribute("tabindex", "0");
-
-  await target.focus();
-  await page.keyboard.press("Enter");
+  for (const actuatorId of [
+    "primitive-card:cardIds:clubs-6",
+    "primitive-card:cardIds:diamonds-10",
+    "primitive-card:cardIds:hearts-10",
+    "primitive-submit",
+  ]) {
+    const target = page.locator(
+      [
+        `[${attrs.protocol}="${DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION}"]`,
+        `[${attrs.role}="actuator"]`,
+        `[${attrs.actuatorId}="${actuatorId}"]`,
+      ].join(""),
+    );
+    await target.focus();
+    await expect(target).toBeFocused();
+    await page.keyboard.press("Enter");
+    await page.evaluate(() => window.__dreamboardUIFixture?.flush());
+  }
 
   await expect
     .poll(async () => {
