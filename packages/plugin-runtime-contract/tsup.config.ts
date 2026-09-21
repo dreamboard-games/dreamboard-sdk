@@ -9,5 +9,6 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: false,
+  noExternal: [/^@dreamboard-games\/reducer-contract(\/|$)/],
   external: ["zod"],
 });
