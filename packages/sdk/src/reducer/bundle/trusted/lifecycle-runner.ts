@@ -2,6 +2,8 @@ import { safeParseOrThrow } from "../../parse-utils";
 import { applySetupBootstrap } from "../../setup-bootstrap";
 import { createStateQueries } from "../../table-queries";
 import type {
+  GameEvent,
+  GameOutcome,
   ExactManifestContractOf,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -151,12 +153,16 @@ export function createLifecycleRunner<
     state: State;
     instructions: RuntimeInstructionForState<State>[];
     consumptions: RngConsumption[];
+    terminal?: GameOutcome<PlayerId>;
+    events: GameEvent[];
   } {
     const workingState = initPhaseState(state, phaseName, playerIds);
     const phase = scope.phaseByName(phaseName);
     let nextState: State = workingState;
     const instructions: RuntimeInstructionForState<State>[] = [];
     const consumptions: RngConsumption[] = [];
+    let terminal: GameOutcome<PlayerId> | undefined;
+    const events: GameEvent[] = [];
     if (phase.enter) {
       const random = createMutableRandomHelpers(workingState.runtime.rng);
       const entered = normalizeResult(
@@ -184,6 +190,8 @@ export function createLifecycleRunner<
         ...entered.state,
         runtime: { ...workingState.runtime, rng: random.currentRng() },
       } as State;
+      terminal ??= entered.terminal;
+      events.push(...(entered.events ?? []));
       consumptions.push(...random.consumptions());
       if (entered.instructions) instructions.push(...entered.instructions);
     }
@@ -216,12 +224,20 @@ export function createLifecycleRunner<
         ...stageEntered.state,
         runtime: { ...nextState.runtime, rng: random.currentRng() },
       } as State;
+      terminal ??= stageEntered.terminal;
+      events.push(...(stageEntered.events ?? []));
       consumptions.push(...random.consumptions());
       if (stageEntered.instructions) {
         instructions.push(...stageEntered.instructions);
       }
     }
-    return { state: nextState, instructions, consumptions };
+    return {
+      state: nextState,
+      instructions,
+      consumptions,
+      ...(terminal ? { terminal } : {}),
+      events,
+    };
   }
 
   function initializePhaseResult(
@@ -231,6 +247,8 @@ export function createLifecycleRunner<
     state: State;
     instructions: RuntimeInstructionForState<State>[];
     consumptions: RngConsumption[];
+    terminal?: GameOutcome<PlayerId>;
+    events: GameEvent[];
   } {
     return enterPhase({
       state,
@@ -404,8 +422,16 @@ export function createLifecycleRunner<
     drainInstructions: (
       state: State,
       instructions: RuntimeInstructionForState<State>[],
-    ) => State,
-  ): SessionState {
+    ) => {
+      state: State;
+      terminal?: GameOutcome<PlayerId>;
+      events: GameEvent[];
+    },
+  ): {
+    state: SessionState;
+    terminal?: GameOutcome<PlayerId>;
+    events: GameEvent[];
+  } {
     const initial = createInitialState(input);
     const bootstrappedState = applySelectedSetupBootstrap(initial.state);
     const entered = enterPhase({
@@ -414,9 +440,13 @@ export function createLifecycleRunner<
       playerIds: input.playerIds,
       event: "initialize",
     });
-    return scope.toSessionState(
-      drainInstructions(entered.state, entered.instructions),
-    );
+    const drained = drainInstructions(entered.state, entered.instructions);
+    const terminal = entered.terminal ?? drained.terminal;
+    return {
+      state: scope.toSessionState(drained.state),
+      ...(terminal ? { terminal } : {}),
+      events: [...entered.events, ...drained.events],
+    };
   }
 
   return {

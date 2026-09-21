@@ -1,8 +1,8 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createReducerBundle,
-  defineGame,
   defineGameContract,
   definePhase,
   defineStaticView,
@@ -166,7 +166,7 @@ describe("defineStaticView", () => {
     });
   });
 
-  test("createReducerBundle().projectStatic() returns a stable view+hash+manifestVersion", () => {
+  test("createReducerBundle().boardStatic() returns a stable view+hash+manifestVersion", () => {
     const contract = buildContract(["alpha"] as const);
     const staticView = defineStaticView<typeof contract>()({
       project: ({ manifest }) => ({
@@ -180,8 +180,8 @@ describe("defineStaticView", () => {
       staticView,
     });
     const bundle = createReducerBundle(definition);
-    const first = bundle.projectStatic();
-    const second = bundle.projectStatic();
+    const first = bundle.boardStatic();
+    const second = bundle.boardStatic();
     expect(first).not.toBeNull();
     expect(second).not.toBeNull();
     expect(first!.view).toEqual({ zoneIds: [] });
@@ -191,7 +191,7 @@ describe("defineStaticView", () => {
     expect(typeof first!.manifestVersion).toBe("string");
   });
 
-  test("createReducerBundle().projectStatic() exposes generated static board queries", () => {
+  test("createReducerBundle().boardStatic() exposes generated static board queries", () => {
     const island = {
       id: "island",
       baseId: "island",
@@ -247,12 +247,12 @@ describe("defineStaticView", () => {
       staticView,
     });
 
-    const projection = createReducerBundle(definition).projectStatic();
+    const projection = createReducerBundle(definition).boardStatic();
 
     expect(projection?.view).toEqual({ board: island });
   });
 
-  test("createReducerBundle().projectStatic() returns null when no staticView is declared", () => {
+  test("createReducerBundle().boardStatic() returns null when no staticView is declared", () => {
     const contract = buildContract(["alpha"] as const);
     const definition = defineGame({
       contract,
@@ -260,6 +260,6 @@ describe("defineStaticView", () => {
       phases: { alpha: autoPhase<typeof contract>() },
     });
     const bundle = createReducerBundle(definition);
-    expect(bundle.projectStatic()).toBeNull();
+    expect(bundle.boardStatic()).toBeNull();
   });
 });

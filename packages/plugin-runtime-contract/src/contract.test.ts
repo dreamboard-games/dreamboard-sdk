@@ -43,7 +43,6 @@ const claimDescriptor = {
 function baseFrame() {
   return {
     basis: {
-      generation: 0,
       version: 42,
       actionSetVersion: "sha256:actions",
       perspectivePlayerId: "player-1",
@@ -134,7 +133,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
-      generation: 2,
       version: 8,
       actionSetVersion,
       staticProjection: {
@@ -193,7 +191,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     });
 
     expect(frame.basis).toEqual({
-      generation: 2,
       version: 8,
       actionSetVersion,
       perspectivePlayerId: "player-1",
@@ -237,7 +234,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       currentPhase: "play",
       activePlayers: ["player-1"],
       perspectivePlayerId: "player-1",
-      generation: 0,
       version: 8,
       actionSetVersion: "sha256:actions",
       staticProjection: {
@@ -303,7 +299,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         currentPhase: "play",
         activePlayers: ["player-1"],
         perspectivePlayerId: "player-1",
-        generation: 0,
         version: 8,
         actionSetVersion: "sha256:actions",
         dynamicProjection: {
@@ -348,17 +343,13 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
     expect(nextVersion).not.toBe(first);
   });
 
-  test("generation is part of the canonical frame basis", () => {
-    const first = PluginGameplayFrameSchema.parse(baseFrame());
-    const rewound = PluginGameplayFrameSchema.parse({
-      ...baseFrame(),
-      basis: { ...baseFrame().basis, generation: 1 },
-    });
-
-    expect(first.basis.version).toBe(rewound.basis.version);
-    expect(digestPluginGameplayFrame(first)).not.toBe(
-      digestPluginGameplayFrame(rewound),
-    );
+  test("frame basis rejects the removed generation field", () => {
+    expect(() =>
+      PluginGameplayFrameSchema.parse({
+        ...baseFrame(),
+        basis: { ...baseFrame().basis, generation: 1 },
+      }),
+    ).toThrow();
   });
 
   test("canonical command and acknowledgement use one client action id", () => {

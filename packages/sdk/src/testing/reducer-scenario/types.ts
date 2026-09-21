@@ -5,7 +5,7 @@ import type {
 
 export type ReducerScenarioBundle = Pick<
   ReducerBundleContract,
-  "projectSeatsDynamic" | "validateInput" | "dispatch" | "projectStatic"
+  "project" | "dispatch" | "boardStatic"
 >;
 
 export interface ReducerScenarioViewer {

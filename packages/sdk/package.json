@@ -1,12 +1,12 @@
 {
   "name": "@dreamboard-games/sdk",
-  "version": "0.4.0-alpha.14",
+  "version": "0.5.0-alpha.0",
   "description": "Dreamboard SDK package set metadata and public facade",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js"
+    "dreamboard-sdk-generate": "./dist/authoring-generate-cli.js"
   },
   "exports": {
     ".": {

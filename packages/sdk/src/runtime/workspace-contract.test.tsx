@@ -29,7 +29,6 @@ function makeSnapshot(): PluginGameplayFrame<
 > {
   return {
     basis: {
-      generation: 0,
       version: 1,
       actionSetVersion:
         "sha256:0000000000000000000000000000000000000000000000000000000000000001",

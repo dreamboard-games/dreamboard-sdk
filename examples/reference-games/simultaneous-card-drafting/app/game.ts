@@ -1,4 +1,5 @@
-import { defineEmptyView, defineGame } from "@dreamboard-games/sdk/reducer";
+import { defineEmptyView } from "@dreamboard-games/sdk/reducer";
+import { defineGameDefinition as defineGame } from "@dreamboard-games/sdk/reducer/advanced";
 import { gameContract } from "./game-contract";
 import { phases } from "./phases";
 import { playerView } from "./player-view";

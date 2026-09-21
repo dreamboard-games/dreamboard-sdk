@@ -39,11 +39,14 @@ declare const reducerBundle: ReducerBundle;
 reducerBundle.resolveInteractionActionability;
 // @ts-expect-error testing-only enumeration is not author-facing bundle API.
 reducerBundle.enumerateInteractionParams;
-const inProcessRuntime = reducerBundle.createInProcessRuntime();
-// @ts-expect-error testing-only actionability is not on the author runtime.
-inProcessRuntime.resolveInteractionActionability;
-// @ts-expect-error testing-only enumeration is not on the author runtime.
-inProcessRuntime.enumerateInteractionParams;
+// @ts-expect-error stateful authoring runtimes are not part of the runner boundary.
+reducerBundle.createInProcessRuntime;
+// @ts-expect-error dispatch owns reducer input validation.
+reducerBundle.validateInput;
+// @ts-expect-error dispatch owns effect execution.
+reducerBundle.reduce;
+// @ts-expect-error phase transitions are reducer-owned.
+reducerBundle.initializePhase;
 
 const playerId = markManifestScopedSchema(z.string(), "playerId");
 const ordinaryString = z.string();

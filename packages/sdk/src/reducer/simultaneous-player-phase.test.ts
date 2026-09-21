@@ -1,9 +1,9 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  createReducerBundle,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   definePhase,
   cardInput,
@@ -408,14 +408,14 @@ describe("simultaneousPlayer phases", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2", "player-3"],
     });
 
     expect(
-      bundle.projectSeatsDynamic({
+      bundle.project({
         state,
         playerIds: ["player-1"],
       }).schedulerFlow,
@@ -428,13 +428,13 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("collects sealed submissions and resolves once all actors are ready", async () => {
-    const bundle = createReducerBundle(createGame());
+    const bundle = createReducerTestingBundle(createGame());
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2", "player-3"],
     });
 
-    const initialProjection = bundle.projectSeatsDynamic({
+    const initialProjection = bundle.project({
       state: initial,
       playerIds: ["player-1", "player-2", "player-3"],
     });
@@ -469,7 +469,7 @@ describe("simultaneousPlayer phases", () => {
     if (first.kind !== "accept") return;
     expect(first.state.domain.publicState.resolved).toEqual([]);
 
-    const afterFirstProjection = bundle.projectSeatsDynamic({
+    const afterFirstProjection = bundle.project({
       state: first.state,
       playerIds: ["player-1", "player-2"],
     });
@@ -523,7 +523,9 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("allows replacement submissions when canResubmit is enabled", async () => {
-    const bundle = createReducerBundle(createGame({ canResubmit: true }));
+    const bundle = createReducerTestingBundle(
+      createGame({ canResubmit: true }),
+    );
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2", "player-3"],
@@ -556,13 +558,13 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("collects three-card simultaneous submissions with server-authoritative validation", async () => {
-    const bundle = createReducerBundle(createCardPassGame());
+    const bundle = createReducerTestingBundle(createCardPassGame());
     const initial = await bundle.initialize({
       table: createCardTable(),
       playerIds: ["player-1", "player-2", "player-3"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: initial,
       playerIds: ["player-1"],
     });

@@ -93,7 +93,7 @@ export function createTrustedReducerBundle<
         instructions.drainInstructions(
           initialized.state,
           initialized.instructions,
-        ),
+        ).state,
       );
     },
     async validateInput({ state, input }) {
@@ -201,11 +201,11 @@ export function createTrustedReducerBundle<
         ...(result.terminal ? { terminal: result.terminal } : {}),
       };
     },
-    projectStatic() {
-      return staticProjection.projectStatic();
+    boardStatic() {
+      return staticProjection.boardStatic();
     },
-    projectSeatsDynamic(input) {
-      return projection.projectSeatsDynamic(input);
+    project(input) {
+      return projection.project(input);
     },
   };
 }

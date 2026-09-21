@@ -105,7 +105,6 @@ function materializeTraceFrame(
       dynamicProjection: frame.dynamicProjection,
       staticProjection: frame.staticProjection,
       perspectivePlayerId,
-      generation: 0,
       version: frame.gameVersion,
       actionSetVersion: frame.actionSetVersion,
     }),

@@ -1,3 +1,5 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -5,10 +7,8 @@ import {
   cardInput,
   cardTarget,
   choiceTarget,
-  createReducerBundle,
   defineCardAction,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInputs,
   defineInteraction,
@@ -227,11 +227,11 @@ function createTwoZoneTable(): RuntimeTableRecord {
 }
 
 function getAvailableInteractions(
-  bundle: ReturnType<typeof createReducerBundle>,
-  state: Parameters<typeof bundle.projectSeatsDynamic>[0]["state"],
+  bundle: ReturnType<typeof createReducerTestingBundle>,
+  state: Parameters<typeof bundle.project>[0]["state"],
   playerId: string,
 ) {
-  const projection = bundle.projectSeatsDynamic({
+  const projection = bundle.project({
     state,
     playerIds: [playerId],
   });
@@ -590,7 +590,7 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
       player: defineEmptyView<typeof contract>(),
     },
   });
-  return createReducerBundle(game, options);
+  return createReducerTestingBundle(game, options);
 }
 
 describe("trusted interaction decision pipeline", () => {
@@ -650,7 +650,7 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -679,11 +679,11 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const oneSeatProjection = bundle.projectSeatsDynamic({
+    const oneSeatProjection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
-    const shiftedSeatProjection = bundle.projectSeatsDynamic({
+    const shiftedSeatProjection = bundle.project({
       state,
       playerIds: ["player-2", "player-1"],
     });
@@ -837,7 +837,7 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1099,7 +1099,7 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1194,12 +1194,12 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1283,7 +1283,7 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
@@ -1415,7 +1415,7 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
@@ -1537,7 +1537,7 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
@@ -1620,12 +1620,12 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1691,12 +1691,12 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1725,7 +1725,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     expect(submitted.kind).toBe("accept");
     if (submitted.kind !== "accept") return;
-    const afterSubmit = bundle.projectSeatsDynamic({
+    const afterSubmit = bundle.project({
       state: submitted.state,
       playerIds: ["player-1", "player-2"],
     });
@@ -1755,7 +1755,7 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -1820,12 +1820,12 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state,
       playerIds: ["player-1"],
     });
@@ -2149,7 +2149,7 @@ describe("trusted interaction decision pipeline", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
