@@ -1,3 +1,4 @@
+import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
 import { describe, expect, test } from "vitest";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -140,7 +141,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         hash: "static-hash",
         manifestVersion: "manifest-v1",
       },
-      dynamicProjection: {
+      dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         currentStage: "play",
         stageSeats: ["player-1"],
         simultaneousPhase: null,
@@ -187,7 +188,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
             },
           },
         },
-      },
+      }),
     });
 
     expect(frame.basis).toEqual({

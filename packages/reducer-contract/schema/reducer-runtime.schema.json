@@ -861,6 +861,16 @@
         "schedulerFlow": {
           "$ref": "#/$defs/SchedulerFlowAuthorityProjection"
         },
+        "guidance": {
+          "anyOf": [
+            { "$ref": "#/$defs/GameGuidanceProjection" },
+            { "type": "null" }
+          ]
+        },
+        "recentEvents": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ProjectedGameEvent" }
+        },
         "sharedView": { "$ref": "#/$defs/JsonValue" },
         "interactionsByRef": { "$ref": "#/$defs/JsonValue" },
         "seats": {
@@ -916,6 +926,113 @@
         "manifestVersion": { "type": "string" }
       },
       "required": ["view", "hash", "manifestVersion"],
+      "additionalProperties": false
+    },
+    "SetupGuidanceStep": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "label"],
+      "additionalProperties": false
+    },
+    "GameGuidanceProjection": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "summary": {
+              "type": "string"
+            },
+            "objective": {
+              "type": "string"
+            }
+          },
+          "required": ["id", "label"],
+          "additionalProperties": false
+        },
+        "setup": {
+          "type": "object",
+          "properties": {
+            "profileId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1
+            },
+            "summary": {
+              "type": "string"
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/SetupGuidanceStep"
+              }
+            }
+          },
+          "required": ["profileId", "name", "steps"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["phase"],
+      "additionalProperties": false
+    },
+    "ProjectedGameEvent": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "systemAction"
+        },
+        "procedureId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "details": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/GameEventDetail"
+          }
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": ["kind", "procedureId", "title", "version", "index"],
       "additionalProperties": false
     }
   }

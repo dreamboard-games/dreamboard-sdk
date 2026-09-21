@@ -1,3 +1,8 @@
+import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
+import {
+  canonicalizePluginRuntimeJson,
+  SeatProjectionBundleSchema,
+} from "@dreamboard-games/plugin-runtime-contract";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -402,6 +407,17 @@ describe("runtime-owned reducer effects", () => {
       playerIds,
     });
     expect(warmProjection).toEqual(freshProjection);
+    const wireProjection = canonicalizePluginRuntimeJson(warmProjection);
+    expect(
+      ReducerWireZod.SeatProjectionBundleSchema.parse(wireProjection),
+    ).toEqual(wireProjection);
+    expect(SeatProjectionBundleSchema.parse(wireProjection)).toEqual(
+      wireProjection,
+    );
+    expect(wireProjection).toMatchObject({
+      guidance: { phase: { id: "takeTurn", label: "Take Turn" } },
+      recentEvents: [],
+    });
     expect(warmTiming).toBeDefined();
     expect(freshTiming).toBeDefined();
     expect(warmProjection).not.toHaveProperty("version");

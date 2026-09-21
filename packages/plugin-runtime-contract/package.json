@@ -37,6 +37,7 @@
     "!tsconfig.tsbuildinfo"
   ],
   "dependencies": {
+    "@dreamboard-games/reducer-contract": "workspace:*",
     "@noble/hashes": "catalog:",
     "zod": "catalog:"
   },

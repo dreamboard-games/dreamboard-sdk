@@ -1,3 +1,4 @@
+import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -39,65 +40,14 @@ export const BoardStaticProjectionSchema = z
   })
   .strict();
 
-export const SetupGuidanceStepSchema = z
-  .object({
-    id: z.string().min(1),
-    label: z.string().min(1),
-    description: z.string().optional(),
-  })
-  .strict();
-
-export const GameGuidanceProjectionSchema = z
-  .object({
-    phase: z
-      .object({
-        id: z.string().min(1),
-        label: z.string().min(1),
-        summary: z.string().optional(),
-        objective: z.string().optional(),
-      })
-      .strict(),
-    setup: z
-      .object({
-        profileId: z.string().min(1),
-        name: z.string().min(1),
-        summary: z.string().optional(),
-        steps: z.array(SetupGuidanceStepSchema),
-      })
-      .strict()
-      .optional(),
-  })
-  .strict();
-
-export const GameEventDetailSchema = z
-  .object({
-    label: z.string().min(1),
-    value: z.union([z.string(), z.number().finite(), z.boolean()]),
-  })
-  .strict();
-
-export const SystemActionEventSchema = z
-  .object({
-    kind: z.literal("systemAction"),
-    procedureId: z.string().min(1),
-    title: z.string().min(1),
-    summary: z.string().optional(),
-    details: z.array(GameEventDetailSchema).optional(),
-  })
-  .strict();
-
-export const GameEventSchema = z.discriminatedUnion("kind", [
-  SystemActionEventSchema,
-]);
-
-export const ProjectedGameEventSchema = GameEventSchema.and(
-  z
-    .object({
-      version: z.number().int().nonnegative(),
-      index: z.number().int().nonnegative(),
-    })
-    .strict(),
-);
+// Reducer output and plugin consumption share the same guidance/event authority.
+export const SetupGuidanceStepSchema = ReducerWireZod.SetupGuidanceStepSchema;
+export const GameGuidanceProjectionSchema =
+  ReducerWireZod.GameGuidanceProjectionSchema;
+export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
+export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
+export const GameEventSchema = ReducerWireZod.GameEventSchema;
+export const ProjectedGameEventSchema = ReducerWireZod.ProjectedGameEventSchema;
 
 export const SeatProjectionBundleSchema = z
   .object({
