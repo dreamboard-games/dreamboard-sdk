@@ -7,7 +7,7 @@ import {
   defineGameContract,
   defineInteraction,
   definePhase,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   applySetupBootstrap,
   createManifestStringLiteralSchema,

@@ -1,16 +1,17 @@
 import { literals } from "../../shared/manifest-contract";
-import { discardBarrierAuthoring } from "../authoring";
 import { resourceTotal } from "../model";
 import {
   appendHistory,
-  edit,
   patchPrivateState,
   resourceTotalFromState,
   systemEvent,
   turnOwnerPlayerId,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const discardSupplies = discardBarrierAuthoring.interaction({
+const discardBarrier = stormtrail.phase("discardBarrier");
+
+const discardSupplies = discardBarrier.interaction({
   to: ({ state }) =>
     state.table.playerOrder.filter(
       (playerId) =>
@@ -19,7 +20,7 @@ const discardSupplies = discardBarrierAuthoring.interaction({
     ),
   visibility: "actorsOnly",
   inputs: {
-    resources: discardBarrierAuthoring.inputs.form.resourceMap({
+    resources: discardBarrier.inputs.form.resourceMap({
       resources: literals.resourceIds.map((resourceId) => ({
         resourceId,
         label: resourceId,
@@ -50,9 +51,8 @@ const discardSupplies = discardBarrierAuthoring.interaction({
         q.player.canAfford(input.playerId, input.params.resources),
     },
   ],
-  reduce({ state, input, accept, fx, q }) {
+  reduce({ tx, input, q }) {
     const count = resourceTotal(input.params.resources);
-    const tx = edit(state);
     tx.spendResources({
       playerId: input.playerId,
       amounts: input.params.resources,
@@ -71,14 +71,23 @@ const discardSupplies = discardBarrierAuthoring.interaction({
         input.playerId,
       ],
     }));
-    let next = patchPrivateState(tx.state, input.playerId, {
+    patchPrivateState(tx, input.playerId, {
       lastDiscard: input.params.resources,
     });
-    next = appendHistory(next, {
+    appendHistory(tx, {
       kind: "discard",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} discarded ${count} supplies.`,
     });
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-discard",
+        title: "Supplies discarded",
+        summary: `${input.playerId} returned ${count} supplies.`,
+        details: [{ label: "Discarded count", value: count }],
+      }),
+    );
+    const next = tx.state;
     const remaining = q.player
       .order()
       .filter(
@@ -86,23 +95,11 @@ const discardSupplies = discardBarrierAuthoring.interaction({
           next.phase.requiredByPlayerId?.[playerId] !== undefined &&
           !(next.phase.completedPlayerIds ?? []).includes(playerId),
       );
-    return accept(next, {
-      ...(remaining.length === 0
-        ? { instructions: [fx.transition("moveBandits")] }
-        : {}),
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-discard",
-          title: "Supplies discarded",
-          summary: `${input.playerId} returned ${count} supplies.`,
-          details: [{ label: "Discarded count", value: count }],
-        }),
-      ],
-    });
+    return remaining.length === 0 ? tx.transition("moveBandits") : tx.accept();
   },
 });
 
-export const discardBarrier = discardBarrierAuthoring.define({
+export default discardBarrier.define({
   kind: "player",
   initialState: ({ state, playerIds }) => ({
     requiredByPlayerId: Object.fromEntries(
@@ -113,10 +110,8 @@ export const discardBarrier = discardBarrierAuthoring.define({
     ),
     completedPlayerIds: [],
   }),
-  enter({ state, accept, q }) {
-    const tx = edit(state);
+  enter({ state, tx, q }) {
     tx.setActivePlayers([turnOwnerPlayerId(state, q)]);
-    return accept(tx.state);
   },
   interactions: { discardSupplies },
 });

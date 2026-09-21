@@ -1,12 +1,12 @@
-import { definePhase } from "@dreamboard-games/sdk/reducer";
-import { scoreHandPhaseStateSchema, type GameContract } from "../game-contract";
+import { hearts } from "../game-model";
 import { scoreCompletedHand } from "../rules";
 
-export const scoreHand = definePhase<GameContract>()({
+const scoreHand = hearts.phase("scoreHand");
+
+export default scoreHand.define({
   kind: "auto",
-  state: scoreHandPhaseStateSchema,
   initialState: () => ({}),
-  enter({ state, edit, endGame, fx }) {
+  enter({ state, tx }) {
     if (state.publicState.tricksCompleted !== 13) {
       throw new Error(
         "Hearts scoring requires exactly thirteen completed tricks.",
@@ -17,7 +17,6 @@ export const scoreHand = definePhase<GameContract>()({
       capturedHeartsByPlayer: state.publicState.capturedHeartsByPlayer,
       queenOfSpadesCapturedBy: state.publicState.queenOfSpadesCapturedBy,
     });
-    const tx = edit(state);
     tx.patchPublicState({
       pointsByPlayer: scored.pointsByPlayer,
       moonShooter: scored.moonShooter,
@@ -25,8 +24,6 @@ export const scoreHand = definePhase<GameContract>()({
       outcome: scored.outcome,
     });
     tx.setActivePlayers([]);
-    return endGame(tx.state, scored.outcome, {
-      instructions: [fx.transition("gameOver")],
-    });
+    return tx.endGame(scored.outcome, { transition: "gameOver" });
   },
 });

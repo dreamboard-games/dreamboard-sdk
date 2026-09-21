@@ -38,7 +38,7 @@ import {
   defineStepPhase,
   pipe,
   promptInput,
-} from "../reducer";
+} from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 

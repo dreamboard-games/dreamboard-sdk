@@ -134,17 +134,12 @@ function generateReducerGameSeed(manifest: GameTopologyManifest): string {
           .join("\n")}\n}`;
 
   return `import { z } from "zod";
-import { defineGame } from "@dreamboard-games/sdk/reducer";
+import { createGame } from "@dreamboard-games/sdk/reducer";
 import {
   ids,
   manifestContract,
   setupProfiles,
 } from "../shared/manifest-contract";
-
-const publicState = z.object({
-  currentPlayerId: ids.playerId.nullable(),
-  notesByPlayerId: z.partialRecord(ids.playerId, z.string()).default({}),
-});
 
 const setupMoodChoices = [
   { value: "ready", label: "Ready" },
@@ -152,69 +147,68 @@ const setupMoodChoices = [
 ] as const;
 type SetupMood = (typeof setupMoodChoices)[number]["value"];
 
-export default defineGame(
-  {
-    manifest: manifestContract,
-    state: {
-      public: publicState,
-      private: z.object({}),
-      hidden: z.object({}),
-    },
-    phases: {
-      setup: z.object({}),
-    },
-    errors: {},
+// The game value binds the model once. Phase files, views, rules, and tests
+// import it; \`typeof game.types.State\` names the game state.
+export const game = createGame({
+  manifest: manifestContract,
+  state: {
+    public: z.object({
+      currentPlayerId: ids.playerId.nullable(),
+      notesByPlayerId: z.partialRecord(ids.playerId, z.string()).default({}),
+    }),
+    private: z.object({}),
+    hidden: z.object({}),
   },
-  (game) => {
-    const setup = game.phase("setup");
+  phases: {
+    setup: z.object({}),
+  },
+  errors: {},
+});
 
-    return {
-      initial: {
-        public: ({ playerIds }) => ({
-          currentPlayerId: playerIds[0] ?? null,
-          notesByPlayerId: {},
-        }),
-        private: () => ({}),
-        hidden: () => ({}),
-      },
-      initialPhase: "setup",
-      setupProfiles: setupProfiles(${setupProfileEntries || "{}"}),
-      phases: {
-        setup: setup.define({
-          kind: "player",
-          initialState: () => ({}),
-          actor: ({ state }) => state.publicState.currentPlayerId,
-          interactions: {
-            ready: setup.interaction({
-              inputs: {
-                mood: setup.inputs.form.choice<SetupMood>({
-                  choices: setupMoodChoices,
-                  defaultValue: "ready",
-                }),
-              },
-              reduce({ state, input, accept }) {
-                return accept({
-                  ...state,
-                  publicState: {
-                    ...state.publicState,
-                    notesByPlayerId: {
-                      ...state.publicState.notesByPlayerId,
-                      [input.playerId]: input.params.mood,
-                    },
-                  },
-                });
-              },
+const setup = game.phase("setup");
+
+export default game.assemble({
+  initial: {
+    public: ({ playerIds }) => ({
+      currentPlayerId: playerIds[0] ?? null,
+      notesByPlayerId: {},
+    }),
+    private: () => ({}),
+    hidden: () => ({}),
+  },
+  initialPhase: "setup",
+  setupProfiles: setupProfiles(${setupProfileEntries || "{}"}),
+  phases: {
+    setup: setup.define({
+      kind: "player",
+      initialState: () => ({}),
+      actor: ({ state }) => state.publicState.currentPlayerId,
+      interactions: {
+        ready: setup.interaction({
+          inputs: {
+            mood: setup.inputs.form.choice<SetupMood>({
+              choices: setupMoodChoices,
+              defaultValue: "ready",
             }),
+          },
+          reduce({ tx, input }) {
+            tx.patchPublicState((publicState) => ({
+              ...publicState,
+              notesByPlayerId: {
+                ...publicState.notesByPlayerId,
+                [input.playerId]: input.params.mood,
+              },
+            }));
           },
         }),
       },
-      views: {
-        shared: game.emptyView(),
-        player: game.emptyView(),
-      },
-    };
+    }),
   },
-);
+  views: {
+    shared: game.views.empty(),
+    player: game.views.empty(),
+  },
+});
 `;
 }
 

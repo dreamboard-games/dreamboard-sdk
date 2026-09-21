@@ -326,10 +326,22 @@ export function rejectResult(
 
 export function normalizeResult<State>(
   result: ReducerResult<State> | void,
-  fallbackState: State,
+  implicitResult: () => ReducerResult<State>,
 ): ReducerResult<State> {
   if (result === undefined || result === null) {
-    return acceptResult(fallbackState);
+    result = implicitResult();
+  }
+  if (result.type === "accept") {
+    // Results built by `tx.accept()` / `tx.transition()` / `tx.endGame()`
+    // arrive raw; apply the same limits as the legacy `accept` helper.
+    return {
+      ...result,
+      instructions: [...(result.instructions ?? [])],
+      events: normalizeGameEvents(result.events),
+      ...(result.terminal
+        ? { terminal: normalizeGameOutcome(result.state, result.terminal) }
+        : {}),
+    };
   }
   return result;
 }

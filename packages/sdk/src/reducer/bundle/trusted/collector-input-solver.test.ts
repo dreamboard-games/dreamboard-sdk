@@ -8,7 +8,7 @@ import {
   defineInputs,
   formInput,
   many,
-} from "../../../reducer";
+} from "../../../reducer/internal";
 import {
   enumerateCollectorInputAssignments,
   hasAnyCollectorInputAssignment,

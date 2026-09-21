@@ -83,7 +83,9 @@ async function runWorkbenchTests(options: {
   const { materializeWorkbench, readScenarioIds } =
     await import("./materialize.ts");
   const scenarioIds = selectUiScenarios(options);
-  const gameIds = scenarioIds.map((id) => id.split(".", 1)[0] ?? id);
+  const gameIds = [
+    ...new Set(scenarioIds.map((id) => id.split(".", 1)[0] ?? id)),
+  ];
   const materialization = await materializeWorkbench({ gameIds });
   const available = await readScenarioIds(
     path.join(materialization.generatedRoot, "fixtures/reference-games"),

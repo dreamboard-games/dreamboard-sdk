@@ -7,7 +7,7 @@ import {
   cardTarget,
   choiceTarget,
   promptInput,
-} from "../reducer";
+} from "../reducer/internal";
 import type { CollectorState } from "./model/spec";
 
 const state = {

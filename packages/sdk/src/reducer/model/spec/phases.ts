@@ -39,6 +39,7 @@ type PhaseDefinitionCommon<
     phase: object;
   },
   Manifest extends ManifestContract<TableOfState<State>>,
+  ErrorCode extends string = string,
 > = {
   name?: string;
   guidance?: PhaseGuidance;
@@ -52,7 +53,8 @@ type PhaseDefinitionCommon<
   enter?: BivariantCallback<
     PhaseEnterArgs<
       ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-      Manifest
+      Manifest,
+      ErrorCode
     >,
     ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
   >;
@@ -66,7 +68,8 @@ export type AutoPhaseDefinition<
     phase: object;
   },
   Manifest extends ManifestContract<TableOfState<State>>,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest> & {
+  ErrorCode extends string = string,
+> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
   kind: "auto";
   actor?: never;
   actors?: never;
@@ -102,7 +105,8 @@ export type PlayerPhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest> & {
+  ErrorCode extends string = string,
+> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
   kind: "player";
   /**
    * Default actor selector for interactions in this phase. When omitted the
@@ -150,7 +154,8 @@ export type SimultaneousPlayerPhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest> & {
+  ErrorCode extends string = string,
+> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
   kind: "simultaneousPlayer";
   actor?: never;
   /**
@@ -186,9 +191,10 @@ export type SimultaneousPlayerPhaseDefinition<
     SimultaneousResolveArgs<
       SubmitCollectors,
       ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-      Manifest
+      Manifest,
+      ErrorCode
     >,
-    ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>>
+    ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
   >;
   effects?: Effects;
   interactions?: Interactions;
@@ -223,8 +229,9 @@ export type PhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
+  ErrorCode extends string = string,
 > =
-  | AutoPhaseDefinition<PhaseStateSchema, State, Manifest>
+  | AutoPhaseDefinition<PhaseStateSchema, State, Manifest, ErrorCode>
   | PlayerPhaseDefinition<
       PhaseStateSchema,
       State,
@@ -233,7 +240,8 @@ export type PhaseDefinition<
       Interactions,
       Stages,
       Zones,
-      CardActions
+      CardActions,
+      ErrorCode
     >
   | SimultaneousPlayerPhaseDefinition<
       PhaseStateSchema,
@@ -244,5 +252,6 @@ export type PhaseDefinition<
       Interactions,
       Stages,
       Zones,
-      CardActions
+      CardActions,
+      ErrorCode
     >;

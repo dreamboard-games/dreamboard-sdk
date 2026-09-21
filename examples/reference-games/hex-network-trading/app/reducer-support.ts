@@ -1,8 +1,7 @@
-import {
-  createReducerEdit,
-  type GameEvent,
-  type GameOutcome,
-  type TableQueriesOfState,
+import type {
+  GameEvent,
+  GameOutcome,
+  ReducerTransaction,
 } from "@dreamboard-games/sdk/reducer";
 import {
   ids,
@@ -14,12 +13,13 @@ import {
   type SpaceId,
   type VertexId,
 } from "../shared/manifest-contract";
-import type {
-  GameState,
-  HistoryEntry,
-  PrivateState,
-  ResourceCounts,
-} from "./game-contract";
+import {
+  stormtrail,
+  type GameState,
+  type HistoryEntry,
+  type PrivateState,
+  type ResourceCounts,
+} from "./game-model";
 import {
   BOARD_ID,
   EDGES_BY_INTERSECTION_ID,
@@ -27,8 +27,12 @@ import {
   INTERSECTIONS_BY_HEX_ID,
 } from "./model";
 
-export type Q = TableQueriesOfState<GameState>;
-export const edit = createReducerEdit<GameState>();
+export type Q = typeof stormtrail.types.Queries;
+/**
+ * Any open transaction over the game state. Phase reducers hand in their
+ * phase-scoped `tx`; the op methods are bivariant so it is assignable here.
+ */
+export type Tx = ReducerTransaction<GameState>;
 
 export const TRAIL_COST: ResourceCounts = { timber: 1, brick: 1 };
 export const CAMP_COST: ResourceCounts = {
@@ -248,41 +252,30 @@ export function resourceCards(
 }
 
 export function patchPrivateState(
-  state: GameState,
+  tx: Tx,
   playerId: PlayerId,
   patch: Partial<PrivateState>,
-): GameState {
-  return {
-    ...state,
-    privateState: {
-      ...state.privateState,
-      [playerId]: { ...state.privateState[playerId], ...patch },
-    },
-  };
+): void {
+  tx.patchPlayerPrivateState({
+    playerId,
+    patch: (privateState) => ({ ...privateState, ...patch }),
+  });
 }
 
-export function clearStealSecrets(state: GameState): GameState {
-  return state.table.playerOrder.reduce(
-    (next, playerId) =>
-      patchPrivateState(next, playerId, { lastStolenResourceId: null }),
-    state,
-  );
+export function clearStealSecrets(tx: Tx): void {
+  for (const playerId of tx.state.table.playerOrder) {
+    patchPrivateState(tx, playerId, { lastStolenResourceId: null });
+  }
 }
 
-export function appendHistory(
-  state: GameState,
-  entry: Omit<HistoryEntry, "turn">,
-): GameState {
-  return {
-    ...state,
-    publicState: {
-      ...state.publicState,
-      history: [
-        ...state.publicState.history,
-        { ...entry, turn: state.publicState.turnNumber },
-      ],
-    },
-  };
+export function appendHistory(tx: Tx, entry: Omit<HistoryEntry, "turn">): void {
+  tx.patchPublicState((publicState) => ({
+    ...publicState,
+    history: [
+      ...publicState.history,
+      { ...entry, turn: publicState.turnNumber },
+    ],
+  }));
 }
 
 export function systemEvent(options: {

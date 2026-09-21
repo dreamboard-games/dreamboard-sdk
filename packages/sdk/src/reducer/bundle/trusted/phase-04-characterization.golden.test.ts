@@ -11,7 +11,7 @@ import {
   definePlayerView,
   definePhase,
   type ReducerDiagnosticEvent,
-} from "../../../reducer";
+} from "../../../reducer/internal";
 import type { RuntimeTableRecord } from "../../../reducer/advanced";
 import { asPlayerId, perPlayer } from "../../per-player";
 

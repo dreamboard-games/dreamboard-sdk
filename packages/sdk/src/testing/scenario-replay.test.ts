@@ -15,7 +15,7 @@ import {
   perPlayer,
   pipe,
   rngInput,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

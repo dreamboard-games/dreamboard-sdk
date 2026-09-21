@@ -8,6 +8,22 @@ import {
 } from "../../packages/sdk/src/reference-games/schema.ts";
 
 export const SDK_PACKAGE_NAME = "@dreamboard-games/sdk";
+
+/**
+ * Reference games still authored against the removed contract-first API.
+ * They stay on disk as conversion material but are skipped by discovery until
+ * they are re-authored on `createGame`. Selecting one explicitly by id still
+ * works so a conversion can be verified in isolation.
+ */
+export const LEGACY_REFERENCE_GAMES: ReadonlySet<string> = new Set([
+  "automa-river-rival",
+  "deck-building-market",
+  "multiplayer-ranking-and-ties",
+  "roll-and-write-scorecard",
+  "simultaneous-card-drafting",
+  "solo-countdown-puzzle",
+  "worker-placement-tableau",
+]);
 export const EXACT_VERSION_PATTERN =
   /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
 
@@ -41,6 +57,7 @@ export type ReferenceGame = {
 export type DiscoverReferenceGamesOptions = {
   readonly root: string;
   readonly gameId?: string;
+  readonly includeLegacy?: boolean;
 };
 
 async function readJson(filePath: string): Promise<unknown> {
@@ -195,7 +212,11 @@ export async function discoverReferenceGames(
       `Unknown reference game '${options.gameId}'. Expected one of: ${ids.join(", ")}`,
     );
   }
-  const selected = options.gameId ? [options.gameId] : ids;
+  const selected = options.gameId
+    ? [options.gameId]
+    : ids.filter(
+        (id) => options.includeLegacy || !LEGACY_REFERENCE_GAMES.has(id),
+      );
   if (selected.length === 0) throw new Error("No reference games were found.");
   return Promise.all(
     selected.map((id) => loadReferenceGame(path.join(gamesRoot, id), id)),
