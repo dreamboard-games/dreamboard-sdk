@@ -330,7 +330,7 @@ describe("phase 4 trusted-bundle characterization", () => {
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: initial,
       playerIds: ["player-1", "player-2"],
     });

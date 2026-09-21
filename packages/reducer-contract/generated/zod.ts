@@ -131,6 +131,6 @@ export const ProjectionTimingMetadataSchema = z.object({ "resolveAvailableIntera
 
 export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "schedulerFlow": SchedulerFlowAuthorityProjectionSchema.optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
 
-export const ProjectSeatsDynamicRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)), "projectionMode": z.union([z.enum(["full", "actionsOnly"]), z.null()]).optional() }).strict();
+export const ProjectRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)) }).strict();
 
 export const BoardStaticProjectionSchema = z.object({ "view": JsonValueSchema, "hash": z.string().min(1), "manifestVersion": z.string() }).strict();

@@ -35,3 +35,21 @@ Include the packaged stylesheet when using SDK UI components:
 ```ts
 import "@dreamboard-games/sdk/ui/plugin-styles.css";
 ```
+
+## Reducer runner contract
+
+`createReducerBundle(game)` returns exactly the contract version and four
+operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
+and `project({ state, playerIds })`. The runner contract is `0.5.0`; hosts must
+require that exact version. Dispatch includes validation and effect execution.
+
+The authoritative state is explicit on every dispatch and projection. A host
+may retain a warm worker and SDK caches, but replaying the same state and input
+must produce the same gameplay result as a fresh worker. Projection timing is
+diagnostic and is excluded from this equivalence.
+
+Seat projections are independent of session versions. The gameplay service
+owns the monotonically increasing version, perspective, and action-set identity.
+The plugin frame basis contains `version`, `actionSetVersion`, and
+`perspectivePlayerId`; it has no generation counter. Hosts merge the separately
+cached board static projection when materializing plugin gameplay frames.

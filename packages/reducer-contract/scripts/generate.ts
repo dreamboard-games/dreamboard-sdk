@@ -1050,18 +1050,18 @@ export function renderReducerContract(
     if (typeof operation.input === "string") {
       assertKnownWireType(operation.input, `/operations/${index}/input`);
     }
-    if (operation.input === null && operation.name !== "projectStatic") {
+    if (operation.input === null && operation.name !== "boardStatic") {
       inputError(
         OPERATIONS_PATH,
         `/operations/${index}/input`,
-        "only projectStatic may be zero-argument",
+        "only boardStatic may be zero-argument",
       );
     }
-    if (operation.name === "projectStatic" && operation.input !== null) {
+    if (operation.name === "boardStatic" && operation.input !== null) {
       inputError(
         OPERATIONS_PATH,
         `/operations/${index}/input`,
-        "projectStatic must stay zero-argument",
+        "boardStatic must stay zero-argument",
       );
     }
     assertKnownWireType(operation.output, `/operations/${index}/output`);

@@ -1,3 +1,4 @@
+import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -171,6 +172,108 @@ function expectProjectionTiming(timing: {
 }
 
 describe("runtime-owned reducer effects", () => {
+  test("runner operations replay the same state independently of warm caches", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({ count: z.number().int() }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ count: 0 }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          interactions: {
+            advance: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ state, accept, ops }) {
+                return accept(
+                  pipe(
+                    state,
+                    ops.patchPublicState({
+                      count: state.publicState.count + 1,
+                    }),
+                  ),
+                );
+              },
+            }),
+          },
+        }),
+      },
+      views: {
+        shared: defineEmptyView<typeof contract>(),
+        player: definePlayerView<typeof contract>()({
+          project({ state }) {
+            return { count: state.publicState.count };
+          },
+        }),
+      },
+    });
+    const warm = createReducerBundle(game);
+    expect(Object.keys(warm).sort()).toEqual([
+      "boardStatic",
+      "dispatch",
+      "initialize",
+      "project",
+      "reducerContractVersion",
+    ]);
+    expect(warm.reducerContractVersion).toBe("0.5.0");
+    const playerIds = ["player-1", "player-2"];
+    const initial = await warm.initialize({
+      table: createTable(),
+      playerIds,
+      rngSeed: 123,
+    });
+    const snapshot = structuredClone(initial);
+    const input = {
+      kind: "interaction" as const,
+      playerId: "player-1",
+      interactionId: "advance",
+      params: {},
+    };
+    const advanced = await warm.dispatch({ state: initial, input });
+    expect(advanced.kind).toBe("accept");
+    if (advanced.kind !== "accept")
+      throw new Error("Expected accepted fixture move");
+    warm.project({ state: advanced.state, playerIds });
+    // Restore an older authoritative state after advancing and warming projections.
+    const replayed = await warm.dispatch({
+      state: structuredClone(snapshot),
+      input,
+    });
+    const fresh = createReducerBundle(game);
+    expect(replayed).toEqual(
+      await fresh.dispatch({ state: structuredClone(snapshot), input }),
+    );
+    const { timing: warmTiming, ...warmProjection } = warm.project({
+      state: snapshot,
+      playerIds,
+    });
+    const { timing: freshTiming, ...freshProjection } = fresh.project({
+      state: structuredClone(snapshot),
+      playerIds,
+    });
+    expect(warmProjection).toEqual(freshProjection);
+    expect(warmTiming).toBeDefined();
+    expect(freshTiming).toBeDefined();
+    expect(warmProjection).not.toHaveProperty("version");
+    expect(warmProjection).not.toHaveProperty("actionSetVersion");
+    expect(warmProjection).not.toHaveProperty("perspectivePlayerId");
+    expect(initial).toEqual(snapshot);
+  });
+
   test("reduce and dispatch materialize reducer-authored game events", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -230,7 +333,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -269,7 +372,7 @@ describe("runtime-owned reducer effects", () => {
     });
   });
 
-  test("bundle projectSeatsDynamic returns a plain view synchronously", async () => {
+  test("bundle project returns a plain view synchronously", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -316,13 +419,13 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: session,
       playerIds: ["player-1"],
     });
@@ -340,7 +443,7 @@ describe("runtime-owned reducer effects", () => {
     expect(JSON.stringify(projection)).not.toContain("descriptorHashMs");
   });
 
-  test("projectSeatsDynamic actionsOnly projects interaction refs and timing", async () => {
+  test("project actionsOnly projects interaction refs and timing", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -390,13 +493,13 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: session,
       playerIds: ["player-1"],
       projectionMode: "actionsOnly",
@@ -422,7 +525,7 @@ describe("runtime-owned reducer effects", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const runtimeProjection = runtime.projectSeatsDynamic({
+    const runtimeProjection = runtime.project({
       playerIds: ["player-1"],
       projectionMode: "actionsOnly",
     });
@@ -437,7 +540,7 @@ describe("runtime-owned reducer effects", () => {
     expect(runtimeProjection.timing.resolveZoneHandlesMs).toBe(0);
   });
 
-  test("projectSeatsDynamic projects shared once and passes it to player views", async () => {
+  test("project projects shared once and passes it to player views", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -483,13 +586,13 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: session,
       playerIds: ["player-1", "player-2"],
     });
@@ -506,7 +609,7 @@ describe("runtime-owned reducer effects", () => {
     });
   });
 
-  test("projectSeatsDynamic full projection resolves descriptors and views", async () => {
+  test("project full projection resolves descriptors and views", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -566,13 +669,13 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: session,
       playerIds: ["player-1"],
     });
@@ -584,7 +687,7 @@ describe("runtime-owned reducer effects", () => {
     expect(availableCalls).toBe(1);
   });
 
-  test("projectSeatsDynamic shares derived values across seats and descriptors", async () => {
+  test("project shares derived values across seats and descriptors", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -639,13 +742,13 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    bundle.projectSeatsDynamic({
+    bundle.project({
       state: session,
       playerIds: ["player-1", "player-2"],
     });
@@ -653,7 +756,7 @@ describe("runtime-owned reducer effects", () => {
     expect(computeCount).toBe(1);
   });
 
-  test("projectSeatsDynamic skips target eligibility for unavailable descriptors", async () => {
+  test("project skips target eligibility for unavailable descriptors", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -724,12 +827,12 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const session = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: session,
       playerIds: ["player-1"],
     });
@@ -796,7 +899,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -896,7 +999,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -1019,7 +1122,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initialA = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -1133,7 +1236,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -1254,7 +1357,7 @@ describe("runtime-owned reducer effects", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -1346,7 +1449,7 @@ describe("runtime-owned reducer effects", () => {
     }
 
     test("validateInput accepts an rngInput interaction with empty client params", async () => {
-      const bundle = createReducerBundle(defineDiceGame());
+      const bundle = createReducerTestingBundle(defineDiceGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1372,7 +1475,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("reduce samples rngInput.d6 values, feeds them to the authored reducer, and advances session RNG", async () => {
-      const bundle = createReducerBundle(defineDiceGame());
+      const bundle = createReducerTestingBundle(defineDiceGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1414,7 +1517,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("dispatch is deterministic for a fixed rngSeed across sessions", async () => {
-      const bundle = createReducerBundle(defineDiceGame());
+      const bundle = createReducerTestingBundle(defineDiceGame());
       const sessionA = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1456,7 +1559,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("consecutive reduces consume RNG monotonically and never re-sample the same cursor", async () => {
-      const bundle = createReducerBundle(defineDiceGame());
+      const bundle = createReducerTestingBundle(defineDiceGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1498,7 +1601,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("client-supplied values for an rngInput are ignored (server is authoritative)", async () => {
-      const bundle = createReducerBundle(defineDiceGame());
+      const bundle = createReducerTestingBundle(defineDiceGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1607,7 +1710,7 @@ describe("runtime-owned reducer effects", () => {
         type: string;
         trace?: readonly unknown[];
       }> = [];
-      const bundle = createReducerBundle(defineIntegerGame(), {
+      const bundle = createReducerTestingBundle(defineIntegerGame(), {
         diagnostics: {
           event(event) {
             diagnosticEvents.push(event);
@@ -1741,7 +1844,7 @@ describe("runtime-owned reducer effects", () => {
           }),
         },
       });
-      const bundle = createReducerBundle(game);
+      const bundle = createReducerTestingBundle(game);
       const initialized = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1834,7 +1937,7 @@ describe("runtime-owned reducer effects", () => {
     }
 
     test("draws deterministic typed subsets and advances the runtime cursor", async () => {
-      const bundle = createReducerBundle(defineSubsetGame());
+      const bundle = createReducerTestingBundle(defineSubsetGame());
       const sessionA = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1879,7 +1982,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("does not persist random.subset cursor advancement when reducer rejects", async () => {
-      const bundle = createReducerBundle(defineSubsetGame());
+      const bundle = createReducerTestingBundle(defineSubsetGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],
@@ -1914,7 +2017,7 @@ describe("runtime-owned reducer effects", () => {
     });
 
     test("throws a clear SDK error when count exceeds the source length", async () => {
-      const bundle = createReducerBundle(defineSubsetGame());
+      const bundle = createReducerTestingBundle(defineSubsetGame());
       const initial = await bundle.initialize({
         table: createTable(),
         playerIds: ["player-1", "player-2"],

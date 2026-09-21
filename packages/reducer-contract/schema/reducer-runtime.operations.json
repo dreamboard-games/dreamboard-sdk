@@ -13,38 +13,20 @@
       "maybePromise": true
     },
     {
-      "name": "initializePhase",
-      "input": "InitializePhaseRequest",
-      "output": "ReducerSessionState",
-      "maybePromise": true
-    },
-    {
-      "name": "validateInput",
-      "input": "ValidateInputRequest",
-      "output": "ReducerInputValidationResult",
-      "maybePromise": true
-    },
-    {
-      "name": "reduce",
-      "input": "ReduceRequest",
-      "output": "ReduceResult",
-      "maybePromise": true
-    },
-    {
       "name": "dispatch",
       "input": "DispatchRequest",
       "output": "DispatchResult",
       "maybePromise": true
     },
     {
-      "name": "projectStatic",
+      "name": "boardStatic",
       "input": null,
       "output": "BoardStaticProjection",
       "nullableOutput": true
     },
     {
-      "name": "projectSeatsDynamic",
-      "input": "ProjectSeatsDynamicRequest",
+      "name": "project",
+      "input": "ProjectRequest",
       "output": "SeatProjectionBundle"
     }
   ]

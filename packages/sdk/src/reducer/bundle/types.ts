@@ -126,12 +126,12 @@ export type TrustedReducerBundle<
         terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }
   >;
-  projectStatic(): {
+  boardStatic(): {
     view: unknown;
     hash: string;
     manifestVersion: string;
   } | null;
-  projectSeatsDynamic(input: {
+  project(input: {
     state: TrustedSessionState<Contract>;
     playerIds: TrustedPlayerId<Contract>[];
     projectionMode?: "full" | "actionsOnly";
@@ -160,7 +160,19 @@ export type TrustedReducerBundle<
   };
 };
 
-export type ReducerBundle = ReducerBundleContract & {
+export type ReducerBundle = ReducerBundleContract;
+
+type ReducerAuthoringBundle = ReducerBundleContract & {
+  initializePhase(
+    input: Wire.InitializePhaseRequest,
+  ): Promise<Wire.ReducerSessionState>;
+  validateInput(
+    input: Wire.ValidateInputRequest,
+  ): Promise<Wire.ReducerInputValidationResult>;
+  reduce(input: Wire.ReduceRequest): Promise<Wire.ReduceResult>;
+  project(
+    input: Wire.ProjectRequest & { projectionMode?: "full" | "actionsOnly" },
+  ): Wire.SeatProjectionBundle;
   createInProcessRuntime(): {
     initialize(input: {
       table: unknown;
@@ -176,7 +188,7 @@ export type ReducerBundle = ReducerBundleContract & {
       | { kind: "accept"; state: unknown; trace: unknown[] }
       | { kind: "reject"; errorCode: string; message?: string }
     >;
-    projectSeatsDynamic(input: {
+    project(input: {
       playerIds: unknown[];
       projectionMode?: "full" | "actionsOnly";
     }): {
@@ -221,11 +233,11 @@ export type ReducerBundle = ReducerBundleContract & {
  * The runtime operations stay off the author-facing `ReducerBundle` type.
  */
 export type ReducerBundleTestingRuntime = Omit<
-  ReducerBundle,
+  ReducerAuthoringBundle,
   "createInProcessRuntime"
 > & {
   createInProcessRuntime(): ReturnType<
-    ReducerBundle["createInProcessRuntime"]
+    ReducerAuthoringBundle["createInProcessRuntime"]
   > & {
     resolveInteractionActionability(input: {
       playerId: unknown;

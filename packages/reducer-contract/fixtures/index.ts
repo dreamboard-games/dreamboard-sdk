@@ -19,7 +19,7 @@ import gameInputInteractionAction from "./game-input-interaction-action.json" wi
 import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
 import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
 import initializeRequest from "./initialize-request.json" with { type: "json" };
-import projectSeatsDynamicRequest from "./project-seats-dynamic-request.json" with { type: "json" };
+import projectRequest from "./project-request.json" with { type: "json" };
 import reduceRequest from "./reduce-request.json" with { type: "json" };
 import reduceResultAcceptMixed from "./reduce-result-accept-mixed.json" with { type: "json" };
 import reduceResultReject from "./reduce-result-reject.json" with { type: "json" };
@@ -153,10 +153,10 @@ export const FIXTURES = [
     value: dispatchRequest,
   },
   {
-    name: "project-seats-dynamic-request",
-    typeName: "ProjectSeatsDynamicRequest" as const,
+    name: "project-request",
+    typeName: "ProjectRequest" as const,
     why: "Reducer bundle projection payload requesting a view for multiple seats.",
-    value: projectSeatsDynamicRequest,
+    value: projectRequest,
   },
   {
     name: "seat-projection",
@@ -167,7 +167,7 @@ export const FIXTURES = [
   {
     name: "seat-projection-bundle",
     typeName: "SeatProjectionBundle" as const,
-    why: "Combined seat projection result returned from projectSeatsDynamic.",
+    why: "Combined seat projection result returned from project.",
     value: seatProjectionBundle,
   },
 ] as const;

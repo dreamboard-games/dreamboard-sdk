@@ -23,18 +23,9 @@ export interface ReducerBundleContract {
   initialize(
     input: Wire.InitializeRequest,
   ): MaybePromise<Wire.ReducerSessionState>;
-  initializePhase(
-    input: Wire.InitializePhaseRequest,
-  ): MaybePromise<Wire.ReducerSessionState>;
-  validateInput(
-    input: Wire.ValidateInputRequest,
-  ): MaybePromise<Wire.ReducerInputValidationResult>;
-  reduce(input: Wire.ReduceRequest): MaybePromise<Wire.ReduceResult>;
   dispatch(input: Wire.DispatchRequest): MaybePromise<Wire.DispatchResult>;
-  projectStatic(): Wire.BoardStaticProjection | null;
-  projectSeatsDynamic(
-    input: Wire.ProjectSeatsDynamicRequest,
-  ): Wire.SeatProjectionBundle;
+  boardStatic(): Wire.BoardStaticProjection | null;
+  project(input: Wire.ProjectRequest): Wire.SeatProjectionBundle;
 }
 
 /**
@@ -62,12 +53,9 @@ export function assertReducerBundleContract(
 
   for (const method of [
     "initialize",
-    "initializePhase",
-    "validateInput",
-    "reduce",
     "dispatch",
-    "projectStatic",
-    "projectSeatsDynamic",
+    "boardStatic",
+    "project",
   ] as const) {
     if (typeof bundle[method] !== "function") {
       throw new Error(`Reducer bundle ${source} is missing ${method}().`);
