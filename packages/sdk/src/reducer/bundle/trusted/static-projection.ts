@@ -93,7 +93,7 @@ export function createStaticProjectionBuilder<
   Views extends ViewMapOf<Contract>,
 >(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
   return {
-    projectStatic(): {
+    boardStatic(): {
       view: unknown;
       hash: string;
       manifestVersion: string;

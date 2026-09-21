@@ -359,6 +359,18 @@
       "additionalProperties": false
     },
 
+    "InitializeResult": {
+      "description": "Initial authoritative state and gameplay effects produced by phase entry and automatic continuations.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/GameOutcome" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/GameEvent" } }
+      },
+      "required": ["state"],
+      "additionalProperties": false
+    },
+
     "InitializeRequest": {
       "description": "Arguments passed to `createReducerBundle(...).initialize(...)`. `table` is intentionally erased at this contract layer; the authored bundle validates it against its manifest-derived schema.",
       "type": "object",
@@ -749,7 +761,7 @@
     },
 
     "SeatProjection": {
-      "description": "One seat's slice of `projectSeatsDynamic(...)`. `availableInteractionRefs` and `zones` stay JSON-erased here because their concrete shapes are owned by the gameplay payload/OpenAPI contracts, not reducer-contract.",
+      "description": "One seat's slice of `project(...)`. `availableInteractionRefs` and `zones` stay JSON-erased here because their concrete shapes are owned by the gameplay payload/OpenAPI contracts, not reducer-contract.",
       "type": "object",
       "properties": {
         "view": { "$ref": "#/$defs/JsonValue" },
@@ -830,7 +842,7 @@
     },
 
     "SeatProjectionBundle": {
-      "description": "Result of `createReducerBundle(...).projectSeatsDynamic(...)`.",
+      "description": "Result of `createReducerBundle(...).project(...)`.",
       "type": "object",
       "properties": {
         "currentStage": {
@@ -864,7 +876,7 @@
     },
 
     "ProjectionTimingMetadata": {
-      "description": "Optional SDK-owned diagnostics for projectSeatsDynamic internals. Hosts may record these values for profiling; reducer authors should not depend on them.",
+      "description": "Optional SDK-owned diagnostics for project internals. Hosts may record these values for profiling; reducer authors should not depend on them.",
       "type": "object",
       "properties": {
         "resolveAvailableInteractionsMs": { "type": "number", "minimum": 0 },
@@ -881,20 +893,14 @@
       "additionalProperties": false
     },
 
-    "ProjectSeatsDynamicRequest": {
-      "description": "Arguments passed to `createReducerBundle(...).projectSeatsDynamic(...)`.",
+    "ProjectRequest": {
+      "description": "Arguments passed to `createReducerBundle(...).project(...)`.",
       "type": "object",
       "properties": {
         "state": { "$ref": "#/$defs/ReducerSessionState" },
         "playerIds": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
-        },
-        "projectionMode": {
-          "anyOf": [
-            { "type": "string", "enum": ["full", "actionsOnly"] },
-            { "type": "null" }
-          ]
         }
       },
       "required": ["state", "playerIds"],
@@ -902,7 +908,7 @@
     },
 
     "BoardStaticProjection": {
-      "description": "Session-scoped projection produced by `projectStatic`. Computed once per reducer session from the manifest + setup profile (no mutable state), cached on the host, and merged back into each seat view on the client. `hash` identifies the payload so clients and the host can detect accidental drift. `manifestVersion` identifies the bundle build so a restart with a new bundle invalidates the cache. Per-seat dynamic projection (view, availableInteractionRefs, zones) continues to flow through `projectSeatsDynamic` and is decoded into typed `InteractionDescriptor` / `ZoneHandles` shapes defined by the OpenAPI game-messages schema, so it is not modeled here.",
+      "description": "Session-scoped projection produced by `boardStatic`. Computed once per reducer session from the manifest + setup profile (no mutable state), cached on the host, and merged back into each seat view on the client. `hash` identifies the payload so clients and the host can detect accidental drift. `manifestVersion` identifies the bundle build so a restart with a new bundle invalidates the cache. Per-seat dynamic projection (view, availableInteractionRefs, zones) continues to flow through `project` and is decoded into typed `InteractionDescriptor` / `ZoneHandles` shapes defined by the OpenAPI game-messages schema, so it is not modeled here.",
       "type": "object",
       "properties": {
         "view": { "$ref": "#/$defs/JsonValue" },

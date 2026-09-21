@@ -7,12 +7,9 @@ function validBundle(): Record<string, unknown> {
   return {
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
     initialize: () => ({}),
-    initializePhase: () => ({}),
-    validateInput: () => ({}),
-    reduce: () => ({}),
     dispatch: () => ({}),
-    projectStatic: () => null,
-    projectSeatsDynamic: () => ({}),
+    boardStatic: () => null,
+    project: () => ({}),
   };
 }
 
@@ -55,10 +52,10 @@ describe("assertReducerBundleContract", () => {
 
   test("rejects a bundle missing any generated callable operation", () => {
     const candidate = validBundle();
-    delete candidate.validateInput;
+    delete candidate.project;
 
     expect(() =>
       assertReducerBundleContract(candidate, "candidate.mjs"),
-    ).toThrow("Reducer bundle candidate.mjs is missing validateInput().");
+    ).toThrow("Reducer bundle candidate.mjs is missing project().");
   });
 });

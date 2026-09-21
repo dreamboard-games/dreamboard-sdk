@@ -3,7 +3,6 @@ import type { RuntimeJson } from "./json.js";
 export type PlayerId = string;
 
 export interface GameplayBasis {
-  readonly generation: number;
   readonly version: number;
   readonly actionSetVersion: string;
   readonly perspectivePlayerId: PlayerId;

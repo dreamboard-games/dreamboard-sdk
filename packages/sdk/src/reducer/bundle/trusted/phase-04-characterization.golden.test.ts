@@ -256,7 +256,7 @@ function createCharacterizationGame() {
 describe("phase 4 trusted-bundle characterization", () => {
   test("dispatch accept/reject outcomes stay golden", async () => {
     const bundle = createReducerBundle(createCharacterizationGame());
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
       rngSeed: 7,
@@ -296,7 +296,7 @@ describe("phase 4 trusted-bundle characterization", () => {
 
   test("lifecycle transition and phase reset stay golden", async () => {
     const bundle = createReducerBundle(createCharacterizationGame());
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
@@ -325,12 +325,12 @@ describe("phase 4 trusted-bundle characterization", () => {
 
   test("seat projection digest stays golden", async () => {
     const bundle = createReducerBundle(createCharacterizationGame());
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
 
-    const projection = bundle.projectSeatsDynamic({
+    const projection = bundle.project({
       state: initial,
       playerIds: ["player-1", "player-2"],
     });
@@ -345,7 +345,7 @@ describe("phase 4 trusted-bundle characterization", () => {
 
   test("rng effect traces and state digest stay golden", async () => {
     const bundle = createReducerBundle(createCharacterizationGame());
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
       rngSeed: 42,
@@ -381,7 +381,7 @@ describe("phase 4 trusted-bundle characterization", () => {
         },
       },
     });
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
       rngSeed: 42,
@@ -468,7 +468,7 @@ describe("phase 4 trusted-bundle characterization", () => {
         },
       },
     });
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
@@ -499,7 +499,7 @@ describe("phase 4 trusted-bundle characterization", () => {
         },
       },
     });
-    const initial = await bundle.initialize({
+    const { state: initial } = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
