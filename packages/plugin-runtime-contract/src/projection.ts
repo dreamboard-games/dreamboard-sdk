@@ -22,7 +22,7 @@ export interface MaterializePluginGameplayFrameInput {
   readonly dynamicProjection: ReducerSeatProjectionBundle;
   readonly staticProjection?: ReducerBoardStaticProjection | null;
   readonly perspectivePlayerId: PlayerId;
-  readonly generation: number;
+
   readonly version: number;
   readonly actionSetVersion: string;
 }
@@ -58,7 +58,6 @@ export function materializePluginGameplayFrame(
 
   const frame = {
     basis: {
-      generation: input.generation,
       version: input.version,
       actionSetVersion: input.actionSetVersion,
       perspectivePlayerId: input.perspectivePlayerId,

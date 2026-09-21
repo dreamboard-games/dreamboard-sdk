@@ -1,6 +1,8 @@
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type {
+  GameEvent,
+  GameOutcome,
   PhaseMapOf,
   ReducerGameContractLike,
   ViewMapOf,
@@ -40,6 +42,8 @@ export function createFlowInstructionResolver<
     queuedInputs: ReducerInput[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    terminal?: GameOutcome<PlayerId>;
+    events: GameEvent[];
   } {
     const initialized = lifecycle.initializePhaseResult(
       {
@@ -61,6 +65,8 @@ export function createFlowInstructionResolver<
     );
     return {
       state: initialized.state,
+      ...(initialized.terminal ? { terminal: initialized.terminal } : {}),
+      events: initialized.events,
       queuedInputs: [],
       queuedInstructions: initialized.instructions,
       trace: initialized.consumptions.map((consumption) => ({

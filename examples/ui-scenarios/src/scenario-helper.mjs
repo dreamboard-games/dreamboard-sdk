@@ -40,7 +40,6 @@ function frame({ id, scenarioId, version, view }) {
     }),
     frame: {
       basis: {
-        generation: 0,
         version,
         actionSetVersion: digest({
           digestVersion: "primitive-protocol-action-set@1",

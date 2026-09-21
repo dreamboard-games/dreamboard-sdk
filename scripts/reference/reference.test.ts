@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { setImmediate } from "node:timers/promises";
 
 import type { AsyncCommandRunner } from "../lib/process.ts";
 import { discoverReferenceGames } from "./games.ts";
@@ -281,6 +282,7 @@ test("packed verification runs at most three games concurrently", async (context
   let active = 0;
   let maximumActive = 0;
   const started: string[] = [];
+  const firstBatch = Promise.withResolvers<void>();
   const run: AsyncCommandRunner = async (_command, args, options) => {
     if (!args.includes("--lockfile=false")) return "";
     const cwd = options?.cwd ?? "";
@@ -288,7 +290,8 @@ test("packed verification runs at most three games concurrently", async (context
     started.push(gameId);
     active += 1;
     maximumActive = Math.max(maximumActive, active);
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    if (started.length === 3) firstBatch.resolve();
+    await firstBatch.promise;
     active -= 1;
     const installed = path.join(
       cwd,
@@ -337,6 +340,9 @@ test("candidate failure stops scheduling and removes temporary state", async (co
   const tarball = path.join(root, "sdk.tgz");
   await writeFile(tarball, "candidate");
   const started: string[] = [];
+  const firstBatch = Promise.withResolvers<void>();
+  const failAlpha = Promise.withResolvers<void>();
+  const finishOthers = Promise.withResolvers<void>();
   let temporaryRoot = "";
   const run: AsyncCommandRunner = async (_command, args, options) => {
     if (!args.includes("--lockfile=false")) return "";
@@ -344,8 +350,12 @@ test("candidate failure stops scheduling and removes temporary state", async (co
     const gameId = path.basename(cwd);
     temporaryRoot = path.dirname(path.dirname(cwd));
     started.push(gameId);
-    if (gameId === "alpha") throw new Error("candidate install failed");
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    if (started.length === 3) firstBatch.resolve();
+    if (gameId === "alpha") {
+      await failAlpha.promise;
+      throw new Error("candidate install failed");
+    }
+    await finishOthers.promise;
     const installed = path.join(
       cwd,
       "node_modules",
@@ -360,8 +370,14 @@ test("candidate failure stops scheduling and removes temporary state", async (co
     return "";
   };
 
+  const verification = verifyReferenceGames({ root, sdkTarball: tarball, run });
+  await firstBatch.promise;
+  failAlpha.resolve();
+  // Drain rejection microtasks through the scheduler before letting other games finish.
+  await setImmediate();
+  finishOthers.resolve();
   await assert.rejects(
-    verifyReferenceGames({ root, sdkTarball: tarball, run }),
+    verification,
     /\[reference:alpha\] failed[\s\S]*candidate install failed/,
   );
   assert.deepEqual(started.sort(), ["alpha", "beta", "delta"]);

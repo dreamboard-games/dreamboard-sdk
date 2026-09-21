@@ -390,7 +390,7 @@ export type ReducerGameDefinition<
    * Optional session-scoped static projection. Authored via
    * {@link StaticViewDefinition}; computed once per reducer session from the
    * manifest + setup profile and cached by the host. The client merges the
-   * cached payload into every seat view, so the per-tick `projectSeatsDynamic`
+   * cached payload into every seat view, so the per-tick `project`
    * call no longer needs to re-serialize static board topology.
    */
   staticView?: StaticViewDefinition<

@@ -295,19 +295,21 @@ function toWireDispatchTrace<State, PlayerId extends string>(result: {
   ).trace;
 }
 
-export function createReducerBundle<
+export function createReducerTestingBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
   options: ReducerBundleOptions = {},
-): ReducerBundle {
+): ReducerBundleTestingRuntime {
   type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
   const trustedBundle = createTrustedReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   type Manifest = ManifestContractOf<Definition["contract"]>;
-  type TrustedState = Awaited<ReturnType<typeof trustedBundle.initialize>>;
+  type TrustedState = Awaited<
+    ReturnType<typeof trustedBundle.initialize>
+  >["state"];
 
   function parseTrustedState(state: unknown): TrustedState {
     return codec.parseState(
@@ -322,13 +324,15 @@ export function createReducerBundle<
     return codec.parsePlayerId(playerId);
   }
 
-  const bundle = {
-    ...trustedBundle,
-    // Top-level protocol version. The Kotlin ReducerBundleAdapter reads this
-    // on bundle load and rejects bundles whose major version does not match
-    // the host's compiled-in REDUCER_CONTRACT_VERSION.
+  const bundle: ReducerBundleTestingRuntime = {
+    // Hosts require this exact runner contract version.
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
-    async initialize({
+    async initialize(
+      input: Wire.InitializeRequest,
+    ): Promise<Wire.ReducerSessionState> {
+      return (await bundle.initializeResult(input)).state;
+    },
+    async initializeResult({
       table,
       playerIds,
       rngSeed,
@@ -339,14 +343,35 @@ export function createReducerBundle<
           table as unknown as Parameters<typeof codec.parseInitialTable>[0],
           playerIds,
         );
-      return codec.serializeState(
-        await trustedBundle.initialize({
-          table: parsedTable,
-          playerIds: parsedPlayerIds,
-          rngSeed,
-          setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
-        }),
-      );
+      const initialized = await trustedBundle.initialize({
+        table: parsedTable,
+        playerIds: parsedPlayerIds,
+        rngSeed,
+        setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+      });
+      return {
+        state: codec.serializeState(initialized.state),
+        ...(initialized.terminal
+          ? {
+              terminal: {
+                reason: initialized.terminal.reason,
+                standings: initialized.terminal.standings.map(
+                  ({ scoreBreakdown, tieBreaks, ...standing }) => ({
+                    ...standing,
+                    ...(scoreBreakdown
+                      ? { scoreBreakdown: [...scoreBreakdown] }
+                      : {}),
+                    ...(tieBreaks ? { tieBreaks: [...tieBreaks] } : {}),
+                  }),
+                ),
+              },
+            }
+          : {}),
+        events: initialized.events.map(({ details, ...event }) => ({
+          ...event,
+          ...(details ? { details: [...details] } : {}),
+        })),
+      } satisfies Wire.InitializeResult;
     },
     async initializePhase({ state, to }: Wire.InitializePhaseRequest) {
       const decodedState = parseTrustedState(state);
@@ -426,17 +451,17 @@ export function createReducerBundle<
      * thereafter merges it back into every seat view on the client. Returns
      * `null` when `defineGame` did not declare a `staticView`.
      */
-    projectStatic() {
-      return trustedBundle.projectStatic() as Wire.BoardStaticProjection | null;
+    boardStatic() {
+      return trustedBundle.boardStatic() as Wire.BoardStaticProjection | null;
     },
-    projectSeatsDynamic({
+    project({
       state,
       playerIds,
       projectionMode,
-    }: Wire.ProjectSeatsDynamicRequest) {
+    }: Wire.ProjectRequest & { projectionMode?: "full" | "actionsOnly" }) {
       const parsedState = parseTrustedState(state);
       const parsedPlayerIds = playerIds.map((pid) => codec.parsePlayerId(pid));
-      return trustedBundle.projectSeatsDynamic({
+      return trustedBundle.project({
         state: parsedState,
         playerIds: parsedPlayerIds,
         projectionMode: projectionMode ?? undefined,
@@ -457,12 +482,14 @@ export function createReducerBundle<
               table as Parameters<typeof codec.parseInitialTable>[0],
               playerIds,
             );
-          state = await trustedBundle.initialize({
-            table: parsedTable,
-            playerIds: parsedPlayerIds,
-            rngSeed,
-            setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
-          });
+          state = (
+            await trustedBundle.initialize({
+              table: parsedTable,
+              playerIds: parsedPlayerIds,
+              rngSeed,
+              setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+            })
+          ).state;
         },
         hydrate({ state: snapshot }) {
           state = parseTrustedState(snapshot);
@@ -490,11 +517,11 @@ export function createReducerBundle<
             trace: toWireDispatchTrace(result as never),
           };
         },
-        projectSeatsDynamic({ playerIds, projectionMode }) {
+        project({ playerIds, projectionMode }) {
           const parsedPlayerIds = playerIds.map((pid) =>
             parseRuntimePlayerId(pid),
           );
-          return trustedBundle.projectSeatsDynamic({
+          return trustedBundle.project({
             state: requireState(),
             playerIds: parsedPlayerIds,
             projectionMode: projectionMode ?? undefined,
@@ -537,4 +564,23 @@ export function createReducerBundle<
   } satisfies ReducerBundleTestingRuntime;
 
   return bundle;
+}
+
+/** The complete runner boundary. Authoring inspection stays SDK-owned. */
+export function createReducerBundle<
+  Contract extends ReducerGameContractLike,
+  Definitions extends PhaseMapOf<Contract>,
+  Views extends ViewMapOf<Contract>,
+>(
+  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  options: ReducerBundleOptions = {},
+): ReducerBundle {
+  const runtime = createReducerTestingBundle(definition, options);
+  return {
+    reducerContractVersion: runtime.reducerContractVersion,
+    boardStatic: runtime.boardStatic,
+    initialize: runtime.initializeResult,
+    dispatch: runtime.dispatch,
+    project: ({ state, playerIds }) => runtime.project({ state, playerIds }),
+  };
 }

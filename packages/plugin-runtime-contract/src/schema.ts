@@ -328,7 +328,6 @@ export const SimultaneousPhaseSnapshotSchema = z
 
 export const GameplayBasisSchema = z
   .object({
-    generation: z.number().int().nonnegative(),
     version: z.number().int().nonnegative(),
     actionSetVersion: z.string().min(1),
     perspectivePlayerId: PlayerIdSchema,

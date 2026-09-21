@@ -37,6 +37,8 @@ export function createRuntimeInstructionEngine<
     queuedInputs: Input[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, Input>[];
+    terminal?: GameOutcome<PlayerId>;
+    events?: readonly GameEvent[];
   };
   afterInput?: (
     state: State,
@@ -53,8 +55,10 @@ export function createRuntimeInstructionEngine<
   function drainInstructions(
     state: State,
     instructionsToDrain: RuntimeInstructionForState<State>[],
-  ): State {
+  ): { state: State; terminal?: GameOutcome<PlayerId>; events: GameEvent[] } {
     let workingState = state;
+    let terminal: GameOutcome<PlayerId> | undefined;
+    const events: GameEvent[] = [];
     const instructionQueue = [...instructionsToDrain];
     const systemQueue: Input[] = [];
 
@@ -67,6 +71,8 @@ export function createRuntimeInstructionEngine<
         if (instruction === undefined) break;
         const resolved = resolveInstruction(workingState, instruction);
         workingState = resolved.state;
+        terminal ??= resolved.terminal;
+        events.push(...(resolved.events ?? []));
         if (resolved.queuedInstructions.length > 0) {
           instructionQueue.unshift(...resolved.queuedInstructions);
         }
@@ -84,11 +90,13 @@ export function createRuntimeInstructionEngine<
           );
         }
         workingState = result.state;
+        terminal ??= result.terminal;
+        events.push(...(result.events ?? []));
         instructionQueue.push(...(result.instructions ?? []));
       }
     }
 
-    return workingState;
+    return { state: workingState, ...(terminal ? { terminal } : {}), events };
   }
 
   function dispatch(
@@ -146,6 +154,8 @@ export function createRuntimeInstructionEngine<
           });
           const resolved = resolveInstruction(workingState, instruction);
           workingState = resolved.state;
+          terminal ??= resolved.terminal;
+          events.push(...(resolved.events ?? []));
           trace.push(...resolved.trace);
           if (resolved.queuedInstructions.length > 0) {
             instructionQueue.unshift(...resolved.queuedInstructions);

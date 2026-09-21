@@ -4,6 +4,8 @@ import type { RuntimePayload } from "../../model";
 import { createRuntimeInstructionEngine } from "../../engine/runtime-instruction-engine";
 import { cloneRuntimeTable } from "../../table";
 import type {
+  GameEvent,
+  GameOutcome,
   InputCollector,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -374,6 +376,7 @@ export function createTrustedInstructionRunner<
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
       } as State),
       instructions: resolved.instructions ?? [],
+      ...(resolved.terminal ? { terminal: resolved.terminal } : {}),
       events: resolved.events ?? [],
       trace: rngTrace(random.consumptions()),
     };
@@ -410,6 +413,7 @@ export function createTrustedInstructionRunner<
         },
       } as State,
       instructions: result.instructions ?? [],
+      ...(result.terminal ? { terminal: result.terminal } : {}),
       events: result.events ?? [],
       trace: rngTrace([
         ...sampled.consumptions,
@@ -426,6 +430,8 @@ export function createTrustedInstructionRunner<
     queuedInputs: ReducerInput[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    terminal?: GameOutcome<PlayerId>;
+    events?: readonly GameEvent[];
   } {
     switch (instruction.kind) {
       case "flow.transition":
@@ -453,6 +459,8 @@ export function createTrustedInstructionRunner<
     queuedInputs: ReducerInput[];
     queuedInstructions: RuntimeInstructionForState<State>[];
     trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    terminal?: GameOutcome<PlayerId>;
+    events?: readonly GameEvent[];
   } {
     switch (instruction.kind) {
       case "flow.transition":

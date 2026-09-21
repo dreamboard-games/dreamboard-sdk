@@ -25,11 +25,11 @@ export function createReducerScenarioRunner(
       const exchanges: ReducerScenarioExchange[] = [];
 
       const appendFrame = (id: string): ReducerScenarioFrame => {
-        const dynamicProjection = options.bundle.projectSeatsDynamic({
+        const dynamicProjection = options.bundle.project({
           state,
           playerIds: [options.viewer.playerId],
         });
-        const staticProjection = options.bundle.projectStatic?.() ?? null;
+        const staticProjection = options.bundle.boardStatic();
         const flow = readFlowState(state);
         const materialized = materializePluginGameplayFrame({
           currentPhase: flow.currentPhase,
@@ -37,7 +37,6 @@ export function createReducerScenarioRunner(
           dynamicProjection,
           staticProjection,
           perspectivePlayerId: options.viewer.playerId,
-          generation: 0,
           version: gameVersion,
           actionSetVersion: "pending",
         });
@@ -74,10 +73,19 @@ export function createReducerScenarioRunner(
           throw new Error("Reducer scenario runner lost its initial frame.");
         }
         if (operation.operation === "validate") {
-          const result = await options.bundle.validateInput({
-            state,
+          // Authoring probes execute the canonical operation without committing it.
+          const dispatched = await options.bundle.dispatch({
+            state: structuredClone(state),
             input: operation.input,
           });
+          const result =
+            dispatched.kind === "accept"
+              ? { valid: true }
+              : {
+                  valid: false,
+                  errorCode: dispatched.errorCode,
+                  message: dispatched.message,
+                };
           exchanges.push({
             id: operation.id,
             operation: "validate",

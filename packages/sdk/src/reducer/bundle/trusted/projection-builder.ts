@@ -558,7 +558,7 @@ export function createProjectionBuilder<
     return view.project(viewArgs);
   }
 
-  function projectSeatsDynamic({
+  function project({
     state,
     playerIds,
     projectionMode = "full",
@@ -649,7 +649,7 @@ export function createProjectionBuilder<
   }
 
   return {
-    projectSeatsDynamic,
+    project,
     resolveCurrentStageFor,
     resolveSchedulerFlowFor,
     resolveStageSeatsFor,

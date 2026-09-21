@@ -1,6 +1,6 @@
 import type { Wire } from "@dreamboard-games/reducer-contract";
 import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
-import { createReducerBundle } from "../reducer/bundle.js";
+import { createReducerTestingBundle } from "../reducer/bundle/ingress-bundle.js";
 import type { ReducerBundleTestingRuntime } from "../reducer/bundle/types.js";
 import type {
   InteractionActionabilityResult,
@@ -343,7 +343,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       perspective.kind === "player"
         ? this.playerId({ seat: perspective.seat }, "perspective.seat")
         : null;
-    const projection = this.bundle.projectSeatsDynamic({
+    const projection = this.bundle.project({
       state: this.reducerState,
       playerIds: selectedPlayerId ? [selectedPlayerId] : [],
     });
@@ -601,7 +601,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   }
 
   private project(playerId: string): Wire.SeatProjectionBundle {
-    return this.bundle.projectSeatsDynamic({
+    return this.bundle.project({
       state: this.reducerState,
       playerIds: [playerId],
     });
@@ -659,7 +659,7 @@ function createScenarioBundle(
   game: ScenarioDefinitionGameLike,
   events: ReducerDiagnosticEvent[],
 ): ScenarioBundle {
-  return createReducerBundle(game as never, {
+  return createReducerTestingBundle(game as never, {
     diagnostics: {
       event(event) {
         events.push(structuredClone(event));

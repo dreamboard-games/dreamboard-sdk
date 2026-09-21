@@ -18,8 +18,9 @@ import effectTransition from "./effect-transition.json" with { type: "json" };
 import gameInputInteractionAction from "./game-input-interaction-action.json" with { type: "json" };
 import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
 import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
+import initializeResult from "./initialize-result.json" with { type: "json" };
 import initializeRequest from "./initialize-request.json" with { type: "json" };
-import projectSeatsDynamicRequest from "./project-seats-dynamic-request.json" with { type: "json" };
+import projectRequest from "./project-request.json" with { type: "json" };
 import reduceRequest from "./reduce-request.json" with { type: "json" };
 import reduceResultAcceptMixed from "./reduce-result-accept-mixed.json" with { type: "json" };
 import reduceResultReject from "./reduce-result-reject.json" with { type: "json" };
@@ -123,6 +124,12 @@ export const FIXTURES = [
     value: dispatchResultReject,
   },
   {
+    name: "initialize-result",
+    typeName: "InitializeResult" as const,
+    why: "Initialization can complete the game and carries its authoritative state and effects.",
+    value: initializeResult,
+  },
+  {
     name: "initialize-request",
     typeName: "InitializeRequest" as const,
     why: "Reducer bundle initialization payload with table, player ids, rng seed, and setup selection.",
@@ -153,10 +160,10 @@ export const FIXTURES = [
     value: dispatchRequest,
   },
   {
-    name: "project-seats-dynamic-request",
-    typeName: "ProjectSeatsDynamicRequest" as const,
+    name: "project-request",
+    typeName: "ProjectRequest" as const,
     why: "Reducer bundle projection payload requesting a view for multiple seats.",
-    value: projectSeatsDynamicRequest,
+    value: projectRequest,
   },
   {
     name: "seat-projection",
@@ -167,7 +174,7 @@ export const FIXTURES = [
   {
     name: "seat-projection-bundle",
     typeName: "SeatProjectionBundle" as const,
-    why: "Combined seat projection result returned from projectSeatsDynamic.",
+    why: "Combined seat projection result returned from project.",
     value: seatProjectionBundle,
   },
 ] as const;

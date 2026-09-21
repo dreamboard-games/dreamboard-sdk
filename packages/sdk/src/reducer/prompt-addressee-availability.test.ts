@@ -26,12 +26,12 @@ import { defineGameDefinition as defineGame } from "./authoring/game";
 // submission attempt came back as `NOT_YOUR_TURN`. These tests prevent that
 // from regressing.
 
+import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   choiceTarget,
   defineEmptyView,
-  createReducerBundle,
   defineGameContract,
   defineInteraction,
   definePhase,
@@ -43,11 +43,11 @@ import type { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 
 function getAvailableInteractions(
-  bundle: ReturnType<typeof createReducerBundle>,
-  state: Parameters<typeof bundle.projectSeatsDynamic>[0]["state"],
+  bundle: ReturnType<typeof createReducerTestingBundle>,
+  state: Parameters<typeof bundle.project>[0]["state"],
   playerId: string,
 ) {
-  const projection = bundle.projectSeatsDynamic({
+  const projection = bundle.project({
     state,
     playerIds: [playerId],
   });
@@ -238,7 +238,7 @@ describe("addressee-based prompt authorization", () => {
       },
     });
 
-    return createReducerBundle(game);
+    return createReducerTestingBundle(game);
   }
 
   test("descriptor: addressee sees the prompt as available even when they are not active", async () => {
@@ -387,7 +387,7 @@ describe("phase actor, step, and cost resolution", () => {
         player: defineEmptyView<typeof contract>(),
       },
     });
-    return createReducerBundle(game);
+    return createReducerTestingBundle(game);
   }
 
   function createResourceTable(): RuntimeTableRecord {
@@ -594,7 +594,7 @@ describe("default action-kind authorization", () => {
       },
     });
 
-    return createReducerBundle(game);
+    return createReducerTestingBundle(game);
   }
 
   test("descriptor: active player sees available status; non-active sees notYourTurn availability", async () => {
@@ -766,7 +766,7 @@ describe("closed prompt (`to` resolves to empty set)", () => {
       },
     });
 
-    return createReducerBundle(game);
+    return createReducerTestingBundle(game);
   }
 
   test("descriptor: the closed prompt is invisible to every seat (no leak to the active player)", async () => {
@@ -869,7 +869,7 @@ describe("action-kind interactions with a `to` selector", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
@@ -946,7 +946,7 @@ describe("author `available` predicate composes with authorization", () => {
       },
     });
 
-    const bundle = createReducerBundle(game);
+    const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
