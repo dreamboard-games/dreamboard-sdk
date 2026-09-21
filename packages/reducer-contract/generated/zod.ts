@@ -61,18 +61,6 @@ export const EffectSchema = z.discriminatedUnion("type", [EffectTransitionSchema
 
 export const ReducerInputValidationResultSchema = z.object({ "valid": z.boolean(), "errorCode": z.string().optional(), "message": z.string().optional() }).strict();
 
-export const InitializeRequestSchema = z.object({ "table": JsonValueSchema, "playerIds": z.array(z.string().min(1)), "rngSeed": z.union([z.number().refine(Number.isInteger, { message: "Expected integer" }), z.null()]).optional(), "setup": z.union([ReducerSetupSelectionSchema, z.null()]).optional() }).strict();
-
-export const InitializePhaseRequestSchema = z.object({ "state": ReducerSessionStateSchema, "to": z.string().min(1) }).strict();
-
-export const ValidateInputRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
-
-export const ReduceRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
-
-export const DispatchRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
-
-export const ReduceResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
-
 export const GameOutcomeReasonSchema = z.object({ "code": z.string().min(1), "message": z.string().min(1).optional() }).strict();
 
 export const OutcomeResultSchema = z.enum(["win", "draw", "loss", "eliminated"]);
@@ -90,6 +78,20 @@ export const GameEventDetailSchema = z.object({ "label": z.string().min(1), "val
 export const SystemActionEventSchema = z.object({ "kind": z.literal("systemAction"), "procedureId": z.string().min(1), "title": z.string().min(1), "summary": z.string().min(1).optional(), "details": z.array(GameEventDetailSchema).max(16).optional() }).strict();
 
 export const GameEventSchema = z.discriminatedUnion("kind", [SystemActionEventSchema]);
+
+export const InitializeResultSchema = z.object({ "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "events": z.array(GameEventSchema).optional() }).strict();
+
+export const InitializeRequestSchema = z.object({ "table": JsonValueSchema, "playerIds": z.array(z.string().min(1)), "rngSeed": z.union([z.number().refine(Number.isInteger, { message: "Expected integer" }), z.null()]).optional(), "setup": z.union([ReducerSetupSelectionSchema, z.null()]).optional() }).strict();
+
+export const InitializePhaseRequestSchema = z.object({ "state": ReducerSessionStateSchema, "to": z.string().min(1) }).strict();
+
+export const ValidateInputRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
+
+export const ReduceRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
+
+export const DispatchRequestSchema = z.object({ "state": ReducerSessionStateSchema, "input": GameInputSchema }).strict();
+
+export const ReduceResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
 
 export const ReduceResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "effects": z.array(EffectSchema), "continuations": ContinuationMapSchema, "events": z.array(GameEventSchema).max(32) }).strict();
 

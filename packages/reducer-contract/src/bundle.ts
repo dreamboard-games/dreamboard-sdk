@@ -22,7 +22,7 @@ export interface ReducerBundleContract {
   readonly reducerContractVersion: Wire.ReducerContractVersion;
   initialize(
     input: Wire.InitializeRequest,
-  ): MaybePromise<Wire.ReducerSessionState>;
+  ): MaybePromise<Wire.InitializeResult>;
   dispatch(input: Wire.DispatchRequest): MaybePromise<Wire.DispatchResult>;
   boardStatic(): Wire.BoardStaticProjection | null;
   project(input: Wire.ProjectRequest): Wire.SeatProjectionBundle;

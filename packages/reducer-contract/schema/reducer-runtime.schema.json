@@ -359,6 +359,18 @@
       "additionalProperties": false
     },
 
+    "InitializeResult": {
+      "description": "Initial authoritative state and gameplay effects produced by phase entry and automatic continuations.",
+      "type": "object",
+      "properties": {
+        "state": { "$ref": "#/$defs/ReducerSessionState" },
+        "terminal": { "$ref": "#/$defs/GameOutcome" },
+        "events": { "type": "array", "items": { "$ref": "#/$defs/GameEvent" } }
+      },
+      "required": ["state"],
+      "additionalProperties": false
+    },
+
     "InitializeRequest": {
       "description": "Arguments passed to `createReducerBundle(...).initialize(...)`. `table` is intentionally erased at this contract layer; the authored bundle validates it against its manifest-derived schema.",
       "type": "object",

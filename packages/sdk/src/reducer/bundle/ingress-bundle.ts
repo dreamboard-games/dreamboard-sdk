@@ -307,7 +307,9 @@ export function createReducerTestingBundle<
   const trustedBundle = createTrustedReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   type Manifest = ManifestContractOf<Definition["contract"]>;
-  type TrustedState = Awaited<ReturnType<typeof trustedBundle.initialize>>;
+  type TrustedState = Awaited<
+    ReturnType<typeof trustedBundle.initialize>
+  >["state"];
 
   function parseTrustedState(state: unknown): TrustedState {
     return codec.parseState(
@@ -322,10 +324,15 @@ export function createReducerTestingBundle<
     return codec.parsePlayerId(playerId);
   }
 
-  const bundle = {
+  const bundle: ReducerBundleTestingRuntime = {
     // Hosts require this exact runner contract version.
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
-    async initialize({
+    async initialize(
+      input: Wire.InitializeRequest,
+    ): Promise<Wire.ReducerSessionState> {
+      return (await bundle.initializeResult(input)).state;
+    },
+    async initializeResult({
       table,
       playerIds,
       rngSeed,
@@ -336,14 +343,35 @@ export function createReducerTestingBundle<
           table as unknown as Parameters<typeof codec.parseInitialTable>[0],
           playerIds,
         );
-      return codec.serializeState(
-        await trustedBundle.initialize({
-          table: parsedTable,
-          playerIds: parsedPlayerIds,
-          rngSeed,
-          setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
-        }),
-      );
+      const initialized = await trustedBundle.initialize({
+        table: parsedTable,
+        playerIds: parsedPlayerIds,
+        rngSeed,
+        setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+      });
+      return {
+        state: codec.serializeState(initialized.state),
+        ...(initialized.terminal
+          ? {
+              terminal: {
+                reason: initialized.terminal.reason,
+                standings: initialized.terminal.standings.map(
+                  ({ scoreBreakdown, tieBreaks, ...standing }) => ({
+                    ...standing,
+                    ...(scoreBreakdown
+                      ? { scoreBreakdown: [...scoreBreakdown] }
+                      : {}),
+                    ...(tieBreaks ? { tieBreaks: [...tieBreaks] } : {}),
+                  }),
+                ),
+              },
+            }
+          : {}),
+        events: initialized.events.map(({ details, ...event }) => ({
+          ...event,
+          ...(details ? { details: [...details] } : {}),
+        })),
+      } satisfies Wire.InitializeResult;
     },
     async initializePhase({ state, to }: Wire.InitializePhaseRequest) {
       const decodedState = parseTrustedState(state);
@@ -454,12 +482,14 @@ export function createReducerTestingBundle<
               table as Parameters<typeof codec.parseInitialTable>[0],
               playerIds,
             );
-          state = await trustedBundle.initialize({
-            table: parsedTable,
-            playerIds: parsedPlayerIds,
-            rngSeed,
-            setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
-          });
+          state = (
+            await trustedBundle.initialize({
+              table: parsedTable,
+              playerIds: parsedPlayerIds,
+              rngSeed,
+              setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+            })
+          ).state;
         },
         hydrate({ state: snapshot }) {
           state = parseTrustedState(snapshot);
@@ -549,7 +579,7 @@ export function createReducerBundle<
   return {
     reducerContractVersion: runtime.reducerContractVersion,
     boardStatic: runtime.boardStatic,
-    initialize: runtime.initialize,
+    initialize: runtime.initializeResult,
     dispatch: runtime.dispatch,
     project: ({ state, playerIds }) => runtime.project({ state, playerIds }),
   };

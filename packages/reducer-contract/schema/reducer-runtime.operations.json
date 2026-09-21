@@ -9,7 +9,7 @@
     {
       "name": "initialize",
       "input": "InitializeRequest",
-      "output": "ReducerSessionState",
+      "output": "InitializeResult",
       "maybePromise": true
     },
     {

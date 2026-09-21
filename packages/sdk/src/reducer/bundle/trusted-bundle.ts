@@ -93,7 +93,7 @@ export function createTrustedReducerBundle<
         instructions.drainInstructions(
           initialized.state,
           initialized.instructions,
-        ),
+        ).state,
       );
     },
     async validateInput({ state, input }) {

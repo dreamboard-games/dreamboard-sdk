@@ -11,6 +11,7 @@ import {
   defineInteraction,
   definePlayerView,
   definePhase,
+  definePhaseStage,
   defineSharedView,
   defineStepPhase,
   gameEvent,
@@ -172,6 +173,141 @@ function expectProjectionTiming(timing: {
 }
 
 describe("runtime-owned reducer effects", () => {
+  test.each(["phase", "stage", "continuation", "dispatch"] as const)(
+    "initialize preserves %s terminal outcomes and events",
+    async (mode) => {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({ complete: z.boolean() }),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+      const outcome = {
+        reason: { code: "INITIAL_STATE_COMPLETE" },
+        standings: [
+          { playerId: "player-1", rank: 1, result: "draw" as const },
+          { playerId: "player-2", rank: 1, result: "draw" as const },
+        ],
+      };
+      const entered = gameEvent.systemAction({
+        procedureId: "entered",
+        title: "Entered phase",
+      });
+      const completed = gameEvent.systemAction({
+        procedureId: "completed",
+        title: "Completed initialization",
+      });
+      const completeAfterRoll = defineEffect<typeof contract>()({
+        type: "rollDie",
+        id: "completeAfterRoll",
+        context: z.object({}),
+        reduce({ state, endGame }) {
+          return endGame(state, outcome, { events: [completed] });
+        },
+      });
+      const game = defineGame({
+        contract,
+        initial: {
+          public: () => ({ complete: false }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            enter({ state, accept, endGame, fx }) {
+              if (
+                mode === "stage" ||
+                (mode === "dispatch" && !state.publicState.complete)
+              )
+                return accept(state);
+              return mode === "phase" || mode === "dispatch"
+                ? endGame(state, outcome, { events: [entered] })
+                : accept(state, {
+                    events: [entered],
+                    instructions: [
+                      fx.effect(completeAfterRoll, {
+                        dieId: "die-1",
+                        context: {},
+                      }),
+                    ],
+                  });
+            },
+            stages: {
+              active: definePhaseStage<
+                typeof contract,
+                z.ZodObject<Record<string, never>>
+              >()({
+                when: () => true,
+                allow: ["complete"],
+                onEnter({ state, accept, endGame }) {
+                  return mode === "stage"
+                    ? endGame(state, outcome, { events: [completed] })
+                    : accept(state);
+                },
+              }),
+            },
+            interactions: {
+              complete: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ state, accept, fx }) {
+                  return accept(
+                    { ...state, publicState: { complete: true } },
+                    {
+                      instructions: [fx.transition("takeTurn")],
+                    },
+                  );
+                },
+              }),
+            },
+            effects: { completeAfterRoll },
+          }),
+        },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
+        },
+      });
+      const bundle = createReducerBundle(game);
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+      const result =
+        mode === "dispatch"
+          ? await bundle.dispatch({
+              state: initialized.state,
+              input: {
+                kind: "interaction",
+                playerId: "player-1",
+                interactionId: "complete",
+                params: {},
+              },
+            })
+          : initialized;
+      if ("kind" in result && result.kind === "reject")
+        throw new Error("Expected completion to accept");
+      expect(result.terminal).toEqual(outcome);
+      expect(result.events).toEqual(
+        mode === "continuation"
+          ? [entered, completed]
+          : mode === "stage"
+            ? [completed]
+            : [entered],
+      );
+      expect(result.state.domain.flow.currentPhase).toBe("takeTurn");
+      if (mode === "continuation")
+        expect(result.state.runtime.rng.cursor).toBe(1);
+    },
+  );
+
   test("runner operations replay the same state independently of warm caches", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -231,7 +367,7 @@ describe("runtime-owned reducer effects", () => {
     ]);
     expect(warm.reducerContractVersion).toBe("0.5.0");
     const playerIds = ["player-1", "player-2"];
-    const initial = await warm.initialize({
+    const { state: initial } = await warm.initialize({
       table: createTable(),
       playerIds,
       rngSeed: 123,

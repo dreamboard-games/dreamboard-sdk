@@ -18,6 +18,7 @@ import effectTransition from "./effect-transition.json" with { type: "json" };
 import gameInputInteractionAction from "./game-input-interaction-action.json" with { type: "json" };
 import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
 import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
+import initializeResult from "./initialize-result.json" with { type: "json" };
 import initializeRequest from "./initialize-request.json" with { type: "json" };
 import projectRequest from "./project-request.json" with { type: "json" };
 import reduceRequest from "./reduce-request.json" with { type: "json" };
@@ -121,6 +122,12 @@ export const FIXTURES = [
     typeName: "DispatchResult" as const,
     why: "Dispatch reject variant.",
     value: dispatchResultReject,
+  },
+  {
+    name: "initialize-result",
+    typeName: "InitializeResult" as const,
+    why: "Initialization can complete the game and carries its authoritative state and effects.",
+    value: initializeResult,
   },
   {
     name: "initialize-request",

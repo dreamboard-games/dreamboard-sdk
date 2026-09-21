@@ -41,7 +41,9 @@ import "@dreamboard-games/sdk/ui/plugin-styles.css";
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
 and `project({ state, playerIds })`. The runner contract is `0.5.0`; hosts must
-require that exact version. Dispatch includes validation and effect execution.
+require that exact version. Dispatch includes validation and effect execution. Initialization returns
+`{ state, terminal?, events? }`, preserving outcomes and events from initial
+phase entry and automatic continuations.
 
 The authoritative state is explicit on every dispatch and projection. A host
 may retain a warm worker and SDK caches, but replaying the same state and input

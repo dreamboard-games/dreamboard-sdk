@@ -68,7 +68,11 @@ export type TrustedReducerBundle<
     playerIds: TrustedPlayerId<Contract>[];
     rngSeed?: number | null;
     setup?: RuntimeSetupSelectionInput<ManifestContractOf<Contract>> | null;
-  }): Promise<TrustedSessionState<Contract>>;
+  }): Promise<{
+    state: TrustedSessionState<Contract>;
+    terminal?: GameOutcome<TrustedPlayerId<Contract>>;
+    events: GameEvent[];
+  }>;
   initializePhase(input: {
     state: TrustedSessionState<Contract>;
     to: PhaseNamesOfDefinition<
@@ -162,7 +166,11 @@ export type TrustedReducerBundle<
 
 export type ReducerBundle = ReducerBundleContract;
 
-type ReducerAuthoringBundle = ReducerBundleContract & {
+type ReducerAuthoringBundle = Omit<ReducerBundleContract, "initialize"> & {
+  initialize(input: Wire.InitializeRequest): Promise<Wire.ReducerSessionState>;
+  initializeResult(
+    input: Wire.InitializeRequest,
+  ): Promise<Wire.InitializeResult>;
   initializePhase(
     input: Wire.InitializePhaseRequest,
   ): Promise<Wire.ReducerSessionState>;

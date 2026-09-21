@@ -20,6 +20,7 @@ describe("wire fixtures parse under generated Zod", () => {
       GameInput: Zod.GameInputSchema,
       InitializePhaseRequest: Zod.InitializePhaseRequestSchema,
       InitializeRequest: Zod.InitializeRequestSchema,
+      InitializeResult: Zod.InitializeResultSchema,
       ProjectRequest: Zod.ProjectRequestSchema,
       ReduceRequest: Zod.ReduceRequestSchema,
       ReducerRuntimeLogEntry: Zod.ReducerRuntimeLogEntrySchema,
@@ -507,33 +508,35 @@ describe("round-trip stability", () => {
       const schema: { parse: (v: unknown) => unknown } =
         fixture.typeName === "Effect"
           ? Zod.EffectSchema
-          : fixture.typeName === "InitializeRequest"
-            ? Zod.InitializeRequestSchema
-            : fixture.typeName === "InitializePhaseRequest"
-              ? Zod.InitializePhaseRequestSchema
-              : fixture.typeName === "ValidateInputRequest"
-                ? Zod.ValidateInputRequestSchema
-                : fixture.typeName === "ReduceRequest"
-                  ? Zod.ReduceRequestSchema
-                  : fixture.typeName === "DispatchRequest"
-                    ? Zod.DispatchRequestSchema
-                    : fixture.typeName === "ProjectRequest"
-                      ? Zod.ProjectRequestSchema
-                      : fixture.typeName === "SeatProjection"
-                        ? Zod.SeatProjectionSchema
-                        : fixture.typeName === "SeatProjectionBundle"
-                          ? Zod.SeatProjectionBundleSchema
-                          : fixture.typeName === "ReducerSessionState"
-                            ? Zod.ReducerSessionStateSchema
-                            : fixture.typeName === "ReducerRuntimeState"
-                              ? Zod.ReducerRuntimeStateSchema
-                              : fixture.typeName === "ReducerRuntimeLogEntry"
-                                ? Zod.ReducerRuntimeLogEntrySchema
-                                : fixture.typeName === "ReduceResult"
-                                  ? Zod.ReduceResultSchema
-                                  : fixture.typeName === "DispatchResult"
-                                    ? Zod.DispatchResultSchema
-                                    : Zod.GameInputSchema;
+          : fixture.typeName === "InitializeResult"
+            ? Zod.InitializeResultSchema
+            : fixture.typeName === "InitializeRequest"
+              ? Zod.InitializeRequestSchema
+              : fixture.typeName === "InitializePhaseRequest"
+                ? Zod.InitializePhaseRequestSchema
+                : fixture.typeName === "ValidateInputRequest"
+                  ? Zod.ValidateInputRequestSchema
+                  : fixture.typeName === "ReduceRequest"
+                    ? Zod.ReduceRequestSchema
+                    : fixture.typeName === "DispatchRequest"
+                      ? Zod.DispatchRequestSchema
+                      : fixture.typeName === "ProjectRequest"
+                        ? Zod.ProjectRequestSchema
+                        : fixture.typeName === "SeatProjection"
+                          ? Zod.SeatProjectionSchema
+                          : fixture.typeName === "SeatProjectionBundle"
+                            ? Zod.SeatProjectionBundleSchema
+                            : fixture.typeName === "ReducerSessionState"
+                              ? Zod.ReducerSessionStateSchema
+                              : fixture.typeName === "ReducerRuntimeState"
+                                ? Zod.ReducerRuntimeStateSchema
+                                : fixture.typeName === "ReducerRuntimeLogEntry"
+                                  ? Zod.ReducerRuntimeLogEntrySchema
+                                  : fixture.typeName === "ReduceResult"
+                                    ? Zod.ReduceResultSchema
+                                    : fixture.typeName === "DispatchResult"
+                                      ? Zod.DispatchResultSchema
+                                      : Zod.GameInputSchema;
       const parsed = schema.parse(fixture.value);
       const reparsed = schema.parse(JSON.parse(JSON.stringify(parsed)));
       expect(reparsed).toEqual(parsed);
@@ -573,6 +576,7 @@ describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
         GameInput: Zod.GameInputSchema,
         InitializePhaseRequest: Zod.InitializePhaseRequestSchema,
         InitializeRequest: Zod.InitializeRequestSchema,
+        InitializeResult: Zod.InitializeResultSchema,
         ProjectRequest: Zod.ProjectRequestSchema,
         ReduceRequest: Zod.ReduceRequestSchema,
         ReduceResult: Zod.ReduceResultSchema,
