@@ -219,17 +219,38 @@ export type GameUiInteractionFormSurface<
   };
 };
 
-export type GameUiInteractionRoutes<Game> = Partial<{
-  [Key in GameUiInteractionKey<Game>]: {
-    readonly collect: {
-      [Input in GameUiInteractionInputKeys<Game, Key>]: GameUiCollectorSlot<
-        Game,
-        Key,
-        Input
-      >;
-    };
+type GameUiInteractionRoute<Game, Key extends GameUiInteractionKey<Game>> = {
+  readonly collect: {
+    [Input in GameUiInteractionInputKeys<Game, Key>]: GameUiCollectorSlot<
+      Game,
+      Key,
+      Input
+    >;
   };
-}>;
+};
+
+type GameUiSimultaneousSubmitKey<Game> = Extract<
+  GameUiInteractionKey<Game>,
+  `${string}.submit`
+>;
+
+type GameUiNamedInteractionKey<Game> = Exclude<
+  GameUiInteractionKey<Game>,
+  GameUiSimultaneousSubmitKey<Game>
+>;
+
+export type GameUiInteractionRoutes<Game> = {
+  [Key in GameUiNamedInteractionKey<Game>]: GameUiInteractionRoute<Game, Key>;
+} & {
+  // definePhase deliberately widens phase definitions to the contract phase
+  // union, so the type surface cannot identify which phase owns the reserved
+  // simultaneous submit interaction. A declared submit route is still fully
+  // checked, and Interaction.Routes diagnoses a missing route at runtime.
+  [Key in GameUiSimultaneousSubmitKey<Game>]?: GameUiInteractionRoute<
+    Game,
+    Key
+  >;
+};
 
 export type GameUiZoneCard<Manifest extends GameUiManifestTypes> =
   ZoneCardRenderItem<

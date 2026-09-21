@@ -129,7 +129,7 @@ async function installCandidate(
     [...isolatedInstallArgs, "--no-frozen-lockfile", "--lockfile=false"],
     { cwd: sandbox, capture: true },
   );
-  await run("pnpm", ["run", "materialize"], {
+  await run("pnpm", ["run", "generate"], {
     cwd: sandbox,
     capture: true,
   });

@@ -71,7 +71,7 @@ async function createRoot(ids: readonly string[]): Promise<string> {
         {
           name: `@example/${id}`,
           scripts: {
-            materialize: "materialize",
+            generate: "generate",
             "typecheck:raw": "typecheck",
             "test:raw": "test",
             "test:ui:raw": "test-ui",

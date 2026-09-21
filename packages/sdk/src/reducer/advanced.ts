@@ -16,6 +16,7 @@ export {
   type ClientParamSchemasByPhase,
 } from "./client-param-schemas";
 export { applySetupBootstrap } from "./setup-bootstrap";
+export { defineGameDefinition } from "./authoring/game";
 export {
   dealToPlayerBoardContainer,
   dealToPlayerZone,

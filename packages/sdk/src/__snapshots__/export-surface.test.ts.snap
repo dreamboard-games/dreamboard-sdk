@@ -200,6 +200,7 @@ exports[`public export surface > reducer/advanced export names are stable 1`] = 
   "createManifestStringLiteralSchema",
   "dealToPlayerBoardContainer",
   "dealToPlayerZone",
+  "defineGameDefinition",
   "isManifestScopedSchema",
   "manifestSchemaFamily",
   "markManifestScopedSchema",

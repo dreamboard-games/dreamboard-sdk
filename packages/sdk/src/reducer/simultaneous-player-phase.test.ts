@@ -1,9 +1,9 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   defineEmptyView,
-  defineGame,
   defineGameContract,
   definePhase,
   cardInput,

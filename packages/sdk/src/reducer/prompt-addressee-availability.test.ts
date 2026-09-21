@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 // Regression coverage for the bundle's unified actor-authorization:
 //
 //   "Who may submit this interaction right now?"
@@ -31,7 +32,6 @@ import { z } from "zod";
 import {
   choiceTarget,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePhase,

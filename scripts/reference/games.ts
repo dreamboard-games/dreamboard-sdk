@@ -122,7 +122,7 @@ function validateDependencies(gameId: string, packageJson: PackageJson): void {
   }
 
   for (const script of [
-    "materialize",
+    "generate",
     "typecheck:raw",
     "test:raw",
     "test:ui:raw",
