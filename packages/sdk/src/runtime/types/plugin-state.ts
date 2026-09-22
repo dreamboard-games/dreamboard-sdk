@@ -283,11 +283,6 @@ export interface SystemActionEvent {
 
 export type GameEvent = SystemActionEvent;
 
-export type ProjectedGameEvent = GameEvent & {
-  version: number;
-  index: number;
-};
-
 export interface GameplaySnapshot<
   PhaseType extends string = string,
   StageType extends string = string,
@@ -299,7 +294,6 @@ export interface GameplaySnapshot<
   simultaneousPhase?: SimultaneousPhaseSnapshot | null;
   availableInteractions: ReadonlyArray<InteractionDescriptor<InteractionType>>;
   guidance?: GameGuidanceProjection | null;
-  recentEvents: ReadonlyArray<ProjectedGameEvent>;
   /**
    * Zone handles scoped to the controlling player. Keyed by zoneId.
    * Authored via phase `zones`; projected from `resolveZoneHandles`.

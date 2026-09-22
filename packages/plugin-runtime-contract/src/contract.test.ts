@@ -56,7 +56,6 @@ function baseFrame() {
       simultaneousPhase: null,
     },
     availableInteractions: [claimDescriptor],
-    recentEvents: [],
     zones: {
       hand: {
         cardIds: ["card-1"],
@@ -141,16 +140,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         hash: "static-hash",
         manifestVersion: "manifest-v1",
       },
-      recentEvents: [
-        {
-          kind: "systemAction",
-          version: 8,
-          index: 0,
-          procedureId: "river-advance",
-          title: "The river advanced",
-          details: [{ label: "Revealed", value: "Storm" }],
-        },
-      ],
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         currentStage: "play",
         stageSeats: ["player-1"],
@@ -214,16 +203,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         steps: [{ id: "shuffle", label: "Shuffle" }],
       },
     });
-    expect(frame.recentEvents).toEqual([
-      {
-        kind: "systemAction",
-        version: 8,
-        index: 0,
-        procedureId: "river-advance",
-        title: "The river advanced",
-        details: [{ label: "Revealed", value: "Storm" }],
-      },
-    ]);
     expect(frame.zones.hand?.playableByCardId["card-1"]).toEqual([
       claimDescriptor,
     ]);

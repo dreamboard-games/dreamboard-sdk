@@ -601,7 +601,7 @@ describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
 });
 
 describe("projected gameplay guidance", () => {
-  test("preserves typed guidance and rejects host-owned recent events", () => {
+  test("preserves typed guidance", () => {
     const projection = {
       seats: {},
       guidance: {
@@ -625,12 +625,6 @@ describe("projected gameplay guidance", () => {
       Zod.SeatProjectionBundleSchema.safeParse({
         ...projection,
         guidance: { phase: { id: "play" } },
-      }).success,
-    ).toBe(false);
-    expect(
-      Zod.SeatProjectionBundleSchema.safeParse({
-        ...projection,
-        recentEvents: [],
       }).success,
     ).toBe(false);
   });

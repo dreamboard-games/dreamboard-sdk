@@ -42,7 +42,6 @@ export type {
   PluginTransport,
   PluginRuntimeProps,
   PostMessagePluginTransportOptions,
-  ProjectedGameEvent,
   RuntimeClock,
   RuntimeIdFactory,
   SystemActionEvent,

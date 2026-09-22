@@ -4,7 +4,7 @@ export const scenario = {
   behaviorScenario:
     "../scenarios/weather-procedure-north-squall-reinforced.scenario.ts",
   at: "reinforcement-hit",
-  contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
+  contracts: ["Board.Space", "InteractionSubmit", "Panel"],
   capabilities: ["event-history", "keyboard", "runtime-submit"],
   sourceFiles: [
     "examples/reference-games/solo-countdown-puzzle/reference-game.json",

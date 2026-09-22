@@ -653,7 +653,7 @@ validated in `pnpm check`, with a Storybook under `registry/`.
 
 **Read first.** shadcn registry docs (`registry.json`, `registry-item.json`,
 `shadcn build`/`validate`, namespaced registries); §3.8, §3.9;
-`ui/components/{Card,HandView,ResourceCounter,DiceRoller,GameEventLog,StandingsTable}.tsx`
+`ui/components/{Card,HandView,ResourceCounter,DiceRoller,StandingsTable}.tsx`
 and `ui/components/board/{HexGrid,SquareGrid}.tsx` for visuals to port.
 
 **Do.** `registry/registry.json`, items `tokens`, `card`, `playing-card`,

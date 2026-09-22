@@ -56,7 +56,6 @@ function frame(gameVersion: number): PluginGameplayFrame {
       },
     ],
     zones: {},
-    recentEvents: [],
   };
 }
 

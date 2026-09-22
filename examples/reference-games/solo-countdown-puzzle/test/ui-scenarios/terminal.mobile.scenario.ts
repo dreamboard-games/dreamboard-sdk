@@ -3,7 +3,7 @@ export const scenario = {
   title: "Last Light: all coastal beacons lit",
   behaviorScenario: "../scenarios/complete-game.scenario.ts",
   at: "developed",
-  contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
+  contracts: ["Board.Space", "InteractionSubmit", "Panel"],
   capabilities: ["terminal-outcome", "touch", "weather-timeline"],
   sourceFiles: [
     "examples/reference-games/solo-countdown-puzzle/reference-game.json",

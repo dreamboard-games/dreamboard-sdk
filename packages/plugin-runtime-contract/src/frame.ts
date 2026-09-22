@@ -197,11 +197,6 @@ export interface SystemActionEvent {
 
 export type GameEvent = SystemActionEvent;
 
-export type ProjectedGameEvent = GameEvent & {
-  readonly version: number;
-  readonly index: number;
-};
-
 export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
 
 export interface OutcomeScoreComponent {
@@ -251,7 +246,6 @@ export interface PluginGameplayFrame<
     InteractionDescriptor<Interaction>
   >;
   readonly guidance?: GameGuidanceProjection | null;
-  readonly recentEvents: readonly ProjectedGameEvent[];
   readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
 }
 

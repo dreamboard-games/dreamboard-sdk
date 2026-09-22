@@ -3,7 +3,7 @@ export const scenario = {
   title: "Last Light: developing beacon puzzle",
   behaviorScenario: "../scenarios/complete-game-loss-storm.scenario.ts",
   at: "developing",
-  contracts: ["Board.Space", "GameEventLog", "InteractionSubmit", "Panel"],
+  contracts: ["Board.Space", "InteractionSubmit", "Panel"],
   capabilities: ["event-history", "resource-pressure", "touch"],
   sourceFiles: [
     "examples/reference-games/solo-countdown-puzzle/reference-game.json",

@@ -160,14 +160,6 @@ export {
   type OutcomeDialogProps,
   type StandingsTableProps,
 } from "./OutcomeDialog.js";
-export {
-  GameEventLog,
-  SystemActionSummary,
-  type GameEventLogProps,
-  type ProjectedGameEvent,
-  type SystemActionEvent,
-  type SystemActionSummaryProps,
-} from "./GameEventLog.js";
 
 // Board primitives (SDK v0.2.0+)
 export {

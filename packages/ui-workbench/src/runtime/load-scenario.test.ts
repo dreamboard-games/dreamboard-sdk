@@ -42,7 +42,6 @@ function makeFixture(): UIScenarioFixture {
       },
     ],
     zones: {},
-    recentEvents: [],
   };
   const projectionDigest = digestUIFixtureJson({ frame });
   return {

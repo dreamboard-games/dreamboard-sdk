@@ -417,7 +417,6 @@ describe("runtime-owned reducer effects", () => {
     expect(wireProjection).toMatchObject({
       guidance: { phase: { id: "takeTurn", label: "Take Turn" } },
     });
-    expect(wireProjection).not.toHaveProperty("recentEvents");
     expect(warmTiming).toBeDefined();
     expect(freshTiming).toBeDefined();
     expect(warmProjection).not.toHaveProperty("version");
