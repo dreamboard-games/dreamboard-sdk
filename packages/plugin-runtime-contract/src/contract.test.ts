@@ -1,3 +1,4 @@
+import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
 import { describe, expect, test } from "vitest";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -55,7 +56,6 @@ function baseFrame() {
       simultaneousPhase: null,
     },
     availableInteractions: [claimDescriptor],
-    recentEvents: [],
     zones: {
       hand: {
         cardIds: ["card-1"],
@@ -140,7 +140,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         hash: "static-hash",
         manifestVersion: "manifest-v1",
       },
-      dynamicProjection: {
+      dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         currentStage: "play",
         stageSeats: ["player-1"],
         simultaneousPhase: null,
@@ -156,16 +156,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
             steps: [{ id: "shuffle", label: "Shuffle" }],
           },
         },
-        recentEvents: [
-          {
-            kind: "systemAction",
-            version: 8,
-            index: 0,
-            procedureId: "river-advance",
-            title: "The river advanced",
-            details: [{ label: "Revealed", value: "Storm" }],
-          },
-        ],
         sharedView: { market: ["card-1"] },
         interactionsByRef: {
           "claim-ref": claimDescriptor,
@@ -187,7 +177,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
             },
           },
         },
-      },
+      }),
     });
 
     expect(frame.basis).toEqual({
@@ -213,16 +203,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         steps: [{ id: "shuffle", label: "Shuffle" }],
       },
     });
-    expect(frame.recentEvents).toEqual([
-      {
-        kind: "systemAction",
-        version: 8,
-        index: 0,
-        procedureId: "river-advance",
-        title: "The river advanced",
-        details: [{ label: "Revealed", value: "Storm" }],
-      },
-    ]);
     expect(frame.zones.hand?.playableByCardId["card-1"]).toEqual([
       claimDescriptor,
     ]);

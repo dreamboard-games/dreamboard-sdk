@@ -3,7 +3,7 @@ export default {
   title: "Stormtrail: first provisions production",
   behaviorScenario: "../scenarios/production.scenario.ts",
   at: "produced",
-  contracts: ["Board.HexGrid", "GameEventLog", "PluginRuntime"],
+  contracts: ["Board.HexGrid", "PluginRuntime"],
   capabilities: ["production-history", "private-resources", "seeded-dice"],
   sourceFiles: [
     "examples/reference-games/hex-network-trading/app/phases/roll.ts",

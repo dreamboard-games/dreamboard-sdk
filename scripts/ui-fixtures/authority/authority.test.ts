@@ -59,7 +59,6 @@ test("protocol authority materializes protocol fixture inputs", async () => {
               },
               availableInteractions: [],
               zones: {},
-              recentEvents: [],
             },
           },
         ],

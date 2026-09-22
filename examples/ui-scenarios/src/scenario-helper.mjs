@@ -57,7 +57,6 @@ function frame({ id, scenarioId, version, view }) {
       },
       availableInteractions: [interactionDescriptor(scenarioId)],
       zones: {},
-      recentEvents: [],
     },
   };
 }

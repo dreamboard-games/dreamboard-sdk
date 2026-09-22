@@ -28,7 +28,6 @@ export function makeTestGameplayFrame<View = unknown>(options: {
       simultaneousPhase: null,
     },
     availableInteractions: options.availableInteractions ?? [],
-    recentEvents: [],
     zones: options.zones ?? {},
   };
 }

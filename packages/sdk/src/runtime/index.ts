@@ -44,7 +44,6 @@ export type {
   InteractionDescriptor,
   InputDomainDependencyCase,
   PromptInteractionDescriptor,
-  ProjectedGameEvent,
   SystemActionEvent,
 } from "./types/plugin-state.js";
 export type * from "./types/runtime-api.js";

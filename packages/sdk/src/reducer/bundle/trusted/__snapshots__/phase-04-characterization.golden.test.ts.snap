@@ -53,7 +53,7 @@ exports[`phase 4 trusted-bundle characterization > rng effect traces and state d
 
 exports[`phase 4 trusted-bundle characterization > seat projection digest stays golden 1`] = `
 {
-  "digest": "a6585f41312f77506d53c6893dcce0919f4ff246e2b15c776af3f082023b3039",
+  "digest": "345b5ace5e7e729fe30c308ae04c4edec4a4f5a380eaa85e4d8d1f25488aacd4",
   "schedulerFlow": {
     "activePlayerIds": [
       "player-1",

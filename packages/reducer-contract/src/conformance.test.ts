@@ -599,3 +599,33 @@ describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
     });
   }
 });
+
+describe("projected gameplay guidance", () => {
+  test("preserves typed guidance", () => {
+    const projection = {
+      seats: {},
+      guidance: {
+        phase: {
+          id: "play",
+          label: "Play",
+          summary: "Choose a card",
+          objective: "Win tricks",
+        },
+        setup: {
+          profileId: "default",
+          name: "Default",
+          steps: [{ id: "deal", label: "Deal", description: "Deal all cards" }],
+        },
+      },
+    } satisfies Wire.SeatProjectionBundle;
+    expect(Zod.SeatProjectionBundleSchema.parse(projection)).toEqual(
+      projection,
+    );
+    expect(
+      Zod.SeatProjectionBundleSchema.safeParse({
+        ...projection,
+        guidance: { phase: { id: "play" } },
+      }).success,
+    ).toBe(false);
+  });
+});
