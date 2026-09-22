@@ -867,10 +867,6 @@
             { "type": "null" }
           ]
         },
-        "recentEvents": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/ProjectedGameEvent" }
-        },
         "sharedView": { "$ref": "#/$defs/JsonValue" },
         "interactionsByRef": { "$ref": "#/$defs/JsonValue" },
         "seats": {
@@ -996,43 +992,6 @@
         }
       },
       "required": ["phase"],
-      "additionalProperties": false
-    },
-    "ProjectedGameEvent": {
-      "type": "object",
-      "properties": {
-        "kind": {
-          "const": "systemAction"
-        },
-        "procedureId": {
-          "type": "string",
-          "minLength": 1
-        },
-        "title": {
-          "type": "string",
-          "minLength": 1
-        },
-        "summary": {
-          "type": "string",
-          "minLength": 1
-        },
-        "details": {
-          "type": "array",
-          "maxItems": 16,
-          "items": {
-            "$ref": "#/$defs/GameEventDetail"
-          }
-        },
-        "version": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        }
-      },
-      "required": ["kind", "procedureId", "title", "version", "index"],
       "additionalProperties": false
     }
   }

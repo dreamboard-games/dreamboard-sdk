@@ -6,7 +6,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
-    "dreamboard-sdk-materialize": "./dist/authoring-materialize-cli.js"
+    "dreamboard-sdk-generate": "./dist/authoring-generate-cli.js"
   },
   "exports": {
     ".": {

@@ -125,7 +125,7 @@ export type SchedulerContinuationDependency = { "waiterPlayerId": string; "block
 
 export type SchedulerFlowAuthorityProjection = { "version": 1; "activePlayerIds": Array<string>; "pendingPlayerIds": Array<string>; "continuationDependencies": Array<SchedulerContinuationDependency> };
 
-export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "schedulerFlow"?: SchedulerFlowAuthorityProjection; "guidance"?: GameGuidanceProjection | null; "recentEvents"?: Array<ProjectedGameEvent>; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
+export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "schedulerFlow"?: SchedulerFlowAuthorityProjection; "guidance"?: GameGuidanceProjection | null; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
 
 export type ProjectionTimingMetadata = { "resolveAvailableInteractionsMs": number; "resolveViewMs": number; "resolveZoneHandlesMs": number; "descriptorHashMs": number };
 
@@ -136,5 +136,3 @@ export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manife
 export type SetupGuidanceStep = { "id": string; "label": string; "description"?: string };
 
 export type GameGuidanceProjection = { "phase": { "id": string; "label": string; "summary"?: string; "objective"?: string }; "setup"?: { "profileId": string; "name": string; "summary"?: string; "steps": Array<SetupGuidanceStep> } };
-
-export type ProjectedGameEvent = { "kind": "systemAction"; "procedureId": string; "title": string; "summary"?: string; "details"?: Array<GameEventDetail>; "version": number; "index": number };

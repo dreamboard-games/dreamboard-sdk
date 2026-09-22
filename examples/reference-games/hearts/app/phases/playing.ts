@@ -1,22 +1,12 @@
-import type { CardId, PlayerId } from "../../shared/manifest-contract";
-import {
-  cardInput,
-  cardTarget,
-  defineInteraction,
-  definePhase,
-} from "@dreamboard-games/sdk/reducer";
-import {
-  playingPhaseStateSchema,
-  type GameContract,
-  type GameState,
-  type Suit,
-} from "../game-contract";
-import { isPenaltyCard, trickWinner, validateCardPlay } from "../rules";
+import type { PlayerId } from "../../shared/manifest-contract";
+import { hearts, type Suit } from "../game-model";
+import { trickWinner, validateCardPlay } from "../rules";
 
-const HAND_ZONES = ["hand"] as const;
-const legalHandCardTarget = cardTarget
-  .zones<GameState, CardId, typeof HAND_ZONES>(HAND_ZONES)
-  .where({
+const playing = hearts.phase("playing");
+
+const legalHandCard = playing.inputs.card({
+  from: ["hand"],
+  where: {
     id: "legal-hearts-card-play",
     errorCode: "INVALID_CARD_PLAY",
     message: "Choose one of the currently legal cards in your hand.",
@@ -27,13 +17,10 @@ const legalHandCardTarget = cardTarget
         cardId: targetId,
         q,
       }) === null,
-  })
-  .build();
+  },
+});
 
-const playCard = defineInteraction<
-  GameContract,
-  typeof playingPhaseStateSchema
->()({
+const playCard = playing.interaction({
   presentation: {
     label: "Play card",
     help: "Play one legal card face up to the current trick.",
@@ -45,11 +32,7 @@ const playCard = defineInteraction<
     "HEARTS_NOT_BROKEN",
     "NO_PENALTIES_FIRST_TRICK",
   ],
-  inputs: {
-    cardId: cardInput<GameState, CardId, typeof HAND_ZONES>({
-      target: legalHandCardTarget,
-    }),
-  },
+  inputs: { cardId: legalHandCard },
   rules: [
     {
       id: "revalidate-hearts-card-play",
@@ -64,7 +47,7 @@ const playCard = defineInteraction<
       },
     },
   ],
-  reduce({ state, input, accept, edit, fx, q }) {
+  reduce({ state, tx, input, q }) {
     const playerId = input.playerId;
     const cardId = input.params.cardId;
     const properties = q.card.get(cardId).properties;
@@ -77,7 +60,6 @@ const playCard = defineInteraction<
     const phase = state.phase;
     const newPlays = [...phase.plays, { playerId, cardId }];
     const leadSuit = (phase.leadSuit ?? properties.suit) as Suit;
-    const tx = edit(state);
     tx.moveCardFromPlayerZoneToSharedZone({
       playerId,
       fromZoneId: "hand",
@@ -96,7 +78,7 @@ const playCard = defineInteraction<
         throw new Error("Hearts could not find the next seat.");
       tx.patchPhaseState({ leadSuit, plays: newPlays });
       tx.setActivePlayers([nextPlayerId]);
-      return accept(tx.state);
+      return;
     }
 
     const winnerPlayerId = trickWinner({ leadSuit, plays: newPlays, q });
@@ -149,28 +131,23 @@ const playCard = defineInteraction<
 
     if (tricksCompleted === 13) {
       tx.setActivePlayers([]);
-      return accept(tx.state, {
-        instructions: [fx.transition("scoreHand")],
-      });
+      return tx.transition("scoreHand");
     }
 
     tx.setActivePlayers([winnerPlayerId]);
-    return accept(tx.state);
   },
 });
 
-export const playing = definePhase<GameContract>()({
+export default playing.define({
   kind: "player",
-  state: playingPhaseStateSchema,
   initialState: () => ({ leadSuit: null, plays: [] }),
   actor: ({ state }) => state.flow.activePlayers,
   zones: ["hand"],
-  enter({ state, accept, edit, q }) {
+  enter({ tx, q }) {
     for (const playerId of q.player.order()) {
       if (q.zone.playerCards(playerId, "hand").includes("clubs-2")) {
-        const tx = edit(state);
         tx.setActivePlayers([playerId]);
-        return accept(tx.state);
+        return;
       }
     }
     throw new Error("Hearts setup completed without a 2 of Clubs holder.");

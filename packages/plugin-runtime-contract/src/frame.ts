@@ -269,7 +269,6 @@ export interface ReducerSeatProjectionBundle {
     }[];
   };
   readonly guidance?: GameGuidanceProjection | null;
-  readonly recentEvents?: readonly ProjectedGameEvent[];
   readonly sharedView?: unknown;
   readonly interactionsByRef?: unknown;
   readonly seats: Readonly<

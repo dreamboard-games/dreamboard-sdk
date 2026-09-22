@@ -133,11 +133,9 @@ export const SetupGuidanceStepSchema = z.object({ "id": z.string().min(1), "labe
 
 export const GameGuidanceProjectionSchema = z.object({ "phase": z.object({ "id": z.string().min(1), "label": z.string().min(1), "summary": z.string().optional(), "objective": z.string().optional() }).strict(), "setup": z.object({ "profileId": z.string().min(1), "name": z.string().min(1), "summary": z.string().optional(), "steps": z.array(SetupGuidanceStepSchema) }).strict().optional() }).strict();
 
-export const ProjectedGameEventSchema = z.object({ "kind": z.literal("systemAction"), "procedureId": z.string().min(1), "title": z.string().min(1), "summary": z.string().min(1).optional(), "details": z.array(GameEventDetailSchema).max(16).optional(), "version": z.number().int().gte(0), "index": z.number().int().gte(0) }).strict();
-
 export const ProjectionTimingMetadataSchema = z.object({ "resolveAvailableInteractionsMs": z.number().finite().gte(0), "resolveViewMs": z.number().finite().gte(0), "resolveZoneHandlesMs": z.number().finite().gte(0), "descriptorHashMs": z.number().finite().gte(0) }).strict();
 
-export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "schedulerFlow": SchedulerFlowAuthorityProjectionSchema.optional(), "guidance": z.union([GameGuidanceProjectionSchema, z.null()]).optional(), "recentEvents": z.array(ProjectedGameEventSchema).optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
+export const SeatProjectionBundleSchema = z.object({ "currentStage": z.union([z.string().min(1), z.null()]).optional(), "stageSeats": z.array(z.string().min(1)).optional(), "simultaneousPhase": z.union([SimultaneousPhaseProjectionSchema, z.null()]).optional(), "schedulerFlow": SchedulerFlowAuthorityProjectionSchema.optional(), "guidance": z.union([GameGuidanceProjectionSchema, z.null()]).optional(), "sharedView": JsonValueSchema.optional(), "interactionsByRef": JsonValueSchema.optional(), "seats": z.record(z.string(), SeatProjectionSchema), "timing": ProjectionTimingMetadataSchema.optional() }).strict();
 
 export const ProjectRequestSchema = z.object({ "state": ReducerSessionStateSchema, "playerIds": z.array(z.string().min(1)) }).strict();
 

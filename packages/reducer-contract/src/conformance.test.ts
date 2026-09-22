@@ -600,8 +600,8 @@ describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
   }
 });
 
-describe("projected gameplay guidance and events", () => {
-  test("preserves typed guidance and versioned events in the runner projection", () => {
+describe("projected gameplay guidance", () => {
+  test("preserves typed guidance and rejects host-owned recent events", () => {
     const projection = {
       seats: {},
       guidance: {
@@ -617,16 +617,6 @@ describe("projected gameplay guidance and events", () => {
           steps: [{ id: "deal", label: "Deal", description: "Deal all cards" }],
         },
       },
-      recentEvents: [
-        {
-          kind: "systemAction",
-          procedureId: "deal",
-          title: "Cards dealt",
-          details: [{ label: "Cards", value: 52 }],
-          version: 1,
-          index: 0,
-        },
-      ],
     } satisfies Wire.SeatProjectionBundle;
     expect(Zod.SeatProjectionBundleSchema.parse(projection)).toEqual(
       projection,
@@ -640,7 +630,7 @@ describe("projected gameplay guidance and events", () => {
     expect(
       Zod.SeatProjectionBundleSchema.safeParse({
         ...projection,
-        recentEvents: [{ ...projection.recentEvents[0], version: -1 }],
+        recentEvents: [],
       }).success,
     ).toBe(false);
   });

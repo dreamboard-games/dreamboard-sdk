@@ -65,6 +65,6 @@ pnpm reference
 ```
 
 The command validates each V5 manifest and checked-in lockfile, packs the SDK
-once, installs temporary copies against that tarball, materializes, typechecks,
+once, installs temporary copies against that tarball, generates, typechecks,
 and runs reducer and UI tests. `pnpm release:verify` applies the same all-game
 proof to the exact release candidate.

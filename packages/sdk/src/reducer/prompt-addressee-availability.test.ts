@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 // Regression coverage for the bundle's unified actor-authorization:
 //
 //   "Who may submit this interaction right now?"
@@ -31,14 +32,13 @@ import { z } from "zod";
 import {
   choiceTarget,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePhase,
   defineStepPhase,
   pipe,
   promptInput,
-} from "../reducer";
+} from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
 

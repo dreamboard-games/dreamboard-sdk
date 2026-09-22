@@ -3,6 +3,7 @@ import {
   canonicalizePluginRuntimeJson,
   SeatProjectionBundleSchema,
 } from "@dreamboard-games/plugin-runtime-contract";
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -11,7 +12,6 @@ import {
   defineDerived,
   defineEmptyView,
   defineEffect,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePlayerView,
@@ -22,7 +22,7 @@ import {
   gameEvent,
   pipe,
   rngInput,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   type InputCollector,
   type RuntimeTableRecord,
@@ -416,8 +416,8 @@ describe("runtime-owned reducer effects", () => {
     );
     expect(wireProjection).toMatchObject({
       guidance: { phase: { id: "takeTurn", label: "Take Turn" } },
-      recentEvents: [],
     });
+    expect(wireProjection).not.toHaveProperty("recentEvents");
     expect(warmTiming).toBeDefined();
     expect(freshTiming).toBeDefined();
     expect(warmProjection).not.toHaveProperty("version");
@@ -2189,4 +2189,103 @@ describe("runtime-owned reducer effects", () => {
       ).rejects.toThrow("random.subset count 2 exceeds source length 1");
     });
   });
+});
+
+describe("implicit transaction acceptance", () => {
+  test.each(["enter", "reduce"] as const)(
+    "%s preserves queued events, instructions, and effect continuations",
+    async (mode) => {
+      const contract = defineGameContract({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({ complete: z.boolean() }),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+      const queued = gameEvent.systemAction({
+        procedureId: "queued",
+        title: "Queued",
+      });
+      const completed = gameEvent.systemAction({
+        procedureId: "completed",
+        title: "Completed",
+      });
+      const afterRoll = defineEffect<typeof contract>()({
+        type: "rollDie",
+        id: "implicitAfterRoll",
+        context: z.object({}),
+        reduce({ tx }) {
+          tx.patchPublicState({ complete: true });
+          tx.emit(completed);
+        },
+      });
+      const queue = (
+        tx: import("./transaction").ReducerTransaction<
+          import("./model").GameStateOf<typeof contract>
+        >,
+      ) => {
+        tx.emit(queued);
+        tx.schedule({ kind: "engine.rollDie", dieId: "die-1" });
+        tx.effect(afterRoll, { dieId: "die-1", context: {} });
+      };
+      const game = defineGame({
+        contract,
+        initial: {
+          public: () => ({ complete: false }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: definePhase<typeof contract>()({
+            kind: "player",
+            state: z.object({}),
+            initialState: () => ({}),
+            actor: () => "player-1",
+            enter({ tx }) {
+              if (mode === "enter") queue(tx);
+            },
+            interactions: {
+              complete: defineInteraction<typeof contract>()({
+                inputs: {},
+                reduce({ tx }) {
+                  queue(tx);
+                },
+              }),
+            },
+            effects: { afterRoll },
+          }),
+        },
+        views: {
+          shared: defineEmptyView<typeof contract>(),
+          player: defineEmptyView<typeof contract>(),
+        },
+      });
+      const bundle = createReducerBundle(game);
+      const initialized = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+      const result =
+        mode === "enter"
+          ? initialized
+          : await bundle.dispatch({
+              state: initialized.state,
+              input: {
+                kind: "interaction",
+                playerId: "player-1",
+                interactionId: "complete",
+                params: {},
+              },
+            });
+      if ("kind" in result && result.kind === "reject")
+        throw new Error("Expected acceptance");
+      expect(result.events).toEqual([queued, completed]);
+      expect(result.state.domain.publicState.complete).toBe(true);
+      expect(result.state.runtime.rng.cursor).toBe(2);
+    },
+  );
 });

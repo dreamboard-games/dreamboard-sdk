@@ -49,13 +49,14 @@ describe("workspace ownership path classification", () => {
     expect(isAllowedGamePath("app/game.ts")).toBe(true);
     expect(isAllowedGamePath("manifest.ts")).toBe(true);
     expect(isAuthoritativeGeneratedPath("shared/manifest-types.ts")).toBe(true);
-    expect(isDynamicSeedPath("app/phases/main.ts")).toBe(true);
+    expect(isDynamicSeedPath("app/game.ts")).toBe(true);
+    expect(isDynamicSeedPath("app/phases/main.ts")).toBe(false);
     expect(isCliStaticPath("ui/index.tsx")).toBe(true);
     expect(isLibraryPath("shared/manifest-runtime.ts")).toBe(true);
   });
 
-  test("publishes ownership contract version 32", () => {
-    expect(WORKSPACE_CODEGEN_OWNERSHIP.version).toBe(32);
-    expect(WORKSPACE_OWNERSHIP_VERSION).toBe(32);
+  test("publishes ownership contract version 33", () => {
+    expect(WORKSPACE_CODEGEN_OWNERSHIP.version).toBe(33);
+    expect(WORKSPACE_OWNERSHIP_VERSION).toBe(33);
   });
 });

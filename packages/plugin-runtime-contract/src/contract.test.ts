@@ -141,6 +141,16 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         hash: "static-hash",
         manifestVersion: "manifest-v1",
       },
+      recentEvents: [
+        {
+          kind: "systemAction",
+          version: 8,
+          index: 0,
+          procedureId: "river-advance",
+          title: "The river advanced",
+          details: [{ label: "Revealed", value: "Storm" }],
+        },
+      ],
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         currentStage: "play",
         stageSeats: ["player-1"],
@@ -157,16 +167,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
             steps: [{ id: "shuffle", label: "Shuffle" }],
           },
         },
-        recentEvents: [
-          {
-            kind: "systemAction",
-            version: 8,
-            index: 0,
-            procedureId: "river-advance",
-            title: "The river advanced",
-            details: [{ label: "Revealed", value: "Storm" }],
-          },
-        ],
         sharedView: { market: ["card-1"] },
         interactionsByRef: {
           "claim-ref": claimDescriptor,

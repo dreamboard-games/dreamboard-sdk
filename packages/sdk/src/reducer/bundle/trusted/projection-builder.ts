@@ -640,7 +640,6 @@ export function createProjectionBuilder<
         schedulerFlow: resolveSchedulerFlowFor(state, projection),
         ...(projectionMode === "full" ? { sharedView } : {}),
         guidance: resolveGuidanceFor(combinedState),
-        recentEvents: [],
         interactionsByRef: registry.entries(),
         seats,
       },

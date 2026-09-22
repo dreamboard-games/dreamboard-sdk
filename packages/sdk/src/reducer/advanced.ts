@@ -3,8 +3,8 @@
  *
  * Everything here is consumed by generated workspace files and SDK-internal
  * code. Authored game code should not need these names -- prefer the
- * workspace's generated `manifest-contract` types and the bound authoring
- * object from `createContractAuthoring`. This subpath has weaker stability
+ * workspace's generated `manifest-contract` types and the bound game value
+ * from `createGame`. This subpath has weaker stability
  * guarantees than `/reducer`: names may move or change between minor
  * releases alongside codegen updates, because its consumers regenerate.
  */
@@ -16,6 +16,7 @@ export {
   type ClientParamSchemasByPhase,
 } from "./client-param-schemas";
 export { applySetupBootstrap } from "./setup-bootstrap";
+export { defineGameDefinition } from "./authoring/game";
 export {
   dealToPlayerBoardContainer,
   dealToPlayerZone,

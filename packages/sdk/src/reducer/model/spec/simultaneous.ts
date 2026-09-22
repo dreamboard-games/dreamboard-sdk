@@ -3,8 +3,8 @@ import type { ManifestContract } from "../manifest";
 import type { PlayerIdOfState, TableOfState } from "../extract";
 import type {
   ActionContext,
-  MutationRuntimeHelpers,
-  RuntimeHelpers,
+  MutationHelpers,
+  ReadHelpers,
 } from "./runtime-args";
 import type { InputCollector, ParamsOf } from "./inputs";
 import type { InteractionSpec } from "./interactions";
@@ -23,9 +23,10 @@ export type SimultaneousResolveArgs<
   Collectors extends Record<string, InputCollector>,
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
+  ErrorCode extends string = string,
 > = ActionContext<State, Manifest> &
-  RuntimeHelpers<State> &
-  MutationRuntimeHelpers & {
+  ReadHelpers<State> &
+  MutationHelpers<State, ErrorCode> & {
     state: State;
     submissions: Record<
       PlayerIdOfState<State>,

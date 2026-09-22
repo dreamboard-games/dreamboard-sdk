@@ -165,62 +165,50 @@ test("workspace fixture compilation materializes reducer authority from a reduce
 });
 
 test("workspace fixture compilation materializes a reducer-native checkpoint from one source closure", async () => {
-  const gameDir = path.join(
-    root,
-    "examples/reference-games/roll-and-write-scorecard",
-  );
-  await withMaterializedReferenceGameWorkspaces(
-    ["roll-and-write-scorecard"],
-    async () => {
-      const metadata = expectRecord(
-        await readJson(path.join(gameDir, "reference-game.json")),
-        "roll-and-write-scorecard/reference-game.json",
-      ) as Record<string, any>;
-      const scenario = await loadScenarioModule(
-        path.join(
-          gameDir,
-          "test/ui-scenarios/mark-cell.terminal.mobile.scenario.ts",
+  const gameDir = path.join(root, "examples/reference-games/hearts");
+  await withMaterializedReferenceGameWorkspaces(["hearts"], async () => {
+    const metadata = expectRecord(
+      await readJson(path.join(gameDir, "reference-game.json")),
+      "hearts/reference-game.json",
+    ) as Record<string, any>;
+    const scenario = await loadScenarioModule(
+      path.join(gameDir, "test/ui-scenarios/final-outcome.mobile.scenario.ts"),
+    );
+    const outputRoot = await mkdtemp(
+      path.join(os.tmpdir(), "dreamboard-reducer-native-authority-test-"),
+    );
+    try {
+      const fixture = await compileScenarioModule({
+        game: {
+          id: metadata.id,
+          displayName: metadata.displayName,
+          mechanics: metadata.mechanics,
+          uiPatterns: metadata.uiPatterns,
+        },
+        gameDir,
+        scenario,
+        outputRoot,
+        sdkCommit: "test",
+      });
+
+      assert.equal(fixture.id, "hearts.final-outcome.mobile");
+      const fixtureJson = JSON.parse(
+        await readFile(path.join(outputRoot, fixture.file), "utf8"),
+      );
+      assert.equal(
+        fixtureJson.protocol.frames[0].frame.flow.currentPhase,
+        "gameOver",
+      );
+      assert.ok(
+        fixtureJson.source.sourceFiles.includes(
+          "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
         ),
       );
-      const outputRoot = await mkdtemp(
-        path.join(os.tmpdir(), "dreamboard-reducer-native-authority-test-"),
-      );
-      try {
-        const fixture = await compileScenarioModule({
-          game: {
-            id: metadata.id,
-            displayName: metadata.displayName,
-            mechanics: metadata.mechanics,
-            uiPatterns: metadata.uiPatterns,
-          },
-          gameDir,
-          scenario,
-          outputRoot,
-          sdkCommit: "test",
-        });
-
-        assert.equal(
-          fixture.id,
-          "roll-and-write-scorecard.mark-cell.terminal.mobile",
-        );
-        const fixtureJson = JSON.parse(
-          await readFile(path.join(outputRoot, fixture.file), "utf8"),
-        );
-        assert.equal(
-          fixtureJson.protocol.frames[0].frame.flow.currentPhase,
-          "gameOver",
-        );
-        assert.ok(
-          fixtureJson.source.sourceFiles.includes(
-            "examples/reference-games/roll-and-write-scorecard/test/scenarios/complete-game.scenario.ts",
-          ),
-        );
-        assert.equal(JSON.stringify(fixtureJson).includes('"given"'), false);
-      } finally {
-        await rm(outputRoot, { recursive: true, force: true });
-      }
-    },
-  );
+      assert.equal(JSON.stringify(fixtureJson).includes('"given"'), false);
+    } finally {
+      await rm(outputRoot, { recursive: true, force: true });
+    }
+  });
 });
 
 test("workspace lifecycle restores package links after callback failure", async () => {

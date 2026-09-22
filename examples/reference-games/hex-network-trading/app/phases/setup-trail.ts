@@ -1,19 +1,21 @@
-import type { EdgeId, ResourceId } from "../../shared/manifest-contract";
-import { setupTrailAuthoring } from "../authoring";
-import { startingTrailTarget } from "../eligibility";
+import type { ResourceId } from "../../shared/manifest-contract";
+import { emptyEdge, touchesStartingCamp } from "../eligibility";
 import { producingHexesAtIntersection } from "../model";
 import {
   appendHistory,
   detachedPiece,
-  edit,
   setupPlayerId,
   systemEvent,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const placeStartingTrail = setupTrailAuthoring.interaction({
+const setupTrail = stormtrail.phase("setupTrail");
+
+const placeStartingTrail = setupTrail.interaction({
   inputs: {
-    edgeId: setupTrailAuthoring.inputs.board.edge<EdgeId>({
-      target: startingTrailTarget,
+    edgeId: setupTrail.inputs.board.edge({
+      boardId: "frontier",
+      where: [emptyEdge, touchesStartingCamp],
     }),
   },
   rules: [
@@ -24,7 +26,7 @@ const placeStartingTrail = setupTrailAuthoring.interaction({
         detachedPiece(state, input.playerId, "trail") !== null,
     },
   ],
-  reduce({ state, input, accept, fx, q }) {
+  reduce({ state, tx, input, q }) {
     const trailId = detachedPiece(state, input.playerId, "trail");
     const setup = state.publicState.setup;
     const intersectionId = setup?.pendingIntersectionId;
@@ -39,7 +41,6 @@ const placeStartingTrail = setupTrailAuthoring.interaction({
       counts[resourceId] = (counts[resourceId] ?? 0) + 1;
       return counts;
     }, {});
-    const tx = edit(state);
     tx.moveComponentToEdge({
       componentId: trailId,
       boardId: "frontier",
@@ -62,35 +63,31 @@ const placeStartingTrail = setupTrailAuthoring.interaction({
     if (finalPlacement) {
       tx.setActivePlayers([q.player.order()[0]!]);
     }
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "startingTrail",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} completed a starting camp-and-trail pair.`,
     });
-    return accept(next, {
-      instructions: [fx.transition(finalPlacement ? "roll" : "setupCamp")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-setup",
-          title: "Starting trail placed",
-          summary: `${input.playerId} gained ${Object.values(grants).reduce(
-            (sum, count) => sum + (count ?? 0),
-            0,
-          )} adjacent supplies.`,
-        }),
-      ],
-    });
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-setup",
+        title: "Starting trail placed",
+        summary: `${input.playerId} gained ${Object.values(grants).reduce(
+          (sum, count) => sum + (count ?? 0),
+          0,
+        )} adjacent supplies.`,
+      }),
+    );
+    return tx.transition(finalPlacement ? "roll" : "setupCamp");
   },
 });
 
-export const setupTrail = setupTrailAuthoring.define({
+export default setupTrail.define({
   kind: "player",
   initialState: () => ({}),
   actor: ({ state, q }) => setupPlayerId(state, q),
-  enter({ state, accept, q }) {
-    const tx = edit(state);
+  enter({ state, tx, q }) {
     tx.setActivePlayers([setupPlayerId(state, q)]);
-    return accept(tx.state);
   },
   interactions: { placeStartingTrail },
 });

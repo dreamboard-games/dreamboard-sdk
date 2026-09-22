@@ -231,7 +231,10 @@ export async function pinReferenceGames(
     options.version,
   );
   const integrity = assertRegistryMetadata(options.version, metadata);
-  const games = await discoverReferenceGames({ root: options.root });
+  const games = await discoverReferenceGames({
+    root: options.root,
+    includeLegacy: true,
+  });
   const stageRoot = await mkdtemp(
     path.join(tmpdir(), "dreamboard-reference-pin-"),
   );

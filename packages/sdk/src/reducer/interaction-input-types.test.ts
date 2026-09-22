@@ -1,8 +1,8 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   defineCardAction,
-  defineGame,
   defineGameContract,
   defineInputs,
   defineInteraction,
@@ -12,7 +12,7 @@ import {
   pipe,
   type GameStateOf,
   type PlayerId,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type ClientParamsOfInteractionOfDefinition,

@@ -12,7 +12,7 @@ import {
 test("default UI tests select the two interaction smoke scenarios", () => {
   assert.deepEqual(selectUiScenarios({ all: false }), [
     "hearts.dealt-hand.desktop",
-    "roll-and-write-scorecard.mark-cell.mobile",
+    "hearts.final-outcome.mobile",
   ]);
 });
 

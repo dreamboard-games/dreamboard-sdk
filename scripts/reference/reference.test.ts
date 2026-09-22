@@ -71,7 +71,7 @@ async function createRoot(ids: readonly string[]): Promise<string> {
         {
           name: `@example/${id}`,
           scripts: {
-            materialize: "materialize",
+            generate: "generate",
             "typecheck:raw": "typecheck",
             "test:raw": "test",
             "test:ui:raw": "test-ui",
@@ -198,7 +198,7 @@ test("pin stages every game before replacing tracked files", async (context) => 
 });
 
 test("pin atomically replaces all package manifests and exact-integrity lockfiles", async (context) => {
-  const root = await createRoot(["alpha", "beta"]);
+  const root = await createRoot(["alpha", "automa-river-rival"]);
   context.after(() => rm(root, { recursive: true, force: true }));
   const run: AsyncCommandRunner = async (_command, _args, options) => {
     writeFileSync(
@@ -220,7 +220,7 @@ test("pin atomically replaces all package manifests and exact-integrity lockfile
     }),
     run,
   });
-  for (const id of ["alpha", "beta"]) {
+  for (const id of ["alpha", "automa-river-rival"]) {
     const game = path.join(root, "examples/reference-games", id);
     const packageJson = JSON.parse(
       readFileSync(path.join(game, "package.json"), "utf8"),

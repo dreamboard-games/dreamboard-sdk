@@ -8,6 +8,7 @@ import {
 import type {
   InteractionDescriptor,
   PlayerId,
+  ProjectedGameEvent,
   PluginGameplayFrame,
   ReducerBoardStaticProjection,
   ReducerSeatProjectionBundle,
@@ -23,6 +24,7 @@ export interface MaterializePluginGameplayFrameInput {
   readonly staticProjection?: ReducerBoardStaticProjection | null;
   readonly perspectivePlayerId: PlayerId;
 
+  readonly recentEvents?: readonly ProjectedGameEvent[];
   readonly version: number;
   readonly actionSetVersion: string;
 }
@@ -71,7 +73,7 @@ export function materializePluginGameplayFrame(
     },
     availableInteractions,
     guidance: dynamicProjection.guidance ?? null,
-    recentEvents: [...(dynamicProjection.recentEvents ?? [])],
+    recentEvents: [...(input.recentEvents ?? [])],
     zones,
   } satisfies PluginGameplayFrame;
 

@@ -1,15 +1,15 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   defineCardAction,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePhase,
   formInput,
   many,
   rngInput,
-} from "../reducer";
+} from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
 import { perPlayer } from "./per-player";

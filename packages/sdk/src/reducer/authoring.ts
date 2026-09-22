@@ -1,13 +1,22 @@
 export { defineGameContract } from "./authoring/contract";
+export type {
+  DefinedGameContract,
+  ReducerGameContractInput,
+} from "./authoring/contract";
 export {
   createContractAuthoring,
   type BoundInputBuilders,
+  type BoundTargetPredicate,
+  type BoundViewBuilders,
   type ContractAuthoring,
+  type ContractTypes,
   type ContractWithPhases,
+  type GameAuthoring,
   type PhaseAuthoring,
+  type PhaseTypes,
 } from "./authoring/contract-authoring";
 export { defineEffect } from "./authoring/effect";
-export { defineGame } from "./authoring/game";
+export { createGame, defineGame } from "./authoring/game";
 export {
   defineCardAction,
   defineInteraction,

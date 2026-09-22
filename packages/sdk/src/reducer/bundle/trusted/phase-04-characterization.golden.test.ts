@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "../../authoring/game";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -5,13 +6,12 @@ import {
   createReducerBundle,
   defineEmptyView,
   defineEffect,
-  defineGame,
   defineGameContract,
   defineInteraction,
   definePlayerView,
   definePhase,
   type ReducerDiagnosticEvent,
-} from "../../../reducer";
+} from "../../../reducer/internal";
 import type { RuntimeTableRecord } from "../../../reducer/advanced";
 import { asPlayerId, perPlayer } from "../../per-player";
 

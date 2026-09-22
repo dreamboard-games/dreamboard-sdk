@@ -47,7 +47,10 @@ export const GameGuidanceProjectionSchema =
 export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
 export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
 export const GameEventSchema = ReducerWireZod.GameEventSchema;
-export const ProjectedGameEventSchema = ReducerWireZod.ProjectedGameEventSchema;
+export const ProjectedGameEventSchema = SystemActionEventSchema.extend({
+  version: z.number().int().nonnegative(),
+  index: z.number().int().nonnegative(),
+});
 
 export const SeatProjectionBundleSchema = z
   .object({
@@ -71,7 +74,6 @@ export const SeatProjectionBundleSchema = z
       .strict()
       .optional(),
     guidance: GameGuidanceProjectionSchema.nullable().optional(),
-    recentEvents: z.array(ProjectedGameEventSchema).optional(),
     sharedView: z.unknown().optional(),
     interactionsByRef: z.record(z.string(), z.unknown()).optional(),
     seats: z.record(

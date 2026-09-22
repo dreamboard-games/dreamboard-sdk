@@ -4,7 +4,7 @@ import {
   createReducerOps,
   createStateQueries,
   perPlayer,
-} from "../reducer";
+} from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import type { PlayerId } from "./per-player";
 import {

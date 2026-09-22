@@ -3,32 +3,37 @@ import { z } from "zod";
 import {
   ids,
   literals,
-  type EdgeId,
   type PlayerId,
   type ResourceId,
-  type VertexId,
 } from "../../shared/manifest-contract";
-import { mainAuthoring } from "../authoring";
-import { buildCampTarget, buildTrailTarget } from "../eligibility";
-import { resourceCountsSchema, type ResourceCounts } from "../game-contract";
+import {
+  connectedNetwork,
+  connectedTrail,
+  emptyBuildIntersection,
+  emptyEdge,
+} from "../eligibility";
+import { resourceCountsSchema, type ResourceCounts } from "../game-model";
 import { hasPositiveResource, resourceMapsOverlap } from "../model";
 import {
   appendHistory,
   campCount,
   CAMP_COST,
   detachedPiece,
-  edit,
   fourthCampOutcome,
   remainingPieceCount,
   systemEvent,
   TRAIL_COST,
   turnOwnerPlayerId,
 } from "../reducer-support";
+import { stormtrail } from "../game-model";
 
-const buildTrail = mainAuthoring.interaction({
+const main = stormtrail.phase("main");
+
+const buildTrail = main.interaction({
   inputs: {
-    edgeId: mainAuthoring.inputs.board.edge<EdgeId>({
-      target: buildTrailTarget,
+    edgeId: main.inputs.board.edge({
+      boardId: "frontier",
+      where: [emptyEdge, connectedNetwork],
     }),
   },
   rules: [
@@ -45,29 +50,28 @@ const buildTrail = mainAuthoring.interaction({
         q.player.canAfford(input.playerId, TRAIL_COST),
     },
   ],
-  reduce({ state, input, accept }) {
+  reduce({ state, tx, input }) {
     const trailId = detachedPiece(state, input.playerId, "trail");
     if (!trailId) throw new Error("Trail piece is unavailable.");
-    const tx = edit(state);
     tx.spendResources({ playerId: input.playerId, amounts: TRAIL_COST });
     tx.moveComponentToEdge({
       componentId: trailId,
       boardId: "frontier",
       edgeId: input.params.edgeId,
     });
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "buildTrail",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} built a trail.`,
     });
-    return accept(next);
   },
 });
 
-const buildCamp = mainAuthoring.interaction({
+const buildCamp = main.interaction({
   inputs: {
-    intersectionId: mainAuthoring.inputs.board.vertex<VertexId>({
-      target: buildCampTarget,
+    intersectionId: main.inputs.board.vertex({
+      boardId: "frontier",
+      where: [emptyBuildIntersection, connectedTrail],
     }),
   },
   rules: [
@@ -83,46 +87,41 @@ const buildCamp = mainAuthoring.interaction({
       validate: ({ input, q }) => q.player.canAfford(input.playerId, CAMP_COST),
     },
   ],
-  reduce({ state, input, accept, endGame, fx, q }) {
+  reduce({ state, tx, input, q }) {
     const campId = detachedPiece(state, input.playerId, "camp");
     if (!campId) throw new Error("Camp piece is unavailable.");
-    const tx = edit(state);
     tx.spendResources({ playerId: input.playerId, amounts: CAMP_COST });
     tx.moveComponentToVertex({
       componentId: campId,
       boardId: "frontier",
       vertexId: input.params.intersectionId,
     });
-    let next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "buildCamp",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} built camp ${campCount(tx.state, input.playerId)}.`,
     });
-    if (campCount(next, input.playerId) < 4) return accept(next);
+    if (campCount(tx.state, input.playerId) < 4) return;
 
     const outcome = fourthCampOutcome(q.player.order(), input.playerId);
-    const finalTx = edit(next);
-    finalTx.patchPublicState({ outcome });
-    finalTx.setActivePlayers([]);
-    next = finalTx.state;
-    return endGame(next, outcome, {
-      instructions: [fx.transition("gameOver")],
-      events: [
-        systemEvent({
-          procedureId: "stormtrail-victory",
-          title: "Fourth camp established",
-          summary: `${input.playerId} wins immediately.`,
-        }),
-      ],
-    });
+    tx.patchPublicState({ outcome });
+    tx.setActivePlayers([]);
+    tx.emit(
+      systemEvent({
+        procedureId: "stormtrail-victory",
+        title: "Fourth camp established",
+        summary: `${input.playerId} wins immediately.`,
+      }),
+    );
+    return tx.endGame(outcome, { transition: "gameOver" });
   },
 });
 
-const tradeWithSupplyDepot = mainAuthoring.interaction({
+const tradeWithSupplyDepot = main.interaction({
   inputs: defineInputs((input) => {
     const giveResource = input.add(
       "giveResource",
-      mainAuthoring.inputs.form.choice<ResourceId>({
+      main.inputs.form.choice<ResourceId>({
         choices: ({ q, playerId }) =>
           literals.resourceIds
             .filter(
@@ -136,12 +135,15 @@ const tradeWithSupplyDepot = mainAuthoring.interaction({
       giveResource,
       receiveResource: input.add(
         "receiveResource",
-        mainAuthoring.inputs.form.choice({
+        main.inputs.form.choice({
           dependsOn: [giveResource],
           choices: ({ values }) =>
             literals.resourceIds
               .filter((resourceId) => resourceId !== values.giveResource)
-              .map((resourceId) => ({ value: resourceId, label: resourceId })),
+              .map((resourceId) => ({
+                value: resourceId,
+                label: resourceId,
+              })),
           defaultValue: ({ choices }) => choices[0]?.value,
         }),
       ),
@@ -165,8 +167,7 @@ const tradeWithSupplyDepot = mainAuthoring.interaction({
         q.player.resource(input.playerId, input.params.giveResource) >= 3,
     },
   ],
-  reduce({ state, input, accept }) {
-    const tx = edit(state);
+  reduce({ tx, input }) {
     tx.spendResources({
       playerId: input.playerId,
       amounts: { [input.params.giveResource]: 3 },
@@ -175,20 +176,19 @@ const tradeWithSupplyDepot = mainAuthoring.interaction({
       playerId: input.playerId,
       amounts: { [input.params.receiveResource]: 1 },
     });
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "depotTrade",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} exchanged 3 ${input.params.giveResource} for 1 ${input.params.receiveResource}.`,
     });
-    return accept(next);
   },
 });
 
-const offerTrade = mainAuthoring.interaction({
+const offerTrade = main.interaction({
   inputs: defineInputs((input) => {
     const targetPlayerId = input.add(
       "targetPlayerId",
-      mainAuthoring.inputs.form.choice<PlayerId>({
+      main.inputs.form.choice<PlayerId>({
         choices: ({ q, playerId }) =>
           q.player
             .order()
@@ -201,7 +201,7 @@ const offerTrade = mainAuthoring.interaction({
       targetPlayerId,
       give: input.add(
         "give",
-        mainAuthoring.inputs.form.resourceMap({
+        main.inputs.form.resourceMap({
           resources: literals.resourceIds.map((resourceId) => ({
             resourceId,
             min: 0,
@@ -211,7 +211,7 @@ const offerTrade = mainAuthoring.interaction({
       ),
       want: input.add(
         "want",
-        mainAuthoring.inputs.form.resourceMap({
+        main.inputs.form.resourceMap({
           resources: literals.resourceIds.map((resourceId) => ({
             resourceId,
             min: 0,
@@ -260,30 +260,28 @@ const offerTrade = mainAuthoring.interaction({
         q.player.canAfford(input.playerId, input.params.give),
     },
   ],
-  reduce({ state, input, accept, fx }) {
+  reduce({ tx, input }) {
     const offer = {
       offerorPlayerId: input.playerId,
       targetPlayerId: input.params.targetPlayerId,
       give: input.params.give as ResourceCounts,
       want: input.params.want as ResourceCounts,
     };
-    const tx = edit(state);
     tx.patchPublicState({ currentTrade: offer });
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "tradeOffered",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} offered a bilateral trade to ${input.params.targetPlayerId}.`,
     });
-    return accept(next, { instructions: [fx.transition("pendingTrade")] });
+    return tx.transition("pendingTrade");
   },
 });
 
-const endTurn = mainAuthoring.interaction({
+const endTurn = main.interaction({
   inputs: {},
-  reduce({ state, input, accept, fx, q }) {
+  reduce({ state, tx, input, q }) {
     const nextIndex =
       (state.publicState.activePlayerIndex + 1) % q.player.order().length;
-    const tx = edit(state);
     tx.patchPublicState({
       activePlayerIndex: nextIndex,
       turnNumber: state.publicState.turnNumber + 1,
@@ -292,23 +290,21 @@ const endTurn = mainAuthoring.interaction({
       lastSteal: null,
     });
     tx.setActivePlayers([q.player.order()[nextIndex]!]);
-    const next = appendHistory(tx.state, {
+    appendHistory(tx, {
       kind: "endTurn",
       actorPlayerId: input.playerId,
       summary: `${input.playerId} ended the turn.`,
     });
-    return accept(next, { instructions: [fx.transition("roll")] });
+    return tx.transition("roll");
   },
 });
 
-export const main = mainAuthoring.define({
+export default main.define({
   kind: "player",
   initialState: () => ({}),
   actor: ({ state, q }) => turnOwnerPlayerId(state, q),
-  enter({ state, accept, q }) {
-    const tx = edit(state);
+  enter({ state, tx, q }) {
     tx.setActivePlayers([turnOwnerPlayerId(state, q)]);
-    return accept(tx.state);
   },
   interactions: {
     buildTrail,

@@ -1,3 +1,4 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
@@ -8,7 +9,6 @@ import {
   choiceTarget,
   defineCardAction,
   defineEmptyView,
-  defineGame,
   defineGameContract,
   defineInputs,
   defineInteraction,
@@ -19,7 +19,7 @@ import {
   formInput,
   many,
   promptInput,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

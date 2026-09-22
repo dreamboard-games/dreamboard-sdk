@@ -1,9 +1,7 @@
 import {
-  defineGameContract,
+  createGame,
   sparseCounts,
-  type ErrorCodeOfContract,
   type GameOutcome,
-  type GameStateOf,
 } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { ids, manifestContract } from "../shared/manifest-contract";
@@ -103,7 +101,13 @@ export const stormtrailPhaseSchema = z.object({
   completedPlayerIds: z.array(ids.playerId).optional(),
 });
 
-export const gameContract = defineGameContract({
+/**
+ * The Stormtrail game: manifest ids, state schemas, phase-state schemas, and
+ * error codes, bound once. Phase files call `stormtrail.phase("<name>")`,
+ * views call `stormtrail.views.*`, `game.ts` calls `stormtrail.assemble(...)`,
+ * and every module names types through `typeof stormtrail.types.*`.
+ */
+export const stormtrail = createGame({
   manifest: manifestContract,
   state: {
     public: publicStateSchema,
@@ -149,9 +153,8 @@ export const gameContract = defineGameContract({
   },
 });
 
-export type GameContract = typeof gameContract;
-export type GameState = GameStateOf<GameContract>;
-export type GameErrorCode = ErrorCodeOfContract<GameContract>;
+export type GameState = typeof stormtrail.types.State;
+export type GameErrorCode = typeof stormtrail.types.ErrorCode;
 export type PublicState = z.infer<typeof publicStateSchema>;
 export type PrivateState = z.infer<typeof privateStateSchema>;
 export type ResourceCounts = z.infer<typeof resourceCountsSchema>;

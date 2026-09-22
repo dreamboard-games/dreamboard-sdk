@@ -1,12 +1,12 @@
+import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createReducerBundle,
-  defineGame,
   defineGameContract,
   definePhase,
   defineStaticView,
-} from "../reducer";
+} from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
