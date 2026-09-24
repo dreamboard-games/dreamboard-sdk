@@ -53,3 +53,18 @@ prerelease version only after checking npm. SDK publication uses its reviewed
 default-branch OIDC workflow; public runtime/dev-host and internal adoption follow
 plans/008-downstream-adoption.md. No private consumer local links, tarball pins or
 local registry substitutes are permitted.
+
+## Final preparation
+
+The supported guides, four API pages and nineteen registry item pages are now
+in-tree. The authoritative check resolves TypeScript barrel exports and checks
+39 documented public names. Obsolete reference-pin CLI handling, generated-file
+format exclusions and unused styled dependency catalog entries are removed.
+The next public SDK candidate is `0.5.0-alpha.3` (reducer ABI `0.6.0`).
+Current type-performance measurements are recorded in
+[the benchmark](../docs/benchmarks/manifest-types.md) and remain within budget.
+
+Manual GitHub Pages registry publication is prepared with pinned official
+actions, real pure/bound installation proof and a revision marker. The workflow
+is default-branch-only. Hosting configuration, custom-domain DNS and actual
+deployment remain distinct operator work; local proof is not a live-host claim.

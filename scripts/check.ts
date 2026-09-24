@@ -1,4 +1,5 @@
 import { mkdtemp, rm } from "node:fs/promises";
+import { checkApiDocs } from "./docs/check-api.ts";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { walkFiles } from "./lib/files.ts";
@@ -86,6 +87,7 @@ export async function runCoreCheck(
   typecheck();
   await assertPublicationBoundary();
   await assertSdkExportParity();
+  await checkApiDocs();
   await testRepositoryScripts();
   testWorkspacePackages();
 

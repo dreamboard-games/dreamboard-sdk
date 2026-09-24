@@ -1,3 +1,6 @@
+> Historical measurement from the manifest migration. Rerun against the final
+> candidate before comparing current generic API performance.
+
 # In-memory manifest type checking
 
 Measured on Node 24.18.0 and TypeScript 5.9.3 for the SDK 0.5.0-alpha.2 candidate.
@@ -66,3 +69,24 @@ rewrite also removes old declarations and tests.
 
 Logs: `/tmp/headless-pre-instance-hearts-types.log` and
 `/tmp/headless-pre-instance-hex-types.log`.
+
+## Final headless candidate
+
+Measured sequentially on 2026-09-24 after the final SDK cut at `1ce51e8`,
+with Node 24, pnpm 10.4.1, TypeScript 5.9.3 and built SDK declarations. Both
+commands above passed without diagnostics. The scope now includes each game's
+headless React UI and copied registry components; obsolete generated UI and
+styled-runtime declarations are removed.
+
+| Game                |  Types | Instantiations | Check time | Total time |    Memory |
+| ------------------- | -----: | -------------: | ---------: | ---------: | --------: |
+| Hearts              | 75,700 |        255,414 |     0.64 s |     1.08 s | 348,738 K |
+| Hex Network Trading | 96,072 |        374,353 |     0.85 s |     1.37 s | 435,603 K |
+
+Against the pre-instance delivery baseline above, instantiation ratios are
+1.13x and 1.25x; check-time ratios are 1.28x and 1.25x. Both remain inside
+the 2x instantiation and 1.5x check-time investigation thresholds. These are
+local samples, not a controlled hardware benchmark. Initial concurrent runs
+were slower (1.02s and 1.36s); only sequential samples are compared here.
+Logs: `/tmp/headless-hearts-types-final.log` and
+`/tmp/headless-hex-types-final.log`.

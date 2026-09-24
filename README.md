@@ -1,89 +1,27 @@
 # Dreamboard SDK
 
-This repository publishes the public `@dreamboard-games/sdk` package and owns
-its reference games, UI fixtures, Storybook, and UI Workbench.
+A TypeScript reducer SDK, framework-free gameplay instance, optional React adapter,
+and source-copy component registry. The repository includes complete Hearts and
+Hex Network Trading examples.
 
-## Develop
-
-Use Node 24 or newer and pnpm:
+Start with the [documentation](docs/index.md), [package API](packages/sdk/README.md),
+or [reference games](examples/reference-games/README.md).
 
 ```sh
-pnpm install --frozen-lockfile
+corepack pnpm install --frozen-lockfile
 pnpm check
+pnpm ui dev --game hearts
 ```
 
-`pnpm check` is the authoritative browser-free gate. It formats-checks, lints,
-typechecks, builds, validates package
-exports, runs unit tests, and verifies both reference games. It is
-read-only from a clean checkout.
+Use Node24+ and pnpm10.4.1. `pnpm check` is the browser-free gate;
+`pnpm ui test` runs registry installation, Storybook and both real desktop/touch
+browser suites. `pnpm reference [game-id]` tests isolated copies against one packed
+SDK. `pnpm release:verify` verifies an immutable release candidate.
 
-The daily command surface is deliberately small:
+Only `@dreamboard-games/sdk`, `/react`, `/reducer`, `/testing` and package metadata
+are public entrypoints. Hosted UIs import their game definition **as a type**;
+executable reducers belong in the server or local testing entry.
 
-| Goal                                 | Command                                          |
-| ------------------------------------ | ------------------------------------------------ |
-| Build packages                       | `pnpm build`                                     |
-| Run the browser-free gate            | `pnpm check`                                     |
-| Format or check formatting           | `pnpm format` / `pnpm format:check`              |
-| Lint, typecheck, or unit test        | `pnpm lint` / `pnpm typecheck` / `pnpm test`     |
-| Verify one or all reference games    | `pnpm reference [game-id]`                       |
-| Open Storybook                       | `pnpm ui storybook`                              |
-| Open the Workbench                   | `pnpm ui workbench [--scenario <id>] [--source]` |
-| Run UI tests                         | `pnpm ui test [--scenario <id>\|--all]`          |
-| Accept Storybook baselines           | `pnpm ui snapshots update`                       |
-| Build and verify a release candidate | `pnpm release:verify`                            |
-
-## Public package
-
-`packages/sdk` is the only published workspace. Public capabilities are
-exposed through `@dreamboard-games/sdk` and its export-map subpaths. The shipped
-declarations, package export map, and [package README](packages/sdk/README.md)
-are the API authority.
-
-## Reference games
-
-The two authored workspace packages under
-[`examples/reference-games/`](examples/reference-games/README.md) are complete
-multi-turn teaching games and genuine packed-package consumers. Each game owns
-its `rule.md`, a schema-V5 `reference-game.json`, typed scenarios, and an exact
-lockfile. Start with the
-[canonical example map](docs/reference/canonical-examples.md), then run a
-focused proof such as:
-
-```sh
-pnpm reference hearts
-```
-
-## UI development
-
-Storybook is the presentation loop; the Workbench replays reducer-produced
-fixtures through the SDK runtime:
-
-```sh
-pnpm ui storybook
-pnpm ui workbench --scenario hearts.dealt-hand.desktop
-pnpm ui test
-```
-
-See [UI iteration loops](docs/reference/ui-iteration-loops.md) and
-[mobile hand and card interactions](docs/reference/ui-sdk-mobile-hand-and-card-interactions.md).
-
-## Publishing
-
-Prepare the exact non-publishing candidate with:
-
-```sh
-pnpm release:verify
-```
-
-The candidate tarball and immutable manifest are written beneath
-`build/release/candidate/`. The `Release` GitHub Actions workflow publishes that
-verified artifact with npm provenance and derives `alpha`, `beta`, or `latest`
-from the package version. Browser UI verification remains a separate CI lane.
-See [the publishing checklist](docs/alpha-publish.md).
-
-## License
-
-This SDK is source-available under the PolyForm Shield License 1.0.0. It is
-intended for authoring Dreamboard games and for internal/noncompeting use. It is
-not licensed for building or operating a competing game authoring, publishing,
-hosting, play, or platform service.
+The [registry](registry/README.md) installs editable UI source into the application.
+It is not a styled SDK package. Registry hostname deployment is tracked separately
+from local build and installation proof. See [publishing](docs/alpha-publish.md).

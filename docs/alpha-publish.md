@@ -19,12 +19,12 @@ Run the local gates from a clean checkout:
 ```sh
 pnpm install --frozen-lockfile
 pnpm release:verify
-pnpm ui test --all
+pnpm ui test
 git status --short
 ```
 
 `pnpm release:verify` runs the browser-free core checks, packs the SDK once,
-validates and smoke-installs that exact tarball, then verifies all nine
+validates and smoke-installs that exact tarball, then verifies both
 reference games against it. UI browser proof is intentionally separate.
 
 The release candidate directory contains exactly one tarball and
@@ -77,11 +77,12 @@ After publication:
 SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
 npm view "@dreamboard-games/sdk@$SDK_VERSION" version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
 npm view @dreamboard-games/sdk dist-tags --json --registry=https://registry.npmjs.org/
-pnpm reference pin "$SDK_VERSION"
 pnpm reference
 ```
 
-Commit the nine updated game manifests and lockfiles. If rollback is necessary,
+Reference games consume the SDK as workspace packages; they need no release pin.
+Downstream repositories must pin the published SDK version with their owning
+repin command and run their installed-package gates. If rollback is necessary,
 move the npm tag to a known-good published version; do not delete a published
 version.
 

@@ -1,3 +1,6 @@
+> Historical design record. This document includes superseded proposals.
+> Use [the supported documentation](index.md) and shipped declarations for current APIs.
+
 # Spike: authoring API inferred from the model
 
 Status: proposal backed by a working prototype (SDK type helpers, a type-level

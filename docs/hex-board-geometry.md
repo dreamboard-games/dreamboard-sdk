@@ -2,7 +2,7 @@
 
 Hex manifests use JSON shapes and `honeycomb-grid` 4.1.5 for coordinates,
 traversal, corners, distance, and hit testing. Hex templates and hand-built
-cube-coordinate IDs are removed. Square and generic templates remain supported.
+cube-coordinate IDs are removed. Square and generic boards also use inline manifest data; all template merging is removed.
 
 ```ts
 import {
