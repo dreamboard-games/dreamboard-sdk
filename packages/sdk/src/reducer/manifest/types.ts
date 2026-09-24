@@ -2,12 +2,12 @@ import type {
   HexSpaceId,
   HexEdgeId,
   HexVertexId,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/board-identities.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import type {
-  GameTopologyManifest,
   ObjectSchema,
   PropertySchema,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
 import type { z } from "zod";
 import type {
   ManifestIdSchema,

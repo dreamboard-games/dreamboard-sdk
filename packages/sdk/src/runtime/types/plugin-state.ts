@@ -104,7 +104,7 @@ export type InteractionAvailability =
   | { status: "blocked"; reason: string; code?: string };
 
 interface InteractionDescriptorBase<Key extends string = string> {
-  step?: import("@dreamboard-games/plugin-runtime-contract").InteractionDescriptor["step"];
+  step?: import("../../shared/protocol/frame.js").InteractionDescriptor["step"];
   phaseName: string;
   interactionKey: Key;
   interactionId: string;

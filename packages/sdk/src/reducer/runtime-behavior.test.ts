@@ -1,10 +1,8 @@
 import { createGame } from "../reducer";
 import { createTable } from "./lifecycle-test-fixtures";
 import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
-import {
-  canonicalizePluginRuntimeJson,
-  SeatProjectionBundleSchema,
-} from "@dreamboard-games/plugin-runtime-contract";
+import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
+import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
 import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";

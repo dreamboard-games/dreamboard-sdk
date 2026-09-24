@@ -1,12 +1,4 @@
-import { z } from "zod";
-
-export type RuntimeJson =
-  | null
-  | boolean
-  | number
-  | string
-  | RuntimeJson[]
-  | { [key: string]: RuntimeJson };
+import { RuntimeJsonSchema, type RuntimeJson } from "./shared/runtime-json.js";
 
 export type JsonLimits = {
   maxDepth: number;
@@ -139,17 +131,6 @@ export function assertJsonWithinLimits(
     }
   }
 }
-
-export const RuntimeJsonSchema: z.ZodType<RuntimeJson> = z.lazy(() =>
-  z.union([
-    z.null(),
-    z.boolean(),
-    z.number().finite(),
-    z.string(),
-    z.array(RuntimeJsonSchema),
-    z.record(z.string(), RuntimeJsonSchema),
-  ]),
-);
 
 export function parseJsonWithLimits(
   value: unknown,

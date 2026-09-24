@@ -1,12 +1,12 @@
 import type {
   BoardCard,
   ComponentHomeSpec,
-  GameTopologyManifest,
   ManualCardSetDefinition,
   ObjectSchema,
   PresetCardSetDefinition,
   PropertySchema,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
 const STANDARD_DECK_ID = "standard_52_deck";
 

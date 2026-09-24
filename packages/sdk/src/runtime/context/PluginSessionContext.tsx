@@ -8,7 +8,7 @@ import {
 import type {
   PluginPlayerSummary,
   PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/frame.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type { PluginSessionState } from "../types/runtime-api";
 

@@ -1,11 +1,15 @@
-import type { HexSpaceId, HexEdgeId, HexVertexId } from "./board-identities.js";
+import type {
+  HexSpaceId,
+  HexEdgeId,
+  HexVertexId,
+} from "../../shared/domain/board-identities.js";
 import type {
   BoardEdgeRef,
   BoardVertexRef,
   DieTypeSpec as ApiDieTypeSpec,
   GameTopologyManifest as ApiGameTopologyManifest,
   JsonValue,
-} from "./contracts.js";
+} from "../../shared/domain/contracts.js";
 
 type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
   sides?: ApiDieTypeSpec["sides"];

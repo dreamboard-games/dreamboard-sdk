@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { CardCollection, ViewCard } from "@dreamboard-games/sdk-types";
+import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
 import { materializeCards } from "../helpers/cards.js";
 
 export function useCards<

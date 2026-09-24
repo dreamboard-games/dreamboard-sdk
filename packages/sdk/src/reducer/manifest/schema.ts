@@ -1,5 +1,8 @@
 import { z } from "zod";
-import type { ObjectSchema, PropertySchema } from "@dreamboard-games/sdk-types";
+import type {
+  ObjectSchema,
+  PropertySchema,
+} from "../../shared/domain/contracts.js";
 import type { ManifestIds } from "../model";
 
 import type { analyzeManifest } from "./materialize";

@@ -1,4 +1,4 @@
-import type { RuntimeJson } from "./json.js";
+import type { RuntimeJson } from "../runtime-json.js";
 
 export type PlayerId = string;
 

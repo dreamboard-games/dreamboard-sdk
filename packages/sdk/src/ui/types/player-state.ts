@@ -1,4 +1,4 @@
-import type { ViewCard } from "@dreamboard-games/sdk-types";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import type { HexColor } from "./hex-color.js";
 
 export type PlayerId = string;

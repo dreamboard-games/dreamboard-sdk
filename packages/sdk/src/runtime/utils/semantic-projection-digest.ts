@@ -3,7 +3,7 @@ import type {
   InteractionInputDescriptor,
   PluginGameplayFrame,
   PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/frame.js";
 
 type JsonValue =
   | null

@@ -8,17 +8,19 @@ import type {
   BrowserInteractionEffectRequest,
   BrowserInteractionIntentRequest,
 } from "../../browser-interaction/index.js";
-import { RuntimeJsonSchema } from "../../runtime-json.js";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { digestUIFixtureRequest, isSha256Digest } from "./canonical.js";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION,
-  PluginProtocolFrameSchema,
-  PluginProtocolStepSchema,
-  PluginProtocolTapeSchema,
   type PluginProtocolFrame,
   type PluginProtocolStep,
   type PluginProtocolTape as RuntimePluginProtocolTape,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/protocol.js";
+import {
+  PluginProtocolFrameSchema,
+  PluginProtocolStepSchema,
+  PluginProtocolTapeSchema,
+} from "../../shared/protocol/schema.js";
 
 export const UI_SCENARIO_FIXTURE_SCHEMA_VERSION = 2;
 export const UI_SCENARIO_FIXTURE_BUNDLE_SCHEMA_VERSION = 2;

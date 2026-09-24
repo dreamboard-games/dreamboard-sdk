@@ -1,21 +1,7 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 
-export type RuntimeJson =
-  | null
-  | boolean
-  | number
-  | string
-  | RuntimeJson[]
-  | { [key: string]: RuntimeJson };
-
-export type CanonicalJson =
-  | null
-  | boolean
-  | number
-  | string
-  | CanonicalJson[]
-  | { [key: string]: CanonicalJson };
+import type { CanonicalJson, RuntimeJson } from "../runtime-json.js";
 
 export function canonicalizePluginRuntimeJson(value: unknown): CanonicalJson {
   assertRuntimeJson(value);

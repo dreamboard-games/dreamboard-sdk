@@ -1,5 +1,5 @@
 import type { RegisteredGameView as GameView } from "../ui-contract";
-import type { PluginGameplayFrame } from "@dreamboard-games/plugin-runtime-contract";
+import type { PluginGameplayFrame } from "../../shared/protocol/frame.js";
 import { usePluginGameplayFrameSelector } from "../context/PluginGameplayFrameContext.js";
 import {
   defaultRuntimeSnapshotEquality,

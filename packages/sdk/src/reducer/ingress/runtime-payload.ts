@@ -1,8 +1,10 @@
 import { z } from "zod";
-import { RuntimeJsonSchema, assertJsonWithinLimits } from "../../runtime-json";
+import { assertJsonWithinLimits } from "../../runtime-json";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import type { RuntimePayload } from "../model";
 
-export { RuntimeJsonSchema, parseTransportJson } from "../../runtime-json";
+export { RuntimeJsonSchema } from "../../shared/runtime-json.js";
+export { parseTransportJson } from "../../runtime-json";
 
 export const runtimePayloadSchema = z.preprocess((value) => {
   if (value === undefined) return value;

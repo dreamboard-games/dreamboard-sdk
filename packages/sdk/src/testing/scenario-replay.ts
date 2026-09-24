@@ -1,6 +1,6 @@
 import type { z } from "zod";
 import type { Wire } from "@dreamboard-games/reducer-contract";
-import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
+import { digestPluginRuntimeJson } from "../shared/protocol/digest.js";
 import { createReducerTestingBundle } from "../reducer/bundle/ingress-bundle.js";
 import type { ReducerBundleTestingRuntime } from "../reducer/bundle/types.js";
 import type {

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { materializeManifestTable } from "./materialize";
 const EMPTY_MANIFEST: GameTopologyManifest = {
   players: {

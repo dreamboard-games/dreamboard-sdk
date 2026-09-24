@@ -14,7 +14,7 @@ import type {
   ZoneHandlesSnapshot,
 } from "./frame.js";
 import { canonicalizePluginRuntimeJson } from "./json.js";
-import type { RuntimeJson } from "./json.js";
+import type { RuntimeJson } from "../runtime-json.js";
 
 export interface MaterializePluginGameplayFrameInput {
   readonly currentPhase: string | null;

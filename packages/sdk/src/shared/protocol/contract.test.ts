@@ -17,7 +17,7 @@ import {
   type PluginProtocolEnvelope,
   type ReducerBoardStaticProjection,
   type ReducerSeatProjectionBundle,
-} from "./index.js";
+} from "../../plugin-runtime-contract.js";
 
 const claimDescriptor = {
   kind: "action",
@@ -71,7 +71,7 @@ function baseFrame() {
   };
 }
 
-describe("@dreamboard-games/plugin-runtime-contract", () => {
+describe("shared plugin runtime contract", () => {
   test("strict frame and protocol schemas accept version 5 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);

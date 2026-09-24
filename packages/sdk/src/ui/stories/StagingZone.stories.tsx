@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent } from "storybook/test";
 import { useMemo } from "react";
-import type { ViewCard } from "@dreamboard-games/sdk-types";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import { CardFace } from "../components/Card.js";
 import {
   StagingZone,

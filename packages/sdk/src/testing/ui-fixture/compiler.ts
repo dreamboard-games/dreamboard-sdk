@@ -4,7 +4,7 @@ import {
   serializeUIScenarioFixture,
 } from "./canonical.js";
 import { DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION } from "../../browser-interaction/index.js";
-import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION } from "@dreamboard-games/plugin-runtime-contract";
+import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION as PLUGIN_RUNTIME_PROTOCOL_VERSION } from "../../shared/protocol/protocol.js";
 import {
   parseUIScenarioFixture,
   type PortableSemanticReplayStep,

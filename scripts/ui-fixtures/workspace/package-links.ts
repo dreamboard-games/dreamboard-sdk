@@ -14,10 +14,6 @@ const packageTargets = [
     target: path.join(root, "packages/sdk"),
   },
   {
-    packageName: "@dreamboard-games/plugin-runtime-contract",
-    target: path.join(root, "packages/plugin-runtime-contract"),
-  },
-  {
     packageName: "react",
     target: path.dirname(sdkRequire.resolve("react/package.json")),
   },

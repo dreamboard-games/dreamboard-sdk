@@ -1,4 +1,4 @@
-import type { CardCollection, ViewCard } from "@dreamboard-games/sdk-types";
+import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
 
 export function materializeCards<
   CardIdValue extends string,

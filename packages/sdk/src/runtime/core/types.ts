@@ -1,9 +1,11 @@
 import type {
   HostToPluginEnvelope,
+  PluginToHostPayload,
+} from "../../shared/protocol/protocol.js";
+import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
-  PluginToHostPayload,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/frame.js";
 
 export interface RuntimeClock {
   now(): number;

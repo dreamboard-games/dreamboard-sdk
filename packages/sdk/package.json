@@ -119,7 +119,7 @@
     "!tsconfig.tsbuildinfo"
   ],
   "scripts": {
-    "build": "tsup && node ../../scripts/package.ts copy-declarations && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
+    "build": "tsup && mkdir -p dist/ui && tailwindcss -i src/ui/plugin-styles.css -o dist/ui/plugin-styles.css --minify",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "storybook": "storybook dev -p 6006 --host 127.0.0.1 --no-open",
@@ -146,9 +146,7 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "@dreamboard-games/plugin-runtime-contract": "workspace:*",
     "@dreamboard-games/reducer-contract": "workspace:*",
-    "@dreamboard-games/sdk-types": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
     "@playwright/test": "catalog:",
     "@storybook/addon-a11y": "^10.4.6",

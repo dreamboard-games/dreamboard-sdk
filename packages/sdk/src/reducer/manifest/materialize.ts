@@ -7,7 +7,6 @@ import type {
   BoardSpaceSpec,
   BoardTemplateSpec,
   BoardVertexRef,
-  GameTopologyManifest,
   GenericBoardSpec,
   GenericBoardTemplateSpec,
   HexBoardSpec,
@@ -25,7 +24,8 @@ import type {
   SquareSpaceSpec,
   SquareVertexSpec,
   ZoneSpec,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
 import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 

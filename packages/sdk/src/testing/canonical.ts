@@ -1,7 +1,7 @@
 import {
   digestPluginRuntimeJson,
   encodeCanonicalPluginRuntimeJson,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../shared/protocol/digest.js";
 import type { Sha256Digest } from "./inspection/types.js";
 
 export function canonicalScenarioJson(value: unknown): string {

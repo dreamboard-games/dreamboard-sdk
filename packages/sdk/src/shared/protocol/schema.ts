@@ -4,7 +4,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "./protocol.js";
-import type { RuntimeJson } from "./json.js";
+import { RuntimeJsonSchema } from "../runtime-json.js";
 import type {
   GameOutcome,
   GameplayBasis,
@@ -20,17 +20,6 @@ import type {
   PluginProtocolTape,
   PluginToHostPayload,
 } from "./protocol.js";
-
-export const RuntimeJsonSchema: z.ZodType<RuntimeJson> = z.lazy(() =>
-  z.union([
-    z.null(),
-    z.boolean(),
-    z.number().finite(),
-    z.string(),
-    z.array(RuntimeJsonSchema),
-    z.record(z.string(), RuntimeJsonSchema),
-  ]),
-);
 
 export const BoardStaticProjectionSchema = z
   .object({

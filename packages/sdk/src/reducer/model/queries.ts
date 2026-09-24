@@ -1,9 +1,6 @@
 import type { BoundBoardQueries } from "../table/board-queries";
-import type {
-  CardCollection,
-  ViewCard,
-  ViewSlotOccupant,
-} from "@dreamboard-games/sdk-types";
+import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
+import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,

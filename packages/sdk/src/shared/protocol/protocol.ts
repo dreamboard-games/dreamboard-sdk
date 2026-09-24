@@ -4,7 +4,7 @@ import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
 } from "./frame.js";
-import type { RuntimeJson } from "./json.js";
+import type { RuntimeJson } from "../runtime-json.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
 export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 5 as const;

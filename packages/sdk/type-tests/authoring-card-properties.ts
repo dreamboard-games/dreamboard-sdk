@@ -1,4 +1,4 @@
-import { defineTopologyManifest } from "./authoring.js";
+import { defineTopologyManifest } from "../src/reducer/manifest/authoring.js";
 
 defineTopologyManifest({
   players: { minPlayers: 2, maxPlayers: 2, optimalPlayers: 2 },

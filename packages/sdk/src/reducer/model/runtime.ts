@@ -156,7 +156,7 @@ import type {
   OutcomeScoreComponent as PluginOutcomeScoreComponent,
   OutcomeStanding as PluginOutcomeStanding,
   OutcomeTieBreak as PluginOutcomeTieBreak,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/frame.js";
 
 export type OutcomeResult = PluginOutcomeResult;
 export type OutcomeScoreComponent = PluginOutcomeScoreComponent;

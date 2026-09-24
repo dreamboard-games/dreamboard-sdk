@@ -55,45 +55,6 @@ const buildOnlyDependencies = [
   "tsup",
 ];
 
-export async function copySdkPrivateDeclarations(): Promise<void> {
-  const sdkDist = path.join(sdkDir, "dist");
-  const pluginDist = path.join(packagesDir, "plugin-runtime-contract/dist");
-  await mkdir(sdkDist, { recursive: true });
-  const pluginFiles = await readdir(pluginDist);
-  const declarationChunks = pluginFiles.filter((fileName) =>
-    /^[a-z0-9-]+-[A-Za-z0-9_-]+\.d\.ts$/.test(fileName),
-  );
-  const sdkFiles = await readdir(sdkDist);
-  const reducerChunk = sdkFiles.find((fileName) =>
-    /^index\.d-.*\.d\.ts$/.test(fileName),
-  );
-  const reducerDeclaration = reducerChunk
-    ? {
-        importName: "w as Wire",
-        modulePath: `./${reducerChunk.replace(/\.d\.ts$/, ".js")}`,
-      }
-    : {
-        importName: "ReducerWire as Wire",
-        modulePath: "./reducer-contract.js",
-      };
-  if (declarationChunks.length === 0) {
-    throw new Error("Plugin runtime declaration chunks were not built.");
-  }
-  if (!reducerChunk && !sdkFiles.includes("reducer-contract.d.ts")) {
-    throw new Error("The SDK reducer-contract declaration was not built.");
-  }
-  for (const fileName of [...declarationChunks, "digest.d.ts", "schema.d.ts"]) {
-    const source = await readFile(path.join(pluginDist, fileName), "utf8");
-    const rewritten = source
-      .replace(/\nimport '@dreamboard-games\/reducer-contract\/zod';/, "")
-      .replace(
-        /import \* as Wire from '@dreamboard-games\/reducer-contract\/wire';/,
-        `import { ${reducerDeclaration.importName} } from '${reducerDeclaration.modulePath}';`,
-      );
-    await writeFile(path.join(sdkDist, fileName), rewritten, "utf8");
-  }
-}
-
 export function assertPeerHygiene(
   manifest: PackageManifest,
   label = "packages/sdk/package.json",
@@ -567,17 +528,4 @@ export async function packAndVerifySdk(
   const packed = await packSdk(outputDirectory);
   await verifyPackedSdk(packed.path);
   return packed;
-}
-
-if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
-  const [command, ...extra] = process.argv.slice(2);
-  if (command !== "copy-declarations" || extra.length > 0) {
-    console.error("Usage: node scripts/package.ts copy-declarations");
-    process.exitCode = 2;
-  } else {
-    copySdkPrivateDeclarations().catch((error: unknown) => {
-      console.error(error instanceof Error ? error.message : String(error));
-      process.exitCode = 1;
-    });
-  }
 }

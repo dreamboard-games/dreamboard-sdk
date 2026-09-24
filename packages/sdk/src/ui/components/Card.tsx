@@ -10,7 +10,7 @@
  */
 
 import { clsx } from "clsx";
-import type { ViewCard } from "@dreamboard-games/sdk-types";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import { useTheme } from "../theme/ThemeProvider.js";
 import { motionDuration } from "../theme/derive.js";
 import {

@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
+import { digestPluginRuntimeJson } from "../../shared/protocol/digest.js";
 import type {
   PerspectiveRef,
   ScenarioIdentity,

@@ -3,13 +3,15 @@ import type {
   BoardSpec,
   BoardTemplateSpec,
   DieSeedSpec,
-  DieTypeSpec,
-  GameTopologyManifest,
   PieceSeedSpec,
   PieceTypeSpec,
   PropertySchema,
   ZoneSpec,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
+import type {
+  DieTypeSpec,
+  GameTopologyManifest,
+} from "../../shared/domain/manifest.js";
 import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 
 export type ManifestAuthoringValidationResult = {

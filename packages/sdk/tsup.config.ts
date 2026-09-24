@@ -38,15 +38,9 @@ export default defineConfig({
   // Private workspace packages are inlined into the published bundle so the
   // package verifier can prove the tarball is self-contained.
   dts: {
-    resolve: [
-      /^@dreamboard-games\/(sdk-types|reducer-contract)(\/.*)?$/,
-      /^@dreamboard-games\/plugin-runtime-contract(\/.*)?$/,
-    ],
+    resolve: [/^@dreamboard-games\/reducer-contract(\/.*)?$/],
   },
-  noExternal: [
-    /^@dreamboard-games\/(sdk-types|reducer-contract)(\/|$)/,
-    /^@dreamboard-games\/plugin-runtime-contract(\/|$)/,
-  ],
+  noExternal: [/^@dreamboard-games\/reducer-contract(\/|$)/],
   clean: true,
   sourcemap: true,
   splitting: true,

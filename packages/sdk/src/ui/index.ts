@@ -75,11 +75,8 @@ export {
   type HexColor,
 } from "./types/hex-color.js";
 export type * from "./types/player-state.js";
-export type {
-  CardCollection,
-  ViewCard,
-  ViewSlotOccupant,
-} from "@dreamboard-games/sdk-types";
+export type { CardCollection, ViewCard } from "../shared/domain/cards.js";
+export type { ViewSlotOccupant } from "../shared/domain/slots.js";
 export type {
   AnyHexBoardInput,
   AnySquareBoardInput,

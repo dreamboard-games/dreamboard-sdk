@@ -1,7 +1,5 @@
-import {
-  computePluginActionSetVersion,
-  materializePluginGameplayFrame,
-} from "@dreamboard-games/plugin-runtime-contract";
+import { computePluginActionSetVersion } from "../../shared/protocol/digest.js";
+import { materializePluginGameplayFrame } from "../../shared/protocol/projection.js";
 import { digestUIFixtureJson } from "../ui-fixture/canonical.js";
 import type {
   CreateReducerScenarioRunnerOptions,
