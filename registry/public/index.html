@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dreamboard source registry</title>
+  </head>
+  <body>
+    <main>
+      <h1>Dreamboard source registry</h1>
+      <p>React components copied into your game and owned by you.</p>
+      <p>Configure the <code>@dreamboard</code> namespace in shadcn:</p>
+      <pre><code>"registries": {
+  "@dreamboard": "https://registry.dreamboard.games/r/{name}.json"
+}</code></pre>
+      <p>Then install a component:</p>
+      <pre><code>pnpm dlx shadcn@4.21.0 add @dreamboard/playing-card</code></pre>
+      <p>
+        <a
+          href="https://github.com/dreamboard-games/dreamboard-sdk/blob/main/docs/registry/index.md"
+          >Component documentation</a
+        >
+      </p>
+    </main>
+  </body>
+</html>
