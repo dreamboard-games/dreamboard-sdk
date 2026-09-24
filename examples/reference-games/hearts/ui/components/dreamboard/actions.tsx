@@ -1,4 +1,5 @@
 import { useGame } from "@game";
+import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 export type BoundInteraction = NonNullable<
   ReturnType<Model["interactions"]["get"]>
@@ -29,6 +30,17 @@ export function Actions({ interaction: key, className }: ActionsProps) {
           onClick={() => {
             void interaction
               .cancel()
+              .then((result) => {
+                if (!result.accepted) {
+                  interaction.game
+                    .getOptions()
+                    .onError?.(
+                      new Error(result.message ?? result.errorCode, {
+                        cause: result,
+                      }),
+                    );
+                }
+              })
               .catch((error) => interaction.game.getOptions().onError?.(error));
           }}
         >

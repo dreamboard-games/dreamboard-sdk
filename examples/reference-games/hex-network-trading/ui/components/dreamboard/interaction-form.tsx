@@ -50,35 +50,33 @@ export function InteractionForm({
         const domain = input.getDomain();
         const current: unknown = input.getValue();
         const field = input.getFieldProps();
-        if (domain.type === "resourceMap" && Array.isArray(domain.resources)) {
-          const resources = domain.resources.filter(record);
+        if (domain.type === "resourceMap") {
+          const resources = domain.resources;
           const values: Record<string, number> = Object.fromEntries(
             resources.map((resource) => [
-              String(resource.resourceId),
-              record(current)
-                ? Number(current[String(resource.resourceId)] ?? 0)
-                : 0,
+              resource.resourceId,
+              record(current) ? Number(current[resource.resourceId] ?? 0) : 0,
             ]),
           );
           return (
             <fieldset key={input.key} disabled={field.disabled}>
               <legend>{input.key}</legend>
               {resources.map((resource) => (
-                <label key={String(resource.resourceId)}>
-                  {String(resource.label ?? resource.resourceId)}
+                <label key={resource.resourceId}>
+                  {resource.label ?? resource.resourceId}
                   <input
                     type="number"
-                    min={Number(resource.min)}
-                    max={Number(resource.max)}
+                    min={resource.min}
+                    max={resource.max}
                     step={1}
-                    value={values[String(resource.resourceId)]}
+                    value={values[resource.resourceId]}
                     data-interaction={key}
                     data-input={input.key}
-                    data-resource={String(resource.resourceId)}
+                    data-resource={resource.resourceId}
                     onChange={(event) => {
                       const next = {
                         ...values,
-                        [String(resource.resourceId)]:
+                        [resource.resourceId]:
                           event.currentTarget.value === ""
                             ? 0
                             : event.currentTarget.valueAsNumber,
@@ -101,15 +99,16 @@ export function InteractionForm({
                 {...field}
                 value={typeof current === "number" ? current : ""}
                 type="number"
-                min={Number(domain.min)}
-                max={Number(domain.max)}
-                step={Number(domain.step ?? 1)}
+                min={domain.min}
+                max={domain.max}
+                step={domain.step ?? 1}
               />
             </label>
           );
-        const choices = Array.isArray(domain.choices)
-          ? domain.choices.filter(record)
-          : [];
+        const choices =
+          domain.type === "choice" || domain.type === "choiceList"
+            ? domain.choices
+            : [];
         return (
           <fieldset key={input.key}>
             <legend>{input.key}</legend>
