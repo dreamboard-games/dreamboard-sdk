@@ -692,3 +692,19 @@ it("rebuilds interaction handlers when a new source reuses the identical immutab
   expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
   game.dispose();
 });
+
+it("native submit reports rejection while preserving the selected draft", async () => {
+  const x = setup();
+  const onError = vi.fn();
+  const game = createGameInstance()({ source: x.source, onError });
+  game.inputs.get("play.move", "choice")!.setValue("a");
+  game.interactions.get("play.move")!.getSubmitHandler()();
+  x.ack(false);
+  await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
+  const error = onError.mock.calls[0]![0] as Error;
+  expect(error.message).toBe("RULE_REJECT");
+  expect(error.cause).toEqual({ accepted: false, errorCode: "RULE_REJECT" });
+  expect(game.state.drafts).toEqual({ "play.move": { choice: "a" } });
+  expect(game.interactions.get("play.move")!.getIsReady()).toBe(true);
+  game.dispose();
+});

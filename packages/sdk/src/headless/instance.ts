@@ -845,8 +845,16 @@ class Controller {
       );
     if (route && input) this.select(route.key, input.key, id, route);
   }
-  handle(promise: Promise<unknown>) {
-    void promise.catch((error) => this.options.onError?.(error));
+  handle(promise: Promise<SubmitResult>) {
+    void promise.then(
+      (result) => {
+        if (!result.accepted)
+          this.options.onError?.(
+            new Error(result.message ?? result.errorCode, { cause: result }),
+          );
+      },
+      (error) => this.options.onError?.(error),
+    );
   }
   async submit(key: string, cancel: boolean): Promise<SubmitResult> {
     const source = this.options.source;
