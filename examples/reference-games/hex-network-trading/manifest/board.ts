@@ -1,20 +1,4 @@
-export const boardTemplates = [
-  {
-    id: "stormtrail-map",
-    name: "Stormtrail Frontier",
-    layout: "hex",
-    orientation: "pointy-top",
-    spaces: [
-      { id: "northForest", q: 0, r: -1, typeId: "pineForest" },
-      { id: "northEastClay", q: 1, r: -1, typeId: "clayFlats" },
-      { id: "southEastFields", q: 1, r: 0, typeId: "grainFields" },
-      { id: "southForest", q: 0, r: 1, typeId: "pineForest" },
-      { id: "southWestClay", q: -1, r: 1, typeId: "clayFlats" },
-      { id: "northWestFields", q: -1, r: 0, typeId: "grainFields" },
-      { id: "centralBarrens", q: 0, r: 0, typeId: "barrens" },
-    ],
-  },
-] as const;
+import { hexagon } from "@dreamboard-games/sdk/reducer";
 
 export const boards = [
   {
@@ -22,6 +6,16 @@ export const boards = [
     name: "Stormtrail Frontier",
     layout: "hex",
     scope: "shared",
-    templateId: "stormtrail-map",
+    orientation: "pointy",
+    shape: hexagon({ radius: 1 }),
+    spaces: {
+      "0,-1": { id: "northForest", typeId: "pineForest" },
+      "1,-1": { id: "northEastClay", typeId: "clayFlats" },
+      "1,0": { id: "southEastFields", typeId: "grainFields" },
+      "0,1": { id: "southForest", typeId: "pineForest" },
+      "-1,1": { id: "southWestClay", typeId: "clayFlats" },
+      "-1,0": { id: "northWestFields", typeId: "grainFields" },
+      "0,0": { id: "centralBarrens", typeId: "barrens" },
+    },
   },
 ] as const;

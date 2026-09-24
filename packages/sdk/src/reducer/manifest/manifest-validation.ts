@@ -1,8 +1,4 @@
 import type {
-  HexBoardSpec,
-  HexBoardTemplateSpec,
-  HexSpaceSpec,
-  HexVertexSpec,
   BoardCard,
   BoardSpec,
   BoardTemplateSpec,
@@ -14,18 +10,12 @@ import type {
   PropertySchema,
   ZoneSpec,
 } from "@dreamboard-games/sdk-types";
-import { resolveHexVertexGeometryKey } from "./hex-geometry.js";
+import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
   errors: string[];
   warnings: string[];
 };
-
-function isHexBoardTemplateSpec(
-  boardTemplate: BoardTemplateSpec,
-): boardTemplate is Extract<BoardTemplateSpec, { layout: "hex" }> {
-  return boardTemplate.layout === "hex";
-}
 
 function isHexBoardSpec(
   board: BoardSpec,
@@ -499,19 +489,6 @@ function validateBoardTemplateDuplicates(
   const issues: string[] = [];
 
   for (const [index, boardTemplate] of boardTemplates.entries()) {
-    if (isHexBoardTemplateSpec(boardTemplate)) {
-      issues.push(
-        ...collectDuplicateIdIssues({
-          entries: (boardTemplate.spaces ?? []).map((space, spaceIndex) => ({
-            id: space.id,
-            path: `manifest.boardTemplates[${index}].spaces[${spaceIndex}].id`,
-          })),
-          label: "space id",
-        }),
-      );
-      continue;
-    }
-
     issues.push(
       ...collectDuplicateIdIssues({
         entries: (boardTemplate.spaces ?? []).map((space, spaceIndex) => ({
@@ -555,10 +532,12 @@ function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
     if (isHexBoardSpec(board)) {
       issues.push(
         ...collectDuplicateIdIssues({
-          entries: (board.spaces ?? []).map((space, spaceIndex) => ({
-            id: space.id,
-            path: `manifest.boards[${index}].spaces[${spaceIndex}].id`,
-          })),
+          entries: Object.values(board.spaces ?? {}).map(
+            (space, spaceIndex) => ({
+              id: space.id,
+              path: `manifest.boards[${index}].spaces[${spaceIndex}].id`,
+            }),
+          ),
           label: "space id",
         }),
       );
@@ -597,112 +576,35 @@ function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
   return issues;
 }
 
-function resolveHexSpaces(
-  board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-): HexSpaceSpec[] {
-  if (!template) {
-    return [...(board.spaces ?? [])].sort((left, right) =>
-      left.id.localeCompare(right.id),
-    );
-  }
-
-  const templateSpacesById = new Map(
-    (template.spaces ?? []).map((space) => [space.id, space] as const),
-  );
-  const overridesById = new Map(
-    (board.spaces ?? []).map((space) => [space.id, space] as const),
-  );
-  for (const overrideId of overridesById.keys()) {
-    if (!templateSpacesById.has(overrideId)) {
-      continue;
-    }
-  }
-
-  return (template.spaces ?? [])
-    .map((templateSpace) => {
-      const override = overridesById.get(templateSpace.id);
-      if (!override) {
-        return templateSpace;
-      }
-      return {
-        ...templateSpace,
-        ...override,
-        id: templateSpace.id,
-        q: templateSpace.q,
-        r: templateSpace.r,
-      };
-    })
-    .sort((left, right) => left.id.localeCompare(right.id));
-}
-
-function validateHexVertexRefs(options: {
-  ownerPath: string;
-  ownerLabel: string;
-  spaces: readonly HexSpaceSpec[];
-  vertices: readonly HexVertexSpec[];
-}): string[] {
+function validateHexBoardVertexRefs(manifest: GameTopologyManifest): string[] {
   const issues: string[] = [];
-  const spacesById = new Map(
-    options.spaces.map((space) => [space.id, space] as const),
-  );
-
-  for (const [vertexIndex, vertex] of options.vertices.entries()) {
+  for (const board of manifest.boards ?? []) {
+    if (board.layout !== "hex") continue;
     try {
-      resolveHexVertexGeometryKey(vertex.ref, spacesById);
+      const geometry = createHexBoardGeometry({
+        ...board,
+        spaces: resolveHexSpaces(board),
+      });
+      const vertices = (board.vertices ?? []).map((vertex) =>
+        "spaces" in vertex.ref
+          ? geometry.vertex(...vertex.ref.spaces)
+          : geometry.vertexAt(vertex.ref.space, vertex.ref.corner),
+      );
+      const edges = (board.edges ?? []).map((edge) =>
+        "spaces" in edge.ref
+          ? geometry.edge(...edge.ref.spaces)
+          : geometry.edgeAt(edge.ref.space, edge.ref.side),
+      );
+      if (new Set(vertices).size !== vertices.length)
+        throw new Error("Duplicate hex vertex refs.");
+      if (new Set(edges).size !== edges.length)
+        throw new Error("Duplicate hex edge refs.");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unknown hex vertex error.";
       issues.push(
-        `${options.ownerPath}.vertices[${vertexIndex}].ref: ${options.ownerLabel} with spaces '${vertex.ref.spaces.join(", ")}' failed validation. ${message}`,
+        `Hex board '${board.id}': ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
-
-  return issues;
-}
-
-function validateHexBoardVertexRefs(manifest: GameTopologyManifest): string[] {
-  const issues: string[] = [];
-  const hexTemplatesById = new Map(
-    (manifest.boardTemplates ?? [])
-      .filter(isHexBoardTemplateSpec)
-      .map((boardTemplate) => [boardTemplate.id, boardTemplate] as const),
-  );
-
-  for (const [templateIndex, template] of (
-    manifest.boardTemplates ?? []
-  ).entries()) {
-    if (!isHexBoardTemplateSpec(template)) {
-      continue;
-    }
-    issues.push(
-      ...validateHexVertexRefs({
-        ownerPath: `manifest.boardTemplates[${templateIndex}]`,
-        ownerLabel: `Hex board template '${template.id}'`,
-        spaces: template.spaces ?? [],
-        vertices: template.vertices ?? [],
-      }),
-    );
-  }
-
-  for (const [boardIndex, board] of (manifest.boards ?? []).entries()) {
-    if (!isHexBoardSpec(board)) {
-      continue;
-    }
-    issues.push(
-      ...validateHexVertexRefs({
-        ownerPath: `manifest.boards[${boardIndex}]`,
-        ownerLabel: `Hex board '${board.id}'`,
-        spaces: resolveHexSpaces(
-          board,
-          hexTemplatesById.get(board.templateId ?? ""),
-        ),
-        vertices: board.vertices ?? [],
-      }),
-    );
-  }
-
   return issues;
 }
 
@@ -733,13 +635,16 @@ function collectAmbiguousBoardTypeWarnings(
   };
 
   for (const board of manifest.boards ?? []) {
-    const template = board.templateId
-      ? boardTemplatesById.get(board.templateId)
-      : undefined;
+    const template =
+      board.layout !== "hex" && board.templateId
+        ? boardTemplatesById.get(board.templateId)
+        : undefined;
     for (const space of [
       ...((template?.layout === board.layout ? template.spaces : undefined) ??
         []),
-      ...(board.spaces ?? []),
+      ...(board.layout === "hex"
+        ? Object.values(board.spaces ?? {})
+        : (board.spaces ?? [])),
     ]) {
       addBoardUsage(boardsBySpaceType, space.typeId, board.id);
     }
@@ -824,7 +729,10 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
       ),
     );
 
-    if (boardTemplate.layout !== "hex") {
+    if (
+      boardTemplate.layout === "generic" ||
+      boardTemplate.layout === "square"
+    ) {
       issues.push(
         ...collectObjectSchemaKeyIssues(
           boardTemplate.relationFieldsSchema,
@@ -923,7 +831,10 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
       ...collectKeyIssues([
         { value: board.id, path: `${boardPath}.id` },
         { value: board.typeId, path: `${boardPath}.typeId` },
-        { value: board.templateId, path: `${boardPath}.templateId` },
+        {
+          value: board.layout !== "hex" ? board.templateId : undefined,
+          path: `${boardPath}.templateId`,
+        },
         ...runtimeBoardIds.map((runtimeBoardId) => ({
           value: runtimeBoardId,
           path: `${boardPath}.runtimeBoardId`,
@@ -1010,7 +921,10 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
 
     issues.push(
       ...collectKeyIssues(
-        (board.spaces ?? []).flatMap((space, spaceIndex) => [
+        (board.layout === "hex"
+          ? Object.values(board.spaces ?? {})
+          : (board.spaces ?? [])
+        ).flatMap((space, spaceIndex) => [
           {
             value: space.id,
             path: `${boardPath}.spaces[${spaceIndex}].id`,

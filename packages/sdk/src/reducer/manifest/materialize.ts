@@ -11,12 +11,9 @@ import type {
   GenericBoardSpec,
   GenericBoardTemplateSpec,
   HexBoardSpec,
-  HexBoardTemplateSpec,
   HexEdgeRef,
-  HexEdgeSpec,
   HexSpaceSpec,
   HexVertexRef,
-  HexVertexSpec,
   DieSeedSpec,
   ManualCardSetDefinition,
   ObjectSchema,
@@ -30,7 +27,7 @@ import type {
   ZoneSpec,
 } from "@dreamboard-games/sdk-types";
 
-import { resolveHexVertexGeometryKey } from "./hex-geometry.js";
+import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 
 import {
   addStandardDecksIfNeeded,
@@ -57,7 +54,6 @@ interface AnalyzedGenericBoard {
 interface AnalyzedHexBoard {
   layout: "hex";
   board: HexBoardSpec;
-  template?: HexBoardTemplateSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
   boardFieldsSchema?: ObjectSchema | null;
@@ -285,12 +281,6 @@ function expandSeedIds(
   return expanded;
 }
 
-function isHexBoardTemplateSpec(
-  boardTemplate: BoardTemplateSpec,
-): boardTemplate is HexBoardTemplateSpec {
-  return boardTemplate.layout === "hex";
-}
-
 function isSquareBoardTemplateSpec(
   boardTemplate: BoardTemplateSpec,
 ): boardTemplate is SquareBoardTemplateSpec {
@@ -311,51 +301,6 @@ function isSquareBoardSpec(board: BoardSpec): board is SquareBoardSpec {
   return board.layout === "square";
 }
 
-const HEX_SIDES = ["e", "ne", "nw", "w", "sw", "se"] as const;
-
-const HEX_CORNERS = ["ne-e", "e-se", "se-sw", "sw-w", "w-nw", "nw-ne"] as const;
-
-type HexSide = (typeof HEX_SIDES)[number];
-
-type HexCorner = (typeof HEX_CORNERS)[number];
-
-const HEX_SIDE_OFFSETS: Record<HexSide, readonly [number, number]> = {
-  e: [1, 0],
-  ne: [1, -1],
-  nw: [0, -1],
-  w: [-1, 0],
-  sw: [-1, 1],
-  se: [0, 1],
-};
-
-const HEX_CORNER_OFFSETS: Record<HexCorner, readonly [number, number, number]> =
-  {
-    "ne-e": [2, -1, -1],
-    "e-se": [1, -2, 1],
-    "se-sw": [-1, -1, 2],
-    "sw-w": [-2, 1, 1],
-    "w-nw": [-1, 2, -1],
-    "nw-ne": [1, 1, -2],
-  };
-
-const HEX_SIDE_CORNERS: Record<HexSide, readonly [HexCorner, HexCorner]> = {
-  e: ["ne-e", "e-se"],
-  ne: ["nw-ne", "ne-e"],
-  nw: ["w-nw", "nw-ne"],
-  w: ["sw-w", "w-nw"],
-  sw: ["se-sw", "sw-w"],
-  se: ["e-se", "se-sw"],
-};
-
-const HEX_CORNER_SIDES: Record<HexCorner, readonly [HexSide, HexSide]> = {
-  "ne-e": ["ne", "e"],
-  "e-se": ["e", "se"],
-  "se-sw": ["se", "sw"],
-  "sw-w": ["sw", "w"],
-  "w-nw": ["w", "nw"],
-  "nw-ne": ["nw", "ne"],
-};
-
 interface ResolvedHexEdge {
   id: string;
   geometryKey: string;
@@ -372,41 +317,6 @@ interface ResolvedHexVertex {
   typeId?: string | null;
   label?: string | null;
   fields?: Record<string, unknown> | null;
-}
-
-function cubeFromAxial(
-  space: Pick<HexSpaceSpec, "q" | "r">,
-): readonly [number, number, number] {
-  const x = space.q;
-  const z = space.r;
-  return [x, -x - z, z] as const;
-}
-
-function cornerGeometryKey(
-  space: Pick<HexSpaceSpec, "q" | "r">,
-  corner: HexCorner,
-) {
-  const [x, y, z] = cubeFromAxial(space);
-  const [dx, dy, dz] = HEX_CORNER_OFFSETS[corner];
-  return `${3 * x + dx},${3 * y + dy},${3 * z + dz}`;
-}
-
-function edgeGeometryKey(space: Pick<HexSpaceSpec, "q" | "r">, side: HexSide) {
-  const [leftCorner, rightCorner] = HEX_SIDE_CORNERS[side];
-  return [
-    cornerGeometryKey(space, leftCorner),
-    cornerGeometryKey(space, rightCorner),
-  ]
-    .sort((left, right) => left.localeCompare(right))
-    .join("::");
-}
-
-function edgeIdFromGeometryKey(key: string): string {
-  return `hex-edge:${key}`;
-}
-
-function vertexIdFromGeometryKey(key: string): string {
-  return `hex-vertex:${key}`;
 }
 
 const SQUARE_SIDES = ["north", "east", "south", "west"] as const;
@@ -539,122 +449,6 @@ function geometryKeyFromSquareVertexRef(
   return only;
 }
 
-function geometryKeyFromEdgeRef(
-  ref: HexEdgeRef,
-  spacesById: ReadonlyMap<string, HexSpaceSpec>,
-): string {
-  const [leftId, rightId] = [...ref.spaces].sort((a, b) => a.localeCompare(b));
-  if (leftId === undefined || rightId === undefined) {
-    throw new Error("Hex edge ref must reference exactly two spaces.");
-  }
-  const leftSpace = spacesById.get(leftId);
-  const rightSpace = spacesById.get(rightId);
-  if (!leftSpace || !rightSpace) {
-    throw new Error(
-      `Hex edge ref references unknown spaces: ${ref.spaces.join(", ")}.`,
-    );
-  }
-  const [dq, dr] = [rightSpace.q - leftSpace.q, rightSpace.r - leftSpace.r];
-  const side = (
-    Object.entries(HEX_SIDE_OFFSETS) as Array<
-      readonly [HexSide, readonly [number, number]]
-    >
-  ).find(([, [sideQ, sideR]]) => sideQ === dq && sideR === dr)?.[0];
-  if (!side) {
-    throw new Error(
-      `Hex edge ref spaces '${leftId}' and '${rightId}' are not adjacent.`,
-    );
-  }
-  return edgeGeometryKey(leftSpace, side);
-}
-
-function geometryKeyFromVertexRef(
-  ref: HexVertexRef,
-  spacesById: ReadonlyMap<string, HexSpaceSpec>,
-): string {
-  return resolveHexVertexGeometryKey(ref, spacesById);
-}
-
-function deriveHexEdges(spaces: readonly HexSpaceSpec[]): ResolvedHexEdge[] {
-  const spacesByCoordinate = new Map<string, HexSpaceSpec>();
-  for (const space of spaces) {
-    spacesByCoordinate.set(`${space.q},${space.r}`, space);
-  }
-
-  const edgeMap = new Map<string, ResolvedHexEdge>();
-  for (const space of spaces) {
-    for (const side of HEX_SIDES) {
-      const [dq, dr] = HEX_SIDE_OFFSETS[side];
-      const neighbor = spacesByCoordinate.get(
-        `${space.q + dq},${space.r + dr}`,
-      );
-      const geometryKey = edgeGeometryKey(space, side);
-      const existing = edgeMap.get(geometryKey);
-      const nextSpaceIds = dedupeSorted([
-        ...(existing?.spaceIds ?? []),
-        space.id,
-        ...(neighbor ? [neighbor.id] : []),
-      ]);
-      edgeMap.set(geometryKey, {
-        id: edgeIdFromGeometryKey(geometryKey),
-        geometryKey,
-        spaceIds: nextSpaceIds,
-        typeId: existing?.typeId ?? null,
-        label: existing?.label ?? null,
-        fields: existing?.fields ?? null,
-      });
-    }
-  }
-
-  return [...edgeMap.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function deriveHexVertices(
-  spaces: readonly HexSpaceSpec[],
-): ResolvedHexVertex[] {
-  const spacesByCoordinate = new Map<string, HexSpaceSpec>();
-  for (const space of spaces) {
-    spacesByCoordinate.set(`${space.q},${space.r}`, space);
-  }
-
-  const vertexMap = new Map<string, ResolvedHexVertex>();
-  for (const space of spaces) {
-    for (const corner of HEX_CORNERS) {
-      const [leftSide, rightSide] = HEX_CORNER_SIDES[corner];
-      const [leftQ, leftR] = HEX_SIDE_OFFSETS[leftSide];
-      const [rightQ, rightR] = HEX_SIDE_OFFSETS[rightSide];
-      const leftNeighbor = spacesByCoordinate.get(
-        `${space.q + leftQ},${space.r + leftR}`,
-      );
-      const rightNeighbor = spacesByCoordinate.get(
-        `${space.q + rightQ},${space.r + rightR}`,
-      );
-      const geometryKey = cornerGeometryKey(space, corner);
-      const existing = vertexMap.get(geometryKey);
-      const nextSpaceIds = dedupeSorted([
-        ...(existing?.spaceIds ?? []),
-        space.id,
-        ...(leftNeighbor ? [leftNeighbor.id] : []),
-        ...(rightNeighbor ? [rightNeighbor.id] : []),
-      ]);
-      vertexMap.set(geometryKey, {
-        id: vertexIdFromGeometryKey(geometryKey),
-        geometryKey,
-        spaceIds: nextSpaceIds,
-        typeId: existing?.typeId ?? null,
-        label: existing?.label ?? null,
-        fields: existing?.fields ?? null,
-      });
-    }
-  }
-
-  return [...vertexMap.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
 function mergeBoardSpaces(
   templateSpaces: readonly BoardSpaceSpec[],
   boardSpaces: readonly BoardSpaceSpec[],
@@ -683,264 +477,29 @@ function mergeBoardContainers(
   ).sort((left, right) => left.id.localeCompare(right.id));
 }
 
-function resolveHexSpaces(
-  board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-): HexSpaceSpec[] {
-  if (!template) {
-    return [...(board.spaces ?? [])].sort((left, right) =>
-      left.id.localeCompare(right.id),
-    );
-  }
-
-  const templateSpacesById = new Map(
-    (template.spaces ?? []).map((space) => [space.id, space] as const),
-  );
-  const overridesById = new Map(
-    (board.spaces ?? []).map((space) => [space.id, space] as const),
-  );
-  for (const overrideId of overridesById.keys()) {
-    if (!templateSpacesById.has(overrideId)) {
-      throw new Error(
-        `Hex board '${board.id}' overrides unknown space '${overrideId}' from template '${template.id}'.`,
-      );
-    }
-  }
-
-  return (template.spaces ?? [])
-    .map((templateSpace) => {
-      const override = overridesById.get(templateSpace.id);
-      if (!override) {
-        return templateSpace;
-      }
-      const templateMatch = templateSpacesById.get(override.id);
-      if (!templateMatch) {
-        throw new Error(
-          `Hex board '${board.id}' overrides unknown space '${override.id}' from template '${template.id}'.`,
-        );
-      }
-      if (templateMatch.q !== override.q || templateMatch.r !== override.r) {
-        throw new Error(
-          `Hex board '${board.id}' cannot change coordinates for space '${override.id}' from template '${template.id}'.`,
-        );
-      }
-      return {
-        ...templateSpace,
-        ...override,
-        id: templateSpace.id,
-        q: templateSpace.q,
-        r: templateSpace.r,
-      };
-    })
-    .sort((left, right) => left.id.localeCompare(right.id));
-}
-
 function resolveAuthoredHexEdges(
   board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-  spaces: readonly HexSpaceSpec[],
+  geometry: ReturnType<typeof createHexBoardGeometry>,
 ): AnalyzedHexBoard["authoredEdges"] {
-  const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
-  const derivedByGeometryKey = new Map(
-    deriveHexEdges(spaces).map((edge) => [edge.geometryKey, edge] as const),
-  );
-  const collectSpecsByGeometryKey = (
-    specs: readonly HexEdgeSpec[],
-    ownerLabel: string,
-  ) => {
-    const specsByGeometryKey = new Map<string, HexEdgeSpec>();
-    for (const spec of specs) {
-      const geometryKey = geometryKeyFromEdgeRef(spec.ref, spacesById);
-      if (specsByGeometryKey.has(geometryKey)) {
-        throw new Error(`${ownerLabel} contains duplicate hex edge refs.`);
-      }
-      specsByGeometryKey.set(geometryKey, spec);
-    }
-    return specsByGeometryKey;
-  };
-
-  const templateSpecsByGeometryKey = template
-    ? collectSpecsByGeometryKey(
-        template.edges ?? [],
-        `Hex board template '${template.id}'`,
-      )
-    : new Map<string, HexEdgeSpec>();
-  const overrideSpecsByGeometryKey = collectSpecsByGeometryKey(
-    board.edges ?? [],
-    `Hex board '${board.id}'`,
-  );
-
-  if (template) {
-    for (const overrideKey of overrideSpecsByGeometryKey.keys()) {
-      if (!templateSpecsByGeometryKey.has(overrideKey)) {
-        throw new Error(
-          `Hex board '${board.id}' overrides unknown edge ref from template '${template.id}'.`,
-        );
-      }
-    }
-  }
-
-  const mergedSpecs = template
-    ? Array.from(templateSpecsByGeometryKey.entries()).map(
-        ([geometryKey, templateSpec]) =>
-          [
-            geometryKey,
-            overrideSpecsByGeometryKey.get(geometryKey) ?? templateSpec,
-          ] as const,
-      )
-    : Array.from(overrideSpecsByGeometryKey.entries());
-
-  return mergedSpecs.map(([geometryKey, spec]) => {
-    const derivedEdge = derivedByGeometryKey.get(geometryKey);
-    if (!derivedEdge) {
-      throw new Error(
-        `Hex edge ref on board '${board.id}' does not resolve to a derived edge.`,
-      );
-    }
-    return {
-      id: derivedEdge.id,
-      ref: cloneJson(spec.ref),
-      typeId: spec.typeId ?? null,
-      label: spec.label ?? null,
-      fields:
-        (spec.fields as Record<string, unknown> | null | undefined) ?? null,
-    };
-  });
+  return (board.edges ?? []).map((edge) => ({
+    ...edge,
+    id:
+      "spaces" in edge.ref
+        ? geometry.edge(...edge.ref.spaces)
+        : geometry.edgeAt(edge.ref.space, edge.ref.side),
+  }));
 }
-
 function resolveAuthoredHexVertices(
   board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-  spaces: readonly HexSpaceSpec[],
+  geometry: ReturnType<typeof createHexBoardGeometry>,
 ): AnalyzedHexBoard["authoredVertices"] {
-  const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
-  const derivedByGeometryKey = new Map(
-    deriveHexVertices(spaces).map(
-      (vertex) => [vertex.geometryKey, vertex] as const,
-    ),
-  );
-  const collectSpecsByGeometryKey = (
-    specs: readonly HexVertexSpec[],
-    ownerLabel: string,
-  ) => {
-    const specsByGeometryKey = new Map<string, HexVertexSpec>();
-    for (const spec of specs) {
-      const geometryKey = geometryKeyFromVertexRef(spec.ref, spacesById);
-      if (specsByGeometryKey.has(geometryKey)) {
-        throw new Error(`${ownerLabel} contains duplicate hex vertex refs.`);
-      }
-      specsByGeometryKey.set(geometryKey, spec);
-    }
-    return specsByGeometryKey;
-  };
-
-  const templateSpecsByGeometryKey = template
-    ? collectSpecsByGeometryKey(
-        template.vertices ?? [],
-        `Hex board template '${template.id}'`,
-      )
-    : new Map<string, HexVertexSpec>();
-  const overrideSpecsByGeometryKey = collectSpecsByGeometryKey(
-    board.vertices ?? [],
-    `Hex board '${board.id}'`,
-  );
-
-  if (template) {
-    for (const overrideKey of overrideSpecsByGeometryKey.keys()) {
-      if (!templateSpecsByGeometryKey.has(overrideKey)) {
-        throw new Error(
-          `Hex board '${board.id}' overrides unknown vertex ref from template '${template.id}'.`,
-        );
-      }
-    }
-  }
-
-  const mergedSpecs = template
-    ? Array.from(templateSpecsByGeometryKey.entries()).map(
-        ([geometryKey, templateSpec]) =>
-          [
-            geometryKey,
-            overrideSpecsByGeometryKey.get(geometryKey) ?? templateSpec,
-          ] as const,
-      )
-    : Array.from(overrideSpecsByGeometryKey.entries());
-
-  return mergedSpecs.map(([geometryKey, spec]) => {
-    const derivedVertex = derivedByGeometryKey.get(geometryKey);
-    if (!derivedVertex) {
-      throw new Error(
-        `Hex vertex ref on board '${board.id}' does not resolve to a derived vertex.`,
-      );
-    }
-    return {
-      id: derivedVertex.id,
-      ref: cloneJson(spec.ref),
-      typeId: spec.typeId ?? null,
-      label: spec.label ?? null,
-      fields:
-        (spec.fields as Record<string, unknown> | null | undefined) ?? null,
-    };
-  });
-}
-
-function resolveHexEdges(
-  board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-  spaces: readonly HexSpaceSpec[],
-): ResolvedHexEdge[] {
-  const derived = deriveHexEdges(spaces);
-  const edgesById = new Map(derived.map((edge) => [edge.id, edge] as const));
-  for (const authoredEdge of resolveAuthoredHexEdges(board, template, spaces)) {
-    const edge = edgesById.get(authoredEdge.id);
-    if (!edge) {
-      throw new Error(
-        `Hex edge ref on board '${board.id}' does not resolve to a derived edge.`,
-      );
-    }
-    edgesById.set(authoredEdge.id, {
-      ...edge,
-      typeId: authoredEdge.typeId ?? null,
-      label: authoredEdge.label ?? null,
-      fields: authoredEdge.fields ?? null,
-    });
-  }
-
-  return [...edgesById.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
-}
-
-function resolveHexVertices(
-  board: HexBoardSpec,
-  template: HexBoardTemplateSpec | undefined,
-  spaces: readonly HexSpaceSpec[],
-): ResolvedHexVertex[] {
-  const derived = deriveHexVertices(spaces);
-  const verticesById = new Map(
-    derived.map((vertex) => [vertex.id, vertex] as const),
-  );
-  for (const authoredVertex of resolveAuthoredHexVertices(
-    board,
-    template,
-    spaces,
-  )) {
-    const vertex = verticesById.get(authoredVertex.id);
-    if (!vertex) {
-      throw new Error(
-        `Hex vertex ref on board '${board.id}' does not resolve to a derived vertex.`,
-      );
-    }
-    verticesById.set(authoredVertex.id, {
-      ...vertex,
-      typeId: authoredVertex.typeId ?? null,
-      label: authoredVertex.label ?? null,
-      fields: authoredVertex.fields ?? null,
-    });
-  }
-
-  return [...verticesById.values()].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
+  return (board.vertices ?? []).map((vertex) => ({
+    ...vertex,
+    id:
+      "spaces" in vertex.ref
+        ? geometry.vertex(...vertex.ref.spaces)
+        : geometry.vertexAt(vertex.ref.space, vertex.ref.corner),
+  }));
 }
 
 function resolveSquareSpaces(
@@ -1241,11 +800,6 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
       .filter(isGenericBoardTemplateSpec)
       .map((boardTemplate) => [boardTemplate.id, boardTemplate] as const),
   );
-  const hexTemplateById = new Map(
-    boardTemplates
-      .filter(isHexBoardTemplateSpec)
-      .map((boardTemplate) => [boardTemplate.id, boardTemplate] as const),
-  );
   const squareTemplateById = new Map(
     boardTemplates
       .filter(isSquareBoardTemplateSpec)
@@ -1259,34 +813,30 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
         : [board.id];
 
     if (isHexBoardSpec(board)) {
-      const hexBoard = board;
-      const template = board.templateId
-        ? hexTemplateById.get(board.templateId)
-        : undefined;
-      const spaces = resolveHexSpaces(hexBoard, template);
+      const spaces = resolveHexSpaces(board);
+      const geometry = createHexBoardGeometry({ ...board, spaces });
+      const authoredEdges = resolveAuthoredHexEdges(board, geometry);
+      const authoredVertices = resolveAuthoredHexVertices(board, geometry);
       return {
         layout: "hex",
-        board: hexBoard,
-        template,
-        boardTypeId: hexBoard.typeId ?? template?.typeId,
+        board,
+        boardTypeId: board.typeId,
         runtimeBoardIds,
-        boardFieldsSchema:
-          hexBoard.boardFieldsSchema ?? template?.boardFieldsSchema,
-        spaceFieldsSchema:
-          hexBoard.spaceFieldsSchema ?? template?.spaceFieldsSchema,
-        edgeFieldsSchema:
-          hexBoard.edgeFieldsSchema ?? template?.edgeFieldsSchema,
-        vertexFieldsSchema:
-          hexBoard.vertexFieldsSchema ?? template?.vertexFieldsSchema,
+        boardFieldsSchema: board.boardFieldsSchema,
+        spaceFieldsSchema: board.spaceFieldsSchema,
+        edgeFieldsSchema: board.edgeFieldsSchema,
+        vertexFieldsSchema: board.vertexFieldsSchema,
         spaces,
-        authoredEdges: resolveAuthoredHexEdges(hexBoard, template, spaces),
-        authoredVertices: resolveAuthoredHexVertices(
-          hexBoard,
-          template,
-          spaces,
-        ),
-        edges: resolveHexEdges(hexBoard, template, spaces),
-        vertices: resolveHexVertices(hexBoard, template, spaces),
+        authoredEdges,
+        authoredVertices,
+        edges: geometry.edges.map((edge) => ({
+          ...edge,
+          ...authoredEdges.find((authored) => authored.id === edge.id),
+        })),
+        vertices: geometry.vertices.map((vertex) => ({
+          ...vertex,
+          ...authoredVertices.find((authored) => authored.id === vertex.id),
+        })),
       };
     }
 
@@ -1629,7 +1179,10 @@ export function analyzeManifest(
         analyzedBoard.board.id,
       ]),
     );
-    if (analyzedBoard.board.templateId) {
+    if (
+      analyzedBoard.board.layout !== "hex" &&
+      analyzedBoard.board.templateId
+    ) {
       boardBaseIdsByTemplateId.set(
         analyzedBoard.board.templateId,
         dedupeSorted([
@@ -2458,7 +2011,10 @@ export function materializeManifestTable(options: {
       layout: analyzedBoard.layout,
       typeId: analyzedBoard.boardTypeId ?? null,
       scope: analyzedBoard.board.scope,
-      templateId: analyzedBoard.board.templateId ?? null,
+      templateId:
+        analyzedBoard.board.layout === "hex"
+          ? null
+          : (analyzedBoard.board.templateId ?? null),
       fields: {
         ...materializeObjectSchemaDefaults(
           analyzedBoard.boardFieldsSchema,
@@ -2612,7 +2168,7 @@ export function materializeManifestTable(options: {
         containers: cloneJson(buildContainers(runtimeBoardId)),
         ...(analyzedBoard.layout === "hex"
           ? {
-              orientation: analyzedBoard.board.orientation ?? "pointy-top",
+              orientation: analyzedBoard.board.orientation ?? "pointy",
               edges: cloneJson(edges),
               vertices: cloneJson(vertices),
             }

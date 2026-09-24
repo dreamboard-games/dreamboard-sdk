@@ -253,7 +253,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
     spaces: z.record(z.string(), hexSpaceStateSchema),
     relations: z.array(boardRelationStateSchema),
     containers: z.object({}),
-    orientation: z.enum(["pointy-top", "flat-top"]),
+    orientation: z.enum(["pointy", "flat"]),
     edges: z.array(hexEdgeStateSchema),
     vertices: z.array(hexVertexStateSchema),
   });

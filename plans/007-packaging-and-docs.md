@@ -42,6 +42,10 @@ The requested registry hostname is registry.dreamboard.games. Inspect existing
 docs/static hosting ownership before preparing deployment; do not claim a live
 hostname from a successful local registry build. Prepare a concrete reviewed
 hosting change if needed and record deployment as a distinct delivery item.
+Read-only checks on 2026-09-24 found this hostname returns NXDOMAIN and the SDK
+GitHub Pages endpoint returns 404. The public tools repo has Mintlify docs config;
+no existing registry deployment was found. This remains an explicit hosting
+delivery item, not something proven by the local installation smoke.
 
 Run pnpm check and the complete browser lane against the final SDK candidate,
 then release:verify. Record exact candidate SHA and integrity. Choose a fresh

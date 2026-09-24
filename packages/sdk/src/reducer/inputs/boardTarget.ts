@@ -1,5 +1,9 @@
 import type { CollectorState, TargetKind } from "../model/spec";
-import type { PlayerIdOfState } from "../model/extract";
+import type {
+  PlayerIdOfState,
+  BoardIdOfTable,
+  TableOfState,
+} from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
 import {
   createTargetRule,
@@ -43,13 +47,14 @@ function candidateIdsForKind<State extends CollectorState, Id extends string>(
   boardId: string,
   targetKind: TargetKind,
 ): readonly Id[] {
-  if (targetKind === "edge") {
-    return idsFromCollection<Id>(q.board.tiled(boardId as never).edges);
-  }
-  if (targetKind === "vertex") {
-    return idsFromCollection<Id>(q.board.tiled(boardId as never).vertices);
-  }
-  return idsFromCollection<Id>(q.board.get(boardId as never)?.spaces);
+  const board = q.board(boardId as BoardIdOfTable<TableOfState<State>>).state;
+  if (targetKind === "edge")
+    return idsFromCollection<Id>(board.layout === "generic" ? [] : board.edges);
+  if (targetKind === "vertex")
+    return idsFromCollection<Id>(
+      board.layout === "generic" ? [] : board.vertices,
+    );
+  return idsFromCollection<Id>(board.spaces);
 }
 
 function idsFromCollection<Id extends string>(

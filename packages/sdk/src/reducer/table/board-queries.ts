@@ -1,3 +1,4 @@
+import { createHexBoardGeometry } from "../manifest/hex-board";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
@@ -7,6 +8,8 @@ import type {
   HexSpaceIdOfTable,
   RelationTypeIdOfTable,
   RuntimeTableRecord,
+  RuntimeHexBoardState,
+  RuntimeBoardState,
   SquareBoardIdOfTable,
   SquareSpaceIdOfTable,
   SpaceIdOfTable,
@@ -20,6 +23,23 @@ import type {
   TiledVertexTypeIdOfTable,
 } from "../model";
 import { orderedComponentIdsForLocation } from "./internal";
+
+const hexGeometries = new WeakMap<
+  RuntimeHexBoardState,
+  ReturnType<typeof createHexBoardGeometry>
+>();
+function geometryOf(board: RuntimeHexBoardState) {
+  let geometry = hexGeometries.get(board);
+  if (!geometry) {
+    geometry = createHexBoardGeometry({
+      id: board.baseId ?? board.id,
+      orientation: board.orientation,
+      spaces: Object.values(board.spaces),
+    });
+    hexGeometries.set(board, geometry);
+  }
+  return geometry;
+}
 
 export function getBoard<
   Table extends RuntimeTableRecord,
@@ -251,6 +271,14 @@ export function getIncidentEdges<
   vertexId: VertexId,
 ): TiledEdgeIdOfTable<Table, BoardId>[] {
   const tiledBoard = getTiledBoard(table, boardId);
+  if (tiledBoard.layout === "hex") {
+    const geometry = geometryOf(tiledBoard);
+    const vertex = geometry.vertices.find((vertex) => vertex.id === vertexId);
+    if (!vertex)
+      throw new Error(`Unknown vertex '${vertexId}' on board '${boardId}'.`);
+    return vertex.edgeIds as TiledEdgeIdOfTable<Table, BoardId>[];
+  }
+
   const vertex = tiledBoard.vertices.find(
     (candidate) => candidate.id === vertexId,
   );
@@ -275,6 +303,14 @@ export function getIncidentVertices<
   edgeId: EdgeId,
 ): TiledVertexIdOfTable<Table, BoardId>[] {
   const tiledBoard = getTiledBoard(table, boardId);
+  if (tiledBoard.layout === "hex") {
+    const geometry = geometryOf(tiledBoard);
+    const edge = geometry.edges.find((edge) => edge.id === edgeId);
+    if (!edge)
+      throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
+    return edge.vertexIds as unknown as TiledVertexIdOfTable<Table, BoardId>[];
+  }
+
   const edge = tiledBoard.edges.find((candidate) => candidate.id === edgeId);
   if (!edge) {
     throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
@@ -324,6 +360,9 @@ export function getAdjacentSpaces<
   BoardId extends BoardIdOfTable<NoInfer<Table>>,
   SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
 >(table: Table, boardId: BoardId, spaceId: SpaceId): SpaceId[] {
+  const board = getBoard(table, boardId);
+  if (board.layout === "hex")
+    return geometryOf(board).neighbors(spaceId) as SpaceId[];
   return getRelatedSpaces(
     table,
     boardId,
@@ -342,6 +381,9 @@ export function getSpaceDistance<
   fromSpaceId: SpaceId,
   toSpaceId: SpaceId,
 ): number {
+  const board = getBoard(table, boardId);
+  if (board.layout === "hex")
+    return geometryOf(board).distance(fromSpaceId, toSpaceId);
   if (fromSpaceId === toSpaceId) {
     return 0;
   }
@@ -575,3 +617,164 @@ export function getComponentsOnVertex<
       location.vertexId === vertexId,
   ) as ComponentIdOfTable<Table>[];
 }
+
+export function bindBoardQueries<
+  Table extends RuntimeTableRecord,
+  BoardId extends BoardIdOfTable<Table>,
+>(table: Table, boardId: BoardId) {
+  const state = getBoard(table, boardId);
+  const common = {
+    state,
+    space: <SpaceId extends SpaceIdOfTable<Table, BoardId>>(id: SpaceId) => {
+      const space = getSpace(table, boardId, id);
+      if (!space)
+        throw new Error(`Unknown space '${id}' on board '${boardId}'.`);
+      return space;
+    },
+    container: <ContainerId extends BoardContainerIdOfTable<Table, BoardId>>(
+      id: ContainerId,
+    ) => getContainer(table, boardId, id),
+    spacesByType: <TypeId extends SpaceTypeIdOfTable<Table, BoardId>>(
+      id: TypeId,
+    ) => getSpacesByTypeId(table, boardId, id),
+    relatedSpaces: <
+      SpaceId extends SpaceIdOfTable<Table, BoardId>,
+      TypeId extends RelationTypeIdOfTable<Table, BoardId>,
+    >(
+      id: SpaceId,
+      typeId: TypeId,
+    ) => getRelatedSpaces(table, boardId, id, typeId),
+    neighbors: (id: SpaceIdOfTable<Table, BoardId>) =>
+      getAdjacentSpaces(table, boardId, id),
+    distance: (
+      from: SpaceIdOfTable<Table, BoardId>,
+      to: SpaceIdOfTable<Table, BoardId>,
+    ) => getSpaceDistance(table, boardId, from, to),
+    spaceOccupants: (id: SpaceIdOfTable<Table, BoardId>) =>
+      getComponentsOnSpace(table, boardId, id),
+    containerOccupants: (id: BoardContainerIdOfTable<Table, BoardId>) =>
+      getComponentsInContainer(table, boardId, id),
+  };
+  if (state.layout === "hex") {
+    const geometry = geometryOf(state);
+    const {
+      edgesOf: spaceEdges,
+      verticesOf: spaceVertices,
+      incidentEdges: edgesOf,
+      incidentVertices: verticesOf,
+      ...queries
+    } = geometry;
+    return {
+      ...common,
+      ...queries,
+      spaceEdges,
+      spaceVertices,
+      edgesOf,
+      verticesOf,
+    } as unknown as BoundBoardQueries<
+      Table["boards"]["byId"][BoardId],
+      ComponentIdOfTable<Table>
+    >;
+  }
+  if (state.layout === "square") {
+    const tiledId = boardId as unknown as SquareBoardIdOfTable<Table> &
+      TiledBoardIdOfTable<Table>;
+    return {
+      ...common,
+      edgesOf: (id: TiledVertexIdOfTable<Table, typeof tiledId>) =>
+        getIncidentEdges(table, tiledId, id),
+      verticesOf: (id: TiledEdgeIdOfTable<Table, typeof tiledId>) =>
+        getIncidentVertices(table, tiledId, id),
+      spaceEdges: (id: SpaceIdOfTable<Table, typeof tiledId>) =>
+        getSpaceEdges(table, tiledId, id),
+      spaceVertices: (id: SpaceIdOfTable<Table, typeof tiledId>) =>
+        getSpaceVertices(table, tiledId, id),
+      spacesAt: (id: TiledVertexIdOfTable<Table, typeof tiledId>) =>
+        state.vertices.find((vertex) => vertex.id === id)!.spaceIds,
+      spacesAlong: (id: TiledEdgeIdOfTable<Table, typeof tiledId>) =>
+        state.edges.find((edge) => edge.id === id)!.spaceIds,
+      neighbors: (
+        id: SquareSpaceIdOfTable<Table, typeof tiledId>,
+        options?: { mode?: "orthogonal" | "diagonal" | "all" },
+      ) => getSquareNeighbors(table, tiledId, id, options),
+      distance: (
+        from: SquareSpaceIdOfTable<Table, typeof tiledId>,
+        to: SquareSpaceIdOfTable<Table, typeof tiledId>,
+        options?: { metric?: "manhattan" | "chebyshev" },
+      ) => getSquareDistance(table, tiledId, from, to, options),
+    } as unknown as BoundBoardQueries<
+      Table["boards"]["byId"][BoardId],
+      ComponentIdOfTable<Table>
+    >;
+  }
+  return common as BoundBoardQueries<
+    Table["boards"]["byId"][BoardId],
+    ComponentIdOfTable<Table>
+  >;
+}
+
+type SpaceId<Board extends RuntimeBoardState> = keyof Board["spaces"] & string;
+type CommonBoardQueries<
+  Board extends RuntimeBoardState,
+  ComponentId extends string,
+> = {
+  state: Board;
+  space<Id extends SpaceId<Board>>(id: Id): Board["spaces"][Id];
+  container<Id extends keyof Board["containers"] & string>(
+    id: Id,
+  ): Board["containers"][Id];
+  spacesByType(
+    id: Extract<Board["spaces"][keyof Board["spaces"]]["typeId"], string>,
+  ): SpaceId<Board>[];
+  relatedSpaces(
+    id: SpaceId<Board>,
+    typeId: Board["relations"][number]["typeId"],
+  ): SpaceId<Board>[];
+  neighbors(id: SpaceId<Board>): SpaceId<Board>[];
+  distance(from: SpaceId<Board>, to: SpaceId<Board>): number;
+  spaceOccupants(id: SpaceId<Board>): ComponentId[];
+  containerOccupants(id: keyof Board["containers"] & string): ComponentId[];
+};
+type HexQueries<Board extends RuntimeBoardState> = ReturnType<
+  typeof createHexBoardGeometry<
+    Extract<Board["baseId"], string>,
+    SpaceId<Board>
+  >
+>;
+export type BoundBoardQueries<
+  Board extends RuntimeBoardState,
+  ComponentId extends string,
+> = CommonBoardQueries<Board, ComponentId> &
+  (Board extends { layout: "hex" }
+    ? Omit<
+        HexQueries<Board>,
+        "edgesOf" | "verticesOf" | "incidentEdges" | "incidentVertices"
+      > & {
+        spaceEdges: HexQueries<Board>["edgesOf"];
+        spaceVertices: HexQueries<Board>["verticesOf"];
+        edgesOf: HexQueries<Board>["incidentEdges"];
+        verticesOf: HexQueries<Board>["incidentVertices"];
+      }
+    : Board extends {
+          layout: "square";
+          edges: readonly { id: infer EdgeId extends string }[];
+          vertices: readonly { id: infer VertexId extends string }[];
+        }
+      ? {
+          edgesOf(id: VertexId): EdgeId[];
+          verticesOf(id: EdgeId): VertexId[];
+          spaceEdges(id: SpaceId<Board>): EdgeId[];
+          spaceVertices(id: SpaceId<Board>): VertexId[];
+          spacesAt(id: VertexId): SpaceId<Board>[];
+          spacesAlong(id: EdgeId): SpaceId<Board>[];
+          neighbors(
+            id: SpaceId<Board>,
+            options?: { mode?: "orthogonal" | "diagonal" | "all" },
+          ): SpaceId<Board>[];
+          distance(
+            from: SpaceId<Board>,
+            to: SpaceId<Board>,
+            options?: { metric?: "manhattan" | "chebyshev" },
+          ): number;
+        }
+      : unknown);

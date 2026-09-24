@@ -48,8 +48,9 @@ export interface HexBoardView<
   TSpaceView extends { id: BoardSpaceIdOf<TBoard> },
 > {
   id: BoardIdOf<TBoard>;
+  baseId: string;
   layout?: "hex";
-  orientation?: "pointy-top" | "flat-top";
+  orientation?: "pointy" | "flat";
   tiles: ReadonlyArray<HexBoardViewTile<TBoard, TSpaceView>>;
   edges: TBoard["edges"];
   vertices: TBoard["vertices"];
@@ -114,6 +115,7 @@ export function createHexBoardView<
 
   return {
     id: normalizedBoard.id,
+    baseId: normalizedBoard.baseId,
     layout: "hex",
     orientation: board.orientation,
     tiles,

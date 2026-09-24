@@ -459,7 +459,16 @@ export type GenericBoardTemplateSpec = {
 /**
  * Visual orientation for authored hex coordinates
  */
-export type HexOrientation = "pointy-top" | "flat-top";
+export type HexOrientation = "pointy" | "flat";
+export type HexCoordinate = { q: number; r: number };
+export type HexShape =
+  | { kind: "hexagon" | "spiral"; radius: number; center?: HexCoordinate }
+  | { kind: "ring"; radius: number; center?: HexCoordinate }
+  | { kind: "rectangle"; width: number; height: number; start?: HexCoordinate }
+  | { kind: "coordinates"; coordinates: readonly HexCoordinate[] };
+export type HexSpaceOverride = Omit<HexSpaceSpec, "id" | "q" | "r"> & {
+  id?: string;
+};
 
 /**
  * One authored hex space in axial coordinates
@@ -496,9 +505,9 @@ export type HexSpaceSpec = {
 /**
  * Hex edge identified by two adjacent hex spaces
  */
-export type HexEdgeRef = {
-  spaces: [string, string];
-};
+export type HexEdgeRef =
+  | { spaces: [string, string] }
+  | { space: string; side: 0 | 1 | 2 | 3 | 4 | 5 };
 
 /**
  * Authored metadata attached to one derived hex edge
@@ -525,9 +534,9 @@ export type HexEdgeSpec = {
 /**
  * Hex vertex identified by three touching hex spaces
  */
-export type HexVertexRef = {
-  spaces: [string, string, string];
-};
+export type HexVertexRef =
+  | { spaces: [string, string, string] }
+  | { space: string; corner: 0 | 1 | 2 | 3 | 4 | 5 };
 
 /**
  * Authored metadata attached to one derived hex vertex
@@ -549,30 +558,6 @@ export type HexVertexSpec = {
   fields?: {
     [key: string]: JsonValue;
   };
-};
-
-/**
- * Reusable authored hex board topology template
- */
-export type HexBoardTemplateSpec = {
-  /**
-   * Stable template identifier
-   */
-  id: string;
-  name: string;
-  layout: "hex";
-  /**
-   * Optional authored board type identifier
-   */
-  typeId?: string;
-  orientation?: HexOrientation;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  edgeFieldsSchema?: ObjectSchema;
-  vertexFieldsSchema?: ObjectSchema;
-  spaces?: Array<HexSpaceSpec>;
-  edges?: Array<HexEdgeSpec>;
-  vertices?: Array<HexVertexSpec>;
 };
 
 /**
@@ -683,9 +668,6 @@ export type BoardTemplateSpec =
       layout: "generic";
     } & GenericBoardTemplateSpec)
   | ({
-      layout: "hex";
-    } & HexBoardTemplateSpec)
-  | ({
       layout: "square";
     } & SquareBoardTemplateSpec);
 
@@ -739,9 +721,10 @@ export type HexBoardSpec = {
   typeId?: string;
   scope: TopologyScope;
   /**
-   * Optional hex board template to clone before applying inline authored additions
+   * Shape used to generate spaces before exclusions and coordinate overrides
    */
-  templateId?: string;
+  shape: HexShape;
+  exclude?: Array<HexCoordinate>;
   orientation?: HexOrientation;
   boardFieldsSchema?: ObjectSchema;
   spaceFieldsSchema?: ObjectSchema;
@@ -753,7 +736,7 @@ export type HexBoardSpec = {
   fields?: {
     [key: string]: JsonValue;
   };
-  spaces?: Array<HexSpaceSpec>;
+  spaces?: { [coordinate: `${number},${number}`]: HexSpaceOverride };
   edges?: Array<HexEdgeSpec>;
   vertices?: Array<HexVertexSpec>;
 };

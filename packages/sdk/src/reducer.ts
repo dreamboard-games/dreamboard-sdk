@@ -124,3 +124,11 @@ export type {
   ManifestIdsOf,
   ManifestTable,
 } from "./reducer/manifest/types";
+
+export {
+  hexagon,
+  rectangle,
+  ring,
+  spiral,
+  fromCoordinates,
+} from "./reducer/manifest/hex-board";

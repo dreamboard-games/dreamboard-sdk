@@ -84,7 +84,8 @@ export interface GeneratedHexBoardInput<
 > {
   id: BoardIdValue;
   layout?: "hex";
-  orientation?: "pointy-top" | "flat-top";
+  baseId?: string;
+  orientation?: "pointy" | "flat";
   spaces: Readonly<
     Record<SpaceIdValue, GeneratedHexSpaceStateLike<SpaceIdValue, SpaceFields>>
   >;
@@ -110,7 +111,8 @@ export interface AuthoredHexBoardInput<
 > {
   id: BoardIdValue;
   layout?: "hex";
-  orientation?: "pointy-top" | "flat-top";
+  baseId?: string;
+  orientation?: "pointy" | "flat";
   tiles: ReadonlyArray<
     HexTileState<BoardIdValue, SpaceIdValue, SpaceFields, SpaceView>
   >;
@@ -450,7 +452,8 @@ export type NormalizedHexBoard<TBoard extends AnyHexBoardInput> = Omit<
   "tiles"
 > & {
   tiles: ReadonlyArray<NormalizedHexTileOf<TBoard>>;
-  orientation?: "pointy-top" | "flat-top";
+  baseId: string;
+  orientation?: "pointy" | "flat";
 };
 
 export type NormalizedSquareBoard<TBoard extends AnySquareBoardInput> = Pick<
@@ -683,6 +686,7 @@ export function normalizeHexBoardInput<TBoard extends AnyHexBoardInput>(
   if (isGeneratedHexBoardInput(board)) {
     return {
       id: board.id,
+      baseId: board.baseId ?? board.id,
       orientation: board.orientation,
       tiles: Object.values(board.spaces).map((tile) =>
         normalizeHexTile<TBoard>(tile as SpaceRecordValueOf<TBoard>),
@@ -702,6 +706,7 @@ export function normalizeHexBoardInput<TBoard extends AnyHexBoardInput>(
   const authoredBoard = board as Extract<TBoard, { tiles: readonly unknown[] }>;
   return {
     id: authoredBoard.id,
+    baseId: authoredBoard.baseId ?? authoredBoard.id,
     orientation: authoredBoard.orientation,
     tiles: authoredBoard.tiles.map((tile) => ({
       ...tile,

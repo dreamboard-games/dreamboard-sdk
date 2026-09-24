@@ -16,7 +16,7 @@ Root updates it with implementation and verification evidence.
 - [ ] Layer 003: ordered valid-prefix revalidation, phase-entry clearing, final rollback.
 - [ ] Layer 003: pure projection, nullable optional steps, durable intermediate commits.
 - [ ] Shared models: ordinary per-player records; redundant type packages removed.
-- [ ] Manifest boards: honeycomb geometry, shapes, canonical identities and queries.
+- [x] Manifest boards: honeycomb geometry, shapes, canonical identities and queries; combined gate and independent review passed.
 - [ ] Bundle: one execution authority with boundary validation retained.
 - [ ] Test authoring: remove legacy unbound helpers and legacy runtime argument keys.
 

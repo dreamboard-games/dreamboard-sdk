@@ -240,13 +240,14 @@ describe("trusted collector input solver", () => {
     });
     const interaction = { inputs: { playerSpace, card } };
     const queries = {
-      board: {
-        get: (boardId: string) => ({
+      board: (boardId: string) => ({
+        state: {
+          layout: "generic",
           spaces: boardId.startsWith("workshop-mat:")
             ? ["space-a", "space-b"]
             : [],
-        }),
-      },
+        },
+      }),
       zone: {
         playerCards: () => ["card-a", "card-b"],
         sharedCards: () => [],

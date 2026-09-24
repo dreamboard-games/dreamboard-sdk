@@ -1,9 +1,7 @@
 # Manifest board geometry
 
-Status: independent preparation on `codex/sdk-board-geometry`; integrate after
-002b/002c and before steps/shared-model consolidation so Hex steps use canonical
-queries and geometry does not cross package relocations during integration.
-Worktree: `/Users/mac/code/worktrees/headless-sdk-boards`.
+Status: integrated on `codex/sdk-manifest-boards` after 002c and before steps.
+Preparation worktree: `/Users/mac/code/worktrees/headless-sdk-boards`.
 
 Implement the original board contract with honeycomb-grid, using exact version
 4.1.5 unless live package verification gives a concrete reason otherwise. Keep
@@ -56,3 +54,16 @@ space, space-type and relation identities. Logs: `/tmp/board-full-check.log`,
 Integration must delete the temporary authored-static-view query adapter in
 favor of 002c's manifest-only projection, and rerun the gate at the combined tip.
 Square/generic template removal remains owned by shared-model consolidation.
+
+## Integration receipt
+
+Integrated as `6420987` on top of the reviewed initialization/actor and seat-view
+cuts. The removed authored static-view adapter remains deleted. Root reviewed
+the complete preparation-to-integration range diff; there are no additional
+implementation changes beyond conflict resolution.
+
+The combined `pnpm check` passed with 632 SDK tests and both packed reference
+games. Agent verification also passed production/checked types, 32 focused tests
+and 33 Hex tests. Root independently passed 13 geometry/render tests, the static
+manifest projection test and checked testing-contract types. Logs are under
+`/tmp/board-integration-*.log`. The branch is ready for stacked submission.

@@ -28,11 +28,15 @@ test("validateManifestAuthoring rejects hex vertex refs that do not resolve to a
         name: "Hex Board",
         layout: "hex",
         scope: "shared",
-        spaces: [
-          { id: "a", q: 0, r: 0 },
-          { id: "b", q: 1, r: 0 },
-          { id: "c", q: 2, r: 0 },
-        ],
+        shape: {
+          kind: "coordinates",
+          coordinates: [
+            { q: 0, r: 0 },
+            { q: 1, r: 0 },
+            { q: 2, r: 0 },
+          ],
+        },
+        spaces: { "0,0": { id: "a" }, "1,0": { id: "b" }, "2,0": { id: "c" } },
         vertices: [
           {
             ref: {
@@ -45,33 +49,28 @@ test("validateManifestAuthoring rejects hex vertex refs that do not resolve to a
   });
 
   expect(validation.errors).toContain(
-    "manifest.boards[0].vertices[0].ref: Hex board 'hex-board' with spaces 'a, b, c' failed validation. Hex vertex ref spaces 'a, b, c' do not resolve to exactly one shared vertex.",
+    "Hex board 'hex-board': Spaces do not share exactly one vertex.",
   );
 });
 
-test("validateManifestAuthoring accepts hex vertex refs that resolve after template space merge", () => {
+test("validateManifestAuthoring accepts hex vertex refs from shape coordinates", () => {
   const validation = validateManifestAuthoring({
     ...BASE_MANIFEST,
-    boardTemplates: [
-      {
-        id: "triad",
-        name: "Triad",
-        layout: "hex",
-        spaces: [
-          { id: "a", q: 0, r: 0 },
-          { id: "b", q: 1, r: 0 },
-          { id: "c", q: 0, r: 1 },
-        ],
-      },
-    ],
     boards: [
       {
         id: "hex-board",
         name: "Hex Board",
         layout: "hex",
         scope: "shared",
-        templateId: "triad",
-        spaces: [{ id: "a", q: 0, r: 0 }],
+        shape: {
+          kind: "coordinates",
+          coordinates: [
+            { q: 0, r: 0 },
+            { q: 1, r: 0 },
+            { q: 0, r: 1 },
+          ],
+        },
+        spaces: { "0,0": { id: "a" }, "1,0": { id: "b" }, "0,1": { id: "c" } },
         vertices: [
           {
             ref: {
@@ -520,10 +519,11 @@ test("validateManifestAuthoring warns when board-scoped category type ids are am
         name: "Alpha",
         layout: "hex",
         scope: "shared",
-        spaces: [{ id: "a", q: 0, r: 0, typeId: "site" }],
+        shape: { kind: "hexagon", radius: 0 },
+        spaces: { "0,0": { id: "a", typeId: "site" } },
         edges: [
           {
-            ref: { spaces: ["a"] },
+            ref: { space: "a", side: 0 },
             typeId: "route",
           },
         ],
@@ -534,10 +534,11 @@ test("validateManifestAuthoring warns when board-scoped category type ids are am
         name: "Beta",
         layout: "hex",
         scope: "shared",
-        spaces: [{ id: "b", q: 0, r: 0, typeId: "site" }],
+        shape: { kind: "hexagon", radius: 0 },
+        spaces: { "0,0": { id: "b", typeId: "site" } },
         edges: [
           {
-            ref: { spaces: ["b"] },
+            ref: { space: "b", side: 0 },
             typeId: "route",
           },
         ],

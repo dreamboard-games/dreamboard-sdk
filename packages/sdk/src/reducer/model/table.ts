@@ -113,7 +113,7 @@ export type RuntimeHexEdgeState = RuntimeTiledEdgeState;
 export type RuntimeHexVertexState = RuntimeTiledVertexState;
 export type RuntimeSquareEdgeState = RuntimeTiledEdgeState;
 export type RuntimeSquareVertexState = RuntimeTiledVertexState;
-export type RuntimeHexOrientation = "pointy-top" | "flat-top";
+export type RuntimeHexOrientation = "pointy" | "flat";
 export type RuntimeTiledBoardBaseState = RuntimeBoardBaseState & {
   layout: "hex" | "square";
   relations: RuntimeBoardRelationState[];

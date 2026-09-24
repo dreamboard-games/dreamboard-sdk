@@ -1,3 +1,9 @@
+import {
+  createHexBoardGeometry,
+  hexShapeCoordinates,
+  spiral,
+} from "../../reducer/manifest/hex-board";
+import { Hex } from "honeycomb-grid";
 /**
  * useHexGrid hook - Headless logic for hex grid games
  *
@@ -58,20 +64,15 @@ export interface UseHexGridReturn {
 // Axial direction vectors
 // ============================================================================
 
-const AXIAL_DIRECTIONS = [
-  { q: 1, r: 0 },
-  { q: 1, r: -1 },
-  { q: 0, r: -1 },
-  { q: -1, r: 0 },
-  { q: -1, r: 1 },
-  { q: 0, r: 1 },
-];
-
 // ============================================================================
 // Hook Implementation
 // ============================================================================
 
 export function useHexGrid(tiles: HexTileData[]): UseHexGridReturn {
+  const geometry = useMemo(
+    () => createHexBoardGeometry({ id: "__hex-grid__", spaces: tiles }),
+    [tiles],
+  );
   // Create lookup maps
   const tileById = useMemo(() => {
     return new Map(tiles.map((t) => [t.id, t]));
@@ -103,16 +104,9 @@ export function useHexGrid(tiles: HexTileData[]): UseHexGridReturn {
       const tile = tileById.get(tileId);
       if (!tile) return [];
 
-      const neighbors: HexTileData[] = [];
-      for (const dir of AXIAL_DIRECTIONS) {
-        const neighbor = tileByCoord.get(`${tile.q + dir.q},${tile.r + dir.r}`);
-        if (neighbor) {
-          neighbors.push(neighbor);
-        }
-      }
-      return neighbors;
+      return geometry.neighbors(tileId).map((id) => tileById.get(id)!);
     },
-    [tileById, tileByCoord],
+    [geometry, tileById],
   );
 
   // Calculate distance between two tiles
@@ -122,15 +116,9 @@ export function useHexGrid(tiles: HexTileData[]): UseHexGridReturn {
       const to = tileById.get(toId);
       if (!from || !to) return Infinity;
 
-      // Hex distance formula using axial coordinates
-      return (
-        (Math.abs(from.q - to.q) +
-          Math.abs(from.q + from.r - to.q - to.r) +
-          Math.abs(from.r - to.r)) /
-        2
-      );
+      return geometry.distance(fromId, toId);
     },
-    [tileById],
+    [geometry, tileById],
   );
 
   // Get all tiles within range
@@ -139,20 +127,12 @@ export function useHexGrid(tiles: HexTileData[]): UseHexGridReturn {
       const center = tileById.get(centerId);
       if (!center) return [];
 
-      const results: HexTileData[] = [];
-
-      for (let dq = -range; dq <= range; dq++) {
-        const minR = Math.max(-range, -dq - range);
-        const maxR = Math.min(range, -dq + range);
-        for (let dr = minR; dr <= maxR; dr++) {
-          const tile = tileByCoord.get(`${center.q + dq},${center.r + dr}`);
-          if (tile) {
-            results.push(tile);
-          }
-        }
-      }
-
-      return results;
+      return hexShapeCoordinates(spiral({ center, radius: range })).flatMap(
+        ({ q, r }) => {
+          const tile = tileByCoord.get(`${q},${r}`);
+          return tile ? [tile] : [];
+        },
+      );
     },
     [tileById, tileByCoord],
   );
@@ -160,7 +140,7 @@ export function useHexGrid(tiles: HexTileData[]): UseHexGridReturn {
   // Convert axial to cube coordinates
   const axialToCube = useCallback(
     (q: number, r: number): { x: number; y: number; z: number } => {
-      return { x: q, z: r, y: -q - r };
+      return { x: q, z: r, y: new Hex({ q, r }).s };
     },
     [],
   );

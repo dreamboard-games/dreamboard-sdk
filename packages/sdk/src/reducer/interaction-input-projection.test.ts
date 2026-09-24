@@ -234,7 +234,9 @@ describe("interaction input projection", () => {
       {
         diagnostics: { event: warning },
         queries: {
-          board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+          board: () => ({
+            state: { layout: "generic", spaces: ["space-a", "space-b"] },
+          }),
         } as never,
       },
     );
@@ -292,7 +294,9 @@ describe("interaction input projection", () => {
         "player-1" as never,
         {
           queries: {
-            board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+            board: () => ({
+              state: { layout: "generic", spaces: ["space-a", "space-b"] },
+            }),
           } as never,
         },
       );
@@ -356,7 +360,9 @@ describe("interaction input projection", () => {
         {
           queries: {
             zone: { playerCards: () => ["card-1", "card-2"] },
-            board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+            board: () => ({
+              state: { layout: "generic", spaces: ["space-a", "space-b"] },
+            }),
           } as never,
         },
       ),
@@ -429,7 +435,9 @@ describe("interaction input projection", () => {
         "player-1" as never,
         {
           queries: {
-            board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+            board: () => ({
+              state: { layout: "generic", spaces: ["space-a", "space-b"] },
+            }),
           } as never,
         },
       ),
@@ -583,7 +591,9 @@ describe("interaction input projection", () => {
         {
           includeEligibleTargets: false,
           queries: {
-            board: { get: () => ({ spaces: ["space-a", "space-b"] }) },
+            board: () => ({
+              state: { layout: "generic", spaces: ["space-a", "space-b"] },
+            }),
           } as never,
         },
       ),

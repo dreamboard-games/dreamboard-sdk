@@ -21,12 +21,7 @@ import {
   type PrivateState,
   type ResourceCounts,
 } from "./game-model";
-import {
-  BOARD_ID,
-  EDGES_BY_INTERSECTION_ID,
-  EDGE_INTERSECTION_IDS,
-  INTERSECTIONS_BY_HEX_ID,
-} from "./model";
+import { BOARD_ID } from "./model";
 
 export type Q = typeof stormtrail.types.Queries;
 /**
@@ -195,31 +190,40 @@ export function campCount(state: GameState, playerId: PlayerId): number {
 
 export function isTrailConnected(
   state: GameState,
+  q: Q,
   playerId: PlayerId,
   edgeId: EdgeId,
 ): boolean {
   const camps = occupancy(state).campsByIntersectionId;
   const trails = occupancy(state).trailsByEdgeId;
-  return EDGE_INTERSECTION_IDS[edgeId].some((intersectionId) => {
-    const campOwnerId = camps[intersectionId];
-    if (campOwnerId === playerId) return true;
-    if (campOwnerId && campOwnerId !== playerId) return false;
-    return EDGES_BY_INTERSECTION_ID[intersectionId].some(
-      (candidateEdgeId) =>
-        candidateEdgeId !== edgeId && trails[candidateEdgeId] === playerId,
-    );
-  });
+  return q
+    .board("frontier")
+    .verticesOf(edgeId)
+    .some((intersectionId) => {
+      const campOwnerId = camps[intersectionId];
+      if (campOwnerId === playerId) return true;
+      if (campOwnerId && campOwnerId !== playerId) return false;
+      return q
+        .board("frontier")
+        .edgesOf(intersectionId)
+        .some(
+          (candidateEdgeId) =>
+            candidateEdgeId !== edgeId && trails[candidateEdgeId] === playerId,
+        );
+    });
 }
 
 export function isCampConnected(
   state: GameState,
+  q: Q,
   playerId: PlayerId,
   intersectionId: VertexId,
 ): boolean {
   const trails = occupancy(state).trailsByEdgeId;
-  return EDGES_BY_INTERSECTION_ID[intersectionId].some(
-    (edgeId) => trails[edgeId] === playerId,
-  );
+  return q
+    .board("frontier")
+    .edgesOf(intersectionId)
+    .some((edgeId) => trails[edgeId] === playerId);
 }
 
 export function eligibleBanditVictims(
@@ -230,7 +234,7 @@ export function eligibleBanditVictims(
 ): PlayerId[] {
   const camps = occupancy(state).campsByIntersectionId;
   const victims = new Set<PlayerId>();
-  for (const intersectionId of INTERSECTIONS_BY_HEX_ID[hexId]) {
+  for (const intersectionId of q.board("frontier").spaceVertices(hexId)) {
     const ownerId = camps[intersectionId];
     if (
       ownerId &&

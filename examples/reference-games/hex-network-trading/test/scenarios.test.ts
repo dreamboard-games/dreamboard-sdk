@@ -1,3 +1,4 @@
+import { FRONTIER_GEOMETRY } from "../app/model";
 import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,12 +11,7 @@ import {
 } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
 import { defineScenario } from "./testing-types.ts";
-import {
-  EDGE_IDS,
-  FRONTIER,
-  INTERSECTION_IDS,
-  INTERSECTIONS_BY_HEX_ID,
-} from "../app/model.ts";
+import { EDGE_IDS, FRONTIER, INTERSECTION_IDS } from "../app/model.ts";
 import completeGame from "./scenarios/complete-game.scenario.ts";
 import discardBarrier from "./scenarios/discard-barrier.scenario.ts";
 import bilateralTrade, {
@@ -639,7 +635,9 @@ test("fixed Stormtrail topology is exactly the approved seven-hex graph", () => 
   );
   assert.deepEqual(
     new Set(
-      Object.values(INTERSECTIONS_BY_HEX_ID).map((vertices) => vertices.length),
+      Object.values(FRONTIER_GEOMETRY.state.spaces).map(
+        (space) => FRONTIER_GEOMETRY.spaceVertices(space.id).length,
+      ),
     ),
     new Set([6]),
   );
@@ -699,9 +697,9 @@ test("setup action discovery follows seat order and adjacent trail domains", asy
     assert.deepEqual(
       afterCamp.candidates.map(({ command }) => command.params.edgeId),
       [
-        "hex-edge:-1,2,-1::1,1,-2",
-        "hex-edge:1,1,-2::2,-1,-1",
-        "hex-edge:1,1,-2::2,2,-4",
+        FRONTIER_GEOMETRY.edgeAt("northEastClay", 2),
+        FRONTIER_GEOMETRY.edgeAt("northForest", 1),
+        FRONTIER_GEOMETRY.edgeAt("northForest", 0),
       ],
     );
   }
@@ -800,7 +798,11 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
   });
   const nonAdjacent = await probeScenarioCommand({
     replay: afterFirstCamp,
-    command: trail(0, "hex-edge:1,-2,1::2,-4,2", "placeStartingTrail"),
+    command: trail(
+      0,
+      FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
+      "placeStartingTrail",
+    ),
   });
   assert.equal(nonAdjacent.kind, "rejected");
   if (nonAdjacent.kind === "rejected") {
@@ -814,7 +816,11 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
   });
   const occupiedCamp = await probeScenarioCommand({
     replay: afterFirstPair,
-    command: camp(1, "hex-vertex:1,1,-2", "placeStartingCamp"),
+    command: camp(
+      1,
+      FRONTIER_GEOMETRY.vertexAt("northForest", 1),
+      "placeStartingCamp",
+    ),
   });
   assert.equal(occupiedCamp.kind, "rejected");
   if (occupiedCamp.kind === "rejected") {
@@ -828,7 +834,11 @@ test("setup rejects occupied camps and non-adjacent or occupied trails", async (
   });
   const occupiedTrail = await probeScenarioCommand({
     replay: afterSecondCamp,
-    command: trail(1, "hex-edge:1,1,-2::2,2,-4", "placeStartingTrail"),
+    command: trail(
+      1,
+      FRONTIER_GEOMETRY.edgeAt("northForest", 0),
+      "placeStartingTrail",
+    ),
   });
   assert.equal(occupiedTrail.kind, "rejected");
   if (occupiedTrail.kind === "rejected") {
@@ -1035,7 +1045,7 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
   const digest = exhausted.checkpointDigest;
   const extra = await probeScenarioCommand({
     replay: exhausted,
-    command: trail(0, "hex-edge:-1,-4,5::-2,-2,4"),
+    command: trail(0, FRONTIER_GEOMETRY.edgeAt("southForest", 2)),
   });
   assert.equal(extra.kind, "rejected");
   assert.equal(exhausted.checkpointDigest, digest);
@@ -1054,7 +1064,7 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   const digest = replay.checkpointDigest;
   const throughOpponent = await probeScenarioCommand({
     replay,
-    command: trail(0, "hex-edge:2,2,-4::4,1,-5"),
+    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northEastClay", 4)),
   });
   assert.equal(throughOpponent.kind, "rejected");
   if (throughOpponent.kind === "rejected") {
@@ -1062,7 +1072,7 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const disconnected = await probeScenarioCommand({
     replay,
-    command: trail(0, "hex-edge:-1,-4,5::-2,-2,4"),
+    command: trail(0, FRONTIER_GEOMETRY.edgeAt("southForest", 2)),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {
@@ -1070,7 +1080,7 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const occupied = await probeScenarioCommand({
     replay,
-    command: trail(0, "hex-edge:1,1,-2::2,2,-4"),
+    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0)),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
@@ -1078,7 +1088,7 @@ test("opponent camps interrupt continuity while own camps and trails connect", a
   }
   const connected = await probeScenarioCommand({
     replay,
-    command: trail(0, "hex-edge:1,1,-2::2,-1,-1"),
+    command: trail(0, FRONTIER_GEOMETRY.edgeAt("northEastClay", 2)),
   });
   assert.equal(connected.kind, "accepted");
   assert.equal(replay.checkpointDigest, digest);
@@ -1096,7 +1106,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   const replay = await replayScenario({ game, scenario: mainScenario });
   const occupied = await probeScenarioCommand({
     replay,
-    command: camp(0, "hex-vertex:1,1,-2"),
+    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1)),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
@@ -1104,7 +1114,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const disconnected = await probeScenarioCommand({
     replay,
-    command: camp(0, "hex-vertex:-1,-4,5"),
+    command: camp(0, FRONTIER_GEOMETRY.vertexAt("southForest", 2)),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {
@@ -1112,7 +1122,7 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   }
   const insufficient = await probeScenarioCommand({
     replay,
-    command: camp(0, "hex-vertex:2,2,-4"),
+    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 0)),
   });
   assert.equal(insufficient.kind, "rejected");
   if (insufficient.kind === "rejected") {

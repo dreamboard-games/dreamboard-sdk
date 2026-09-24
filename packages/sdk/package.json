@@ -140,6 +140,7 @@
     "@use-gesture/react": "catalog:",
     "clsx": "catalog:",
     "esbuild": "catalog:",
+    "honeycomb-grid": "4.1.5",
     "lucide-react": "catalog:",
     "vaul": "catalog:",
     "zustand": "catalog:"

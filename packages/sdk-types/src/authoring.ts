@@ -1,3 +1,4 @@
+import type { HexSpaceId, HexEdgeId, HexVertexId } from "./board-identities.js";
 import type {
   BoardEdgeRef,
   BoardVertexRef,
@@ -96,9 +97,9 @@ type ResolvedBoardLikeOf<
       ? BoardTemplateOf<Manifest, CurrentTemplateId>
       : never);
 
-type SpaceIdOf<BoardLike> = IdsOf<
-  BoardLike extends { spaces?: infer Spaces } ? Spaces : never
->;
+type SpaceIdOf<BoardLike> = BoardLike extends { layout: "hex" }
+  ? HexSpaceId<BoardLike>
+  : IdsOf<BoardLike extends { spaces?: infer Spaces } ? Spaces : never>;
 type ContainerIdOf<BoardLike> = IdsOf<
   BoardLike extends { containers?: infer Containers } ? Containers : never
 >;
@@ -108,10 +109,6 @@ type SpaceOf<BoardLike> = ArrayItem<
 type SquareSpaceOf<BoardLike> = Extract<
   SpaceOf<BoardLike>,
   { row: number; col: number }
->;
-type HexSpaceOf<BoardLike> = Extract<
-  SpaceOf<BoardLike>,
-  { q: number; r: number }
 >;
 type BoardEntryOf<Manifest extends GameTopologyManifest> = ArrayItem<
   NonNullable<Manifest["boards"]>
@@ -487,59 +484,6 @@ type AddSigned<Left extends number, Right extends number> = number extends
               SubtractPositive<AbsoluteNumber<Right>, AbsoluteNumber<Left>>
             >
           : SubtractPositive<AbsoluteNumber<Right>, AbsoluteNumber<Left>>;
-type MultiplyByThree<Count extends number> = AddSigned<
-  Count,
-  AddSigned<Count, Count>
->;
-type CharRank<Character extends string> = Character extends ","
-  ? 0
-  : Character extends "-"
-    ? 1
-    : Character extends "0"
-      ? 2
-      : Character extends "1"
-        ? 3
-        : Character extends "2"
-          ? 4
-          : Character extends "3"
-            ? 5
-            : Character extends "4"
-              ? 6
-              : Character extends "5"
-                ? 7
-                : Character extends "6"
-                  ? 8
-                  : Character extends "7"
-                    ? 9
-                    : Character extends "8"
-                      ? 10
-                      : Character extends "9"
-                        ? 11
-                        : never;
-type CompareCharacters<
-  Left extends string,
-  Right extends string,
-> = Left extends Right
-  ? "equal"
-  : ComparePositive<CharRank<Left>, CharRank<Right>> extends "less"
-    ? "less"
-    : "greater";
-type CompareStrings<
-  Left extends string,
-  Right extends string,
-> = Left extends `${infer LeftHead}${infer LeftTail}`
-  ? Right extends `${infer RightHead}${infer RightTail}`
-    ? LeftHead extends RightHead
-      ? CompareStrings<LeftTail, RightTail>
-      : CompareCharacters<LeftHead, RightHead>
-    : "greater"
-  : Right extends ""
-    ? "equal"
-    : "less";
-type SortPair<Left extends string, Right extends string> =
-  CompareStrings<Left, Right> extends "greater"
-    ? `${Right}::${Left}`
-    : `${Left}::${Right}`;
 type SquareCornerGeometryKey<
   Space extends { row: number; col: number },
   Corner extends "nw" | "ne" | "se" | "sw",
@@ -569,82 +513,6 @@ type SquareEdgeGeometryKey<
           Space["row"],
           1
         >}`;
-type HexCornerGeometryKey<
-  Space extends { q: number; r: number },
-  Corner extends "ne-e" | "e-se" | "se-sw" | "sw-w" | "w-nw" | "nw-ne",
-> = `${AddSigned<
-  MultiplyByThree<Space["q"]>,
-  Corner extends "ne-e"
-    ? 2
-    : Corner extends "e-se"
-      ? 1
-      : Corner extends "se-sw"
-        ? -1
-        : Corner extends "sw-w"
-          ? -2
-          : Corner extends "w-nw"
-            ? -1
-            : 1
->},${AddSigned<
-  MultiplyByThree<Negate<AddSigned<Space["q"], Space["r"]>>>,
-  Corner extends "ne-e"
-    ? -1
-    : Corner extends "e-se"
-      ? -2
-      : Corner extends "se-sw"
-        ? -1
-        : Corner extends "sw-w"
-          ? 1
-          : Corner extends "w-nw"
-            ? 2
-            : 1
->},${AddSigned<
-  MultiplyByThree<Space["r"]>,
-  Corner extends "ne-e"
-    ? -1
-    : Corner extends "e-se"
-      ? 1
-      : Corner extends "se-sw"
-        ? 2
-        : Corner extends "sw-w"
-          ? 1
-          : Corner extends "w-nw"
-            ? -1
-            : -2
->}`;
-type HexEdgeGeometryKey<
-  Space extends { q: number; r: number },
-  Side extends "e" | "ne" | "nw" | "w" | "sw" | "se",
-> = SortPair<
-  HexCornerGeometryKey<
-    Space,
-    Side extends "e"
-      ? "ne-e"
-      : Side extends "ne"
-        ? "nw-ne"
-        : Side extends "nw"
-          ? "w-nw"
-          : Side extends "w"
-            ? "sw-w"
-            : Side extends "sw"
-              ? "se-sw"
-              : "e-se"
-  >,
-  HexCornerGeometryKey<
-    Space,
-    Side extends "e"
-      ? "e-se"
-      : Side extends "ne"
-        ? "ne-e"
-        : Side extends "nw"
-          ? "nw-ne"
-          : Side extends "w"
-            ? "w-nw"
-            : Side extends "sw"
-              ? "sw-w"
-              : "se-sw"
-  >
->;
 type DerivedSquareEdgeIdOf<BoardLike> =
   SquareSpaceOf<BoardLike> extends infer Space
     ? Space extends { row: number; col: number }
@@ -665,30 +533,16 @@ type DerivedSquareVertexIdOf<BoardLike> =
           | `square-vertex:${SquareCornerGeometryKey<Space, "sw">}`
       : never
     : never;
-type DerivedHexEdgeIdOf<BoardLike> =
-  HexSpaceOf<BoardLike> extends infer Space
-    ? Space extends { q: number; r: number }
-      ?
-          | `hex-edge:${HexEdgeGeometryKey<Space, "e">}`
-          | `hex-edge:${HexEdgeGeometryKey<Space, "ne">}`
-          | `hex-edge:${HexEdgeGeometryKey<Space, "nw">}`
-          | `hex-edge:${HexEdgeGeometryKey<Space, "w">}`
-          | `hex-edge:${HexEdgeGeometryKey<Space, "sw">}`
-          | `hex-edge:${HexEdgeGeometryKey<Space, "se">}`
-      : never
-    : never;
-type DerivedHexVertexIdOf<BoardLike> =
-  HexSpaceOf<BoardLike> extends infer Space
-    ? Space extends { q: number; r: number }
-      ?
-          | `hex-vertex:${HexCornerGeometryKey<Space, "ne-e">}`
-          | `hex-vertex:${HexCornerGeometryKey<Space, "e-se">}`
-          | `hex-vertex:${HexCornerGeometryKey<Space, "se-sw">}`
-          | `hex-vertex:${HexCornerGeometryKey<Space, "sw-w">}`
-          | `hex-vertex:${HexCornerGeometryKey<Space, "w-nw">}`
-          | `hex-vertex:${HexCornerGeometryKey<Space, "nw-ne">}`
-      : never
-    : never;
+type DerivedHexEdgeIdOf<BoardLike> = BoardLike extends {
+  id: infer Id extends string;
+}
+  ? HexEdgeId<Id>
+  : never;
+type DerivedHexVertexIdOf<BoardLike> = BoardLike extends {
+  id: infer Id extends string;
+}
+  ? HexVertexId<Id>
+  : never;
 type DerivedEdgeIdOf<BoardLike> = BoardLike extends { layout: "square" }
   ? DerivedSquareEdgeIdOf<BoardLike>
   : BoardLike extends { layout: "hex" }
@@ -956,24 +810,24 @@ type TypedHexBoardLike<
   BoardLike,
 > = TypedOptionalArray<
   TypedOptionalArray<
-    TypedOptionalArray<
-      TypedFields<
-        Omit<Entry, "spaces" | "edges" | "vertices">,
-        EffectiveSchemaForEntry<Manifest, Entry, "boardFieldsSchema">,
-        Manifest,
-        BoardLike
-      >,
-      Entry,
-      "spaces",
-      TypedFields<
-        ArrayItem<
-          NonNullable<Entry extends { spaces?: infer Spaces } ? Spaces : never>
-        >,
-        EffectiveSchemaForEntry<Manifest, Entry, "spaceFieldsSchema">,
-        Manifest,
-        BoardLike
-      >
-    >,
+    TypedFields<
+      Omit<Entry, "spaces" | "edges" | "vertices">,
+      EffectiveSchemaForEntry<Manifest, Entry, "boardFieldsSchema">,
+      Manifest,
+      BoardLike
+    > &
+      (Entry extends { spaces: infer Spaces }
+        ? {
+            spaces: {
+              [Key in keyof Spaces]: TypedFields<
+                Spaces[Key],
+                EffectiveSchemaForEntry<Manifest, Entry, "spaceFieldsSchema">,
+                Manifest,
+                BoardLike
+              >;
+            };
+          }
+        : unknown),
     Entry,
     "edges",
     TypedFields<
