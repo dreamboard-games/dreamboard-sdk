@@ -1,5 +1,5 @@
 import { useGame } from "@game";
-import { useEffect, useRef, type ReactNode, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ReactNode, type ComponentProps } from "react";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
 type Board = NonNullable<ReturnType<Model["boards"]["get"]>>;
@@ -35,6 +35,18 @@ export function BoardTargets({
   const board = useGame((game) => game.boards.get(boardId));
   const viewport = useGame((game) => game.viewport);
   const surface = useRef<SVGSVGElement>(null);
+  const [screenScale, setScreenScale] = useState(1);
+  useEffect(() => {
+    const node = surface.current;
+    if (!node) return;
+    const measure = () => {
+      const matrix = node.getScreenCTM();
+      if (matrix) setScreenScale(Math.hypot(matrix.a, matrix.b));
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(node); measure();
+    return () => observer.disconnect();
+  }, [board]);
   const pointer = viewport.getProps();
   const { onWheel } = pointer;
   function boardPoint(node: SVGSVGElement, clientX: number, clientY: number) {
@@ -84,11 +96,18 @@ export function BoardTargets({
   const layout = board.getLayout({ hexSize });
   const box = layout.viewBox;
   const transform = viewport.getTransform();
+  const selectable = [...layout.getEdges(), ...layout.getVertices()].filter(target => target.getIsSelectable());
+  function hitSize(target: Edge | Vertex) {
+    const pixels = screenScale * transform.scale;
+    const nearest = Math.min(...selectable.filter(other => other !== target).map(other => Math.hypot(other.center.x - target.center.x, other.center.y - target.center.y) * pixels));
+    return Math.max(24, Math.min(44, nearest - 4)) / pixels;
+  }
   function control(target: Space | Edge | Vertex) {
     const { disabled, type: _type, onClick, ...data } = target.getTargetProps();
     return {
       ...data,
       role: "button",
+      style: { pointerEvents: disabled ? "none" as const : "auto" as const },
       tabIndex: disabled ? -1 : 0,
       "aria-disabled": disabled,
       "aria-pressed": target.getIsSelected(),
@@ -138,7 +157,8 @@ export function BoardTargets({
           </g>
         ))}
         {layout.getEdges().map((edge) => (
-          <g key={edge.id} {...control(edge)}>
+          <g key={edge.id} {...control(edge)} data-target-kind="edge">
+            {edge.getIsSelectable() && <line data-hit-area="edge" x1={edge.line[0].x} y1={edge.line[0].y} x2={edge.line[1].x} y2={edge.line[1].y} stroke="transparent" strokeWidth={hitSize(edge)} strokeLinecap="round" />}
             <line
               x1={edge.line[0].x}
               y1={edge.line[0].y}
@@ -152,7 +172,8 @@ export function BoardTargets({
           </g>
         ))}
         {layout.getVertices().map((vertex) => (
-          <g key={vertex.id} {...control(vertex)}>
+          <g key={vertex.id} {...control(vertex)} data-target-kind="vertex">
+            {vertex.getIsSelectable() && <circle data-hit-area="vertex" cx={vertex.center.x} cy={vertex.center.y} r={hitSize(vertex) / 2} fill="transparent" />}
             <circle
               cx={vertex.center.x}
               cy={vertex.center.y}
