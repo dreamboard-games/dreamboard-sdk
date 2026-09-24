@@ -147,7 +147,7 @@ export async function prepareIsolatedReferenceGame(
 }
 
 async function installCandidate(
-  game: ReferenceGame,
+  game: Pick<ReferenceGame, "id" | "dir">,
   sandbox: string,
   sdkTarball: string,
   run: AsyncCommandRunner,
@@ -182,8 +182,8 @@ async function installCandidate(
 }
 
 async function verifyGamesConcurrently(
-  games: readonly ReferenceGame[],
-  verify: (game: ReferenceGame) => Promise<void>,
+  games: readonly Pick<ReferenceGame, "id" | "dir">[],
+  verify: (game: Pick<ReferenceGame, "id" | "dir">) => Promise<void>,
 ): Promise<void> {
   let nextIndex = 0;
   let failed = false;
@@ -228,7 +228,13 @@ export async function verifyReferenceGames(
       : await packSdk(options.root, temporaryRoot, run);
     await readFile(sdkTarball);
 
-    await verifyGamesConcurrently(games, async (game) => {
+    const candidates = options.gameId
+      ? games
+      : [
+          ...games,
+          { id: "template", dir: path.join(options.root, "templates/game") },
+        ];
+    await verifyGamesConcurrently(candidates, async (game) => {
       console.log(`[reference:${game.id}] verifying`);
       const sandbox = path.join(temporaryRoot, "games", game.id);
       try {

@@ -1,5 +1,18 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "noEmit": true },
-  "include": ["manifest.ts", "app/**/*.ts", "test/**/*.ts"]
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@game": ["./ui/game.tsx"]
+    }
+  },
+  "include": [
+    "manifest.ts",
+    "app/**/*.ts",
+    "test/**/*.ts",
+    "ui/**/*.ts",
+    "ui/**/*.tsx",
+    "vite.config.ts"
+  ]
 }

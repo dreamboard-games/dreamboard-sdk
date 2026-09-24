@@ -43,7 +43,6 @@ export type ReferenceGame = {
 export type DiscoverReferenceGamesOptions = {
   readonly root: string;
   readonly gameId?: string;
-  readonly includeLegacy?: boolean;
 };
 
 async function readJson(filePath: string): Promise<unknown> {

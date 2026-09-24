@@ -5,14 +5,22 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "check": "pnpm typecheck && pnpm test"
+    "check": "pnpm typecheck && pnpm test",
+    "dev": "vite --host 127.0.0.1"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "@tanstack/react-store": "0.11.1"
   },
   "devDependencies": {
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "vite": "catalog:",
+    "esbuild": "catalog:"
   }
 }
