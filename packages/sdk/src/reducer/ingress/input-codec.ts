@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
+import * as ContractZod from "../../shared/runtime-schema";
 import { safeParseOrThrow } from "../parse-utils";
 import type { RawRuntimeInput } from "./raw-types";
 

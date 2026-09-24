@@ -1,7 +1,5 @@
-import type {
-  ReducerBundleContract,
-  Wire,
-} from "@dreamboard-games/reducer-contract";
+import type * as Wire from "../../shared/runtime-types";
+import type { ReducerBundleContract } from "../../shared/worker-contract";
 
 export type ReducerScenarioBundle = Pick<
   ReducerBundleContract,

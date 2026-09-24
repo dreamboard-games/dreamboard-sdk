@@ -1,4 +1,9 @@
-import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
+import {
+  BoardStaticProjectionSchema,
+  GameOutcomeSchema,
+  SeatProjectionBundleSchema,
+} from "./schema";
+import * as ReducerWireZod from "../runtime-schema";
 import { describe, expect, test } from "vitest";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -214,7 +219,7 @@ describe("shared plugin runtime contract", () => {
       actionSetVersion: "sha256:actions",
       staticProjection: {
         view: { board: { id: "shared-board", optional: undefined } },
-        hash: undefined,
+        hash: "static-hash",
         manifestVersion: "manifest-v1",
       } as unknown as ReducerBoardStaticProjection,
       dynamicProjection: {
@@ -372,4 +377,28 @@ describe("shared plugin runtime contract", () => {
       "sha256:43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777",
     );
   });
+});
+
+test("worker and plugin boundaries share canonical output admission", () => {
+  expect(BoardStaticProjectionSchema).toBe(
+    ReducerWireZod.BoardStaticProjectionSchema,
+  );
+  expect(SeatProjectionBundleSchema).toBe(
+    ReducerWireZod.SeatProjectionBundleSchema,
+  );
+  expect(GameOutcomeSchema).toBe(ReducerWireZod.GameOutcomeSchema);
+  expect(
+    GameOutcomeSchema.safeParse({ reason: { code: "done" }, standings: [] })
+      .success,
+  ).toBe(false);
+  expect(
+    GameOutcomeSchema.safeParse({
+      reason: { code: "done", message: "" },
+      standings: [{ playerId: "player-1", rank: 1, result: "win" }],
+    }).success,
+  ).toBe(false);
+  expect(
+    BoardStaticProjectionSchema.safeParse({ view: {}, manifestVersion: "1" })
+      .success,
+  ).toBe(false);
 });

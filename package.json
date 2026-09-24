@@ -13,7 +13,6 @@
     "check": "node scripts/cli.ts check",
     "format": "node scripts/cli.ts format",
     "format:check": "node scripts/cli.ts format:check",
-    "generate": "node scripts/cli.ts generate",
     "lint": "node scripts/cli.ts lint",
     "reference": "node scripts/cli.ts reference",
     "release:verify": "node scripts/cli.ts release:verify",

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { REDUCER_CONTRACT_VERSION } from "../generated/version";
-import { assertReducerBundleContract } from "./bundle";
+import { REDUCER_CONTRACT_VERSION } from "./worker-contract";
+import { assertReducerBundleContract } from "./worker-contract";
 
 function validBundle(): Record<string, unknown> {
   return {
@@ -14,7 +14,7 @@ function validBundle(): Record<string, unknown> {
 }
 
 describe("assertReducerBundleContract", () => {
-  test("accepts the exact generated reducer bundle ABI", () => {
+  test("accepts the exact reducer bundle ABI", () => {
     const candidate: unknown = validBundle();
 
     expect(() =>
@@ -50,12 +50,26 @@ describe("assertReducerBundleContract", () => {
     );
   });
 
-  test("rejects a bundle missing any generated callable operation", () => {
-    const candidate = validBundle();
-    delete candidate.project;
-
-    expect(() =>
-      assertReducerBundleContract(candidate, "candidate.mjs"),
-    ).toThrow("Reducer bundle candidate.mjs is missing project().");
-  });
+  test.each(["initialize", "dispatch", "boardStatic", "project"])(
+    "rejects a missing or noncallable %s operation",
+    (method) => {
+      const candidate = validBundle();
+      delete candidate[method];
+      expect(() =>
+        assertReducerBundleContract(candidate, "candidate.js"),
+      ).toThrow(`Reducer bundle candidate.js is missing ${method}().`);
+      candidate[method] = {};
+      expect(() =>
+        assertReducerBundleContract(candidate, "candidate.js"),
+      ).toThrow(`Reducer bundle candidate.js is missing ${method}().`);
+    },
+  );
+  test.each([null, undefined, [], "bundle", 42])(
+    "rejects non-object %s",
+    (value) => {
+      expect(() => assertReducerBundleContract(value, "candidate.js")).toThrow(
+        "did not export an object",
+      );
+    },
+  );
 });

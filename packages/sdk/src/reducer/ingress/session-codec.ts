@@ -1,6 +1,6 @@
 import { collectReducerDefinitionIndex } from "../definition-index";
 import { z } from "zod";
-import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
+import * as ContractZod from "../../shared/runtime-schema";
 import { safeParseOrThrow } from "../parse-utils";
 import { runtimePayloadSchema } from "./runtime-payload";
 import type {
@@ -19,8 +19,6 @@ import type {
   TableOfManifest,
   ViewOfContract,
 } from "../model";
-import { contractFingerprint } from "../contract-fingerprint";
-import { StaleContractArtifactError } from "../stale-contract-artifact-error";
 import type { IngressRuntimeCodec, RawReducerSessionState } from "./raw-types";
 import { createRuntimeInputParser } from "./input-codec";
 import { collectIngressPhaseSchemas } from "./phase-schemas";
@@ -222,7 +220,6 @@ export function createIngressRuntimeCodec<
   const definitionIndex = collectReducerDefinitionIndex(definition);
   const playerIdSchema = definition.contract.manifest.ids
     .playerId as z.ZodType<PlayerId>;
-  const liveContractFingerprint = contractFingerprint(definition).value;
 
   const flowSchema = z.object({
     currentPhase: phaseNameSchema,
@@ -334,19 +331,6 @@ export function createIngressRuntimeCodec<
         rawState,
         "state",
       );
-      const encodedContractFingerprint = (
-        envelope as { meta?: { contractFingerprint?: string } }
-      ).meta?.contractFingerprint;
-      if (
-        encodedContractFingerprint &&
-        encodedContractFingerprint !== liveContractFingerprint
-      ) {
-        throw new StaleContractArtifactError({
-          artifact: "session-state",
-          expected: liveContractFingerprint,
-          found: encodedContractFingerprint,
-        });
-      }
       const table = safeParseOrThrow(
         definition.contract.manifest.tableSchema,
         envelope.domain.table,
@@ -411,7 +395,6 @@ export function createIngressRuntimeCodec<
     },
     serializeState(state: State) {
       return {
-        meta: { contractFingerprint: liveContractFingerprint },
         domain: { ...state.domain },
         runtime: state.runtime,
       } as unknown as RawReducerSessionState;

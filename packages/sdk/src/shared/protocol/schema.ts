@@ -1,4 +1,4 @@
-import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
+import * as ReducerWireZod from "../runtime-schema";
 import { z } from "zod";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -21,53 +21,13 @@ import type {
   PluginToHostPayload,
 } from "./protocol.js";
 
-export const BoardStaticProjectionSchema = z
-  .object({
-    view: RuntimeJsonSchema,
-    hash: z.string().optional(),
-    manifestVersion: z.string().optional(),
-  })
-  .strict();
-
+export const BoardStaticProjectionSchema =
+  ReducerWireZod.BoardStaticProjectionSchema;
 export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
 export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
 export const GameEventSchema = ReducerWireZod.GameEventSchema;
-
-export const SeatProjectionBundleSchema = z
-  .object({
-    currentStage: z.string().nullable().optional(),
-    stageSeats: z.array(z.string()).optional(),
-    simultaneousPhase: z.unknown().nullable().optional(),
-    schedulerFlow: z
-      .object({
-        version: z.literal(1),
-        activePlayerIds: z.array(z.string()),
-        pendingPlayerIds: z.array(z.string()),
-        continuationDependencies: z.array(
-          z
-            .object({
-              waiterPlayerId: z.string(),
-              blockerPlayerIds: z.array(z.string()),
-            })
-            .strict(),
-        ),
-      })
-      .strict()
-      .optional(),
-    sharedView: z.unknown().optional(),
-    interactionsByRef: z.record(z.string(), z.unknown()).optional(),
-    seats: z.record(
-      z.string(),
-      z
-        .object({
-          view: z.unknown().optional(),
-          availableInteractionRefs: z.array(z.string()).optional(),
-          zones: z.unknown().optional(),
-        })
-        .strict(),
-    ),
-  })
-  .strict();
+export const SeatProjectionBundleSchema =
+  ReducerWireZod.SeatProjectionBundleSchema;
 
 export const PlayerIdSchema = z.string().min(1);
 
@@ -195,15 +155,8 @@ export const ZoneHandlesSnapshotSchema = z
   })
   .strict() as unknown as z.ZodType<ZoneHandlesSnapshot>;
 
-export const SimultaneousPhaseSnapshotSchema = z
-  .object({
-    phaseName: z.string().min(1),
-    interactionId: z.string().min(1),
-    actorIds: z.array(PlayerIdSchema),
-    sealedPlayerIds: z.array(PlayerIdSchema),
-    pendingPlayerIds: z.array(PlayerIdSchema),
-  })
-  .strict();
+export const SimultaneousPhaseSnapshotSchema =
+  ReducerWireZod.SimultaneousPhaseProjectionSchema;
 
 export const GameplayBasisSchema = z
   .object({
@@ -213,48 +166,8 @@ export const GameplayBasisSchema = z
   })
   .strict() satisfies z.ZodType<GameplayBasis>;
 
-export const GameOutcomeSchema = z
-  .object({
-    reason: z
-      .object({
-        code: z.string().min(1),
-        message: z.string().optional(),
-      })
-      .strict(),
-    standings: z.array(
-      z
-        .object({
-          playerId: PlayerIdSchema,
-          rank: z.number().int().positive(),
-          result: z.enum(["win", "draw", "loss", "eliminated"]),
-          score: z.number().finite().optional(),
-          scoreBreakdown: z
-            .array(
-              z
-                .object({
-                  id: z.string().min(1),
-                  label: z.string().min(1),
-                  value: z.number().finite(),
-                })
-                .strict(),
-            )
-            .optional(),
-          tieBreaks: z
-            .array(
-              z
-                .object({
-                  id: z.string().min(1),
-                  label: z.string().min(1),
-                  value: z.union([z.number().finite(), z.string()]),
-                })
-                .strict(),
-            )
-            .optional(),
-        })
-        .strict(),
-    ),
-  })
-  .strict() satisfies z.ZodType<GameOutcome>;
+export const GameOutcomeSchema =
+  ReducerWireZod.GameOutcomeSchema satisfies z.ZodType<GameOutcome>;
 
 export const PluginGameplayFrameSchema = z
   .object({

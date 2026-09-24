@@ -1,6 +1,6 @@
 import { createGame } from "../reducer";
 import { createTable } from "./lifecycle-test-fixtures";
-import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
+import * as ReducerWireZod from "../shared/runtime-schema";
 import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
 import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
 import { defineGameDefinition as defineGame } from "./authoring/game";

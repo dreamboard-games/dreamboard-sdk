@@ -14,10 +14,8 @@ import type {
   OptionsOfContract,
   ViewOfContract,
 } from "../model";
-import type {
-  ReducerBundleContract,
-  Wire,
-} from "@dreamboard-games/reducer-contract";
+import type * as Wire from "../../shared/runtime-types";
+import type { ReducerBundleContract } from "../../shared/worker-contract";
 import type {
   InteractionActionabilityResult,
   InteractionExplanation,

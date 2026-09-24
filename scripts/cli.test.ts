@@ -36,7 +36,6 @@ function importWithoutBuildArtifacts(modulePath: string) {
 test("help documents the product command surface", () => {
   const result = cli("--help");
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /generate \[--check\]/);
   assert.doesNotMatch(result.stdout, /reference pin <version>/);
   assert.match(result.stdout, /ui <storybook\|workbench\|test\|snapshots>/);
   assert.equal(rootHelp(), result.stdout);
@@ -60,9 +59,9 @@ test("unknown commands and options return usage exit code 2", () => {
   assert.equal(command.status, 2);
   assert.match(command.stderr, /Unknown command/);
 
-  const option = cli("generate", "--unknown");
+  const option = cli("reference", "--unknown");
   assert.equal(option.status, 2);
-  assert.match(option.stderr, /Unknown option/);
+  assert.match(option.stderr, /Usage: pnpm reference/);
 });
 
 test("runtime failures return exit code 1", () => {

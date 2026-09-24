@@ -1,5 +1,6 @@
+import { RuntimeJsonSchema } from "../../shared/runtime-json";
 import type { RuntimeRecord } from "./table";
-import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
+import * as ContractZod from "../../shared/runtime-schema";
 import { z } from "zod";
 import type {
   AnySchema,
@@ -322,7 +323,7 @@ export function createManifestRuntimeSchema<
         trace: [],
         draws: [],
       }),
-    options: z.record(z.string(), ContractZod.JsonValueSchema).default({}),
+    options: z.record(z.string(), RuntimeJsonSchema).default({}),
     simultaneous: z
       .object({
         current: z

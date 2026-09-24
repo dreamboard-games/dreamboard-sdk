@@ -1,3 +1,4 @@
+import type * as Wire from "../runtime-types.js";
 import type { RuntimeJson } from "../runtime-json.js";
 
 export type PlayerId = string;
@@ -109,59 +110,25 @@ export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   >;
 }
 
-export interface SimultaneousPhaseSnapshot {
-  readonly phaseName: string;
-  readonly interactionId: string;
-  readonly actorIds: readonly PlayerId[];
-  readonly sealedPlayerIds: readonly PlayerId[];
-  readonly pendingPlayerIds: readonly PlayerId[];
-}
+type ReadonlyProjection<Value> = Value extends readonly (infer Item)[]
+  ? readonly ReadonlyProjection<Item>[]
+  : Value extends object
+    ? { readonly [Key in keyof Value]: ReadonlyProjection<Value[Key]> }
+    : Value;
 
-export interface GameEventDetail {
-  readonly label: string;
-  readonly value: string | number | boolean;
-}
+export type SimultaneousPhaseSnapshot =
+  ReadonlyProjection<Wire.SimultaneousPhaseProjection>;
 
-export interface SystemActionEvent {
-  readonly kind: "systemAction";
-  readonly procedureId: string;
-  readonly title: string;
-  readonly summary?: string;
-  readonly details?: readonly GameEventDetail[];
-}
-
-export type GameEvent = SystemActionEvent;
-
-export type OutcomeResult = "win" | "draw" | "loss" | "eliminated";
-
-export interface OutcomeScoreComponent {
-  readonly id: string;
-  readonly label: string;
-  readonly value: number;
-}
-
-export interface OutcomeTieBreak {
-  readonly id: string;
-  readonly label: string;
-  readonly value: number | string;
-}
-
-export interface OutcomeStanding<Player extends string = string> {
-  readonly playerId: Player;
-  readonly rank: number;
-  readonly result: OutcomeResult;
-  readonly score?: number;
-  readonly scoreBreakdown?: readonly OutcomeScoreComponent[];
-  readonly tieBreaks?: readonly OutcomeTieBreak[];
-}
-
-export interface GameOutcome<Player extends string = string> {
-  readonly reason: {
-    readonly code: string;
-    readonly message?: string;
-  };
-  readonly standings: readonly OutcomeStanding<Player>[];
-}
+export type {
+  GameEventDetail,
+  SystemActionEvent,
+  GameEvent,
+  OutcomeResult,
+  OutcomeScoreComponent,
+  OutcomeTieBreak,
+  OutcomeStanding,
+  GameOutcome,
+} from "../domain/results.js";
 
 export interface PluginGameplayFrame<
   View = unknown,
@@ -183,35 +150,6 @@ export interface PluginGameplayFrame<
   readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
 }
 
-export interface ReducerSeatProjectionBundle {
-  readonly currentStage?: string | null;
-  readonly stageSeats?: readonly string[];
-  readonly simultaneousPhase?: SimultaneousPhaseSnapshot | null;
-  readonly schedulerFlow?: {
-    readonly version: 1;
-    readonly activePlayerIds: readonly string[];
-    readonly pendingPlayerIds: readonly string[];
-    readonly continuationDependencies: readonly {
-      readonly waiterPlayerId: string;
-      readonly blockerPlayerIds: readonly string[];
-    }[];
-  };
-  readonly sharedView?: unknown;
-  readonly interactionsByRef?: unknown;
-  readonly seats: Readonly<
-    Record<
-      string,
-      {
-        readonly view?: unknown;
-        readonly availableInteractionRefs?: unknown;
-        readonly zones?: unknown;
-      }
-    >
-  >;
-}
-
-export interface ReducerBoardStaticProjection {
-  readonly view: RuntimeJson;
-  readonly hash?: string;
-  readonly manifestVersion?: string;
-}
+export type ReducerSeatProjectionBundle =
+  ReadonlyProjection<Wire.SeatProjectionBundle>;
+export type ReducerBoardStaticProjection = Readonly<Wire.BoardStaticProjection>;

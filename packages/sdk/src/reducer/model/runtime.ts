@@ -150,36 +150,17 @@ export type ReducerReject = {
   message?: string;
 };
 
-import type {
-  GameOutcome as PluginGameOutcome,
-  OutcomeResult as PluginOutcomeResult,
-  OutcomeScoreComponent as PluginOutcomeScoreComponent,
-  OutcomeStanding as PluginOutcomeStanding,
-  OutcomeTieBreak as PluginOutcomeTieBreak,
-} from "../../shared/protocol/frame.js";
-
-export type OutcomeResult = PluginOutcomeResult;
-export type OutcomeScoreComponent = PluginOutcomeScoreComponent;
-export type OutcomeTieBreak = PluginOutcomeTieBreak;
-export type OutcomeStanding<Player extends string = string> =
-  PluginOutcomeStanding<Player>;
-export type GameOutcome<Player extends string = string> =
-  PluginGameOutcome<Player>;
-
-export type GameEventDetail = {
-  label: string;
-  value: string | number | boolean;
-};
-
-export type SystemActionEvent = {
-  kind: "systemAction";
-  procedureId: string;
-  title: string;
-  summary?: string;
-  details?: readonly GameEventDetail[];
-};
-
-export type GameEvent = SystemActionEvent;
+import type { GameEvent, GameOutcome } from "../../shared/domain/results";
+export type {
+  GameEventDetail,
+  SystemActionEvent,
+  GameEvent,
+  OutcomeResult,
+  OutcomeScoreComponent,
+  OutcomeTieBreak,
+  OutcomeStanding,
+  GameOutcome,
+} from "../../shared/domain/results";
 
 export type ReducerAcceptOptions<State> = {
   transition?: PhaseNameOfState<State>;

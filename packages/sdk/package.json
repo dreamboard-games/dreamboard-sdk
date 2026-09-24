@@ -146,7 +146,6 @@
     "zustand": "catalog:"
   },
   "devDependencies": {
-    "@dreamboard-games/reducer-contract": "workspace:*",
     "@happy-dom/global-registrator": "^20.9.0",
     "@playwright/test": "catalog:",
     "@storybook/addon-a11y": "^10.4.6",

@@ -11,9 +11,5 @@
     "erasableSyntaxOnly": true,
     "isolatedModules": true
   },
-  "include": [
-    "scripts/**/*.ts",
-    "packages/reducer-contract/scripts/**/*.ts",
-    "packages/sdk/tsup.config.ts"
-  ]
+  "include": ["scripts/**/*.ts", "packages/sdk/tsup.config.ts"]
 }

@@ -35,12 +35,7 @@ export default defineConfig({
     __DREAMBOARD_SDK_VERSION__: JSON.stringify(packageManifest.version),
   },
   outDir: "dist",
-  // Private workspace packages are inlined into the published bundle so the
-  // package verifier can prove the tarball is self-contained.
-  dts: {
-    resolve: [/^@dreamboard-games\/reducer-contract(\/.*)?$/],
-  },
-  noExternal: [/^@dreamboard-games\/reducer-contract(\/|$)/],
+  dts: true,
   clean: true,
   sourcemap: true,
   splitting: true,

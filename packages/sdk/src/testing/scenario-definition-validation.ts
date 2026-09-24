@@ -1,5 +1,5 @@
 import { collectReducerDefinitionIndex } from "../reducer/definition-index.js";
-import type { Wire } from "@dreamboard-games/reducer-contract";
+import type { RuntimeJson } from "../shared/runtime-json.js";
 import { z } from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import {
@@ -61,7 +61,7 @@ type ScenarioDefinitionLike = {
   readonly setup: {
     readonly players: number;
     readonly seed: number;
-    readonly options?: Readonly<Record<string, Wire.JsonValue>>;
+    readonly options?: Readonly<Record<string, RuntimeJson>>;
   };
   readonly given: readonly unknown[];
   readonly when: readonly unknown[];
