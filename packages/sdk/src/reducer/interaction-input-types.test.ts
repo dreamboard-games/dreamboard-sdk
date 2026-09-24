@@ -9,7 +9,6 @@ import {
   definePhase,
   formInput,
   many,
-  pipe,
   type GameStateOf,
   type PlayerId,
 } from "../reducer/internal";
@@ -295,19 +294,16 @@ describe("interaction input id types", () => {
             },
           },
         ],
-        reduce({ state, input, accept, ops }) {
+        reduce({ input, accept, tx }) {
           const playerId: TestPlayerId = input.playerId;
           const cardId: TestCardId = input.params.cardId;
           return accept(
-            pipe(
-              state,
-              ops.moveCardBetweenPlayerZones({
-                playerId,
-                fromZoneId: "hand",
-                toZoneId: "in-play",
-                cardId,
-              }),
-            ),
+            tx.moveCardBetweenPlayerZones({
+              playerId,
+              fromZoneId: "hand",
+              toZoneId: "in-play",
+              cardId,
+            }),
           );
         },
       },
@@ -354,19 +350,16 @@ describe("interaction input id types", () => {
     const action = defineCardAction<typeof contract, typeof phaseState>()({
       cardType: "action",
       playFrom: "hand",
-      reduce({ state, input, accept, ops }) {
+      reduce({ input, accept, tx }) {
         const playerId: TestPlayerId = input.playerId;
         const cardId: TestCardId = input.params.cardId;
         return accept(
-          pipe(
-            state,
-            ops.moveCardBetweenPlayerZones({
-              playerId,
-              fromZoneId: "hand",
-              toZoneId: "in-play",
-              cardId,
-            }),
-          ),
+          tx.moveCardBetweenPlayerZones({
+            playerId,
+            fromZoneId: "hand",
+            toZoneId: "in-play",
+            cardId,
+          }),
         );
       },
     });

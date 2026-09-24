@@ -10,7 +10,6 @@ import {
   cardTarget,
   formInput,
   many,
-  pipe,
 } from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
@@ -276,12 +275,12 @@ function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
             }),
           },
         },
-        resolve({ state, submissions, accept, ops }) {
+        resolve({ submissions, accept, tx }) {
           const resolved = Object.values(submissions).map((submission) => ({
             playerId: submission.playerId,
             choice: String(submission.params.choice),
           }));
-          return accept(pipe(state, ops.patchPublicState({ resolved })));
+          return accept(tx.patchPublicState({ resolved }));
         },
       }),
     },
@@ -342,12 +341,12 @@ function createCardPassGame(options?: {
             }),
           },
         },
-        resolve({ state, submissions, accept, ops }) {
+        resolve({ submissions, accept, tx }) {
           const resolved = Object.values(submissions).map((submission) => ({
             playerId: submission.playerId,
             cardIds: [...(submission.params.cardIds as readonly string[])],
           }));
-          return accept(pipe(state, ops.patchPublicState({ resolved })));
+          return accept(tx.patchPublicState({ resolved }));
         },
       }),
     },

@@ -167,21 +167,6 @@ function writePlayerResources<Table extends RuntimeTableRecord>(
   ) as Table["resources"];
 }
 
-/**
- * Increment each resource in `amounts` for `playerId`. Negative entries are
- * rejected — prefer {@link spendPlayerResources} for deductions so that
- * affordability is checked explicitly.
- */
-export function addPlayerResources<Table extends RuntimeTableRecord>(
-  table: Table,
-  playerId: string,
-  amounts: Readonly<Record<string, number | undefined>>,
-): Table {
-  const nextTable = { ...table };
-  addPlayerResourcesInPlace(nextTable, playerId, amounts);
-  return nextTable;
-}
-
 export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
   table: Table,
   playerId: string,
@@ -202,21 +187,6 @@ export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
     next[resourceId] = nextAmount;
   }
   writePlayerResources(table, playerId, next);
-}
-
-/**
- * Deduct each resource in `amounts` from `playerId`. Throws when the player
- * cannot afford the full cost — callers must check `canAfford` in their
- * `validate` phase before invoking this op.
- */
-export function spendPlayerResources<Table extends RuntimeTableRecord>(
-  table: Table,
-  playerId: string,
-  amounts: Readonly<Record<string, number | undefined>>,
-): Table {
-  const nextTable = { ...table };
-  spendPlayerResourcesInPlace(nextTable, playerId, amounts);
-  return nextTable;
 }
 
 export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
@@ -248,22 +218,6 @@ export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
     next[resourceId] = nextAmount;
   }
   writePlayerResources(table, playerId, next);
-}
-
-/**
- * Transfer the specified `amounts` from one player to another. Fails when the
- * source player cannot afford the full cost; on success the destination
- * gains exactly what the source loses.
- */
-export function transferPlayerResources<Table extends RuntimeTableRecord>(
-  table: Table,
-  fromPlayerId: string,
-  toPlayerId: string,
-  amounts: Readonly<Record<string, number | undefined>>,
-): Table {
-  const nextTable = { ...table };
-  transferPlayerResourcesInPlace(nextTable, fromPlayerId, toPlayerId, amounts);
-  return nextTable;
 }
 
 export function transferPlayerResourcesInPlace<
@@ -315,22 +269,6 @@ export function transferPlayerResourcesInPlace<
 
   writePlayerResources(table, fromPlayerId, fromNext);
   writePlayerResources(table, toPlayerId, toNext);
-}
-
-/**
- * Overwrite a single resource balance for a player. Prefer the additive or
- * subtractive helpers — use this only when the new balance is an absolute
- * (e.g. "set coins to 10" for a scripted setup).
- */
-export function setPlayerResource<Table extends RuntimeTableRecord>(
-  table: Table,
-  playerId: string,
-  resourceId: string,
-  amount: number,
-): Table {
-  const nextTable = { ...table };
-  setPlayerResourceInPlace(nextTable, playerId, resourceId, amount);
-  return nextTable;
 }
 
 export function setPlayerResourceInPlace<Table extends RuntimeTableRecord>(

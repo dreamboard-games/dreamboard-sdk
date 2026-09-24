@@ -1,7 +1,6 @@
 import { createDerivedResolver } from "../../derived";
 import type { DerivedResolver } from "../../derived";
 import { createReducerFx } from "../../effects";
-import { createReducerOps } from "../../ops";
 import { createReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type { TrustedRuntimeInput } from "../../core/types";
@@ -120,7 +119,6 @@ export interface TrustedRuntimeHelpers<
     terminal: GameOutcome<TrustedPlayerId<Contract>>;
   };
   reject: typeof rejectResult;
-  ops: ReturnType<typeof createReducerOps<TrustedDomainState<Contract>>>;
   edit: ReturnType<typeof createReducerEdit<TrustedDomainState<Contract>>>;
 }
 
@@ -293,7 +291,6 @@ export function createTrustedRuntimeScope<
 
   const helpers: TrustedRuntimeHelpers<Contract> = {
     ...runtimeResultHelpers,
-    ops: createReducerOps<DomainState>(),
     edit: createReducerEdit<DomainState>(),
   };
 

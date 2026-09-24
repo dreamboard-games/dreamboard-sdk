@@ -1,30 +1,20 @@
-import type { Op } from "./compose";
 import { createReducerFx } from "./effects";
 import type {
-  BoardIdOfTable,
-  CardIdOfTable,
-  ComponentIdOfTable,
   EffectInvokeOptions,
   EffectSpecLike,
   GameEvent,
   GameOutcome,
   PhaseNameOfState,
   PlayerIdOfState,
-  PlayerIdOfTable,
-  PlayerZoneIdOfTable,
   ReducerAccept,
   ReducerReject,
   RuntimeTableRecord,
-  SpaceIdOfTable,
-  TableOfState,
   TableQueriesOfState,
 } from "./model";
 import {
-  createReducerOps,
-  getReducerOpsInternal,
-  type ReducerOpsInternal,
-  type ReducerOps,
-} from "./ops";
+  transactionMutations,
+  type TransactionMutations,
+} from "./transaction-mutations";
 import type { RuntimeInstructionForState } from "./core/runtime-instruction";
 import { createStateQueries } from "./table-queries";
 
@@ -39,52 +29,7 @@ type TransitionTarget<State> =
   IsAny<State> extends true ? string : PhaseNameOfState<State>;
 import { cloneRuntimeTable } from "./table/clone";
 
-export type RotatePlayerZoneArgs<
-  State extends { table: RuntimeTableRecord },
-  ZoneId extends PlayerZoneIdOfTable<TableOfState<State>> = PlayerZoneIdOfTable<
-    TableOfState<State>
-  >,
-  PlayerId extends PlayerIdOfTable<TableOfState<State>> = PlayerIdOfTable<
-    TableOfState<State>
-  >,
-> = {
-  zoneId: ZoneId;
-  direction: "left" | "right";
-  players?: readonly PlayerId[];
-  cardIdsByPlayer?: Partial<
-    Record<PlayerId, readonly CardIdOfTable<TableOfState<State>>[]>
-  >;
-  position?: "top" | "bottom";
-};
-
-/**
- * Method-style callable. Method parameters are compared bivariantly, so a
- * transaction over a phase-scoped state stays assignable to one over the base
- * game state (and vice versa for engine-erased states). Function-typed
- * properties would be invariant under `strictFunctionTypes`.
- */
-type BivariantMethod<Args extends readonly unknown[], Result> = {
-  method(...args: Args): Result;
-}["method"];
-
-type TransactionMethods<State extends { table: RuntimeTableRecord }> = {
-  [Key in Exclude<
-    keyof ReducerOps<State>,
-    "moveComponentToSpace"
-  >]: ReducerOps<State>[Key] extends (...args: infer Args) => Op<State>
-    ? BivariantMethod<Args, State>
-    : never;
-} & {
-  moveComponentToSpace<
-    BoardId extends BoardIdOfTable<TableOfState<State>>,
-    SpaceId extends SpaceIdOfTable<TableOfState<State>, BoardId>,
-    ComponentId extends ComponentIdOfTable<TableOfState<State>>,
-  >(args: {
-    componentId: ComponentId;
-    boardId: BoardId;
-    spaceId: SpaceId;
-  }): State;
-};
+export type { RotatePlayerZoneArgs } from "./transaction-mutations";
 
 /**
  * Result builders on the transaction. A mutation callback ends with one of
@@ -122,17 +67,10 @@ export type ReducerTransactionOutcome<
 export type ReducerTransaction<
   State extends { table: RuntimeTableRecord },
   ErrorCode extends string = string,
-> = TransactionMethods<State> &
+> = TransactionMutations<State> &
   ReducerTransactionOutcome<State, ErrorCode> & {
     readonly state: State;
     readonly q: TableQueriesOfState<State>;
-    apply(op: Op<State>): State;
-    rotatePlayerZone<
-      ZoneId extends PlayerZoneIdOfTable<TableOfState<State>>,
-      PlayerId extends PlayerIdOfTable<TableOfState<State>>,
-    >(
-      args: RotatePlayerZoneArgs<State, ZoneId, PlayerId>,
-    ): State;
   };
 
 export type ReducerEdit<State extends { table: RuntimeTableRecord }> = <
@@ -146,9 +84,7 @@ const transactionContext = Symbol("dreamboard.reducerTransactionContext");
 type TransactionContext<State extends { table: RuntimeTableRecord }> = {
   currentState: State;
   currentQueries: TableQueriesOfState<State> | null;
-  internalOps: ReducerOpsInternal<State>;
   methodCache: Record<string, (...args: readonly unknown[]) => State>;
-  applyMethod?: (op: Op<State>) => State;
   events: GameEvent[];
   instructions: RuntimeInstructionForState<State>[];
   outcome?: ReducerTransactionOutcome<State>;
@@ -224,22 +160,13 @@ function invalidate<State extends { table: RuntimeTableRecord }>(
   context.currentQueries = null;
 }
 
-function applyTransactionOp<State extends { table: RuntimeTableRecord }>(
-  context: TransactionContext<State>,
-  op: Op<State>,
-): State {
-  context.currentState = op(context.currentState);
-  invalidate(context);
-  return context.currentState;
-}
-
 function runInternal<State extends { table: RuntimeTableRecord }>(
   context: TransactionContext<State>,
-  key: keyof ReducerOps<State>,
+  key: keyof TransactionMutations<State>,
   args: readonly unknown[],
 ): State {
-  context.currentState = (
-    context.internalOps[key] as unknown as (
+  (
+    transactionMutations[key] as unknown as (
       state: State,
       ...args: readonly unknown[]
     ) => State
@@ -250,7 +177,7 @@ function runInternal<State extends { table: RuntimeTableRecord }>(
 
 function createReducerTransactionSurface<
   State extends { table: RuntimeTableRecord },
->(ops: ReducerOps<State>) {
+>() {
   const surface = {};
   const descriptors: PropertyDescriptorMap = {
     state: {
@@ -265,15 +192,6 @@ function createReducerTransactionSurface<
         const context = getTransactionContext<State>(this);
         context.currentQueries ??= createStateQueries(context.currentState);
         return context.currentQueries;
-      },
-    },
-    apply: {
-      enumerable: true,
-      get(this: unknown) {
-        const context = getTransactionContext<State>(this);
-        context.applyMethod ??= (op: Op<State>) =>
-          applyTransactionOp(context, op);
-        return context.applyMethod;
       },
     },
   };
@@ -297,7 +215,9 @@ function createReducerTransactionSurface<
     };
   }
 
-  for (const key of Object.keys(ops) as Array<keyof ReducerOps<State>>) {
+  for (const key of Object.keys(transactionMutations) as Array<
+    keyof TransactionMutations<State>
+  >) {
     descriptors[String(key)] = {
       enumerable: true,
       get(this: unknown) {
@@ -316,11 +236,7 @@ function createReducerTransactionSurface<
 
 function createReducerTransactionFromSurface<
   State extends { table: RuntimeTableRecord },
->(
-  initialState: State,
-  internalOps: ReducerOpsInternal<State>,
-  surface: object,
-): ReducerTransaction<State> {
+>(initialState: State, surface: object): ReducerTransaction<State> {
   const transaction = Object.create(surface) as ReducerTransaction<State> &
     TransactionHost<State>;
   Object.defineProperty(transaction, transactionContext, {
@@ -330,7 +246,6 @@ function createReducerTransactionFromSurface<
         table: cloneRuntimeTable(initialState.table),
       },
       currentQueries: null,
-      internalOps,
       methodCache: {},
       events: [],
       instructions: [],
@@ -341,25 +256,17 @@ function createReducerTransactionFromSurface<
 
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
->(initialState: State, ops: ReducerOps<State> = createReducerOps<State>()) {
-  const internalOps = getReducerOpsInternal(ops);
-  const surface = createReducerTransactionSurface(ops);
+>(initialState: State): ReducerTransaction<State> {
   return createReducerTransactionFromSurface(
     initialState,
-    internalOps,
-    surface,
+    createReducerTransactionSurface<State>(),
   );
 }
 
-export function createReducerEdit<State extends { table: RuntimeTableRecord }>(
-  ops: ReducerOps<State> = createReducerOps<State>(),
-): ReducerEdit<State> {
-  const internalOps = getReducerOpsInternal(ops);
-  const surface = createReducerTransactionSurface(ops);
+export function createReducerEdit<
+  State extends { table: RuntimeTableRecord },
+>(): ReducerEdit<State> {
+  const surface = createReducerTransactionSurface<State>();
   return <DraftState extends State>(state: DraftState) =>
-    createReducerTransactionFromSurface(
-      state,
-      internalOps as unknown as ReducerOpsInternal<DraftState>,
-      surface,
-    );
+    createReducerTransactionFromSurface(state, surface);
 }

@@ -52,7 +52,12 @@ Mutation callbacks (`enter`, `reduce`, `resolve`) receive an open transaction
 `tx`. Mutate through it and finish with a bare `return` (accept), or with
 `tx.transition(name)`, `tx.endGame(outcome)`, or `tx.reject(code)`. Events go
 through `tx.emit(...)`. `state` is the read-only snapshot the callback started
-from; `tx.state` is the current draft.
+from; `tx.state` is the current draft. The transaction clones its table once;
+all card, component, resource, and state-slice updates use that draft. Use
+`tx.q` when a query must observe an earlier mutation in the same callback.
+State patch callbacks return a replacement slice without mutating their input.
+The former `ops`, `pipe`, flat `setActivePlayers`, and `tx.apply` APIs are removed;
+call the named transaction methods directly.
 
 ```ts
 // app/game-model.ts — the model, bound once

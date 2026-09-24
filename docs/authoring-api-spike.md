@@ -179,7 +179,7 @@ pass `pnpm reference`. The other seven games are unchanged on disk, listed in
 | `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.prompt({ schema, choices, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.    |
 | `game.views.shared / player / empty / static`                                                                                                                     | Views.                                              |
 | `game.assemble({...})`                                                                                                                                            | Assembly; missing and extra phase keys fail here.   |
-| `defineEffect`, `defineInputs`, `many`, `pipe`                                                                                                                    | Combinators that were already model-independent.    |
+| `defineEffect`, `defineInputs`, `many`                                                                                                                            | Combinators that were already model-independent.    |
 
 **Mutation callbacks** (`enter`, `reduce`, `resolve`, continuations) receive
 `{ tx, random, q, derived, state, ...context }`. `tx` is the open transaction;

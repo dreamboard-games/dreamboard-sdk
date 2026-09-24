@@ -1,14 +1,10 @@
+import { createReducerTransaction } from "../transaction";
 import { describe, expect, test } from "vitest";
 import {
   getComponentsInContainer,
   getComponentsOnEdge,
   getComponentsOnSpace,
   getComponentsOnVertex,
-  moveComponentToContainer,
-  moveComponentToDetached,
-  moveComponentToEdge,
-  moveComponentToSpace,
-  moveComponentToVertex,
 } from "./index";
 import { createSpatialTable } from "./table-test-fixtures";
 
@@ -16,24 +12,27 @@ describe("table ops spatial helpers", () => {
   test("moveComponentToSpace and moveComponentToContainer re-home cards, pieces, and dice", () => {
     const table = createSpatialTable();
 
-    const withCardInContainer = moveComponentToContainer(
+    const withCardInContainer = createReducerTransaction({
       table,
-      "card-1",
-      "main-board",
-      "market-row",
-    );
-    const withPieceOnSpace = moveComponentToSpace(
-      withCardInContainer,
-      "piece-1",
-      "main-board",
-      "space-a",
-    );
-    const withDieOnSpace = moveComponentToSpace(
-      withPieceOnSpace,
-      "die-1",
-      "main-board",
-      "space-a",
-    );
+    }).moveComponentToContainer({
+      componentId: "card-1",
+      boardId: "main-board",
+      containerId: "market-row",
+    }).table;
+    const withPieceOnSpace = createReducerTransaction({
+      table: withCardInContainer,
+    }).moveComponentToSpace({
+      componentId: "piece-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    }).table;
+    const withDieOnSpace = createReducerTransaction({
+      table: withPieceOnSpace,
+    }).moveComponentToSpace({
+      componentId: "die-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    }).table;
 
     expect(withDieOnSpace.decks["draw-deck"]).toEqual([]);
     expect(withDieOnSpace.zones.shared.supply).toEqual([]);
@@ -65,20 +64,24 @@ describe("table ops spatial helpers", () => {
 
   test("moveComponentToDetached re-homes pieces and reindexes old occupants", () => {
     const table = createSpatialTable();
-    const withPieceOnSpace = moveComponentToSpace(
+    const withPieceOnSpace = createReducerTransaction({
       table,
-      "piece-1",
-      "main-board",
-      "space-a",
-    );
-    const withDieOnSpace = moveComponentToSpace(
-      withPieceOnSpace,
-      "die-1",
-      "main-board",
-      "space-a",
-    );
+    }).moveComponentToSpace({
+      componentId: "piece-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    }).table;
+    const withDieOnSpace = createReducerTransaction({
+      table: withPieceOnSpace,
+    }).moveComponentToSpace({
+      componentId: "die-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    }).table;
 
-    const detached = moveComponentToDetached(withDieOnSpace, "piece-1");
+    const detached = createReducerTransaction({
+      table: withDieOnSpace,
+    }).moveComponentToDetached({ componentId: "piece-1" }).table;
 
     expect(detached.componentLocations["piece-1"]).toEqual({
       type: "Detached",
@@ -98,40 +101,41 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      moveComponentToEdge(
-        table,
-        "piece-1",
-        "square-board",
-        "missing-edge" as never,
-      ),
+      createReducerTransaction({ table }).moveComponentToEdge({
+        componentId: "piece-1",
+        boardId: "square-board",
+        edgeId: "missing-edge" as never,
+      }),
     ).toThrow("Unknown edge");
     expect(() =>
-      moveComponentToVertex(
-        table,
-        "piece-1",
-        "square-board",
-        "missing-vertex" as never,
-      ),
+      createReducerTransaction({ table }).moveComponentToVertex({
+        componentId: "piece-1",
+        boardId: "square-board",
+        vertexId: "missing-vertex" as never,
+      }),
     ).toThrow("Unknown vertex");
 
-    const withPieceOnEdge = moveComponentToEdge(
+    const withPieceOnEdge = createReducerTransaction({
       table,
-      "piece-1",
-      "square-board",
-      "square-edge:a1-a2",
-    );
-    const withDieOnEdge = moveComponentToEdge(
-      withPieceOnEdge,
-      "die-1",
-      "square-board",
-      "square-edge:a1-a2",
-    );
-    const withPieceOnVertex = moveComponentToVertex(
-      withDieOnEdge,
-      "piece-1",
-      "square-board",
-      "square-vertex:center",
-    );
+    }).moveComponentToEdge({
+      componentId: "piece-1",
+      boardId: "square-board",
+      edgeId: "square-edge:a1-a2",
+    }).table;
+    const withDieOnEdge = createReducerTransaction({
+      table: withPieceOnEdge,
+    }).moveComponentToEdge({
+      componentId: "die-1",
+      boardId: "square-board",
+      edgeId: "square-edge:a1-a2",
+    }).table;
+    const withPieceOnVertex = createReducerTransaction({
+      table: withDieOnEdge,
+    }).moveComponentToVertex({
+      componentId: "piece-1",
+      boardId: "square-board",
+      vertexId: "square-vertex:center",
+    }).table;
 
     expect(
       getComponentsOnEdge(withDieOnEdge, "square-board", "square-edge:a1-a2"),
@@ -185,12 +189,13 @@ describe("table ops spatial helpers", () => {
       position: 0,
     };
 
-    const moved = moveComponentToSpace(
+    const moved = createReducerTransaction({
       table,
-      "piece-1",
-      "main-board",
-      "space-a",
-    );
+    }).moveComponentToSpace({
+      componentId: "piece-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    }).table;
 
     expect(moved.componentLocations["piece-1"]).toEqual({
       type: "OnSpace",

@@ -61,7 +61,6 @@ export {
   getSlotOccupantsByHost,
 } from "./zone-queries";
 export {
-  addPlayerResources,
   addPlayerResourcesInPlace,
   canAffordResources,
   getMissingResources,
@@ -70,44 +69,27 @@ export {
   getPlayerResourceAmount,
   getPlayerResources,
   getPlayerResourceTotal,
-  setPlayerResource,
   setPlayerResourceInPlace,
-  spendPlayerResources,
   spendPlayerResourcesInPlace,
-  transferPlayerResources,
   transferPlayerResourcesInPlace,
 } from "./resource-ops";
 export {
-  moveComponentToContainer,
   moveComponentToContainerInPlace,
-  moveComponentToDetached,
   moveComponentToDetachedInPlace,
-  moveComponentToEdge,
   moveComponentToEdgeInPlace,
-  moveComponentToSpace,
   moveComponentToSpaceInPlace,
-  moveComponentToVertex,
   moveComponentToVertexInPlace,
 } from "./component-mutations";
 export {
-  addCardToSharedZone,
   addCardToSharedZoneInPlace,
-  dealCardsBetweenPlayerZones,
   dealCardsBetweenPlayerZonesInPlace,
-  dealCardsFromDeckToHand,
   dealCardsFromDeckToHandInPlace,
-  moveCardBetweenPlayerZones,
   moveCardBetweenPlayerZonesInPlace,
-  moveCardBetweenSharedZones,
   moveCardBetweenSharedZonesInPlace,
-  moveCardFromPlayerZoneToSharedZone,
   moveCardFromPlayerZoneToSharedZoneInPlace,
-  moveCardFromSharedZoneToPlayerZone,
   moveCardFromSharedZoneToPlayerZoneInPlace,
-  removeCardFromSharedZone,
   removeCardFromSharedZoneInPlace,
   shufflePlayerZoneCards,
 } from "./card-mutations";
-export { setActivePlayers, setPhaseState } from "./phase-state";
 
 export type { RuntimeTableRecord, TableOfState, CardIdOfState } from "../model";

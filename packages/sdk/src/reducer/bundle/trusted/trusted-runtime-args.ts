@@ -113,7 +113,7 @@ export function buildRuntimeArgs<
   type DomainState = BaseGameStateOfContract<Contract>;
   const domainState = toDomainState(state);
   const q = options.q ?? createStateQueries(domainState);
-  // Legacy helpers (`accept`, `edit`, `fx`, `ops`, `reject`, `endGame`) stay
+  // Legacy helpers (`accept`, `edit`, `fx`, `reject`, `endGame`) stay
   // on the runtime object for the SDK's own test suite. They are no longer
   // part of any public argument type and will be removed with those tests.
   const args = {

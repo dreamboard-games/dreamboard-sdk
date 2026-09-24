@@ -13,7 +13,6 @@ import {
   definePlayerView,
   formInput,
   perPlayer,
-  pipe,
   rngInput,
 } from "../reducer/internal";
 import {
@@ -255,8 +254,8 @@ function createScenarioGame() {
         kind: "player",
         state: phaseState,
         initialState: () => ({}),
-        enter: ({ state, accept, ops, q }) =>
-          accept(pipe(state, ops.setActivePlayers([q.player.order()[0]!]))),
+        enter: ({ accept, tx, q }) =>
+          accept(tx.setActivePlayers([q.player.order()[0]!])),
         actor: ({ q }) => q.player.order()[0] ?? null,
         interactions: {
           dependentTask: defineInteraction<
