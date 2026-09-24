@@ -639,3 +639,11 @@ game.view(() => 3);
 game.view(() => ["hidden"]);
 // @ts-expect-error boards is reserved for manifest metadata.
 game.view(() => ({ boards: {} }));
+
+// Nested domain interfaces and readonly collections remain valid authoring data.
+interface ProjectedCard {
+  readonly id: string;
+}
+declare const projectedCards: readonly ProjectedCard[];
+const recordView = game.view(() => ({ cards: projectedCards }));
+void recordView;

@@ -1,4 +1,4 @@
-import type { AuthoredView } from "../../shared/runtime-types";
+import type { ViewData } from "./spec/views";
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "./table";
 import type {
@@ -223,7 +223,7 @@ export type ResolvedGameSessionOf<
 
 export type ViewOfContract<
   Contract,
-  Projection extends AuthoredView = AuthoredView,
+  Projection extends ViewData = ViewData,
 > = ViewDefinition<
   BaseGameStateOfContract<Contract>,
   ManifestContractOf<Contract>,
