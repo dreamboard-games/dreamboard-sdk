@@ -66,6 +66,6 @@ Board grids default to labelled static images. A later interactive board wrapper
 
 ## Layer006 integration
 
-This independent foundation adds only the `registry` workspace and its development dependencies. Root `pnpm check` does not yet invoke its gate. At integration, add `pnpm --dir registry check` to the maintained repository check implementation and the browser/storybook proofs to the replacement UI lane. Keep existing UI gates until their callers migrate. Add bound registry items only after the headless instance/React contract lands, migrate both reference UIs, then remove the old styled SDK and workbench. No registry hosting or publishing is performed here.
+Root `pnpm check` validates the registry explicitly and runs its typecheck and shadcn build through the existing workspace tasks. The existing CI UI lane additionally runs real consumer installation, Storybook build and the 26 desktop/mobile browser checks for pull requests and main. Existing SDK/workbench UI gates remain until their callers migrate. Add bound registry items only after the headless instance/React contract lands, migrate both reference UIs, then remove the old styled SDK and workbench. No registry hosting or publishing is performed here.
 
 Registry metadata follows the official [registry.json](https://ui.shadcn.com/docs/registry/registry-json) and [registry-item.json](https://ui.shadcn.com/docs/registry/registry-item-json) specifications. `registry.json` is the single source of item metadata; `shadcn build` emits each `registry-item.json` payload with embedded file content.

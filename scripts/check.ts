@@ -103,6 +103,8 @@ export async function runCoreCheck(
 ): Promise<void> {
   const includeReferenceGames = options.referenceGames !== false;
   format(false);
+  // Workspace Turbo tasks below include registry typecheck and shadcn build.
+  run("pnpm", ["--dir", "registry", "validate"], { cwd: rootDir });
   lint();
   typecheck();
   generate(false);
