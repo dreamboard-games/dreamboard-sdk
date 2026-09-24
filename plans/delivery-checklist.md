@@ -22,12 +22,12 @@ Root updates it with implementation and verification evidence.
 
 ## Headless client and React
 
-- [ ] Layer 004: stable typed instance, optional features, getters/handlers/props.
-- [ ] Layer 004: controlled drafts and active interaction, source/request lifecycle.
-- [ ] Sources: hosted socket, iframe, static, test, local and scenario providers.
-- [ ] Sources: hidden stale-action basis, deduplication/retry, close/reconnect behavior.
-- [ ] Inspection/exploration/fuzz: reuse authoritative domains and engine commands.
-- [ ] Layer 005: thin React selector adapter, provider/hook/Subscribe and type proofs.
+- [x] Layer 004: stable typed instance, optional features, getters/handlers/props.
+- [x] Layer 004: controlled drafts and active interaction, source/request lifecycle.
+- [x] Sources: hosted socket, iframe, static, test, local and scenario providers.
+- [x] Sources: hidden stale-action basis, deduplication/retry, close/reconnect behavior.
+- [x] Inspection/exploration/fuzz: reuse authoritative domains and engine commands.
+- [x] Layer 005: thin React selector adapter, provider/hook/Subscribe and type proofs.
 - [ ] Layer 005: reference games import game types in hosted UI, never reducer code.
 - [ ] Layer 005: both UIs migrated; old runtime/component API deleted.
 - [ ] Animation: optional registry-owned implementation with no false external-store promise.

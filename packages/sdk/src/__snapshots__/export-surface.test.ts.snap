@@ -109,6 +109,12 @@ exports[`public export surface > plugin-runtime-contract export names are stable
 ]
 `;
 
+exports[`public export surface > react export names are stable 1`] = `
+[
+  "createGameHook",
+]
+`;
+
 exports[`public export surface > reducer export names are stable 1`] = `
 [
   "FrameworkErrorCodes",

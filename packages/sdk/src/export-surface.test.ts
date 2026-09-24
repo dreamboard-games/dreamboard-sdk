@@ -10,6 +10,7 @@ import { describe, expect, test } from "vitest";
 
 const facades = {
   root: () => import("./index.js"),
+  react: () => import("./react.js"),
   reducer: () => import("./reducer.js"),
   "plugin-runtime-contract": () => import("./plugin-runtime-contract.js"),
   "reducer/advanced": () => import("./reducer/advanced.js"),
