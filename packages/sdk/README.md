@@ -251,3 +251,17 @@ Use `memoize((input: SomeImmutableObject) => result)` for shared pure calculatio
 It caches by object identity with a WeakMap, including `undefined` results. Pass
 immutable snapshots (or stable immutable branches), not an open mutable transaction.
 There is no injected derived-value resolver.
+
+## React adapter dependency
+
+Framework-free consumers can import the package root without React. Applications
+using `@dreamboard-games/sdk/react` must install the maintained React store adapter
+alongside React:
+
+```sh
+pnpm add @dreamboard-games/sdk react@^19 react-dom@^19 @tanstack/react-store@0.11.1
+```
+
+`@tanstack/react-store` is an optional peer of the SDK so headless consumers do not
+install the React adapter. The `/react` entry delegates selectors to that package;
+the application bundler resolves its supported React subscription dependencies.

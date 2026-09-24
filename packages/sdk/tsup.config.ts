@@ -8,6 +8,7 @@ const packageManifest = JSON.parse(
 export default defineConfig({
   entry: [
     "src/index.ts",
+    "src/react.ts",
     "src/package-set.ts",
     "src/plugin-runtime-contract.ts",
     "src/reference-games/index.ts",

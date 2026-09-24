@@ -484,7 +484,14 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
           name: "dreamboard-sdk-package-smoke",
           private: true,
           type: "module",
+          packageManager: (
+            await readJson<{ packageManager: string }>(
+              path.join(rootDir, "package.json"),
+            )
+          ).packageManager,
           dependencies: {
+            // This consumer exercises every facade, including optional adapters.
+            ...manifest.peerDependencies,
             [publicPackageName]: `file:${path.resolve(tarballPath)}`,
           },
         },
@@ -505,7 +512,7 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
       "sdk",
     );
     await assertSdkExportParity(installedSdkRoot);
-    const probe = path.join(consumer, "probe.mjs");
+    const probe = path.join(consumer, "probe.ts");
     await writeFile(
       probe,
       `${publicSpecifiers(manifest)

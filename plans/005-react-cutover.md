@@ -29,3 +29,26 @@ controlled edits while a request is pending, source replacement/unmount cleanup,
 both complete reference-game tests, and packed UI import closure proving no game
 reducer or Node code reaches the hosted UI. Run pnpm check, then meaningful
 desktop/keyboard/touch/accessibility browser proof with the registry cutover.
+
+## React adapter receipt
+
+The adapter binds game types and features without a source. Each mounted
+`GameProvider` requires its own source, creates its instance after commit, and
+disposes that lifetime on unmount. Strict Mode replay retains one live instance;
+source replacement installs current options on that instance. `useGame(selector)`
+and `Subscribe` use maintained TanStack `useSelector` with optional comparison.
+React consumers install the optional `@tanstack/react-store` peer explicitly.
+
+The integrated repository gate passed 800 SDK tests and both packed reference
+games. Nine adapter tests cover selector isolation, controlled updates, source
+replacement, abandoned render, Strict Mode cleanup, independent providers, and
+coverage warnings. Compile-only proofs retain exact feature/source capability
+types and require provider source. The export gate includes the actual `/react`
+facade, and the all-facade installed smoke explicitly installs optional peers.
+A fresh packed Vite browser consumer mounted under Strict Mode and replaced its
+source with no page errors; the React adapter stays external to prevent a bundled
+CommonJS React shim. Full-gate evidence: `/tmp/react-integrated-check-retry.log`;
+packed browser evidence: `/tmp/react-peer-packed-browser.log`.
+
+The game and registry migrations are reviewed separately; the old UI surface is
+deleted only once their shared development and browser tooling has migrated.
