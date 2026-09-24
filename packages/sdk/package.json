@@ -130,13 +130,14 @@
     "test": "vitest run src"
   },
   "dependencies": {
+    "@noble/hashes": "catalog:",
     "@radix-ui/react-accordion": "catalog:",
     "@radix-ui/react-dialog": "catalog:",
     "@radix-ui/react-label": "catalog:",
     "@radix-ui/react-select": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@radix-ui/react-tooltip": "catalog:",
-    "@noble/hashes": "catalog:",
+    "@tanstack/store": "0.11.1",
     "@use-gesture/react": "catalog:",
     "clsx": "catalog:",
     "esbuild": "catalog:",

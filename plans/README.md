@@ -69,8 +69,8 @@ host and browser runtime rather than the former CLI.
 | [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed          |
 | [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed                        |
 | [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | PR #33; local/hosted gates passed                        |
-| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Records PR #34; canonical models integrated; bundle next |
-| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Sources and public event projection executing            |
+| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | PRs #34–36 green; bound authoring in validation          |
+| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Events PR #37 green; source adapters in final validation |
 | 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                         |
 | 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure foundation PR #32 green; bound cutover after React  |
 | 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                               |
@@ -126,9 +126,22 @@ Canonical package/model consolidation integrates ownership, board-template remov
 and strict SDK-local Zod schemas at `3b6d90e`. Its source matches reviewed preparation
 `717213d`; the complete gate passed 710 SDK tests and both packed reference games.
 All three private type/contract packages and their handwritten emitter are gone.
-One production bundle/testing ownership is the next bounded cleanup. The source
-agent is implementing the reviewed snapshot and ACK/frame lifecycle; another agent
-is adding the latest public event batch to serialized state and seat projection.
+One production bundle/testing ownership is PR #36 at `82735c6`; its full gate
+passed 705 SDK tests and both packed games. Canonical models, records and bundle
+layers passed hosted checks with no exact-head review threads.
+
+Public event snapshots are PR #37 at `a09c863`. The combined gate passed 707 SDK
+tests and both packed games, with an independent 65-test proof. Both hosted gates
+passed and exact-head review threads are empty. The latest accepted operation
+replaces the public batch; checkpoint restoration does not replay notifications.
+
+Host, iframe and static source adapters are integrated at `a419411`, with public
+basis-free snapshots and private transport identity. Both ACK/frame orders,
+immutable original retries, missing-frame resume, changed context, disposal and
+native transport cleanup have focused proofs. The combined gate passed after
+adding resume handling to the existing workbench fixture; final immutability
+review added frozen source state/request objects. Local/scenario providers and
+the core instance remain in progress.
 
 Preparatory internal cleanup uses fresh `origin/main` at `bcf3375ed` in
 `/Users/mac/code/worktrees/headless-internal-kotlin-cleanup`. The old Kotlin

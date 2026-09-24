@@ -169,9 +169,8 @@ export const GameplayBasisSchema = z
 export const GameOutcomeSchema =
   ReducerWireZod.GameOutcomeSchema satisfies z.ZodType<GameOutcome>;
 
-export const PluginGameplayFrameSchema = z
+export const SeatFrameSchema = z
   .object({
-    basis: GameplayBasisSchema,
     events: z.array(GameEventSchema).max(32),
     view: RuntimeJsonSchema.nullable(),
     flow: z
@@ -185,7 +184,11 @@ export const PluginGameplayFrameSchema = z
     availableInteractions: z.array(InteractionDescriptorSchema),
     zones: z.record(z.string(), ZoneHandlesSnapshotSchema),
   })
-  .strict() as unknown as z.ZodType<PluginGameplayFrame>;
+  .strict();
+
+export const PluginGameplayFrameSchema = SeatFrameSchema.extend({
+  basis: GameplayBasisSchema,
+}) as unknown as z.ZodType<PluginGameplayFrame>;
 
 export const InteractionResultSchema = z.discriminatedUnion("accepted", [
   z
@@ -239,6 +242,7 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
 
 export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("runtime.ready") }).strict(),
+  z.object({ type: z.literal("runtime.resume") }).strict(),
   z
     .object({
       type: z.literal("runtime.ack"),

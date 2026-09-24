@@ -71,6 +71,7 @@ export {
   InteractionDescriptorSchema,
   InteractionInputDescriptorSchema,
   PluginGameplayFrameSchema,
+  SeatFrameSchema,
   PluginPlayerSummarySchema,
   PluginProtocolFrameSchema,
   PluginProtocolStepSchema,
