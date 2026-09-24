@@ -16,6 +16,13 @@ type Id<
   K extends keyof ManifestOf<G>["ids"],
 > = z.output<ManifestOf<G>["ids"][K]> & string;
 type Table<G extends GameWithManifest> = z.output<ManifestOf<G>["tableSchema"]>;
+type CardZone<
+  G extends GameWithManifest,
+  Scope extends "shared" | "perPlayer",
+> = keyof ManifestOf<G>["literals"][Scope extends "shared"
+  ? "cardSetIdsBySharedZoneId"
+  : "cardSetIdsByPlayerZoneId"] &
+  string;
 export type GameUiManifestOf<G extends GameWithManifest> = {
   PlayerId: Id<G, "playerId">;
   ResourceId: Id<G, "resourceId">;
@@ -29,8 +36,8 @@ export type GameUiManifestOf<G extends GameWithManifest> = {
   SpaceId: Id<G, "spaceId">;
   EdgeId: Id<G, "edgeId">;
   VertexId: Id<G, "vertexId">;
-  PlayerCardZoneId: Id<G, "playerZoneId">;
-  CardZoneId: Id<G, "zoneId">;
+  PlayerCardZoneId: CardZone<G, "perPlayer">;
+  CardZoneId: CardZone<G, "shared"> | CardZone<G, "perPlayer">;
 };
 export type GameUiRootStateOf<G extends GameWithManifest> = GameUiGameRootState<
   G,

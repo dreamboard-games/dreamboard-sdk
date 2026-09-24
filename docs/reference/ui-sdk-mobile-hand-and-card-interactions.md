@@ -75,9 +75,12 @@ Storybook owns tracked visual baselines.
 Use one scenario while iterating, then the aggregate UI gate:
 
 ```sh
-pnpm ui test --scenario roll-and-write-scorecard.mark-cell.mobile
+pnpm ui test --scenario hearts.final-outcome.mobile
 pnpm ui test
 ```
+
+The Hearts mobile scenario checks the final-outcome projection. The browser
+driver suite in `pnpm ui test` covers touch interaction behavior.
 
 Run `pnpm ui test --all` after shared pointer, semantic, fixture, or interaction
 changes. Use `pnpm ui snapshots update` only when intentionally changing
