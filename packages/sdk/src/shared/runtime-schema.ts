@@ -68,7 +68,25 @@ export const RuntimePendingInteractionSchema = z.strictObject({
   values: z.array(RuntimeJsonSchema).min(1),
 });
 
+export const GameEventDetailSchema = z.strictObject({
+  label: z.string().min(1),
+  value: z.union([z.string(), z.number().finite(), z.boolean()]),
+});
+
+export const SystemActionEventSchema = z.strictObject({
+  kind: z.literal("systemAction"),
+  procedureId: z.string().min(1),
+  title: z.string().min(1),
+  summary: z.string().min(1).optional(),
+  details: z.array(GameEventDetailSchema).max(16).optional(),
+});
+
+export const GameEventSchema = z.discriminatedUnion("kind", [
+  SystemActionEventSchema,
+]);
+
 export const ReducerRuntimeStateSchema = z.strictObject({
+  events: z.array(GameEventSchema).max(32),
   rng: RngStateSchema,
   pending: z.record(z.string(), RuntimePendingInteractionSchema),
   simultaneous: RuntimeSimultaneousStateSchema,
@@ -145,23 +163,6 @@ export const GameOutcomeSchema = z.strictObject({
   reason: GameOutcomeReasonSchema,
   standings: z.array(OutcomeStandingSchema).min(1),
 });
-
-export const GameEventDetailSchema = z.strictObject({
-  label: z.string().min(1),
-  value: z.union([z.string(), z.number().finite(), z.boolean()]),
-});
-
-export const SystemActionEventSchema = z.strictObject({
-  kind: z.literal("systemAction"),
-  procedureId: z.string().min(1),
-  title: z.string().min(1),
-  summary: z.string().min(1).optional(),
-  details: z.array(GameEventDetailSchema).max(16).optional(),
-});
-
-export const GameEventSchema = z.discriminatedUnion("kind", [
-  SystemActionEventSchema,
-]);
 
 export const InitializeResultSchema = z.strictObject({
   state: ReducerSessionStateSchema,
@@ -298,6 +299,7 @@ export const ProjectionTimingMetadataSchema = z.strictObject({
 });
 
 export const SeatProjectionBundleSchema = z.strictObject({
+  events: z.array(GameEventSchema).max(32),
   currentStage: z.union([z.string().min(1), z.null()]).optional(),
   stageSeats: z.array(z.string().min(1)).optional(),
   simultaneousPhase: z

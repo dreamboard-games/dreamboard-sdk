@@ -15,6 +15,7 @@ export function makeTestGameplayFrame<View = unknown>(options: {
   zones?: PluginGameplayFrame["zones"];
 }): PluginGameplayFrame<View> {
   return {
+    events: [],
     basis: {
       version: options.gameVersion,
       actionSetVersion: `sha256:${options.gameVersion.toString(16).padStart(64, "0")}`,

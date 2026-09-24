@@ -310,6 +310,7 @@ export function createManifestRuntimeSchema<
   playerIdSchema: z.ZodType<PlayerId>;
 }) {
   return z.object({
+    events: z.array(ContractZod.GameEventSchema).max(32),
     rng: z
       .object({
         seed: z.number().nullable().optional(),

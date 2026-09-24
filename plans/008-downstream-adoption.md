@@ -102,3 +102,16 @@ Private verification includes `authoring:cohort:check`, `verify:offline`, normal
 `pnpm check`, dependency closure and the required integration/browser lanes.
 Record receipt paths, exact candidate SHAs, package versions and final PR heads.
 No staging/production infrastructure operation is part of this delivery.
+
+### Public event propagation
+
+Adopt required engine-owned `runtime.events` and selected-seat `frame.events`.
+The SDK materializer reads the projected latest public batch; public host
+`GameplaySnapshot`/`gameplay-ui.ts` and private `apps/gameplay/src/projection.ts`
+must propagate it without recreating an event cache from dispatch callbacks.
+Existing serialized reducer state persistence/restoration carries the batch.
+Update UI-host session/bridge/screenshot models and canonical/private schema
+consumers so they do not strip the field. Worker diagnostic logs remain host-only
+and must never populate gameplay events. Restores expose checkpoint event data;
+reading it must not trigger notification replay. Exact retries return saved
+results without dispatching or emitting again.

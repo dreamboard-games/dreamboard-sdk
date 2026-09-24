@@ -28,6 +28,7 @@ function makeSnapshot(): PluginGameplayFrame<
   "play.placeCard"
 > {
   return {
+    events: [],
     basis: {
       version: 1,
       actionSetVersion:

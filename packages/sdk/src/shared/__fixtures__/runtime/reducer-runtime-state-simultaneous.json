@@ -23,5 +23,6 @@
     "to": "choose"
   },
   "options": {},
-  "pending": {}
+  "pending": {},
+  "events": []
 }

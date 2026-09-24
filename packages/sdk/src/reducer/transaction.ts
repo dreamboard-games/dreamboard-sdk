@@ -47,7 +47,7 @@ export type ReducerTransactionOutcome<
   State extends { table: RuntimeTableRecord },
   ErrorCode extends string = string,
 > = {
-  /** Record events on the eventual accept result. */
+  /** Emit public display events for every seat. Private details belong in the authored seat view. */
   emit(...events: GameEvent[]): void;
   /** Accept with the current transaction state. Same as a bare `return`. */
   accept(): ReducerAccept<State>;

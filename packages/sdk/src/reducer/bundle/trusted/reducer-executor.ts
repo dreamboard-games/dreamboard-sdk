@@ -1,3 +1,4 @@
+import { normalizeGameEvents } from "./trusted-runtime-result";
 import { evaluateStepPrefix } from "./step-prefix";
 import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
@@ -462,10 +463,14 @@ export function createReducerExecutor<
       }
       transition = entered.transition as PhaseName | undefined;
     }
+    const committedEvents = normalizeGameEvents(events);
     return {
       type: "accept" as const,
-      state: reconcilePending(state),
-      events,
+      state: reconcilePending({
+        ...state,
+        runtime: { ...state.runtime, events: committedEvents },
+      }),
+      events: committedEvents,
       trace,
       ...(terminal ? { terminal } : {}),
     };

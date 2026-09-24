@@ -1,3 +1,4 @@
+import type { GameEvent } from "../domain/results.js";
 import type * as Wire from "../runtime-types.js";
 import type { RuntimeJson } from "../runtime-json.js";
 
@@ -136,6 +137,8 @@ export interface PluginGameplayFrame<
   Stage extends string = string,
   Interaction extends string = string,
 > {
+  /** Latest committed public display-event batch. Reading a snapshot does not replay notifications. */
+  readonly events: readonly GameEvent[];
   readonly basis: GameplayBasis;
   readonly view: View | null;
   readonly flow: {

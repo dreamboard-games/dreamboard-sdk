@@ -49,6 +49,7 @@ const claimDescriptor = {
 
 function baseFrame() {
   return {
+    events: [],
     basis: {
       version: 42,
       actionSetVersion: "sha256:actions",
@@ -165,6 +166,7 @@ describe("shared plugin runtime contract", () => {
         manifestVersion: "manifest-v1",
       },
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
+        events: [],
         currentStage: "play",
         stageSeats: ["player-1"],
         simultaneousPhase: null,
@@ -223,6 +225,7 @@ describe("shared plugin runtime contract", () => {
         manifestVersion: "manifest-v1",
       } as unknown as ReducerBoardStaticProjection,
       dynamicProjection: {
+        events: [],
         currentStage: "play",
         schedulerFlow: {
           version: 1,
@@ -283,6 +286,7 @@ describe("shared plugin runtime contract", () => {
         version: 8,
         actionSetVersion: "sha256:actions",
         dynamicProjection: {
+          events: [],
           interactionsByRef: {},
           seats: {
             "player-1": {

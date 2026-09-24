@@ -6,6 +6,7 @@ export type SystemActionEvent = Readonly<
 > & {
   readonly details?: readonly GameEventDetail[];
 };
+/** Public display information only. Never include hidden cards, resources, or private state. */
 export type GameEvent = SystemActionEvent;
 export type OutcomeResult = Wire.OutcomeResult;
 export type OutcomeScoreComponent = Readonly<Wire.OutcomeScoreComponent>;

@@ -31,6 +31,7 @@ const BROWSER_HOST_ORIGIN = "https://host.dreamboard.test";
 
 function frame(gameVersion: number): PluginGameplayFrame {
   return {
+    events: [],
     basis: {
       version: gameVersion,
       actionSetVersion: `sha256:${String(gameVersion).padStart(64, "0")}`,

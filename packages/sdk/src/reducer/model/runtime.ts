@@ -93,6 +93,8 @@ export type RuntimeState<
   PlayerId extends string,
   Options extends RuntimeRecord = RuntimeRecord,
 > = {
+  /** Latest accepted public display-event batch; snapshot data, not history. */
+  events: readonly GameEvent[];
   rng: RuntimeRngState;
   options: Options;
   simultaneous: RuntimeSimultaneousState<PhaseName, PlayerId>;
