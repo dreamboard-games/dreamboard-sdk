@@ -134,3 +134,9 @@ reducers. Concrete features and the React adapter follow in separate layers.
 
 Testing sources are PR #41 at `3f7719a`; both hosted checks passed and exact-head
 review threads were empty.
+
+Native submit/selection handlers now report rejected reducer results through
+`onError`, preserving the selected draft and its retry readiness. Programmatic
+submission still returns its explicit result. The focused rejection proof and
+combined repository/packed-game gate passed
+(`/tmp/core-native-feedback-check.log`). Applications own the visible notice.
