@@ -63,18 +63,18 @@ host and browser runtime rather than the former CLI.
 
 ## Execution order
 
-| Layer                               | Scope                                                                          | Status                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
-| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                   |
-| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed         |
-| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed                       |
+| Layer                               | Scope                                                                          | Status                                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                    |
+| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed          |
+| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed                        |
 | [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | PR #33; local/hosted gates passed                        |
 | 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Records PR #34; canonical models integrated; bundle next |
-| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Sources and public event projection executing                  |
-| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                        |
-| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure foundation PR #32 green; bound cutover after React |
-| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                              |
-| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                  |
+| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Sources and public event projection executing            |
+| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                         |
+| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure foundation PR #32 green; bound cutover after React  |
+| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                               |
+| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                   |
 
 The original six-layer sketch is split at the reducer foundation so the
 transaction rewrite can be reviewed and verified on its own. Future layers get
