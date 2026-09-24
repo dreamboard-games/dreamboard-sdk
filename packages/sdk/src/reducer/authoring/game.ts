@@ -1,3 +1,9 @@
+import { compileManifest } from "../manifest/compiler";
+import type {
+  AuthoredManifest,
+  CompiledManifest,
+  ManifestTable,
+} from "../manifest/types";
 import type {
   PhaseMapOf,
   PhaseNameOfContract,
@@ -46,6 +52,30 @@ export function defineGameDefinition<
  * parameter types are needed.
  */
 export function createGame<
+  const Manifest extends AuthoredManifest,
+  PublicSchema extends SchemaLike<object>,
+  PrivateSchema extends SchemaLike<object>,
+  HiddenSchema extends SchemaLike<object>,
+  const Phases extends Record<string, SchemaLike<object>>,
+  const Errors extends Record<string, string> | undefined = undefined,
+>(model: {
+  manifest: Manifest;
+  state: { public: PublicSchema; private: PrivateSchema; hidden: HiddenSchema };
+  phases: Phases;
+  errors?: Errors;
+}): import("./contract-authoring").GameAuthoring<
+  DefinedGameContract<
+    ManifestTable<Manifest>,
+    CompiledManifest<Manifest>,
+    PublicSchema,
+    PrivateSchema,
+    HiddenSchema,
+    Phases,
+    Errors
+  >
+>;
+
+export function createGame<
   Table extends RuntimeTableRecord,
   const Manifest extends ReducerManifestContract<
     Table,
@@ -80,8 +110,41 @@ export function createGame<
     Phases,
     Errors
   >
-> {
-  return createContractAuthoring(defineGameContract(model));
+>;
+export function createGame(
+  model:
+    | ReducerGameContractInput<
+        RuntimeTableRecord,
+        ReducerManifestContract<
+          RuntimeTableRecord,
+          string,
+          string,
+          string,
+          string,
+          string
+        >,
+        SchemaLike<object>,
+        SchemaLike<object>,
+        SchemaLike<object>,
+        Record<string, SchemaLike<object>>,
+        Record<string, string> | undefined
+      >
+    | {
+        manifest: AuthoredManifest;
+        state: {
+          public: SchemaLike<object>;
+          private: SchemaLike<object>;
+          hidden: SchemaLike<object>;
+        };
+        phases: Record<string, SchemaLike<object>>;
+        errors?: Record<string, string>;
+      },
+): unknown {
+  const manifest =
+    "literals" in model.manifest
+      ? model.manifest
+      : compileManifest(model.manifest);
+  return createContractAuthoring(defineGameContract({ ...model, manifest }));
 }
 
 /**
