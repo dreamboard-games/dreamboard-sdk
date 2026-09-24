@@ -128,3 +128,32 @@ This remains a proof, not shipped implementation. It does not prove selector
 stability or object-cache lifetime; the implementation must keep selector results
 stable while their selected values are unchanged and scope caches to source and
 snapshot lifetime. A plain per-call object factory alone cannot satisfy that.
+
+## Verified Store and React adapter APIs
+
+An independent audit checked exact @tanstack/store and @tanstack/react-store
+0.11.1 tarballs. Store exposes createStore(initial), get(), functional setState()
+and subscribe(listener), which returns an object with unsubscribe(). Subscription
+does not emit the current state immediately. There is no store.setOptions or
+store.destroy; those lifecycle responsibilities belong to the owning instance.
+
+The maintained React API is useSelector(source, selector, { compare }); its
+default equality is ===. useStore is a deprecated alias with a different third
+argument shape. Use the current API rather than assuming older examples apply.
+
+Selectors must read an immutable snapshot/read-model. Never expose the stable
+mutable instance itself as the store snapshot or evaluate selector(instance)
+against live getters: that suppresses updates or loses old-value evidence during
+concurrent rendering. Domain objects retain snapshot-captured data and their
+stable instance back-reference; handlers still observe current owner options.
+Reuse unchanged domain branches across connection/draft-only updates. Primitive
+or immutable-branch selection works with default equality; consumers selecting a
+new composed object can supply an explicit comparator. No universal deep cache
+or new selector framework is needed.
+
+Proof must cover scalar updates, unrelated connection updates without rendering,
+object identity within a snapshot, changed domain objects rendering, old captured
+objects retaining old data, changed selector/comparator, source replacement and
+unmount cleanup. Exact package sources are in /tmp/tanstack-api-review; official
+implementation references are packages/react-store/src/useSelector.ts and
+packages/store/src/store.ts in https://github.com/TanStack/store.

@@ -34,8 +34,8 @@ Root updates it with implementation and verification evidence.
 
 ## Registry and developer experience
 
-- [ ] Layer 006: validated shadcn-compatible source registry and tokens.
-- [ ] Pure items: card, playing-card, pile, grids, players, resources, dice, event-log, standings.
+- [x] Layer 006 foundation: validated shadcn-compatible source registry and tokens; PR #32 local/hosted gates passed.
+- [x] Pure items: card, playing-card, pile, grids, players, resources, dice, event-log, standings.
 - [ ] Bound items: hand, hand-drawer, board-targets, interaction-form, actions, inspector.
 - [ ] Storybook lives with registry; installation smoke against an authored game.
 - [ ] Scenario dev UI/checkpoints and DOM-attribute browser helper replace workbench.

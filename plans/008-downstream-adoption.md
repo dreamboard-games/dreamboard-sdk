@@ -69,12 +69,18 @@ GameplayAuthorityControlClient consumes separate generated service envelopes.
 Preserve those OpenAPI-owned DTOs.
 
 The old engine-core `com.dreamboard.reducer.contract.ReducerContract.kt` has no
-production consumers: all 34 top-level symbols have no Kotlin/Gradle references
+production consumers: its top-level symbols have no Kotlin/Gradle references
 outside that file and ReducerRuntimeLogEntrySerializationIntegrationTest.kt.
 The `gameplayStateJson` codec is used only by that test. Delete these dead artifacts
 in the adoption cut and retain meaningful worker malformed-result, PostgreSQL
 state/log roundtrip, and session retry/restore/reload proof. Do not introduce a
-new Kotlin generator or schema validator for an unused boundary.
+new Kotlin generator or schema validator for an unused boundary. This deletion
+is prepared at `5e9234d38` in
+[internal PR #531](https://github.com/dreamboard-games/dreamboard-internal/pull/531),
+with focused Kotlin compilation/control-client tests, ktlint and the complete
+repository gate passed. Its source base is `bcf3375ed` from origin/main; the
+working tree is clean. No hosted checks or review threads were reported at that
+exact head on submission.
 
 No current public or internal executable/configuration consumer reads the private
 reducer-runtime.schema.json file. Historical plan references are not consumers.
