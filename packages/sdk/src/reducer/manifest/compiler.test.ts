@@ -46,6 +46,45 @@ const manifest = {
   resources: [{ id: "points", name: "Points" }],
 } as const;
 describe("in-memory manifests", () => {
+  test("uses an authored card category distinct from its instance type", () => {
+    const compiled = compileManifest({
+      ...manifest,
+      cardSets: [
+        {
+          ...manifest.cardSets[0],
+          cardSchema: {
+            variants: {
+              "ranked-card": {
+                properties: {
+                  color: { type: "enum", enums: ["red"] },
+                  points: { type: "integer", default: 0 },
+                },
+              },
+            },
+          },
+          cards: [
+            {
+              type: "ace",
+              cardType: "ranked-card",
+              name: "Ace",
+              count: 1,
+              properties: { color: "red" },
+            },
+          ],
+        },
+      ],
+    } as const);
+    expect(compiled.createInitialTable().cards.ace.cardType).toBe(
+      "ranked-card",
+    );
+    expect(compiled.createInitialTable().cards.ace.properties).toEqual({
+      color: "red",
+      points: 0,
+    });
+    expect(compiled.literals.cardTypes).toEqual(["ranked-card"]);
+    expect(compiled.literals.cardTypeByCardId.ace).toBe("ranked-card");
+    expect(compiled.records).not.toHaveProperty("playerIds");
+  });
   test("materializes fresh defaults for the active roster and preserves card field schemas", () => {
     const compiled = compileManifest(manifest);
     const table = compiled.createInitialTable({
