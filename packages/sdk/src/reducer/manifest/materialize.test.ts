@@ -16,8 +16,6 @@ const EMPTY_MANIFEST: GameTopologyManifest = {
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [],
 };
 
 test("materializeManifestTable keeps runtime board topology board-local", () => {

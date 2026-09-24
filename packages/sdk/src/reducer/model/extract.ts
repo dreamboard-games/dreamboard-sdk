@@ -611,33 +611,6 @@ export type ManifestOf<Source> = Source extends { contract: infer Contract }
   : Source extends { manifest: infer Manifest }
     ? Manifest
     : never;
-export type SetupOptionIdOfManifest<Manifest> = Manifest extends {
-  literals: { setupOptionIds: readonly (infer SetupOptionId)[] };
-}
-  ? Extract<SetupOptionId, string>
-  : string;
-export type SetupProfileIdOfManifest<Manifest> = Manifest extends {
-  literals: { setupProfileIds: readonly (infer SetupProfileId)[] };
-}
-  ? Extract<SetupProfileId, string>
-  : string;
-export type SetupSelectionInputOfManifest<Manifest> = {
-  profileId: SetupProfileIdOfManifest<Manifest>;
-  optionValues?: Partial<Record<SetupOptionIdOfManifest<Manifest>, string>>;
-};
-export type SetupSelectionOfManifest<Manifest> = {
-  profileId: SetupProfileIdOfManifest<Manifest>;
-  optionValues: Record<SetupOptionIdOfManifest<Manifest>, string | null>;
-};
-export type RuntimeSetupSelectionInput<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = SetupSelectionInputOfManifest<Manifest>;
-export type RuntimeSetupSelection<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = SetupSelectionOfManifest<Manifest>;
-export type RuntimeSetupSelectionOverride<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = SetupSelectionInputOfManifest<Manifest>;
 export type StateDefinitionOfContract<Contract> = Contract extends {
   state: infer StateDefinitionValue;
 }
@@ -751,3 +724,12 @@ export type CompatibleCardIdForTwoPlayerZones<
   FromZoneId extends HandIdOfTable<Table>,
   ToZoneId extends HandIdOfTable<Table>,
 > = Extract<CardIdOfHand<Table, FromZoneId>, CardIdOfHand<Table, ToZoneId>>;
+
+export type OptionsSchemaOfContract<Contract> = Contract extends {
+  options: infer Schema extends SchemaLike<import("./table").RuntimeRecord>;
+}
+  ? Schema
+  : SchemaLike<Record<string, never>>;
+export type OptionsOfContract<Contract> = z.infer<
+  OptionsSchemaOfContract<Contract>
+>;

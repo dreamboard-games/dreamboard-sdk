@@ -1,13 +1,7 @@
 import { defineTopologyManifest } from "@dreamboard-games/sdk/types";
 import { boardTemplates, boards } from "./manifest/board";
 import { pieceSeeds, pieceTypes } from "./manifest/pieces";
-import {
-  dieSeeds,
-  dieTypes,
-  resources,
-  setupOptions,
-  setupProfiles,
-} from "./manifest/setup";
+import { dieSeeds, dieTypes, resources } from "./manifest/setup";
 
 export default defineTopologyManifest({
   players: {
@@ -24,6 +18,4 @@ export default defineTopologyManifest({
   dieTypes,
   dieSeeds,
   resources,
-  setupOptions,
-  setupProfiles,
 });

@@ -1,22 +1,18 @@
 import { implicitResultOf } from "./trusted-runtime-args";
 import { safeParseOrThrow } from "../../parse-utils";
-import { applySetupBootstrap } from "../../setup-bootstrap";
 import { createStateQueries } from "../../table-queries";
 import type {
   GameEvent,
   GameOutcome,
-  ExactManifestContractOf,
   PhaseMapOf,
   ReducerGameContractLike,
-  RuntimeSetupSelection,
-  RuntimeSetupSelectionInput,
+  OptionsOfContract,
   ViewMapOf,
 } from "../../model";
 import { isPerPlayer } from "../../per-player";
 import { normalizeResult } from "./runtime-scope";
 import { createMutableRandomHelpers, type RngConsumption } from "./rng-sampler";
 import type {
-  TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
   TrustedRuntimeScope,
@@ -31,52 +27,11 @@ export function createLifecycleRunner<
 >(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
-  type Manifest = TrustedManifest<Contract>;
-  type ExactManifest = ExactManifestContractOf<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
 
-  function resolveSelectedSetup(
-    setup: RuntimeSetupSelectionInput<Manifest> | null | undefined,
-  ): State["runtime"]["setup"] {
-    if (!setup) {
-      return null;
-    }
-    const manifestProfile = scope.manifestSetupProfilesById[setup.profileId];
-    if (!manifestProfile) {
-      throw new Error(`Unknown setup profile '${setup.profileId}'.`);
-    }
-    const resolvedOptionValues: Record<string, string | null> =
-      Object.fromEntries(
-        scope.definition.contract.manifest.literals.setupOptionIds.map(
-          (optionId: string) => [optionId, null] as const,
-        ),
-      );
-
-    for (const [optionId, choiceId] of Object.entries(
-      manifestProfile.optionValues ?? {},
-    ) as Array<[string, string]>) {
-      resolvedOptionValues[optionId] = choiceId;
-    }
-    for (const [optionId, choiceId] of Object.entries(
-      setup.optionValues ?? {},
-    ) as Array<[string, string]>) {
-      resolvedOptionValues[optionId] = choiceId ?? null;
-    }
-
-    return {
-      profileId: setup.profileId,
-      optionValues:
-        resolvedOptionValues as RuntimeSetupSelection<Manifest>["optionValues"],
-    };
-  }
-
-  function resolveInitialPhase(setup: State["runtime"]["setup"]): PhaseName {
-    const setupProfile = setup
-      ? scope.reducerSetupProfiles[setup.profileId]
-      : null;
-    const resolvedPhase = (setupProfile?.initialPhase ??
-      scope.defaultInitialPhase ??
+  function resolveInitialPhase(): PhaseName {
+    const resolvedPhase = (scope.defaultInitialPhase ??
       scope.phaseEntries[0]?.[0]) as PhaseName | undefined;
     if (!resolvedPhase) {
       throw new Error("Reducer-native games must define at least one phase.");
@@ -85,20 +40,6 @@ export function createLifecycleRunner<
       throw new Error(`Unknown initial phase '${resolvedPhase}'.`);
     }
     return resolvedPhase;
-  }
-
-  function applySelectedSetupBootstrap(state: State): State {
-    const setup = state.runtime.setup;
-    if (!setup) {
-      return state;
-    }
-
-    const bootstrap = scope.reducerSetupProfiles[setup.profileId]?.bootstrap;
-    if (!bootstrap || bootstrap.length === 0) {
-      return state;
-    }
-
-    return applySetupBootstrap(state, bootstrap) as State;
   }
 
   function initPhaseState(
@@ -112,7 +53,7 @@ export function createLifecycleRunner<
           manifest: scope.definition.contract.manifest,
           state,
           playerIds,
-          setup: state.runtime.setup,
+          options: state.runtime.options,
         })
       : safeParseOrThrow(phase.state, {}, `phase:${phaseName}:initialState`);
     return {
@@ -229,12 +170,12 @@ export function createLifecycleRunner<
     table,
     playerIds,
     rngSeed,
-    setup,
+    options,
   }: {
     table: State["table"];
     playerIds: PlayerId[];
     rngSeed?: number | null;
-    setup?: RuntimeSetupSelectionInput<Manifest> | null;
+    options: OptionsOfContract<Contract>;
   }): { state: State; initialPhase: PhaseName } {
     const tableWithManifestDefaults = applyManifestTableDefaults(
       table,
@@ -245,10 +186,7 @@ export function createLifecycleRunner<
       tableWithManifestDefaults,
       "table",
     ) as State["table"];
-    const selectedSetup = resolveSelectedSetup(setup);
-    const initialSetup =
-      selectedSetup as RuntimeSetupSelection<ExactManifest> | null;
-    const initialPhase = resolveInitialPhase(selectedSetup);
+    const initialPhase = resolveInitialPhase();
     const initialQueries = createStateQueries({ table: parsedTable });
     return {
       initialPhase,
@@ -261,7 +199,7 @@ export function createLifecycleRunner<
             table: parsedTable,
             playerIds,
             rngSeed,
-            setup: initialSetup,
+            options,
             q: initialQueries,
           }) ?? {},
           "publicState",
@@ -277,7 +215,7 @@ export function createLifecycleRunner<
                 playerIds,
                 playerId,
                 rngSeed,
-                setup: initialSetup,
+                options,
                 q: initialQueries,
               }) ?? {},
               `privateState:${playerId}`,
@@ -291,7 +229,7 @@ export function createLifecycleRunner<
             table: parsedTable,
             playerIds,
             rngSeed,
-            setup: initialSetup,
+            options,
             q: initialQueries,
           }) ?? {},
           "hiddenState",
@@ -310,7 +248,7 @@ export function createLifecycleRunner<
             trace: [],
             draws: [],
           },
-          setup: selectedSetup,
+          options,
           simultaneous: { current: null },
           lastTransition: null,
         } as State["runtime"],
@@ -384,7 +322,7 @@ export function createLifecycleRunner<
       table: State["table"];
       playerIds: PlayerId[];
       rngSeed?: number | null;
-      setup?: RuntimeSetupSelectionInput<Manifest> | null;
+      options: OptionsOfContract<Contract>;
     },
     complete: (
       result: ReturnType<typeof enterPhase>,
@@ -400,9 +338,8 @@ export function createLifecycleRunner<
     events: GameEvent[];
   } {
     const initial = createInitialState(input);
-    const bootstrappedState = applySelectedSetupBootstrap(initial.state);
     const entered = enterPhase({
-      state: bootstrappedState,
+      state: initial.state,
       phaseName: initial.initialPhase,
       playerIds: input.playerIds,
       event: "initialize",
@@ -423,6 +360,5 @@ export function createLifecycleRunner<
     initializeSession,
     initPhaseState,
     resolveInitialPhase,
-    resolveSelectedSetup,
   };
 }

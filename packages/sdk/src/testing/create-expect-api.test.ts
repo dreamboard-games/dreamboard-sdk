@@ -14,7 +14,6 @@ function makeDescriptor(
     availability: { status: "available" },
     kind: "choose-zone",
     surface: "board",
-    context: { to: "player-1" },
     ...descriptor,
   };
 }
@@ -320,35 +319,21 @@ describe("createExpectApi — descriptor matchers", () => {
     );
   });
 
-  test("toBeActiveFor asserts descriptor targets a player and is available", () => {
+  test("ordinary response availability uses the projected seat descriptor", () => {
     const descriptor = makeDescriptor({
-      interactionId: "placeThingCard",
+      interactionId: "respond",
       availability: { status: "available" },
-      context: { to: "player-1" },
     });
-    expectFn(descriptor).toBeActiveFor("player-1");
-    expect(() => expectFn(descriptor).toBeActiveFor("player-2")).toThrow();
-
-    const unavailable = makeDescriptor({
-      interactionId: "placeThingCard",
-      availability: { status: "notYourTurn", reason: "NOT_YOUR_TURN" },
-      context: { to: "player-1" },
-    });
-    expect(() => expectFn(unavailable).toBeActiveFor("player-1")).toThrow();
-  });
-
-  test("toBeActiveFor on array finds by interactionId", () => {
-    const descriptors = [
-      makeDescriptor({
-        interactionId: "placeThingCard",
-        availability: { status: "available" },
-        context: { to: "player-1" },
-      }),
-    ];
-    expectFn(descriptors).toBeActiveFor("player-1", {
-      interactionId: "placeThingCard",
-    });
-    expect(() => expectFn(descriptors).toBeActiveFor("player-1")).toThrow();
+    expectFn(descriptor).toBeAvailable();
+    expectFn([descriptor]).toHaveInteraction("respond");
+    expectFn([]).not.toHaveInteraction("respond");
+    expect(() =>
+      expectFn(
+        makeDescriptor({
+          availability: { status: "blocked", reason: "not ready" },
+        }),
+      ).toBeAvailable(),
+    ).toThrow();
   });
 });
 

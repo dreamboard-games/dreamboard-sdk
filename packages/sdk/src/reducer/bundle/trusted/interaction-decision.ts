@@ -1,5 +1,4 @@
 import type {
-  AnyInteractionSpec,
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerValidationResult,
@@ -37,7 +36,6 @@ import {
 } from "./simultaneous-player";
 import type {
   TrustedDomainState,
-  TrustedManifest,
   TrustedPhaseName,
   TrustedPlayerId,
   TrustedRuntimeScope,
@@ -96,7 +94,6 @@ export function createInteractionDecisionResolver<
   options: { diagnostics?: InteractionDiagnosticsMode } = {},
 ) {
   type DomainState = TrustedDomainState<Contract>;
-  type Manifest = TrustedManifest<Contract>;
   type State = TrustedState<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
@@ -143,38 +140,6 @@ export function createInteractionDecisionResolver<
       };
     }
     return undefined;
-  }
-
-  function evaluateInteractionCost(
-    state: State,
-    interaction: AnyInteractionSpec<DomainState, Manifest>,
-    playerId: PlayerId,
-    params: Record<string, unknown>,
-    projection?: ProjectionContext<DomainState>,
-  ):
-    | { cost?: Record<string, number>; missing?: Record<string, number> }
-    | { error: unknown } {
-    if (!interaction.cost) {
-      return {};
-    }
-    const args = scope.buildRuntimeArgs(
-      state,
-      {
-        state: projection?.domainState ?? scope.toDomainState(state),
-        input: { playerId, params },
-      },
-      projection,
-    );
-    try {
-      const cost = { ...interaction.cost(args) };
-      const typedCost = cost as Parameters<typeof args.q.player.canAfford>[1];
-      const missing = args.q.player.canAfford(playerId, typedCost)
-        ? {}
-        : { ...args.q.player.missingResources(playerId, typedCost) };
-      return { cost, missing };
-    } catch (error) {
-      return { error };
-    }
   }
 
   function acceptsSubmitAssignment(input: {
@@ -281,28 +246,16 @@ export function createInteractionDecisionResolver<
     const authorized = candidateInvariantsValidated
       ? true
       : authorization.isActorAuthorized(state, playerId, actorAuthorization);
-    let visible = candidateInvariantsValidated
-      ? true
-      : authorization.isInteractionVisible(
-          interaction,
-          actorAuthorization,
-          authorized,
-        );
+    let visible = authorized;
     if (alreadySubmitted && !canResubmit && mode !== "submit") {
       visible = false;
     }
     let validation: ReducerValidationResult = { valid: true };
     if (!authorized) {
-      validation =
-        actorAuthorization.mode === "addressees"
-          ? makeValidationError(
-              "prompt-not-owned",
-              `Interaction '${interactionId}' is not addressed to '${playerId}'.`,
-            )
-          : makeValidationError(
-              "NOT_YOUR_TURN",
-              `It is not your turn (interaction '${interactionId}').`,
-            );
+      validation = makeValidationError(
+        "NOT_YOUR_TURN",
+        `It is not your turn (interaction '${interactionId}').`,
+      );
     } else if (alreadySubmitted && !canResubmit) {
       validation = makeValidationError(
         "ALREADY_SUBMITTED",
@@ -313,40 +266,6 @@ export function createInteractionDecisionResolver<
     const canEvaluateProjectionDetails =
       mode !== "submit" && visible && authorized;
     const canContinueSubmitValidation = mode === "submit" && validation.valid;
-    let cost: Record<string, number> | undefined;
-    let missingResources: Record<string, number> | undefined;
-    let costAffordable = true;
-    if (canContinueSubmitValidation || canEvaluateProjectionDetails) {
-      const costDecision = evaluateInteractionCost(
-        state,
-        interaction,
-        playerId,
-        parsed.params,
-        projection,
-      );
-      if ("error" in costDecision) {
-        costAffordable = false;
-        validation = makeValidationError(
-          "cost-unavailable",
-          `Interaction '${interactionId}' cost could not be evaluated.`,
-        );
-      } else {
-        cost = costDecision.cost ?? undefined;
-        missingResources = costDecision.missing ?? undefined;
-        costAffordable =
-          !missingResources ||
-          Object.values(missingResources).every((amount) => amount <= 0);
-        if (!costAffordable) {
-          if (mode === "submit" || validation.valid) {
-            validation = makeValidationError(
-              "INSUFFICIENT_RESOURCES",
-              `Interaction '${interactionId}' cannot be afforded.`,
-            );
-          }
-        }
-      }
-    }
-
     let ruleAvailabilityIssue: InteractionRuleIssue | undefined;
     if (
       (canContinueSubmitValidation || canEvaluateProjectionDetails) &&
@@ -464,17 +383,14 @@ export function createInteractionDecisionResolver<
     const available =
       candidateInvariantAvailable &&
       (inputSatisfiability?.status === "yes" ||
-        (inputSatisfiability?.status !== "no" &&
-          costAffordable &&
-          !authoredValidation));
+        (inputSatisfiability?.status !== "no" && !authoredValidation));
     const descriptorDecision: InteractionDecision = available
-      ? { available: true, cost }
+      ? { available: true }
       : !authorized
         ? {
             available: false,
             code: FrameworkErrorCodes.NOT_YOUR_TURN,
             message: "Not your turn",
-            cost,
           }
         : ruleAvailabilityIssue
           ? {
@@ -484,38 +400,26 @@ export function createInteractionDecisionResolver<
               message:
                 ruleAvailabilityIssue.message ??
                 ruleAvailabilityIssue.errorCode,
-              cost,
             }
-          : !costAffordable
+          : authoredValidation
             ? {
                 available: false,
-                code: "INSUFFICIENT_RESOURCES",
-                message: "INSUFFICIENT_RESOURCES",
-                cost,
-                missingResources,
+                code: authoredValidation.errorCode,
+                ruleId: authoredValidation.ruleId,
+                message:
+                  authoredValidation.message ?? "Interaction unavailable",
               }
-            : authoredValidation
+            : inputSatisfiability?.status === "no"
               ? {
                   available: false,
-                  code: authoredValidation.errorCode,
-                  ruleId: authoredValidation.ruleId,
-                  message:
-                    authoredValidation.message ?? "Interaction unavailable",
-                  cost,
+                  code: FrameworkErrorCodes.NO_LEGAL_INPUT,
+                  message: "No legal input is currently available.",
                 }
-              : inputSatisfiability?.status === "no"
-                ? {
-                    available: false,
-                    code: FrameworkErrorCodes.NO_LEGAL_INPUT,
-                    message: "No legal input is currently available.",
-                    cost,
-                  }
-                : {
-                    available: false,
-                    code: "action-unavailable",
-                    message: "Interaction unavailable",
-                    cost,
-                  };
+              : {
+                  available: false,
+                  code: "action-unavailable",
+                  message: "Interaction unavailable",
+                };
     const descriptor = buildInteractionDescriptor(
       scope,
       state,
@@ -662,11 +566,9 @@ export function createInteractionDecisionResolver<
       actorAuthorization,
     );
     const required =
-      actorAuthorization.mode === "addressees"
-        ? [...actorAuthorization.addressees]
-        : actorAuthorization.mode === "actors"
-          ? [...actorAuthorization.actors]
-          : [...(state.flow.activePlayers as readonly string[])];
+      actorAuthorization.mode === "actors"
+        ? [...actorAuthorization.actors]
+        : [...(state.flow.activePlayers as readonly string[])];
 
     const decision = resolveInteractionDecision({
       state,
@@ -694,19 +596,11 @@ export function createInteractionDecisionResolver<
                 code: decision.descriptor.availability.code,
                 message: decision.descriptor.availability.reason,
               }
-            : decision.found &&
-                decision.descriptor.availability.status ===
-                  "insufficientResources"
-              ? {
-                  available: false,
-                  code: "INSUFFICIENT_RESOURCES",
-                  message: decision.descriptor.availability.reason,
-                }
-              : {
-                  available: false,
-                  code: "action-unavailable",
-                  message: "Interaction unavailable",
-                };
+            : {
+                available: false,
+                code: "action-unavailable",
+                message: "Interaction unavailable",
+              };
 
     const ruleOutcomes: Array<InteractionExplanation["rules"][number]> = [];
     const canEvaluateRules = authorized;
@@ -778,7 +672,6 @@ export function createInteractionDecisionResolver<
 
   return {
     enumerateInteractionParams,
-    evaluateInteractionCost,
     explainInteraction,
     resolveAvailableInteractionsFor,
     resolveInteractionActionability,

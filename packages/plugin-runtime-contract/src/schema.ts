@@ -40,10 +40,6 @@ export const BoardStaticProjectionSchema = z
   })
   .strict();
 
-// Reducer output and plugin consumption share the same guidance/event authority.
-export const SetupGuidanceStepSchema = ReducerWireZod.SetupGuidanceStepSchema;
-export const GameGuidanceProjectionSchema =
-  ReducerWireZod.GameGuidanceProjectionSchema;
 export const GameEventDetailSchema = ReducerWireZod.GameEventDetailSchema;
 export const SystemActionEventSchema = ReducerWireZod.SystemActionEventSchema;
 export const GameEventSchema = ReducerWireZod.GameEventSchema;
@@ -69,7 +65,6 @@ export const SeatProjectionBundleSchema = z
       })
       .strict()
       .optional(),
-    guidance: GameGuidanceProjectionSchema.nullable().optional(),
     sharedView: z.unknown().optional(),
     interactionsByRef: z.record(z.string(), z.unknown()).optional(),
     seats: z.record(
@@ -183,13 +178,6 @@ export const InteractionAvailabilitySchema = z.discriminatedUnion("status", [
   z.object({ status: z.literal("notYourTurn"), reason: z.string() }).strict(),
   z
     .object({
-      status: z.literal("insufficientResources"),
-      reason: z.string(),
-      missingResources: z.record(z.string(), z.number().finite()),
-    })
-    .strict(),
-  z
-    .object({
       status: z.literal("blocked"),
       reason: z.string(),
       code: z.string().optional(),
@@ -211,8 +199,6 @@ const InteractionBaseSchema = z
     actorSeat: z.number().int().optional(),
     draftDigest: z.string().optional(),
     inputs: z.array(InteractionInputDescriptorSchema),
-    cost: z.record(z.string(), RuntimeJsonSchema).optional(),
-    currentResources: z.record(z.string(), RuntimeJsonSchema).optional(),
     availability: InteractionAvailabilitySchema,
     reasons: z
       .array(
@@ -227,31 +213,9 @@ const InteractionBaseSchema = z
   })
   .strict();
 
-export const InteractionContextSchema = z
-  .object({
-    to: z.string().min(1),
-    title: z.string().optional(),
-    payload: z.record(z.string(), RuntimeJsonSchema).optional(),
-    options: z
-      .array(
-        z
-          .object({
-            id: z.string(),
-            label: z.string().optional(),
-          })
-          .strict(),
-      )
-      .optional(),
-  })
-  .strict();
-
-export const InteractionDescriptorSchema = z.discriminatedUnion("kind", [
-  InteractionBaseSchema.extend({ kind: z.literal("action") }).strict(),
-  InteractionBaseSchema.extend({
-    kind: z.literal("prompt"),
-    context: InteractionContextSchema,
-  }).strict(),
-]) as unknown as z.ZodType<InteractionDescriptor>;
+export const InteractionDescriptorSchema = InteractionBaseSchema.extend({
+  kind: z.literal("action"),
+}).strict() as unknown as z.ZodType<InteractionDescriptor>;
 
 export const ZoneHandlesSnapshotSchema = z
   .object({
@@ -338,7 +302,6 @@ export const PluginGameplayFrameSchema = z
       })
       .strict(),
     availableInteractions: z.array(InteractionDescriptorSchema),
-    guidance: GameGuidanceProjectionSchema.nullable().optional(),
     zones: z.record(z.string(), ZoneHandlesSnapshotSchema),
   })
   .strict() as unknown as z.ZodType<PluginGameplayFrame>;

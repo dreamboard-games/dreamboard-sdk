@@ -52,9 +52,6 @@ export function compileManifest<const M extends AuthoredManifest>(
     zoneVisibilityById: Object.fromEntries(analysis.zoneVisibilityById),
     cardSetIdByCardId: Object.fromEntries(analysis.cardSetIdByCardId),
     cardTypeByCardId: Object.fromEntries(analysis.cardTypeByCardId),
-    setupChoiceIdsByOptionId: Object.fromEntries(
-      analysis.setupChoiceIdsByOptionId,
-    ),
     cardSetIdsBySharedZoneId: Object.fromEntries(analysis.sharedZoneCardSetIds),
     cardSetIdsByPlayerZoneId: Object.fromEntries(analysis.playerZoneCardSetIds),
   } as unknown as ReducerManifestContract<
@@ -68,8 +65,6 @@ export function compileManifest<const M extends AuthoredManifest>(
   const families = [
     "phaseName",
     "boardLayout",
-    "setupOptionId",
-    "setupProfileId",
     "cardSetId",
     "cardType",
     "cardId",
@@ -161,7 +156,6 @@ export function compileManifest<const M extends AuthoredManifest>(
   const runtimeSchema = createManifestRuntimeSchema({
     phaseNameSchema: z.string(),
     playerIdSchema: ids.playerId,
-    setupProfileIdSchema: ids.setupProfileId,
   });
   const createInitialTable = (
     options: {
@@ -196,9 +190,6 @@ export function compileManifest<const M extends AuthoredManifest>(
     runtimeSchema,
     schemas: { table: tableSchema, runtime: runtimeSchema },
     staticBoards: initial.boards,
-    setupOptionsById: analysis.setupOptionsById,
-    setupChoiceIdsByOptionId: literals.setupChoiceIdsByOptionId,
-    setupProfilesById: analysis.setupProfilesById,
     createInitialTable,
     normalSetup: {
       minPlayers: source.players.minPlayers,
@@ -212,7 +203,6 @@ export function compileManifest<const M extends AuthoredManifest>(
         ...config,
         tableSchema,
         playerIdSchema: ids.playerId,
-        setupProfileIdSchema: ids.setupProfileId,
       }),
   } as unknown as CompiledManifest<M>;
 }

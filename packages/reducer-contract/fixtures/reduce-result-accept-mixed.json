@@ -32,14 +32,14 @@
         "cursor": 0,
         "trace": []
       },
-      "setup": null,
       "simultaneous": {
         "current": null
       },
       "lastTransition": {
         "from": "main",
         "to": "takeTurn"
-      }
+      },
+      "options": {}
     }
   },
   "events": [],

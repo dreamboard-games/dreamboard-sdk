@@ -1,3 +1,4 @@
+import type { Wire } from "@dreamboard-games/reducer-contract";
 import type { z } from "zod";
 import type {
   ClientParamsOfInteractionOfDefinition,
@@ -29,19 +30,11 @@ export type InteractionDescriptorLike = {
   surface?: string;
   kind?: string;
   availability?: InteractionAvailabilityLike;
-  context?: {
-    to?: string;
-  };
 } & Record<string, unknown>;
 
 export type InteractionAvailabilityLike =
   | { status: "available" }
   | { status: "notYourTurn"; reason: string }
-  | {
-      status: "insufficientResources";
-      reason: string;
-      missingResources?: Record<string, unknown>;
-    }
   | { status: "blocked"; reason: string; code?: string };
 
 export type InteractionExplanationLike = {
@@ -99,7 +92,6 @@ export type ExpectMatchers = {
   ) => void;
   toBeGatedBy: (reason: string, opts?: { interactionId?: string }) => void;
   toBeAvailable: (explanation?: InteractionExplanationLike) => void;
-  toBeActiveFor: (playerId: string, opts?: { interactionId?: string }) => void;
   not: {
     toHaveInteraction: (interactionId: string) => void;
   };
@@ -116,7 +108,7 @@ export type ScenarioActor = ScenarioSeatRef;
 export type ScenarioSetup = {
   readonly players: number;
   readonly seed: number;
-  readonly setupProfileId?: string | null;
+  readonly options?: Readonly<Record<string, Wire.JsonValue>>;
 };
 
 type ScenarioTupleOutput<

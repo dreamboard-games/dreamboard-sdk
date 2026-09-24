@@ -55,10 +55,6 @@ function semanticSeatProjection(
     stageSeats: frame.flow.activePlayers.map((playerId) =>
       canonicalizeSeatReference(playerId, playerToSeat),
     ),
-    guidance: canonicalizeSemanticProjectionValue(
-      frame.guidance ?? null,
-      playerToSeat,
-    ),
     view: canonicalizeSemanticProjectionValue(frame.view, playerToSeat),
     zones: canonicalizeSemanticProjectionValue(frame.zones ?? {}, playerToSeat),
     availableInteractions: frame.availableInteractions.map((descriptor) =>

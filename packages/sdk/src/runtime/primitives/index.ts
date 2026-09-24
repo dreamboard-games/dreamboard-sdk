@@ -122,27 +122,7 @@ export {
   type PlayerRosterPartProps,
   type PlayerRosterRootProps,
 } from "./player-roster.js";
-export {
-  Prompt,
-  PromptInbox,
-  PromptInboxEmpty,
-  PromptInboxItems,
-  PromptInboxRoot,
-  PromptDialog,
-  PromptMessage,
-  PromptOption,
-  PromptOptions,
-  PromptRoot,
-  PromptTitle,
-  type PromptDialogProps,
-  type PromptDialogRenderState,
-  type PromptDialogState,
-  type PromptInboxItemsProps,
-  type PromptOptionRenderItem,
-  type PromptOptionProps,
-  type PromptOptionsProps,
-  type PromptRootProps,
-} from "./prompt.js";
+
 export {
   composeEventHandlers,
   renderPrimitive,

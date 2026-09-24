@@ -4,7 +4,6 @@ import type {
   PhaseNameOfState,
   PlayerIdOfState,
   TableOfState,
-  SetupSelectionOfManifest,
 } from "../extract";
 import type { ReducerRuntimeStateForState } from "../runtime";
 import type { TableQueriesOfState } from "../queries";
@@ -79,7 +78,6 @@ export type ActionContext<
   playerOrder: PlayerIdOfState<State>[];
   activePlayers: PlayerIdOfState<State>[];
   runtime: Omit<ReducerRuntimeStateForState<State>, "rng">;
-  setup: SetupSelectionOfManifest<Manifest> | null;
 };
 
 export type ValidationIssue<ErrorCode extends string = string> = {

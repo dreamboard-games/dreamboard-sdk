@@ -48,11 +48,7 @@ export type InspectInteraction = {
   readonly actor: ActorRef;
   readonly interactionId: string;
   readonly availability: {
-    readonly status:
-      | "available"
-      | "notYourTurn"
-      | "insufficientResources"
-      | "blocked";
+    readonly status: "available" | "notYourTurn" | "blocked";
     readonly code?: string;
     readonly reason?: string;
   };

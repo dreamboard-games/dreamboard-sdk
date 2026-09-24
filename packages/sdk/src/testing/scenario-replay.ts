@@ -121,13 +121,7 @@ export async function replayScenario<
     table: table as Wire.JsonValue,
     playerIds: [...playerIds],
     rngSeed: scenario.setup.seed,
-    setup:
-      typeof scenario.setup.setupProfileId === "string"
-        ? {
-            profileId: scenario.setup.setupProfileId,
-            optionValues: {},
-          }
-        : null,
+    options: scenario.setup.options,
   });
 
   const runtime = new ScenarioReplayImplementation<Game>({

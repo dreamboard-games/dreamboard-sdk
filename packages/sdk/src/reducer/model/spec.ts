@@ -27,7 +27,6 @@ export type {
   BoardInputCollectorKind,
   CardInputCollectorMeta,
   BoardInputCollectorMeta,
-  PromptInputCollectorMeta,
   RngInputCollectorMeta,
   InputCollectorMetaForKind,
   InputSelectionDescriptor,
@@ -67,11 +66,9 @@ export type {
   InteractionRule,
   InteractionCommitPolicy,
   InteractionKind,
-  InteractionToArgs,
   InteractionSpec,
   AnyInteractionSpec,
   InteractionMap,
-  PhaseZoneList,
 } from "./spec/interactions";
 
 export type {

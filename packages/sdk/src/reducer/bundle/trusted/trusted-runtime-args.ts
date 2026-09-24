@@ -36,14 +36,6 @@ export function buildContext<Contract extends ReducerGameContractLike>(
     playerOrder: [...state.table.playerOrder] as PlayerId[],
     activePlayers: [...state.flow.activePlayers] as PlayerId[],
     runtime: publicRuntime(state.runtime),
-    setup: (state.runtime.setup
-      ? {
-          profileId: state.runtime.setup.profileId,
-          optionValues: {
-            ...state.runtime.setup.optionValues,
-          },
-        }
-      : null) as ActionContext<DomainState, Manifest>["setup"],
   };
 }
 

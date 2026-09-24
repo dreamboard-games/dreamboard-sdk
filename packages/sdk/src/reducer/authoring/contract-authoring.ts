@@ -9,7 +9,7 @@ import type {
   PhaseMapOf,
   PhaseNameOfContract,
   PhaseSchemasOfContract,
-  PhaseZoneList,
+  OptionsOfContract,
   PlayerViewDefinition,
   PlayerIdOfState,
   SchemaLike,
@@ -24,14 +24,11 @@ import type {
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
-  ChoiceOptionsFactory,
-  ChoiceTargetOption,
   InputFieldRef,
   PlayerBoardSpaceTarget,
   PlayerSpaceInputSchema,
 } from "../inputs";
 import type { TargetPredicate } from "../inputs/targetRule";
-import type { CollectorState } from "../model/spec";
 import type { TableQueriesOfState } from "../model/queries";
 import type { ReducerTransaction } from "../transaction";
 import {
@@ -39,9 +36,7 @@ import {
   boardTarget,
   cardInput,
   cardTarget,
-  choiceTarget,
   formInput,
-  promptInput,
   rngInput,
 } from "../inputs";
 import type {
@@ -175,30 +170,6 @@ type BoundCardInput<Contract extends ContractWithPhases> = <
   dependsOn?: readonly InputFieldRef<string, unknown>[];
 }) => BoundCardCollector<Contract, Id, ZoneIds>;
 
-/**
- * Prompt collector. `choices` names the option domain (a list or a factory
- * over state) and `where` filters it; the target rule is built internally.
- */
-type BoundPromptInput<Contract extends ContractWithPhases> = <
-  Schema extends SchemaLike<unknown>,
->(options: {
-  schema: Schema;
-  choices?:
-    | ReadonlyArray<
-        ChoiceTargetOption<
-          Extract<Schema extends z.ZodType<infer Value> ? Value : never, string>
-        >
-      >
-    | ChoiceOptionsFactory<
-        BoundState<Contract>,
-        Extract<Schema extends z.ZodType<infer Value> ? Value : never, string>
-      >;
-  where?: BoundWhere<
-    Contract,
-    Extract<Schema extends z.ZodType<infer Value> ? Value : never, string>
-  >;
-}) => InputCollector<Schema, BoundState<Contract>, "prompt">;
-
 type BoundRngInputs<Contract extends ContractWithPhases> = {
   d6(count?: number): ReturnType<typeof rngInput.d6<BoundState<Contract>>>;
   coin(): ReturnType<typeof rngInput.coin<BoundState<Contract>>>;
@@ -208,7 +179,6 @@ export type BoundInputBuilders<Contract extends ContractWithPhases> = {
   readonly board: BoundBoardInputs<Contract>;
   readonly card: BoundCardInput<Contract>;
   readonly form: BoundFormInputs<Contract>;
-  readonly prompt: BoundPromptInput<Contract>;
   readonly rng: BoundRngInputs<Contract>;
 };
 
@@ -256,7 +226,6 @@ export type PhaseAuthoring<
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>
     > = Record<string, never>,
-    const Zones extends PhaseZoneList<BoundManifest<Contract>> = readonly [],
   >(
     definition: Omit<
       PhaseDefinition<
@@ -265,7 +234,7 @@ export type PhaseAuthoring<
         BoundManifest<Contract>,
         SubmitCollectors,
         Interactions,
-        Zones,
+        OptionsOfContract<Contract>,
         ContractErrorCode<Contract>
       >,
       "state"
@@ -276,7 +245,7 @@ export type PhaseAuthoring<
     BoundManifest<Contract>,
     SubmitCollectors,
     Interactions,
-    Zones,
+    OptionsOfContract<Contract>,
     ContractErrorCode<Contract>
   >;
   readonly inputs: BoundInputBuilders<Contract>;
@@ -307,6 +276,7 @@ export type PhaseTypes<
  */
 export type ContractTypes<Contract extends ContractWithPhases> = {
   readonly Contract: Contract;
+  readonly Options: OptionsOfContract<Contract>;
   readonly State: BoundState<Contract>;
   readonly Manifest: BoundManifest<Contract>;
   readonly ErrorCode: ContractErrorCode<Contract>;
@@ -488,29 +458,6 @@ function createFusedBoardInputs<
   } as unknown as BoundBoardInputs<Contract>;
 }
 
-function createFusedPromptInput<
-  Contract extends ContractWithPhases,
->(): BoundPromptInput<Contract> {
-  return ((options: {
-    schema: SchemaLike<unknown>;
-    choices?: unknown;
-    where?: AnyPredicate | readonly AnyPredicate[];
-  }) =>
-    promptInput({
-      schema: options.schema as z.ZodType<string>,
-      ...(options.choices
-        ? {
-            target: applyWhere(
-              choiceTarget.options<CollectorState, string>(
-                options.choices as never,
-              ),
-              options.where,
-            ).build(),
-          }
-        : {}),
-    })) as unknown as BoundPromptInput<Contract>;
-}
-
 function createBoundInputBuilders<
   Contract extends ContractWithPhases,
 >(): BoundInputBuilders<Contract> {
@@ -518,7 +465,6 @@ function createBoundInputBuilders<
     board: createFusedBoardInputs<Contract>(),
     card: createFusedCardInput<Contract>(),
     form: formInput.forState<BoundState<Contract>>(),
-    prompt: createFusedPromptInput<Contract>(),
     rng: rngInput as BoundRngInputs<Contract>,
   };
 }

@@ -1,3 +1,4 @@
+import type { RuntimeRecord } from "../model/table";
 import { z } from "zod";
 import { createManifestStringLiteralSchema } from "../model/manifest";
 import type {
@@ -47,11 +48,15 @@ export type ReducerGameContractInput<
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
   Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 > = {
   manifest: Manifest;
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
   errors?: Errors;
+  options?: OptionsSchema;
 };
 
 export type DefinedGameContract<
@@ -69,6 +74,9 @@ export type DefinedGameContract<
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
   Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 > = ReducerGameContract<
   Table,
   NarrowManifestPhaseNames<Manifest, readonly (keyof Phases & string)[]>,
@@ -76,7 +84,8 @@ export type DefinedGameContract<
   PrivateSchema,
   HiddenSchema,
   Phases,
-  Errors
+  Errors,
+  OptionsSchema
 > & {
   readonly phases: Phases;
   readonly errors: Errors;
@@ -106,6 +115,24 @@ function validateErrorMap(errors: Record<string, string> | undefined): void {
   }
 }
 
+/** Options are persisted and parsed again when a session crosses the ingress boundary. */
+function validateOptionsSchema(schema: SchemaLike<RuntimeRecord>): void {
+  z.toJSONSchema(schema, {
+    override: ({ zodSchema }) => {
+      const definition = zodSchema._zod.def;
+      if (
+        definition.type === "pipe" ||
+        ("coerce" in definition && definition.coerce) ||
+        definition.checks?.some((check) => check._zod.def.check === "overwrite")
+      ) {
+        throw new Error(
+          "Game options schemas must not transform or coerce persisted values.",
+        );
+      }
+    },
+  });
+}
+
 export function defineGameContract<
   Table extends RuntimeTableRecord,
   const Manifest extends ReducerManifestContract<
@@ -121,6 +148,9 @@ export function defineGameContract<
   HiddenSchema extends SchemaLike<object>,
   const Phases extends Record<string, SchemaLike<object>>,
   const Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 >(
   definition: ReducerGameContractInput<
     Table,
@@ -129,7 +159,8 @@ export function defineGameContract<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >,
 ): DefinedGameContract<
   Table,
@@ -138,12 +169,15 @@ export function defineGameContract<
   PrivateSchema,
   HiddenSchema,
   Phases,
-  Errors
+  Errors,
+  OptionsSchema
 > {
   validateStateSchemaIdBranding(definition.state.public, "public");
   validateStateSchemaIdBranding(definition.state.private, "private");
   validateStateSchemaIdBranding(definition.state.hidden, "hidden");
   validateErrorMap(definition.errors);
+  const optionsSchema = definition.options ?? z.strictObject({});
+  validateOptionsSchema(optionsSchema);
   const phaseNames = Object.keys(definition.phases) as (keyof Phases &
     string)[];
   if (phaseNames.length === 0) {
@@ -178,6 +212,7 @@ export function defineGameContract<
     state: definition.state,
     phases: definition.phases,
     errors: definition.errors,
+    options: optionsSchema,
     phaseNames,
     schemas: narrowedManifest.ids,
   } as DefinedGameContract<
@@ -187,7 +222,8 @@ export function defineGameContract<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >;
   return contract;
 }

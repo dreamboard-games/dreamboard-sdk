@@ -84,12 +84,4 @@ export default defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [
-    {
-      id: "default",
-      name: "Default",
-      description: "Standard 4-player Hearts setup.",
-    },
-  ],
 });

@@ -33,7 +33,6 @@ const game = {
         createInitialTable: () => ({}),
       },
       literals: { playerIds: ["player-1", "player-2", "player-3"] },
-      setupProfilesById: { standard: { id: "standard" } },
     },
   },
   phases: {
@@ -61,7 +60,7 @@ function validScenario() {
   return {
     id: "scenario.valid",
     description: "A self-contained scenario",
-    setup: { players: 2, seed: 0, setupProfileId: "standard" },
+    setup: { players: 2, seed: 0 },
     given: [
       {
         actor: { seat: 0 },
@@ -111,7 +110,7 @@ describe("createScenarioAuthoring", () => {
     expect(replay).toEqual({
       id: "scenario.valid",
       description: "A self-contained scenario",
-      setup: { players: 2, seed: 0, setupProfileId: "standard" },
+      setup: { players: 2, seed: 0 },
       given: definition.given,
       when: [],
     });
@@ -192,10 +191,10 @@ describe("createScenarioAuthoring", () => {
       () =>
         defineScenario({
           ...validScenario(),
-          setup: { players: 2, seed: 0, setupProfileId: "test-only" },
+          setup: { players: 2, seed: 0, setupProfileId: "removed" } as never,
         }),
       {
-        code: "UNKNOWN_SETUP_PROFILE",
+        code: "UNKNOWN_FIELD",
         path: "scenario.setup.setupProfileId",
       },
     );

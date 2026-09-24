@@ -70,7 +70,6 @@ export function materializePluginGameplayFrame(
       simultaneousPhase: dynamicProjection.simultaneousPhase ?? null,
     },
     availableInteractions,
-    guidance: dynamicProjection.guidance ?? null,
     zones,
   } satisfies PluginGameplayFrame;
 

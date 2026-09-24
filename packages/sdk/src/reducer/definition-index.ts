@@ -11,8 +11,7 @@ import type {
   ReducerGameDefinition,
   SchemaLike,
   ViewMapOf,
-  PhaseZoneList,
-  PlayerZoneIdOfManifest,
+  OptionsOfContract,
 } from "./model";
 
 export type ReducerIndexedPhase<Contract extends ReducerGameContractLike> =
@@ -25,7 +24,7 @@ export type ReducerIndexedPhase<Contract extends ReducerGameContractLike> =
       BaseGameStateOfContract<Contract>,
       ManifestContractOf<Contract>
     >,
-    PhaseZoneList<ManifestContractOf<Contract>>
+    OptionsOfContract<Contract>
   >;
 
 export type ReducerIndexedInteractionEntry<
@@ -37,9 +36,6 @@ export type ReducerIndexedInteractionEntry<
     ManifestContractOf<Contract>
   >,
 ];
-
-export type ReducerIndexedZoneEntry<Contract extends ReducerGameContractLike> =
-  PlayerZoneIdOfManifest<ManifestContractOf<Contract>>;
 
 export interface ReducerDefinitionPhaseIndex<
   Contract extends ReducerGameContractLike,
@@ -53,7 +49,6 @@ export interface ReducerDefinitionPhaseIndex<
   readonly interactions: ReadonlyArray<
     ReducerIndexedInteractionEntry<Contract>
   >;
-  readonly zones: ReadonlyArray<ReducerIndexedZoneEntry<Contract>>;
 }
 
 export interface ReducerDefinitionIndex<
@@ -113,14 +108,6 @@ function simultaneousSubmitEntriesOf<Contract extends ReducerGameContractLike>(
   ];
 }
 
-function zoneEntriesOf<Contract extends ReducerGameContractLike>(
-  phase: ReducerIndexedPhase<Contract>,
-): Array<ReducerIndexedZoneEntry<Contract>> {
-  return Array.from(
-    (phase as { zones?: readonly unknown[] }).zones ?? [],
-  ) as Array<ReducerIndexedZoneEntry<Contract>>;
-}
-
 export function collectReducerDefinitionIndex<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
@@ -147,7 +134,6 @@ export function collectReducerDefinitionIndex<
       phaseName,
       phase,
       interactions: interactionEntries,
-      zones: zoneEntriesOf(phase),
     });
   }
 

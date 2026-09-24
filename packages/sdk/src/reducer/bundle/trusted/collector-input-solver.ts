@@ -409,13 +409,6 @@ function resolveCollectorValueSource(
   collector: InputCollector,
   dependencyValues: Readonly<Record<string, unknown>>,
 ): ValueSource {
-  if (
-    collector.kind === "prompt" &&
-    !collector.meta?.options &&
-    !collector.eligibleTargets
-  ) {
-    return incompleteValueSource();
-  }
   if (!collector.domain) return incompleteValueSource();
 
   const domain = collector.domain(

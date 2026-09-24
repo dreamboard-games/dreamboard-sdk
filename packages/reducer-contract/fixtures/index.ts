@@ -97,7 +97,7 @@ export const FIXTURES = [
   {
     name: "initialize-request",
     typeName: "InitializeRequest" as const,
-    why: "Reducer bundle initialization payload with table, player ids, rng seed, and setup selection.",
+    why: "Reducer bundle initialization payload with table, player ids, rng seed, and lobby options.",
     value: initializeRequest,
   },
   {

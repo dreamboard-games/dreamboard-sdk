@@ -1,30 +1,4 @@
 import { defineGameDefinition as defineGame } from "./authoring/game";
-// Regression coverage for the bundle's unified actor-authorization:
-//
-//   "Who may submit this interaction right now?"
-//
-// The bundle exposes this decision in two places:
-//   - `getAvailableInteractions` uses it to project descriptor `availability`
-//     so UIs can enable / gray out buttons.
-//   - `validateInteractionInput` uses it to accept / reject actual
-//     submissions.
-//
-// These must never drift. The tests below pin the contract:
-//
-//   1. Interactions without a `to` selector default to "turn's active
-//      player" — this is the common path for `buildRoad`, `rollDice`,
-//      `endTurn`, etc.
-//   2. Interactions with a non-empty `to` selector are addressee-driven
-//      (e.g. `respondToTrade` for a recipient). Non-addressees neither see
-//      the descriptor nor can they submit the interaction.
-//   3. The author's availability predicate still gates addressees — it's
-//      an additional filter on top of authorization, not a replacement.
-//
-// History: before the unification, availability and runtime submission each
-// had their own "active player only" gates which were blind to prompt
-// addressees. A trade recipient would see the Accept/Reject prompt but every
-// submission attempt came back as `NOT_YOUR_TURN`. These tests prevent that
-// from regressing.
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -33,8 +7,8 @@ import {
   defineEmptyView,
   defineGameContract,
   defineInteraction,
+  formInput,
   definePhase,
-  promptInput,
 } from "../reducer/internal";
 import { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId, perPlayer } from "../reducer/per-player";
@@ -82,8 +56,6 @@ function createManifestContract() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -118,8 +90,6 @@ function createManifestContract() {
     ids: {
       playerId: z.enum(playerIds),
       phaseName: z.enum(phaseNames),
-      setupOptionId: z.string(),
-      setupProfileId: z.string(),
       cardSetId: z.string(),
       cardType: z.string(),
       cardId: z.string(),
@@ -155,22 +125,12 @@ function createManifestContract() {
       visibility: () => ({}),
       resources: () => perPlayer([], () => ({})),
     },
-    setupOptionsById: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
   };
 }
-// ─────────────────────────────────────────────────────────────────────────
-// Scenario A — addressed prompt (the trade-respond pattern).
-//
-// `respond` is `kind: "prompt"` with `to: ({state}) => state.publicState.askPlayer`.
-// The active player is `player-1`; `askPlayer` is `player-2`. So the
-// addressee (player-2) is NOT the active player. This is the exact shape
-// that broke before the fix.
-// ─────────────────────────────────────────────────────────────────────────
-describe("addressee-based prompt authorization", () => {
+describe("recipient-based response authorization", () => {
   function makeBundle() {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -203,19 +163,21 @@ describe("addressee-based prompt authorization", () => {
           state: z.object({}),
           initialState: () => ({}),
           enter({ accept, tx }) {
-            // Active player is player-1; the addressee (askPlayer) is player-2.
-            // This is the exact configuration that broke before the fix.
             return accept(tx.setActivePlayers(["player-1"]));
           },
           interactions: {
             respond: defineInteraction<typeof contract>()({
               inputs: {
-                answer: promptInput({
-                  schema: z.enum(["yes", "no"]),
-                  target: yesNoTarget,
+                answer: formInput.choice({
+                  defaultValue: () => undefined,
+                  choices: (context) =>
+                    yesNoTarget.options(context).map((option) => ({
+                      value: option.id,
+                      label: option.label ?? option.id,
+                    })),
                 }),
               },
-              to: ({ state }) => state.publicState.askPlayer,
+              actor: ({ state }) => state.publicState.askPlayer,
               reduce({ state, accept }) {
                 return accept(state);
               },
@@ -230,24 +192,34 @@ describe("addressee-based prompt authorization", () => {
     });
     return createReducerTestingBundle(game);
   }
-  test("descriptor: addressee sees the prompt as available even when they are not active", async () => {
+  test("descriptor: recipient sees the response as available even when they are not active", async () => {
     const bundle = makeBundle();
     const initial = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
     const offerer = getAvailableInteractions(bundle, initial, "player-1");
-    // player-1 is active but not addressed — no descriptor.
+    expect(
+      bundle.project({ state: initial, playerIds: ["player-1", "player-2"] })
+        .schedulerFlow,
+    ).toEqual({
+      version: 1,
+      activePlayerIds: ["player-2"],
+      pendingPlayerIds: ["player-2"],
+      continuationDependencies: [
+        { waiterPlayerId: "player-1", blockerPlayerIds: ["player-2"] },
+      ],
+    });
     expect(offerer).toEqual([]);
     const recipient = getAvailableInteractions(bundle, initial, "player-2");
     expect(recipient).toHaveLength(1);
     expect(recipient[0].interactionId).toBe("respond");
-    expect(recipient[0].kind).toBe("prompt");
+    expect(recipient[0].kind).toBe("action");
     expect(recipient[0].availability).toEqual({ status: "available" });
     expect(recipient[0].inputs).toEqual([
       {
         key: "answer",
-        kind: "prompt",
+        kind: "form",
         domain: {
           type: "choice",
           choices: [
@@ -257,12 +229,9 @@ describe("addressee-based prompt authorization", () => {
         },
       },
     ]);
-    expect(recipient[0].context?.options).toEqual([
-      { id: "yes", label: "Yes" },
-      { id: "no", label: "No" },
-    ]);
+    expect(recipient[0]).not.toHaveProperty("context");
   });
-  test("submit: the addressee (non-active) can submit the prompt", async () => {
+  test("submit: the recipient (non-active) can submit the response", async () => {
     const bundle = makeBundle();
     const initial = await bundle.initialize({
       table: createTable(),
@@ -279,7 +248,7 @@ describe("addressee-based prompt authorization", () => {
     });
     expect(accepted.valid).toBe(true);
   });
-  test("submit: a non-addressee (even the active player) gets prompt-not-owned, NOT NOT_YOUR_TURN", async () => {
+  test("submit: a non-recipient (even the active player) gets NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
     const initial = await bundle.initialize({
       table: createTable(),
@@ -290,14 +259,12 @@ describe("addressee-based prompt authorization", () => {
       input: {
         kind: "interaction",
         interactionId: "respond",
-        // player-1 is the active player but `askPlayer` is player-2,
-        // so player-1 is NOT an addressee.
         playerId: "player-1",
         params: { answer: "yes" },
       },
     });
     expect(rejected.valid).toBe(false);
-    expect(rejected.errorCode).toBe("prompt-not-owned");
+    expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
   });
 });
 describe("phase actor, step, and cost resolution", () => {
@@ -330,7 +297,16 @@ describe("phase actor, step, and cost resolution", () => {
           interactions: {
             spendGold: defineInteraction<typeof contract>()({
               inputs: {},
-              cost: () => ({ gold: 2 }),
+              rules: [
+                {
+                  id: "affordable",
+                  errorCode: "INSUFFICIENT_RESOURCES",
+                  available: ({ q, input }) =>
+                    q.player.canAfford(input.playerId, { gold: 2 }),
+                  validate: ({ q, input }) =>
+                    q.player.canAfford(input.playerId, { gold: 2 }),
+                },
+              ],
               reduce({ state, accept }) {
                 return accept(state);
               },
@@ -352,7 +328,6 @@ describe("phase actor, step, and cost resolution", () => {
             actorOnlyOverride: defineInteraction<typeof contract>()({
               inputs: {},
               actor: () => "player-1",
-              visibility: "actorsOnly",
               reduce({ state, accept }) {
                 return accept(state);
               },
@@ -389,7 +364,7 @@ describe("phase actor, step, and cost resolution", () => {
       actorDescriptors.find((d) => d.interactionId === "spendGold"),
     ).toMatchObject({
       availability: {
-        status: "insufficientResources",
+        status: "blocked",
         reason: "INSUFFICIENT_RESOURCES",
       },
     });
@@ -400,12 +375,7 @@ describe("phase actor, step, and cost resolution", () => {
     );
     expect(
       nonActorDescriptors.find((d) => d.interactionId === "spendGold"),
-    ).toMatchObject({
-      availability: {
-        status: "notYourTurn",
-        reason: "Not your turn",
-      },
-    });
+    ).toBeUndefined();
     const notActor = await bundle.validateInput({
       state,
       input: {
@@ -420,7 +390,7 @@ describe("phase actor, step, and cost resolution", () => {
       errorCode: "NOT_YOUR_TURN",
     });
   });
-  test("interaction actor with actorsOnly replaces prompt addressee routing", async () => {
+  test("interaction actor overrides its phase actor", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createResourceTable(),
@@ -495,13 +465,6 @@ describe("phase actor, step, and cost resolution", () => {
     });
   });
 });
-// ─────────────────────────────────────────────────────────────────────────
-// Scenario B — default action-kind interactions (the common path).
-//
-// `act` is `kind: "action"` without a `to` selector. Authorization
-// defaults to "active player only"; we verify both the descriptor
-// projection and the submit path.
-// ─────────────────────────────────────────────────────────────────────────
 describe("default action-kind authorization", () => {
   function makeBundle() {
     const contract = defineGameContract({
@@ -569,13 +532,16 @@ describe("default action-kind authorization", () => {
     expect(active.find((d) => d.interactionId === "act")).toMatchObject({
       availability: { status: "available" },
     });
-    const inactive = getAvailableInteractions(bundle, initial, "player-2");
-    expect(inactive.find((d) => d.interactionId === "act")).toMatchObject({
-      availability: {
-        status: "notYourTurn",
-        reason: "Not your turn",
-      },
+    expect(
+      bundle.project({ state: initial, playerIds: ["player-1"] }).schedulerFlow,
+    ).toEqual({
+      version: 1,
+      activePlayerIds: ["player-1"],
+      pendingPlayerIds: [],
+      continuationDependencies: [],
     });
+    const inactive = getAvailableInteractions(bundle, initial, "player-2");
+    expect(inactive.find((d) => d.interactionId === "act")).toBeUndefined();
   });
   test("descriptor and submit: authorization reason wins over step mismatch for non-active player", async () => {
     const bundle = makeBundle();
@@ -591,12 +557,9 @@ describe("default action-kind authorization", () => {
       },
     });
     const inactive = getAvailableInteractions(bundle, initial, "player-2");
-    expect(inactive.find((d) => d.interactionId === "rollOnly")).toMatchObject({
-      availability: {
-        status: "notYourTurn",
-        reason: "Not your turn",
-      },
-    });
+    expect(
+      inactive.find((d) => d.interactionId === "rollOnly"),
+    ).toBeUndefined();
     const rejected = await bundle.validateInput({
       state: initial,
       input: {
@@ -645,29 +608,7 @@ describe("default action-kind authorization", () => {
     expect(accepted.valid).toBe(true);
   });
 });
-// ─────────────────────────────────────────────────────────────────────────
-// Scenario C — author `available` predicate still composes.
-// ─────────────────────────────────────────────────────────────────────────
-// ─────────────────────────────────────────────────────────────────────────
-// Scenario D — `to` selector that returns an empty set (a "closed" prompt).
-//
-// This is the shape every "open-for-a-while, then close" prompt has —
-// `respondToTrade` after `pendingTrade` clears, `discardCards` when
-// nobody has to discard, "select which discard pile to take from" after
-// the deck empties, and so on.
-//
-// Historically the bundle conflated "selector undefined" with "selector
-// returned null/empty": both fell back to `mode: "active"`. That leaked
-// closed prompts back to the turn's active player (descriptor showed up
-// with available status despite there being nothing to respond to) and
-// rendered stale "Not your turn" descriptors to every non-active seat.
-//
-// The contract now is: an `interaction.to` that is DEFINED but resolves
-// to an empty set is authoritative — it means "no addressees right now".
-// The descriptor is suppressed for every seat, and any stray submission
-// is rejected with `prompt-not-owned`.
-// ─────────────────────────────────────────────────────────────────────────
-describe("closed prompt (`to` resolves to empty set)", () => {
+describe("closed response (`actor` resolves to empty set)", () => {
   function makeBundle() {
     const contract = defineGameContract({
       manifest: createManifestContract(),
@@ -683,7 +624,6 @@ describe("closed prompt (`to` resolves to empty set)", () => {
     const game = defineGame({
       contract,
       initial: {
-        // `pendingRespondents` is empty — the prompt is closed.
         public: () => ({ pendingRespondents: [] }),
         private: () => ({}),
         hidden: () => ({}),
@@ -700,7 +640,7 @@ describe("closed prompt (`to` resolves to empty set)", () => {
           interactions: {
             respond: defineInteraction<typeof contract>()({
               inputs: {},
-              to: ({ state }) => state.publicState.pendingRespondents,
+              actor: ({ state }) => state.publicState.pendingRespondents,
               reduce({ state, accept }) {
                 return accept(state);
               },
@@ -715,7 +655,7 @@ describe("closed prompt (`to` resolves to empty set)", () => {
     });
     return createReducerTestingBundle(game);
   }
-  test("descriptor: the closed prompt is invisible to every seat (no leak to the active player)", async () => {
+  test("descriptor: the closed response is invisible to every seat (no leak to the active player)", async () => {
     const bundle = makeBundle();
     const initial = await bundle.initialize({
       table: createTable(),
@@ -726,7 +666,7 @@ describe("closed prompt (`to` resolves to empty set)", () => {
       expect(descriptors).toEqual([]);
     }
   });
-  test("submit: every seat is rejected with prompt-not-owned, not NOT_YOUR_TURN", async () => {
+  test("submit: every seat is rejected with NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
     const initial = await bundle.initialize({
       table: createTable(),
@@ -743,28 +683,12 @@ describe("closed prompt (`to` resolves to empty set)", () => {
         },
       });
       expect(rejected.valid).toBe(false);
-      // The author declared a `to` selector — an empty result still
-      // means "addressee-driven", just with no current addressees.
-      // Rejecting with NOT_YOUR_TURN here would hide the real reason
-      // and confuse the UI's "Not your turn" affordance.
-      expect(rejected.errorCode).toBe("prompt-not-owned");
+      expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
     }
   });
 });
-// ─────────────────────────────────────────────────────────────────────────
-// Scenario E — action-kind interactions with a `to` selector are also
-// addressee-driven. `discardCards` (forced-discard after a 7 is rolled)
-// is declared `kind: "action"` and `surface: "blocker"` but has
-// `to: ({ state }) => state.phase.discardPending`. The captains who need
-// to discard are the addressees; everyone else — including the active
-// player — must not see the descriptor. Historically only prompt-kind
-// interactions were suppressed for non-addressees, which meant the
-// active player saw a `"Discard"` blocker descriptor marked as
-// not-your-turn even when they didn't need to
-// discard. Hiding it is the only correct answer.
-// ─────────────────────────────────────────────────────────────────────────
-describe("action-kind interactions with a `to` selector", () => {
-  test("descriptor: only addressees see an action-kind interaction with `to`; non-addressees (incl. active player) do not", async () => {
+describe("action-kind interactions with a `actor` selector", () => {
+  test("descriptor: only recipients see an action-kind interaction with `actor`; non-recipients (incl. active player) do not", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -795,7 +719,7 @@ describe("action-kind interactions with a `to` selector", () => {
           interactions: {
             discard: defineInteraction<typeof contract>()({
               inputs: {},
-              to: ({ state }) => state.publicState.mustDiscard,
+              actor: ({ state }) => state.publicState.mustDiscard,
               reduce({ state, accept }) {
                 return accept(state);
               },
@@ -813,25 +737,21 @@ describe("action-kind interactions with a `to` selector", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    // Active player is player-1 but the `to` selector names player-2.
-    // Before the fix, player-1 got the descriptor with
-    // not-your-turn availability — misleading chrome. The
-    // descriptor should be suppressed entirely for player-1.
     const activeNonAddressee = getAvailableInteractions(
       bundle,
       initial,
       "player-1",
     );
     expect(activeNonAddressee).toEqual([]);
-    const addressee = getAvailableInteractions(bundle, initial, "player-2");
-    expect(addressee).toHaveLength(1);
-    expect(addressee[0].interactionId).toBe("discard");
-    expect(addressee[0].kind).toBe("action");
-    expect(addressee[0].availability).toEqual({ status: "available" });
+    const recipient = getAvailableInteractions(bundle, initial, "player-2");
+    expect(recipient).toHaveLength(1);
+    expect(recipient[0].interactionId).toBe("discard");
+    expect(recipient[0].kind).toBe("action");
+    expect(recipient[0].availability).toEqual({ status: "available" });
   });
 });
 describe("author `available` predicate composes with authorization", () => {
-  test("addressee's availability still respects the author's `available` predicate", async () => {
+  test("recipient's availability still respects the author's `available` predicate", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -859,7 +779,7 @@ describe("author `available` predicate composes with authorization", () => {
           interactions: {
             gatedRespond: defineInteraction<typeof contract>()({
               inputs: {},
-              to: ({ state }) => state.publicState.askPlayer,
+              actor: ({ state }) => state.publicState.askPlayer,
               rules: [
                 {
                   id: "gated-respond-unavailable",
@@ -885,14 +805,10 @@ describe("author `available` predicate composes with authorization", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-    // Descriptor path.
     const descriptors = getAvailableInteractions(bundle, initial, "player-2");
     expect(descriptors).toHaveLength(1);
     expect(descriptors[0].availability.status).toBe("blocked");
-    // Crucially NOT "Not your turn" — the addressee IS the actor; it's
-    // the predicate that denied.
     expect(descriptors[0].availability.reason).toBe("Interaction unavailable");
-    // Submit path.
     const rejected = await bundle.validateInput({
       state: initial,
       input: {

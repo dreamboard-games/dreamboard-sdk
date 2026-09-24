@@ -1,3 +1,4 @@
+import type { RuntimeRecord } from "../model/table";
 import { compileManifest } from "../manifest/compiler";
 import type {
   AuthoredManifest,
@@ -23,7 +24,6 @@ import type { AnyReducerGameContract } from "./types";
 import {
   validateDefineGamePhaseNames,
   validateDefineGameSimultaneousPhases,
-  validateDefineGameZoneWiring,
 } from "./validation";
 
 export function defineGameDefinition<
@@ -38,7 +38,6 @@ export function defineGameDefinition<
 ): ReducerGameDefinition<Contract, Definitions, Views> {
   validateDefineGamePhaseNames(definition);
   validateDefineGameSimultaneousPhases(definition);
-  validateDefineGameZoneWiring(definition);
   return definition;
 }
 
@@ -58,11 +57,15 @@ export function createGame<
   HiddenSchema extends SchemaLike<object>,
   const Phases extends Record<string, SchemaLike<object>>,
   const Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 >(model: {
   manifest: Manifest;
   state: { public: PublicSchema; private: PrivateSchema; hidden: HiddenSchema };
   phases: Phases;
   errors?: Errors;
+  options?: OptionsSchema;
 }): import("./contract-authoring").GameAuthoring<
   DefinedGameContract<
     ManifestTable<Manifest>,
@@ -71,7 +74,8 @@ export function createGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >
 >;
 
@@ -90,6 +94,9 @@ export function createGame<
   HiddenSchema extends SchemaLike<object>,
   const Phases extends Record<string, SchemaLike<object>>,
   const Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 >(
   model: ReducerGameContractInput<
     Table,
@@ -98,7 +105,8 @@ export function createGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >,
 ): import("./contract-authoring").GameAuthoring<
   DefinedGameContract<
@@ -108,7 +116,8 @@ export function createGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >
 >;
 export function createGame(
@@ -127,7 +136,8 @@ export function createGame(
         SchemaLike<object>,
         SchemaLike<object>,
         Record<string, SchemaLike<object>>,
-        Record<string, string> | undefined
+        Record<string, string> | undefined,
+        SchemaLike<RuntimeRecord>
       >
     | {
         manifest: AuthoredManifest;
@@ -138,6 +148,7 @@ export function createGame(
         };
         phases: Record<string, SchemaLike<object>>;
         errors?: Record<string, string>;
+        options?: SchemaLike<RuntimeRecord>;
       },
 ): unknown {
   const manifest =
@@ -182,6 +193,9 @@ export function defineGame<
   HiddenSchema extends SchemaLike<object>,
   const Phases extends Record<string, SchemaLike<object>>,
   const Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
   Contract extends DefinedGameContract<
     Table,
     Manifest,
@@ -189,7 +203,8 @@ export function defineGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   > = DefinedGameContract<
     Table,
     Manifest,
@@ -197,7 +212,8 @@ export function defineGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >,
   Definitions extends PhaseMapOf<Contract> = PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract> = ViewMapOf<Contract>,
@@ -209,7 +225,8 @@ export function defineGame<
     PrivateSchema,
     HiddenSchema,
     Phases,
-    Errors
+    Errors,
+    OptionsSchema
   >,
   implement: (
     game: import("./contract-authoring").GameAuthoring<Contract>,

@@ -6,7 +6,6 @@ import {
   cardInput,
   cardTarget,
   choiceTarget,
-  promptInput,
 } from "../reducer/internal";
 import type { CollectorState } from "./model/spec";
 
@@ -213,13 +212,9 @@ describe("target rules", () => {
       message: undefined,
     });
 
-    const input = promptInput({
-      schema: z.enum(["yes", "no"]),
-      target,
-    });
-    expect(input.validateTarget?.(state, "player-1", q, "no")).toEqual({
-      errorCode: "choice-blocked",
-      message: undefined,
-    });
+    expect(target.options(ctx)).toEqual([
+      { id: "yes", label: "Yes" },
+      { id: "no", label: "No" },
+    ]);
   });
 });

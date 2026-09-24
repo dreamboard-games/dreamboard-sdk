@@ -56,8 +56,6 @@ test("materializeManifestTable rejects player-scoped seed homes without ownerId"
       },
     ],
     resources: [],
-    setupOptions: [],
-    setupProfiles: [],
   } satisfies GameTopologyManifest;
 
   expect(() =>

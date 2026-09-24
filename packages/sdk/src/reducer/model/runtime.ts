@@ -1,17 +1,16 @@
-import type { RuntimePayload, RuntimeTableRecord } from "./table";
+import type {
+  RuntimePayload,
+  RuntimeTableRecord,
+  RuntimeRecord,
+} from "./table";
 import type {
   PhaseNameOfState,
   PlayerIdOfState,
   PlayerIdOfTable,
-  RuntimeSetupSelection,
 } from "./extract";
 // --- Shared authoring primitives ---
 
-/**
- * Declarative choice option. Retained as the shape used by prompt-kind
- * interactions' `options` field (see `InteractionSpec.options` in
- * `model/spec.ts`). Independent of any specific prompt authoring API.
- */
+/** A labeled finite choice. */
 export type ChoiceOption<OptionId extends string = string> = {
   id: OptionId;
   label: string;
@@ -92,10 +91,10 @@ export type RuntimeSimultaneousState<
 export type RuntimeState<
   PhaseName extends string,
   PlayerId extends string,
-  Setup extends RuntimeSetupSelection = RuntimeSetupSelection,
+  Options extends RuntimeRecord = RuntimeRecord,
 > = {
   rng: RuntimeRngState;
-  setup: Setup | null;
+  options: Options;
   simultaneous: RuntimeSimultaneousState<PhaseName, PlayerId>;
   lastTransition: {
     from: PhaseName;
@@ -105,8 +104,8 @@ export type RuntimeState<
 
 export type ReducerRuntimeStateForState<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Setup extends RuntimeSetupSelection = RuntimeSetupSelection,
-> = RuntimeState<PhaseNameOfState<State>, PlayerIdOfState<State>, Setup>;
+  Options extends RuntimeRecord = RuntimeRecord,
+> = RuntimeState<PhaseNameOfState<State>, PlayerIdOfState<State>, Options>;
 
 export type ReducerGameState<
   Table extends RuntimeTableRecord,
@@ -127,10 +126,10 @@ export type ReducerGameState<
 
 export type ReducerSessionState<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Setup extends RuntimeSetupSelection = RuntimeSetupSelection,
+  Options extends RuntimeRecord = RuntimeRecord,
 > = {
   domain: State;
-  runtime: ReducerRuntimeStateForState<State, Setup>;
+  runtime: ReducerRuntimeStateForState<State, Options>;
 };
 
 // --- Results ---

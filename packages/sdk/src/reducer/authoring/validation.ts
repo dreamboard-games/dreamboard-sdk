@@ -1,9 +1,4 @@
-import {
-  isManifestScopedSchema,
-  type ManifestContract,
-  type RuntimeTableRecord,
-  type SchemaLike,
-} from "../model";
+import { isManifestScopedSchema, type SchemaLike } from "../model";
 import type { InputCollector } from "../model";
 import {
   getObjectShape,
@@ -51,8 +46,6 @@ const MANIFEST_SCOPED_ID_NAMES = [
   "pieceTypeId",
   "dieId",
   "dieTypeId",
-  "setupOptionId",
-  "setupProfileId",
   "cardSetId",
   "cardType",
 ] as const;
@@ -205,7 +198,6 @@ export function validateDefineGamePhaseNames(definition: {
   contract: AnyReducerGameContract;
   phases: Record<string, unknown>;
   initialPhase?: string;
-  setupProfiles?: Record<string, { initialPhase?: string }>;
 }): void {
   const contractPhaseNames = (
     definition.contract as AnyReducerGameContract & {
@@ -240,74 +232,6 @@ export function validateDefineGamePhaseNames(definition: {
     throw new Error(
       `defineGame: initialPhase '${definition.initialPhase}' is not declared in contract.phaseNames.`,
     );
-  }
-  if (definition.setupProfiles) {
-    for (const [profileId, profile] of Object.entries(
-      definition.setupProfiles,
-    )) {
-      const initial = profile?.initialPhase;
-      if (initial !== undefined && !declared.has(initial)) {
-        throw new Error(
-          `defineGame: setupProfiles.${profileId}.initialPhase '${initial}' is not declared in contract.phaseNames.`,
-        );
-      }
-    }
-  }
-}
-
-export function validateDefineGameZoneWiring(definition: {
-  contract: {
-    manifest: ManifestContract<RuntimeTableRecord>;
-  };
-  phases: Record<string, unknown>;
-}): void {
-  const manifestPlayerZoneIds = new Set(
-    definition.contract.manifest.literals.playerZoneIds ?? [],
-  );
-  for (const [phaseName, phase] of Object.entries(definition.phases)) {
-    const phaseRecord =
-      typeof phase === "object" && phase !== null
-        ? (phase as {
-            zones?: Record<string, unknown>;
-          })
-        : null;
-    if (!phaseRecord) continue;
-
-    if (phaseRecord.zones !== undefined && !Array.isArray(phaseRecord.zones)) {
-      const zonesRecord =
-        typeof phaseRecord.zones === "object" && phaseRecord.zones !== null
-          ? (phaseRecord.zones as Record<string, unknown>)
-          : null;
-      const hasRemovedZoneSpec =
-        zonesRecord &&
-        Object.values(zonesRecord).some(
-          (zone) =>
-            typeof zone === "object" &&
-            zone !== null &&
-            ("cardsFrom" in zone || "playableVia" in zone || "from" in zone),
-        );
-      if (hasRemovedZoneSpec) {
-        throw new Error(
-          `defineGame: phases.${phaseName}.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] instead.`,
-        );
-      }
-      throw new Error(
-        `defineGame: phases.${phaseName}.zones must be an array of manifest player zone ids.`,
-      );
-    }
-
-    for (const [index, zoneId] of (phaseRecord.zones ?? []).entries()) {
-      if (typeof zoneId !== "string") {
-        throw new Error(
-          `defineGame: phases.${phaseName}.zones[${index}] must be a manifest player zone id string.`,
-        );
-      }
-      if (!manifestPlayerZoneIds.has(zoneId)) {
-        throw new Error(
-          `defineGame: phases.${phaseName}.zones[${index}] '${zoneId}' is not declared in manifest.literals.playerZoneIds.`,
-        );
-      }
-    }
   }
 }
 

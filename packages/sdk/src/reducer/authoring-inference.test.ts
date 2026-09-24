@@ -34,8 +34,6 @@ function createModel() {
       literals: {
         playerIds,
         phaseNames,
-        setupOptionIds: [] as const,
-        setupProfileIds: [] as const,
         cardSetIds: [] as const,
         cardTypes,
         deckIds: [] as const,
@@ -72,8 +70,6 @@ function createModel() {
       ids: {
         playerId: createManifestStringLiteralSchema(playerIds),
         phaseName: createManifestStringLiteralSchema(phaseNames),
-        setupOptionId: createManifestStringLiteralSchema([] as const),
-        setupProfileId: createManifestStringLiteralSchema([] as const),
         cardSetId: createManifestStringLiteralSchema([] as const),
         cardType: createManifestStringLiteralSchema(cardTypes),
         cardId: createManifestStringLiteralSchema(cardIds),
@@ -112,9 +108,6 @@ function createModel() {
         visibility: () => ({}),
         resources: () => perPlayer([], () => ({})),
       },
-      setupOptionsById: {},
-      setupChoiceIdsByOptionId: {},
-      setupProfilesById: {},
       tableSchema: z.custom<RuntimeTableRecord>(),
       runtimeSchema: z.any(),
       createGameStateSchema: () => z.any(),

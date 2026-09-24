@@ -28,6 +28,7 @@ export type ContractFingerprint = {
     publicState: string;
     privateState: string;
     hiddenState: string;
+    options: string;
     phases: Record<string, string>;
     errors: string;
   };
@@ -54,6 +55,7 @@ export function contractFingerprint(
     publicState: hashSchema(contract.state.public),
     privateState: hashSchema(contract.state.private),
     hiddenState: hashSchema(contract.state.hidden),
+    options: hashSchema(contract.options),
     phases: Object.fromEntries(
       phaseEntries.map(([phaseName, phase]) => [
         phaseName,

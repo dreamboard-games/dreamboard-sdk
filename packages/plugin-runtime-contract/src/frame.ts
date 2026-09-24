@@ -84,11 +84,6 @@ export type InteractionAvailability =
   | { readonly status: "available" }
   | { readonly status: "notYourTurn"; readonly reason: string }
   | {
-      readonly status: "insufficientResources";
-      readonly reason: string;
-      readonly missingResources: Readonly<Record<string, number>>;
-    }
-  | {
       readonly status: "blocked";
       readonly reason: string;
       readonly code?: string;
@@ -97,27 +92,6 @@ export type InteractionAvailability =
 export interface InteractionDiagnosticReason {
   readonly ruleId: string;
   readonly errorCode: string;
-}
-
-export interface SetupGuidanceStep {
-  readonly id: string;
-  readonly label: string;
-  readonly description?: string;
-}
-
-export interface GameGuidanceProjection {
-  readonly phase: {
-    readonly id: string;
-    readonly label: string;
-    readonly summary?: string;
-    readonly objective?: string;
-  };
-  readonly setup?: {
-    readonly profileId: string;
-    readonly name: string;
-    readonly summary?: string;
-    readonly steps: readonly SetupGuidanceStep[];
-  };
 }
 
 interface InteractionDescriptorBase<Interaction extends string = string> {
@@ -133,8 +107,6 @@ interface InteractionDescriptorBase<Interaction extends string = string> {
   readonly actorSeat?: number;
   readonly draftDigest?: string;
   readonly inputs: readonly InteractionInputDescriptor[];
-  readonly cost?: Readonly<Record<string, RuntimeJson>>;
-  readonly currentResources?: Readonly<Record<string, RuntimeJson>>;
   readonly availability: InteractionAvailability;
   readonly reasons?: readonly InteractionDiagnosticReason[];
 }
@@ -144,27 +116,8 @@ export type ActionInteractionDescriptor<Interaction extends string = string> =
     readonly kind: "action";
   };
 
-export interface InteractionContextOption {
-  readonly id: string;
-  readonly label?: string;
-}
-
-export interface InteractionContext {
-  readonly to: string;
-  readonly title?: string;
-  readonly payload?: Readonly<Record<string, RuntimeJson>>;
-  readonly options?: readonly InteractionContextOption[];
-}
-
-export type PromptInteractionDescriptor<Interaction extends string = string> =
-  InteractionDescriptorBase<Interaction> & {
-    readonly kind: "prompt";
-    readonly context: InteractionContext;
-  };
-
 export type InteractionDescriptor<Interaction extends string = string> =
-  | ActionInteractionDescriptor<Interaction>
-  | PromptInteractionDescriptor<Interaction>;
+  ActionInteractionDescriptor<Interaction>;
 
 export interface ZoneHandlesSnapshot<Interaction extends string = string> {
   readonly cardIds: readonly string[];
@@ -245,7 +198,6 @@ export interface PluginGameplayFrame<
   readonly availableInteractions: ReadonlyArray<
     InteractionDescriptor<Interaction>
   >;
-  readonly guidance?: GameGuidanceProjection | null;
   readonly zones: Readonly<Record<string, ZoneHandlesSnapshot<Interaction>>>;
 }
 
@@ -262,7 +214,6 @@ export interface ReducerSeatProjectionBundle {
       readonly blockerPlayerIds: readonly string[];
     }[];
   };
-  readonly guidance?: GameGuidanceProjection | null;
   readonly sharedView?: unknown;
   readonly interactionsByRef?: unknown;
   readonly seats: Readonly<

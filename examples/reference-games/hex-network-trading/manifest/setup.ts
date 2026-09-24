@@ -12,6 +12,3 @@ export const resources = [
   { id: "brick", name: "Brick", icon: "🧱" },
   { id: "provisions", name: "Provisions", icon: "🌾" },
 ] as const;
-
-export const setupOptions = [] as const;
-export const setupProfiles = [] as const;

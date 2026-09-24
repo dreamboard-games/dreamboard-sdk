@@ -80,7 +80,6 @@ export function createInteractionResolver<
     collectEligibleTargets,
     collectFirstCardZoneId,
     enumerateInteractionParams: decisions.enumerateInteractionParams,
-    evaluateInteractionCost: decisions.evaluateInteractionCost,
     explainInteraction: decisions.explainInteraction,
     findCardInputKey,
     findCardInputKeyForZone,

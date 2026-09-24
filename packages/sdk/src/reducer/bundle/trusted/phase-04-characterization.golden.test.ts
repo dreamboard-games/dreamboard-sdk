@@ -75,8 +75,6 @@ function createManifestContract() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -111,8 +109,6 @@ function createManifestContract() {
     ids: {
       playerId: z.enum(playerIds),
       phaseName: z.enum(phaseNames),
-      setupOptionId: z.string(),
-      setupProfileId: z.string(),
       cardSetId: z.string(),
       cardType: z.string(),
       cardId: z.string(),
@@ -148,8 +144,6 @@ function createManifestContract() {
       visibility: () => ({}),
       resources: () => perPlayer([], () => ({})),
     },
-    setupOptionsById: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),

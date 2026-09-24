@@ -4,8 +4,7 @@ import { stormtrail } from "../game-model";
 const pendingTrade = stormtrail.phase("pendingTrade");
 
 const acceptTrade = pendingTrade.interaction({
-  to: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
-  visibility: "actorsOnly",
+  actor: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
   inputs: {},
   rules: [
     {
@@ -72,8 +71,7 @@ const acceptTrade = pendingTrade.interaction({
 });
 
 const rejectTrade = pendingTrade.interaction({
-  to: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
-  visibility: "actorsOnly",
+  actor: ({ state }) => state.publicState.currentTrade?.targetPlayerId,
   inputs: {},
   reduce({ state, tx }) {
     const trade = state.publicState.currentTrade;

@@ -21,8 +21,6 @@ function buildMinimalManifest() {
     literals: {
       playerIds,
       phases: { "phase-1": z.object({}) },
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -55,8 +53,6 @@ function buildMinimalManifest() {
     ids: {
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: z.enum(["phase-1"] as const),
-      setupOptionId: createManifestStringLiteralSchema([] as const),
-      setupProfileId: createManifestStringLiteralSchema([] as const),
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema([] as const),
       cardId: createManifestStringLiteralSchema([] as const),
@@ -91,9 +87,6 @@ function buildMinimalManifest() {
       visibility: () => ({}),
       resources: () => perPlayer([], () => ({})),
     },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),

@@ -142,7 +142,6 @@ export default playing.define({
   kind: "player",
   initialState: () => ({ leadSuit: null, plays: [] }),
   actor: ({ state }) => state.flow.activePlayers,
-  zones: ["hand"],
   enter({ tx, q }) {
     for (const playerId of q.player.order()) {
       if (q.zone.playerCards(playerId, "hand").includes("clubs-2")) {

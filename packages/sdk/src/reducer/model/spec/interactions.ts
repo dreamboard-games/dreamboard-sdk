@@ -1,10 +1,6 @@
 import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { ManifestContract } from "../manifest";
-import type {
-  PlayerIdOfState,
-  PlayerZoneIdOfManifest,
-  TableOfState,
-} from "../extract";
+import type { PlayerIdOfState, TableOfState } from "../extract";
 import type { ReducerResult } from "../runtime";
 import type {
   ActionContext,
@@ -124,33 +120,11 @@ type InteractionCommitPolicyFor<
     ? { mode: "manual" }
     : InteractionCommitPolicy;
 
-/**
- * Projection-level interaction kind, derived by the trusted bundle from
- * collector shape:
- *
- * - `"action"`: any interaction whose inputs are ordinary collectors
- *   (`formInput`, `cardInput`).
- * - `"prompt"`: any interaction whose inputs include a `promptInput`
- *   collector. Prompt descriptors carry addressed-player context and options
- *   so UI primitives can render response controls without reducer-owned
- *   placement metadata.
- *
- * Authors never set this directly — the `promptInput(...)` collector is
- * the single source of truth for prompt semantics. See {@link promptInput}
- * and {@link InteractionDescriptor.kind}.
- */
-export type InteractionKind = "action" | "prompt";
+export type InteractionKind = "action";
 
 export type InteractionPresentation = {
   label: string;
   help?: string;
-};
-
-export type InteractionToArgs<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-> = ActionContext<State, Manifest> & {
-  state: State;
 };
 
 export type InteractionSpec<
@@ -183,37 +157,9 @@ export type InteractionSpec<
    * explicit player intent, so `autoWhenReady` is intentionally not accepted.
    */
   commit?: InteractionCommitPolicyFor<Collectors>;
-  /**
-   * Addressed-player selector, used by prompt-kind interactions. When
-   * present, the trusted bundle only emits this descriptor for players in
-   * the returned set (or the single player, if a scalar is returned). Use
-   * to thread e.g. `state.publicState.knowerPlayerId` through without
-   * having to manage `activePlayers`. `undefined` / empty returns fall back
-   * to the standard `activePlayers` gating used by action-kind interactions.
-   */
-  to?: BivariantCallback<
-    InteractionToArgs<State, Manifest>,
-    | PlayerIdOfState<State>
-    | ReadonlyArray<PlayerIdOfState<State>>
-    | null
-    | undefined
-  >;
-  /**
-   * Explicit actor selector. Overrides the phase-level actor for this
-   * interaction. Prefer this over `to` for new non-prompt interactions; `to`
-   * remains the prompt/addressee shorthand.
-   */
+  /** Overrides the phase actor and limits input domains to the selected seats. */
   actor?: ActorSelector<State, Manifest>;
-  /**
-   * Descriptor visibility policy. `all` keeps non-actors visible but disabled;
-   * `actorsOnly` suppresses descriptors for seats that cannot act.
-   */
-  visibility?: "all" | "actorsOnly";
   errorCodes?: readonly ErrorCode[];
-  cost?: BivariantCallback<
-    InteractionValidateArgs<Collectors, State, Manifest>,
-    Readonly<Record<string, number>>
-  >;
   rules?: readonly InteractionRule<
     NoInfer<Collectors>,
     State,
@@ -246,13 +192,11 @@ export type AnyInteractionSpec<
   Manifest extends ManifestContract<TableOfState<State>>,
 > = Omit<
   InteractionSpec<any, State, Manifest, any>,
-  "actor" | "cost" | "rules" | "reduce" | "to"
+  "actor" | "rules" | "reduce"
 > & {
   actor?: BivariantCallback<any, any>;
-  cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
   rules?: readonly AnyInteractionRule[];
   reduce: BivariantCallback<any, ReducerResult<any> | void>;
-  to?: BivariantCallback<any, any>;
 };
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
@@ -260,7 +204,3 @@ export type InteractionMap<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = Record<string, AnyInteractionSpec<State, Manifest>>;
-
-export type PhaseZoneList<
-  Manifest extends ManifestContract<RuntimeTableRecord>,
-> = readonly PlayerZoneIdOfManifest<Manifest>[];

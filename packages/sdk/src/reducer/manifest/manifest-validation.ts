@@ -12,7 +12,6 @@ import type {
   PieceSeedSpec,
   PieceTypeSpec,
   PropertySchema,
-  SetupOptionSpec,
   ZoneSpec,
 } from "@dreamboard-games/sdk-types";
 import { resolveHexVertexGeometryKey } from "./hex-geometry.js";
@@ -366,48 +365,6 @@ function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
   return issues;
 }
 
-function validateSetupProfileReferences(
-  manifest: GameTopologyManifest,
-): string[] {
-  const issues: string[] = [];
-  const optionChoiceIdsByOptionId = new Map<string, Set<string>>(
-    (manifest.setupOptions ?? []).map((option, optionIndex) => {
-      const choiceIds = new Set<string>();
-      for (const choice of option.choices ?? []) {
-        choiceIds.add(choice.id);
-      }
-      if (!option.id) {
-        issues.push(
-          `manifest.setupOptions[${optionIndex}].id: Missing option id.`,
-        );
-      }
-      return [option.id, choiceIds];
-    }),
-  );
-
-  for (const [profileIndex, profile] of (
-    manifest.setupProfiles ?? []
-  ).entries()) {
-    const optionValues = profile.optionValues ?? {};
-    for (const [optionId, choiceId] of Object.entries(optionValues)) {
-      const allowedChoices = optionChoiceIdsByOptionId.get(optionId);
-      if (!allowedChoices) {
-        issues.push(
-          `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}: Unknown setup option '${optionId}'.`,
-        );
-        continue;
-      }
-      if (!allowedChoices.has(choiceId)) {
-        issues.push(
-          `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}: Unknown choice '${choiceId}' for setup option '${optionId}'.`,
-        );
-      }
-    }
-  }
-
-  return issues;
-}
-
 function validatePlayerScopedSeedHomes(
   manifest: GameTopologyManifest,
 ): string[] {
@@ -633,26 +590,6 @@ function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
           path: `manifest.boards[${index}].relations[${relationIndex}].id`,
         })),
         label: "relation id",
-      }),
-    );
-  }
-
-  return issues;
-}
-
-function validateSetupOptionChoiceDuplicates(
-  options: readonly SetupOptionSpec[],
-): string[] {
-  const issues: string[] = [];
-
-  for (const [optionIndex, option] of options.entries()) {
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (option.choices ?? []).map((choice, choiceIndex) => ({
-          id: choice.id,
-          path: `manifest.setupOptions[${optionIndex}].choices[${choiceIndex}].id`,
-        })),
-        label: "setup option choice id",
       }),
     );
   }
@@ -1163,38 +1100,6 @@ function collectManifestRecordKeyIssues(
         value: dieId,
         path: `manifest.dieSeeds[*][${index}]`,
       })),
-      ...(manifest.setupOptions ?? []).flatMap((option, optionIndex) => [
-        {
-          value: option.id,
-          path: `manifest.setupOptions[${optionIndex}].id`,
-        },
-        ...(option.choices ?? []).map((choice, choiceIndex) => ({
-          value: choice.id,
-          path: `manifest.setupOptions[${optionIndex}].choices[${choiceIndex}].id`,
-        })),
-      ]),
-      ...(manifest.setupProfiles ?? []).flatMap((profile, profileIndex) => [
-        {
-          value: profile.id,
-          path: `manifest.setupProfiles[${profileIndex}].id`,
-        },
-        ...(profile.guidance?.steps ?? []).map((step, stepIndex) => ({
-          value: step.id,
-          path: `manifest.setupProfiles[${profileIndex}].guidance.steps[${stepIndex}].id`,
-        })),
-        ...Object.entries(profile.optionValues ?? {}).flatMap(
-          ([optionId, choiceId]) => [
-            {
-              value: optionId,
-              path: `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}`,
-            },
-            {
-              value: choiceId,
-              path: `manifest.setupProfiles[${profileIndex}].optionValues.${optionId}`,
-            },
-          ],
-        ),
-      ]),
     ]),
     ...cardSets.flatMap((cardSet, cardSetIndex) =>
       collectCardSchemaKeyIssues(cardSet, `manifest.cardSets[${cardSetIndex}]`),
@@ -1337,44 +1242,9 @@ export function validateManifestAuthoring(
       label: "resource id",
     }),
   );
-  errors.push(
-    ...collectDuplicateIdIssues({
-      entries: (manifest.setupOptions ?? []).map((option, index) => ({
-        id: option.id,
-        path: `manifest.setupOptions[${index}].id`,
-      })),
-      label: "setup option id",
-    }),
-  );
-  errors.push(
-    ...validateSetupOptionChoiceDuplicates(manifest.setupOptions ?? []),
-  );
-  errors.push(
-    ...collectDuplicateIdIssues({
-      entries: (manifest.setupProfiles ?? []).map((profile, index) => ({
-        id: profile.id,
-        path: `manifest.setupProfiles[${index}].id`,
-      })),
-      label: "setup profile id",
-    }),
-  );
-  for (const [profileIndex, profile] of (
-    manifest.setupProfiles ?? []
-  ).entries()) {
-    errors.push(
-      ...collectDuplicateIdIssues({
-        entries: (profile.guidance?.steps ?? []).map((step, stepIndex) => ({
-          id: step.id,
-          path: `manifest.setupProfiles[${profileIndex}].guidance.steps[${stepIndex}].id`,
-        })),
-        label: `setup profile '${profile.id}' guidance step id`,
-      }),
-    );
-  }
   errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
-  errors.push(...validateSetupProfileReferences(manifest));
   errors.push(...validateHexBoardVertexRefs(manifest));
 
   return {

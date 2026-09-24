@@ -59,21 +59,6 @@ defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [
-    {
-      id: "default",
-      name: "Default",
-      description: "",
-      choices: [{ id: "default", label: "Default" }],
-    },
-  ],
-  setupProfiles: [
-    {
-      id: "default",
-      name: "Default",
-      optionValues: { default: "default" },
-    },
-  ],
 });
 
 defineTopologyManifest({
@@ -118,21 +103,6 @@ defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [
-    {
-      id: "default",
-      name: "Default",
-      description: "",
-      choices: [{ id: "default", label: "Default" }],
-    },
-  ],
-  setupProfiles: [
-    {
-      id: "default",
-      name: "Default",
-      optionValues: { default: "default" },
-    },
-  ],
 });
 
 defineTopologyManifest({
@@ -184,8 +154,6 @@ defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [],
 });
 
 defineTopologyManifest({
@@ -226,8 +194,6 @@ defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [],
 });
 
 defineTopologyManifest({
@@ -266,6 +232,4 @@ defineTopologyManifest({
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [],
 });

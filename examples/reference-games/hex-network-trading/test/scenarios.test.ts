@@ -210,7 +210,7 @@ test("discard commitments are exact, single-use, and order-independent", async (
   });
   assert.equal(unrequired.kind, "rejected");
   if (unrequired.kind === "rejected") {
-    assert.equal(unrequired.errorCode, "prompt-not-owned");
+    assert.equal(unrequired.errorCode, "NOT_YOUR_TURN");
   }
 
   const afterFirst = await replayScenario({
@@ -225,7 +225,7 @@ test("discard commitments are exact, single-use, and order-independent", async (
   });
   assert.equal(duplicate.kind, "rejected");
   if (duplicate.kind === "rejected") {
-    assert.equal(duplicate.errorCode, "prompt-not-owned");
+    assert.equal(duplicate.errorCode, "NOT_YOUR_TURN");
   }
   assert.equal(afterFirst.checkpointDigest, sourceDigest);
 
@@ -308,7 +308,7 @@ test("pending bilateral trade exposes only the target response and derived block
   });
   assert.equal(wrongActor.kind, "rejected");
   if (wrongActor.kind === "rejected") {
-    assert.equal(wrongActor.errorCode, "prompt-not-owned");
+    assert.equal(wrongActor.errorCode, "NOT_YOUR_TURN");
   }
 });
 

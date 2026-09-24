@@ -217,34 +217,6 @@ export function collectInputDomains<
     if (collector.kind === "rng") {
       continue;
     }
-    if (collector.kind === "prompt") {
-      const optionFactory = collector.meta?.options;
-      if (!optionFactory) continue;
-      result[key] = {
-        type: "choice",
-        choices: optionFactory(domainState, playerId, queries() as unknown).map(
-          (option) => ({
-            value: String(option.id),
-            label: option.label ?? String(option.id),
-            ...(() => {
-              const issue = collector.validateTarget?.(
-                domainState,
-                playerId,
-                queries() as unknown,
-                String(option.id),
-              );
-              return issue
-                ? {
-                    disabled: true,
-                    disabledReason: issue.message ?? issue.errorCode,
-                  }
-                : {};
-            })(),
-          }),
-        ),
-      };
-      continue;
-    }
     if (collector.domain) {
       const domainProjector = collector.domain;
       const dependencies = collector.dependsOn ?? [];
@@ -366,9 +338,6 @@ export function collectInteractionInputs<
       return [];
     }
     const domain = domainsByKey[key];
-    if (!domain && collector.kind === "prompt") {
-      return [];
-    }
     if (!domain) {
       throw unsupportedDefaultInputError(key, collector);
     }
@@ -440,24 +409,4 @@ function warnConcreteDependentChoiceDefault({
       defaultValue,
     )}". Dependent choices that select the object an action applies to should usually use defaultValue: () => undefined so collection stays explicit.`,
   });
-}
-
-export function collectPromptOptions(
-  interaction: {
-    inputs: Record<string, InputCollector>;
-  },
-  domainState: unknown,
-  playerId: string,
-  queries: unknown,
-): Array<{ id: string; label?: string }> | undefined {
-  for (const collector of Object.values(interaction.inputs)) {
-    if (collector.kind !== "prompt") continue;
-    const factory = collector.meta?.options;
-    if (!factory) continue;
-    return factory(domainState, playerId, queries).map((option) => ({
-      id: String(option.id),
-      ...(option.label !== undefined ? { label: option.label } : {}),
-    }));
-  }
-  return undefined;
 }

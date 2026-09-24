@@ -3,14 +3,9 @@ export {
   type ClientParamSchemaMap,
 } from "./context/ClientParamSchemaContext.js";
 
-export type {
-  GameplayPromptOption,
-  GameplaySnapshot,
-} from "./types/plugin-state.js";
+export type { GameplaySnapshot } from "./types/plugin-state.js";
 export type {
   InteractionDescriptor,
-  InteractionContext,
-  InteractionContextOption,
   ZoneHandlesSnapshot,
 } from "./types/plugin-state.js";
 export type { Player } from "./hooks/useMe.js";

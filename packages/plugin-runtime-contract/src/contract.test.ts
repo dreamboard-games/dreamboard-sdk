@@ -144,18 +144,6 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
         currentStage: "play",
         stageSeats: ["player-1"],
         simultaneousPhase: null,
-        guidance: {
-          phase: {
-            id: "play",
-            label: "Play",
-            summary: "Claim a card.",
-          },
-          setup: {
-            profileId: "standard",
-            name: "Standard",
-            steps: [{ id: "shuffle", label: "Shuffle" }],
-          },
-        },
         sharedView: { market: ["card-1"] },
         interactionsByRef: {
           "claim-ref": claimDescriptor,
@@ -191,18 +179,7 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       handSize: 1,
     });
     expect(frame.availableInteractions).toEqual([claimDescriptor]);
-    expect(frame.guidance).toEqual({
-      phase: {
-        id: "play",
-        label: "Play",
-        summary: "Claim a card.",
-      },
-      setup: {
-        profileId: "standard",
-        name: "Standard",
-        steps: [{ id: "shuffle", label: "Shuffle" }],
-      },
-    });
+    expect(frame).not.toHaveProperty("guidance");
     expect(frame.zones.hand?.playableByCardId["card-1"]).toEqual([
       claimDescriptor,
     ]);

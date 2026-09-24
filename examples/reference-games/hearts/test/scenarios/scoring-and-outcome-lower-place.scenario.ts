@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.scoring-and-outcome-lower-place",
   description:
     "Equal second-place scores produce competition ranks 1, 2, 2, 4.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: allHeartsLeadPath.slice(0, 55),
   when: [allHeartsLeadPath[55]],
   then: ({ expect, state }) => {

@@ -5,7 +5,7 @@ import { defineScenario } from "../testing-types.ts";
 export default defineScenario({
   id: "hearts.card-legality-first-lead",
   description: "Only the 2 of Clubs can be the first card of the first trick.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: firstTrickPenaltyPasses,
   when: [play(1, "clubs-2")],
   then: ({ expect, state, view }) => {

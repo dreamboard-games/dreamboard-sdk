@@ -116,8 +116,6 @@ export type ManifestIdsOf<M> = {
   playerId: PlayerId;
   phaseName: string;
   boardLayout: "generic" | "hex" | "square";
-  setupOptionId: Id<Entries<M, "setupOptions">>;
-  setupProfileId: Id<Entries<M, "setupProfiles">>;
   cardSetId: Id<Entries<M, "cardSets">>;
   cardType: CardTypeOf<Cards<M>>;
   cardId: CardIds<Cards<M>>;

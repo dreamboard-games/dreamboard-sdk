@@ -16,7 +16,6 @@ import type {
   PhaseMapOf,
   PhaseNamesOfDefinition,
   PlayerIdOfState,
-  PlayerZoneIdOfManifest,
   ReducerGameContractLike,
   ReducerGameDefinition,
   TableQueriesOfState,
@@ -47,10 +46,6 @@ import {
   toDomainState as codecToDomainState,
   toSessionState as codecToSessionState,
 } from "./trusted-state-codec";
-import {
-  resolveDefaultInitialPhase,
-  resolveTrustedSetupProfiles,
-} from "./trusted-setup-profiles";
 
 export { normalizeResult } from "./trusted-runtime-result";
 export { rejectResult };
@@ -135,10 +130,6 @@ export interface TrustedRuntimeScope<
     ]
   >;
   defaultInitialPhase: TrustedPhaseName<Contract, Definitions, Views>;
-  manifestSetupProfilesById: TrustedManifest<Contract>["setupProfilesById"];
-  reducerSetupProfiles: NonNullable<
-    TrustedDefinition<Contract, Definitions, Views>["setupProfiles"]
-  >;
   runtimeHelpers: TrustedRuntimeHelpers<Contract>;
   toDomainState(state: TrustedState<Contract>): TrustedDomainState<Contract>;
   toCombinedState(
@@ -163,9 +154,6 @@ export interface TrustedRuntimeScope<
   interactionEntriesForPhase(
     phaseName: TrustedPhaseName<Contract, Definitions, Views>,
   ): ReadonlyArray<TrustedInteractionEntry<Contract>>;
-  zonesForPhase(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
-  ): ReadonlyArray<PlayerZoneIdOfManifest<TrustedManifest<Contract>>>;
   buildContext(
     state: TrustedState<Contract>,
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>>;
@@ -204,12 +192,10 @@ export function createTrustedRuntimeScope<
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   const registry = collectTrustedRuntimeRegistry(definition);
   const { phaseEntries } = registry;
-  const defaultInitialPhase = resolveDefaultInitialPhase(
-    definition.initialPhase as PhaseName | undefined,
-    phaseEntries,
-  );
-  const { manifestSetupProfilesById, reducerSetupProfiles } =
-    resolveTrustedSetupProfiles(definition);
+  const defaultInitialPhase = definition.initialPhase ?? phaseEntries[0]?.[0];
+  if (!defaultInitialPhase) {
+    throw new Error("Reducer-native games must define at least one phase.");
+  }
 
   function toDomainState(state: State): DomainState {
     return codecToDomainState<State, DomainState>(state);
@@ -254,10 +240,6 @@ export function createTrustedRuntimeScope<
     return phaseRegistryByName(phaseName)?.interactions ?? [];
   }
 
-  function zonesForPhase(phaseName: PhaseName) {
-    return phaseRegistryByName(phaseName)?.zones ?? [];
-  }
-
   const helpers: TrustedRuntimeHelpers<Contract> = {
     ...runtimeResultHelpers,
     edit: createReducerEdit<DomainState>(),
@@ -292,10 +274,6 @@ export function createTrustedRuntimeScope<
     registry,
     phaseEntries,
     defaultInitialPhase,
-    manifestSetupProfilesById,
-    reducerSetupProfiles: reducerSetupProfiles as NonNullable<
-      TrustedDefinition<Contract, Definitions, Views>["setupProfiles"]
-    >,
     runtimeHelpers: helpers,
     toDomainState,
     toCombinedState,
@@ -304,7 +282,6 @@ export function createTrustedRuntimeScope<
     phaseByName,
     findInteractionInPhase,
     interactionEntriesForPhase,
-    zonesForPhase,
     buildContext,
     buildRuntimeArgs,
   };

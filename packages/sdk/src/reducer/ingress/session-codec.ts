@@ -6,7 +6,6 @@ import type {
   BaseGameSessionOfContract,
   GameStateOf,
   HiddenSchemaOfContract,
-  ManifestContractOf,
   ManifestOf,
   PhaseMapOf,
   PhaseNameOfContract,
@@ -15,7 +14,7 @@ import type {
   PublicSchemaOfContract,
   ReducerGameContractLike,
   ReducerGameDefinition,
-  RuntimeSetupSelection,
+  OptionsOfContract,
   TableOfManifest,
   ViewMapOf,
 } from "../model";
@@ -199,24 +198,23 @@ export function createIngressRuntimeCodec<
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
 ): IngressRuntimeCodec<
   TableOfManifest<ManifestOf<Contract>>,
-  ManifestContractOf<Contract>,
   PublicSchemaOfContract<Contract>,
   PrivateSchemaOfContract<Contract>,
   HiddenSchemaOfContract<Contract>,
-  PhaseNameOfContract<Contract>
+  PhaseNameOfContract<Contract>,
+  OptionsOfContract<Contract>
 > {
   type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
   type DomainState = GameStateOf<Definition>;
   type State = BaseGameSessionOfContract<Contract>;
-  type Manifest = ManifestContractOf<Contract>;
   type PhaseName = PhaseNameOfContract<Contract>;
   type ReturnType = IngressRuntimeCodec<
     TableOfManifest<ManifestOf<Contract>>,
-    Manifest,
     PublicSchemaOfContract<Contract>,
     PrivateSchemaOfContract<Contract>,
     HiddenSchemaOfContract<Contract>,
-    PhaseName
+    PhaseName,
+    OptionsOfContract<Contract>
   >;
   type PlayerId = PlayerIdOfState<DomainState>;
 
@@ -231,6 +229,15 @@ export function createIngressRuntimeCodec<
     round: z.number().int(),
     activePlayers: z.array(playerIdSchema),
   });
+  function parseOptions(rawOptions: unknown): OptionsOfContract<Contract> {
+    const jsonInput = runtimeRecordSchema.parse(rawOptions);
+    const parsed = safeParseOrThrow(
+      definition.contract.options,
+      jsonInput,
+      "options",
+    );
+    return runtimeRecordSchema.parse(parsed) as OptionsOfContract<Contract>;
+  }
   const runtimeStateSchema = z.object({
     rng: z.object({
       seed: z.number().int().nullable(),
@@ -238,12 +245,7 @@ export function createIngressRuntimeCodec<
       trace: z.array(z.string()),
       draws: z.array(ContractZod.RngDrawSchema).default([]),
     }),
-    setup: z
-      .object({
-        profileId: z.string(),
-        optionValues: z.record(z.string(), z.string().nullable()),
-      })
-      .nullable(),
+    options: z.unknown().transform(parseOptions),
     simultaneous: z.object({
       current: z
         .object({
@@ -274,7 +276,7 @@ export function createIngressRuntimeCodec<
   return {
     defaultRuntimeState(
       seed: number | null = null,
-      setup: RuntimeSetupSelection<Manifest> | null = null,
+      options: OptionsOfContract<Contract>,
     ) {
       const runtimeState: State["runtime"] = {
         rng: {
@@ -283,11 +285,14 @@ export function createIngressRuntimeCodec<
           trace: [],
           draws: [],
         },
-        setup,
+        options,
         simultaneous: { current: null },
         lastTransition: null,
       };
       return runtimeState;
+    },
+    parseInitialOptions(rawOptions: unknown) {
+      return parseOptions(rawOptions === undefined ? {} : rawOptions);
     },
     parseInitialTable(rawTable: unknown, playerIds: string[] | undefined) {
       const table = safeParseOrThrow(

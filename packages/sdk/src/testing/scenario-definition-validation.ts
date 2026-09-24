@@ -1,3 +1,4 @@
+import type { Wire } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import {
@@ -12,7 +13,6 @@ export type ScenarioDefinitionValidationCode =
   | "INVALID_VALUE"
   | "UNSAFE_INTEGER"
   | "OUT_OF_RANGE"
-  | "UNKNOWN_SETUP_PROFILE"
   | "UNKNOWN_INTERACTION"
   | "INVALID_COMMAND_PARAMS"
   | "NON_SERIALIZABLE"
@@ -49,7 +49,6 @@ export type ScenarioDefinitionGameLike = {
     readonly manifest: {
       readonly normalSetup?: NormalSetupLike;
       readonly literals: { readonly playerIds: readonly string[] };
-      readonly setupProfilesById: Readonly<Record<string, unknown>>;
     };
   };
   readonly phases: Readonly<Record<string, unknown>>;
@@ -61,7 +60,7 @@ type ScenarioDefinitionLike = {
   readonly setup: {
     readonly players: number;
     readonly seed: number;
-    readonly setupProfileId?: string | null;
+    readonly options?: Readonly<Record<string, Wire.JsonValue>>;
   };
   readonly given: readonly unknown[];
   readonly when: readonly unknown[];
@@ -466,11 +465,7 @@ export function validateScenarioDefinition(
   }
 
   const setup = requireObject(definition.setup, "scenario.setup");
-  assertExactKeys(
-    setup,
-    ["players", "seed", "setupProfileId"],
-    "scenario.setup",
-  );
+  assertExactKeys(setup, ["players", "seed", "options"], "scenario.setup");
   assertOwn(setup, "players", "scenario.setup");
   assertOwn(setup, "seed", "scenario.setup");
   const players = assertSafeInteger(setup.players, "scenario.setup.players");
@@ -496,32 +491,6 @@ export function validateScenarioDefinition(
     });
   }
   assertSafeInteger(setup.seed, "scenario.setup.seed");
-
-  if (Object.prototype.hasOwnProperty.call(setup, "setupProfileId")) {
-    if (
-      setup.setupProfileId !== null &&
-      typeof setup.setupProfileId !== "string"
-    ) {
-      fail({
-        code: "INVALID_TYPE",
-        path: "scenario.setup.setupProfileId",
-        reason: "expected a declared setup profile id or null",
-      });
-    }
-    if (
-      typeof setup.setupProfileId === "string" &&
-      !Object.prototype.hasOwnProperty.call(
-        game.contract.manifest.setupProfilesById,
-        setup.setupProfileId,
-      )
-    ) {
-      fail({
-        code: "UNKNOWN_SETUP_PROFILE",
-        path: "scenario.setup.setupProfileId",
-        reason: `setup profile '${setup.setupProfileId}' is not declared by the manifest`,
-      });
-    }
-  }
 
   assertJsonSerializable(definition.id, "scenario.id");
   if (Object.prototype.hasOwnProperty.call(definition, "description")) {

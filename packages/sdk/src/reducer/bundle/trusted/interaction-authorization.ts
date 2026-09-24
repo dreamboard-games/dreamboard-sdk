@@ -19,7 +19,7 @@ import {
   resolveSimultaneousActors,
 } from "./simultaneous-player";
 
-function resolvePromptToSet<PlayerId extends string>(
+function resolveActorSet<PlayerId extends string>(
   to: unknown,
 ): ReadonlySet<PlayerId> {
   if (to === undefined || to === null) return new Set();
@@ -48,16 +48,6 @@ export function createInteractionAuthorization<
     interaction: AnyInteractionSpec<DomainState, Manifest>,
     projection?: ProjectionContext<DomainState>,
   ): InteractionActorAuthorization<PlayerId> {
-    if (interaction.to) {
-      const resolved = interaction.to({
-        ...scope.buildContext(state),
-        state: projection?.domainState ?? scope.toDomainState(state),
-      });
-      return {
-        mode: "addressees",
-        addressees: resolvePromptToSet<PlayerId>(resolved),
-      };
-    }
     if (interaction.actor) {
       const resolved = interaction.actor(
         scope.buildRuntimeArgs(
@@ -70,7 +60,7 @@ export function createInteractionAuthorization<
       );
       return {
         mode: "actors",
-        actors: resolvePromptToSet<PlayerId>(resolved),
+        actors: resolveActorSet<PlayerId>(resolved),
       };
     }
     const phase = scope.phaseByName(state.flow.currentPhase as PhaseName);
@@ -94,7 +84,7 @@ export function createInteractionAuthorization<
       );
       return {
         mode: "actors",
-        actors: resolvePromptToSet<PlayerId>(resolved),
+        actors: resolveActorSet<PlayerId>(resolved),
       };
     }
     return { mode: "active" };
@@ -105,9 +95,6 @@ export function createInteractionAuthorization<
     playerId: PlayerId,
     authorization: InteractionActorAuthorization<PlayerId>,
   ): boolean {
-    if (authorization.mode === "addressees") {
-      return authorization.addressees.has(playerId);
-    }
     if (authorization.mode === "actors") {
       return authorization.actors.has(playerId);
     }
@@ -118,20 +105,8 @@ export function createInteractionAuthorization<
     return active.includes(playerId);
   }
 
-  function isInteractionVisible(
-    interaction: AnyInteractionSpec<DomainState, Manifest>,
-    authorization: InteractionActorAuthorization<PlayerId>,
-    authorized: boolean,
-  ): boolean {
-    return (
-      !(authorization.mode === "addressees" && !authorized) &&
-      !(interaction.visibility === "actorsOnly" && !authorized)
-    );
-  }
-
   return {
     isActorAuthorized,
-    isInteractionVisible,
     resolveInteractionActorAuthorization,
   };
 }

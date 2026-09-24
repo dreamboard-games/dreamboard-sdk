@@ -1,9 +1,8 @@
 import type { z } from "zod";
-import type { RuntimeTableRecord, SchemaLike } from "./table";
+import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "./table";
 import type {
   InitContext,
   ReducerManifestContract,
-  SetupProfileDefinition,
   StateDefinition,
 } from "./manifest";
 import type {
@@ -16,7 +15,7 @@ import type {
   PlayerIdOfTable,
   PrivateSchemaOfContract,
   PublicSchemaOfContract,
-  RuntimeSetupSelection,
+  OptionsOfContract,
   TableOfManifest,
 } from "./extract";
 import type {
@@ -28,7 +27,6 @@ import type {
   InputCollector,
   InteractionMap,
   PhaseDefinition,
-  PhaseZoneList,
   PlayerViewDefinition,
   SharedViewDefinition,
   StaticViewDefinition,
@@ -49,11 +47,15 @@ export type ReducerGameContract<
   HiddenSchema extends SchemaLike<object>,
   Phases extends Record<string, SchemaLike<object>>,
   Errors extends Record<string, string> | undefined = undefined,
+  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
+    Record<string, never>
+  >,
 > = {
   manifest: Manifest;
   state: StateDefinition<PublicSchema, PrivateSchema, HiddenSchema>;
   phases: Phases;
   errors?: Errors;
+  options: OptionsSchema;
   /** Derived from `phases`; retained as an internal runtime convenience. */
   phaseNames: readonly string[];
 };
@@ -80,7 +82,7 @@ export type ReducerSessionForConfig<
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   PhaseName extends string,
-  Setup extends RuntimeSetupSelection = RuntimeSetupSelection,
+  Options extends RuntimeRecord = RuntimeRecord,
 > = ReducerSessionState<
   ReducerStateForConfig<
     Table,
@@ -89,7 +91,7 @@ export type ReducerSessionForConfig<
     HiddenSchema,
     PhaseName
   >,
-  Setup
+  Options
 >;
 
 export type BaseGameStateOfContract<Contract> = ReducerGameState<
@@ -104,7 +106,7 @@ export type BaseGameStateOfContract<Contract> = ReducerGameState<
 
 export type BaseGameSessionOfContract<Contract> = ReducerSessionState<
   BaseGameStateOfContract<Contract>,
-  RuntimeSetupSelection<ManifestContractOf<Contract>>
+  OptionsOfContract<Contract>
 >;
 
 /**
@@ -124,7 +126,7 @@ export type PhaseMapOf<Contract> = {
       BaseGameStateOfContract<Contract>,
       ManifestContractOf<Contract>
     >,
-    PhaseZoneList<ManifestContractOf<Contract>>
+    OptionsOfContract<Contract>
   >;
 };
 
@@ -151,7 +153,7 @@ export type PhaseStateMapOfDefinitions<
       any,
       Record<string, InputCollector>,
       InteractionMap<any, any>,
-      PhaseZoneList<any>
+      any
     >
   >,
 > = Partial<{
@@ -171,7 +173,7 @@ export type PhaseStateOfDefinitions<
       any,
       Record<string, InputCollector>,
       InteractionMap<any, any>,
-      PhaseZoneList<any>
+      any
     >
   >,
 > = {
@@ -217,7 +219,7 @@ export type ResolvedGameSessionOf<
   Definitions extends PhaseMapOf<Contract>,
 > = ReducerSessionState<
   ResolvedGameStateOf<Contract, Definitions>,
-  RuntimeSetupSelection<ManifestContractOf<Contract>>
+  OptionsOfContract<Contract>
 >;
 
 export type ViewMapOf<
@@ -292,7 +294,7 @@ export type GameStateOf<Source> = Source extends {
   ? Definitions extends PhaseMapOf<Contract>
     ? ResolvedGameStateOf<Contract, Definitions>
     : never
-  : Source extends ReducerGameContract<any, any, any, any, any, any, any>
+  : Source extends ReducerGameContract<any, any, any, any, any, any, any, any>
     ? BaseGameStateOfContract<Source>
     : never;
 /* eslint-enable @typescript-eslint/no-explicit-any */
@@ -309,6 +311,7 @@ export type GameStateOf<Source> = Source extends {
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type ReducerGameContractLike = {
   manifest: any;
+  options: SchemaLike<RuntimeRecord>;
   state: StateDefinition<
     SchemaLike<object>,
     SchemaLike<object>,
@@ -320,7 +323,8 @@ export type ReducerGameContractLike = {
 type InitialStateContextOf<Contract extends ReducerGameContractLike> =
   InitContext<
     TableOfManifest<ManifestOf<Contract>>,
-    ExactManifestContractOf<Contract>
+    ExactManifestContractOf<Contract>,
+    OptionsOfContract<Contract>
   >;
 
 export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
@@ -345,19 +349,12 @@ export type ReducerGameDefinition<
   contract: Contract;
   initial?: InitialStateCallbacks<NoInfer<Contract>>;
   initialPhase?: keyof Definitions & string;
-  setupProfiles?: Record<
-    string,
-    SetupProfileDefinition<
-      keyof Definitions & string,
-      ExactManifestContractOf<Contract>
-    >
-  >;
   phases: Definitions;
   views: Views;
   /**
    * Optional session-scoped static projection. Authored via
    * {@link StaticViewDefinition}; computed once per reducer session from the
-   * manifest + setup profile and cached by the host. The client merges the
+   * manifest and cached by the host. The client merges the
    * cached payload into every seat view, so the per-tick `project`
    * call no longer needs to re-serialize static board topology.
    */
@@ -590,14 +587,6 @@ type QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
   > extends infer InteractionId extends string
     ? `${PhaseName}.${InteractionId}`
     : never;
-
-export type PromptInteractionKeyOfDefinition<Definition> = {
-  [PhaseName in PhaseNamesOfDefinition<Definition>]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
-    Definition,
-    PhaseName,
-    "prompt"
-  >;
-}[PhaseNamesOfDefinition<Definition>];
 
 export type BoardInteractionKeyOfDefinition<Definition> = {
   [PhaseName in PhaseNamesOfDefinition<Definition>]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<

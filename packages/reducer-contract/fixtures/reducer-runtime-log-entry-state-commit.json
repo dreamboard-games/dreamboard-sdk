@@ -5,10 +5,19 @@
     "domain": {
       "table": {
         "playerOrder": ["player-1", "player-2"],
-        "zones": { "shared": {}, "perPlayer": {}, "visibility": {} }
+        "zones": {
+          "shared": {},
+          "perPlayer": {},
+          "visibility": {}
+        }
       },
-      "publicState": { "turnCount": 1 },
-      "privateState": { "player-1": {}, "player-2": {} },
+      "publicState": {
+        "turnCount": 1
+      },
+      "privateState": {
+        "player-1": {},
+        "player-2": {}
+      },
       "hiddenState": {},
       "flow": {
         "currentPhase": "main",
@@ -19,10 +28,16 @@
       "phase": {}
     },
     "runtime": {
-      "rng": { "seed": 1337, "cursor": 0, "trace": [] },
-      "setup": null,
-      "simultaneous": { "current": null },
-      "lastTransition": null
+      "rng": {
+        "seed": 1337,
+        "cursor": 0,
+        "trace": []
+      },
+      "simultaneous": {
+        "current": null
+      },
+      "lastTransition": null,
+      "options": {}
     }
   }
 }
