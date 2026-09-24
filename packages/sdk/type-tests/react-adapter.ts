@@ -28,11 +28,10 @@ function feature(core: CoreInstance<Game>) {
   };
 }
 const { GameProvider, useGame, Subscribe } = createGameHook<Game>()({
-  source,
   features: (core) => ({ custom: feature(core) }),
 });
-const bare = createGameHook<Game>()({ source });
-const localHook = createGameHook<Game>()({ source: local });
+const bare = createGameHook<Game>()({});
+const localHook = createGameHook<Game, typeof local>()({});
 function TypeProof() {
   const game = useGame();
   const value: "ready" | "wait" | undefined = game.inputs
@@ -72,7 +71,13 @@ function TypeProof() {
 // @ts-expect-error A local-capability provider cannot replace its source with a hosted-only source.
 createElement(localHook.GameProvider, { source });
 createElement(GameProvider, {
+  source,
   // @ts-expect-error Controlled values preserve authored choices.
   state: { drafts: { "playerTurn.pick": { mood: "invalid" } } },
 });
 void TypeProof;
+
+// @ts-expect-error Every mounted provider supplies its source lifetime.
+createElement(GameProvider, {});
+// @ts-expect-error Source composition belongs to the provider, not hook binding.
+createGameHook<Game>()({ source });

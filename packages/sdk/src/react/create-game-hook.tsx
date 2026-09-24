@@ -22,13 +22,10 @@ export interface SelectionOptions<Value> {
   readonly compare?: (previous: Value, next: Value) => boolean;
 }
 
-/** Bind erased game types, features and one owned source lifetime. */
-export function createGameHook<Game>() {
-  return function <
-    const Enabled extends Features = Record<never, never>,
-    Source extends GameSource = GameSource,
-  >(
-    defaults: InstanceOptions<Game, Source> & {
+/** Bind erased game types and features; each provider owns its source lifetime. */
+export function createGameHook<Game, Source extends GameSource = GameSource>() {
+  return function <const Enabled extends Features = Record<never, never>>(
+    defaults: Omit<InstanceOptions<Game, Source>, "source"> & {
       features?: (
         core: CoreInstance<Game>,
         context: FeatureContext<Game>,
@@ -37,7 +34,10 @@ export function createGameHook<Game>() {
   ) {
     type Instance = GameInstance<Game, Enabled, Source>;
     type Snapshot = GameSnapshot<Game, Enabled>;
-    type ProviderProps = Partial<InstanceOptions<Game, Source>> & {
+    type ProviderProps = Partial<
+      Omit<InstanceOptions<Game, Source>, "source">
+    > & {
+      source: Source;
       children?: ReactNode;
     };
     const Context = createContext<Instance | null>(null);
@@ -52,7 +52,6 @@ export function createGameHook<Game>() {
       const options = {
         ...defaults,
         ...overrides,
-        source: overrides.source ?? defaults.source,
       };
       useLayoutEffect(() => {
         let current = lifetime.current;

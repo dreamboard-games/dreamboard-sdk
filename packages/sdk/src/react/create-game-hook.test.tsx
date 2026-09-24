@@ -73,7 +73,7 @@ async function mount(element: ReactElement) {
 
 test("selectors isolate renders and Subscribe uses immutable selected values", async () => {
   const source = createTestSource(snapshot());
-  const { GameProvider, useGame, Subscribe } = createGameHook()({ source });
+  const { GameProvider, useGame, Subscribe } = createGameHook()({});
   let meRenders = 0;
   let scoreRenders = 0;
   let composedRenders = 0;
@@ -86,7 +86,7 @@ test("selectors isolate renders and Subscribe uses immutable selected values", a
     return <b>{useGame((s) => (s.view as { score: number }).score)}</b>;
   }
   const mounted = await mount(
-    <GameProvider>
+    <GameProvider source={source}>
       <Me />
       <Score />
       <Subscribe
@@ -110,7 +110,7 @@ test("StrictMode replay owns one instance and disposes source once on actual unm
   const source = createTestSource(snapshot());
   const dispose = vi.spyOn(source, "dispose");
   const features = vi.fn(() => ({}));
-  const { GameProvider, useGame } = createGameHook()({ source, features });
+  const { GameProvider, useGame } = createGameHook()({ features });
   const seen = new Set();
   function Child() {
     seen.add(useGame());
@@ -118,7 +118,7 @@ test("StrictMode replay owns one instance and disposes source once on actual unm
   }
   const mounted = await mount(
     <StrictMode>
-      <GameProvider>
+      <GameProvider source={source}>
         <Child />
       </GameProvider>
     </StrictMode>,
@@ -136,10 +136,10 @@ test("uncommitted rendering neither constructs features nor takes source ownersh
   const source = createTestSource(snapshot());
   const dispose = vi.spyOn(source, "dispose");
   const features = vi.fn(() => ({}));
-  const { GameProvider } = createGameHook()({ source, features });
+  const { GameProvider } = createGameHook()({ features });
   expect(
     renderToString(
-      <GameProvider>
+      <GameProvider source={source}>
         <span>child</span>
       </GameProvider>,
     ),
@@ -149,7 +149,7 @@ test("uncommitted rendering neither constructs features nor takes source ownersh
   const host = document.createElement("div");
   const root = createRoot(host);
   await act(async () => {
-    root.render(<GameProvider />);
+    root.render(<GameProvider source={source} />);
     root.unmount();
   });
   expect(features).not.toHaveBeenCalled();
@@ -161,14 +161,14 @@ test("source replacement keeps the instance and discards old source intent", asy
   const old = createTestSource(snapshot());
   const next = createTestSource(snapshot(4));
   const dispose = vi.spyOn(old, "dispose");
-  const { GameProvider, useGame } = createGameHook()({ source: old });
+  const { GameProvider, useGame } = createGameHook()({});
   let game!: GameInstance<unknown>;
   function Child() {
     game = useGame();
     return <span>{game.version}</span>;
   }
   const mounted = await mount(
-    <GameProvider>
+    <GameProvider source={old}>
       <Child />
     </GameProvider>,
   );
@@ -197,7 +197,7 @@ test("controlled drafts use current callbacks and preserve newer edits through A
   const source = createTestSource(snapshot());
   const first = vi.fn();
   const current = vi.fn();
-  const { GameProvider, useGame } = createGameHook()({ source });
+  const { GameProvider, useGame } = createGameHook()({});
   let game!: GameInstance<unknown>;
   function Child() {
     game = useGame();
@@ -217,6 +217,7 @@ test("controlled drafts use current callbacks and preserve newer edits through A
     edit = setDrafts;
     return (
       <GameProvider
+        source={source}
         state={{ drafts }}
         onDraftsChange={(next) => {
           callback(next);
@@ -251,7 +252,7 @@ test("controlled drafts use current callbacks and preserve newer edits through A
 
 test("request-only updates preserve selected domain objects and old snapshot values", async () => {
   const source = createTestSource(snapshot());
-  const { GameProvider, useGame } = createGameHook()({ source });
+  const { GameProvider, useGame } = createGameHook()({});
   const views: unknown[] = [];
   let requestRenders = 0;
   function View() {
@@ -265,7 +266,7 @@ test("request-only updates preserve selected domain objects and old snapshot val
     return null;
   }
   await mount(
-    <GameProvider>
+    <GameProvider source={source}>
       <View />
       <Request />
     </GameProvider>,
@@ -290,8 +291,8 @@ test("coverage observation remains owned by the instance and warns once", async 
   const source = createTestSource(snapshot());
   const warning = vi.spyOn(console, "warn").mockImplementation(() => {});
   try {
-    const { GameProvider } = createGameHook()({ source, debug: true });
-    await mount(<GameProvider />);
+    const { GameProvider } = createGameHook()({ debug: true });
+    await mount(<GameProvider source={source} />);
     await act(async () => source.emit(snapshot(2)));
     expect(warning).toHaveBeenCalledTimes(1);
     expect(warning).toHaveBeenCalledWith(
@@ -302,18 +303,34 @@ test("coverage observation remains owned by the instance and warns once", async 
   }
 });
 
-test("an undefined provider source retains the factory source", async () => {
+test("one hook binding supports independently owned provider sources", async () => {
   const source = createTestSource(snapshot());
-  const { GameProvider, useGame } = createGameHook()({ source });
+  const other = createTestSource(snapshot(4));
+  const dispose = vi.spyOn(source, "dispose");
+  const otherDispose = vi.spyOn(other, "dispose");
+  const { GameProvider, useGame } = createGameHook()({});
   function Child() {
     return <span>{useGame((state) => state.version)}</span>;
   }
-  const mounted = await mount(
-    <GameProvider source={undefined}>
+  const first = await mount(
+    <GameProvider source={source}>
       <Child />
     </GameProvider>,
   );
-  expect(mounted.host.textContent).toBe("1");
+  const second = await mount(
+    <GameProvider source={other}>
+      <Child />
+    </GameProvider>,
+  );
+  expect(first.host.textContent).toBe("1");
+  expect(second.host.textContent).toBe("4");
   await act(async () => source.emit(snapshot(2)));
-  expect(mounted.host.textContent).toBe("2");
+  expect(first.host.textContent).toBe("2");
+  expect(second.host.textContent).toBe("4");
+  await act(async () => first.root.unmount());
+  roots.splice(roots.indexOf(first.root), 1);
+  expect(dispose).toHaveBeenCalledTimes(1);
+  expect(otherDispose).not.toHaveBeenCalled();
+  await act(async () => other.emit(snapshot(5)));
+  expect(second.host.textContent).toBe("5");
 });
