@@ -40,7 +40,6 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   splitting: true,
-  noExternal: ["@tanstack/react-store", "use-sync-external-store"],
   external: [
     "@radix-ui/react-dialog",
     "@radix-ui/react-accordion",
