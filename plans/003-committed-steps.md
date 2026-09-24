@@ -171,3 +171,10 @@ pnpm 10.4.1; layer 007 owns this previously recorded tooling quirk.
 Next integration is layer 003b: plain player records and the canonical SDK-owned
 runtime schema/model authority. External host persistence/history verification
 remains part of adoption, not this isolated SDK slice.
+
+Root integrated the reviewed source as `1542dd0` after the registry foundation.
+Independent proof passed 54 step/runtime/codec tests and all 14 export tests.
+The combined `pnpm check` passed, including both packed reference games
+(`/tmp/steps-integrated-check-retry.log`). Its first run hit the existing five-second
+dynamic import timeout under parallel load; the isolated export tests passed in
+under a second, and the complete gate passed with `TURBO_CONCURRENCY=1`.

@@ -157,3 +157,27 @@ objects retaining old data, changed selector/comparator, source replacement and
 unmount cleanup. Exact package sources are in /tmp/tanstack-api-review; official
 implementation references are packages/react-store/src/useSelector.ts and
 packages/store/src/store.ts in https://github.com/TanStack/store.
+
+## Turn and event semantics
+
+`turn.currentPlayerId` is the sole active player when exactly one is active,
+otherwise null. `turn.isMine` tests active membership. Never substitute the first
+roster member or guess a turn owner from interaction actors. Both reference games
+already retain their turn seat separately from simultaneous interaction actors.
+No second flow-owner field or setter is required.
+
+`events.recent` reads the latest accepted operation's public display-event batch,
+not an accumulated history or a delivery stream. The engine persists that batch
+in `runtime.events` and projects it as `frame.events`; accepted operations replace
+it, including empty intermediate steps and cancellation, while rejection preserves
+it. Checkpoint restore restores snapshot data and does not replay notifications.
+`tx.emit` is explicitly public-only; private details belong in the existing authored
+seat view. Current Hex emitters satisfy this invariant. Diagnostic host logs remain
+separate and never enter the selected-seat frame.
+
+The iframe protocol needs an explicit `runtime.resume` request to repair an ACK
+without a frame. Repeating `runtime.ready` is insufficient because the current
+internal gateway deduplicates delivered frames. The SDK will own the reusable
+WebSocket gameplay schemas used by hostSource; internal's protocol composes those
+with its host-only history and diagnostic extensions. Do not copy an independent
+wire schema into the source or import a private package from the public SDK.
