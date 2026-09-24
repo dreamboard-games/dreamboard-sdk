@@ -170,12 +170,7 @@ export function enumerateCollectorInputAssignments<
       return;
     }
 
-    const source = valueSourceForCollector(
-      context,
-      inputKey,
-      collector,
-      assignment,
-    );
+    const source = valueSourceForCollector(context, inputKey, collector);
     if (!source.complete) {
       throw new DomainNotEnumerableError(inputKey);
     }
@@ -267,12 +262,7 @@ function findFirstAssignment(
     return findFirstAssignment(context, collectorIndex + 1, assignment);
   }
 
-  const source = valueSourceForCollector(
-    context,
-    inputKey,
-    collector,
-    assignment,
-  );
+  const source = valueSourceForCollector(context, inputKey, collector);
   let sawUnknown = !source.complete;
   for (const value of source.values()) {
     const result = findFirstAssignment(
@@ -316,33 +306,15 @@ function valueSourceForCollector(
   context: SolverContext,
   inputKey: string,
   collector: InputCollector,
-  assignment: Readonly<Record<string, unknown>>,
 ): ValueSource {
-  const dependencyValues = Object.fromEntries(
-    (collector.dependsOn ?? []).map((dependencyKey) => [
-      dependencyKey,
-      Object.prototype.hasOwnProperty.call(assignment, dependencyKey)
-        ? assignment[dependencyKey]
-        : context.initialValues[dependencyKey],
-    ]),
-  );
-  const resolved = resolveCollectorValueSource(
-    context,
-    collector,
-    dependencyValues,
-  );
+  const resolved = resolveCollectorValueSource(context, collector);
   if (!Object.prototype.hasOwnProperty.call(context.initialValues, inputKey)) {
     return resolved;
   }
 
   const fixedValue = context.initialValues[inputKey];
   if (!resolved.complete) {
-    return fixedCollectorValueSource(
-      context,
-      collector,
-      fixedValue,
-      dependencyValues,
-    );
+    return fixedCollectorValueSource(context, collector, fixedValue);
   }
   if (collector.selection?.mode === "many" && !Array.isArray(fixedValue)) {
     const matchingSelections = [...resolved.values()].filter(
@@ -369,7 +341,6 @@ function fixedCollectorValueSource(
   context: SolverContext,
   collector: InputCollector,
   fixedValue: unknown,
-  dependencyValues: Readonly<Record<string, unknown>>,
 ): ValueSource {
   const schemaResult = collector.schema.safeParse(fixedValue);
   const targetValues =
@@ -384,7 +355,6 @@ function fixedCollectorValueSource(
         context.playerId,
         context.queries(),
         target,
-        dependencyValues,
       ) == null,
   );
   return {
@@ -398,7 +368,6 @@ function fixedCollectorValueSource(
 function resolveCollectorValueSource(
   context: SolverContext,
   collector: InputCollector,
-  dependencyValues: Readonly<Record<string, unknown>>,
 ): ValueSource {
   if (!collector.domain) return incompleteValueSource();
 
@@ -406,14 +375,8 @@ function resolveCollectorValueSource(
     context.domainState,
     context.playerId,
     context.queries(),
-    dependencyValues,
   );
-  const base = baseValuesForDomain(
-    domain,
-    collector,
-    context,
-    dependencyValues,
-  );
+  const base = baseValuesForDomain(domain, collector, context);
   const selected = applySelection(
     base,
     collector.selection ?? domain.selection,
@@ -437,7 +400,6 @@ function baseValuesForDomain(
   domain: InputDomainDescriptor,
   collector: InputCollector,
   context: SolverContext,
-  dependencyValues: Readonly<Record<string, unknown>>,
 ): ValueSource {
   switch (domain.type) {
     case "cardTarget":
@@ -448,7 +410,6 @@ function baseValuesForDomain(
             context.domainState,
             context.playerId,
             context.queries(),
-            dependencyValues,
           ),
         );
       }
@@ -464,7 +425,6 @@ function baseValuesForDomain(
                 context.domainState,
                 context.playerId,
                 context.queries(),
-                dependencyValues,
               )
               .map((value) => canonicalJson(value)),
           )

@@ -46,7 +46,7 @@ export function interactionInputsOf<
 >(
   interaction: AnyInteractionSpec<DomainState, Manifest>,
 ): Record<string, InputCollector> {
-  return interaction.inputs as Record<string, InputCollector>;
+  return (interaction.inputs ?? {}) as Record<string, InputCollector>;
 }
 
 export function collectInputMetadata<

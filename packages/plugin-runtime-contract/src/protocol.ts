@@ -7,7 +7,7 @@ import type {
 import type { RuntimeJson } from "./json.js";
 
 export const DREAMBOARD_PLUGIN_PROTOCOL = "dreamboard-plugin" as const;
-export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 4 as const;
+export const DREAMBOARD_PLUGIN_PROTOCOL_VERSION = 5 as const;
 
 export type InteractionResult =
   | {
@@ -31,6 +31,13 @@ export interface SubmitInteractionCommand {
   readonly params: RuntimeJson;
 }
 
+export interface CancelInteractionCommand {
+  readonly type: "interaction.cancel";
+  readonly clientActionId: string;
+  readonly basis: GameplayBasis;
+  readonly interactionId: string;
+}
+
 export type HostToPluginPayload =
   | {
       readonly type: "runtime.init";
@@ -52,6 +59,7 @@ export type PluginToHostPayload =
       readonly clientRenderedAtMs?: number;
     }
   | SubmitInteractionCommand
+  | CancelInteractionCommand
   | {
       readonly type: "runtime.error";
       readonly message: string;

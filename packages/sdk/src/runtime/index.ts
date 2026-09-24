@@ -40,7 +40,6 @@ export type {
   GameEvent,
   GameEventDetail,
   InteractionDescriptor,
-  InputDomainDependencyCase,
   SystemActionEvent,
 } from "./types/plugin-state.js";
 export type * from "./types/runtime-api.js";

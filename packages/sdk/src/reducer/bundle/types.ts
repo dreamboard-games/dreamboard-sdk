@@ -86,6 +86,11 @@ export type TrustedReducerBundle<
     playerId: TrustedPlayerId<Contract>;
     interactionId: string;
   }): InteractionExplanation;
+  currentClientParamSchema(input: {
+    state: TrustedSessionState<Contract>;
+    playerId: TrustedPlayerId<Contract>;
+    interactionId: string;
+  }): import("../client-param-schemas").ClientParamSchema | null;
   resolveInteractionActionability(input: {
     state: TrustedSessionState<Contract>;
     playerId: TrustedPlayerId<Contract>;
@@ -252,6 +257,11 @@ export type ReducerBundleTestingRuntime = Omit<
       maxEvaluations: number;
     }): InteractionInputEnumerationResult;
   };
+  currentClientParamSchema(input: {
+    state: unknown;
+    playerId: unknown;
+    interactionId: string;
+  }): import("../client-param-schemas").ClientParamSchema | null;
   resolveInteractionActionability(input: {
     state: unknown;
     playerId: unknown;

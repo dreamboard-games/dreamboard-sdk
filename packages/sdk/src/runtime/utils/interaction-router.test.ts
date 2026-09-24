@@ -37,20 +37,6 @@ test("routeCardInputIntent applies card and destination inputs atomically", () =
         projection: "resolved",
         targetKind: "space",
         eligibleTargets: ["hex-a"],
-        dependencies: {
-          mode: "eager",
-          dependentCases: [
-            {
-              when: { cardId: "card-1" },
-              domain: {
-                type: "boardTarget",
-                projection: "resolved",
-                targetKind: "space",
-                eligibleTargets: ["hex-a"],
-              },
-            },
-          ],
-        },
       },
     },
   ]);
@@ -74,4 +60,39 @@ test("routeCardInputIntent applies card and destination inputs atomically", () =
   expect(result.params).toEqual({ cardId: "card-1", spaceId: "hex-a" });
   expect(result.readiness.ready).toBe(true);
   expect(draft).toEqual({ cardId: "card-1", spaceId: "hex-a" });
+});
+
+test("a card drop cannot prefill a future committed step", () => {
+  const interaction: InteractionDescriptor = {
+    ...descriptor([
+      {
+        key: "cardId",
+        kind: "card",
+        domain: {
+          type: "cardTarget",
+          projection: "resolved",
+          eligibleTargets: ["card-1"],
+        },
+      },
+    ]),
+    step: { index: 0, total: 2, selected: {}, canCancel: false },
+  };
+  const draft: Record<string, unknown> = {};
+  const store = {
+    getDraft: () => draft,
+    setInput: (_: string, key: string, value: unknown) => {
+      draft[key] = value;
+    },
+    clearInput: (_: string, key?: string) => {
+      if (key) delete draft[key];
+    },
+  };
+  const result = routeCardInputIntent(store, interaction, {
+    cardInputKey: "cardId",
+    cardId: "card-1",
+    dropTarget: { inputKey: "spaceId", value: "hex-a" },
+  });
+  expect(result.params).toEqual({ cardId: "card-1" });
+  expect(draft).toEqual({ cardId: "card-1" });
+  expect(result.readiness.ready).toBe(true);
 });

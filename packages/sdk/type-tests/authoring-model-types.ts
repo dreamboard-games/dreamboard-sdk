@@ -478,21 +478,21 @@ optionPhase.interaction({
   actor: () => "unknown-seat",
   reduce: () => {},
 });
+// @ts-expect-error Recipient routing uses actor.
 optionPhase.interaction({
   inputs: {},
-  // @ts-expect-error Recipient routing uses actor.
   to: () => playerIds[0],
   reduce: () => {},
 });
+// @ts-expect-error Visibility is controlled by actor authorization.
 optionPhase.interaction({
   inputs: {},
-  // @ts-expect-error Visibility is controlled by actor authorization.
   visibility: "actorsOnly",
   reduce: () => {},
 });
+// @ts-expect-error Affordability is an authored rule.
 optionPhase.interaction({
   inputs: {},
-  // @ts-expect-error Affordability is an authored rule.
   cost: () => ({ gold: 1 }),
   reduce: () => {},
 });
@@ -536,3 +536,94 @@ type _SeatViewInference = Expect<
 >;
 // @ts-expect-error Split shared/player/static view builders were removed.
 game.views;
+
+const committedSteps = playerTurn
+  .steps()
+  .input("count", { kind: "form", schema: z.number() })
+  .input("choice", ({ selected, state, playerId, q }) => {
+    const count: number = selected.count;
+    // @ts-expect-error A factory cannot read a future step.
+    selected.choice;
+    void [count, state.phase, playerId, q];
+    return { kind: "form" as const, schema: z.string().nullable() };
+  });
+playerTurn.interaction({
+  steps: committedSteps,
+  reduce({ input }) {
+    const count: number = input.params.count;
+    const choice: string | null = input.params.choice;
+    void [count, choice];
+    // @ts-expect-error Complete params contain only declared steps.
+    input.params.future;
+  },
+});
+// @ts-expect-error Step names are unique.
+committedSteps.input("count", { kind: "form", schema: z.number() });
+// @ts-expect-error Server sampled inputs cannot be committed interaction steps.
+playerTurn.steps().input("roll", playerTurn.inputs.rng.d6());
+// @ts-expect-error Inputs and ordered steps are mutually exclusive.
+playerTurn.interaction({ inputs: {}, steps: committedSteps, reduce() {} });
+
+// @ts-expect-error Dynamic step factories cannot return server sampled collectors.
+playerTurn.steps().input("roll", () => playerTurn.inputs.rng.d6());
+
+const stepDefinition = game.assemble({
+  ...definition,
+  phases: {
+    ...definition.phases,
+    playerTurn: playerTurn.define({
+      kind: "player",
+      initialState: () => ({ rolled: false }),
+      interactions: {
+        choose: playerTurn.interaction({ steps: committedSteps, reduce() {} }),
+      },
+    }),
+  },
+});
+type StepCommandParams = ClientParamsOfInteractionOfDefinition<
+  typeof stepDefinition,
+  "playerTurn",
+  "choose"
+>;
+const firstStepParams: StepCommandParams = { count: 1 };
+const secondStepParams: StepCommandParams = { choice: null };
+// @ts-expect-error A command cannot submit the whole dependent interaction.
+const combinedStepParams: StepCommandParams = { count: 1, choice: null };
+// @ts-expect-error The current step command requires one declared value.
+const emptyStepParams: StepCommandParams = {};
+// @ts-expect-error Removed dependency declaration is not an input option.
+playerTurn.inputs.form.choice({
+  choices: [{ value: "a", label: "A" }],
+  dependsOn: [],
+  defaultValue: "a",
+});
+playerTurn.inputs.form.choice({
+  // @ts-expect-error Previous values are closed over from the step factory selected argument.
+  choices: ({ values }) => [{ value: values.previous, label: "A" }],
+  defaultValue: () => undefined,
+});
+void [firstStepParams, secondStepParams, combinedStepParams, emptyStepParams];
+
+playerTurn.interaction({
+  inputs: {
+    bonus: playerTurn.inputs.form.number({ min: 0, max: 10, defaultValue: 0 }),
+    dice: playerTurn.inputs.rng.d6(),
+  },
+  paramsSchema: z.object({ bonus: z.number() }),
+  rules: [
+    {
+      id: "client-only",
+      errorCode: "NOT_READY",
+      validate({ input }) {
+        const bonus: number = input.params.bonus;
+        // @ts-expect-error Engine-sampled values do not exist during validation.
+        input.params.dice;
+        return bonus >= 0;
+      },
+    },
+  ],
+  reduce({ input }) {
+    const faces: number[] = input.params.dice.values;
+    void faces;
+  },
+});

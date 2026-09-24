@@ -218,20 +218,6 @@ describe("applyCardIntent", () => {
           projection: "resolved",
           targetKind: "space",
           eligibleTargets: ["hex-a"],
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { cardId: "card-1" },
-                domain: {
-                  type: "boardTarget",
-                  projection: "resolved",
-                  targetKind: "space",
-                  eligibleTargets: ["hex-a"],
-                },
-              },
-            ],
-          },
         },
       },
     ]);
@@ -275,20 +261,6 @@ describe("applyCardIntent", () => {
           projection: "resolved",
           targetKind: "space",
           eligibleTargets: ["hex-a"],
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { cardId: "card-1" },
-                domain: {
-                  type: "boardTarget",
-                  projection: "resolved",
-                  targetKind: "space",
-                  eligibleTargets: ["hex-a"],
-                },
-              },
-            ],
-          },
         },
       },
     ]);
@@ -509,20 +481,6 @@ describe("applyCardIntent", () => {
             projection: "resolved",
             targetKind: "space",
             eligibleTargets: ["b"],
-            dependencies: {
-              mode: "eager",
-              dependentCases: [
-                {
-                  when: { cardId: "card-1" },
-                  domain: {
-                    type: "boardTarget",
-                    projection: "resolved",
-                    targetKind: "space",
-                    eligibleTargets: ["b"],
-                  },
-                },
-              ],
-            },
           },
         },
       ],
@@ -585,20 +543,6 @@ describe("applyCardIntent", () => {
             projection: "resolved",
             targetKind: "space",
             eligibleTargets: ["b"],
-            dependencies: {
-              mode: "eager",
-              dependentCases: [
-                {
-                  when: { cardId: "card-1" },
-                  domain: {
-                    type: "boardTarget",
-                    projection: "resolved",
-                    targetKind: "space",
-                    eligibleTargets: ["b"],
-                  },
-                },
-              ],
-            },
           },
         },
       ],
@@ -623,20 +567,6 @@ describe("applyCardIntent", () => {
             projection: "resolved",
             targetKind: "space",
             eligibleTargets: ["b"],
-            dependencies: {
-              mode: "eager",
-              dependentCases: [
-                {
-                  when: { cardId: "card-1" },
-                  domain: {
-                    type: "boardTarget",
-                    projection: "resolved",
-                    targetKind: "space",
-                    eligibleTargets: ["b"],
-                  },
-                },
-              ],
-            },
           },
         },
       ],
@@ -848,20 +778,6 @@ describe("generated facade integration", () => {
           projection: "resolved",
           targetKind: "space",
           eligibleTargets: ["hex-a"],
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { cardId: "card-1" },
-                domain: {
-                  type: "boardTarget",
-                  projection: "resolved",
-                  targetKind: "space",
-                  eligibleTargets: ["hex-a"],
-                },
-              },
-            ],
-          },
         },
       },
     ]);

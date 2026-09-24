@@ -32,7 +32,6 @@ import type {
 import {
   inputTargetKind,
   isTargetDomain,
-  resolveInputDomain,
   resolveInteractionInputs,
 } from "../../utils/interaction-inputs.js";
 import { interactionDraftDigestForValues } from "../../utils/interaction-draft-digest.js";
@@ -98,10 +97,7 @@ export function InteractionField<
     (candidate) => candidate.key === inputKey,
   );
   if (!input) return null;
-  const typedInput = resolveInputDomain(
-    input,
-    handle.values as Readonly<Record<string, unknown>>,
-  ) as InteractionInputDescriptor & { key: Key };
+  const typedInput = input as InteractionInputDescriptor & { key: Key };
   const value = handle.values[inputKey] as Params[Key] | undefined;
   const props: InteractionFieldRenderProps<Params, Key> = {
     descriptor,
@@ -126,9 +122,8 @@ export function hasDefaultInteractionFormFields(
 
 export function defaultFormInputs(
   descriptor: Pick<InteractionDescriptor, "inputs">,
-  values: Readonly<Record<string, unknown>> = {},
 ): InteractionInputDescriptor[] {
-  return resolveInteractionInputs(descriptor, values).filter((input) => {
+  return resolveInteractionInputs(descriptor).filter((input) => {
     switch (input.domain.type) {
       case "choice":
       case "choiceList":
@@ -426,10 +421,9 @@ function ChoiceField<
             enabled: !disabled,
             actuatorKind: "click",
             actuatorId: `choice-reveal:${input.key}`,
-            preparationPatterns: gameplayPreparationPatternsForDescriptor(
-              { inputs: [input] },
-              handle.values as Readonly<Record<string, unknown>>,
-            ),
+            preparationPatterns: gameplayPreparationPatternsForDescriptor({
+              inputs: [input],
+            }),
           })}
         >
           <span data-slot="select-value">

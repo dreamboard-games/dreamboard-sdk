@@ -63,6 +63,7 @@ export interface RuntimeAPI {
    *   collectors may submit scalars while ordinary collectors submit objects.
    * @throws SubmissionError if submission is rejected by the authority.
    */
+  cancelInteraction: (interactionId: string) => Promise<void>;
   submitInteraction: (interactionId: string, params: unknown) => Promise<void>;
 
   emitDiagnostic?: (event: RuntimeDiagnosticEvent) => void;

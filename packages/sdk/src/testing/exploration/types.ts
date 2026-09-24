@@ -67,7 +67,7 @@ export type ExploreSeedResult = {
       readonly actions: readonly {
         readonly seat: number;
         readonly interactionId: string;
-        readonly concreteOptionCount: number | "lazy";
+        readonly concreteOptionCount: number | "unknown";
       }[];
     };
     readonly rejection?: {

@@ -73,7 +73,7 @@ export function digestUIFixtureRequest(request: UIReplayRequest): string {
 }
 
 export function digestUIFixtureTransportRequest(request: {
-  readonly operation: "validate" | "submit";
+  readonly operation: "validate" | "submit" | "cancel";
   readonly basis?: {
     readonly version: number;
     readonly actionSetVersion: string;

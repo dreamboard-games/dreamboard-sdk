@@ -22,24 +22,6 @@ export type InputDomain =
   | ChoiceDomain
   | ChoiceListDomain;
 
-export type InputDomainResolver =
-  | EagerInputDomainDependencies
-  | LazyInputDomainDependencies;
-
-export interface EagerInputDomainDependencies {
-  mode: "eager";
-  dependentCases: readonly InputDomainDependencyCase[];
-}
-
-export interface LazyInputDomainDependencies {
-  mode: "lazy";
-  dependsOn: readonly string[];
-  resolver: {
-    interactionKey?: string;
-    inputKey: string;
-  };
-}
-
 export interface ResolvedCardTargetDomain {
   type: "cardTarget";
   projection: "resolved";
@@ -47,19 +29,9 @@ export interface ResolvedCardTargetDomain {
   zoneIds?: readonly string[];
   eligibleTargets: readonly string[];
   selection?: InputSelection;
-  dependencies?: InputDomainResolver;
 }
 
-export interface LazyCardTargetDomain {
-  type: "cardTarget";
-  projection: "lazy";
-  zoneId?: string;
-  zoneIds?: readonly string[];
-  selection?: InputSelection;
-  dependencies: LazyInputDomainDependencies;
-}
-
-export type CardTargetDomain = ResolvedCardTargetDomain | LazyCardTargetDomain;
+export type CardTargetDomain = ResolvedCardTargetDomain;
 
 export interface ResolvedBoardTargetDomain {
   type: "boardTarget";
@@ -68,21 +40,9 @@ export interface ResolvedBoardTargetDomain {
   boardId?: string;
   eligibleTargets: readonly string[];
   selection?: InputSelection;
-  dependencies?: InputDomainResolver;
 }
 
-export interface LazyBoardTargetDomain {
-  type: "boardTarget";
-  projection: "lazy";
-  targetKind: string;
-  boardId?: string;
-  selection?: InputSelection;
-  dependencies: LazyInputDomainDependencies;
-}
-
-export type BoardTargetDomain =
-  | ResolvedBoardTargetDomain
-  | LazyBoardTargetDomain;
+export type BoardTargetDomain = ResolvedBoardTargetDomain;
 
 export interface ResourceMapDomain {
   type: "resourceMap";
@@ -93,7 +53,6 @@ export interface ResourceMapDomain {
     min: number;
     max: number;
   }>;
-  dependencies?: InputDomainResolver;
 }
 
 export interface BoundedNumberDomain {
@@ -101,14 +60,12 @@ export interface BoundedNumberDomain {
   min?: number;
   max?: number;
   step?: number;
-  dependencies?: InputDomainResolver;
 }
 
 export interface ChoiceDomain {
   type: "choice";
   choices?: readonly InteractionChoiceOption[];
   selection?: InputSelection;
-  dependencies?: InputDomainResolver;
 }
 
 export interface ChoiceListDomain {
@@ -117,12 +74,6 @@ export interface ChoiceListDomain {
   min?: number;
   max?: number;
   selection?: InputSelection;
-  dependencies?: InputDomainResolver;
-}
-
-export interface InputDomainDependencyCase {
-  when: Readonly<Record<string, string>>;
-  domain: InputDomain;
 }
 
 export interface InteractionChoiceOption {
@@ -153,6 +104,7 @@ export type InteractionAvailability =
   | { status: "blocked"; reason: string; code?: string };
 
 interface InteractionDescriptorBase<Key extends string = string> {
+  step?: import("@dreamboard-games/plugin-runtime-contract").InteractionDescriptor["step"];
   phaseName: string;
   interactionKey: Key;
   interactionId: string;

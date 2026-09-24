@@ -1,3 +1,4 @@
+import { createGame } from "../reducer";
 import { createTable } from "./lifecycle-test-fixtures";
 import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
 import {
@@ -1008,30 +1009,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
     )
       .map((ref) => projection.interactionsByRef[ref])
       .find((interaction) => interaction.interactionId === "blockedTarget");
-    const noDependencies: string[] = [];
 
     expect(eligibleTargetCalls).toBe(0);
     expect(descriptor?.availability).toMatchObject({
       status: "blocked",
       reason: "Interaction is blocked by its rule.",
     });
-    expect(descriptor?.inputs).toEqual([
-      {
-        key: "edgeId",
-        kind: "board-edge",
-        domain: {
-          type: "boardTarget",
-          projection: "lazy",
-          targetKind: "edge",
-          boardId: "board",
-          dependencies: {
-            mode: "lazy",
-            dependsOn: noDependencies,
-            resolver: { inputKey: "edgeId" },
-          },
-        },
-      },
-    ]);
+    expect(descriptor?.inputs).toEqual([]);
   });
 
   test("bundle dispatch rejects unsupported actions with the new discriminator", async () => {
@@ -1488,7 +1472,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   // tests pin the contract at the reducer layer so no surface (route,
   // harness, or UI SDK) can regress it.
   describe("rngInput auto-sampling", () => {
-    function defineDiceGame() {
+    function defineDiceGame(sampleSchema = rngInput.d6(2).schema) {
       const contract = defineGameContract({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
@@ -1518,7 +1502,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
             interactions: {
               rollDice: defineInteraction<typeof contract>()({
                 inputs: {
-                  dice: rngInput.d6(2),
+                  dice: { ...rngInput.d6(2), schema: sampleSchema },
                 },
                 reduce({ state, input, accept }) {
                   const values = input.params.dice.values;
@@ -1689,6 +1673,152 @@ describe("direct reducer lifecycle and seeded operations", () => {
       // The second call's trace must extend (not overlap) the first.
       expect(secondTrace.slice(0, firstTrace.length)).toEqual(firstTrace);
       expect(secondTrace).toHaveLength(4);
+    });
+
+    test("parses client paramsSchema once before merging authoritative sampled collectors", async () => {
+      let clientParses = 0;
+      let validationParams: unknown;
+      const model = createGame({
+        manifest: createManifestContract(),
+        phases: { takeTurn: z.object({}) },
+        state: {
+          public: z.object({ total: z.number(), faces: z.array(z.number()) }),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+      });
+      const phase = model.phase("takeTurn");
+      const game = model.assemble({
+        initial: {
+          public: () => ({ total: 0, faces: [] }),
+          private: () => ({}),
+          hidden: () => ({}),
+        },
+        initialPhase: "takeTurn",
+        phases: {
+          takeTurn: phase.define({
+            kind: "player",
+            initialState: () => ({}),
+            interactions: {
+              roll: phase.interaction({
+                inputs: {
+                  bonus: phase.inputs.form.number({
+                    min: 0,
+                    max: 10,
+                    defaultValue: 0,
+                  }),
+                  dice: phase.inputs.rng.d6(2),
+                },
+                paramsSchema: z.object({
+                  bonus: z.number().transform((value) => {
+                    clientParses++;
+                    return value + 1;
+                  }),
+                }),
+                rules: [
+                  {
+                    id: "client",
+                    errorCode: "INVALID",
+                    validate({ input }) {
+                      validationParams = input.params;
+                      return input.params.bonus === 3;
+                    },
+                  },
+                ],
+                reduce({ tx, input }) {
+                  tx.patchPublicState({
+                    total:
+                      input.params.bonus +
+                      input.params.dice.values.reduce(
+                        (sum, face) => sum + face,
+                        0,
+                      ),
+                    faces: input.params.dice.values,
+                  });
+                },
+              }),
+            },
+          }),
+        },
+        view: model.view(() => ({})),
+      });
+      const bundle = createReducerTestingBundle(game);
+      const initial = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+      const accepted = await bundle.reduce({
+        state: initial,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "roll",
+          params: { bonus: 2, dice: { values: [99, 99] } },
+        },
+      });
+      expect(accepted.kind).toBe("accept");
+      expect(clientParses).toBe(1);
+      expect(validationParams).toEqual({ bonus: 3 });
+      if (accepted.kind === "accept") {
+        const result = accepted.state.domain.publicState;
+        expect(result.faces).toHaveLength(2);
+        expect(result.faces.every((face) => face >= 1 && face <= 6)).toBe(true);
+        expect(result.total).toBe(
+          3 + result.faces.reduce((sum, face) => sum + face, 0),
+        );
+        expect(accepted.state.runtime.rng.cursor).toBe(2);
+      }
+    });
+
+    test("parses sampled RNG values once and rolls back a rejected sample", async () => {
+      let parses = 0;
+      const schema = rngInput.d6(2).schema.transform((value) => {
+        parses++;
+        return { values: value.values.map((face) => face + 10) };
+      });
+      const game = defineDiceGame(schema);
+      const bundle = createReducerTestingBundle(game);
+      const initial = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      });
+      const accepted = await bundle.reduce({
+        state: initial,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "rollDice",
+          params: { dice: { values: [99, 99] } },
+        },
+      });
+      expect(accepted.kind).toBe("accept");
+      expect(parses).toBe(1);
+      if (accepted.kind === "accept")
+        expect(
+          accepted.state.domain.publicState.lastRoll.every(
+            (face) => face >= 11 && face <= 16,
+          ),
+        ).toBe(true);
+      const rejecting = createReducerTestingBundle(
+        defineDiceGame(
+          rngInput.d6(2).schema.refine(() => false, "sample rejected"),
+        ),
+      );
+      const before = JSON.stringify(initial);
+      expect(
+        await rejecting.reduce({
+          state: initial,
+          input: {
+            kind: "interaction",
+            playerId: "player-1",
+            interactionId: "rollDice",
+            params: {},
+          },
+        }),
+      ).toMatchObject({ kind: "reject", errorCode: "invalid-action-params" });
+      expect(JSON.stringify(initial)).toBe(before);
     });
 
     test("client-supplied values for an rngInput are ignored (server is authoritative)", async () => {

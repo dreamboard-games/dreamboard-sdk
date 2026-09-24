@@ -63,18 +63,18 @@ host and browser runtime rather than the former CLI.
 
 ## Execution order
 
-| Layer                               | Scope                                                                          | Status                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                      |
-| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | 002a local/hosted gates passed; 002b/002c executing        |
-| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | Preparation executing; integrate after 002c                |
-| [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | Specified; pending reducer foundation                      |
-| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Pending steps                                              |
-| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Specified; pending projection contract                     |
-| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                           |
-| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure registry preparation in parallel; cutover after React |
-| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                                 |
-| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                     |
+| Layer                               | Scope                                                                          | Status                                                  |
+| ----------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                   |
+| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed         |
+| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed                       |
+| [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | Executing on reviewed foundation                        |
+| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Pending steps                                           |
+| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Specified; pending projection contract                  |
+| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                        |
+| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure foundation PR #32 green; bound cutover after React |
+| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                              |
+| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                  |
 
 The original six-layer sketch is split at the reducer foundation so the
 transaction rewrite can be reviewed and verified on its own. Future layers get
@@ -111,10 +111,44 @@ publication are not implied by starting development.
 
 ## Latest receipt
 
-Layer 002a is implemented and independently reviewed on `codex/sdk-reducer-lifecycle`.
-The full browser-free `pnpm check` passed, including SDK 635 tests, checked type
-proofs and both packed reference games; root's independent 48 tests and type proofs
-also passed. See [the lifecycle receipt](002-reducer-lifecycle.md#002a-implementation-receipt).
-Next: [002b initialization and actors](002b-initialization-and-actors.md).
-The final tooling layer must pin pnpm in isolated packed-game copies; this run used
-the repository's pnpm 10.4.1 and the copies' global pnpm 12.5.1 successfully.
+Transactions, lifecycle, initialization/actors, seat views and board geometry are
+implemented and independently reviewed in SDK PRs #26, #27, #29, #30 and #31.
+All local and hosted gates passed. The pure source registry is PR #32, also green
+in both hosted lanes, including real installation and browser proof. Committed
+steps are executing with independent review; canonical Zod schema preparation
+is reviewed. Ordinary player records are reviewed and committed separately as
+`ba183e521b2785371b4b37d39442f23d2d0b6505`, with the full repository gate and
+an actual two-of-four-seat initialization/serialization/restoration proof passed.
+Integrate that preparation after committed steps and rerun the combined gate.
+
+The step review caught and corrected double parsing of transformed selections.
+Persist raw committed values, derive parsed selections once per decision, and
+carry the validated final parameters into ordinary or simultaneous execution.
+Never run the parsed values back through their input schemas during reduction.
+The remaining step gate includes suffix truncation, unrelated-change retention,
+phase reentry and actual sequential Hex browser interaction.
+
+Preparatory internal cleanup uses fresh `origin/main` at `bcf3375ed` in
+`/Users/mac/code/worktrees/headless-internal-kotlin-cleanup`. The old Kotlin
+reducer DTO file, its sole legacy test and its otherwise unused JSON codec have
+no production consumers. Their deletion passed all five gameplay-control client
+tests, compilation, ktlint and the full ten-stage repository gate. The change is
+committed as `5e9234d38` in draft
+[internal PR #531](https://github.com/dreamboard-games/dreamboard-internal/pull/531).
+No hosted checks were reported at submission. Production TypeScript worker
+admission and generated gameplay control DTOs remain intact.
+
+Remaining generic/square board templates are removed in prepared commit
+`60ca30e`; full repository and packed-game gates passed, followed by 17
+independent materialization/validation tests. The private sdk-types and plugin
+contract package ownership move is committed as `19f4e8d`; it passed its full
+gate and 31 independent protocol/JSON/publication tests. The template cut is
+adapted to those new owners as `b6c42f7`, with 17 focused tests and the checked
+SDK type project passing. Integrate records, ownership, then this adapted
+template commit after steps; do not apply both template commits. These
+preparations remain separate from the integrated stack until the committed-step
+slice is green.
+
+See each layer receipt and the delivery checklist for the remaining work. The
+final tooling layer must pin pnpm in isolated packed-game copies; current checks
+use repository pnpm 10.4.1 while copied package verification resolves pnpm 12.5.1.

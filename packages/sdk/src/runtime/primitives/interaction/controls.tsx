@@ -1,9 +1,6 @@
 import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
 import type { InteractionParamsShape } from "../../hooks/useInteractionHandle.js";
-import {
-  inputByKey,
-  resolveInputDomain,
-} from "../../utils/interaction-inputs.js";
+import { inputByKey } from "../../utils/interaction-inputs.js";
 import { isInteractionAvailable } from "../../utils/interaction-status.js";
 import {
   gameplayPreparationPatternsForDescriptor,
@@ -46,10 +43,8 @@ export function InteractionTrigger({
           enabled: !isDisabled,
           actuatorKind: "click",
           actuatorId: "primitive-trigger",
-          preparationPatterns: gameplayPreparationPatternsForDescriptor(
-            descriptor,
-            (handle?.values ?? {}) as Readonly<Record<string, unknown>>,
-          ),
+          preparationPatterns:
+            gameplayPreparationPatternsForDescriptor(descriptor),
         })
       : {}),
     disabled: isDisabled,
@@ -163,12 +158,7 @@ export function InteractionInput({
   const isDisabled = disabled === true || !isInteractionAvailable(descriptor);
   const inputDescriptor = descriptor ? inputByKey(descriptor, name) : undefined;
   const resolvedInputDescriptor =
-    inputDescriptor && handle
-      ? resolveInputDomain(
-          inputDescriptor,
-          handle.values as Readonly<Record<string, unknown>>,
-        )
-      : undefined;
+    inputDescriptor && handle ? inputDescriptor : undefined;
   const scalarFillMetadata =
     resolvedInputDescriptor?.domain.type === "boundedNumber"
       ? gameplayScalarFillMetadata({

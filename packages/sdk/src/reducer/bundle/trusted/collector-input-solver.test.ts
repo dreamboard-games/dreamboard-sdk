@@ -5,7 +5,6 @@ import {
   boardTarget,
   cardInput,
   cardTarget,
-  defineInputs,
   formInput,
   many,
 } from "../../../reducer/internal";
@@ -19,42 +18,30 @@ const domainState = {
   flow: { currentPhase: "work" },
 };
 
-function dependentFormInteraction(options: { allBlocked?: boolean } = {}) {
-  const inputs = defineInputs((input) => {
-    const mode = input.add(
-      "mode",
-      formInput.choice({
-        choices: [
-          { value: "beta", label: "Beta" },
-          { value: "alpha", label: "Alpha" },
-        ],
+function finiteFormInteraction(options: { allBlocked?: boolean } = {}) {
+  return {
+    inputs: {
+      mode: formInput.choice({
+        choices: [{ value: "beta", label: "Beta" }],
         defaultValue: () => undefined,
       }),
-    );
-    return {
-      mode,
-      task: input.add(
-        "task",
-        formInput.choice({
-          dependsOn: [mode],
-          choices: ({ values }) =>
-            options.allBlocked || values.mode === "alpha"
-              ? []
-              : [
-                  { value: "two", label: "Two" },
-                  { value: "one", label: "One" },
-                ],
-          defaultValue: () => undefined,
-        }),
-      ),
-    };
-  });
-  return { inputs };
+      task: formInput.choice({
+        choices: () =>
+          options.allBlocked
+            ? []
+            : [
+                { value: "two", label: "Two" },
+                { value: "one", label: "One" },
+              ],
+        defaultValue: () => undefined,
+      }),
+    },
+  };
 }
 
 describe("trusted collector input solver", () => {
-  test("proves dependent finite domains and enumerates canonical assignments", () => {
-    const interaction = dependentFormInteraction();
+  test("proves independent finite domains and enumerates canonical assignments", () => {
+    const interaction = finiteFormInteraction();
 
     expect(
       hasAnyCollectorInputAssignment({
@@ -78,8 +65,8 @@ describe("trusted collector input solver", () => {
     ]);
   });
 
-  test("returns no only after exhausting dependent collector authority", () => {
-    const interaction = dependentFormInteraction({ allBlocked: true });
+  test("returns no only after exhausting collector authority", () => {
+    const interaction = finiteFormInteraction({ allBlocked: true });
 
     expect(
       hasAnyCollectorInputAssignment({
@@ -99,7 +86,7 @@ describe("trusted collector input solver", () => {
   });
 
   test("filters every complete assignment through trusted acceptance", () => {
-    const interaction = dependentFormInteraction();
+    const interaction = finiteFormInteraction();
     const evaluatedForActionability: Readonly<Record<string, unknown>>[] = [];
 
     expect(
@@ -141,7 +128,7 @@ describe("trusted collector input solver", () => {
   });
 
   test("keeps actionability independent from the enumeration budget", () => {
-    const interaction = dependentFormInteraction();
+    const interaction = finiteFormInteraction();
 
     expect(
       enumerateCollectorInputAssignments({
@@ -208,7 +195,7 @@ describe("trusted collector input solver", () => {
   test("rejects invalid evaluation budgets before touching collector state", () => {
     expect(() =>
       enumerateCollectorInputAssignments({
-        interaction: dependentFormInteraction() as never,
+        interaction: finiteFormInteraction() as never,
         domainState: domainState as never,
         playerId: "player-1" as never,
         maxEvaluations: 0,

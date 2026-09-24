@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { ClientParamSchemaProvider } from "../context/ClientParamSchemaContext.js";
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 import { createElement, useEffect } from "react";
@@ -68,7 +70,7 @@ function descriptor(
   };
 }
 
-function dependencyDescriptor(): InteractionDescriptor {
+function independentDescriptor(): InteractionDescriptor {
   return descriptor([
     {
       key: "cardId",
@@ -87,20 +89,6 @@ function dependencyDescriptor(): InteractionDescriptor {
         projection: "resolved",
         targetKind: "space",
         eligibleTargets: ["hex-a"],
-        dependencies: {
-          mode: "eager",
-          dependentCases: [
-            {
-              when: { cardId: "card-1" },
-              domain: {
-                type: "boardTarget",
-                projection: "resolved",
-                targetKind: "space",
-                eligibleTargets: ["hex-a"],
-              },
-            },
-          ],
-        },
       },
     },
   ]);
@@ -249,8 +237,8 @@ test("key handles resolve null to a descriptor without changing hook order", asy
   await unmount(mounted);
 });
 
-test("key and descriptor handles share canonical dependent draft clearing", async () => {
-  const interaction = dependencyDescriptor();
+test("key and descriptor handles share independent drafts without clearing other inputs", async () => {
+  const interaction = independentDescriptor();
   const harness = makeTestRuntimeHarness(
     makeSnapshot({ gameVersion: 1, interactions: [interaction] }),
   );
@@ -305,8 +293,150 @@ test("key and descriptor handles share canonical dependent draft clearing", asyn
     keyHandle!.setInput("cardId", "card-2");
   });
 
-  expect(keyHandle!.draft).toEqual({ cardId: "card-2" });
-  expect(descriptorHandle!.draft).toEqual({ cardId: "card-2" });
+  expect(keyHandle!.draft).toEqual({ cardId: "card-2", spaceId: "hex-a" });
+  expect(descriptorHandle!.draft).toEqual({
+    cardId: "card-2",
+    spaceId: "hex-a",
+  });
 
+  await unmount(mounted);
+});
+
+test("committed steps submit only the current input and require fresh intent after a frame", async () => {
+  const first: InteractionDescriptor = {
+    ...independentDescriptor(),
+    inputs: independentDescriptor().inputs.slice(0, 1),
+    commit: { mode: "autoWhenReady" },
+    step: { index: 0, total: 2, selected: {}, canCancel: false },
+  };
+  const second: InteractionDescriptor = {
+    ...first,
+    inputs: [
+      {
+        key: "victim",
+        kind: "select",
+        defaultValue: null,
+        domain: {
+          type: "choice",
+          choices: [{ value: null, label: "No victim" }],
+        },
+      },
+    ],
+    step: {
+      index: 1,
+      total: 2,
+      selected: { cardId: "card-1" },
+      canCancel: true,
+    },
+  };
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, interactions: [first] }),
+  );
+  let handle: InteractionHandle | null = null;
+  function Handle() {
+    handle = useInteractionByKey(first.interactionKey);
+    return null;
+  }
+  const mounted = await mountIntoDom(
+    createElement(
+      RuntimeHarness,
+      { runtime: harness.runtime },
+      createElement(ClientParamSchemaProvider, {
+        schemas: {
+          play: {
+            placeCard: z.object({
+              cardId: z.string(),
+              victim: z.string().nullable(),
+            }),
+          },
+        },
+        children: createElement(Handle),
+      }),
+    ),
+  );
+  await act(async () => {
+    handle!.setInput("victim", null);
+  });
+  expect(handle!.draft).toEqual({});
+  expect(harness.submitCalls).toEqual([]);
+  await act(async () => {
+    handle!.setInput("cardId", "card-1");
+  });
+  expect(harness.submitCalls).toEqual([
+    { interactionId: "placeCard", params: { cardId: "card-1" } },
+  ]);
+  await act(async () => {
+    harness.emit(makeSnapshot({ gameVersion: 2, interactions: [second] }));
+  });
+  expect(handle!.draft).toEqual({});
+  expect(handle!.values).toEqual({ victim: null });
+  expect(harness.submitCalls).toHaveLength(1);
+  await act(async () => {
+    handle!.setInput("victim", null);
+  });
+  expect(harness.submitCalls).toEqual([
+    { interactionId: "placeCard", params: { cardId: "card-1" } },
+    { interactionId: "placeCard", params: { victim: null } },
+  ]);
+  await unmount(mounted);
+});
+
+test("cancel retains the authoritative prefix and draft until accepted", async () => {
+  const interaction: InteractionDescriptor = {
+    ...descriptor([
+      {
+        key: "victim",
+        kind: "select",
+        domain: {
+          type: "choice",
+          choices: [{ value: "player-2", label: "Player 2" }],
+        },
+      },
+    ]),
+    availability: { status: "blocked", reason: "No legal current input" },
+    step: {
+      index: 1,
+      total: 2,
+      selected: { cardId: "card-1" },
+      canCancel: true,
+    },
+  };
+  const harness = makeTestRuntimeHarness(
+    makeSnapshot({ gameVersion: 1, interactions: [interaction] }),
+  );
+  const pending = deferred();
+  const cancelled: string[] = [];
+  harness.runtime.cancelInteraction = async (id) => {
+    cancelled.push(id);
+    await pending.promise;
+  };
+  let handle: InteractionHandle | null = null;
+  function Handle() {
+    handle = useInteractionByKey(interaction.interactionKey);
+    return null;
+  }
+  const mounted = await mountIntoDom(
+    createElement(
+      RuntimeHarness,
+      { runtime: harness.runtime },
+      createElement(Handle),
+    ),
+  );
+  await act(async () => {
+    handle!.setInput("victim", "player-2");
+  });
+  let cancel!: Promise<void>;
+  await act(async () => {
+    cancel = handle!.cancel();
+  });
+  expect(cancelled).toEqual(["placeCard"]);
+  expect(handle!.draft).toEqual({ victim: "player-2" });
+  expect(handle!.descriptor.step?.selected).toEqual({ cardId: "card-1" });
+  await act(async () => {
+    pending.resolve();
+    await cancel;
+  });
+  expect(handle!.draft).toEqual({});
+  expect(handle!.descriptor.step?.selected).toEqual({ cardId: "card-1" });
   await unmount(mounted);
 });

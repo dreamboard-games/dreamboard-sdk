@@ -29,7 +29,9 @@ export const RuntimeSimultaneousStateSchema = z.object({ "current": z.union([Run
 
 export const TransitionRecordSchema = z.object({ "from": z.string().min(1), "to": z.string().min(1) }).strict();
 
-export const ReducerRuntimeStateSchema = z.object({ "rng": RngStateSchema, "simultaneous": RuntimeSimultaneousStateSchema, "lastTransition": z.union([TransitionRecordSchema, z.null()]), "options": z.record(z.string(), JsonValueSchema) }).strict();
+export const RuntimePendingInteractionSchema = z.object({ "phaseName": z.string().min(1), "interactionId": z.string().min(1), "values": z.array(JsonValueSchema).min(1) }).strict();
+
+export const ReducerRuntimeStateSchema = z.object({ "rng": RngStateSchema, "simultaneous": RuntimeSimultaneousStateSchema, "lastTransition": z.union([TransitionRecordSchema, z.null()]), "options": z.record(z.string(), JsonValueSchema), "pending": z.record(z.string(), RuntimePendingInteractionSchema) }).strict();
 
 export const ReducerDomainStateSchema = z.object({ "table": JsonValueSchema, "publicState": JsonValueSchema, "privateState": z.record(z.string(), JsonValueSchema), "hiddenState": JsonValueSchema, "flow": ReducerFlowStateSchema, "phase": JsonValueSchema }).strict();
 
@@ -39,7 +41,9 @@ export const ReducerSessionStateSchema = z.object({ "meta": ReducerSessionMetaSc
 
 export const GameInputInteractionSchema = z.object({ "kind": z.literal("interaction"), "playerId": z.string().min(1), "interactionId": z.string().min(1), "params": JsonValueSchema }).strict();
 
-export const GameInputSchema = z.discriminatedUnion("kind", [GameInputInteractionSchema]);
+export const GameInputCancelSchema = z.object({ "kind": z.literal("interaction.cancel"), "playerId": z.string().min(1), "interactionId": z.string().min(1) }).strict();
+
+export const GameInputSchema = z.discriminatedUnion("kind", [GameInputInteractionSchema, GameInputCancelSchema]);
 
 export const ReducerInputValidationResultSchema = z.object({ "valid": z.boolean(), "errorCode": z.string().optional(), "message": z.string().optional() }).strict();
 

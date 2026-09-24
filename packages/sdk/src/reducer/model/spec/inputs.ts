@@ -58,34 +58,7 @@ export type InputSelectionDescriptor =
       readonly distinct?: boolean;
     };
 
-export type InputDomainResolverDescriptor = {
-  readonly interactionKey?: string;
-  readonly inputKey: string;
-};
-
-export type InputDomainDependencyCase<
-  Domain extends InputDomainDescriptor = InputDomainDescriptor,
-> = {
-  when: Record<string, string>;
-  domain: Domain;
-};
-
-export type EagerInputDomainDependencies<
-  Domain extends InputDomainDescriptor = InputDomainDescriptor,
-> = {
-  readonly mode: "eager";
-  readonly dependentCases: readonly InputDomainDependencyCase<Domain>[];
-};
-
-export type LazyInputDomainDependencies = {
-  readonly mode: "lazy";
-  readonly dependsOn: readonly string[];
-  readonly resolver: InputDomainResolverDescriptor;
-};
-
-export type CardTargetDomainDescriptor =
-  | ResolvedCardTargetDomainDescriptor
-  | LazyCardTargetDomainDescriptor;
+export type CardTargetDomainDescriptor = ResolvedCardTargetDomainDescriptor;
 
 export type ResolvedCardTargetDomainDescriptor = {
   readonly type: "cardTarget";
@@ -94,22 +67,9 @@ export type ResolvedCardTargetDomainDescriptor = {
   readonly zoneIds: readonly string[];
   readonly eligibleTargets: readonly string[];
   readonly selection?: InputSelectionDescriptor;
-  readonly dependencies?: EagerInputDomainDependencies<ResolvedCardTargetDomainDescriptor>;
 };
 
-export type LazyCardTargetDomainDescriptor = {
-  readonly type: "cardTarget";
-  readonly projection: "lazy";
-  readonly targetKind: "card";
-  readonly zoneIds: readonly string[];
-  readonly eligibleTargets?: never;
-  readonly selection?: InputSelectionDescriptor;
-  readonly dependencies: LazyInputDomainDependencies;
-};
-
-export type BoardTargetDomainDescriptor =
-  | ResolvedBoardTargetDomainDescriptor
-  | LazyBoardTargetDomainDescriptor;
+export type BoardTargetDomainDescriptor = ResolvedBoardTargetDomainDescriptor;
 
 export type ResolvedBoardTargetDomainDescriptor = {
   readonly type: "boardTarget";
@@ -119,18 +79,6 @@ export type ResolvedBoardTargetDomainDescriptor = {
   readonly valueKind?: "board-id" | "player-board-space";
   readonly eligibleTargets: readonly string[];
   readonly selection?: InputSelectionDescriptor;
-  readonly dependencies?: EagerInputDomainDependencies<ResolvedBoardTargetDomainDescriptor>;
-};
-
-export type LazyBoardTargetDomainDescriptor = {
-  readonly type: "boardTarget";
-  readonly projection: "lazy";
-  readonly targetKind: Exclude<TargetKind, "card">;
-  readonly boardId: string;
-  readonly valueKind?: "board-id" | "player-board-space";
-  readonly eligibleTargets?: never;
-  readonly selection?: InputSelectionDescriptor;
-  readonly dependencies: LazyInputDomainDependencies;
 };
 
 export type ResourceMapDomainDescriptor = {
@@ -165,7 +113,6 @@ export type ChoiceDomainDescriptor = {
     disabledReason?: string;
   }>;
   selection?: InputSelectionDescriptor;
-  dependencies?: EagerInputDomainDependencies<ChoiceDomainDescriptor>;
 };
 
 export type ChoiceListDomainDescriptor = {
@@ -182,7 +129,6 @@ export type ChoiceListDomainDescriptor = {
   min?: number;
   max?: number;
   selection?: InputSelectionDescriptor;
-  dependencies?: EagerInputDomainDependencies<ChoiceListDomainDescriptor>;
 };
 
 export type InputDomainDescriptor =
@@ -197,7 +143,6 @@ type DomainProjector<Domain extends InputDomainDescriptor> = (
   state: CollectorState,
   playerId: string,
   q: unknown,
-  values?: Readonly<Record<string, unknown>>,
 ) => Domain;
 
 type InputDomainForCollectorKind<Kind extends InputCollectorKind> =
@@ -277,16 +222,13 @@ type InputCollectorBase<
     state: CollectorState,
     playerId: string,
     q: unknown,
-    values?: Readonly<Record<string, unknown>>,
   ) => ReadonlyArray<unknown>;
   readonly validateTarget?: (
     state: CollectorState,
     playerId: string,
     q: unknown,
     targetId: unknown,
-    values?: Readonly<Record<string, unknown>>,
   ) => ValidationIssue | null | undefined;
-  readonly dependsOn?: readonly string[];
   readonly resolveDefaultValue?: (
     state: CollectorState,
     playerId: string,

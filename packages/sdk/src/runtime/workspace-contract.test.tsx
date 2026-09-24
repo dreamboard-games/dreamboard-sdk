@@ -69,20 +69,6 @@ function makeSnapshot(): PluginGameplayFrame<
               projection: "resolved",
               targetKind: "space",
               eligibleTargets: ["hex-a"],
-              dependencies: {
-                mode: "eager",
-                dependentCases: [
-                  {
-                    when: { cardId: "card-1" },
-                    domain: {
-                      type: "boardTarget",
-                      projection: "resolved",
-                      targetKind: "space",
-                      eligibleTargets: ["hex-a"],
-                    },
-                  },
-                ],
-              },
             },
           },
         ],
@@ -514,67 +500,20 @@ test("UI root emits the semantic projection digest marker", () => {
 });
 
 test("semantic projection digest normalizes order-insensitive target domains", () => {
-  const digestFor = (targets: string[], dependentCases: unknown[]) => {
+  const digestFor = (targets: string[]) => {
     const snapshot = makeSnapshot();
     const input = snapshot.availableInteractions[0]?.inputs.find(
       (candidate) => candidate.key === "spaceId",
     );
-    if (!input) {
-      throw new Error("Missing spaceId input.");
+    if (!input || input.domain.type !== "boardTarget") {
+      throw new Error("Missing spaceId target input.");
     }
-    const domain = input.domain as {
-      eligibleTargets: string[];
-      dependencies?: { mode: string; dependentCases: unknown[] };
-    };
-    domain.eligibleTargets = targets;
-    domain.dependencies = {
-      mode: "eager",
-      dependentCases,
-    };
+    input.domain.eligibleTargets = targets;
     return semanticProjectionDigestForFrame(snapshot, TEST_SESSION);
   };
-
-  const first = digestFor(
-    ["h-2-10", "h-2-2", "h-2-11"],
-    [
-      {
-        when: { stormSpaceId: "h-2-10" },
-        domain: {
-          type: "choice",
-          choices: [{ value: "none", label: "No eligible captain" }],
-        },
-      },
-      {
-        when: { stormSpaceId: "h-2-2" },
-        domain: {
-          type: "choice",
-          choices: [{ value: "player-2", label: "Player 2" }],
-        },
-      },
-    ],
+  expect(digestFor(["h-2-2", "h-2-11", "h-2-10"])).toBe(
+    digestFor(["h-2-10", "h-2-2", "h-2-11"]),
   );
-
-  expect(
-    digestFor(
-      ["h-2-2", "h-2-11", "h-2-10"],
-      [
-        {
-          when: { stormSpaceId: "h-2-2" },
-          domain: {
-            type: "choice",
-            choices: [{ value: "player-2", label: "Player 2" }],
-          },
-        },
-        {
-          when: { stormSpaceId: "h-2-10" },
-          domain: {
-            type: "choice",
-            choices: [{ value: "none", label: "No eligible captain" }],
-          },
-        },
-      ],
-    ),
-  ).toBe(first);
 });
 
 test("board targets render semantic browser replay select actuators", () => {

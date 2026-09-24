@@ -52,6 +52,7 @@ export interface InteractionHandle<
    * mutated by {@link InteractionHandle.setInput}) is used instead, which is
    * the common case for multi-input prompts.
    */
+  cancel: () => Promise<void>;
   submit: (params?: Params) => Promise<void>;
   /** Run local generated client-schema validation against the current draft. */
   validateDraft: () => DraftValidation<Params>;

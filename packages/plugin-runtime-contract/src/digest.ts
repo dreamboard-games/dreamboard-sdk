@@ -2,6 +2,7 @@ import type { PluginGameplayFrame } from "./frame.js";
 import {
   type ActionSetVersionInput,
   type SubmitInteractionCommand,
+  type CancelInteractionCommand,
 } from "./protocol.js";
 import {
   canonicalizePluginRuntimeJson,
@@ -19,7 +20,7 @@ export function computePluginActionSetVersion(
   input: ActionSetVersionInput,
 ): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-action-set@4",
+    digestVersion: "plugin-action-set@5",
     version: input.version,
     availableInteractions: input.availableInteractions,
   });
@@ -27,16 +28,16 @@ export function computePluginActionSetVersion(
 
 export function digestPluginGameplayFrame(frame: PluginGameplayFrame): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-gameplay-frame@4",
+    digestVersion: "plugin-gameplay-frame@5",
     frame,
   });
 }
 
 export function digestPluginCommandRequest(
-  command: SubmitInteractionCommand,
+  command: SubmitInteractionCommand | CancelInteractionCommand,
 ): string {
   return digestPluginRuntimeJson({
-    digestVersion: "plugin-command-request@4",
+    digestVersion: "plugin-command-request@5",
     command,
   });
 }

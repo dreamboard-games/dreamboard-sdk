@@ -641,10 +641,7 @@ function normalizeOrderInsensitiveDescriptorFields(
   return Object.fromEntries(
     Object.entries(value).map(([key, item]) => {
       const normalized = normalizeOrderInsensitiveDescriptorFields(item);
-      if (
-        (key === "eligibleTargets" || key === "dependentCases") &&
-        Array.isArray(normalized)
-      ) {
+      if (key === "eligibleTargets" && Array.isArray(normalized)) {
         return [
           key,
           [...normalized].sort((left, right) =>

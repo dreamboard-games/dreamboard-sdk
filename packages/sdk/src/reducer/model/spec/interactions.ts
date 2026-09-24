@@ -1,3 +1,4 @@
+import type { StepDefinition } from "../../authoring/steps";
 import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { ManifestContract } from "../manifest";
 import type { PlayerIdOfState, TableOfState } from "../extract";
@@ -27,7 +28,10 @@ export type InteractionValidateArgs<
 > = ActionContext<State, Manifest> &
   ReadHelpers<State> & {
     state: State;
-    input: InteractionReduceInput<Collectors, State>;
+    input: {
+      playerId: PlayerIdOfState<State>;
+      params: ClientParamsOf<Collectors>;
+    };
   };
 
 export type InteractionReduceArgs<
@@ -35,8 +39,9 @@ export type InteractionReduceArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
-> = InteractionValidateArgs<Collectors, State, Manifest> &
-  MutationHelpers<State, ErrorCode>;
+> = Omit<InteractionValidateArgs<Collectors, State, Manifest>, "input"> & {
+  input: InteractionReduceInput<Collectors, State>;
+} & MutationHelpers<State, ErrorCode>;
 
 export type InteractionAvailabilityArgs<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
@@ -143,8 +148,10 @@ export type InteractionSpec<
     TableOfState<State>
   >,
   ErrorCode extends string = string,
-> = {
-  inputs: Collectors;
+> = (
+  | { inputs: Collectors; steps?: never }
+  | { inputs?: never; steps: StepDefinition<Collectors> }
+) & {
   paramsSchema?: SchemaLike<ClientParamsOf<Collectors>>;
   presentation?: InteractionPresentation;
   /**

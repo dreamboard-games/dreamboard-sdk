@@ -11,6 +11,8 @@ import type { RuntimeAPI } from "../types/runtime-api.js";
 
 function runtimeApiFromClient(runtime: PluginRuntimeClient): RuntimeAPI {
   return {
+    cancelInteraction: (interactionId) =>
+      runtime.cancelInteraction(interactionId),
     submitInteraction: (interactionId, params) =>
       runtime.submitInteraction(interactionId, params),
     getSessionState: () => {

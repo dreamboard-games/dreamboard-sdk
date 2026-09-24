@@ -1,3 +1,4 @@
+import { InteractionSteps } from "../reducer/authoring/steps";
 import { defineGameDefinition as defineGame } from "../reducer/authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -6,7 +7,6 @@ import {
   boardInput,
   boardTarget,
   defineGameContract,
-  defineInputs,
   defineInteraction,
   definePhase,
   defineView,
@@ -248,8 +248,8 @@ function createScenarioGame() {
             typeof contract,
             typeof phaseState
           >()({
-            inputs: defineInputs((input) => {
-              const mode = input.add(
+            steps: new InteractionSteps()
+              .input(
                 "mode",
                 formInput.choice({
                   choices: [
@@ -258,25 +258,19 @@ function createScenarioGame() {
                   ],
                   defaultValue: () => undefined,
                 }),
-              );
-              return {
-                mode,
-                task: input.add(
-                  "task",
-                  formInput.choice({
-                    dependsOn: [mode],
-                    choices: ({ values }) =>
-                      values.mode === "beta"
-                        ? [
-                            { value: "one", label: "One" },
-                            { value: "two", label: "Two" },
-                          ]
-                        : [],
-                    defaultValue: () => undefined,
-                  }),
-                ),
-              };
-            }),
+              )
+              .input("task", ({ selected }) =>
+                formInput.choice({
+                  choices:
+                    selected.mode === "beta"
+                      ? [
+                          { value: "one", label: "One" },
+                          { value: "two", label: "Two" },
+                        ]
+                      : [],
+                  defaultValue: () => undefined,
+                }),
+              ),
             reduce: ({ state, accept }) => accept(state),
           }),
           neverLegalTask: defineInteraction<
@@ -311,8 +305,8 @@ function createScenarioGame() {
             typeof contract,
             typeof phaseState
           >()({
-            inputs: defineInputs((input) => {
-              const mode = input.add(
+            steps: new InteractionSteps()
+              .input(
                 "mode",
                 formInput.choice({
                   choices: [
@@ -321,26 +315,19 @@ function createScenarioGame() {
                   ],
                   defaultValue: () => undefined,
                 }),
-              );
-              const recipient = formInput.choice({
-                dependsOn: [mode],
-                choices: ({ values }) =>
-                  values.mode === "targeted"
-                    ? [{ value: "player-2" as const, label: "Player 2" }]
-                    : [],
-                defaultValue: ({ choices }) => choices[0]?.value,
-              });
-              return {
-                mode,
-                recipient: input.add("recipient", {
-                  ...recipient,
-                  schema: playerIdSchema.optional(),
+              )
+              .input("recipient", ({ selected }) =>
+                formInput.choice({
+                  choices:
+                    selected.mode === "targeted"
+                      ? [{ value: "player-2", label: "Player 2" }]
+                      : [{ value: null, label: "No recipient" }],
+                  defaultValue: () => undefined,
                 }),
-              };
-            }),
+              ),
             paramsSchema: z.object({
               mode: z.enum(["solo", "targeted"]),
-              recipient: playerIdSchema.optional(),
+              recipient: playerIdSchema.nullable(),
             }),
             rules: [
               {
@@ -764,15 +751,14 @@ describe("scenario inspection and exploration", () => {
     ).toContain("dependentTask");
     expect(
       player.node.actions.map(({ interactionId }) => interactionId),
-    ).not.toContain("neverLegalTask");
+    ).toContain("neverLegalTask");
     expect(
       player.node.interactions.find(
         ({ interactionId }) => interactionId === "neverLegalTask",
       ),
     ).toMatchObject({
       availability: {
-        status: "blocked",
-        code: "NO_LEGAL_INPUT",
+        status: "available",
       },
     });
     expect(player.node.publicState).toMatchObject({ count: 0 });
@@ -819,12 +805,12 @@ describe("scenario inspection and exploration", () => {
       {
         actor: { seat: 0 },
         interactionId: "dependentTask",
-        params: { mode: "beta", task: "one" },
+        params: { mode: "alpha" },
       },
       {
         actor: { seat: 0 },
         interactionId: "dependentTask",
-        params: { mode: "beta", task: "two" },
+        params: { mode: "beta" },
       },
     ]);
     expect(
@@ -880,7 +866,7 @@ describe("scenario inspection and exploration", () => {
     expect(replayed.trace[0]?.command).toEqual(command);
   });
 
-  test("omits an optional dependent input and replays the explored command", async () => {
+  test("commits explicit null as a separate no-recipient step", async () => {
     const explored = await exploreScenario({
       game,
       scenario,
@@ -910,12 +896,20 @@ describe("scenario inspection and exploration", () => {
         id: "replay-explored-optional-dependent-command",
         setup: scenario.setup,
         given: [],
-        when: [command as never],
+        when: [
+          command as never,
+          {
+            actor: { seat: 0 },
+            interactionId: "optionalRecipient",
+            params: { recipient: null },
+          } as never,
+        ],
         then: () => {},
       }),
     });
     expect(replayed.complete).toBe(true);
     expect(replayed.trace[0]?.command).toEqual(command);
+    expect(replayed.trace[1]?.command.params).toEqual({ recipient: null });
   });
 
   test("derives targeted-response pending actors and continuation blockers", async () => {

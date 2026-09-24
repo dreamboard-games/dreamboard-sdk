@@ -1,4 +1,3 @@
-import { defineInputs } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { ids } from "../manifest";
 import { differentHex } from "../eligibility";
@@ -16,41 +15,31 @@ import { stormtrail } from "../game-model";
 const moveBanditsPhase = stormtrail.phase("moveBandits");
 
 const moveBandits = moveBanditsPhase.interaction({
-  inputs: defineInputs((input) => {
-    const hexId = input.add(
+  steps: moveBanditsPhase
+    .steps()
+    .input(
       "hexId",
       moveBanditsPhase.inputs.board.space({
         boardId: "frontier",
         where: differentHex,
       }),
-    );
-    const victimChoice = moveBanditsPhase.inputs.form.choice({
-      dependsOn: [hexId],
-      choices: ({ state, playerId, q, values }) => {
-        const parsedHexId = ids.spaceId.safeParse(values.hexId);
-        if (!parsedHexId.success) {
-          return [];
-        }
-        return eligibleBanditVictims(state, q, playerId, parsedHexId.data).map(
-          (targetPlayerId) => ({
-            value: targetPlayerId,
-            label: targetPlayerId,
-          }),
-        );
-      },
-      defaultValue: ({ choices }) => choices[0]?.value,
-    });
-    return {
-      hexId,
-      targetPlayerId: input.add("targetPlayerId", {
-        ...victimChoice,
-        schema: ids.playerId.optional(),
-      }),
-    };
-  }),
+    )
+    .input("targetPlayerId", ({ selected, state, playerId, q }) => {
+      const victims = eligibleBanditVictims(state, q, playerId, selected.hexId);
+      return {
+        ...moveBanditsPhase.inputs.form.choice({
+          choices:
+            victims.length > 0
+              ? victims.map((value) => ({ value, label: value }))
+              : [{ value: null, label: "No victim" }],
+          defaultValue: () => undefined,
+        }),
+        schema: ids.playerId.nullable(),
+      };
+    }),
   paramsSchema: z.object({
     hexId: ids.spaceId,
-    targetPlayerId: ids.playerId.optional(),
+    targetPlayerId: ids.playerId.nullable(),
   }),
   rules: [
     {
@@ -64,7 +53,7 @@ const moveBandits = moveBanditsPhase.interaction({
           input.params.hexId,
         );
         if (victims.length === 0) {
-          return input.params.targetPlayerId === undefined
+          return input.params.targetPlayerId === null
             ? null
             : { errorCode: "STEAL_TARGET_FORBIDDEN" };
         }

@@ -1,10 +1,10 @@
+import { InteractionSteps } from "./authoring/steps";
 import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   defineInteraction,
   defineGameContract,
-  defineInputs,
   definePhase,
   formInput,
   many,
@@ -512,38 +512,25 @@ describe("interaction input id types", () => {
     expect(typeof assertGeneratedFormInputTypes).toBe("function");
     void valid;
   });
-  test("types dependent input callbacks with direct declared dependencies only", () => {
-    const inputs = defineInputs((input) => {
-      const spaceId = input.add(
-        "spaceId",
-        formInput.choice<"hex-a">({
-          choices: [{ value: "hex-a", label: "Hex A" }] as const,
-          defaultValue: "hex-a",
+  test("step factories expose earlier selections only", () => {
+    const steps = new InteractionSteps()
+      .input(
+        "space",
+        formInput.choice({
+          choices: [{ value: "hex-a", label: "Hex A" }],
+          defaultValue: () => undefined,
+        }),
+      )
+      .input("answer", ({ selected }) =>
+        formInput.choice({
+          choices: [{ value: selected.space, label: selected.space }],
+          defaultValue: () => undefined,
         }),
       );
-      return {
-        spaceId,
-        playerId: input.add(
-          "playerId",
-          formInput.choice({
-            dependsOn: [spaceId],
-            choices: ({ values }) => {
-              const selectedSpace: "hex-a" = values.spaceId;
-              const assertDependencyValues = () => {
-                // @ts-expect-error undeclared sibling inputs are not visible.
-                const cardId = values.cardId;
-                void cardId;
-              };
-              void selectedSpace;
-              void assertDependencyValues;
-              return [{ value: "player-1", label: "Player 1" }];
-            },
-            defaultValue: "player-1",
-          }),
-        ),
-      };
-    });
-    expect(Object.keys(inputs)).toEqual(["spaceId", "playerId"]);
+    expect(steps.entries.map((entry) => entry.key)).toEqual([
+      "space",
+      "answer",
+    ]);
   });
   test("types mutation random helper without exposing runtime rng", () => {
     const contract = buildContract();

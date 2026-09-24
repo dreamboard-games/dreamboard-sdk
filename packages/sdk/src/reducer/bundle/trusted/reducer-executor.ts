@@ -1,3 +1,4 @@
+import { evaluateStepPrefix } from "./step-prefix";
 import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
 import type { RuntimePayload } from "../../model";
@@ -81,7 +82,7 @@ export function createReducerExecutor<
 
   function reduceInternal(
     state: State,
-    input: ReducerInput,
+    input: Extract<ReducerInput, { kind: "interaction" }>,
   ): ReducerResult<DomainState> & RuntimeRngResult {
     const ctx = scope.buildContext(state);
 
@@ -96,14 +97,7 @@ export function createReducerExecutor<
         `Interaction '${input.interactionId}' is not available in phase '${state.flow.currentPhase}'.`,
       );
     }
-    const parsed = interactions.parseInteractionParams(
-      interaction,
-      input.params,
-      { playerId: input.playerId },
-    );
-    if (!parsed.ok) {
-      return rejectResult("invalid-action-params", parsed.message);
-    }
+    const params = input.params as Record<string, unknown>;
     const random = createMutableRandomHelpers(state.runtime.rng);
     const reduceArgs = scope.buildRuntimeArgs(
       state,
@@ -112,7 +106,7 @@ export function createReducerExecutor<
         state: scope.toDomainState(state),
         input: {
           playerId: input.playerId,
-          params: parsed.params,
+          params,
         },
       },
       { random },
@@ -132,10 +126,11 @@ export function createReducerExecutor<
 
   function preSampleRngForAction(
     state: State,
-    input: ReducerInput,
+    input: Extract<ReducerInput, { kind: "interaction" }>,
   ): {
     state: State;
-    input: ReducerInput;
+    input: Extract<ReducerInput, { kind: "interaction" }>;
+    error?: string;
     consumptions: readonly {
       operation: string;
       drawIndex: number;
@@ -148,7 +143,10 @@ export function createReducerExecutor<
       input.interactionId,
     );
     if (!interaction) return { state, input, consumptions: [] };
-    const collectors = interaction.inputs as Record<string, InputCollector>;
+    const collectors = (interaction.inputs ?? {}) as Record<
+      string,
+      InputCollector
+    >;
     let nextRng = state.runtime.rng;
     const sampled: Record<string, unknown> = {};
     const consumptions: RngConsumption[] = [];
@@ -160,7 +158,18 @@ export function createReducerExecutor<
         nextRng: advanced,
         consumptions: collectorConsumptions,
       } = sampleRngCollectorValue(collector, nextRng);
-      sampled[key] = value;
+      const parsed = collector.schema.safeParse(value);
+      if (!parsed.success) {
+        return {
+          state,
+          input,
+          consumptions: [],
+          error: parsed.error.issues
+            .map((issue) => `params.${key}: ${issue.message}`)
+            .join("; "),
+        };
+      }
+      sampled[key] = parsed.data;
       nextRng = advanced;
       consumptions.push(...collectorConsumptions);
       anySampled = true;
@@ -175,7 +184,10 @@ export function createReducerExecutor<
         ...state,
         runtime: { ...state.runtime, rng: nextRng },
       } as State,
-      input: { ...input, params: mergedParams } as ReducerInput,
+      input: { ...input, params: mergedParams } as Extract<
+        ReducerInput,
+        { kind: "interaction" }
+      >,
       consumptions,
     };
   }
@@ -192,7 +204,7 @@ export function createReducerExecutor<
 
   function reduceSimultaneousSubmit(
     state: State,
-    input: ReducerInput,
+    input: Extract<ReducerInput, { kind: "interaction" }>,
   ):
     | (ReducerResult<State> & {
         trace?: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
@@ -231,10 +243,7 @@ export function createReducerExecutor<
       );
     }
 
-    const parsed = interactions.parseInteractionParams(submit, input.params);
-    if (!parsed.ok) {
-      return rejectResult("invalid-action-params", parsed.message);
-    }
+    const params = input.params;
 
     const current =
       state.runtime.simultaneous?.current?.phaseName === phaseName
@@ -261,7 +270,7 @@ export function createReducerExecutor<
       ...current.submissions,
       [input.playerId]: {
         interactionId: input.interactionId,
-        params: parsed.params as RuntimePayload,
+        params,
       },
     };
     const stateWithSubmission = {
@@ -325,8 +334,13 @@ export function createReducerExecutor<
     };
   }
 
-  function reduceOnce(state: State, input: ReducerInput) {
+  function reduceOnce(
+    state: State,
+    input: Extract<ReducerInput, { kind: "interaction" }>,
+  ) {
     const sampled = preSampleRngForAction(state, input);
+    if (sampled.error)
+      return rejectResult("invalid-action-params", sampled.error);
     const simultaneousResult = reduceSimultaneousSubmit(
       sampled.state,
       sampled.input,
@@ -363,6 +377,47 @@ export function createReducerExecutor<
         ...(result.rngConsumptions ?? []),
       ]),
     };
+  }
+
+  function reconcilePending(state: State): State {
+    const pending = { ...state.runtime.pending };
+    for (const [seat, choice] of Object.entries(state.runtime.pending)) {
+      const playerId = seat as PlayerId;
+      const saved = choice as NonNullable<
+        State["runtime"]["pending"][PlayerId]
+      >;
+      const interaction = scope.findInteractionInPhase(
+        state.flow.currentPhase as PhaseName,
+        saved.interactionId,
+      );
+      const eligibility = interactions.resolveInteractionEligibility({
+        state,
+        playerId,
+        interactionId: saved.interactionId,
+      });
+      if (
+        saved.phaseName !== state.flow.currentPhase ||
+        !interaction?.steps ||
+        !eligibility.found ||
+        !eligibility.validation.valid
+      ) {
+        delete pending[playerId];
+        continue;
+      }
+      const prefix = evaluateStepPrefix(
+        interaction.steps,
+        scope.toDomainState(state),
+        playerId,
+        saved.values,
+      );
+      if (prefix.values.length === 0) delete pending[playerId];
+      else
+        pending[playerId] = {
+          ...saved,
+          values: prefix.values as RuntimePayload[],
+        };
+    }
+    return { ...state, runtime: { ...state.runtime, pending } };
   }
 
   const MAX_PHASE_ENTRIES = 1_000;
@@ -409,7 +464,7 @@ export function createReducerExecutor<
     }
     return {
       type: "accept" as const,
-      state,
+      state: reconcilePending(state),
       events,
       trace,
       ...(terminal ? { terminal } : {}),
@@ -417,7 +472,50 @@ export function createReducerExecutor<
   }
 
   function dispatch(state: State, input: ReducerInput) {
-    const result = reduceOnce(state, input);
+    const pending = { ...state.runtime.pending };
+    if (input.kind === "interaction.cancel") {
+      const rejected = interactions.validateOrReject(state, input);
+      if (rejected) return rejected;
+      delete pending[input.playerId];
+      return complete({
+        state: { ...state, runtime: { ...state.runtime, pending } },
+        trace: [{ type: "acceptedClientInput", input }],
+      });
+    }
+    const decision = interactions.resolveInteractionDecision({
+      state,
+      playerId: input.playerId,
+      interactionId: input.interactionId,
+      params: input.params as Record<string, unknown>,
+      mode: "submit",
+    });
+    if (!decision.validation.valid)
+      return rejectResult(
+        decision.validation.errorCode,
+        decision.validation.message,
+      );
+    if (!decision.found) return rejectResult("unsupported-action");
+    let workingState = state;
+    const workingInput = {
+      ...input,
+      params: decision.parsedParams as RuntimePayload,
+    };
+    if (decision.stepResult) {
+      if (!decision.stepResult.complete) {
+        pending[input.playerId] = {
+          phaseName: state.flow.currentPhase,
+          interactionId: input.interactionId,
+          values: decision.stepResult.values as RuntimePayload[],
+        };
+        return complete({
+          state: { ...state, runtime: { ...state.runtime, pending } },
+          trace: [{ type: "acceptedClientInput", input }],
+        });
+      }
+      delete pending[input.playerId];
+      workingState = { ...state, runtime: { ...state.runtime, pending } };
+    }
+    const result = reduceOnce(workingState, workingInput);
     if (result.type === "reject") return result;
     return complete({
       ...result,

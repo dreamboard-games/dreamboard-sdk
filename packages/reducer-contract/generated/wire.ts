@@ -25,7 +25,7 @@ export type RuntimeSimultaneousState = { "current": RuntimeSimultaneousCurrent |
 
 export type TransitionRecord = { "from": string; "to": string };
 
-export type ReducerRuntimeState = { "rng": RngState; "simultaneous": RuntimeSimultaneousState; "lastTransition": TransitionRecord | null; "options": Record<string, JsonValue> };
+export type ReducerRuntimeState = { "rng": RngState; "simultaneous": RuntimeSimultaneousState; "lastTransition": TransitionRecord | null; "options": Record<string, JsonValue>; "pending": Record<string, RuntimePendingInteraction> };
 
 export type ReducerDomainState = { "table": JsonValue; "publicState": JsonValue; "privateState": Record<string, JsonValue>; "hiddenState": JsonValue; "flow": ReducerFlowState; "phase": JsonValue };
 
@@ -33,7 +33,7 @@ export type ReducerSessionMeta = { "contractFingerprint": string };
 
 export type ReducerSessionState = { "meta"?: ReducerSessionMeta; "domain": ReducerDomainState; "runtime": ReducerRuntimeState };
 
-export type GameInput = GameInputInteraction;
+export type GameInput = GameInputInteraction | GameInputCancel;
 
 export type GameInputInteraction = { "kind": "interaction"; "playerId": string; "interactionId": string; "params": JsonValue };
 
@@ -114,3 +114,7 @@ export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manife
 export type DispatchTracePhaseEntered = { "kind": "phaseEntered"; "from": string; "to": string };
 
 export type ReducerRuntimeLogEntryPhaseEntered = { "kind": "phaseEntered"; "from": string; "to": string; "version": number };
+
+export type RuntimePendingInteraction = { "phaseName": string; "interactionId": string; "values": Array<JsonValue> };
+
+export type GameInputCancel = { "kind": "interaction.cancel"; "playerId": string; "interactionId": string };

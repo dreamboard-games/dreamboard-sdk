@@ -39,7 +39,6 @@ import {
   isResolvedTargetDomain,
   isTargetDomain,
   validateInteractionInputDomains,
-  resolveInputDomain,
 } from "../utils/interaction-inputs.js";
 import {
   useCardIntentAdapter,
@@ -367,14 +366,13 @@ export function HandSurfaceView<Card extends ZoneCardRenderItem>({
       const attributes = pointerTargetAttributesForRuntimeDropTarget({
         target,
         availableInteractions,
-        drafts,
       });
       if (attributes) {
         map.set(target.targetId, attributes);
       }
     }
     return map;
-  }, [availableInteractions, drafts, dropTargets]);
+  }, [availableInteractions, dropTargets]);
 
   const handView = (
     <HandView
@@ -501,20 +499,17 @@ function manyCardSelectionForZone(
 function pointerTargetAttributesForRuntimeDropTarget({
   target,
   availableInteractions,
-  drafts,
 }: {
   target: RuntimeDropTarget;
   availableInteractions: readonly InteractionDescriptor[];
-  drafts: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
 }): BrowserInteractionAttributeMap | undefined {
   const decoded = decodeRuntimeDropTargetId(target.targetId);
   if (!decoded) return undefined;
   for (const descriptor of availableInteractions) {
     if (!isInteractionAvailable(descriptor)) continue;
-    const draft = drafts[descriptor.interactionKey] ?? {};
     const acceptedEffectPatterns: GameplaySemanticEffectPattern[] = [];
     for (const rawInput of descriptor.inputs) {
-      const input = resolveInputDomain(rawInput, draft);
+      const input = rawInput;
       if (decoded.mode === "input" && input.key !== decoded.inputKey) {
         continue;
       }

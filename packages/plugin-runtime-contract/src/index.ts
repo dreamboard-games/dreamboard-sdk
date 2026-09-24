@@ -11,8 +11,6 @@ export type {
   InteractionDiagnosticReason,
   InteractionInputDescriptor,
   InputDomain,
-  InputDomainDependencies,
-  InputDomainDependencyCase,
   InputSelection,
   OutcomeResult,
   OutcomeScoreComponent,
@@ -41,6 +39,7 @@ export type {
   PluginToHostEnvelope,
   PluginToHostPayload,
   SubmitInteractionCommand,
+  CancelInteractionCommand,
 } from "./protocol.js";
 export {
   DREAMBOARD_PLUGIN_PROTOCOL,
@@ -66,7 +65,6 @@ export {
   GameplayBasisSchema,
   HostToPluginEnvelopeSchema,
   HostToPluginPayloadSchema,
-  InputDomainDependenciesSchema,
   InputDomainSchema,
   InteractionAvailabilitySchema,
   InteractionCommitPolicySchema,
@@ -86,6 +84,7 @@ export {
   InteractionResultSchema,
   SystemActionEventSchema,
   SubmitInteractionCommandSchema,
+  CancelInteractionCommandSchema,
   ZoneHandlesSnapshotSchema,
   createPluginProtocolEnvelopeSchema,
   parseHostToPluginEnvelope,

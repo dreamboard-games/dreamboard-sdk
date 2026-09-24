@@ -12,9 +12,9 @@ Root updates it with implementation and verification evidence.
 - [x] Layer 002a: direct lifecycle/outcomes, effects/continuations/stages removed; PR #27 local/hosted gates passed.
 - [x] Layer 002: seeded transaction operations, initial options, setup profiles removed (002b `c4b9f80`).
 - [x] Layer 002: actor interactions, one authored seat view, minimal memoize (002c `8679356`; combined `pnpm check` passed).
-- [ ] Layer 003: serialized private step selections and cancel command.
-- [ ] Layer 003: ordered valid-prefix revalidation, phase-entry clearing, final rollback.
-- [ ] Layer 003: pure projection, nullable optional steps, durable intermediate commits.
+- [x] Layer 003: serialized private step selections and cancel command; integrated at `1542dd0`.
+- [x] Layer 003: ordered valid-prefix revalidation, phase-entry clearing, final rollback; combined repository gate passed.
+- [x] Layer 003: pure projection, nullable optional steps, durable intermediate commits; two real Hex browser workflows passed.
 - [ ] Shared models: ordinary per-player records; redundant type packages removed.
 - [x] Manifest boards: honeycomb geometry, shapes, canonical identities and queries; combined gate and independent review passed.
 - [ ] Bundle: one execution authority with boundary validation retained.
@@ -34,8 +34,8 @@ Root updates it with implementation and verification evidence.
 
 ## Registry and developer experience
 
-- [ ] Layer 006: validated shadcn-compatible source registry and tokens.
-- [ ] Pure items: card, playing-card, pile, grids, players, resources, dice, event-log, standings.
+- [x] Layer 006 foundation: validated shadcn-compatible source registry and tokens; PR #32 local/hosted gates passed.
+- [x] Pure items: card, playing-card, pile, grids, players, resources, dice, event-log, standings.
 - [ ] Bound items: hand, hand-drawer, board-targets, interaction-form, actions, inspector.
 - [ ] Storybook lives with registry; installation smoke against an authored game.
 - [ ] Scenario dev UI/checkpoints and DOM-attribute browser helper replace workbench.

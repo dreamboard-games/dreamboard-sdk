@@ -1,3 +1,4 @@
+import { currentScenarioClientParamSchema } from "../scenario-replay.js";
 import {
   advanceScenarioReplay,
   enumerateScenarioInteractionParams,
@@ -180,6 +181,11 @@ async function exploreTransitions<Game extends ScenarioDefinitionGameLike>(
         interactionId: action.interactionId,
         params: projectScenarioCommandParams({
           game: options.game,
+          currentSchema: currentScenarioClientParamSchema(
+            replay,
+            action.actor.seat,
+            action.interactionId,
+          ),
           phase: node.flow.phase,
           interactionId: action.interactionId,
           params: assignment,
@@ -295,7 +301,7 @@ async function exploreSeeds<Game extends ScenarioDefinitionGameLike>(
             seat: actor.seat,
             interactionId,
             concreteOptionCount:
-              counts.get(`${actor.seat}:${interactionId}`) ?? "lazy",
+              counts.get(`${actor.seat}:${interactionId}`) ?? "unknown",
           })),
         },
       });
@@ -339,14 +345,14 @@ async function concreteOptionCounts<Game>(options: {
   readonly replay: ScenarioReplay<Game>;
   readonly node: InspectNode;
   readonly maxEvaluations: number;
-}): Promise<Map<string, number | "lazy">> {
+}): Promise<Map<string, number | "unknown">> {
   assertTransitionLimits(DEFAULT_EXPLORE_LIMIT, options.maxEvaluations);
-  const counts = new Map<string, number | "lazy">();
+  const counts = new Map<string, number | "unknown">();
   let evaluated = 0;
   for (const action of options.node.actions) {
     const remaining = options.maxEvaluations - evaluated;
     if (remaining <= 0) {
-      counts.set(`${action.actor.seat}:${action.interactionId}`, "lazy");
+      counts.set(`${action.actor.seat}:${action.interactionId}`, "unknown");
       continue;
     }
     const result = enumerateScenarioInteractionParams({
@@ -361,7 +367,7 @@ async function concreteOptionCounts<Game>(options: {
       `${action.actor.seat}:${action.interactionId}`,
       result.enumeration.status === "enumerated"
         ? result.enumeration.assignments.length
-        : "lazy",
+        : "unknown",
     );
   }
   return counts;

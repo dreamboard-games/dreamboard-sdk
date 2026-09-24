@@ -129,6 +129,42 @@ export default play.define({
 });
 ```
 
+Dependent choices use `phase.steps()` instead of `inputs`. Each accepted command
+commits exactly one current value. Factories receive only earlier parsed
+`selected` values; descriptors expose only the current input. The final commit
+runs complete-parameter validation and the reducer once. Use explicit `null`
+for a no-target choice, and `many(...)` for one atomic multi-selection.
+
+```ts
+const choose = play.interaction({
+  steps: play
+    .steps()
+    .input(
+      "kind",
+      play.inputs.form.choice({
+        choices: [{ value: "single", label: "Single" }],
+        defaultValue: () => undefined,
+      }),
+    )
+    .input("count", ({ selected }) =>
+      play.inputs.form.number({
+        min: 1,
+        max: selected.kind === "single" ? 1 : 3,
+        defaultValue: 1,
+      }),
+    ),
+  reduce({ input }) {
+    // input.params contains both kind and count here.
+  },
+});
+```
+
+`rules.available` controls action eligibility; `rules.validate` checks a final
+submission. Accepted state changes reconcile pending prefixes, while phase
+entry clears them. A rejected final submission keeps the prior prefix. The
+actor can cancel an unsealed prefix with `interaction.cancel`, using the same
+transport basis and action identity as submission.
+
 ```ts
 // app/game.ts — assembly
 import { game } from "./game-model";

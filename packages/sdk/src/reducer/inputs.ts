@@ -1,10 +1,4 @@
 export { formInput } from "./inputs/formInput";
-export {
-  defineInputs,
-  type DependencyValues,
-  type DefinedInputs,
-  type InputFieldRef,
-} from "./inputs/defineInputs";
 export { boardInput, type PlayerSpaceInputSchema } from "./inputs/boardInput";
 export { boardTarget } from "./inputs/boardTarget";
 export type {

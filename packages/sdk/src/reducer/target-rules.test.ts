@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import { z } from "zod";
 import {
   boardInput,
   boardTarget,
@@ -111,29 +110,20 @@ describe("target rules", () => {
     });
   });
 
-  test("board targets receive dependency values for projection and validation", () => {
+  test("board target predicates capture selected step values", () => {
     const target = boardTarget
       .space<CollectorState, "s1" | "s2">("board")
       .where({
         id: "selected-mode",
         errorCode: "wrong-mode",
-        test: ({ targetId, values }) =>
-          values?.mode === "wide" ? targetId === "s2" : targetId === "s1",
+        test: ({ targetId }) => targetId === "s2",
       })
       .build();
 
-    const modeRef = {
-      key: "mode",
-      collector: { kind: "form", schema: z.string() },
-    } as never;
-    const input = boardInput.space({ target, dependsOn: [modeRef] });
+    const input = boardInput.space({ target });
 
-    expect(
-      input.eligibleTargets?.(state, "player-1", q, { mode: "wide" }),
-    ).toEqual(["s2"]);
-    expect(
-      input.validateTarget?.(state, "player-1", q, "s1", { mode: "wide" }),
-    ).toEqual({
+    expect(input.eligibleTargets?.(state, "player-1", q)).toEqual(["s2"]);
+    expect(input.validateTarget?.(state, "player-1", q, "s1")).toEqual({
       errorCode: "wrong-mode",
       message: undefined,
     });
@@ -164,33 +154,20 @@ describe("target rules", () => {
     });
   });
 
-  test("card targets receive dependency values for projection and validation", () => {
+  test("card target predicates capture selected step values", () => {
     const target = cardTarget
       .zones<CollectorState, "card-a" | "card-b">(["hand"])
       .where({
         id: "selected-mode",
         errorCode: "wrong-mode",
-        test: ({ targetId, values }) =>
-          values?.mode === "expensive"
-            ? targetId === "card-b"
-            : targetId === "card-a",
+        test: ({ targetId }) => targetId === "card-b",
       })
       .build();
 
-    const modeRef = {
-      key: "mode",
-      collector: { kind: "form", schema: z.string() },
-    } as never;
-    const input = cardInput({ target, dependsOn: [modeRef] });
+    const input = cardInput({ target });
 
-    expect(
-      input.eligibleTargets?.(state, "player-1", q, { mode: "expensive" }),
-    ).toEqual(["card-b"]);
-    expect(
-      input.validateTarget?.(state, "player-1", q, "card-a", {
-        mode: "expensive",
-      }),
-    ).toEqual({
+    expect(input.eligibleTargets?.(state, "player-1", q)).toEqual(["card-b"]);
+    expect(input.validateTarget?.(state, "player-1", q, "card-a")).toEqual({
       errorCode: "wrong-mode",
       message: undefined,
     });

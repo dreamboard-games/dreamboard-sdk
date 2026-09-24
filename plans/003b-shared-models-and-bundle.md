@@ -72,3 +72,10 @@ Run focused model/schema/behavior/type tests and pnpm check at each branch tip.
 Retain worker ABI/schema fixtures, private seat selection, serialized pending/RNG
 round trips, both games, and browser-safe root/testing closure proof. Root owns
 independent review, stack integration and public/internal adoption.
+
+Before final synchronization, inspect the still-open manifest inference PR #25
+(`1cfb15d`). Its board-template inference changes are superseded by template
+removal, but its authored `cardType` override fix and removal of the phantom
+`records.playerIds` helper remain relevant. Prefer receiving the upstream fix
+through main; if it has not landed, explicitly account for those behaviors in
+the final manifest review rather than blindly replaying the old template patch.

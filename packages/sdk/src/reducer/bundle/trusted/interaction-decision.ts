@@ -1,3 +1,5 @@
+import { schemaForCollectors } from "../../client-param-schemas";
+import { evaluateStepPrefix } from "./step-prefix";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,
@@ -161,69 +163,30 @@ export function createInteractionDecisionResolver<
     return decision.found && decision.validation.valid;
   }
 
-  function resolveInteractionDecision({
+  function resolveInteractionEligibility({
     state,
     playerId,
     interactionId,
-    params = {},
-    mode,
+    mode = "descriptor",
     candidateInvariantsValidated = false,
     projection,
-  }: ResolveDecisionInput<Contract>): InteractionDecisionResult<
-    Contract,
-    Definitions,
-    View
-  > {
+  }: Omit<ResolveDecisionInput<Contract>, "params" | "mode"> & {
+    mode?: ResolveDecisionInput<Contract>["mode"];
+  }) {
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(phaseName, interactionId);
-    if (!interaction) {
+    if (!interaction)
       return {
-        found: false,
+        found: false as const,
         validation: makeValidationError(
           "unsupported-action",
-          `Interaction '${interactionId}' is not available in phase '${state.flow.currentPhase}'.`,
+          `Unknown interaction '${interactionId}'.`,
         ),
       };
-    }
-    const trustedInteractionId = interactionId as InteractionId;
-
-    const parseForSubmit = mode === "submit";
-    const parsed = parseForSubmit
-      ? parseInteractionParams(interaction, params, {
-          skipRng: true,
-          playerId,
-        })
-      : ({
-          ok: true,
-          params: prepareInteractionProjectionParams(interaction, params),
-        } as const);
-    if (!parsed.ok) {
-      const descriptorDecision: InteractionDecision = {
-        available: false,
-        code: FrameworkErrorCodes.INVALID_PARAMS,
-        message: parsed.message,
-      };
-      return {
-        found: true,
-        interaction,
-        parsedParams: {},
-        visible: true,
-        descriptor: buildInteractionDescriptor(
-          scope,
-          state,
-          playerId,
-          trustedInteractionId,
-          interaction,
-          descriptorDecision,
-          { projection, includeEligibleTargets: false },
-        ),
-        validation: makeValidationError(
-          "invalid-action-params",
-          parsed.message,
-        ),
-      };
-    }
-
+    const pending = state.runtime.pending[playerId];
+    const pendingMatches =
+      pending?.phaseName === phaseName &&
+      pending.interactionId === interactionId;
     const phase = scope.phaseByName(phaseName);
     const isSimultaneousSubmit =
       isSimultaneousPhase(phase) &&
@@ -251,6 +214,14 @@ export function createInteractionDecisionResolver<
       visible = false;
     }
     let validation: ReducerValidationResult = { valid: true };
+    const otherPending = pending !== undefined && !pendingMatches;
+    if (otherPending) {
+      visible = false;
+      validation = makeValidationError(
+        "PENDING_INTERACTION",
+        "Finish or cancel the pending interaction first.",
+      );
+    }
     if (!authorized) {
       validation = makeValidationError(
         "NOT_YOUR_TURN",
@@ -299,6 +270,188 @@ export function createInteractionDecisionResolver<
       }
     }
 
+    return {
+      found: true as const,
+      interaction,
+      authorized,
+      visible,
+      validation,
+      ruleAvailabilityIssue,
+      otherPending,
+      canEvaluateProjectionDetails,
+    };
+  }
+
+  function resolveInteractionDecision({
+    state,
+    playerId,
+    interactionId,
+    params = {},
+    mode,
+    candidateInvariantsValidated = false,
+    projection,
+  }: ResolveDecisionInput<Contract>): InteractionDecisionResult<
+    Contract,
+    Definitions,
+    View
+  > {
+    const phaseName = state.flow.currentPhase as PhaseName;
+    let interaction = scope.findInteractionInPhase(phaseName, interactionId);
+    if (!interaction) {
+      return {
+        found: false,
+        validation: makeValidationError(
+          "unsupported-action",
+          `Interaction '${interactionId}' is not available in phase '${state.flow.currentPhase}'.`,
+        ),
+      };
+    }
+    const trustedInteractionId = interactionId as InteractionId;
+    const originalInteraction = interaction;
+    const pending = state.runtime.pending[playerId];
+    const pendingMatches =
+      pending?.phaseName === phaseName &&
+      pending.interactionId === interactionId;
+    const eligibility = resolveInteractionEligibility({
+      state,
+      playerId,
+      interactionId,
+      mode,
+      candidateInvariantsValidated,
+      projection,
+    });
+    if (!eligibility.found) return eligibility;
+    const { authorized, visible, ruleAvailabilityIssue, otherPending } =
+      eligibility;
+    let validation = eligibility.validation;
+    if (!validation.valid) {
+      const code =
+        "errorCode" in validation ? validation.errorCode : "action-unavailable";
+      return {
+        found: true,
+        interaction,
+        parsedParams: {},
+        visible,
+        descriptor: buildInteractionDescriptor(
+          scope,
+          state,
+          playerId,
+          trustedInteractionId,
+          interaction,
+          {
+            available: false,
+            code,
+            message: validation.message ?? code,
+            ...(ruleAvailabilityIssue
+              ? { ruleId: ruleAvailabilityIssue.ruleId }
+              : {}),
+          },
+          {
+            projection,
+            includeDiagnosticReasons: options.diagnostics === "verbose",
+          },
+        ),
+        validation,
+      };
+    }
+    const previousValues = pendingMatches ? pending.values : [];
+    const submittedKey = interaction.steps?.entries[previousValues.length]?.key;
+    const paramsRecord =
+      params !== null && typeof params === "object" && !Array.isArray(params)
+        ? params
+        : {};
+    const prefix = interaction.steps
+      ? evaluateStepPrefix(
+          interaction.steps,
+          scope.toDomainState(state),
+          playerId,
+          mode === "submit"
+            ? [...previousValues, paramsRecord[submittedKey ?? ""]]
+            : previousValues,
+        )
+      : undefined;
+    const submittedPrefix = mode === "submit" ? prefix : undefined;
+    const stepComplete = submittedPrefix?.complete === true;
+    const stepParamsValid =
+      !prefix ||
+      mode !== "submit" ||
+      (!!submittedKey &&
+        Object.keys(paramsRecord).length === 1 &&
+        Object.prototype.hasOwnProperty.call(paramsRecord, submittedKey) &&
+        prefix.values.length === previousValues.length + 1 &&
+        !prefix.issue);
+    if (prefix) {
+      interaction = {
+        ...interaction,
+        steps: undefined,
+        inputs: stepComplete
+          ? submittedPrefix!.collectors
+          : prefix.current
+            ? { [prefix.current.key]: prefix.current.collector }
+            : {},
+        paramsSchema: stepComplete ? interaction.paramsSchema : undefined,
+      };
+    }
+
+    const parseForSubmit = mode === "submit";
+    const finalStepSchema =
+      stepComplete && originalInteraction.paramsSchema
+        ? originalInteraction.paramsSchema.safeParse(submittedPrefix!.selected)
+        : undefined;
+    const parsed = !stepParamsValid
+      ? {
+          ok: false as const,
+          message: "Submit exactly the current eligible step value.",
+        }
+      : submittedPrefix
+        ? finalStepSchema && !finalStepSchema.success
+          ? {
+              ok: false as const,
+              message:
+                "Complete step parameters do not match the interaction schema.",
+            }
+          : {
+              ok: true as const,
+              params: (finalStepSchema?.success
+                ? finalStepSchema.data
+                : submittedPrefix.selected) as Record<string, unknown>,
+            }
+        : parseForSubmit
+          ? parseInteractionParams(interaction, params, {
+              skipRng: true,
+              playerId,
+            })
+          : ({
+              ok: true,
+              params: prepareInteractionProjectionParams(interaction, params),
+            } as const);
+    if (!parsed.ok) {
+      const descriptorDecision: InteractionDecision = {
+        available: false,
+        code: FrameworkErrorCodes.INVALID_PARAMS,
+        message: parsed.message,
+      };
+      return {
+        found: true,
+        interaction,
+        parsedParams: {},
+        visible: true,
+        descriptor: buildInteractionDescriptor(
+          scope,
+          state,
+          playerId,
+          trustedInteractionId,
+          interaction,
+          descriptorDecision,
+          { projection, includeEligibleTargets: false },
+        ),
+        validation: makeValidationError(
+          "invalid-action-params",
+          parsed.message,
+        ),
+      };
+    }
+
     let authoredValidation:
       | {
           ruleId: string;
@@ -306,24 +459,16 @@ export function createInteractionDecisionResolver<
           message?: string;
         }
       | undefined;
-    if (
-      (validation.valid || (mode === "card" && canEvaluateProjectionDetails)) &&
-      (mode === "submit" || mode === "card")
-    ) {
-      if (validation.valid && mode === "submit") {
-        validation = validateCollectorTargets(
-          interaction,
-          projection?.domainState ?? scope.toDomainState(state),
-          playerId,
-          parsed.params,
-        );
-      }
+    if (validation.valid && mode === "submit" && (!prefix || stepComplete)) {
+      validation = validateCollectorTargets(
+        interaction,
+        projection?.domainState ?? scope.toDomainState(state),
+        playerId,
+        parsed.params,
+      );
     }
 
-    if (
-      (validation.valid || (mode === "card" && canEvaluateProjectionDetails)) &&
-      (mode === "submit" || mode === "card")
-    ) {
+    if (validation.valid && mode === "submit" && (!prefix || stepComplete)) {
       const validateArgs = scope.buildRuntimeArgs(
         state,
         {
@@ -357,17 +502,8 @@ export function createInteractionDecisionResolver<
       }
     }
 
-    const candidateInvariantAvailable = authorized && !ruleAvailabilityIssue;
-    const acceptsAssignment = (
-      assignment: Readonly<Record<string, unknown>>,
-    ): boolean =>
-      acceptsSubmitAssignment({
-        state,
-        playerId,
-        interactionId,
-        assignment,
-        projection,
-      });
+    const candidateInvariantAvailable =
+      authorized && !otherPending && !ruleAvailabilityIssue;
     const inputSatisfiability =
       candidateInvariantAvailable && mode !== "submit"
         ? hasAnyCollectorInputAssignment({
@@ -376,7 +512,7 @@ export function createInteractionDecisionResolver<
             playerId,
             queries: projection?.q,
             initialValues: params,
-            acceptsAssignment,
+            acceptsAssignment: () => true,
           })
         : undefined;
     const available =
@@ -424,10 +560,11 @@ export function createInteractionDecisionResolver<
       state,
       playerId,
       trustedInteractionId,
-      interaction,
+      originalInteraction,
       descriptorDecision,
       {
         projection,
+        stepPrefix: mode === "submit" ? undefined : prefix,
         includeEligibleTargets: available || mode === "card",
         includeDiagnosticReasons: options.diagnostics === "verbose",
       },
@@ -436,6 +573,14 @@ export function createInteractionDecisionResolver<
       found: true,
       interaction,
       parsedParams: parsed.params,
+      ...(submittedPrefix
+        ? {
+            stepResult: {
+              values: submittedPrefix.values,
+              complete: submittedPrefix.complete,
+            },
+          }
+        : {}),
       visible,
       descriptor,
       inputSatisfiability,
@@ -484,6 +629,20 @@ export function createInteractionDecisionResolver<
       descriptor: decision.descriptor,
       inputSatisfiability: decision.inputSatisfiability,
     };
+  }
+
+  function currentClientParamSchema(input: {
+    state: State;
+    playerId: PlayerId;
+    interactionId: string;
+  }) {
+    const decision = resolveInteractionDecision({
+      ...input,
+      mode: "descriptor",
+    });
+    if (!decision.found || !decision.visible || !decision.descriptor.step)
+      return null;
+    return schemaForCollectors(decision.interaction.inputs ?? {});
   }
 
   function enumerateInteractionParams(input: {
@@ -669,10 +828,12 @@ export function createInteractionDecisionResolver<
   }
 
   return {
+    currentClientParamSchema,
     enumerateInteractionParams,
     explainInteraction,
     resolveAvailableInteractionsFor,
     resolveInteractionActionability,
     resolveInteractionDecision,
+    resolveInteractionEligibility,
   };
 }

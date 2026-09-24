@@ -5,6 +5,7 @@ import {
   type PluginProtocolTape,
   type PluginToHostPayload,
   type SubmitInteractionCommand,
+  type CancelInteractionCommand,
 } from "@dreamboard-games/plugin-runtime-contract";
 import type { PluginTransport } from "../../runtime/core/types.js";
 import { digestUIFixtureTransportRequest } from "./canonical.js";
@@ -206,12 +207,14 @@ export function createFixtureHostHarness(
     return step as Extract<PluginProtocolTape["steps"][number], { kind: Kind }>;
   };
 
-  const handleSubmit = async (command: SubmitInteractionCommand) => {
+  const handleSubmit = async (
+    command: SubmitInteractionCommand | CancelInteractionCommand,
+  ) => {
     const requestDigest = digestUIFixtureTransportRequest({
-      operation: "submit",
+      operation: command.type === "interaction.cancel" ? "cancel" : "submit",
       basis: command.basis,
       interactionId: command.interactionId,
-      payload: command.params,
+      payload: command.type === "interaction.cancel" ? null : command.params,
     });
     const step = consumeExpectedStep("client.submit", requestDigest);
     record({
@@ -249,6 +252,7 @@ export function createFixtureHostHarness(
       case "runtime.ack":
         record({ kind: "ack-received" });
         break;
+      case "interaction.cancel":
       case "interaction.submit":
         trackHandler(handleSubmit(payload));
         break;

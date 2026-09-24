@@ -147,16 +147,35 @@ export function StormtrailInteractionRoutes({
           <div className={fieldPanelClass}>
             <strong>Move the Bandits</strong>
             <p className="text-sm text-stone-600">
-              Choose a highlighted district, then select a victim only when one
-              is required.
+              {state.descriptor.step?.index === 0
+                ? "Choose a highlighted district to commit your destination."
+                : "District committed. Choose a victim or confirm that there is no victim."}
             </p>
-            <moveBandits.slot.targetPlayerId.Field />
+            {state.inputKeys.includes("targetPlayerId") && (
+              <moveBandits.slot.targetPlayerId.Field />
+            )}
             <moveBandits.Submit
               className={buttonClass}
               disabled={!state.available}
             >
-              Move Bandits
+              {state.descriptor.step?.index === 0
+                ? "Confirm district"
+                : "Confirm victim"}
             </moveBandits.Submit>
+            {state.descriptor.step?.canCancel && (
+              <button
+                type="button"
+                className={buttonClass}
+                disabled={state.status !== "open"}
+                onClick={() => {
+                  void state.handle.cancel().catch(() => {
+                    /* The runtime reports rejection; retain the committed prefix. */
+                  });
+                }}
+              >
+                Cancel Bandits move
+              </button>
+            )}
           </div>
         )}
       </moveBandits.State>

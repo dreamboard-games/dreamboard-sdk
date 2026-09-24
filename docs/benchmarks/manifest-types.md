@@ -37,3 +37,32 @@ edge and vertex IDs remain strings in TypeScript where they cannot be derived
 statically; the compiled runtime schemas validate them against the actual
 materialized topology. This is an intentional precision boundary, not equivalent
 static narrowing for every literal formerly emitted by code generation.
+
+## Headless delivery baseline
+
+The in-memory migration measured above already landed before this delivery.
+The following measurements isolate the additional headless rewrite, after the
+board and seat-view cuts and before committed steps and the instance/React cut.
+Repeat them at final packaging. The historical geometry/type notes above describe
+the earlier candidate; board IDs now use the branded query contract.
+
+Measured on 2026-09-24 at SDK `a7b8500` with Node 24, repository pnpm 10.4.1,
+TypeScript 5.9.3 and the built workspace SDK declarations. Each game used:
+
+```sh
+pnpm exec tsc --noEmit -p tsconfig.json --extendedDiagnostics
+```
+
+| Game                |  Types | Instantiations | Check time | Total time |    Memory |
+| ------------------- | -----: | -------------: | ---------: | ---------: | --------: |
+| Hearts              | 67,712 |        226,990 |     0.50 s |     0.86 s | 327,755 K |
+| Hex Network Trading | 83,030 |        299,389 |     0.68 s |     1.00 s | 373,600 K |
+
+These are single local runs, not a stable hardware benchmark. Instantiations
+provide the less noisy comparison; investigate changes above the original
+2x budget and repeat timing before drawing a conclusion from the 1.5x timing
+budget. The final measurement must record its actual API/UI scope, since the
+rewrite also removes old declarations and tests.
+
+Logs: `/tmp/headless-pre-instance-hearts-types.log` and
+`/tmp/headless-pre-instance-hex-types.log`.

@@ -56,7 +56,7 @@ export type InteractionExplanationLike = {
   inputs: ReadonlyArray<{
     key: string;
     kind: string;
-    eligibleCount: number | "lazy";
+    eligibleCount: number | "unknown";
   }>;
 };
 
@@ -193,12 +193,20 @@ export type ScenarioSchemaOutput<Schema extends z.core.SomeType> =
                                     : z.output<Schema>;
 
 type InputCollectorsOfInteraction<Interaction> = Interaction extends {
-  readonly inputs?: infer Collectors;
+  readonly steps: {
+    readonly collectors: infer Collectors extends Readonly<
+      Record<string, unknown>
+    >;
+  };
 }
-  ? NonNullable<Collectors> extends Readonly<Record<string, unknown>>
-    ? NonNullable<Collectors>
-    : Record<string, never>
-  : Record<string, never>;
+  ? Collectors
+  : Interaction extends {
+        readonly inputs?: infer Collectors;
+      }
+    ? NonNullable<Collectors> extends Readonly<Record<string, unknown>>
+      ? NonNullable<Collectors>
+      : Record<string, never>
+    : Record<string, never>;
 
 type ScenarioParamsOfCollectors<
   Collectors extends Readonly<Record<string, unknown>>,
@@ -214,14 +222,25 @@ type ScenarioParamsOfCollectors<
     : never;
 };
 
+type ScenarioStepParams<Params> = {
+  [Key in keyof Params]: Pick<Params, Key> &
+    Partial<Record<Exclude<keyof Params, Key>, never>>;
+}[keyof Params];
+
 type ScenarioParamsOfInteraction<Interaction> = Interaction extends {
-  readonly cardType: unknown;
-  readonly playFrom: unknown;
+  readonly steps: unknown;
 }
-  ? { readonly cardId: string } & ScenarioParamsOfCollectors<
-      InputCollectorsOfInteraction<Interaction>
+  ? ScenarioStepParams<
+      ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>
     >
-  : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
+  : Interaction extends {
+        readonly cardType: unknown;
+        readonly playFrom: unknown;
+      }
+    ? { readonly cardId: string } & ScenarioParamsOfCollectors<
+        InputCollectorsOfInteraction<Interaction>
+      >
+    : ScenarioParamsOfCollectors<InputCollectorsOfInteraction<Interaction>>;
 
 export type ScenarioCommand<
   InteractionId extends string = string,

@@ -1,4 +1,3 @@
-import { defineInputs } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 import { ids, literals, type PlayerId, type ResourceId } from "../manifest";
 import {
@@ -35,12 +34,16 @@ const buildTrail = main.interaction({
     {
       id: "trail-piece-available",
       errorCode: "TRAIL_PIECES_EXHAUSTED",
+      available: ({ state, input }) =>
+        remainingPieceCount(state, input.playerId, "trail") > 0,
       validate: ({ state, input }) =>
         remainingPieceCount(state, input.playerId, "trail") > 0,
     },
     {
       id: "trail-cost",
       errorCode: "INSUFFICIENT_RESOURCES",
+      available: ({ q, input }) =>
+        q.player.canAfford(input.playerId, TRAIL_COST),
       validate: ({ input, q }) =>
         q.player.canAfford(input.playerId, TRAIL_COST),
     },
@@ -73,12 +76,16 @@ const buildCamp = main.interaction({
     {
       id: "camp-piece-available",
       errorCode: "CAMP_PIECES_EXHAUSTED",
+      available: ({ state, input }) =>
+        remainingPieceCount(state, input.playerId, "camp") > 0,
       validate: ({ state, input }) =>
         remainingPieceCount(state, input.playerId, "camp") > 0,
     },
     {
       id: "camp-cost",
       errorCode: "INSUFFICIENT_RESOURCES",
+      available: ({ q, input }) =>
+        q.player.canAfford(input.playerId, CAMP_COST),
       validate: ({ input, q }) => q.player.canAfford(input.playerId, CAMP_COST),
     },
   ],
@@ -113,37 +120,19 @@ const buildCamp = main.interaction({
 });
 
 const tradeWithSupplyDepot = main.interaction({
-  inputs: defineInputs((input) => {
-    const giveResource = input.add(
-      "giveResource",
-      main.inputs.form.choice<ResourceId>({
-        choices: ({ q, playerId }) =>
-          literals.resourceIds
-            .filter(
-              (resourceId) => q.player.resource(playerId, resourceId) >= 3,
-            )
-            .map((resourceId) => ({ value: resourceId, label: resourceId })),
-        defaultValue: ({ choices }) => choices[0]?.value,
-      }),
-    );
-    return {
-      giveResource,
-      receiveResource: input.add(
-        "receiveResource",
-        main.inputs.form.choice({
-          dependsOn: [giveResource],
-          choices: ({ values }) =>
-            literals.resourceIds
-              .filter((resourceId) => resourceId !== values.giveResource)
-              .map((resourceId) => ({
-                value: resourceId,
-                label: resourceId,
-              })),
-          defaultValue: ({ choices }) => choices[0]?.value,
-        }),
-      ),
-    };
-  }),
+  inputs: {
+    giveResource: main.inputs.form.choice<ResourceId>({
+      choices: ({ q, playerId }) =>
+        literals.resourceIds
+          .filter((resourceId) => q.player.resource(playerId, resourceId) >= 3)
+          .map((value) => ({ value, label: value })),
+      defaultValue: ({ choices }) => choices[0]?.value,
+    }),
+    receiveResource: main.inputs.form.choice({
+      choices: literals.resourceIds.map((value) => ({ value, label: value })),
+      defaultValue: ({ choices }) => choices[0]?.value,
+    }),
+  },
   paramsSchema: z.object({
     giveResource: ids.resourceId,
     receiveResource: ids.resourceId,
@@ -180,48 +169,36 @@ const tradeWithSupplyDepot = main.interaction({
 });
 
 const offerTrade = main.interaction({
-  inputs: defineInputs((input) => {
-    const targetPlayerId = input.add(
-      "targetPlayerId",
-      main.inputs.form.choice<PlayerId>({
-        choices: ({ q, playerId }) =>
-          q.player
-            .order()
-            .filter((candidate) => candidate !== playerId)
-            .map((candidate) => ({ value: candidate, label: candidate })),
-        defaultValue: ({ choices }) => choices[0]?.value,
-      }),
-    );
-    return {
-      targetPlayerId,
-      give: input.add(
-        "give",
-        main.inputs.form.resourceMap({
-          resources: literals.resourceIds.map((resourceId) => ({
-            resourceId,
-            min: 0,
-            max: ({ q, playerId }) => q.player.resource(playerId, resourceId),
-          })),
-        }),
-      ),
-      want: input.add(
-        "want",
-        main.inputs.form.resourceMap({
-          resources: literals.resourceIds.map((resourceId) => ({
-            resourceId,
-            min: 0,
-            max: ({ q }) =>
-              Math.max(
-                0,
-                ...q.player
-                  .order()
-                  .map((playerId) => q.player.resource(playerId, resourceId)),
-              ) + 1,
-          })),
-        }),
-      ),
-    };
-  }),
+  inputs: {
+    targetPlayerId: main.inputs.form.choice<PlayerId>({
+      choices: ({ q, playerId }) =>
+        q.player
+          .order()
+          .filter((candidate) => candidate !== playerId)
+          .map((value) => ({ value, label: value })),
+      defaultValue: ({ choices }) => choices[0]?.value,
+    }),
+    give: main.inputs.form.resourceMap({
+      resources: literals.resourceIds.map((resourceId) => ({
+        resourceId,
+        min: 0,
+        max: ({ q, playerId }) => q.player.resource(playerId, resourceId),
+      })),
+    }),
+    want: main.inputs.form.resourceMap({
+      resources: literals.resourceIds.map((resourceId) => ({
+        resourceId,
+        min: 0,
+        max: ({ q }) =>
+          Math.max(
+            0,
+            ...q.player
+              .order()
+              .map((playerId) => q.player.resource(playerId, resourceId)),
+          ) + 1,
+      })),
+    }),
+  },
   paramsSchema: z.object({
     targetPlayerId: ids.playerId,
     give: resourceCountsSchema,

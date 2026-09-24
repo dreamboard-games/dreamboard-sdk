@@ -21,7 +21,7 @@ const projection: ScenarioProjectionParity = {
       actorSeat: 0,
       interactionId: "increment",
       availability: { status: "available" },
-      inputs: [{ key: "amount", kind: "number", eligibleCount: "lazy" }],
+      inputs: [{ key: "amount", kind: "number", eligibleCount: "unknown" }],
     },
   ],
 };

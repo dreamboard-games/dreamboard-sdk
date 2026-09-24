@@ -79,6 +79,9 @@ export function useBoundInteractionHandle<
       Partial<Params> & Pick<Params, DefaultedKeys>
     >;
   }, [descriptor, draft]);
+  useEffect(() => {
+    if (descriptor?.step) applyInteractionDraftMutation(store, descriptor, []);
+  }, [descriptor, store]);
   const armedId = useArmedInteraction(armScope);
   const isArmed = descriptor ? armedId === interactionKey : false;
   const submitting = useInteractionSubmitting(interactionKey);
@@ -161,7 +164,7 @@ export function useBoundInteractionHandle<
       rawDraft,
     ) as Partial<Record<keyof Params & string, readonly string[]>>;
 
-    if (!paramsSchema) {
+    if (!paramsSchema || activeDescriptor.step) {
       if (missing.length > 0 || hasInteractionFieldErrors(domainFieldErrors)) {
         return {
           ok: false,
@@ -251,9 +254,17 @@ export function useBoundInteractionHandle<
       if (!isReady) autoSubmitSignatureRef.current = null;
       return;
     }
+    // A suggested step default is not committed without player input.
+    if (
+      descriptor.step &&
+      !descriptor.inputs.some((input) =>
+        Object.prototype.hasOwnProperty.call(draft, input.key),
+      )
+    )
+      return;
     const validation = validateDraft();
     if (!validation.ok) return;
-    const signature = `${descriptor.interactionKey}:${JSON.stringify(
+    const signature = `${descriptor.interactionKey}:${descriptor.step?.index ?? "independent"}:${JSON.stringify(
       validation.params,
     )}`;
     if (autoSubmitSignatureRef.current === signature) return;
@@ -264,6 +275,7 @@ export function useBoundInteractionHandle<
     });
   }, [
     descriptor,
+    draft,
     descriptor?.availability,
     descriptor?.commit.mode,
     descriptor?.inputs,
@@ -311,6 +323,23 @@ export function useBoundInteractionHandle<
   }
 
   return {
+    cancel: async () => {
+      const active = requireDescriptor();
+      if (!claimInteractionSubmit(store, active)) {
+        throw new ValidationError(
+          "SUBMITTING",
+          "Interaction submission is already in progress.",
+        );
+      }
+      try {
+        await runtime.cancelInteraction(active.interactionId);
+        clearInteractionRoute(store, active);
+      } catch (error) {
+        throw validationErrorFromUnknown(error);
+      } finally {
+        store.setSubmitting(active.interactionKey, false);
+      }
+    },
     descriptor,
     commit: descriptor.commit,
     available: isInteractionAvailable(descriptor),

@@ -20,7 +20,6 @@ import {
   inputTargetKind,
   isResolvedTargetDomain,
   isTargetDomain,
-  resolveInputDomain,
   toggleManyValue,
 } from "../../utils/interaction-inputs.js";
 import { interactionDraftDigestForValues } from "../../utils/interaction-draft-digest.js";
@@ -103,10 +102,7 @@ export function createInteractionInputSlot<
   disabled: boolean;
 }): InteractionInputSlot {
   const value = handle.values[input.key] as Params[Key] | undefined;
-  const resolvedInput = resolveInputDomain(
-    input,
-    handle.values as Readonly<Record<string, unknown>>,
-  ) as InteractionInputDescriptor & { key: Key };
+  const resolvedInput = input as InteractionInputDescriptor & { key: Key };
 
   const targetButton = ({
     value: targetValue,

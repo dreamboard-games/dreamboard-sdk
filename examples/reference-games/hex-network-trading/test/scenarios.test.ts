@@ -424,7 +424,7 @@ const banditsIdentity = {
   sourceDigest: "sha256:stormtrail-bandits",
 } as const;
 
-test("Bandits exploration derives no-victim, one-victim, and multi-victim commands", async () => {
+test("Bandits exploration commits the destination before discovering victims", async () => {
   const explored = await exploreScenario({
     game,
     scenario: banditsScenario,
@@ -438,36 +438,55 @@ test("Bandits exploration derives no-victim, one-victim, and multi-victim comman
   assert.deepEqual(
     explored.candidates.map(({ command }) => command),
     [
-      bandits(0, "northEastClay", 2),
-      bandits(0, "northForest", 1),
-      bandits(0, "northForest", 2),
-      bandits(0, "northWestFields", 1),
-      bandits(0, "southEastFields"),
-      bandits(0, "southForest"),
-      bandits(0, "southWestClay"),
-    ],
+      "northEastClay",
+      "northForest",
+      "northWestFields",
+      "southEastFields",
+      "southForest",
+      "southWestClay",
+    ].map((hexId) => ({
+      actor: { seat: 0 },
+      interactionId: "moveBandits",
+      params: { hexId },
+    })),
   );
-  assert.equal(
-    explored.candidates.some(
-      ({ command }) => command.params.hexId === "centralBarrens",
-    ),
-    false,
-  );
-  for (const candidate of explored.candidates) {
-    const replay = await replayScenario({
+  for (const [hexId, expected] of [
+    ["northForest", [{ seat: 1 }, { seat: 2 }]],
+    ["northEastClay", [{ seat: 2 }]],
+    ["southWestClay", [null]],
+  ] as const) {
+    const scenario = defineScenario({
+      id: `bandits-${hexId}`,
+      setup: banditsScenario.setup,
+      given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]!],
+      when: [],
+      then: () => {},
+    });
+    const victims = await exploreScenario({
       game,
-      scenario: banditsScenario,
-      at: { segment: "given", completed: BANDITS_PREFIX_COMMANDS.length },
+      scenario,
+      identity: { ...banditsIdentity, id: scenario.id },
+      perspective: { kind: "player", seat: 0 },
+      limit: 50,
     });
-    const result = await probeScenarioCommand({
-      replay,
-      command: candidate.command as never,
-    });
-    assert.equal(result.kind, "accepted");
+    assert.equal(victims.mode, "transitions");
+    if (victims.mode !== "transitions") continue;
+    assert.deepEqual(
+      victims.candidates.map(({ command }) => command.params),
+      expected.map((targetPlayerId) => ({ targetPlayerId })),
+    );
+    for (const candidate of victims.candidates) {
+      const replay = await replayScenario({ game, scenario });
+      const result = await probeScenarioCommand({
+        replay,
+        command: candidate.command as never,
+      });
+      assert.equal(result.kind, "accepted");
+    }
   }
 });
 
-test("Bandits rejects the current hex and enforces optional victim cardinality", async () => {
+test("Bandits rejects the current hex and invalid victim values without changing its prefix", async () => {
   const replay = await replayScenario({
     game,
     scenario: banditsScenario,
@@ -476,25 +495,35 @@ test("Bandits rejects the current hex and enforces optional victim cardinality",
   const digest = replay.checkpointDigest;
   const currentHex = await probeScenarioCommand({
     replay,
-    command: bandits(0, "centralBarrens"),
+    command: bandits(0, "centralBarrens")[0]!,
   });
   assert.equal(currentHex.kind, "rejected");
-  if (currentHex.kind === "rejected") {
-    assert.equal(currentHex.errorCode, "BANDITS_DESTINATION_REQUIRED");
+  for (const [hexId, targetPlayerId] of [
+    ["northForest", null],
+    ["southWestClay", { seat: 1 }],
+  ] as const) {
+    const pending = await replayScenario({
+      game,
+      scenario: defineScenario({
+        id: `invalid-victim-${hexId}`,
+        setup: banditsScenario.setup,
+        given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]!],
+        when: [],
+        then: () => {},
+      }),
+    });
+    const before = pending.checkpointDigest;
+    const invalid = await probeScenarioCommand({
+      replay: pending,
+      command: {
+        actor: { seat: 0 },
+        interactionId: "moveBandits",
+        params: { targetPlayerId },
+      },
+    });
+    assert.equal(invalid.kind, "rejected");
+    assert.equal(pending.checkpointDigest, before);
   }
-  const missingVictim = await probeScenarioCommand({
-    replay,
-    command: bandits(0, "northForest"),
-  });
-  assert.equal(missingVictim.kind, "rejected");
-  if (missingVictim.kind === "rejected") {
-    assert.equal(missingVictim.errorCode, "STEAL_TARGET_REQUIRED");
-  }
-  const forbiddenVictim = await probeScenarioCommand({
-    replay,
-    command: bandits(0, "southWestClay", 1),
-  });
-  assert.equal(forbiddenVictim.kind, "rejected");
   assert.equal(replay.checkpointDigest, digest);
 });
 
@@ -517,7 +546,7 @@ test("seeded stolen supply type is participant-only and reproducible", async () 
     scenario: banditsScenario,
     identity: banditsIdentity,
     perspective: { kind: "spectator" },
-    at: { segment: "when", completed: 1 },
+    at: { segment: "when", completed: 2 },
   });
   assert.equal(JSON.stringify(spectator.node).includes("myLastStolen"), false);
   assert.deepEqual(spectator.node.view, {});
@@ -542,28 +571,28 @@ test("privacy projection exposes exact inventories only to their owners", async 
       scenario: projectionPrivacy,
       identity,
       perspective: { kind: "player", seat: 0 },
-      at: { segment: "when", completed: 2 },
+      at: { segment: "when", completed: 3 },
     }),
     inspectScenario({
       game,
       scenario: projectionPrivacy,
       identity,
       perspective: { kind: "player", seat: 1 },
-      at: { segment: "when", completed: 2 },
+      at: { segment: "when", completed: 3 },
     }),
     inspectScenario({
       game,
       scenario: projectionPrivacy,
       identity,
       perspective: { kind: "player", seat: 2 },
-      at: { segment: "when", completed: 2 },
+      at: { segment: "when", completed: 3 },
     }),
     inspectScenario({
       game,
       scenario: projectionPrivacy,
       identity,
       perspective: { kind: "spectator" },
-      at: { segment: "when", completed: 2 },
+      at: { segment: "when", completed: 3 },
     }),
   ]);
   const firstView = playerOne.node.view as Record<string, unknown>;
@@ -861,9 +890,9 @@ test("seeded production covers every terrain number and all no-token totals", as
       resourceId: "provisions",
       hexId: "northWestFields",
     },
-    { completed: 27, total: 9, resourceId: "timber", hexId: "southForest" },
-    { completed: 70, total: 6, resourceId: "brick", hexId: "northEastClay" },
-    { completed: 78, total: 4, resourceId: "brick", hexId: "southWestClay" },
+    { completed: 29, total: 9, resourceId: "timber", hexId: "southForest" },
+    { completed: 76, total: 6, resourceId: "brick", hexId: "northEastClay" },
+    { completed: 84, total: 4, resourceId: "brick", hexId: "southWestClay" },
   ] as const;
   for (const expected of checkpoints) {
     const replay = await replayScenario({
@@ -893,8 +922,8 @@ test("seeded production covers every terrain number and all no-token totals", as
 
   for (const [completed, total] of [
     [15, 3],
-    [29, 11],
-    [51, 12],
+    [31, 11],
+    [54, 12],
   ] as const) {
     const replay = await replayScenario({
       game,
@@ -907,14 +936,14 @@ test("seeded production covers every terrain number and all no-token totals", as
   const final = await replayScenario({ game, scenario: productionScenario });
   assert.equal(final.state().publicState.lastRoll?.total, 2);
   assert.deepEqual(final.state().publicState.lastProduction, []);
-  assert.equal(PRODUCTION_COMMANDS.length, 219);
+  assert.equal(PRODUCTION_COMMANDS.length, 235);
 });
 
 test("Bandits suppress production and multiple adjacent camps each produce", async () => {
   const suppressed = await replayScenario({
     game,
     scenario: productionScenario,
-    at: { segment: "given", completed: 108 },
+    at: { segment: "given", completed: 117 },
   });
   assert.equal(suppressed.state().publicState.lastRoll?.total, 5);
   assert.equal(suppressed.view({ seat: 0 }).banditsHexId, "northForest");
@@ -936,7 +965,7 @@ test("Bandits suppress production and multiple adjacent camps each produce", asy
   const threeCamps = await replayScenario({
     game,
     scenario: completeGame,
-    at: { segment: "given", completed: 96 },
+    at: { segment: "given", completed: 103 },
   });
   assert.deepEqual(threeCamps.state().publicState.lastProduction, [
     {
@@ -1104,17 +1133,22 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
     then: () => {},
   });
   const replay = await replayScenario({ game, scenario: mainScenario });
+  const funded = await replayScenario({
+    game,
+    scenario: completeGame,
+    at: { segment: "given", completed: 11 },
+  });
   const occupied = await probeScenarioCommand({
-    replay,
-    command: camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1)),
+    replay: funded,
+    command: camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 1)),
   });
   assert.equal(occupied.kind, "rejected");
   if (occupied.kind === "rejected") {
     assert.equal(occupied.errorCode, "VERTEX_OCCUPIED");
   }
   const disconnected = await probeScenarioCommand({
-    replay,
-    command: camp(0, FRONTIER_GEOMETRY.vertexAt("southForest", 2)),
+    replay: funded,
+    command: camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 2)),
   });
   assert.equal(disconnected.kind, "rejected");
   if (disconnected.kind === "rejected") {

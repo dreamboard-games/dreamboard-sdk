@@ -149,8 +149,9 @@ Every turn begins in `roll` and follows one of two paths.
    and must submit `discardSupplies`. Required players may respond in any order.
 3. The active player is blocked until every required discard commits. A player
    with 7 or fewer supplies does not receive a discard action.
-4. After the barrier clears, the active player submits `moveBandits`, choosing
-   a different hex and, when required, an eligible adjacent opponent.
+4. After the barrier clears, the active player commits a different hex through
+   `moveBandits`, then commits an eligible adjacent opponent or explicit no-victim
+   choice. The Bandits stay in place until both choices are complete.
 5. The Bandits move and one supply is stolen through seeded entropy when the
    chosen hex has an eligible opponent.
 6. The active player enters `main` and continues the same turn normally.
@@ -183,7 +184,7 @@ produce nothing because the fixed map has no corresponding number token.
   one eligible victim. Multiple adjacent camps do not give a victim extra
   weight.
 - If no victim is eligible, the Bandits move without a steal and
-  `targetPlayerId` must be omitted.
+  `targetPlayerId` must be explicitly `null`.
 - When stealing, select uniformly from the victim's individual supply cards by
   trusted seeded entropy, remove that supply from the victim, and give it to
   the active player.
@@ -224,20 +225,20 @@ if each is independently affordable.
 These IDs are the public gameplay vocabulary exposed by action discovery,
 inspection, tests, and UI bindings.
 
-| Phase            | Interaction ID         | Actor                 | Inputs                                                                       | Availability and result                                                                                                                   |
-| ---------------- | ---------------------- | --------------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `setupCamp`      | `placeStartingCamp`    | Current setup player  | `intersectionId`                                                             | Available for every empty intersection. Place the camp and advance to `setupTrail` for the same player.                                   |
-| `setupTrail`     | `placeStartingTrail`   | Current setup player  | `edgeId`                                                                     | Available for every empty edge touching the camp just placed. Place the trail, grant starting supplies, then advance setup in seat order. |
-| `roll`           | `rollDice`             | Active player         | none                                                                         | The only player action before the roll. Consume seeded 2d6 entropy, then resolve production or enter the seven path.                      |
-| `discardBarrier` | `discardSupplies`      | Every required player | `resources`                                                                  | Available concurrently only to players above 7 supplies. Commit exactly the required private discard.                                     |
-| `moveBandits`    | `moveBandits`          | Active player         | `hexId`; `targetPlayerId` exactly when the target hex has an eligible victim | Move to a different hex and atomically perform any seeded-random steal, then enter `main`.                                                |
-| `main`           | `buildTrail`           | Active player         | `edgeId`                                                                     | Available for affordable, legal edges while a trail piece remains. Pay and place atomically.                                              |
-| `main`           | `buildCamp`            | Active player         | `intersectionId`                                                             | Available for affordable, legal intersections while a camp piece remains. Pay, place, and immediately check victory.                      |
-| `main`           | `tradeWithSupplyDepot` | Active player         | `giveResource`, `receiveResource`                                            | Available for a 3:1 trade the player can afford, with two different resource types. Transfer atomically.                                  |
-| `main`           | `offerTrade`           | Active player         | `targetPlayerId`, `give`, `want`                                             | Available for one legal, affordable offer to one opponent. Enter `pendingTrade`.                                                          |
-| `pendingTrade`   | `acceptTrade`          | Target player         | none                                                                         | Available only when the target can pay `want`. Revalidate and exchange atomically, then return the offeror to `main`.                     |
-| `pendingTrade`   | `rejectTrade`          | Target player         | none                                                                         | Always available to the target. Cancel and return the offeror to `main`.                                                                  |
-| `main`           | `endTurn`              | Active player         | none                                                                         | End the turn and pass clockwise to the next player's `roll` phase.                                                                        |
+| Phase            | Interaction ID         | Actor                 | Inputs                                                              | Availability and result                                                                                                                   |
+| ---------------- | ---------------------- | --------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `setupCamp`      | `placeStartingCamp`    | Current setup player  | `intersectionId`                                                    | Available for every empty intersection. Place the camp and advance to `setupTrail` for the same player.                                   |
+| `setupTrail`     | `placeStartingTrail`   | Current setup player  | `edgeId`                                                            | Available for every empty edge touching the camp just placed. Place the trail, grant starting supplies, then advance setup in seat order. |
+| `roll`           | `rollDice`             | Active player         | none                                                                | The only player action before the roll. Consume seeded 2d6 entropy, then resolve production or enter the seven path.                      |
+| `discardBarrier` | `discardSupplies`      | Every required player | `resources`                                                         | Available concurrently only to players above 7 supplies. Commit exactly the required private discard.                                     |
+| `moveBandits`    | `moveBandits`          | Active player         | `hexId`, then `targetPlayerId` (eligible victim or explicit `null`) | Move to a different hex and atomically perform any seeded-random steal, then enter `main`.                                                |
+| `main`           | `buildTrail`           | Active player         | `edgeId`                                                            | Available for affordable, legal edges while a trail piece remains. Pay and place atomically.                                              |
+| `main`           | `buildCamp`            | Active player         | `intersectionId`                                                    | Available for affordable, legal intersections while a camp piece remains. Pay, place, and immediately check victory.                      |
+| `main`           | `tradeWithSupplyDepot` | Active player         | `giveResource`, `receiveResource`                                   | Available for a 3:1 trade the player can afford, with two different resource types. Transfer atomically.                                  |
+| `main`           | `offerTrade`           | Active player         | `targetPlayerId`, `give`, `want`                                    | Available for one legal, affordable offer to one opponent. Enter `pendingTrade`.                                                          |
+| `pendingTrade`   | `acceptTrade`          | Target player         | none                                                                | Available only when the target can pay `want`. Revalidate and exchange atomically, then return the offeror to `main`.                     |
+| `pendingTrade`   | `rejectTrade`          | Target player         | none                                                                | Always available to the target. Cancel and return the offeror to `main`.                                                                  |
+| `main`           | `endTurn`              | Active player         | none                                                                | End the turn and pass clockwise to the next player's `roll` phase.                                                                        |
 
 ## Automatic procedures and terminal ordering
 

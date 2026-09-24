@@ -4,6 +4,7 @@ import type {
   AnyInteractionSpec,
   CollectorState,
   InputCollector,
+  InputDomainDescriptor,
   InputSelectionDescriptor,
   ManifestContract,
   ReducerValidationResult,
@@ -11,6 +12,19 @@ import type {
 } from "../../model";
 import { makeValidationError } from "./interaction-types";
 import { interactionInputsOf } from "./collector-introspection";
+
+export function normalizeCollectorValue(
+  collector: InputCollector,
+  value: unknown,
+  playerId?: string,
+): unknown {
+  return collector.kind === "board-space" &&
+    collector.meta?.valueKind === "player-board-space" &&
+    typeof value === "string" &&
+    playerId
+    ? { boardId: collector.meta.boardId, playerId, spaceId: value }
+    : value;
+}
 
 export function parseInteractionParams<
   DomainState extends CollectorState,
@@ -44,17 +58,11 @@ export function parseInteractionParams<
       record[key] === undefined && "defaultValue" in collector
         ? collector.defaultValue
         : record[key];
-    const rawValue =
-      collector.kind === "board-space" &&
-      collector.meta?.valueKind === "player-board-space" &&
-      typeof rawValueBase === "string" &&
-      options.playerId
-        ? {
-            boardId: collector.meta.boardId,
-            playerId: options.playerId,
-            spaceId: rawValueBase,
-          }
-        : rawValueBase;
+    const rawValue = normalizeCollectorValue(
+      collector,
+      rawValueBase,
+      options.playerId,
+    );
     const result = collector.schema.safeParse(rawValue);
     if (!result.success) {
       for (const issue of result.error.issues) {
@@ -118,48 +126,44 @@ export function validateCollectorTargets<
       domainState as unknown as { table: CollectorState["table"] },
     ));
   for (const [key, collector] of Object.entries(collectors)) {
-    const selectionIssue = validateCollectorSelection(collector, params[key]);
-    if (selectionIssue) {
-      return makeValidationError(
-        selectionIssue.errorCode,
-        selectionIssue.message,
-      );
-    }
-    if (!collector.validateTarget) continue;
-    const rawTarget = params[key];
-    if (rawTarget === null || rawTarget === undefined) continue;
-    const dependencyValues = dependencyValuesForCollector(collector, params);
-    const targetValues = valuesForCollectorValidation(
-      collector.selection,
-      rawTarget,
+    const issue = validateCollectorValue(
+      collector,
+      domainState,
+      playerId,
+      queries(),
+      params[key],
     );
-    for (const value of targetValues) {
-      const issue = collector.validateTarget(
-        domainState as unknown as Parameters<
-          typeof collector.validateTarget
-        >[0],
-        playerId as unknown as Parameters<typeof collector.validateTarget>[1],
-        queries() as unknown as Parameters<typeof collector.validateTarget>[2],
-        value,
-        dependencyValues,
-      );
-      if (issue) {
-        return makeValidationError(issue.errorCode, issue.message);
-      }
-    }
+    if (issue) return makeValidationError(issue.errorCode, issue.message);
   }
   return { valid: true };
 }
 
-function dependencyValuesForCollector(
+export function validateCollectorValue(
   collector: InputCollector,
-  params: Record<string, unknown>,
-): Readonly<Record<string, unknown>> | undefined {
-  const dependencies = collector.dependsOn ?? [];
-  if (dependencies.length === 0) return undefined;
-  return Object.fromEntries(
-    dependencies.map((dependencyKey) => [dependencyKey, params[dependencyKey]]),
-  );
+  state: CollectorState,
+  playerId: string,
+  q: unknown,
+  value: unknown,
+  domain = collector.domain?.(state, playerId, q),
+): { errorCode: string; message?: string } | null {
+  const selectionIssue = validateCollectorSelection(collector, value);
+  if (selectionIssue) return selectionIssue;
+  if (value === undefined || collector.kind === "rng") return null;
+  if (value !== null) {
+    for (const target of valuesForCollectorValidation(
+      collector.selection,
+      value,
+    )) {
+      const issue = collector.validateTarget?.(state, playerId, q, target);
+      if (issue) return issue;
+    }
+  }
+  return domain && !collectorValueInDomain(domain, value, collector)
+    ? {
+        errorCode: "INVALID_INPUT_VALUE",
+        message: "Selected value is outside the current input domain.",
+      }
+    : null;
 }
 
 function valuesForCollectorValidation(
@@ -172,7 +176,7 @@ function valuesForCollectorValidation(
   return [value];
 }
 
-function validateCollectorSelection(
+export function validateCollectorSelection(
   collector: InputCollector,
   value: unknown,
 ): { errorCode: string; message?: string } | null {
@@ -218,5 +222,80 @@ function stableValueKey(value: unknown): string {
       return `${typeof value}:${String(value)}`;
     default:
       return `json:${JSON.stringify(value)}`;
+  }
+}
+
+export function collectorValueInDomain(
+  domain: InputDomainDescriptor,
+  value: unknown,
+  collector: InputCollector,
+): boolean {
+  if (collector.selection?.mode === "many") {
+    return (
+      Array.isArray(value) &&
+      value.every((item) =>
+        collectorValueInDomain(domain, item, {
+          ...collector,
+          selection: undefined,
+        }),
+      )
+    );
+  }
+  switch (domain.type) {
+    case "choice":
+      return domain.choices.some(
+        (choice) => !choice.disabled && choice.value === value,
+      );
+    case "choiceList":
+      return (
+        Array.isArray(value) &&
+        value.length >= (domain.min ?? 0) &&
+        value.length <= (domain.max ?? Infinity) &&
+        value.every((item) =>
+          domain.choices.some(
+            (choice) => !choice.disabled && choice.value === item,
+          ),
+        )
+      );
+    case "cardTarget":
+    case "boardTarget": {
+      const values = [value];
+      return values.every((item) =>
+        domain.eligibleTargets.includes(
+          typeof item === "object" && item !== null && "spaceId" in item
+            ? String(item.spaceId)
+            : String(item),
+        ),
+      );
+    }
+    case "boundedNumber":
+      return (
+        typeof value === "number" &&
+        value >= domain.min &&
+        value <= domain.max &&
+        Math.abs(
+          (value - domain.min) / (domain.step ?? 1) -
+            Math.round((value - domain.min) / (domain.step ?? 1)),
+        ) < 1e-9
+      );
+    case "resourceMap":
+      return (
+        typeof value === "object" &&
+        value !== null &&
+        !Array.isArray(value) &&
+        Object.keys(value).every((key) =>
+          domain.resources.some((entry) => entry.resourceId === key),
+        ) &&
+        domain.resources.every((entry) => {
+          const amount =
+            (value as Record<string, unknown>)[entry.resourceId] ?? 0;
+          return (
+            typeof amount === "number" &&
+            Number.isInteger(amount) &&
+            amount >= (entry.min ?? 0) &&
+            amount <= (entry.max ?? Infinity)
+          );
+        })
+      );
   }
 }

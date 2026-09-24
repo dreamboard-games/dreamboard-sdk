@@ -1,3 +1,4 @@
+import { collectReducerDefinitionIndex } from "../definition-index";
 import { z } from "zod";
 import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { safeParseOrThrow } from "../parse-utils";
@@ -219,6 +220,7 @@ export function createIngressRuntimeCodec<
   type PlayerId = PlayerIdOfState<DomainState>;
 
   const { phaseNameSchema } = collectIngressPhaseSchemas(definition);
+  const definitionIndex = collectReducerDefinitionIndex(definition);
   const playerIdSchema = definition.contract.manifest.ids
     .playerId as z.ZodType<PlayerId>;
   const liveContractFingerprint = contractFingerprint(definition).value;
@@ -246,6 +248,23 @@ export function createIngressRuntimeCodec<
       draws: z.array(ContractZod.RngDrawSchema).default([]),
     }),
     options: z.unknown().transform(parseOptions),
+    pending: z.partialRecord(
+      playerIdSchema,
+      z
+        .object({
+          phaseName: phaseNameSchema,
+          interactionId: z.string().min(1),
+          values: z.array(runtimePayloadSchema).min(1),
+        })
+        .strict()
+        .refine((pending) => {
+          const phase = definitionIndex.phasesByName.get(pending.phaseName);
+          const steps = phase?.interactions.find(
+            ([id]) => id === pending.interactionId,
+          )?.[1].steps;
+          return !!steps && pending.values.length < steps.entries.length;
+        }, "Pending interaction must name an authored stepped interaction with an unfinished prefix."),
+    ),
     simultaneous: z.object({
       current: z
         .object({
@@ -286,6 +305,7 @@ export function createIngressRuntimeCodec<
           draws: [],
         },
         options,
+        pending: {},
         simultaneous: { current: null },
         lastTransition: null,
       };

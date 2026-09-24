@@ -48,6 +48,16 @@ export function createInteractionResolver<
     state: State,
     input: ReducerInput,
   ): ReducerValidationResult {
+    if (input.kind === "interaction.cancel") {
+      const pending = state.runtime.pending[input.playerId];
+      return pending?.interactionId === input.interactionId
+        ? { valid: true }
+        : {
+            valid: false,
+            errorCode: "NO_PENDING_INTERACTION",
+            message: "There is no matching unsealed interaction to cancel.",
+          };
+    }
     if (input.kind === "interaction") {
       const decision = decisions.resolveInteractionDecision({
         state,
@@ -77,6 +87,7 @@ export function createInteractionResolver<
   }
 
   return {
+    currentClientParamSchema: decisions.currentClientParamSchema,
     collectEligibleTargets,
     collectFirstCardZoneId,
     enumerateInteractionParams: decisions.enumerateInteractionParams,
@@ -90,6 +101,7 @@ export function createInteractionResolver<
     resolveInteractionActorAuthorization:
       authorization.resolveInteractionActorAuthorization,
     resolveInteractionDecision: decisions.resolveInteractionDecision,
+    resolveInteractionEligibility: decisions.resolveInteractionEligibility,
     validateClientInput,
     validateOrReject,
   };

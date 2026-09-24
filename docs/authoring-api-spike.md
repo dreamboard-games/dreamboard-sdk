@@ -171,15 +171,15 @@ pass `pnpm reference`. The other seven games are unchanged on disk, listed in
 
 **Public authoring surface** (`@dreamboard-games/sdk/reducer`):
 
-| Name                                                                                                                       | Role                                                |
-| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `createGame(model)`                                                                                                        | The only entry point. Returns the bound game value. |
-| `game.types.{State, ErrorCode, PlayerId, Queries, Tx, Manifest, Contract}`                                                 | Phantom type carriers.                              |
-| `game.phase(name)` → `phase.define / .interaction / .inputs.* / .types`                                                    | Phase authoring.                                    |
-| `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.    |
-| `game.views.shared / player / empty / static`                                                                              | Views.                                              |
-| `game.assemble({...})`                                                                                                     | Assembly; missing and extra phase keys fail here.   |
-| `defineInputs`, `many`                                                                                                     | Combinators that were already model-independent.    |
+| Name                                                                                                                       | Role                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `createGame(model)`                                                                                                        | The only entry point. Returns the bound game value.                                      |
+| `game.types.{State, ErrorCode, PlayerId, Queries, Tx, Manifest, Contract}`                                                 | Phantom type carriers.                                                                   |
+| `game.phase(name)` → `phase.define / .interaction / .inputs.* / .types`                                                    | Phase authoring.                                                                         |
+| `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.                                         |
+| `game.views.shared / player / empty / static`                                                                              | Views.                                                                                   |
+| `game.assemble({...})`                                                                                                     | Assembly; missing and extra phase keys fail here.                                        |
+| `many`                                                                                                                     | Atomic multi-selection remains model-independent; dependent choices use `phase.steps()`. |
 
 **Mutation callbacks** (`enter`, `reduce`, `resolve`) receive
 `{ tx, random, q, derived, state, ...context }`. `tx` is the open transaction;

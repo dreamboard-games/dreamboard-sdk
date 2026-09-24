@@ -14,11 +14,7 @@ import type {
   InteractionInputDescriptor,
   InputDomain,
 } from "../types/plugin-state.js";
-import {
-  inputByKey,
-  isTargetDomain,
-  resolveInputDomain,
-} from "./interaction-inputs.js";
+import { inputByKey, isTargetDomain } from "./interaction-inputs.js";
 
 export function gameplayCandidateMetadata(input: {
   readonly descriptor: Pick<InteractionDescriptor, "inputs">;
@@ -32,11 +28,7 @@ export function gameplayCandidateMetadata(input: {
 }): {
   readonly semanticEffects: readonly GameplaySemanticEffect[];
 } {
-  const inputDescriptor = resolvedInputByKey(
-    input.descriptor,
-    input.inputKey,
-    input.draftValues,
-  );
+  const inputDescriptor = inputByKey(input.descriptor, input.inputKey);
   if (!inputDescriptor) return { semanticEffects: [] };
   const currentValue = input.draftValues[input.inputKey];
   const beforeSelected = isCandidateSelected(
@@ -127,11 +119,10 @@ export function gameplaySubmitMetadata(input: {
 
 export function gameplayPreparationPatternsForDescriptor(
   descriptor: Pick<InteractionDescriptor, "inputs">,
-  draftValues: Readonly<Record<string, unknown>>,
 ): readonly GameplaySemanticEffectPattern[] {
   const patterns: GameplaySemanticEffectPattern[] = [];
   for (const rawInput of descriptor.inputs) {
-    const input = resolveInputDomain(rawInput, draftValues);
+    const input = rawInput;
     switch (input.domain.type) {
       case "choice":
       case "choiceList":
@@ -175,15 +166,6 @@ function boundedScalarPattern(
       ...(scalarIsInteger(domain) ? { integer: true } : {}),
     },
   };
-}
-
-function resolvedInputByKey(
-  descriptor: Pick<InteractionDescriptor, "inputs">,
-  inputKey: string,
-  draftValues: Readonly<Record<string, unknown>>,
-): InteractionInputDescriptor | undefined {
-  const input = inputByKey(descriptor, inputKey);
-  return input ? resolveInputDomain(input, draftValues) : undefined;
 }
 
 function isCandidateSelected(

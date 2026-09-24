@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import bandits from "./bandits.desktop.scenario.ts";
 import discard from "./discard-barrier.mobile.scenario.ts";
 import growing from "./growing-network.desktop.scenario.ts";
 import pendingTrade from "./pending-trade.mobile.scenario.ts";
@@ -12,6 +13,7 @@ test("Stormtrail UI checkpoints all derive from ordinary legal behavior scenario
     setup,
     production,
     discard,
+    bandits,
     pendingTrade,
     growing,
     terminal,
@@ -22,6 +24,7 @@ test("Stormtrail UI checkpoints all derive from ordinary legal behavior scenario
       "../scenarios/topology-and-setup.scenario.ts",
       "../scenarios/production.scenario.ts",
       "../scenarios/discard-barrier.scenario.ts",
+      "../scenarios/bandits.scenario.ts",
       "../scenarios/bilateral-trade.scenario.ts",
       "../scenarios/complete-game.scenario.ts",
       "../scenarios/complete-game.scenario.ts",
@@ -29,7 +32,7 @@ test("Stormtrail UI checkpoints all derive from ordinary legal behavior scenario
   );
   assert.deepEqual(
     scenarios.map(({ replay }) => replay),
-    [[], [], [], [], [], []],
+    [[], [], [], [], [], [], []],
   );
   assert.equal(discard.viewer.playerId, "player-2");
   assert.equal(pendingTrade.viewer.playerId, "player-1");

@@ -10,7 +10,6 @@ import {
   type ManifestIdSchema,
 } from "../model/manifest";
 import type { BoardTargetRule, PlayerBoardSpaceTarget } from "./boardTarget";
-import type { InputFieldRef } from "./defineInputs";
 
 export type PlayerSpaceInputSchema<
   BoardId extends string,
@@ -49,34 +48,29 @@ function makeBoardCollector<
     Id extends string = string,
   >(options: {
     target: BoardTargetRule<State, Id>;
-    dependsOn?: readonly InputFieldRef<string, unknown>[];
   }): InputCollector<z.ZodType<Id>, State, Kind> {
     const target = options.target;
-    const dependsOn = options.dependsOn?.map((dependency) => dependency.key);
     return {
       kind,
       schema: z.string() as unknown as z.ZodType<Id>,
-      eligibleTargets: ((state, playerId, q, values) =>
+      eligibleTargets: ((state, playerId, q) =>
         target.eligible({
           state: state as State,
           playerId: playerId as never,
           q: q as never,
-          values,
         })) as
         | ((
             state: CollectorState,
             playerId: string,
             q: unknown,
-            values?: Readonly<Record<string, unknown>>,
           ) => ReadonlyArray<unknown>)
         | undefined,
-      validateTarget: ((state, playerId, q, targetId, values) =>
+      validateTarget: ((state, playerId, q, targetId) =>
         target.validate(
           {
             state: state as State,
             playerId: playerId as never,
             q: q as never,
-            values,
           },
           targetId as Id,
         )) as
@@ -85,16 +79,9 @@ function makeBoardCollector<
             playerId: string,
             q: unknown,
             targetId: unknown,
-            values?: Readonly<Record<string, unknown>>,
           ) => ReturnType<BoardTargetRule<CollectorState, string>["validate"]>)
         | undefined,
-      ...(dependsOn ? { dependsOn } : {}),
-      domain: (
-        state: CollectorState,
-        playerId: string,
-        q: unknown,
-        values?: Readonly<Record<string, unknown>>,
-      ) =>
+      domain: (state: CollectorState, playerId: string, q: unknown) =>
         ({
           type: "boardTarget" as const,
           projection: "resolved" as const,
@@ -106,7 +93,6 @@ function makeBoardCollector<
               state: state as State,
               playerId: playerId as never,
               q: q as never,
-              values,
             })
             .map(String),
         }) satisfies BoardTargetDomainDescriptor,
@@ -134,14 +120,12 @@ export function playerSpaceInput<
     State,
     PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
   >;
-  dependsOn?: readonly InputFieldRef<string, unknown>[];
 }): InputCollector<
   PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
   State,
   "board-space"
 > {
   const target = options.target;
-  const dependsOn = options.dependsOn?.map((dependency) => dependency.key);
   const playerIdSchema = markManifestScopedSchema(
     z.string(),
     "playerId",
@@ -153,27 +137,24 @@ export function playerSpaceInput<
       playerId: playerIdSchema,
       spaceId: z.string() as unknown as z.ZodType<SpaceId>,
     }) as PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
-    eligibleTargets: ((state, playerId, q, values) =>
+    eligibleTargets: ((state, playerId, q) =>
       target.eligible({
         state: state as State,
         playerId: playerId as never,
         q: q as never,
-        values,
       })) as
       | ((
           state: CollectorState,
           playerId: string,
           q: unknown,
-          values?: Readonly<Record<string, unknown>>,
         ) => ReadonlyArray<unknown>)
       | undefined,
-    validateTarget: ((state, playerId, q, targetValue, values) =>
+    validateTarget: ((state, playerId, q, targetValue) =>
       target.validate(
         {
           state: state as State,
           playerId: playerId as never,
           q: q as never,
-          values,
         },
         targetValue as PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>,
       )) as
@@ -182,7 +163,6 @@ export function playerSpaceInput<
           playerId: string,
           q: unknown,
           targetId: unknown,
-          values?: Readonly<Record<string, unknown>>,
         ) => ReturnType<
           BoardTargetRule<
             CollectorState,
@@ -190,13 +170,7 @@ export function playerSpaceInput<
           >["validate"]
         >)
       | undefined,
-    ...(dependsOn ? { dependsOn } : {}),
-    domain: (
-      state: CollectorState,
-      playerId: string,
-      q: unknown,
-      values?: Readonly<Record<string, unknown>>,
-    ) =>
+    domain: (state: CollectorState, playerId: string, q: unknown) =>
       ({
         type: "boardTarget" as const,
         projection: "resolved" as const,
@@ -208,7 +182,6 @@ export function playerSpaceInput<
             state: state as State,
             playerId: playerId as never,
             q: q as never,
-            values,
           })
           .map((candidate) => candidate.spaceId),
       }) satisfies BoardTargetDomainDescriptor,
