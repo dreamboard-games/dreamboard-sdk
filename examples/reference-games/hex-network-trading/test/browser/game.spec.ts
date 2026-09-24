@@ -206,6 +206,19 @@ for (const scenario of [
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
+    const trailLog = page.getByRole("list", { name: "Trail log" });
+    await trailLog.focus();
+    await expect(trailLog).toBeFocused();
+    if (
+      await trailLog.evaluate(
+        (element) => element.scrollHeight > element.clientHeight,
+      )
+    ) {
+      await trailLog.press("ArrowDown");
+      await expect
+        .poll(() => trailLog.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(0);
+    }
     await page.screenshot({
       path: `/tmp/hex-ui-${scenario.at}-${testInfo.project.name}.png`,
       fullPage: true,

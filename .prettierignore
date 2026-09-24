@@ -9,3 +9,7 @@ examples/reference-games/*/app/tsconfig.framework.json
 examples/reference-games/*/shared/generated/**
 examples/reference-games/*/shared/manifest-*
 examples/reference-games/*/ui/tsconfig.framework.json
+
+# Browser-run artifacts are not authored source.
+**/test-results/
+**/playwright-report/

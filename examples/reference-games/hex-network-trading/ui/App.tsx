@@ -313,6 +313,8 @@ function StormtrailGame() {
             <h2 className="text-lg font-black">Trail log</h2>
             <ol
               className="mt-2 max-h-72 space-y-2 overflow-auto text-sm"
+              tabIndex={0}
+              aria-label="Trail log"
               aria-live="polite"
             >
               {latestHistory.length === 0 ? (
