@@ -105,10 +105,12 @@ export async function runCli(argv: readonly string[]): Promise<void> {
     }
     case "test":
       requireNoArgs(parsed.command, parsed.args);
+      build();
       await test();
       return;
     case "typecheck":
       requireNoArgs(parsed.command, parsed.args);
+      build();
       typecheck();
       return;
     case "ui": {

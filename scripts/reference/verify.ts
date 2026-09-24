@@ -40,13 +40,9 @@ async function packSdk(
   destination: string,
   run: AsyncCommandRunner,
 ): Promise<string> {
-  await run(
-    "pnpm",
-    ["exec", "turbo", "run", "build", `--filter=${SDK_PACKAGE_NAME}`],
-    {
-      cwd: root,
-    },
-  );
+  await run("pnpm", ["--filter", SDK_PACKAGE_NAME, "run", "build"], {
+    cwd: root,
+  });
   const before = new Set(await readdir(destination));
   await run(
     "pnpm",
@@ -80,7 +76,13 @@ async function copyGame(source: string, destination: string): Promise<void> {
       const segments = relative.split(path.sep);
       if (
         segments.some((segment) =>
-          ["node_modules", ".turbo", "dist"].includes(segment),
+          [
+            "node_modules",
+            "dist",
+            "build",
+            "test-results",
+            "playwright-report",
+          ].includes(segment),
         )
       ) {
         return false;
