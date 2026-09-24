@@ -19,12 +19,12 @@ Run the local gates from a clean checkout:
 ```sh
 pnpm install --frozen-lockfile
 pnpm release:verify
-pnpm ui test --all
+pnpm ui test
 git status --short
 ```
 
 `pnpm release:verify` runs the browser-free core checks, packs the SDK once,
-validates and smoke-installs that exact tarball, then verifies all nine
+validates and smoke-installs that exact tarball, then verifies both
 reference games against it. UI browser proof is intentionally separate.
 
 The release candidate directory contains exactly one tarball and
@@ -81,7 +81,7 @@ pnpm reference pin "$SDK_VERSION"
 pnpm reference
 ```
 
-Commit the nine updated game manifests and lockfiles. If rollback is necessary,
+Commit the updated game manifests and root lockfile. If rollback is necessary,
 move the npm tag to a known-good published version; do not delete a published
 version.
 

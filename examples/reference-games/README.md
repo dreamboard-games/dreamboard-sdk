@@ -1,13 +1,11 @@
 # Reference games
 
-Hearts and Hex Network Trading are ordinary workspace packages that import the
-SDK through `workspace:*`. The root lockfile records their dependencies.
+[Hearts](hearts/rule.md) and [Hex Network Trading](hex-network-trading/rule.md) are
+ordinary workspace packages. Each owns its manifest, reducer, hosted UI, local
+scenario entry and browser tests. `ui/game.ts` binds the typed hook; `ui/index.tsx`
+is hosted, while `ui/dev.tsx` imports executable local tooling. The root lockfile
+owns dependencies; `reference-game.json` records teaching and rights metadata.
 
-Each game owns `manifest.ts`, `app/game.ts`, UI modules, and typed scenarios.
-`app/manifest.ts` compiles topology in memory; `ui/game-ui.ts` binds the inferred
-UI contract. There are no generated authoring files.
-
-Run `pnpm reference [game-id]` from the repository root to verify the packed SDK
-against either game or both. Run a game's `typecheck` and `test` scripts for
-focused development. `rule.md` defines gameplay; `reference-game.json` retains
-teaching, rights, and Workbench metadata.
+Run `pnpm reference [game-id]` to verify isolated game copies against one SDK
+artifact. `pnpm ui dev --game <id>` opens the local scenario UI; `pnpm ui test`
+proves registry installation and both games in desktop/touch browsers.

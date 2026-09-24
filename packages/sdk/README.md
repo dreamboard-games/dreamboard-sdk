@@ -1,5 +1,7 @@
 # @dreamboard-games/sdk
 
+[Guides and API reference](../../docs/index.md) · [Registry](../../registry/README.md) · [Examples](../../examples/reference-games/README.md)
+
 The public TypeScript SDK for authoring, testing, and rendering Dreamboard
 games. Install this package rather than any of the repository's unpublished
 workspace inputs.
@@ -8,33 +10,15 @@ workspace inputs.
 pnpm add @dreamboard-games/sdk
 ```
 
-The package's declarations and export map are the API authority. Supported
-imports include the root module and explicit subpaths for authoring, runtime,
-reducer contracts, testing, browser interaction, UI, and reference-game
-metadata. Import only subpaths present in the installed package's `exports`
-field.
+The package declarations and export map are the API authority. There are four entry points:
 
-```ts
-import { DREAMBOARD_SDK_VERSION } from "@dreamboard-games/sdk";
-import type { ReducerWire } from "@dreamboard-games/sdk/reducer-contract";
-import {
-  REFERENCE_GAME_MANIFEST_SCHEMA_VERSION,
-  parseReferenceGameManifest,
-  type ReferenceGameManifest,
-} from "@dreamboard-games/sdk/reference-games";
+- `@dreamboard-games/sdk`: framework-free instances, sources, features and canonical host protocol schemas.
+- `@dreamboard-games/sdk/react`: typed React provider, selector hook and subscription component.
+- `@dreamboard-games/sdk/reducer`: game authoring, manifest compilation, execution and trusted worker admission.
+- `@dreamboard-games/sdk/testing`: browser-safe local/scenario sources, replay, inspection and bounded exploration.
 
-const manifest: ReferenceGameManifest = parseReferenceGameManifest(input);
-console.log(REFERENCE_GAME_MANIFEST_SCHEMA_VERSION, manifest.id);
-```
-
-Reference-game manifests use schema V5. They describe the game workspace,
-teaching purpose, mechanics, UI patterns, and substantive rights metadata.
-
-Include the packaged stylesheet when using SDK UI components:
-
-```ts
-import "@dreamboard-games/sdk/ui/plugin-styles.css";
-```
+UI components are source-owned registry items installed into your application.
+The SDK contains no styled components or stylesheet.
 
 ## Game authoring
 
@@ -195,8 +179,10 @@ imports the assembled game, so there is no import cycle.
 New workspaces keep authored starter code in `app/game.ts` and `ui/App.tsx`.
 Import the manifest directly. `compileManifest(manifest)` provides inferred ID schemas,
 table schemas, fresh initial tables, and board metadata in memory. `createGame`
-also accepts the authored manifest directly. Bind UI primitives with
-`createGameUi(game)` from `@dreamboard-games/sdk/runtime/workspace-contract`.
+also accepts the authored manifest directly. Bind a typed React hook with
+`createGameHook<Game>()({ features, coverage })` from `@dreamboard-games/sdk/react`,
+and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a type;
+`iframeSource()` supplies authoritative frames and handles commands.
 No authoring generation step or shared workspace files are needed.
 
 ## Reducer runner contract
@@ -265,3 +251,22 @@ pnpm add @dreamboard-games/sdk react@^19 react-dom@^19 @tanstack/react-store@0.1
 `@tanstack/react-store` is an optional peer of the SDK so headless consumers do not
 install the React adapter. The `/react` entry delegates selectors to that package;
 the application bundler resolves its supported React subscription dependencies.
+
+## Local development and tests
+
+`localSource(game, { players, seed, as, options })` executes the production reducer
+and materializes the selected seat. `scenarioSource` starts from authored scenario
+checkpoints. Keep these executable game imports in your local development entry;
+the hosted entry uses only `iframeSource()` and type imports.
+
+Local sources expose `inspect`, bounded `explore`, typed explicit-actor `apply`,
+`switchSeat`, `checkpoint`, and validated `restore`. A JSON checkpoint preserves
+pending selections and terminal state; restoring does not replay commands.
+`createTestSource(snapshot)` supplies controlled frames and acknowledgements for
+instance and React tests. Static and hosted sources do not expose `apply`.
+
+Hosts import `assertReducerBundleContract`, `REDUCER_CONTRACT_VERSION`,
+`ReducerWire` types and `ReducerWireZod` schemas from `/reducer`. Canonical iframe
+and gameplay websocket schemas plus `materializePluginGameplayFrame` live at the
+root. Materialize the seat projection with static board data before publishing it;
+sources publish the canonical seat view and keep command bases private.

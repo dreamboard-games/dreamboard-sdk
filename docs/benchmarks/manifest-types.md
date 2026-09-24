@@ -1,3 +1,6 @@
+> Historical measurement from the manifest migration. Rerun against the final
+> candidate before comparing current generic API performance.
+
 # In-memory manifest type checking
 
 Measured on Node 24.18.0 and TypeScript 5.9.3 for the SDK 0.5.0-alpha.2 candidate.

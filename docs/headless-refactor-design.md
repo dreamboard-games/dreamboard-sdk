@@ -1,3 +1,6 @@
+> Historical design record. This document includes superseded proposals.
+> Use [the supported documentation](index.md) and shipped declarations for current APIs.
+
 # Headless SDK hard cut: design and stacked delivery plan
 
 Status: locked design (2026-09-18), ready for implementation as stacked PRs.
