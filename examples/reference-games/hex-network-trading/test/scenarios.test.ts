@@ -1,4 +1,4 @@
-import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing-runtime";
+import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing";
 import { FRONTIER_GEOMETRY } from "../app/model";
 import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";

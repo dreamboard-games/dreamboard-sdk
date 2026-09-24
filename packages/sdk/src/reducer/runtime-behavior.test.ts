@@ -3,7 +3,7 @@ import * as ReducerWireZod from "../shared/runtime-schema";
 import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
 import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
 
-import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -16,7 +16,7 @@ import { rngInput } from "./inputs";
 import {
   type InputCollector,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 
 import {
   getCloneRuntimeTableCallCount,
@@ -201,12 +201,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }
       return table;
     };
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: makeTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: makeTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
     const before = structuredClone(initial);
     const input = {
       kind: "interaction" as const,
@@ -215,12 +217,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
       params: {},
     };
     const accepted = await bundle.dispatch({ state: initial, input });
-    const freshBundle = createReducerTestingBundle(game);
-    const fresh = await freshBundle.initialize({
-      table: makeTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
+    const freshBundle = createReducerTestingRuntime(game);
+    const fresh = (
+      await freshBundle.initialize({
+        table: makeTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
     expect(accepted).toEqual(
       await freshBundle.dispatch({ state: fresh, input }),
     );
@@ -491,11 +495,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const input = {
       kind: "interaction" as const,
       playerId: "player-1",
@@ -569,11 +575,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     const projection = bundle.project({
       state: session,
@@ -638,11 +646,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       })),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     const projection = bundle.project({
       state: session,
@@ -702,11 +712,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     const projection = bundle.project({
       state: session,
@@ -786,11 +798,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     const projection = bundle.project({
       state: session,
@@ -859,11 +873,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       }),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     bundle.project({
       state: session,
@@ -940,11 +956,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       view: () => ({}),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const session = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const session = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state: session,
       playerIds: ["player-1"],
@@ -992,12 +1010,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 23,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 23,
+      })
+    ).state;
 
     const rejected = await bundle.dispatch({
       state: initial,
@@ -1080,11 +1100,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     expect(
       await bundle.validateInput({
@@ -1178,17 +1200,21 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initialA = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
-    const initialB = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initialA = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
+    const initialB = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
 
     const resultA = await bundle.dispatch({
       state: initialA,
@@ -1271,12 +1297,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
 
     const reduced = await bundle.reduce({
       state: initial,
@@ -1355,12 +1383,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 42,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 42,
+      })
+    ).state;
 
     resetCloneRuntimeTableCallCount();
     const dispatched = await bundle.dispatch({
@@ -1443,12 +1473,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
     }
 
     test("validateInput accepts an rngInput interaction with empty client params", async () => {
-      const bundle = createReducerTestingBundle(defineDiceGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(defineDiceGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       // This is the exact payload shape the web SDK posts: params is `{}`
       // because `rngInput.d6(2)` is engine-sampled and the client has no
@@ -1469,12 +1501,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("reduce samples rngInput.d6 values, feeds them to the authored reducer, and advances session RNG", async () => {
-      const bundle = createReducerTestingBundle(defineDiceGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(defineDiceGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       const result = await bundle.reduce({
         state: initial,
@@ -1511,17 +1545,21 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("dispatch is deterministic for a fixed rngSeed across sessions", async () => {
-      const bundle = createReducerTestingBundle(defineDiceGame());
-      const sessionA = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 1337,
-      });
-      const sessionB = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 1337,
-      });
+      const bundle = createReducerTestingRuntime(defineDiceGame());
+      const sessionA = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 1337,
+        })
+      ).state;
+      const sessionB = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 1337,
+        })
+      ).state;
 
       const resultA = await bundle.dispatch({
         state: sessionA,
@@ -1553,12 +1591,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("consecutive reduces consume RNG monotonically and never re-sample the same cursor", async () => {
-      const bundle = createReducerTestingBundle(defineDiceGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 7,
-      });
+      const bundle = createReducerTestingRuntime(defineDiceGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 7,
+        })
+      ).state;
 
       const first = await bundle.reduce({
         state: initial,
@@ -1661,12 +1701,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         view: model.view(() => ({})),
       });
-      const bundle = createReducerTestingBundle(game);
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(game);
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
       const accepted = await bundle.reduce({
         state: initial,
         input: {
@@ -1697,12 +1739,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
         return { values: value.values.map((face) => face + 10) };
       });
       const game = defineDiceGame(schema);
-      const bundle = createReducerTestingBundle(game);
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(game);
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
       const accepted = await bundle.reduce({
         state: initial,
         input: {
@@ -1720,7 +1764,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
             (face) => face >= 11 && face <= 16,
           ),
         ).toBe(true);
-      const rejecting = createReducerTestingBundle(
+      const rejecting = createReducerTestingRuntime(
         defineDiceGame(
           rngInput.d6(2).schema.refine(() => false, "sample rejected"),
         ),
@@ -1741,12 +1785,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("client-supplied values for an rngInput are ignored (server is authoritative)", async () => {
-      const bundle = createReducerTestingBundle(defineDiceGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(defineDiceGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       // A hostile or naive client tries to force the outcome. The engine
       // must overwrite this with the deterministic sample.
@@ -1841,18 +1887,20 @@ describe("direct reducer lifecycle and seeded operations", () => {
         type: string;
         trace?: readonly unknown[];
       }> = [];
-      const bundle = createReducerTestingBundle(defineIntegerGame(), {
+      const bundle = createReducerTestingRuntime(defineIntegerGame(), {
         diagnostics: {
           event(event) {
             diagnosticEvents.push(event);
           },
         },
       });
-      const initialized = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const initialized = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       expect(initialized.runtime.rng.draws).toEqual([
         {
@@ -1974,12 +2022,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
           }),
         },
       });
-      const bundle = createReducerTestingBundle(game);
-      const initialized = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(game);
+      const initialized = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       await expect(
         bundle.dispatch({
@@ -2074,17 +2124,21 @@ describe("direct reducer lifecycle and seeded operations", () => {
     }
 
     test("draws deterministic typed subsets and advances the runtime cursor", async () => {
-      const bundle = createReducerTestingBundle(defineSubsetGame());
-      const sessionA = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
-      const sessionB = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 42,
-      });
+      const bundle = createReducerTestingRuntime(defineSubsetGame());
+      const sessionA = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
+      const sessionB = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 42,
+        })
+      ).state;
 
       const resultA = await bundle.reduce({
         state: sessionA,
@@ -2119,19 +2173,23 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("rejects all draft mutations, queued output, and RNG consumption together", async () => {
-      const bundle = createReducerTestingBundle(defineSubsetGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 7,
-      });
+      const bundle = createReducerTestingRuntime(defineSubsetGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 7,
+        })
+      ).state;
 
       const initialBefore = structuredClone(initial);
-      const controlSession = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 7,
-      });
+      const controlSession = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 7,
+        })
+      ).state;
       const rejected = await bundle.reduce({
         state: initial,
         input: {
@@ -2173,12 +2231,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("throws a clear SDK error when count exceeds the source length", async () => {
-      const bundle = createReducerTestingBundle(defineSubsetGame());
-      const initial = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
-        rngSeed: 7,
-      });
+      const bundle = createReducerTestingRuntime(defineSubsetGame());
+      const initial = (
+        await bundle.initialize({
+          table: createTable(),
+          playerIds: ["player-1", "player-2"],
+          rngSeed: 7,
+        })
+      ).state;
 
       await expect(
         bundle.reduce({

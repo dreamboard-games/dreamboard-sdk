@@ -210,6 +210,9 @@ describe("headless instance", () => {
       key: "card",
       kind: "card",
       domain: {
+        targetKind: "card",
+        zoneIds: ["hand"],
+
         type: "cardTarget",
         projection: "resolved",
         eligibleTargets: ["ace"],
@@ -404,6 +407,9 @@ describe("instance boundaries", () => {
       key: "cards",
       kind: "card",
       domain: {
+        targetKind: "card",
+        zoneIds: ["hand"],
+
         type: "cardTarget",
         projection: "resolved",
         eligibleTargets: ["a", "b", "c"],
@@ -455,6 +461,9 @@ it("many draft reconciliation retains valid members and enforces a lowered maxim
     key: "cards",
     kind: "card",
     domain: {
+      targetKind: "card",
+      zoneIds: ["hand"],
+
       type: "cardTarget",
       projection: "resolved",
       eligibleTargets: ["a", "b", "c"],
@@ -492,6 +501,9 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
     key: "card",
     kind: "card",
     domain: {
+      targetKind: "card",
+      zoneIds: ["hand"],
+
       type: "cardTarget",
       projection: "resolved",
       eligibleTargets: ["ace"],
@@ -552,6 +564,9 @@ it("input and interaction readiness reject duplicate and oversized programmatic 
     key: "cards",
     kind: "card",
     domain: {
+      targetKind: "card",
+      zoneIds: ["hand"],
+
       type: "cardTarget",
       projection: "resolved",
       eligibleTargets: ["a", "b", "c"],
@@ -621,6 +636,9 @@ it("controlled nested values are immutable snapshots without freezing owner data
     key: "cards",
     kind: "card",
     domain: {
+      targetKind: "card",
+      zoneIds: ["hand"],
+
       type: "cardTarget",
       projection: "resolved",
       eligibleTargets: ["a", "b"],
@@ -649,6 +667,9 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
     key: "card",
     kind: "card",
     domain: {
+      targetKind: "card",
+      zoneIds: ["hand"],
+
       type: "cardTarget",
       projection: "resolved",
       eligibleTargets: ["ace"],

@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { formInput, rngInput } from "./inputs";
 import { many } from "../reducer";
-import { RuntimeTableRecord } from "../reducer/advanced";
+import { RuntimeTableRecord } from "../reducer/model";
 import { createManifestStringLiteralSchema } from "./model";
 
 import { createClientParamSchemasByPhase } from "./client-param-schemas";

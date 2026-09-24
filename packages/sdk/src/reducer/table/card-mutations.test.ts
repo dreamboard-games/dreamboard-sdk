@@ -1,6 +1,6 @@
 import { createTestTransaction } from "../transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
-import type { RuntimeTableRecord } from "../../reducer/advanced";
+import type { RuntimeTableRecord } from "../../reducer/model";
 import { type PlayerId } from "../per-player";
 import {
   addCardToSharedZoneInPlace,

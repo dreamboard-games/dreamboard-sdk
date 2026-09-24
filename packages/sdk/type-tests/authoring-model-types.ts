@@ -23,7 +23,7 @@ import {
   type RuntimeCardData,
   type RuntimeRecord,
   type RuntimeTableRecord,
-} from "../src/reducer/advanced.js";
+} from "../src/reducer/model.js";
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <

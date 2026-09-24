@@ -7,7 +7,7 @@ import { normalizeCommandParams, sparseCounts, sparseMap } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 
 function buildMinimalManifest() {
   const playerIds = ["player-1", "player-2"] as const;

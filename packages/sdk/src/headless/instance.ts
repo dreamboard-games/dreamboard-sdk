@@ -1,21 +1,13 @@
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
 import { inputValueInDomain } from "../shared/input-domain.js";
-import type {
-  InputDomainDescriptor,
-  InputSelectionDescriptor,
-} from "../reducer/model/spec/inputs.js";
-import type { InteractionDescriptor as RoutingDescriptor } from "../runtime/types/plugin-state.js";
 import {
   getInteractionDraftReadiness,
   routeInteractionTarget,
   routeCardInputIntent,
   shouldAutoSubmitInteraction,
-} from "../runtime/utils/interaction-router.js";
-import {
-  isManyInput,
-  isManyTargetSelectable,
-} from "../runtime/utils/interaction-inputs.js";
+} from "./interaction-router.js";
+import { isManyInput, isManyTargetSelectable } from "./interaction-inputs.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   Features,
@@ -39,10 +31,6 @@ type DraftMap = Readonly<Record<string, Values | undefined>>;
 type RuntimeOptions = InstanceOptions<unknown>;
 const EMPTY: Values = Object.freeze({});
 const EMPTY_DRAFTS: DraftMap = Object.freeze({});
-const routeDescriptor = (value: InteractionDescriptor) =>
-  value as RoutingDescriptor;
-const routeInput = (value: InteractionInputDescriptor) =>
-  value as RoutingDescriptor["inputs"][number];
 const equalValue = (a: unknown, b: unknown) =>
   Object.is(a, b) ||
   (typeof a === "object" &&
@@ -53,12 +41,9 @@ function inDomain(
   value: unknown,
   partial = false,
 ) {
-  return inputValueInDomain(
-    input.domain as InputDomainDescriptor,
-    value,
-    input.domain.selection as InputSelectionDescriptor | undefined,
-    { ignoreMinimum: partial },
-  );
+  return inputValueInDomain(input.domain, value, input.domain.selection, {
+    ignoreMinimum: partial,
+  });
 }
 function immutableValues(value: Values): Values {
   return immutableCopy(value);
@@ -159,10 +144,7 @@ class InteractionObject {
     return this.inputObjects;
   }
   readiness() {
-    const readiness = getInteractionDraftReadiness(
-      routeDescriptor(this.descriptor),
-      this.draft,
-    );
+    const readiness = getInteractionDraftReadiness(this.descriptor, this.draft);
     return {
       ...readiness,
       ready:
@@ -265,21 +247,19 @@ class InputObject {
       inputs: [this.descriptor],
     };
     return (
-      getInteractionDraftReadiness(routeDescriptor(descriptor), {
+      getInteractionDraftReadiness(descriptor, {
         [this.key]: this.getValue(),
       }).ready && inDomain(this.descriptor, this.getValue())
     );
   }
   getEligibleTargets(): readonly RuntimeJson[] {
     const domain = this.descriptor.domain;
-    if (Array.isArray(domain.eligibleTargets)) return domain.eligibleTargets;
-    const choices = domain.choices;
-    if (Array.isArray(choices))
-      return choices
-        .filter(
-          (c) => c && typeof c === "object" && !Array.isArray(c) && !c.disabled,
-        )
-        .map((c) => (c as Record<string, RuntimeJson>).value);
+    if (domain.type === "cardTarget" || domain.type === "boardTarget")
+      return domain.eligibleTargets;
+    if (domain.type === "choice" || domain.type === "choiceList")
+      return domain.choices
+        .filter((choice) => !choice.disabled)
+        .map((choice) => choice.value);
     return [];
   }
   getIsEligible(value: RuntimeJson) {
@@ -292,16 +272,12 @@ class InputObject {
       ) &&
       (!selection ||
         selection.mode !== "many" ||
-        isManyTargetSelectable(
-          routeInput(input),
-          this.getValue(),
-          String(value),
-        ))
+        isManyTargetSelectable(input, this.getValue(), String(value)))
     );
   }
   getIsSelected(value: RuntimeJson) {
     const current = this.getValue();
-    return isManyInput(routeInput(this.descriptor)) && Array.isArray(current)
+    return isManyInput(this.descriptor) && Array.isArray(current)
       ? current.some((item) => equalValue(item, value))
       : equalValue(current, value);
   }
@@ -799,7 +775,7 @@ class Controller {
             if (k) delete next[k];
           },
         },
-        routeDescriptor(interaction.descriptor),
+        interaction.descriptor,
         { inputKey, value },
       );
       this.writeDraft(key, next as Values);
@@ -809,7 +785,7 @@ class Controller {
     if (
       current &&
       Object.hasOwn(this.drafts()[key] ?? EMPTY, inputKey) &&
-      shouldAutoSubmitInteraction(routeDescriptor(current.descriptor)) &&
+      shouldAutoSubmitInteraction(current.descriptor) &&
       current.getIsReady()
     )
       this.handle(this.submit(key, false));
@@ -1011,7 +987,7 @@ class Controller {
         if (!input && this.pending?.key === key) continue;
         if (input?.domain.selection?.mode === "many" && Array.isArray(value)) {
           const eligible = value.filter((item) =>
-            inputValueInDomain(input.domain as InputDomainDescriptor, item),
+            inputValueInDomain(input.domain, item),
           );
           const max = input.domain.selection.max;
           const retained =
@@ -1155,7 +1131,7 @@ class Controller {
           if (key) delete next[key];
         },
       },
-      routeDescriptor(interaction.descriptor),
+      interaction.descriptor,
       {
         cardId,
         cardInputKey: cardInput.key,
@@ -1167,7 +1143,7 @@ class Controller {
     const current = this.current(interaction.key);
     if (
       current &&
-      shouldAutoSubmitInteraction(routeDescriptor(current.descriptor)) &&
+      shouldAutoSubmitInteraction(current.descriptor) &&
       current.getIsReady()
     )
       this.handle(current.submit());

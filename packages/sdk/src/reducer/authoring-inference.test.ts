@@ -6,7 +6,7 @@ import {
   type ClientParamsOfInteractionOfDefinition,
   type PhaseNamesOfDefinition,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <

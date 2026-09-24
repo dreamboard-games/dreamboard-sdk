@@ -5,14 +5,14 @@ import {
   createTestTransaction,
 } from "./transaction-test-fixtures";
 
-import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 import { type PlayerId } from "./per-player";
 
 function pp<T>(
@@ -403,14 +403,14 @@ describe("initialization runtime", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
+    const bundle = createReducerTestingRuntime(game);
     const request = {
       table: createEmptyTable(),
       playerIds: ["player-1", "player-2"],
       rngSeed: 42,
       options: { mode: "draft" },
     };
-    const initialized = await bundle.initialize(request);
+    const initialized = (await bundle.initialize(request)).state;
     expect(initialized.runtime.options).toEqual({ mode: "draft", rounds: 3 });
     expect(initialized.domain.publicState).toEqual({ mode: "draft" });
     expect(initialized.domain.hiddenState).toEqual({ mode: "draft" });
@@ -501,12 +501,14 @@ describe("initialization runtime", () => {
       view: () => ({}),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initialized = await bundle.initialize({
-      table: createEmptyTable(["player-1", "player-2"]),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 7,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initialized = (
+      await bundle.initialize({
+        table: createEmptyTable(["player-1", "player-2"]),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 7,
+      })
+    ).state;
 
     expect(Object.keys(initialized.domain.table.hands.hand)).toEqual([
       "player-1",
@@ -677,86 +679,88 @@ describe("initialization runtime", () => {
       view: () => ({}),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initialized = await bundle.initialize({
-      table: {
-        playerOrder: ["player-1", "player-2"],
-        zones: {
-          shared: {
+    const bundle = createReducerTestingRuntime(game);
+    const initialized = (
+      await bundle.initialize({
+        table: {
+          playerOrder: ["player-1", "player-2"],
+          zones: {
+            shared: {
+              "draw-deck": ["card-1"],
+            },
+            perPlayer: {
+              hand: pp<string[]>(
+                ["player-1", "player-2"],
+                { "player-2": ["card-2"] },
+                [],
+              ),
+            },
+            visibility: {
+              "draw-deck": "public",
+              hand: "ownerOnly",
+            },
+            cardSetIdsByZoneId: {
+              "draw-deck": ["main"],
+              hand: ["main"],
+            },
+          },
+          decks: {
             "draw-deck": ["card-1"],
           },
-          perPlayer: {
+          hands: {
             hand: pp<string[]>(
               ["player-1", "player-2"],
               { "player-2": ["card-2"] },
               [],
             ),
           },
-          visibility: {
-            "draw-deck": "public",
+          handVisibility: {
             hand: "ownerOnly",
           },
-          cardSetIdsByZoneId: {
-            "draw-deck": ["main"],
-            hand: ["main"],
+          cards: {
+            "card-1": {
+              id: "card-1",
+              cardSetId: "main",
+              cardType: "thing",
+              properties: {},
+            },
+            "card-2": {
+              id: "card-2",
+              cardSetId: "main",
+              cardType: "thing",
+              properties: {},
+            },
           },
-        },
-        decks: {
-          "draw-deck": ["card-1"],
-        },
-        hands: {
-          hand: pp<string[]>(
-            ["player-1", "player-2"],
-            { "player-2": ["card-2"] },
-            [],
-          ),
-        },
-        handVisibility: {
-          hand: "ownerOnly",
-        },
-        cards: {
-          "card-1": {
-            id: "card-1",
-            cardSetId: "main",
-            cardType: "thing",
-            properties: {},
+          pieces: {},
+          componentLocations: {
+            "card-1": {
+              type: "InDeck",
+              deckId: "draw-deck",
+              playedBy: null,
+              position: 0,
+            },
+            "card-2": {
+              type: "InHand",
+              handId: "hand",
+              playerId: "player-2",
+              position: 0,
+            },
           },
-          "card-2": {
-            id: "card-2",
-            cardSetId: "main",
-            cardType: "thing",
-            properties: {},
+          ownerOfCard: {},
+          visibility: {},
+          resources: ppEmpty(["player-1", "player-2"]),
+          boards: {
+            byId: {},
+            hex: {},
+            network: {},
+            square: {},
+            track: {},
           },
+          dice: {},
         },
-        pieces: {},
-        componentLocations: {
-          "card-1": {
-            type: "InDeck",
-            deckId: "draw-deck",
-            playedBy: null,
-            position: 0,
-          },
-          "card-2": {
-            type: "InHand",
-            handId: "hand",
-            playerId: "player-2",
-            position: 0,
-          },
-        },
-        ownerOfCard: {},
-        visibility: {},
-        resources: ppEmpty(["player-1", "player-2"]),
-        boards: {
-          byId: {},
-          hex: {},
-          network: {},
-          square: {},
-          track: {},
-        },
-        dice: {},
-      },
-      playerIds: ["player-1", "player-2"],
-    });
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
 
     expect(initialized.domain.table.playerOrder).toEqual([
       "player-1",
@@ -784,30 +788,34 @@ describe("initialization runtime", () => {
   });
 
   test("games without an options schema reject undeclared lobby options", async () => {
-    const bundle = createReducerTestingBundle(createBootstrapGame(() => {}));
+    const bundle = createReducerTestingRuntime(createBootstrapGame(() => {}));
     const request = {
       table: createBootstrapTable(),
       playerIds: [...BOOTSTRAP_PLAYER_IDS],
       rngSeed: 42,
     };
-    expect((await bundle.initialize(request)).runtime.options).toEqual({});
+    expect((await bundle.initialize(request)).state.runtime.options).toEqual(
+      {},
+    );
     await expect(
       bundle.initialize({ ...request, options: { undeclared: true } }),
     ).rejects.toThrow();
   });
 
   test("phase entry shuffles with seeded entropy", async () => {
-    const bundle = createReducerTestingBundle(
+    const bundle = createReducerTestingRuntime(
       createBootstrapGame((tx) => {
         tx.shuffle({ zoneId: "draw-deck" });
       }),
     );
 
-    const initialized = await bundle.initialize({
-      table: createBootstrapTable(),
-      playerIds: [...BOOTSTRAP_PLAYER_IDS],
-      rngSeed: 42,
-    });
+    const initialized = (
+      await bundle.initialize({
+        table: createBootstrapTable(),
+        playerIds: [...BOOTSTRAP_PLAYER_IDS],
+        rngSeed: 42,
+      })
+    ).state;
     const order = initialized.domain.table.zones.shared["draw-deck"];
 
     expect(order).toHaveLength(BOOTSTRAP_CARD_IDS.length);
@@ -822,7 +830,7 @@ describe("initialization runtime", () => {
   });
 
   test("phase entry deals to each seat", async () => {
-    const bundle = createReducerTestingBundle(
+    const bundle = createReducerTestingRuntime(
       createBootstrapGame((tx) => {
         for (const playerId of tx.q.player.order())
           tx.deal({
@@ -834,11 +842,13 @@ describe("initialization runtime", () => {
       }),
     );
 
-    const initialized = await bundle.initialize({
-      table: createBootstrapTable(),
-      playerIds: [...BOOTSTRAP_PLAYER_IDS],
-      rngSeed: 42,
-    });
+    const initialized = (
+      await bundle.initialize({
+        table: createBootstrapTable(),
+        playerIds: [...BOOTSTRAP_PLAYER_IDS],
+        rngSeed: 42,
+      })
+    ).state;
 
     expect(initialized.domain.table.zones.shared["draw-deck"]).toEqual([
       "card-3",
@@ -1210,12 +1220,14 @@ describe("initialization runtime", () => {
       view: () => ({}),
     });
 
-    const bundle = createReducerTestingBundle(game);
-    const initialized = await bundle.initialize({
-      table: createEmptyTable(["player-1", "player-2"]),
-      playerIds: ["player-1", "player-2"],
-      rngSeed: 1,
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initialized = (
+      await bundle.initialize({
+        table: createEmptyTable(["player-1", "player-2"]),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 1,
+      })
+    ).state;
 
     expect(publicQ).toHaveLength(1);
     expect(privateQ).toHaveLength(2);

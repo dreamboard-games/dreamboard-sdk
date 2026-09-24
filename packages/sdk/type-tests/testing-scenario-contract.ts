@@ -1,3 +1,4 @@
+import { resolveScenarioCommandParams } from "../src/testing/scenario-player-refs.js";
 import { z } from "zod";
 import { many } from "../src/reducer/inputs/many.js";
 import type { PlayerSpaceInputSchema } from "../src/reducer/inputs/boardInput.js";
@@ -7,10 +8,9 @@ import * as testingFacade from "../src/testing.js";
 import * as testingDefinitions from "../src/testing/definitions.js";
 import {
   digestScenarioProjection,
-  resolveScenarioCommandParams,
   scenarioProjectionInputMetadata,
   scenarioProjectionParityFromInspectNode,
-} from "../src/testing-runtime.js";
+} from "../src/testing/scenario-projection-digest.js";
 import {
   createScenarioAuthoring,
   type ScenarioCommandOf,

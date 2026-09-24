@@ -1,4 +1,4 @@
-import type { ViewCard } from "@dreamboard-games/sdk/types";
+import type { ViewCard } from "@dreamboard-games/sdk";
 import type {
   CardId,
   CardType,

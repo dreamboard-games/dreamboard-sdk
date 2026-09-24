@@ -9,7 +9,7 @@ export {
 export * from "./inspection/index.js";
 export * from "./exploration/index.js";
 export * from "./reducer-scenario/index.js";
-export * from "./ui-scenario/index.js";
-export * from "./ui-fixture/index.js";
 
 export * from "./sources/index.js";
+
+export * from "./candidate-verification.js";

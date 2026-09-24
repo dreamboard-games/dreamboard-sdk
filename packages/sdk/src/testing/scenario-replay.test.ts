@@ -13,7 +13,7 @@ import {
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 import {
   assertScenario,
   createScenarioAuthoring,

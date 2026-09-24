@@ -1,6 +1,6 @@
 import { createGame as createModel } from "../reducer";
 
-import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { cardInput, cardTarget, formInput, rngInput } from "./inputs";
@@ -8,7 +8,7 @@ import { gameEvent, many } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 import { asPlayerId } from "../reducer/per-player";
 
 function hydrateRefs<T>(
@@ -381,14 +381,16 @@ function submitCardsInput(playerId: string, cardIds: readonly string[]) {
 
 describe("simultaneousPlayer phases", () => {
   test("a rejected final actor rolls back its seal, draft, events and RNG while retaining earlier seals", async () => {
-    const bundle = createReducerTestingBundle(
+    const bundle = createReducerTestingRuntime(
       createGame({ rejectRight: true }),
     );
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-      rngSeed: 42,
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+        rngSeed: 42,
+      })
+    ).state;
     const submit = (state: typeof initial, playerId: string, choice: string) =>
       bundle.dispatch({
         state,
@@ -412,11 +414,13 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(first.state).toEqual(saved);
     const accepted = await submit(first.state, "player-2", "left");
-    const fresh = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-      rngSeed: 42,
-    });
+    const fresh = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+        rngSeed: 42,
+      })
+    ).state;
     const controlFirst = await submit(fresh, "player-1", "left");
     if (controlFirst.kind !== "accept")
       throw new Error("Expected control seal");
@@ -459,11 +463,13 @@ describe("simultaneousPlayer phases", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+      })
+    ).state;
 
     expect(
       bundle.project({
@@ -479,17 +485,22 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("collects sealed submissions and resolves once all actors are ready", async () => {
-    const bundle = createReducerTestingBundle(createGame());
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-    });
+    const bundle = createReducerTestingRuntime(createGame());
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+      })
+    ).state;
 
     const initialProjection = bundle.project({
       state: initial,
       playerIds: ["player-1", "player-2", "player-3"],
     });
-    expect(initialProjection.stageSeats).toEqual(["player-1", "player-2"]);
+    expect(initialProjection.schedulerFlow?.activePlayerIds).toEqual([
+      "player-1",
+      "player-2",
+    ]);
     expect(initialProjection.schedulerFlow).toEqual({
       version: 1,
       activePlayerIds: ["player-1", "player-2"],
@@ -574,13 +585,15 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("allows replacement submissions when canResubmit is enabled", async () => {
-    const bundle = createReducerTestingBundle(
+    const bundle = createReducerTestingRuntime(
       createGame({ canResubmit: true }),
     );
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+      })
+    ).state;
 
     const first = await bundle.dispatch({
       state: initial,
@@ -609,11 +622,13 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("collects three-card simultaneous submissions with server-authoritative validation", async () => {
-    const bundle = createReducerTestingBundle(createCardPassGame());
-    const initial = await bundle.initialize({
-      table: createCardTable(),
-      playerIds: ["player-1", "player-2", "player-3"],
-    });
+    const bundle = createReducerTestingRuntime(createCardPassGame());
+    const initial = (
+      await bundle.initialize({
+        table: createCardTable(),
+        playerIds: ["player-1", "player-2", "player-3"],
+      })
+    ).state;
 
     const projection = bundle.project({
       state: initial,

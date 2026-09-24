@@ -4,7 +4,7 @@ import test from "node:test";
 import { assertPeerHygiene, resolvePackedTarballPath } from "./package.ts";
 
 const peers = {
-  "framer-motion": "^12.0.0",
+  "@tanstack/react-store": "0.11.1",
   react: "^19.0.0",
   "react-dom": "^19.0.0",
   zod: "^4.4.3",

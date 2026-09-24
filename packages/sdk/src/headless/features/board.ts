@@ -254,6 +254,7 @@ export function boardFeature<G>(
             );
             if (!matching.length) return;
             const domain = matching[0]!.input.getDomain();
+            if (domain.type !== "boardTarget") return;
             context.routeTarget(kind, id, {
               ...options,
               boardId: String(domain.boardId) as IdOf<G, "boardId">,

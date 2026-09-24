@@ -34,11 +34,7 @@ type ReductionResult =
   | Omit<Extract<Wire.DispatchResult, { kind: "accept" }>, "trace">;
 
 /** Scenario conveniences; all state changes use the production bundle. */
-export type ReducerBundleTestingRuntime = Omit<
-  ReducerBundleContract,
-  "initialize" | "project"
-> & {
-  initialize(input: Wire.InitializeRequest): Promise<Wire.ReducerSessionState>;
+export type ReducerTestingRuntime = Omit<ReducerBundleContract, "project"> & {
   validateInput(input: Wire.DispatchRequest): Promise<ReducerValidationResult>;
   reduce(input: Wire.DispatchRequest): Promise<ReductionResult>;
   project(
@@ -61,8 +57,7 @@ export function createReducerTestingRuntime<
 >(
   definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
-): Omit<ReducerBundleTestingRuntime, "initialize"> &
-  Pick<ReducerBundleContract, "initialize"> {
+): ReducerTestingRuntime {
   const bundle = createReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   // The codec validates the authored schemas; its erased phase return type
@@ -128,24 +123,6 @@ export function createReducerTestingRuntime<
         ...inspect(input),
         maxEvaluations: input.maxEvaluations,
       });
-    },
-  };
-}
-
-/** Existing scenario conveniences unwrap only initialization, never execution. */
-export function createReducerTestingBundle<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  View extends ViewOfContract<Contract>,
->(
-  definition: ReducerGameDefinition<Contract, Definitions, View>,
-  options: ReducerBundleOptions = {},
-): ReducerBundleTestingRuntime {
-  const runtime = createReducerTestingRuntime(definition, options);
-  return {
-    ...runtime,
-    async initialize(input) {
-      return (await runtime.initialize(input)).state;
     },
   };
 }
