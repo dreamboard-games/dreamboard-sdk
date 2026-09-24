@@ -83,24 +83,6 @@ type BoardOf<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
 > = Extract<ArrayItem<NonNullable<Manifest["boards"]>>, { id: CurrentBoardId }>;
-type BoardTemplateOf<
-  Manifest extends GameTopologyManifest,
-  CurrentTemplateId extends string,
-> = Extract<
-  ArrayItem<NonNullable<Manifest["boardTemplates"]>>,
-  { id: CurrentTemplateId }
->;
-type ResolvedBoardLikeOf<
-  Manifest extends GameTopologyManifest,
-  CurrentBoardId extends BoardId<Manifest>,
-> =
-  | BoardOf<Manifest, CurrentBoardId>
-  | (BoardOf<Manifest, CurrentBoardId> extends {
-      templateId: infer CurrentTemplateId extends string;
-    }
-      ? BoardTemplateOf<Manifest, CurrentTemplateId>
-      : never);
-
 type SpaceIdOf<BoardLike> = BoardLike extends { layout: "hex" }
   ? HexSpaceId<BoardLike>
   : IdsOf<BoardLike extends { spaces?: infer Spaces } ? Spaces : never>;
@@ -114,33 +96,14 @@ type SquareSpaceOf<BoardLike> = Extract<
   SpaceOf<BoardLike>,
   { row: number; col: number }
 >;
-type BoardEntryOf<Manifest extends GameTopologyManifest> = ArrayItem<
-  NonNullable<Manifest["boards"]>
->;
-type TemplateForBoardEntry<
-  Manifest extends GameTopologyManifest,
-  Entry,
-> = Entry extends {
-  templateId: infer TemplateId extends string;
-  layout: infer Layout;
-}
-  ? Extract<BoardTemplateOf<Manifest, TemplateId>, { layout: Layout }>
-  : never;
-type BoardLikeForEntry<Manifest extends GameTopologyManifest, Entry> =
-  Entry extends BoardEntryOf<Manifest>
-    ? Entry extends { id: infer CurrentBoardId extends BoardId<Manifest> }
-      ? ResolvedBoardLikeOf<Manifest, CurrentBoardId>
-      : Entry
-    : Entry;
-
 type SpaceIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
-> = SpaceIdOf<ResolvedBoardLikeOf<Manifest, CurrentBoardId>>;
+> = SpaceIdOf<BoardOf<Manifest, CurrentBoardId>>;
 type ContainerIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
-> = ContainerIdOf<ResolvedBoardLikeOf<Manifest, CurrentBoardId>>;
+> = ContainerIdOf<BoardOf<Manifest, CurrentBoardId>>;
 
 type RuntimeIdsFromCount<BaseId extends string, Count> = Count extends number
   ? number extends Count
@@ -747,17 +710,9 @@ type TypedOptionalArray<
       [Property in Key]?: ReadonlyArray<Item>;
     }
   : Base;
-type EffectiveSchemaForEntry<
-  Manifest extends GameTopologyManifest,
-  Entry,
-  Key extends string,
-> = Key extends keyof Entry
+type SchemaForEntry<Entry, Key extends string> = Key extends keyof Entry
   ? Entry[Key]
-  : TemplateForBoardEntry<Manifest, Entry> extends infer Template
-    ? Key extends keyof Template
-      ? Template[Key]
-      : undefined
-    : undefined;
+  : undefined;
 type TypedGenericBoardLike<
   Entry,
   Manifest extends GameTopologyManifest,
@@ -767,7 +722,7 @@ type TypedGenericBoardLike<
     TypedOptionalArray<
       TypedFields<
         Omit<Entry, "spaces" | "relations" | "containers">,
-        EffectiveSchemaForEntry<Manifest, Entry, "boardFieldsSchema">,
+        SchemaForEntry<Entry, "boardFieldsSchema">,
         Manifest,
         BoardLike
       >,
@@ -777,7 +732,7 @@ type TypedGenericBoardLike<
         ArrayItem<
           NonNullable<Entry extends { spaces?: infer Spaces } ? Spaces : never>
         >,
-        EffectiveSchemaForEntry<Manifest, Entry, "spaceFieldsSchema">,
+        SchemaForEntry<Entry, "spaceFieldsSchema">,
         Manifest,
         BoardLike
       >
@@ -792,7 +747,7 @@ type TypedGenericBoardLike<
       >,
       Manifest,
       BoardLike,
-      EffectiveSchemaForEntry<Manifest, Entry, "relationFieldsSchema">
+      SchemaForEntry<Entry, "relationFieldsSchema">
     >
   >,
   Entry,
@@ -805,7 +760,7 @@ type TypedGenericBoardLike<
     >,
     Manifest,
     BoardLike,
-    EffectiveSchemaForEntry<Manifest, Entry, "containerFieldsSchema">
+    SchemaForEntry<Entry, "containerFieldsSchema">
   >
 >;
 type TypedHexBoardLike<
@@ -816,7 +771,7 @@ type TypedHexBoardLike<
   TypedOptionalArray<
     TypedFields<
       Omit<Entry, "spaces" | "edges" | "vertices">,
-      EffectiveSchemaForEntry<Manifest, Entry, "boardFieldsSchema">,
+      SchemaForEntry<Entry, "boardFieldsSchema">,
       Manifest,
       BoardLike
     > &
@@ -825,7 +780,7 @@ type TypedHexBoardLike<
             spaces: {
               [Key in keyof Spaces]: TypedFields<
                 Spaces[Key],
-                EffectiveSchemaForEntry<Manifest, Entry, "spaceFieldsSchema">,
+                SchemaForEntry<Entry, "spaceFieldsSchema">,
                 Manifest,
                 BoardLike
               >;
@@ -838,7 +793,7 @@ type TypedHexBoardLike<
       ArrayItem<
         NonNullable<Entry extends { edges?: infer Edges } ? Edges : never>
       >,
-      EffectiveSchemaForEntry<Manifest, Entry, "edgeFieldsSchema">,
+      SchemaForEntry<Entry, "edgeFieldsSchema">,
       Manifest,
       BoardLike
     >
@@ -851,7 +806,7 @@ type TypedHexBoardLike<
         Entry extends { vertices?: infer Vertices } ? Vertices : never
       >
     >,
-    EffectiveSchemaForEntry<Manifest, Entry, "vertexFieldsSchema">,
+    SchemaForEntry<Entry, "vertexFieldsSchema">,
     Manifest,
     BoardLike
   >
@@ -870,7 +825,7 @@ type TypedSquareBoardLike<
               Entry,
               "spaces" | "relations" | "containers" | "edges" | "vertices"
             >,
-            EffectiveSchemaForEntry<Manifest, Entry, "boardFieldsSchema">,
+            SchemaForEntry<Entry, "boardFieldsSchema">,
             Manifest,
             BoardLike
           >,
@@ -882,7 +837,7 @@ type TypedSquareBoardLike<
                 Entry extends { spaces?: infer Spaces } ? Spaces : never
               >
             >,
-            EffectiveSchemaForEntry<Manifest, Entry, "spaceFieldsSchema">,
+            SchemaForEntry<Entry, "spaceFieldsSchema">,
             Manifest,
             BoardLike
           >
@@ -897,7 +852,7 @@ type TypedSquareBoardLike<
           >,
           Manifest,
           BoardLike,
-          EffectiveSchemaForEntry<Manifest, Entry, "relationFieldsSchema">
+          SchemaForEntry<Entry, "relationFieldsSchema">
         >
       >,
       Entry,
@@ -910,7 +865,7 @@ type TypedSquareBoardLike<
         >,
         Manifest,
         BoardLike,
-        EffectiveSchemaForEntry<Manifest, Entry, "containerFieldsSchema">
+        SchemaForEntry<Entry, "containerFieldsSchema">
       >
     >,
     Entry,
@@ -919,7 +874,7 @@ type TypedSquareBoardLike<
       ArrayItem<
         NonNullable<Entry extends { edges?: infer Edges } ? Edges : never>
       >,
-      EffectiveSchemaForEntry<Manifest, Entry, "edgeFieldsSchema">,
+      SchemaForEntry<Entry, "edgeFieldsSchema">,
       Manifest,
       BoardLike
     >
@@ -932,7 +887,7 @@ type TypedSquareBoardLike<
         Entry extends { vertices?: infer Vertices } ? Vertices : never
       >
     >,
-    EffectiveSchemaForEntry<Manifest, Entry, "vertexFieldsSchema">,
+    SchemaForEntry<Entry, "vertexFieldsSchema">,
     Manifest,
     BoardLike
   >
@@ -941,15 +896,11 @@ type TypedBoardLikeEntry<
   Entry,
   Manifest extends GameTopologyManifest,
 > = Entry extends { layout: "generic" }
-  ? TypedGenericBoardLike<Entry, Manifest, BoardLikeForEntry<Manifest, Entry>>
+  ? TypedGenericBoardLike<Entry, Manifest, Entry>
   : Entry extends { layout: "hex" }
-    ? TypedHexBoardLike<Entry, Manifest, BoardLikeForEntry<Manifest, Entry>>
+    ? TypedHexBoardLike<Entry, Manifest, Entry>
     : Entry extends { layout: "square" }
-      ? TypedSquareBoardLike<
-          Entry,
-          Manifest,
-          BoardLikeForEntry<Manifest, Entry>
-        >
+      ? TypedSquareBoardLike<Entry, Manifest, Entry>
       : Entry;
 
 type TypedCard<
@@ -1056,7 +1007,7 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
 
 export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   Manifest,
-  "cardSets" | "zones" | "boardTemplates" | "boards" | "pieceSeeds" | "dieSeeds"
+  "cardSets" | "zones" | "boards" | "pieceSeeds" | "dieSeeds"
 > & {
   cardSets: ReadonlyArray<
     TypedCardSet<ArrayItem<Manifest["cardSets"]>, Manifest>
@@ -1064,11 +1015,6 @@ export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   zones?: Manifest["zones"] extends readonly unknown[]
     ? ReadonlyArray<TypedZone<ArrayItem<Manifest["zones"]>, Manifest>>
     : Manifest["zones"];
-  boardTemplates?: Manifest["boardTemplates"] extends readonly unknown[]
-    ? ReadonlyArray<
-        TypedBoardLikeEntry<ArrayItem<Manifest["boardTemplates"]>, Manifest>
-      >
-    : Manifest["boardTemplates"];
   boards: Manifest["boards"] extends readonly unknown[]
     ? ReadonlyArray<
         TypedBoardLikeEntry<ArrayItem<Manifest["boards"]>, Manifest>

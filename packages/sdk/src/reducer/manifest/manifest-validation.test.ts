@@ -10,7 +10,6 @@ const BASE_MANIFEST: GameTopologyManifest = {
   },
   cardSets: [],
   zones: [],
-  boardTemplates: [],
   boards: [],
   pieceTypes: [],
   pieceSeeds: [],

@@ -77,7 +77,6 @@ export default defineTopologyManifest({
       visibility: "public",
     },
   ],
-  boardTemplates: [],
   boards: [],
   pieceTypes: [],
   pieceSeeds: [],

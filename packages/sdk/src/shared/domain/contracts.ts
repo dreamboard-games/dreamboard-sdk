@@ -434,29 +434,6 @@ export type BoardContainerSpec = {
 };
 
 /**
- * Reusable authored board topology template
- */
-export type GenericBoardTemplateSpec = {
-  /**
-   * Stable template identifier
-   */
-  id: string;
-  name: string;
-  layout: "generic";
-  /**
-   * Optional authored board type identifier such as track, map, tableau, or grid
-   */
-  typeId?: string;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  relationFieldsSchema?: ObjectSchema;
-  containerFieldsSchema?: ObjectSchema;
-  spaces?: Array<BoardSpaceSpec>;
-  relations?: Array<BoardRelationSpec>;
-  containers?: Array<BoardContainerSpec>;
-};
-
-/**
  * Visual orientation for authored hex coordinates
  */
 export type HexOrientation = "pointy" | "flat";
@@ -637,41 +614,6 @@ export type SquareVertexSpec = {
 };
 
 /**
- * Reusable authored square board topology template
- */
-export type SquareBoardTemplateSpec = {
-  /**
-   * Stable template identifier
-   */
-  id: string;
-  name: string;
-  layout: "square";
-  /**
-   * Optional authored board type identifier
-   */
-  typeId?: string;
-  boardFieldsSchema?: ObjectSchema;
-  spaceFieldsSchema?: ObjectSchema;
-  relationFieldsSchema?: ObjectSchema;
-  containerFieldsSchema?: ObjectSchema;
-  edgeFieldsSchema?: ObjectSchema;
-  vertexFieldsSchema?: ObjectSchema;
-  spaces?: Array<SquareSpaceSpec>;
-  relations?: Array<BoardRelationSpec>;
-  containers?: Array<BoardContainerSpec>;
-  edges?: Array<SquareEdgeSpec>;
-  vertices?: Array<SquareVertexSpec>;
-};
-
-export type BoardTemplateSpec =
-  | ({
-      layout: "generic";
-    } & GenericBoardTemplateSpec)
-  | ({
-      layout: "square";
-    } & SquareBoardTemplateSpec);
-
-/**
  * Shared or per-player authored board instance shell
  */
 export type GenericBoardSpec = {
@@ -686,10 +628,6 @@ export type GenericBoardSpec = {
    */
   typeId?: string;
   scope: TopologyScope;
-  /**
-   * Optional board template to clone before applying inline authored additions
-   */
-  templateId?: string;
   boardFieldsSchema?: ObjectSchema;
   spaceFieldsSchema?: ObjectSchema;
   relationFieldsSchema?: ObjectSchema;
@@ -756,10 +694,6 @@ export type SquareBoardSpec = {
    */
   typeId?: string;
   scope: TopologyScope;
-  /**
-   * Optional square board template to clone before applying inline authored additions
-   */
-  templateId?: string;
   boardFieldsSchema?: ObjectSchema;
   spaceFieldsSchema?: ObjectSchema;
   relationFieldsSchema?: ObjectSchema;
@@ -897,10 +831,6 @@ export type GameTopologyManifest = {
    * Shared and per-player authored containers
    */
   zones?: Array<ZoneSpec>;
-  /**
-   * Reusable board topology templates
-   */
-  boardTemplates?: Array<BoardTemplateSpec>;
   /**
    * Shared and per-player authored board shells
    */

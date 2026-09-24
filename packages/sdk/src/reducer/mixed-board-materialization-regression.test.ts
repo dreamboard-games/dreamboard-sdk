@@ -18,7 +18,7 @@ test("materializeManifestTable rejects player-scoped seed homes without ownerId"
         scope: "perPlayer",
       },
     ],
-    boardTemplates: [],
+
     boards: [
       {
         id: "player-mat",
