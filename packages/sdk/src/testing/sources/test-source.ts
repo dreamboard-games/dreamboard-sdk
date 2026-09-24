@@ -18,6 +18,8 @@ export interface CapturedSubmission {
 export interface TestSource extends CommandSource {
   readonly submissions: readonly CapturedSubmission[];
   emit(snapshot: SourceSnapshot): void;
+  recovering(): void;
+  fail(error: Error): void;
 }
 /** Test-owned transport control; all request/barrier behavior remains production code. */
 export function createTestSource(initial: SourceSnapshot): TestSource {
@@ -68,5 +70,7 @@ export function createTestSource(initial: SourceSnapshot): TestSource {
       return [...submissions];
     },
     emit,
+    recovering: lifecycle.recovering,
+    fail: lifecycle.fail,
   };
 }

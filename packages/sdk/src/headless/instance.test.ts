@@ -1,9 +1,10 @@
-import { createStore } from "@tanstack/store";
-import type { SourceState } from "./sources/types.js";
 import { describe, expect, it, vi } from "vitest";
 import { createGameInstance, AmbiguousTargetError } from "./instance.js";
-import { createSourceLifecycle } from "./sources/lifecycle.js";
 import { frame, session } from "./sources/__fixtures__/frames.js";
+import { createTestSource } from "../testing/sources/test-source.js";
+import { scenarioSource } from "../testing/sources/scenario-source.js";
+import hex from "../../../../examples/reference-games/hex-network-trading/app/game.ts";
+import bandits from "../../../../examples/reference-games/hex-network-trading/test/scenarios/bandits.scenario.ts";
 import type {
   InteractionDescriptor,
   InteractionInputDescriptor,
@@ -38,34 +39,39 @@ function action(
   };
 }
 function setup(descriptors: readonly InteractionDescriptor[] = [action()]) {
-  const send = vi.fn();
-  const lifecycle = createSourceLifecycle({
-    context: { sessionId: session.sessionId, playerId: "alice" },
-    send,
-    recover: vi.fn(),
-    close: vi.fn(),
-    timeoutMs: 100000,
+  const { basis: _basis, ...seatFrame } = frame();
+  void _basis;
+  const source = createTestSource({
+    me: "alice",
+    players: session.players,
+    version: 1,
+    frame: { ...seatFrame, availableInteractions: descriptors },
   });
-  lifecycle.session(session);
   const emit = (
     version: number,
     interactions = descriptors,
     changes: Partial<PluginGameplayFrame> = {},
-  ) =>
-    lifecycle.frame({
-      ...frame(version),
-      availableInteractions: interactions,
-      ...changes,
+  ) => {
+    const current = source.store.get().snapshot!;
+    source.emit({
+      ...current,
+      version,
+      frame: {
+        ...current.frame,
+        availableInteractions: interactions,
+        ...changes,
+      },
     });
-  emit(1);
+  };
   const ack = (accepted = true) =>
-    lifecycle.result({
-      type: "interaction.result",
-      clientActionId: send.mock.lastCall![0].clientActionId,
-      accepted,
-      ...(accepted ? {} : { errorCode: "RULE_REJECT" }),
-    });
-  return { ...lifecycle, send, emit, ack };
+    source.submissions
+      .at(-1)!
+      .resolve(
+        accepted
+          ? { accepted: true }
+          : { accepted: false, errorCode: "RULE_REJECT" },
+      );
+  return { source, emit, ack };
 }
 describe("headless instance", () => {
   it.each([true, false])(
@@ -76,7 +82,7 @@ describe("headless instance", () => {
       const interaction = game.interactions.get("play.move")!;
       interaction.getInput("choice")!.setValue("a");
       const submit = interaction.submit();
-      expect(x.send.mock.lastCall![0].params).toEqual({ choice: "a" });
+      expect(x.source.submissions.at(-1)?.params).toEqual({ choice: "a" });
       if (frameFirst) x.emit(2);
       expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
       x.ack();
@@ -160,12 +166,12 @@ describe("headless instance", () => {
     });
     const x = setup([first]);
     const game = createGameInstance()({ source: x.source });
-    expect(x.send).not.toHaveBeenCalled();
+    expect(x.source.submissions).toHaveLength(0);
     game.interactions
       .get("play.move")!
       .getInput("first")!
       .getSelectHandler("b")();
-    expect(x.send.mock.lastCall![0].params).toEqual({ first: "b" });
+    expect(x.source.submissions.at(-1)?.params).toEqual({ first: "b" });
     x.ack();
     await Promise.resolve();
     const next = action([choice("second", [null])], {
@@ -177,12 +183,12 @@ describe("headless instance", () => {
       expect(game.state.drafts["play.move"]).toBeUndefined(),
     );
     game.interactions.get("play.move")!.reset();
-    expect(x.send).toHaveBeenCalledTimes(1);
+    expect(x.source.submissions).toHaveLength(1);
     expect(game.interactions.get("play.move")!.getStep()?.selected).toEqual({
       first: "b",
     });
     const cancellation = game.interactions.get("play.move")!.cancel();
-    expect(x.send.mock.lastCall![0].type).toBe("interaction.cancel");
+    expect(x.source.submissions.at(-1)?.operation).toBe("cancel");
     x.ack();
     await cancellation;
     x.emit(3, [first]);
@@ -197,7 +203,7 @@ describe("headless instance", () => {
     const chosen = game.interactions.get("play.move")!.getInput("choice")!;
     expect(oldInput.getValue()).toBeUndefined();
     expect(chosen.getValue()).toBe("a");
-    x.recovering();
+    x.source.recovering();
     expect(game.getSnapshot()).not.toBe(old);
     expect(game.players).toBe(old.players);
     expect(game.view).toBe(old.view);
@@ -304,7 +310,7 @@ describe("instance boundaries", () => {
     const submitted = game.interactions.get("play.move")!.submit();
     x.ack();
     await submitted;
-    x.fail(new Error("Recovery exhausted"));
+    x.source.fail(new Error("Recovery exhausted"));
     expect(game.connection).toBe("closed");
     expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
     game.dispose();
@@ -394,7 +400,7 @@ describe("instance boundaries", () => {
     });
     const old = game.getSnapshot();
     expect(old.pointer.x).toBe(1);
-    x.recovering();
+    x.source.recovering();
     expect(game.getSnapshot().pointer).toBe(old.pointer);
     branch = Object.freeze({ x: 2 });
     invalidate();
@@ -492,7 +498,7 @@ it("many draft reconciliation retains valid members and enforces a lowered maxim
     ),
   ]);
   expect(game.state.drafts["play.move"]).toEqual({ cards: ["a"] });
-  expect(x.send).not.toHaveBeenCalled();
+  expect(x.source.submissions).toHaveLength(0);
   game.dispose();
 });
 
@@ -551,11 +557,11 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
     },
   });
   drop!();
-  expect(x.send.mock.lastCall![0].params).toEqual({
+  expect(x.source.submissions.at(-1)?.params).toEqual({
     card: "ace",
     space: "0,0",
   });
-  expect(x.send).toHaveBeenCalledTimes(1);
+  expect(x.source.submissions).toHaveLength(1);
   game.dispose();
 });
 
@@ -590,44 +596,28 @@ it("input and interaction readiness reject duplicate and oversized programmatic 
   game.dispose();
 });
 
-it("same-source seat changes invalidate controlled drafts and old handlers", () => {
-  const { basis: _basis, ...seatFrame } = frame();
-  expect(_basis).toBeDefined();
-  const store = createStore<SourceState>({
-    snapshot: {
-      me: "alice",
-      players: [...session.players, { playerId: "bob", displayName: "Bob" }],
-      frame: { ...seatFrame, availableInteractions: [action()] },
-      version: 1,
-    },
-    connection: "ready",
-    request: null,
+it("same-source seat changes invalidate controlled drafts and old handlers", async () => {
+  const source = await scenarioSource(hex, bandits, {
+    at: "ready-to-move",
+    as: "player-1",
   });
-  const source = {
-    store,
-    dispose: vi.fn(),
-    submit: async () => ({ accepted: true as const }),
-    cancel: async () => ({ accepted: true as const }),
-  };
-  const drafts = { "play.move": { choice: "a" } };
+  const key = "moveBandits.moveBandits";
+  const drafts = { [key]: { hexId: "northForest" } };
   const onDraftsChange = vi.fn();
   const game = createGameInstance()({
     source,
-    state: { drafts, activeInteraction: "play.move" },
+    state: { drafts, activeInteraction: key },
     onDraftsChange,
   });
-  const oldInput = game.interactions.get("play.move")!.getInput("choice")!;
-  store.setState((current) => ({
-    ...current,
-    snapshot: { ...current.snapshot!, me: "bob", version: 2 },
-  }));
-  expect(game.me!.id).toBe("bob");
+  const oldInput = game.interactions.get(key)!.getInput("hexId")!;
+  source.switchSeat("player-3");
+  expect(game.me!.id).toBe("player-3");
   expect(game.state.drafts).toEqual({});
   expect(game.state.activeInteraction).toBeNull();
   expect(onDraftsChange).toHaveBeenCalledWith({});
-  oldInput.setValue("b");
+  oldInput.setValue("southWestClay");
   expect(onDraftsChange).toHaveBeenCalledTimes(1);
-  expect(drafts["play.move"].choice).toBe("a");
+  expect(drafts[key].hexId).toBe("northForest");
   game.dispose();
 });
 
@@ -694,16 +684,11 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
   game.dispose();
 });
 
-it("rebuilds interaction handlers when a new source reuses the identical immutable snapshot", () => {
+it("rebuilds interaction handlers when a new source starts with the same snapshot", () => {
   const x = setup();
   const game = createGameInstance()({ source: x.source });
   const old = game.interactions.get("play.move")!;
-  const replacement = {
-    ...x.source,
-    store: createStore(x.source.store.get()),
-    dispose: vi.fn(),
-    submit: vi.fn(),
-  };
+  const replacement = createTestSource(x.source.store.get().snapshot!);
   game.setOptions({ source: replacement });
   const current = game.interactions.get("play.move")!;
   expect(current).not.toBe(old);
