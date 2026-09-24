@@ -49,6 +49,7 @@ describe("in-memory manifests", () => {
       playerIds: ["north", "south"],
     });
     expect(table.decks.draw).toEqual(["ace-1", "ace-2"]);
+    expect(table).toEqual(JSON.parse(JSON.stringify(table)));
     expect(table.cards["ace-1"].properties).toEqual({
       points: 0,
       color: "red",
@@ -87,4 +88,64 @@ describe("in-memory manifests", () => {
     });
     expect(game).toHaveProperty("assemble");
   });
+});
+
+test("player-scoped boards follow the active roster rather than max-player placeholders", () => {
+  const board = compileManifest({
+    players: { minPlayers: 1, maxPlayers: 4 },
+    cardSets: [],
+    zones: [],
+    boards: [
+      {
+        id: "mat",
+        name: "Mat",
+        layout: "generic",
+        scope: "perPlayer",
+        spaces: [],
+        relations: [],
+        containers: [],
+      },
+    ],
+  } as const);
+  const table = board.createInitialTable({ playerIds: ["north", "south"] });
+  expect(Object.keys(table.boards.byId)).toEqual(["mat:north", "mat:south"]);
+  expect(board.ids.boardId.safeParse("mat:north").success).toBe(true);
+  expect(board.ids.boardId.safeParse("other:north").success).toBe(false);
+  expect(board.ids.cardId.safeParse("unavailable").success).toBe(false);
+});
+
+test("derived geometry IDs remain constrained by the materialized topology", () => {
+  const compiled = compileManifest({
+    players: { minPlayers: 1, maxPlayers: 2 },
+    cardSets: [],
+    zones: [],
+    boards: [
+      {
+        id: "map",
+        name: "Map",
+        layout: "square",
+        scope: "shared",
+        spaces: [
+          { id: "a", row: 0, col: 0 },
+          { id: "b", row: 0, col: 1 },
+        ],
+        relations: [],
+        containers: [],
+        edges: [],
+        vertices: [],
+      },
+    ],
+  } as const);
+  expect(compiled.ids.edgeId.safeParse("square-edge:1,0::1,1").success).toBe(
+    true,
+  );
+  expect(compiled.ids.vertexId.safeParse("square-vertex:1,1").success).toBe(
+    true,
+  );
+  expect(compiled.ids.edgeId.safeParse("square-edge:99,0::99,1").success).toBe(
+    false,
+  );
+  expect(compiled.ids.vertexId.safeParse("square-vertex:99,99").success).toBe(
+    false,
+  );
 });

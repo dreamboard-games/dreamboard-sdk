@@ -269,7 +269,10 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
   const boards = analysis.analyzedBoards.flatMap((board) =>
     board.runtimeBoardIds.map((id) => {
       const base = {
-        id: z.literal(id),
+        id:
+          board.board.scope === "perPlayer"
+            ? z.templateLiteral([board.board.id, ":", z.string().min(1)])
+            : z.literal(id),
         baseId: z.literal(board.board.id),
         scope: z.literal(board.board.scope),
         fields: objectSchema(board.boardFieldsSchema),
@@ -301,6 +304,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
       if (board.layout === "generic")
         return {
           id,
+          scope: board.board.scope,
           layout: board.layout,
           schema: runtimeGenericBoardStateSchema.extend({
             ...base,
@@ -322,6 +326,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
       );
       return {
         id,
+        scope: board.board.scope,
         layout: board.layout,
         schema:
           board.layout === "hex"
@@ -351,20 +356,23 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
       };
     }),
   );
-  const boardStateByIdSchema = shape(
-    boards,
-    (board) => board.id,
-    (board) => board.schema,
-  );
-  const hexBoardStateByIdSchema = shape(
+  const boardCollection = (entries: typeof boards) => {
+    const shared = entries.filter((board) => board.scope === "shared");
+    const scoped = entries
+      .filter((board) => board.scope === "perPlayer")
+      .map((board) => board.schema);
+    return shape(
+      shared,
+      (board) => board.id,
+      (board) => board.schema,
+    ).catchall(scoped.length ? z.union(scoped) : z.never());
+  };
+  const boardStateByIdSchema = boardCollection(boards);
+  const hexBoardStateByIdSchema = boardCollection(
     boards.filter((board) => board.layout === "hex"),
-    (board) => board.id,
-    (board) => board.schema,
   );
-  const squareBoardStateByIdSchema = shape(
+  const squareBoardStateByIdSchema = boardCollection(
     boards.filter((board) => board.layout === "square"),
-    (board) => board.id,
-    (board) => board.schema,
   );
   return z.object({
     playerOrder: z.array(ids.playerId),

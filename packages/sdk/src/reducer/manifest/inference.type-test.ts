@@ -61,3 +61,63 @@ const game = createGame({
 });
 const input = game.phase("play");
 void [invalidCard, points, badColor, input, missingDeck];
+
+import type { ManifestIdsOf } from "./types";
+const seed: ManifestIdsOf<{
+  pieceSeeds: readonly [{ typeId: "token" }];
+}>["pieceId"] = "token";
+const hugeSeed: ManifestIdsOf<{
+  pieceSeeds: readonly [{ typeId: "token"; count: 10000 }];
+}>["pieceId"] = "token-9999";
+const preset = compileManifest({
+  players: { minPlayers: 1, maxPlayers: 2 },
+  cardSets: [
+    {
+      type: "preset",
+      id: "standard",
+      presetId: "standard_52_deck",
+      name: "Standard",
+      defaultHome: { type: "zone", zoneId: "draw" },
+    },
+  ],
+  zones: [
+    {
+      id: "draw",
+      name: "Draw",
+      scope: "shared",
+      allowedCardSetIds: ["standard"],
+    },
+  ],
+  boards: [],
+} as const);
+const presetCard: z.infer<typeof preset.ids.cardId> = "SPADES_A";
+// @ts-expect-error The preset contains only the standard suits and ranks.
+const badPresetCard: z.infer<typeof preset.ids.cardId> = "SPADES_20";
+const hex = compileManifest({
+  players: { minPlayers: 1, maxPlayers: 2 },
+  cardSets: [],
+  zones: [],
+  boardTemplates: [
+    {
+      id: "template",
+      name: "Template",
+      layout: "hex",
+      orientation: "pointy-top",
+      spaces: [{ id: "center", q: 0, r: 0 }],
+    },
+  ],
+  boards: [
+    {
+      id: "map",
+      name: "Map",
+      layout: "hex",
+      scope: "shared",
+      templateId: "template",
+    },
+  ],
+} as const);
+const hexId: z.infer<typeof hex.ids.spaceId> = "center";
+const axial: number = hex.staticBoards.hex.map.spaces.center.q;
+// @ts-expect-error Unused spaces do not enter the inferred manifest.
+const absent: z.infer<typeof hex.ids.spaceId> = "nowhere";
+void [seed, hugeSeed, preset, presetCard, badPresetCard, hexId, axial, absent];

@@ -1406,12 +1406,15 @@ function isSingletonExplicitSeed(seed: {
 
 export function analyzeManifest(
   inputManifest: GameTopologyManifest,
+  runtimePlayerIds?: readonly string[],
 ): ManifestAnalysis {
   const manifest = addStandardDecksIfNeeded(inputManifest);
-  const playerIds = Array.from(
-    { length: manifest.players.maxPlayers },
-    (_, index) => `player-${index + 1}`,
-  );
+  const playerIds = runtimePlayerIds
+    ? [...runtimePlayerIds]
+    : Array.from(
+        { length: manifest.players.maxPlayers },
+        (_, index) => `player-${index + 1}`,
+      );
   const sharedZones = (manifest.zones ?? []).filter(
     (zone) => zone.scope === "shared",
   );
@@ -2053,7 +2056,7 @@ export function materializeManifestTable(options: {
     );
   }
 
-  const analysis = analyzeManifest(options.manifest);
+  const analysis = analyzeManifest(options.manifest, options.playerIds);
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];
 
@@ -2843,7 +2846,7 @@ export function materializeManifestTable(options: {
   );
   const resourcesWire = toPerPlayerWireFormat(resourcesByPlayer);
 
-  return {
+  return cloneJson({
     playerOrder: playerIds,
     zones: {
       shared: sharedZones,
@@ -2868,5 +2871,5 @@ export function materializeManifestTable(options: {
       track: {},
     },
     dice,
-  };
+  });
 }

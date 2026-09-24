@@ -97,19 +97,34 @@ export function compileManifest<const M extends AuthoredManifest>(
   ] as const;
   const ids = {
     ...Object.fromEntries(
-      families.map((family) => [
-        family,
-        createManifestStringLiteralSchema(
-          literals[`${family}s` as keyof typeof literals] as readonly string[],
+      families.map((family) => {
+        const values = literals[
+          `${family}s` as keyof typeof literals
+        ] as readonly string[];
+        return [
           family,
-        ),
-      ]),
+          family === "phaseName"
+            ? markManifestScopedSchema(z.string(), family)
+            : values.length
+              ? createManifestStringLiteralSchema(values, family)
+              : markManifestScopedSchema(z.never(), family),
+        ];
+      }),
     ),
     playerId: markManifestScopedSchema(
       z.string().min(1).transform(asPlayerId),
       "playerId",
     ),
   } as unknown as RuntimeManifestIds;
+  const boardIdSchemas = analysis.analyzedBoards.map((board) =>
+    board.board.scope === "perPlayer"
+      ? z.templateLiteral([board.board.id, ":", z.string().min(1)])
+      : z.literal(board.board.id),
+  );
+  ids.boardId = markManifestScopedSchema(
+    boardIdSchemas.length ? z.union(boardIdSchemas) : z.never(),
+    "boardId",
+  );
   const tableSchema = assumeManifestSchema<RuntimeTableRecord>(
     createTableSchema(analysis, ids),
   );
