@@ -7,15 +7,15 @@ import { REDUCER_CONTRACT_VERSION } from "./worker-contract";
 describe("completed reductions", () => {
   test("accepts final state and events and rejects pending work", () => {
     const fixture = FIXTURES.find(
-      (entry) => entry.name === "reduce-result-accept-mixed",
+      (entry) => entry.name === "dispatch-result-accept",
     )!;
-    const accepted = Zod.ReduceResultSchema.parse(fixture.value);
+    const accepted = Zod.DispatchResultSchema.parse(fixture.value);
     expect(accepted.kind).toBe("accept");
     expect(() =>
-      Zod.ReduceResultSchema.parse({ ...accepted, effects: [] }),
+      Zod.DispatchResultSchema.parse({ ...accepted, effects: [] }),
     ).toThrow();
     expect(() =>
-      Zod.ReduceResultSchema.parse({ ...accepted, continuations: {} }),
+      Zod.DispatchResultSchema.parse({ ...accepted, continuations: {} }),
     ).toThrow();
   });
   test("records actual phase entries, including same-phase reentry", () => {
@@ -172,13 +172,13 @@ describe("strict zod rejects unknown keys", () => {
     ).toThrow();
   });
 
-  test("reduce result rejects an extra top-level field", () => {
+  test("dispatch result rejects an extra top-level field", () => {
     const resultWithExtra = {
       kind: "reject",
       errorCode: "nope",
       unexpected: 42,
     };
-    expect(() => Zod.ReduceResultSchema.parse(resultWithExtra)).toThrow();
+    expect(() => Zod.DispatchResultSchema.parse(resultWithExtra)).toThrow();
   });
 
   test("dispatch trace entry rejects an extra field", () => {

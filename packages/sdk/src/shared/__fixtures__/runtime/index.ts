@@ -5,19 +5,14 @@ import dispatchResultReject from "./dispatch-result-reject.json" with { type: "j
 import dispatchRequest from "./dispatch-request.json" with { type: "json" };
 import gameInputInteractionAction from "./game-input-interaction-action.json" with { type: "json" };
 import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
-import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
 import initializeResult from "./initialize-result.json" with { type: "json" };
 import initializeRequest from "./initialize-request.json" with { type: "json" };
 import projectRequest from "./project-request.json" with { type: "json" };
-import reduceRequest from "./reduce-request.json" with { type: "json" };
-import reduceResultAcceptMixed from "./reduce-result-accept-mixed.json" with { type: "json" };
-import reduceResultReject from "./reduce-result-reject.json" with { type: "json" };
 import reducerRuntimeLogEntryStateCommit from "./reducer-runtime-log-entry-state-commit.json" with { type: "json" };
 import reducerRuntimeStateSimultaneous from "./reducer-runtime-state-simultaneous.json" with { type: "json" };
 import reducerSessionState from "./reducer-session-state.json" with { type: "json" };
 import seatProjectionBundle from "./seat-projection-bundle.json" with { type: "json" };
 import seatProjection from "./seat-projection.json" with { type: "json" };
-import validateInputRequest from "./validate-input-request.json" with { type: "json" };
 
 export type Fixture<TypeName extends string> = {
   readonly name: string;
@@ -44,18 +39,6 @@ export const FIXTURES = [
     typeName: "ReducerRuntimeLogEntry" as const,
     why: "Persisted state commit log entry embeds the canonical session envelope used for recovery.",
     value: reducerRuntimeLogEntryStateCommit,
-  },
-  {
-    name: "reduce-result-accept-mixed",
-    typeName: "ReduceResult" as const,
-    why: "A completed reduction contains its final state and events without pending work.",
-    value: reduceResultAcceptMixed,
-  },
-  {
-    name: "reduce-result-reject",
-    typeName: "ReduceResult" as const,
-    why: "Reject variant: no state, no effects, no continuations.",
-    value: reduceResultReject,
   },
   {
     name: "game-input-interaction-action",
@@ -92,24 +75,6 @@ export const FIXTURES = [
     typeName: "InitializeRequest" as const,
     why: "Reducer bundle initialization payload with table, player ids, rng seed, and lobby options.",
     value: initializeRequest,
-  },
-  {
-    name: "initialize-phase-request",
-    typeName: "InitializePhaseRequest" as const,
-    why: "Reducer bundle initializePhase payload with an erased session state and target phase id.",
-    value: initializePhaseRequest,
-  },
-  {
-    name: "validate-input-request",
-    typeName: "ValidateInputRequest" as const,
-    why: "Reducer bundle validateInput payload reusing the canonical GameInput union.",
-    value: validateInputRequest,
-  },
-  {
-    name: "reduce-request",
-    typeName: "ReduceRequest" as const,
-    why: "Reducer bundle reduce payload reusing the canonical GameInput union.",
-    value: reduceRequest,
   },
   {
     name: "dispatch-request",

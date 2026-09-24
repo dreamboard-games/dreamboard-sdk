@@ -35,9 +35,6 @@ export type GameInputInteraction = z.infer<
   typeof Schemas.GameInputInteractionSchema
 >;
 export type GameInput = z.infer<typeof Schemas.GameInputSchema>;
-export type ReducerInputValidationResult = z.infer<
-  typeof Schemas.ReducerInputValidationResultSchema
->;
 export type GameOutcomeReason = z.infer<typeof Schemas.GameOutcomeReasonSchema>;
 export type OutcomeResult = z.infer<typeof Schemas.OutcomeResultSchema>;
 export type OutcomeScoreComponent = z.infer<
@@ -51,21 +48,7 @@ export type SystemActionEvent = z.infer<typeof Schemas.SystemActionEventSchema>;
 export type GameEvent = z.infer<typeof Schemas.GameEventSchema>;
 export type InitializeResult = z.infer<typeof Schemas.InitializeResultSchema>;
 export type InitializeRequest = z.infer<typeof Schemas.InitializeRequestSchema>;
-export type InitializePhaseRequest = z.infer<
-  typeof Schemas.InitializePhaseRequestSchema
->;
-export type ValidateInputRequest = z.infer<
-  typeof Schemas.ValidateInputRequestSchema
->;
-export type ReduceRequest = z.infer<typeof Schemas.ReduceRequestSchema>;
 export type DispatchRequest = z.infer<typeof Schemas.DispatchRequestSchema>;
-export type ReduceResultReject = z.infer<
-  typeof Schemas.ReduceResultRejectSchema
->;
-export type ReduceResultAccept = z.infer<
-  typeof Schemas.ReduceResultAcceptSchema
->;
-export type ReduceResult = z.infer<typeof Schemas.ReduceResultSchema>;
 export type DispatchTraceAcceptedClientInput = z.infer<
   typeof Schemas.DispatchTraceAcceptedClientInputSchema
 >;
