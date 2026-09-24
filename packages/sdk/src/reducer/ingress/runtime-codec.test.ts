@@ -6,7 +6,7 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../model";
-import { asPlayerId, perPlayer } from "../per-player";
+import { asPlayerId } from "../per-player";
 import {
   createIngressRuntimeCodec,
   runtimePayloadSchema,
@@ -101,9 +101,10 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
       zones: () => ({
         shared: { draw: [] },
         perPlayer: {
-          hand: perPlayer(
-            playerIds.map((playerId) => asPlayerId(playerId)),
-            () => [],
+          hand: Object.fromEntries(
+            playerIds
+              .map((playerId) => asPlayerId(playerId))
+              .map((id) => [id, []]),
           ),
         },
         visibility: { draw: "public", hand: "ownerOnly" },
@@ -111,9 +112,10 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
       }),
       decks: () => ({ draw: [] }),
       hands: () => ({
-        hand: perPlayer(
-          playerIds.map((playerId) => asPlayerId(playerId)),
-          () => [],
+        hand: Object.fromEntries(
+          playerIds
+            .map((playerId) => asPlayerId(playerId))
+            .map((id) => [id, []]),
         ),
       }),
       handVisibility: () => ({ hand: "ownerOnly" }),
@@ -123,9 +125,10 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
         "card-2": { faceUp: true },
       }),
       resources: () =>
-        perPlayer(
-          playerIds.map((playerId) => asPlayerId(playerId)),
-          () => ({}),
+        Object.fromEntries(
+          playerIds
+            .map((playerId) => asPlayerId(playerId))
+            .map((id) => [id, {}]),
         ),
     },
     tableSchema: z
@@ -205,8 +208,11 @@ function rawCanonicalTable() {
     zones: {
       shared: { draw: [] },
       perPlayer: {
-        hand: perPlayer(players, (playerId) =>
-          playerId === "player-1" ? ["card-2"] : [],
+        hand: Object.fromEntries(
+          players.map((playerId) => [
+            playerId,
+            playerId === "player-1" ? ["card-2"] : [],
+          ]),
         ),
       },
       visibility: { draw: "public", hand: "ownerOnly" },
@@ -214,8 +220,11 @@ function rawCanonicalTable() {
     },
     decks: { draw: ["card-1"] },
     hands: {
-      hand: perPlayer(players, (playerId) =>
-        playerId === "player-1" ? ["card-2"] : [],
+      hand: Object.fromEntries(
+        players.map((playerId) => [
+          playerId,
+          playerId === "player-1" ? ["card-2"] : [],
+        ]),
       ),
     },
     handVisibility: { hand: "ownerOnly" },
@@ -246,7 +255,7 @@ function rawCanonicalTable() {
       "card-1": { faceUp: true },
       "card-2": { faceUp: true },
     },
-    resources: perPlayer(players, () => ({})),
+    resources: Object.fromEntries(players.map((id) => [id, {}])),
     pieces: {},
     boards: { byId: {}, hex: {}, square: {} },
     dice: {},
@@ -267,6 +276,31 @@ describe("ingress runtime codec", () => {
         ["player-1", "player-2"],
       ),
     ).toThrow(/zones/);
+  });
+
+  test("admits player records and rejects wrapper objects at initial wire ingress", () => {
+    const codec = createIngressRuntimeCodec(buildDefinition());
+    const table = rawCanonicalTable();
+    const wire = JSON.parse(JSON.stringify(table));
+    expect(codec.parseInitialTable(wire, table.playerOrder).table).toEqual(
+      table,
+    );
+    const wrapper = {
+      __perPlayer: true,
+      entries: [
+        ["player-1", []],
+        ["player-2", []],
+      ],
+    };
+    for (const invalid of [
+      { ...wire, resources: wrapper },
+      { ...wire, hands: { hand: wrapper } },
+      { ...wire, zones: { ...wire.zones, perPlayer: { hand: wrapper } } },
+    ]) {
+      expect(() =>
+        codec.parseInitialTable(invalid, table.playerOrder),
+      ).toThrow();
+    }
   });
 
   test("parses and serializes sessions for heterogeneous phases", () => {

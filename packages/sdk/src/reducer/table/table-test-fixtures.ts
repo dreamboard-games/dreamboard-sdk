@@ -1,5 +1,5 @@
 import type { RuntimeTableRecord } from "../../reducer/advanced";
-import { perPlayer, type PlayerId } from "../per-player";
+import { type PlayerId } from "../per-player";
 
 export function createSpatialTable(): RuntimeTableRecord {
   return {
@@ -69,9 +69,13 @@ export function createSpatialTable(): RuntimeTableRecord {
     visibility: {
       "card-1": { faceUp: true },
     },
-    resources: perPlayer(
-      ["player-1", "player-2"].map((id) => id as PlayerId),
-      (id) => (id === ("player-1" as PlayerId) ? { coins: 2 } : { coins: 5 }),
+    resources: Object.fromEntries(
+      ["player-1", "player-2"]
+        .map((id) => id as PlayerId)
+        .map((id) => [
+          id,
+          id === ("player-1" as PlayerId) ? { coins: 2 } : { coins: 5 },
+        ]),
     ),
     boards: {
       byId: {

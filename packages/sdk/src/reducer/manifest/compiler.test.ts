@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
-import { perPlayerKeys } from "../per-player";
+import { createTableQueries } from "../table-queries";
+import { cloneRuntimeTable } from "../table/clone";
+import { createReducerTestingBundle } from "../bundle/ingress-bundle";
+import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
 
 const manifest = {
   players: { minPlayers: 2, maxPlayers: 4 },
@@ -54,7 +57,7 @@ describe("in-memory manifests", () => {
       points: 0,
       color: "red",
     });
-    expect(perPlayerKeys(table.hands.hand)).toEqual(["north", "south"]);
+    expect(Object.keys(table.hands.hand)).toEqual(["north", "south"]);
     expect(compiled.ids.cardId.safeParse("ace-3").success).toBe(false);
     expect(
       compiled.tableSchema.safeParse({
@@ -148,4 +151,125 @@ test("derived geometry IDs remain constrained by the materialized topology", () 
   expect(compiled.ids.vertexId.safeParse("square-vertex:99,99").success).toBe(
     false,
   );
+});
+
+describe("active player records", () => {
+  test("initializes defaults for two of four seats and restores the serialized session", async () => {
+    const game = createGame({
+      manifest,
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: { play: z.object({}) },
+    });
+    const definition = game.assemble({
+      initialPhase: "play",
+      phases: {
+        play: game
+          .phase("play")
+          .define({ kind: "auto", initialState: () => ({}) }),
+      },
+      view: () => ({}),
+    });
+    const playerIds = ["zulu", "alpha"];
+    const table = game.contract.manifest.createInitialTable({ playerIds });
+    const bundle = createReducerTestingBundle(definition);
+    const initialized = await bundle.initialize({
+      table: {
+        ...table,
+        hands: {},
+        zones: { ...table.zones, perPlayer: {} },
+        resources: {},
+      },
+      playerIds,
+      rngSeed: 7,
+    });
+    const codec = createIngressRuntimeCodec(definition);
+    const restored = codec.parseState(JSON.parse(JSON.stringify(initialized)));
+    expect(restored.domain.table.playerOrder).toEqual(playerIds);
+    expect(restored.domain.table.hands.hand).toEqual({ zulu: [], alpha: [] });
+    expect(restored.domain.table.zones.perPlayer.hand).toEqual({
+      zulu: [],
+      alpha: [],
+    });
+    expect(restored.domain.table.resources).toEqual({
+      zulu: { points: 0 },
+      alpha: { points: 0 },
+    });
+    expect(codec.serializeState(restored)).toEqual(initialized);
+    expect(() =>
+      bundle.project({
+        state: JSON.parse(JSON.stringify(initialized)),
+        playerIds,
+      }),
+    ).not.toThrow();
+  });
+
+  test("roundtrips a partial roster and takes traversal order only from playerOrder", () => {
+    const compiled = compileManifest(manifest);
+    const table = compiled.createInitialTable({ playerIds: ["10", "2"] });
+    const restored = compiled.tableSchema.parse(
+      JSON.parse(JSON.stringify(table)),
+    );
+    expect(restored.playerOrder).toEqual(["10", "2"]);
+    // Integer-like record keys have a different JS enumeration order.
+    expect(Object.keys(restored.resources)).toEqual(["2", "10"]);
+    const q = createTableQueries(restored);
+    expect(q.player.order()).toEqual(["10", "2"]);
+    expect(q.player.nextInOrder(restored.playerOrder[0]!)).toBe("2");
+    expect(restored.hands.hand).toEqual({ "10": [], "2": [] });
+    expect(restored.zones.perPlayer.hand).toEqual({ "10": [], "2": [] });
+    expect(restored.resources).toEqual({
+      "10": { points: 0 },
+      "2": { points: 0 },
+    });
+    const clone = cloneRuntimeTable(restored);
+    clone.hands.hand[restored.playerOrder[0]!].push("ace-1");
+    clone.zones.perPlayer.hand!["10"].push("ace-2");
+    clone.resources[restored.playerOrder[0]!].points = 8;
+    expect(restored.hands.hand[restored.playerOrder[0]!]).toEqual([]);
+    expect(restored.zones.perPlayer.hand!["10"]).toEqual([]);
+    expect(restored.resources[restored.playerOrder[0]!].points).toBe(0);
+  });
+
+  test("rejects missing or foreign active players and old wrappers at the manifest boundary", () => {
+    const compiled = compileManifest(manifest);
+    const table = compiled.createInitialTable({ playerIds: ["zulu", "alpha"] });
+    for (const field of ["hands", "zones", "resources"] as const) {
+      for (const record of [
+        { zulu: field === "resources" ? { points: 0 } : [] },
+        {
+          zulu: field === "resources" ? { points: 0 } : [],
+          alpha: field === "resources" ? { points: 0 } : [],
+          outsider: field === "resources" ? { points: 0 } : [],
+        },
+        {
+          __perPlayer: true,
+          entries: [
+            ["zulu", []],
+            ["alpha", []],
+          ],
+        },
+      ]) {
+        const candidate =
+          field === "resources"
+            ? { ...table, resources: record }
+            : field === "hands"
+              ? { ...table, hands: { hand: record } }
+              : {
+                  ...table,
+                  zones: { ...table.zones, perPlayer: { hand: record } },
+                };
+        expect(compiled.tableSchema.safeParse(candidate).success).toBe(false);
+      }
+    }
+    expect(
+      compiled.tableSchema.safeParse({
+        ...table,
+        playerOrder: ["zulu", "zulu"],
+      }).success,
+    ).toBe(false);
+  });
 });

@@ -1,7 +1,7 @@
 import { createReducerTransaction } from "./transaction";
 import { createTestEdit, createTestRandom } from "./transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
-import { createStateQueries, perPlayer } from "../reducer/internal";
+import { createStateQueries } from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import type { PlayerId } from "./per-player";
 import { createSpatialTable } from "./table/table-test-fixtures";
@@ -31,14 +31,17 @@ function createState(): TestState {
       zones: {
         shared: {},
         perPlayer: {
-          hand: perPlayer(players, (id) =>
-            id === player("player-1")
-              ? ["card-a", "card-b"]
-              : id === player("player-2")
-                ? ["card-c"]
-                : ["card-d"],
+          hand: Object.fromEntries(
+            players.map((id) => [
+              id,
+              id === player("player-1")
+                ? ["card-a", "card-b"]
+                : id === player("player-2")
+                  ? ["card-c"]
+                  : ["card-d"],
+            ]),
           ),
-          played: perPlayer(players, () => []),
+          played: Object.fromEntries(players.map((id) => [id, []])),
         },
         visibility: {
           hand: "ownerOnly",
@@ -51,14 +54,17 @@ function createState(): TestState {
       },
       decks: {},
       hands: {
-        hand: perPlayer(players, (id) =>
-          id === player("player-1")
-            ? ["card-a", "card-b"]
-            : id === player("player-2")
-              ? ["card-c"]
-              : ["card-d"],
+        hand: Object.fromEntries(
+          players.map((id) => [
+            id,
+            id === player("player-1")
+              ? ["card-a", "card-b"]
+              : id === player("player-2")
+                ? ["card-c"]
+                : ["card-d"],
+          ]),
         ),
-        played: perPlayer(players, () => []),
+        played: Object.fromEntries(players.map((id) => [id, []])),
       },
       handVisibility: {
         hand: "ownerOnly",
@@ -130,8 +136,11 @@ function createState(): TestState {
         "card-c": { faceUp: false, visibleTo: ["player-2"] },
         "card-d": { faceUp: false, visibleTo: ["player-3"] },
       },
-      resources: perPlayer(players, (id) =>
-        id === player("player-1") ? { coins: 3 } : {},
+      resources: Object.fromEntries(
+        players.map((id) => [
+          id,
+          id === player("player-1") ? { coins: 3 } : {},
+        ]),
       ),
       boards: { byId: {} },
       slots: {},
@@ -166,7 +175,9 @@ describe("reducer transactions", () => {
     const cards = ["card-a", "card-b"];
     state.table.decks.draw = [...cards];
     state.table.zones.shared.draw = [...cards];
-    state.table.hands.hand = perPlayer(state.table.playerOrder, () => []);
+    state.table.hands.hand = Object.fromEntries(
+      state.table.playerOrder.map((id) => [id, []]),
+    );
     state.table.zones.perPlayer.hand = state.table.hands.hand;
     for (const [position, cardId] of cards.entries()) {
       state.table.componentLocations[cardId] = {

@@ -1,7 +1,7 @@
 import { createTestTransaction } from "../transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
 import type { RuntimeTableRecord } from "../../reducer/advanced";
-import { perPlayer, type PlayerId } from "../per-player";
+import { type PlayerId } from "../per-player";
 import {
   addCardToSharedZoneInPlace,
   dealCardsBetweenPlayerZonesInPlace,
@@ -18,7 +18,6 @@ const asRuntimePlayerId = (value: string): PlayerId =>
 const PLAYER_1 = asRuntimePlayerId("player-1");
 const PLAYER_2 = asRuntimePlayerId("player-2");
 const PLAYER_IDS = [PLAYER_1, PLAYER_2] as const;
-const PLAYER_1_ONLY = [PLAYER_1] as const;
 
 const DRAW_DECK = "draw-deck";
 const SPECIAL_DECK = "special-deck";
@@ -70,11 +69,11 @@ describe("table ops spatial helpers", () => {
       "Zone 'draw-deck' has scope 'shared', but moveCardFromPlayerZoneToSharedZone requires fromZoneId to be a perPlayer zone.",
     );
 
-    table.hands["player-hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.hands["player-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
-    table.zones.perPlayer["player-hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.zones.perPlayer["player-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
 
     expect(() =>
@@ -203,11 +202,11 @@ describe("table ops spatial helpers", () => {
   test("moveCardFromPlayerZoneToSharedZone honors position 'top'", () => {
     const table = createSpatialTable();
     table.handVisibility["player-hand"] = "ownerOnly";
-    table.hands["player-hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.hands["player-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
-    table.zones.perPlayer["player-hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.zones.perPlayer["player-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
     table.componentLocations["card-1"] = {
       type: "InHand",
@@ -262,14 +261,18 @@ describe("table ops spatial helpers", () => {
     table.handVisibility["in-play"] = "public";
     table.zones.cardSetIdsByZoneId!["hand"] = ["main"];
     table.zones.cardSetIdsByZoneId!["in-play"] = ["main"];
-    table.hands["hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.hands["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
-    table.zones.perPlayer["hand"] = perPlayer(PLAYER_IDS, (id) =>
-      id === PLAYER_1 ? ["card-1"] : [],
+    table.zones.perPlayer["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, id === PLAYER_1 ? ["card-1"] : []]),
     );
-    table.hands["in-play"] = perPlayer(PLAYER_IDS, () => []);
-    table.zones.perPlayer["in-play"] = perPlayer(PLAYER_IDS, () => []);
+    table.hands["in-play"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["in-play"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
     table.componentLocations["card-1"] = {
       type: "InHand",
       handId: "hand",
@@ -298,13 +301,17 @@ describe("table ops spatial helpers", () => {
     expect(afterPlay.visibility["card-1"]).toEqual({ faceUp: true });
 
     // Source hand was emptied for player-1, untouched for player-2.
-    expect(perPlayer(PLAYER_1_ONLY, () => [])).toBeDefined();
+    expect(Object.fromEntries(PLAYER_IDS.map((id) => [id, []]))).toBeDefined();
 
     // hand → discard recomputes visibility back to faceUp:false for ownerOnly.
     table.handVisibility["discard"] = "ownerOnly";
     table.zones.cardSetIdsByZoneId!["discard"] = ["main"];
-    afterPlay.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
-    afterPlay.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
+    afterPlay.hands["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    afterPlay.zones.perPlayer["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
 
     const afterCleanup = createTestTransaction({
       table: afterPlay,
@@ -326,10 +333,16 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["hand"] = "ownerOnly";
     table.handVisibility["in-play"] = "public";
-    table.hands["hand"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["hand"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.hands["in-play"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["in-play"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["hand"] = Object.fromEntries(PLAYER_IDS.map((id) => [id, []]));
+    table.zones.perPlayer["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.hands["in-play"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["in-play"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
 
     expect(() =>
       createTestTransaction({ table }).moveCardBetweenPlayerZones({
@@ -362,10 +375,18 @@ describe("table ops spatial helpers", () => {
     table.handVisibility["only-special"] = "public";
     table.zones.cardSetIdsByZoneId!["hand"] = ["main"];
     table.zones.cardSetIdsByZoneId!["only-special"] = ["special"];
-    table.hands["hand"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
-    table.zones.perPlayer["hand"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
-    table.hands["only-special"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["only-special"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
+    table.zones.perPlayer["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
+    table.hands["only-special"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["only-special"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
     table.componentLocations["card-1"] = {
       type: "InHand",
       handId: "hand",
@@ -387,8 +408,12 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["discard"] = "ownerOnly";
     table.zones.cardSetIdsByZoneId!["discard"] = ["main"];
-    table.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
-    table.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
+    table.hands["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
 
     const next = createTestTransaction({
       table,
@@ -418,8 +443,12 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["public-area"] = "public";
     table.zones.cardSetIdsByZoneId!["public-area"] = ["main"];
-    table.hands["public-area"] = perPlayer(PLAYER_IDS, () => []);
-    table.zones.perPlayer["public-area"] = perPlayer(PLAYER_IDS, () => []);
+    table.hands["public-area"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["public-area"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
 
     const next = createTestTransaction({
       table,
@@ -438,10 +467,11 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["only-special-hand"] = "ownerOnly";
     table.zones.cardSetIdsByZoneId!["only-special-hand"] = ["special"];
-    table.hands["only-special-hand"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["only-special-hand"] = perPlayer(
-      PLAYER_1_ONLY,
-      () => [],
+    table.hands["only-special-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["only-special-hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
     );
 
     expect(() =>
@@ -459,8 +489,12 @@ describe("table ops spatial helpers", () => {
   test("moveCardFromSharedZoneToPlayerZone rejects when card is not in source zone", () => {
     const table = createSpatialTable();
     table.handVisibility["discard"] = "ownerOnly";
-    table.hands["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
 
     expect(() =>
       createTestTransaction({
@@ -536,8 +570,12 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["discard"] = "ownerOnly";
     table.zones.cardSetIdsByZoneId!["discard"] = ["main"];
-    table.hands["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["discard"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
     table.componentLocations["card-1"] = { type: "Detached" };
     const before = structuredClone(table);
 
@@ -559,10 +597,18 @@ describe("table ops spatial helpers", () => {
     table.handVisibility["only-special"] = "public";
     table.zones.cardSetIdsByZoneId!["hand"] = ["main"];
     table.zones.cardSetIdsByZoneId!["only-special"] = ["special"];
-    table.hands["hand"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
-    table.zones.perPlayer["hand"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
-    table.hands["only-special"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["only-special"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
+    table.zones.perPlayer["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
+    table.hands["only-special"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
+    table.zones.perPlayer["only-special"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
     table.componentLocations["card-1"] = {
       type: "InHand",
       handId: "hand",
@@ -587,8 +633,10 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
     table.handVisibility["hand"] = "ownerOnly";
     table.zones.cardSetIdsByZoneId!["hand"] = ["main"];
-    table.hands["hand"] = perPlayer(PLAYER_1_ONLY, () => []);
-    table.zones.perPlayer["hand"] = perPlayer(PLAYER_1_ONLY, () => []);
+    table.hands["hand"] = Object.fromEntries(PLAYER_IDS.map((id) => [id, []]));
+    table.zones.perPlayer["hand"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, []]),
+    );
     const beforeInvalidCount = structuredClone(table);
 
     expect(() =>
@@ -596,8 +644,12 @@ describe("table ops spatial helpers", () => {
     ).toThrow("Deal count must be a non-negative safe integer");
     expect(table).toEqual(beforeInvalidCount);
 
-    table.hands["deck"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
-    table.zones.perPlayer["deck"] = perPlayer(PLAYER_1_ONLY, () => ["card-1"]);
+    table.hands["deck"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
+    table.zones.perPlayer["deck"] = Object.fromEntries(
+      PLAYER_IDS.map((id) => [id, ["card-1"]]),
+    );
     table.handVisibility["deck"] = "ownerOnly";
     table.componentLocations["card-1"] = {
       type: "InHand",

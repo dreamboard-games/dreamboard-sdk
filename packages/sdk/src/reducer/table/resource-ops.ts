@@ -4,8 +4,7 @@ import type {
   RuntimeRecord,
   RuntimeTableRecord,
 } from "../model";
-import type { PerPlayer, PlayerId } from "../per-player";
-import { perPlayerGet, perPlayerSet } from "../per-player";
+
 import { assertNonNegativeSafeInteger } from "./numeric";
 
 export function getPlayerOrder<Table extends RuntimeTableRecord>(
@@ -18,10 +17,7 @@ export function getPlayerResources<Table extends RuntimeTableRecord>(
   table: Table,
   playerId: PlayerIdOfTable<NoInfer<Table>>,
 ): ResourceBalancesOfTable<Table> {
-  return perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as unknown as PlayerId,
-  ) as ResourceBalancesOfTable<Table>;
+  return table.resources[playerId] as ResourceBalancesOfTable<Table>;
 }
 
 /**
@@ -33,10 +29,7 @@ export function getPlayerResourceAmount<Table extends RuntimeTableRecord>(
   playerId: string,
   resourceId: string,
 ): number {
-  const playerResources = perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-  );
+  const playerResources = table.resources[playerId];
   if (!playerResources) return 0;
   const value = (playerResources as Record<string, unknown>)[resourceId];
   if (value === undefined) return 0;
@@ -57,10 +50,7 @@ export function getPlayerResourceTotal<Table extends RuntimeTableRecord>(
   table: Table,
   playerId: string,
 ): number {
-  const playerResources = perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-  );
+  const playerResources = table.resources[playerId];
   if (!playerResources) return 0;
   let total = 0;
   for (const key of Object.keys(playerResources)) {
@@ -160,11 +150,10 @@ function writePlayerResources<Table extends RuntimeTableRecord>(
   playerId: string,
   nextForPlayer: Record<string, number>,
 ): void {
-  table.resources = perPlayerSet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-    nextForPlayer as RuntimeRecord,
-  ) as Table["resources"];
+  table.resources = {
+    ...table.resources,
+    [playerId]: nextForPlayer as RuntimeRecord,
+  } as Table["resources"];
 }
 
 export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
@@ -172,10 +161,7 @@ export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
   playerId: string,
   amounts: Readonly<Record<string, number | undefined>>,
 ): void {
-  const prev = (perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-  ) ?? {}) as Record<string, number>;
+  const prev = (table.resources[playerId] ?? {}) as Record<string, number>;
   const next: Record<string, number> = { ...prev };
   for (const [resourceId, amount] of resourceEntries(amounts)) {
     const nextAmount =
@@ -203,10 +189,7 @@ export function spendPlayerResourcesInPlace<Table extends RuntimeTableRecord>(
       )}. Check canAfford in your validate step first.`,
     );
   }
-  const prev = (perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-  ) ?? {}) as Record<string, number>;
+  const prev = (table.resources[playerId] ?? {}) as Record<string, number>;
   const next: Record<string, number> = { ...prev };
   for (const [resourceId, amount] of entries) {
     const nextAmount =
@@ -239,14 +222,11 @@ export function transferPlayerResourcesInPlace<
   }
   if (fromPlayerId === toPlayerId) return;
 
-  const fromPrev = (perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    fromPlayerId as PlayerId,
-  ) ?? {}) as Record<string, number>;
-  const toPrev = (perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    toPlayerId as PlayerId,
-  ) ?? {}) as Record<string, number>;
+  const fromPrev = (table.resources[fromPlayerId] ?? {}) as Record<
+    string,
+    number
+  >;
+  const toPrev = (table.resources[toPlayerId] ?? {}) as Record<string, number>;
   const fromNext: Record<string, number> = { ...fromPrev };
   const toNext: Record<string, number> = { ...toPrev };
 
@@ -278,10 +258,7 @@ export function setPlayerResourceInPlace<Table extends RuntimeTableRecord>(
   amount: number,
 ): void {
   assertNonNegativeSafeInteger(amount, `Resource '${resourceId}' amount`);
-  const prev = (perPlayerGet(
-    table.resources as PerPlayer<RuntimeRecord>,
-    playerId as PlayerId,
-  ) ?? {}) as Record<string, number>;
+  const prev = (table.resources[playerId] ?? {}) as Record<string, number>;
   writePlayerResources(table, playerId, {
     ...prev,
     [resourceId]: amount,

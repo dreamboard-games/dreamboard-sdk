@@ -11,7 +11,6 @@ import type {
 } from "../model/spec";
 import type { PlayerIdOfState } from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
-import { isPerPlayer } from "../per-player";
 
 type DomainContext<State extends CollectorState> = {
   state: State;
@@ -223,11 +222,11 @@ function resolveResourceMapChoices<State extends CollectorState>(
   disabled?: boolean;
   disabledReason?: string;
 }> {
-  const resources = context.state.table.resources as unknown;
+  const firstPlayerId = context.state.table.playerOrder[0];
   const firstResourceMap =
-    isPerPlayer(resources) && resources.entries.length > 0
-      ? resources.entries[0]?.[1]
-      : resources;
+    firstPlayerId === undefined
+      ? undefined
+      : context.state.table.resources[firstPlayerId];
   if (
     typeof firstResourceMap !== "object" ||
     firstResourceMap === null ||

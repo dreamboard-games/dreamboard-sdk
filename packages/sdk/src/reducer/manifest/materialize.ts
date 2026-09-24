@@ -2282,44 +2282,23 @@ export function materializeManifestTable(options: {
       ),
     ]),
   );
-  // PerPlayer<T> wire shape only: { __perPlayer: true, entries: [[playerId, value], ...] }.
-  const toPerPlayerWireFormat = <Value>(
-    entries: Record<string, Value>,
-  ): {
-    readonly __perPlayer: true;
-    readonly entries: ReadonlyArray<readonly [string, Value]>;
-  } => ({
-    __perPlayer: true,
-    entries: playerIds.map(
-      (playerId) => [playerId, entries[playerId] as Value] as const,
-    ),
-  });
-
-  const perPlayerZonesWire = Object.fromEntries(
-    Object.entries(perPlayerZones).map(([zoneId, entries]) => [
-      zoneId,
-      toPerPlayerWireFormat(entries),
-    ]),
-  );
-  const resourcesWire = toPerPlayerWireFormat(resourcesByPlayer);
-
   return cloneJson({
     playerOrder: playerIds,
     zones: {
       shared: sharedZones,
-      perPlayer: perPlayerZonesWire,
+      perPlayer: perPlayerZones,
       visibility: zoneVisibility,
       cardSetIdsByZoneId: zoneCardSetIdsByZoneId,
     },
     decks: cloneJson(sharedZones),
-    hands: cloneJson(perPlayerZonesWire),
+    hands: cloneJson(perPlayerZones),
     handVisibility,
     cards,
     pieces,
     componentLocations,
     ownerOfCard,
     visibility,
-    resources: resourcesWire,
+    resources: resourcesByPlayer,
     boards: {
       byId: boardStatesById,
       hex: hexBoardStatesById,

@@ -11,7 +11,7 @@ import {
   type ReducerDiagnosticEvent,
 } from "../../../reducer/internal";
 import type { RuntimeTableRecord } from "../../../reducer/advanced";
-import { asPlayerId, perPlayer } from "../../per-player";
+import { asPlayerId } from "../../per-player";
 
 function digest(value: unknown): string {
   return createHash("sha256").update(stableStringify(value)).digest("hex");
@@ -50,7 +50,7 @@ function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(ids, () => ({})),
+    resources: Object.fromEntries(ids.map((id) => [id, {}])),
     boards: { byId: {}, hex: {}, network: {}, square: {}, track: {} },
     dice: {
       "die-1": {
@@ -141,7 +141,7 @@ function createManifestContract() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),

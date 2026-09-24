@@ -1,5 +1,5 @@
 import * as reducer from "../src/reducer.js";
-import type { PerPlayer, ReducerTransaction } from "../src/reducer.js";
+import type { ReducerTransaction } from "../src/reducer.js";
 import type { RuntimeTableRecord } from "../src/reducer/advanced.js";
 
 type HexBoard = RuntimeTableRecord["boards"]["hex"][string];
@@ -23,9 +23,9 @@ type Table = Omit<
   dice: { d6: RuntimeTableRecord["dice"][string] };
   decks: { draw: "red"[]; special: "blue"[] };
   hands: {
-    hand: PerPlayer<"red"[]>;
-    played: PerPlayer<"red"[]>;
-    specialHand: PerPlayer<"blue"[]>;
+    hand: Record<string, "red"[]>;
+    played: Record<string, "red"[]>;
+    specialHand: Record<string, "blue"[]>;
   };
   cards: Record<"red" | "blue", RuntimeTableRecord["cards"][string]>;
   componentLocations: Record<

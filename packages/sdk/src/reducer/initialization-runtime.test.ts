@@ -16,33 +16,32 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import {
-  perPlayer,
-  perPlayerGet,
-  perPlayerKeys,
-  type PlayerId,
-} from "./per-player";
+import { type PlayerId } from "./per-player";
 
 function pp<T>(
   playerIds: readonly string[],
   source: Readonly<Record<string, T>>,
   fallback: T,
 ) {
-  return perPlayer(
-    playerIds.map((id) => id as PlayerId),
-    (id) =>
-      Object.prototype.hasOwnProperty.call(source, id as string)
-        ? source[id as string]!
-        : fallback,
+  return Object.fromEntries(
+    playerIds
+      .map((id) => id as PlayerId)
+      .map((id) => [
+        id,
+        Object.prototype.hasOwnProperty.call(source, id as string)
+          ? source[id as string]!
+          : fallback,
+      ]),
   );
 }
 
 function ppEmpty(
   playerIds: readonly string[],
-): ReturnType<typeof perPlayer<Record<string, unknown>, PlayerId>> {
-  return perPlayer(
-    playerIds.map((id) => id as PlayerId),
-    () => ({}) as Record<string, unknown>,
+): Record<PlayerId, Record<string, unknown>> {
+  return Object.fromEntries(
+    playerIds
+      .map((id) => id as PlayerId)
+      .map((id) => [id, {} as Record<string, unknown>]),
   );
 }
 
@@ -64,7 +63,7 @@ function createEmptyTable(
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer([] as PlayerId[], () => ({})),
+    resources: Object.fromEntries(([] as PlayerId[]).map((id) => [id, {}])),
     boards: {
       byId: {},
       hex: {},
@@ -152,27 +151,30 @@ function createManifestContract() {
       zones: (selectedPlayerIds?: readonly string[]) => ({
         shared: {},
         perPlayer: {
-          hand: perPlayer(
-            resolvePlayerIds(selectedPlayerIds).map((id) => id as PlayerId),
-            () => [] as string[],
+          hand: Object.fromEntries(
+            resolvePlayerIds(selectedPlayerIds)
+              .map((id) => id as PlayerId)
+              .map((id) => [id, [] as string[]]),
           ),
         },
         visibility: {},
       }),
       decks: () => ({}),
       hands: (selectedPlayerIds?: readonly string[]) => ({
-        hand: perPlayer(
-          resolvePlayerIds(selectedPlayerIds).map((id) => id as PlayerId),
-          () => [] as string[],
+        hand: Object.fromEntries(
+          resolvePlayerIds(selectedPlayerIds)
+            .map((id) => id as PlayerId)
+            .map((id) => [id, [] as string[]]),
         ),
       }),
       handVisibility: () => ({ hand: "ownerOnly" }),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: (selectedPlayerIds?: readonly string[]) =>
-        perPlayer(
-          resolvePlayerIds(selectedPlayerIds).map((id) => id as PlayerId),
-          () => ({ coins: 0 }),
+        Object.fromEntries(
+          resolvePlayerIds(selectedPlayerIds)
+            .map((id) => id as PlayerId)
+            .map((id) => [id, { coins: 0 }]),
         ),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
@@ -519,21 +521,19 @@ describe("initialization runtime", () => {
       rngSeed: 7,
     });
 
-    expect(perPlayerKeys(initialized.domain.table.hands.hand)).toEqual([
+    expect(Object.keys(initialized.domain.table.hands.hand)).toEqual([
       "player-1",
       "player-2",
     ]);
-    expect(perPlayerKeys(initialized.domain.table.resources)).toEqual([
+    expect(Object.keys(initialized.domain.table.resources)).toEqual([
       "player-1",
       "player-2",
     ]);
-    expect(
-      perPlayerGet(initialized.domain.table.resources, "player-1" as PlayerId),
-    ).toEqual({
+    expect(initialized.domain.table.resources["player-1" as PlayerId]).toEqual({
       coins: 0,
     });
     expect(
-      perPlayerGet(initialized.domain.table.resources, "player-3" as PlayerId),
+      initialized.domain.table.resources["player-3" as PlayerId],
     ).toBeUndefined();
   });
 
@@ -628,9 +628,10 @@ describe("initialization runtime", () => {
               "draw-deck": [],
             },
             perPlayer: {
-              hand: perPlayer(
-                (selectedPlayerIds ?? playerIds).map((id) => id as PlayerId),
-                () => [] as string[],
+              hand: Object.fromEntries(
+                (selectedPlayerIds ?? playerIds)
+                  .map((id) => id as PlayerId)
+                  .map((id) => [id, [] as string[]]),
               ),
             },
             visibility: {
@@ -646,9 +647,10 @@ describe("initialization runtime", () => {
             "draw-deck": [],
           }),
           hands: (selectedPlayerIds?: readonly string[]) => ({
-            hand: perPlayer(
-              (selectedPlayerIds ?? playerIds).map((id) => id as PlayerId),
-              () => [] as string[],
+            hand: Object.fromEntries(
+              (selectedPlayerIds ?? playerIds)
+                .map((id) => id as PlayerId)
+                .map((id) => [id, [] as string[]]),
             ),
           }),
           handVisibility: () => ({
@@ -662,7 +664,7 @@ describe("initialization runtime", () => {
             "card-1": { faceUp: true },
             "card-2": { faceUp: false, visibleTo: ["player-2"] },
           }),
-          resources: () => perPlayer([], () => ({})),
+          resources: () => Object.fromEntries([].map((id) => [id, {}])),
         },
         tableSchema: z.custom<RuntimeTableRecord>(),
         runtimeSchema: z.any(),
@@ -777,12 +779,12 @@ describe("initialization runtime", () => {
       "player-2",
     ]);
     expect(initialized.domain.table.decks["draw-deck"]).toEqual(["card-1"]);
-    expect(
-      perPlayerGet(initialized.domain.table.hands.hand, "player-1" as PlayerId),
-    ).toEqual([]);
-    expect(
-      perPlayerGet(initialized.domain.table.hands.hand, "player-2" as PlayerId),
-    ).toEqual(["card-2"]);
+    expect(initialized.domain.table.hands.hand["player-1" as PlayerId]).toEqual(
+      [],
+    );
+    expect(initialized.domain.table.hands.hand["player-2" as PlayerId]).toEqual(
+      ["card-2"],
+    );
     expect(initialized.domain.table.componentLocations["card-1"]).toEqual({
       type: "InDeck",
       deckId: "draw-deck",
@@ -858,12 +860,12 @@ describe("initialization runtime", () => {
       "card-3",
       "card-4",
     ]);
-    expect(
-      perPlayerGet(initialized.domain.table.hands.hand, "player-1" as PlayerId),
-    ).toEqual(["card-1"]);
-    expect(
-      perPlayerGet(initialized.domain.table.hands.hand, "player-2" as PlayerId),
-    ).toEqual(["card-2"]);
+    expect(initialized.domain.table.hands.hand["player-1" as PlayerId]).toEqual(
+      ["card-1"],
+    );
+    expect(initialized.domain.table.hands.hand["player-2" as PlayerId]).toEqual(
+      ["card-2"],
+    );
     expect(initialized.runtime.rng.trace).toEqual([]);
   });
 
@@ -1043,16 +1045,10 @@ describe("initialization runtime", () => {
 
     expect(nextState.runtime.rng.cursor).toBe(2);
     expect(nextState.runtime.rng.trace).toHaveLength(2);
-    expect(
-      perPlayerGet(nextState.table.hands.hand, "player-1" as PlayerId),
-    ).toHaveLength(1);
-    expect(
-      perPlayerGet(nextState.table.hands.hand, "player-2" as PlayerId),
-    ).toHaveLength(1);
-    expect(
-      perPlayerGet(nextState.table.hands.hand, "player-1" as PlayerId),
-    ).not.toEqual(
-      perPlayerGet(nextState.table.hands.hand, "player-2" as PlayerId),
+    expect(nextState.table.hands.hand["player-1" as PlayerId]).toHaveLength(1);
+    expect(nextState.table.hands.hand["player-2" as PlayerId]).toHaveLength(1);
+    expect(nextState.table.hands.hand["player-1" as PlayerId]).not.toEqual(
+      nextState.table.hands.hand["player-2" as PlayerId],
     );
     expect(nextState.table.decks["draw-deck"]).toHaveLength(1);
     expect(nextState.table.zones.shared.supply).toEqual([]);

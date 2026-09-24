@@ -48,31 +48,30 @@ export type ErrorCodeOfContract<Contract> = Contract extends {
  * Manifest-declared resource id union for a runtime table.
  *
  * Derived from the shape of `table.resources`, which the generated
- * manifest contract seeds as `PerPlayer<Record<ResourceId, number>>`.
- * The helper peeks inside the `PerPlayer` wrapper to surface the
- * resource-id keys without forcing callers to remember the wrapper.
+ * manifest contract seeds as `Record<PlayerId, Record<ResourceId, number>>`.
+ * Resource identifiers come from the player balance record.
  */
 export type ResourceIdOfTable<Table> = Table extends {
   resources: infer Resources;
 }
-  ? ValueOfPerPlayer<Resources> extends infer PerPlayerValue
-    ? PerPlayerValue extends Record<string, unknown>
-      ? StringKeyOf<PerPlayerValue>
+  ? PlayerRecordValue<Resources> extends infer PlayerValue
+    ? PlayerValue extends Record<string, unknown>
+      ? StringKeyOf<PlayerValue>
       : never
     : never
   : never;
 export type ResourceIdOfState<State> = ResourceIdOfTable<TableOfState<State>>;
 /**
- * Per-player balance shape for a runtime table. Strips the `PerPlayer`
- * wrapper around `table.resources` so callers receive the manifest-typed
+ * Per-player balance shape for a runtime table. Extracts the
+ * value of `table.resources` so callers receive the manifest-typed
  * record directly (e.g. `Record<ResourceId, number>`).
  */
 export type ResourceBalancesOfTable<Table> = Table extends {
   resources: infer Resources;
 }
-  ? ValueOfPerPlayer<Resources> extends infer PerPlayerValue
-    ? PerPlayerValue extends Record<string, unknown>
-      ? PerPlayerValue
+  ? PlayerRecordValue<Resources> extends infer PlayerValue
+    ? PlayerValue extends Record<string, unknown>
+      ? PlayerValue
       : never
     : never
   : never;
@@ -672,15 +671,8 @@ export type DeckCardsOfTable<
 }
   ? Decks[DeckId]
   : never;
-// `hands` is a `Record<string, PerPlayer<string[]>>`-shaped map. Extracting the
-// per-player cards type through the `PerPlayer<Value>` wrapper requires
-// digging into the `entries` tuple. This intermediate helper resolves the
-// tuple-value type even when `PerPlayer` is generic.
-type ValueOfPerPlayer<T> = T extends {
-  readonly entries: ReadonlyArray<readonly [unknown, infer Value]>;
-}
-  ? Value
-  : never;
+type PlayerRecordValue<T> =
+  T extends Record<string, infer Value> ? Value : never;
 export type HandCardsOfTable<
   Table,
   HandId extends HandIdOfTable<Table>,
@@ -688,7 +680,7 @@ export type HandCardsOfTable<
   hands: infer Hands extends Record<string, unknown>;
 }
   ? HandId extends keyof Hands
-    ? ValueOfPerPlayer<Hands[HandId]> extends infer Value
+    ? PlayerRecordValue<Hands[HandId]> extends infer Value
       ? Value extends readonly unknown[]
         ? Value
         : never

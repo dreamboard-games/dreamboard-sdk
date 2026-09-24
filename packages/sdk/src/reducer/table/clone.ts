@@ -1,10 +1,4 @@
-import type {
-  RuntimeBoardState,
-  RuntimeRecord,
-  RuntimeTableRecord,
-} from "../model";
-import type { PerPlayer } from "../per-player";
-import { perPlayerMap } from "../per-player";
+import type { RuntimeBoardState, RuntimeTableRecord } from "../model";
 
 let cloneRuntimeTableCallCount = 0;
 
@@ -100,9 +94,12 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
       perPlayer: Object.fromEntries(
         Object.entries(table.zones.perPlayer).map(([zoneId, players]) => [
           zoneId,
-          perPlayerMap(players as PerPlayer<string[]>, (componentIds) => [
-            ...componentIds,
-          ]),
+          Object.fromEntries(
+            table.playerOrder.map((playerId) => [
+              playerId,
+              [...players[playerId]],
+            ]),
+          ),
         ]),
       ) as Table["zones"]["perPlayer"],
       visibility: { ...table.zones.visibility },
@@ -123,7 +120,12 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
     hands: Object.fromEntries(
       Object.entries(table.hands).map(([handId, players]) => [
         handId,
-        perPlayerMap(players as PerPlayer<string[]>, (cards) => [...cards]),
+        Object.fromEntries(
+          table.playerOrder.map((playerId) => [
+            playerId,
+            [...players[playerId]],
+          ]),
+        ),
       ]),
     ) as Table["hands"],
     handVisibility: { ...table.handVisibility },
@@ -136,9 +138,11 @@ export function cloneRuntimeTable<Table extends RuntimeTableRecord>(
     componentLocations: { ...table.componentLocations },
     ownerOfCard: { ...table.ownerOfCard },
     visibility: { ...table.visibility },
-    resources: perPlayerMap(
-      table.resources as PerPlayer<RuntimeRecord>,
-      (resources) => ({ ...resources }),
+    resources: Object.fromEntries(
+      table.playerOrder.map((playerId) => [
+        playerId,
+        { ...table.resources[playerId] },
+      ]),
     ) as Table["resources"],
     boards: {
       ...table.boards,

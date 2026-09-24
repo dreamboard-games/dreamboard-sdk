@@ -23,7 +23,7 @@ import type {
   RuntimeHexBoardState,
   RuntimeSquareBoardState,
 } from "../model";
-import type { PlayerId, PerPlayer } from "../per-player";
+import type { PlayerId } from "../per-player";
 
 type ReadonlyValue<T> = T extends readonly (infer V)[]
   ? readonly ReadonlyValue<V>[]
@@ -332,12 +332,15 @@ export type ManifestTable<M> = AuthoredManifest extends M
       decks: Record<ManifestIdsOf<M>["deckId"], ManifestIdsOf<M>["cardId"][]>;
       hands: Record<
         ManifestIdsOf<M>["handId"],
-        PerPlayer<ManifestIdsOf<M>["cardId"][]>
+        Record<PlayerId, ManifestIdsOf<M>["cardId"][]>
       >;
       cards: Record<ManifestIdsOf<M>["cardId"], CardState<M>>;
       pieces: Record<ManifestIdsOf<M>["pieceId"], RuntimePieceData>;
       dice: Record<ManifestIdsOf<M>["dieId"], RuntimeDieData>;
-      resources: PerPlayer<Record<ManifestIdsOf<M>["resourceId"], number>>;
+      resources: Record<
+        PlayerId,
+        Record<ManifestIdsOf<M>["resourceId"], number>
+      >;
     };
 export type CompiledManifest<M extends AuthoredManifest> = Omit<
   ReducerManifestContract<

@@ -19,7 +19,7 @@ import {
   createManifestStringLiteralSchema,
   RuntimeTableRecord,
 } from "../reducer/advanced";
-import { asPlayerId, perPlayer, perPlayerGet } from "../reducer/per-player";
+import { asPlayerId } from "../reducer/per-player";
 function buildManifest() {
   const playerIds = ["player-1", "player-2"] as const;
   const phaseNames = ["takeTurn"] as const;
@@ -106,7 +106,7 @@ function buildManifest() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
@@ -159,7 +159,9 @@ function createTable(
     zones: {
       shared: {},
       perPlayer: {
-        playZone: perPlayer(ids, () => ["card-a", "card-b"]),
+        playZone: Object.fromEntries(
+          ids.map((id) => [id, ["card-a", "card-b"]]),
+        ),
       },
       visibility: {},
     },
@@ -184,9 +186,14 @@ function createTable(
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(ids, (id) => ({
-      gold: id === "player-1" ? (options.player1Gold ?? 1) : 5,
-    })),
+    resources: Object.fromEntries(
+      ids.map((id) => [
+        id,
+        {
+          gold: id === "player-1" ? (options.player1Gold ?? 1) : 5,
+        },
+      ]),
+    ),
     boards: {
       byId: {},
       hex: {},
@@ -204,8 +211,8 @@ function createTwoZoneTable(): RuntimeTableRecord {
     zones: {
       shared: {},
       perPlayer: {
-        playZone: perPlayer(ids, () => ["card-a"]),
-        discardZone: perPlayer(ids, () => ["card-b"]),
+        playZone: Object.fromEntries(ids.map((id) => [id, ["card-a"]])),
+        discardZone: Object.fromEntries(ids.map((id) => [id, ["card-b"]])),
       },
       visibility: {},
     },
@@ -308,11 +315,10 @@ function makeBundle(
     errorCode: "INSUFFICIENT_RESOURCES",
     message: "Need 2 gold.",
     available: ({ state, input }) =>
-      (perPlayerGet(state.table.resources, asPlayerId(input.playerId))?.gold ??
-        0) >= 2,
+      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >= 2,
     validate: ({ state, input }) =>
-      (perPlayerGet(state.table.resources, asPlayerId(input.playerId))?.gold ??
-        0) >= input.params.amount
+      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >=
+      input.params.amount
         ? null
         : {
             errorCode: "INSUFFICIENT_RESOURCES",
@@ -328,8 +334,8 @@ function makeBundle(
     id: "string-gold",
     errorCode: "INSUFFICIENT_RESOURCES",
     validate: ({ state, input }) =>
-      (perPlayerGet(state.table.resources, asPlayerId(input.playerId))?.gold ??
-        0) >= input.params.amount
+      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >=
+      input.params.amount
         ? null
         : "Need that much gold.",
   });
@@ -409,10 +415,7 @@ function makeBundle(
                       resourceId: "gold",
                       label: "Gold",
                       max: ({ state, playerId }) =>
-                        perPlayerGet(
-                          state.table.resources,
-                          asPlayerId(playerId),
-                        )?.gold ?? 0,
+                        state.table.resources[asPlayerId(playerId)]?.gold ?? 0,
                     },
                   ],
                 }),
@@ -426,8 +429,7 @@ function makeBundle(
                 amount: formInput.number({
                   min: 0,
                   max: ({ state, playerId }) =>
-                    perPlayerGet(state.table.resources, asPlayerId(playerId))
-                      ?.gold ?? 0,
+                    state.table.resources[asPlayerId(playerId)]?.gold ?? 0,
                   step: 1,
                 }),
               },

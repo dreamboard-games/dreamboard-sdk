@@ -12,7 +12,7 @@ import {
 } from "../reducer/internal";
 import { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
-import { perPlayer } from "./per-player";
+
 import { createClientParamSchemasByPhase } from "./client-param-schemas";
 function createContract() {
   const playerIds = ["player-1"] as const;
@@ -97,7 +97,7 @@ function createContract() {
         handVisibility: () => ({}),
         ownerOfCard: () => ({}),
         visibility: () => ({}),
-        resources: () => perPlayer([], () => ({})),
+        resources: () => Object.fromEntries([].map((id) => [id, {}])),
       },
       tableSchema: z.custom<RuntimeTableRecord>(),
       runtimeSchema: z.any(),

@@ -16,7 +16,7 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import { asPlayerId, perPlayer } from "../reducer/per-player";
+import { asPlayerId } from "../reducer/per-player";
 
 function hydrateRefs<T>(
   interactionsByRef: Record<string, T>,
@@ -32,18 +32,16 @@ function createTable(): RuntimeTableRecord {
     zones: {
       shared: {},
       perPlayer: {
-        hand: perPlayer(
-          playerIds.map((id) => asPlayerId(id)),
-          () => [],
+        hand: Object.fromEntries(
+          playerIds.map((id) => asPlayerId(id)).map((id) => [id, []]),
         ),
       },
       visibility: { hand: "ownerOnly" },
     },
     decks: {},
     hands: {
-      hand: perPlayer(
-        playerIds.map((id) => asPlayerId(id)),
-        () => [],
+      hand: Object.fromEntries(
+        playerIds.map((id) => asPlayerId(id)).map((id) => [id, []]),
       ),
     },
     handVisibility: {},
@@ -52,9 +50,8 @@ function createTable(): RuntimeTableRecord {
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(
-      playerIds.map((id) => asPlayerId(id)),
-      () => ({}),
+    resources: Object.fromEntries(
+      playerIds.map((id) => asPlayerId(id)).map((id) => [id, {}]),
     ),
     boards: {
       byId: {},
@@ -93,26 +90,32 @@ function createCardTable(): RuntimeTableRecord {
     zones: {
       ...table.zones,
       perPlayer: {
-        hand: perPlayer(
-          ["player-1", "player-2", "player-3"].map((id) => asPlayerId(id)),
-          (playerId) =>
+        hand: Object.fromEntries(
+          ["player-1", "player-2", "player-3"]
+            .map((id) => asPlayerId(id))
+            .map((playerId) => [
+              playerId,
+              playerId === "player-1"
+                ? ["card-1", "card-2", "card-3"]
+                : playerId === "player-2"
+                  ? ["card-4", "card-5", "card-6"]
+                  : ["card-7"],
+            ]),
+        ),
+      },
+    },
+    hands: {
+      hand: Object.fromEntries(
+        ["player-1", "player-2", "player-3"]
+          .map((id) => asPlayerId(id))
+          .map((playerId) => [
+            playerId,
             playerId === "player-1"
               ? ["card-1", "card-2", "card-3"]
               : playerId === "player-2"
                 ? ["card-4", "card-5", "card-6"]
                 : ["card-7"],
-        ),
-      },
-    },
-    hands: {
-      hand: perPlayer(
-        ["player-1", "player-2", "player-3"].map((id) => asPlayerId(id)),
-        (playerId) =>
-          playerId === "player-1"
-            ? ["card-1", "card-2", "card-3"]
-            : playerId === "player-2"
-              ? ["card-4", "card-5", "card-6"]
-              : ["card-7"],
+          ]),
       ),
     },
   };
@@ -211,14 +214,13 @@ function createManifestContract() {
     defaults: {
       zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
       decks: () => ({}),
-      hands: () => ({ hand: perPlayer([], () => []) }),
+      hands: () => ({ hand: Object.fromEntries([].map((id) => [id, []])) }),
       handVisibility: () => ({ hand: "ownerOnly" }),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: (ids: readonly string[]) =>
-        perPlayer(
-          ids.map((id) => asPlayerId(id)),
-          () => ({}),
+        Object.fromEntries(
+          ids.map((id) => asPlayerId(id)).map((id) => [id, {}]),
         ),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),

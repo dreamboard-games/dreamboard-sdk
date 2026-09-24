@@ -11,7 +11,6 @@ import {
   definePhase,
   defineView,
   formInput,
-  perPlayer,
   rngInput,
 } from "../reducer/internal";
 import {
@@ -66,7 +65,7 @@ function createTable(playerIds: readonly string[]): RuntimeTableRecord {
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(brandedPlayerIds, () => ({})),
+    resources: Object.fromEntries(brandedPlayerIds.map((id) => [id, {}])),
     boards: {
       byId: personalBoards,
       hex: {},
@@ -181,7 +180,7 @@ function createScenarioGame() {
       ownerOfCard: () => ({}),
       visibility: () => ({}),
       resources: (ids?: readonly string[]) =>
-        perPlayer((ids ?? []).map(asPlayerId), () => ({})),
+        Object.fromEntries((ids ?? []).map(asPlayerId).map((id) => [id, {}])),
     },
     normalSetup: {
       minPlayers: 2,

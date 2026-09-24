@@ -26,12 +26,7 @@ import type {
   TiledEdgeIdOfTable,
   TiledVertexIdOfTable,
 } from "./model";
-import {
-  asPlayerId,
-  perPlayerGet,
-  perPlayerSet,
-  type PerPlayer,
-} from "./per-player";
+import { asPlayerId } from "./per-player";
 import {
   addCardToSharedZoneInPlace as tableAddCardToSharedZoneInPlace,
   addPlayerResourcesInPlace as tableAddPlayerResourcesInPlace,
@@ -417,10 +412,7 @@ function readPlayerZoneCards(
   if (!zone) {
     throw new Error(`Player zone '${zoneId}' does not exist.`);
   }
-  return (
-    perPlayerGet(zone as PerPlayer<readonly string[]>, asPlayerId(playerId)) ??
-    []
-  );
+  return zone[playerId] ?? [];
 }
 
 function writePlayerZoneCards(
@@ -433,18 +425,10 @@ function writePlayerZoneCards(
   const currentHand = table.hands[zoneId];
   const player = asPlayerId(playerId);
   if (currentZone) {
-    table.zones.perPlayer[zoneId] = perPlayerSet(
-      currentZone as PerPlayer<string[]>,
-      player,
-      [...cards],
-    );
+    table.zones.perPlayer[zoneId] = { ...currentZone, [player]: [...cards] };
   }
   if (currentHand) {
-    table.hands[zoneId] = perPlayerSet(
-      currentHand as PerPlayer<string[]>,
-      player,
-      [...cards],
-    );
+    table.hands[zoneId] = { ...currentHand, [player]: [...cards] };
   }
 }
 

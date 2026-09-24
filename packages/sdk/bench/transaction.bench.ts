@@ -1,7 +1,6 @@
 import { createMutableRandomHelpers } from "../src/reducer/bundle/trusted/rng-sampler";
 import {
   createReducerEdit,
-  perPlayer,
   type PlayerId,
   type RuntimeTableRecord,
 } from "../src/reducer";
@@ -123,10 +122,13 @@ function createBenchState(): BenchState {
           { faceUp: true },
         ]),
       ),
-      resources: perPlayer(playerIds, (playerId) =>
-        playerId === ("player-1" as PlayerId)
-          ? { wood: 8, brick: 8 }
-          : { wood: 3, brick: 3 },
+      resources: Object.fromEntries(
+        playerIds.map((playerId) => [
+          playerId,
+          playerId === ("player-1" as PlayerId)
+            ? { wood: 8, brick: 8 }
+            : { wood: 3, brick: 3 },
+        ]),
       ),
       boards: {
         byId: {

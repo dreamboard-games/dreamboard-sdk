@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { PerPlayer } from "../per-player";
 
 export type RuntimeScalar = boolean | number | string | null;
 export interface RuntimeRecord {
@@ -22,20 +21,16 @@ export type RuntimeHandVisibilityMode =
   | "public"
   | "hidden";
 export type RuntimeDeckMap = Record<string, string[]>;
-// Per-player runtime maps now consume `PerPlayer<T>` rather than the old
-// `Record<playerId, T>` shape. The prior structure implicitly encoded the
-// "total roster" assumption (one entry per configured player seat) which
-// didn't survive runtime reshuffles where fewer seats were present. See
-// `packages/sdk/src/reducer/per-player.ts` for the primitive + helpers.
-export type RuntimeHandMap = Record<string, PerPlayer<string[]>>;
+// Records contain exactly the active roster; playerOrder owns traversal order.
+export type RuntimeHandMap = Record<string, Record<string, string[]>>;
 export type RuntimeZoneMap = {
   shared: Record<string, string[]>;
-  perPlayer: Record<string, PerPlayer<string[]>>;
+  perPlayer: Record<string, Record<string, string[]>>;
   visibility: Record<string, RuntimeHandVisibilityMode>;
   cardSetIdsByZoneId?: Record<string, readonly string[]>;
 };
 export type RuntimeOwnerMap = Record<string, string | null>;
-export type RuntimeResourceMap = PerPlayer<RuntimeRecord>;
+export type RuntimeResourceMap = Record<string, RuntimeRecord>;
 export type RuntimeBoardSpaceState = {
   id: string;
   name?: string | null;

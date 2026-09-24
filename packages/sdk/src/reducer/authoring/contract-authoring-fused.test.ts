@@ -5,7 +5,6 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../advanced";
-import { perPlayer } from "../per-player";
 
 function createModel() {
   const playerIds = ["player-1", "player-2"] as const;
@@ -84,11 +83,11 @@ function createModel() {
       defaults: {
         zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
         decks: () => ({}),
-        hands: () => ({ hand: perPlayer([], () => []) }),
+        hands: () => ({ hand: Object.fromEntries([].map((id) => [id, []])) }),
         handVisibility: () => ({}),
         ownerOfCard: () => ({}),
         visibility: () => ({}),
-        resources: () => perPlayer([], () => ({})),
+        resources: () => Object.fromEntries([].map((id) => [id, {}])),
       },
       tableSchema: z.custom<RuntimeTableRecord>(),
       runtimeSchema: z.any(),

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { createStateQueries, createTableQueries } from "../../reducer/internal";
-import { perPlayer, type PlayerId } from "../per-player";
+import { type PlayerId } from "../per-player";
 import {
   getAdjacentSpaces,
   getBoard,
@@ -48,13 +48,15 @@ describe("table ops spatial helpers", () => {
       faceUp: false,
       visibleTo: ["player-1"],
     };
-    table.hands["player-hand"] = perPlayer(
-      ["player-1", "player-2"].map((id) => id as PlayerId),
-      (id) => (id === ("player-1" as PlayerId) ? ["card-2"] : []),
+    table.hands["player-hand"] = Object.fromEntries(
+      ["player-1", "player-2"]
+        .map((id) => id as PlayerId)
+        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
     );
-    table.zones.perPlayer["player-hand"] = perPlayer(
-      ["player-1", "player-2"].map((id) => id as PlayerId),
-      (id) => (id === ("player-1" as PlayerId) ? ["card-2"] : []),
+    table.zones.perPlayer["player-hand"] = Object.fromEntries(
+      ["player-1", "player-2"]
+        .map((id) => id as PlayerId)
+        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
     );
     table.pieces["piece-2"] = {
       id: "piece-2",
@@ -264,13 +266,15 @@ describe("table ops spatial helpers", () => {
     };
     table.ownerOfCard["card-2"] = "player-2";
     table.visibility["card-2"] = { faceUp: true };
-    table.hands["player-hand"] = perPlayer(
-      ["player-1", "player-2"].map((id) => id as PlayerId),
-      (id) => (id === ("player-1" as PlayerId) ? ["card-2"] : []),
+    table.hands["player-hand"] = Object.fromEntries(
+      ["player-1", "player-2"]
+        .map((id) => id as PlayerId)
+        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
     );
-    table.zones.perPlayer["player-hand"] = perPlayer(
-      ["player-1", "player-2"].map((id) => id as PlayerId),
-      (id) => (id === ("player-1" as PlayerId) ? ["card-2"] : []),
+    table.zones.perPlayer["player-hand"] = Object.fromEntries(
+      ["player-1", "player-2"]
+        .map((id) => id as PlayerId)
+        .map((id) => [id, id === ("player-1" as PlayerId) ? ["card-2"] : []]),
     );
     table.componentLocations["card-2"] = {
       type: "InHand",

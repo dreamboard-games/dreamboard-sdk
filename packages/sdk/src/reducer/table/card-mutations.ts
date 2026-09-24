@@ -13,8 +13,6 @@ import { assertCardAllowedInZone } from "./card-validation";
 import {
   assertZoneScope,
   ensureArray,
-  ppRead,
-  ppWrite,
   syncPlayerZoneWithHand,
   syncSharedZoneWithDeck,
 } from "./internal";
@@ -34,7 +32,7 @@ function playerZoneCards<Table extends RuntimeTableRecord>(
 ): string[] {
   return [
     ...ensureArray(
-      ppRead(table.zones.perPlayer[zoneId] ?? table.hands[zoneId], playerId) as
+      (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[playerId] as
         | readonly string[]
         | undefined,
     ),
@@ -229,20 +227,19 @@ export function shufflePlayerZoneCards(
   nextCards?: readonly string[],
 ): string[] {
   if (nextCards === undefined) {
-    const fromZone = ppRead(
-      table.zones.perPlayer[zoneId] ?? table.hands[zoneId],
-      playerId,
-    ) as readonly string[] | undefined;
+    const fromZone = (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[
+      playerId
+    ] as readonly string[] | undefined;
     return [...ensureArray(fromZone)];
   }
-  table.hands[zoneId] = ppWrite(table.hands[zoneId], playerId, [
-    ...nextCards,
-  ]) as (typeof table.hands)[string];
-  table.zones.perPlayer[zoneId] = ppWrite(
-    table.zones.perPlayer[zoneId],
-    playerId,
-    [...nextCards],
-  ) as (typeof table.zones.perPlayer)[string];
+  table.hands[zoneId] = {
+    ...table.hands[zoneId],
+    [playerId]: [...nextCards],
+  } as (typeof table.hands)[string];
+  table.zones.perPlayer[zoneId] = {
+    ...table.zones.perPlayer[zoneId],
+    [playerId]: [...nextCards],
+  } as (typeof table.zones.perPlayer)[string];
   return [...nextCards];
 }
 
