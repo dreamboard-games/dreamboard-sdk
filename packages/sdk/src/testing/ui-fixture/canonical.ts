@@ -1,4 +1,5 @@
-import { createHash } from "node:crypto";
+import { sha256 as hashSha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import type {
   PluginProtocolTape,
   UIReplayRequest,
@@ -117,5 +118,5 @@ export function digestUIScenarioFixture(fixture: UIScenarioFixture): string {
 }
 
 function sha256(value: string): string {
-  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+  return `sha256:${bytesToHex(hashSha256(utf8ToBytes(value)))}`;
 }

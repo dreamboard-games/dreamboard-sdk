@@ -1,4 +1,3 @@
-import { Buffer } from "node:buffer";
 import { digestPluginRuntimeJson } from "../../shared/protocol/digest.js";
 import type {
   PerspectiveRef,
@@ -49,9 +48,14 @@ export function createExploreCursor(options: {
     seedOverride: options.seedOverride ?? null,
     nextOrdinal: options.nextOrdinal,
   };
-  const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString(
-    "base64url",
-  );
+  const encoded = btoa(
+    Array.from(new TextEncoder().encode(JSON.stringify(payload)), (byte) =>
+      String.fromCharCode(byte),
+    ).join(""),
+  )
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replace(/=+$/, "");
   const digest = digestPluginRuntimeJson(payload).slice("sha256:".length);
   return `dbx1.${encoded}.${digest}`;
 }
@@ -75,7 +79,12 @@ export function readExploreCursor(options: {
   let payload: CursorPayload;
   try {
     payload = JSON.parse(
-      Buffer.from(encoded, "base64url").toString("utf8"),
+      new TextDecoder("utf-8", { fatal: true }).decode(
+        Uint8Array.from(
+          atob(encoded.replaceAll("-", "+").replaceAll("_", "/")),
+          (character) => character.charCodeAt(0),
+        ),
+      ),
     ) as CursorPayload;
   } catch {
     return stale();
