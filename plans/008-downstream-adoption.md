@@ -61,6 +61,26 @@ source or public skills into internal.
 
 ## Release evidence
 
+### Verified reducer ownership
+
+The current reducer state boundary is TypeScript: gameplay worker admission uses
+SDK Zod schemas, and the store persists/restores its JSON state directly. Kotlin's
+GameplayAuthorityControlClient consumes separate generated service envelopes.
+Preserve those OpenAPI-owned DTOs.
+
+The old engine-core `com.dreamboard.reducer.contract.ReducerContract.kt` has no
+production consumers: all 34 top-level symbols have no Kotlin/Gradle references
+outside that file and ReducerRuntimeLogEntrySerializationIntegrationTest.kt.
+The `gameplayStateJson` codec is used only by that test. Delete these dead artifacts
+in the adoption cut and retain meaningful worker malformed-result, PostgreSQL
+state/log roundtrip, and session retry/restore/reload proof. Do not introduce a
+new Kotlin generator or schema validator for an unused boundary.
+
+No current public or internal executable/configuration consumer reads the private
+reducer-runtime.schema.json file. Historical plan references are not consumers.
+
+### Package sequence
+
 Last live npm inventory during this task: SDK `0.5.0-alpha.2`, browser runtime
 `0.1.0-alpha.1`, dev-host `0.2.0-alpha.1`. Recheck before choosing fresh versions;
 the clean public main source has older version fields than npm. Never reuse an

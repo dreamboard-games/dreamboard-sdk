@@ -1,6 +1,7 @@
 # Shared models and one validated bundle
 
-Status: scoped after steps; board geometry is prepared independently.
+Status: scoped after steps; board geometry is integrated and schema preparation
+is proceeding independently.
 
 Consolidate the three private type/contract packages into the SDK. Root owns
 framework-free shared models, seat-frame materialization, canonical protocol and
@@ -32,10 +33,12 @@ Implement in independently green cuts if necessary:
 
 Final canonical protocol/runtime schemas are SDK-local strict JSON-native Zod;
 DTOs use z.infer. Replace the bespoke JSON-Schema-to-TypeScript/Zod emitter with
-these owning schemas. Derive downstream JSON Schema via z.toJSONSchema with
-unrepresentable: throw and stable named references. A small build serializer is
-enough; do not retain two authored schema authorities. Check the actual Kotlin
-generator's accepted dialect rather than assuming all dialects work. Do not put
+these owning schemas. A live consumer audit found no external reader of the
+private reducer JSON Schema file. Do not add an export or replacement generator
+without a concrete consumer. Internal's old Kotlin reducer DTOs have no production
+users; remove that dead boundary during adoption instead of creating a generator
+to maintain it. If a future consumer needs JSON Schema, use z.toJSONSchema with
+unrepresentable: throw and stable named references. Do not put
 transforms/coercion/defaulting in wire schemas. Authored game refinements remain
 executable runtime validation, not something JSON Schema export can replace.
 
