@@ -577,6 +577,7 @@ it("input and interaction readiness reject duplicate and oversized programmatic 
 
 it("same-source seat changes invalidate controlled drafts and old handlers", () => {
   const { basis: _basis, ...seatFrame } = frame();
+  expect(_basis).toBeDefined();
   const store = createStore<SourceState>({
     snapshot: {
       me: "alice",

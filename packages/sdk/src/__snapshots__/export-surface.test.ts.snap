@@ -167,6 +167,19 @@ exports[`public export surface > reference-games export names are stable 1`] = `
 ]
 `;
 
+exports[`public export surface > root export names are stable 1`] = `
+[
+  "AmbiguousTargetError",
+  "DREAMBOARD_SDK_PACKAGES",
+  "DREAMBOARD_SDK_PACKAGE_SET",
+  "DREAMBOARD_SDK_VERSION",
+  "createGameInstance",
+  "hostSource",
+  "iframeSource",
+  "staticSource",
+]
+`;
+
 exports[`public export surface > runtime export names are stable 1`] = `
 [
   "PluginRuntime",

@@ -115,3 +115,22 @@ one suite run took 5.5 seconds; its command and solver budgets are unchanged.
 Canonical phase-kind inference now prevents automatic phases from widening
 commands to arbitrary strings. Checked real Hearts proofs reject unknown command
 IDs and invalid params. Core objects, concrete features and React remain open.
+
+## Instance integration receipt
+
+The framework-free instance is integrated at `c05d712`, with root public exports
+and browser import-closure proof. It uses TanStack Store, immutable domain
+snapshots, native handlers, controlled drafts and an ACK/frame draft barrier.
+Card routing follows projected per-card authority; active-seat changes invalidate
+retained handlers. Partial local many-value drafts retain eligible members while
+completed server steps remain atomic. Feature hooks reject overlapping ownership;
+coverage records observed interactions rather than treating declarations as reads.
+
+Root reviewed production code and independently passed 42 focused tests including
+real Hearts and Hex. The combined `pnpm check` passed with both packed reference
+games (`/tmp/core-integrated-check-final.log`). The deliberate public export
+snapshot now includes root, and its browser closure excludes React and executable
+reducers. Concrete features and the React adapter follow in separate layers.
+
+Testing sources are PR #41 at `3f7719a`; both hosted checks passed and exact-head
+review threads were empty.
