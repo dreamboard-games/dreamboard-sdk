@@ -97,3 +97,21 @@ React adapter and game UI cutover follow in 005 rather than expanding this cut.
 Public display events and derived turn semantics are specified in the review
 notes: events are the latest persisted batch, currentPlayerId is the sole active
 player or null, and isMine tests active membership.
+
+## Source integration receipt
+
+Host/iframe/static sources are PR #38 at `600fe8e`, with both hosted gates passed
+and no exact-head review threads. Testing providers integrate at `4773c4b`:
+local/scenario execution, explicit test transport control, JSON checkpoint
+restore, bounded exploration and deterministic fuzzing all reuse the production
+bundle, canonical materializer and collector evaluator. Source internals retain
+transport identity; test authors use the public snapshot and explicit results.
+
+Root reviewed every production path and independently passed 46 provider, replay,
+lifecycle and export tests. The combined repository gate passed 734 SDK tests and
+both packed games (`/tmp/testing-sources-integrated-check-retry.log`). Its full
+Hearts fuzz/replay test has an explicit 15-second integration-test timeout after
+one suite run took 5.5 seconds; its command and solver budgets are unchanged.
+Canonical phase-kind inference now prevents automatic phases from widening
+commands to arbitrary strings. Checked real Hearts proofs reject unknown command
+IDs and invalid params. Core objects, concrete features and React remain open.
