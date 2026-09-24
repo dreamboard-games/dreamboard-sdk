@@ -164,11 +164,6 @@ export type {
   GameOutcome,
 } from "../../shared/domain/results";
 
-export type ReducerAcceptOptions<State> = {
-  transition?: PhaseNameOfState<State>;
-  events?: readonly GameEvent[];
-};
-
 export type ReducerAccept<State> = {
   type: "accept";
   state: State;

@@ -1,14 +1,9 @@
-import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createGame as createModel } from "../reducer";
+
 import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  choiceTarget,
-  defineGameContract,
-  defineInteraction,
-  formInput,
-  definePhase,
-} from "../reducer/internal";
+import { choiceTarget, formInput } from "./inputs";
 import { RuntimeTableRecord } from "../reducer/advanced";
 import { asPlayerId } from "../reducer/per-player";
 function getAvailableInteractions(
@@ -131,7 +126,7 @@ function createManifestContract() {
 }
 describe("recipient-based response authorization", () => {
   function makeBundle() {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -148,8 +143,7 @@ describe("recipient-based response authorization", () => {
         { id: "no", label: "No" },
       ] as const)
       .build();
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ askPlayer: "player-2" as const }),
         private: () => ({}),
@@ -157,15 +151,15 @@ describe("recipient-based response authorization", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
-          enter({ accept, tx }) {
-            return accept(tx.setActivePlayers(["player-1"]));
+          enter({ tx }) {
+            tx.setActivePlayers(["player-1"]);
+            return;
           },
           interactions: {
-            respond: defineInteraction<typeof contract>()({
+            respond: contract.phase("takeTurn").interaction({
               inputs: {
                 answer: formInput.choice({
                   defaultValue: () => undefined,
@@ -177,8 +171,8 @@ describe("recipient-based response authorization", () => {
                 }),
               },
               actor: ({ state }) => state.publicState.askPlayer,
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
           },
@@ -265,7 +259,7 @@ describe("recipient-based response authorization", () => {
 });
 describe("phase actor, step, and cost resolution", () => {
   function makeBundle() {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -276,9 +270,7 @@ describe("phase actor, step, and cost resolution", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ actor: "player-2" as const }),
         private: () => ({}),
@@ -286,12 +278,11 @@ describe("phase actor, step, and cost resolution", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           actor: ({ state }) => state.publicState.actor,
           interactions: {
-            spendGold: defineInteraction<typeof contract>()({
+            spendGold: contract.phase("takeTurn").interaction({
               inputs: {},
               rules: [
                 {
@@ -303,14 +294,14 @@ describe("phase actor, step, and cost resolution", () => {
                     q.player.canAfford(input.playerId, { gold: 2 }),
                 },
               ],
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
-            blockedOnly: defineInteraction<typeof contract>()({
+            blockedOnly: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
               rules: [
                 {
@@ -321,11 +312,11 @@ describe("phase actor, step, and cost resolution", () => {
                 },
               ],
             }),
-            actorOnlyOverride: defineInteraction<typeof contract>()({
+            actorOnlyOverride: contract.phase("takeTurn").interaction({
               inputs: {},
               actor: () => "player-1",
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
           },
@@ -462,7 +453,7 @@ describe("phase actor, step, and cost resolution", () => {
 });
 describe("default action-kind authorization", () => {
   function makeBundle() {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -471,8 +462,7 @@ describe("default action-kind authorization", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -480,23 +470,23 @@ describe("default action-kind authorization", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
-          enter({ accept, tx }) {
-            return accept(tx.setActivePlayers(["player-1"]));
+          enter({ tx }) {
+            tx.setActivePlayers(["player-1"]);
+            return;
           },
           interactions: {
-            act: defineInteraction<typeof contract>()({
+            act: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
-            rollOnly: defineInteraction<typeof contract>()({
+            rollOnly: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
               rules: [
                 {
@@ -602,7 +592,7 @@ describe("default action-kind authorization", () => {
 });
 describe("closed response (`actor` resolves to empty set)", () => {
   function makeBundle() {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -613,8 +603,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ pendingRespondents: [] }),
         private: () => ({}),
@@ -622,19 +611,19 @@ describe("closed response (`actor` resolves to empty set)", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
-          enter({ accept, tx }) {
-            return accept(tx.setActivePlayers(["player-1"]));
+          enter({ tx }) {
+            tx.setActivePlayers(["player-1"]);
+            return;
           },
           interactions: {
-            respond: defineInteraction<typeof contract>()({
+            respond: contract.phase("takeTurn").interaction({
               inputs: {},
               actor: ({ state }) => state.publicState.pendingRespondents,
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
           },
@@ -678,7 +667,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
 });
 describe("action-kind interactions with a `actor` selector", () => {
   test("descriptor: only recipients see an action-kind interaction with `actor`; non-recipients (incl. active player) do not", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -689,8 +678,7 @@ describe("action-kind interactions with a `actor` selector", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ mustDiscard: ["player-2"] as const }),
         private: () => ({}),
@@ -698,19 +686,19 @@ describe("action-kind interactions with a `actor` selector", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
-          enter({ accept, tx }) {
-            return accept(tx.setActivePlayers(["player-1"]));
+          enter({ tx }) {
+            tx.setActivePlayers(["player-1"]);
+            return;
           },
           interactions: {
-            discard: defineInteraction<typeof contract>()({
+            discard: contract.phase("takeTurn").interaction({
               inputs: {},
               actor: ({ state }) => state.publicState.mustDiscard,
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
           },
@@ -738,7 +726,7 @@ describe("action-kind interactions with a `actor` selector", () => {
 });
 describe("author `available` predicate composes with authorization", () => {
   test("recipient's availability still respects the author's `available` predicate", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -749,8 +737,7 @@ describe("author `available` predicate composes with authorization", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ askPlayer: "player-2" as const }),
         private: () => ({}),
@@ -758,12 +745,11 @@ describe("author `available` predicate composes with authorization", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            gatedRespond: defineInteraction<typeof contract>()({
+            gatedRespond: contract.phase("takeTurn").interaction({
               inputs: {},
               actor: ({ state }) => state.publicState.askPlayer,
               rules: [
@@ -774,8 +760,8 @@ describe("author `available` predicate composes with authorization", () => {
                   available: () => false,
                 },
               ],
-              reduce({ state, accept }) {
-                return accept(state);
+              reduce() {
+                return;
               },
             }),
           },

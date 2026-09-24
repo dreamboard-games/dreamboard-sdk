@@ -5,7 +5,7 @@ import {
   cardInput,
   cardTarget,
   choiceTarget,
-} from "../reducer/internal";
+} from "./inputs";
 import type { CollectorState } from "./model/spec";
 
 const state = {

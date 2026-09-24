@@ -7,7 +7,6 @@ import type {
 } from "../manifest/types";
 import type {
   PhaseMapOf,
-  PhaseNameOfContract,
   ReducerGameDefinition,
   ReducerManifestContract,
   RuntimeTableRecord,
@@ -44,8 +43,7 @@ export function defineGameDefinition<
 /**
  * Creates the bound authoring object for a model without assembling the game.
  *
- * This is the module-level primitive behind {@link defineGame}: the returned
- * value is the type leaf (`typeof game.types.State`), the factory namespace
+ * The returned value is the type leaf (`typeof game.types.State`), the factory namespace
  * (`game.phase(name)`, `game.view`), and the assembler (`game.assemble`).
  * Phase files import it directly, so no factory wrappers or `*AuthoringOf`
  * parameter types are needed.
@@ -156,94 +154,4 @@ export function createGame(
       ? model.manifest
       : compileManifest(model.manifest);
   return createContractAuthoring(defineGameContract({ ...model, manifest }));
-}
-
-/**
- * Rejects phase keys that the model did not declare. `PhaseMapOf<Contract>`
- * already requires every declared phase; this closes the other direction so
- * an extra key fails at the `defineGame` return instead of at runtime.
- */
-type NoUndeclaredPhases<Contract, Definitions> = {
-  [Name in Exclude<
-    keyof Definitions,
-    PhaseNameOfContract<Contract>
-  >]: `Phase '${Name & string}' is not declared in model.phases`;
-};
-
-/**
- * Defines the complete game through two deliberate inference stages.
- *
- * The model argument establishes manifest ids, state schemas, phase names,
- * phase-state schemas, and error codes. The implementation callback then
- * receives helpers bound to that fixed model. Authors may keep the callback
- * in one file or pass the bound helpers to any module structure they prefer.
- */
-export function defineGame<
-  Table extends RuntimeTableRecord,
-  const Manifest extends ReducerManifestContract<
-    Table,
-    string,
-    string,
-    string,
-    string,
-    string
-  >,
-  PublicSchema extends SchemaLike<object>,
-  PrivateSchema extends SchemaLike<object>,
-  HiddenSchema extends SchemaLike<object>,
-  const Phases extends Record<string, SchemaLike<object>>,
-  const Errors extends Record<string, string> | undefined = undefined,
-  OptionsSchema extends SchemaLike<RuntimeRecord> = SchemaLike<
-    Record<string, never>
-  >,
-  Contract extends DefinedGameContract<
-    Table,
-    Manifest,
-    PublicSchema,
-    PrivateSchema,
-    HiddenSchema,
-    Phases,
-    Errors,
-    OptionsSchema
-  > = DefinedGameContract<
-    Table,
-    Manifest,
-    PublicSchema,
-    PrivateSchema,
-    HiddenSchema,
-    Phases,
-    Errors,
-    OptionsSchema
-  >,
-  Definitions extends PhaseMapOf<Contract> = PhaseMapOf<Contract>,
-  View extends ViewOfContract<Contract> = ViewOfContract<Contract>,
->(
-  model: ReducerGameContractInput<
-    Table,
-    Manifest,
-    PublicSchema,
-    PrivateSchema,
-    HiddenSchema,
-    Phases,
-    Errors,
-    OptionsSchema
-  >,
-  implement: (
-    game: import("./contract-authoring").GameAuthoring<Contract>,
-  ) => Omit<ReducerGameDefinition<Contract, Definitions, View>, "contract"> & {
-    phases: NoUndeclaredPhases<Contract, Definitions>;
-  },
-): ReducerGameDefinition<Contract, Definitions, View> {
-  const contract = defineGameContract(model) as Contract;
-  const authoring = createContractAuthoring(contract);
-  // The intersection with `NoUndeclaredPhases` only exists to reject extra
-  // keys at the call site; the assembled definition keeps the inferred map.
-  const implemented: Omit<
-    ReducerGameDefinition<Contract, Definitions, View>,
-    "contract"
-  > = implement(authoring);
-  return defineGameDefinition<Contract, Definitions, View>({
-    contract,
-    ...implemented,
-  });
 }

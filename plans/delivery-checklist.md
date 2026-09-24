@@ -18,7 +18,7 @@ Root updates it with implementation and verification evidence.
 - [x] Shared models: ordinary per-player records and all three redundant private type packages removed; combined gates passed.
 - [x] Manifest boards: honeycomb geometry, shapes, canonical identities and queries; combined gate and independent review passed.
 - [x] Bundle: one execution authority with boundary validation retained; PR #36 local/hosted gates passed.
-- [ ] Test authoring: remove legacy unbound helpers and legacy runtime argument keys.
+- [x] Test authoring: legacy unbound helpers and mutation callback aliases removed; integrated full gate passed at `4058e8b`.
 
 ## Headless client and React
 

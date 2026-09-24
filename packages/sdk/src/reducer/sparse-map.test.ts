@@ -1,13 +1,9 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineGameContract,
-  defineInteraction,
-  formInput,
-  normalizeCommandParams,
-  sparseCounts,
-  sparseMap,
-} from "../reducer/internal";
+import { defineGameContract } from "./authoring/contract";
+import { defineInteraction } from "./authoring/interaction";
+import { formInput } from "./inputs";
+import { normalizeCommandParams, sparseCounts, sparseMap } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
@@ -146,8 +142,8 @@ describe("sparse map helpers", () => {
             ),
           ),
         },
-        reduce({ state, accept }) {
-          return accept(state);
+        reduce() {
+          return;
         },
       }),
     ).toThrow(/enum-keyed z\.record/);
@@ -159,8 +155,8 @@ describe("sparse map helpers", () => {
             sparseCounts(z.enum(["brick", "grain", "lumber"] as const)),
           ),
         },
-        reduce({ state, accept }) {
-          return accept(state);
+        reduce() {
+          return;
         },
       }),
     ).not.toThrow();

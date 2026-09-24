@@ -213,9 +213,10 @@ methods. `defineGameDefinition` left `/reducer/advanced`.
 - `tx` is created lazily. Views, actor selectors, and rules never pay for the
   table clone; `resultStateOf(args)` returns the transaction state only if the
   callback opened one.
-- The runtime still puts the legacy helpers on the args object (untyped) so
-  the SDK's own test suite keeps running through `src/reducer/internal.ts`.
-  Migrating those tests removes both.
+- Runtime callbacks expose mutation methods only through `tx`; runtime metadata
+  remains available. SDK game fixtures now use bound authoring. The internal
+  authoring barrel and legacy callback helper aliases have been deleted; unit
+  tests import private constructors directly from their owning modules.
 - `testing-runtime.test.ts` compiled roll-and-write as its source-bound
   fixture; it now compiles Hearts.
 - The workspace seed (`app/game.ts` for a new project) emits the

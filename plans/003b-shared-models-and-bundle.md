@@ -91,3 +91,19 @@ still validates authored step identity and unfinished prefix length. No generato
 or compatibility parser was retained. Logs: `/tmp/models-integrated-check.log` and
 `/tmp/records-integrated-check.log`. Bundle composition and bound test authoring
 remain open and are not claimed by this model receipt.
+
+## Bound authoring receipt
+
+The one-bundle layer is PR #36, with local and hosted checks passed. Legacy
+unbound authoring and mutation callback aliases are removed in `4058e8b`, adapted
+from reviewed preparation `66d2f34`. All full-game fixtures now use bound
+`createGame`, phase and assembly APIs. Low-level unit tests import their private
+owning constructors. Mutation callbacks expose the transaction; view callbacks
+receive no mutation helpers. Runtime metadata remains available for its real
+read-only consumers. Recursive JSON types derive from canonical `RuntimeJson`.
+
+The integrated repository gate passed 724 SDK tests and both packed games;
+root independently passed 72 runtime, event, committed-step, initialization and
+export tests. Logs: `/tmp/bound-integrated-check.log` and
+`/tmp/bound-integrated-root-proof.log`. Manifest inference fixes from still-open
+PR #25 are reviewed separately; its obsolete template changes are not retained.

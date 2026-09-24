@@ -432,7 +432,6 @@ export function createProjectionBuilder<
     const view = scope.definition.view;
     const viewArgs = {
       ...scope.buildContext(combinedState),
-      ...scope.runtimeHelpers,
       q: projection.q,
       state: projection.domainState,
       playerId,

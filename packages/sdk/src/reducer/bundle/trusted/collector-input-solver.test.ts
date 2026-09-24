@@ -6,8 +6,8 @@ import {
   cardInput,
   cardTarget,
   formInput,
-  many,
-} from "../../../reducer/internal";
+} from "../../inputs";
+import { many } from "../..";
 import {
   enumerateCollectorInputAssignments,
   hasAnyCollectorInputAssignment,

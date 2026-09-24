@@ -1,20 +1,15 @@
+import { createGame as createModel } from "../reducer";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { defineGameDefinition } from "./authoring/game";
-import {
-  createReducerBundle,
-  defineGameContract,
-  definePhase,
-  defineInteraction,
-  gameEvent,
-} from "./internal";
+
+import { createReducerBundle, gameEvent } from "../reducer";
 import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
 
 async function lifecycleGame(
   mode: "ignored" | "chain" | "terminal" | "invalid-terminal" | "runaway",
 ) {
   const observations: unknown[] = [];
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest: buildMinimalManifest(["start", "next", "done"] as const),
     phases: {
       start: z.object({ visits: z.number() }),
@@ -36,8 +31,7 @@ async function lifecycleGame(
       { playerId: "player-2", rank: 2, result: "loss" as const },
     ],
   };
-  const game = defineGameDefinition({
-    contract,
+  const game = contract.assemble({
     initial: {
       public: () => ({ entries: 0 }),
       private: () => ({}),
@@ -45,9 +39,8 @@ async function lifecycleGame(
     },
     initialPhase: "start",
     phases: {
-      start: definePhase<typeof contract>()({
+      start: contract.phase("start").define({
         kind: "player",
-        state: contract.phases.start,
         initialState: ({ state }) => {
           observations.push([
             "initial",
@@ -66,7 +59,7 @@ async function lifecycleGame(
           tx.emit(event("start"));
         },
         interactions: {
-          go: defineInteraction<typeof contract>()({
+          go: contract.phase("start").interaction({
             inputs: {},
             reduce({ tx }) {
               tx.emit(event("go"));
@@ -81,9 +74,8 @@ async function lifecycleGame(
           }),
         },
       }),
-      next: definePhase<typeof contract>()({
+      next: contract.phase("next").define({
         kind: "auto",
-        state: contract.phases.next,
         initialState: ({ state }) => {
           observations.push([
             "initial",
@@ -108,9 +100,8 @@ async function lifecycleGame(
           );
         },
       }),
-      done: definePhase<typeof contract>()({
+      done: contract.phase("done").define({
         kind: "player",
-        state: contract.phases.done,
         initialState: ({ state }) => {
           observations.push([
             "initial",

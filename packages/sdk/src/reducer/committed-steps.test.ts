@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createGame } from "../reducer";
-import { createReducerBundle } from "./internal";
+import { createReducerBundle } from "../reducer";
 import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
 
 async function fixture(

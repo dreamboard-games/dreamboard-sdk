@@ -1,78 +1,54 @@
+import { createGame as createModel } from "../../../reducer";
 import { buildMinimalManifest } from "../../lifecycle-test-fixtures";
-import { defineGameDefinition as defineGame } from "../../authoring/game";
+
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineGameContract,
-  defineInteraction,
-  definePhase,
-} from "../../authoring";
 
 import { collectTrustedRuntimeRegistry } from "./runtime-registry";
 
-function buildContract<const PhaseNames extends readonly string[]>(
-  phaseNames: PhaseNames,
-) {
-  return defineGameContract({
-    manifest: buildMinimalManifest(phaseNames),
-    state: {
-      public: z.object({}),
-      private: z.object({}),
-      hidden: z.object({}),
-    },
-    phases: Object.fromEntries(
-      phaseNames.map((phaseName) => [phaseName, z.object({})]),
-    ) as { [Name in PhaseNames[number]]: z.ZodObject<Record<string, never>> },
-  });
-}
-
 describe("collectTrustedRuntimeRegistry", () => {
   test("preserves typed phase keys while collecting heterogeneous phase registries", () => {
-    const contract = buildContract(["setup", "play"] as const);
     const setupState = z.object({
       selectedFirstPlayer: z.string().nullable(),
     });
     const playState = z.object({
       actionCount: z.number().int(),
     });
-    const game = defineGame({
-      contract,
+    const contract = createModel({
+      manifest: buildMinimalManifest(["setup", "play"] as const),
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: { setup: setupState, play: playState },
+    });
+    const game = contract.assemble({
       initialPhase: "setup",
       phases: {
-        setup: definePhase<typeof contract>()({
+        setup: contract.phase("setup").define({
           kind: "player",
-          state: setupState,
           initialState: () => ({ selectedFirstPlayer: null }),
           interactions: {
-            chooseFirstPlayer: defineInteraction<
-              typeof contract,
-              typeof setupState
-            >()({
+            chooseFirstPlayer: contract.phase("setup").interaction({
               inputs: {},
-              reduce: ({ state }) => ({
-                type: "accept",
-                state: {
-                  ...state,
-                  phase: { selectedFirstPlayer: "player-1" },
-                },
-              }),
+              reduce: ({ tx }) => {
+                tx.patchPhaseState({ selectedFirstPlayer: "player-1" });
+              },
             }),
           },
         }),
-        play: definePhase<typeof contract>()({
+        play: contract.phase("play").define({
           kind: "player",
-          state: playState,
           initialState: () => ({ actionCount: 0 }),
           interactions: {
-            takeAction: defineInteraction<typeof contract, typeof playState>()({
+            takeAction: contract.phase("play").interaction({
               inputs: {},
-              reduce: ({ state }) => ({
-                type: "accept",
-                state: {
-                  ...state,
-                  phase: { actionCount: state.phase.actionCount + 1 },
-                },
-              }),
+              reduce: ({ state, tx }) => {
+                tx.patchPhaseState({
+                  actionCount: state.phase.actionCount + 1,
+                });
+              },
             }),
           },
         }),

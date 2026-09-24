@@ -1,17 +1,14 @@
+import { createGame as createModel } from "../reducer";
 import { createReducerTransaction } from "./transaction";
 import {
   createTestRandom,
   createTestTransaction,
 } from "./transaction-test-fixtures";
-import { defineGameDefinition as defineGame } from "./authoring/game";
+
 import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineGameContract,
-  defineInteraction,
-  definePhase,
-} from "../reducer/internal";
+
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
@@ -337,7 +334,7 @@ function createBootstrapGame(
   initialize: (tx: ReturnType<typeof createTestTransaction>) => void,
 ) {
   const manifest = createBootstrapManifestContract();
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest,
     state: {
       public: z.object({}),
@@ -349,13 +346,11 @@ function createBootstrapGame(
     },
   });
 
-  return defineGame({
-    contract,
+  return contract.assemble({
     initialPhase: "setup",
     phases: {
-      setup: definePhase<typeof contract>()({
+      setup: contract.phase("setup").define({
         kind: "auto",
-        state: z.object({}),
         initialState: () => ({}),
         enter: ({ tx }) => initialize(tx),
       }),
@@ -366,7 +361,7 @@ function createBootstrapGame(
 
 describe("initialization runtime", () => {
   test("parsed options reach initial state and each phase initializer and survive restoration", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       options: z.strictObject({
         mode: z.enum(["draft", "quick"]),
@@ -382,8 +377,7 @@ describe("initialization runtime", () => {
         hidden: z.object({ mode: z.string() }),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: ({ options }) => ({ mode: options.mode }),
         private: ({ options }) => ({ rounds: options.rounds }),
@@ -391,18 +385,16 @@ describe("initialization runtime", () => {
       },
       initialPhase: "defaultPhase",
       phases: {
-        defaultPhase: definePhase<typeof contract>()({
+        defaultPhase: contract.phase("defaultPhase").define({
           kind: "auto",
-          state: contract.phases.defaultPhase,
           initialState: ({ options }) => ({ mode: options.mode }),
           enter: ({ tx }) => tx.transition("draftPhase"),
         }),
-        draftPhase: definePhase<typeof contract>()({
+        draftPhase: contract.phase("draftPhase").define({
           kind: "player",
-          state: contract.phases.draftPhase,
           initialState: ({ options }) => ({ mode: options.mode }),
           interactions: {
-            next: defineInteraction<typeof contract>()({
+            next: contract.phase("draftPhase").interaction({
               inputs: {},
               reduce: ({ tx }) => tx.transition("draftPhase"),
             }),
@@ -471,7 +463,7 @@ describe("initialization runtime", () => {
       z.object({ date: z.date() }),
     ]) {
       expect(() =>
-        defineGameContract({
+        createModel({
           manifest: createManifestContract(),
           options: options as never,
           phases: { defaultPhase: z.object({}) },
@@ -486,7 +478,7 @@ describe("initialization runtime", () => {
   });
 
   test("initialize only materializes the actual session players for per-player hands and resources", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
       state: {
@@ -496,20 +488,15 @@ describe("initialization runtime", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initialPhase: "defaultPhase",
       phases: {
-        defaultPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
-        draftPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        defaultPhase: contract
+          .phase("defaultPhase")
+          .define({ kind: "auto", initialState: () => ({}) }),
+        draftPhase: contract
+          .phase("draftPhase")
+          .define({ kind: "auto", initialState: () => ({}) }),
       },
       view: () => ({}),
     });
@@ -544,7 +531,7 @@ describe("initialization runtime", () => {
     const handIds = ["hand"] as const;
     const cardIds = ["card-1", "card-2"] as const;
 
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: {
         literals: {
           playerIds,
@@ -680,15 +667,12 @@ describe("initialization runtime", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initialPhase: "defaultPhase",
       phases: {
-        defaultPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        defaultPhase: contract
+          .phase("defaultPhase")
+          .define({ kind: "auto", initialState: () => ({}) }),
       },
       view: () => ({}),
     });
@@ -1179,7 +1163,7 @@ describe("initialization runtime", () => {
   });
 
   test("initialize injects table queries (q) into initial.public/private/hidden callbacks", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: createManifestContract(),
       phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
       state: {
@@ -1199,8 +1183,7 @@ describe("initialization runtime", () => {
     const privateQ: unknown[] = [];
     const hiddenQ: unknown[] = [];
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: ({ q }) => {
           publicQ.push(q);
@@ -1217,16 +1200,12 @@ describe("initialization runtime", () => {
       },
       initialPhase: "defaultPhase",
       phases: {
-        defaultPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
-        draftPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        defaultPhase: contract
+          .phase("defaultPhase")
+          .define({ kind: "auto", initialState: () => ({}) }),
+        draftPhase: contract
+          .phase("draftPhase")
+          .define({ kind: "auto", initialState: () => ({}) }),
       },
       view: () => ({}),
     });

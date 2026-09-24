@@ -13,7 +13,6 @@ import {
   type BoundTargetPredicate,
   type PlayerId,
 } from "../src/reducer.js";
-import { defineGameContract } from "../src/reducer/internal.js";
 import type { GameStateOf } from "../src/reducer/model.js";
 import {
   createManifestStringLiteralSchema,
@@ -178,7 +177,7 @@ type Tx = typeof game.types.Tx;
 
 // --- Phantom types equal the contract-derived types exactly. -----------------
 
-const runtimeContract = defineGameContract(gameModel);
+const runtimeContract = game.contract;
 type _StateEqualsContractState = Expect<
   Equal<GameState, GameStateOf<typeof runtimeContract>>
 >;
@@ -304,6 +303,14 @@ const playerTurnPhase = playerTurn.define({
         }),
       },
       reduce: ({ tx, input, ...args }) => {
+        // @ts-expect-error Acceptance belongs to tx, not the callback args.
+        args.accept;
+        // @ts-expect-error Transactions have no competing edit constructor.
+        args.edit;
+        // @ts-expect-error Rejection belongs to tx.
+        args.reject;
+        // @ts-expect-error Terminal results belong to tx.
+        args.endGame;
         // @ts-expect-error Mutation callbacks no longer receive an ops namespace.
         args.ops;
         // @ts-expect-error Mutation callbacks have no effect namespace.

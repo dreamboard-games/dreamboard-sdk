@@ -1,4 +1,4 @@
-import type { ReducerTransaction } from "../../transaction";
+import type { ReducerTransaction, ReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type {
   BaseGameStateOfContract,
@@ -13,7 +13,7 @@ import type {
   ActionContext,
   RandomHelpers,
 } from "../../model/spec/runtime-args";
-import type { TrustedRuntimeHelpers, TrustedState } from "./runtime-scope";
+import type { TrustedState } from "./runtime-scope";
 
 export function buildContext<Contract extends ReducerGameContractLike>(
   state: TrustedState<Contract>,
@@ -83,7 +83,7 @@ export function buildRuntimeArgs<
 >(
   state: TrustedState<Contract>,
   manifest: ManifestContractOf<Contract>,
-  helpers: TrustedRuntimeHelpers<Contract>,
+  createTransaction: ReducerEdit<BaseGameStateOfContract<Contract>>,
   toDomainState: (
     state: TrustedState<Contract>,
   ) => BaseGameStateOfContract<Contract>,
@@ -96,12 +96,8 @@ export function buildRuntimeArgs<
   type DomainState = BaseGameStateOfContract<Contract>;
   const domainState = toDomainState(state);
   const q = options.q ?? createStateQueries(domainState);
-  // Legacy helpers (`accept`, `edit`, `reject`, `endGame`) stay
-  // on the runtime object for the SDK's own test suite. They are no longer
-  // part of any public argument type and will be removed with those tests.
   const args = {
     ...buildContext(state, manifest),
-    ...helpers,
     q,
     runtime: publicRuntime(state.runtime),
     random: options.random?.random ?? DISABLED_RANDOM_HELPERS,
@@ -117,13 +113,15 @@ export function buildRuntimeArgs<
         throw new Error(
           "Transactions are only available in reducer mutation callbacks.",
         );
-      return (transaction ??= helpers.edit(domainState, options.random));
+      return (transaction ??= createTransaction(domainState, options.random));
     },
   });
   Object.defineProperty(args, implicitResultSymbol, {
     enumerable: false,
     value: () =>
-      transaction ? transaction.accept() : helpers.accept(domainState),
+      transaction
+        ? transaction.accept()
+        : { type: "accept", state: domainState, events: [] },
   });
   return args as typeof args & RuntimeArgsWithTransaction<DomainState>;
 }

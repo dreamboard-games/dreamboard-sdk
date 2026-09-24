@@ -340,10 +340,6 @@ export type GameAuthoring<Contract extends ContractWithPhases> = {
   ): PhaseAuthoring<Contract, PhaseSchemasOfContract<Contract>[Name]>;
 };
 
-/** @deprecated internal alias; use {@link GameAuthoring}. */
-export type ContractAuthoring<Contract extends ContractWithPhases> =
-  GameAuthoring<Contract>;
-
 const PHANTOM_TYPES_MESSAGE =
   "`.types` is a compile-time carrier: use it only in `typeof` positions.";
 

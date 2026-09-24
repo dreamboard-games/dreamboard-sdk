@@ -1,15 +1,10 @@
-import { cardInput, cardTarget } from "./internal";
-import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createGame as createModel } from "../reducer";
+import { cardInput, cardTarget } from "./inputs";
+
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineInteraction,
-  defineGameContract,
-  definePhase,
-  formInput,
-  many,
-  rngInput,
-} from "../reducer/internal";
+import { formInput, rngInput } from "./inputs";
+import { many } from "../reducer";
 import { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
 
@@ -20,7 +15,7 @@ function createContract() {
   const cardIds = ["card-1"] as const;
   const cardTypes = ["play-card"] as const;
   const handIds = ["hand"] as const;
-  return defineGameContract({
+  return createModel({
     manifest: {
       literals: {
         playerIds,
@@ -117,20 +112,17 @@ function createContract() {
 describe("createClientParamSchemasByPhase", () => {
   test("derives schemas from registry-materialized authored interactions", () => {
     const contract = createContract();
-    const phaseState = z.object({});
     const explicitSchema = z.object({
       explicit: z.literal("schema"),
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initialPhase: "setup",
       phases: {
-        setup: definePhase<typeof contract>()({
+        setup: contract.phase("setup").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            choose: defineInteraction<typeof contract, typeof phaseState>()({
+            choose: contract.phase("setup").interaction({
               inputs: {
                 count: formInput.number({ min: 0, max: 10 }),
                 mode: formInput.choice({
@@ -156,9 +148,9 @@ describe("createClientParamSchemasByPhase", () => {
                 ),
                 dice: rngInput.d6(2),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            explicit: defineInteraction<typeof contract, typeof phaseState>()({
+            explicit: contract.phase("setup").interaction({
               inputs: {
                 ignored: formInput.choice({
                   choices: [{ value: "ignored", label: "Ignored" }],
@@ -166,9 +158,9 @@ describe("createClientParamSchemasByPhase", () => {
                 }),
               },
               paramsSchema: explicitSchema,
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            playCard: defineInteraction<typeof contract, typeof phaseState>()({
+            playCard: contract.phase("setup").interaction({
               inputs: {
                 cardId: cardInput({
                   target: cardTarget
@@ -192,23 +184,22 @@ describe("createClientParamSchemasByPhase", () => {
                 }),
                 sampled: rngInput.d6(),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
-        play: definePhase<typeof contract>()({
+        play: contract.phase("play").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            choose: defineInteraction<typeof contract, typeof phaseState>()({
+            choose: contract.phase("play").interaction({
               inputs: {
                 label: formInput.choice({
                   choices: [{ value: "ok", label: "OK" }],
                   defaultValue: "ok",
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
