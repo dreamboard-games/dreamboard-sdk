@@ -132,3 +132,11 @@ export type {
   OutcomeStanding,
   OutcomeTieBreak,
 } from "./reducer/model";
+
+export { compileManifest } from "./reducer/manifest/compiler";
+export type {
+  AuthoredManifest,
+  CompiledManifest,
+  ManifestIdsOf,
+  ManifestTable,
+} from "./reducer/manifest/types";

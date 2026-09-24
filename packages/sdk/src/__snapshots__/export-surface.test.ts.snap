@@ -124,6 +124,7 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "boardRef",
   "boardRefKey",
   "boardRefSchema",
+  "compileManifest",
   "contractFingerprint",
   "createDerivedResolver",
   "createGame",

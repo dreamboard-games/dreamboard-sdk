@@ -17,4 +17,4 @@ export type {
   Wire as ReducerWire,
 } from "@dreamboard-games/reducer-contract";
 export { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
-export { materializeManifestTable } from "@dreamboard-games/workspace-codegen";
+export { materializeManifestTable } from "./reducer/manifest/materialize";
