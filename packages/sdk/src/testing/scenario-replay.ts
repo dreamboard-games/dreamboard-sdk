@@ -1,6 +1,7 @@
 import type { z } from "zod";
-import type { Wire } from "@dreamboard-games/reducer-contract";
-import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
+import type { RuntimeJson } from "../shared/runtime-json.js";
+import type * as Wire from "../shared/runtime-types.js";
+import { digestPluginRuntimeJson } from "../shared/protocol/digest.js";
 import { createReducerTestingBundle } from "../reducer/bundle/ingress-bundle.js";
 import type { ReducerBundleTestingRuntime } from "../reducer/bundle/types.js";
 import type {
@@ -119,7 +120,7 @@ export async function replayScenario<
   }
   const table = normalSetup.createInitialTable({ playerIds });
   const reducerState = await bundle.initialize({
-    table: table as Wire.JsonValue,
+    table: table as RuntimeJson,
     playerIds: [...playerIds],
     rngSeed: scenario.setup.seed,
     options: scenario.setup.options,
@@ -581,7 +582,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         kind: "interaction",
         playerId,
         interactionId: command.interactionId,
-        params: params as Wire.JsonValue,
+        params: params as RuntimeJson,
       },
     });
     if (result.kind === "reject") {

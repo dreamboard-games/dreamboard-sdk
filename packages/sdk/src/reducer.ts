@@ -46,16 +46,6 @@ export type {
   ReducerDiagnosticEvent,
   ReducerDiagnosticsSink,
 } from "./reducer/diagnostics";
-export {
-  contractFingerprint,
-  type ContractFingerprint,
-} from "./reducer/contract-fingerprint";
-export {
-  StaleContractArtifactError,
-  isStaleContractArtifactError,
-  type StaleContractArtifactErrorOptions,
-  type StaleContractArtifactKind,
-} from "./reducer/stale-contract-artifact-error";
 export type {
   ReducerTransaction,
   ReducerTransactionOutcome,

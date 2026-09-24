@@ -1,0 +1,140 @@
+// Canonical worker-boundary examples; each fixture names the invariant it proves.
+
+import dispatchResultAccept from "./dispatch-result-accept.json" with { type: "json" };
+import dispatchResultReject from "./dispatch-result-reject.json" with { type: "json" };
+import dispatchRequest from "./dispatch-request.json" with { type: "json" };
+import gameInputInteractionAction from "./game-input-interaction-action.json" with { type: "json" };
+import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
+import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
+import initializeResult from "./initialize-result.json" with { type: "json" };
+import initializeRequest from "./initialize-request.json" with { type: "json" };
+import projectRequest from "./project-request.json" with { type: "json" };
+import reduceRequest from "./reduce-request.json" with { type: "json" };
+import reduceResultAcceptMixed from "./reduce-result-accept-mixed.json" with { type: "json" };
+import reduceResultReject from "./reduce-result-reject.json" with { type: "json" };
+import reducerRuntimeLogEntryStateCommit from "./reducer-runtime-log-entry-state-commit.json" with { type: "json" };
+import reducerRuntimeStateSimultaneous from "./reducer-runtime-state-simultaneous.json" with { type: "json" };
+import reducerSessionState from "./reducer-session-state.json" with { type: "json" };
+import seatProjectionBundle from "./seat-projection-bundle.json" with { type: "json" };
+import seatProjection from "./seat-projection.json" with { type: "json" };
+import validateInputRequest from "./validate-input-request.json" with { type: "json" };
+
+export type Fixture<TypeName extends string> = {
+  readonly name: string;
+  readonly typeName: TypeName;
+  readonly why: string;
+  readonly value: unknown;
+};
+
+export const FIXTURES = [
+  {
+    name: "reducer-session-state",
+    typeName: "ReducerSessionState" as const,
+    why: "Canonical reducer session envelope: validated by the canonical schema, with game-owned payloads still JSON-erased.",
+    value: reducerSessionState,
+  },
+  {
+    name: "reducer-runtime-state-simultaneous",
+    typeName: "ReducerRuntimeState" as const,
+    why: "Runtime state with an in-flight simultaneous-player submission bucket; catches schema drift on runtime.simultaneous.",
+    value: reducerRuntimeStateSimultaneous,
+  },
+  {
+    name: "reducer-runtime-log-entry-state-commit",
+    typeName: "ReducerRuntimeLogEntry" as const,
+    why: "Persisted state commit log entry embeds the canonical session envelope used for recovery.",
+    value: reducerRuntimeLogEntryStateCommit,
+  },
+  {
+    name: "reduce-result-accept-mixed",
+    typeName: "ReduceResult" as const,
+    why: "A completed reduction contains its final state and events without pending work.",
+    value: reduceResultAcceptMixed,
+  },
+  {
+    name: "reduce-result-reject",
+    typeName: "ReduceResult" as const,
+    why: "Reject variant: no state, no effects, no continuations.",
+    value: reduceResultReject,
+  },
+  {
+    name: "game-input-interaction-action",
+    typeName: "GameInput" as const,
+    why: "Interaction carrying a free-form action payload.",
+    value: gameInputInteractionAction,
+  },
+  {
+    name: "game-input-interaction-prompt",
+    typeName: "GameInput" as const,
+    why: "Interaction carrying a prompt response payload; the prompt kind is encoded by the interactionId.",
+    value: gameInputInteractionPrompt,
+  },
+  {
+    name: "dispatch-result-accept",
+    typeName: "DispatchResult" as const,
+    why: "Full dispatch accept with trace entries covering each DispatchTrace variant.",
+    value: dispatchResultAccept,
+  },
+  {
+    name: "dispatch-result-reject",
+    typeName: "DispatchResult" as const,
+    why: "Dispatch reject variant.",
+    value: dispatchResultReject,
+  },
+  {
+    name: "initialize-result",
+    typeName: "InitializeResult" as const,
+    why: "Initialization can complete the game and carries its authoritative state and events.",
+    value: initializeResult,
+  },
+  {
+    name: "initialize-request",
+    typeName: "InitializeRequest" as const,
+    why: "Reducer bundle initialization payload with table, player ids, rng seed, and lobby options.",
+    value: initializeRequest,
+  },
+  {
+    name: "initialize-phase-request",
+    typeName: "InitializePhaseRequest" as const,
+    why: "Reducer bundle initializePhase payload with an erased session state and target phase id.",
+    value: initializePhaseRequest,
+  },
+  {
+    name: "validate-input-request",
+    typeName: "ValidateInputRequest" as const,
+    why: "Reducer bundle validateInput payload reusing the canonical GameInput union.",
+    value: validateInputRequest,
+  },
+  {
+    name: "reduce-request",
+    typeName: "ReduceRequest" as const,
+    why: "Reducer bundle reduce payload reusing the canonical GameInput union.",
+    value: reduceRequest,
+  },
+  {
+    name: "dispatch-request",
+    typeName: "DispatchRequest" as const,
+    why: "Reducer bundle dispatch payload reusing the canonical GameInput union.",
+    value: dispatchRequest,
+  },
+  {
+    name: "project-request",
+    typeName: "ProjectRequest" as const,
+    why: "Reducer bundle projection payload requesting a view for multiple seats.",
+    value: projectRequest,
+  },
+  {
+    name: "seat-projection",
+    typeName: "SeatProjection" as const,
+    why: "One seat's projected view, interactions, and zones payload.",
+    value: seatProjection,
+  },
+  {
+    name: "seat-projection-bundle",
+    typeName: "SeatProjectionBundle" as const,
+    why: "Combined seat projection result returned from project.",
+    value: seatProjectionBundle,
+  },
+] as const;
+
+export type FixtureTypeName = (typeof FIXTURES)[number]["typeName"];

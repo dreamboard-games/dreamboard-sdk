@@ -5,10 +5,8 @@ import {
   useMemo,
   useSyncExternalStore,
 } from "react";
-import {
-  digestPluginGameplayFrame,
-  type PluginGameplayFrame,
-} from "@dreamboard-games/plugin-runtime-contract";
+import { digestPluginGameplayFrame } from "../../shared/protocol/digest.js";
+import { type PluginGameplayFrame } from "../../shared/protocol/frame.js";
 import type { PluginRuntimeClient } from "../core/types.js";
 import type {
   InteractionDescriptor,

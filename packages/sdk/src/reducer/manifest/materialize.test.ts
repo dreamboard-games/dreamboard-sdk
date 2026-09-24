@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { materializeManifestTable } from "./materialize";
 const EMPTY_MANIFEST: GameTopologyManifest = {
   players: {
@@ -9,7 +9,6 @@ const EMPTY_MANIFEST: GameTopologyManifest = {
   },
   cardSets: [],
   zones: [],
-  boardTemplates: [],
   boards: [],
   pieceTypes: [],
   pieceSeeds: [],
@@ -346,4 +345,67 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
       shuffleItems: (values) => [...values],
     }),
   ).toThrow("Cannot materialize invalid topology manifest");
+});
+
+test("inline square metadata and schemas survive topology materialization", () => {
+  const board = {
+    id: "map",
+    name: "Map",
+    layout: "square" as const,
+    scope: "shared" as const,
+    boardFieldsSchema: {
+      properties: { round: { type: "integer" as const, default: 2 } },
+    },
+    spaceFieldsSchema: { properties: { terrain: { type: "string" as const } } },
+    edgeFieldsSchema: { properties: { cost: { type: "integer" as const } } },
+    vertexFieldsSchema: {
+      properties: { points: { type: "integer" as const } },
+    },
+    spaces: [
+      { id: "a", row: 0, col: 0, fields: { terrain: "grass" } },
+      { id: "b", row: 0, col: 1 },
+      { id: "c", row: 1, col: 0 },
+      { id: "d", row: 1, col: 1 },
+    ],
+    edges: [
+      {
+        ref: { spaces: ["a", "b"] },
+        typeId: "road",
+        label: "Bridge",
+        fields: { cost: 3 },
+      },
+    ],
+    vertices: [
+      {
+        ref: { spaces: ["a", "b", "c", "d"] },
+        typeId: "city",
+        fields: { points: 4 },
+      },
+    ],
+  };
+  const materialize = (input = board) =>
+    materializeManifestTable({
+      manifest: { ...EMPTY_MANIFEST, boards: [input] },
+      playerIds: ["player-1"],
+      shuffleItems: (values) => [...values],
+    });
+  const result = materialize().boards.square.map;
+  expect(result.fields).toEqual({ round: 2 });
+  expect(result.spaces.a.fields).toEqual({ terrain: "grass" });
+  expect(
+    Object.values(result.edges).find((edge) => edge.typeId === "road"),
+  ).toMatchObject({ label: "Bridge", fields: { cost: 3 } });
+  expect(
+    Object.values(result.vertices).find((vertex) => vertex.typeId === "city"),
+  ).toMatchObject({ fields: { points: 4 } });
+  expect(result).not.toHaveProperty("templateId");
+  expect(() =>
+    materialize({ ...board, edges: [...board.edges, ...board.edges] }),
+  ).toThrow("duplicate square edge refs");
+  expect(() =>
+    materialize({
+      ...board,
+      vertices: [{ ...board.vertices[0]!, ref: { spaces: ["missing"] } }],
+    }),
+  ).toThrow("unknown space 'missing'");
 });

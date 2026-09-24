@@ -2,12 +2,12 @@ import type {
   HexSpaceId,
   HexEdgeId,
   HexVertexId,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/board-identities.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import type {
-  GameTopologyManifest,
   ObjectSchema,
   PropertySchema,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
 import type { z } from "zod";
 import type {
   ManifestIdSchema,
@@ -102,12 +102,6 @@ type Cards<M> =
       : never
     : never;
 type Zone<M, Scope> = Id<Extract<Entries<M, "zones">, { scope: Scope }>>;
-type BoardLike<M> =
-  Boards<M> extends infer B
-    ? B extends unknown
-      ? ResolveBoard<M, B>
-      : never
-    : never;
 type Boards<M> = Entries<M, "boards">;
 type RuntimeBoardId<B> = B extends { id: infer I extends string }
   ? B extends { scope: "perPlayer" }
@@ -134,12 +128,12 @@ export type ManifestIdsOf<M> = {
   pieceId: SeedIds<Entries<M, "pieceSeeds">>;
   dieTypeId: Id<Entries<M, "dieTypes">>;
   dieId: SeedIds<Entries<M, "dieSeeds">>;
-  boardTypeId: Extract<Get<BoardLike<M>, "typeId">, string>;
+  boardTypeId: Extract<Get<Boards<M>, "typeId">, string>;
   boardBaseId: Id<Boards<M>>;
   boardId: RuntimeBoardId<Boards<M>>;
-  boardContainerId: Id<Entry<Get<BoardLike<M>, "containers">>>;
+  boardContainerId: Id<Entry<Get<Boards<M>, "containers">>>;
   relationTypeId: Extract<
-    Get<Entry<Get<BoardLike<M>, "relations">>, "typeId">,
+    Get<Entry<Get<Boards<M>, "relations">>, "typeId">,
     string
   >;
   edgeId:
@@ -147,18 +141,18 @@ export type ManifestIdsOf<M> = {
     | (Extract<Boards<M>, { layout: "square" }> extends never
         ? never
         : `square-edge:${string}`);
-  edgeTypeId: Extract<Get<Entry<Get<BoardLike<M>, "edges">>, "typeId">, string>;
+  edgeTypeId: Extract<Get<Entry<Get<Boards<M>, "edges">>, "typeId">, string>;
   vertexId:
     | HexVertexId<Extract<Id<Extract<Boards<M>, { layout: "hex" }>>, string>>
     | (Extract<Boards<M>, { layout: "square" }> extends never
         ? never
         : `square-vertex:${string}`);
   vertexTypeId: Extract<
-    Get<Entry<Get<BoardLike<M>, "vertices">>, "typeId">,
+    Get<Entry<Get<Boards<M>, "vertices">>, "typeId">,
     string
   >;
-  spaceId: BoardSpaceId<BoardLike<M>>;
-  spaceTypeId: Extract<Get<BoardSpaceEntry<BoardLike<M>>, "typeId">, string>;
+  spaceId: BoardSpaceId<Boards<M>>;
+  spaceTypeId: Extract<Get<BoardSpaceEntry<Boards<M>>, "typeId">, string>;
 };
 type PropertyValue<P, M> = PropertySchema extends P
   ? RuntimePayload
@@ -218,10 +212,6 @@ type CardState<M> =
         }
       : never
     : never;
-type ResolveBoard<M, B> = B &
-  (B extends { templateId: infer I }
-    ? Omit<Extract<Entries<M, "boardTemplates">, { id: I }>, keyof B>
-    : unknown);
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
   ? Spaces[keyof Spaces]
@@ -232,29 +222,23 @@ type BoardSpaceId<B> = B extends { layout: "hex" }
 type BoardParts<M, B> = {
   id: RuntimeBoardId<B>;
   baseId: Id<B>;
-  fields: BoardField<ResolveBoard<M, B>, "boardFieldsSchema", M>;
+  fields: BoardField<B, "boardFieldsSchema", M>;
   relations: (Omit<RuntimeHexBoardState["relations"][number], "typeId"> & {
     typeId:
-      | Extract<
-          Get<Entry<Get<ResolveBoard<M, B>, "relations">>, "typeId">,
-          string
-        >
+      | Extract<Get<Entry<Get<B, "relations">>, "typeId">, string>
       | (B extends { layout: "hex" | "square" } ? "adjacent" : never);
   })[];
   spaces: Record<
-    BoardSpaceId<ResolveBoard<M, B>>,
+    BoardSpaceId<B>,
     (B extends { layout: "hex" }
       ? { q: number; r: number }
       : B extends { layout: "square" }
         ? { row: number; col: number }
         : unknown) & {
-      id: BoardSpaceId<ResolveBoard<M, B>>;
+      id: BoardSpaceId<B>;
       name?: string | null;
-      typeId?: Extract<
-        Get<BoardSpaceEntry<ResolveBoard<M, B>>, "typeId">,
-        string
-      > | null;
-      fields: BoardField<ResolveBoard<M, B>, "spaceFieldsSchema", M>;
+      typeId?: Extract<Get<BoardSpaceEntry<B>, "typeId">, string> | null;
+      fields: BoardField<B, "spaceFieldsSchema", M>;
       zoneId?: string | null;
     }
   >;

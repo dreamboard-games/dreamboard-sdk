@@ -22,7 +22,6 @@ pnpm format:check
 pnpm lint
 pnpm test
 pnpm typecheck
-pnpm generate [--check]
 pnpm reference [game-id]
 pnpm ui storybook
 pnpm ui workbench [--scenario <id>] [--source]
@@ -52,9 +51,7 @@ new behavior genuinely belongs in this repository.
 
 ## Generated output
 
-`pnpm generate` writes reducer-contract TypeScript. `pnpm generate --check`
-renders and compares without changing tracked files. Unsupported schema forms
-must fail with the input path; never weaken generated types to `unknown`.
+Runtime wire schemas and their inferred DTOs are authored in the SDK shared owner.
 
 Authoring uses ordinary source imports and in-memory manifest compilation.
 Workbench fixtures beneath `build/` are ignored local products; UI commands

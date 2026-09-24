@@ -1,10 +1,10 @@
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-  HostToPluginEnvelopeSchema,
   type HostToPluginEnvelope,
   type PluginToHostPayload,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/protocol.js";
+import { HostToPluginEnvelopeSchema } from "../../shared/protocol/schema.js";
 import type { PluginTransport } from "../core/types.js";
 
 export interface PostMessagePluginTransportOptions {

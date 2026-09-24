@@ -1,4 +1,4 @@
-import type { Wire } from "@dreamboard-games/reducer-contract";
+import type * as Wire from "../../shared/runtime-types";
 import type {
   PlayerIdOfState,
   ReducerSessionForConfig,

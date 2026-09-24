@@ -3,10 +3,10 @@ import { describe, expect, test } from "vitest";
 import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
-  type PluginGameplayFrame,
   type HostToPluginEnvelope,
   type PluginToHostEnvelope,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/protocol.js";
+import { type PluginGameplayFrame } from "../../shared/protocol/frame.js";
 import { DREAMBOARD_BROWSER_INTERACTION_PROTOCOL_VERSION } from "../../browser-interaction/index.js";
 import { createPostMessagePluginTransport } from "../../runtime/browser/post-message-transport.js";
 import {

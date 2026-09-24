@@ -7,7 +7,7 @@ import {
   CardDragSurface,
   CardDropTargetView,
 } from "../components/card-drag/index.js";
-import type { ViewCard } from "@dreamboard-games/sdk-types";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import type {
   CardIntent,
   InteractionVisualState,

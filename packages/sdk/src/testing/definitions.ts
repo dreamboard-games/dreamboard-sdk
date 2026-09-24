@@ -1,4 +1,4 @@
-import type { Wire } from "@dreamboard-games/reducer-contract";
+import { type RuntimeJson } from "../shared/runtime-json";
 import type { z } from "zod";
 import type {
   ClientParamsOfInteractionOfDefinition,
@@ -107,7 +107,7 @@ export type ScenarioActor = ScenarioSeatRef;
 export type ScenarioSetup = {
   readonly players: number;
   readonly seed: number;
-  readonly options?: Readonly<Record<string, Wire.JsonValue>>;
+  readonly options?: Readonly<Record<string, RuntimeJson>>;
 };
 
 type ScenarioTupleOutput<

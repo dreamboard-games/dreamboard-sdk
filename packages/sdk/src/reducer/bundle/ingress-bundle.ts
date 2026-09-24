@@ -1,9 +1,7 @@
 import { createTrustedReducerBundle } from "./trusted-bundle";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
-import {
-  REDUCER_CONTRACT_VERSION,
-  type Wire,
-} from "@dreamboard-games/reducer-contract";
+import type * as Wire from "../../shared/runtime-types";
+import { REDUCER_CONTRACT_VERSION } from "../../shared/worker-contract";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,

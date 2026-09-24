@@ -213,13 +213,6 @@ export default defineConfig(({ command }) => {
           replacement: path.join(__dirname, "node_modules/zod/index.js"),
         },
         ...sdkAliases(useSdkSource),
-        {
-          find: /^@dreamboard-games\/plugin-runtime-contract$/,
-          replacement: path.join(
-            workspaceRoot,
-            "packages/plugin-runtime-contract/dist/index.js",
-          ),
-        },
       ],
     },
     server: {

@@ -1,7 +1,7 @@
+import { RuntimeJsonSchema } from "../shared/runtime-json.js";
 import { z } from "zod";
 import {
   BROWSER_ATTRIBUTE_JSON_LIMITS,
-  RuntimeJsonSchema,
   assertJsonWithinLimits,
 } from "../runtime-json.js";
 import {

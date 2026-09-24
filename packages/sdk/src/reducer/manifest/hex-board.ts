@@ -1,10 +1,12 @@
 import type {
   HexEdgeId,
   HexVertexId,
+} from "../../shared/domain/board-identities.js";
+import type {
   HexShape,
   HexCoordinate,
   HexOrientation,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
 import {
   defineHex,
   Grid,
@@ -17,7 +19,7 @@ import {
   type Point,
 } from "honeycomb-grid";
 
-export type { HexShape } from "@dreamboard-games/sdk-types";
+export type { HexShape } from "../../shared/domain/contracts.js";
 export type AxialCoordinate = Readonly<HexCoordinate>;
 export const hexagon = (
   options: Omit<Extract<HexShape, { kind: "hexagon" | "spiral" }>, "kind">,
@@ -376,8 +378,8 @@ export function createHexBoardGeometry<
 }
 
 export function resolveHexSpaces(
-  board: import("@dreamboard-games/sdk-types").HexBoardSpec,
-): import("@dreamboard-games/sdk-types").HexSpaceSpec[] {
+  board: import("../../shared/domain/contracts.js").HexBoardSpec,
+): import("../../shared/domain/contracts.js").HexSpaceSpec[] {
   const excluded = new Set((board.exclude ?? []).map(coordinateKey));
   const coordinates = hexShapeCoordinates(
     board.shape,

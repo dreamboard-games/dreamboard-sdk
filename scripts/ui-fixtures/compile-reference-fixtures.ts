@@ -7,7 +7,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/plugin-runtime-contract/dist/index.js";
+import { DREAMBOARD_PLUGIN_PROTOCOL_VERSION } from "../../packages/sdk/src/shared/protocol/protocol.ts";
 import {
   compareCanonicalStrings,
   discoverReferenceGames,

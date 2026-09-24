@@ -1,9 +1,9 @@
 import { expect, test } from "vitest";
+import { digestPluginGameplayFrame } from "../shared/protocol/digest.js";
 import {
-  digestPluginGameplayFrame,
   type PluginGameplayFrame,
   type PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../shared/protocol/frame.js";
 import { createElement } from "react";
 import { renderToString } from "react-dom/server";
 import { PluginRuntimeBoundary } from "./components/PluginRuntimeBoundary.js";

@@ -1,7 +1,7 @@
 import type {
   PluginGameplayFrame,
   PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../shared/protocol/frame.js";
 import type { PluginRuntimeClient } from "./core/types.js";
 
 export function makeTestGameplayFrame<View = unknown>(options: {

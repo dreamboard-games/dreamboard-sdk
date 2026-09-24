@@ -1,15 +1,16 @@
 import type {
   BoardCard,
   BoardSpec,
-  BoardTemplateSpec,
   DieSeedSpec,
-  DieTypeSpec,
-  GameTopologyManifest,
   PieceSeedSpec,
   PieceTypeSpec,
   PropertySchema,
   ZoneSpec,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
+import type {
+  DieTypeSpec,
+  GameTopologyManifest,
+} from "../../shared/domain/manifest.js";
 import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
@@ -483,48 +484,6 @@ function homeTargetsBoard(
   );
 }
 
-function validateBoardTemplateDuplicates(
-  boardTemplates: readonly BoardTemplateSpec[],
-): string[] {
-  const issues: string[] = [];
-
-  for (const [index, boardTemplate] of boardTemplates.entries()) {
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (boardTemplate.spaces ?? []).map((space, spaceIndex) => ({
-          id: space.id,
-          path: `manifest.boardTemplates[${index}].spaces[${spaceIndex}].id`,
-        })),
-        label: "space id",
-      }),
-    );
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (boardTemplate.containers ?? []).map(
-          (container, containerIndex) => ({
-            id: container.id,
-            path: `manifest.boardTemplates[${index}].containers[${containerIndex}].id`,
-          }),
-        ),
-        label: "container id",
-      }),
-    );
-    issues.push(
-      ...collectDuplicateIdIssues({
-        entries: (boardTemplate.relations ?? []).map(
-          (relation, relationIndex) => ({
-            id: relation.id,
-            path: `manifest.boardTemplates[${index}].relations[${relationIndex}].id`,
-          }),
-        ),
-        label: "relation id",
-      }),
-    );
-  }
-
-  return issues;
-}
-
 function validateBoardDuplicates(boards: readonly BoardSpec[]): string[] {
   const issues: string[] = [];
 
@@ -612,11 +571,6 @@ function collectAmbiguousBoardTypeWarnings(
   manifest: GameTopologyManifest,
 ): string[] {
   const warnings: string[] = [];
-  const boardTemplatesById = new Map(
-    (manifest.boardTemplates ?? []).map(
-      (template) => [template.id, template] as const,
-    ),
-  );
   const boardsBySpaceType = new Map<string, Set<string>>();
   const boardsByEdgeType = new Map<string, Set<string>>();
   const boardsByVertexType = new Map<string, Set<string>>();
@@ -635,13 +589,7 @@ function collectAmbiguousBoardTypeWarnings(
   };
 
   for (const board of manifest.boards ?? []) {
-    const template =
-      board.layout !== "hex" && board.templateId
-        ? boardTemplatesById.get(board.templateId)
-        : undefined;
     for (const space of [
-      ...((template?.layout === board.layout ? template.spaces : undefined) ??
-        []),
       ...(board.layout === "hex"
         ? Object.values(board.spaces ?? {})
         : (board.spaces ?? [])),
@@ -650,19 +598,10 @@ function collectAmbiguousBoardTypeWarnings(
     }
 
     if (board.layout === "hex" || board.layout === "square") {
-      for (const edge of [
-        ...((template?.layout === board.layout ? template.edges : undefined) ??
-          []),
-        ...(board.edges ?? []),
-      ]) {
+      for (const edge of [...(board.edges ?? [])]) {
         addBoardUsage(boardsByEdgeType, edge.typeId, board.id);
       }
-      for (const vertex of [
-        ...((template?.layout === board.layout
-          ? template.vertices
-          : undefined) ?? []),
-        ...(board.vertices ?? []),
-      ]) {
+      for (const vertex of [...(board.vertices ?? [])]) {
         addBoardUsage(boardsByVertexType, vertex.typeId, board.id);
       }
     }
@@ -710,117 +649,6 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
     (_, index) => `player-${index + 1}`,
   );
 
-  for (const [templateIndex, boardTemplate] of (
-    manifest.boardTemplates ?? []
-  ).entries()) {
-    const templatePath = `manifest.boardTemplates[${templateIndex}]`;
-    issues.push(
-      ...collectKeyIssues([
-        { value: boardTemplate.id, path: `${templatePath}.id` },
-        { value: boardTemplate.typeId, path: `${templatePath}.typeId` },
-      ]),
-      ...collectObjectSchemaKeyIssues(
-        boardTemplate.boardFieldsSchema,
-        `${templatePath}.boardFieldsSchema`,
-      ),
-      ...collectObjectSchemaKeyIssues(
-        boardTemplate.spaceFieldsSchema,
-        `${templatePath}.spaceFieldsSchema`,
-      ),
-    );
-
-    if (
-      boardTemplate.layout === "generic" ||
-      boardTemplate.layout === "square"
-    ) {
-      issues.push(
-        ...collectObjectSchemaKeyIssues(
-          boardTemplate.relationFieldsSchema,
-          `${templatePath}.relationFieldsSchema`,
-        ),
-        ...collectObjectSchemaKeyIssues(
-          boardTemplate.containerFieldsSchema,
-          `${templatePath}.containerFieldsSchema`,
-        ),
-        ...collectKeyIssues([
-          ...(boardTemplate.containers ?? []).flatMap(
-            (container, containerIndex) => [
-              {
-                value: container.id,
-                path: `${templatePath}.containers[${containerIndex}].id`,
-              },
-              {
-                value:
-                  container.host.type === "space"
-                    ? container.host.spaceId
-                    : undefined,
-                path: `${templatePath}.containers[${containerIndex}].host.spaceId`,
-              },
-            ],
-          ),
-          ...(boardTemplate.relations ?? []).flatMap(
-            (relation, relationIndex) => [
-              {
-                value: relation.id,
-                path: `${templatePath}.relations[${relationIndex}].id`,
-              },
-              {
-                value: relation.typeId,
-                path: `${templatePath}.relations[${relationIndex}].typeId`,
-              },
-              {
-                value: relation.fromSpaceId,
-                path: `${templatePath}.relations[${relationIndex}].fromSpaceId`,
-              },
-              {
-                value: relation.toSpaceId,
-                path: `${templatePath}.relations[${relationIndex}].toSpaceId`,
-              },
-            ],
-          ),
-        ]),
-      );
-    }
-
-    if (boardTemplate.layout !== "generic") {
-      issues.push(
-        ...collectObjectSchemaKeyIssues(
-          boardTemplate.edgeFieldsSchema,
-          `${templatePath}.edgeFieldsSchema`,
-        ),
-        ...collectObjectSchemaKeyIssues(
-          boardTemplate.vertexFieldsSchema,
-          `${templatePath}.vertexFieldsSchema`,
-        ),
-        ...collectKeyIssues([
-          ...(boardTemplate.edges ?? []).map((edge, edgeIndex) => ({
-            value: edge.typeId,
-            path: `${templatePath}.edges[${edgeIndex}].typeId`,
-          })),
-          ...(boardTemplate.vertices ?? []).map((vertex, vertexIndex) => ({
-            value: vertex.typeId,
-            path: `${templatePath}.vertices[${vertexIndex}].typeId`,
-          })),
-        ]),
-      );
-    }
-
-    issues.push(
-      ...collectKeyIssues(
-        (boardTemplate.spaces ?? []).flatMap((space, spaceIndex) => [
-          {
-            value: space.id,
-            path: `${templatePath}.spaces[${spaceIndex}].id`,
-          },
-          {
-            value: space.typeId,
-            path: `${templatePath}.spaces[${spaceIndex}].typeId`,
-          },
-        ]),
-      ),
-    );
-  }
-
   for (const [boardIndex, board] of (manifest.boards ?? []).entries()) {
     const boardPath = `manifest.boards[${boardIndex}]`;
     const runtimeBoardIds =
@@ -831,10 +659,6 @@ function collectBoardRecordKeyIssues(manifest: GameTopologyManifest): string[] {
       ...collectKeyIssues([
         { value: board.id, path: `${boardPath}.id` },
         { value: board.typeId, path: `${boardPath}.typeId` },
-        {
-          value: board.layout !== "hex" ? board.templateId : undefined,
-          path: `${boardPath}.templateId`,
-        },
         ...runtimeBoardIds.map((runtimeBoardId) => ({
           value: runtimeBoardId,
           path: `${boardPath}.runtimeBoardId`,
@@ -1080,18 +904,6 @@ export function validateManifestAuthoring(
       })),
       label: "zone id",
     }),
-  );
-  errors.push(
-    ...collectDuplicateIdIssues({
-      entries: (manifest.boardTemplates ?? []).map((boardTemplate, index) => ({
-        id: boardTemplate.id,
-        path: `manifest.boardTemplates[${index}].id`,
-      })),
-      label: "board template id",
-    }),
-  );
-  errors.push(
-    ...validateBoardTemplateDuplicates(manifest.boardTemplates ?? []),
   );
   errors.push(
     ...collectDuplicateIdIssues({

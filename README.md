@@ -13,7 +13,7 @@ pnpm check
 ```
 
 `pnpm check` is the authoritative browser-free gate. It formats-checks, lints,
-typechecks, checks generated reducer contracts, builds, validates package
+typechecks, builds, validates package
 exports, runs unit tests, and verifies both reference games. It is
 read-only from a clean checkout.
 
@@ -25,8 +25,6 @@ The daily command surface is deliberately small:
 | Run the browser-free gate            | `pnpm check`                                     |
 | Format or check formatting           | `pnpm format` / `pnpm format:check`              |
 | Lint, typecheck, or unit test        | `pnpm lint` / `pnpm typecheck` / `pnpm test`     |
-| Write reducer-contract output        | `pnpm generate`                                  |
-| Check reducer-contract drift         | `pnpm generate --check`                          |
 | Verify one or all reference games    | `pnpm reference [game-id]`                       |
 | Open Storybook                       | `pnpm ui storybook`                              |
 | Open the Workbench                   | `pnpm ui workbench [--scenario <id>] [--source]` |

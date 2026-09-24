@@ -1,7 +1,6 @@
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { generateReducerContract } from "../packages/reducer-contract/scripts/generate.ts";
 import { walkFiles } from "./lib/files.ts";
 import { rootDir } from "./lib/paths.ts";
 import { run } from "./lib/process.ts";
@@ -24,16 +23,7 @@ export function format(write: boolean): void {
 
 export function lint(): void {
   run("pnpm", ["exec", "turbo", "run", "lint"], { cwd: rootDir });
-  run(
-    "pnpm",
-    [
-      "exec",
-      "eslint",
-      "scripts/**/*.ts",
-      "packages/reducer-contract/scripts/**/*.ts",
-    ],
-    { cwd: rootDir },
-  );
+  run("pnpm", ["exec", "eslint", "scripts/**/*.ts"], { cwd: rootDir });
 }
 
 export function typecheck(): void {
@@ -57,13 +47,6 @@ export function build(): void {
   );
 }
 
-export function generate(write: boolean): void {
-  const result = generateReducerContract({ mode: write ? "write" : "check" });
-  console.log(
-    `${write ? "Generated" : "Checked"} reducer contract ${result.version} (${result.files.length} files).`,
-  );
-}
-
 function testWorkspacePackages(): void {
   run(
     "pnpm",
@@ -82,10 +65,7 @@ async function testRepositoryScripts(): Promise<void> {
   const scriptTests = (await walkFiles(path.join(rootDir, "scripts"))).filter(
     (filePath) => filePath.endsWith(".test.ts"),
   );
-  const generatorTests = (
-    await walkFiles(path.join(rootDir, "packages/reducer-contract/scripts"))
-  ).filter((filePath) => filePath.endsWith(".test.ts"));
-  const tests = [...scriptTests, ...generatorTests];
+  const tests = scriptTests;
   if (tests.length > 0) {
     run(process.execPath, ["--test", "--test-concurrency=1", ...tests], {
       cwd: rootDir,
@@ -107,7 +87,6 @@ export async function runCoreCheck(
   run("pnpm", ["--dir", "registry", "validate"], { cwd: rootDir });
   lint();
   typecheck();
-  generate(false);
   build();
   await assertPublicationBoundary();
   await assertSdkExportParity();

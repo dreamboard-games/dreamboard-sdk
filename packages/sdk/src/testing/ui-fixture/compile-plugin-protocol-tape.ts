@@ -1,7 +1,5 @@
-import {
-  materializePluginGameplayFrame,
-  type PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+import { materializePluginGameplayFrame } from "../../shared/protocol/projection.js";
+import { type PluginSessionDescriptor } from "../../shared/protocol/frame.js";
 import { digestUIFixtureTransportRequest } from "./canonical.js";
 import type { PluginProtocolTape, UIFixtureFrame } from "./schema.js";
 import type { UIFixtureProtocolStep } from "./schema.js";

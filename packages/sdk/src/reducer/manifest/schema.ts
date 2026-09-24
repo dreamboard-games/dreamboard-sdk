@@ -1,5 +1,8 @@
 import { z } from "zod";
-import type { ObjectSchema, PropertySchema } from "@dreamboard-games/sdk-types";
+import type {
+  ObjectSchema,
+  PropertySchema,
+} from "../../shared/domain/contracts.js";
 import type { ManifestIds } from "../model";
 
 import type { analyzeManifest } from "./materialize";
@@ -213,7 +216,6 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
     typeId: ids.boardTypeId.nullable().optional(),
     scope: z.enum(["shared", "perPlayer"]),
     playerId: ids.playerId.nullable().optional(),
-    templateId: z.string().nullable().optional(),
     fields: unknownRecordSchema,
     // T220: per-board state.spaces is loose-keyed by string. See the
     // codegen-template comment in renderGenericBoardStateSchema for

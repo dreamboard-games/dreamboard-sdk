@@ -1,8 +1,6 @@
 import { z } from "zod";
-import {
-  buildTypedRecord,
-  type GameTopologyManifest,
-} from "@dreamboard-games/sdk-types";
+import { buildTypedRecord } from "./generated-helpers.js";
+import { type GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { analyzeManifest, materializeManifestTable } from "./materialize";
 import { createTableSchema, type RuntimeManifestIds } from "./schema";
 import { asPlayerId } from "../per-player";

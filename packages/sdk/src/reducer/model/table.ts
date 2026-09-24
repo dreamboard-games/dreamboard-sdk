@@ -71,7 +71,6 @@ export type RuntimeBoardBaseState = {
   typeId?: string | null;
   scope: "shared" | "perPlayer";
   playerId?: string | null;
-  templateId?: string | null;
   fields: RuntimeRecord;
 };
 export type RuntimeGenericBoardState = RuntimeBoardBaseState & {

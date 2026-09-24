@@ -12,7 +12,6 @@ import {
   runtimePayloadSchema,
   safeParseOrThrow,
 } from "./runtime-codec";
-import { StaleContractArtifactError } from "../stale-contract-artifact-error";
 import type { TrustedRuntimeInput } from "../core/types";
 import {
   createIngressRuntimeCodec as createInputCodec,
@@ -390,7 +389,7 @@ describe("ingress runtime codec", () => {
     });
   });
 
-  test("stamps session state fingerprints and rejects mismatched stamped sessions", () => {
+  test("serializes without metadata and validates restored state against current schemas", () => {
     const definition = buildDefinition();
     const codec = createIngressRuntimeCodec(definition);
     const parsed = codec.parseState({
@@ -417,7 +416,7 @@ describe("ingress runtime codec", () => {
     });
     const encoded = codec.serializeState(parsed);
 
-    expect(encoded.meta?.contractFingerprint).toMatch(/^cfp1:[a-f0-9]{16}$/);
+    expect(encoded).not.toHaveProperty("meta");
     expect(codec.parseState(encoded).domain.phase).toEqual({ actionCount: 2 });
 
     const changedCodec = createIngressRuntimeCodec(
@@ -429,14 +428,7 @@ describe("ingress runtime codec", () => {
       }),
     );
 
-    expect(() => changedCodec.parseState(encoded)).toThrow(
-      StaleContractArtifactError,
-    );
-    const legacyEncoded = {
-      domain: encoded.domain,
-      runtime: encoded.runtime,
-    };
-    expect(changedCodec.parseState(legacyEncoded).domain.phase).toEqual({
+    expect(changedCodec.parseState(encoded).domain.phase).toEqual({
       actionCount: 2,
     });
   });

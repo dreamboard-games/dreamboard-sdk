@@ -16,8 +16,5 @@ export type {
   InteractionHandleStatus,
   InteractionParamsShape,
 } from "./hooks/useInteractionHandle.js";
-export type {
-  CardCollection,
-  ViewCard,
-  ViewSlotOccupant,
-} from "@dreamboard-games/sdk-types";
+export type { CardCollection, ViewCard } from "../shared/domain/cards.js";
+export type { ViewSlotOccupant } from "../shared/domain/slots.js";

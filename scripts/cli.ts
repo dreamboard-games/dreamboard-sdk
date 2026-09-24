@@ -1,16 +1,7 @@
 #!/usr/bin/env node
 
-import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
-import {
-  build,
-  format,
-  generate,
-  lint,
-  runCoreCheck,
-  test,
-  typecheck,
-} from "./check.ts";
+import { build, format, lint, runCoreCheck, test, typecheck } from "./check.ts";
 import { CommandError } from "./lib/process.ts";
 import { runReferenceCommand } from "./reference/index.ts";
 import { verifyRelease } from "./release.ts";
@@ -20,7 +11,6 @@ export const rootCommands = [
   "check",
   "format",
   "format:check",
-  "generate",
   "lint",
   "reference",
   "release:verify",
@@ -56,29 +46,6 @@ export function parseCli(argv: readonly string[]): ParsedCli {
 function requireNoArgs(command: RootCommand, args: readonly string[]): void {
   if (args.length > 0) {
     throw new CliUsageError(`${command} accepts no arguments.`);
-  }
-}
-
-function parseGenerateArgs(args: readonly string[]): { check: boolean } {
-  try {
-    const parsed = parseArgs({
-      args: [...args],
-      strict: true,
-      allowPositionals: false,
-      options: {
-        check: { type: "boolean", default: false },
-        help: { type: "boolean", short: "h", default: false },
-      },
-    });
-    if (parsed.values.help) {
-      process.stdout.write("Usage: pnpm generate [--check]\n");
-      return { check: false };
-    }
-    return { check: parsed.values.check ?? false };
-  } catch (error) {
-    throw new CliUsageError(
-      error instanceof Error ? error.message : String(error),
-    );
   }
 }
 
@@ -119,12 +86,6 @@ export async function runCli(argv: readonly string[]): Promise<void> {
       requireNoArgs(parsed.command, parsed.args);
       format(false);
       return;
-    case "generate": {
-      const options = parseGenerateArgs(parsed.args);
-      if (parsed.args.includes("--help") || parsed.args.includes("-h")) return;
-      generate(!options.check);
-      return;
-    }
     case "lint":
       requireNoArgs(parsed.command, parsed.args);
       lint();
@@ -168,7 +129,6 @@ Commands:
   check                         Run the browser-free clean-checkout gate
   format                        Format maintained files
   format:check                  Check formatting without writing
-  generate [--check]            Write or check reducer-contract output
   lint                          Run workspace lint checks
   reference [game-id]           Verify one or all packed reference games
   release:verify                Build the immutable release candidate

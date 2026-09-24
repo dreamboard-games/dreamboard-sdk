@@ -5,11 +5,8 @@ import type {
   BoardRelationSpec,
   BoardSpec,
   BoardSpaceSpec,
-  BoardTemplateSpec,
   BoardVertexRef,
-  GameTopologyManifest,
   GenericBoardSpec,
-  GenericBoardTemplateSpec,
   HexBoardSpec,
   HexEdgeRef,
   HexSpaceSpec,
@@ -20,12 +17,12 @@ import type {
   PieceSeedSpec,
   PropertySchema,
   SquareBoardSpec,
-  SquareBoardTemplateSpec,
   SquareEdgeSpec,
   SquareSpaceSpec,
   SquareVertexSpec,
   ZoneSpec,
-} from "@dreamboard-games/sdk-types";
+} from "../../shared/domain/contracts.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
 import { createHexBoardGeometry, resolveHexSpaces } from "./hex-board.js";
 
@@ -39,7 +36,6 @@ import { validateManifestAuthoring } from "./manifest-validation.js";
 interface AnalyzedGenericBoard {
   layout: "generic";
   board: GenericBoardSpec;
-  template?: GenericBoardTemplateSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
   boardFieldsSchema?: ObjectSchema | null;
@@ -94,7 +90,6 @@ interface AnalyzedHexBoard {
 interface AnalyzedSquareBoard {
   layout: "square";
   board: SquareBoardSpec;
-  template?: SquareBoardTemplateSpec;
   boardTypeId?: string | null;
   runtimeBoardIds: string[];
   boardFieldsSchema?: ObjectSchema | null;
@@ -162,7 +157,6 @@ interface ManifestAnalysis {
     id: string;
     slotIds: string[];
   }>;
-  boardTemplateIds: string[];
   boardBaseIds: string[];
   boardIds: string[];
   boardContainerIds: string[];
@@ -171,8 +165,6 @@ interface ManifestAnalysis {
   boardIdsByLayout: Map<string, string[]>;
   boardBaseIdsByLayout: Map<string, string[]>;
   boardIdsByBaseId: Map<string, string[]>;
-  boardBaseIdsByTemplateId: Map<string, string[]>;
-  boardTemplateLayoutById: Map<string, string>;
   boardIdsByTypeId: Map<string, string[]>;
   spaceIdsByBoardId: Map<string, string[]>;
   spaceTypeIdByBoardId: Map<string, Record<string, string | null>>;
@@ -279,18 +271,6 @@ function expandSeedIds(
     }
   }
   return expanded;
-}
-
-function isSquareBoardTemplateSpec(
-  boardTemplate: BoardTemplateSpec,
-): boardTemplate is SquareBoardTemplateSpec {
-  return boardTemplate.layout === "square";
-}
-
-function isGenericBoardTemplateSpec(
-  boardTemplate: BoardTemplateSpec,
-): boardTemplate is GenericBoardTemplateSpec {
-  return boardTemplate.layout === "generic";
 }
 
 function isHexBoardSpec(board: BoardSpec): board is HexBoardSpec {
@@ -449,34 +429,6 @@ function geometryKeyFromSquareVertexRef(
   return only;
 }
 
-function mergeBoardSpaces(
-  templateSpaces: readonly BoardSpaceSpec[],
-  boardSpaces: readonly BoardSpaceSpec[],
-): BoardSpaceSpec[] {
-  return Array.from(
-    [...templateSpaces, ...boardSpaces]
-      .reduce<Map<string, BoardSpaceSpec>>((accumulator, space) => {
-        accumulator.set(space.id, space);
-        return accumulator;
-      }, new Map<string, BoardSpaceSpec>())
-      .values(),
-  ).sort((left, right) => left.id.localeCompare(right.id));
-}
-
-function mergeBoardContainers(
-  templateContainers: readonly BoardContainerSpec[],
-  boardContainers: readonly BoardContainerSpec[],
-): BoardContainerSpec[] {
-  return Array.from(
-    [...templateContainers, ...boardContainers]
-      .reduce<Map<string, BoardContainerSpec>>((accumulator, container) => {
-        accumulator.set(container.id, container);
-        return accumulator;
-      }, new Map<string, BoardContainerSpec>())
-      .values(),
-  ).sort((left, right) => left.id.localeCompare(right.id));
-}
-
 function resolveAuthoredHexEdges(
   board: HexBoardSpec,
   geometry: ReturnType<typeof createHexBoardGeometry>,
@@ -502,59 +454,10 @@ function resolveAuthoredHexVertices(
   }));
 }
 
-function resolveSquareSpaces(
-  board: SquareBoardSpec,
-  template: SquareBoardTemplateSpec | undefined,
-): SquareSpaceSpec[] {
-  if (!template) {
-    return [...(board.spaces ?? [])].sort((left, right) =>
-      left.id.localeCompare(right.id),
-    );
-  }
-
-  const templateSpacesById = new Map(
-    (template.spaces ?? []).map((space) => [space.id, space] as const),
+function resolveSquareSpaces(board: SquareBoardSpec): SquareSpaceSpec[] {
+  return [...(board.spaces ?? [])].sort((left, right) =>
+    left.id.localeCompare(right.id),
   );
-  const overridesById = new Map(
-    (board.spaces ?? []).map((space) => [space.id, space] as const),
-  );
-  for (const overrideId of overridesById.keys()) {
-    if (!templateSpacesById.has(overrideId)) {
-      throw new Error(
-        `Square board '${board.id}' overrides unknown space '${overrideId}' from template '${template.id}'.`,
-      );
-    }
-  }
-
-  return (template.spaces ?? [])
-    .map((templateSpace) => {
-      const override = overridesById.get(templateSpace.id);
-      if (!override) {
-        return templateSpace;
-      }
-      const templateMatch = templateSpacesById.get(override.id);
-      if (!templateMatch) {
-        throw new Error(
-          `Square board '${board.id}' overrides unknown space '${override.id}' from template '${template.id}'.`,
-        );
-      }
-      if (
-        templateMatch.row !== override.row ||
-        templateMatch.col !== override.col
-      ) {
-        throw new Error(
-          `Square board '${board.id}' cannot change coordinates for space '${override.id}' from template '${template.id}'.`,
-        );
-      }
-      return {
-        ...templateSpace,
-        ...override,
-        id: templateSpace.id,
-        row: templateSpace.row,
-        col: templateSpace.col,
-      };
-    })
-    .sort((left, right) => left.id.localeCompare(right.id));
 }
 
 function deriveSquareEdges(
@@ -663,7 +566,6 @@ function indexSquareVertexMetadata(
 
 function resolveSquareEdges(
   board: SquareBoardSpec,
-  template: SquareBoardTemplateSpec | undefined,
   spaces: readonly SquareSpaceSpec[],
 ): ResolvedHexEdge[] {
   const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
@@ -671,43 +573,13 @@ function resolveSquareEdges(
   const edgesByGeometryKey = new Map(
     derived.map((edge) => [edge.geometryKey, edge] as const),
   );
-  const templateMetadata = template
-    ? indexSquareEdgeMetadata(
-        template.edges ?? [],
-        spacesById,
-        `Square board template '${template.id}'`,
-      )
-    : new Map();
-  const overrideMetadata = indexSquareEdgeMetadata(
+  const metadataByKey = indexSquareEdgeMetadata(
     board.edges ?? [],
     spacesById,
     `Square board '${board.id}'`,
   );
 
-  if (template) {
-    for (const overrideKey of overrideMetadata.keys()) {
-      if (!templateMetadata.has(overrideKey)) {
-        throw new Error(
-          `Square board '${board.id}' overrides unknown edge ref from template '${template.id}'.`,
-        );
-      }
-    }
-  }
-
-  const mergedMetadata = template
-    ? new Map(
-        [...templateMetadata.entries()].map(([key, metadata]) => [
-          key,
-          {
-            ...metadata,
-            ...(overrideMetadata.get(key) ?? {}),
-            geometryKey: key,
-          },
-        ]),
-      )
-    : overrideMetadata;
-
-  for (const [geometryKey, metadata] of mergedMetadata.entries()) {
+  for (const [geometryKey, metadata] of metadataByKey.entries()) {
     const edge = edgesByGeometryKey.get(geometryKey);
     if (!edge) {
       throw new Error(
@@ -729,7 +601,6 @@ function resolveSquareEdges(
 
 function resolveSquareVertices(
   board: SquareBoardSpec,
-  template: SquareBoardTemplateSpec | undefined,
   spaces: readonly SquareSpaceSpec[],
 ): ResolvedHexVertex[] {
   const spacesById = new Map(spaces.map((space) => [space.id, space] as const));
@@ -737,43 +608,13 @@ function resolveSquareVertices(
   const verticesByGeometryKey = new Map(
     derived.map((vertex) => [vertex.geometryKey, vertex] as const),
   );
-  const templateMetadata = template
-    ? indexSquareVertexMetadata(
-        template.vertices ?? [],
-        spacesById,
-        `Square board template '${template.id}'`,
-      )
-    : new Map();
-  const overrideMetadata = indexSquareVertexMetadata(
+  const metadataByKey = indexSquareVertexMetadata(
     board.vertices ?? [],
     spacesById,
     `Square board '${board.id}'`,
   );
 
-  if (template) {
-    for (const overrideKey of overrideMetadata.keys()) {
-      if (!templateMetadata.has(overrideKey)) {
-        throw new Error(
-          `Square board '${board.id}' overrides unknown vertex ref from template '${template.id}'.`,
-        );
-      }
-    }
-  }
-
-  const mergedMetadata = template
-    ? new Map(
-        [...templateMetadata.entries()].map(([key, metadata]) => [
-          key,
-          {
-            ...metadata,
-            ...(overrideMetadata.get(key) ?? {}),
-            geometryKey: key,
-          },
-        ]),
-      )
-    : overrideMetadata;
-
-  for (const [geometryKey, metadata] of mergedMetadata.entries()) {
+  for (const [geometryKey, metadata] of metadataByKey.entries()) {
     const vertex = verticesByGeometryKey.get(geometryKey);
     if (!vertex) {
       throw new Error(
@@ -794,18 +635,6 @@ function resolveSquareVertices(
 }
 
 function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
-  const boardTemplates = manifest.boardTemplates ?? [];
-  const genericTemplateById = new Map(
-    boardTemplates
-      .filter(isGenericBoardTemplateSpec)
-      .map((boardTemplate) => [boardTemplate.id, boardTemplate] as const),
-  );
-  const squareTemplateById = new Map(
-    boardTemplates
-      .filter(isSquareBoardTemplateSpec)
-      .map((boardTemplate) => [boardTemplate.id, boardTemplate] as const),
-  );
-
   return (manifest.boards ?? []).map((board): AnalyzedBoard => {
     const runtimeBoardIds =
       board.scope === "perPlayer"
@@ -842,71 +671,46 @@ function analyzeBoards(manifest: GameTopologyManifest, playerIds: string[]) {
 
     if (isSquareBoardSpec(board)) {
       const squareBoard = board;
-      const template = board.templateId
-        ? squareTemplateById.get(board.templateId)
-        : undefined;
-      const spaces = resolveSquareSpaces(squareBoard, template);
+      const spaces = resolveSquareSpaces(squareBoard);
       return {
         layout: "square",
         board: squareBoard,
-        template,
-        boardTypeId: squareBoard.typeId ?? template?.typeId,
+
+        boardTypeId: squareBoard.typeId,
         runtimeBoardIds,
-        boardFieldsSchema:
-          squareBoard.boardFieldsSchema ?? template?.boardFieldsSchema,
-        spaceFieldsSchema:
-          squareBoard.spaceFieldsSchema ?? template?.spaceFieldsSchema,
-        relationFieldsSchema:
-          squareBoard.relationFieldsSchema ?? template?.relationFieldsSchema,
-        containerFieldsSchema:
-          squareBoard.containerFieldsSchema ?? template?.containerFieldsSchema,
-        edgeFieldsSchema:
-          squareBoard.edgeFieldsSchema ?? template?.edgeFieldsSchema,
-        vertexFieldsSchema:
-          squareBoard.vertexFieldsSchema ?? template?.vertexFieldsSchema,
+        boardFieldsSchema: squareBoard.boardFieldsSchema,
+        spaceFieldsSchema: squareBoard.spaceFieldsSchema,
+        relationFieldsSchema: squareBoard.relationFieldsSchema,
+        containerFieldsSchema: squareBoard.containerFieldsSchema,
+        edgeFieldsSchema: squareBoard.edgeFieldsSchema,
+        vertexFieldsSchema: squareBoard.vertexFieldsSchema,
         spaces,
-        relations: [
-          ...(template?.relations ?? []),
-          ...(squareBoard.relations ?? []),
-        ],
-        containers: mergeBoardContainers(
-          template?.containers ?? [],
-          squareBoard.containers ?? [],
+        relations: [...(squareBoard.relations ?? [])],
+        containers: [...(squareBoard.containers ?? [])].sort((left, right) =>
+          left.id.localeCompare(right.id),
         ),
-        edges: resolveSquareEdges(squareBoard, template, spaces),
-        vertices: resolveSquareVertices(squareBoard, template, spaces),
+        edges: resolveSquareEdges(squareBoard, spaces),
+        vertices: resolveSquareVertices(squareBoard, spaces),
       };
     }
 
     const genericBoard = board;
-    const template = board.templateId
-      ? genericTemplateById.get(board.templateId)
-      : undefined;
     return {
       layout: "generic",
       board: genericBoard,
-      template,
-      boardTypeId: genericBoard.typeId ?? template?.typeId,
+
+      boardTypeId: genericBoard.typeId,
       runtimeBoardIds,
-      boardFieldsSchema:
-        genericBoard.boardFieldsSchema ?? template?.boardFieldsSchema,
-      spaceFieldsSchema:
-        genericBoard.spaceFieldsSchema ?? template?.spaceFieldsSchema,
-      relationFieldsSchema:
-        genericBoard.relationFieldsSchema ?? template?.relationFieldsSchema,
-      containerFieldsSchema:
-        genericBoard.containerFieldsSchema ?? template?.containerFieldsSchema,
-      spaces: mergeBoardSpaces(
-        template?.spaces ?? [],
-        genericBoard.spaces ?? [],
+      boardFieldsSchema: genericBoard.boardFieldsSchema,
+      spaceFieldsSchema: genericBoard.spaceFieldsSchema,
+      relationFieldsSchema: genericBoard.relationFieldsSchema,
+      containerFieldsSchema: genericBoard.containerFieldsSchema,
+      spaces: [...(genericBoard.spaces ?? [])].sort((left, right) =>
+        left.id.localeCompare(right.id),
       ),
-      relations: [
-        ...(template?.relations ?? []),
-        ...(genericBoard.relations ?? []),
-      ],
-      containers: mergeBoardContainers(
-        template?.containers ?? [],
-        genericBoard.containers ?? [],
+      relations: [...(genericBoard.relations ?? [])],
+      containers: [...(genericBoard.containers ?? [])].sort((left, right) =>
+        left.id.localeCompare(right.id),
       ),
     };
   });
@@ -1119,9 +923,6 @@ export function analyzeManifest(
       left.kind.localeCompare(right.kind) || left.id.localeCompare(right.id),
   );
   const analyzedBoards = analyzeBoards(manifest, playerIds);
-  const boardTemplateIds = dedupeSorted(
-    (manifest.boardTemplates ?? []).map((boardTemplate) => boardTemplate.id),
-  );
   const boardBaseIds = dedupeSorted(
     analyzedBoards.map(({ board }) => board.id),
   );
@@ -1137,8 +938,6 @@ export function analyzeManifest(
   const boardIdsByLayout = new Map<string, string[]>();
   const boardBaseIdsByLayout = new Map<string, string[]>();
   const boardIdsByBaseId = new Map<string, string[]>();
-  const boardBaseIdsByTemplateId = new Map<string, string[]>();
-  const boardTemplateLayoutById = new Map<string, string>();
   const boardIdsByTypeId = new Map<string, string[]>();
   const spaceIdsByBoardId = new Map<string, string[]>();
   const spaceTypeIdByBoardId = new Map<string, Record<string, string | null>>();
@@ -1156,13 +955,6 @@ export function analyzeManifest(
     string,
     Record<string, string[]>
   >();
-  for (const boardTemplate of manifest.boardTemplates ?? []) {
-    boardTemplateLayoutById.set(boardTemplate.id, boardTemplate.layout);
-    boardBaseIdsByLayout.set(
-      boardTemplate.layout,
-      dedupeSorted([...(boardBaseIdsByLayout.get(boardTemplate.layout) ?? [])]),
-    );
-  }
   for (const analyzedBoard of analyzedBoards) {
     boardIdsByBaseId.set(analyzedBoard.board.id, analyzedBoard.runtimeBoardIds);
     boardIdsByLayout.set(
@@ -1179,19 +971,6 @@ export function analyzeManifest(
         analyzedBoard.board.id,
       ]),
     );
-    if (
-      analyzedBoard.board.layout !== "hex" &&
-      analyzedBoard.board.templateId
-    ) {
-      boardBaseIdsByTemplateId.set(
-        analyzedBoard.board.templateId,
-        dedupeSorted([
-          ...(boardBaseIdsByTemplateId.get(analyzedBoard.board.templateId) ??
-            []),
-          analyzedBoard.board.id,
-        ]),
-      );
-    }
     const runtimeSpaceIds = analyzedBoard.spaces.map((space) => space.id);
     const runtimeSpaceTypeIds: Record<string, string | null> = sortedObject(
       analyzedBoard.spaces.map(
@@ -1357,7 +1136,6 @@ export function analyzeManifest(
     dieIds,
     dieTypeIdByDieId,
     strictSlotHosts,
-    boardTemplateIds,
     boardBaseIds,
     boardIds,
     boardContainerIds,
@@ -1366,8 +1144,6 @@ export function analyzeManifest(
     boardIdsByLayout,
     boardBaseIdsByLayout,
     boardIdsByBaseId,
-    boardBaseIdsByTemplateId,
-    boardTemplateLayoutById,
     boardIdsByTypeId,
     spaceIdsByBoardId,
     spaceTypeIdByBoardId,
@@ -2011,10 +1787,6 @@ export function materializeManifestTable(options: {
       layout: analyzedBoard.layout,
       typeId: analyzedBoard.boardTypeId ?? null,
       scope: analyzedBoard.board.scope,
-      templateId:
-        analyzedBoard.board.layout === "hex"
-          ? null
-          : (analyzedBoard.board.templateId ?? null),
       fields: {
         ...materializeObjectSchemaDefaults(
           analyzedBoard.boardFieldsSchema,

@@ -6,7 +6,7 @@ import {
   type PluginToHostPayload,
   type SubmitInteractionCommand,
   type CancelInteractionCommand,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/protocol.js";
 import type { PluginTransport } from "../../runtime/core/types.js";
 import { digestUIFixtureTransportRequest } from "./canonical.js";
 

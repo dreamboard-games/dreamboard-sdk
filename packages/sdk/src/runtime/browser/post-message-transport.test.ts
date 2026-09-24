@@ -4,7 +4,7 @@ import {
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
   type HostToPluginEnvelope,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/protocol.js";
 import { createPostMessagePluginTransport } from "./post-message-transport.js";
 
 const CHANNEL_ID = "channel-id";

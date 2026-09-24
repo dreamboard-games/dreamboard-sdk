@@ -1,5 +1,5 @@
 import { test, expect } from "vitest";
-import type { GameTopologyManifest } from "@dreamboard-games/sdk-types";
+import type { GameTopologyManifest } from "../shared/domain/manifest.js";
 
 test("materializeManifestTable rejects player-scoped seed homes without ownerId", async () => {
   const { materializeManifestTable } = await import("./manifest/materialize");
@@ -18,7 +18,7 @@ test("materializeManifestTable rejects player-scoped seed homes without ownerId"
         scope: "perPlayer",
       },
     ],
-    boardTemplates: [],
+
     boards: [
       {
         id: "player-mat",

@@ -1,12 +1,14 @@
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
+import { HostToPluginEnvelopeSchema } from "../../shared/protocol/schema.js";
 import {
-  HostToPluginEnvelopeSchema,
-  RuntimeJsonSchema,
   type GameplayBasis,
-  type HostToPluginEnvelope,
-  type InteractionResult,
   type PluginGameplayFrame,
   type PluginSessionDescriptor,
-} from "@dreamboard-games/plugin-runtime-contract";
+} from "../../shared/protocol/frame.js";
+import {
+  type HostToPluginEnvelope,
+  type InteractionResult,
+} from "../../shared/protocol/protocol.js";
 import type {
   PluginRuntimeClient,
   PluginRuntimeClientOptions,
