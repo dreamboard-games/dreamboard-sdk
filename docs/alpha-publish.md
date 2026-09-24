@@ -24,7 +24,7 @@ git status --short
 ```
 
 `pnpm release:verify` runs the browser-free core checks, packs the SDK once,
-validates and smoke-installs that exact tarball, then verifies all nine
+validates and smoke-installs that exact tarball, then verifies both
 reference games against it. UI browser proof is intentionally separate.
 
 The release candidate directory contains exactly one tarball and
@@ -77,13 +77,13 @@ After publication:
 SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
 npm view "@dreamboard-games/sdk@$SDK_VERSION" version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
 npm view @dreamboard-games/sdk dist-tags --json --registry=https://registry.npmjs.org/
-pnpm reference pin "$SDK_VERSION"
 pnpm reference
 ```
 
-Commit the nine updated game manifests and lockfiles. If rollback is necessary,
-move the npm tag to a known-good published version; do not delete a published
-version.
+The reference games use the workspace SDK during development; `pnpm reference`
+checks temporary installed copies against the packed SDK. Repin downstream
+consumers separately to the published version. If rollback is necessary, move
+the npm tag to a known-good published version; do not delete a published version.
 
 ## Trusted Publishing setup
 

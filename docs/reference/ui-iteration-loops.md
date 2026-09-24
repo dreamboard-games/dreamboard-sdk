@@ -67,7 +67,7 @@ The default smoke scenarios are:
 
 - `hearts.dealt-hand.desktop`, covering multi-select, draft mutation, and
   submission;
-- `roll-and-write-scorecard.mark-cell.mobile`, covering mobile activation.
+- `hearts.final-outcome.mobile`, covering the mobile final-outcome projection.
 
 Scenario selection is intentionally direct. Add a scenario id only when you
 want that exact focused proof; use `--all` for the complete authored set.

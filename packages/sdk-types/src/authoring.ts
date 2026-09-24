@@ -1108,20 +1108,27 @@ type TypedBoardLikeEntry<
         >
       : Entry;
 
+type AuthoredCardType<Card> = Card extends {
+  cardType: infer Category extends string;
+}
+  ? Category
+  : Card extends { type: infer Type extends string }
+    ? Type
+    : never;
 type TypedCard<
   Card,
   Manifest extends GameTopologyManifest,
   CardSchema,
-> = Card extends { type: infer CardType extends string }
+> = Card extends { type: string }
   ? Omit<TypedVisibility<Card, Manifest>, "home" | "properties"> & {
       home?: TypedComponentHomeSpec<Manifest>;
       properties: CardSchema extends {
         variants: infer Variants extends Record<string, unknown>;
         shared?: infer Shared;
       }
-        ? CardType extends keyof Variants
+        ? AuthoredCardType<Card> extends keyof Variants
           ? SchemaValueForObjectSchema<
-              MergeSharedProperties<Variants[CardType], Shared>,
+              MergeSharedProperties<Variants[AuthoredCardType<Card>], Shared>,
               Manifest
             >
           : never

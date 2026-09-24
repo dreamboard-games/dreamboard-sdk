@@ -181,7 +181,7 @@ export function compileManifest<const M extends AuthoredManifest>(
     ids,
     defaults,
     records: Object.fromEntries(
-      [...families, "playerId"].map((family) => [
+      families.map((family) => [
         `${family}s`,
         <V>(initial: V | ((id: string) => V)) =>
           buildTypedRecord(

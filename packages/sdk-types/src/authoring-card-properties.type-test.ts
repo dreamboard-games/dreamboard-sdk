@@ -153,7 +153,7 @@ defineTopologyManifest({
               coins: { type: "integer" },
             },
           },
-          estate: {
+          "ranked-card": {
             properties: {
               vp: { type: "integer" },
             },
@@ -169,6 +169,7 @@ defineTopologyManifest({
         },
         {
           type: "estate",
+          cardType: "ranked-card",
           name: "Estate",
           count: 24,
           properties: { vp: 1, cost: 2 },
