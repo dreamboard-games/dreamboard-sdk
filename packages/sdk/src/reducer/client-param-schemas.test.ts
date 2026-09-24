@@ -1,20 +1,19 @@
+import { cardInput, cardTarget } from "./internal";
 import { defineGameDefinition as defineGame } from "./authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  defineCardAction,
-  defineGameContract,
   defineInteraction,
+  defineGameContract,
   definePhase,
   formInput,
   many,
   rngInput,
 } from "../reducer/internal";
-import type { RuntimeTableRecord } from "../reducer/advanced";
+import { RuntimeTableRecord } from "../reducer/advanced";
 import { createManifestStringLiteralSchema } from "./model";
 import { perPlayer } from "./per-player";
 import { createClientParamSchemasByPhase } from "./client-param-schemas";
-
 function createContract() {
   const playerIds = ["player-1"] as const;
   const phaseNames = ["setup", "play"] as const;
@@ -122,7 +121,6 @@ function createContract() {
     },
   });
 }
-
 describe("createClientParamSchemasByPhase", () => {
   test("derives schemas from registry-materialized authored interactions", () => {
     const contract = createContract();
@@ -177,12 +175,24 @@ describe("createClientParamSchemasByPhase", () => {
               paramsSchema: explicitSchema,
               reduce: ({ state, accept }) => accept(state),
             }),
-          },
-          cardActions: {
-            playCard: defineCardAction<typeof contract, typeof phaseState>()({
-              cardType: "play-card",
-              playFrom: "hand",
+            playCard: defineInteraction<typeof contract, typeof phaseState>()({
               inputs: {
+                cardId: cardInput({
+                  target: cardTarget
+                    .zones<
+                      {
+                        table: RuntimeTableRecord;
+                      },
+                      string
+                    >(["hand"])
+                    .where({
+                      id: "card-type",
+                      errorCode: "CARD_TYPE_NOT_ALLOWED",
+                      test: ({ state, targetId }) =>
+                        state.table.cards[targetId]?.type === "play-card",
+                    })
+                    .build(),
+                }),
                 target: formInput.choice({
                   choices: [{ value: "zone-1", label: "Zone 1" }],
                   defaultValue: "zone-1",
@@ -211,9 +221,7 @@ describe("createClientParamSchemasByPhase", () => {
         }),
       },
     });
-
     const schemas = createClientParamSchemasByPhase(game);
-
     expect(
       schemas.setup?.choose?.safeParse({ count: 1, labels: ["a", "b"] })
         .success,

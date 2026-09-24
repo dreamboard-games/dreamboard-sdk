@@ -17,29 +17,6 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
     },
 
-    "EffectId": {
-      "description": "Locally-unique id scoped to a single accept payload. The SDK mints these; the host uses them as keys into the continuations map.",
-      "type": "string",
-      "minLength": 1
-    },
-
-    "ContinuationToken": {
-      "description": "Opaque handle the host passes back to the bundle when the effect resolves.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "data": { "$ref": "#/$defs/JsonValue" }
-      },
-      "required": ["id", "data"],
-      "additionalProperties": false
-    },
-
-    "ContinuationMap": {
-      "description": "Sparse map keyed by EffectId. Presence = effect has a continuation; absence = fire-and-forget.",
-      "type": "object",
-      "additionalProperties": { "$ref": "#/$defs/ContinuationToken" }
-    },
-
     "JsonValue": {
       "description": "Any JSON-compatible value. Deliberately permissive; callers enforce payload shapes elsewhere.",
       "anyOf": [
@@ -293,61 +270,6 @@
       "additionalProperties": false
     },
 
-    "Effect": {
-      "description": "A thing the host should do. Every variant has effectId + type and carries NO continuation field. Continuations are expressed via the sibling ContinuationMap keyed by effectId.",
-      "oneOf": [
-        { "$ref": "#/$defs/EffectTransition" },
-        { "$ref": "#/$defs/EffectRollDie" },
-        { "$ref": "#/$defs/EffectShuffleSharedZone" },
-        { "$ref": "#/$defs/EffectShufflePlayerZone" }
-      ]
-    },
-
-    "EffectTransition": {
-      "type": "object",
-      "properties": {
-        "effectId": { "$ref": "#/$defs/EffectId" },
-        "type": { "const": "transition" },
-        "to": { "type": "string", "minLength": 1 }
-      },
-      "required": ["effectId", "type", "to"],
-      "additionalProperties": false
-    },
-
-    "EffectRollDie": {
-      "type": "object",
-      "properties": {
-        "effectId": { "$ref": "#/$defs/EffectId" },
-        "type": { "const": "rollDie" },
-        "dieId": { "type": "string", "minLength": 1 }
-      },
-      "required": ["effectId", "type", "dieId"],
-      "additionalProperties": false
-    },
-
-    "EffectShuffleSharedZone": {
-      "type": "object",
-      "properties": {
-        "effectId": { "$ref": "#/$defs/EffectId" },
-        "type": { "const": "shuffleSharedZone" },
-        "zoneId": { "type": "string", "minLength": 1 }
-      },
-      "required": ["effectId", "type", "zoneId"],
-      "additionalProperties": false
-    },
-
-    "EffectShufflePlayerZone": {
-      "type": "object",
-      "properties": {
-        "effectId": { "$ref": "#/$defs/EffectId" },
-        "type": { "const": "shufflePlayerZone" },
-        "zoneId": { "type": "string", "minLength": 1 },
-        "playerId": { "type": "string", "minLength": 1 }
-      },
-      "required": ["effectId", "type", "zoneId", "playerId"],
-      "additionalProperties": false
-    },
-
     "ReducerInputValidationResult": {
       "type": "object",
       "properties": {
@@ -442,10 +364,14 @@
     },
 
     "ReduceResult": {
-      "description": "Pure reduce output (no host side-effects yet). Discriminator is `kind`.",
+      "description": "Accepted state after direct reduction and automatic phase entries, or rejection.",
       "oneOf": [
-        { "$ref": "#/$defs/ReduceResultReject" },
-        { "$ref": "#/$defs/ReduceResultAccept" }
+        {
+          "$ref": "#/$defs/ReduceResultReject"
+        },
+        {
+          "$ref": "#/$defs/ReduceResultAccept"
+        }
       ]
     },
 
@@ -463,30 +389,39 @@
     "ReduceResultAccept": {
       "type": "object",
       "properties": {
-        "kind": { "const": "accept" },
-        "state": { "$ref": "#/$defs/ReducerSessionState" },
-        "terminal": { "$ref": "#/$defs/GameOutcome" },
-        "effects": {
-          "type": "array",
-          "items": { "$ref": "#/$defs/Effect" }
+        "kind": {
+          "const": "accept"
         },
-        "continuations": { "$ref": "#/$defs/ContinuationMap" },
+        "state": {
+          "$ref": "#/$defs/ReducerSessionState"
+        },
+        "terminal": {
+          "$ref": "#/$defs/GameOutcome"
+        },
         "events": {
           "type": "array",
           "maxItems": 32,
-          "items": { "$ref": "#/$defs/GameEvent" }
+          "items": {
+            "$ref": "#/$defs/GameEvent"
+          }
         }
       },
-      "required": ["kind", "state", "effects", "continuations", "events"],
+      "required": ["kind", "state", "events"],
       "additionalProperties": false
     },
 
     "DispatchTrace": {
-      "description": "Per-step trace emitted by the host as it applies effects. Parallel in shape to ReducerRuntimeLogEntry but without the version field.",
+      "description": "Execution trace with explicit phase entry boundaries and deterministic RNG consumption.",
       "oneOf": [
-        { "$ref": "#/$defs/DispatchTraceAcceptedClientInput" },
-        { "$ref": "#/$defs/DispatchTraceAppliedEffect" },
-        { "$ref": "#/$defs/DispatchTraceRngConsumption" }
+        {
+          "$ref": "#/$defs/DispatchTraceAcceptedClientInput"
+        },
+        {
+          "$ref": "#/$defs/DispatchTracePhaseEntered"
+        },
+        {
+          "$ref": "#/$defs/DispatchTraceRngConsumption"
+        }
       ]
     },
 
@@ -497,18 +432,6 @@
         "input": { "$ref": "#/$defs/GameInput" }
       },
       "required": ["kind", "input"],
-      "additionalProperties": false
-    },
-
-    "DispatchTraceAppliedEffect": {
-      "description": "Applied effect trace. The continuation is inlined here so each trace entry is self-contained; the host emits the token it pulled from the sibling ContinuationMap at accept time.",
-      "type": "object",
-      "properties": {
-        "kind": { "const": "appliedEffect" },
-        "effect": { "$ref": "#/$defs/Effect" },
-        "continuation": { "$ref": "#/$defs/ContinuationToken" }
-      },
-      "required": ["kind", "effect"],
       "additionalProperties": false
     },
 
@@ -698,12 +621,20 @@
     },
 
     "ReducerRuntimeLogEntry": {
-      "description": "Persisted reducer runtime log entry. Parallel to dispatch trace, with a committed version and state snapshots for recovery.",
+      "description": "Execution trace with explicit phase entry boundaries and deterministic RNG consumption.",
       "oneOf": [
-        { "$ref": "#/$defs/ReducerRuntimeLogEntryAcceptedClientInput" },
-        { "$ref": "#/$defs/ReducerRuntimeLogEntryAppliedEffect" },
-        { "$ref": "#/$defs/ReducerRuntimeLogEntryRngConsumption" },
-        { "$ref": "#/$defs/ReducerRuntimeLogEntryStateCommit" }
+        {
+          "$ref": "#/$defs/ReducerRuntimeLogEntryAcceptedClientInput"
+        },
+        {
+          "$ref": "#/$defs/ReducerRuntimeLogEntryPhaseEntered"
+        },
+        {
+          "$ref": "#/$defs/ReducerRuntimeLogEntryRngConsumption"
+        },
+        {
+          "$ref": "#/$defs/ReducerRuntimeLogEntryStateCommit"
+        }
       ]
     },
 
@@ -715,20 +646,6 @@
         "input": { "$ref": "#/$defs/GameInput" }
       },
       "required": ["kind", "version", "input"],
-      "additionalProperties": false
-    },
-
-    "ReducerRuntimeLogEntryAppliedEffect": {
-      "type": "object",
-      "properties": {
-        "kind": { "const": "appliedEffect" },
-        "version": { "type": "integer" },
-        "effect": { "$ref": "#/$defs/Effect" },
-        "continuation": {
-          "anyOf": [{ "$ref": "#/$defs/ContinuationToken" }, { "type": "null" }]
-        }
-      },
-      "required": ["kind", "version", "effect", "continuation"],
       "additionalProperties": false
     },
 
@@ -924,6 +841,7 @@
       "required": ["view", "hash", "manifestVersion"],
       "additionalProperties": false
     },
+
     "SetupGuidanceStep": {
       "type": "object",
       "properties": {
@@ -942,6 +860,7 @@
       "required": ["id", "label"],
       "additionalProperties": false
     },
+
     "GameGuidanceProjection": {
       "type": "object",
       "properties": {
@@ -992,6 +911,43 @@
         }
       },
       "required": ["phase"],
+      "additionalProperties": false
+    },
+
+    "DispatchTracePhaseEntered": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "phaseEntered"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": ["kind", "from", "to"],
+      "additionalProperties": false
+    },
+
+    "ReducerRuntimeLogEntryPhaseEntered": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "phaseEntered"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer"
+        }
+      },
+      "required": ["kind", "from", "to", "version"],
       "additionalProperties": false
     }
   }

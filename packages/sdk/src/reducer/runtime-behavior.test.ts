@@ -1,3 +1,4 @@
+import { createTable } from "./lifecycle-test-fixtures";
 import { Zod as ReducerWireZod } from "@dreamboard-games/reducer-contract";
 import {
   canonicalizePluginRuntimeJson,
@@ -11,14 +12,11 @@ import {
   createReducerBundle,
   defineDerived,
   defineEmptyView,
-  defineEffect,
   defineGameContract,
   defineInteraction,
   definePlayerView,
   definePhase,
-  definePhaseStage,
   defineSharedView,
-  defineStepPhase,
   gameEvent,
   rngInput,
 } from "../reducer/internal";
@@ -26,49 +24,11 @@ import {
   type InputCollector,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import { asPlayerId, perPlayer } from "../reducer/per-player";
+import { perPlayer } from "../reducer/per-player";
 import {
   getCloneRuntimeTableCallCount,
   resetCloneRuntimeTableCallCount,
 } from "./table/clone";
-
-function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
-  const ids = playerIds.map((id) => asPlayerId(id));
-  return {
-    playerOrder: [...playerIds],
-    zones: {
-      shared: {},
-      perPlayer: {},
-      visibility: {},
-    },
-    decks: {},
-    hands: {},
-    handVisibility: {},
-    cards: {},
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: perPlayer(ids, () => ({})),
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
-    },
-    dice: {
-      "die-1": {
-        id: "die-1",
-        dieTypeId: "d6",
-        dieName: "Test die",
-        sides: 6,
-        value: null,
-        properties: {},
-      },
-    },
-  };
-}
 
 function createManifestContract() {
   const phaseNames = ["takeTurn"] as const;
@@ -176,8 +136,138 @@ function expectProjectionTiming(timing: {
   }
 }
 
-describe("runtime-owned reducer effects", () => {
-  test.each(["phase", "stage", "continuation", "dispatch"] as const)(
+describe("direct reducer lifecycle and seeded operations", () => {
+  test("accepted mixed random helpers and transaction operations publish one contiguous RNG stream through entry", async () => {
+    const contract = defineGameContract({
+      manifest: createManifestContract(),
+      phases: { takeTurn: z.object({}) },
+      state: {
+        public: z.object({
+          values: z.array(z.number()),
+          finished: z.boolean(),
+        }),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+    });
+    const game = defineGame({
+      contract,
+      initial: {
+        public: () => ({ values: [], finished: false }),
+        private: () => ({}),
+        hidden: () => ({}),
+      },
+      initialPhase: "takeTurn",
+      phases: {
+        takeTurn: definePhase<typeof contract>()({
+          kind: "player",
+          state: z.object({}),
+          initialState: () => ({}),
+          enter({ tx }) {
+            if (tx.state.publicState.finished)
+              tx.patchPublicState({
+                values: [...tx.state.publicState.values, tx.roll("die-1")],
+              });
+          },
+          interactions: {
+            mix: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce({ tx, random }) {
+                const first = random.integer({
+                  minInclusive: 10,
+                  maxInclusive: 20,
+                });
+                const second = tx.roll("die-1");
+                const selected = random.subset({
+                  from: [1, 2, 3] as const,
+                  count: 2,
+                });
+                tx.shuffle({ zoneId: "draw" });
+                tx.patchPublicState({
+                  values: [first, second, ...selected],
+                  finished: true,
+                });
+                return tx.transition("takeTurn");
+              },
+            }),
+          },
+        }),
+      },
+    });
+    const makeTable = () => {
+      const table = createTable();
+      const ids = ["a", "b", "c"];
+      table.decks.draw = [...ids];
+      table.zones.shared.draw = [...ids];
+      for (const [position, id] of ids.entries()) {
+        table.cards[id] = {
+          id,
+          cardSetId: "main",
+          cardType: "card",
+          properties: {},
+        };
+        table.componentLocations[id] = {
+          type: "InDeck",
+          deckId: "draw",
+          position,
+          playedBy: null,
+        };
+        table.ownerOfCard[id] = null;
+      }
+      return table;
+    };
+    const bundle = createReducerTestingBundle(game);
+    const initial = await bundle.initialize({
+      table: makeTable(),
+      playerIds: ["player-1", "player-2"],
+      rngSeed: 42,
+    });
+    const before = structuredClone(initial);
+    const input = {
+      kind: "interaction" as const,
+      playerId: "player-1",
+      interactionId: "mix",
+      params: {},
+    };
+    const accepted = await bundle.dispatch({ state: initial, input });
+    const freshBundle = createReducerTestingBundle(game);
+    const fresh = await freshBundle.initialize({
+      table: makeTable(),
+      playerIds: ["player-1", "player-2"],
+      rngSeed: 42,
+    });
+    expect(accepted).toEqual(
+      await freshBundle.dispatch({ state: fresh, input }),
+    );
+    if (accepted.kind !== "accept")
+      throw new Error("Expected mixed operations to accept");
+    expect(initial).toEqual(before);
+    expect(accepted.state.runtime.rng.draws?.map((draw) => draw.index)).toEqual(
+      [0, 1, 2, 3, 4, 5, 6],
+    );
+    expect(accepted.state.runtime.rng.cursor).toBe(7);
+    expect(
+      accepted.trace
+        .filter((entry) => entry.kind === "rngConsumption")
+        .map((entry) => [entry.drawIndex, entry.operation]),
+    ).toEqual([
+      [0, "random.integer"],
+      [1, "rollDie"],
+      [2, "randomSubset"],
+      [3, "randomSubset"],
+      [4, "shuffleSharedZone"],
+      [5, "shuffleSharedZone"],
+      [6, "rollDie"],
+    ]);
+    expect(accepted.trace.at(-2)).toEqual({
+      kind: "phaseEntered",
+      from: "takeTurn",
+      to: "takeTurn",
+    });
+    expect(accepted.state.domain.publicState.values).toHaveLength(5);
+  });
+
+  test.each(["phase", "roll", "dispatch"] as const)(
     "initialize preserves %s terminal outcomes and events",
     async (mode) => {
       const contract = defineGameContract({
@@ -204,14 +294,6 @@ describe("runtime-owned reducer effects", () => {
         procedureId: "completed",
         title: "Completed initialization",
       });
-      const completeAfterRoll = defineEffect<typeof contract>()({
-        type: "rollDie",
-        id: "completeAfterRoll",
-        context: z.object({}),
-        reduce({ state, endGame }) {
-          return endGame(state, outcome, { events: [completed] });
-        },
-      });
       const game = defineGame({
         contract,
         initial: {
@@ -225,52 +307,24 @@ describe("runtime-owned reducer effects", () => {
             kind: "player",
             state: z.object({}),
             initialState: () => ({}),
-            enter({ state, accept, endGame, fx }) {
-              if (
-                mode === "stage" ||
-                (mode === "dispatch" && !state.publicState.complete)
-              )
-                return accept(state);
-              return mode === "phase" || mode === "dispatch"
-                ? endGame(state, outcome, { events: [entered] })
-                : accept(state, {
-                    events: [entered],
-                    instructions: [
-                      fx.effect(completeAfterRoll, {
-                        dieId: "die-1",
-                        context: {},
-                      }),
-                    ],
-                  });
-            },
-            stages: {
-              active: definePhaseStage<
-                typeof contract,
-                z.ZodObject<Record<string, never>>
-              >()({
-                when: () => true,
-                allow: ["complete"],
-                onEnter({ state, accept, endGame }) {
-                  return mode === "stage"
-                    ? endGame(state, outcome, { events: [completed] })
-                    : accept(state);
-                },
-              }),
+            enter({ tx }) {
+              if (mode === "dispatch" && !tx.state.publicState.complete) return;
+              tx.emit(entered);
+              if (mode === "roll") {
+                tx.roll("die-1");
+                tx.emit(completed);
+              }
+              return tx.endGame(outcome);
             },
             interactions: {
               complete: defineInteraction<typeof contract>()({
                 inputs: {},
-                reduce({ state, accept, fx }) {
-                  return accept(
-                    { ...state, publicState: { complete: true } },
-                    {
-                      instructions: [fx.transition("takeTurn")],
-                    },
-                  );
+                reduce({ tx }) {
+                  tx.patchPublicState({ complete: true });
+                  return tx.transition("takeTurn");
                 },
               }),
             },
-            effects: { completeAfterRoll },
           }),
         },
         views: {
@@ -297,18 +351,13 @@ describe("runtime-owned reducer effects", () => {
             })
           : initialized;
       if ("kind" in result && result.kind === "reject")
-        throw new Error("Expected completion to accept");
+        throw new Error("Expected completion");
       expect(result.terminal).toEqual(outcome);
       expect(result.events).toEqual(
-        mode === "continuation"
-          ? [entered, completed]
-          : mode === "stage"
-            ? [completed]
-            : [entered],
+        mode === "roll" ? [entered, completed] : [entered],
       );
       expect(result.state.domain.flow.currentPhase).toBe("takeTurn");
-      if (mode === "continuation")
-        expect(result.state.runtime.rng.cursor).toBe(1);
+      if (mode === "roll") expect(result.state.runtime.rng.cursor).toBe(1);
     },
   );
 
@@ -366,7 +415,7 @@ describe("runtime-owned reducer effects", () => {
       "project",
       "reducerContractVersion",
     ]);
-    expect(warm.reducerContractVersion).toBe("0.5.0");
+    expect(warm.reducerContractVersion).toBe("0.6.0");
     const playerIds = ["player-1", "player-2"];
     const { state: initial } = await warm.initialize({
       table: createTable(),
@@ -945,23 +994,27 @@ describe("runtime-owned reducer effects", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: defineStepPhase<typeof contract>()({
+        takeTurn: definePhase<typeof contract>()({
           kind: "player",
-          steps: ["main", "blocked"],
           state: phaseState,
           interactions: {
-            blockedTarget: {
-              steps: ["blocked"],
-              interaction: defineInteraction<
-                typeof contract,
-                typeof phaseState
-              >()({
-                inputs: {
-                  edgeId: targetInput,
+            blockedTarget: defineInteraction<
+              typeof contract,
+              typeof phaseState
+            >()({
+              inputs: {
+                edgeId: targetInput,
+              },
+              rules: [
+                {
+                  id: "blocked",
+                  errorCode: "blocked",
+                  message: "Interaction is blocked by its rule.",
+                  available: () => false,
                 },
-                reduce: ({ state, accept }) => accept(state),
-              }),
-            },
+              ],
+              reduce: ({ state, accept }) => accept(state),
+            }),
           },
         }),
       },
@@ -990,7 +1043,7 @@ describe("runtime-owned reducer effects", () => {
     expect(eligibleTargetCalls).toBe(0);
     expect(descriptor?.availability).toMatchObject({
       status: "blocked",
-      reason: "Interaction not allowed in current step",
+      reason: "Interaction is blocked by its rule.",
     });
     expect(descriptor?.inputs).toEqual([
       {
@@ -1197,7 +1250,7 @@ describe("runtime-owned reducer effects", () => {
     });
   });
 
-  test("fx.effect with a rollDie effect consumes seeded RNG, updates the die value, and routes a typed continuation", async () => {
+  test("tx.roll consumes seeded RNG and returns the authoritative die value", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -1208,23 +1261,6 @@ describe("runtime-owned reducer effects", () => {
         }),
         private: z.object({}),
         hidden: z.object({}),
-      },
-    });
-
-    const rollDieEffect = defineEffect<typeof contract>()({
-      type: "rollDie",
-      id: "rollDieEffect",
-      context: z.object({
-        reason: z.string(),
-      }),
-      reduce({ state, input, accept }) {
-        return accept({
-          ...state,
-          publicState: {
-            recordedValue: input.response.value,
-            recordedReason: input.data.reason,
-          },
-        });
       },
     });
 
@@ -1244,20 +1280,14 @@ describe("runtime-owned reducer effects", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          effects: {
-            rollDieEffect,
-          },
           interactions: {
             rollVisibleDie: defineInteraction<typeof contract>()({
               inputs: {},
-              reduce({ state, accept, fx }) {
-                return accept(state, {
-                  instructions: [
-                    fx.effect(rollDieEffect, {
-                      dieId: "die-1",
-                      context: { reason: "action" },
-                    }),
-                  ],
+              reduce({ tx }) {
+                const value = tx.roll("die-1");
+                tx.patchPublicState({
+                  recordedValue: value,
+                  recordedReason: "action",
                 });
               },
             }),
@@ -1325,14 +1355,7 @@ describe("runtime-owned reducer effects", () => {
     });
   });
 
-  test("fx.effect with a fire-and-forget rollDie effect (no reduce) emits an effect without a `resume` key", async () => {
-    // This is the exact shape `presentation3/catan` hits: an author registers
-    // a `rollDie` effect purely to schedule the runtime-side die animation and
-    // omits `reduce` because the authoritative value is supplied via the
-    // player action params instead of a reducer continuation. Previously the
-    // SDK attached `resume: undefined` to the wire effect, which the runtime
-    // bridge converted to JSON `null`, breaking Kotlin
-    // deserialization of `Effect.RollDie` (whose `resume` was non-nullable).
+  test("reduce completes a direct roll without pending wire work", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -1341,11 +1364,6 @@ describe("runtime-owned reducer effects", () => {
         private: z.object({}),
         hidden: z.object({}),
       },
-    });
-
-    const fireAndForgetRollEffect = defineEffect<typeof contract>()({
-      type: "rollDie",
-      id: "fireAndForgetRoll",
     });
 
     const game = defineGame({
@@ -1361,18 +1379,11 @@ describe("runtime-owned reducer effects", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          effects: {
-            fireAndForgetRollEffect,
-          },
           interactions: {
             rollSilently: defineInteraction<typeof contract>()({
               inputs: {},
-              reduce({ state, accept, fx }) {
-                return accept(state, {
-                  instructions: [
-                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                  ],
-                });
+              reduce({ tx }) {
+                tx.roll("die-1");
               },
             }),
           },
@@ -1400,30 +1411,9 @@ describe("runtime-owned reducer effects", () => {
     if (reduced.kind !== "accept") {
       throw new Error("Expected rollSilently to be accepted.");
     }
-    expect(reduced.effects).toHaveLength(1);
-    const effect = reduced.effects[0] as Record<string, unknown>;
-    expect(effect.type).toBe("rollDie");
-    expect(effect.dieId).toBe("die-1");
-    expect(effect.effectId).toBeDefined();
-    // Wire contract: the effect payload must NEVER carry a `resume` field.
-    // Continuations live in the sibling `continuations` map, keyed by
-    // effectId. A fire-and-forget effect simply has no entry in that map.
-    expect("resume" in effect).toBe(false);
-    expect("__continuation" in effect).toBe(false);
-    const serialized = JSON.parse(JSON.stringify(effect)) as Record<
-      string,
-      unknown
-    >;
-    expect("resume" in serialized).toBe(false);
-    expect("__continuation" in serialized).toBe(false);
-    // No continuation should have been recorded for the fire-and-forget
-    // variant.
-    const effectId = effect.effectId as string;
-    expect(reduced.continuations[effectId]).toBeUndefined();
-
-    // End-to-end dispatch should still update the die value even without a
-    // continuation wired up, confirming the runtime treats a missing
-    // `resume` as fire-and-forget.
+    expect(reduced).not.toHaveProperty("effects");
+    expect(reduced).not.toHaveProperty("continuations");
+    expect(ReducerWireZod.ReduceResultSchema.parse(reduced)).toEqual(reduced);
     const dispatched = await bundle.dispatch({
       state: initial,
       input: {
@@ -1442,17 +1432,16 @@ describe("runtime-owned reducer effects", () => {
       }
     ).dice;
     expect(dispatchedDice?.["die-1"]?.value).toBeGreaterThan(0);
+    expect(dispatched.state).toEqual(reduced.state);
     expect(
       dispatched.trace.some(
         (entry) =>
-          entry.kind === "appliedEffect" &&
-          entry.effect.type === "rollDie" &&
-          !("resume" in entry.effect),
+          entry.kind === "rngConsumption" && entry.operation === "rollDie",
       ),
     ).toBe(true);
   });
 
-  test("dispatch resolves multiple engine instructions with one table clone", async () => {
+  test("dispatch resolves multiple direct rolls with one table clone", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -1461,11 +1450,6 @@ describe("runtime-owned reducer effects", () => {
         private: z.object({}),
         hidden: z.object({}),
       },
-    });
-
-    const fireAndForgetRollEffect = defineEffect<typeof contract>()({
-      type: "rollDie",
-      id: "fireAndForgetRoll",
     });
 
     const game = defineGame({
@@ -1481,19 +1465,12 @@ describe("runtime-owned reducer effects", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          effects: {
-            fireAndForgetRollEffect,
-          },
           interactions: {
             rollTwice: defineInteraction<typeof contract>()({
               inputs: {},
-              reduce({ state, accept, fx }) {
-                return accept(state, {
-                  instructions: [
-                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                    fx.effect(fireAndForgetRollEffect, { dieId: "die-1" }),
-                  ],
-                });
+              reduce({ tx }) {
+                tx.roll("die-1");
+                tx.roll("die-1");
               },
             }),
           },
@@ -1528,7 +1505,7 @@ describe("runtime-owned reducer effects", () => {
     expect(
       dispatched.trace.filter(
         (entry) =>
-          entry.kind === "appliedEffect" && entry.effect.type === "rollDie",
+          entry.kind === "rngConsumption" && entry.operation === "rollDie",
       ),
     ).toHaveLength(2);
   });
@@ -1827,20 +1804,15 @@ describe("runtime-owned reducer effects", () => {
             interactions: {
               drawAndReenter: defineInteraction<typeof contract>()({
                 inputs: {},
-                reduce({ state, accept, fx, random }) {
+                reduce({ state, tx, random }) {
                   const result = random.integer({
                     minInclusive: 10,
                     maxInclusive: 12,
                   });
-                  return accept(
-                    {
-                      ...state,
-                      publicState: {
-                        results: [...state.publicState.results, result],
-                      },
-                    },
-                    { instructions: [fx.transition("takeTurn")] },
-                  );
+                  tx.patchPublicState({
+                    results: [...state.publicState.results, result],
+                  });
+                  return tx.transition("takeTurn");
                 },
               }),
             },
@@ -1939,8 +1911,9 @@ describe("runtime-owned reducer effects", () => {
           drawIndex: 1,
         }),
         expect.objectContaining({
-          kind: "appliedInstruction",
-          instruction: "flow.transition",
+          kind: "phaseEntered",
+          from: "takeTurn",
+          to: "takeTurn",
         }),
         expect.objectContaining({
           kind: "rngConsumption",
@@ -2069,7 +2042,7 @@ describe("runtime-owned reducer effects", () => {
                       title: "Discarded",
                     }),
                   );
-                  tx.schedule({ kind: "engine.rollDie", dieId: "die-1" });
+                  tx.roll("die-1");
                   return tx.reject("NOPE", "Rejected after sampling.");
                 },
               }),
@@ -2213,7 +2186,7 @@ describe("runtime-owned reducer effects", () => {
 
 describe("implicit transaction acceptance", () => {
   test.each(["enter", "reduce"] as const)(
-    "%s preserves queued events, instructions, and effect continuations",
+    "%s preserves events and immediate seeded mutations",
     async (mode) => {
       const contract = defineGameContract({
         manifest: createManifestContract(),
@@ -2232,23 +2205,16 @@ describe("implicit transaction acceptance", () => {
         procedureId: "completed",
         title: "Completed",
       });
-      const afterRoll = defineEffect<typeof contract>()({
-        type: "rollDie",
-        id: "implicitAfterRoll",
-        context: z.object({}),
-        reduce({ tx }) {
-          tx.patchPublicState({ complete: true });
-          tx.emit(completed);
-        },
-      });
       const queue = (
         tx: import("./transaction").ReducerTransaction<
           import("./model").GameStateOf<typeof contract>
         >,
       ) => {
         tx.emit(queued);
-        tx.schedule({ kind: "engine.rollDie", dieId: "die-1" });
-        tx.effect(afterRoll, { dieId: "die-1", context: {} });
+        tx.roll("die-1");
+        tx.roll("die-1");
+        tx.patchPublicState({ complete: true });
+        tx.emit(completed);
       };
       const game = defineGame({
         contract,
@@ -2275,7 +2241,6 @@ describe("implicit transaction acceptance", () => {
                 },
               }),
             },
-            effects: { afterRoll },
           }),
         },
         views: {

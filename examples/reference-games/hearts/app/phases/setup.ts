@@ -27,7 +27,7 @@ export default setup.define({
     // performed the one trusted seeded shuffle of the shared draw pile.
     for (let cardNumber = 0; cardNumber < 13; cardNumber += 1) {
       for (const playerId of playerIds) {
-        tx.dealCardsToPlayerZone({
+        tx.deal({
           fromZoneId: "draw-pile",
           playerId,
           toZoneId: "hand",

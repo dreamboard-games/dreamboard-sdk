@@ -6,4 +6,4 @@
  * any breaking change to schema/reducer-runtime.schema.json. At bundle load
  * time hosts require bundles to carry this exact version.
  */
-export const REDUCER_CONTRACT_VERSION = "0.5.0" as const;
+export const REDUCER_CONTRACT_VERSION = "0.6.0" as const;

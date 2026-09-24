@@ -6,16 +6,6 @@
 
 export type {
   StaticViewQueries,
-  ContinuationSourceKind,
-  ResumableEffectKind,
-  ContinuationKind,
-  RollDieContinuationResponse,
-  ShuffleSharedZoneContinuationResponse,
-  ShufflePlayerZoneContinuationResponse,
-  EffectContinuationResponse,
-  EffectContinuationInput,
-  ContinuationInput,
-  ContinuationInputForSource,
   PhaseEnterContext,
   ActionContext,
   ValidationIssue,
@@ -26,23 +16,10 @@ export type {
   ActorSelectorArgs,
   ActorSelection,
   ActorSelector,
-  ContinuationReduceArgs,
   ScopedPhaseState,
-  ContinuationCallable,
-  AnyContinuationCallable,
-  EffectContinuationCallable,
 } from "./spec/runtime-args";
 
 export { FrameworkErrorCodes, type FrameworkErrorCode } from "./error-codes";
-
-export type {
-  EffectRollDieDefinition,
-  EffectShuffleDefinition,
-  EffectShufflePlayerZoneDefinition,
-  EffectDefinition,
-  EffectMap,
-  EffectRegistryOfPhase,
-} from "./spec/effects";
 
 export type {
   InputCollectorKind,
@@ -92,13 +69,8 @@ export type {
   InteractionKind,
   InteractionToArgs,
   InteractionSpec,
-  CardActionSpec,
-  AnyCardActionSpec,
-  CardActionMap,
   AnyInteractionSpec,
   InteractionMap,
-  StageSpec,
-  StageMap,
   PhaseZoneList,
 } from "./spec/interactions";
 

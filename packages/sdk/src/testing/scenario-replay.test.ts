@@ -451,10 +451,7 @@ function createScenarioGame() {
             typeof phaseState
           >()({
             inputs: {},
-            reduce: ({ state, accept, fx }) =>
-              accept(state, {
-                instructions: [fx.transition("chooseTogether")],
-              }),
+            reduce: ({ tx }) => tx.transition("chooseTogether"),
           }),
         },
       }),
@@ -474,8 +471,7 @@ function createScenarioGame() {
             }),
           },
         },
-        resolve: ({ state, accept, fx }) =>
-          accept(state, { instructions: [fx.transition("play")] }),
+        resolve: ({ tx }) => tx.transition("play"),
       }),
       finish: definePhase<typeof contract>()({
         kind: "player",

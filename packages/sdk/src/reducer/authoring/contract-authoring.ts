@@ -1,9 +1,6 @@
 import type { z } from "zod";
 import type {
-  CardActionMap,
-  CardActionSpec,
   CardIdOfManifest,
-  EffectMap,
   InputCollector,
   InteractionMap,
   InteractionRule,
@@ -15,11 +12,8 @@ import type {
   PhaseZoneList,
   PlayerViewDefinition,
   PlayerIdOfState,
-  PlayerZoneIdOfManifest,
   SchemaLike,
-  SetupSelectionOfManifest,
   SharedViewDefinition,
-  StageMap,
   StaticViewDefinition,
   TableOfManifest,
   TiledBoardIdOfTable,
@@ -55,29 +49,16 @@ import type {
   ContractErrorCode,
   ContractManifest,
   ContractState,
-  InferPhaseState,
 } from "./types";
 import { defineGameDefinition } from "./game";
-import {
-  defineCardAction,
-  defineInteraction,
-  defineInteractionRule,
-} from "./interaction";
-import {
-  definePhase,
-  defineStepPhase,
-  type StepPhaseCardActionMap,
-  type StepPhaseInteractionMap,
-  type StepPhaseState,
-  type UnwrappedStepCardActions,
-  type UnwrappedStepInteractions,
-} from "./phase";
+import { defineInteraction, defineInteractionRule } from "./interaction";
+import { definePhase } from "./phase";
 import {
   defineEmptyView,
   definePlayerView,
   defineSharedView,
   defineStaticView,
-} from "./view-stage";
+} from "./views";
 
 export type ContractWithPhases = AnyReducerGameContract & {
   readonly phases: Record<string, SchemaLike<object>>;
@@ -231,77 +212,6 @@ export type BoundInputBuilders<Contract extends ContractWithPhases> = {
   readonly rng: BoundRngInputs<Contract>;
 };
 
-type StepPhaseInput<
-  Contract extends ContractWithPhases,
-  PhaseStateSchema extends SchemaLike<object>,
-  Steps extends readonly [string, ...string[]],
-  SubmitCollectors extends Record<string, InputCollector>,
-  Effects extends EffectMap<BoundState<Contract>, BoundManifest<Contract>>,
-  Interactions extends StepPhaseInteractionMap<
-    Steps[number],
-    ScopedPhaseState<
-      BoundState<Contract>,
-      StepPhaseState<PhaseStateSchema, Steps>
-    >,
-    BoundManifest<Contract>
-  >,
-  Stages extends StageMap<
-    ScopedPhaseState<
-      BoundState<Contract>,
-      StepPhaseState<PhaseStateSchema, Steps>
-    >,
-    BoundManifest<Contract>
-  >,
-  Zones extends PhaseZoneList<BoundManifest<Contract>>,
-  CardActions extends StepPhaseCardActionMap<
-    Steps[number],
-    ScopedPhaseState<
-      BoundState<Contract>,
-      StepPhaseState<PhaseStateSchema, Steps>
-    >,
-    BoundManifest<Contract>
-  >,
-> = Omit<
-  PhaseDefinition<
-    PhaseStateSchema,
-    BoundState<Contract>,
-    BoundManifest<Contract>,
-    SubmitCollectors,
-    Effects,
-    UnwrappedStepInteractions<
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>,
-      Interactions
-    >,
-    Stages,
-    Zones,
-    UnwrappedStepCardActions<
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>,
-      CardActions
-    >,
-    ContractErrorCode<Contract>
-  >,
-  "state" | "initialState" | "interactions" | "cardActions"
-> & {
-  steps: Steps;
-  state?: never;
-  initialState?: (ctx: {
-    manifest: BoundManifest<Contract>;
-    state: BoundState<Contract>;
-    playerIds: PlayerIdOfState<BoundState<Contract>>[];
-    setup: SetupSelectionOfManifest<BoundManifest<Contract>> | null;
-  }) => InferPhaseState<PhaseStateSchema>;
-  interactions?: Interactions;
-  cardActions?: CardActions;
-};
-
 export type PhaseAuthoring<
   Contract extends ContractWithPhases,
   PhaseStateSchema extends SchemaLike<object>,
@@ -317,25 +227,6 @@ export type PhaseAuthoring<
     Collectors,
     BoundPhaseState<Contract, PhaseStateSchema>,
     BoundManifest<Contract>,
-    ContractErrorCode<Contract>
-  >;
-  cardAction<
-    Collectors extends Record<string, InputCollector> = Record<string, never>,
-    const PlayFrom extends PlayerZoneIdOfManifest<BoundManifest<Contract>> =
-      PlayerZoneIdOfManifest<BoundManifest<Contract>>,
-  >(
-    spec: CardActionSpec<
-      Collectors,
-      BoundPhaseState<Contract, PhaseStateSchema>,
-      BoundManifest<Contract>,
-      PlayFrom,
-      ContractErrorCode<Contract>
-    >,
-  ): CardActionSpec<
-    Collectors,
-    BoundPhaseState<Contract, PhaseStateSchema>,
-    BoundManifest<Contract>,
-    PlayFrom,
     ContractErrorCode<Contract>
   >;
   rule<
@@ -361,21 +252,11 @@ export type PhaseAuthoring<
       string,
       InputCollector
     >,
-    Effects extends EffectMap<BoundState<Contract>, BoundManifest<Contract>> =
-      Record<string, never>,
     Interactions extends InteractionMap<
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>
     > = Record<string, never>,
-    Stages extends StageMap<
-      BoundPhaseState<Contract, PhaseStateSchema>,
-      BoundManifest<Contract>
-    > = Record<string, never>,
     const Zones extends PhaseZoneList<BoundManifest<Contract>> = readonly [],
-    CardActions extends CardActionMap<
-      BoundPhaseState<Contract, PhaseStateSchema>,
-      BoundManifest<Contract>
-    > = Record<string, never>,
   >(
     definition: Omit<
       PhaseDefinition<
@@ -383,11 +264,8 @@ export type PhaseAuthoring<
         BoundState<Contract>,
         BoundManifest<Contract>,
         SubmitCollectors,
-        Effects,
         Interactions,
-        Stages,
         Zones,
-        CardActions,
         ContractErrorCode<Contract>
       >,
       "state"
@@ -397,81 +275,8 @@ export type PhaseAuthoring<
     BoundState<Contract>,
     BoundManifest<Contract>,
     SubmitCollectors,
-    Effects,
     Interactions,
-    Stages,
     Zones,
-    CardActions,
-    ContractErrorCode<Contract>
-  >;
-  stepPhase<
-    const Steps extends readonly [string, ...string[]],
-    SubmitCollectors extends Record<string, InputCollector> = Record<
-      string,
-      InputCollector
-    >,
-    Effects extends EffectMap<BoundState<Contract>, BoundManifest<Contract>> =
-      Record<string, never>,
-    Interactions extends StepPhaseInteractionMap<
-      Steps[number],
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>
-    > = Record<string, never>,
-    Stages extends StageMap<
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>
-    > = Record<string, never>,
-    const Zones extends PhaseZoneList<BoundManifest<Contract>> = readonly [],
-    CardActions extends StepPhaseCardActionMap<
-      Steps[number],
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>
-    > = Record<string, never>,
-  >(
-    definition: StepPhaseInput<
-      Contract,
-      PhaseStateSchema,
-      Steps,
-      SubmitCollectors,
-      Effects,
-      Interactions,
-      Stages,
-      Zones,
-      CardActions
-    >,
-  ): PhaseDefinition<
-    SchemaLike<StepPhaseState<PhaseStateSchema, Steps>>,
-    BoundState<Contract>,
-    BoundManifest<Contract>,
-    SubmitCollectors,
-    Effects,
-    UnwrappedStepInteractions<
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>,
-      Interactions
-    >,
-    Stages,
-    Zones,
-    UnwrappedStepCardActions<
-      ScopedPhaseState<
-        BoundState<Contract>,
-        StepPhaseState<PhaseStateSchema, Steps>
-      >,
-      BoundManifest<Contract>,
-      CardActions
-    >,
     ContractErrorCode<Contract>
   >;
   readonly inputs: BoundInputBuilders<Contract>;
@@ -732,12 +537,6 @@ function createPhaseAuthoring<
           ReturnType<typeof defineInteraction<Contract, PhaseStateSchema>>
         >[0],
       ) as typeof spec,
-    cardAction: (spec) =>
-      defineCardAction<Contract, PhaseStateSchema>()(
-        spec as unknown as Parameters<
-          ReturnType<typeof defineCardAction<Contract, PhaseStateSchema>>
-        >[0],
-      ) as unknown as typeof spec,
     rule: (rule) =>
       defineInteractionRule<Contract, PhaseStateSchema>()(
         rule as Parameters<
@@ -749,13 +548,6 @@ function createPhaseAuthoring<
         ...definition,
         state: schema,
       } as Parameters<ReturnType<typeof definePhase<Contract>>>[0]) as never,
-    stepPhase: (definition) =>
-      defineStepPhase<Contract>()({
-        ...definition,
-        state: schema,
-      } as Parameters<
-        ReturnType<typeof defineStepPhase<Contract>>
-      >[0]) as never,
     inputs: createBoundInputBuilders<Contract>(),
     types: phantomTypes<PhaseTypes<Contract, PhaseStateSchema>>(),
   };

@@ -8,7 +8,7 @@ import type {
   ViewMapOf,
 } from "../model";
 import type { InteractionDiagnosticsMode } from "./trusted/interaction-types";
-import { createTrustedInstructionRunner } from "./trusted/instruction-runner";
+import { createReducerExecutor } from "./trusted/reducer-executor";
 import { createInteractionResolver } from "./trusted/interaction-resolver";
 import { createLifecycleRunner } from "./trusted/lifecycle-runner";
 import { createProjectionBuilder } from "./trusted/projection-builder";
@@ -32,15 +32,10 @@ function resolveDescriptorDiagnostics(
   );
 }
 
-function inputIdentity(input: {
-  kind: string;
-  playerId?: string;
-  interactionId?: string;
-}) {
+function inputIdentity(input: { playerId: string; interactionId: string }) {
   return {
-    playerId: input.kind === "interaction" ? (input.playerId ?? "") : "",
-    interactionId:
-      input.kind === "interaction" ? (input.interactionId ?? "") : input.kind,
+    playerId: input.playerId,
+    interactionId: input.interactionId,
   };
 }
 
@@ -58,12 +53,8 @@ export function createTrustedReducerBundle<
   const interactions = createInteractionResolver(scope, {
     diagnostics: resolveDescriptorDiagnostics(options),
   });
-  const lifecycle = createLifecycleRunner(scope, interactions);
-  const instructions = createTrustedInstructionRunner(
-    scope,
-    interactions,
-    lifecycle,
-  );
+  const lifecycle = createLifecycleRunner(scope);
+  const executor = createReducerExecutor(scope, interactions, lifecycle);
   const staticProjection = createStaticProjectionBuilder(scope);
   const projection = createProjectionBuilder(scope, interactions);
   let submissionCounter = 0;
@@ -75,7 +66,7 @@ export function createTrustedReducerBundle<
 
   return {
     async initialize(input) {
-      return lifecycle.initializeSession(input, instructions.drainInstructions);
+      return lifecycle.initializeSession(input, executor.complete);
     },
     async initializePhase({ state, to }) {
       const combinedState = scope.toCombinedState(state);
@@ -89,12 +80,7 @@ export function createTrustedReducerBundle<
           reason: "lifecycle",
         });
       }
-      return scope.toSessionState(
-        instructions.drainInstructions(
-          initialized.state,
-          initialized.instructions,
-        ).state,
-      );
+      return scope.toSessionState(executor.complete(initialized, 1).state);
     },
     async validateInput({ state, input }) {
       return interactions.validateClientInput(
@@ -135,14 +121,13 @@ export function createTrustedReducerBundle<
       if (reject) {
         return reject;
       }
-      const result = instructions.reduceOnce(combinedState, input);
+      const result = executor.dispatch(combinedState, input);
       if (result.type === "reject") {
         return result;
       }
       return {
         type: "accept" as const,
         state: scope.toSessionState(result.state),
-        instructions: result.instructions ?? [],
         events: result.events ?? [],
         ...(result.terminal ? { terminal: result.terminal } : {}),
       };
@@ -168,7 +153,7 @@ export function createTrustedReducerBundle<
         });
         return reject;
       }
-      const result = instructions.dispatch(combinedState, input);
+      const result = executor.dispatch(combinedState, input);
       if (result.type === "reject") {
         scope.diagnostics.event({
           type: "submitRejected",

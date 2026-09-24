@@ -3,7 +3,7 @@ import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { DerivedResolver } from "../../derived";
 import type { ValidationIssue } from "./runtime-args";
 
-// --- Interaction / Stage / Zone primitives ---
+// --- Interaction / Zone primitives ---
 //
 // The new authoring surface. A `PhaseDefinition` can declare:
 //   - `interactions`: the set of authoring-level interactions routed by id.

@@ -15,22 +15,18 @@ export {
   type PhaseAuthoring,
   type PhaseTypes,
 } from "./authoring/contract-authoring";
-export { defineEffect } from "./authoring/effect";
 export { createGame, defineGame } from "./authoring/game";
 export {
-  defineCardAction,
   defineInteraction,
   defineInteractionRule,
 } from "./authoring/interaction";
-export { definePhase, defineStepPhase } from "./authoring/phase";
+export { definePhase } from "./authoring/phase";
 export {
   defineEmptyView,
   definePlayerView,
-  definePhaseStage,
   defineSharedView,
-  defineStage,
   defineStaticView,
-} from "./authoring/view-stage";
+} from "./authoring/views";
 
 export type {
   ReducerPhaseDefinition,

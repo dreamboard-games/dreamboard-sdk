@@ -1,9 +1,7 @@
 import type {
-  CardActionSpec,
   InputCollector,
   InteractionRule,
   InteractionSpec,
-  PlayerZoneIdOfManifest,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
@@ -67,39 +65,4 @@ export function defineInteractionRule<
     ContractManifest<Contract>,
     ContractErrorCode<Contract>
   > => definition;
-}
-
-export function defineCardAction<
-  Contract extends AnyReducerGameContract,
-  PhaseState extends PhaseStateInput,
->() {
-  return <
-    Collectors extends Record<string, InputCollector> = Record<string, never>,
-    const PlayFrom extends PlayerZoneIdOfManifest<ContractManifest<Contract>> =
-      PlayerZoneIdOfManifest<ContractManifest<Contract>>,
-  >(
-    definition: CardActionSpec<
-      Collectors,
-      ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-      ContractManifest<Contract>,
-      PlayFrom,
-      ContractErrorCode<Contract>
-    >,
-  ): CardActionSpec<
-    Collectors,
-    ScopedPhaseState<ContractState<Contract>, InferPhaseState<PhaseState>>,
-    ContractManifest<Contract>,
-    PlayFrom,
-    ContractErrorCode<Contract>
-  > => {
-    validateInteractionLikeDefinition(
-      definition as {
-        inputs?: Record<string, InputCollector>;
-        commit?: { mode: string };
-        paramsSchema?: unknown;
-      },
-      "defineCardAction",
-    );
-    return definition;
-  };
 }

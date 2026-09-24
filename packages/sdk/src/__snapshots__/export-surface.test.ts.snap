@@ -126,7 +126,6 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "createStateQueries",
   "createTableQueries",
   "defineDerived",
-  "defineEffect",
   "defineInputs",
   "gameEvent",
   "isPerPlayer",

@@ -7,15 +7,9 @@ import { z } from "zod";
 
 export const ReducerContractVersionSchema = z.string().regex(new RegExp("^[0-9]+\\.[0-9]+\\.[0-9]+$"));
 
-export const EffectIdSchema = z.string().min(1);
-
 let JsonValueSchemaInternal: z.ZodType<Wire.JsonValue>;
 JsonValueSchemaInternal = z.lazy(() => z.union([z.record(z.string(), JsonValueSchemaInternal), z.array(JsonValueSchemaInternal), z.string(), z.number(), z.boolean(), z.null()]));
 export const JsonValueSchema = JsonValueSchemaInternal;
-
-export const ContinuationTokenSchema = z.object({ "id": z.string().min(1), "data": JsonValueSchema }).strict();
-
-export const ContinuationMapSchema = z.record(z.string(), ContinuationTokenSchema);
 
 export const ReducerSetupSelectionSchema = z.object({ "profileId": z.string().min(1), "optionValues": z.record(z.string(), z.union([z.string(), z.null()])) }).strict();
 
@@ -48,16 +42,6 @@ export const ReducerSessionStateSchema = z.object({ "meta": ReducerSessionMetaSc
 export const GameInputInteractionSchema = z.object({ "kind": z.literal("interaction"), "playerId": z.string().min(1), "interactionId": z.string().min(1), "params": JsonValueSchema }).strict();
 
 export const GameInputSchema = z.discriminatedUnion("kind", [GameInputInteractionSchema]);
-
-export const EffectTransitionSchema = z.object({ "effectId": EffectIdSchema, "type": z.literal("transition"), "to": z.string().min(1) }).strict();
-
-export const EffectRollDieSchema = z.object({ "effectId": EffectIdSchema, "type": z.literal("rollDie"), "dieId": z.string().min(1) }).strict();
-
-export const EffectShuffleSharedZoneSchema = z.object({ "effectId": EffectIdSchema, "type": z.literal("shuffleSharedZone"), "zoneId": z.string().min(1) }).strict();
-
-export const EffectShufflePlayerZoneSchema = z.object({ "effectId": EffectIdSchema, "type": z.literal("shufflePlayerZone"), "zoneId": z.string().min(1), "playerId": z.string().min(1) }).strict();
-
-export const EffectSchema = z.discriminatedUnion("type", [EffectTransitionSchema, EffectRollDieSchema, EffectShuffleSharedZoneSchema, EffectShufflePlayerZoneSchema]);
 
 export const ReducerInputValidationResultSchema = z.object({ "valid": z.boolean(), "errorCode": z.string().optional(), "message": z.string().optional() }).strict();
 
@@ -93,17 +77,17 @@ export const DispatchRequestSchema = z.object({ "state": ReducerSessionStateSche
 
 export const ReduceResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
 
-export const ReduceResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "effects": z.array(EffectSchema), "continuations": ContinuationMapSchema, "events": z.array(GameEventSchema).max(32) }).strict();
+export const ReduceResultAcceptSchema = z.object({ "kind": z.literal("accept"), "state": ReducerSessionStateSchema, "terminal": GameOutcomeSchema.optional(), "events": z.array(GameEventSchema).max(32) }).strict();
 
 export const ReduceResultSchema = z.discriminatedUnion("kind", [ReduceResultRejectSchema, ReduceResultAcceptSchema]);
 
 export const DispatchTraceAcceptedClientInputSchema = z.object({ "kind": z.literal("acceptedClientInput"), "input": GameInputSchema }).strict();
 
-export const DispatchTraceAppliedEffectSchema = z.object({ "kind": z.literal("appliedEffect"), "effect": EffectSchema, "continuation": ContinuationTokenSchema.optional() }).strict();
+export const DispatchTracePhaseEnteredSchema = z.object({ "kind": z.literal("phaseEntered"), "from": z.string(), "to": z.string() }).strict();
 
 export const DispatchTraceRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "version": z.literal(2), "operation": z.string().min(1), "drawIndex": z.number().int().gte(0), "traceEntry": z.string() }).strict();
 
-export const DispatchTraceSchema = z.discriminatedUnion("kind", [DispatchTraceAcceptedClientInputSchema, DispatchTraceAppliedEffectSchema, DispatchTraceRngConsumptionSchema]);
+export const DispatchTraceSchema = z.discriminatedUnion("kind", [DispatchTraceAcceptedClientInputSchema, DispatchTracePhaseEnteredSchema, DispatchTraceRngConsumptionSchema]);
 
 export const DispatchResultRejectSchema = z.object({ "kind": z.literal("reject"), "errorCode": z.string().min(1), "message": z.string().optional() }).strict();
 
@@ -113,13 +97,13 @@ export const DispatchResultSchema = z.discriminatedUnion("kind", [DispatchResult
 
 export const ReducerRuntimeLogEntryAcceptedClientInputSchema = z.object({ "kind": z.literal("acceptedClientInput"), "version": z.number().int(), "input": GameInputSchema }).strict();
 
-export const ReducerRuntimeLogEntryAppliedEffectSchema = z.object({ "kind": z.literal("appliedEffect"), "version": z.number().int(), "effect": EffectSchema, "continuation": z.union([ContinuationTokenSchema, z.null()]) }).strict();
+export const ReducerRuntimeLogEntryPhaseEnteredSchema = z.object({ "kind": z.literal("phaseEntered"), "from": z.string(), "to": z.string(), "version": z.number().int() }).strict();
 
 export const ReducerRuntimeLogEntryRngConsumptionSchema = z.object({ "kind": z.literal("rngConsumption"), "version": z.number().int(), "operation": z.string().min(1), "drawIndex": z.number().int().gte(0).optional(), "traceEntry": z.string() }).strict();
 
 export const ReducerRuntimeLogEntryStateCommitSchema = z.object({ "kind": z.literal("stateCommit"), "version": z.number().int(), "state": ReducerSessionStateSchema }).strict();
 
-export const ReducerRuntimeLogEntrySchema = z.discriminatedUnion("kind", [ReducerRuntimeLogEntryAcceptedClientInputSchema, ReducerRuntimeLogEntryAppliedEffectSchema, ReducerRuntimeLogEntryRngConsumptionSchema, ReducerRuntimeLogEntryStateCommitSchema]);
+export const ReducerRuntimeLogEntrySchema = z.discriminatedUnion("kind", [ReducerRuntimeLogEntryAcceptedClientInputSchema, ReducerRuntimeLogEntryPhaseEnteredSchema, ReducerRuntimeLogEntryRngConsumptionSchema, ReducerRuntimeLogEntryStateCommitSchema]);
 
 export const SeatProjectionSchema = z.object({ "view": JsonValueSchema.optional(), "availableInteractionRefs": JsonValueSchema.optional(), "zones": JsonValueSchema.optional() }).strict();
 

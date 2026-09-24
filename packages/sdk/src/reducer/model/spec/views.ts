@@ -45,7 +45,7 @@ export type EmptyViewDefinition<
 /**
  * Session-scoped, once-per-init view. The `project` callback receives only
  * the authored manifest — the mutable-state helpers (`state`, `playerId`,
- * `runtime`, `fx`, `ops`, `accept`, `reject`, `q`) that `ViewDefinition.project`
+ * `runtime`, `accept`, `reject`, `q`) that `ViewDefinition.project`
  * exposes are structurally absent, so an author cannot accidentally project
  * per-tick state into the payload. The host calls this once per reducer
  * session, caches the result, and merges it back into every seat view on

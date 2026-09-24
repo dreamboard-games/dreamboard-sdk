@@ -10,7 +10,6 @@ const ENTRIES = [
   "src/bundle",
   "generated/wire",
   "generated/zod",
-  "generated/builders",
   "generated/version",
 ] as const;
 

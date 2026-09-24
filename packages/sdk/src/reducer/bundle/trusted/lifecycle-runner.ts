@@ -12,11 +12,9 @@ import type {
   RuntimeSetupSelectionInput,
   ViewMapOf,
 } from "../../model";
-import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import { isPerPlayer } from "../../per-player";
 import { normalizeResult } from "./runtime-scope";
 import { createMutableRandomHelpers, type RngConsumption } from "./rng-sampler";
-import type { createInteractionResolver } from "./interaction-resolver";
 import type {
   TrustedManifest,
   TrustedPhaseName,
@@ -26,20 +24,11 @@ import type {
   TrustedState,
 } from "./runtime-scope";
 
-type InteractionResolverFor<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<typeof createInteractionResolver<Contract, Definitions, Views>>;
-
 export function createLifecycleRunner<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
->(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
-  interactions: InteractionResolverFor<Contract, Definitions, Views>,
-) {
+>(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
   type Manifest = TrustedManifest<Contract>;
@@ -133,10 +122,6 @@ export function createLifecycleRunner<
         phaseState,
         `phase:${phaseName}`,
       ) as State["phase"],
-      flow: {
-        ...state.flow,
-        currentPhase: phaseName as State["flow"]["currentPhase"],
-      },
     };
   }
 
@@ -152,15 +137,33 @@ export function createLifecycleRunner<
     event: "initialize" | "transition";
   }): {
     state: State;
-    instructions: RuntimeInstructionForState<State>[];
+    transition?: PhaseName;
     consumptions: RngConsumption[];
     terminal?: GameOutcome<PlayerId>;
     events: GameEvent[];
   } {
-    const workingState = initPhaseState(state, phaseName, playerIds);
+    const enteringState = {
+      ...state,
+      flow: {
+        ...state.flow,
+        currentPhase: phaseName as State["flow"]["currentPhase"],
+      },
+      runtime: {
+        ...state.runtime,
+        simultaneous: { current: null },
+        lastTransition:
+          event === "initialize"
+            ? null
+            : {
+                from: state.flow.currentPhase,
+                to: phaseName as State["flow"]["currentPhase"],
+              },
+      },
+    } as State;
+    const workingState = initPhaseState(enteringState, phaseName, playerIds);
     const phase = scope.phaseByName(phaseName);
     let nextState: State = workingState;
-    const instructions: RuntimeInstructionForState<State>[] = [];
+    let transition: PhaseName | undefined;
     const consumptions: RngConsumption[] = [];
     let terminal: GameOutcome<PlayerId> | undefined;
     const events: GameEvent[] = [];
@@ -172,7 +175,7 @@ export function createLifecycleRunner<
           event,
           state: scope.toDomainState(workingState),
         },
-        { random: random.random },
+        { random },
       );
       const entered = normalizeResult(phase.enter(enterArgs), () =>
         implicitResultOf(enterArgs),
@@ -192,46 +195,12 @@ export function createLifecycleRunner<
       terminal ??= entered.terminal;
       events.push(...(entered.events ?? []));
       consumptions.push(...random.consumptions());
-      if (entered.instructions) instructions.push(...entered.instructions);
+      transition = entered.transition as PhaseName | undefined;
     }
 
-    const activeStage = interactions.resolveActiveStage(nextState, phaseName);
-    if (activeStage?.stage.onEnter) {
-      const random = createMutableRandomHelpers(nextState.runtime.rng);
-      const stageArgs = scope.buildRuntimeArgs(
-        nextState,
-        {
-          event,
-          state: scope.toDomainState(nextState),
-        },
-        { random: random.random },
-      );
-      const stageEntered = normalizeResult(
-        activeStage.stage.onEnter(stageArgs),
-        () => implicitResultOf(stageArgs),
-      );
-      if (stageEntered.type === "reject") {
-        throw new Error(
-          stageEntered.message ??
-            (event === "initialize"
-              ? `Reducer stage '${phaseName}.${activeStage.id}' rejected during initialization.`
-              : `Reducer stage '${phaseName}.${activeStage.id}' rejected during stage initialization.`),
-        );
-      }
-      nextState = {
-        ...stageEntered.state,
-        runtime: { ...nextState.runtime, rng: random.currentRng() },
-      } as State;
-      terminal ??= stageEntered.terminal;
-      events.push(...(stageEntered.events ?? []));
-      consumptions.push(...random.consumptions());
-      if (stageEntered.instructions) {
-        instructions.push(...stageEntered.instructions);
-      }
-    }
     return {
       state: nextState,
-      instructions,
+      transition,
       consumptions,
       ...(terminal ? { terminal } : {}),
       events,
@@ -243,7 +212,7 @@ export function createLifecycleRunner<
     phaseName: PhaseName,
   ): {
     state: State;
-    instructions: RuntimeInstructionForState<State>[];
+    transition?: PhaseName;
     consumptions: RngConsumption[];
     terminal?: GameOutcome<PlayerId>;
     events: GameEvent[];
@@ -417,9 +386,9 @@ export function createLifecycleRunner<
       rngSeed?: number | null;
       setup?: RuntimeSetupSelectionInput<Manifest> | null;
     },
-    drainInstructions: (
-      state: State,
-      instructions: RuntimeInstructionForState<State>[],
+    complete: (
+      result: ReturnType<typeof enterPhase>,
+      entries: number,
     ) => {
       state: State;
       terminal?: GameOutcome<PlayerId>;
@@ -438,12 +407,12 @@ export function createLifecycleRunner<
       playerIds: input.playerIds,
       event: "initialize",
     });
-    const drained = drainInstructions(entered.state, entered.instructions);
+    const drained = complete(entered, 1);
     const terminal = entered.terminal ?? drained.terminal;
     return {
       state: scope.toSessionState(drained.state),
       ...(terminal ? { terminal } : {}),
-      events: [...entered.events, ...drained.events],
+      events: drained.events,
     };
   }
 

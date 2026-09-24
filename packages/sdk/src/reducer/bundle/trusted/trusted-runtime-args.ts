@@ -1,6 +1,5 @@
 import { createDerivedResolver } from "../../derived";
 import type { DerivedResolver } from "../../derived";
-import { createReducerFx } from "../../effects";
 import type { ReducerTransaction } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type {
@@ -17,10 +16,6 @@ import type {
   RandomHelpers,
 } from "../../model/spec/runtime-args";
 import type { TrustedRuntimeHelpers, TrustedState } from "./runtime-scope";
-
-export function fxForState<Contract extends ReducerGameContractLike>() {
-  return createReducerFx<TrustedState<Contract>>();
-}
 
 export function buildContext<Contract extends ReducerGameContractLike>(
   state: TrustedState<Contract>,
@@ -106,24 +101,22 @@ export function buildRuntimeArgs<
   options: {
     q?: TableQueriesOfState<BaseGameStateOfContract<Contract>>;
     derived?: DerivedResolver;
-    fx?: ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
-    random?: RandomHelpers;
+    random?: import("./rng-sampler").MutableRandomHelpers;
   } = {},
 ) {
   type DomainState = BaseGameStateOfContract<Contract>;
   const domainState = toDomainState(state);
   const q = options.q ?? createStateQueries(domainState);
-  // Legacy helpers (`accept`, `edit`, `fx`, `reject`, `endGame`) stay
+  // Legacy helpers (`accept`, `edit`, `reject`, `endGame`) stay
   // on the runtime object for the SDK's own test suite. They are no longer
   // part of any public argument type and will be removed with those tests.
   const args = {
     ...buildContext(state, manifest),
     ...helpers,
-    fx: options.fx ?? fxForState<Contract>(),
     q,
     derived: options.derived ?? createDerivedResolver(domainState, { q }),
     runtime: publicRuntime(state.runtime),
-    random: options.random ?? DISABLED_RANDOM_HELPERS,
+    random: options.random?.random ?? DISABLED_RANDOM_HELPERS,
     ...extra,
   };
   // The transaction clones the table, so open it only when a callback reads
@@ -131,7 +124,13 @@ export function buildRuntimeArgs<
   let transaction: ReducerTransaction<DomainState> | undefined;
   Object.defineProperty(args, "tx", {
     enumerable: true,
-    get: () => (transaction ??= helpers.edit(domainState)),
+    get: () => {
+      if (!options.random)
+        throw new Error(
+          "Transactions are only available in reducer mutation callbacks.",
+        );
+      return (transaction ??= helpers.edit(domainState, options.random));
+    },
   });
   Object.defineProperty(args, implicitResultSymbol, {
     enumerable: false,

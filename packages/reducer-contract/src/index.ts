@@ -7,13 +7,12 @@
 // package specifiers into the published SDK tarball — caught by
 // the repository package verifier.
 //
-// The sub-entries ("./wire", "./zod", "./builders", "./bundle", "./version",
+// The sub-entries ("./wire", "./zod", "./bundle", "./version",
 // "./fixtures") remain for this package's own tests and tooling.
 //
 // Public consumers should use @dreamboard-games/sdk/reducer-contract.
 export * as Wire from "../generated/wire";
 export * as Zod from "../generated/zod";
-export * as Builders from "../generated/builders";
 export { REDUCER_CONTRACT_VERSION } from "../generated/version";
 export { assertReducerBundleContract } from "./bundle";
 export type { MaybePromise, ReducerBundleContract } from "./bundle";

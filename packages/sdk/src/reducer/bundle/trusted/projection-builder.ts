@@ -104,7 +104,7 @@ export function createProjectionBuilder<
     combinedState: State,
     playerId: PlayerId,
     actorSeat: number,
-    projection: ProjectionContext<DomainState, State>,
+    projection: ProjectionContext<DomainState>,
     registry: DescriptorRegistry,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -209,15 +209,8 @@ export function createProjectionBuilder<
     return result;
   }
 
-  function resolveCurrentStageFor(
-    combinedState: State,
-    projection?: ProjectionContext<DomainState, State>,
-  ): string {
-    const phaseName = combinedState.flow.currentPhase as PhaseName;
-    return (
-      interactions.resolveActiveStage(combinedState, phaseName, projection)
-        ?.id ?? phaseName
-    );
+  function resolveCurrentStageFor(combinedState: State): string {
+    return combinedState.flow.currentPhase;
   }
 
   function resolveGuidanceFor(combinedState: State) {
@@ -288,22 +281,8 @@ export function createProjectionBuilder<
     if (isSimultaneousPhase(phase)) {
       return resolveSimultaneousActors(scope, combinedState, phase).map(String);
     }
-    const stageAllowlist = interactions.resolveActiveStageAllowlist(
-      combinedState,
-      phaseName,
-    );
     const actors = new Set<string>();
-    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
-      phaseName,
-    )) {
-      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
-        continue;
-      }
-      if (
-        !interactions.isInteractionAllowedInStep(combinedState, interaction)
-      ) {
-        continue;
-      }
+    for (const [, interaction] of scope.interactionEntriesForPhase(phaseName)) {
       const authorization = interactions.resolveInteractionActorAuthorization(
         combinedState,
         interaction,
@@ -342,7 +321,7 @@ export function createProjectionBuilder<
 
   function resolveSchedulerFlowFor(
     state: SessionState,
-    projection?: ProjectionContext<DomainState, State>,
+    projection?: ProjectionContext<DomainState>,
   ): Wire.SchedulerFlowAuthorityProjection {
     const combinedState = scope.toCombinedState(state);
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -393,29 +372,10 @@ export function createProjectionBuilder<
       };
     }
 
-    const stageAllowlist = interactions.resolveActiveStageAllowlist(
-      combinedState,
-      phaseName,
-      projection,
-    );
     const activePlayerIds = new Set<string>();
     const pendingPlayerIds = new Set<string>();
     let sawScheduledInteraction = false;
-    for (const [interactionId, interaction] of scope.interactionEntriesForPhase(
-      phaseName,
-    )) {
-      if (stageAllowlist && !stageAllowlist.has(String(interactionId))) {
-        continue;
-      }
-      if (
-        !interactions.isInteractionAllowedInStep(
-          combinedState,
-          interaction,
-          projection,
-        )
-      ) {
-        continue;
-      }
+    for (const [, interaction] of scope.interactionEntriesForPhase(phaseName)) {
       sawScheduledInteraction = true;
       const actorAuthorization =
         interactions.resolveInteractionActorAuthorization(
@@ -524,13 +484,12 @@ export function createProjectionBuilder<
 
   function resolveSharedViewFor(
     combinedState: State,
-    projection: ProjectionContext<DomainState, State>,
+    projection: ProjectionContext<DomainState>,
   ): unknown {
     const view = scope.definition.views.shared;
     const viewArgs = {
       ...scope.buildContext(combinedState),
       ...scope.runtimeHelpers,
-      fx: projection.fx,
       q: projection.q,
       derived: projection.derived,
       state: projection.domainState,
@@ -542,13 +501,12 @@ export function createProjectionBuilder<
     combinedState: State,
     playerId: PlayerId,
     sharedView: unknown,
-    projection: ProjectionContext<DomainState, State>,
+    projection: ProjectionContext<DomainState>,
   ): unknown {
     const view = scope.definition.views.player;
     const viewArgs = {
       ...scope.buildContext(combinedState),
       ...scope.runtimeHelpers,
-      fx: projection.fx,
       q: projection.q,
       derived: projection.derived,
       state: projection.domainState,
@@ -569,7 +527,6 @@ export function createProjectionBuilder<
   }) {
     const combinedState = scope.toCombinedState(state);
     const projection = createProjectionContext({
-      combinedState,
       domainState: scope.toDomainState(combinedState),
     });
     const timing = createProjectionTimingMetadata();
@@ -634,7 +591,7 @@ export function createProjectionBuilder<
     }
     return withProjectionTiming(
       {
-        currentStage: resolveCurrentStageFor(combinedState, projection),
+        currentStage: resolveCurrentStageFor(combinedState),
         stageSeats: resolveStageSeatsFor(state),
         simultaneousPhase: resolveSimultaneousPhaseFor(state),
         schedulerFlow: resolveSchedulerFlowFor(state, projection),

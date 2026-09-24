@@ -15,7 +15,6 @@ import type {
   RuntimeSetupSelectionInput,
   ViewMapOf,
 } from "../model";
-import type { RuntimeInstructionForState } from "../core/runtime-instruction";
 import type {
   ReducerBundleContract,
   Wire,
@@ -107,9 +106,6 @@ export type TrustedReducerBundle<
     | {
         type: "accept";
         state: TrustedSessionState<Contract>;
-        instructions: readonly RuntimeInstructionForState<
-          TrustedCombinedState<Contract>
-        >[];
         events: readonly GameEvent[];
         terminal?: GameOutcome<TrustedPlayerId<Contract>>;
       }

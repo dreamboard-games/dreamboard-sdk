@@ -1,14 +1,11 @@
-import type { z } from "zod";
 import type {
   ExactManifestContractOf,
-  SchemaLike,
-  StageSpec,
   StaticViewDefinition,
   EmptyViewDefinition,
   PlayerViewDefinition,
   SharedViewDefinition,
 } from "../model";
-import type { ScopedPhaseState } from "../model/spec/runtime-args";
+
 import type {
   AnyReducerGameContract,
   ContractManifest,
@@ -57,7 +54,7 @@ export function defineEmptyView<
  * Factory for the session-scoped static view (see {@link StaticViewDefinition}).
  * Kept separate from dynamic view helpers because the argument shape is
  * structurally different: it exposes only the manifest and generated static
- * queries, with no `state`, `playerId`, `runtime`, `fx`, `ops`, or
+ * queries, with no `state`, `playerId`, `runtime`, or
  * `accept/reject`. That shape is what prevents authors from accidentally
  * projecting per-tick state into the once-per-session payload.
  */
@@ -69,26 +66,4 @@ export function defineStaticView<Contract extends AnyReducerGameContract>() {
     >,
   ): StaticViewDefinition<ExactManifestContractOf<Contract>, Projection> =>
     definition;
-}
-
-export function defineStage<Contract extends AnyReducerGameContract>() {
-  return (
-    definition: StageSpec<ContractState<Contract>, ContractManifest<Contract>>,
-  ): StageSpec<ContractState<Contract>, ContractManifest<Contract>> =>
-    definition;
-}
-
-export function definePhaseStage<
-  Contract extends AnyReducerGameContract,
-  PhaseStateSchema extends SchemaLike<object>,
->() {
-  return (
-    definition: StageSpec<
-      ScopedPhaseState<ContractState<Contract>, z.infer<PhaseStateSchema>>,
-      ContractManifest<Contract>
-    >,
-  ): StageSpec<
-    ScopedPhaseState<ContractState<Contract>, z.infer<PhaseStateSchema>>,
-    ContractManifest<Contract>
-  > => definition;
 }

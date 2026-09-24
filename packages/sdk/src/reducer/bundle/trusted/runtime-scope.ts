@@ -1,10 +1,8 @@
 import { createDerivedResolver } from "../../derived";
 import type { DerivedResolver } from "../../derived";
-import { createReducerFx } from "../../effects";
 import { createReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type { TrustedRuntimeInput } from "../../core/types";
-import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import { createReducerDiagnosticsEmitter } from "../../diagnostics";
 import type {
   ReducerDiagnosticsEmitter,
@@ -21,7 +19,6 @@ import type {
   PlayerZoneIdOfManifest,
   ReducerGameContractLike,
   ReducerGameDefinition,
-  StageSpec,
   TableQueriesOfState,
   GameOutcome,
   GameEvent,
@@ -30,13 +27,11 @@ import type {
 } from "../../model";
 import type {
   ActionContext,
-  AnyContinuationCallable,
   RandomHelpers,
 } from "../../model/spec/runtime-args";
 import {
   collectTrustedRuntimeRegistry,
   type TrustedErasedPhase,
-  type TrustedCardActionEntry,
   type TrustedInteractionEntry,
   type TrustedPhaseRegistry,
   type TrustedRuntimeRegistry,
@@ -44,7 +39,6 @@ import {
 import {
   buildContext as buildTrustedContext,
   buildRuntimeArgs as buildTrustedRuntimeArgs,
-  fxForState as trustedFxForState,
   type RuntimeArgsWithTransaction,
 } from "./trusted-runtime-args";
 import { rejectResult, runtimeResultHelpers } from "./trusted-runtime-result";
@@ -104,7 +98,9 @@ export interface TrustedRuntimeHelpers<
   ) => {
     type: "accept";
     state: TrustedDomainState<Contract>;
-    instructions: RuntimeInstructionForState<TrustedDomainState<Contract>>[];
+    transition?: import("../../model").PhaseNameOfState<
+      TrustedDomainState<Contract>
+    >;
     events: GameEvent[];
   };
   endGame: (
@@ -114,7 +110,9 @@ export interface TrustedRuntimeHelpers<
   ) => {
     type: "accept";
     state: TrustedDomainState<Contract>;
-    instructions: RuntimeInstructionForState<TrustedDomainState<Contract>>[];
+    transition?: import("../../model").PhaseNameOfState<
+      TrustedDomainState<Contract>
+    >;
     events: GameEvent[];
     terminal: GameOutcome<TrustedPlayerId<Contract>>;
   };
@@ -165,24 +163,9 @@ export interface TrustedRuntimeScope<
   interactionEntriesForPhase(
     phaseName: TrustedPhaseName<Contract, Definitions, Views>,
   ): ReadonlyArray<TrustedInteractionEntry<Contract>>;
-  stagesForPhase(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
-  ): ReadonlyArray<
-    readonly [
-      string,
-      StageSpec<TrustedDomainState<Contract>, TrustedManifest<Contract>>,
-    ]
-  >;
   zonesForPhase(
     phaseName: TrustedPhaseName<Contract, Definitions, Views>,
   ): ReadonlyArray<PlayerZoneIdOfManifest<TrustedManifest<Contract>>>;
-  cardActionEntriesForPhase(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
-  ): ReadonlyArray<TrustedCardActionEntry<Contract>>;
-  continuationById(
-    id: string,
-  ): AnyContinuationCallable<TrustedDomainState<Contract>> | undefined;
-  fxForState(): ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
   buildContext(
     state: TrustedState<Contract>,
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>>;
@@ -192,12 +175,10 @@ export interface TrustedRuntimeScope<
     options?: {
       q?: TableQueriesOfState<TrustedDomainState<Contract>>;
       derived?: DerivedResolver;
-      fx?: ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
-      random?: RandomHelpers;
+      random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> &
     TrustedRuntimeHelpers<Contract> & {
-      fx: ReturnType<typeof createReducerFx<TrustedState<Contract>>>;
       q: ReturnType<typeof createStateQueries<TrustedDomainState<Contract>>>;
       derived: ReturnType<
         typeof createDerivedResolver<TrustedDomainState<Contract>>
@@ -273,30 +254,14 @@ export function createTrustedRuntimeScope<
     return phaseRegistryByName(phaseName)?.interactions ?? [];
   }
 
-  function stagesForPhase(phaseName: PhaseName) {
-    return phaseRegistryByName(phaseName)?.stages ?? [];
-  }
-
   function zonesForPhase(phaseName: PhaseName) {
     return phaseRegistryByName(phaseName)?.zones ?? [];
-  }
-
-  function cardActionEntriesForPhase(phaseName: PhaseName) {
-    return phaseRegistryByName(phaseName)?.cardActions ?? [];
-  }
-
-  function continuationById(id: string) {
-    return registry.continuationsById.get(id);
   }
 
   const helpers: TrustedRuntimeHelpers<Contract> = {
     ...runtimeResultHelpers,
     edit: createReducerEdit<DomainState>(),
   };
-
-  function fxForState() {
-    return trustedFxForState<Contract>();
-  }
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {
     return buildTrustedContext<Contract>(state, definition.contract.manifest);
@@ -308,8 +273,7 @@ export function createTrustedRuntimeScope<
     options?: {
       q?: TableQueriesOfState<DomainState>;
       derived?: DerivedResolver;
-      fx?: ReturnType<typeof createReducerFx<State>>;
-      random?: RandomHelpers;
+      random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ) {
     return buildTrustedRuntimeArgs<Contract, Extra>(
@@ -340,11 +304,7 @@ export function createTrustedRuntimeScope<
     phaseByName,
     findInteractionInPhase,
     interactionEntriesForPhase,
-    stagesForPhase,
     zonesForPhase,
-    cardActionEntriesForPhase,
-    continuationById,
-    fxForState,
     buildContext,
     buildRuntimeArgs,
   };

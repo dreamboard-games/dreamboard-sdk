@@ -1,50 +1,10 @@
-import type { z } from "zod";
+import type { RuntimePayload, RuntimeTableRecord } from "./table";
 import type {
-  AnySchema,
-  RuntimePayload,
-  RuntimeTableRecord,
-  StringKeyOf,
-} from "./table";
-import type {
-  DeckIdOfState,
   PhaseNameOfState,
   PlayerIdOfState,
   PlayerIdOfTable,
-  PlayerZoneIdOfState,
   RuntimeSetupSelection,
-  TableOfState,
 } from "./extract";
-import type {
-  EngineRollDieInstruction,
-  EngineShufflePlayerZoneInstruction,
-  EngineShuffleSharedZoneInstruction,
-  FlowInstruction,
-  RuntimeInstructionForState,
-} from "../core/runtime-instruction";
-
-// --- Continuation Tokens ---
-
-export type ContinuationToken<
-  Data = RuntimePayload,
-  ContinuationId extends string = string,
-  Response = RuntimePayload,
-> = {
-  id: ContinuationId;
-  data: Data;
-  readonly __responseType?: Response;
-};
-
-export type ContinuationResponseOf<Token> =
-  Token extends ContinuationToken<unknown, string, infer Response>
-    ? Response
-    : never;
-
-export type AnyContinuationToken = ContinuationToken<
-  RuntimePayload,
-  string,
-  RuntimePayload
->;
-
 // --- Shared authoring primitives ---
 
 /**
@@ -125,97 +85,6 @@ export type RuntimeSimultaneousState<
     actors: PlayerId[];
     submissions: Partial<Record<PlayerId, RuntimeSimultaneousSubmission>>;
   } | null;
-};
-
-/**
- * Marker tag attached by `defineEffect` to every effect spec. `fx.effect`
- * uses `type` to dispatch to the right wire-effect builder.
- */
-export type EffectTypeTag =
-  | "rollDie"
-  | "shuffleSharedZone"
-  | "shufflePlayerZone";
-
-/**
- * Structural shape of the objects produced by `defineEffect`, as seen by
- * the `fx.effect` dispatcher. The public, per-type effect definitions live
- * in `model/spec.ts`.
- */
-export type EffectSpecLike<ContextSchema extends AnySchema = AnySchema> = {
-  type: EffectTypeTag;
-  id: string;
-  contextSchema?: ContextSchema;
-  /**
-   * Opaque authoring-time continuation callable. The runtime only needs its
-   * `id`; the heterogeneously-typed `(data) => ...` signature is erased
-   * here. The `data` parameter is typed as `never` so that this structural
-   * upper bound is assignable-from every concrete per-effect continuation
-   * (function parameters are contravariant — a specific `(data: T) => R`
-   * is assignable to `(data: X) => R` only when `X <: T`, and `never <: T`
-   * holds for every `T`).
-   */
-  __continuation?: ((data: never) => unknown) & { id: string };
-};
-
-/**
- * Options accepted by `fx.effect(effect, options)`, specialized by
- * `effect.type`.
- */
-type EffectContextValue<Effect extends EffectSpecLike> =
-  NonNullable<Effect["contextSchema"]> extends AnySchema
-    ? z.infer<NonNullable<Effect["contextSchema"]>>
-    : undefined;
-
-export type EffectInvokeOptions<
-  Effect extends EffectSpecLike,
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-> = Effect["type"] extends "rollDie"
-  ? {
-      dieId: StringKeyOf<TableOfState<State>["dice"]>;
-      context?: EffectContextValue<Effect>;
-    }
-  : Effect["type"] extends "shuffleSharedZone"
-    ? {
-        zoneId: DeckIdOfState<State>;
-        context?: EffectContextValue<Effect>;
-      }
-    : Effect["type"] extends "shufflePlayerZone"
-      ? {
-          zoneId: PlayerZoneIdOfState<State>;
-          playerId: PlayerIdOfState<State>;
-          context?: EffectContextValue<Effect>;
-        }
-      : never;
-
-type EffectInstructionForState<
-  Effect extends EffectSpecLike,
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-> = Effect["type"] extends "rollDie"
-  ? EngineRollDieInstruction
-  : Effect["type"] extends "shuffleSharedZone"
-    ? EngineShuffleSharedZoneInstruction<DeckIdOfState<State>>
-    : Effect["type"] extends "shufflePlayerZone"
-      ? EngineShufflePlayerZoneInstruction<
-          PlayerZoneIdOfState<State>,
-          PlayerIdOfState<State>
-        >
-      : never;
-
-export type ReducerFx<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-> = {
-  transition: <To extends PhaseNameOfState<State>>(
-    to: To,
-  ) => FlowInstruction<To>;
-  /**
-   * Invoke an engine-side resumable effect authored via `defineEffect`.
-   * The returned runtime instruction is consumed by the engine; if the effect
-   * has a `reduce`, its continuation is delivered back as a typed input.
-   */
-  effect: <Effect extends EffectSpecLike>(
-    effect: Effect,
-    options: EffectInvokeOptions<Effect, State>,
-  ) => EffectInstructionForState<Effect, State>;
 };
 
 // --- Composite State ---
@@ -308,14 +177,14 @@ export type SystemActionEvent = {
 export type GameEvent = SystemActionEvent;
 
 export type ReducerAcceptOptions<State> = {
-  instructions?: readonly RuntimeInstructionForState<State>[];
+  transition?: PhaseNameOfState<State>;
   events?: readonly GameEvent[];
 };
 
 export type ReducerAccept<State> = {
   type: "accept";
   state: State;
-  instructions?: readonly RuntimeInstructionForState<State>[];
+  transition?: PhaseNameOfState<State>;
   events?: readonly GameEvent[];
   terminal?: GameOutcome<PlayerIdOfState<State>>;
 };

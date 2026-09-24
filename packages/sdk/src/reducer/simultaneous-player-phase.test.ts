@@ -9,6 +9,8 @@ import {
   cardInput,
   cardTarget,
   formInput,
+  rngInput,
+  gameEvent,
   many,
 } from "../reducer/internal";
 import {
@@ -233,7 +235,10 @@ function createManifestContract() {
   } as const;
 }
 
-function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
+function createGame({
+  canResubmit = false,
+  rejectRight = false,
+}: { canResubmit?: boolean; rejectRight?: boolean } = {}) {
   const manifest = createManifestContract();
   const contract = defineGameContract({
     manifest,
@@ -266,6 +271,7 @@ function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
         canResubmit,
         submit: {
           inputs: {
+            ...(rejectRight ? { die: rngInput.d6() } : {}),
             choice: formInput.choice({
               choices: [
                 { value: "left", label: "Left" },
@@ -275,12 +281,29 @@ function createGame({ canResubmit = false }: { canResubmit?: boolean } = {}) {
             }),
           },
         },
-        resolve({ submissions, accept, tx }) {
+        resolve({ submissions, tx, random }) {
           const resolved = Object.values(submissions).map((submission) => ({
             playerId: submission.playerId,
             choice: String(submission.params.choice),
           }));
-          return accept(tx.patchPublicState({ resolved }));
+          tx.patchPublicState({ resolved });
+          if (rejectRight) {
+            tx.addResources({
+              playerId: "player-1",
+              amounts: {
+                gold: random.integer({ minInclusive: 1, maxInclusive: 6 }),
+              },
+            });
+            tx.emit(
+              gameEvent.systemAction({
+                procedureId: "resolved",
+                title: "Resolved",
+              }),
+            );
+            if (resolved.some((entry) => entry.choice === "right"))
+              return tx.reject("RETRY");
+          }
+          return tx.accept();
         },
       }),
     },
@@ -376,6 +399,60 @@ function submitCardsInput(playerId: string, cardIds: readonly string[]) {
 }
 
 describe("simultaneousPlayer phases", () => {
+  test("a rejected final actor rolls back its seal, draft, events and RNG while retaining earlier seals", async () => {
+    const bundle = createReducerTestingBundle(
+      createGame({ rejectRight: true }),
+    );
+    const initial = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2", "player-3"],
+      rngSeed: 42,
+    });
+    const submit = (state: typeof initial, playerId: string, choice: string) =>
+      bundle.dispatch({
+        state,
+        input: {
+          kind: "interaction",
+          playerId,
+          interactionId: "submit",
+          params: { choice },
+        },
+      });
+    const first = await submit(initial, "player-1", "left");
+    if (first.kind !== "accept") throw new Error("Expected first seal");
+    const saved = structuredClone(first.state);
+    expect(first.state.runtime.rng.cursor).toBeGreaterThan(0);
+    expect(first.state.runtime.simultaneous.current).not.toBeNull();
+    const rejected = await submit(first.state, "player-2", "right");
+    expect(rejected).toEqual({
+      kind: "reject",
+      errorCode: "RETRY",
+      message: undefined,
+    });
+    expect(first.state).toEqual(saved);
+    const accepted = await submit(first.state, "player-2", "left");
+    const fresh = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2", "player-3"],
+      rngSeed: 42,
+    });
+    const controlFirst = await submit(fresh, "player-1", "left");
+    if (controlFirst.kind !== "accept")
+      throw new Error("Expected control seal");
+    const control = await submit(controlFirst.state, "player-2", "left");
+    expect(accepted).toEqual(control);
+    if (accepted.kind !== "accept") throw new Error("Expected resolution");
+    expect(accepted.events).toHaveLength(1);
+    expect(accepted.state.runtime.simultaneous.current).toBeNull();
+    expect(accepted.state.domain.publicState).toEqual({
+      resolved: [
+        { playerId: "player-1", choice: "left" },
+        { playerId: "player-2", choice: "left" },
+      ],
+    });
+    expect(first.state).toEqual(saved);
+  });
+
   test("automatic phases expose no actor or causal scheduler metadata", async () => {
     const manifest = createManifestContract();
     const contract = defineGameContract({

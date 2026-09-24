@@ -29,24 +29,7 @@ exports[`phase 4 trusted-bundle characterization > lifecycle transition and phas
   },
   "traceKinds": [
     "acceptedClientInput",
-    "appliedEffect",
-  ],
-}
-`;
-
-exports[`phase 4 trusted-bundle characterization > rng effect traces and state digest stay golden 1`] = `
-{
-  "rngTrace": [
-    "cursor=0;bound=6;value=2",
-    "cursor=1;bound=6;value=4",
-  ],
-  "stateDigest": "afedcb857c1e9d9cb390604f0f8fbc937a160fe21c592bff0107f195d9b13e89",
-  "traceKinds": [
-    "acceptedClientInput",
-    "appliedEffect",
-    "rngConsumption",
-    "appliedEffect",
-    "rngConsumption",
+    "phaseEntered",
   ],
 }
 `;
@@ -98,6 +81,21 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
   "stageSeats": [
     "player-1",
     "player-2",
+  ],
+}
+`;
+
+exports[`phase 4 trusted-bundle characterization > seeded roll traces and state digest stay golden 1`] = `
+{
+  "rngTrace": [
+    "cursor=0;bound=6;value=2",
+    "cursor=1;bound=6;value=4",
+  ],
+  "stateDigest": "afedcb857c1e9d9cb390604f0f8fbc937a160fe21c592bff0107f195d9b13e89",
+  "traceKinds": [
+    "acceptedClientInput",
+    "rngConsumption",
+    "rngConsumption",
   ],
 }
 `;

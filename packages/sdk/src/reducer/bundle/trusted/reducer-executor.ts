@@ -1,9 +1,6 @@
 import { implicitResultOf } from "./trusted-runtime-args";
 import type { DispatchTraceEntry } from "../../core/types";
-import type { RuntimeInstructionForState } from "../../core/runtime-instruction";
 import type { RuntimePayload } from "../../model";
-import { createRuntimeInstructionEngine } from "../../engine/runtime-instruction-engine";
-import { cloneRuntimeTable } from "../../table";
 import type {
   GameEvent,
   GameOutcome,
@@ -16,8 +13,6 @@ import type {
 } from "../../model";
 import type { createInteractionResolver } from "./interaction-resolver";
 import type { createLifecycleRunner } from "./lifecycle-runner";
-import { createEngineInstructionResolver } from "./engine-instruction-resolver";
-import { createFlowInstructionResolver } from "./flow-instruction-resolver";
 import {
   createMutableRandomHelpers,
   sampleRngCollectorValue,
@@ -52,7 +47,7 @@ type LifecycleRunnerFor<
   Views extends ViewMapOf<Contract>,
 > = ReturnType<typeof createLifecycleRunner<Contract, Definitions, Views>>;
 
-export function createTrustedInstructionRunner<
+export function createReducerExecutor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
@@ -66,9 +61,6 @@ export function createTrustedInstructionRunner<
   type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
-
-  const flowInstructions = createFlowInstructionResolver(lifecycle);
-  const engineInstructions = createEngineInstructionResolver<Contract>();
 
   type RuntimeRngResult = {
     runtimeRng?: RuntimeRngState;
@@ -93,89 +85,49 @@ export function createTrustedInstructionRunner<
   ): ReducerResult<DomainState> & RuntimeRngResult {
     const ctx = scope.buildContext(state);
 
-    if (input.kind === "interaction") {
-      const phaseName = state.flow.currentPhase as PhaseName;
-      const interaction = scope.findInteractionInPhase(
-        phaseName,
-        input.interactionId,
+    const phaseName = state.flow.currentPhase as PhaseName;
+    const interaction = scope.findInteractionInPhase(
+      phaseName,
+      input.interactionId,
+    );
+    if (!interaction) {
+      return rejectResult(
+        "unsupported-action",
+        `Interaction '${input.interactionId}' is not available in phase '${state.flow.currentPhase}'.`,
       );
-      if (!interaction) {
-        return rejectResult(
-          "unsupported-action",
-          `Interaction '${input.interactionId}' is not available in phase '${state.flow.currentPhase}'.`,
-        );
-      }
-      const parsed = interactions.parseInteractionParams(
-        interaction,
-        input.params,
-        { playerId: input.playerId },
-      );
-      if (!parsed.ok) {
-        return rejectResult("invalid-action-params", parsed.message);
-      }
-      const random = createMutableRandomHelpers(state.runtime.rng);
-      const reduceArgs = scope.buildRuntimeArgs(
-        state,
-        {
-          ...ctx,
-          state: scope.toDomainState(state),
-          input: {
-            playerId: input.playerId,
-            params: parsed.params,
-          },
-        },
-        { random: random.random },
-      );
-      const result = normalizeResult(
-        interaction.reduce(reduceArgs) as ReducerResult<DomainState>,
-        () => implicitResultOf(reduceArgs),
-      );
-      return result.type === "accept"
-        ? {
-            ...result,
-            runtimeRng: random.currentRng(),
-            rngConsumptions: random.consumptions(),
-          }
-        : result;
     }
-
-    if (input.kind === "continuation") {
-      const continuation = scope.continuationById(input.continuationId);
-      if (!continuation) {
-        return rejectResult(
-          "missing-continuation",
-          `Continuation '${input.continuationId}' was not registered.`,
-        );
-      }
-      const random = createMutableRandomHelpers(state.runtime.rng);
-      const continuationArgs = scope.buildRuntimeArgs(
-        state,
-        {
-          ...ctx,
-          state: scope.toDomainState(state),
-          input: {
-            source: "effect" as const,
-            effectKind: input.effectKind,
-            data: input.resumeData,
-            response: input.response,
-          },
-        },
-        { random: random.random },
-      );
-      const result = normalizeResult(
-        continuation.reduce(continuationArgs),
-        () => implicitResultOf(continuationArgs),
-      );
-      return result.type === "accept"
-        ? {
-            ...result,
-            runtimeRng: random.currentRng(),
-            rngConsumptions: random.consumptions(),
-          }
-        : result;
+    const parsed = interactions.parseInteractionParams(
+      interaction,
+      input.params,
+      { playerId: input.playerId },
+    );
+    if (!parsed.ok) {
+      return rejectResult("invalid-action-params", parsed.message);
     }
-
-    return scope.runtimeHelpers.accept(scope.toDomainState(state));
+    const random = createMutableRandomHelpers(state.runtime.rng);
+    const reduceArgs = scope.buildRuntimeArgs(
+      state,
+      {
+        ...ctx,
+        state: scope.toDomainState(state),
+        input: {
+          playerId: input.playerId,
+          params: parsed.params,
+        },
+      },
+      { random },
+    );
+    const result = normalizeResult(
+      interaction.reduce(reduceArgs) as ReducerResult<DomainState>,
+      () => implicitResultOf(reduceArgs),
+    );
+    return result.type === "accept"
+      ? {
+          ...result,
+          runtimeRng: random.currentRng(),
+          rngConsumptions: random.consumptions(),
+        }
+      : result;
   }
 
   function preSampleRngForAction(
@@ -190,9 +142,6 @@ export function createTrustedInstructionRunner<
       traceEntry: string;
     }[];
   } {
-    if (input.kind !== "interaction") {
-      return { state, input, consumptions: [] };
-    }
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(
       phaseName,
@@ -249,10 +198,7 @@ export function createTrustedInstructionRunner<
         trace?: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
       })
     | null {
-    if (
-      input.kind !== "interaction" ||
-      input.interactionId !== SIMULTANEOUS_SUBMIT_INTERACTION_ID
-    ) {
+    if (input.interactionId !== SIMULTANEOUS_SUBMIT_INTERACTION_ID) {
       return null;
     }
 
@@ -336,7 +282,6 @@ export function createTrustedInstructionRunner<
       return {
         type: "accept",
         state: stateWithSubmission,
-        instructions: [],
       };
     }
 
@@ -358,7 +303,7 @@ export function createTrustedInstructionRunner<
         submittedPlayerIds: [...actors],
         waitingPlayerIds: [],
       },
-      { random: random.random },
+      { random },
     );
     const resolved = normalizeResult(
       resolve(resolveArgs) as ReducerResult<DomainState>,
@@ -373,7 +318,7 @@ export function createTrustedInstructionRunner<
         ...resolved.state,
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
       } as State),
-      instructions: resolved.instructions ?? [],
+      ...(resolved.transition ? { transition: resolved.transition } : {}),
       ...(resolved.terminal ? { terminal: resolved.terminal } : {}),
       events: resolved.events ?? [],
       trace: rngTrace(random.consumptions()),
@@ -410,7 +355,7 @@ export function createTrustedInstructionRunner<
           rng: result.runtimeRng ?? sampled.state.runtime.rng,
         },
       } as State,
-      instructions: result.instructions ?? [],
+      ...(result.transition ? { transition: result.transition } : {}),
       ...(result.terminal ? { terminal: result.terminal } : {}),
       events: result.events ?? [],
       trace: rngTrace([
@@ -420,92 +365,66 @@ export function createTrustedInstructionRunner<
     };
   }
 
-  function resolveInstruction(
-    state: State,
-    instruction: RuntimeInstructionForState<State>,
-  ): {
+  const MAX_PHASE_ENTRIES = 1_000;
+
+  type Accepted = {
     state: State;
-    queuedInputs: ReducerInput[];
-    queuedInstructions: RuntimeInstructionForState<State>[];
-    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
+    transition?: PhaseName;
     terminal?: GameOutcome<PlayerId>;
     events?: readonly GameEvent[];
-  } {
-    switch (instruction.kind) {
-      case "flow.transition":
-        return flowInstructions.resolveTransition(state, instruction);
-      case "engine.rollDie":
-        return engineInstructions.resolveRollDie(state, instruction);
-      case "engine.shuffleSharedZone":
-        return engineInstructions.resolveShuffleSharedZone(state, instruction);
-      case "engine.shufflePlayerZone":
-        return engineInstructions.resolveShufflePlayerZone(state, instruction);
-      default: {
-        const _exhaustive: never = instruction;
-        throw new Error(
-          `Unknown runtime instruction kind: ${(_exhaustive as { kind: string }).kind}`,
-        );
-      }
-    }
-  }
-
-  function resolveInstructionForDrain(
-    state: State,
-    instruction: RuntimeInstructionForState<State>,
-  ): {
-    state: State;
-    queuedInputs: ReducerInput[];
-    queuedInstructions: RuntimeInstructionForState<State>[];
-    trace: DispatchTraceEntry<State, PlayerId, ReducerInput>[];
-    terminal?: GameOutcome<PlayerId>;
-    events?: readonly GameEvent[];
-  } {
-    switch (instruction.kind) {
-      case "flow.transition":
-        return flowInstructions.resolveTransition(state, instruction);
-      case "engine.rollDie":
-        return engineInstructions.resolveRollDieDraft(state, instruction);
-      case "engine.shuffleSharedZone":
-        return engineInstructions.resolveShuffleSharedZoneDraft(
-          state,
-          instruction,
-        );
-      case "engine.shufflePlayerZone":
-        return engineInstructions.resolveShufflePlayerZoneDraft(
-          state,
-          instruction,
-        );
-      default: {
-        const _exhaustive: never = instruction;
-        throw new Error(
-          `Unknown runtime instruction kind: ${(_exhaustive as { kind: string }).kind}`,
-        );
-      }
-    }
-  }
-
-  const instructionEngine = createRuntimeInstructionEngine<
-    State,
-    PlayerId,
-    ReducerInput
-  >({
-    reduce(state, input) {
-      return reduceOnce(state, input);
-    },
-    resolveInstruction: resolveInstructionForDrain,
-    prepareInstructionState(state) {
-      return {
-        ...state,
-        table: cloneRuntimeTable(state.table),
-      };
-    },
-  });
-
-  return {
-    resolveInstruction,
-    dispatch: instructionEngine.dispatch,
-    drainInstructions: instructionEngine.drainInstructions,
-    reduceInternal,
-    reduceOnce,
+    trace?: readonly DispatchTraceEntry<State, PlayerId, ReducerInput>[];
   };
+
+  function complete(initial: Accepted, entries = 0) {
+    let state = initial.state;
+    let transition = initial.transition;
+    let terminal = initial.terminal;
+    const events = [...(initial.events ?? [])];
+    const trace = [...(initial.trace ?? [])];
+    while (transition !== undefined) {
+      if (entries >= MAX_PHASE_ENTRIES) {
+        throw new Error(
+          `Reducer exceeded ${MAX_PHASE_ENTRIES} phase entries in one dispatch.`,
+        );
+      }
+      entries += 1;
+      const finalEntry = terminal !== undefined;
+      const from = state.flow.currentPhase;
+      const entered = lifecycle.initializePhaseResult(state, transition);
+      trace.push({
+        type: "phaseEntered",
+        from,
+        to: entered.state.flow.currentPhase,
+      });
+      trace.push(...rngTrace(entered.consumptions));
+      state = entered.state;
+      events.push(...entered.events);
+      terminal ??= entered.terminal;
+      if (finalEntry && entered.transition !== undefined) {
+        throw new Error(
+          "A terminal phase entry cannot request another transition.",
+        );
+      }
+      transition = entered.transition as PhaseName | undefined;
+    }
+    return {
+      type: "accept" as const,
+      state,
+      events,
+      trace,
+      ...(terminal ? { terminal } : {}),
+    };
+  }
+
+  function dispatch(state: State, input: ReducerInput) {
+    const result = reduceOnce(state, input);
+    if (result.type === "reject") return result;
+    return complete({
+      ...result,
+      transition: result.transition as PhaseName | undefined,
+      trace: [{ type: "acceptedClientInput", input }, ...(result.trace ?? [])],
+    });
+  }
+
+  return { dispatch, complete };
 }

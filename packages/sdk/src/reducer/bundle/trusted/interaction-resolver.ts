@@ -14,7 +14,6 @@ import {
 import { parseInteractionParams } from "./collector-params";
 import { createInteractionAuthorization } from "./interaction-authorization";
 import { createInteractionDecisionResolver } from "./interaction-decision";
-import { createStageResolver } from "./stage-resolver";
 import {
   rejectResult,
   type TrustedInput,
@@ -38,11 +37,9 @@ export function createInteractionResolver<
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 
-  const stages = createStageResolver(scope);
   const authorization = createInteractionAuthorization(scope);
   const decisions = createInteractionDecisionResolver(
     scope,
-    stages,
     authorization,
     options,
   );
@@ -88,10 +85,7 @@ export function createInteractionResolver<
     findCardInputKey,
     findCardInputKeyForZone,
     isActorAuthorized: authorization.isActorAuthorized,
-    isInteractionAllowedInStep: stages.isInteractionAllowedInStep,
     parseInteractionParams,
-    resolveActiveStage: stages.resolveActiveStage,
-    resolveActiveStageAllowlist: stages.resolveActiveStageAllowlist,
     resolveAvailableInteractionsFor: decisions.resolveAvailableInteractionsFor,
     resolveInteractionActionability: decisions.resolveInteractionActionability,
     resolveInteractionActorAuthorization:

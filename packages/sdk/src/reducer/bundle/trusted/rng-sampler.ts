@@ -13,11 +13,12 @@ export type RngConsumption = {
   traceEntry: string;
 };
 
-export type MutableRandomHelpers = {
-  random: RandomHelpers;
-  currentRng: () => RuntimeRngState;
-  consumptions: () => readonly RngConsumption[];
-};
+export type MutableRandomHelpers =
+  import("../../transaction").TransactionRandom & {
+    random: RandomHelpers;
+    currentRng: () => RuntimeRngState;
+    consumptions: () => readonly RngConsumption[];
+  };
 
 const MAX_INTEGER_RANGE = 0x1_0000_0000;
 
@@ -192,6 +193,18 @@ export function createMutableRandomHelpers(
         recordedConsumptions.push(...sampled.consumptions);
         return sampled.values;
       },
+    },
+    roll(sides) {
+      const sampled = sampleDieValue(sides, current);
+      current = sampled.nextRng;
+      recordedConsumptions.push(sampled.consumption);
+      return sampled.value;
+    },
+    shuffle(values, operation) {
+      const sampled = shuffleWithRng(values, current, operation);
+      current = sampled.nextRng;
+      recordedConsumptions.push(...sampled.consumptions);
+      return sampled.orderedValues;
     },
     currentRng: () => current,
     consumptions: () => [...recordedConsumptions],

@@ -1,6 +1,6 @@
 {
   "name": "@dreamboard-games/reducer-contract",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "description": "Single-source-of-truth TypeScript wire contract between the JS reducer bundle and the SDK-owned reducer bundle ABI. The JSON Schema in ./schema is authoritative.",
   "type": "module",
@@ -26,11 +26,6 @@
       "types": "./dist/generated/zod.d.ts",
       "import": "./generated/zod.ts",
       "default": "./generated/zod.ts"
-    },
-    "./builders": {
-      "types": "./dist/generated/builders.d.ts",
-      "import": "./generated/builders.ts",
-      "default": "./generated/builders.ts"
     },
     "./version": {
       "types": "./dist/generated/version.d.ts",

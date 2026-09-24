@@ -177,7 +177,7 @@ export interface TransactionMutations<
   /**
    * Draw the top `count` cards from one perPlayer zone into another for the
    * same player (e.g. deck → hand at the start of a turn). Companion to
-   * {@link dealCardsToPlayerZone} for the perPlayer → perPlayer case. Stops
+   * {@link deal} for the perPlayer → perPlayer case. Stops
    * silently if the source runs out before `count` is reached.
    */
   dealCardsBetweenPlayerZones<
@@ -236,7 +236,7 @@ export interface TransactionMutations<
   /**
    * Move a named card from a shared zone (supply pile, deck) to a perPlayer
    * zone (e.g. discard). The "gain" verb in deck-builders. Distinct from
-   * {@link dealCardsToPlayerZone}, which draws unspecified top-N cards from a
+   * {@link deal}, which draws unspecified top-N cards from a
    * deck. Owner flips to the receiving player; visibility is recomputed.
    */
   moveCardFromSharedZoneToPlayerZone<
@@ -258,11 +258,10 @@ export interface TransactionMutations<
   /**
    * Deal the top `count` cards from a shared deck into a player's hand zone.
    *
-   * This op does not consume RNG. If the deck needs to be random, shuffle it
-   * first with `fx.shuffleSharedZone(...)`, then deal from the shuffled deck
-   * inside the same reducer via this op.
+   * Dealing does not consume RNG. Shuffle first with `tx.shuffle({ zoneId })`
+   * when the deck needs a random order, then call `tx.deal(...)`.
    */
-  dealCardsToPlayerZone<
+  deal<
     FromZoneId extends DeckIdOfTable<TableOfState<State>>,
     PlayerId extends PlayerIdOfTable<TableOfState<State>>,
     ToZoneId extends CompatibleHandIdForDeck<TableOfState<State>, FromZoneId> &
@@ -363,7 +362,7 @@ export interface TransactionMutations<
    * `q.player.canAfford(...)` in your `validate` step before invoking.
    *
    *     tx.spendResources({ playerId, amounts: COST_DEV_CARD });
-   *     tx.dealCardsToPlayerZone({ ... });
+   *     tx.deal({ ... });
    */
   spendResources(args: {
     playerId: PlayerIdOfTable<TableOfState<State>>;
@@ -799,7 +798,7 @@ export const transactionMutations = {
     });
     return state;
   },
-  dealCardsToPlayerZone<S extends AnyState>(
+  deal<S extends AnyState>(
     state: S,
     args: {
       fromZoneId: string;

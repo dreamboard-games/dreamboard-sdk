@@ -1,9 +1,7 @@
+import { createReducerTransaction } from "./transaction";
+import { createTestEdit, createTestRandom } from "./transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
-import {
-  createReducerEdit,
-  createStateQueries,
-  perPlayer,
-} from "../reducer/internal";
+import { createStateQueries, perPlayer } from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import type { PlayerId } from "./per-player";
 import { createSpatialTable } from "./table/table-test-fixtures";
@@ -163,10 +161,81 @@ function deepFreeze<T>(value: T): T {
 }
 
 describe("reducer transactions", () => {
+  test("seeded methods are bound, preserve shuffled metadata, and share the isolated draft", () => {
+    const state = createState();
+    const cards = ["card-a", "card-b"];
+    state.table.decks.draw = [...cards];
+    state.table.zones.shared.draw = [...cards];
+    state.table.hands.hand = perPlayer(state.table.playerOrder, () => []);
+    state.table.zones.perPlayer.hand = state.table.hands.hand;
+    for (const [position, cardId] of cards.entries()) {
+      state.table.componentLocations[cardId] = {
+        type: "InDeck",
+        deckId: "draw",
+        position,
+        playedBy: "player-2",
+      };
+    }
+    state.table.dice.d6 = {
+      id: "d6",
+      dieTypeId: "d6",
+      dieName: "Die",
+      sides: 6,
+      value: null,
+      properties: {},
+    };
+    const before = structuredClone(state);
+    deepFreeze(state);
+    const random = createTestRandom();
+    resetCloneRuntimeTableCallCount();
+    const tx = createReducerTransaction(state, random);
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    const cachedQ = tx.q;
+    expect(cachedQ.zone.sharedCards("draw")).toEqual(cards);
+    expect(tx.roll).toBe(tx.roll);
+    expect(tx.shuffle).toBe(tx.shuffle);
+    const { roll, shuffle } = tx;
+    const rolled = roll("d6");
+    expect(rolled).toBeGreaterThanOrEqual(1);
+    expect(rolled).toBeLessThanOrEqual(6);
+    expect(tx.state.table.dice.d6.value).toBe(rolled);
+    shuffle({ zoneId: "draw" });
+    const shuffled = [...tx.q.zone.sharedCards("draw")];
+    expect([...shuffled].sort()).toEqual(cards);
+    for (const [position, cardId] of shuffled.entries()) {
+      expect(tx.state.table.componentLocations[cardId]).toEqual({
+        type: "InDeck",
+        deckId: "draw",
+        position,
+        playedBy: "player-2",
+      });
+      expect(tx.state.table.ownerOfCard[cardId]).toBe("player-1");
+    }
+    tx.deal({
+      fromZoneId: "draw",
+      toZoneId: "hand",
+      playerId: player("player-1"),
+      count: 2,
+    });
+    expect(tx.q.zone.sharedCards("draw")).toEqual([]);
+    expect(tx.q.zone.playerCards(player("player-1"), "hand")).toEqual(shuffled);
+    shuffle({ zoneId: "hand", playerId: player("player-1") });
+    expect(
+      [...tx.q.zone.playerCards(player("player-1"), "hand")].sort(),
+    ).toEqual(cards);
+    expect(getCloneRuntimeTableCallCount()).toBe(1);
+    expect(state).toEqual(before);
+    const sibling = createReducerTransaction(state, createTestRandom());
+    expect(sibling.roll("d6")).toBe(rolled);
+    sibling.shuffle({ zoneId: "draw" });
+    expect(sibling.q.zone.sharedCards("draw")).toEqual(shuffled);
+    expect(sibling.q.zone.playerCards(player("player-1"), "hand")).toEqual([]);
+  });
+
   test("tx.q refreshes after each operation without mutating the callback q", () => {
     const state = createState();
     const callbackQ = createStateQueries(state);
-    const tx = createReducerEdit<TestState>()(state);
+    const tx = createTestEdit<TestState>()(state);
 
     tx.moveCardBetweenPlayerZones({
       playerId: player("player-1"),
@@ -192,7 +261,7 @@ describe("reducer transactions", () => {
   });
 
   test("tx.rotatePlayerZone rotates selected cards and refreshes ownership", () => {
-    const tx = createReducerEdit<TestState>()(createState());
+    const tx = createTestEdit<TestState>()(createState());
 
     tx.rotatePlayerZone({
       zoneId: "hand",
@@ -224,7 +293,7 @@ describe("reducer transactions", () => {
   test("tx mutations clone the table once and retain one draft state", () => {
     const state = deepFreeze(createState());
     resetCloneRuntimeTableCallCount();
-    const tx = createReducerEdit<TestState>()(state);
+    const tx = createTestEdit<TestState>()(state);
 
     const afterAdd = tx.addResources({
       playerId: player("player-1"),
@@ -257,7 +326,7 @@ describe("reducer transactions", () => {
   test("one spatial transaction refreshes queries and isolates its sibling", () => {
     const state = deepFreeze({ table: createSpatialTable() });
     const before = structuredClone(state);
-    const edit = createReducerEdit<typeof state>();
+    const edit = createTestEdit<typeof state>();
     const tx = edit(state);
     const sibling = edit(state);
     const siblingBefore = structuredClone(sibling.state);
@@ -309,8 +378,8 @@ describe("reducer transactions", () => {
 
   test("independent transactions isolate mutations and refresh cached queries", () => {
     const state = deepFreeze(createState());
-    const first = createReducerEdit<TestState>()(state);
-    const second = createReducerEdit<TestState>()(state);
+    const first = createTestEdit<TestState>()(state);
+    const second = createTestEdit<TestState>()(state);
     const secondBefore = structuredClone(second.state);
     const firstDraft = first.state;
     const initialQueries = first.q;
@@ -349,7 +418,7 @@ describe("reducer transactions", () => {
   });
 
   test("edit factories reuse the transaction method surface", () => {
-    const edit = createReducerEdit<TestState>();
+    const edit = createTestEdit<TestState>();
     const first = edit(createState());
     const second = edit(createState());
 
@@ -372,7 +441,7 @@ describe("reducer transactions", () => {
 
   test("transactions rotate whole hands to the right", () => {
     const state = createState();
-    const tx = createReducerEdit<TestState>()(state);
+    const tx = createTestEdit<TestState>()(state);
     const next = tx.rotatePlayerZone({
       zoneId: "hand",
       direction: "right",

@@ -1,8 +1,6 @@
 import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { ManifestContract } from "../manifest";
 import type {
-  CardIdOfState,
-  CardTypeOfState,
   PlayerIdOfState,
   PlayerZoneIdOfManifest,
   TableOfState,
@@ -13,7 +11,6 @@ import type {
   ActorSelector,
   BivariantCallback,
   MutationHelpers,
-  PhaseEnterArgs,
   ReadHelpers,
   ValidationIssue,
 } from "./runtime-args";
@@ -176,8 +173,6 @@ export type InteractionSpec<
   inputs: Collectors;
   paramsSchema?: SchemaLike<ClientParamsOf<Collectors>>;
   presentation?: InteractionPresentation;
-  /** @internal Phase-local step gates are attached by `defineStepPhase`. */
-  __steps?: readonly string[];
   /**
    * Draft commit policy. The input collectors still own value shape and
    * validation; this only controls whether a ready draft may be submitted
@@ -231,71 +226,6 @@ export type InteractionSpec<
   >;
 };
 
-export type CardActionSpec<
-  Collectors extends Record<string, InputCollector> = Record<
-    string,
-    InputCollector
-  >,
-  State extends {
-    table: RuntimeTableRecord;
-    flow: { currentPhase: string };
-  } = {
-    table: RuntimeTableRecord;
-    flow: { currentPhase: string };
-  },
-  Manifest extends ManifestContract<TableOfState<State>> = ManifestContract<
-    TableOfState<State>
-  >,
-  PlayFrom extends PlayerZoneIdOfManifest<Manifest> =
-    PlayerZoneIdOfManifest<Manifest>,
-  ErrorCode extends string = string,
-> = {
-  cardType: CardTypeOfState<State>;
-  playFrom: PlayFrom;
-  inputs?: Collectors;
-  paramsSchema?: SchemaLike<Record<string, unknown>>;
-  presentation?: InteractionPresentation;
-  /** @internal Phase-local step gates are attached by `defineStepPhase`. */
-  __steps?: readonly string[];
-  /**
-   * Draft commit policy. Card clicks still mutate the draft first;
-   * `autoWhenReady` submits only once the full interaction draft validates.
-   * Multi-value collectors created with `many(...)` are always manual draft
-   * interactions and cannot opt into `autoWhenReady`.
-   */
-  commit?: InteractionCommitPolicyFor<Collectors>;
-  actor?: ActorSelector<State, Manifest>;
-  visibility?: "all" | "actorsOnly";
-  errorCodes?: readonly ErrorCode[];
-  cost?: BivariantCallback<
-    InteractionValidateArgs<
-      Collectors & { cardId: InputCollector<SchemaLike<CardIdOfState<State>>> },
-      State,
-      Manifest
-    >,
-    Readonly<Record<string, number>>
-  >;
-  rules?: readonly InteractionRule<
-    NoInfer<
-      Collectors & {
-        cardId: InputCollector<SchemaLike<CardIdOfState<State>>>;
-      }
-    >,
-    State,
-    Manifest,
-    ErrorCode
-  >[];
-  reduce: BivariantCallback<
-    InteractionReduceArgs<
-      Collectors & { cardId: InputCollector<SchemaLike<CardIdOfState<State>>> },
-      State,
-      Manifest,
-      ErrorCode
-    >,
-    ReducerResult<State>
-  >;
-};
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type AnyInteractionRule = Omit<
   InteractionRule<any, any, any, any>,
@@ -304,24 +234,6 @@ type AnyInteractionRule = Omit<
   available?: BivariantCallback<any, boolean>;
   validate?: BivariantCallback<any, InteractionRuleValidationResult<any>>;
 };
-
-export type AnyCardActionSpec<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-> = Omit<
-  CardActionSpec<any, State, Manifest, any, any>,
-  "actor" | "cost" | "rules" | "reduce"
-> & {
-  actor?: BivariantCallback<any, any>;
-  cost?: BivariantCallback<any, Readonly<Record<string, number>>>;
-  rules?: readonly AnyInteractionRule[];
-  reduce: BivariantCallback<any, ReducerResult<any> | void>;
-};
-
-export type CardActionMap<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-> = Record<string, AnyCardActionSpec<State, Manifest>>;
 
 /**
  * Type-safe erasure of {@link InteractionSpec} used by the runtime when it
@@ -348,30 +260,6 @@ export type InteractionMap<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
 > = Record<string, AnyInteractionSpec<State, Manifest>>;
-
-export type StageSpec<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-> = {
-  when?: BivariantCallback<
-    ActionContext<State, Manifest> & { state: State },
-    boolean
-  >;
-  onEnter?: BivariantCallback<
-    PhaseEnterArgs<State, Manifest>,
-    ReducerResult<State> | void
-  >;
-  onExit?: BivariantCallback<
-    PhaseEnterArgs<State, Manifest>,
-    ReducerResult<State> | void
-  >;
-  allow: readonly string[];
-};
-
-export type StageMap<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-> = Record<string, StageSpec<State, Manifest>>;
 
 export type PhaseZoneList<
   Manifest extends ManifestContract<RuntimeTableRecord>,

@@ -25,15 +25,12 @@ import type {
   RuntimePhaseState,
 } from "./runtime";
 import type {
-  EffectMap,
-  CardActionMap,
   InputCollector,
   InteractionMap,
   PhaseDefinition,
   PhaseZoneList,
   PlayerViewDefinition,
   SharedViewDefinition,
-  StageMap,
   StaticViewDefinition,
 } from "./spec";
 
@@ -113,7 +110,7 @@ export type BaseGameSessionOfContract<Contract> = ReducerSessionState<
 /**
  * Heterogeneous phase map for a contract. Each phase carries its own local
  * `PhaseStateSchema` plus authoring-time Actions/Flows/Interactions/
- * Stages/Zones maps. The registries are bound to the contract's base state +
+ * interaction and zone maps. The registries are bound to the contract's base state +
  * manifest so the runtime can iterate them through a single index type
  * without reaching for `any`.
  */
@@ -123,17 +120,11 @@ export type PhaseMapOf<Contract> = {
     BaseGameStateOfContract<Contract>,
     ManifestContractOf<Contract>,
     Record<string, InputCollector>,
-    EffectMap<BaseGameStateOfContract<Contract>, ManifestContractOf<Contract>>,
     InteractionMap<
       BaseGameStateOfContract<Contract>,
       ManifestContractOf<Contract>
     >,
-    StageMap<BaseGameStateOfContract<Contract>, ManifestContractOf<Contract>>,
-    PhaseZoneList<ManifestContractOf<Contract>>,
-    CardActionMap<
-      BaseGameStateOfContract<Contract>,
-      ManifestContractOf<Contract>
-    >
+    PhaseZoneList<ManifestContractOf<Contract>>
   >;
 };
 
@@ -159,11 +150,8 @@ export type PhaseStateMapOfDefinitions<
       any,
       any,
       Record<string, InputCollector>,
-      EffectMap<any, any>,
       InteractionMap<any, any>,
-      StageMap<any, any>,
-      PhaseZoneList<any>,
-      CardActionMap<any, any>
+      PhaseZoneList<any>
     >
   >,
 > = Partial<{
@@ -182,11 +170,8 @@ export type PhaseStateOfDefinitions<
       any,
       any,
       Record<string, InputCollector>,
-      EffectMap<any, any>,
       InteractionMap<any, any>,
-      StageMap<any, any>,
-      PhaseZoneList<any>,
-      CardActionMap<any, any>
+      PhaseZoneList<any>
     >
   >,
 > = {
@@ -299,23 +284,6 @@ export type PhaseDefinitionByName<
   ? PhasesOfDefinition<Definition>[PhaseName]
   : never;
 
-type EffectsOfDefinition<Definition> =
-  PhasesOfDefinition<Definition>[keyof PhasesOfDefinition<Definition> &
-    string] extends {
-    effects?: infer Effects;
-  }
-    ? Effects extends Record<string, unknown>
-      ? Effects[keyof Effects & string]
-      : never
-    : never;
-
-export type EffectIdsOfDefinition<Definition> =
-  EffectsOfDefinition<Definition> extends infer Effect
-    ? Effect extends { id: infer Id }
-      ? Extract<Id, string>
-      : never
-    : never;
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export type GameStateOf<Source> = Source extends {
   contract: infer Contract extends ReducerGameContractLike;
@@ -405,7 +373,7 @@ export type AnyReducerGameDefinition = ReducerGameDefinition<
   ViewMapOf<ReducerGameContractLike>
 >;
 
-// --- Interaction / Stage / Zone extractors -------------------------------
+// --- Interaction / Zone extractors -------------------------------
 
 type InteractionRegistriesOfDefinition<Definition> =
   PhasesOfDefinition<Definition>[keyof PhasesOfDefinition<Definition> &
@@ -423,44 +391,12 @@ type SimultaneousSubmitRegistriesOfDefinition<Definition> =
     ? { submit: NonNullable<Submit> }
     : never;
 
-type CardActionRegistriesOfDefinition<Definition> =
-  PhasesOfDefinition<Definition>[keyof PhasesOfDefinition<Definition> &
-    string] extends {
-    cardActions?: infer CardActions;
-  }
-    ? NonNullable<CardActions>
-    : never;
-
 export type InteractionIdOfDefinition<Definition> =
-  InteractionRegistriesOfDefinition<Definition> extends infer Interactions
-    ? SimultaneousSubmitRegistriesOfDefinition<Definition> extends infer Submit
-      ? CardActionRegistriesOfDefinition<Definition> extends infer CardActions
-        ? Interactions extends Record<string, unknown>
-          ? CardActions extends Record<string, unknown>
-            ? Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<CardActions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              :
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<CardActions> & string)
-            : Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              : NonNeverKeys<Interactions> & string
-          : CardActions extends Record<string, unknown>
-            ? Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<CardActions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              : NonNeverKeys<CardActions> & string
-            : Submit extends Record<string, unknown>
-              ? NonNeverKeys<Submit> & string
-              : never
-        : never
-      : never
+  | RegistryKeys<InteractionRegistriesOfDefinition<Definition>>
+  | RegistryKeys<SimultaneousSubmitRegistriesOfDefinition<Definition>>;
+type RegistryKeys<Registry> =
+  Registry extends Record<string, unknown>
+    ? NonNeverKeys<Registry> & string
     : never;
 
 type InteractionRegistryOfDefinitionPhase<
@@ -481,16 +417,6 @@ type SimultaneousSubmitRegistryOfDefinitionPhase<
     submit?: infer Submit;
   }
     ? { submit: NonNullable<Submit> }
-    : Record<string, never>;
-
-type CardActionRegistryOfDefinitionPhase<
-  Definition,
-  PhaseName extends PhaseNamesOfDefinition<Definition>,
-> =
-  PhaseDefinitionByName<Definition, PhaseName> extends {
-    cardActions?: infer CardActions;
-  }
-    ? NonNullable<CardActions>
     : Record<string, never>;
 
 type NonNeverRegistryValue<Registry, Key extends string> =
@@ -514,35 +440,7 @@ export type InteractionIdOfDefinitionPhase<
         Definition,
         PhaseName
       > extends infer Submit
-      ? CardActionRegistryOfDefinitionPhase<
-          Definition,
-          PhaseName
-        > extends infer CardActions
-        ? Interactions extends Record<string, unknown>
-          ? CardActions extends Record<string, unknown>
-            ? Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<CardActions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              :
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<CardActions> & string)
-            : Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<Interactions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              : NonNeverKeys<Interactions> & string
-          : CardActions extends Record<string, unknown>
-            ? Submit extends Record<string, unknown>
-              ?
-                  | (NonNeverKeys<CardActions> & string)
-                  | (NonNeverKeys<Submit> & string)
-              : NonNeverKeys<CardActions> & string
-            : Submit extends Record<string, unknown>
-              ? NonNeverKeys<Submit> & string
-              : never
-        : never
+      ? RegistryKeys<Interactions> | RegistryKeys<Submit>
       : never
     : never;
 
@@ -551,38 +449,14 @@ export type InteractionSpecByNameOfDefinitionPhase<
   PhaseName extends PhaseNamesOfDefinition<Definition>,
   InteractionId extends InteractionIdOfDefinitionPhase<Definition, PhaseName>,
 > =
-  InteractionRegistryOfDefinitionPhase<
-    Definition,
-    PhaseName
-  > extends infer Interactions
-    ? Interactions extends Record<string, unknown>
-      ? NonNeverRegistryValue<
-          Interactions,
-          InteractionId
-        > extends infer InteractionSpec
-        ? [InteractionSpec] extends [never]
-          ? CardActionRegistryOfDefinitionPhase<
-              Definition,
-              PhaseName
-            > extends infer CardActions
-            ? NonNeverRegistryValue<
-                CardActions,
-                InteractionId
-              > extends infer CardActionSpec
-              ? [CardActionSpec] extends [never]
-                ? SimultaneousSubmitRegistryOfDefinitionPhase<
-                    Definition,
-                    PhaseName
-                  > extends infer Submit
-                  ? NonNeverRegistryValue<Submit, InteractionId>
-                  : never
-                : CardActionSpec
-              : never
-            : never
-          : InteractionSpec
-        : never
-      : never
-    : never;
+  | NonNeverRegistryValue<
+      InteractionRegistryOfDefinitionPhase<Definition, PhaseName>,
+      InteractionId
+    >
+  | NonNeverRegistryValue<
+      SimultaneousSubmitRegistryOfDefinitionPhase<Definition, PhaseName>,
+      InteractionId
+    >;
 
 type CollectorKindsOf<Collectors> =
   Collectors extends Record<string, InputCollector>
@@ -840,26 +714,6 @@ export type DefaultedClientParamKeysOfInteractionOfDefinition<
         string
     : never;
 
-type StageRegistryOfDefinitionPhase<
-  Definition,
-  PhaseName extends PhaseNamesOfDefinition<Definition>,
-> =
-  PhaseDefinitionByName<Definition, PhaseName> extends {
-    stages?: infer Stages;
-  }
-    ? NonNullable<Stages>
-    : Record<string, never>;
-
-export type StageNamesOfDefinitionPhase<
-  Definition,
-  PhaseName extends PhaseNamesOfDefinition<Definition>,
-> =
-  StageRegistryOfDefinitionPhase<Definition, PhaseName> extends infer Stages
-    ? Stages extends Record<string, unknown>
-      ? NonNeverKeys<Stages> & string
-      : never
-    : never;
-
 type ZoneRegistriesOfDefinition<Definition> =
   PhasesOfDefinition<Definition>[keyof PhasesOfDefinition<Definition> &
     string] extends {
@@ -873,44 +727,4 @@ export type ZoneIdsOfDefinition<Definition> =
     ? Zones extends readonly (infer ZoneId)[]
       ? Extract<ZoneId, string>
       : never
-    : never;
-
-type ZoneListOfDefinitionPhase<
-  Definition,
-  PhaseName extends PhaseNamesOfDefinition<Definition>,
-> =
-  PhaseDefinitionByName<Definition, PhaseName> extends {
-    zones?: infer Zones;
-  }
-    ? NonNullable<Zones>
-    : readonly [];
-
-export type PlayableInteractionsOfZoneOfDefinition<
-  Definition,
-  PhaseName extends PhaseNamesOfDefinition<Definition>,
-  ZoneId extends string,
-> =
-  ZoneListOfDefinitionPhase<
-    Definition,
-    PhaseName
-  > extends readonly (infer From)[]
-    ? Extract<From, ZoneId> extends never
-      ? never
-      : CardActionRegistryOfDefinitionPhase<
-            Definition,
-            PhaseName
-          > extends infer CardActions
-        ? CardActions extends Record<string, unknown>
-          ? {
-              [ActionId in keyof CardActions &
-                string]: CardActions[ActionId] extends {
-                playFrom: infer PlayFrom extends string;
-              }
-                ? Extract<PlayFrom, ZoneId> extends never
-                  ? never
-                  : ActionId
-                : never;
-            }[keyof CardActions & string]
-          : never
-        : never
     : never;

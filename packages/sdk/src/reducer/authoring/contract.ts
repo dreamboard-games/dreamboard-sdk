@@ -17,7 +17,7 @@ import {
  * author-supplied phase-name tuple. Lets `defineGameContract` override the
  * codegen-emitted `phaseNames: readonly string[]` / `phaseName: z.string()`
  * placeholders so `PhaseNameOfContract<Contract>` resolves to a literal
- * union and flows through `fx.transition`, `PhaseMapOf`, and the flow
+ * union and flows through `tx.transition`, `PhaseMapOf`, and the flow
  * state's `currentPhase`.
  */
 export type NarrowManifestPhaseNames<

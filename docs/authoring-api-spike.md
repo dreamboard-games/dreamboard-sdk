@@ -179,14 +179,14 @@ pass `pnpm reference`. The other seven games are unchanged on disk, listed in
 | `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.prompt({ schema, choices, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.    |
 | `game.views.shared / player / empty / static`                                                                                                                     | Views.                                              |
 | `game.assemble({...})`                                                                                                                                            | Assembly; missing and extra phase keys fail here.   |
-| `defineEffect`, `defineInputs`, `many`                                                                                                                            | Combinators that were already model-independent.    |
+| `defineInputs`, `many`                                                                                                                                            | Combinators that were already model-independent.    |
 
-**Mutation callbacks** (`enter`, `reduce`, `resolve`, continuations) receive
+**Mutation callbacks** (`enter`, `reduce`, `resolve`) receive
 `{ tx, random, q, derived, state, ...context }`. `tx` is the open transaction;
 `accept`, `endGame`, `reject`, `edit`, `fx`, and `ops` are gone from every
 public argument type. A bare `return` accepts the transaction; `tx.transition`,
 `tx.endGame(outcome, { transition })`, and `tx.reject(code)` are the other
-outcomes; `tx.emit` records events; `tx.effect` schedules an engine effect.
+outcomes; `tx.emit` records events; `tx.roll`, `tx.shuffle`, and `tx.deal` mutate the transaction directly.
 Views, actor selectors, and interaction rules receive only `{ q, derived,
 state, ...context }`.
 

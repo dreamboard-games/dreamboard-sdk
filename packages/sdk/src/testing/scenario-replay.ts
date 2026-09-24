@@ -759,22 +759,8 @@ function summarizeWireTrace(
             playerId: entry.input.playerId,
           },
         ];
-      case "appliedEffect":
-        return [
-          {
-            kind: "appliedInstruction",
-            instruction: String(
-              (
-                entry.effect as {
-                  readonly kind?: string;
-                  readonly type?: string;
-                }
-              ).kind ??
-                (entry.effect as { readonly type?: string }).type ??
-                "effect",
-            ),
-          },
-        ];
+      case "phaseEntered":
+        return [{ kind: "phaseEntered", from: entry.from, to: entry.to }];
       case "rngConsumption":
         return [
           {

@@ -78,7 +78,7 @@ function matchManifestScopedIdName(
 
 export function validateInteractionParamsSchema(
   schema: unknown,
-  context: "defineInteraction" | "defineCardAction",
+  context: "defineInteraction",
   path: string,
 ): void {
   const inner = unwrapWrappers(schema);
@@ -110,7 +110,7 @@ export function validateInteractionParamsSchema(
 
 export function validateInteractionInputsSchema(
   inputs: Record<string, InputCollector> | undefined,
-  context: "defineInteraction" | "defineCardAction",
+  context: "defineInteraction",
 ): void {
   if (!inputs) return;
   for (const [key, collector] of Object.entries(inputs)) {
@@ -141,7 +141,7 @@ export function validateInteractionLikeDefinition(
     commit?: { mode: string };
     paramsSchema?: unknown;
   },
-  context: "defineInteraction" | "defineCardAction",
+  context: "defineInteraction",
 ): void {
   validateInteractionInputsSchema(input.inputs, context);
   validateManyCommitPolicy({
@@ -269,7 +269,6 @@ export function validateDefineGameZoneWiring(definition: {
       typeof phase === "object" && phase !== null
         ? (phase as {
             zones?: Record<string, unknown>;
-            cardActions?: Record<string, unknown>;
           })
         : null;
     if (!phaseRecord) continue;
@@ -289,7 +288,7 @@ export function validateDefineGameZoneWiring(definition: {
         );
       if (hasRemovedZoneSpec) {
         throw new Error(
-          `defineGame: phases.${phaseName}.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] and cardActions[*].playFrom instead.`,
+          `defineGame: phases.${phaseName}.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] instead.`,
         );
       }
       throw new Error(
@@ -306,24 +305,6 @@ export function validateDefineGameZoneWiring(definition: {
       if (!manifestPlayerZoneIds.has(zoneId)) {
         throw new Error(
           `defineGame: phases.${phaseName}.zones[${index}] '${zoneId}' is not declared in manifest.literals.playerZoneIds.`,
-        );
-      }
-    }
-
-    for (const [actionId, action] of Object.entries(
-      phaseRecord.cardActions ?? {},
-    )) {
-      const actionRecord =
-        typeof action === "object" && action !== null
-          ? (action as Record<string, unknown>)
-          : null;
-      const playFrom = actionRecord?.playFrom;
-      if (
-        typeof playFrom === "string" &&
-        !manifestPlayerZoneIds.has(playFrom)
-      ) {
-        throw new Error(
-          `defineGame: phases.${phaseName}.cardActions.${actionId}.playFrom '${playFrom}' is not declared in manifest.literals.playerZoneIds.`,
         );
       }
     }
