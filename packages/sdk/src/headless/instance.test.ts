@@ -1,3 +1,4 @@
+import { createStore } from "@tanstack/store";
 import { describe, expect, it, vi } from "vitest";
 import { createGameInstance, AmbiguousTargetError } from "./instance.js";
 import { frame, session } from "./sources/__fixtures__/frames.js";
@@ -684,11 +685,17 @@ it("reconciles with the selected card's narrow domain, not the broad global desc
   game.dispose();
 });
 
-it("rebuilds interaction handlers when a new source starts with the same snapshot", () => {
+it("rebuilds interaction handlers when a new source reuses the identical immutable snapshot", () => {
   const x = setup();
   const game = createGameInstance()({ source: x.source });
   const old = game.interactions.get("play.move")!;
-  const replacement = createTestSource(x.source.store.get().snapshot!);
+  // A new test source copies snapshots, so share this exact object deliberately.
+  const replacement = {
+    ...x.source,
+    store: createStore(x.source.store.get()),
+    dispose: vi.fn(),
+  };
+  expect(replacement.store.get().snapshot).toBe(x.source.store.get().snapshot);
   game.setOptions({ source: replacement });
   const current = game.interactions.get("play.move")!;
   expect(current).not.toBe(old);
