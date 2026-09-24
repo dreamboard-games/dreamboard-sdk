@@ -8,6 +8,7 @@ const packageManifest = JSON.parse(
 export default defineConfig({
   entry: [
     "src/index.ts",
+    "src/react.ts",
     "src/package-set.ts",
     "src/plugin-runtime-contract.ts",
     "src/reference-games/index.ts",
@@ -39,6 +40,7 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   splitting: true,
+  noExternal: ["@tanstack/react-store", "use-sync-external-store"],
   external: [
     "@radix-ui/react-dialog",
     "@radix-ui/react-accordion",

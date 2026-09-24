@@ -109,7 +109,12 @@
       "import": "./dist/browser-interaction.js",
       "default": "./dist/browser-interaction.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
+    }
   },
   "files": [
     "LICENSE.md",
@@ -155,6 +160,7 @@
     "@storybook/test-runner": "^0.24.4",
     "@tailwindcss/cli": "^4.3.1",
     "@tailwindcss/vite": "catalog:",
+    "@tanstack/react-store": "0.11.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
