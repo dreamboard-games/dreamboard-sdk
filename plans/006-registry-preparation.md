@@ -66,3 +66,12 @@ submissions and explicit interactions remain. Focused proofs cover complete
 Hearts replay/fuzz, Hex committed selections/null/cancel/rejection retention,
 JSON checkpoint restore with terminal and roster invariants, seat privacy, and
 ACK/frame/disposal behavior.
+
+Real dev-entry browser execution exposed Node imports in the complete `/testing`
+facade that a provider-only import closure had missed. The existing cursor now
+uses platform UTF-8/base64 APIs, and fixture hashing uses the already-owned noble
+implementation. A full-facade browser bundle test prevents recurrence while
+remaining legacy callers await deletion. Local restore accepts untrusted JSON
+at its public type boundary and proves malformed input leaves the checkpoint and
+source snapshot unchanged. The revised provider layer passed the complete gate
+including both packed games (`/tmp/testing-browser-integrated-check.log`).
