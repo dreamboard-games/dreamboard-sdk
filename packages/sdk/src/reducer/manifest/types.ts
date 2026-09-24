@@ -335,7 +335,7 @@ export type CompiledManifest<M extends AuthoredManifest> = Omit<
     ManifestIdsOf<M>["handId"],
     ManifestIdsOf<M>["cardId"]
   >,
-  "ids" | "literals" | "staticBoards"
+  "ids" | "literals" | "records" | "staticBoards"
 > & {
   staticBoards: Pick<InferredBoards<M>, "byId" | "hex" | "square">;
   literals: Omit<
@@ -352,7 +352,7 @@ export type CompiledManifest<M extends AuthoredManifest> = Omit<
     [K in keyof ManifestIdsOf<M> as `${K}s`]: readonly ManifestIdsOf<M>[K][];
   };
   records: {
-    [K in keyof ManifestIdsOf<M> as `${K}s`]: <V>(
+    [K in Exclude<keyof ManifestIdsOf<M>, "playerId"> as `${K}s`]: <V>(
       initial: V | ((id: ManifestIdsOf<M>[K]) => V),
     ) => Record<ManifestIdsOf<M>[K], V>;
   };

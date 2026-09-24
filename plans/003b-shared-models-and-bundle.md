@@ -107,3 +107,15 @@ root independently passed 72 runtime, event, committed-step, initialization and
 export tests. Logs: `/tmp/bound-integrated-check.log` and
 `/tmp/bound-integrated-root-proof.log`. Manifest inference fixes from still-open
 PR #25 are reviewed separately; its obsolete template changes are not retained.
+
+## Manifest correctness receipt
+
+The relevant behavior from still-open upstream PR #25 is adapted in `130ce38`
+without restoring removed board templates. Authored `cardType` overrides now
+agree across runtime materialization, card literals, home-zone analysis, defaults
+and inferred variant properties. The phantom `records.playerIds` API is absent
+at runtime and in checked types; actual player records remain roster-owned.
+
+Independent review found no remaining issue in the seven-file patch. Focused
+compiler tests and both type projects passed in preparation. The combined gate
+passed 725 SDK tests and both packed games (`/tmp/manifest-integrated-check.log`).

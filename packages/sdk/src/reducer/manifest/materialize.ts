@@ -746,7 +746,9 @@ export function analyzeManifest(
   const cardSets = manifest.cardSets.map(materializeCardSet);
   const cardSetIds = dedupeSorted(cardSets.map((cardSet) => cardSet.id));
   const cardTypes = dedupeSorted(
-    cardSets.flatMap((cardSet) => cardSet.cards.map((card) => card.type)),
+    cardSets.flatMap((cardSet) =>
+      cardSet.cards.map((card) => card.cardType ?? card.type),
+    ),
   );
   const cardIds = dedupeSorted(
     cardSets.flatMap((cardSet) => cardSet.cards.flatMap(renderCardInstanceIds)),
@@ -810,9 +812,10 @@ export function analyzeManifest(
       ) {
         continue;
       }
-      const zoneIds = homeSharedZoneIdsByCardType.get(card.type) ?? [];
+      const cardType = card.cardType ?? card.type;
+      const zoneIds = homeSharedZoneIdsByCardType.get(cardType) ?? [];
       zoneIds.push(card.home.zoneId);
-      homeSharedZoneIdsByCardType.set(card.type, zoneIds);
+      homeSharedZoneIdsByCardType.set(cardType, zoneIds);
     }
   }
   const homeSharedZoneIdByCardType = new Map<string, string>();
@@ -1540,13 +1543,13 @@ export function materializeManifestTable(options: {
         cards[cardId] = {
           id: cardId,
           cardSetId: materializedCardSet.id,
-          cardType: card.type,
+          cardType: card.cardType ?? card.type,
           name: card.name,
           text: card.text,
           properties: {
             ...materializeCardPropertiesDefaults(
               materializedCardSet.cardSchema,
-              card.type,
+              card.cardType ?? card.type,
               analysis,
             ),
             ...(card.properties ?? {}),
