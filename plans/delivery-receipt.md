@@ -76,7 +76,11 @@ active authoring guidance. Both landed through stack #546 at
 `35476cc9ee24017968afe51b4a48ddda1e161edf`. The landed tree matches reviewed
 head `b6608674378b98d0faa5eb9f7df3f0c081351345` exactly. Both PRs were mergeable
 and had no unresolved review threads. Internal hosted CI runs on main or manual
-dispatch; no pre-merge hosted-check result is claimed.
+dispatch; no pre-merge hosted-check result is claimed. The post-merge
+[CI run](https://github.com/dreamboard-games/dreamboard-internal/actions/runs/36020318649)
+could not start any job because GitHub reported failed account payments or an
+exhausted spending limit. This is an account prerequisite; the complete local
+check and integration receipts above remain the execution evidence.
 
 The options migration preserves existing option values while removing setup
 profiles. Disposable PostgreSQL validation and preservation checks passed.
