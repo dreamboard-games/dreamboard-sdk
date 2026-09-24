@@ -5,7 +5,7 @@ import {
 } from "@dreamboard-games/sdk-types";
 import { analyzeManifest, materializeManifestTable } from "./materialize";
 import { createTableSchema, type RuntimeManifestIds } from "./schema";
-import { asPlayerId, perPlayer } from "../per-player";
+import { asPlayerId } from "../per-player";
 import {
   assumeManifestSchema,
   createManifestStringLiteralSchema,
@@ -131,7 +131,7 @@ export function compileManifest<const M extends AuthoredManifest>(
     Object.fromEntries(
       playerZoneIds.map((id) => [
         id,
-        perPlayer(resolvePlayers(players), () => []),
+        Object.fromEntries(resolvePlayers(players).map((id) => [id, []])),
       ]),
     );
   const defaults = {
@@ -149,8 +149,11 @@ export function compileManifest<const M extends AuthoredManifest>(
     visibility: () =>
       Object.fromEntries(analysis.cardIds.map((id) => [id, { faceUp: true }])),
     resources: (players?: readonly string[]) =>
-      perPlayer(resolvePlayers(players), () =>
-        Object.fromEntries(analysis.resourceIds.map((id) => [id, 0])),
+      Object.fromEntries(
+        resolvePlayers(players).map((id) => [
+          id,
+          Object.fromEntries(analysis.resourceIds.map((id) => [id, 0])),
+        ]),
       ),
   };
   const runtimeSchema = createManifestRuntimeSchema({

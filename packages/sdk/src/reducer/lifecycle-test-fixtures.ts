@@ -3,7 +3,7 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "./model";
-import { asPlayerId, perPlayer } from "./per-player";
+import { asPlayerId } from "./per-player";
 export function buildMinimalManifest<
   const PhaseNames extends readonly string[],
 >(phaseNames: PhaseNames) {
@@ -88,7 +88,7 @@ export function buildMinimalManifest<
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
@@ -115,7 +115,7 @@ export function createTable(
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(ids, () => ({})),
+    resources: Object.fromEntries(ids.map((id) => [id, {}])),
     boards: {
       byId: {},
       hex: {},

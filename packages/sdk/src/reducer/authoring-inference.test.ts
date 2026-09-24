@@ -12,7 +12,6 @@ import {
   type PhaseNamesOfDefinition,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import { perPlayer } from "./per-player";
 
 type Equal<Left, Right> =
   (<Value>() => Value extends Left ? 1 : 2) extends <
@@ -105,7 +104,7 @@ function createModel() {
         handVisibility: () => ({}),
         ownerOfCard: () => ({}),
         visibility: () => ({}),
-        resources: () => perPlayer([], () => ({})),
+        resources: () => Object.fromEntries([].map((id) => [id, {}])),
       },
       tableSchema: z.custom<RuntimeTableRecord>(),
       runtimeSchema: z.any(),

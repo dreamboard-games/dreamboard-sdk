@@ -55,9 +55,7 @@ export function resourceTotalFromState(
   state: GameState,
   playerId: PlayerId,
 ): number {
-  const resources = state.table.resources.entries.find(
-    ([candidate]) => candidate === playerId,
-  )?.[1];
+  const resources = state.table.resources[playerId];
   return Object.values(resources ?? {}).reduce(
     (total, count) => total + (typeof count === "number" ? count : 0),
     0,

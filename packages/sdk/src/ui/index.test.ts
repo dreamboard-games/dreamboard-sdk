@@ -20,7 +20,6 @@ import {
   type HexEdgeState,
   type HexTileState,
   type HexVertexState,
-  type PerPlayer,
   type PerPlayerBoardRef,
   type SharedBoardRef,
   type SquareEdgeState,
@@ -251,18 +250,17 @@ test("ui-sdk source does not import the private UI package", async () => {
   expect(offenders).toEqual([]);
 });
 
-test("GameState consumes PerPlayer<T> and BoardRef instead of flat records", () => {
-  const perPlayerResources: PerPlayer<Record<string, number>> = {
-    __perPlayer: true,
-    entries: [
-      ["player-1" as never, { gold: 3, wood: 1 }],
-      ["player-2" as never, { gold: 2, wood: 4 }],
-    ],
-  };
-  const perPlayerHandCards: PerPlayer<string[]> = {
-    __perPlayer: true,
-    entries: [["player-1" as never, ["card-1", "card-2"]]],
-  };
+test("GameState consumes player records and BoardRef", () => {
+  const perPlayerResources: Record<
+    string,
+    Record<string, number>
+  > = Object.fromEntries([
+    ["player-1" as never, { gold: 3, wood: 1 }],
+    ["player-2" as never, { gold: 2, wood: 4 }],
+  ]);
+  const perPlayerHandCards: Record<string, string[]> = Object.fromEntries([
+    ["player-1" as never, ["card-1", "card-2"]],
+  ]);
 
   const sharedRef: SharedBoardRef = { baseId: "market-board" };
   const perPlayerRef: PerPlayerBoardRef = {
@@ -282,10 +280,7 @@ test("GameState consumes PerPlayer<T> and BoardRef instead of flat records", () 
   const hexBoards: BoardKindStates<HexBoardState> = {
     shared: { "market-board": sampleHexBoard },
     perPlayer: {
-      "player-mat": {
-        __perPlayer: true,
-        entries: [["player-1" as never, sampleHexBoard]],
-      },
+      "player-mat": Object.fromEntries([["player-1" as never, sampleHexBoard]]),
     },
   };
   const boards: BoardStates = {
@@ -307,12 +302,9 @@ test("GameState consumes PerPlayer<T> and BoardRef instead of flat records", () 
     dice: {},
   };
 
-  expect(state.playerResources.__perPlayer).toBe(true);
-  expect(state.playerResources.entries).toHaveLength(2);
-  expect(state.hands["main-hand"]?.entries[0]?.[1]).toEqual([
-    "card-1",
-    "card-2",
-  ]);
+  expect(state.playerResources["player-1"]).toEqual({ gold: 3, wood: 1 });
+  expect(Object.keys(state.playerResources)).toHaveLength(2);
+  expect(state.hands["main-hand"]?.["player-1"]).toEqual(["card-1", "card-2"]);
   expect(Object.keys(state.boards.hex.shared)).toEqual(["market-board"]);
   expect(Object.keys(state.boards.hex.perPlayer)).toEqual(["player-mat"]);
 });

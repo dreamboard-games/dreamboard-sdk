@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { perPlayer, asPlayerId } from "./per-player";
 import { createGame } from "../reducer";
 import { createReducerBundle } from "./internal";
 import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
@@ -115,10 +114,7 @@ async function fixture(
   });
   const bundle = createReducerBundle(definition);
   const table = createTable();
-  table.hands.hand = perPlayer(
-    [asPlayerId("player-1"), asPlayerId("player-2")],
-    () => [],
-  );
+  table.hands.hand = { "player-1": [], "player-2": [] };
   const initialized = await bundle.initialize({
     table,
     playerIds: ["player-1", "player-2"],
@@ -620,10 +616,7 @@ for (const change of [
     });
     const bundle = createReducerBundle(definition);
     const table = createTable();
-    table.hands.hand = perPlayer(
-      [asPlayerId("player-1"), asPlayerId("player-2")],
-      () => [],
-    );
+    table.hands.hand = { "player-1": [], "player-2": [] };
     let state = (
       await bundle.initialize({ table, playerIds: ["player-1", "player-2"] })
     ).state;

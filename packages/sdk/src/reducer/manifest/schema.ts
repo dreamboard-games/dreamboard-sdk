@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { ObjectSchema, PropertySchema } from "@dreamboard-games/sdk-types";
 import type { ManifestIds } from "../model";
-import { perPlayerSchema } from "../per-player";
+
 import type { analyzeManifest } from "./materialize";
 type Analysis = ReturnType<typeof analyzeManifest>;
 export type RuntimeManifestIds = {
@@ -148,7 +148,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
   const playerZoneSchema = shape(
     analysis.playerZones,
     (zone) => zone.id,
-    () => perPlayerSchema(z.array(ids.cardId)),
+    () => z.record(ids.playerId, z.array(ids.cardId)),
   );
   const zoneIdSchema = ids.zoneId;
   const playerZoneIdSchema = ids.playerZoneId;
@@ -374,92 +374,136 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
   const squareBoardStateByIdSchema = boardCollection(
     boards.filter((board) => board.layout === "square"),
   );
-  return z.object({
-    playerOrder: z.array(ids.playerId),
-    zones: z.object({
-      shared: sharedZoneSchema,
-      perPlayer: playerZoneSchema,
-      visibility: z.record(
-        zoneIdSchema,
+  return z
+    .object({
+      playerOrder: z.array(ids.playerId),
+      zones: z.object({
+        shared: sharedZoneSchema,
+        perPlayer: playerZoneSchema,
+        visibility: z.record(
+          zoneIdSchema,
+          z.enum(["all", "ownerOnly", "public", "hidden"]),
+        ),
+        cardSetIdsByZoneId: z
+          .record(zoneIdSchema, z.array(ids.cardSetId))
+          .optional(),
+      }),
+      decks: sharedZoneSchema,
+      hands: playerZoneSchema,
+      handVisibility: z.record(
+        playerZoneIdSchema,
         z.enum(["all", "ownerOnly", "public", "hidden"]),
       ),
-      cardSetIdsByZoneId: z
-        .record(zoneIdSchema, z.array(ids.cardSetId))
-        .optional(),
-    }),
-    decks: sharedZoneSchema,
-    hands: playerZoneSchema,
-    handVisibility: z.record(
-      playerZoneIdSchema,
-      z.enum(["all", "ownerOnly", "public", "hidden"]),
-    ),
-    cards: cardStateByIdSchema,
-    pieces: pieceStateByIdSchema,
-    componentLocations: z.record(
-      z.string(),
-      z.union([
-        z.object({ type: z.literal("Detached") }),
+      cards: cardStateByIdSchema,
+      pieces: pieceStateByIdSchema,
+      componentLocations: z.record(
+        z.string(),
+        z.union([
+          z.object({ type: z.literal("Detached") }),
+          z.object({
+            type: z.literal("InDeck"),
+            deckId: ids.deckId,
+            playedBy: ids.playerId.nullable(),
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("InHand"),
+            handId: ids.handId,
+            playerId: ids.playerId,
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("InZone"),
+            zoneId: z.string(),
+            playedBy: ids.playerId.nullable().optional(),
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("OnSpace"),
+            boardId: ids.boardId,
+            spaceId: ids.spaceId,
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("InContainer"),
+            boardId: ids.boardId,
+            containerId: ids.boardContainerId,
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("OnEdge"),
+            boardId: ids.boardId,
+            edgeId: ids.edgeId,
+            position: z.number().int().nullable().optional(),
+          }),
+          z.object({
+            type: z.literal("OnVertex"),
+            boardId: ids.boardId,
+            vertexId: ids.vertexId,
+            position: z.number().int().nullable().optional(),
+          }),
+          slotLocationSchema,
+        ]),
+      ),
+      ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
+      visibility: z.record(
+        ids.cardId,
         z.object({
-          type: z.literal("InDeck"),
-          deckId: ids.deckId,
-          playedBy: ids.playerId.nullable(),
-          position: z.number().int().nullable().optional(),
+          faceUp: z.boolean(),
+          visibleTo: z.array(ids.playerId).nullable().optional(),
         }),
-        z.object({
-          type: z.literal("InHand"),
-          handId: ids.handId,
-          playerId: ids.playerId,
-          position: z.number().int().nullable().optional(),
-        }),
-        z.object({
-          type: z.literal("InZone"),
-          zoneId: z.string(),
-          playedBy: ids.playerId.nullable().optional(),
-          position: z.number().int().nullable().optional(),
-        }),
-        z.object({
-          type: z.literal("OnSpace"),
-          boardId: ids.boardId,
-          spaceId: ids.spaceId,
-          position: z.number().int().nullable().optional(),
-        }),
-        z.object({
-          type: z.literal("InContainer"),
-          boardId: ids.boardId,
-          containerId: ids.boardContainerId,
-          position: z.number().int().nullable().optional(),
-        }),
-        z.object({
-          type: z.literal("OnEdge"),
-          boardId: ids.boardId,
-          edgeId: ids.edgeId,
-          position: z.number().int().nullable().optional(),
-        }),
-        z.object({
-          type: z.literal("OnVertex"),
-          boardId: ids.boardId,
-          vertexId: ids.vertexId,
-          position: z.number().int().nullable().optional(),
-        }),
-        slotLocationSchema,
-      ]),
-    ),
-    ownerOfCard: z.record(ids.cardId, ids.playerId.nullable()),
-    visibility: z.record(
-      ids.cardId,
-      z.object({
-        faceUp: z.boolean(),
-        visibleTo: z.array(ids.playerId).nullable().optional(),
+      ),
+      resources: z.record(
+        ids.playerId,
+        z.record(ids.resourceId, z.number().int()),
+      ),
+      boards: z.object({
+        byId: boardStateByIdSchema,
+        hex: hexBoardStateByIdSchema,
+        square: squareBoardStateByIdSchema,
+        network: z.record(z.string(), unknownRecordSchema).default({}),
+        track: z.record(z.string(), unknownRecordSchema).default({}),
       }),
-    ),
-    resources: perPlayerSchema(z.record(ids.resourceId, z.number().int())),
-    boards: z.object({
-      byId: boardStateByIdSchema,
-      hex: hexBoardStateByIdSchema,
-      square: squareBoardStateByIdSchema,
-      network: z.record(z.string(), unknownRecordSchema).default({}),
-      track: z.record(z.string(), unknownRecordSchema).default({}),
-    }),
-    dice: dieStateByIdSchema,
-  });
+      dice: dieStateByIdSchema,
+    })
+    .superRefine((table, context) => {
+      const players = new Set(table.playerOrder);
+      if (players.size !== table.playerOrder.length) {
+        context.addIssue({
+          code: "custom",
+          path: ["playerOrder"],
+          message: "Duplicate player id",
+        });
+      }
+      const checkPlayers = (
+        record: Record<string, unknown>,
+        path: string[],
+      ) => {
+        for (const playerId of table.playerOrder) {
+          if (!Object.hasOwn(record, playerId))
+            context.addIssue({
+              code: "custom",
+              path: [...path, playerId],
+              message: "Missing active player",
+            });
+        }
+        for (const playerId of Object.keys(record)) {
+          if (!players.has(playerId))
+            context.addIssue({
+              code: "custom",
+              path: [...path, playerId],
+              message: "Unknown active player",
+            });
+        }
+      };
+      checkPlayers(table.resources, ["resources"]);
+      for (const [id, players] of Object.entries(
+        table.hands as Record<string, Record<string, unknown>>,
+      ))
+        checkPlayers(players, ["hands", id]);
+      for (const [id, players] of Object.entries(
+        table.zones.perPlayer as Record<string, Record<string, unknown>>,
+      ))
+        checkPlayers(players, ["zones", "perPlayer", id]);
+    });
 }

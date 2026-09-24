@@ -12,7 +12,6 @@ import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import { perPlayer } from "./per-player";
 
 function buildMinimalManifest() {
   const playerIds = ["player-1", "player-2"] as const;
@@ -85,7 +84,7 @@ function buildMinimalManifest() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),

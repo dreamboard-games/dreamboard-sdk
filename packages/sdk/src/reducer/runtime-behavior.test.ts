@@ -23,7 +23,7 @@ import {
   type InputCollector,
   type RuntimeTableRecord,
 } from "../reducer/advanced";
-import { perPlayer } from "../reducer/per-player";
+
 import {
   getCloneRuntimeTableCallCount,
   resetCloneRuntimeTableCallCount,
@@ -109,7 +109,7 @@ function createManifestContract() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),

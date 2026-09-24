@@ -39,21 +39,18 @@ type Expect<Value extends true> = Value;
 type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";
 type TestPlayerZoneId = "hand";
-type TestPerPlayer<Value> = {
-  readonly __perPlayer: true;
-  readonly entries: ReadonlyArray<readonly [TestPlayerId, Value]>;
-};
+type TestPlayerRecord<Value> = Record<TestPlayerId, Value>;
 type TestTable = Omit<
   RuntimeTableRecord,
   "playerOrder" | "cards" | "hands" | "resources"
 > & {
   playerOrder: TestPlayerId[];
   cards: Record<TestCardId, RuntimeCardData>;
-  hands: Record<TestPlayerZoneId, TestPerPlayer<TestCardId[]>>;
-  resources: TestPerPlayer<RuntimeRecord>;
+  hands: Record<TestPlayerZoneId, TestPlayerRecord<TestCardId[]>>;
+  resources: TestPlayerRecord<RuntimeRecord>;
 };
-function testPerPlayer<Value>(): TestPerPlayer<Value> {
-  return { __perPlayer: true, entries: [] };
+function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
+  return Object.fromEntries([]);
 }
 
 const playerIds = [
@@ -133,11 +130,11 @@ const manifest = {
   defaults: {
     zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
     decks: () => ({}),
-    hands: () => ({ hand: testPerPlayer<TestCardId[]>() }),
+    hands: () => ({ hand: testPlayerRecord<TestCardId[]>() }),
     handVisibility: () => ({}),
     ownerOfCard: () => ({}),
     visibility: () => ({}),
-    resources: () => testPerPlayer<RuntimeRecord>(),
+    resources: () => testPlayerRecord<RuntimeRecord>(),
   },
   tableSchema: z.custom<TestTable>(),
   runtimeSchema: z.any(),

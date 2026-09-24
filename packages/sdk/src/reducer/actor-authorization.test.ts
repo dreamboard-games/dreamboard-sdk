@@ -10,7 +10,7 @@ import {
   definePhase,
 } from "../reducer/internal";
 import { RuntimeTableRecord } from "../reducer/advanced";
-import { asPlayerId, perPlayer } from "../reducer/per-player";
+import { asPlayerId } from "../reducer/per-player";
 function getAvailableInteractions(
   bundle: ReturnType<typeof createReducerTestingBundle>,
   state: Parameters<typeof bundle.project>[0]["state"],
@@ -37,7 +37,7 @@ function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(ids, () => ({})),
+    resources: Object.fromEntries(ids.map((id) => [id, {}])),
     boards: {
       byId: {},
       hex: {},
@@ -122,7 +122,7 @@ function createManifestContract() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
@@ -339,7 +339,9 @@ describe("phase actor, step, and cost resolution", () => {
     const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
     return {
       ...createTable(["player-1", "player-2"]),
-      resources: perPlayer(ids, (id) => ({ gold: id === "player-2" ? 1 : 9 })),
+      resources: Object.fromEntries(
+        ids.map((id) => [id, { gold: id === "player-2" ? 1 : 9 }]),
+      ),
     };
   }
   test("phase actor defaults drive descriptors and submit authorization", async () => {

@@ -20,7 +20,6 @@ import {
   assertZoneScope,
   ensureArray,
   orderedComponentIdsForLocation,
-  ppRead,
 } from "./internal";
 
 type ViewCardForTable<
@@ -147,8 +146,8 @@ export function getPlayerZoneCards<
     "zoneId",
   );
   const cards =
-    ppRead(table.zones.perPlayer[zoneId], playerId as string) ??
-    ppRead(table.hands[zoneId], playerId as string);
+    table.zones.perPlayer[zoneId]?.[playerId as string] ??
+    table.hands[zoneId]?.[playerId as string];
   return [
     ...ensureArray(cards as readonly string[] | undefined),
   ] as unknown as HandCardsForZone<Table, ZoneId>;

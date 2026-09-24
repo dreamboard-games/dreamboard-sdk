@@ -9,7 +9,7 @@ import type {
   OptionsOfContract,
   ViewOfContract,
 } from "../../model";
-import { isPerPlayer } from "../../per-player";
+
 import { normalizeResult } from "./runtime-scope";
 import { createMutableRandomHelpers, type RngConsumption } from "./rng-sampler";
 import type {
@@ -313,7 +313,7 @@ export function createLifecycleRunner<
         ...table.visibility,
       },
       resources:
-        isPerPlayer(tableResources) && tableResources.entries.length > 0
+        Object.keys(tableResources).length > 0
           ? tableResources
           : manifest.defaults.resources(playerIds),
     } as State["table"];

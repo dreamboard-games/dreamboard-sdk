@@ -8,7 +8,7 @@ import {
   definePhase,
 } from "./reducer/internal";
 import type { RuntimeTableRecord } from "./reducer/advanced";
-import { asPlayerId, perPlayer } from "./reducer/per-player";
+import { asPlayerId } from "./reducer/per-player";
 import {
   type CandidateVerificationInput,
   materializeScenarioRuntimeCheckpoint,
@@ -30,7 +30,7 @@ function createTable(playerIds: readonly string[]): RuntimeTableRecord {
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: perPlayer(ids, () => ({})),
+    resources: Object.fromEntries(ids.map((id) => [id, {}])),
     boards: { byId: {}, hex: {}, network: {}, square: {}, track: {} },
     dice: {},
   };
@@ -114,7 +114,7 @@ function createManifestContract() {
       handVisibility: () => ({}),
       ownerOfCard: () => ({}),
       visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
+      resources: () => Object.fromEntries([].map((id) => [id, {}])),
     },
     normalSetup: {
       minPlayers: 2,

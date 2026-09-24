@@ -16,11 +16,6 @@ export type SpaceTypeId = string;
 export type CardProperties = Record<string, unknown>;
 export type CardIdsByDeckId = Record<DeckId, readonly CardId[]>;
 
-export interface PerPlayer<Value> {
-  readonly __perPlayer: true;
-  readonly entries: ReadonlyArray<readonly [PlayerId, Value]>;
-}
-
 export interface SharedBoardRef<BaseId extends string = BoardBaseId> {
   readonly baseId: BaseId;
   readonly seat?: undefined;
@@ -44,7 +39,7 @@ export type BoardRef<
  * entries are populated from the runtime seat list, not the static manifest
  * upper bound, so views always match what the backend actually computed.
  */
-type CardIdsByHandId = Record<string, PerPlayer<CardId[]>>;
+type CardIdsByHandId = Record<string, Record<string, CardId[]>>;
 type StateName = string;
 type TilePropertiesByBoardId = Record<BoardId, Record<string, unknown>>;
 type EdgePropertiesByBoardId = Record<BoardId, Record<string, unknown>>;
@@ -404,7 +399,7 @@ export interface DieState {
 /**
  * Collection of boards of a particular kind, split into shared boards
  * (indexed by base id, e.g. `"market-board"`) and per-player boards
- * (indexed by base id, then by the runtime seat list via `PerPlayer<T>`).
+ * (indexed by base id, then by the runtime seat list via player records).
  *
  * Splitting by the `BoardRef` discriminator keeps the UI types honest about
  * what the runtime actually produced: per-player board state only exists
@@ -414,8 +409,8 @@ export interface DieState {
 export interface BoardKindStates<State> {
   /** Shared boards keyed by base id. */
   shared: Record<BoardBaseId, State>;
-  /** Per-player boards keyed by base id, then by seat via `PerPlayer<T>`. */
-  perPlayer: Record<BoardBaseId, PerPlayer<State>>;
+  /** Per-player boards keyed by base id, then by seat via player records. */
+  perPlayer: Record<BoardBaseId, Record<string, State>>;
 }
 
 /**
@@ -445,7 +440,7 @@ export interface GameState {
   decks: CardIdsByDeckId;
   /**
    * Player-scoped hands keyed by the authored hand id. The inner
-   * `PerPlayer<CardId[]>` is keyed by the runtime seat list and only
+   * Player records is keyed by the runtime seat list and only
    * contains entries for players who actually hold the hand.
    */
   hands: CardIdsByHandId;
@@ -455,7 +450,7 @@ export interface GameState {
    * Per-player resource totals keyed by the runtime seat list. The inner
    * record maps resource id → amount for that seat.
    */
-  playerResources: PerPlayer<Record<string, number>>;
+  playerResources: Record<string, Record<string, number>>;
   currentState: StateName;
   isMyTurn: boolean;
   boards: BoardStates;

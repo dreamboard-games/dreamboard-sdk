@@ -28,7 +28,6 @@ import {
   getTiledBoard,
   getVertex,
 } from "./board-queries";
-import { ppRead } from "./internal";
 
 export function getComponentLocation<
   Table extends RuntimeTableRecord,
@@ -78,10 +77,10 @@ export function getComponentHandLocation<
     componentId,
     handId: location.handId as HandIdOfTable<Table>,
     playerId: location.playerId as PlayerIdOfTable<Table>,
-    cards: ppRead(
-      table.hands[location.handId as HandIdOfTable<Table>],
-      location.playerId as string,
-    ),
+    cards:
+      table.hands[location.handId as HandIdOfTable<Table>]?.[
+        location.playerId as string
+      ],
     location,
   } as unknown as ResolvedHandLocation<Table, ComponentId>;
 }

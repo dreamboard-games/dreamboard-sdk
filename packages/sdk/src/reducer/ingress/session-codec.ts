@@ -26,13 +26,6 @@ import { createRuntimeInputParser } from "./input-codec";
 import { collectIngressPhaseSchemas } from "./phase-schemas";
 
 const runtimeRecordSchema = z.record(z.string(), runtimePayloadSchema);
-const perPlayerSchema = <Value extends z.ZodTypeAny>(valueSchema: Value) =>
-  z
-    .object({
-      __perPlayer: z.literal(true),
-      entries: z.array(z.tuple([z.string(), valueSchema])),
-    })
-    .strict();
 const runtimeComponentLocationSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("Detached") }).strict(),
   z
@@ -109,7 +102,10 @@ const currentRuntimeTableSchema = z
     zones: z
       .object({
         shared: z.record(z.string(), z.array(z.string())),
-        perPlayer: z.record(z.string(), perPlayerSchema(z.array(z.string()))),
+        perPlayer: z.record(
+          z.string(),
+          z.record(z.string().min(1), z.array(z.string())),
+        ),
         visibility: z.record(
           z.string(),
           z.enum(["all", "ownerOnly", "public", "hidden"]),
@@ -120,7 +116,10 @@ const currentRuntimeTableSchema = z
       })
       .strict(),
     decks: z.record(z.string(), z.array(z.string())),
-    hands: z.record(z.string(), perPlayerSchema(z.array(z.string()))),
+    hands: z.record(
+      z.string(),
+      z.record(z.string().min(1), z.array(z.string())),
+    ),
     handVisibility: z.record(
       z.string(),
       z.enum(["all", "ownerOnly", "public", "hidden"]),
@@ -163,7 +162,7 @@ const currentRuntimeTableSchema = z
         })
         .strict(),
     ),
-    resources: perPlayerSchema(runtimeRecordSchema),
+    resources: z.record(z.string().min(1), runtimeRecordSchema),
     boards: z
       .object({
         byId: z.record(z.string(), runtimeRecordSchema),

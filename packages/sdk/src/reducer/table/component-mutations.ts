@@ -27,7 +27,6 @@ import { assertCardAllowedInContainer } from "./card-validation";
 import {
   ensureArray,
   orderedComponentIdsForLocation,
-  ppRead,
   syncPlayerZoneWithHand,
   syncSharedZoneWithDeck,
 } from "./internal";
@@ -167,7 +166,7 @@ function removeComponentFromCurrentLocation<
 
   if (currentLocation.type === "InHand") {
     const nextCards = ensureArray(
-      ppRead(table.hands[currentLocation.handId], currentLocation.playerId),
+      table.hands[currentLocation.handId]?.[currentLocation.playerId],
     ).filter((candidate) => candidate !== componentId);
     syncPlayerZoneWithHand(
       table,

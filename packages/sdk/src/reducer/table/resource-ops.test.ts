@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { perPlayerGet } from "../per-player";
+
 import {
   addPlayerResourcesInPlace,
   canAffordResources,
@@ -109,10 +109,10 @@ describe("resource mutation numeric contracts", () => {
 
   test("stored malformed balances are rejected by resource reads", () => {
     const table = createSpatialTable();
-    const playerResources = perPlayerGet(
-      table.resources,
-      "player-1" as never,
-    ) as Record<string, unknown>;
+    const playerResources = table.resources["player-1" as never] as Record<
+      string,
+      unknown
+    >;
     playerResources.coins = 0.5;
 
     expect(() => getPlayerResourceAmount(table, "player-1", "coins")).toThrow(
