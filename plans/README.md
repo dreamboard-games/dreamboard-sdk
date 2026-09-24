@@ -1,18 +1,21 @@
 # Headless SDK delivery
 
-Status: full delivery authorized on 2026-09-24. Root orchestrates and reviews;
-implementation and independent audits use GPT-6 Astra with Medium reasoning.
+Status: implementation delivered on 2026-09-24 (UTC). Root orchestrated and
+reviewed; implementation and independent audits used GPT-6 Astra with Medium
+reasoning.
 Track every original requirement in [the delivery checklist](delivery-checklist.md).
 
-## Current baseline
+## Implementation baselines
 
 - SDK: `891bad8` from `origin/main`.
-- Internal: `a368191e4` from `origin/main`.
+- Internal adoption: `bcf3375ed` from `origin/main`.
 - Public tools/runtime: `d8e4785` from `origin/main`, checked out separately at
   `/Users/mac/code/worktrees/headless-cli-main` to preserve unrelated dirty work.
 - SDK implementation: `/Users/mac/code/worktrees/headless-sdk`.
-- Open SDK PR #25 owns manifest inference fixes. Avoid duplicating that work;
-  synchronize with main before publishing subsequent layers.
+
+The complete SDK stack landed at `1d193929897aa0103c90313211b41a6b91579dd3`
+and published `0.5.0-alpha.3` through the reviewed release workflow. The
+four-facade API uses reducer ABI `0.6.0`.
 
 The earlier `docs/headless-refactor-design.md` is background, not the current
 implementation authority. Its repository facts and delivery ordering have
@@ -63,22 +66,22 @@ host and browser runtime rather than the former CLI.
 
 ## Execution order
 
-| Layer                               | Scope                                                                          | Status                                                   |
-| ----------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                    |
-| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed          |
-| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed                        |
-| [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | PR #33; local/hosted gates passed                        |
-| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | PRs #34–36 green; bound authoring in validation          |
-| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Events PR #37 green; source adapters in final validation |
-| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                         |
-| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure foundation PR #32 green; bound cutover after React  |
-| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                               |
-| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                   |
+| Layer                               | Scope                                                                          | Status                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------- |
+| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed           |
+| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | PRs #27, #29 and #30; local/hosted gates passed |
+| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | PR #31; local/hosted gates passed               |
+| [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | PR #33; local/hosted gates passed               |
+| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | PRs #34–36 and #39 landed                       |
+| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | PRs #37–44 landed                               |
+| 005                                 | React adapter, both reference UIs, removal of old public runtime               | PRs #45–46 landed                               |
+| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | PRs #32 and #46 landed                          |
+| 007                                 | Final packaging, documentation and public release proof                        | PR #47 landed; SDK alpha.3 published            |
+| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Landed and verified; see delivery receipt       |
 
-The original six-layer sketch is split at the reducer foundation so the
-transaction rewrite can be reviewed and verified on its own. Future layers get
-self-contained implementation plans after their prerequisites are reviewed.
+The original six-layer sketch was split at the reducer foundation so the
+transaction rewrite could be reviewed and verified on its own. The final SDK
+stack contains 21 PRs; downstream adoption uses separate repository stacks.
 
 Layer 002 should replace instruction-driven execution with direct transaction
 outcomes and an explicit phase-entry loop, retaining simultaneous resolution
@@ -109,50 +112,9 @@ integration lanes as appropriate. Do not reuse the retired CLI release-set flow.
 No staging/production operations are part of this implementation. Merging and
 publication are not implied by starting development.
 
-## Latest receipt
+## Delivery evidence
 
-Transactions, lifecycle, initialization/actors, seat views and board geometry are
-implemented and independently reviewed in SDK PRs #26, #27, #29, #30 and #31.
-The source registry is PR #32. These layers and committed steps (PR #33) passed
-both local and hosted gates; exact-head review threads were empty.
-
-Committed steps integrated at `1542dd0`; the combined gate passed with both packed
-reference games, plus 54 independent reducer/codec tests and 14 export tests.
-Two real Hex browser workflows prove physical target selection, separate victim
-or null intent, cancellation and exact commands. Plain player records are PR #34
-at `46bbc2d`, with their combined repository and packed-game gate passed.
-
-Canonical package/model consolidation integrates ownership, board-template removal
-and strict SDK-local Zod schemas at `3b6d90e`. Its source matches reviewed preparation
-`717213d`; the complete gate passed 710 SDK tests and both packed reference games.
-All three private type/contract packages and their handwritten emitter are gone.
-One production bundle/testing ownership is PR #36 at `82735c6`; its full gate
-passed 705 SDK tests and both packed games. Canonical models, records and bundle
-layers passed hosted checks with no exact-head review threads.
-
-Public event snapshots are PR #37 at `a09c863`. The combined gate passed 707 SDK
-tests and both packed games, with an independent 65-test proof. Both hosted gates
-passed and exact-head review threads are empty. The latest accepted operation
-replaces the public batch; checkpoint restoration does not replay notifications.
-
-Host, iframe and static source adapters are integrated at `a419411`, with public
-basis-free snapshots and private transport identity. Both ACK/frame orders,
-immutable original retries, missing-frame resume, changed context, disposal and
-native transport cleanup have focused proofs. The combined gate passed after
-adding resume handling to the existing workbench fixture; final immutability
-review added frozen source state/request objects. Local/scenario providers and
-the core instance remain in progress.
-
-Preparatory internal cleanup uses fresh `origin/main` at `bcf3375ed` in
-`/Users/mac/code/worktrees/headless-internal-kotlin-cleanup`. The old Kotlin
-reducer DTO file, its sole legacy test and its otherwise unused JSON codec have
-no production consumers. Their deletion passed all five gameplay-control client
-tests, compilation, ktlint and the full ten-stage repository gate. The change is
-committed as `5e9234d38` in draft
-[internal PR #531](https://github.com/dreamboard-games/dreamboard-internal/pull/531).
-No hosted checks were reported at submission. Production TypeScript worker
-admission and generated gameplay control DTOs remain intact.
-
-See each layer receipt and the delivery checklist for the remaining work. The
-final tooling layer must pin pnpm in isolated packed-game copies; current checks
-use repository pnpm 10.4.1 while copied package verification resolves pnpm 12.5.1.
+The [delivery receipt](delivery-receipt.md) records the final SDK release, public
+runtime/dev-host cohort, consumer verification, and repository landing evidence.
+Earlier per-layer receipts describe intermediate states; the delivery checklist
+tracks completion of the accepted plan.
