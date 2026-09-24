@@ -1,4 +1,4 @@
-import { createHexBoardGeometry } from "../manifest/hex-board";
+import { createHexBoardGeometry } from "../../shared/hex-board";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,

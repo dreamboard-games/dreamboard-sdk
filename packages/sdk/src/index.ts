@@ -5,3 +5,9 @@ export {
   type DreamboardSdkPackageName,
   type DreamboardSdkPackageSet,
 } from "./package-set.js";
+export {
+  createGameInstance,
+  AmbiguousTargetError,
+} from "./headless/instance.js";
+export type * from "./headless/model.js";
+export * from "./headless/sources/index.js";

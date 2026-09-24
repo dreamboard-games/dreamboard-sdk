@@ -8,7 +8,7 @@ import {
   spiral,
   fromCoordinates,
   resolveHexSpaces,
-} from "./hex-board";
+} from "../../shared/hex-board";
 
 describe("honeycomb board geometry", () => {
   for (const orientation of ["pointy", "flat"] as const) {

@@ -3,7 +3,7 @@ import {
   createTableQueries,
   fromCoordinates,
 } from "../src/reducer";
-import { createHexBoardGeometry } from "../src/reducer/manifest/hex-board";
+import { createHexBoardGeometry } from "../src/shared/hex-board";
 const manifest = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },
   cardSets: [],
