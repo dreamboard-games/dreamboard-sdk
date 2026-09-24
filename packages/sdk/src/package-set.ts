@@ -1,6 +1,9 @@
-import { AUTHORING_METADATA } from "./authoring/metadata.js";
+declare const __DREAMBOARD_SDK_VERSION__: string;
 
-export const DREAMBOARD_SDK_VERSION = AUTHORING_METADATA.sdkVersion;
+export const DREAMBOARD_SDK_VERSION =
+  typeof __DREAMBOARD_SDK_VERSION__ === "string"
+    ? __DREAMBOARD_SDK_VERSION__
+    : "0.0.0-development";
 
 export const DREAMBOARD_SDK_PACKAGES = {
   "@dreamboard-games/sdk": DREAMBOARD_SDK_VERSION,

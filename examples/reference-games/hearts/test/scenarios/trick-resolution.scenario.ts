@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { completeGamePath } from "../scenario-paths.ts";
 import { defineScenario } from "../testing-types.ts";
 
@@ -28,9 +29,11 @@ export default defineScenario({
       winnerPlayerId: "player-4",
       heartsCaptured: 1,
     });
-    expect(state().publicState.capturedHeartsByPlayer["player-4"]).toBe(1);
+    expect(
+      state().publicState.capturedHeartsByPlayer[asPlayerId("player-4")],
+    ).toBe(1);
     expect(state().publicState.heartsBroken).toBe(true);
-    expect(state().flow.activePlayers).toEqual(["player-4"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-4")]);
     expect(view({ seat: 0 }).currentTrick).toHaveLength(0);
   },
 });

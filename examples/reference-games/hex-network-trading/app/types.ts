@@ -1,8 +1,4 @@
-import type {
-  PlayerId,
-  ResourceId,
-  SpaceId,
-} from "../shared/manifest-contract";
+import type { PlayerId, ResourceId, SpaceId } from "./manifest";
 
 export type ProductionGrant = {
   readonly playerId: PlayerId;

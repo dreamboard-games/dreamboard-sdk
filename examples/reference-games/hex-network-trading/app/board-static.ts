@@ -1,4 +1,4 @@
-import { staticBoards } from "../shared/manifest-runtime";
+import { staticBoards } from "./manifest";
 import { stormtrail } from "./game-model";
 
 export const boardStatic = stormtrail.views.static({

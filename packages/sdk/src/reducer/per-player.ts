@@ -4,8 +4,7 @@ import type { Brand } from "./model/table";
 /**
  * Opaque brand applied to a runtime player identifier.
  *
- * Generators produce a workspace-specific `PlayerId` alias (e.g.
- * `Brand<string, "PlayerId">` in `shared/manifest-contract.ts`). Authors
+ * The reducer owns the branded `PlayerId` identity. Authors
  * obtain `PlayerId` values only through:
  *   - `q.player.order()` / `q.player.current()` (reducer queries),
  *   - engine-injected callback arguments (actions, phases, prompts),

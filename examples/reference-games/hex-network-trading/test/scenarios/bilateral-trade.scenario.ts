@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { COMPLETE_GAME_COMMANDS, reject } from "../scenario-commands.ts";
 
@@ -16,7 +17,7 @@ export default defineScenario({
   then: ({ expect, state, view }) => {
     const finalState = state();
     expect(finalState.flow.currentPhase).toBe("main");
-    expect(finalState.flow.activePlayers).toEqual(["player-2"]);
+    expect(finalState.flow.activePlayers).toEqual([asPlayerId("player-2")]);
     expect(finalState.publicState.currentTrade).toBeNull();
     expect(finalState.publicState.tradeHistory).toEqual([
       {

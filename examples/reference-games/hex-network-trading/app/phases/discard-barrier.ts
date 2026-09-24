@@ -1,4 +1,4 @@
-import { literals } from "../../shared/manifest-contract";
+import { literals } from "../manifest";
 import { resourceTotal } from "../model";
 import {
   appendHistory,

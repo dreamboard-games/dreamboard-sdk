@@ -1,11 +1,6 @@
-import {
-  Board,
-  Game,
-  UI,
-  type BoardSurface,
-  type GameView,
-} from "../shared/generated/ui-contract";
-import { idGuards, type PlayerId } from "../shared/manifest-contract";
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
+import { Board, Game, UI, type BoardSurface, type GameView } from "./game-ui";
+import { idGuards, type PlayerId } from "../app/manifest";
 import { StormtrailInteractionRoutes } from "./interaction-routes";
 import "./style.css";
 
@@ -17,9 +12,21 @@ const PLAYER_STYLE: Record<
   PlayerId,
   { label: string; color: string; pale: string }
 > = {
-  "player-1": { label: "Northwind", color: "#dc2626", pale: "#fee2e2" },
-  "player-2": { label: "Riverstone", color: "#2563eb", pale: "#dbeafe" },
-  "player-3": { label: "Sunmeadow", color: "#ca8a04", pale: "#fef9c3" },
+  [asPlayerId("player-1")]: {
+    label: "Northwind",
+    color: "#dc2626",
+    pale: "#fee2e2",
+  },
+  [asPlayerId("player-2")]: {
+    label: "Riverstone",
+    color: "#2563eb",
+    pale: "#dbeafe",
+  },
+  [asPlayerId("player-3")]: {
+    label: "Sunmeadow",
+    color: "#ca8a04",
+    pale: "#fef9c3",
+  },
 };
 
 const TERRAIN_STYLE = {

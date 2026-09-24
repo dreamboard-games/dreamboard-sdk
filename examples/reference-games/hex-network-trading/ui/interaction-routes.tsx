@@ -2,7 +2,7 @@ import {
   Interaction,
   type BoardSurface,
   type InteractionRoutes,
-} from "../shared/generated/ui-contract";
+} from "./game-ui";
 
 const buttonClass =
   "min-h-11 rounded-xl border border-amber-700/70 bg-amber-950 px-4 py-2 text-sm font-black text-amber-50 shadow-sm transition enabled:hover:bg-amber-900 enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-45";

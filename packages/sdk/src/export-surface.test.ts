@@ -20,7 +20,6 @@ const facades = {
   types: () => import("./types.js"),
   testing: () => import("./testing.js"),
   "testing-compiler": () => import("./testing-compiler.js"),
-  "authoring-compiler": () => import("./authoring-compiler.js"),
   "browser-interaction": () => import("./browser-interaction.js"),
 } as const;
 

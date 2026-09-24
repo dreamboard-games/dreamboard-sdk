@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { COMPLETE_GAME_COMMANDS } from "../scenario-commands.ts";
 
@@ -30,7 +31,9 @@ export default defineScenario({
         { playerId: "player-3", rank: 2, result: "loss" },
       ],
     });
-    expect(view({ seat: 1 }).remainingCampsByPlayerId["player-2"]).toBe(0);
+    expect(
+      view({ seat: 1 }).remainingCampsByPlayerId[asPlayerId("player-2")],
+    ).toBe(0);
     expect(finalState.publicState.history.at(-1)?.kind).toBe("buildCamp");
     for (const seat of [0, 1, 2]) {
       expect(interactions({ seat })).toHaveLength(0);

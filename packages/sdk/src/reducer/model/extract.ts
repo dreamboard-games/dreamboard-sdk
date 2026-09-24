@@ -1,6 +1,6 @@
 import type { RuntimeTableRecord, StringKeyOf } from "./table";
 import type {
-  GeneratedManifestContractLike,
+  ReducerManifestContractLike,
   ManifestContract,
   StateDefinition,
 } from "./manifest";
@@ -15,7 +15,7 @@ export type TableOfManifest<Manifest> = Manifest extends {
   tableSchema: z.ZodType<infer Table extends RuntimeTableRecord>;
 }
   ? Table
-  : Manifest extends GeneratedManifestContractLike<infer Table>
+  : Manifest extends ReducerManifestContractLike<infer Table>
     ? Table
     : never;
 export type PhaseNameOfState<State> = State extends {
@@ -630,16 +630,13 @@ export type SetupSelectionOfManifest<Manifest> = {
   optionValues: Record<SetupOptionIdOfManifest<Manifest>, string | null>;
 };
 export type RuntimeSetupSelectionInput<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = SetupSelectionInputOfManifest<Manifest>;
 export type RuntimeSetupSelection<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = SetupSelectionOfManifest<Manifest>;
 export type RuntimeSetupSelectionOverride<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = SetupSelectionInputOfManifest<Manifest>;
 export type StateDefinitionOfContract<Contract> = Contract extends {
   state: infer StateDefinitionValue;
@@ -688,7 +685,7 @@ export type ManifestContractOf<Contract> = ManifestContract<
   TableOfManifest<ManifestOf<Contract>>
 >;
 export type ExactManifestContractOf<Contract> = ManifestOf<Contract> &
-  GeneratedManifestContractLike<TableOfManifest<ManifestOf<Contract>>>;
+  ReducerManifestContractLike<TableOfManifest<ManifestOf<Contract>>>;
 export type PhaseNameOf<Source> = Source extends {
   flow: { currentPhase: infer PhaseName };
 }

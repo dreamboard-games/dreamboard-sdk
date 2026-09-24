@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { completeGamePath } from "../scenario-paths.ts";
 import { defineScenario } from "../testing-types.ts";
 
@@ -10,7 +11,7 @@ export default defineScenario({
   when: [completeGamePath[3]],
   then: ({ expect, interactions, state, view }) => {
     expect(state().flow.currentPhase).toBe("playing");
-    expect(state().flow.activePlayers).toEqual(["player-2"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-2")]);
     const seen = new Set<string>();
     for (const seat of [0, 1, 2, 3] as const) {
       const playerView = view({ seat });

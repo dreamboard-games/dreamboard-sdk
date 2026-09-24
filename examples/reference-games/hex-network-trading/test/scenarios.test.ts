@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
@@ -319,7 +320,7 @@ test("bilateral acceptance transfers both maps atomically and resumes the offero
   });
   const replay = await replayScenario({ game, scenario: acceptedScenario });
   assert.equal(replay.state().flow.currentPhase, "main");
-  assert.deepEqual(replay.state().flow.activePlayers, ["player-2"]);
+  assert.deepEqual(replay.state().flow.activePlayers, [asPlayerId("player-2")]);
   assert.deepEqual(replay.view({ seat: 0 }).mySupplies, {
     brick: 0,
     provisions: 1,
@@ -1002,7 +1003,9 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
     timber: 1,
   });
   assert.equal(
-    beforeLast.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"],
+    beforeLast.view({ seat: 0 }).remainingTrailsByPlayerId[
+      asPlayerId("player-1")
+    ],
     1,
   );
 
@@ -1013,7 +1016,9 @@ test("trail costs pay atomically and exhausted piece supply disables further bui
     timber: 0,
   });
   assert.equal(
-    exhausted.view({ seat: 0 }).remainingTrailsByPlayerId["player-1"],
+    exhausted.view({ seat: 0 }).remainingTrailsByPlayerId[
+      asPlayerId("player-1")
+    ],
     0,
   );
   assert.equal(
@@ -1131,13 +1136,15 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
     timber: 0,
   });
   assert.equal(
-    afterBuild.view({ seat: 1 }).remainingCampsByPlayerId["player-2"],
+    afterBuild.view({ seat: 1 }).remainingCampsByPlayerId[
+      asPlayerId("player-2")
+    ],
     2,
   );
 
   const terminal = await replayScenario({ game, scenario: completeGame });
   assert.equal(
-    terminal.view({ seat: 1 }).remainingCampsByPlayerId["player-2"],
+    terminal.view({ seat: 1 }).remainingCampsByPlayerId[asPlayerId("player-2")],
     0,
   );
   assert.equal(terminal.state().flow.currentPhase, "gameOver");

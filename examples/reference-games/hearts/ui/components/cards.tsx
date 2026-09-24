@@ -3,7 +3,7 @@ import type {
   CardId,
   CardType,
   PlayingCardsCardProperties,
-} from "../../shared/manifest-contract";
+} from "../../app/manifest";
 
 type Suit = "clubs" | "diamonds" | "spades" | "hearts";
 

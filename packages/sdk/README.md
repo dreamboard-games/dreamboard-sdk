@@ -57,8 +57,10 @@ from; `tx.state` is the current draft.
 ```ts
 // app/game-model.ts — the model, bound once
 import { z } from "zod";
-import { createGame } from "@dreamboard-games/sdk/reducer";
-import { ids, manifestContract } from "../shared/manifest-contract";
+import { compileManifest, createGame } from "@dreamboard-games/sdk/reducer";
+import manifest from "../manifest";
+const manifestContract = compileManifest(manifest);
+const { ids } = manifestContract;
 
 export const game = createGame({
   manifest: manifestContract,
@@ -155,8 +157,11 @@ or at `game.phase(name)`. Rules, views, and tests import `GameState` and
 imports the assembled game, so there is no import cycle.
 
 New workspaces keep authored starter code in `app/game.ts` and `ui/App.tsx`.
-Run the package-local `pnpm generate` command to refresh framework-owned
-manifest and UI contracts; generated files are not authoring surfaces.
+Import the manifest directly. `compileManifest(manifest)` provides inferred ID schemas,
+table schemas, fresh initial tables, and board metadata in memory. `createGame`
+also accepts the authored manifest directly. Bind UI primitives with
+`createGameUi(game)` from `@dreamboard-games/sdk/runtime/workspace-contract`.
+No authoring generation step or shared workspace files are needed.
 
 ## Reducer runner contract
 

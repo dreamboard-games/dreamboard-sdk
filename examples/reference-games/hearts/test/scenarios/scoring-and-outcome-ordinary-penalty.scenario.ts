@@ -12,15 +12,15 @@ export default defineScenario({
     const final = state().publicState;
     expect(final.moonShooter).toBe(null);
     expect(
-      Object.values(final.capturedHeartsByPlayer).reduce(
-        (sum, count) => sum + count,
+      Object.values(final.capturedHeartsByPlayer).reduce<number>(
+        (sum, count) => sum + (count ?? 0),
         0,
       ),
     ).toBe(13);
     expect(final.queenOfSpadesCapturedBy).toBe("player-1");
     expect(
-      Object.values(final.pointsByPlayer).reduce(
-        (sum, points) => sum + points,
+      Object.values(final.pointsByPlayer).reduce<number>(
+        (sum, points) => sum + (points ?? 0),
         0,
       ),
     ).toBe(26);

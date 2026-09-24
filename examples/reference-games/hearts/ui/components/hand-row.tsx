@@ -1,6 +1,6 @@
 import React, { type ReactNode } from "react";
 import { CardFace, useIsMobile } from "@dreamboard-games/sdk/ui";
-import type { HandSurface } from "../../shared/generated/ui-contract";
+import type { HandSurface } from "../game-ui";
 import {
   cardLabel,
   comparePlayingCards,

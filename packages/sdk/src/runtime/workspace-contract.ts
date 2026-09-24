@@ -57,3 +57,10 @@ export type {
   ZoneCardRenderItem,
   ZoneListProps,
 } from "./workspace-contract/index.js";
+
+export {
+  createGameUi,
+  type GameUiManifestOf,
+  type GameUiRootStateOf,
+  type GameUiHandSurfaceOf,
+} from "./workspace-contract/create-game-ui";

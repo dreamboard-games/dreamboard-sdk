@@ -275,13 +275,20 @@ export type ScenarioReplayDefinition<Game> = {
   readonly when: readonly ScenarioCommandOf<Game>[];
 };
 
-type DeepReadonly<Value> = Value extends (...args: never[]) => unknown
+type DeepReadonly<Value> = Value extends
+  | string
+  | number
+  | boolean
+  | bigint
+  | symbol
   ? Value
-  : Value extends readonly (infer Item)[]
-    ? readonly DeepReadonly<Item>[]
-    : Value extends object
-      ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
-      : Value;
+  : Value extends (...args: never[]) => unknown
+    ? Value
+    : Value extends readonly (infer Item)[]
+      ? readonly DeepReadonly<Item>[]
+      : Value extends object
+        ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
+        : Value;
 
 type ScenarioPlayerView<Game> =
   Extract<"player", ViewNamesOfDefinition<Game>> extends infer ViewName

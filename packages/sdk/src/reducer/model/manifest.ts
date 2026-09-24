@@ -153,15 +153,6 @@ export type StaticBoards<Table extends RuntimeTableRecord> = Pick<
   "byId" | "hex" | "square"
 >;
 
-export type StaticBoardsJsonEnvelope<
-  Table extends RuntimeTableRecord = RuntimeTableRecord,
-> = {
-  formatVersion: 1;
-  generatedBy: "@dreamboard-games/sdk/codegen";
-  boards: StaticBoards<Table>;
-  initialTable: Table;
-};
-
 export type SetupOptionChoiceMetadata = {
   id: string;
   label: string;
@@ -202,11 +193,11 @@ export type ReducerManifestContract<
   ids: ManifestIds<PlayerId, DeckId, HandId, CardId, PhaseName>;
   defaults: ManifestDefaults<Table>;
   /**
-   * Generic normal-session setup capability emitted by workspace codegen.
+   * Normal-session setup capability supplied by the manifest compiler.
    *
    * This remains optional on the structural contract so small handwritten
    * manifests can model focused reducer tests without recreating generated
-   * topology metadata. Generated workspace manifests always provide it.
+   * topology metadata. Compiled manifests always provide it.
    */
   normalSetup?: ManifestNormalSetup<Table>;
   staticBoards?: StaticBoards<Table>;
@@ -224,7 +215,7 @@ export type ReducerManifestContract<
   }) => AnySchema;
 };
 
-export type GeneratedManifestContractLike<
+export type ReducerManifestContractLike<
   Table extends RuntimeTableRecord = RuntimeTableRecord,
   PhaseName extends string = string,
   PlayerId extends string = string,
@@ -517,22 +508,20 @@ export type InitSetupSelectionInput<
     string,
     string,
     string
-  > = GeneratedManifestContractLike,
+  > = ReducerManifestContractLike,
 > = SetupSelectionInputOfManifest<Manifest>;
 
 // --- Setup Bootstrap Types ---
 
 export type SetupBootstrapSharedZoneRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "sharedZone";
   zoneId: SharedZoneIdOfManifest<Manifest>;
 };
 
 export type SetupBootstrapPerPlayerZoneRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "playerZone";
   zoneId: PlayerZoneIdOfManifest<Manifest>;
@@ -540,8 +529,7 @@ export type SetupBootstrapPerPlayerZoneRef<
 };
 
 export type SetupBootstrapSharedBoardContainerRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "sharedBoardContainer";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -549,8 +537,7 @@ export type SetupBootstrapSharedBoardContainerRef<
 };
 
 export type SetupBootstrapPerPlayerBoardContainerRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "playerBoardContainer";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -559,8 +546,7 @@ export type SetupBootstrapPerPlayerBoardContainerRef<
 };
 
 export type SetupBootstrapSharedBoardSpaceRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "sharedBoardSpace";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -568,8 +554,7 @@ export type SetupBootstrapSharedBoardSpaceRef<
 };
 
 export type SetupBootstrapPerPlayerBoardSpaceRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   type: "playerBoardSpace";
   boardId: BoardBaseIdOfManifest<Manifest>;
@@ -578,8 +563,7 @@ export type SetupBootstrapPerPlayerBoardSpaceRef<
 };
 
 export type SetupBootstrapContainerRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > =
   | SetupBootstrapSharedZoneRef<Manifest>
   | SetupBootstrapPerPlayerZoneRef<Manifest>
@@ -587,16 +571,14 @@ export type SetupBootstrapContainerRef<
   | SetupBootstrapPerPlayerBoardContainerRef<Manifest>;
 
 export type SetupBootstrapDestinationRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > =
   | SetupBootstrapContainerRef<Manifest>
   | SetupBootstrapSharedBoardSpaceRef<Manifest>
   | SetupBootstrapPerPlayerBoardSpaceRef<Manifest>;
 
 export type SetupBootstrapPerPlayerContainerTemplateRef<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > =
   | {
       type: "playerZone";
@@ -609,8 +591,7 @@ export type SetupBootstrapPerPlayerContainerTemplateRef<
     };
 
 export type SetupBootstrapStep<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > =
   | {
       type: "shuffle";
@@ -639,8 +620,7 @@ export type SetupBootstrapStep<
 
 export type SetupProfileDefinition<
   PhaseName extends string = string,
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 > = {
   initialPhase?: PhaseName;
   bootstrap?: readonly SetupBootstrapStep<Manifest>[];

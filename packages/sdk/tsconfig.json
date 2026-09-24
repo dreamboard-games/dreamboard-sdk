@@ -8,11 +8,7 @@
     "sourceMap": true,
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "baseUrl": "./src",
-    "paths": {
-      "@dreamboard/manifest-contract": ["./type-stubs/manifest-contract"],
-      "#dreamboard/ui-contract": ["./type-stubs/ui-contract"]
-    }
+    "baseUrl": "./src"
   },
   "include": ["src/**/*"],
   "exclude": [

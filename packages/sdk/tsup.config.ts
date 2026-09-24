@@ -21,14 +21,10 @@ export default defineConfig({
     "src/testing.ts",
     "src/testing-runtime.ts",
     "src/testing-compiler.ts",
-    "src/authoring-compiler.ts",
-    "src/authoring-generate-cli.ts",
     "src/runtime.ts",
     "src/runtime/primitives.ts",
     "src/runtime/workspace-contract.ts",
     "src/runtime/runtime-api.ts",
-    "src/codegen.ts",
-    "src/authoring/index.ts",
     "src/reducer-contract.ts",
     "src/browser-interaction.ts",
   ],
@@ -43,12 +39,12 @@ export default defineConfig({
   // package verifier can prove the tarball is self-contained.
   dts: {
     resolve: [
-      /^@dreamboard-games\/(sdk-types|reducer-contract|workspace-codegen)(\/.*)?$/,
+      /^@dreamboard-games\/(sdk-types|reducer-contract)(\/.*)?$/,
       /^@dreamboard-games\/plugin-runtime-contract(\/.*)?$/,
     ],
   },
   noExternal: [
-    /^@dreamboard-games\/(sdk-types|reducer-contract|workspace-codegen)(\/|$)/,
+    /^@dreamboard-games\/(sdk-types|reducer-contract)(\/|$)/,
     /^@dreamboard-games\/plugin-runtime-contract(\/|$)/,
   ],
   clean: true,

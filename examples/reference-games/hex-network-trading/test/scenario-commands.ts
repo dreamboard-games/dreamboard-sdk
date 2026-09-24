@@ -1,11 +1,6 @@
 import type { ScenarioCommandOf } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
-import type {
-  EdgeId,
-  ResourceId,
-  SpaceId,
-  VertexId,
-} from "../shared/manifest-contract.ts";
+import type { EdgeId, ResourceId, SpaceId, VertexId } from "../app/manifest";
 import type { ResourceCounts } from "../app/game-model.ts";
 
 export type StormtrailCommand = ScenarioCommandOf<typeof game>;

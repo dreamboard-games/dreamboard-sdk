@@ -530,3 +530,9 @@ export function createDreamboardUI<const Contract extends UIContract>(
     Board: BoardPrimitive,
   } as DreamboardUI<Contract>;
 }
+
+export type RegisteredGameView = DreamboardUIRegister extends {
+  contract: infer Game;
+}
+  ? import("./workspace-contract/game-ui-contract").GameUiView<Game>
+  : Record<string, unknown>;

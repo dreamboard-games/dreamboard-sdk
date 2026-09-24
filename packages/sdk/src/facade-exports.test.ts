@@ -18,12 +18,10 @@ const jsSubpaths = [
   "@dreamboard-games/sdk/ui/player-state",
   "@dreamboard-games/sdk/testing",
   "@dreamboard-games/sdk/testing-compiler",
-  "@dreamboard-games/sdk/authoring-compiler",
   "@dreamboard-games/sdk/runtime",
   "@dreamboard-games/sdk/runtime/primitives",
   "@dreamboard-games/sdk/runtime/workspace-contract",
   "@dreamboard-games/sdk/runtime/runtime-api",
-  "@dreamboard-games/sdk/codegen",
   "@dreamboard-games/sdk/reducer-contract",
   "@dreamboard-games/sdk/browser-interaction",
 ] as const;
@@ -54,14 +52,10 @@ describe("SDK facade exports", () => {
     );
   });
 
-  test("codegen and reducer-contract facades expose their core surface", async () => {
-    const codegen = await import("@dreamboard-games/sdk/codegen");
+  test("reducer-contract facade expose their core surface", async () => {
     const reducerContract =
       await import("@dreamboard-games/sdk/reducer-contract");
 
-    expect(typeof codegen.generateAuthoritativeFiles).toBe("function");
-    expect(typeof codegen.generateSeedFiles).toBe("function");
-    expect(typeof codegen.materializeManifestTable).toBe("function");
     expect(typeof reducerContract.REDUCER_CONTRACT_VERSION).toBe("string");
     expect(typeof reducerContract.assertReducerBundleContract).toBe("function");
     expect(typeof reducerContract.materializeManifestTable).toBe("function");

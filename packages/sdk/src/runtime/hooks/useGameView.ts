@@ -1,4 +1,4 @@
-import type { GameView } from "#dreamboard/ui-contract";
+import type { RegisteredGameView as GameView } from "../ui-contract";
 import { useGameSelector } from "./useGameSelector.js";
 
 /**

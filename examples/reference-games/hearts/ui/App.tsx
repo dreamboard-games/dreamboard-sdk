@@ -1,9 +1,4 @@
-import {
-  Game,
-  Phase,
-  UI,
-  type PhaseName,
-} from "../shared/generated/ui-contract";
+import { Game, Phase, UI, type PhaseName } from "./game-ui";
 import { HeartsSurfaces } from "./components/game-ui";
 import { useHeartsSurfaces } from "./surfaces";
 import "./style.css";

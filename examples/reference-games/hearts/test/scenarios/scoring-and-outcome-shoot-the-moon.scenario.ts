@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { shootTheMoonPath } from "../scenario-paths.ts";
 import { defineScenario } from "../testing-types.ts";
 
@@ -10,7 +11,7 @@ export default defineScenario({
   when: [shootTheMoonPath[55]],
   then: ({ expect, state }) => {
     const final = state().publicState;
-    expect(final.capturedHeartsByPlayer["player-1"]).toBe(13);
+    expect(final.capturedHeartsByPlayer[asPlayerId("player-1")]).toBe(13);
     expect(final.queenOfSpadesCapturedBy).toBe("player-1");
     expect(final.moonShooter).toBe("player-1");
     expect(final.pointsByPlayer).toEqual({

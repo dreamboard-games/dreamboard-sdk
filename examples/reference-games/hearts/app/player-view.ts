@@ -4,7 +4,7 @@ import type {
   CardType,
   PlayerId,
   PlayingCardsCardProperties,
-} from "../shared/manifest-contract";
+} from "./manifest";
 import { hearts, type GameState } from "./game-model";
 
 type PlayingCardView = ViewCard<CardId, CardType, PlayingCardsCardProperties>;

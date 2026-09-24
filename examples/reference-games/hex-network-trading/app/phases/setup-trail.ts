@@ -1,4 +1,4 @@
-import type { ResourceId } from "../../shared/manifest-contract";
+import type { ResourceId } from "../manifest";
 import { emptyEdge, touchesStartingCamp } from "../eligibility";
 import { producingHexesAtIntersection } from "../model";
 import {

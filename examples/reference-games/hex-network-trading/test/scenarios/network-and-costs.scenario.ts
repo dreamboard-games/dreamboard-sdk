@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { NETWORK_EXHAUSTION_COMMANDS } from "../scenario-commands.ts";
 
@@ -11,7 +12,9 @@ export default defineScenario({
   then: ({ expect, state, view }) => {
     expect(state().flow.currentPhase).toBe("main");
     expect(state().publicState.turnNumber).toBe(76);
-    expect(view({ seat: 0 }).remainingTrailsByPlayerId["player-1"]).toBe(0);
+    expect(
+      view({ seat: 0 }).remainingTrailsByPlayerId[asPlayerId("player-1")],
+    ).toBe(0);
     expect(
       Object.values(view({ seat: 0 }).trailsByEdgeId).filter(
         (playerId) => playerId === "player-1",

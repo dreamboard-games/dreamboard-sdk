@@ -84,18 +84,14 @@ function parseGenerateArgs(args: readonly string[]): { check: boolean } {
 
 function parseReferenceArgs(args: readonly string[]): readonly string[] | null {
   if (args.length === 1 && ["--help", "-h"].includes(args[0] ?? "")) {
-    process.stdout.write(
-      "Usage: pnpm reference [game-id]\n       pnpm reference pin <version>\n",
-    );
+    process.stdout.write("Usage: pnpm reference [game-id]\n");
     return null;
   }
   if (
     args.some((argument) => argument.startsWith("-")) ||
     (args[0] === "pin" ? args.length !== 2 : args.length > 1)
   ) {
-    throw new CliUsageError(
-      "Usage: pnpm reference [game-id] | pnpm reference pin <version>",
-    );
+    throw new CliUsageError("Usage: pnpm reference [game-id]");
   }
   return args;
 }
@@ -175,7 +171,6 @@ Commands:
   generate [--check]            Write or check reducer-contract output
   lint                          Run workspace lint checks
   reference [game-id]           Verify one or all packed reference games
-  reference pin <version>       Pin all reference games after publication
   release:verify                Build the immutable release candidate
   test                          Run browser-free unit tests
   typecheck                     Type-check packages and repository scripts

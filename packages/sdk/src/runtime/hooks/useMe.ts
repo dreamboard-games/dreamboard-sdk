@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { PlayerId } from "@dreamboard/manifest-contract";
+import type { PlayerId } from "../types/player-id";
 import {
   usePluginSessionDescriptor,
   usePluginSession,

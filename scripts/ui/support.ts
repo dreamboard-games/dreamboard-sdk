@@ -1,4 +1,3 @@
-import { LEGACY_REFERENCE_GAMES } from "../reference/games.ts";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -76,7 +75,6 @@ export async function discoverReferenceGames(): Promise<
   }
   const games: ReferenceGameSummary[] = [];
   for (const directory of directories) {
-    if (LEGACY_REFERENCE_GAMES.has(directory)) continue;
     const gameRoot = path.join(referenceGamesRoot, directory);
     const gameStat = await lstat(gameRoot);
     if (gameStat.isSymbolicLink()) {

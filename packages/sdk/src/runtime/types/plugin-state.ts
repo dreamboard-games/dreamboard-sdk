@@ -1,4 +1,4 @@
-import type { PlayerId } from "@dreamboard/manifest-contract";
+import type { PlayerId } from "./player-id";
 
 export interface GameplayPromptOption {
   id: string;

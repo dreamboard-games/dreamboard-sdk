@@ -1,8 +1,4 @@
-import {
-  Interaction,
-  type GameRootState,
-  type PhaseName,
-} from "../../shared/generated/ui-contract";
+import { Interaction, type GameRootState, type PhaseName } from "../game-ui";
 import { HandRow } from "./hand-row";
 import { TrickArea } from "./trick-area";
 import { HeartsInteractionRoutes, PRIMARY_BUTTON } from "../interaction-routes";

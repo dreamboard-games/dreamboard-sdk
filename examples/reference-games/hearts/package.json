@@ -2,27 +2,13 @@
   "name": "@dreamboard/example-hearts",
   "private": true,
   "type": "module",
-  "imports": {
-    "#dreamboard/ui-contract": "./shared/generated/ui-contract.ts"
-  },
   "scripts": {
-    "generate": "dreamboard-sdk-generate --project-root . --manifest manifest.ts",
-    "predev": "pnpm generate",
-    "dev": "dreamboard dev",
-    "typecheck": "pnpm generate && pnpm typecheck:raw",
-    "typecheck:raw": "tsc --noEmit -p manifest.tsconfig.json && tsc --noEmit -p app/tsconfig.json && tsc --noEmit -p ui/tsconfig.json && tsc --noEmit -p test/tsconfig.json",
-    "typecheck:manifest": "tsc --noEmit -p manifest.tsconfig.json",
-    "typecheck:app": "tsc --noEmit -p app/tsconfig.json",
-    "typecheck:ui": "tsc --noEmit -p ui/tsconfig.json",
-    "typecheck:test": "tsc --noEmit -p test/tsconfig.json",
-    "test": "pnpm generate && pnpm test:raw",
-    "test:raw": "tsx --tsconfig test/tsconfig.json --test test/scenarios.test.ts",
-    "test:ui": "pnpm generate && pnpm test:ui:raw",
-    "test:ui:raw": "tsx --tsconfig test/tsconfig.tsx-runtime.json --test test/ui/**/*.test.tsx test/ui-scenarios/**/*.test.ts",
-    "verify": "pnpm generate && pnpm typecheck:raw && pnpm test:raw && pnpm test:ui:raw"
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "tsx --tsconfig tsconfig.json --test test/scenarios.test.ts test/ui/**/*.test.tsx test/ui-scenarios/**/*.test.ts",
+    "check": "pnpm typecheck && pnpm test"
   },
   "dependencies": {
-    "@dreamboard-games/sdk": "0.5.0-alpha.1",
+    "@dreamboard-games/sdk": "workspace:*",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "zod": "4.4.3"
@@ -35,12 +21,5 @@
     "tsx": "^4.20.5",
     "typescript": "^5.9.2"
   },
-  "packageManager": "pnpm@10.4.1",
-  "pnpm": {
-    "overrides": {
-      "zod": "4.4.3",
-      "react": "19.2.6",
-      "react-dom": "19.2.6"
-    }
-  }
+  "packageManager": "pnpm@10.4.1"
 }

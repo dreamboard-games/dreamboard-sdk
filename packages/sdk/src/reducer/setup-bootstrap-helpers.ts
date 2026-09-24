@@ -1,7 +1,7 @@
 import type {
   CardIdOfManifest,
   DieIdOfManifest,
-  GeneratedManifestContractLike,
+  ReducerManifestContractLike,
   PieceIdOfManifest,
   PlayerIdOfManifest,
   SetupBootstrapContainerRef,
@@ -11,8 +11,7 @@ import type {
 } from "./model";
 
 export function shuffle<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 >(
   container: SetupBootstrapContainerRef<Manifest>,
 ): SetupBootstrapStep<Manifest> {
@@ -23,8 +22,7 @@ export function shuffle<
 }
 
 export function dealToPlayerZone<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 >({
   from,
   zoneId,
@@ -55,8 +53,7 @@ export function dealToPlayerZone<
 }
 
 export function dealToPlayerBoardContainer<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 >({
   from,
   boardId,
@@ -93,8 +90,7 @@ export function dealToPlayerBoardContainer<
 }
 
 export function seedSharedBoardContainer<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 >({
   from,
   boardId,
@@ -132,8 +128,7 @@ export function seedSharedBoardContainer<
 }
 
 export function seedSharedBoardSpace<
-  Manifest extends GeneratedManifestContractLike =
-    GeneratedManifestContractLike,
+  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
 >({
   from,
   boardId,

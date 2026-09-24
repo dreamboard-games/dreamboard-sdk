@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-test("Hearts app mounts generated surfaces under UI.Root", async () => {
+test("Hearts app mounts authored surfaces under UI.Root", async () => {
   const appSource = await readFile(
     new URL("../../ui/App.tsx", import.meta.url),
     "utf8",

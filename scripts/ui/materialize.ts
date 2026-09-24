@@ -5,7 +5,6 @@ import path from "node:path";
 
 import { checkReferenceFixtures } from "../ui-fixtures/check-fixtures.ts";
 import { compileReferenceFixtures } from "../ui-fixtures/compile-reference-fixtures.ts";
-import { materializeReferenceGameWorkspaces } from "../ui-fixtures/workspace/materialize-workspaces.ts";
 import { generateScenarioCatalog } from "./catalog.ts";
 import {
   defaultGeneratedWorkbenchRoot,
@@ -55,10 +54,6 @@ export async function materializeWorkbench({
   return withMaterializationLock(
     () =>
       publishWorkbenchProduct(resolvedOutputRoot, async (temporaryRoot) => {
-        const referenceGameIds = gameIds.filter((id) => id !== "ui-scenarios");
-        if (gameIds.length === 0 || referenceGameIds.length > 0) {
-          await materializeReferenceGameWorkspaces(referenceGameIds);
-        }
         const fixtureRoot = path.join(
           temporaryRoot,
           "fixtures/reference-games",

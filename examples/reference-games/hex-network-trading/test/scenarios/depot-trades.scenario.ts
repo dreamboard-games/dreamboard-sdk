@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import {
   DISCARD_BARRIER_PREFIX_COMMANDS,
@@ -20,7 +21,7 @@ export default defineScenario({
   when: THREE_DEPOT_TRADES,
   then: ({ expect, state, view }) => {
     expect(state().flow.currentPhase).toBe("main");
-    expect(state().flow.activePlayers).toEqual(["player-2"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-2")]);
     expect(view({ seat: 1 }).mySupplies).toEqual({
       brick: 3,
       provisions: 6,

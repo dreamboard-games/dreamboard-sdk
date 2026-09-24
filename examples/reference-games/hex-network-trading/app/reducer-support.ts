@@ -12,7 +12,7 @@ import {
   type ResourceId,
   type SpaceId,
   type VertexId,
-} from "../shared/manifest-contract";
+} from "./manifest";
 import {
   stormtrail,
   type GameState,

@@ -1,4 +1,4 @@
-import type { CardId } from "../shared/manifest-contract";
+import type { CardId } from "../app/manifest";
 
 export function submit(seat: number, cardIds: readonly CardId[]) {
   return {

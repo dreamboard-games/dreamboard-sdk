@@ -1,19 +1,13 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { mkdtemp, readFile, readlink, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { executeProtocolAuthority } from "./protocol-authority.ts";
-import {
-  expectRecord,
-  hasErrorCode,
-  root,
-  readJson,
-} from "../../ui/support.ts";
+import { expectRecord, root, readJson } from "../../ui/support.ts";
 import { compileScenarioModule } from "../compile-scenario.ts";
 import { loadScenarioModule } from "../load-scenario-module.ts";
-import { withMaterializedReferenceGameWorkspaces } from "../workspace/materialize-workspaces.ts";
 
 const sdkRequire = createRequire(
   new URL("../../../packages/sdk/package.json", import.meta.url),
@@ -85,153 +79,125 @@ test("protocol authority materializes protocol fixture inputs", async () => {
 
 test("workspace fixture compilation materializes reducer authority from a reducer-native replay", async () => {
   const gameDir = path.join(root, "examples/reference-games/hearts");
-  await withMaterializedReferenceGameWorkspaces(["hearts"], async () => {
-    const metadata = expectRecord(
-      await readJson(path.join(gameDir, "reference-game.json")),
-      "hearts/reference-game.json",
-    ) as Record<string, any>;
-    const scenario = await loadScenarioModule(
-      path.join(gameDir, "test/ui-scenarios/sealed-pass.mobile.scenario.ts"),
-    );
-    const outputRoot = await mkdtemp(
-      path.join(os.tmpdir(), "dreamboard-authority-test-"),
-    );
-    const repeatedOutputRoot = await mkdtemp(
-      path.join(os.tmpdir(), "dreamboard-authority-repeat-test-"),
-    );
-    try {
-      const fixture = await compileScenarioModule({
-        game: {
-          id: metadata.id,
-          displayName: metadata.displayName,
-          mechanics: metadata.mechanics,
-          uiPatterns: metadata.uiPatterns,
-        },
-        gameDir,
-        scenario,
-        outputRoot,
-        sdkCommit: "test",
-      });
-      const repeatedFixture = await compileScenarioModule({
-        game: {
-          id: metadata.id,
-          displayName: metadata.displayName,
-          mechanics: metadata.mechanics,
-          uiPatterns: metadata.uiPatterns,
-        },
-        gameDir,
-        scenario,
-        outputRoot: repeatedOutputRoot,
-        sdkCommit: "different-provenance-commit",
-      });
+  const metadata = expectRecord(
+    await readJson(path.join(gameDir, "reference-game.json")),
+    "hearts/reference-game.json",
+  ) as Record<string, any>;
+  const scenario = await loadScenarioModule(
+    path.join(gameDir, "test/ui-scenarios/sealed-pass.mobile.scenario.ts"),
+  );
+  const outputRoot = await mkdtemp(
+    path.join(os.tmpdir(), "dreamboard-authority-test-"),
+  );
+  const repeatedOutputRoot = await mkdtemp(
+    path.join(os.tmpdir(), "dreamboard-authority-repeat-test-"),
+  );
+  try {
+    const fixture = await compileScenarioModule({
+      game: {
+        id: metadata.id,
+        displayName: metadata.displayName,
+        mechanics: metadata.mechanics,
+        uiPatterns: metadata.uiPatterns,
+      },
+      gameDir,
+      scenario,
+      outputRoot,
+      sdkCommit: "test",
+    });
+    const repeatedFixture = await compileScenarioModule({
+      game: {
+        id: metadata.id,
+        displayName: metadata.displayName,
+        mechanics: metadata.mechanics,
+        uiPatterns: metadata.uiPatterns,
+      },
+      gameDir,
+      scenario,
+      outputRoot: repeatedOutputRoot,
+      sdkCommit: "different-provenance-commit",
+    });
 
-      assert.equal(fixture.id, "hearts.sealed-pass.mobile");
-      assert.equal(
-        repeatedFixture.sha256,
-        fixture.sha256,
-        "fixture digests must not depend on bundle commit provenance",
-      );
-      assert.ok(fixture.capabilities.includes("accessibility-scan"));
-      const fixtureJson = JSON.parse(
-        await readFile(path.join(outputRoot, fixture.file), "utf8"),
-      );
-      assert.equal(
-        fixtureJson.source.renderModule,
-        "modules/hearts.sealed-pass.mobile.mjs",
-      );
-      assert.ok(
-        fixtureJson.source.sourceFiles.includes(
-          "examples/reference-games/hearts/app/phases/passing.ts",
-        ),
-      );
-      assert.ok(
-        fixtureJson.source.sourceFiles.includes(
-          "examples/reference-games/hearts/ui/components/game-ui.tsx",
-        ),
-      );
-      assert.ok(
-        fixtureJson.source.sourceFiles.includes(
-          "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
-        ),
-      );
-    } finally {
-      await Promise.all([
-        rm(outputRoot, { recursive: true, force: true }),
-        rm(repeatedOutputRoot, { recursive: true, force: true }),
-      ]);
-    }
-  });
+    assert.equal(fixture.id, "hearts.sealed-pass.mobile");
+    assert.equal(
+      repeatedFixture.sha256,
+      fixture.sha256,
+      "fixture digests must not depend on bundle commit provenance",
+    );
+    assert.ok(fixture.capabilities.includes("accessibility-scan"));
+    const fixtureJson = JSON.parse(
+      await readFile(path.join(outputRoot, fixture.file), "utf8"),
+    );
+    assert.equal(
+      fixtureJson.source.renderModule,
+      "modules/hearts.sealed-pass.mobile.mjs",
+    );
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/app/phases/passing.ts",
+      ),
+    );
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/ui/components/game-ui.tsx",
+      ),
+    );
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+      ),
+    );
+  } finally {
+    await Promise.all([
+      rm(outputRoot, { recursive: true, force: true }),
+      rm(repeatedOutputRoot, { recursive: true, force: true }),
+    ]);
+  }
 });
 
 test("workspace fixture compilation materializes a reducer-native checkpoint from one source closure", async () => {
   const gameDir = path.join(root, "examples/reference-games/hearts");
-  await withMaterializedReferenceGameWorkspaces(["hearts"], async () => {
-    const metadata = expectRecord(
-      await readJson(path.join(gameDir, "reference-game.json")),
-      "hearts/reference-game.json",
-    ) as Record<string, any>;
-    const scenario = await loadScenarioModule(
-      path.join(gameDir, "test/ui-scenarios/final-outcome.mobile.scenario.ts"),
-    );
-    const outputRoot = await mkdtemp(
-      path.join(os.tmpdir(), "dreamboard-reducer-native-authority-test-"),
-    );
-    try {
-      const fixture = await compileScenarioModule({
-        game: {
-          id: metadata.id,
-          displayName: metadata.displayName,
-          mechanics: metadata.mechanics,
-          uiPatterns: metadata.uiPatterns,
-        },
-        gameDir,
-        scenario,
-        outputRoot,
-        sdkCommit: "test",
-      });
-
-      assert.equal(fixture.id, "hearts.final-outcome.mobile");
-      const fixtureJson = JSON.parse(
-        await readFile(path.join(outputRoot, fixture.file), "utf8"),
-      );
-      assert.equal(
-        fixtureJson.protocol.frames[0].frame.flow.currentPhase,
-        "gameOver",
-      );
-      assert.ok(
-        fixtureJson.source.sourceFiles.includes(
-          "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
-        ),
-      );
-      assert.equal(JSON.stringify(fixtureJson).includes('"given"'), false);
-    } finally {
-      await rm(outputRoot, { recursive: true, force: true });
-    }
-  });
-});
-
-test("workspace lifecycle restores package links after callback failure", async () => {
-  const link = path.join(
-    root,
-    "examples/reference-games/hearts/node_modules/@dreamboard-games/sdk",
+  const metadata = expectRecord(
+    await readJson(path.join(gameDir, "reference-game.json")),
+    "hearts/reference-game.json",
+  ) as Record<string, any>;
+  const scenario = await loadScenarioModule(
+    path.join(gameDir, "test/ui-scenarios/final-outcome.mobile.scenario.ts"),
   );
-  const before = await readlink(link).catch((error: unknown) => {
-    if (hasErrorCode(error, "ENOENT")) return null;
-    throw error;
-  });
-
-  await assert.rejects(
-    withMaterializedReferenceGameWorkspaces(["hearts"], async () => {
-      throw new Error("callback failure");
-    }),
-    /callback failure/,
+  const outputRoot = await mkdtemp(
+    path.join(os.tmpdir(), "dreamboard-reducer-native-authority-test-"),
   );
+  try {
+    const fixture = await compileScenarioModule({
+      game: {
+        id: metadata.id,
+        displayName: metadata.displayName,
+        mechanics: metadata.mechanics,
+        uiPatterns: metadata.uiPatterns,
+      },
+      gameDir,
+      scenario,
+      outputRoot,
+      sdkCommit: "test",
+    });
 
-  const after = await readlink(link).catch((error: unknown) => {
-    if (hasErrorCode(error, "ENOENT")) return null;
-    throw error;
-  });
-  assert.equal(after, before);
+    assert.equal(fixture.id, "hearts.final-outcome.mobile");
+    const fixtureJson = JSON.parse(
+      await readFile(path.join(outputRoot, fixture.file), "utf8"),
+    );
+    assert.equal(
+      fixtureJson.protocol.frames[0].frame.flow.currentPhase,
+      "gameOver",
+    );
+    assert.ok(
+      fixtureJson.source.sourceFiles.includes(
+        "examples/reference-games/hearts/test/scenarios/complete-game.scenario.ts",
+      ),
+    );
+    assert.equal(JSON.stringify(fixtureJson).includes('"given"'), false);
+  } finally {
+    await rm(outputRoot, { recursive: true, force: true });
+  }
 });
 
 test("scenario loader rejects modules outside the reference-game roots", async () => {

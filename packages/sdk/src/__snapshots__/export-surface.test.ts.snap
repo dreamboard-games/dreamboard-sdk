@@ -1,11 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`public export surface > authoring-compiler export names are stable 1`] = `
-[
-  "materializeWorkspace",
-]
-`;
-
 exports[`public export surface > browser-interaction export names are stable 1`] = `
 [
   "BROWSER_INTERACTION_ACTUATOR_KINDS",
@@ -300,6 +294,7 @@ exports[`public export surface > runtime/primitives export names are stable 1`] 
 
 exports[`public export surface > runtime/workspace-contract export names are stable 1`] = `
 [
+  "createGameUi",
   "createGameUiContract",
   "createWorkspaceUIContract",
 ]
