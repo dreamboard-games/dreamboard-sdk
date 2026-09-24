@@ -1,5 +1,5 @@
 import { defineHex, Grid, Orientation, ring } from "honeycomb-grid";
-import { createHexBoardGeometry } from "../../../reducer/manifest/hex-board";
+import { createHexBoardGeometry } from "../../../shared/hex-board";
 /**
  * SVG-based hex grid for hex-based games (Catan, wargames, Hive, Twilight Imperium).
  * Supports tiles, edges (roads), vertices (settlements), and interactive placement overlays.

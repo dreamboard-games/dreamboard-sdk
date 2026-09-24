@@ -103,4 +103,4 @@ export {
   ring,
   spiral,
   fromCoordinates,
-} from "./reducer/manifest/hex-board";
+} from "./shared/hex-board";

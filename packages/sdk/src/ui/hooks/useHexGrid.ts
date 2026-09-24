@@ -2,7 +2,7 @@ import {
   createHexBoardGeometry,
   hexShapeCoordinates,
   spiral,
-} from "../../reducer/manifest/hex-board";
+} from "../../shared/hex-board";
 import { Hex } from "honeycomb-grid";
 /**
  * useHexGrid hook - Headless logic for hex grid games

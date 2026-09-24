@@ -1,10 +1,10 @@
+import { inputValueInDomain } from "../../../shared/input-domain";
 import { formatIssue } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
   CollectorState,
   InputCollector,
-  InputDomainDescriptor,
   InputSelectionDescriptor,
   ManifestContract,
   ReducerValidationResult,
@@ -158,7 +158,7 @@ export function validateCollectorValue(
       if (issue) return issue;
     }
   }
-  return domain && !collectorValueInDomain(domain, value, collector)
+  return domain && !inputValueInDomain(domain, value, collector.selection)
     ? {
         errorCode: "INVALID_INPUT_VALUE",
         message: "Selected value is outside the current input domain.",
@@ -222,80 +222,5 @@ function stableValueKey(value: unknown): string {
       return `${typeof value}:${String(value)}`;
     default:
       return `json:${JSON.stringify(value)}`;
-  }
-}
-
-export function collectorValueInDomain(
-  domain: InputDomainDescriptor,
-  value: unknown,
-  collector: InputCollector,
-): boolean {
-  if (collector.selection?.mode === "many") {
-    return (
-      Array.isArray(value) &&
-      value.every((item) =>
-        collectorValueInDomain(domain, item, {
-          ...collector,
-          selection: undefined,
-        }),
-      )
-    );
-  }
-  switch (domain.type) {
-    case "choice":
-      return domain.choices.some(
-        (choice) => !choice.disabled && choice.value === value,
-      );
-    case "choiceList":
-      return (
-        Array.isArray(value) &&
-        value.length >= (domain.min ?? 0) &&
-        value.length <= (domain.max ?? Infinity) &&
-        value.every((item) =>
-          domain.choices.some(
-            (choice) => !choice.disabled && choice.value === item,
-          ),
-        )
-      );
-    case "cardTarget":
-    case "boardTarget": {
-      const values = [value];
-      return values.every((item) =>
-        domain.eligibleTargets.includes(
-          typeof item === "object" && item !== null && "spaceId" in item
-            ? String(item.spaceId)
-            : String(item),
-        ),
-      );
-    }
-    case "boundedNumber":
-      return (
-        typeof value === "number" &&
-        value >= domain.min &&
-        value <= domain.max &&
-        Math.abs(
-          (value - domain.min) / (domain.step ?? 1) -
-            Math.round((value - domain.min) / (domain.step ?? 1)),
-        ) < 1e-9
-      );
-    case "resourceMap":
-      return (
-        typeof value === "object" &&
-        value !== null &&
-        !Array.isArray(value) &&
-        Object.keys(value).every((key) =>
-          domain.resources.some((entry) => entry.resourceId === key),
-        ) &&
-        domain.resources.every((entry) => {
-          const amount =
-            (value as Record<string, unknown>)[entry.resourceId] ?? 0;
-          return (
-            typeof amount === "number" &&
-            Number.isInteger(amount) &&
-            amount >= (entry.min ?? 0) &&
-            amount <= (entry.max ?? Infinity)
-          );
-        })
-      );
   }
 }
