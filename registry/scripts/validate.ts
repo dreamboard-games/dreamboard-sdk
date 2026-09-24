@@ -23,7 +23,7 @@ for (const item of registry.items) {
       new URL(`../${file.path}`, import.meta.url),
       "utf8",
     );
-    if (!file.path.endsWith(".tsx")) continue;
+    if (!/\.tsx?$/.test(file.path)) continue;
     const ast = ts.createSourceFile(
       file.path,
       source,
@@ -38,9 +38,14 @@ for (const item of registry.items) {
       )
         continue;
       const name = node.moduleSpecifier.text;
-      if (name !== "react" && !name.startsWith("./"))
+      if (
+        name !== "react" &&
+        !name.startsWith("./") &&
+        !(item.meta?.binding === "workspace" && name === "@game") &&
+        !(item.meta?.binding === "test" && name === "@playwright/test")
+      )
         throw new Error(`Non-pure import in ${file.path}: ${name}`);
     }
   }
 }
-console.log(`Validated ${names.size} pure registry items with shadcn schemas.`);
+console.log(`Validated ${names.size} registry items with shadcn schemas.`);

@@ -8,12 +8,16 @@
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@game": ["./typecheck/game.ts"]
+    }
   },
   "include": [
     "items/**/*.tsx",
     "stories/**/*.tsx",
     "scripts/**/*.ts",
-    ".storybook/**/*.ts"
+    ".storybook/**/*.ts",
+    "items/**/*.ts"
   ]
 }

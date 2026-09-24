@@ -280,3 +280,88 @@
     text-align: end;
   }
 }
+
+@layer components {
+  .db-hand {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    overflow-x: auto;
+    padding: 0.5rem;
+  }
+  .db-hand > button {
+    flex: 0 0 auto;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    border-radius: var(--radius);
+  }
+  .db-hand > button[aria-pressed="true"] {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .db-hand > button:focus-visible,
+  .db-grid [role="button"]:focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .db-hand-drawer > summary {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .db-actions,
+  .db-scenario-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .db-scenario-controls {
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .db-scenario-controls > summary {
+    width: 100%;
+    cursor: pointer;
+    font-weight: 650;
+    margin-bottom: 0.75rem;
+  }
+  .db-scenario-controls:not([open]) > :not(summary) {
+    display: none;
+  }
+  .db-scenario-controls label,
+  .db-interaction-form label {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.25rem;
+  }
+  .db-scenario-controls button,
+  .db-scenario-controls select,
+  .db-interaction-form button,
+  .db-interaction-form input,
+  .db-actions button {
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) / 2);
+    background: var(--background);
+    color: var(--foreground);
+    padding: 0.5rem 0.75rem;
+  }
+  .db-interaction-form input {
+    max-width: 8rem;
+  }
+  .db-interaction-form fieldset {
+    margin-block: 1rem;
+  }
+  .db-interaction-form button {
+    margin: 0.25rem;
+  }
+  .db-scenario-controls button:disabled,
+  .db-actions button:disabled {
+    opacity: 0.55;
+  }
+}

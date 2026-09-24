@@ -1,6 +1,6 @@
 # Dreamboard source registry
 
-Pure React building blocks, copied into the game that owns them. There are no SDK imports, gameplay rules, providers, geometry engines, network calls or animation dependencies. Each component takes display data, accepts ordinary DOM props and composes with children. Selection and other behavior belongs to the caller; the keyboard selection story shows a native button wrapping a card.
+React building blocks copied into the game that owns them. Pure display items have no SDK imports and accept ordinary DOM props and children. Bound items read the workspace’s `@game` hook and delegate interactions to the headless SDK. Local scenario controls and a browser-test helper support development without adding hosted gameplay authority. Animation remains optional and app-owned.
 
 ## Local proof
 
@@ -66,6 +66,32 @@ Board grids default to labelled static images. A later interactive board wrapper
 
 ## Layer006 integration
 
-Root `pnpm check` validates the registry explicitly and runs its typecheck and shadcn build through the existing workspace tasks. The existing CI UI lane additionally runs real consumer installation, Storybook build and the 26 desktop/mobile browser checks for pull requests and main. Existing SDK/workbench UI gates remain until their callers migrate. Add bound registry items only after the headless instance/React contract lands, migrate both reference UIs, then remove the old styled SDK and workbench. No registry hosting or publishing is performed here.
+Root `pnpm check` validates registry metadata, typechecks source and builds shadcn payloads. `pnpm ui test` builds the SDK, runs both installation modes, renders pure and real-scenario Storybook stories, and runs both reference games' desktop/touch Playwright suites. `pnpm ui test --game hearts` focuses one actual game. `pnpm ui dev --game hearts` starts its local scenario entry. The former tape compiler and Workbench are removed; tests now drive real reducers through local/scenario sources. Registry hosting remains a separate deployment item.
 
 Registry metadata follows the official [registry.json](https://ui.shadcn.com/docs/registry/registry-json) and [registry-item.json](https://ui.shadcn.com/docs/registry/registry-item-json) specifications. `registry.json` is the single source of item metadata; `shadcn build` emits each `registry-item.json` payload with embedded file content.
+
+## Workspace-bound items
+
+`hand`, `hand-drawer`, `board-targets`, `interaction-form`, `actions` and
+`inspector` import the consuming game's `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export the hook there. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
+not a styled SDK package. `board-targets` requires the board and pan/zoom features;
+install only the items supported by the game's binding. It installs a native
+non-passive wheel listener with cleanup, and uses canonical board geometry and
+handlers. App slots own terrain, pieces and optional animation.
+
+`InteractionForm` renders only current-step inputs and shows server-saved choices
+separately. Its `renderInput` slot lets a game replace board fields with a board
+hint. Cancel clears the authoritative server prefix; reset clears local choices.
+`Hand` accepts a card renderer, accessible label callback and optional comparator.
+`Inspector` displays only selected-seat data. `scenario-controls` belongs only in
+the local development entry, with roster and checkpoint/restore callbacks from a
+testing source. Hosted entry points never import executable games or scenarios.
+
+After building the SDK and registry, `pnpm --dir registry smoke:bound` installs
+all items against a packed SDK in a disposable all-features consumer. The pure
+`smoke` remains SDK-free. `install:games` serves an ephemeral registry and invokes
+the actual pinned shadcn CLI for each reference game's selected items, then writes
+the intended registry URL back to their `components.json`. This proves local
+installation, not deployment of the registry hostname.
+
+`browser-game` installs test-only Playwright locators under `test/helpers/`, using the public gameplay DOM attributes without a command tape or executable authority.

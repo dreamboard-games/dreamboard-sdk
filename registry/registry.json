@@ -166,6 +166,148 @@
         }
       ],
       "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "hand",
+      "type": "registry:component",
+      "title": "Hand",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/hand.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/hand.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "hand-drawer",
+      "type": "registry:component",
+      "title": "Hand Drawer",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/hand-drawer.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/hand-drawer.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/hand"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "board-targets",
+      "type": "registry:component",
+      "title": "Board Targets",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/board-targets.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/board-targets.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "interaction-form",
+      "type": "registry:component",
+      "title": "Interaction Form",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/interaction-form.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/interaction-form.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/actions"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "actions",
+      "type": "registry:component",
+      "title": "Actions",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/actions.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/actions.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "inspector",
+      "type": "registry:component",
+      "title": "Inspector",
+      "description": "Workspace-bound headless UI; copied source owned by the game.",
+      "meta": {
+        "binding": "workspace"
+      },
+      "files": [
+        {
+          "path": "items/inspector.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/inspector.tsx"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "scenario-controls",
+      "type": "registry:component",
+      "title": "Scenario Controls",
+      "description": "Local-only scenario source controls.",
+      "meta": {
+        "binding": "local"
+      },
+      "files": [
+        {
+          "path": "items/scenario-controls.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/scenario-controls.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "browser-game",
+      "title": "Browser game helpers",
+      "type": "registry:file",
+      "description": "Playwright locators over the public gameplay DOM attributes. Test-only source.",
+      "meta": {
+        "binding": "test"
+      },
+      "files": [
+        {
+          "path": "items/browser-game.ts",
+          "type": "registry:file",
+          "target": "test/helpers/browser-game.ts"
+        }
+      ]
     }
   ]
 }
