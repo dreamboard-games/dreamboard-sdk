@@ -7,7 +7,7 @@ import {
 import { immutableCopy } from "./immutable.js";
 import type { GameSource, SourceSnapshot, SourceState } from "./types.js";
 
-const snapshotSchema = z
+export const SourceSnapshotSchema = z
   .object({
     me: z.string().min(1),
     players: z.array(PluginPlayerSummarySchema),
@@ -18,7 +18,7 @@ const snapshotSchema = z
 
 /** A read-only fixture source accepts the public seat snapshot, never wire basis. */
 export function staticSource(input: SourceSnapshot): GameSource {
-  const snapshot = immutableCopy(snapshotSchema.parse(input));
+  const snapshot = immutableCopy(SourceSnapshotSchema.parse(input));
   if (!snapshot.players.some((player) => player.playerId === snapshot.me))
     throw new Error("Gameplay seat is absent from session.");
   const store = createStore<SourceState>(

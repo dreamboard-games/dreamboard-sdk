@@ -27,6 +27,10 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
         ContractManifest<Contract>
       >
     > = Record<string, never>,
+    const Kind extends "player" | "simultaneousPlayer" | "auto" =
+      | "player"
+      | "simultaneousPlayer"
+      | "auto",
   >(
     definition: PhaseDefinition<
       PhaseStateSchema,
@@ -35,7 +39,7 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
       SubmitCollectors,
       Interactions,
       OptionsOfContract<Contract>
-    >,
+    > & { kind: Kind },
   ): PhaseDefinition<
     PhaseStateSchema,
     ContractState<Contract>,
@@ -43,7 +47,7 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
     SubmitCollectors,
     Interactions,
     OptionsOfContract<Contract>
-  > => {
+  > & { kind: Kind } => {
     return definition;
   };
 }

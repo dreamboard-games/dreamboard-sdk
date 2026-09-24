@@ -384,17 +384,19 @@ export type InteractionIdOfDefinitionPhase<
   Definition,
   PhaseName extends PhaseNamesOfDefinition<Definition>,
 > =
-  InteractionRegistryOfDefinitionPhase<
-    Definition,
-    PhaseName
-  > extends infer Interactions
-    ? SimultaneousSubmitRegistryOfDefinitionPhase<
-        Definition,
-        PhaseName
-      > extends infer Submit
-      ? RegistryKeys<Interactions> | RegistryKeys<Submit>
-      : never
-    : never;
+  PhaseDefinitionByName<Definition, PhaseName> extends { kind: "auto" }
+    ? never
+    : InteractionRegistryOfDefinitionPhase<
+          Definition,
+          PhaseName
+        > extends infer Interactions
+      ? SimultaneousSubmitRegistryOfDefinitionPhase<
+          Definition,
+          PhaseName
+        > extends infer Submit
+        ? RegistryKeys<Interactions> | RegistryKeys<Submit>
+        : never
+      : never;
 
 export type InteractionSpecByNameOfDefinitionPhase<
   Definition,

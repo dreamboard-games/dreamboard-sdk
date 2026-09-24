@@ -45,3 +45,24 @@ four integration files and passed `pnpm --dir registry check` again
 Bound registry items, installation into both authored games, scenario stories and
 real game interaction/accessibility proof remain required. This receipt does not
 mark layer 006 complete or claim the registry hostname has been deployed.
+
+## Testing provider migration receipt
+
+The testing-owned sources compose one production bundle with existing inspection
+and collector enumeration. The older `createReducerTestingBundle` state-unwrapping
+initializer remains only for current test/scenario callers. Migrate those callers
+to the production-shaped testing runtime and delete that convenience wrapper in
+006; do not add another production initialization method. Local checkpoints retain
+serialized state and terminal outcome, while restore advances the source revision
+without replaying commands or initialization. New source providers bundle for the
+browser without Node built-ins.
+
+Provider verification passed: full `pnpm check` (734 SDK tests and both packed
+reference games), checked provider and real Hearts command types, and an esbuild
+`platform:browser` bundle of the testing-source entry with no Node built-ins.
+Canonical phase-kind inference excludes automatic phases from commands and
+removed eight nonexistent synthetic Hex `.submit` routes; real simultaneous
+submissions and explicit interactions remain. Focused proofs cover complete
+Hearts replay/fuzz, Hex committed selections/null/cancel/rejection retention,
+JSON checkpoint restore with terminal and roster invariants, seat privacy, and
+ACK/frame/disposal behavior.
