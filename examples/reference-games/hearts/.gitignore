@@ -1,5 +1,3 @@
-# Dreamboard local state
-.dreamboard/state.json
-.dreamboard/snapshot.json
-.dreamboard/dev/
-.dreamboard/generated/
+/test-results/
+/playwright-report/
+/dist/

@@ -28,10 +28,10 @@
       "app/phases/passing.ts",
       "app/phases/playing.ts",
       "ui/App.tsx",
-      "ui/interaction-routes.tsx",
+      "ui/game.ts",
       "test/scenarios/complete-game.scenario.ts",
       "test/scenarios/setup-and-pass.scenario.ts",
-      "test/ui-scenarios/dealt-hand.desktop.scenario.ts"
+      "test/browser/gameplay.spec.ts"
     ]
   },
   "mechanics": [

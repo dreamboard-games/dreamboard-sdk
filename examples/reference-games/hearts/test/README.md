@@ -1,7 +1,7 @@
 # Hearts scenario workspace
 
 Every authored scenario starts from ordinary four-player setup with an explicit
-safe-integer seed and the `default` production setup profile. Scenarios reach
+safe-integer seed. Scenarios reach
 their subject only by replaying canonical `passing.submit` and
 `playing.playCard` commands.
 
@@ -9,12 +9,16 @@ their subject only by replaying canonical `passing.submit` and
 inspect/explore checks, and UI/demo checkpoints all use that path or a separate
 legal seed/path for a mutually exclusive scoring or legality branch.
 
-Generated workspace contracts, projections, and Workbench checkpoints are
-ignored local outputs. They are not scenario authority and must not be edited
-or committed.
+Runtime projections and browser outputs are disposable evidence, not scenario
+authority.
 
 Run the focused gate from this package:
 
 ```sh
-pnpm verify
+pnpm check
+pnpm test:browser
 ```
+
+`test/browser/gameplay.spec.ts` drives the actual local provider through keyboard
+and touch input. `test/ui/app.test.tsx` proves hosted import closure, selected-seat
+privacy and named checkpoint startup.

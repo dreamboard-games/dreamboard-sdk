@@ -1,24 +1,8 @@
-import type { ViewCard } from "@dreamboard-games/sdk/ui";
-import type {
-  CardId,
-  CardType,
-  PlayingCardsCardProperties,
-} from "../../app/manifest";
+import type { ViewOf } from "@dreamboard-games/sdk";
+import type game from "../../app/game";
 
 type Suit = "clubs" | "diamonds" | "spades" | "hearts";
-
-export type PlayingCardView = ViewCard<
-  CardId,
-  CardType,
-  PlayingCardsCardProperties
->;
-
-const SUIT_GLYPH: Record<Suit, string> = {
-  clubs: "♣",
-  diamonds: "♦",
-  spades: "♠",
-  hearts: "♥",
-};
+export type PlayingCardView = ViewOf<typeof game>["hand"][number];
 
 const SUIT_ORDER: Record<Suit, number> = {
   clubs: 0,
@@ -43,8 +27,6 @@ const RANK_ORDER: Record<string, number> = {
   A: 14,
 };
 
-const RED_SUITS: ReadonlySet<Suit> = new Set(["diamonds", "hearts"]);
-
 function parseSuit(suit: string | undefined): Suit | undefined {
   return suit === "clubs" ||
     suit === "diamonds" ||
@@ -52,59 +34,6 @@ function parseSuit(suit: string | undefined): Suit | undefined {
     suit === "hearts"
     ? suit
     : undefined;
-}
-
-function isRed(suit: string | undefined): boolean {
-  const parsed = parseSuit(suit);
-  return !!parsed && RED_SUITS.has(parsed);
-}
-
-export function cardLabel(card: PlayingCardView): string {
-  return card.name ?? `${card.properties.rank} of ${card.properties.suit}`;
-}
-
-// ─── Card visuals ─────────────────────────────────────────────────────────
-
-export function PlayingCardContent({ card }: { card: PlayingCardView }) {
-  const colorClass = isRed(card.properties.suit)
-    ? "text-[#c0392b]"
-    : "text-slate-800";
-  const suit = parseSuit(card.properties.suit);
-  const glyph = suit ? SUIT_GLYPH[suit] : "?";
-
-  return (
-    <div
-      className={`flex h-full select-none flex-col items-stretch justify-between p-1 sm:p-1.5 ${colorClass}`}
-    >
-      <span className="text-left text-sm font-bold leading-none sm:text-base">
-        {card.properties.rank}
-      </span>
-      <span className="text-center text-2xl leading-none sm:text-3xl">
-        {glyph}
-      </span>
-      <span className="rotate-180 text-right text-sm font-bold leading-none sm:text-base">
-        {card.properties.rank}
-      </span>
-    </div>
-  );
-}
-
-export function PlayingCardTile({ card }: { card: PlayingCardView }) {
-  return (
-    <div className="h-[74px] w-[52px] overflow-hidden rounded-lg border border-slate-300 bg-white shadow-[0_2px_5px_rgba(15,23,42,0.16)]">
-      <PlayingCardContent card={card} />
-    </div>
-  );
-}
-
-export function HiddenPlayingCardTile() {
-  return (
-    <div className="h-[74px] w-[52px] rounded-lg border border-slate-700 bg-slate-800 shadow-[0_2px_5px_rgba(15,23,42,0.16)]" />
-  );
-}
-
-export function renderPlayingCardContent(viewCard: PlayingCardView) {
-  return <PlayingCardContent card={viewCard} />;
 }
 
 function stringProperty(
