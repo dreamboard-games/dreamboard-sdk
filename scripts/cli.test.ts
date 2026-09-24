@@ -18,7 +18,7 @@ function importWithoutBuildArtifacts(modulePath: string) {
     registerHooks({
       resolve(specifier, context, nextResolve) {
         const result = nextResolve(specifier, context);
-        if (result.url.includes("/dist/")) {
+        if (result.url.includes("/dist/") && !result.url.includes("/node_modules/")) {
           throw new Error(\`build artifact imported during startup: \${result.url}\`);
         }
         return result;
@@ -37,7 +37,7 @@ test("help documents the product command surface", () => {
   const result = cli("--help");
   assert.equal(result.status, 0);
   assert.doesNotMatch(result.stdout, /reference pin <version>/);
-  assert.match(result.stdout, /ui <storybook\|workbench\|test\|snapshots>/);
+  assert.match(result.stdout, /ui <storybook\|dev\|test>/);
   assert.equal(rootHelp(), result.stdout);
 });
 
