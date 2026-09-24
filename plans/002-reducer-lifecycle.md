@@ -1,6 +1,6 @@
 # Direct reducer execution and phase lifecycle
 
-Status: 002a implemented and reviewed; 002b executing; 002c prepared and reviewed.
+Status: 002a, 002b and 002c implemented, reviewed and verified together.
 Base: layer 001 (`de6be2c`).
 First branch: `codex/sdk-reducer-lifecycle` (002a).
 
@@ -100,10 +100,11 @@ Freeze the diff for root and independent review. Fix valid findings, then commit
 only this layer after the final gate; root submits the stack. Report exact
 commands, remaining downstream contract obligations and deleted public names.
 
-## 002c preparation receipt
+## 002c implementation receipt
 
-Commit `850e2d8061e128ced180053051b2535dee242277` is reviewed in
-`/Users/mac/code/worktrees/headless-sdk-views`; integration follows 002b.
+Prepared commit `850e2d8061e128ced180053051b2535dee242277` was independently
+reviewed, then integrated as `8679356` on reviewed 002b `c4b9f80` in
+`codex/sdk-single-seat-view`.
 It replaces split authored shared/player/static views with one contextual seat
 view, derives static boards from the manifest, and removes injected derived
 resolvers in favor of ordinary functions and the small WeakMap `memoize` helper.
@@ -116,7 +117,21 @@ template and both packed games. Root independently reran 57 focused tests and
 checked types; independent review found no actionable regressions in privacy,
 collector argument migration or memoization. Logs: `/tmp/views-full-check.log`,
 `/tmp/views-root-focused.log`, `/tmp/views-root-types.log`.
-Integration must revalidate the combined initialization/actor/view branch.
+Combined-tip verification passed with `mise exec node@24 -- corepack
+pnpm@10.4.1 check` (exit 0): SDK 86 files/624 tests, contract suites, checked
+authoring types, template, and both packed reference games. Seven focused files
+passed 95 tests; the memoization availability-rule integration fix then passed
+all 29 runtime behavior tests. Production and checked-type compilation passed.
+Logs: `/tmp/views-integration-fullcheck.log`,
+`/tmp/views-integration-focused.log`, `/tmp/views-integration-focused-fix.log`,
+`/tmp/views-integration-tsc.log`, `/tmp/views-integration-types.log`.
+
+Conflict resolution preserves 002b options admission and restoration, actor
+pending/continuation semantics, hidden-zone/card filtering, and scenario proofs.
+The memoization descriptor test now uses an ordinary availability rule instead
+of removed cost metadata. The existing two usePanZoom lint warnings and packed
+runner pnpm issue remain recorded follow-ups. No browser proof or publication
+is claimed by this browser-free gate.
 
 ## 002a implementation receipt
 

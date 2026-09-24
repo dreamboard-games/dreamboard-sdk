@@ -78,6 +78,12 @@ explicit enumeration budget; do not maintain another legality implementation.
 Scenario sources use existing reducer scenarios/checkpoints as their authority.
 Keep old tooling only until its actual callers migrate, then delete it in 006.
 
+Retain the original coverage requirement: a typed coverage map covers every
+interaction key, development warns once when an available interaction is never
+read, and `assertCoverage` provides the test form. Keep this optional observation
+inside the instance rather than introducing another diagnostics protocol. Add
+the planned phase/availability/eligibility matchers alongside the test helpers.
+
 Compile proofs cover game identities, inferred nullable/many inputs, absent
 features, enabled per-object features, phase exhaustiveness, controlled options
 and local-only operations. Behavioral proof covers complete Hearts replay,
