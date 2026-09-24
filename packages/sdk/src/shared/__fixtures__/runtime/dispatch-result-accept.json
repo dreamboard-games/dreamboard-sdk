@@ -54,7 +54,8 @@
         "to": "takeTurn"
       },
       "options": {},
-      "pending": {}
+      "pending": {},
+      "events": []
     }
   },
   "terminal": {

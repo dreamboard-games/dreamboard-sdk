@@ -504,6 +504,7 @@ export function createProjectionBuilder<
     }
     return withProjectionTiming(
       {
+        events: state.runtime.events,
         currentStage: resolveCurrentStageFor(combinedState),
         stageSeats: resolveStageSeatsFor(state),
         simultaneousPhase: resolveSimultaneousPhaseFor(state),

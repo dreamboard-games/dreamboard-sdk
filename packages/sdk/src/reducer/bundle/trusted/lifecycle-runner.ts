@@ -243,6 +243,7 @@ export function createLifecycleRunner<
         },
         phase: {} as State["phase"],
         runtime: {
+          events: [],
           rng: {
             seed: rngSeed ?? null,
             cursor: 0,

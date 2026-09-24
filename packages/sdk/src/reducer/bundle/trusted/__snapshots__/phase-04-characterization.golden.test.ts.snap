@@ -36,7 +36,7 @@ exports[`phase 4 trusted-bundle characterization > lifecycle transition and phas
 
 exports[`phase 4 trusted-bundle characterization > seat projection digest stays golden 1`] = `
 {
-  "digest": "fd30ecb5f8e66492db1a09a677ade83280a59baaa2b85e66bd3799b3a3e4ed14",
+  "digest": "e6736087f2694501d598ba96040fc1ea1df06b4e0bcb5b008a3401e761f02d73",
   "schedulerFlow": {
     "activePlayerIds": [
       "player-1",

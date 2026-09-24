@@ -328,6 +328,7 @@ describe("ingress runtime codec", () => {
         phase: { actionCount: 2 },
       },
       runtime: {
+        events: [],
         rng: { seed: 42, cursor: 0, trace: [] },
         options: {},
         pending: {},
@@ -344,6 +345,7 @@ describe("ingress runtime codec", () => {
         phase: { actionCount: 2 },
       },
       runtime: {
+        events: [],
         rng: { seed: 42, cursor: 0, trace: [] },
         pending: {},
         simultaneous: { current: null },
@@ -407,6 +409,7 @@ describe("ingress runtime codec", () => {
         phase: { actionCount: 2 },
       },
       runtime: {
+        events: [],
         rng: { seed: 42, cursor: 0, trace: [] },
         options: {},
         pending: {},

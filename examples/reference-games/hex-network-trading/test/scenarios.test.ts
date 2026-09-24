@@ -1,3 +1,4 @@
+import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing-runtime";
 import { FRONTIER_GEOMETRY } from "../app/model";
 import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
@@ -1197,4 +1198,23 @@ test("camp targets require an owned trail, an empty vertex, and full atomic cost
   );
   assert.equal(terminal.state().flow.currentPhase, "gameOver");
   assert.deepEqual(terminal.interactions({ seat: 1 }), []);
+});
+
+test("Bandits public events omit the privately stolen resource", async () => {
+  const { state } = await materializeScenarioRuntimeCheckpoint({
+    game,
+    scenario: banditsScenario,
+  });
+  assert.deepEqual(state.runtime.events, [
+    {
+      kind: "systemAction",
+      procedureId: "stormtrail-bandits",
+      title: "Bandits moved",
+      summary: "player-1 stole one hidden supply from player-2.",
+    },
+  ]);
+  assert.doesNotMatch(
+    JSON.stringify(state.runtime.events),
+    /provisions|myLastStolenResourceId/,
+  );
 });

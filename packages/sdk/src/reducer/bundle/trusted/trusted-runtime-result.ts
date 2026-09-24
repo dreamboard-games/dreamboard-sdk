@@ -262,7 +262,9 @@ function normalizeSystemActionEvent(
   };
 }
 
-function normalizeGameEvents(events: readonly GameEvent[] = []): GameEvent[] {
+export function normalizeGameEvents(
+  events: readonly GameEvent[] = [],
+): GameEvent[] {
   assertJsonWithinLimits(
     events,
     {

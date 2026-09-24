@@ -36,7 +36,8 @@
       },
       "lastTransition": null,
       "options": {},
-      "pending": {}
+      "pending": {},
+      "events": []
     }
   },
   "playerIds": ["player-1", "player-2"]

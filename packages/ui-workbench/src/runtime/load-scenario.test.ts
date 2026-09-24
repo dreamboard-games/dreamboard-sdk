@@ -17,6 +17,7 @@ const fixtureClockIso = "2026-01-02T03:04:05.000Z";
 
 function makeFixture(): UIScenarioFixture {
   const frame = {
+    events: [],
     basis: {
       version: 1,
       actionSetVersion,

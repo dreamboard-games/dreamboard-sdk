@@ -1010,6 +1010,7 @@ describe("initialization runtime", () => {
         },
       } satisfies RuntimeTableRecord,
       runtime: {
+        events: [],
         rng: {
           seed: 7,
           cursor: 0,
@@ -1147,6 +1148,7 @@ describe("initialization runtime", () => {
         dice: {},
       } satisfies RuntimeTableRecord,
       runtime: {
+        events: [],
         rng: {
           seed: 1,
           cursor: 0,

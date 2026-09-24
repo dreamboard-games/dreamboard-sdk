@@ -38,7 +38,8 @@
       },
       "lastTransition": null,
       "options": {},
-      "pending": {}
+      "pending": {},
+      "events": []
     }
   }
 }

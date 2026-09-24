@@ -93,3 +93,7 @@ during submission. Include a browser import-closure check for root.
 
 Run focused proofs and `pnpm check`; freeze for review before committing. The
 React adapter and game UI cutover follow in 005 rather than expanding this cut.
+
+Public display events and derived turn semantics are specified in the review
+notes: events are the latest persisted batch, currentPlayerId is the sole active
+player or null, and isMine tests active membership.

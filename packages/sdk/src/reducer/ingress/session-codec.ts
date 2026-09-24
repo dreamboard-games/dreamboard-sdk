@@ -237,6 +237,7 @@ export function createIngressRuntimeCodec<
     return runtimeRecordSchema.parse(parsed) as OptionsOfContract<Contract>;
   }
   const runtimeStateSchema = z.object({
+    events: z.array(ContractZod.GameEventSchema).max(32),
     rng: z.object({
       seed: z.number().int().nullable(),
       cursor: z.number().int(),
@@ -294,6 +295,7 @@ export function createIngressRuntimeCodec<
       options: OptionsOfContract<Contract>,
     ) {
       const runtimeState: State["runtime"] = {
+        events: [],
         rng: {
           seed,
           cursor: 0,

@@ -57,6 +57,7 @@ export function materializePluginGameplayFrame(
     seat?.zones == null ? {} : hydrateZones(registry, seat.zones, "zones");
 
   const frame = {
+    events: dynamicProjection.events,
     basis: {
       version: input.version,
       actionSetVersion: input.actionSetVersion,

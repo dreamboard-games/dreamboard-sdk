@@ -39,6 +39,7 @@ function frame({ id, scenarioId, version, view }) {
       view,
     }),
     frame: {
+      events: [],
       basis: {
         version,
         actionSetVersion: digest({

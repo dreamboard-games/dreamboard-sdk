@@ -114,16 +114,25 @@ describe("canonical runtime schemas", () => {
         options: null,
       }).success,
     ).toBe(false);
-    expect(current.SeatProjectionBundleSchema.parse({ seats: {} })).toEqual({
+    expect(
+      current.SeatProjectionBundleSchema.parse({ seats: {}, events: [] }),
+    ).toEqual({
       seats: {},
+      events: [],
     });
     expect(
       current.SeatProjectionBundleSchema.parse({
         seats: {},
+        events: [],
         currentStage: null,
         simultaneousPhase: null,
       }),
-    ).toEqual({ seats: {}, currentStage: null, simultaneousPhase: null });
+    ).toEqual({
+      seats: {},
+      events: [],
+      currentStage: null,
+      simultaneousPhase: null,
+    });
     expect(
       current.DispatchResultSchema.safeParse({
         kind: "reject",

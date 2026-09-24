@@ -172,6 +172,7 @@ export const GameOutcomeSchema =
 export const PluginGameplayFrameSchema = z
   .object({
     basis: GameplayBasisSchema,
+    events: z.array(GameEventSchema).max(32),
     view: RuntimeJsonSchema.nullable(),
     flow: z
       .object({
