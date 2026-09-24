@@ -20,7 +20,6 @@ import {
   defineSharedView,
   defineStepPhase,
   gameEvent,
-  pipe,
   rngInput,
 } from "../reducer/internal";
 import {
@@ -339,14 +338,11 @@ describe("runtime-owned reducer effects", () => {
           interactions: {
             advance: defineInteraction<typeof contract>()({
               inputs: {},
-              reduce({ state, accept, ops }) {
+              reduce({ state, accept, tx }) {
                 return accept(
-                  pipe(
-                    state,
-                    ops.patchPublicState({
-                      count: state.publicState.count + 1,
-                    }),
-                  ),
+                  tx.patchPublicState({
+                    count: state.publicState.count + 1,
+                  }),
                 );
               },
             }),
@@ -454,14 +450,11 @@ describe("runtime-owned reducer effects", () => {
           interactions: {
             advance: defineInteraction<typeof contract>()({
               inputs: {},
-              reduce({ state, accept, ops }) {
+              reduce({ state, accept, tx }) {
                 return accept(
-                  pipe(
-                    state,
-                    ops.patchPublicState({
-                      count: state.publicState.count + 1,
-                    }),
-                  ),
+                  tx.patchPublicState({
+                    count: state.publicState.count + 1,
+                  }),
                   {
                     events: [
                       gameEvent.systemAction({
@@ -2050,25 +2043,34 @@ describe("runtime-owned reducer effects", () => {
             interactions: {
               drawTwo: defineInteraction<typeof contract>()({
                 inputs: {},
-                reduce({ state, accept, random }) {
+                reduce({ tx, random }) {
                   const drawn = random.subset({
                     from: ["alpha", "bravo", "charlie", "delta"] as const,
                     count: 2,
                   });
-                  return accept({
-                    ...state,
-                    publicState: { drawn: [...drawn] },
-                  });
+                  tx.patchPublicState({ drawn: [...drawn] });
                 },
               }),
               rejectAfterDraw: defineInteraction<typeof contract>()({
                 inputs: {},
-                reduce({ reject, random }) {
+                reduce({ tx, random }) {
                   random.subset({
                     from: ["alpha", "bravo", "charlie", "delta"] as const,
                     count: 2,
                   });
-                  return reject("NOPE", "Rejected after sampling.");
+                  tx.addResources({
+                    playerId: "player-1",
+                    amounts: { coins: 9 },
+                  });
+                  tx.patchPublicState({ drawn: ["discarded"] });
+                  tx.emit(
+                    gameEvent.systemAction({
+                      procedureId: "discarded",
+                      title: "Discarded",
+                    }),
+                  );
+                  tx.schedule({ kind: "engine.rollDie", dieId: "die-1" });
+                  return tx.reject("NOPE", "Rejected after sampling.");
                 },
               }),
               drawTooMany: defineInteraction<typeof contract>()({
@@ -2132,7 +2134,7 @@ describe("runtime-owned reducer effects", () => {
       expect(resultA.state.runtime?.rng?.trace).toHaveLength(3);
     });
 
-    test("does not persist random.subset cursor advancement when reducer rejects", async () => {
+    test("rejects all draft mutations, queued output, and RNG consumption together", async () => {
       const bundle = createReducerTestingBundle(defineSubsetGame());
       const initial = await bundle.initialize({
         table: createTable(),
@@ -2140,6 +2142,12 @@ describe("runtime-owned reducer effects", () => {
         rngSeed: 7,
       });
 
+      const initialBefore = structuredClone(initial);
+      const controlSession = await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+        rngSeed: 7,
+      });
       const rejected = await bundle.reduce({
         state: initial,
         input: {
@@ -2151,6 +2159,9 @@ describe("runtime-owned reducer effects", () => {
       });
       expect(rejected.kind).toBe("reject");
       expect(initial.runtime?.rng?.cursor).toBe(0);
+      expect(initial).toEqual(initialBefore);
+      expect(rejected).not.toHaveProperty("events");
+      expect(rejected).not.toHaveProperty("instructions");
 
       const accepted = await bundle.reduce({
         state: initial,
@@ -2165,6 +2176,16 @@ describe("runtime-owned reducer effects", () => {
         throw new Error("Expected drawTwo to accept after rejected sample.");
       }
       expect(accepted.state.runtime?.rng?.cursor).toBe(3);
+      const control = await bundle.reduce({
+        state: controlSession,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "drawTwo",
+          params: {},
+        },
+      });
+      expect(accepted).toEqual(control);
     });
 
     test("throws a clear SDK error when count exceeds the source length", async () => {

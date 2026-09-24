@@ -36,7 +36,6 @@ import {
   defineInteraction,
   definePhase,
   defineStepPhase,
-  pipe,
   promptInput,
 } from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
@@ -211,10 +210,10 @@ describe("addressee-based prompt authorization", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          enter({ state, accept, ops }) {
+          enter({ accept, tx }) {
             // Active player is player-1; the addressee (askPlayer) is player-2.
             // This is the exact configuration that broke before the fix.
-            return accept(pipe(state, ops.setActivePlayers(["player-1"])));
+            return accept(tx.setActivePlayers(["player-1"]));
           },
           interactions: {
             respond: defineInteraction<typeof contract>()({
@@ -563,8 +562,8 @@ describe("default action-kind authorization", () => {
           kind: "player",
           steps: ["main", "roll"],
           state: z.object({}),
-          enter({ state, accept, ops }) {
-            return accept(pipe(state, ops.setActivePlayers(["player-1"])));
+          enter({ accept, tx }) {
+            return accept(tx.setActivePlayers(["player-1"]));
           },
           interactions: {
             act: {
@@ -746,8 +745,8 @@ describe("closed prompt (`to` resolves to empty set)", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          enter({ state, accept, ops }) {
-            return accept(pipe(state, ops.setActivePlayers(["player-1"])));
+          enter({ accept, tx }) {
+            return accept(tx.setActivePlayers(["player-1"]));
           },
           interactions: {
             respond: defineInteraction<typeof contract>()({
@@ -849,8 +848,8 @@ describe("action-kind interactions with a `to` selector", () => {
           kind: "player",
           state: z.object({}),
           initialState: () => ({}),
-          enter({ state, accept, ops }) {
-            return accept(pipe(state, ops.setActivePlayers(["player-1"])));
+          enter({ accept, tx }) {
+            return accept(tx.setActivePlayers(["player-1"]));
           },
           interactions: {
             discard: defineInteraction<typeof contract>()({

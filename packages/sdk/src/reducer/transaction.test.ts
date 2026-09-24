@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
   createReducerEdit,
-  createReducerOps,
   createStateQueries,
   perPlayer,
 } from "../reducer/internal";
 import type { RuntimeTableRecord } from "../reducer/advanced";
 import type { PlayerId } from "./per-player";
+import { createSpatialTable } from "./table/table-test-fixtures";
 import {
   getCloneRuntimeTableCallCount,
   resetCloneRuntimeTableCallCount,
@@ -15,10 +15,10 @@ import {
 type TestState = {
   table: RuntimeTableRecord;
   flow: { currentPhase: "draft"; activePlayers: PlayerId[] };
-  phase: Record<string, never>;
+  phase: { round: number };
   publicState: { picked: string | null };
-  hiddenState: Record<string, never>;
-  privateState: Record<string, Record<string, never>>;
+  hiddenState: { secret: number };
+  privateState: Record<string, { mark: number }>;
 };
 
 function player(id: string): PlayerId {
@@ -139,10 +139,10 @@ function createState(): TestState {
       slots: {},
     },
     flow: { currentPhase: "draft", activePlayers: players },
-    phase: {},
+    phase: { round: 1 },
     publicState: { picked: null },
-    hiddenState: {},
-    privateState: {},
+    hiddenState: { secret: 2 },
+    privateState: { "player-1": { mark: 3 }, "player-2": { mark: 8 } },
   };
 }
 
@@ -221,7 +221,7 @@ describe("reducer transactions", () => {
     });
   });
 
-  test("tx direct ops clone the table once and retain one draft state", () => {
+  test("tx mutations clone the table once and retain one draft state", () => {
     const state = deepFreeze(createState());
     resetCloneRuntimeTableCallCount();
     const tx = createReducerEdit<TestState>()(state);
@@ -254,27 +254,98 @@ describe("reducer transactions", () => {
     expect(tx.q.player.resource(player("player-1"), "coins")).toBe(4);
   });
 
-  test("tx.apply keeps pure-op escape hatch semantics", () => {
-    const state = createState();
-    const ops = createReducerOps<TestState>();
+  test("one spatial transaction refreshes queries and isolates its sibling", () => {
+    const state = deepFreeze({ table: createSpatialTable() });
+    const before = structuredClone(state);
+    const edit = createReducerEdit<typeof state>();
+    const tx = edit(state);
+    const sibling = edit(state);
+    const siblingBefore = structuredClone(sibling.state);
     resetCloneRuntimeTableCallCount();
-    const tx = createReducerEdit<TestState>()(state);
+    const draft = tx.state;
+    const initialQueries = tx.q;
+    expect(initialQueries.component.location("piece-1")).toEqual(
+      state.table.componentLocations["piece-1"],
+    );
 
-    const directDraft = tx.addResources({
+    tx.moveComponentToSpace({
+      componentId: "piece-1",
+      boardId: "main-board",
+      spaceId: "space-a",
+    });
+    expect(tx.q).not.toBe(initialQueries);
+    expect(tx.q.component.location("piece-1")).toMatchObject({
+      type: "OnSpace",
+      spaceId: "space-a",
+    });
+    tx.moveComponentToEdge({
+      componentId: "piece-1",
+      boardId: "square-board",
+      edgeId: "square-edge:a1-a2",
+    });
+    expect(tx.q.component.location("piece-1")).toMatchObject({
+      type: "OnEdge",
+      edgeId: "square-edge:a1-a2",
+    });
+    expect(tx.q.component.space("piece-1")).toBeNull();
+    tx.moveComponentToVertex({
+      componentId: "piece-1",
+      boardId: "square-board",
+      vertexId: "square-vertex:center",
+    });
+    expect(tx.q.component.location("piece-1")).toMatchObject({
+      type: "OnVertex",
+      vertexId: "square-vertex:center",
+    });
+    expect(tx.q.component.edge("piece-1")).toBeNull();
+    tx.moveComponentToDetached({ componentId: "piece-1" });
+    expect(tx.q.component.location("piece-1")).toEqual({ type: "Detached" });
+    expect(tx.q.component.vertex("piece-1")).toBeNull();
+    expect(tx.state).toBe(draft);
+    expect(getCloneRuntimeTableCallCount()).toBe(0);
+    expect(state).toEqual(before);
+    expect(sibling.state).toEqual(siblingBefore);
+  });
+
+  test("independent transactions isolate mutations and refresh cached queries", () => {
+    const state = deepFreeze(createState());
+    const first = createReducerEdit<TestState>()(state);
+    const second = createReducerEdit<TestState>()(state);
+    const secondBefore = structuredClone(second.state);
+    const firstDraft = first.state;
+    const initialQueries = first.q;
+    expect(initialQueries.player.resource(player("player-1"), "coins")).toBe(3);
+
+    first.addResources({ playerId: player("player-1"), amounts: { coins: 2 } });
+    expect(first.q).not.toBe(initialQueries);
+    expect(first.q.player.resource(player("player-1"), "coins")).toBe(5);
+    first.spendResources({
       playerId: player("player-1"),
       amounts: { coins: 1 },
     });
-    const appliedDraft = tx.apply(
-      ops.spendResources({
-        playerId: player("player-1"),
-        amounts: { coins: 1 },
-      }),
-    );
+    first.patchPublicState({ picked: "first" });
+    first.patchPhaseState((previous) => ({ round: previous.round + 1 }));
+    first.patchHiddenState({ secret: 4 });
+    first.patchPlayerPrivateState({
+      playerId: player("player-1"),
+      patch: (previous) => ({ mark: previous.mark + 2 }),
+    });
+    first.setActivePlayers([player("player-2")]);
 
-    expect(appliedDraft).not.toBe(directDraft);
-    expect(appliedDraft).toBe(tx.state);
-    expect(getCloneRuntimeTableCallCount()).toBe(1);
-    expect(tx.q.player.resource(player("player-1"), "coins")).toBe(3);
+    expect(first.q.player.resource(player("player-1"), "coins")).toBe(4);
+    expect(second.q.player.resource(player("player-1"), "coins")).toBe(3);
+    expect(second.state).toEqual(secondBefore);
+    expect(first.state).toBe(firstDraft);
+    expect(first.state.publicState.picked).toBe("first");
+    expect(first.state.flow.activePlayers).toEqual(["player-2"]);
+    expect(first.state.phase).toEqual({ round: 2 });
+    expect(first.state.hiddenState).toEqual({ secret: 4 });
+    expect(first.state.privateState["player-1"]).toEqual({ mark: 5 });
+    expect(first.state.privateState["player-2"]).toEqual({ mark: 8 });
+    expect(first.state.phase).not.toBe(state.phase);
+    expect(first.state.hiddenState).not.toBe(state.hiddenState);
+    expect(first.state.privateState).not.toBe(state.privateState);
+    expect(state).toEqual(createState());
   });
 
   test("edit factories reuse the transaction method surface", () => {
@@ -287,29 +358,26 @@ describe("reducer transactions", () => {
     expect(second.spendResources).toBe(second.spendResources);
     expect(first.spendResources).not.toBe(second.spendResources);
 
-    const { spendResources, apply } = first;
+    const { spendResources, patchPublicState } = first;
     spendResources({
       playerId: player("player-1"),
       amounts: { coins: 1 },
     });
-    apply((state) => ({
-      ...state,
-      publicState: { picked: "destructured" },
-    }));
+    patchPublicState({ picked: "destructured" });
 
     expect(first.q.player.resource(player("player-1"), "coins")).toBe(2);
     expect(first.state.publicState.picked).toBe("destructured");
     expect(second.q.player.resource(player("player-1"), "coins")).toBe(3);
   });
 
-  test("ops.rotatePlayerZone is available as a low-level op", () => {
+  test("transactions rotate whole hands to the right", () => {
     const state = createState();
-    const ops = createReducerOps<TestState>();
-    const next = ops.rotatePlayerZone({
+    const tx = createReducerEdit<TestState>()(state);
+    const next = tx.rotatePlayerZone({
       zoneId: "hand",
       direction: "right",
       players: [player("player-1"), player("player-2"), player("player-3")],
-    })(state);
+    });
     const q = createStateQueries(next);
 
     expect(q.zone.playerCards(player("player-1"), "hand")).toEqual(["card-c"]);

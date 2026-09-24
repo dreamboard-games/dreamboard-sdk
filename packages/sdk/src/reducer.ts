@@ -62,7 +62,6 @@ export {
   type StaleContractArtifactErrorOptions,
   type StaleContractArtifactKind,
 } from "./reducer/stale-contract-artifact-error";
-export { pipe, type Op } from "./reducer/compose";
 export type {
   ReducerTransaction,
   ReducerTransactionOutcome,
@@ -99,11 +98,6 @@ export {
   type SharedBoardRef,
 } from "./reducer/per-player";
 export {
-  createReducerOps,
-  type ReducerOps,
-  type ReducerStateBase,
-} from "./reducer/ops";
-export {
   defineDerived,
   createDerivedResolver,
   type DerivedDefinition,
@@ -112,10 +106,7 @@ export {
 // Flat `getX` table helpers were removed from the public surface in favour
 // of the opinionated `q.*` namespace returned by `createTableQueries` /
 // `createStateQueries` (also injected into every reducer callback as `q`).
-export {
-  assertCardAllowedInContainer,
-  setActivePlayers,
-} from "./reducer/table";
+export { assertCardAllowedInContainer } from "./reducer/table";
 export {
   createTableQueries,
   createStateQueries,

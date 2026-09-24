@@ -24,7 +24,6 @@ import {
   getVertex,
 } from "./board-queries";
 import { assertCardAllowedInContainer } from "./card-validation";
-import { cloneRuntimeTable } from "./clone";
 import {
   ensureArray,
   orderedComponentIdsForLocation,
@@ -270,22 +269,6 @@ function removeComponentFromCurrentLocation<
   delete table.componentLocations[componentId];
 }
 
-export function moveComponentToSpace<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  SpaceId extends SpaceIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  componentId: ComponentId,
-  boardId: BoardId,
-  spaceId: SpaceId,
-): Table {
-  const nextTable = cloneRuntimeTable(table);
-  moveComponentToSpaceInPlace(nextTable, componentId, boardId, spaceId);
-  return nextTable;
-}
-
 export function moveComponentToSpaceInPlace<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
@@ -305,22 +288,6 @@ export function moveComponentToSpaceInPlace<
     spaceId,
     position,
   };
-}
-
-export function moveComponentToContainer<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-  BoardId extends BoardIdOfTable<NoInfer<Table>>,
-  ContainerId extends BoardContainerIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  componentId: ComponentId,
-  boardId: BoardId,
-  containerId: ContainerId,
-): Table {
-  const nextTable = cloneRuntimeTable(table);
-  moveComponentToContainerInPlace(nextTable, componentId, boardId, containerId);
-  return nextTable;
 }
 
 export function moveComponentToContainerInPlace<
@@ -345,37 +312,12 @@ export function moveComponentToContainerInPlace<
   };
 }
 
-export function moveComponentToDetached<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
->(table: Table, componentId: ComponentId): Table {
-  const nextTable = cloneRuntimeTable(table);
-  moveComponentToDetachedInPlace(nextTable, componentId);
-  return nextTable;
-}
-
 export function moveComponentToDetachedInPlace<
   Table extends RuntimeTableRecord,
   ComponentId extends ComponentIdOfTable<Table>,
 >(table: Table, componentId: ComponentId): void {
   removeComponentFromCurrentLocation(table, componentId);
   table.componentLocations[componentId] = { type: "Detached" };
-}
-
-export function moveComponentToEdge<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  EdgeId extends TiledEdgeIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  componentId: ComponentId,
-  boardId: BoardId,
-  edgeId: EdgeId,
-): Table {
-  const nextTable = cloneRuntimeTable(table);
-  moveComponentToEdgeInPlace(nextTable, componentId, boardId, edgeId);
-  return nextTable;
 }
 
 export function moveComponentToEdgeInPlace<
@@ -398,22 +340,6 @@ export function moveComponentToEdgeInPlace<
     edgeId,
     position,
   };
-}
-
-export function moveComponentToVertex<
-  Table extends RuntimeTableRecord,
-  ComponentId extends ComponentIdOfTable<Table>,
-  BoardId extends TiledBoardIdOfTable<NoInfer<Table>>,
-  VertexId extends TiledVertexIdOfTable<NoInfer<Table>, BoardId>,
->(
-  table: Table,
-  componentId: ComponentId,
-  boardId: BoardId,
-  vertexId: VertexId,
-): Table {
-  const nextTable = cloneRuntimeTable(table);
-  moveComponentToVertexInPlace(nextTable, componentId, boardId, vertexId);
-  return nextTable;
 }
 
 export function moveComponentToVertexInPlace<

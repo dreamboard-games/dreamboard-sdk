@@ -87,8 +87,8 @@ export type ResourceIdOfManifest<Manifest> = Manifest extends {
 /**
  * Per-player resource counts: a partial `Record<ResourceId, number>`.
  *
- * Used as the input shape for {@link ReducerOps.addResources},
- * {@link ReducerOps.spendResources}, and {@link ReducerOps.transferResources}.
+ * Used as the input shape for {@link ReducerTransaction.addResources},
+ * {@link ReducerTransaction.spendResources}, and {@link ReducerTransaction.transferResources}.
  */
 export type ResourceAmountsOfTable<Table> = Partial<
   Record<ResourceIdOfTable<Table>, number>

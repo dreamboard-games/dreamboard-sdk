@@ -215,6 +215,33 @@ export function markReady(tx: Tx, playerId: PlayerId): void {
   tx.patchPublicState({ currentPlayerId: playerId });
 }
 
+// Direct transaction methods preserve manifest identities without an ops layer.
+export function mutateTypedDraft(tx: Tx, playerId: PlayerId): GameState {
+  const draft: GameState = tx.moveCardBetweenPlayerZones({
+    playerId,
+    fromZoneId: "hand",
+    toZoneId: "hand",
+    cardId: "card-1",
+  });
+  tx.rotatePlayerZone({
+    zoneId: "hand",
+    direction: "left",
+    cardIdsByPlayer: { [playerId]: ["card-2"] },
+  });
+  tx.moveCardBetweenPlayerZones({
+    playerId,
+    fromZoneId: "hand",
+    toZoneId: "hand",
+    // @ts-expect-error Card IDs stay constrained to this manifest.
+    cardId: "unknown-card",
+  });
+  // @ts-expect-error A transaction has no immutable-op escape hatch.
+  tx.apply((state: GameState) => state);
+  // @ts-expect-error Patch field types remain constrained by the state schema.
+  tx.patchPublicState({ currentPlayerId: 12 });
+  return draft;
+}
+
 // --- A phase file: the bound handle, fused inputs, tx-first reducer. --------
 
 const playerTurn = game.phase("playerTurn");
@@ -283,7 +310,9 @@ const playerTurnPhase = playerTurn.define({
           defaultValue: "ready",
         }),
       },
-      reduce: ({ tx, input }) => {
+      reduce: ({ tx, input, ...args }) => {
+        // @ts-expect-error Mutation callbacks no longer receive an ops namespace.
+        args.ops;
         type _ParamsAreLiteral = Expect<
           Equal<typeof input.params.mood, "ready" | "wait">
         >;
@@ -294,7 +323,12 @@ const playerTurnPhase = playerTurn.define({
           Equal<typeof tx.state.phase.rolled, boolean>
         >;
         // Mutations go through the transaction; a bare return accepts it.
-        tx.patchPhaseState({ rolled: true });
+        const patched = tx.patchPhaseState({ rolled: true });
+        type _MutationRetainsPhase = Expect<
+          Equal<typeof patched.phase.rolled, boolean>
+        >;
+        // @ts-expect-error The scoped phase state rejects unrelated fields.
+        tx.patchPhaseState({ nonexistent: true });
         markReady(tx, input.playerId);
         if (input.params.mood === "wait") return;
         // Declared error codes only.

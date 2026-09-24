@@ -1,18 +1,13 @@
+import { createReducerTransaction } from "../transaction";
 import { describe, expect, test } from "vitest";
 import type { RuntimeTableRecord } from "../../reducer/advanced";
 import { perPlayer, type PlayerId } from "../per-player";
 import {
-  addCardToSharedZone,
   addCardToSharedZoneInPlace,
   dealCardsBetweenPlayerZonesInPlace,
   dealCardsFromDeckToHandInPlace,
-  moveCardBetweenPlayerZones,
   moveCardBetweenPlayerZonesInPlace,
-  moveCardBetweenSharedZones,
-  moveCardFromPlayerZoneToSharedZone,
-  moveCardFromSharedZoneToPlayerZone,
   moveCardFromSharedZoneToPlayerZoneInPlace,
-  moveComponentToContainer,
   removeCardFromSharedZoneInPlace,
 } from "./index";
 import { createSpatialTable } from "./table-test-fixtures";
@@ -43,8 +38,7 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      moveCardBetweenSharedZones({
-        table,
+      createReducerTransaction({ table }).moveCardBetweenSharedZones({
         fromZoneId: "draw-deck",
         toZoneId: "special-deck",
         cardId: "card-1",
@@ -52,7 +46,11 @@ describe("table ops spatial helpers", () => {
     ).toThrow("cannot enter zone 'special-deck'");
 
     expect(() =>
-      moveComponentToContainer(table, "card-1", "main-board", "restricted-row"),
+      createReducerTransaction({ table }).moveComponentToContainer({
+        componentId: "card-1",
+        boardId: "main-board",
+        containerId: "restricted-row",
+      }),
     ).toThrow("cannot enter container 'restricted-row'");
   });
 
@@ -60,8 +58,9 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      moveCardFromPlayerZoneToSharedZone({
+      createReducerTransaction({
         table,
+      }).moveCardFromPlayerZoneToSharedZone({
         playerId: PLAYER_1,
         fromZoneId: DRAW_DECK,
         toZoneId: SPECIAL_DECK,
@@ -79,8 +78,9 @@ describe("table ops spatial helpers", () => {
     );
 
     expect(() =>
-      moveCardFromPlayerZoneToSharedZone({
+      createReducerTransaction({
         table,
+      }).moveCardFromPlayerZoneToSharedZone({
         playerId: PLAYER_1,
         fromZoneId: PLAYER_HAND,
         toZoneId: PLAYER_HAND,
@@ -105,7 +105,12 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
 
-    const next = addCardToSharedZone(table, DRAW_DECK, CARD_2, null, "top");
+    const next = createReducerTransaction({ table }).addCardToSharedZone({
+      deckId: DRAW_DECK,
+      cardId: CARD_2,
+      playedBy: null,
+      position: "top",
+    }).table;
 
     expect(next.decks["draw-deck"]).toEqual(["card-2", "card-1"]);
     expect(next.zones.shared["draw-deck"]).toEqual(["card-2", "card-1"]);
@@ -135,7 +140,10 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
 
-    const next = addCardToSharedZone(table, DRAW_DECK, CARD_2);
+    const next = createReducerTransaction({ table }).addCardToSharedZone({
+      deckId: DRAW_DECK,
+      cardId: CARD_2,
+    }).table;
 
     expect(next.decks["draw-deck"]).toEqual(["card-1", "card-2"]);
     expect(next.componentLocations["card-2"]).toMatchObject({
@@ -170,13 +178,14 @@ describe("table ops spatial helpers", () => {
     // Make draw-deck and special-deck cardSet-compatible for this test.
     table.zones.cardSetIdsByZoneId!["special-deck"] = ["main", "special"];
 
-    const next = moveCardBetweenSharedZones({
+    const next = createReducerTransaction({
       table,
+    }).moveCardBetweenSharedZones({
       fromZoneId: DRAW_DECK,
       toZoneId: SPECIAL_DECK,
       cardId: CARD_1,
       position: "top",
-    });
+    }).table;
 
     expect(next.decks["special-deck"]).toEqual(["card-1", "card-special"]);
     expect(next.componentLocations["card-1"]).toMatchObject({
@@ -224,14 +233,15 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-other"] = null;
     table.visibility["card-other"] = { faceUp: true };
 
-    const next = moveCardFromPlayerZoneToSharedZone({
+    const next = createReducerTransaction({
       table,
+    }).moveCardFromPlayerZoneToSharedZone({
       playerId: PLAYER_1,
       fromZoneId: PLAYER_HAND,
       toZoneId: DRAW_DECK,
       cardId: CARD_1,
       position: "top",
-    });
+    }).table;
 
     expect(next.decks["draw-deck"]).toEqual(["card-1", "card-other"]);
     expect(next.componentLocations["card-1"]).toMatchObject({
@@ -269,13 +279,14 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-1"] = "player-1";
     table.visibility["card-1"] = { faceUp: false, visibleTo: ["player-1"] };
 
-    const afterPlay = moveCardBetweenPlayerZones({
+    const afterPlay = createReducerTransaction({
       table,
+    }).moveCardBetweenPlayerZones({
       playerId: PLAYER_1,
       fromZoneId: HAND,
       toZoneId: IN_PLAY,
       cardId: CARD_1,
-    });
+    }).table;
 
     expect(afterPlay.componentLocations["card-1"]).toEqual({
       type: "InHand",
@@ -295,13 +306,14 @@ describe("table ops spatial helpers", () => {
     afterPlay.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
     afterPlay.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
 
-    const afterCleanup = moveCardBetweenPlayerZones({
+    const afterCleanup = createReducerTransaction({
       table: afterPlay,
+    }).moveCardBetweenPlayerZones({
       playerId: PLAYER_1,
       fromZoneId: IN_PLAY,
       toZoneId: DISCARD,
       cardId: CARD_1,
-    });
+    }).table;
 
     expect(afterCleanup.visibility["card-1"]).toEqual({
       faceUp: false,
@@ -320,8 +332,7 @@ describe("table ops spatial helpers", () => {
     table.zones.perPlayer["in-play"] = perPlayer(PLAYER_1_ONLY, () => []);
 
     expect(() =>
-      moveCardBetweenPlayerZones({
-        table,
+      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: HAND,
         toZoneId: IN_PLAY,
@@ -334,8 +345,7 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      moveCardBetweenPlayerZones({
-        table,
+      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: DRAW_DECK,
         toZoneId: DRAW_DECK,
@@ -364,8 +374,7 @@ describe("table ops spatial helpers", () => {
     };
 
     expect(() =>
-      moveCardBetweenPlayerZones({
-        table,
+      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: HAND,
         toZoneId: ONLY_SPECIAL,
@@ -381,13 +390,14 @@ describe("table ops spatial helpers", () => {
     table.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
     table.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
 
-    const next = moveCardFromSharedZoneToPlayerZone({
+    const next = createReducerTransaction({
       table,
+    }).moveCardFromSharedZoneToPlayerZone({
       playerId: PLAYER_1,
       fromZoneId: DRAW_DECK,
       toZoneId: DISCARD,
       cardId: CARD_1,
-    });
+    }).table;
 
     expect(next.decks["draw-deck"]).toEqual([]);
     expect(next.zones.shared["draw-deck"]).toEqual([]);
@@ -411,13 +421,14 @@ describe("table ops spatial helpers", () => {
     table.hands["public-area"] = perPlayer(PLAYER_IDS, () => []);
     table.zones.perPlayer["public-area"] = perPlayer(PLAYER_IDS, () => []);
 
-    const next = moveCardFromSharedZoneToPlayerZone({
+    const next = createReducerTransaction({
       table,
+    }).moveCardFromSharedZoneToPlayerZone({
       playerId: PLAYER_1,
       fromZoneId: DRAW_DECK,
       toZoneId: PUBLIC_AREA,
       cardId: CARD_1,
-    });
+    }).table;
 
     expect(next.visibility["card-1"]).toEqual({ faceUp: true });
     expect(next.ownerOfCard["card-1"]).toBe("player-1");
@@ -434,8 +445,9 @@ describe("table ops spatial helpers", () => {
     );
 
     expect(() =>
-      moveCardFromSharedZoneToPlayerZone({
+      createReducerTransaction({
         table,
+      }).moveCardFromSharedZoneToPlayerZone({
         playerId: PLAYER_1,
         fromZoneId: DRAW_DECK,
         toZoneId: ONLY_SPECIAL_HAND,
@@ -451,8 +463,9 @@ describe("table ops spatial helpers", () => {
     table.zones.perPlayer["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
 
     expect(() =>
-      moveCardFromSharedZoneToPlayerZone({
+      createReducerTransaction({
         table,
+      }).moveCardFromSharedZoneToPlayerZone({
         playerId: PLAYER_1,
         fromZoneId: SPECIAL_DECK,
         toZoneId: DISCARD,
