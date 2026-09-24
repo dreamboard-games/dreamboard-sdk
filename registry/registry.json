@@ -1,0 +1,171 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "dreamboard",
+  "homepage": "https://dreamboard.games",
+  "items": [
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "tokens",
+      "type": "registry:style",
+      "title": "Tokens",
+      "description": "Dreamboard visual tokens and component styles.",
+      "files": [
+        {
+          "path": "items/tokens.css",
+          "type": "registry:file",
+          "target": "@components/dreamboard/tokens.css"
+        }
+      ]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "card",
+      "type": "registry:component",
+      "title": "Card",
+      "description": "Pure, composable card presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/card.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/card.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "playing-card",
+      "type": "registry:component",
+      "title": "Playing Card",
+      "description": "Pure, composable playing card presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/playing-card.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/playing-card.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens", "@dreamboard/card"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "pile",
+      "type": "registry:component",
+      "title": "Pile",
+      "description": "Pure, composable pile presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/pile.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/pile.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "hex-grid",
+      "type": "registry:component",
+      "title": "Hex Grid",
+      "description": "Pure, composable hex grid presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/hex-grid.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/hex-grid.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "square-grid",
+      "type": "registry:component",
+      "title": "Square Grid",
+      "description": "Pure, composable square grid presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/square-grid.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/square-grid.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "players",
+      "type": "registry:component",
+      "title": "Players",
+      "description": "Pure, composable players presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/players.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/players.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "resources",
+      "type": "registry:component",
+      "title": "Resources",
+      "description": "Pure, composable resources presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/resources.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/resources.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "dice",
+      "type": "registry:component",
+      "title": "Dice",
+      "description": "Pure, composable dice presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/dice.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/dice.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "event-log",
+      "type": "registry:component",
+      "title": "Event Log",
+      "description": "Pure, composable event log presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/event-log.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/event-log.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    },
+    {
+      "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+      "name": "standings",
+      "type": "registry:component",
+      "title": "Standings",
+      "description": "Pure, composable standings presentation. No SDK dependency.",
+      "files": [
+        {
+          "path": "items/standings.tsx",
+          "type": "registry:component",
+          "target": "@components/dreamboard/standings.tsx"
+        }
+      ],
+      "registryDependencies": ["@dreamboard/tokens"]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 packages:
+  - "registry"
   - "packages/*"
   - "templates/game"
   - "examples/reference-games/hearts"
