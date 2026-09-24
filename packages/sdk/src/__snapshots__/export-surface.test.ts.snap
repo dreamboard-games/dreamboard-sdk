@@ -124,7 +124,9 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "createStateQueries",
   "createTableQueries",
   "defineInputs",
+  "fromCoordinates",
   "gameEvent",
+  "hexagon",
   "isPerPlayer",
   "isPerPlayerBoardRef",
   "isPlayerId",
@@ -147,9 +149,12 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "perPlayerSet",
   "perPlayerSize",
   "perPlayerValues",
+  "rectangle",
+  "ring",
   "sharedBoardRef",
   "sparseCounts",
   "sparseMap",
+  "spiral",
 ]
 `;
 

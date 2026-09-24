@@ -42,7 +42,9 @@ export type {
   GenericBoardSpec,
   GenericBoardTemplateSpec,
   HexBoardSpec,
-  HexBoardTemplateSpec,
+  HexShape,
+  HexCoordinate,
+  HexSpaceOverride,
   HexEdgeRef,
   HexEdgeSpec,
   HexOrientation,
@@ -138,3 +140,4 @@ export {
   expectTypedId,
   isTypedId,
 } from "./generated-helpers.js";
+export type { HexEdgeId, HexVertexId, HexSpaceId } from "./board-identities.js";

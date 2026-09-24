@@ -1,3 +1,4 @@
+import { FRONTIER_GEOMETRY } from "../app/model";
 import type { ScenarioCommandOf } from "@dreamboard-games/sdk/testing";
 import game from "../app/game.ts";
 import type { EdgeId, ResourceId, SpaceId, VertexId } from "../app/manifest";
@@ -92,21 +93,41 @@ export function reject(seat: number) {
 }
 
 export const STANDARD_SETUP_COMMANDS = [
-  camp(0, "hex-vertex:1,1,-2", "placeStartingCamp"),
-  trail(0, "hex-edge:1,1,-2::2,2,-4", "placeStartingTrail"),
-  camp(1, "hex-vertex:1,-2,1", "placeStartingCamp"),
-  trail(1, "hex-edge:1,-2,1::2,-4,2", "placeStartingTrail"),
-  camp(2, "hex-vertex:-2,1,1", "placeStartingCamp"),
-  trail(2, "hex-edge:-2,1,1::-4,2,2", "placeStartingTrail"),
+  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
+  camp(
+    1,
+    FRONTIER_GEOMETRY.vertexAt("southEastFields", 3),
+    "placeStartingCamp",
+  ),
+  trail(
+    1,
+    FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
+    "placeStartingTrail",
+  ),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 5), "placeStartingCamp"),
+  trail(2, FRONTIER_GEOMETRY.edgeAt("southWestClay", 4), "placeStartingTrail"),
 ] as const;
 
 export const MULTI_VICTIM_SETUP_COMMANDS = [
-  camp(0, "hex-vertex:1,-2,1", "placeStartingCamp"),
-  trail(0, "hex-edge:1,-2,1::2,-4,2", "placeStartingTrail"),
-  camp(1, "hex-vertex:-1,2,-1", "placeStartingCamp"),
-  trail(1, "hex-edge:-1,2,-1::-2,1,1", "placeStartingTrail"),
-  camp(2, "hex-vertex:1,1,-2", "placeStartingCamp"),
-  trail(2, "hex-edge:1,1,-2::2,2,-4", "placeStartingTrail"),
+  camp(
+    0,
+    FRONTIER_GEOMETRY.vertexAt("southEastFields", 3),
+    "placeStartingCamp",
+  ),
+  trail(
+    0,
+    FRONTIER_GEOMETRY.edgeAt("southEastFields", 2),
+    "placeStartingTrail",
+  ),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 2), "placeStartingCamp"),
+  trail(
+    1,
+    FRONTIER_GEOMETRY.edgeAt("northWestFields", 0),
+    "placeStartingTrail",
+  ),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  trail(2, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
 ] as const;
 
 export const BANDITS_PREFIX_COMMANDS = [
@@ -121,12 +142,12 @@ export const COMPLETE_GAME_COMMANDS = [
   roll(1),
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
-  camp(1, "hex-vertex:2,-4,2"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southEastFields", 2)),
   end(1),
   roll(2),
   offer(2, 0, { provisions: 1 }, { timber: 1 }),
   accept(0),
-  camp(2, "hex-vertex:-4,2,2"),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 4)),
   end(2),
   roll(0),
   end(0),
@@ -152,7 +173,7 @@ export const COMPLETE_GAME_COMMANDS = [
   depot(2, "provisions", "brick"),
   offer(2, 0, { provisions: 1 }, { timber: 1 }),
   accept(0),
-  trail(2, "hex-edge:-1,-1,2::-2,1,1"),
+  trail(2, FRONTIER_GEOMETRY.edgeAt("southWestClay", 5)),
   end(2),
   roll(0),
   depot(0, "provisions", "brick"),
@@ -162,7 +183,7 @@ export const COMPLETE_GAME_COMMANDS = [
   accept(0),
   offer(1, 0, { provisions: 1 }, { timber: 1 }),
   accept(0),
-  trail(1, "hex-edge:-1,-1,2::1,-2,1"),
+  trail(1, FRONTIER_GEOMETRY.edgeAt("southForest", 4)),
   end(1),
   roll(2),
   end(2),
@@ -194,7 +215,7 @@ export const COMPLETE_GAME_COMMANDS = [
   roll(1),
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
-  camp(1, "hex-vertex:-1,-1,2"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 4)),
   end(1),
   roll(2),
   end(2),
@@ -210,7 +231,7 @@ export const COMPLETE_GAME_COMMANDS = [
   roll(1),
   bandits(1, "southForest"),
   depot(1, "timber", "brick"),
-  trail(1, "hex-edge:-1,-1,2::-2,-2,4"),
+  trail(1, FRONTIER_GEOMETRY.edgeAt("southForest", 3)),
   end(1),
   roll(2),
   end(2),
@@ -220,7 +241,7 @@ export const COMPLETE_GAME_COMMANDS = [
   offer(1, 0, { provisions: 1 }, { brick: 1 }),
   accept(0),
   depot(1, "provisions", "timber"),
-  camp(1, "hex-vertex:-2,-2,4"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("southForest", 3)),
 ] as const;
 
 /** Seed-1 legal replay ending immediately after turn 76 rolls a 7. */
@@ -448,7 +469,7 @@ export const PRODUCTION_COMMANDS = [
 export const NETWORK_EXHAUSTION_COMMANDS = [
   ...STANDARD_SETUP_COMMANDS,
   roll(0),
-  trail(0, "hex-edge:-1,2,-1::1,1,-2"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 1)),
   end(0),
   roll(1),
   end(1),
@@ -497,14 +518,14 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-1,2,-1::-2,1,1"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northWestFields", 0)),
   end(0),
   roll(1),
   end(1),
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-1,2,-1::-2,4,-2"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 2)),
   end(0),
   roll(1),
   bandits(1, "southEastFields"),
@@ -526,7 +547,7 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-1,5,-4::-2,4,-2"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 3)),
   end(0),
   roll(1),
   end(1),
@@ -539,7 +560,7 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-1,5,-4::1,4,-5"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 4)),
   end(0),
   roll(1),
   discard(1, { provisions: 4 }),
@@ -577,7 +598,7 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   end(2),
   roll(0),
   bandits(0, "northForest"),
-  trail(0, "hex-edge:-2,4,-2::-4,5,-1"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northWestFields", 4)),
   end(0),
   roll(1),
   bandits(1, "southEastFields"),
@@ -599,7 +620,7 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-4,5,-1::-5,4,1"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northWestFields", 3)),
   end(0),
   roll(1),
   end(1),
@@ -608,7 +629,7 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   bandits(2, "northWestFields"),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-4,2,2::-5,4,1"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northWestFields", 2)),
   end(0),
   roll(1),
   end(1),
@@ -628,14 +649,14 @@ export const NETWORK_EXHAUSTION_COMMANDS = [
   roll(2),
   end(2),
   roll(0),
-  trail(0, "hex-edge:-4,2,2::-5,1,4"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("southWestClay", 3)),
 ] as const;
 
 export const INTERRUPTION_SETUP_COMMANDS = [
-  camp(0, "hex-vertex:1,1,-2", "placeStartingCamp"),
-  trail(0, "hex-edge:1,1,-2::2,2,-4", "placeStartingTrail"),
-  camp(1, "hex-vertex:2,2,-4", "placeStartingCamp"),
-  trail(1, "hex-edge:1,4,-5::2,2,-4", "placeStartingTrail"),
-  camp(2, "hex-vertex:-2,1,1", "placeStartingCamp"),
-  trail(2, "hex-edge:-2,1,1::-4,2,2", "placeStartingTrail"),
+  camp(0, FRONTIER_GEOMETRY.vertexAt("northForest", 1), "placeStartingCamp"),
+  trail(0, FRONTIER_GEOMETRY.edgeAt("northForest", 0), "placeStartingTrail"),
+  camp(1, FRONTIER_GEOMETRY.vertexAt("northForest", 0), "placeStartingCamp"),
+  trail(1, FRONTIER_GEOMETRY.edgeAt("northForest", 5), "placeStartingTrail"),
+  camp(2, FRONTIER_GEOMETRY.vertexAt("southWestClay", 5), "placeStartingCamp"),
+  trail(2, FRONTIER_GEOMETRY.edgeAt("southWestClay", 4), "placeStartingTrail"),
 ] as const;

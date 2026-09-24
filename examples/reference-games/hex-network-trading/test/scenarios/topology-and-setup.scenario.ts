@@ -1,3 +1,4 @@
+import { FRONTIER_GEOMETRY } from "../../app/model";
 import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { STANDARD_SETUP_COMMANDS } from "../scenario-commands.ts";
@@ -61,9 +62,9 @@ export default defineScenario({
       },
     ]);
     expect(view({ seat: 0 }).campsByIntersectionId).toEqual({
-      "hex-vertex:1,1,-2": "player-1",
-      "hex-vertex:1,-2,1": "player-2",
-      "hex-vertex:-2,1,1": "player-3",
+      [FRONTIER_GEOMETRY.vertexAt("northForest", 1)]: "player-1",
+      [FRONTIER_GEOMETRY.vertexAt("southEastFields", 3)]: "player-2",
+      [FRONTIER_GEOMETRY.vertexAt("southWestClay", 5)]: "player-3",
     });
     expect(view({ seat: 0 }).mySupplies).toEqual({
       brick: 1,

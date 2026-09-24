@@ -130,7 +130,7 @@ export function createSpatialTable(): RuntimeTableRecord {
           layout: "hex",
           typeId: "map",
           scope: "shared",
-          orientation: "pointy-top",
+          orientation: "pointy",
           fields: {},
           spaces: {
             "tile-a": {

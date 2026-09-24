@@ -53,16 +53,16 @@ export const connectedNetwork: Predicate<EdgeId> = {
   id: "connected-network",
   errorCode: "TRAIL_NOT_CONNECTED",
   message: "Connect the new trail to your existing network.",
-  test: ({ state, playerId, targetId }) =>
-    isTrailConnected(state, playerId, targetId),
+  test: ({ state, q, playerId, targetId }) =>
+    isTrailConnected(state, q, playerId, targetId),
 };
 
 export const connectedTrail: Predicate<VertexId> = {
   id: "connected-trail",
   errorCode: "CAMP_NOT_CONNECTED",
   message: "Build the camp beside one of your trails.",
-  test: ({ state, playerId, targetId }) =>
-    isCampConnected(state, playerId, targetId),
+  test: ({ state, q, playerId, targetId }) =>
+    isCampConnected(state, q, playerId, targetId),
 };
 
 export const differentHex: Predicate<SpaceId> = {

@@ -1,4 +1,9 @@
 import type {
+  HexSpaceId,
+  HexEdgeId,
+  HexVertexId,
+} from "@dreamboard-games/sdk-types";
+import type {
   GameTopologyManifest,
   ObjectSchema,
   PropertySchema,
@@ -137,18 +142,23 @@ export type ManifestIdsOf<M> = {
     Get<Entry<Get<BoardLike<M>, "relations">>, "typeId">,
     string
   >;
-  edgeId: string;
+  edgeId:
+    | HexEdgeId<Extract<Id<Extract<Boards<M>, { layout: "hex" }>>, string>>
+    | (Extract<Boards<M>, { layout: "square" }> extends never
+        ? never
+        : `square-edge:${string}`);
   edgeTypeId: Extract<Get<Entry<Get<BoardLike<M>, "edges">>, "typeId">, string>;
-  vertexId: string;
+  vertexId:
+    | HexVertexId<Extract<Id<Extract<Boards<M>, { layout: "hex" }>>, string>>
+    | (Extract<Boards<M>, { layout: "square" }> extends never
+        ? never
+        : `square-vertex:${string}`);
   vertexTypeId: Extract<
     Get<Entry<Get<BoardLike<M>, "vertices">>, "typeId">,
     string
   >;
-  spaceId: Id<Entry<Get<BoardLike<M>, "spaces">>>;
-  spaceTypeId: Extract<
-    Get<Entry<Get<BoardLike<M>, "spaces">>, "typeId">,
-    string
-  >;
+  spaceId: BoardSpaceId<BoardLike<M>>;
+  spaceTypeId: Extract<Get<BoardSpaceEntry<BoardLike<M>>, "typeId">, string>;
 };
 type PropertyValue<P, M> = PropertySchema extends P
   ? RuntimePayload
@@ -213,31 +223,73 @@ type ResolveBoard<M, B> = B &
     ? Omit<Extract<Entries<M, "boardTemplates">, { id: I }>, keyof B>
     : unknown);
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M>;
+type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
+  ? Spaces[keyof Spaces]
+  : Entry<Get<B, "spaces">>;
+type BoardSpaceId<B> = B extends { layout: "hex" }
+  ? HexSpaceId<B>
+  : Id<Entry<Get<B, "spaces">>>;
 type BoardParts<M, B> = {
   id: RuntimeBoardId<B>;
   baseId: Id<B>;
   fields: BoardField<ResolveBoard<M, B>, "boardFieldsSchema", M>;
+  relations: (Omit<RuntimeHexBoardState["relations"][number], "typeId"> & {
+    typeId:
+      | Extract<
+          Get<Entry<Get<ResolveBoard<M, B>, "relations">>, "typeId">,
+          string
+        >
+      | (B extends { layout: "hex" | "square" } ? "adjacent" : never);
+  })[];
   spaces: Record<
-    Id<Entry<Get<ResolveBoard<M, B>, "spaces">>>,
+    BoardSpaceId<ResolveBoard<M, B>>,
     (B extends { layout: "hex" }
       ? { q: number; r: number }
       : B extends { layout: "square" }
         ? { row: number; col: number }
         : unknown) & {
-      id: Id<Entry<Get<ResolveBoard<M, B>, "spaces">>>;
+      id: BoardSpaceId<ResolveBoard<M, B>>;
       name?: string | null;
-      typeId?: string | null;
+      typeId?: Extract<
+        Get<BoardSpaceEntry<ResolveBoard<M, B>>, "typeId">,
+        string
+      > | null;
       fields: BoardField<ResolveBoard<M, B>, "spaceFieldsSchema", M>;
       zoneId?: string | null;
     }
   >;
 };
 type BoardState<M, B> = B extends { layout: "hex" }
-  ? Omit<RuntimeHexBoardState, "id" | "baseId" | "fields"> & BoardParts<M, B>
+  ? Omit<
+      RuntimeHexBoardState,
+      "id" | "baseId" | "fields" | "spaces" | "edges" | "vertices" | "relations"
+    > &
+      BoardParts<M, B> & {
+        edges: (Omit<
+          RuntimeHexBoardState["edges"][number],
+          "id" | "spaceIds"
+        > & {
+          id: HexEdgeId<Extract<Id<B>, string>>;
+          spaceIds: BoardSpaceId<B>[];
+        })[];
+        vertices: (Omit<
+          RuntimeHexBoardState["vertices"][number],
+          "id" | "spaceIds"
+        > & {
+          id: HexVertexId<Extract<Id<B>, string>>;
+          spaceIds: BoardSpaceId<B>[];
+        })[];
+      }
   : B extends { layout: "square" }
-    ? Omit<RuntimeSquareBoardState, "id" | "baseId" | "fields"> &
+    ? Omit<
+        RuntimeSquareBoardState,
+        "id" | "baseId" | "fields" | "spaces" | "relations"
+      > &
         BoardParts<M, B>
-    : Omit<RuntimeGenericBoardState, "id" | "baseId" | "fields"> &
+    : Omit<
+        RuntimeGenericBoardState,
+        "id" | "baseId" | "fields" | "spaces" | "relations"
+      > &
         BoardParts<M, B>;
 type BoardMap<M> = {
   [B in Boards<M> as RuntimeBoardId<B>]: Extract<

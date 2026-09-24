@@ -345,7 +345,7 @@ test("tiled board hooks and types accept generated board-state records", () => {
   const generatedHexBoard = {
     id: "hex-board",
     layout: "hex" as const,
-    orientation: "pointy-top" as const,
+    orientation: "pointy" as const,
     spaces: {
       a: { id: "a", q: 0, r: 0, typeId: null, fields: { terrain: "forest" } },
       b: { id: "b", q: 1, r: 0, typeId: "hill", fields: { terrain: "hill" } },

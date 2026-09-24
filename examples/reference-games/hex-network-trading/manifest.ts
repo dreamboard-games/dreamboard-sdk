@@ -1,5 +1,5 @@
 import { defineTopologyManifest } from "@dreamboard-games/sdk/types";
-import { boardTemplates, boards } from "./manifest/board";
+import { boards } from "./manifest/board";
 import { pieceSeeds, pieceTypes } from "./manifest/pieces";
 import { dieSeeds, dieTypes, resources } from "./manifest/setup";
 
@@ -11,7 +11,6 @@ export default defineTopologyManifest({
   },
   cardSets: [],
   zones: [],
-  boardTemplates,
   boards,
   pieceTypes,
   pieceSeeds,

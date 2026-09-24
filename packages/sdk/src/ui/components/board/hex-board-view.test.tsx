@@ -1,3 +1,4 @@
+import { compileManifest } from "../../../reducer/manifest/compiler";
 import { describe, expect, test } from "vitest";
 import { renderToString } from "react-dom/server";
 import { createHexBoardView } from "./hex-board-view.js";
@@ -111,4 +112,38 @@ describe("createHexBoardView", () => {
     expect(seenTokens).toContain(null);
     expect(seenProduction.sort()).toEqual([1, 2]);
   });
+});
+
+test("per-player single-cell boards render every canonical boundary target", () => {
+  const contract = compileManifest({
+    players: { minPlayers: 1, maxPlayers: 1 },
+    cardSets: [],
+    zones: [],
+    boards: [
+      {
+        id: "island",
+        name: "Island",
+        layout: "hex",
+        scope: "perPlayer",
+        shape: { kind: "hexagon", radius: 0 },
+      },
+    ],
+  } as const);
+  const board = contract.createInitialTable().boards.hex["island:player-1"]!;
+  for (const input of [
+    board,
+    createHexBoardView(board, { spaces: [{ id: "0,0" }] }),
+  ]) {
+    const html = renderToString(
+      <HexGrid
+        board={input}
+        enablePanZoom={false}
+        renderTile={() => null}
+        renderEdge={(edge) => <line data-boundary-edge={edge.id} />}
+        renderVertex={(vertex) => <circle data-boundary-vertex={vertex.id} />}
+      />,
+    );
+    expect(html.match(/data-boundary-edge=/g) ?? []).toHaveLength(6);
+    expect(html.match(/data-boundary-vertex=/g) ?? []).toHaveLength(6);
+  }
 });

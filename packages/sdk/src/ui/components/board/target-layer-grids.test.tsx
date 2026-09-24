@@ -403,14 +403,14 @@ test("HexGrid renderTile receives geometry context with size, orientation, and p
   expect(center).toBeDefined();
   if (!center) throw new Error("missing center geometry");
   expect(center.geometry.size).toBe(40);
-  expect(center.geometry.orientation).toBe("pointy-top");
+  expect(center.geometry.orientation).toBe("pointy");
   expect(center.geometry.center).toEqual({ x: 0, y: 0 });
   expect(center.geometry.position).toEqual({ x: 0, y: 0 });
   expect(center.geometry.points()).toBe(
-    hexUtils.getHexPoints(0, 0, 40, "pointy-top"),
+    hexUtils.getHexPoints(0, 0, 40, "pointy"),
   );
   expect(center.geometry.points({ inset: 6 })).toBe(
-    hexUtils.getHexPoints(0, 0, 34, "pointy-top"),
+    hexUtils.getHexPoints(0, 0, 34, "pointy"),
   );
   expect(center.geometry.corners()).toHaveLength(6);
   expect(center.geometry.bounds.width).toBeGreaterThan(0);

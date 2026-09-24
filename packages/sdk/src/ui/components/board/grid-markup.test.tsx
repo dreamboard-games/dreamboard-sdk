@@ -129,7 +129,7 @@ test("HexGrid flat-top orientation without interactive layers", () => {
       tiles={hexTiles}
       edges={hexEdges}
       vertices={hexVertices}
-      orientation="flat-top"
+      orientation="flat"
       hexSize={32}
       enablePanZoom={false}
       renderTile={(tile, geometry) => (

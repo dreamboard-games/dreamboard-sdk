@@ -19,10 +19,14 @@ const state = {
 } as CollectorState;
 
 const q = {
-  board: {
-    get: () => ({ spaces: ["s1", "s2"] }),
-    tiled: () => ({ vertices: ["v1", "v2"], edges: ["e1", "e2"] }),
-  },
+  board: () => ({
+    state: {
+      layout: "hex",
+      spaces: ["s1", "s2"],
+      vertices: ["v1", "v2"],
+      edges: ["e1", "e2"],
+    },
+  }),
   zone: {
     playerCards: () => ["card-a", "card-b"],
     sharedCards: () => [],

@@ -97,22 +97,14 @@ const hex = compileManifest({
   players: { minPlayers: 1, maxPlayers: 2 },
   cardSets: [],
   zones: [],
-  boardTemplates: [
-    {
-      id: "template",
-      name: "Template",
-      layout: "hex",
-      orientation: "pointy-top",
-      spaces: [{ id: "center", q: 0, r: 0 }],
-    },
-  ],
   boards: [
     {
       id: "map",
       name: "Map",
       layout: "hex",
       scope: "shared",
-      templateId: "template",
+      shape: { kind: "coordinates", coordinates: [{ q: 0, r: 0 }] },
+      spaces: { "0,0": { id: "center" } },
     },
   ],
 } as const);

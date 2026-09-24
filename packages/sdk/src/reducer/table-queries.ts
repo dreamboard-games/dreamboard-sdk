@@ -1,35 +1,19 @@
+import { bindBoardQueries } from "./table/board-queries";
 import type {
-  BoardContainerIdOfTable,
   BoardIdOfTable,
-  BoardTypeIdOfTable,
   CardIdOfTable,
   ComponentDataOfTable,
   ComponentIdOfTable,
   DeckIdOfTable,
   HandIdOfTable,
-  HexBoardIdOfTable,
-  HexSpaceIdOfTable,
   PlayerIdOfTable,
-  RelationTypeIdOfTable,
   RuntimeTableRecord,
-  SpaceIdOfTable,
-  SpaceTypeIdOfTable,
-  SquareBoardIdOfTable,
-  SquareSpaceIdOfTable,
   TableQueries,
   TableQueriesOfState,
-  TiledBoardIdOfTable,
-  TiledEdgeIdOfTable,
-  TiledEdgeTypeIdOfTable,
-  TiledVertexIdOfTable,
-  TiledVertexTypeIdOfTable,
 } from "./model";
 import {
-  getAdjacentSpaces,
   getAllPlayerZoneCards,
   getAllSharedZoneCards,
-  getBoard,
-  getBoardsByTypeId,
   getCard,
   getCardsById,
   getCardOwner,
@@ -45,18 +29,6 @@ import {
   getComponentSpaceLocation,
   getComponentVertexLocation,
   getComponentZoneLocation,
-  getComponentsInContainer,
-  getComponentsOnEdge,
-  getComponentsOnSpace,
-  getComponentsOnVertex,
-  getContainer,
-  getEdge,
-  getEdgesByTypeId,
-  getHexBoard,
-  getHexSpace,
-  getHexSpaceAt,
-  getIncidentEdges,
-  getIncidentVertices,
   canAffordResources,
   getMissingResources,
   getNextPlayerInOrder,
@@ -66,204 +38,16 @@ import {
   getPlayerResources,
   getPlayerZoneCardCollection,
   getPlayerZoneCards,
-  getRelatedSpaces,
   getSharedZoneCardCollection,
   getSharedZoneCards,
-  getSpace,
-  getSpaceDistance,
-  getSpaceEdges,
-  getSpacesByTypeId,
-  getSpaceVertices,
-  getSquareBoard,
-  getSquareDistance,
-  getSquareNeighbors,
-  getSquareSpace,
-  getSquareSpaceAt,
-  getTiledBoard,
-  getVertex,
-  getVerticesByTypeId,
 } from "./table";
 
 export function createTableQueries<Table extends RuntimeTableRecord>(
   table: Table,
 ): TableQueries<Table> {
   return {
-    board: {
-      get: <BoardId extends BoardIdOfTable<Table>>(boardId: BoardId) =>
-        getBoard(table, boardId),
-      hex: <BoardId extends HexBoardIdOfTable<Table>>(boardId: BoardId) =>
-        getHexBoard(table, boardId),
-      square: <BoardId extends SquareBoardIdOfTable<Table>>(boardId: BoardId) =>
-        getSquareBoard(table, boardId),
-      tiled: <BoardId extends TiledBoardIdOfTable<Table>>(boardId: BoardId) =>
-        getTiledBoard(table, boardId),
-      space: <
-        BoardId extends BoardIdOfTable<Table>,
-        SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-      ) => getSpace(table, boardId, spaceId),
-      hexSpace: <
-        BoardId extends HexBoardIdOfTable<Table>,
-        SpaceId extends HexSpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-      ) => getHexSpace(table, boardId, spaceId),
-      squareSpace: <
-        BoardId extends SquareBoardIdOfTable<Table>,
-        SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-      ) => getSquareSpace(table, boardId, spaceId),
-      container: <
-        BoardId extends BoardIdOfTable<Table>,
-        ContainerId extends BoardContainerIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        containerId: ContainerId,
-      ) => getContainer(table, boardId, containerId),
-      edge: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        edgeId: EdgeId,
-      ) => getEdge(table, boardId, edgeId),
-      vertex: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        vertexId: VertexId,
-      ) => getVertex(table, boardId, vertexId),
-      byType: <TypeId extends BoardTypeIdOfTable<Table>>(typeId: TypeId) =>
-        getBoardsByTypeId(table, typeId),
-      spacesByType: <
-        BoardId extends BoardIdOfTable<Table>,
-        TypeId extends SpaceTypeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        typeId: TypeId,
-      ) => getSpacesByTypeId(table, boardId, typeId),
-      edgesByType: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        TypeId extends TiledEdgeTypeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        typeId: TypeId,
-      ) => getEdgesByTypeId(table, boardId, typeId),
-      verticesByType: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        TypeId extends TiledVertexTypeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        typeId: TypeId,
-      ) => getVerticesByTypeId(table, boardId, typeId),
-      adjacentSpaces: <
-        BoardId extends BoardIdOfTable<Table>,
-        SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-      ) => getAdjacentSpaces(table, boardId, spaceId),
-      relatedSpaces: <
-        BoardId extends BoardIdOfTable<Table>,
-        SpaceId extends SpaceIdOfTable<Table, BoardId>,
-        TypeId extends RelationTypeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-        relationTypeId: TypeId,
-      ) => getRelatedSpaces(table, boardId, spaceId, relationTypeId),
-      incidentEdges: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        vertexId: VertexId,
-      ) => getIncidentEdges(table, boardId, vertexId),
-      incidentVertices: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        edgeId: EdgeId,
-      ) => getIncidentVertices(table, boardId, edgeId),
-      spaceEdges: <BoardId extends TiledBoardIdOfTable<Table>>(
-        boardId: BoardId,
-        spaceId: SpaceIdOfTable<Table, BoardId>,
-      ) => getSpaceEdges(table, boardId, spaceId),
-      spaceVertices: <BoardId extends TiledBoardIdOfTable<Table>>(
-        boardId: BoardId,
-        spaceId: SpaceIdOfTable<Table, BoardId>,
-      ) => getSpaceVertices(table, boardId, spaceId),
-      spaceDistance: <
-        BoardId extends BoardIdOfTable<Table>,
-        SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        fromSpaceId: SpaceId,
-        toSpaceId: SpaceId,
-      ) => getSpaceDistance(table, boardId, fromSpaceId, toSpaceId),
-      hexSpaceAt: <BoardId extends HexBoardIdOfTable<Table>>(
-        boardId: BoardId,
-        q: number,
-        r: number,
-      ) => getHexSpaceAt(table, boardId, q, r),
-      squareSpaceAt: <BoardId extends SquareBoardIdOfTable<Table>>(
-        boardId: BoardId,
-        row: number,
-        col: number,
-      ) => getSquareSpaceAt(table, boardId, row, col),
-      squareNeighbors: <
-        BoardId extends SquareBoardIdOfTable<Table>,
-        SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-        options?: { mode?: "orthogonal" | "diagonal" | "all" },
-      ) => getSquareNeighbors(table, boardId, spaceId, options),
-      squareDistance: <
-        BoardId extends SquareBoardIdOfTable<Table>,
-        SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        fromSpaceId: SpaceId,
-        toSpaceId: SpaceId,
-        options?: { metric?: "manhattan" | "chebyshev" },
-      ) => getSquareDistance(table, boardId, fromSpaceId, toSpaceId, options),
-      spaceOccupants: <
-        BoardId extends BoardIdOfTable<Table>,
-        SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        spaceId: SpaceId,
-      ) => getComponentsOnSpace(table, boardId, spaceId),
-      containerOccupants: <
-        BoardId extends BoardIdOfTable<Table>,
-        ContainerId extends BoardContainerIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        containerId: ContainerId,
-      ) => getComponentsInContainer(table, boardId, containerId),
-      edgeOccupants: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        edgeId: EdgeId,
-      ) => getComponentsOnEdge(table, boardId, edgeId),
-      vertexOccupants: <
-        BoardId extends TiledBoardIdOfTable<Table>,
-        VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-      >(
-        boardId: BoardId,
-        vertexId: VertexId,
-      ) => getComponentsOnVertex(table, boardId, vertexId),
-    },
+    board: <BoardId extends BoardIdOfTable<Table>>(boardId: BoardId) =>
+      bindBoardQueries(table, boardId),
     zone: {
       sharedCards: <ZoneId extends DeckIdOfTable<Table>>(zoneId: ZoneId) =>
         getSharedZoneCards(table, zoneId),

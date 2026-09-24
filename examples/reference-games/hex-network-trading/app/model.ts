@@ -1,6 +1,7 @@
+import { createTableQueries } from "@dreamboard-games/sdk/reducer";
 import {
-  idGuards,
   literals,
+  manifestContract,
   staticBoards,
   type EdgeId,
   type ResourceId,
@@ -39,8 +40,13 @@ export const HEX_RULES: Readonly<Record<SpaceId, HexRule>> = {
 
 export const RESOURCE_IDS = literals.resourceIds;
 export const FRONTIER = staticBoards.byId.frontier;
-export const INTERSECTION_IDS = FRONTIER.vertices.map((vertex) => vertex.id);
-export const EDGE_IDS = FRONTIER.edges.map((edge) => edge.id);
+export const FRONTIER_GEOMETRY = createTableQueries(
+  manifestContract.createInitialTable(),
+).board(BOARD_ID);
+export const INTERSECTION_IDS = FRONTIER_GEOMETRY.vertices.map(
+  (vertex) => vertex.id,
+);
+export const EDGE_IDS = FRONTIER_GEOMETRY.edges.map((edge) => edge.id);
 
 if (
   Object.keys(FRONTIER.spaces).length !== 7 ||
@@ -52,57 +58,17 @@ if (
   );
 }
 
-export const INTERSECTIONS_BY_HEX_ID = Object.fromEntries(
-  literals.spaceIds.map((hexId) => [
-    hexId,
-    FRONTIER.vertices
-      .filter((vertex) => vertex.spaceIds.includes(hexId))
-      .map((vertex) => vertex.id),
-  ]),
-) as unknown as Record<SpaceId, readonly VertexId[]>;
-
-export const INTERSECTION_HEX_IDS = Object.fromEntries(
-  FRONTIER.vertices.map((vertex) => [
-    vertex.id,
-    [...new Set(vertex.spaceIds)].filter(idGuards.isSpaceId),
-  ]),
-) as unknown as Record<VertexId, readonly SpaceId[]>;
-
-function endpointsForEdge(edgeId: EdgeId): readonly [VertexId, VertexId] {
-  const [left, right] = edgeId.replace("hex-edge:", "").split("::");
-  if (!left || !right) {
-    throw new Error(`Invalid Stormtrail edge id '${edgeId}'.`);
-  }
-  return [
-    idGuards.expectVertexId(`hex-vertex:${left}`),
-    idGuards.expectVertexId(`hex-vertex:${right}`),
-  ];
-}
-
-export const EDGE_INTERSECTION_IDS = Object.fromEntries(
-  EDGE_IDS.map((edgeId) => [edgeId, endpointsForEdge(edgeId)]),
-) as Record<EdgeId, readonly [VertexId, VertexId]>;
-
-export const EDGES_BY_INTERSECTION_ID = Object.fromEntries(
-  INTERSECTION_IDS.map((intersectionId) => [
-    intersectionId,
-    EDGE_IDS.filter((edgeId) =>
-      EDGE_INTERSECTION_IDS[edgeId].includes(intersectionId),
-    ),
-  ]),
-) as unknown as Record<VertexId, readonly EdgeId[]>;
-
 export function edgeTouchesIntersection(
   edgeId: EdgeId,
   intersectionId: VertexId,
 ): boolean {
-  return EDGE_INTERSECTION_IDS[edgeId].includes(intersectionId);
+  return FRONTIER_GEOMETRY.verticesOf(edgeId).includes(intersectionId);
 }
 
 export function producingHexesAtIntersection(
   intersectionId: VertexId,
 ): readonly { readonly hexId: SpaceId; readonly resourceId: ResourceId }[] {
-  return INTERSECTION_HEX_IDS[intersectionId].flatMap((hexId) => {
+  return FRONTIER_GEOMETRY.spacesAt(intersectionId).flatMap((hexId) => {
     const resourceId = HEX_RULES[hexId].resourceId;
     return resourceId ? [{ hexId, resourceId }] : [];
   });

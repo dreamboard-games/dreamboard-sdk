@@ -1,3 +1,4 @@
+import type { BoundBoardQueries } from "../table/board-queries";
 import type {
   CardCollection,
   ViewCard,
@@ -6,32 +7,21 @@ import type {
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
-  BoardTypeIdOfTable,
   CardIdOfTable,
   ComponentIdOfTable,
   DeckCardsOfTable,
   DeckIdOfTable,
   HandCardsOfTable,
   HandIdOfTable,
-  HexBoardIdOfTable,
-  HexSpaceIdOfTable,
   PlayerIdOfTable,
   ResourceAmountsOfTable,
   ResourceBalancesOfTable,
   ResourceIdOfTable,
-  SquareBoardIdOfTable,
-  SquareSpaceIdOfTable,
   SpaceIdOfTable,
-  RelationTypeIdOfTable,
-  SpaceTypeIdOfTable,
   TableOfState,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
-  TiledEdgeStateOfTable,
-  TiledEdgeTypeIdOfTable,
   TiledVertexIdOfTable,
-  TiledVertexStateOfTable,
-  TiledVertexTypeIdOfTable,
 } from "./extract";
 import type {
   RuntimeComponentLocation,
@@ -305,203 +295,12 @@ export type ResolvedSlotLocation<
     : never;
 
 export type TableQueries<Table extends RuntimeTableRecord> = {
-  board: {
-    get: <BoardId extends BoardIdOfTable<Table>>(
-      boardId: BoardId,
-    ) => BoardRecord<Table, BoardId>;
-    hex: <BoardId extends HexBoardIdOfTable<Table>>(
-      boardId: BoardId,
-    ) => Extract<BoardRecord<Table, BoardId>, { layout: "hex" }>;
-    square: <BoardId extends SquareBoardIdOfTable<Table>>(
-      boardId: BoardId,
-    ) => Extract<BoardRecord<Table, BoardId>, { layout: "square" }>;
-    tiled: <BoardId extends TiledBoardIdOfTable<Table>>(
-      boardId: BoardId,
-    ) => TiledBoardRecord<Table, BoardId>;
-    space: <
-      BoardId extends BoardIdOfTable<Table>,
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-    ) => Table["boards"]["byId"][BoardId]["spaces"][SpaceId];
-    hexSpace: <
-      BoardId extends HexBoardIdOfTable<Table>,
-      SpaceId extends HexSpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-    ) => Extract<
-      Table["boards"]["byId"][BoardId],
-      { layout: "hex" }
-    >["spaces"][SpaceId];
-    squareSpace: <
-      BoardId extends SquareBoardIdOfTable<Table>,
-      SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-    ) => Extract<
-      Table["boards"]["byId"][BoardId],
-      { layout: "square" }
-    >["spaces"][SpaceId];
-    container: <
-      BoardId extends BoardIdOfTable<Table>,
-      ContainerId extends BoardContainerIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      containerId: ContainerId,
-    ) => Table["boards"]["byId"][BoardId]["containers"][ContainerId];
-    edge: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      edgeId: EdgeId,
-    ) => TiledEdgeStateOfTable<Table, BoardId, EdgeId>;
-    vertex: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      vertexId: VertexId,
-    ) => TiledVertexStateOfTable<Table, BoardId, VertexId>;
-    byType: <TypeId extends BoardTypeIdOfTable<Table>>(
-      typeId: TypeId,
-    ) => BoardIdOfTable<Table>[];
-    spacesByType: <
-      BoardId extends BoardIdOfTable<Table>,
-      TypeId extends SpaceTypeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      typeId: TypeId,
-    ) => SpaceIdOfTable<Table, BoardId>[];
-    edgesByType: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      TypeId extends TiledEdgeTypeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      typeId: TypeId,
-    ) => TiledEdgeIdOfTable<Table, BoardId>[];
-    verticesByType: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      TypeId extends TiledVertexTypeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      typeId: TypeId,
-    ) => TiledVertexIdOfTable<Table, BoardId>[];
-    adjacentSpaces: <
-      BoardId extends BoardIdOfTable<Table>,
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-    ) => SpaceIdOfTable<Table, BoardId>[];
-    relatedSpaces: <
-      BoardId extends BoardIdOfTable<Table>,
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-      TypeId extends RelationTypeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-      relationTypeId: TypeId,
-    ) => SpaceIdOfTable<Table, BoardId>[];
-    incidentEdges: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      vertexId: VertexId,
-    ) => TiledEdgeIdOfTable<Table, BoardId>[];
-    incidentVertices: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      edgeId: EdgeId,
-    ) => TiledVertexIdOfTable<Table, BoardId>[];
-    spaceEdges: <BoardId extends TiledBoardIdOfTable<Table>>(
-      boardId: BoardId,
-      spaceId: SpaceIdOfTable<Table, BoardId>,
-    ) => TiledEdgeIdOfTable<Table, BoardId>[];
-    spaceVertices: <BoardId extends TiledBoardIdOfTable<Table>>(
-      boardId: BoardId,
-      spaceId: SpaceIdOfTable<Table, BoardId>,
-    ) => TiledVertexIdOfTable<Table, BoardId>[];
-    spaceDistance: <
-      BoardId extends BoardIdOfTable<Table>,
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      fromSpaceId: SpaceId,
-      toSpaceId: SpaceId,
-    ) => number;
-    hexSpaceAt: <BoardId extends HexBoardIdOfTable<Table>>(
-      boardId: BoardId,
-      q: number,
-      r: number,
-    ) =>
-      | Extract<
-          Table["boards"]["byId"][BoardId],
-          { layout: "hex" }
-        >["spaces"][HexSpaceIdOfTable<Table, BoardId>]
-      | undefined;
-    squareSpaceAt: <BoardId extends SquareBoardIdOfTable<Table>>(
-      boardId: BoardId,
-      row: number,
-      col: number,
-    ) =>
-      | Extract<
-          Table["boards"]["byId"][BoardId],
-          { layout: "square" }
-        >["spaces"][SquareSpaceIdOfTable<Table, BoardId>]
-      | undefined;
-    squareNeighbors: <
-      BoardId extends SquareBoardIdOfTable<Table>,
-      SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-      options?: { mode?: "orthogonal" | "diagonal" | "all" },
-    ) => SquareSpaceIdOfTable<Table, BoardId>[];
-    squareDistance: <
-      BoardId extends SquareBoardIdOfTable<Table>,
-      SpaceId extends SquareSpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      fromSpaceId: SpaceId,
-      toSpaceId: SpaceId,
-      options?: { metric?: "manhattan" | "chebyshev" },
-    ) => number;
-    spaceOccupants: <
-      BoardId extends BoardIdOfTable<Table>,
-      SpaceId extends SpaceIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      spaceId: SpaceId,
-    ) => ComponentIdOfTable<Table>[];
-    containerOccupants: <
-      BoardId extends BoardIdOfTable<Table>,
-      ContainerId extends BoardContainerIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      containerId: ContainerId,
-    ) => ComponentIdOfTable<Table>[];
-    edgeOccupants: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      EdgeId extends TiledEdgeIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      edgeId: EdgeId,
-    ) => ComponentIdOfTable<Table>[];
-    vertexOccupants: <
-      BoardId extends TiledBoardIdOfTable<Table>,
-      VertexId extends TiledVertexIdOfTable<Table, BoardId>,
-    >(
-      boardId: BoardId,
-      vertexId: VertexId,
-    ) => ComponentIdOfTable<Table>[];
-  };
+  board<BoardId extends BoardIdOfTable<Table>>(
+    boardId: BoardId,
+  ): BoundBoardQueries<
+    Table["boards"]["byId"][BoardId],
+    ComponentIdOfTable<Table>
+  >;
   zone: {
     sharedCards: <ZoneId extends DeckIdOfTable<Table>>(
       zoneId: ZoneId,

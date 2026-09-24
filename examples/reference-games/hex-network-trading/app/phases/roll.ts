@@ -1,6 +1,6 @@
 import type { SpaceId } from "../manifest";
 import type { ProductionGrant } from "../types";
-import { HEX_RULES, INTERSECTIONS_BY_HEX_ID } from "../model";
+import { HEX_RULES } from "../model";
 import {
   appendHistory,
   banditsHexId,
@@ -64,7 +64,9 @@ const rollDice = roll.interaction({
         continue;
       }
       const counts = new Map<string, number>();
-      for (const intersectionId of INTERSECTIONS_BY_HEX_ID[hexId as SpaceId]) {
+      for (const intersectionId of q
+        .board("frontier")
+        .spaceVertices(hexId as SpaceId)) {
         const playerId = camps[intersectionId];
         if (playerId) counts.set(playerId, (counts.get(playerId) ?? 0) + 1);
       }

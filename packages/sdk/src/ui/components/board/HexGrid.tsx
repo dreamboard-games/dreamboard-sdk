@@ -1,3 +1,5 @@
+import { defineHex, Grid, Orientation, ring } from "honeycomb-grid";
+import { createHexBoardGeometry } from "../../../reducer/manifest/hex-board";
 /**
  * SVG-based hex grid for hex-based games (Catan, wargames, Hive, Twilight Imperium).
  * Supports tiles, edges (roads), vertices (settlements), and interactive placement overlays.
@@ -39,7 +41,7 @@ export type {
 // Types
 // ============================================================================
 
-export type HexOrientation = "pointy-top" | "flat-top";
+export type HexOrientation = "pointy" | "flat";
 
 /**
  * Geometry context passed to `renderTile`.
@@ -328,7 +330,7 @@ export function DefaultHexTile({
   label,
   showCoordinates = false,
   coordinates,
-  orientation = "pointy-top",
+  orientation = "pointy",
   onClick,
   onPointerEnter,
   onPointerLeave,
@@ -656,52 +658,39 @@ export const hexUtils = {
     size: number,
     orientation: HexOrientation,
   ): { x: number; y: number } {
-    if (orientation === "pointy-top") {
-      const x = size * (Math.sqrt(3) * q + (Math.sqrt(3) / 2) * r);
-      const y = size * ((3 / 2) * r);
-      return { x, y };
-    } else {
-      const x = size * ((3 / 2) * q);
-      const y = size * ((Math.sqrt(3) / 2) * q + Math.sqrt(3) * r);
-      return { x, y };
-    }
+    const Hex = defineHex({
+      dimensions: size,
+      orientation:
+        orientation === "pointy" ? Orientation.POINTY : Orientation.FLAT,
+      origin: { x: 0, y: 0 },
+    });
+    const hex = new Hex({ q, r });
+    return { x: hex.x, y: hex.y };
   },
-
   getNeighbors(q: number, r: number): Array<{ q: number; r: number }> {
-    return [
-      { q: q + 1, r: r },
-      { q: q + 1, r: r - 1 },
-      { q: q, r: r - 1 },
-      { q: q - 1, r: r },
-      { q: q - 1, r: r + 1 },
-      { q: q, r: r + 1 },
-    ];
+    return new Grid(defineHex(), ring({ center: { q, r }, radius: 1 }))
+      .toArray()
+      .map(({ q, r }) => ({ q, r }));
   },
-
   getDistance(q1: number, r1: number, q2: number, r2: number): number {
-    return (
-      (Math.abs(q1 - q2) + Math.abs(q1 + r1 - q2 - r2) + Math.abs(r1 - r2)) / 2
-    );
+    return new Grid(defineHex()).distance({ q: q1, r: r1 }, { q: q2, r: r2 });
   },
-
   getHexCorners(
     centerX: number,
     centerY: number,
     size: number,
     orientation: HexOrientation,
   ): Array<{ x: number; y: number }> {
-    const corners: Array<{ x: number; y: number }> = [];
-    const startAngle = orientation === "pointy-top" ? 30 : 0;
-
-    for (let i = 0; i < 6; i++) {
-      const angleDeg = startAngle + 60 * i;
-      const angleRad = (Math.PI / 180) * angleDeg;
-      corners.push({
-        x: centerX + size * Math.cos(angleRad),
-        y: centerY + size * Math.sin(angleRad),
-      });
-    }
-    return corners;
+    const Hex = defineHex({
+      dimensions: size,
+      orientation:
+        orientation === "pointy" ? Orientation.POINTY : Orientation.FLAT,
+      origin: { x: 0, y: 0 },
+    });
+    return new Hex().corners.map(({ x, y }) => ({
+      x: x + centerX,
+      y: y + centerY,
+    }));
   },
 
   getHexPoints(
@@ -712,47 +701,6 @@ export const hexUtils = {
   ): string {
     const corners = this.getHexCorners(centerX, centerY, size, orientation);
     return corners.map(formatSvgPoint).join(" ");
-  },
-
-  getEdgePosition(
-    hex1Pos: { x: number; y: number },
-    hex2Pos: { x: number; y: number },
-    size: number,
-  ): EdgePosition {
-    const midX = (hex1Pos.x + hex2Pos.x) / 2;
-    const midY = (hex1Pos.y + hex2Pos.y) / 2;
-    const centerAngleRad = Math.atan2(
-      hex2Pos.y - hex1Pos.y,
-      hex2Pos.x - hex1Pos.x,
-    );
-
-    // Calculate edge endpoints perpendicular to the line between hex centers
-    const edgeAngleRad = centerAngleRad + Math.PI / 2;
-    const edgeLength = size * 0.8;
-    const centerAngle = (centerAngleRad * 180) / Math.PI;
-    const edgeAngle = (edgeAngleRad * 180) / Math.PI;
-
-    return {
-      x1: midX - (edgeLength / 2) * Math.cos(edgeAngleRad),
-      y1: midY - (edgeLength / 2) * Math.sin(edgeAngleRad),
-      x2: midX + (edgeLength / 2) * Math.cos(edgeAngleRad),
-      y2: midY + (edgeLength / 2) * Math.sin(edgeAngleRad),
-      midX,
-      midY,
-      centerAngle,
-      edgeAngle,
-    };
-  },
-
-  getVertexPosition(
-    hex1Pos: { x: number; y: number },
-    hex2Pos: { x: number; y: number },
-    hex3Pos: { x: number; y: number },
-  ): { x: number; y: number } {
-    return {
-      x: (hex1Pos.x + hex2Pos.x + hex3Pos.x) / 3,
-      y: (hex1Pos.y + hex2Pos.y + hex3Pos.y) / 3,
-    };
   },
 };
 
@@ -776,7 +724,7 @@ function HexGridImpl(
   props: HexGridBoardProps<AnyHexBoardInput> | HexGridProps<HexGridInputProps>,
 ) {
   const {
-    orientation = "pointy-top",
+    orientation = "pointy",
     hexSize = 50,
     renderTile,
     renderEdge,
@@ -831,23 +779,27 @@ function HexGridImpl(
   const resolvedVertices = normalizedBoard.vertices;
   const resolvedOrientation = normalizedBoard.orientation ?? orientation;
 
-  // Pre-compute tile positions
-  const tilePositions = useMemo(() => {
-    const positions = new Map<string, { x: number; y: number }>();
-    resolvedTiles.forEach((tile) => {
-      positions.set(
-        tile.id,
-        hexUtils.axialToPixel(tile.q, tile.r, hexSize, resolvedOrientation),
-      );
-    });
-    return positions;
-  }, [resolvedTiles, hexSize, resolvedOrientation]);
+  const geometry = useMemo(
+    () =>
+      createHexBoardGeometry({
+        id: normalizedBoard.baseId,
+        orientation: resolvedOrientation,
+        spaces: resolvedTiles,
+      }),
+    [normalizedBoard.baseId, resolvedOrientation, resolvedTiles],
+  );
+  const layout = useMemo(
+    () => geometry.getLayout({ hexSize }),
+    [geometry, hexSize],
+  );
+  const tilePositions = useMemo(
+    () => new Map(layout.spaces.map((space) => [space.id, space.center])),
+    [layout],
+  );
 
   // Build a `HexTileGeometry` for a tile centered at `position`.
   //
-  // The closures intentionally re-derive corners on demand so callers
-  // can pass a per-call `inset` without the grid pre-computing every
-  // possible inset. Hex math is cheap (six trig calls).
+  // Resolve caller-selected visual insets with the same library geometry.
   const buildTileGeometry = useMemo(
     () =>
       (position: { x: number; y: number }): HexTileGeometry => {
@@ -888,39 +840,51 @@ function HexGridImpl(
   const resolvedEdgePositions = useMemo(
     () =>
       resolvedEdges.flatMap((edge) => {
-        const pos1 = tilePositions.get(edge.hex1);
-        const pos2 = tilePositions.get(edge.hex2);
-        if (!pos1 || !pos2) {
-          return [];
-        }
+        const geometryId = layout.edges.some((item) => item.id === edge.id)
+          ? edge.id
+          : edge.hex1 && edge.hex2
+            ? geometry.edge(edge.hex1, edge.hex2)
+            : undefined;
+        const line = layout.edges.find((item) => item.id === geometryId);
+        if (!line) return [];
+        const dx = line.to.x - line.from.x;
+        const dy = line.to.y - line.from.y;
+        const edgeAngle = (Math.atan2(dy, dx) * 180) / Math.PI;
+        const position: EdgePosition = {
+          x1: line.from.x + dx * 0.1,
+          y1: line.from.y + dy * 0.1,
+          x2: line.to.x - dx * 0.1,
+          y2: line.to.y - dy * 0.1,
+          midX: (line.from.x + line.to.x) / 2,
+          midY: (line.from.y + line.to.y) / 2,
+          centerAngle: edgeAngle - 90,
+          edgeAngle,
+        };
         return [
           {
             edge,
             interactiveEdge: {
               ...edge,
-              spaceIds: [edge.hex1, edge.hex2] as const,
-              position: hexUtils.getEdgePosition(pos1, pos2, hexSize),
+              spaceIds: [edge.hex1, edge.hex2].filter(Boolean),
+              position,
             } as InteractiveHexEdge<AnyHexBoardInput>,
           },
         ];
       }),
-    [hexSize, resolvedEdges, tilePositions],
+    [geometry, layout, resolvedEdges],
   );
 
   const resolvedVertexPositions = useMemo(
     () =>
       resolvedVertices.flatMap((vertex) => {
         const [hex0, hex1, hex2] = vertex.hexes;
-        if (!hex0 || !hex1 || !hex2) {
-          return [];
-        }
-
-        const pos0 = tilePositions.get(hex0);
-        const pos1 = tilePositions.get(hex1);
-        const pos2 = tilePositions.get(hex2);
-        if (!pos0 || !pos1 || !pos2) {
-          return [];
-        }
+        const geometryId = layout.vertices.some((item) => item.id === vertex.id)
+          ? vertex.id
+          : hex0 && hex1 && hex2
+            ? geometry.vertex(hex0, hex1, hex2)
+            : undefined;
+        const point = layout.vertices.find((item) => item.id === geometryId);
+        if (!point) return [];
 
         return [
           {
@@ -928,12 +892,12 @@ function HexGridImpl(
             interactiveVertex: {
               ...vertex,
               spaceIds: vertex.hexes,
-              position: hexUtils.getVertexPosition(pos0, pos1, pos2),
+              position: point.center,
             } as InteractiveHexVertex<AnyHexBoardInput>,
           },
         ];
       }),
-    [resolvedVertices, tilePositions],
+    [geometry, layout, resolvedVertices],
   );
 
   // Calculate bounds for viewBox

@@ -4,7 +4,6 @@ import { perPlayer, type PlayerId } from "../per-player";
 import {
   getAdjacentSpaces,
   getBoard,
-  getBoardsByTypeId,
   getCard,
   getCardOwner,
   getCardVisibility,
@@ -294,31 +293,36 @@ describe("table ops spatial helpers", () => {
 
     const q = createTableQueries(table);
 
-    expect(q.board.get("main-board")).toBe(getBoard(table, "main-board"));
-    expect(q.board.hex("hex-board")).toBe(getHexBoard(table, "hex-board"));
-    expect(q.board.square("square-board")).toBe(
+    expect(q.board("main-board").state).toBe(getBoard(table, "main-board"));
+    expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
+    expect(q.board("square-board").state).toBe(
       getSquareBoard(table, "square-board"),
     );
-    expect(q.board.space("main-board", "space-a")).toBe(
+    expect(q.board("main-board").space("space-a")).toBe(
       getSpace(table, "main-board", "space-a"),
     );
-    expect(q.board.container("main-board", "market-row")).toBe(
+    expect(q.board("main-board").container("market-row")).toBe(
       getContainer(table, "main-board", "market-row"),
     );
-    expect(q.board.edge("hex-board", "tile-a$$tile-b")).toBe(
-      getEdge(table, "hex-board", "tile-a$$tile-b"),
-    );
-    expect(q.board.vertex("hex-board", "tile-a$$tile-a$$tile-b")).toBe(
-      getVertex(table, "hex-board", "tile-a$$tile-a$$tile-b"),
-    );
-    expect(q.board.byType("track")).toEqual(getBoardsByTypeId(table, "track"));
-    expect(q.board.adjacentSpaces("main-board", "space-a")).toEqual(
+    expect(
+      q
+        .board("hex-board")
+        .state.edges.find((edge) => edge.id === "tile-a$$tile-b"),
+    ).toBe(getEdge(table, "hex-board", "tile-a$$tile-b"));
+    expect(
+      q
+        .board("hex-board")
+        .state.vertices.find(
+          (vertex) => vertex.id === "tile-a$$tile-a$$tile-b",
+        ),
+    ).toBe(getVertex(table, "hex-board", "tile-a$$tile-a$$tile-b"));
+    expect(q.board("main-board").neighbors("space-a")).toEqual(
       getAdjacentSpaces(table, "main-board", "space-a"),
     );
-    expect(
-      q.board.incidentEdges("square-board", "square-vertex:center"),
-    ).toEqual(getIncidentEdges(table, "square-board", "square-vertex:center"));
-    expect(q.board.spaceDistance("square-board", "cell-a1", "cell-b2")).toBe(
+    expect(q.board("square-board").edgesOf("square-vertex:center")).toEqual(
+      getIncidentEdges(table, "square-board", "square-vertex:center"),
+    );
+    expect(q.board("square-board").distance("cell-a1", "cell-b2")).toBe(
       getSpaceDistance(table, "square-board", "cell-a1", "cell-b2"),
     );
     expect(q.zone.sharedCards("draw-deck")).toEqual(
@@ -414,7 +418,7 @@ describe("table ops spatial helpers", () => {
 
     const q = createStateQueries(state);
 
-    expect(q.board.hex("hex-board")).toBe(getHexBoard(table, "hex-board"));
+    expect(q.board("hex-board").state).toBe(getHexBoard(table, "hex-board"));
     expect(q.zone.sharedCards("draw-deck")).toEqual(
       getSharedZoneCards(table, "draw-deck"),
     );
