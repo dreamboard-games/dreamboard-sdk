@@ -265,8 +265,19 @@ export const ReducerRuntimeLogEntrySchema = z.discriminatedUnion("kind", [
   ReducerRuntimeLogEntryStateCommitSchema,
 ]);
 
+/** Authored views are records; boards is reserved for manifest geometry. */
+export const AuthoredViewSchema = z
+  .object({
+    boards: z
+      .never({
+        error: "The view field 'boards' is reserved for manifest geometry.",
+      })
+      .optional(),
+  })
+  .catchall(RuntimeJsonSchema);
+
 export const SeatProjectionSchema = z.strictObject({
-  view: RuntimeJsonSchema.optional(),
+  view: AuthoredViewSchema.nullable().optional(),
   availableInteractionRefs: RuntimeJsonSchema.optional(),
   zones: RuntimeJsonSchema.optional(),
 });
@@ -306,7 +317,7 @@ export const SeatProjectionBundleSchema = z.strictObject({
     .union([SimultaneousPhaseProjectionSchema, z.null()])
     .optional(),
   schedulerFlow: SchedulerFlowAuthorityProjectionSchema.optional(),
-  sharedView: RuntimeJsonSchema.optional(),
+  sharedView: AuthoredViewSchema.nullable().optional(),
   interactionsByRef: RuntimeJsonSchema.optional(),
   seats: z.record(z.string(), SeatProjectionSchema),
   timing: ProjectionTimingMetadataSchema.optional(),
@@ -318,7 +329,7 @@ export const ProjectRequestSchema = z.strictObject({
 });
 
 export const BoardStaticProjectionSchema = z.strictObject({
-  view: RuntimeJsonSchema,
+  view: z.record(z.string(), RuntimeJsonSchema),
   hash: z.string().min(1),
   manifestVersion: z.string(),
 });

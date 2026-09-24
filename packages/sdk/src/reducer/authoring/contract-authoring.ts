@@ -1,3 +1,4 @@
+import type { AuthoredView } from "../../shared/runtime-types";
 import { InteractionSteps } from "./steps";
 import type { ViewDefinition } from "../model";
 import type { z } from "zod";
@@ -318,7 +319,7 @@ type NoUndeclaredPhases<Contract, Definitions> = {
 
 export type GameAuthoring<Contract extends ContractWithPhases> = {
   readonly contract: Contract;
-  view<Projection>(
+  view<Projection extends AuthoredView>(
     view: ViewDefinition<
       BoundState<Contract>,
       BoundManifest<Contract>,

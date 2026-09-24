@@ -88,13 +88,8 @@ function materializeView(
     seatView,
   ].filter((part) => part !== undefined && part !== null);
   if (parts.length === 0) return null;
-  if (parts.every(isRecord)) {
-    return Object.assign({}, ...parts) as RuntimeJson;
-  }
-  return (seatView ??
-    dynamicProjection.sharedView ??
-    staticProjection?.view ??
-    null) as RuntimeJson | null;
+  // Admitting schemas guarantee records and reject authored `boards` fields.
+  return Object.assign({}, ...parts) as Record<string, RuntimeJson>;
 }
 
 function canonicalizeReducerProjection(value: unknown): unknown {

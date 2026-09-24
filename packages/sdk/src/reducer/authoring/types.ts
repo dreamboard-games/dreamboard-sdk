@@ -1,3 +1,4 @@
+import type { AuthoredView } from "../../shared/runtime-types";
 import type { z } from "zod";
 import type {
   BaseGameStateOfContract,
@@ -57,7 +58,7 @@ export type ReducerPhaseDefinition<
 
 export type ReducerViewDefinition<
   Contract extends AnyReducerGameContract,
-  Projection = unknown,
+  Projection extends AuthoredView = AuthoredView,
 > = ViewDefinition<
   ContractState<Contract>,
   ContractManifest<Contract>,
