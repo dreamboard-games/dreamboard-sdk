@@ -1,9 +1,9 @@
+import { resolvePlayerRoster } from "./player-roster.js";
 import type { z } from "zod";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type * as Wire from "../shared/runtime-types.js";
 import { digestPluginRuntimeJson } from "../shared/protocol/digest.js";
-import { createReducerTestingBundle } from "./reducer-runtime.js";
-import type { ReducerBundleTestingRuntime } from "./reducer-runtime.js";
+import { createReducerTestingRuntime } from "./reducer-runtime.js";
 import type {
   InteractionActionabilityResult,
   InteractionInputEnumerationResult,
@@ -42,13 +42,14 @@ import {
   resolveScenarioSeatRef,
 } from "./scenario-player-refs.js";
 
-type ScenarioBundle = ReducerBundleTestingRuntime;
+type ScenarioBundle = ReturnType<typeof createReducerTestingRuntime>;
 
 type ScenarioReplayState<Game> = {
   readonly game: Game;
   readonly scenario: ScenarioReplayDefinition<Game>;
   readonly playerIds: readonly string[];
   readonly reducerState: Wire.ReducerSessionState;
+  readonly terminal: Wire.GameOutcome | null;
   readonly checkpoint: ScenarioCheckpoint;
   readonly trace: readonly ScenarioCommandTraceEntry<Game>[];
   readonly events: readonly ReducerDiagnosticEvent[];
@@ -107,7 +108,7 @@ export async function replayScenario<
   validateReplayDefinition(options.game, options.scenario);
   const scenario = cloneReplayDefinition(options.scenario);
   const checkpoint = normalizeCheckpoint(scenario, options.at);
-  const playerIds = resolvePlayerIds(options.game, scenario.setup.players);
+  const playerIds = resolvePlayerRoster(options.game, scenario.setup.players);
   const events: ReducerDiagnosticEvent[] = [];
   const bundle = createScenarioBundle(options.game, events);
   const normalSetup = options.game.contract.manifest.normalSetup;
@@ -119,7 +120,7 @@ export async function replayScenario<
     });
   }
   const table = normalSetup.createInitialTable({ playerIds });
-  const reducerState = await bundle.initialize({
+  const initialized = await bundle.initialize({
     table: table as RuntimeJson,
     playerIds: [...playerIds],
     rngSeed: scenario.setup.seed,
@@ -130,7 +131,8 @@ export async function replayScenario<
     game: options.game,
     scenario,
     playerIds,
-    reducerState,
+    reducerState: initialized.state,
+    terminal: initialized.terminal ?? null,
     checkpoint: { segment: "setup", completed: 0 },
     trace: [],
     events,
@@ -144,6 +146,7 @@ export type ScenarioRuntimeCheckpointMaterialization = {
   readonly checkpointDigest: string;
   readonly playerIds: readonly string[];
   readonly state: Wire.ReducerSessionState;
+  readonly terminal: Wire.GameOutcome | null;
 };
 
 /**
@@ -163,6 +166,7 @@ export async function materializeScenarioRuntimeCheckpoint<
     checkpointDigest: replay.checkpointDigest,
     playerIds: [...replay.playerIds],
     state: structuredClone(replay.reducerState),
+    terminal: structuredClone(replay.terminal),
   };
 }
 
@@ -223,6 +227,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
   readonly events: ReducerDiagnosticEvent[];
   checkpoint: ScenarioCheckpoint;
   reducerState: Wire.ReducerSessionState;
+  terminal: Wire.GameOutcome | null;
   trace: ScenarioCommandTraceEntry<Game>[];
 
   constructor(state: ScenarioReplayState<Game>) {
@@ -231,6 +236,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     this.game = state.game;
     this.playerIds = [...state.playerIds];
     this.reducerState = structuredClone(state.reducerState);
+    this.terminal = structuredClone(state.terminal);
     this.checkpoint = structuredClone(state.checkpoint);
     this.trace = structuredClone(
       state.trace,
@@ -250,6 +256,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       scenarioId: this.scenarioId,
       checkpoint: this.checkpoint,
       reducerState: this.reducerState,
+      terminal: this.terminal,
       trace: this.trace,
     });
   }
@@ -326,6 +333,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       scenario: this.scenario,
       playerIds: this.playerIds,
       reducerState: this.reducerState,
+      terminal: this.terminal,
       checkpoint: this.checkpoint,
       trace: this.trace,
       events: this.events,
@@ -432,6 +440,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       scenario: this.scenario,
       playerIds: this.playerIds,
       reducerState: this.reducerState,
+      terminal: this.terminal,
       checkpoint: this.checkpoint,
       trace: this.trace,
       events: this.events,
@@ -558,6 +567,8 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         readonly trace: DispatchTraceSummaryEntry[];
       }
   > {
+    if (this.terminal)
+      return { kind: "reject", errorCode: "game-ended", trace: [] };
     const phase = readFlowState(this.reducerState).currentPhase ?? "";
     const playerId = resolveScenarioSeatRef({
       ref: command.actor,
@@ -594,6 +605,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       };
     }
     this.reducerState = structuredClone(result.state);
+    this.terminal = result.terminal ?? null;
     return {
       kind: "accept",
       trace: summarizeWireTrace(result.trace),
@@ -678,7 +690,7 @@ function createScenarioBundle(
   game: ScenarioDefinitionGameLike,
   events: ReducerDiagnosticEvent[],
 ): ScenarioBundle {
-  return createReducerTestingBundle(game as never, {
+  return createReducerTestingRuntime(game as never, {
     diagnostics: {
       event(event) {
         events.push(structuredClone(event));
@@ -695,17 +707,6 @@ function validateReplayDefinition<Game>(
     ...replay,
     then: () => undefined,
   });
-}
-
-function resolvePlayerIds(
-  game: ScenarioDefinitionGameLike,
-  count: number,
-): string[] {
-  const declared = game.contract.manifest.literals.playerIds;
-  return Array.from(
-    { length: count },
-    (_, index) => declared[index] ?? `player-${index + 1}`,
-  );
 }
 
 function normalizeCheckpoint<Game>(

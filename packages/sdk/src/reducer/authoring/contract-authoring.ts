@@ -238,6 +238,10 @@ export type PhaseAuthoring<
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>
     > = Record<string, never>,
+    const Kind extends "player" | "simultaneousPlayer" | "auto" =
+      | "player"
+      | "simultaneousPlayer"
+      | "auto",
   >(
     definition: Omit<
       PhaseDefinition<
@@ -250,7 +254,7 @@ export type PhaseAuthoring<
         ContractErrorCode<Contract>
       >,
       "state"
-    >,
+    > & { kind: Kind },
   ): PhaseDefinition<
     PhaseStateSchema,
     BoundState<Contract>,
@@ -259,7 +263,7 @@ export type PhaseAuthoring<
     Interactions,
     OptionsOfContract<Contract>,
     ContractErrorCode<Contract>
-  >;
+  > & { kind: Kind };
   readonly inputs: BoundInputBuilders<Contract>;
   /** Compile-time only. Reading any member at runtime throws. */
   readonly types: PhaseTypes<Contract, PhaseStateSchema>;

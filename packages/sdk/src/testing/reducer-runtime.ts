@@ -54,14 +54,15 @@ export type ReducerBundleTestingRuntime = Omit<
   ): InteractionInputEnumerationResult;
 };
 
-export function createReducerTestingBundle<
+export function createReducerTestingRuntime<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   View extends ViewOfContract<Contract>,
 >(
   definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
-): ReducerBundleTestingRuntime {
+): Omit<ReducerBundleTestingRuntime, "initialize"> &
+  Pick<ReducerBundleContract, "initialize"> {
   const bundle = createReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   // The codec validates the authored schemas; its erased phase return type
@@ -88,9 +89,6 @@ export function createReducerTestingBundle<
   }
   return {
     ...bundle,
-    async initialize(input) {
-      return (await bundle.initialize(input)).state;
-    },
     async validateInput({ state, input }) {
       return interactions.validateClientInput(
         scope.toCombinedState(parseState(state)),
@@ -130,6 +128,24 @@ export function createReducerTestingBundle<
         ...inspect(input),
         maxEvaluations: input.maxEvaluations,
       });
+    },
+  };
+}
+
+/** Existing scenario conveniences unwrap only initialization, never execution. */
+export function createReducerTestingBundle<
+  Contract extends ReducerGameContractLike,
+  Definitions extends PhaseMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
+>(
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
+  options: ReducerBundleOptions = {},
+): ReducerBundleTestingRuntime {
+  const runtime = createReducerTestingRuntime(definition, options);
+  return {
+    ...runtime,
+    async initialize(input) {
+      return (await runtime.initialize(input)).state;
     },
   };
 }

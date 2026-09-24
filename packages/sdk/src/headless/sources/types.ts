@@ -45,6 +45,6 @@ export interface CommandSource extends GameSource {
   cancel(interactionId: string): Promise<SubmitResult>;
 }
 /** Testing-owned sources can add local actions without widening hosted sources. */
-export interface ApplySource<Action> extends GameSource {
-  apply(action: Action): void;
+export interface ApplySource<Action, Result = void> extends GameSource {
+  apply(action: Action): Result;
 }

@@ -50,28 +50,22 @@ export function StormtrailInteractionRoutes({
   const rejectTrade = Interaction.useForm("pendingTrade.rejectTrade");
 
   const routes = {
-    "setupCamp.submit": { collect: {} },
     "setupCamp.placeStartingCamp": {
       collect: { intersectionId: board.slot.vertex },
     },
-    "setupTrail.submit": { collect: {} },
     "setupTrail.placeStartingTrail": {
       collect: { edgeId: board.slot.edge },
     },
-    "roll.submit": { collect: {} },
     "roll.rollDice": { collect: {} },
-    "discardBarrier.submit": { collect: {} },
     "discardBarrier.discardSupplies": {
       collect: { resources: discardSupplies.slot.resources },
     },
-    "moveBandits.submit": { collect: {} },
     "moveBandits.moveBandits": {
       collect: {
         hexId: board.slot.space,
         targetPlayerId: moveBandits.slot.targetPlayerId,
       },
     },
-    "main.submit": { collect: {} },
     "main.buildTrail": { collect: { edgeId: board.slot.edge } },
     "main.buildCamp": {
       collect: { intersectionId: board.slot.vertex },
@@ -90,10 +84,8 @@ export function StormtrailInteractionRoutes({
       },
     },
     "main.endTurn": { collect: {} },
-    "pendingTrade.submit": { collect: {} },
     "pendingTrade.acceptTrade": { collect: {} },
     "pendingTrade.rejectTrade": { collect: {} },
-    "gameOver.submit": { collect: {} },
   } satisfies InteractionRoutes;
 
   return (
