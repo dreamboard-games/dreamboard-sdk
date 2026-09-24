@@ -1,255 +1,52 @@
-import {
-  Interaction,
-  type BoardSurface,
-  type InteractionRoutes,
-} from "./game-ui";
+import type { ComponentProps } from "react";
+import { useGame } from "./game";
+import { InteractionForm } from "./components/dreamboard/interaction-form";
 
-const buttonClass =
-  "min-h-11 rounded-xl border border-amber-700/70 bg-amber-950 px-4 py-2 text-sm font-black text-amber-50 shadow-sm transition enabled:hover:bg-amber-900 enabled:focus-visible:outline enabled:focus-visible:outline-2 enabled:focus-visible:outline-offset-2 enabled:focus-visible:outline-amber-300 disabled:cursor-not-allowed disabled:opacity-45";
-const fieldPanelClass =
-  "grid gap-2 rounded-xl border border-stone-300 bg-stone-50 p-2";
-
-function AvailabilityNote({
-  available,
-  children,
-}: {
-  available: boolean;
-  children: string;
-}) {
+export function Form(props: ComponentProps<typeof InteractionForm>) {
   return (
-    <p
-      className={
-        available
-          ? "text-sm font-bold text-emerald-800"
-          : "text-sm text-stone-500"
-      }
-    >
-      {children}
-    </p>
+    <InteractionForm
+      {...props}
+      className="stormtrail-form"
+      renderInput={(input) => {
+        const domain = input.getDomain();
+        if (domain.type !== "boardTarget") return undefined;
+        return (
+          <p key={input.key}>
+            Choose a highlighted {String(domain.targetKind)} on the frontier.
+            {input.getValue() !== undefined && (
+              <span> Selected: {String(input.getValue())}</span>
+            )}
+          </p>
+        );
+      }}
+    />
   );
 }
 
-export function StormtrailInteractionRoutes({
-  board,
-}: {
-  board: BoardSurface<"frontier">;
-}) {
-  const placeStartingCamp = Interaction.useForm("setupCamp.placeStartingCamp");
-  const placeStartingTrail = Interaction.useForm(
-    "setupTrail.placeStartingTrail",
-  );
-  const rollDice = Interaction.useForm("roll.rollDice");
-  const discardSupplies = Interaction.useForm("discardBarrier.discardSupplies");
-  const moveBandits = Interaction.useForm("moveBandits.moveBandits");
-  const buildTrail = Interaction.useForm("main.buildTrail");
-  const buildCamp = Interaction.useForm("main.buildCamp");
-  const depotTrade = Interaction.useForm("main.tradeWithSupplyDepot");
-  const offerTrade = Interaction.useForm("main.offerTrade");
-  const endTurn = Interaction.useForm("main.endTurn");
-  const acceptTrade = Interaction.useForm("pendingTrade.acceptTrade");
-  const rejectTrade = Interaction.useForm("pendingTrade.rejectTrade");
-
-  const routes = {
-    "setupCamp.placeStartingCamp": {
-      collect: { intersectionId: board.slot.vertex },
-    },
-    "setupTrail.placeStartingTrail": {
-      collect: { edgeId: board.slot.edge },
-    },
-    "roll.rollDice": { collect: {} },
-    "discardBarrier.discardSupplies": {
-      collect: { resources: discardSupplies.slot.resources },
-    },
-    "moveBandits.moveBandits": {
-      collect: {
-        hexId: board.slot.space,
-        targetPlayerId: moveBandits.slot.targetPlayerId,
-      },
-    },
-    "main.buildTrail": { collect: { edgeId: board.slot.edge } },
-    "main.buildCamp": {
-      collect: { intersectionId: board.slot.vertex },
-    },
-    "main.tradeWithSupplyDepot": {
-      collect: {
-        giveResource: depotTrade.slot.giveResource,
-        receiveResource: depotTrade.slot.receiveResource,
-      },
-    },
-    "main.offerTrade": {
-      collect: {
-        targetPlayerId: offerTrade.slot.targetPlayerId,
-        give: offerTrade.slot.give,
-        want: offerTrade.slot.want,
-      },
-    },
-    "main.endTurn": { collect: {} },
-    "pendingTrade.acceptTrade": { collect: {} },
-    "pendingTrade.rejectTrade": { collect: {} },
-  } satisfies InteractionRoutes;
-
+export function StormtrailInteractionRoutes() {
+  const game = useGame();
   return (
-    <div className="grid gap-2" data-stormtrail-actions="">
-      <Interaction.Routes routes={routes} />
-
-      <placeStartingCamp.State unavailable={null}>
-        {(state) => (
-          <AvailabilityNote available={state.available}>
-            Select a highlighted intersection for your starting camp.
-          </AvailabilityNote>
-        )}
-      </placeStartingCamp.State>
-      <placeStartingTrail.State unavailable={null}>
-        {(state) => (
-          <AvailabilityNote available={state.available}>
-            Select a highlighted edge touching your new camp.
-          </AvailabilityNote>
-        )}
-      </placeStartingTrail.State>
-
-      <rollDice.State unavailable={null}>
-        {(state) =>
-          state.available ? (
-            <rollDice.Submit className={buttonClass}>Roll 2d6</rollDice.Submit>
-          ) : (
-            <button type="button" className={buttonClass} disabled>
-              Waiting to roll
-            </button>
-          )
-        }
-      </rollDice.State>
-
-      <discardSupplies.State unavailable={null}>
-        {(state) => (
-          <div className={fieldPanelClass}>
-            <strong>Return the required supplies</strong>
-            <discardSupplies.slot.resources.Field />
-            <discardSupplies.Submit
-              className={buttonClass}
-              disabled={!state.available}
-            >
-              Commit private discard
-            </discardSupplies.Submit>
-          </div>
-        )}
-      </discardSupplies.State>
-
-      <moveBandits.State unavailable={null}>
-        {(state) => (
-          <div className={fieldPanelClass}>
-            <strong>Move the Bandits</strong>
-            <p className="text-sm text-stone-600">
-              {state.descriptor.step?.index === 0
-                ? "Choose a highlighted district to commit your destination."
-                : "District committed. Choose a victim or confirm that there is no victim."}
-            </p>
-            {state.inputKeys.includes("targetPlayerId") && (
-              <moveBandits.slot.targetPlayerId.Field />
-            )}
-            <moveBandits.Submit
-              className={buttonClass}
-              disabled={!state.available}
-            >
-              {state.descriptor.step?.index === 0
-                ? "Confirm district"
-                : "Confirm victim"}
-            </moveBandits.Submit>
-            {state.descriptor.step?.canCancel && (
-              <button
-                type="button"
-                className={buttonClass}
-                disabled={state.status !== "open"}
-                onClick={() => {
-                  void state.handle.cancel().catch(() => {
-                    /* The runtime reports rejection; retain the committed prefix. */
-                  });
-                }}
-              >
-                Cancel Bandits move
-              </button>
-            )}
-          </div>
-        )}
-      </moveBandits.State>
-
-      <buildTrail.State unavailable={null}>
-        {(state) => (
-          <AvailabilityNote available={state.available}>
-            Build Trail: select a highlighted connected edge (1 Timber + 1
-            Brick).
-          </AvailabilityNote>
-        )}
-      </buildTrail.State>
-      <buildCamp.State unavailable={null}>
-        {(state) => (
-          <AvailabilityNote available={state.available}>
-            Build Camp: select a highlighted connected intersection (1 of each
-            supply).
-          </AvailabilityNote>
-        )}
-      </buildCamp.State>
-
-      <depotTrade.State unavailable={null}>
-        {(state) => (
-          <div className={fieldPanelClass}>
-            <strong>Supply Depot · 3:1</strong>
-            <depotTrade.slot.giveResource.Field />
-            <depotTrade.slot.receiveResource.Field />
-            <depotTrade.Submit
-              className={buttonClass}
-              disabled={!state.available}
-            >
-              Exchange supplies
-            </depotTrade.Submit>
-          </div>
-        )}
-      </depotTrade.State>
-
-      <offerTrade.State unavailable={null}>
-        {(state) => (
-          <div className={fieldPanelClass}>
-            <strong>Offer a bilateral trade</strong>
-            <offerTrade.slot.targetPlayerId.Field />
-            <offerTrade.slot.give.Field />
-            <offerTrade.slot.want.Field />
-            <offerTrade.Submit
-              className={buttonClass}
-              disabled={!state.available}
-            >
-              Send offer
-            </offerTrade.Submit>
-          </div>
-        )}
-      </offerTrade.State>
-
-      <endTurn.State unavailable={null}>
-        {(state) => (
-          <endTurn.Submit className={buttonClass} disabled={!state.available}>
-            End turn
-          </endTurn.Submit>
-        )}
-      </endTurn.State>
-
-      <acceptTrade.State unavailable={null}>
-        {(state) => (
-          <acceptTrade.Submit
-            className={buttonClass}
-            disabled={!state.available}
-          >
-            Accept trade
-          </acceptTrade.Submit>
-        )}
-      </acceptTrade.State>
-      <rejectTrade.State unavailable={null}>
-        {(state) => (
-          <rejectTrade.Submit
-            className={buttonClass}
-            disabled={!state.available}
-          >
-            Reject trade
-          </rejectTrade.Submit>
-        )}
-      </rejectTrade.State>
+    <div className="grid gap-3" data-stormtrail-actions="">
+      {game.connection !== "ready" && (
+        <p role="status">
+          Connection: {game.connection}. Actions resume after reconnection.
+        </p>
+      )}
+      {game.interactions.list().length === 0 && (
+        <p>Waiting for the other crews.</p>
+      )}
+      <Form interaction="setupCamp.placeStartingCamp" />
+      <Form interaction="setupTrail.placeStartingTrail" />
+      <Form interaction="roll.rollDice" />
+      <Form interaction="discardBarrier.discardSupplies" />
+      <Form interaction="moveBandits.moveBandits" />
+      <Form interaction="main.buildTrail" />
+      <Form interaction="main.buildCamp" />
+      <Form interaction="main.tradeWithSupplyDepot" />
+      <Form interaction="main.offerTrade" />
+      <Form interaction="main.endTurn" />
+      <Form interaction="pendingTrade.acceptTrade" />
+      <Form interaction="pendingTrade.rejectTrade" />
     </div>
   );
 }

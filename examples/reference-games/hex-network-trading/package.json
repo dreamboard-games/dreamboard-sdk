@@ -4,15 +4,18 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "test": "tsx --tsconfig tsconfig.json --test test/scenarios.test.ts test/ui/**/*.test.tsx test/ui-scenarios/**/*.test.ts",
-    "check": "pnpm typecheck && pnpm test"
+    "test": "tsx --tsconfig tsconfig.json --test test/scenarios.test.ts test/ui/**/*.test.tsx",
+    "check": "pnpm typecheck && pnpm test",
+    "dev": "vite --host 127.0.0.1",
+    "test:browser": "playwright test",
+    "build:ui": "vite build"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",
-    "framer-motion": "12.38.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
-    "zod": "4.4.3"
+    "zod": "4.4.3",
+    "@tanstack/react-store": "0.11.1"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",
@@ -21,7 +24,12 @@
     "csstype": "^3.1.3",
     "tsx": "^4.20.5",
     "typescript": "^5.9.2",
-    "use-sync-external-store": "1.6.0"
+    "vite": "catalog:",
+    "@tailwindcss/vite": "catalog:",
+    "tailwindcss": "catalog:",
+    "@playwright/test": "catalog:",
+    "axe-playwright": "catalog:",
+    "esbuild": "catalog:"
   },
   "packageManager": "pnpm@10.4.1"
 }

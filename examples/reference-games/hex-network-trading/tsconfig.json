@@ -4,7 +4,11 @@
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./ui/*"],
+      "@game": ["./ui/game.ts"]
+    }
   },
   "include": [
     "manifest.ts",
@@ -13,7 +17,9 @@
     "ui/**/*.ts",
     "ui/**/*.tsx",
     "test/**/*.ts",
-    "test/**/*.tsx"
+    "test/**/*.tsx",
+    "vite.config.ts",
+    "playwright.config.ts"
   ],
   "exclude": ["node_modules"]
 }

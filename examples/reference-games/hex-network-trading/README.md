@@ -43,5 +43,32 @@ not inject dice, resources, or mid-game state.
 ## Verification
 
 ```sh
-pnpm verify
+pnpm check
+pnpm test:browser
 ```
+
+## Hosted and local UI
+
+`ui/game.ts` binds the erased game type to the headless React instance, canonical
+board geometry and pan/zoom. The hosted entry `ui/index.tsx` owns an iframe source;
+it never imports executable reducer code. Registry source components are installed
+under `ui/components/dreamboard`, using `@game` for the typed hook binding.
+
+Run `pnpm dev` for local play. Only `ui/dev.tsx` imports the game and scenario
+sources. Open, for example:
+
+- `/?scenario=setup&at=opening&as=player-1`
+- `/?scenario=bandits&at=ready-to-move&as=player-1`
+- `/?scenario=depot&at=depot-ready&as=player-2`
+- `/?scenario=discard&at=ready-to-discard&as=player-2`
+- `/?scenario=trade&at=pending-trade&as=player-1`
+- `/?scenario=complete&at=game-over&as=player-2`
+
+Development controls switch the selected seat and save/restore JSON checkpoints.
+The inspector displays the selected-seat frame; full reducer state stays in the
+local source. Normal hosted gameplay has no checkpoint or seat-switch controls.
+
+Board targets use native pointer and keyboard handlers. Single-target placements
+commit when selected. Supply Depot give/receive choices share one unfinished draft
+and submit together. Bandits commits the district first, then the eligible victim
+or explicit no-victim choice; saved choices remain visible and can be cancelled.

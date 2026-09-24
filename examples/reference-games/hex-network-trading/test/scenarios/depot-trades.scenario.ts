@@ -17,6 +17,9 @@ export default defineScenario({
   description:
     "Player 2 legally performs three independent 3:1 Supply Depot exchanges during one main phase.",
   setup: { players: 3, seed: 1 },
+  checkpoints: {
+    "depot-ready": { segment: "given", completed: depotReadyPrefix.length },
+  },
   given: depotReadyPrefix,
   when: THREE_DEPOT_TRADES,
   then: ({ expect, state, view }) => {
