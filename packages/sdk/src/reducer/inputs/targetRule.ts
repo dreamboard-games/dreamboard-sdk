@@ -7,7 +7,6 @@ export type TargetContext<State extends CollectorState> = {
   state: State;
   playerId: PlayerIdOfState<State>;
   q: TableQueriesOfState<State>;
-  values?: Readonly<Record<string, unknown>>;
 };
 
 export type TargetPredicateArgs<

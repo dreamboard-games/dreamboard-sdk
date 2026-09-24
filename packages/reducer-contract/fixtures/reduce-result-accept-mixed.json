@@ -39,7 +39,8 @@
         "from": "main",
         "to": "takeTurn"
       },
-      "options": {}
+      "options": {},
+      "pending": {}
     }
   },
   "events": [],

@@ -117,10 +117,18 @@ function digestRuntimeCommand(
   frame: UIFixtureFrame,
 ): string {
   return digestUIFixtureTransportRequest({
-    operation: exchange.operation === "validate" ? "validate" : "submit",
+    operation:
+      exchange.operation === "validate"
+        ? "validate"
+        : exchange.input.kind === "interaction.cancel"
+          ? "cancel"
+          : "submit",
     basis: frame.frame.basis,
     interactionId: exchange.input.interactionId,
-    payload: exchange.input.params,
+    payload:
+      exchange.input.kind === "interaction.cancel"
+        ? null
+        : exchange.input.params,
   });
 }
 

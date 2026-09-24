@@ -33,34 +33,10 @@ export type InputSelection =
       readonly distinct?: boolean;
     };
 
-export interface InputDomainDependencyCase {
-  readonly when: Readonly<Record<string, string>>;
-  readonly domain: InputDomain;
-}
-
-export type InputDomainDependencies =
-  | {
-      readonly mode: "eager";
-      readonly dependentCases: readonly InputDomainDependencyCase[];
-    }
-  | {
-      readonly mode: "lazy";
-      readonly dependsOn: readonly string[];
-      readonly resolver: {
-        readonly interactionKey?: string;
-        readonly inputKey: string;
-      };
-    };
-
 export interface InputDomain {
   readonly type: string;
   readonly selection?: InputSelection;
-  readonly dependencies?: InputDomainDependencies;
-  readonly [key: string]:
-    | RuntimeJson
-    | InputSelection
-    | InputDomainDependencies
-    | undefined;
+  readonly [key: string]: RuntimeJson | InputSelection | undefined;
 }
 
 export interface InteractionChoiceOption {
@@ -107,6 +83,12 @@ interface InteractionDescriptorBase<Interaction extends string = string> {
   readonly actorSeat?: number;
   readonly draftDigest?: string;
   readonly inputs: readonly InteractionInputDescriptor[];
+  readonly step?: {
+    readonly index: number;
+    readonly total: number;
+    readonly selected: Readonly<Record<string, RuntimeJson>>;
+    readonly canCancel: boolean;
+  };
   readonly availability: InteractionAvailability;
   readonly reasons?: readonly InteractionDiagnosticReason[];
 }

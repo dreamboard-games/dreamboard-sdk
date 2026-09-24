@@ -1,3 +1,4 @@
+import { InteractionSteps } from "./authoring/steps";
 import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { createHash } from "node:crypto";
@@ -9,7 +10,6 @@ import {
   choiceTarget,
   defineInteraction,
   defineGameContract,
-  defineInputs,
   defineInteractionRule,
   definePhase,
   formInput,
@@ -1104,13 +1104,21 @@ describe("trusted interaction decision pipeline", () => {
             },
           },
         ],
-        availability: {
-          status: "blocked",
-          reason: "Card is blocked.",
-        },
+        availability: { status: "available" },
       },
     ]);
     expect(playZone?.playableByCardId["card-b"]).toEqual([]);
+    expect(
+      await bundle.validateInput({
+        state,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "playCard",
+          params: { cardId: "card-a" },
+        },
+      }),
+    ).toMatchObject({ valid: false, message: "Card is blocked." });
   });
   test("hand zones derive authored hand interactions from card inputs", async () => {
     const contract = defineGameContract({
@@ -1274,7 +1282,7 @@ describe("trusted interaction decision pipeline", () => {
       descriptor?.inputs.find((input) => input.key === "selectedCardIds"),
     ).toMatchObject({ defaultValue: [] });
   });
-  test("default commit policy follows terminal input dependencies", async () => {
+  test("default commit policy follows the current input", async () => {
     const contract = defineGameContract({
       manifest: buildTwoZoneManifest(),
       phases: { takeTurn: z.object({}) },
@@ -1323,50 +1331,31 @@ describe("trusted interaction decision pipeline", () => {
               typeof contract,
               typeof phaseState
             >()({
-              inputs: defineInputs((input) => {
-                const cardId = input.add(
-                  "cardId",
-                  cardInput({ target: playZoneTarget }),
-                );
-                return {
-                  cardId,
-                  choice: input.add(
-                    "choice",
-                    formInput.choice<string, never, readonly [typeof cardId]>({
-                      dependsOn: [cardId],
-                      choices: ({ values }) => [
-                        {
-                          value: `resolve-${values.cardId}`,
-                          label: `Resolve ${values.cardId}`,
-                        },
-                      ],
-                      defaultValue: ({ choices }) => choices[0]?.value,
-                    }),
-                  ),
-                };
-              }),
+              steps: new InteractionSteps()
+                .input("cardId", cardInput({ target: playZoneTarget }))
+                .input("choice", ({ selected }) =>
+                  formInput.choice({
+                    choices: [
+                      { value: `resolve-${selected.cardId}`, label: "Resolve" },
+                    ],
+                    defaultValue: () => undefined,
+                  }),
+                ),
               reduce: ({ state, accept }) => accept(state),
             }),
             formThenTarget: defineInteraction<
               typeof contract,
               typeof phaseState
             >()({
-              inputs: defineInputs((input) => {
-                const mode = input.add(
+              steps: new InteractionSteps()
+                .input(
                   "mode",
                   formInput.choice({
                     choices: [{ value: "play", label: "Play" }],
                     defaultValue: () => undefined,
                   }),
-                );
-                return {
-                  mode,
-                  cardId: input.add(
-                    "cardId",
-                    cardInput({ target: playZoneTarget, dependsOn: [mode] }),
-                  ),
-                };
-              }),
+                )
+                .input("cardId", cardInput({ target: playZoneTarget })),
               reduce: ({ state, accept }) => accept(state),
             }),
             independentMixed: defineInteraction<
@@ -1399,8 +1388,8 @@ describe("trusted interaction decision pipeline", () => {
       )?.commit.mode;
     expect(commitModeFor("formOnly")).toBe("manual");
     expect(commitModeFor("targetOnly")).toBe("autoWhenReady");
-    expect(commitModeFor("targetThenForm")).toBe("manual");
-    expect(commitModeFor("formThenTarget")).toBe("autoWhenReady");
+    expect(commitModeFor("targetThenForm")).toBe("autoWhenReady");
+    expect(commitModeFor("formThenTarget")).toBe("manual");
     expect(commitModeFor("independentMixed")).toBe("manual");
   });
   test("many-input interactions cannot opt into auto submit", () => {
@@ -1434,7 +1423,7 @@ describe("trusted interaction decision pipeline", () => {
       'defineInteraction: interactions with many(...) inputs must use commit: { mode: "manual" }.',
     );
   });
-  test("submit target validation receives collector dependency values", async () => {
+  test("a committed selection controls the next target authority", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
@@ -1445,15 +1434,6 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const phaseState = z.object({});
-    const playZoneTarget = cardTarget
-      .zones<never, "card-a">(["playZone"])
-      .where({
-        id: "mode-enabled",
-        errorCode: "MODE_BLOCKED",
-        message: "Mode blocks that target.",
-        test: ({ values }) => values?.mode === "enabled",
-      })
-      .build();
     const game = defineGame({
       contract,
       initial: {
@@ -1472,8 +1452,8 @@ describe("trusted interaction decision pipeline", () => {
               typeof contract,
               typeof phaseState
             >()({
-              inputs: defineInputs((input) => {
-                const mode = input.add(
+              steps: new InteractionSteps()
+                .input(
                   "mode",
                   formInput.choice({
                     choices: [
@@ -1482,18 +1462,19 @@ describe("trusted interaction decision pipeline", () => {
                     ],
                     defaultValue: () => undefined,
                   }),
-                );
-                return {
-                  mode,
-                  cardId: input.add(
-                    "cardId",
-                    cardInput({
-                      target: playZoneTarget,
-                      dependsOn: [mode],
-                    }),
-                  ),
-                };
-              }),
+                )
+                .input("cardId", ({ selected }) =>
+                  cardInput({
+                    target: cardTarget
+                      .zones(["playZone"])
+                      .where({
+                        id: "mode-enabled",
+                        errorCode: "MODE_BLOCKED",
+                        test: () => selected.mode === "enabled",
+                      })
+                      .build(),
+                  }),
+                ),
               reduce: ({ state, accept }) => accept(state),
             }),
           },
@@ -1506,20 +1487,31 @@ describe("trusted interaction decision pipeline", () => {
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
     });
+    const first = await bundle.dispatch({
+      state,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "playWithMode",
+        params: { mode: "enabled" },
+      },
+    });
+    expect(first.kind).toBe("accept");
+    if (first.kind !== "accept") return;
     await expect(
       bundle.validateInput({
-        state,
+        state: first.state,
         input: {
           kind: "interaction",
           playerId: "player-1",
           interactionId: "playWithMode",
-          params: { mode: "enabled", cardId: "card-a" },
+          params: { cardId: "card-a" },
         },
       }),
     ).resolves.toMatchObject({ valid: true });
     expect(
       bundle.enumerateInteractionParams({
-        state,
+        state: first.state,
         playerId: "player-1",
         interactionId: "playWithMode",
         maxEvaluations: 100,
@@ -1528,9 +1520,31 @@ describe("trusted interaction decision pipeline", () => {
       inputSatisfiability: { status: "yes" },
       enumeration: {
         status: "enumerated",
-        assignments: [{ mode: "enabled", cardId: "card-a" }],
+        assignments: [{ cardId: "card-a" }],
       },
     });
+    const disabled = await bundle.dispatch({
+      state,
+      input: {
+        kind: "interaction",
+        playerId: "player-1",
+        interactionId: "playWithMode",
+        params: { mode: "disabled" },
+      },
+    });
+    if (disabled.kind !== "accept")
+      throw new Error("first step must not enumerate future domains");
+    await expect(
+      bundle.validateInput({
+        state: disabled.state,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "playWithMode",
+          params: { cardId: "card-a" },
+        },
+      }),
+    ).resolves.toMatchObject({ valid: false });
   });
   test("hand zones bind playable cards to the matching card input zone", async () => {
     const contract = defineGameContract({
@@ -2058,9 +2072,7 @@ describe("trusted interaction decision pipeline", () => {
       ),
     ).toMatchObject({
       availability: {
-        status: "blocked",
-        code: "NO_LEGAL_INPUT",
-        reason: "No legal input is currently available.",
+        status: "available",
       },
     });
     expect(
@@ -2089,10 +2101,21 @@ describe("trusted interaction decision pipeline", () => {
       found: true,
       visible: true,
       descriptor: {
-        availability: { status: "blocked", code: "NO_LEGAL_INPUT" },
+        availability: { status: "available" },
       },
-      inputSatisfiability: { status: "no" },
+      inputSatisfiability: { status: "yes" },
     });
+    expect(
+      await bundle.validateInput({
+        state,
+        input: {
+          kind: "interaction",
+          playerId: "player-1",
+          interactionId: "ruleRejectedInput",
+          params: { task: "one" },
+        },
+      }),
+    ).toMatchObject({ valid: false, errorCode: "TASK_REJECTED" });
     expect(
       bundle.enumerateInteractionParams({
         state,
@@ -2103,8 +2126,8 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({
       found: true,
       visible: true,
-      inputSatisfiability: { status: "no" },
-      enumeration: null,
+      inputSatisfiability: { status: "yes" },
+      enumeration: { status: "enumerated", assignments: [] },
     });
     expect(
       bundle.enumerateInteractionParams({

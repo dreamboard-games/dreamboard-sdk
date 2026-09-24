@@ -18,16 +18,12 @@ export type {
   ValidationIssue,
 } from "./reducer/model";
 export {
-  defineInputs,
   many,
   type BoardTargetPredicate,
   type CardTargetPredicate,
   type ChoiceOptionsFactory,
   type ChoiceTargetOption,
   type ChoiceTargetPredicate,
-  type DependencyValues,
-  type DefinedInputs,
-  type InputFieldRef,
   type ManyOptions,
   type PlayerBoardSpaceTarget,
   type TargetContext,

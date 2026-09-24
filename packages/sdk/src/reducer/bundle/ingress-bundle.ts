@@ -32,18 +32,8 @@ import type {
  * (`{ kind: "interaction" }`) and the engine's `TrustedRuntimeInput`
  * uses the same discriminator, so this is a straight pass-through.
  */
-function routeInteraction(input: UntrustedRuntimeInput): {
-  kind: "interaction";
-  playerId: string;
-  interactionId: string;
-  params: unknown;
-} {
-  return {
-    kind: "interaction",
-    playerId: input.playerId,
-    interactionId: input.interactionId,
-    params: input.params,
-  };
+function routeInteraction(input: UntrustedRuntimeInput): UntrustedRuntimeInput {
+  return input;
 }
 
 // Adapt trusted results to the generated, validated host contract.
@@ -103,12 +93,7 @@ function toWireDispatchResult<State, PlayerId extends string>(
       case "acceptedClientInput":
         trace.push({
           kind: "acceptedClientInput",
-          input: {
-            kind: "interaction",
-            playerId: entry.input.playerId,
-            interactionId: entry.input.interactionId,
-            params: entry.input.params as Wire.JsonValue,
-          },
+          input: entry.input as Wire.GameInput,
         });
         break;
       case "phaseEntered":
@@ -252,6 +237,13 @@ export function createReducerTestingBundle<
     },
     explainInteraction({ state, playerId, interactionId }) {
       return trustedBundle.explainInteraction({
+        state: parseTrustedState(state),
+        playerId: parseRuntimePlayerId(playerId),
+        interactionId,
+      });
+    },
+    currentClientParamSchema({ state, playerId, interactionId }) {
+      return trustedBundle.currentClientParamSchema({
         state: parseTrustedState(state),
         playerId: parseRuntimePlayerId(playerId),
         interactionId,

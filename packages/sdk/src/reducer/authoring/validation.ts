@@ -131,11 +131,21 @@ export function validateManyCommitPolicy(input: {
 export function validateInteractionLikeDefinition(
   input: {
     inputs?: Record<string, InputCollector>;
+    steps?: { entries: readonly { key: string }[] };
     commit?: { mode: string };
     paramsSchema?: unknown;
   },
   context: "defineInteraction",
 ): void {
+  if (input.steps) {
+    if (input.inputs !== undefined)
+      throw new Error("An interaction declares inputs or steps, never both.");
+    if (input.steps.entries.length === 0)
+      throw new Error("An interaction requires at least one step.");
+    const keys = input.steps.entries.map((entry) => entry.key);
+    if (new Set(keys).size !== keys.length)
+      throw new Error("Interaction step keys must be unique.");
+  }
   validateInteractionInputsSchema(input.inputs, context);
   validateManyCommitPolicy({
     inputs: input.inputs,

@@ -1,11 +1,12 @@
-import { describe, expect, test, vi } from "vitest";
+import { InteractionSteps } from "./authoring/steps";
+import { evaluateStepPrefix } from "./bundle/trusted/step-prefix";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   boardInput,
   boardTarget,
   cardInput,
   cardTarget,
-  defineInputs,
   formInput,
 } from "../reducer/internal";
 import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
@@ -32,7 +33,7 @@ describe("interaction input projection", () => {
         } as never,
         "player-1" as never,
       ),
-    ).toThrow("without a default-renderable domain or target metadata");
+    ).toThrow("has no renderable domain");
   });
 
   test("projected default form inputs are explicit renderable domains", () => {
@@ -125,189 +126,7 @@ describe("interaction input projection", () => {
     ]);
   });
 
-  test("materializes dependent finite choice domains", () => {
-    const inputs = defineInputs((input) => {
-      const spaceId = input.add(
-        "spaceId",
-        formInput.choice({
-          choices: [
-            { value: "hex-a", label: "Hex A" },
-            { value: "hex-b", label: "Hex B" },
-          ],
-          defaultValue: () => undefined,
-        }),
-      );
-      return {
-        spaceId,
-        targetPlayerId: input.add(
-          "targetPlayerId",
-          formInput.choice({
-            dependsOn: [spaceId],
-            choices: ({ values }) =>
-              values.spaceId === "hex-a"
-                ? [{ value: "player-1", label: "Player 1" }]
-                : [{ value: "player-2", label: "Player 2" }],
-            defaultValue: ({ choices }) => choices[0]?.value,
-          }),
-        ),
-      };
-    });
-    const interaction = { inputs };
-
-    expect(
-      collectInteractionInputs(
-        interaction as never,
-        {
-          table: {},
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-      ),
-    ).toMatchObject([
-      { key: "spaceId", domain: { type: "choice" } },
-      {
-        key: "targetPlayerId",
-        domain: {
-          type: "choice",
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { spaceId: "hex-a" },
-                domain: {
-                  type: "choice",
-                  choices: [{ value: "player-1", label: "Player 1" }],
-                },
-              },
-              {
-                when: { spaceId: "hex-b" },
-                domain: {
-                  type: "choice",
-                  choices: [{ value: "player-2", label: "Player 2" }],
-                },
-              },
-            ],
-          },
-        },
-      },
-    ]);
-  });
-
-  test("warns when a dependent choice selector has a concrete default", () => {
-    const warning = vi.fn(() => {});
-    const inputs = defineInputs((input) => {
-      const workerId = input.add(
-        "workerId",
-        formInput.choice({
-          choices: [
-            { value: "apprentice", label: "Apprentice" },
-            { value: "master", label: "Master" },
-          ],
-          defaultValue: "apprentice",
-        }),
-      );
-      const target = boardTarget
-        .space<
-          {
-            table: { playerOrder: string[] };
-            flow: { currentPhase: string };
-          },
-          "space-a" | "space-b"
-        >("action-board")
-        .build();
-      return {
-        workerId,
-        spaceId: input.add(
-          "spaceId",
-          boardInput.space({ target, dependsOn: [workerId] }),
-        ),
-      };
-    });
-
-    collectInteractionInputs(
-      { inputs } as never,
-      {
-        table: { playerOrder: ["player-1"] },
-        flow: { currentPhase: "play" },
-      } as never,
-      "player-1" as never,
-      {
-        diagnostics: { event: warning },
-        queries: {
-          board: () => ({
-            state: { layout: "generic", spaces: ["space-a", "space-b"] },
-          }),
-        } as never,
-      },
-    );
-
-    expect(warning).toHaveBeenCalledTimes(1);
-    expect(warning.mock.calls[0]?.[0]).toMatchObject({
-      type: "authoringWarning",
-      code: "dependent-choice-concrete-default",
-    });
-    expect(warning.mock.calls[0]?.[0]?.message).toContain(
-      'Form choice input "workerId" feeds another collector',
-    );
-  });
-
-  test("does not warn when a dependent choice selector defaults to undefined", () => {
-    const originalWarn = console.warn;
-    const warn = vi.fn(() => {});
-    console.warn = warn;
-    try {
-      const inputs = defineInputs((input) => {
-        const workerId = input.add(
-          "workerId",
-          formInput.choice({
-            choices: [
-              { value: "apprentice", label: "Apprentice" },
-              { value: "master", label: "Master" },
-            ],
-            defaultValue: () => undefined,
-          }),
-        );
-        const target = boardTarget
-          .space<
-            {
-              table: { playerOrder: string[] };
-              flow: { currentPhase: string };
-            },
-            "space-a" | "space-b"
-          >("action-board")
-          .build();
-        return {
-          workerId,
-          spaceId: input.add(
-            "spaceId",
-            boardInput.space({ target, dependsOn: [workerId] }),
-          ),
-        };
-      });
-
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: { playerOrder: ["player-1"] },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            board: () => ({
-              state: { layout: "generic", spaces: ["space-a", "space-b"] },
-            }),
-          } as never,
-        },
-      );
-    } finally {
-      console.warn = originalWarn;
-    }
-
-    expect(warn).not.toHaveBeenCalled();
-  });
-
-  test("card and board targets project renderable domains without dependsOn", () => {
+  test("card and board targets project renderable domains", () => {
     const cardRule = cardTarget
       .zones<
         {
@@ -389,308 +208,124 @@ describe("interaction input projection", () => {
       },
     ]);
   });
+});
 
-  test("materializes dependent board target domains", () => {
-    const inputs = defineInputs((input) => {
-      const workerId = input.add(
-        "workerId",
-        formInput.choice({
-          choices: [
-            { value: "apprentice", label: "Apprentice" },
-            { value: "master", label: "Master" },
-          ],
-          defaultValue: () => undefined,
-        }),
-      );
-      const target = boardTarget
-        .space<
-          { table: { playerOrder: string[] }; flow: { currentPhase: string } },
-          "space-a" | "space-b"
-        >("action-board")
-        .where({
-          id: "worker-space",
-          errorCode: "wrong-worker",
-          test: ({ targetId, values }) =>
-            values?.workerId === "master"
-              ? targetId === "space-b"
-              : targetId === "space-a",
-        })
-        .build();
-      return {
-        workerId,
-        spaceId: input.add(
-          "spaceId",
-          boardInput.space({ target, dependsOn: [workerId] }),
-        ),
-      };
-    });
-
-    expect(
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: { playerOrder: ["player-1"] },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            board: () => ({
-              state: { layout: "generic", spaces: ["space-a", "space-b"] },
-            }),
-          } as never,
-        },
-      ),
-    ).toMatchObject([
-      { key: "workerId", domain: { type: "choice" } },
-      {
-        key: "spaceId",
-        domain: {
-          type: "boardTarget",
-          projection: "resolved",
-          targetKind: "space",
-          boardId: "action-board",
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { workerId: "apprentice" },
-                domain: { eligibleTargets: ["space-a"] },
-              },
-              {
-                when: { workerId: "master" },
-                domain: { eligibleTargets: ["space-b"] },
-              },
-            ],
-          },
-        },
-      },
+const stepState = { table: {}, flow: { currentPhase: "play" } };
+const select = (values: readonly string[], defaultValue?: string) =>
+  formInput.choice({
+    choices: () => values.map((value) => ({ value, label: value })),
+    defaultValue: () => defaultValue,
+  });
+function projectCurrent(
+  steps: InteractionSteps<
+    typeof stepState,
+    Record<string, import("./model").InputCollector>
+  >,
+  values: unknown[],
+) {
+  const evaluated = evaluateStepPrefix(steps, stepState, "player-1", values);
+  const inputs = evaluated.current
+    ? { [evaluated.current.key]: evaluated.current.collector }
+    : {};
+  return collectInteractionInputs({ inputs } as never, stepState, "player-1");
+}
+describe("committed current input projection", () => {
+  test("projects only the current domain, never future branch choices", () => {
+    let futureCalls = 0;
+    const steps = new InteractionSteps<typeof stepState>()
+      .input("mode", select(["a", "b"]))
+      .input("answer", ({ selected }) => {
+        futureCalls++;
+        return select([selected.mode + "-only"]);
+      });
+    expect(projectCurrent(steps, [])[0]?.key).toBe("mode");
+    expect(futureCalls).toBe(0);
+    expect(projectCurrent(steps, ["b"])).toMatchObject([
+      { key: "answer", domain: { choices: [{ value: "b-only" }] } },
     ]);
   });
-
-  test("materializes dependent card target domains", () => {
-    const inputs = defineInputs((input) => {
-      const mode = input.add(
-        "mode",
-        formInput.choice({
-          choices: [
-            { value: "order", label: "Order" },
-            { value: "apprentice", label: "Apprentice" },
-          ],
-          defaultValue: () => undefined,
-        }),
-      );
-      const target = cardTarget
-        .zones<
-          {
-            table: {
-              playerOrder: string[];
-              hands: Record<string, unknown>;
-              zones: {
-                perPlayer: Record<string, unknown>;
-                shared: Record<string, unknown>;
-              };
-            };
-            flow: { currentPhase: string };
-          },
-          "order-1" | "apprentice-1"
-        >(["hand"])
-        .where({
-          id: "card-mode",
-          errorCode: "wrong-card",
-          test: ({ targetId, values }) =>
-            values?.mode === "order"
-              ? targetId === "order-1"
-              : targetId === "apprentice-1",
-        })
-        .build();
-      return {
-        mode,
-        cardId: input.add("cardId", cardInput({ target, dependsOn: [mode] })),
-      };
-    });
-
-    expect(
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: {
-            playerOrder: ["player-1"],
-            hands: { hand: {} },
-            zones: { perPlayer: {}, shared: {} },
-          },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            zone: { playerCards: () => ["order-1", "apprentice-1"] },
-          } as never,
-        },
-      ),
-    ).toMatchObject([
-      { key: "mode", domain: { type: "choice" } },
-      {
-        key: "cardId",
-        domain: {
-          type: "cardTarget",
-          projection: "resolved",
-          targetKind: "card",
-          zoneIds: ["hand"],
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              {
-                when: { mode: "order" },
-                domain: { eligibleTargets: ["order-1"] },
-              },
-              {
-                when: { mode: "apprentice" },
-                domain: { eligibleTargets: ["apprentice-1"] },
-              },
-            ],
-          },
-        },
-      },
+  test("defaults remain suggestions and do not advance committed progress", () => {
+    const steps = new InteractionSteps<typeof stepState>()
+      .input("mode", select(["a"], "a"))
+      .input("answer", select(["b"]));
+    expect(projectCurrent(steps, [])).toMatchObject([
+      { key: "mode", defaultValue: "a" },
     ]);
+    expect(evaluateStepPrefix(steps, stepState, "player-1", []).values).toEqual(
+      [],
+    );
   });
-
-  test("keeps target dependencies finite when ordinary eligible targets are omitted", () => {
-    const inputs = defineInputs((input) => {
-      const target = boardTarget
-        .space<
-          { table: { playerOrder: string[] }; flow: { currentPhase: string } },
-          "space-a" | "space-b"
-        >("action-board")
-        .build();
-      const spaceId = input.add("spaceId", boardInput.space({ target }));
-      return {
-        spaceId,
-        playerId: input.add(
-          "playerId",
-          formInput.choice<string, never, readonly [typeof spaceId]>({
-            dependsOn: [spaceId],
-            choices: ({ values }) =>
-              values.spaceId === "space-a"
-                ? [{ value: "player-1", label: "Player 1" }]
-                : [{ value: "player-2", label: "Player 2" }],
-            defaultValue: ({ choices }) => choices[0]?.value,
-          }),
-        ),
-      };
-    });
-
-    expect(
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: { playerOrder: ["player-1"] },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          includeEligibleTargets: false,
-          queries: {
-            board: () => ({
-              state: { layout: "generic", spaces: ["space-a", "space-b"] },
-            }),
-          } as never,
-        },
-      ),
-    ).toMatchObject([
-      {
-        key: "spaceId",
-        domain: {
-          type: "boardTarget",
-          projection: "resolved",
-          eligibleTargets: ["space-a", "space-b"],
-        },
-      },
-      {
-        key: "playerId",
-        domain: {
-          type: "choice",
-          dependencies: {
-            mode: "eager",
-            dependentCases: [
-              { when: { spaceId: "space-a" } },
-              { when: { spaceId: "space-b" } },
-            ],
-          },
-        },
-      },
-    ]);
+  test("undefined defaults keep the current value unfinished", () => {
+    const steps = new InteractionSteps<typeof stepState>().input(
+      "mode",
+      select(["a"]),
+    );
+    expect(projectCurrent(steps, [])[0]).not.toHaveProperty("defaultValue");
   });
-
-  test("projects high-cardinality dependent target domains lazily", () => {
-    const choices = Array.from({ length: 65 }, (_, index) => ({
-      value: `mode-${index}`,
-      label: `Mode ${index}`,
-    }));
-    const inputs = defineInputs((input) => {
-      const mode = input.add(
-        "mode",
-        formInput.choice({
-          choices,
-          defaultValue: () => undefined,
-        }),
-      );
-      const target = cardTarget
-        .zones<
-          {
-            table: {
-              playerOrder: string[];
-              hands: Record<string, unknown>;
-              zones: {
-                perPlayer: Record<string, unknown>;
-                shared: Record<string, unknown>;
-              };
-            };
-            flow: { currentPhase: string };
-          },
-          "card-1"
-        >(["hand"])
-        .build();
-      return {
-        mode,
-        cardId: input.add("cardId", cardInput({ target, dependsOn: [mode] })),
-      };
+  for (const kind of ["card", "board-space"] as const) {
+    test(`projects only the selected ${kind} target domain`, () => {
+      const steps = new InteractionSteps<typeof stepState>()
+        .input("mode", select(["a", "b"]))
+        .input(
+          "target",
+          ({ selected }) =>
+            ({
+              kind,
+              schema: z.string(),
+              meta:
+                kind === "card"
+                  ? { targetKind: "card", zoneId: "hand" }
+                  : { targetKind: "space", boardId: "main" },
+              domain: () =>
+                kind === "card"
+                  ? {
+                      type: "cardTarget",
+                      projection: "resolved",
+                      targetKind: "card",
+                      zoneIds: ["hand"],
+                      eligibleTargets: [selected.mode],
+                    }
+                  : {
+                      type: "boardTarget",
+                      projection: "resolved",
+                      targetKind: "space",
+                      boardId: "main",
+                      eligibleTargets: [selected.mode],
+                    },
+            }) as never,
+        );
+      expect(projectCurrent(steps, ["b"])).toMatchObject([
+        {
+          key: "target",
+          domain: { projection: "resolved", eligibleTargets: ["b"] },
+        },
+      ]);
     });
-
-    expect(
-      collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: {
-            playerOrder: ["player-1"],
-            hands: { hand: {} },
-            zones: { perPlayer: {}, shared: {} },
-          },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            zone: { playerCards: () => ["card-1"] },
-          } as never,
-        },
-      ),
-    ).toMatchObject([
-      { key: "mode", domain: { type: "choice" } },
-      {
-        key: "cardId",
-        domain: {
-          type: "cardTarget",
-          projection: "lazy",
-          targetKind: "card",
-          zoneIds: ["hand"],
-          dependencies: {
-            mode: "lazy",
-            dependsOn: ["mode"],
-            resolver: { inputKey: "cardId" },
-          },
-        },
-      },
+  }
+  test("empty next domains remain explicit and do not erase a valid selection", () => {
+    const steps = new InteractionSteps<typeof stepState>()
+      .input("mode", select(["a"]))
+      .input("answer", select([]));
+    expect(projectCurrent(steps, ["a"])).toMatchObject([
+      { key: "answer", domain: { choices: [] } },
     ]);
+    expect(
+      evaluateStepPrefix(steps, stepState, "player-1", ["a"]).values,
+    ).toEqual(["a"]);
+  });
+  test("large preceding domains never enumerate future branch combinations", () => {
+    let calls = 0;
+    const steps = new InteractionSteps<typeof stepState>()
+      .input("mode", select(Array.from({ length: 1000 }, (_, i) => String(i))))
+      .input("target", ({ selected }) => {
+        calls++;
+        return select([selected.mode]);
+      });
+    projectCurrent(steps, []);
+    expect(calls).toBe(0);
+    expect(projectCurrent(steps, ["999"])).toMatchObject([
+      { key: "target", domain: { choices: [{ value: "999" }] } },
+    ]);
+    expect(calls).toBe(1);
   });
 });

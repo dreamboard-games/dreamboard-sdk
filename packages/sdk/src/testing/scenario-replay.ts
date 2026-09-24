@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { Wire } from "@dreamboard-games/reducer-contract";
 import { digestPluginRuntimeJson } from "@dreamboard-games/plugin-runtime-contract";
 import { createReducerTestingBundle } from "../reducer/bundle/ingress-bundle.js";
@@ -399,6 +400,14 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     };
   }
 
+  currentClientParamSchema(seat: number, interactionId: string) {
+    return this.bundle.currentClientParamSchema({
+      state: this.reducerState,
+      playerId: this.playerId({ seat }, "actor"),
+      interactionId,
+    }) as z.ZodTypeAny | null;
+  }
+
   enumerateInteractionParams(options: {
     readonly seat: number;
     readonly interactionId: string;
@@ -556,6 +565,10 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     });
     const params = resolveScenarioCommandParams({
       game: this.game as never,
+      currentSchema: this.currentClientParamSchema(
+        command.actor.seat,
+        command.interactionId,
+      ),
       phase,
       interactionId: command.interactionId,
       params: command.params,
@@ -609,6 +622,17 @@ export function inspectScenarioReplayAuthority<Game>(options: {
   return requireScenarioReplayImplementation(
     options.replay,
   ).inspectionAuthority(options.perspective);
+}
+
+export function currentScenarioClientParamSchema<Game>(
+  replay: ScenarioReplay<Game>,
+  seat: number,
+  interactionId: string,
+) {
+  return requireScenarioReplayImplementation(replay).currentClientParamSchema(
+    seat,
+    interactionId,
+  );
 }
 
 export function enumerateScenarioInteractionParams<Game>(options: {

@@ -7,6 +7,7 @@ import {
   InteractionResultSchema,
   PluginGameplayFrameSchema,
   SubmitInteractionCommandSchema,
+  CancelInteractionCommandSchema,
   computePluginActionSetVersion,
   digestPluginGameplayFrame,
   digestPluginRuntimeJson,
@@ -71,7 +72,7 @@ function baseFrame() {
 }
 
 describe("@dreamboard-games/plugin-runtime-contract", () => {
-  test("strict frame and protocol schemas accept version 4 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 5 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -86,13 +87,31 @@ describe("@dreamboard-games/plugin-runtime-contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(4);
+    expect(envelope.version).toBe(5);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
     expect(() =>
       HostToPluginEnvelopeSchema.parse({ ...envelope, version: 2 }),
     ).toThrow();
+  });
+
+  test("cancel uses the same basis and action identity without submission params", () => {
+    const cancel = {
+      type: "interaction.cancel",
+      clientActionId: "cancel-1",
+      basis: baseFrame().basis,
+      interactionId: "claim",
+    };
+    expect(CancelInteractionCommandSchema.parse(cancel)).toEqual(cancel);
+    expect(
+      CancelInteractionCommandSchema.safeParse({ ...cancel, params: {} })
+        .success,
+    ).toBe(false);
+    expect(
+      CancelInteractionCommandSchema.safeParse({ ...cancel, basis: undefined })
+        .success,
+    ).toBe(false);
   });
 
   test("envelope sequence is distinct from gameplay revision", () => {

@@ -281,10 +281,7 @@ export function useBoardInteractions<I extends string = string>(
     };
     for (const descriptor of interactions) {
       if (!isInteractionAvailable(descriptor)) continue;
-      const targetsByKind = eligibleTargetsByBoardKind(
-        descriptor,
-        drafts[descriptor.interactionKey] ?? {},
-      );
+      const targetsByKind = eligibleTargetsByBoardKind(descriptor);
       for (const [targetKind, ids] of Object.entries(targetsByKind) as Array<
         [BoardTargetKind, readonly string[] | undefined]
       >) {
@@ -294,7 +291,7 @@ export function useBoardInteractions<I extends string = string>(
       }
     }
     return acc;
-  }, [drafts, interactions]);
+  }, [interactions]);
 
   const isEligible = useCallback(
     (targetId: string, kind?: BoardTargetKind) => {
@@ -387,18 +384,13 @@ export function useBoardInteractions<I extends string = string>(
         }
         if (!isInteractionAvailable(descriptor)) return [];
         const draft = drafts[descriptor.interactionKey] ?? {};
-        const inputKey = inputKeyForTarget(
-          descriptor,
-          targetKind,
-          targetId,
-          draft,
-        );
+        const inputKey = inputKeyForTarget(descriptor, targetKind, targetId);
         if (!inputKey) return [];
-        const input = inputByTarget(descriptor, targetKind, targetId, draft);
+        const input = inputByTarget(descriptor, targetKind, targetId);
         if (input && !isTargetSelectable(input, draft, targetId)) {
           return [];
         }
-        const targets = eligibleTargetsForInput(descriptor, inputKey, draft);
+        const targets = eligibleTargetsForInput(descriptor, inputKey);
         if (!targets || !targets.includes(targetId)) return [];
         return [
           {

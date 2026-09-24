@@ -2,16 +2,13 @@ import type { InteractionUiStore } from "../context/InteractionDraftContext.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
 import {
   applyInteractionInputDefaults,
-  dependentInputKeys,
   hasInteractionFieldErrors,
   inputByKey,
-  inputDependencyKeys,
   interactionArmScope,
   interactionInputKeys,
   isManyInput,
   isInputValueReady,
   isTargetDomain,
-  resolveInputDomain,
   toggleManyValue,
   validateInteractionInputDomains,
 } from "./interaction-inputs.js";
@@ -61,35 +58,14 @@ export function applyInteractionDraftMutation(
   const nextDraft: Record<string, unknown> = {
     ...originalDraft,
   };
-  const mutatedKeys = new Set(mutations.map((mutation) => mutation.key));
-  const changedKeys = new Set(
-    mutations
-      .filter((mutation) => originalDraft[mutation.key] !== mutation.value)
-      .map((mutation) => mutation.key),
-  );
 
+  const currentKeys = new Set(interactionInputKeys(descriptor));
   for (const { key, value } of mutations) {
-    nextDraft[key] = value;
+    if (!descriptor.step || currentKeys.has(key)) nextDraft[key] = value;
   }
-
-  for (const { key } of mutations) {
-    for (const dependentKey of dependentInputKeys(descriptor, key)) {
-      if (mutatedKeys.has(dependentKey)) continue;
-      if (
-        changedKeys.has(key) ||
-        shouldClearDependentInput(descriptor, nextDraft, dependentKey)
-      ) {
-        delete nextDraft[dependentKey];
-        const defaultValue = defaultValueForInput(
-          descriptor,
-          nextDraft,
-          dependentKey,
-        );
-        if (defaultValue !== undefined) {
-          nextDraft[dependentKey] = defaultValue;
-        }
-      }
-    }
+  if (descriptor.step) {
+    for (const key of Object.keys(nextDraft))
+      if (!currentKeys.has(key)) delete nextDraft[key];
   }
 
   const allKeys = new Set([
@@ -109,35 +85,6 @@ export function applyInteractionDraftMutation(
   return nextDraft;
 }
 
-function defaultValueForInput(
-  descriptor: InteractionDescriptor,
-  draft: Readonly<Record<string, unknown>>,
-  inputKey: string,
-): unknown {
-  const input = inputByKey(descriptor, inputKey);
-  if (!input || !("defaultValue" in input)) return undefined;
-  const defaultValue = input.defaultValue;
-  if (!isInputValueReady(resolveInputDomain(input, draft), defaultValue)) {
-    return undefined;
-  }
-  const candidateDraft = { ...draft, [inputKey]: defaultValue };
-  const errors = validateInteractionInputDomains(descriptor, candidateDraft);
-  return (errors[inputKey]?.length ?? 0) > 0 ? undefined : defaultValue;
-}
-
-function shouldClearDependentInput(
-  descriptor: InteractionDescriptor,
-  draft: Readonly<Record<string, unknown>>,
-  dependentKey: string,
-): boolean {
-  const input = inputByKey(descriptor, dependentKey);
-  if (!input) return true;
-  const value = draft[dependentKey];
-  if (!isInputValueReady(resolveInputDomain(input, draft), value)) return true;
-  const errors = validateInteractionInputDomains(descriptor, draft);
-  return (errors[dependentKey]?.length ?? 0) > 0;
-}
-
 export function getInteractionDraftReadiness(
   descriptor: InteractionDescriptor,
   draft: Readonly<Record<string, unknown>>,
@@ -150,23 +97,10 @@ export function getInteractionDraftReadiness(
     const input = inputByKey(descriptor, key);
     const value = values[key];
     return input
-      ? !isInputValueReady(resolveInputDomain(input, values), value)
+      ? !isInputValueReady(input, value)
       : value === null || value === undefined;
   });
-  const missingInputSet = new Set(missingInputs);
-  const readyFrontier = missingInputs.filter((key) => {
-    const input = inputByKey(descriptor, key);
-    if (!input) return true;
-    return inputDependencyKeys(input).every((dependencyKey) => {
-      if (missingInputSet.has(dependencyKey)) return false;
-      const dependency = inputByKey(descriptor, dependencyKey);
-      if (!dependency) return values[dependencyKey] !== undefined;
-      return isInputValueReady(
-        resolveInputDomain(dependency, values),
-        values[dependencyKey],
-      );
-    });
-  });
+  const readyFrontier = missingInputs;
   const fieldErrors = validateInteractionInputDomains(descriptor, values);
   return {
     values,

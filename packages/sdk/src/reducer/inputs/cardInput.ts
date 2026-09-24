@@ -2,7 +2,6 @@ import { z } from "zod";
 import type { CollectorState, InputCollector } from "../model/spec";
 import type { CardIdOfState } from "../model/extract";
 import type { CardTargetRule } from "./cardTarget";
-import type { InputFieldRef } from "./defineInputs";
 
 /**
  * `cardInput` produces a collector backed by one built `cardTarget` rule.
@@ -17,7 +16,6 @@ export function cardInput<
   const ZoneIds extends readonly string[] = readonly string[],
 >(options: {
   target: CardTargetRule<State, Id, ZoneIds>;
-  dependsOn?: readonly InputFieldRef<string, unknown>[];
 }): InputCollector<z.ZodType<Id>, State, "card"> & {
   readonly meta: {
     readonly zoneId: ZoneIds[number];
@@ -26,31 +24,27 @@ export function cardInput<
   };
 } {
   const target = options.target;
-  const dependsOn = options.dependsOn?.map((dependency) => dependency.key);
   return {
     kind: "card",
     schema: z.string() as unknown as z.ZodType<Id>,
-    eligibleTargets: ((state, playerId, q, values) =>
+    eligibleTargets: ((state, playerId, q) =>
       target.eligible({
         state: state as State,
         playerId: playerId as never,
         q: q as never,
-        values,
       })) as
       | ((
           state: CollectorState,
           playerId: string,
           q: unknown,
-          values?: Readonly<Record<string, unknown>>,
         ) => ReadonlyArray<unknown>)
       | undefined,
-    validateTarget: ((state, playerId, q, targetId, values) =>
+    validateTarget: ((state, playerId, q, targetId) =>
       target.validate(
         {
           state: state as State,
           playerId: playerId as never,
           q: q as never,
-          values,
         },
         targetId as Id,
       )) as
@@ -59,11 +53,9 @@ export function cardInput<
           playerId: string,
           q: unknown,
           targetId: unknown,
-          values?: Readonly<Record<string, unknown>>,
         ) => ReturnType<CardTargetRule<CollectorState, string>["validate"]>)
       | undefined,
-    ...(dependsOn ? { dependsOn } : {}),
-    domain: (state, playerId, q, values) => ({
+    domain: (state, playerId, q) => ({
       type: "cardTarget" as const,
       projection: "resolved" as const,
       targetKind: target.targetKind,
@@ -73,7 +65,6 @@ export function cardInput<
           state: state as State,
           playerId: playerId as never,
           q: q as never,
-          values,
         })
         .map(String),
     }),

@@ -60,6 +60,7 @@ export function resolveScenarioCommandParams(options: {
   readonly params: unknown;
   readonly playerIds: readonly string[];
   readonly path: string;
+  readonly currentSchema?: z.ZodTypeAny | null;
 }): Record<string, unknown> {
   const candidateSchemas = clientParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
@@ -76,7 +77,7 @@ export function resolveScenarioCommandParams(options: {
       });
       const parsed = schema.safeParse(resolved);
       if (parsed.success) {
-        return parsed.data as Record<string, unknown>;
+        return resolved as Record<string, unknown>;
       }
       firstIssue ??= parsed.error.issues[0];
     } catch (error) {
@@ -114,6 +115,7 @@ export function projectScenarioCommandParams(options: {
   readonly params: unknown;
   readonly playerIds: readonly string[];
   readonly path: string;
+  readonly currentSchema?: z.ZodTypeAny | null;
 }): Record<string, unknown> {
   const candidateSchemas = clientParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
@@ -152,7 +154,9 @@ function clientParamSchemaCandidates(options: {
   readonly phase: string;
   readonly interactionId: string;
   readonly path: string;
+  readonly currentSchema?: z.ZodTypeAny | null;
 }): z.ZodTypeAny[] {
+  if (options.currentSchema) return [options.currentSchema];
   const schemas = createClientParamSchemasByPhase(options.game as never);
   const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
     | z.ZodTypeAny

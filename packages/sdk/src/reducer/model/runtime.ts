@@ -96,6 +96,12 @@ export type RuntimeState<
   rng: RuntimeRngState;
   options: Options;
   simultaneous: RuntimeSimultaneousState<PhaseName, PlayerId>;
+  pending: Partial<
+    Record<
+      PlayerId,
+      { phaseName: PhaseName; interactionId: string; values: RuntimePayload[] }
+    >
+  >;
   lastTransition: {
     from: PhaseName;
     to: PhaseName;

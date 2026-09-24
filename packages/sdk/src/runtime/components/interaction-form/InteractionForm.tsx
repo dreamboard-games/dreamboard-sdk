@@ -113,21 +113,17 @@ export function InteractionForm<
   const visibleInputs = useMemo(() => {
     if (inputs) {
       const rendered = new Set(Object.keys(inputs));
-      return resolveInteractionInputs(
-        descriptor,
-        handle.values as Readonly<Record<string, unknown>>,
-      ).filter((input) => rendered.has(input.key));
+      return resolveInteractionInputs(descriptor).filter((input) =>
+        rendered.has(input.key),
+      );
     }
     const allowed = fields ? new Set(fields) : null;
-    return defaultFormInputs(
-      descriptor,
-      handle.values as Readonly<Record<string, unknown>>,
-    ).filter((input) => {
+    return defaultFormInputs(descriptor).filter((input) => {
       const key = input.key as keyof Params & string;
       if (allowed && !allowed.has(key)) return false;
       return !hidden.has(key);
     });
-  }, [descriptor, fields, hidden, handle.values, inputs]);
+  }, [descriptor, fields, hidden, inputs]);
 
   const currentValidation = validation;
   const fieldErrors = (currentValidation?.fieldErrors ?? {}) as Partial<
@@ -159,10 +155,7 @@ export function InteractionForm<
     enabled: !isDisabled,
     actuatorKind: "click",
     actuatorId: "arm",
-    preparationPatterns: gameplayPreparationPatternsForDescriptor(
-      descriptor,
-      handle.values as Readonly<Record<string, unknown>>,
-    ),
+    preparationPatterns: gameplayPreparationPatternsForDescriptor(descriptor),
   });
   const submitMetadata = gameplaySubmitMetadata({ descriptor });
   const submitBrowserAttributes = gameplayActuatorAttributes({

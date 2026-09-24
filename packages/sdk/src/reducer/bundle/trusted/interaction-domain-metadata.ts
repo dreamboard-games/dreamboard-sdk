@@ -1,7 +1,7 @@
 export function interactionDomainEligibleCount(
   domain: unknown,
-): number | "lazy" {
-  if (!domain || typeof domain !== "object") return "lazy";
+): number | "unknown" {
+  if (!domain || typeof domain !== "object") return "unknown";
   const typed = domain as {
     type?: string;
     projection?: string;
@@ -33,5 +33,5 @@ export function interactionDomainEligibleCount(
       typeof typed.step === "number" && typed.step > 0 ? typed.step : 1;
     return Math.max(0, Math.floor((typed.max - typed.min) / step) + 1);
   }
-  return "lazy";
+  return "unknown";
 }

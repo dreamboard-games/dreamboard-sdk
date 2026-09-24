@@ -91,6 +91,7 @@ export function createLifecycleRunner<
       },
       runtime: {
         ...state.runtime,
+        pending: {},
         simultaneous: { current: null },
         lastTransition:
           event === "initialize"
@@ -249,6 +250,7 @@ export function createLifecycleRunner<
             draws: [],
           },
           options,
+          pending: {},
           simultaneous: { current: null },
           lastTransition: null,
         } as State["runtime"],

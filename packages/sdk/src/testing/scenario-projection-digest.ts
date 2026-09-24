@@ -14,7 +14,7 @@ export function scenarioProjectionInputMetadata(
 ): {
   readonly key: string;
   readonly kind: string;
-  readonly eligibleCount: number | "lazy";
+  readonly eligibleCount: number | "unknown";
 } {
   return {
     key: input.key,
@@ -48,7 +48,7 @@ export type ScenarioProjectionParity = {
     readonly inputs: readonly {
       readonly key: string;
       readonly kind: string;
-      readonly eligibleCount: number | "lazy";
+      readonly eligibleCount: number | "unknown";
     }[];
   }[];
 };

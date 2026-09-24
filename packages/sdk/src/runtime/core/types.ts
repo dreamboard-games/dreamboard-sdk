@@ -23,6 +23,7 @@ export interface PluginRuntimeClient {
   subscribeSession(listener: () => void): () => void;
   getFrame(): PluginGameplayFrame | null;
   subscribeFrame(listener: () => void): () => void;
+  cancelInteraction(interactionId: string): Promise<void>;
   submitInteraction(interactionId: string, params: unknown): Promise<void>;
   disconnect(): void;
 }

@@ -1147,18 +1147,6 @@ export type InputDomain =
       type: "choiceList";
     } & ChoiceListDomain);
 
-export type InputDomainDependencyCase = {
-  when: {
-    [key: string]: string;
-  };
-  domain: InputDomain;
-};
-
-export type EagerInputDomainDependencies = {
-  mode: "eager";
-  dependentCases: Array<InputDomainDependencyCase>;
-};
-
 export type ResolvedCardTargetDomain = {
   type: "cardTarget";
   projection: "resolved";
@@ -1166,36 +1154,9 @@ export type ResolvedCardTargetDomain = {
   zoneIds: Array<string>;
   eligibleTargets: Array<string>;
   selection?: InputSelection;
-  dependencies?: EagerInputDomainDependencies;
 };
 
-export type InputDomainResolver = {
-  interactionKey?: string;
-  inputKey: string;
-};
-
-export type LazyInputDomainDependencies = {
-  mode: "lazy";
-  dependsOn: Array<string>;
-  resolver: InputDomainResolver;
-};
-
-export type LazyCardTargetDomain = {
-  type: "cardTarget";
-  projection: "lazy";
-  targetKind: "card";
-  zoneIds: Array<string>;
-  selection?: InputSelection;
-  dependencies: LazyInputDomainDependencies;
-};
-
-export type CardTargetDomain =
-  | ({
-      projection: "resolved";
-    } & ResolvedCardTargetDomain)
-  | ({
-      projection: "lazy";
-    } & LazyCardTargetDomain);
+export type CardTargetDomain = ResolvedCardTargetDomain;
 
 export type ResolvedBoardTargetDomain = {
   type: "boardTarget";
@@ -1205,26 +1166,9 @@ export type ResolvedBoardTargetDomain = {
   valueKind?: "board-id" | "player-board-space";
   eligibleTargets: Array<string>;
   selection?: InputSelection;
-  dependencies?: EagerInputDomainDependencies;
 };
 
-export type LazyBoardTargetDomain = {
-  type: "boardTarget";
-  projection: "lazy";
-  targetKind: "edge" | "vertex" | "space" | "tile";
-  boardId: string;
-  valueKind?: "board-id" | "player-board-space";
-  selection?: InputSelection;
-  dependencies: LazyInputDomainDependencies;
-};
-
-export type BoardTargetDomain =
-  | ({
-      projection: "resolved";
-    } & ResolvedBoardTargetDomain)
-  | ({
-      projection: "lazy";
-    } & LazyBoardTargetDomain);
+export type BoardTargetDomain = ResolvedBoardTargetDomain;
 
 export type ResourceMapDomainEntry = {
   resourceId: string;
@@ -1262,7 +1206,6 @@ export type ChoiceDomain = {
   type: "choice";
   choices: Array<ChoiceDomainOption>;
   selection?: InputSelection;
-  dependencies?: EagerInputDomainDependencies;
 };
 
 export type ChoiceListDomain = {
@@ -1271,7 +1214,6 @@ export type ChoiceListDomain = {
   min?: number;
   max?: number;
   selection?: InputSelection;
-  dependencies?: EagerInputDomainDependencies;
 };
 
 /**
@@ -1333,6 +1275,12 @@ export type InteractionDescriptorBase = {
    * Ordered input descriptors. Each entry is the canonical source for its collector key, collector kind, and valid-value domain.
    */
   inputs: Array<InteractionInputDescriptor>;
+  step?: {
+    index: number;
+    total: number;
+    selected: Record<string, JsonValue>;
+    canCancel: boolean;
+  };
   availability: InteractionAvailability;
 };
 

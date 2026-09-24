@@ -190,9 +190,21 @@
           "additionalProperties": {
             "$ref": "#/$defs/JsonValue"
           }
+        },
+        "pending": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/RuntimePendingInteraction"
+          }
         }
       },
-      "required": ["rng", "options", "simultaneous", "lastTransition"],
+      "required": [
+        "rng",
+        "options",
+        "simultaneous",
+        "lastTransition",
+        "pending"
+      ],
       "additionalProperties": false
     },
 
@@ -248,8 +260,15 @@
     },
 
     "GameInput": {
-      "description": "Input submitted by a player. Tagged union; kind is the discriminator. Currently a single variant (interaction) so the union is trivially closed, but kept as oneOf so future input shapes (system events, etc.) can be added without breaking the code path.",
-      "oneOf": [{ "$ref": "#/$defs/GameInputInteraction" }]
+      "description": "A player submits the current interaction value or cancels an unsealed prefix.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/GameInputInteraction"
+        },
+        {
+          "$ref": "#/$defs/GameInputCancel"
+        }
+      ]
     },
 
     "GameInputInteraction": {
@@ -896,6 +915,48 @@
         }
       },
       "required": ["kind", "from", "to", "version"],
+      "additionalProperties": false
+    },
+
+    "RuntimePendingInteraction": {
+      "type": "object",
+      "properties": {
+        "phaseName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/JsonValue"
+          }
+        }
+      },
+      "required": ["phaseName", "interactionId", "values"],
+      "additionalProperties": false
+    },
+
+    "GameInputCancel": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "interaction.cancel"
+        },
+        "playerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interactionId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["kind", "playerId", "interactionId"],
       "additionalProperties": false
     }
   }

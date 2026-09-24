@@ -1,6 +1,6 @@
 # Private committed interaction steps
 
-Status: specified; implementation waits for layer 002.
+Status: implemented, verified and approved for integration.
 
 ## Supported authoring and commands
 
@@ -123,3 +123,51 @@ nullable no-victim Hex; serialized round trip; both reference games.
 Run focused tests then `pnpm check`, including packed references. Root and an
 independent reviewer inspect the frozen diff before commit and stacked submission.
 Carry external host persistence/history proof into the final adoption checklist.
+
+## Implementation receipt
+
+The hard cut replaces dependency declarations and eager/lazy projection with
+ordered `phase.steps()` definitions. One prefix evaluator owns normalization,
+schema and domain validation, current-step discovery and suffix reconciliation.
+Runtime pending state contains only phase-local interaction identity and raw
+ordered values. Persisted entries must name an authored stepped interaction and
+remain unfinished; restore does not evaluate factories.
+
+Final parsed values pass directly into ordinary or simultaneous execution.
+Validation receives client parameters; reduction additionally receives trusted
+sampled RNG collectors. Client schemas and sampled collector schemas each parse
+once. Invalid sampled values reject normally without publishing RNG or state.
+Actual phase entries clear pending prefixes, including same-name and A→B→A
+entries. Rejected final resolutions preserve earlier seals and the actor's
+pre-final prefix. Cancel uses the existing basis/action identity boundary.
+
+Hex Bandits commits a destination, then a victim or explicit null. Browser
+controls retain only the current draft and require a fresh intent after each
+commit. Cancel also works when the pending current domain is blocked. Supply
+Depot and offerTrade retain independent inputs. Scenario exploration uses the
+same authorized current-collector schema for dynamic seat-reference conversion.
+
+Verification:
+
+- `pnpm check` passed: SDK 89 files / 656 tests, reducer wire 80 tests, plugin
+  protocol 11 tests, repository scripts 32 tests, all build/type/lint/format and
+  generation checks, package verification and both packed reference games.
+- Workspace Hearts: 28 tests; Hex: 33 tests, including deterministic complete
+  games, private projections, atomic resource rules and explicit nullable steps.
+- Real Chromium Hex workflow: 2 browser tests with physical board/choice/cancel
+  input, reducer-derived protocol tapes and exact command/basis digest checks.
+- After the full gate, the RNG schema rejection code was aligned with existing
+  `invalid-action-params`; 46 focused runtime and committed-step tests passed again.
+- Checked authoring proofs cover earlier-only selected values, complete reducer
+  parameters, one-key client commands, nullable outputs, duplicate keys, RNG
+  exclusion from steps and validation, and mutually exclusive inputs/steps.
+
+The two existing usePanZoom hook lint warnings remain. JSON schema edits use the
+required repository formatter while preserving compact unchanged definitions;
+there is no schema formatting bypass. Packed reference installs continue using
+global pnpm 12.5.1 inside temporary copies, while the repository gate runs pinned
+pnpm 10.4.1; layer 007 owns this previously recorded tooling quirk.
+
+Next integration is layer 003b: plain player records and the canonical SDK-owned
+runtime schema/model authority. External host persistence/history verification
+remains part of adoption, not this isolated SDK slice.

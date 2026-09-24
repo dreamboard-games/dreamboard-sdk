@@ -95,6 +95,13 @@ export function createTrustedReducerBundle<
         interactionId,
       });
     },
+    currentClientParamSchema({ state, playerId, interactionId }) {
+      return interactions.currentClientParamSchema({
+        state: scope.toCombinedState(state),
+        playerId: playerId,
+        interactionId,
+      });
+    },
     resolveInteractionActionability({ state, playerId, interactionId }) {
       return interactions.resolveInteractionActionability({
         state: scope.toCombinedState(state),
@@ -117,10 +124,6 @@ export function createTrustedReducerBundle<
     },
     async reduce({ state, input }) {
       const combinedState = scope.toCombinedState(state);
-      const reject = interactions.validateOrReject(combinedState, input);
-      if (reject) {
-        return reject;
-      }
       const result = executor.dispatch(combinedState, input);
       if (result.type === "reject") {
         return result;
@@ -143,16 +146,6 @@ export function createTrustedReducerBundle<
         interactionId: identity.interactionId,
         phase: String(combinedState.flow.currentPhase),
       });
-      const reject = interactions.validateOrReject(combinedState, input);
-      if (reject) {
-        scope.diagnostics.event({
-          type: "submitRejected",
-          submissionId,
-          errorCode: reject.errorCode,
-          ...(reject.message ? { message: reject.message } : {}),
-        });
-        return reject;
-      }
       const result = executor.dispatch(combinedState, input);
       if (result.type === "reject") {
         scope.diagnostics.event({

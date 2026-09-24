@@ -12,16 +12,11 @@ import type {
 import type { PlayerIdOfState } from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
 import { isPerPlayer } from "../per-player";
-import type { DependencyValues, InputFieldRef } from "./defineInputs";
 
-type DomainContext<
-  State extends CollectorState,
-  Values extends Readonly<Record<string, unknown>> = Record<string, never>,
-> = {
+type DomainContext<State extends CollectorState> = {
   state: State;
   playerId: PlayerIdOfState<State>;
   q: TableQueriesOfState<State>;
-  values: Values;
 };
 
 type ManifestFormInputSchema =
@@ -88,16 +83,6 @@ type DomainChoices<Value extends ChoiceValue, State extends CollectorState> =
   | ResourceMapChoiceSource<State>
   | ((context: DomainContext<State>) => ReadonlyArray<DomainChoice<Value>>);
 
-type DependentDomainChoices<
-  Value extends ChoiceValue,
-  State extends CollectorState,
-  Dependencies extends readonly InputFieldRef<string, unknown>[],
-> =
-  | ReadonlyArray<DomainChoice<Value>>
-  | ((
-      context: DomainContext<State, DependencyValues<Dependencies>>,
-    ) => ReadonlyArray<DomainChoice<Value>>);
-
 type ChoiceListDefaultValue<
   Value extends string,
   State extends CollectorState,
@@ -113,11 +98,10 @@ type ChoiceListDefaultValue<
 type ChoiceDefaultValue<
   Value extends ChoiceValue,
   State extends CollectorState,
-  Values extends Readonly<Record<string, unknown>> = Record<string, never>,
 > =
   | Value
   | ((
-      context: DomainContext<State, Values> & {
+      context: DomainContext<State> & {
         choices: ReadonlyArray<DomainChoice<Value>>;
       },
     ) => Value);
@@ -125,9 +109,8 @@ type ChoiceDefaultValue<
 type ChoiceDefaultResolver<
   Value extends ChoiceValue,
   State extends CollectorState,
-  Values extends Readonly<Record<string, unknown>> = Record<string, never>,
 > = (
-  context: DomainContext<State, Values> & {
+  context: DomainContext<State> & {
     choices: ReadonlyArray<DomainChoice<Value>>;
   },
 ) => Value | undefined;
@@ -184,34 +167,6 @@ function resolveDomainChoices<
   }));
 }
 
-function resolveDependentDomainChoices<
-  Value extends ChoiceValue,
-  State extends CollectorState,
-  Dependencies extends readonly InputFieldRef<string, unknown>[],
->(
-  choices: DependentDomainChoices<Value, State, Dependencies>,
-  context: DomainContext<State, DependencyValues<Dependencies>>,
-): Array<{
-  value: ChoiceValue;
-  label: string;
-  icon?: string;
-  badge?: string;
-  description?: string;
-  disabled?: boolean;
-  disabledReason?: string;
-}> {
-  const resolved = typeof choices === "function" ? choices(context) : choices;
-  return resolved.map((choice) => ({
-    value: choice.value,
-    label: choice.label,
-    icon: choice.icon,
-    badge: choice.badge,
-    description: choice.description,
-    disabled: choice.disabled,
-    disabledReason: choice.disabledReason,
-  }));
-}
-
 function choiceValuesInclude(
   choices: ReadonlyArray<{ value: ChoiceValue }>,
   value: ChoiceValue,
@@ -235,6 +190,7 @@ function assertChoiceDefaultInChoices(
 function choiceSchema<Value extends ChoiceValue>(
   choices: ReadonlyArray<DomainChoice<Value>>,
 ): SchemaLike<Value> {
+  if (choices.length === 0) return z.never() as SchemaLike<Value>;
   const values = choices.map((choice) => choice.value);
   const stringValues = values.filter(
     (value): value is Exclude<Value, null> => value !== null,
@@ -361,7 +317,6 @@ function resourceMapInput<State extends CollectorState = CollectorState>(
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        values: {},
       };
       return {
         type: "resourceMap",
@@ -407,7 +362,6 @@ function numberInput<State extends CollectorState = CollectorState>(options: {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        values: {},
       };
       return {
         type: "boundedNumber",
@@ -422,30 +376,6 @@ function numberInput<State extends CollectorState = CollectorState>(options: {
   };
 }
 
-function choiceInput<
-  const Dependencies extends readonly InputFieldRef<string, unknown>[],
-  Value extends ChoiceValue = string,
-  State extends CollectorState = CollectorState,
->(options: {
-  dependsOn: Dependencies;
-  choices: DependentDomainChoices<Value, State, Dependencies>;
-  defaultValue: Value;
-}): InputCollector<SchemaLike<Value>, State, "form"> & {
-  readonly defaultValue: Value;
-};
-function choiceInput<
-  const Dependencies extends readonly InputFieldRef<string, unknown>[],
-  Value extends ChoiceValue = string,
-  State extends CollectorState = CollectorState,
->(options: {
-  dependsOn: Dependencies;
-  choices: DependentDomainChoices<Value, State, Dependencies>;
-  defaultValue: ChoiceDefaultResolver<
-    Value,
-    State,
-    DependencyValues<Dependencies>
-  >;
-}): InputCollector<SchemaLike<Value>, State, "form">;
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
@@ -465,51 +395,10 @@ function choiceInput<
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
-  const Dependencies extends readonly InputFieldRef<string, unknown>[] =
-    readonly InputFieldRef<string, unknown>[],
 >(options: {
-  dependsOn: Dependencies;
-  choices: DependentDomainChoices<Value, State, Dependencies>;
-  defaultValue: Value;
-}): InputCollector<SchemaLike<Value>, State, "form"> & {
-  readonly defaultValue: Value;
-};
-function choiceInput<
-  Value extends ChoiceValue,
-  State extends CollectorState = CollectorState,
-  const Dependencies extends readonly InputFieldRef<string, unknown>[] =
-    readonly InputFieldRef<string, unknown>[],
->(options: {
-  dependsOn: Dependencies;
-  choices: DependentDomainChoices<Value, State, Dependencies>;
-  defaultValue: ChoiceDefaultResolver<
-    Value,
-    State,
-    DependencyValues<Dependencies>
-  >;
-}): InputCollector<SchemaLike<Value>, State, "form">;
-function choiceInput<
-  Value extends ChoiceValue,
-  State extends CollectorState = CollectorState,
->(options: {
-  choices:
-    | DomainChoices<Value, State>
-    | DependentDomainChoices<
-        Value,
-        State,
-        readonly InputFieldRef<string, unknown>[]
-      >;
-  dependsOn?: readonly InputFieldRef<string, unknown>[];
-  defaultValue: ChoiceDefaultValue<
-    Value,
-    State,
-    Readonly<Record<string, unknown>>
-  >;
+  choices: DomainChoices<Value, State>;
+  defaultValue: ChoiceDefaultValue<Value, State>;
 }): InputCollector<SchemaLike<Value>, State, "form"> {
-  const dependsOn = options.dependsOn?.map((dependency) => dependency.key);
-  if (Array.isArray(options.choices) && options.choices.length === 0) {
-    throw new Error("formInput.choice requires at least one choice.");
-  }
   const staticChoices = Array.isArray(options.choices) ? options.choices : null;
   const hasStaticDefault = typeof options.defaultValue !== "function";
   const staticDefault = options.defaultValue as ChoiceValue;
@@ -531,31 +420,13 @@ function choiceInput<
     kind: "form",
     schema,
     ...(hasStaticDefault ? { defaultValue: staticDefault as Value } : {}),
-    ...(dependsOn ? { dependsOn } : {}),
-    domain: (state, playerId, q, values): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): FormInputDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
       };
-      const choices = dependsOn
-        ? resolveDependentDomainChoices(
-            options.choices as DependentDomainChoices<
-              Value,
-              State,
-              readonly InputFieldRef<string, unknown>[]
-            >,
-            {
-              ...context,
-              values: (values ?? {}) as DependencyValues<
-                readonly InputFieldRef<string, unknown>[]
-              >,
-            },
-          )
-        : resolveDomainChoices(options.choices as DomainChoices<Value, State>, {
-            ...context,
-            values: {},
-          });
+      const choices = resolveDomainChoices(options.choices, context);
       if (hasStaticDefault) {
         assertChoiceDefaultInChoices(
           "formInput.choice",
@@ -587,7 +458,7 @@ function choiceInput<
               state: state as State,
               playerId: playerId as PlayerIdOfState<State>,
               q: q as TableQueriesOfState<State>,
-              values: {},
+
               choices,
             });
             if (resolved === undefined) return undefined;
@@ -649,7 +520,6 @@ function choiceListInput<
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        values: {},
       };
       const choices = resolveDomainChoices(options.choices, context).map(
         (choice) => ({
@@ -686,7 +556,7 @@ function choiceListInput<
               state: state as State,
               playerId: playerId as PlayerIdOfState<State>,
               q: q as TableQueriesOfState<State>,
-              values: {},
+
               choices,
             });
           },
@@ -721,28 +591,6 @@ type FormInputForState<State extends CollectorState> = {
   number(
     options: Parameters<typeof numberInput<State>>[0],
   ): ReturnType<typeof numberInput<State>>;
-  choice<
-    Value extends ChoiceValue,
-    const Dependencies extends readonly InputFieldRef<string, unknown>[],
-  >(options: {
-    dependsOn: Dependencies;
-    choices: DependentDomainChoices<Value, State, Dependencies>;
-    defaultValue: Value;
-  }): InputCollector<SchemaLike<Value>, State, "form"> & {
-    readonly defaultValue: Value;
-  };
-  choice<
-    Value extends ChoiceValue,
-    const Dependencies extends readonly InputFieldRef<string, unknown>[],
-  >(options: {
-    dependsOn: Dependencies;
-    choices: DependentDomainChoices<Value, State, Dependencies>;
-    defaultValue: ChoiceDefaultResolver<
-      Value,
-      State,
-      DependencyValues<Dependencies>
-    >;
-  }): InputCollector<SchemaLike<Value>, State, "form">;
   choice<Value extends ChoiceValue>(options: {
     choices: DomainChoices<Value, State>;
     defaultValue: Value;

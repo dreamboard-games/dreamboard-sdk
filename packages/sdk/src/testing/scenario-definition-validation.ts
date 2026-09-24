@@ -1,3 +1,4 @@
+import { collectReducerDefinitionIndex } from "../reducer/definition-index.js";
 import type { Wire } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
@@ -328,10 +329,29 @@ function commandSchemas(
   const schemasByPhase = createClientParamSchemasByPhase(
     game as Parameters<typeof createClientParamSchemasByPhase>[0],
   );
-  return Object.values(schemasByPhase).flatMap((schemas) => {
+  const schemas = Object.values(schemasByPhase).flatMap((schemas) => {
     const schema = schemas[interactionId];
     return schema ? [schema as z.ZodTypeAny] : [];
   });
+  // Dependent collectors require replay state; authoring can check only the
+  // declared key and atomic command shape before that state exists.
+  const index = collectReducerDefinitionIndex(
+    game as Parameters<typeof collectReducerDefinitionIndex>[0],
+  );
+  for (const phase of index.phasesByName.values()) {
+    const steps = phase.interactions.find(([id]) => id === interactionId)?.[1]
+      .steps;
+    if (steps)
+      schemas.push(
+        z
+          .partialRecord(
+            z.enum(steps.entries.map((step) => step.key)),
+            z.unknown(),
+          )
+          .refine((params) => Object.keys(params).length === 1),
+      );
+  }
+  return schemas;
 }
 
 function issuePath(

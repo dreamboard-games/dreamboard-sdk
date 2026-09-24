@@ -451,12 +451,21 @@ type CollectorCardZoneIds<Collectors, Input extends string> =
     : never;
 
 type CollectorsOfInteractionDefinition<Spec> = Spec extends {
-  readonly inputs?: infer Collectors;
+  readonly steps: {
+    readonly collectors: infer Collectors extends Record<
+      string,
+      InputCollector
+    >;
+  };
 }
-  ? NonNullable<Collectors> extends Record<string, InputCollector>
-    ? NonNullable<Collectors>
-    : Record<string, never>
-  : Record<string, never>;
+  ? Collectors
+  : Spec extends {
+        readonly inputs?: infer Collectors;
+      }
+    ? NonNullable<Collectors> extends Record<string, InputCollector>
+      ? NonNullable<Collectors>
+      : Record<string, never>
+    : Record<string, never>;
 
 type CollectorKindsOfInteractionDefinition<Spec> =
   | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
@@ -615,6 +624,13 @@ export type ParamsOfInteractionOfDefinition<
  * {@link ParamsOfInteractionOfDefinition}, which includes every field
  * because the engine has already filled the sampled ones by then.
  */
+type CurrentStepParams<Collectors extends Record<string, InputCollector>> = {
+  [Key in keyof Collectors]: Pick<
+    ClientParamsOfCollectors<Collectors>,
+    Key & keyof ClientParamsOfCollectors<Collectors>
+  > & { [Other in Exclude<keyof Collectors, Key>]?: never };
+}[keyof Collectors];
+
 export type ClientParamsOfInteractionOfDefinition<
   Definition,
   PhaseName extends PhaseNamesOfDefinition<Definition>,
@@ -625,11 +641,13 @@ export type ClientParamsOfInteractionOfDefinition<
     PhaseName,
     InteractionId
   > extends infer Spec
-    ? Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
-      ? { cardId: string } & ClientParamsOfCollectors<
-          CollectorsOfInteractionDefinition<Spec>
-        >
-      : ClientParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
+    ? Spec extends { readonly steps: unknown }
+      ? CurrentStepParams<CollectorsOfInteractionDefinition<Spec>>
+      : Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
+        ? { cardId: string } & ClientParamsOfCollectors<
+            CollectorsOfInteractionDefinition<Spec>
+          >
+        : ClientParamsOfCollectors<CollectorsOfInteractionDefinition<Spec>>
     : never;
 
 type DefaultedClientCollectorKeys<

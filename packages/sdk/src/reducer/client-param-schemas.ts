@@ -21,7 +21,7 @@ export type ClientParamSchemasByPhase = Readonly<
   Record<string, Readonly<Record<string, ClientParamSchema>>>
 >;
 
-function schemaForCollectors(
+export function schemaForCollectors(
   collectors: Record<string, InputCollector>,
 ): ClientParamSchema {
   const shape: Record<string, z.ZodTypeAny> = {};
@@ -48,6 +48,7 @@ export function createClientParamSchemasByPhase<
   for (const phaseIndex of index.phasesByName.values()) {
     const phaseSchemas: Record<string, ClientParamSchema> = {};
     for (const [id, interaction] of phaseIndex.interactions) {
+      if (interaction.steps) continue;
       phaseSchemas[id] =
         interaction.paramsSchema ?? schemaForCollectors(interaction.inputs);
     }

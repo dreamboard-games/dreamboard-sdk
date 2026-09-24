@@ -1,3 +1,4 @@
+import { evaluateStepPrefix } from "./step-prefix";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -61,23 +62,6 @@ function isManyCollector(collector: InputCollector): boolean {
   return collector.selection?.mode === "many";
 }
 
-function terminalCollectorsForInputs(
-  inputs: Record<string, InputCollector>,
-): InputCollector[] {
-  const terminalKeys = new Set(Object.keys(inputs));
-  for (const collector of Object.values(inputs)) {
-    for (const dependencyKey of collector.dependsOn ?? []) {
-      terminalKeys.delete(dependencyKey);
-    }
-  }
-  const collectors: InputCollector[] = [];
-  for (const key of terminalKeys) {
-    const collector = inputs[key];
-    if (collector) collectors.push(collector);
-  }
-  return collectors;
-}
-
 function deriveCommitPolicy(
   inputs: Record<string, InputCollector>,
   explicit: InteractionDescriptorShape["commit"] | undefined,
@@ -98,7 +82,7 @@ function deriveCommitPolicy(
   if (collectors.length === 0 || !collectors.some(isTargetCollector)) {
     return { mode: "manual" };
   }
-  const terminalCollectors = terminalCollectorsForInputs(inputs);
+  const terminalCollectors = Object.values(inputs);
   if (terminalCollectors.length === 0) {
     return { mode: "manual" };
   }
@@ -253,6 +237,7 @@ export function buildInteractionDescriptor<
     projection?: ProjectionContext<TrustedDomainState<Contract>>;
     includeEligibleTargets?: boolean;
     includeDiagnosticReasons?: boolean;
+    stepPrefix?: ReturnType<typeof evaluateStepPrefix>;
   } = {},
 ): TrustedInteractionDescriptorShape<Contract, Definitions, View> {
   type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
@@ -264,7 +249,32 @@ export function buildInteractionDescriptor<
   const domainState =
     options.projection?.domainState ?? scope.toDomainState(state);
   const phaseName = state.flow.currentPhase as PhaseName;
-  const interactionInputs = interactionInputsOf(interaction);
+  const saved = state.runtime.pending[playerId];
+  const prefix =
+    options.stepPrefix ??
+    (interaction.steps &&
+    (decision.available || decision.code === FrameworkErrorCodes.NO_LEGAL_INPUT)
+      ? evaluateStepPrefix(
+          interaction.steps,
+          domainState,
+          playerId,
+          saved?.interactionId === interactionId &&
+            saved.phaseName === phaseName
+            ? saved.values
+            : [],
+        )
+      : undefined);
+  const projectedInteraction = prefix
+    ? {
+        ...interaction,
+        steps: undefined,
+        paramsSchema: undefined,
+        inputs: prefix.current
+          ? { [prefix.current.key]: prefix.current.collector }
+          : {},
+      }
+    : interaction;
+  const interactionInputs = interactionInputsOf(projectedInteraction);
   const metadata = projectInteractionMetadata({
     ...interaction,
     inputs: interactionInputs,
@@ -273,10 +283,10 @@ export function buildInteractionDescriptor<
   const queries = options.projection?.q ?? createStateQueries(domainState);
 
   const shouldMaterializeInputDomains =
-    decision.available || decision.code !== FrameworkErrorCodes.NOT_YOUR_TURN;
+    decision.available || decision.code === FrameworkErrorCodes.NO_LEGAL_INPUT;
   const inputs = shouldMaterializeInputDomains
     ? enrichResourceInputPresentation(
-        collectInteractionInputs(interaction, domainState, playerId, {
+        collectInteractionInputs(projectedInteraction, domainState, playerId, {
           queries,
           eligibleTargetCache: options.projection?.eligibleTargets,
           eligibleTargetCachePrefix: `${phaseName}:${String(
@@ -295,9 +305,19 @@ export function buildInteractionDescriptor<
     label: metadata.label,
     help: metadata.help,
     commit: metadata.commit,
-    zoneId: collectFirstCardZoneId(interaction),
-    zoneIds: collectCardZoneIds(interaction),
+    zoneId: collectFirstCardZoneId(projectedInteraction),
+    zoneIds: collectCardZoneIds(projectedInteraction),
     inputs,
+    ...(prefix
+      ? {
+          step: {
+            index: prefix.values.length,
+            total: interaction.steps!.entries.length,
+            selected: prefix.selected,
+            canCancel: !!saved,
+          },
+        }
+      : {}),
     availability: interactionAvailabilityFromDecision(decision),
     reasons:
       options.includeDiagnosticReasons && !decision.available && decision.ruleId

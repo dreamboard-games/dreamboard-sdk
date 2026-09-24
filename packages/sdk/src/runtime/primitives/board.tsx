@@ -31,7 +31,6 @@ import {
   inputByKey,
   inputKeyForTarget,
   isResolvedTargetDomain,
-  resolveInputDomain,
   type BoardTargetKind,
 } from "../utils/interaction-inputs.js";
 import {
@@ -432,15 +431,13 @@ function ExplicitBoardTarget({
   const store = useInteractionUiStore();
   useStore(store, (state) => state.drafts[descriptor.interactionKey] ?? {});
   const draft = store.getDraft(descriptor.interactionKey);
-  const inputKey = input ?? inputKeyForTarget(descriptor, kind, value, draft);
+  const inputKey = input ?? inputKeyForTarget(descriptor, kind, value);
   const rawInputDescriptor = inputKey
     ? inputByKey(descriptor, inputKey)
     : undefined;
-  const inputDescriptor = rawInputDescriptor
-    ? resolveInputDomain(rawInputDescriptor, draft)
-    : undefined;
+  const inputDescriptor = rawInputDescriptor ? rawInputDescriptor : undefined;
   const eligibleTargets = inputKey
-    ? eligibleTargetsForInput(descriptor, inputKey, draft)
+    ? eligibleTargetsForInput(descriptor, inputKey)
     : undefined;
   const eligible =
     inputDescriptor !== undefined &&

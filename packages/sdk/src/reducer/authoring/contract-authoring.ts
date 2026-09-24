@@ -1,3 +1,4 @@
+import { InteractionSteps } from "./steps";
 import type { ViewDefinition } from "../model";
 import type { z } from "zod";
 import type {
@@ -21,11 +22,7 @@ import type {
   ViewOfContract,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
-import type {
-  InputFieldRef,
-  PlayerBoardSpaceTarget,
-  PlayerSpaceInputSchema,
-} from "../inputs";
+import type { PlayerBoardSpaceTarget, PlayerSpaceInputSchema } from "../inputs";
 import type { TargetPredicate } from "../inputs/targetRule";
 import type { TableQueriesOfState } from "../model/queries";
 import type { ReducerTransaction } from "../transaction";
@@ -73,7 +70,6 @@ type BoundFormInputs<Contract extends ContractWithPhases> = ReturnType<
 type BoundBoardInputOptions<Contract extends ContractWithPhases, Id> = {
   boardId: string;
   where?: BoundWhere<Contract, Id>;
-  dependsOn?: readonly InputFieldRef<string, unknown>[];
 };
 
 type BoundBoardInputs<Contract extends ContractWithPhases> = {
@@ -114,7 +110,6 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       Contract,
       PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
     >;
-    dependsOn?: readonly InputFieldRef<string, unknown>[];
   }): InputCollector<
     PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
     BoundState<Contract>,
@@ -159,7 +154,6 @@ type BoundCardInput<Contract extends ContractWithPhases> = <
 >(options: {
   from: ZoneIds;
   where?: BoundWhere<Contract, Id>;
-  dependsOn?: readonly InputFieldRef<string, unknown>[];
 }) => BoundCardCollector<Contract, Id, ZoneIds>;
 
 type BoundRngInputs<Contract extends ContractWithPhases> = {
@@ -178,18 +172,44 @@ export type PhaseAuthoring<
   Contract extends ContractWithPhases,
   PhaseStateSchema extends SchemaLike<object>,
 > = {
+  steps(): InteractionSteps<BoundPhaseState<Contract, PhaseStateSchema>>;
   interaction<Collectors extends Record<string, InputCollector>>(
-    spec: InteractionSpec<
+    spec: Extract<
+      InteractionSpec<
+        Collectors,
+        BoundPhaseState<Contract, PhaseStateSchema>,
+        BoundManifest<Contract>,
+        ContractErrorCode<Contract>
+      >,
+      { steps: unknown }
+    >,
+  ): Extract<
+    InteractionSpec<
       Collectors,
       BoundPhaseState<Contract, PhaseStateSchema>,
       BoundManifest<Contract>,
       ContractErrorCode<Contract>
     >,
-  ): InteractionSpec<
-    Collectors,
-    BoundPhaseState<Contract, PhaseStateSchema>,
-    BoundManifest<Contract>,
-    ContractErrorCode<Contract>
+    { steps: unknown }
+  >;
+  interaction<Collectors extends Record<string, InputCollector>>(
+    spec: Extract<
+      InteractionSpec<
+        Collectors,
+        BoundPhaseState<Contract, PhaseStateSchema>,
+        BoundManifest<Contract>,
+        ContractErrorCode<Contract>
+      >,
+      { inputs: unknown }
+    >,
+  ): Extract<
+    InteractionSpec<
+      Collectors,
+      BoundPhaseState<Contract, PhaseStateSchema>,
+      BoundManifest<Contract>,
+      ContractErrorCode<Contract>
+    >,
+    { inputs: unknown }
   >;
   rule<
     Collectors extends Record<string, InputCollector> = Record<
@@ -360,7 +380,6 @@ function createFusedCardInput<
   return ((options: {
     from: readonly string[];
     where?: AnyPredicate | readonly AnyPredicate[];
-    dependsOn?: readonly InputFieldRef<string, unknown>[];
   }) => {
     const target = applyWhere(
       cardTarget.zones<never, string, readonly string[]>(options.from),
@@ -368,7 +387,6 @@ function createFusedCardInput<
     ).build();
     return cardInput({
       target: target as never,
-      ...(options.dependsOn ? { dependsOn: options.dependsOn } : {}),
     });
   }) as unknown as BoundCardInput<Contract>;
 }
@@ -381,7 +399,6 @@ function createFusedBoardInputs<
     (options: {
       boardId: string;
       where?: AnyPredicate | readonly AnyPredicate[];
-      dependsOn?: readonly InputFieldRef<string, unknown>[];
     }) => {
       const target = applyWhere(
         boardTarget[kind]<never, string>(options.boardId),
@@ -389,20 +406,17 @@ function createFusedBoardInputs<
       ).build();
       return boardInput[kind]({
         target: target as never,
-        ...(options.dependsOn ? { dependsOn: options.dependsOn } : {}),
       });
     };
   const playerSpace = (options: {
     boardId: string;
     where?: AnyPredicate | readonly AnyPredicate[];
-    dependsOn?: readonly InputFieldRef<string, unknown>[];
   }) =>
     boardInput.playerSpace({
       target: applyWhere(
         boardTarget.playerSpace<never, string, string>(options.boardId),
         options.where,
       ).build() as never,
-      ...(options.dependsOn ? { dependsOn: options.dependsOn } : {}),
     });
   return {
     vertex: fuse("vertex"),
@@ -432,12 +446,11 @@ function createPhaseAuthoring<
   schema: PhaseStateSchema,
 ): PhaseAuthoring<Contract, PhaseStateSchema> {
   return {
-    interaction: (spec) =>
-      defineInteraction<Contract, PhaseStateSchema>()(
-        spec as Parameters<
-          ReturnType<typeof defineInteraction<Contract, PhaseStateSchema>>
-        >[0],
-      ) as typeof spec,
+    steps: () => new InteractionSteps(),
+    interaction: defineInteraction<
+      Contract,
+      PhaseStateSchema
+    >() as PhaseAuthoring<Contract, PhaseStateSchema>["interaction"],
     rule: (rule) =>
       defineInteractionRule<Contract, PhaseStateSchema>()(
         rule as Parameters<

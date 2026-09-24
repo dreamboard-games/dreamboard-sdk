@@ -11,7 +11,8 @@ export type TrustedInteractionInput<PlayerId extends string> = {
 };
 
 export type TrustedRuntimeInput<PlayerId extends string> =
-  TrustedInteractionInput<PlayerId>;
+  | TrustedInteractionInput<PlayerId>
+  | { kind: "interaction.cancel"; playerId: PlayerId; interactionId: string };
 
 export type DecodedReducerInput<PlayerId extends string> =
   TrustedRuntimeInput<PlayerId>;

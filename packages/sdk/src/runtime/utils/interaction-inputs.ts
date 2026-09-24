@@ -16,10 +16,16 @@ export function interactionInputKeys(
 export function applyInteractionInputDefaults<
   Params extends Record<string, unknown>,
 >(
-  descriptor: Pick<InteractionDescriptor, "inputs">,
+  descriptor: Pick<InteractionDescriptor, "inputs" | "step">,
   params: Readonly<Partial<Params>>,
 ): Partial<Params> {
-  const next: Record<string, unknown> = { ...params };
+  const next: Record<string, unknown> = descriptor.step
+    ? Object.fromEntries(
+        Object.entries(params).filter(([key]) =>
+          descriptor.inputs.some((input) => input.key === key),
+        ),
+      )
+    : { ...params };
   for (const input of descriptor.inputs) {
     if (next[input.key] !== undefined) continue;
     if (!("defaultValue" in input)) continue;
@@ -28,58 +34,10 @@ export function applyInteractionInputDefaults<
   return next as Partial<Params>;
 }
 
-export function resolveInputDomain(
-  input: InteractionInputDescriptor,
-  params: Readonly<Record<string, unknown>>,
-): InteractionInputDescriptor {
-  const dependencies = input.domain.dependencies;
-  if (dependencies?.mode !== "eager") return input;
-  const dependencyKeys = inputDependencyKeys(input);
-  if (dependencyKeys.length === 0) return input;
-  const caseMatch = dependencies.dependentCases.find((candidate) =>
-    dependencyKeys.every(
-      (key) =>
-        params[key] !== undefined &&
-        params[key] !== null &&
-        String(params[key]) === candidate.when[key],
-    ),
-  );
-  if (!caseMatch) return input;
-  return {
-    ...input,
-    domain: caseMatch.domain,
-  };
-}
-
 export function resolveInteractionInputs(
   descriptor: Pick<InteractionDescriptor, "inputs">,
-  params: Readonly<Record<string, unknown>>,
 ): InteractionInputDescriptor[] {
-  return descriptor.inputs.map((input) => resolveInputDomain(input, params));
-}
-
-export function dependentInputKeys(
-  descriptor: Pick<InteractionDescriptor, "inputs">,
-  changedKey: string,
-): string[] {
-  const dependentsByKey = new Map<string, string[]>();
-  for (const input of descriptor.inputs) {
-    for (const dependency of inputDependencyKeys(input)) {
-      dependentsByKey.set(dependency, [
-        ...(dependentsByKey.get(dependency) ?? []),
-        input.key,
-      ]);
-    }
-  }
-  const result: string[] = [];
-  const queue = [...(dependentsByKey.get(changedKey) ?? [])];
-  while (queue.length > 0) {
-    const key = queue.shift();
-    if (!key || result.includes(key)) continue;
-    result.push(key);
-    queue.push(...(dependentsByKey.get(key) ?? []));
-  }
-  return result;
+  return [...descriptor.inputs];
 }
 
 export function validateInteractionInputDomains(
@@ -89,7 +47,7 @@ export function validateInteractionInputDomains(
   const fieldErrors: Record<string, string[]> = {};
 
   for (const rawInput of descriptor.inputs) {
-    const input = resolveInputDomain(rawInput, params);
+    const input = rawInput;
     const value = params[input.key];
     if (value === undefined || value === null) continue;
 
@@ -173,7 +131,14 @@ export function isInputValueReady(
   input: InteractionInputDescriptor,
   value: unknown,
 ): boolean {
-  if (value === undefined || value === null) return false;
+  if (value === undefined) return false;
+  if (value === null)
+    return (
+      input.domain.type === "choice" &&
+      (input.domain.choices ?? []).some(
+        (choice) => choice.value === null && !choice.disabled,
+      )
+    );
   const selection = inputSelection(input);
   if (selection?.mode !== "many") return true;
   return Array.isArray(value) && value.length >= selection.min;
@@ -256,10 +221,9 @@ export function inputByTarget(
   descriptor: Pick<InteractionDescriptor, "inputs">,
   targetKind: BoardTargetKind | "card",
   targetId: string,
-  params: Readonly<Record<string, unknown>> = {},
 ): InteractionInputDescriptor | null {
   for (const rawInput of descriptor.inputs) {
-    const input = resolveInputDomain(rawInput, params);
+    const input = rawInput;
     if (!isResolvedTargetDomain(input.domain)) continue;
     if (inputTargetKind(input.domain) !== targetKind) continue;
     if (input.domain.eligibleTargets.includes(targetId)) return input;
@@ -270,10 +234,9 @@ export function inputByTarget(
 export function eligibleTargetsForInput(
   descriptor: Pick<InteractionDescriptor, "inputs">,
   key: string,
-  params: Readonly<Record<string, unknown>> = {},
 ): readonly string[] | undefined {
   const rawInput = inputByKey(descriptor, key);
-  const domain = rawInput ? resolveInputDomain(rawInput, params).domain : null;
+  const domain = rawInput ? rawInput.domain : null;
   return domain && isResolvedTargetDomain(domain)
     ? domain.eligibleTargets
     : undefined;
@@ -281,11 +244,10 @@ export function eligibleTargetsForInput(
 
 export function eligibleTargetsByInput(
   descriptor: Pick<InteractionDescriptor, "inputs">,
-  params: Readonly<Record<string, unknown>> = {},
 ): Record<string, readonly string[]> {
   return Object.fromEntries(
     descriptor.inputs.flatMap((rawInput) => {
-      const input = resolveInputDomain(rawInput, params);
+      const input = rawInput;
       const targets = isResolvedTargetDomain(input.domain)
         ? input.domain.eligibleTargets
         : undefined;
@@ -296,7 +258,6 @@ export function eligibleTargetsByInput(
 
 export function eligibleTargetsByBoardKind(
   descriptor: Pick<InteractionDescriptor, "inputs">,
-  params: Readonly<Record<string, unknown>> = {},
 ): Partial<Record<BoardTargetKind, readonly string[]>> {
   const result: Record<BoardTargetKind, Set<string>> = {
     edge: new Set<string>(),
@@ -305,7 +266,7 @@ export function eligibleTargetsByBoardKind(
     tile: new Set<string>(),
   };
   for (const rawInput of descriptor.inputs) {
-    const input = resolveInputDomain(rawInput, params);
+    const input = rawInput;
     if (
       input.domain.type !== "boardTarget" ||
       input.domain.projection !== "resolved"
@@ -354,24 +315,8 @@ export function inputKeyForTarget(
   descriptor: Pick<InteractionDescriptor, "inputs">,
   targetKind: BoardTargetKind | "card",
   targetId: string,
-  params: Readonly<Record<string, unknown>> = {},
 ): string | null {
-  return inputByTarget(descriptor, targetKind, targetId, params)?.key ?? null;
-}
-
-export function inputDependencyKeys(
-  input: InteractionInputDescriptor,
-): readonly string[] {
-  const dependencies = input.domain.dependencies;
-  if (!dependencies) return [];
-  if (dependencies.mode === "lazy") return dependencies.dependsOn;
-  const keys = new Set<string>();
-  for (const candidate of dependencies.dependentCases) {
-    for (const key of Object.keys(candidate.when)) {
-      keys.add(key);
-    }
-  }
-  return [...keys];
+  return inputByTarget(descriptor, targetKind, targetId)?.key ?? null;
 }
 
 export function isTargetDomain(

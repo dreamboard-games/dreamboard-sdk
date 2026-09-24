@@ -34,6 +34,7 @@
       "current": null
     },
     "lastTransition": null,
-    "options": {}
+    "options": {},
+    "pending": {}
   }
 }

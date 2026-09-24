@@ -71,7 +71,7 @@ export type InteractionExplanation = {
   inputs: ReadonlyArray<{
     key: string;
     kind: string;
-    eligibleCount: number | "lazy";
+    eligibleCount: number | "unknown";
   }>;
 };
 
@@ -92,6 +92,12 @@ type InteractionDescriptorBaseShape<
   zoneId?: ZoneId;
   zoneIds?: readonly ZoneId[];
   inputs: InteractionInputDescriptorShape[];
+  step?: {
+    index: number;
+    total: number;
+    selected: Record<string, unknown>;
+    canCancel: boolean;
+  };
   availability: InteractionAvailabilityShape;
   reasons?: readonly InteractionDiagnosticReasonShape[];
 };
@@ -160,6 +166,7 @@ export type InteractionDecisionResult<
         TrustedManifest<Contract>
       >;
       parsedParams: Record<string, unknown>;
+      stepResult?: { values: unknown[]; complete: boolean };
       visible: boolean;
       descriptor: TrustedInteractionDescriptorShape<
         Contract,

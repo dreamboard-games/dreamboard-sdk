@@ -705,19 +705,29 @@ export function createGameUiContract<
       | {
           interactions?: Record<
             string,
-            { inputs?: Record<string, { kind?: string }> }
+            {
+              inputs?: Record<string, { kind?: string }>;
+              steps?: { entries: readonly { key: string }[] };
+            }
           >;
           cardActions?: Record<
             string,
-            { inputs?: Record<string, { kind?: string }> }
+            {
+              inputs?: Record<string, { kind?: string }>;
+              steps?: { entries: readonly { key: string }[] };
+            }
           >;
-          submit?: { inputs?: Record<string, { kind?: string }> };
+          submit?: {
+            inputs?: Record<string, { kind?: string }>;
+            steps?: { entries: readonly { key: string }[] };
+          };
         }
       | undefined;
     const spec =
       (id ? phaseRecord?.interactions?.[id] : undefined) ??
       (id ? phaseRecord?.cardActions?.[id] : undefined) ??
       (id === "submit" ? phaseRecord?.submit : undefined);
+    if (spec?.steps) return new Set(spec.steps.entries.map(({ key }) => key));
     return new Set(
       Object.entries(spec?.inputs ?? {})
         .filter(([, collector]) => collector.kind === "form")

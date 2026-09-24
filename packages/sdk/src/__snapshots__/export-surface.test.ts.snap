@@ -64,6 +64,7 @@ exports[`public export surface > browser-interaction export names are stable 1`]
 exports[`public export surface > plugin-runtime-contract export names are stable 1`] = `
 [
   "BoardStaticProjectionSchema",
+  "CancelInteractionCommandSchema",
   "DREAMBOARD_PLUGIN_PROTOCOL",
   "DREAMBOARD_PLUGIN_PROTOCOL_VERSION",
   "GameEventDetailSchema",
@@ -72,7 +73,6 @@ exports[`public export surface > plugin-runtime-contract export names are stable
   "GameplayBasisSchema",
   "HostToPluginEnvelopeSchema",
   "HostToPluginPayloadSchema",
-  "InputDomainDependenciesSchema",
   "InputDomainSchema",
   "InteractionAvailabilitySchema",
   "InteractionCommitPolicySchema",
@@ -123,7 +123,6 @@ exports[`public export surface > reducer export names are stable 1`] = `
   "createReducerBundle",
   "createStateQueries",
   "createTableQueries",
-  "defineInputs",
   "fromCoordinates",
   "gameEvent",
   "hexagon",

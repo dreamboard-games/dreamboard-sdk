@@ -114,41 +114,10 @@ export const InputSelectionSchema = z.discriminatedUnion("mode", [
     .strict(),
 ]);
 
-const InputDomainDependencyCaseSchema: z.ZodType<unknown> = z.lazy(() =>
-  z
-    .object({
-      when: z.record(z.string(), z.string()),
-      domain: InputDomainSchema,
-    })
-    .strict(),
-);
-
-export const InputDomainDependenciesSchema = z.discriminatedUnion("mode", [
-  z
-    .object({
-      mode: z.literal("eager"),
-      dependentCases: z.array(InputDomainDependencyCaseSchema),
-    })
-    .strict(),
-  z
-    .object({
-      mode: z.literal("lazy"),
-      dependsOn: z.array(z.string()),
-      resolver: z
-        .object({
-          interactionKey: z.string().optional(),
-          inputKey: z.string(),
-        })
-        .strict(),
-    })
-    .strict(),
-]);
-
 export const InputDomainSchema = z
   .object({
     type: z.string(),
     selection: InputSelectionSchema.optional(),
-    dependencies: InputDomainDependenciesSchema.optional(),
   })
   .catchall(RuntimeJsonSchema);
 
@@ -199,6 +168,15 @@ const InteractionBaseSchema = z
     actorSeat: z.number().int().optional(),
     draftDigest: z.string().optional(),
     inputs: z.array(InteractionInputDescriptorSchema),
+    step: z
+      .object({
+        index: z.number().int().nonnegative(),
+        total: z.number().int().positive(),
+        selected: z.record(z.string(), RuntimeJsonSchema),
+        canCancel: z.boolean(),
+      })
+      .strict()
+      .optional(),
     availability: InteractionAvailabilitySchema,
     reasons: z
       .array(
@@ -335,6 +313,11 @@ export const SubmitInteractionCommandSchema = z
   })
   .strict();
 
+export const CancelInteractionCommandSchema =
+  SubmitInteractionCommandSchema.omit({ params: true })
+    .extend({ type: z.literal("interaction.cancel") })
+    .strict();
+
 export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
   z
     .object({
@@ -362,6 +345,7 @@ export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
     })
     .strict(),
   SubmitInteractionCommandSchema,
+  CancelInteractionCommandSchema,
   z
     .object({
       type: z.literal("runtime.error"),

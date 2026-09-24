@@ -41,7 +41,7 @@ export type FlowDiagnostic = {
 export type InspectInteractionInput = {
   readonly key: string;
   readonly kind: string;
-  readonly eligibleCount: number | "lazy";
+  readonly eligibleCount: number | "unknown";
 };
 
 export type InspectInteraction = {

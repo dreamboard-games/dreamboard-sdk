@@ -69,6 +69,7 @@ export function makeTestRuntimeHarness(
         frameListeners.delete(listener);
       };
     },
+    cancelInteraction: async () => undefined,
     submitInteraction: (...args) => submitImpl(...args),
     disconnect: () => undefined,
   };

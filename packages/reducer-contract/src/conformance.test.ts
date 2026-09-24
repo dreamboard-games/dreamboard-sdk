@@ -72,6 +72,20 @@ describe("JsonValueSchema", () => {
   });
 });
 
+describe("committed step wire shape", () => {
+  test("cancel is an actor command without params", () => {
+    const command = {
+      kind: "interaction.cancel",
+      playerId: "player-1",
+      interactionId: "choose",
+    };
+    expect(Zod.GameInputSchema.parse(command)).toEqual(command);
+    expect(() =>
+      Zod.GameInputSchema.parse({ ...command, params: {} }),
+    ).toThrow();
+  });
+});
+
 describe("ReducerSessionState meta", () => {
   test("accepts optional contract fingerprints on session envelopes", () => {
     const fixture = FIXTURES.find(

@@ -297,6 +297,7 @@ describe("ingress runtime codec", () => {
       runtime: {
         rng: { seed: 42, cursor: 0, trace: [] },
         options: {},
+        pending: {},
         simultaneous: { current: null },
         lastTransition: null,
       },
@@ -311,6 +312,7 @@ describe("ingress runtime codec", () => {
       },
       runtime: {
         rng: { seed: 42, cursor: 0, trace: [] },
+        pending: {},
         simultaneous: { current: null },
         lastTransition: null,
       },
@@ -374,6 +376,7 @@ describe("ingress runtime codec", () => {
       runtime: {
         rng: { seed: 42, cursor: 0, trace: [] },
         options: {},
+        pending: {},
         simultaneous: { current: null },
         lastTransition: null,
       },

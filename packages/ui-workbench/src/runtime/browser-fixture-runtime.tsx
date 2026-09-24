@@ -48,6 +48,10 @@ export interface BrowserFixtureHostEvent {
     | "ack-received"
     | "ready-received"
     | "diagnostic";
+  readonly command?: Extract<
+    PluginToHostPayload,
+    { type: "interaction.submit" | "interaction.cancel" }
+  >;
   readonly frameId?: string;
   readonly projectionDigest?: string;
   readonly result?: "accepted" | "rejected";
@@ -228,6 +232,7 @@ function createBrowserFixtureHostHarness(
       case "runtime.error":
         record({ kind: "diagnostic" });
         break;
+      case "interaction.cancel":
       case "interaction.submit": {
         const step = consume("client.submit") as Extract<
           PluginProtocolTape["steps"][number],
@@ -235,6 +240,7 @@ function createBrowserFixtureHostHarness(
         >;
         record({
           kind: "submit-received",
+          command: payload,
           result: step.response.accepted ? "accepted" : "rejected",
         });
         send({

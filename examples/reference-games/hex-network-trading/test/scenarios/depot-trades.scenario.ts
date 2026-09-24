@@ -5,7 +5,7 @@ import {
   depot,
 } from "../scenario-commands.ts";
 
-export const depotReadyPrefix = DISCARD_BARRIER_PREFIX_COMMANDS.slice(0, 172);
+export const depotReadyPrefix = DISCARD_BARRIER_PREFIX_COMMANDS.slice(0, 185);
 export const THREE_DEPOT_TRADES = [
   depot(1, "timber", "brick"),
   depot(1, "timber", "brick"),
