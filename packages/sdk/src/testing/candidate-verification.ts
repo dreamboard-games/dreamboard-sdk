@@ -1,3 +1,7 @@
+import {
+  assertReducerBundleContract,
+  type ReducerBundleContract,
+} from "../shared/worker-contract.js";
 import type { DispatchTraceSummaryEntry } from "../reducer/diagnostics.js";
 import { ScenarioReplayError, type ScenarioDefinition } from "./definitions.js";
 import type { ScenarioDefinitionGameLike } from "./scenario-definition-validation.js";
@@ -15,7 +19,9 @@ export type CandidateVerificationScenario<
 export type CandidateVerificationInput<
   Game extends ScenarioDefinitionGameLike,
 > = {
-  /** The authored reducer game definition used by production dispatch. */
+  /** The exact compiled production artifact under verification. */
+  readonly bundle: ReducerBundleContract;
+  /** Authored scenario schemas and inspection metadata; not execution authority. */
   readonly reducer: Game;
   readonly scenarios:
     | Readonly<Record<string, CandidateVerificationScenario<Game>>>
@@ -69,6 +75,7 @@ export type CandidateVerificationResult = {
 
 const CANDIDATE_INPUT_FIELDS = new Set([
   "reducer",
+  "bundle",
   "scenarios",
   "maxScenarios",
   "maxStepsPerScenario",
@@ -82,6 +89,7 @@ export async function runCandidateVerification<
   input: CandidateVerificationInput<Game>,
 ): Promise<CandidateVerificationResult> {
   assertCandidateInputFields(input);
+  assertReducerBundleContract(input.bundle, "candidate verification");
   const scenarios = normalizeScenarios(input.scenarios);
   if (scenarios.length === 0) {
     throw new Error("Candidate verification requires at least one scenario.");
@@ -103,6 +111,7 @@ export async function runCandidateVerification<
     results.push(
       await runScenario({
         reducer: input.reducer,
+        bundle: input.bundle,
         scenario,
         maxStepsPerScenario,
       }),
@@ -123,6 +132,7 @@ export async function runCandidateVerification<
 
 async function runScenario<Game extends ScenarioDefinitionGameLike>(input: {
   readonly reducer: Game;
+  readonly bundle: ReducerBundleContract;
   readonly scenario: CandidateVerificationScenario<Game>;
   readonly maxStepsPerScenario: number;
 }): Promise<CandidateVerificationScenarioResult> {
@@ -146,6 +156,7 @@ async function runScenario<Game extends ScenarioDefinitionGameLike>(input: {
   try {
     replay = await replayScenario({
       game: input.reducer,
+      bundle: input.bundle,
       scenario: input.scenario,
     });
   } catch (error) {

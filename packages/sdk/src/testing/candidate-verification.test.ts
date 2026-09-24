@@ -1,5 +1,5 @@
-import { createGame as createModel } from "../reducer";
-
+import { createGame as createModel, createReducerBundle } from "../reducer";
+import { replayScenario, advanceScenarioReplay } from "./scenario-replay";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
@@ -186,9 +186,102 @@ const passingScenario = defineScenario({
 });
 
 describe("runCandidateVerification", () => {
+  test("retains the exact artifact through clone and advance", async () => {
+    const production = createReducerBundle(game);
+    const calls = { initialize: 0, dispatch: 0, project: 0 };
+    const bundle = {
+      ...production,
+      initialize(input: Parameters<typeof production.initialize>[0]) {
+        calls.initialize++;
+        return production.initialize(input);
+      },
+      async dispatch(input: Parameters<typeof production.dispatch>[0]) {
+        calls.dispatch++;
+        const result = await production.dispatch(input);
+        if (result.kind === "accept")
+          result.state.domain.publicState.score = 99;
+        return result;
+      },
+      project(input: Parameters<typeof production.project>[0]) {
+        calls.project++;
+        return production.project(input);
+      },
+    };
+    const replay = await replayScenario({
+      game,
+      bundle,
+      scenario: passingScenario,
+      at: { segment: "setup", completed: 0 },
+    });
+    const cloned = replay.clone();
+    cloned.view({ seat: 0 });
+    const advanced = await advanceScenarioReplay({
+      replay: cloned,
+      command: { actor: { seat: 0 }, interactionId: "score", params: {} },
+    });
+    expect(advanced.kind).toBe("accepted");
+    if (advanced.kind !== "accepted") throw new Error("Unexpected rejection");
+    expect(advanced.replay.state().publicState.score).toBe(99);
+    advanced.replay.view({ seat: 0 });
+    expect(calls).toEqual({ initialize: 1, dispatch: 1, project: 2 });
+  });
+
+  test("fails a valid-contract artifact with incorrect dispatch despite correct authored source", async () => {
+    const production = createReducerBundle(game);
+    const bundle = {
+      ...production,
+      async dispatch(request: Parameters<typeof production.dispatch>[0]) {
+        const result = await production.dispatch(request);
+        if (result.kind === "accept")
+          result.state.domain.publicState.score = 99;
+        return result;
+      },
+    };
+    const result = await runCandidateVerification({
+      reducer: game,
+      bundle,
+      scenarios: [passingScenario],
+    });
+    expect(result.status).toBe("failed");
+    expect(result.scenarioSummary.scenarios[0]?.diagnostic?.kind).toBe(
+      "assertion",
+    );
+  });
+
+  test.each(["initialize", "project"] as const)(
+    "executes candidate %s instead of rebuilding authored behavior",
+    async (operation) => {
+      const bundle = {
+        ...createReducerBundle(game),
+        [operation]: () => {
+          throw new Error(`candidate ${operation} executed`);
+        },
+      };
+      const scenario = defineScenario({
+        id: "artifact-projection",
+        setup: { players: 2, seed: 1 },
+        given: [],
+        when: [],
+        then: ({ view }) => {
+          view({ seat: 0 });
+        },
+      });
+      const result = await runCandidateVerification({
+        reducer: game,
+        bundle,
+        scenarios: [scenario],
+      });
+      expect(result.status).toBe("failed");
+      expect(
+        result.scenarioSummary.scenarios[0]?.diagnostic?.message,
+      ).toContain(`candidate ${operation} executed`);
+    },
+  );
+
   test("replays and asserts scenarios through the canonical runtime", async () => {
     const result = await runCandidateVerification({
       reducer: game,
+      bundle: createReducerBundle(game),
       scenarios: { [passingScenario.id]: passingScenario },
     });
 
@@ -215,6 +308,7 @@ describe("runCandidateVerification", () => {
     });
     const result = await runCandidateVerification({
       reducer: game,
+      bundle: createReducerBundle(game),
       scenarios: [scenario],
     });
 
@@ -245,6 +339,7 @@ describe("runCandidateVerification", () => {
     });
     const result = await runCandidateVerification({
       reducer: game,
+      bundle: createReducerBundle(game),
       scenarios: [scenario],
     });
 
@@ -273,6 +368,7 @@ describe("runCandidateVerification", () => {
     });
     const limited = await runCandidateVerification({
       reducer: game,
+      bundle: createReducerBundle(game),
       scenarios: [twoSteps],
       maxStepsPerScenario: 1,
     });
@@ -287,6 +383,7 @@ describe("runCandidateVerification", () => {
     await expect(
       runCandidateVerification({
         reducer: game,
+        bundle: createReducerBundle(game),
         scenarios: [passingScenario, twoSteps],
         maxScenarios: 1,
       }),
@@ -297,12 +394,14 @@ describe("runCandidateVerification", () => {
     const assertRemovedTypes = () => {
       const cannotSupplyBases: CandidateVerificationInput<typeof game> = {
         reducer: game,
+        bundle: createReducerBundle(game),
         scenarios: [passingScenario],
         // @ts-expect-error candidate verification has no base-state authority.
         bases: {},
       };
       const cannotSupplySnapshot: CandidateVerificationInput<typeof game> = {
         reducer: game,
+        bundle: createReducerBundle(game),
         scenarios: [passingScenario],
         // @ts-expect-error candidate verification cannot hydrate snapshots.
         snapshot: {},
@@ -314,6 +413,7 @@ describe("runCandidateVerification", () => {
     await expect(
       runCandidateVerification({
         reducer: game,
+        bundle: createReducerBundle(game),
         scenarios: [passingScenario],
         bases: {},
       } as never),
@@ -321,6 +421,7 @@ describe("runCandidateVerification", () => {
     await expect(
       runCandidateVerification({
         reducer: game,
+        bundle: createReducerBundle(game),
         scenarios: [passingScenario],
         snapshot: {},
       } as never),

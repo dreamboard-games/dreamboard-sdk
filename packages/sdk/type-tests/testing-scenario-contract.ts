@@ -190,3 +190,13 @@ void digestScenarioProjection;
 void resolveScenarioCommandParams;
 void scenarioProjectionInputMetadata;
 void scenarioProjectionParityFromInspectNode;
+
+// Candidate verification must execute an explicit production artifact.
+type CandidateInput =
+  import("../src/testing/candidate-verification").CandidateVerificationInput<
+    import("../src/testing/scenario-definition-validation").ScenarioDefinitionGameLike
+  >;
+declare const authoredCandidateInput: Omit<CandidateInput, "bundle">;
+// @ts-expect-error Authored definitions alone are not compiled artifact verification.
+const missingCandidateBundle: CandidateInput = authoredCandidateInput;
+void missingCandidateBundle;

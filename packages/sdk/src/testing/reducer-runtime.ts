@@ -57,8 +57,8 @@ export function createReducerTestingRuntime<
 >(
   definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
+  bundle: ReducerBundleContract = createReducerBundle(definition, options),
 ): ReducerTestingRuntime {
-  const bundle = createReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
   // The codec validates the authored schemas; its erased phase return type
   // cannot express the contract-specific phase-state mapping.
