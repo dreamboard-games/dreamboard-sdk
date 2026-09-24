@@ -1,6 +1,6 @@
 import { createGame, type GameOutcome } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
+import { ids, manifestContract } from "./manifest";
 
 export const suitSchema = z.enum(["clubs", "diamonds", "spades", "hearts"]);
 

@@ -7,7 +7,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import type { PlayerId } from "@dreamboard/manifest-contract";
+import type { PlayerId } from "../types/player-id";
 import { useActivePlayers } from "../hooks/useActivePlayers.js";
 import { usePlayerInfo } from "../hooks/usePlayerInfo.js";
 import { usePlayerTurnOrder } from "../hooks/usePlayerTurnOrder.js";

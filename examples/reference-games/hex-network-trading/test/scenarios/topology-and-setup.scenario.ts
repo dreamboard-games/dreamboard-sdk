@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { defineScenario } from "../testing-types.ts";
 import { STANDARD_SETUP_COMMANDS } from "../scenario-commands.ts";
 
@@ -13,7 +14,7 @@ export default defineScenario({
   when: STANDARD_SETUP_COMMANDS.slice(-1),
   then: ({ expect, state, view }) => {
     expect(state().flow.currentPhase).toBe("roll");
-    expect(state().flow.activePlayers).toEqual(["player-1"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-1")]);
     expect(state().publicState.setup).toBeNull();
     expect(view({ seat: 0 }).hexes).toEqual([
       {

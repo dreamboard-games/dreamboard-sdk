@@ -4,13 +4,8 @@ import {
   type GameOutcome,
 } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
-import { ids, manifestContract } from "../shared/manifest-contract";
-import type {
-  PlayerId,
-  ResourceId,
-  SpaceId,
-  VertexId,
-} from "../shared/manifest-contract";
+import { ids, manifestContract } from "./manifest";
+import type { PlayerId, ResourceId, SpaceId, VertexId } from "./manifest";
 
 export const resourceCountsSchema = sparseCounts(ids.resourceId);
 

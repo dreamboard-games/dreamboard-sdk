@@ -793,7 +793,7 @@ export type ParamsOfInteractionOfDefinition<
  *
  * This is the type that drives `submit(playerId, id, params)`,
  * `handle.submit(params)`, and the generated `InteractionParams` surface
- * in `shared/generated/ui-contract.ts`. The `reduce`-input counterpart is
+ * through `createGameUi(game)`. The `reduce`-input counterpart is
  * {@link ParamsOfInteractionOfDefinition}, which includes every field
  * because the engine has already filled the sampled ones by then.
  */

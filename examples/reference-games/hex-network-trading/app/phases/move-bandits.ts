@@ -1,6 +1,6 @@
 import { defineInputs } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
-import { ids } from "../../shared/manifest-contract";
+import { ids } from "../manifest";
 import { differentHex } from "../eligibility";
 import {
   appendHistory,

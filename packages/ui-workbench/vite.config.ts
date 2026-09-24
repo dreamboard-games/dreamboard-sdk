@@ -14,9 +14,7 @@ const sdkManifest = JSON.parse(
     string | { import?: string; default?: string; types?: string }
   >;
 };
-const referenceGamesRoot = path.join(workspaceRoot, "examples/reference-games");
 const fixtureRequestPrefix = "/fixtures/";
-const manifestContractId = "@dreamboard/manifest-contract";
 const scenarioCatalogId = "virtual:dreamboard-scenario-catalog";
 const uiSourceModulePrefix = "virtual:dreamboard-ui-source:";
 
@@ -111,40 +109,6 @@ function generatedScenarioPlugin(generatedRoot: string): Plugin {
   };
 }
 
-function referenceGameManifestContractPlugin(): Plugin {
-  return {
-    name: "dreamboard-reference-game-manifest-contract",
-    enforce: "pre",
-    resolveId(source, importer) {
-      if (source !== manifestContractId || !importer) {
-        return null;
-      }
-
-      const importerPath = importer.startsWith("/@fs/")
-        ? importer.slice("/@fs/".length)
-        : importer;
-      const relativeImporter = path.relative(referenceGamesRoot, importerPath);
-      if (
-        relativeImporter.startsWith("..") ||
-        path.isAbsolute(relativeImporter)
-      ) {
-        return null;
-      }
-
-      const [gameId] = relativeImporter.split(path.sep);
-      if (!gameId) {
-        return null;
-      }
-
-      return path.join(
-        referenceGamesRoot,
-        gameId,
-        "shared/manifest-contract.ts",
-      );
-    },
-  };
-}
-
 /**
  * SDK module aliases.
  *
@@ -218,7 +182,6 @@ export default defineConfig(({ command }) => {
   return {
     plugins: [
       generatedScenarioPlugin(generatedRoot),
-      referenceGameManifestContractPlugin(),
       tailwindcss(),
       fixtureAssetPlugin(fixtureSourceRoot),
     ],

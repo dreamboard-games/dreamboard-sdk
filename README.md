@@ -14,26 +14,25 @@ pnpm check
 
 `pnpm check` is the authoritative browser-free gate. It formats-checks, lints,
 typechecks, checks generated reducer contracts, builds, validates package
-exports, runs unit tests, and verifies all nine isolated reference games. It is
+exports, runs unit tests, and verifies both reference games. It is
 read-only from a clean checkout.
 
 The daily command surface is deliberately small:
 
-| Goal                                    | Command                                          |
-| --------------------------------------- | ------------------------------------------------ |
-| Build packages                          | `pnpm build`                                     |
-| Run the browser-free gate               | `pnpm check`                                     |
-| Format or check formatting              | `pnpm format` / `pnpm format:check`              |
-| Lint, typecheck, or unit test           | `pnpm lint` / `pnpm typecheck` / `pnpm test`     |
-| Write reducer-contract output           | `pnpm generate`                                  |
-| Check reducer-contract drift            | `pnpm generate --check`                          |
-| Verify one or all reference games       | `pnpm reference [game-id]`                       |
-| Repin reference games after publication | `pnpm reference pin <version>`                   |
-| Open Storybook                          | `pnpm ui storybook`                              |
-| Open the Workbench                      | `pnpm ui workbench [--scenario <id>] [--source]` |
-| Run UI tests                            | `pnpm ui test [--scenario <id>\|--all]`          |
-| Accept Storybook baselines              | `pnpm ui snapshots update`                       |
-| Build and verify a release candidate    | `pnpm release:verify`                            |
+| Goal                                 | Command                                          |
+| ------------------------------------ | ------------------------------------------------ |
+| Build packages                       | `pnpm build`                                     |
+| Run the browser-free gate            | `pnpm check`                                     |
+| Format or check formatting           | `pnpm format` / `pnpm format:check`              |
+| Lint, typecheck, or unit test        | `pnpm lint` / `pnpm typecheck` / `pnpm test`     |
+| Write reducer-contract output        | `pnpm generate`                                  |
+| Check reducer-contract drift         | `pnpm generate --check`                          |
+| Verify one or all reference games    | `pnpm reference [game-id]`                       |
+| Open Storybook                       | `pnpm ui storybook`                              |
+| Open the Workbench                   | `pnpm ui workbench [--scenario <id>] [--source]` |
+| Run UI tests                         | `pnpm ui test [--scenario <id>\|--all]`          |
+| Accept Storybook baselines           | `pnpm ui snapshots update`                       |
+| Build and verify a release candidate | `pnpm release:verify`                            |
 
 ## Public package
 
@@ -44,7 +43,7 @@ are the API authority.
 
 ## Reference games
 
-The nine isolated workspaces under
+The two authored workspace packages under
 [`examples/reference-games/`](examples/reference-games/README.md) are complete
 multi-turn teaching games and genuine packed-package consumers. Each game owns
 its `rule.md`, a schema-V5 `reference-game.json`, typed scenarios, and an exact

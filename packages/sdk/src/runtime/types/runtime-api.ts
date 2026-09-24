@@ -1,4 +1,4 @@
-import type { PlayerId } from "@dreamboard/manifest-contract";
+import type { PlayerId } from "./player-id";
 
 /**
  * Result of validating a player action

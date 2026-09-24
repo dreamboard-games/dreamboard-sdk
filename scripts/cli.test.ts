@@ -37,7 +37,7 @@ test("help documents the product command surface", () => {
   const result = cli("--help");
   assert.equal(result.status, 0);
   assert.match(result.stdout, /generate \[--check\]/);
-  assert.match(result.stdout, /reference pin <version>/);
+  assert.doesNotMatch(result.stdout, /reference pin <version>/);
   assert.match(result.stdout, /ui <storybook\|workbench\|test\|snapshots>/);
   assert.equal(rootHelp(), result.stdout);
 });

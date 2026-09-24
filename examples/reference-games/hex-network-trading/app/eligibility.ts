@@ -1,5 +1,5 @@
 import type { BoundTargetPredicate } from "@dreamboard-games/sdk/reducer";
-import type { EdgeId, SpaceId, VertexId } from "../shared/manifest-contract";
+import type { EdgeId, SpaceId, VertexId } from "./manifest";
 import { stormtrail } from "./game-model";
 import { edgeTouchesIntersection } from "./model";
 import {

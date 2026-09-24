@@ -1,4 +1,4 @@
-import type { SpaceId } from "../../shared/manifest-contract";
+import type { SpaceId } from "../manifest";
 import type { ProductionGrant } from "../types";
 import { HEX_RULES, INTERSECTIONS_BY_HEX_ID } from "../model";
 import {

@@ -1,8 +1,13 @@
-import { setupProfiles, shuffle } from "../shared/manifest-contract";
-
-export default setupProfiles({
+import { shuffle } from "@dreamboard-games/sdk/reducer/advanced";
+import { manifestContract } from "./manifest";
+export default {
   default: {
     initialPhase: "setup",
-    bootstrap: [shuffle({ type: "sharedZone", zoneId: "draw-pile" })],
+    bootstrap: [
+      shuffle<typeof manifestContract>({
+        type: "sharedZone",
+        zoneId: "draw-pile",
+      }),
+    ],
   },
-});
+} as const;

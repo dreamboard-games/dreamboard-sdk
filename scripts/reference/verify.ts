@@ -69,15 +69,6 @@ async function packSdk(
   return path.join(destination, tarballs[0]);
 }
 
-async function validateFrozenLockfile(
-  game: ReferenceGame,
-  run: AsyncCommandRunner,
-): Promise<void> {
-  await run("pnpm", [...isolatedInstallArgs, "--frozen-lockfile"], {
-    cwd: game.dir,
-  });
-}
-
 async function copyGame(source: string, destination: string): Promise<void> {
   await mkdir(path.dirname(destination), { recursive: true });
   await cp(source, destination, {
@@ -107,6 +98,32 @@ async function installCandidate(
   sdkTarball: string,
   run: AsyncCommandRunner,
 ): Promise<void> {
+  await writeFile(
+    path.join(sandbox, "tsconfig.json"),
+    JSON.stringify({
+      compilerOptions: {
+        target: "ES2022",
+        module: "ESNext",
+        moduleResolution: "bundler",
+        strict: true,
+        skipLibCheck: true,
+        esModuleInterop: true,
+        jsx: "react-jsx",
+        allowImportingTsExtensions: true,
+        noEmit: true,
+        types: ["node"],
+      },
+      include: [
+        "manifest.ts",
+        "manifest/**/*.ts",
+        "app/**/*.ts",
+        "ui/**/*.ts",
+        "ui/**/*.tsx",
+        "test/**/*.ts",
+        "test/**/*.tsx",
+      ],
+    }),
+  );
   const packagePath = path.join(sandbox, "package.json");
   const packageJson = JSON.parse(
     await readFile(packagePath, "utf8"),
@@ -129,11 +146,7 @@ async function installCandidate(
     [...isolatedInstallArgs, "--no-frozen-lockfile", "--lockfile=false"],
     { cwd: sandbox, capture: true },
   );
-  await run("pnpm", ["run", "generate"], {
-    cwd: sandbox,
-    capture: true,
-  });
-  for (const script of ["typecheck:raw", "test:raw", "test:ui:raw"]) {
+  for (const script of ["typecheck", "test"]) {
     await run("pnpm", ["run", script], { cwd: sandbox, capture: true });
   }
 
@@ -189,7 +202,6 @@ export async function verifyReferenceGames(
     root: options.root,
     ...(options.gameId ? { gameId: options.gameId } : {}),
   });
-  for (const game of games) await validateFrozenLockfile(game, run);
 
   const temporaryRoot = await mkdtemp(
     path.join(tmpdir(), "dreamboard-reference-"),

@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { completeGamePath } from "../scenario-paths.ts";
 import { defineScenario } from "../testing-types.ts";
 
@@ -9,7 +10,7 @@ export default defineScenario({
   given: completeGamePath.slice(0, 8),
   when: [],
   then: ({ expect, state }) => {
-    expect(state().flow.activePlayers).toEqual(["player-3"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-3")]);
     expect(state().publicState.heartsBroken).toBe(false);
   },
 });

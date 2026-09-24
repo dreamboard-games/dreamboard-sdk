@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type {
   BaseGameStateOfContract,
-  GeneratedManifestContractLike,
+  ReducerManifestContractLike,
   ManifestContractOf,
   ErrorCodeOfContract,
   PhaseDefinition,
@@ -13,7 +13,7 @@ import type {
 } from "../model";
 
 export type AnyReducerGameContract = {
-  manifest: GeneratedManifestContractLike<RuntimeTableRecord>;
+  manifest: ReducerManifestContractLike<RuntimeTableRecord>;
   state: StateDefinition<
     SchemaLike<object>,
     SchemaLike<object>,

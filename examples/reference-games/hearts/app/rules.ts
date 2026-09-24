@@ -1,4 +1,4 @@
-import type { CardId, PlayerId } from "../shared/manifest-contract";
+import type { CardId, PlayerId } from "./manifest";
 import {
   hearts,
   type GameErrorCode,

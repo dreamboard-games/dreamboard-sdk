@@ -1,11 +1,6 @@
 import { defineInputs } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
-import {
-  ids,
-  literals,
-  type PlayerId,
-  type ResourceId,
-} from "../../shared/manifest-contract";
+import { ids, literals, type PlayerId, type ResourceId } from "../manifest";
 import {
   connectedNetwork,
   connectedTrail,

@@ -1,5 +1,8 @@
 packages:
   - "packages/*"
+  - "templates/game"
+  - "examples/reference-games/hearts"
+  - "examples/reference-games/hex-network-trading"
 
 catalog:
   "@noble/hashes": ^2.2.0

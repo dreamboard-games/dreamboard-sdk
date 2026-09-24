@@ -6,7 +6,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import type { PlayerId } from "@dreamboard/manifest-contract";
+import type { PlayerId } from "../types/player-id";
 import { useStore } from "zustand";
 import {
   useInteractionUiStore,

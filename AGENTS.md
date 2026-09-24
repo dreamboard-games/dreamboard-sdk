@@ -24,7 +24,6 @@ pnpm test
 pnpm typecheck
 pnpm generate [--check]
 pnpm reference [game-id]
-pnpm reference pin <version>
 pnpm ui storybook
 pnpm ui workbench [--scenario <id>] [--source]
 pnpm ui test [--scenario <id>|--all]
@@ -43,9 +42,8 @@ new behavior genuinely belongs in this repository.
   public API. Do not generate a second API reference.
 - `scripts/` is Node 24 TypeScript. Prefer shared typed helpers and
   `node:util.parseArgs`; do not add a command framework for this small surface.
-- Each `examples/reference-games/<game>/` directory is an isolated authored
-  game. Its `rule.md` defines gameplay and its checked-in lockfile records the
-  exact published SDK dependency.
+- Each `examples/reference-games/<game>/` directory is an authored workspace
+  package. Its `rule.md` defines gameplay and the root lockfile owns dependency resolution.
 - `reference-game.json` uses schema V5. It contains workspace, teaching,
   mechanics, UI-pattern, and rights metadata only.
 - UI fixture compilation lives under `scripts/ui-fixtures/`, UI orchestration
@@ -58,10 +56,9 @@ new behavior genuinely belongs in this repository.
 renders and compares without changing tracked files. Unsupported schema forms
 must fail with the input path; never weaken generated types to `unknown`.
 
-Reference-game workspace contracts and Workbench materialization beneath
-`build/` are ignored local products. The UI commands materialize them when
-needed and preserve the last good Workbench output after a failed rebuild. Do
-not commit ignored materialization or hand-edit generated contracts.
+Authoring uses ordinary source imports and in-memory manifest compilation.
+Workbench fixtures beneath `build/` are ignored local products; UI commands
+preserve the last good output after a failed rebuild.
 
 ## Reference-game workflow
 
@@ -77,15 +74,10 @@ pnpm reference hearts
 pnpm reference
 ```
 
-The focused form verifies one game. The default verifies every game that is not
-listed in `LEGACY_REFERENCE_GAMES` (`scripts/reference/games.ts`). The seven
-games on that list still use the removed contract-first authoring API; they
-stay on disk as conversion material, are skipped by `pnpm check` and the UI
-lane, and can be verified in isolation by id once converted. Both forms validate
-the checked-in lockfile, pack the SDK once, install the selected game copies
-against that tarball, materialize, typecheck, and run reducer and UI tests.
-After publishing, run `pnpm reference pin <version>` to atomically repin every
-game manifest and lockfile to one exact npm version.
+The focused form verifies one game; the default verifies Hearts and Hex.
+Both forms pack the SDK once, install selected game copies against that
+tarball, typecheck, and run reducer and UI tests. Workspace development
+uses `workspace:*` dependencies and one root lockfile.
 
 ## UI workflow
 
@@ -111,7 +103,7 @@ traces, and video are ordinary failure artifacts.
 ## Release verification
 
 `pnpm release:verify` runs the shared core checks, creates one SDK tarball,
-smokes that artifact, and verifies the non-legacy reference games against the
+smokes that artifact, and verifies the reference games against the
 same file. It writes the immutable candidate description to
 `build/release/candidate/candidate.json`.
 

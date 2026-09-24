@@ -1,5 +1,5 @@
 import { many } from "@dreamboard-games/sdk/reducer";
-import type { CardId } from "../../shared/manifest-contract";
+import type { CardId } from "../manifest";
 import { hearts } from "../game-model";
 
 // Simultaneous-pass barrier: every seated player picks three cards, the trusted

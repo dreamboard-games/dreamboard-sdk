@@ -1,4 +1,4 @@
-import { literals, type PlayerId } from "../shared/manifest-contract";
+import { literals, type PlayerId } from "./manifest";
 import { stormtrail, type GameState } from "./game-model";
 import { HEX_RULES } from "./model";
 import {

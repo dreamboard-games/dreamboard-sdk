@@ -1,3 +1,4 @@
+import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import { firstTrickPenaltyPasses, play } from "../scenario-paths.ts";
 import { defineScenario } from "../testing-types.ts";
 
@@ -8,7 +9,7 @@ export default defineScenario({
   given: [...firstTrickPenaltyPasses, play(1, "clubs-2")],
   when: [play(2, "clubs-4")],
   then: ({ expect, state, view }) => {
-    expect(state().flow.activePlayers).toEqual(["player-4"]);
+    expect(state().flow.activePlayers).toEqual([asPlayerId("player-4")]);
     expect(
       view({ seat: 0 }).currentTrickPlays.map(({ cardId }) => cardId),
     ).toEqual(["clubs-2", "clubs-4"]);
