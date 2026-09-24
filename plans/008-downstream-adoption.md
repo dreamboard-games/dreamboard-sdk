@@ -1,13 +1,14 @@
 # Public runtime and private product adoption
 
-Status: implementation follows the reviewed SDK candidate. Use exact published
-package versions; preparation must not introduce local package links or tarball
-dependencies into either consumer repository.
+This document records the accepted downstream scope. Current completion and
+verification evidence live in [the delivery receipt](delivery-receipt.md).
+Consumers use exact published package versions without local package links or
+tarball dependencies.
 
 ## Public runtime and offline host
 
-The current source is `/Users/mac/code/worktrees/headless-cli-main`, repository
-`dreamboard-games/dreamboard`; it owns browser-gameplay-runtime and dev-host.
+The public repository `dreamboard-games/dreamboard` owns browser-gameplay-runtime
+and dev-host.
 Do not resurrect the retired CLI release-set workflow. Read its AGENTS first.
 
 Migrate package imports to the SDK's four subpaths and use the canonical SDK
@@ -17,9 +18,8 @@ Authored UI remains in a separate opaque iframe. Full state and persistence
 callbacks never cross the UI bridge. A fresh worker for each operation must
 preserve pending steps, RNG and initialized options through serialized state.
 
-`packages/browser-gameplay-runtime/src/gameplay-ui.ts` currently validates basis
-and dispatches each received submit directly. Add session-owned retry identity
-handling before basis validation: an exact previously accepted command returns
+The required `packages/browser-gameplay-runtime/src/gameplay-ui.ts` admission
+uses session-owned retry identity before basis validation: an exact previously accepted command returns
 its stored result and current frame, while reused ID with changed payload is
 rejected. Handle both submit and cancel with the same authority. Keep queued
 operation ordering and original actor/basis. Do not infer missing ACKs from
@@ -75,7 +75,7 @@ The `gameplayStateJson` codec is used only by that test. Delete these dead artif
 in the adoption cut and retain meaningful worker malformed-result, PostgreSQL
 state/log roundtrip, and session retry/restore/reload proof. Do not introduce a
 new Kotlin generator or schema validator for an unused boundary. This deletion
-is prepared at `5e9234d38` in
+was prepared at `5e9234d38` in
 [internal PR #531](https://github.com/dreamboard-games/dreamboard-internal/pull/531),
 with focused Kotlin compilation/control-client tests, ktlint and the complete
 repository gate passed. Its source base is `bcf3375ed` from origin/main; the
@@ -87,11 +87,11 @@ reducer-runtime.schema.json file. Historical plan references are not consumers.
 
 ### Package sequence
 
-Last live npm inventory during this task: SDK `0.5.0-alpha.2`, browser runtime
-`0.1.0-alpha.1`, dev-host `0.2.0-alpha.1`. Recheck before choosing fresh versions;
-the clean public main source has older version fields than npm. Never reuse an
-already published version. The dependency order is SDK, runtime, then dev-host,
+Delivered npm cohort: SDK `0.5.0-alpha.3`, browser runtime `0.1.0-alpha.2`,
+and dev-host `0.2.0-alpha.2`. The dependency order is SDK, runtime, then dev-host,
 with dev-host pinning the newly published runtime; internal pins the exact cohort.
+Never reuse a published version. Exact source revisions, workflow links and
+registry integrities are recorded in [the delivery receipt](delivery-receipt.md).
 
 Use reviewed immutable release candidates and repository publication workflows.
 The SDK publish workflow requires default-branch source and protected release

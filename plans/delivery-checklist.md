@@ -30,7 +30,7 @@ Root updates it with implementation and verification evidence.
 - [x] Layer 005: thin React selector adapter, provider/hook/Subscribe and type proofs.
 - [x] Layer 005: reference games import game types in hosted UI, never reducer code.
 - [x] Layer 005: both UIs migrated; old runtime/component API deleted.
-- [ ] Animation: optional registry-owned implementation with no false external-store promise.
+- [x] Animation: optional app/registry ownership; no false external-store transition promise or mandatory SDK primitive.
 
 ## Registry and developer experience
 
@@ -50,11 +50,11 @@ Root updates it with implementation and verification evidence.
 - [x] Template game typechecks and runs against the new API.
 - [x] Guides/API/registry docs and examples describe only the supported headless API.
 - [x] One packed SDK artifact proves declarations, exports and complete reference games.
-- [ ] Public runtime/dev-host adapt worker, UI source and initialization boundaries.
-- [ ] Public exact-version release sequence: SDK → runtime → dev-host.
-- [ ] Internal adoption updates canonical schemas/adapters/scaffolds/pins.
-- [ ] Installed cohort, offline/browser, dependency closure and integration gates pass.
-- [ ] All owned PRs reviewed, checks complete, exact heads verified; final landing recorded.
+- [x] Public runtime/dev-host adapt worker, UI source and initialization boundaries; public PRs #26–27 and #29 landed with package/browser proof.
+- [x] Public exact-version release sequence: SDK `0.5.0-alpha.3` → runtime `0.1.0-alpha.2` → dev-host `0.2.0-alpha.2`; registry hashes match the verified workflow artifacts.
+- [x] Internal adoption updates canonical schemas/adapters/scaffolds/pins; PRs #531 and #545 landed at `35476cc9e`.
+- [x] Installed cohort, offline/browser, dependency closure and integration gates pass; see [the delivery receipt](delivery-receipt.md).
+- [x] All implementation PRs reviewed, required checks complete, exact heads verified; final landing recorded. Internal CI reports no PR checks; its full local gate and integration passed.
 
 Publication must use the reviewed candidate and repository release workflow.
 Never replace an unavailable public dependency with local links or tarballs in
