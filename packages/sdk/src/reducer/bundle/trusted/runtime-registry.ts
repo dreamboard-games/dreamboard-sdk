@@ -3,7 +3,7 @@ import type {
   PhaseNamesOfDefinition,
   ReducerGameContractLike,
   ReducerGameDefinition,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import {
   collectReducerDefinitionIndex,
@@ -21,46 +21,46 @@ export type TrustedInteractionEntry<Contract extends ReducerGameContractLike> =
 export type TrustedPhaseRegistry<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReducerDefinitionPhaseIndex<Contract, Definitions, Views>;
+  View extends ViewOfContract<Contract>,
+> = ReducerDefinitionPhaseIndex<Contract, Definitions, View>;
 
 export interface TrustedRuntimeRegistry<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > {
   readonly phaseEntries: ReadonlyArray<
     readonly [
       PhaseNamesOfDefinition<
-        ReducerGameDefinition<Contract, Definitions, Views>
+        ReducerGameDefinition<Contract, Definitions, View>
       >,
       TrustedErasedPhase<Contract>,
     ]
   >;
   readonly phasesByName: ReadonlyMap<
-    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, Views>>,
-    TrustedPhaseRegistry<Contract, Definitions, Views>
+    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, View>>,
+    TrustedPhaseRegistry<Contract, Definitions, View>
   >;
 }
 
 export function collectTrustedRuntimeRegistry<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
-): TrustedRuntimeRegistry<Contract, Definitions, Views> {
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
+): TrustedRuntimeRegistry<Contract, Definitions, View> {
   type PhaseName = PhaseNamesOfDefinition<
-    ReducerGameDefinition<Contract, Definitions, Views>
+    ReducerGameDefinition<Contract, Definitions, View>
   >;
 
   const index = collectReducerDefinitionIndex(definition);
   const phasesByName = new Map<
     PhaseName,
-    TrustedPhaseRegistry<Contract, Definitions, Views>
+    TrustedPhaseRegistry<Contract, Definitions, View>
   >();
   for (const phaseIndex of index.phasesByName.values()) {
-    const trustedPhase: TrustedPhaseRegistry<Contract, Definitions, Views> = {
+    const trustedPhase: TrustedPhaseRegistry<Contract, Definitions, View> = {
       phaseName: phaseIndex.phaseName,
       phase: phaseIndex.phase,
       interactions: phaseIndex.interactions,

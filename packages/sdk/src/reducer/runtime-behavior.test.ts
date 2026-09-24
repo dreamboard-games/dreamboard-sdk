@@ -10,13 +10,11 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createReducerBundle,
-  defineDerived,
-  defineEmptyView,
+  memoize,
   defineGameContract,
   defineInteraction,
-  definePlayerView,
+  defineView,
   definePhase,
-  defineSharedView,
   gameEvent,
   rngInput,
 } from "../reducer/internal";
@@ -321,10 +319,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
             },
           }),
         },
-        views: {
-          shared: defineEmptyView<typeof contract>(),
-          player: defineEmptyView<typeof contract>(),
-        },
+        view: () => ({}),
       });
       const bundle = createReducerBundle(game);
       const initialized = await bundle.initialize({
@@ -392,14 +387,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: definePlayerView<typeof contract>()({
-          project({ state }) {
-            return { count: state.publicState.count };
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ state }) => {
+        return { count: state.publicState.count };
+      }),
     });
     const warm = createReducerBundle(game);
     expect(Object.keys(warm).sort()).toEqual([
@@ -591,17 +581,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: definePlayerView<typeof contract>()({
-          project({ state }) {
-            return {
-              counter: state.publicState.counter,
-              secret: state.hiddenState.secret,
-            };
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ state }) => {
+        return {
+          counter: state.publicState.counter,
+          secret: state.hiddenState.secret,
+        };
+      }),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -620,7 +605,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
       counter: 3,
       secret: "eel",
     });
-    expect(typeof (view as { then?: unknown }).then).toBe("undefined");
+    expect(
+      typeof (
+        view as {
+          then?: unknown;
+        }
+      ).then,
+    ).toBe("undefined");
     expectProjectionTiming(projection.timing);
     expect(
       Object.prototype.propertyIsEnumerable.call(projection, "timing"),
@@ -664,18 +655,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
           },
         }),
       },
-      views: {
-        shared: defineSharedView<typeof contract>()({
-          project({ state }) {
-            return { counter: state.publicState.counter };
-          },
-        }),
-        player: definePlayerView<typeof contract>()({
-          project({ shared }) {
-            return shared;
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ state }) => ({
+        counter: state.publicState.counter,
+      })),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -724,8 +706,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expect(runtimeProjection.timing.resolveViewMs).toBe(0);
     expect(runtimeProjection.timing.resolveZoneHandlesMs).toBe(0);
   });
-
-  test("project projects shared once and passes it to player views", async () => {
+  test("project evaluates only requested seats and never promotes private data to shared", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -737,8 +718,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         hidden: z.object({}),
       },
     });
-    let sharedCalls = 0;
-
+    const viewedPlayers: string[] = [];
     const game = defineGame({
       contract,
       initial: {
@@ -756,19 +736,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineSharedView<typeof contract>()({
-          project({ state }) {
-            sharedCalls++;
-            return { counter: state.publicState.counter };
-          },
-        }),
-        player: definePlayerView<typeof contract>()({
-          project({ playerId, shared }) {
-            return { playerId, shared };
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ playerId, state }) => {
+        viewedPlayers.push(playerId);
+        return {
+          playerId,
+          secret: `private:${playerId}`,
+          counter: state.publicState.counter,
+        };
+      }),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -781,17 +756,25 @@ describe("direct reducer lifecycle and seeded operations", () => {
       state: session,
       playerIds: ["player-1", "player-2"],
     });
-
-    expect(sharedCalls).toBe(1);
-    expect(projection.sharedView).toEqual({ counter: 3 });
+    expect(viewedPlayers).toEqual(["player-1", "player-2"]);
+    expect(projection.sharedView).toEqual({});
     expect(projection.seats["player-1"]?.view).toEqual({
       playerId: "player-1",
-      shared: { counter: 3 },
+      counter: 3,
+      secret: "private:player-1",
     });
     expect(projection.seats["player-2"]?.view).toEqual({
       playerId: "player-2",
-      shared: { counter: 3 },
+      counter: 3,
+      secret: "private:player-2",
     });
+    const spectator = bundle.project({ state: session, playerIds: [] });
+    expect(spectator.sharedView).toEqual({});
+    expect(spectator.seats).toEqual({});
+    expect(viewedPlayers).toEqual(["player-1", "player-2"]);
+    const seat = bundle.project({ state: session, playerIds: ["player-2"] });
+    expect(Object.keys(seat.seats)).toEqual(["player-2"]);
+    expect(JSON.stringify(seat)).not.toContain("private:player-1");
   });
 
   test("project full projection resolves descriptors and views", async () => {
@@ -841,17 +824,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: definePlayerView<typeof contract>()({
-          project({ state, playerId }) {
-            return {
-              playerId,
-              counter: state.publicState.counter,
-            };
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ state, playerId }) => {
+        return {
+          playerId,
+          counter: state.publicState.counter,
+        };
+      }),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -872,7 +850,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expect(availableCalls).toBe(1);
   });
 
-  test("project shares derived values across seats and descriptors", async () => {
+  test("ordinary memoized functions share immutable inputs across seats and descriptors", async () => {
     const contract = defineGameContract({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
@@ -885,12 +863,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
     let computeCount = 0;
-    const expensiveTotal = defineDerived<typeof contract>()({
-      name: "expensiveTotal",
-      compute: ({ state }) => {
-        computeCount++;
-        return state.publicState.counter;
-      },
+    let availabilityCalls = 0;
+    const expensiveTotal = memoize((state: { counter: number }) => {
+      computeCount++;
+      return state.counter;
     });
 
     const game = defineGame({
@@ -911,20 +887,24 @@ describe("direct reducer lifecycle and seeded operations", () => {
           interactions: {
             inspect: defineInteraction<typeof contract>()({
               inputs: {},
-              cost: ({ derived }) => ({ gold: derived(expensiveTotal) }),
-              reduce: ({ state, accept }) => accept(state),
+              rules: [
+                {
+                  id: "positive-total",
+                  errorCode: "EMPTY_TOTAL",
+                  available: ({ state }) => {
+                    availabilityCalls++;
+                    return expensiveTotal(state.publicState) > 0;
+                  },
+                },
+              ],
+              reduce: () => {},
             }),
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: definePlayerView<typeof contract>()({
-          project({ derived }) {
-            return { total: derived(expensiveTotal) };
-          },
-        }),
-      },
+      view: defineView<typeof contract>()(({ state }) => {
+        return { total: expensiveTotal(state.publicState) };
+      }),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -939,6 +919,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     expect(computeCount).toBe(1);
+    expect(availabilityCalls).toBeGreaterThan(0);
   });
 
   test("project skips target eligibility for unavailable descriptors", async () => {
@@ -1010,10 +991,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -2235,10 +2213,7 @@ describe("implicit transaction acceptance", () => {
             },
           }),
         },
-        views: {
-          shared: defineEmptyView<typeof contract>(),
-          player: defineEmptyView<typeof contract>(),
-        },
+        view: () => ({}),
       });
       const bundle = createReducerBundle(game);
       const initialized = await bundle.initialize({

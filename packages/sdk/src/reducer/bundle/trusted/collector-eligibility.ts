@@ -1,4 +1,3 @@
-import type { DerivedResolver } from "../../derived";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -13,7 +12,6 @@ import { interactionInputsOf } from "./collector-introspection";
 
 export type CollectorProjectionOptions<DomainState extends CollectorState> = {
   readonly queries?: TableQueriesOfState<DomainState>;
-  readonly derived?: DerivedResolver;
   readonly eligibleTargetCache?: Map<string, string[]>;
   readonly eligibleTargetCachePrefix?: string;
   readonly includeEligibleTargets?: boolean;

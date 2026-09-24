@@ -1,4 +1,3 @@
-import { createDerivedResolver, type DerivedResolver } from "../../derived";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -44,7 +43,6 @@ export type CollectorInputSolverOptions<
   readonly domainState: DomainState;
   readonly playerId: PlayerId;
   readonly queries?: TableQueriesOfState<DomainState>;
-  readonly derived?: DerivedResolver;
   /** Values already selected by a trusted caller, such as a card projection. */
   readonly initialValues?: Readonly<Record<string, unknown>>;
   /**
@@ -78,7 +76,6 @@ type SolverContext = {
     assignment: Readonly<Record<string, unknown>>,
   ) => boolean;
   readonly queries: () => unknown;
-  readonly derived: () => DerivedResolver;
 };
 
 type RecursiveSatisfiability =
@@ -243,11 +240,6 @@ function createSolverContext<
         table: CollectorState["table"];
       },
     ) as unknown as TableQueriesOfState<DomainState>);
-  let derivedLazy = options.derived ?? null;
-  const derived = () =>
-    (derivedLazy ??= createDerivedResolver(options.domainState, {
-      q: queries(),
-    }));
   return {
     interaction: options.interaction as unknown as AnyInteractionSpec<
       CollectorState,
@@ -259,7 +251,6 @@ function createSolverContext<
     initialValues: options.initialValues ?? {},
     acceptsAssignment: options.acceptsAssignment ?? (() => true),
     queries,
-    derived,
   };
 }
 
@@ -415,7 +406,6 @@ function resolveCollectorValueSource(
     context.domainState,
     context.playerId,
     context.queries(),
-    context.derived(),
     dependencyValues,
   );
   const base = baseValuesForDomain(

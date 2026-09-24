@@ -1,4 +1,4 @@
-import type { RuntimeTableRecord, StringKeyOf } from "../table";
+import type { RuntimeTableRecord } from "../table";
 import type { ManifestContract } from "../manifest";
 import type {
   PhaseNameOfState,
@@ -8,56 +8,6 @@ import type {
 import type { ReducerRuntimeStateForState } from "../runtime";
 import type { TableQueriesOfState } from "../queries";
 import type { ReducerTransaction } from "../../transaction";
-import type { DerivedResolver } from "../../derived";
-
-type StaticBoardsOfManifest<Manifest> = Manifest extends {
-  staticBoards?: infer StaticBoards;
-}
-  ? NonNullable<StaticBoards>
-  : {
-      byId: Record<string, never>;
-      hex: Record<string, never>;
-      square: Record<string, never>;
-    };
-
-type StaticBoardMapOfManifest<Manifest> =
-  StaticBoardsOfManifest<Manifest> extends {
-    byId: infer Boards;
-  }
-    ? Boards
-    : Record<string, never>;
-
-type StaticHexBoardMapOfManifest<Manifest> =
-  StaticBoardsOfManifest<Manifest> extends {
-    hex: infer Boards;
-  }
-    ? Boards
-    : Record<string, never>;
-
-type StaticSquareBoardMapOfManifest<Manifest> =
-  StaticBoardsOfManifest<Manifest> extends {
-    square: infer Boards;
-  }
-    ? Boards
-    : Record<string, never>;
-
-export type StaticViewQueries<
-  Manifest extends ManifestContract<RuntimeTableRecord>,
-> = {
-  board: {
-    get: <BoardId extends StringKeyOf<StaticBoardMapOfManifest<Manifest>>>(
-      boardId: BoardId,
-    ) => StaticBoardMapOfManifest<Manifest>[BoardId];
-    hex: <BoardId extends StringKeyOf<StaticHexBoardMapOfManifest<Manifest>>>(
-      boardId: BoardId,
-    ) => StaticHexBoardMapOfManifest<Manifest>[BoardId];
-    square: <
-      BoardId extends StringKeyOf<StaticSquareBoardMapOfManifest<Manifest>>,
-    >(
-      boardId: BoardId,
-    ) => StaticSquareBoardMapOfManifest<Manifest>[BoardId];
-  };
-};
 
 // --- Context Types ---
 
@@ -93,7 +43,6 @@ export type ReadHelpers<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
 > = {
   q: TableQueriesOfState<State>;
-  derived: DerivedResolver;
 };
 
 export type RandomHelpers = {

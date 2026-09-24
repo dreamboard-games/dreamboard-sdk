@@ -2,7 +2,7 @@ import type {
   AnyInteractionSpec,
   PhaseMapOf,
   ReducerGameContractLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type {
   TrustedDomainState,
@@ -35,12 +35,12 @@ function resolveActorSet<PlayerId extends string>(
 export function createInteractionAuthorization<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
->(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
+  View extends ViewOfContract<Contract>,
+>(scope: TrustedRuntimeScope<Contract, Definitions, View>) {
   type DomainState = TrustedDomainState<Contract>;
   type Manifest = TrustedManifest<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
 
   function resolveInteractionActorAuthorization(

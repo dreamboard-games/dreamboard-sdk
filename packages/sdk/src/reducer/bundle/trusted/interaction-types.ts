@@ -6,7 +6,7 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerValidationResult,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type {
   TrustedDefinition,
@@ -25,8 +25,8 @@ import type {
 export type TrustedInteractionId<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = InteractionIdOfDefinition<TrustedDefinition<Contract, Definitions, Views>>;
+  View extends ViewOfContract<Contract>,
+> = InteractionIdOfDefinition<TrustedDefinition<Contract, Definitions, View>>;
 
 export type InteractionCommitPolicyShape =
   | { mode: "manual" }
@@ -107,10 +107,10 @@ export type InteractionDescriptorShape<
 export type TrustedInteractionDescriptorShape<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > = InteractionDescriptorShape<
-  TrustedPhaseName<Contract, Definitions, Views>,
-  TrustedInteractionId<Contract, Definitions, Views>
+  TrustedPhaseName<Contract, Definitions, View>,
+  TrustedInteractionId<Contract, Definitions, View>
 >;
 
 export type InteractionInputDescriptorShape = {
@@ -147,7 +147,7 @@ export type ResolveDecisionInput<Contract extends ReducerGameContractLike> = {
 export type InteractionDecisionResult<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > =
   | {
       found: false;
@@ -164,7 +164,7 @@ export type InteractionDecisionResult<
       descriptor: TrustedInteractionDescriptorShape<
         Contract,
         Definitions,
-        Views
+        View
       >;
       /** Trusted collector/domain satisfiability used by inspect/explore. */
       inputSatisfiability?: CollectorInputSatisfiability;

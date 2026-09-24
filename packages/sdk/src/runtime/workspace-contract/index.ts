@@ -69,7 +69,6 @@ export {
   type GameUiPlayers,
   type GameUiTurn,
   type GameUiView,
-  type GameUiViewName,
   type GameWorkspaceUI,
 } from "./game-ui-contract.js";
 

@@ -1,11 +1,8 @@
 import type {
-  ManifestContract,
   PhaseMapOf,
   ReducerGameContractLike,
-  RuntimeTableRecord,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
-import type { StaticViewQueries } from "../../model/spec/runtime-args";
 import type { TrustedRuntimeScope } from "./runtime-scope";
 
 function stableStringify(value: unknown): string {
@@ -43,68 +40,21 @@ function readManifestVersion(manifest: unknown): string {
   return "0";
 }
 
-function createStaticViewQueries<
-  Manifest extends ManifestContract<RuntimeTableRecord>,
->(manifest: Manifest): StaticViewQueries<Manifest> {
-  const staticBoards = manifest.staticBoards ?? {
-    byId: {},
-    hex: {},
-    square: {},
-  };
-  const requireBoard = (
-    boards: Record<string, unknown>,
-    boardId: string,
-    layout: "board" | "hex" | "square",
-  ) => {
-    const board = boards[boardId];
-    if (!board) {
-      throw new Error(`Unknown static ${layout} board '${boardId}'.`);
-    }
-    return board;
-  };
-
-  return {
-    board: {
-      get: (boardId) =>
-        requireBoard(
-          staticBoards.byId as Record<string, unknown>,
-          boardId,
-          "board",
-        ) as never,
-      hex: (boardId) =>
-        requireBoard(
-          staticBoards.hex as Record<string, unknown>,
-          boardId,
-          "hex",
-        ) as never,
-      square: (boardId) =>
-        requireBoard(
-          staticBoards.square as Record<string, unknown>,
-          boardId,
-          "square",
-        ) as never,
-    },
-  };
-}
-
 export function createStaticProjectionBuilder<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
->(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
+  View extends ViewOfContract<Contract>,
+>(scope: TrustedRuntimeScope<Contract, Definitions, View>) {
   return {
     boardStatic(): {
       view: unknown;
       hash: string;
       manifestVersion: string;
     } | null {
-      const staticView = scope.definition.staticView;
-      if (!staticView) return null;
       const manifest = scope.definition.contract.manifest;
-      const view = staticView.project({
-        manifest,
-        q: createStaticViewQueries(manifest),
-      });
+      const view = {
+        boards: manifest.staticBoards ?? { byId: {}, hex: {}, square: {} },
+      };
       const serialized = stableStringify(view);
       return {
         view: JSON.parse(serialized) as unknown,

@@ -9,18 +9,13 @@
 export * from "../reducer";
 export {
   createContractAuthoring,
-  defineEmptyView,
   defineGame,
   defineGameContract,
   defineInteraction,
   defineInteractionRule,
   definePhase,
-  definePlayerView,
-  defineSharedView,
-  defineStaticView,
   type ReducerPhaseDefinition,
-  type ReducerPlayerViewDefinition,
-  type ReducerSharedViewDefinition,
+  type ReducerViewDefinition,
 } from "./authoring";
 export { defineGameDefinition } from "./authoring/game";
 export type {
@@ -54,3 +49,5 @@ export {
   createReducerTransaction,
   type ReducerEdit,
 } from "./transaction";
+
+export { defineView } from "./authoring/views";

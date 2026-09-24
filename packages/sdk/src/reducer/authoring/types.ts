@@ -5,10 +5,9 @@ import type {
   ManifestContractOf,
   ErrorCodeOfContract,
   PhaseDefinition,
-  PlayerViewDefinition,
+  ViewDefinition,
   RuntimeTableRecord,
   SchemaLike,
-  SharedViewDefinition,
   StateDefinition,
 } from "../model";
 
@@ -56,23 +55,12 @@ export type ReducerPhaseDefinition<
   ContractManifest<Contract>
 >;
 
-export type ReducerSharedViewDefinition<
+export type ReducerViewDefinition<
   Contract extends AnyReducerGameContract,
   Projection = unknown,
-> = SharedViewDefinition<
+> = ViewDefinition<
   ContractState<Contract>,
   ContractManifest<Contract>,
-  Projection
->;
-
-export type ReducerPlayerViewDefinition<
-  Contract extends AnyReducerGameContract,
-  SharedProjection = unknown,
-  Projection = unknown,
-> = PlayerViewDefinition<
-  ContractState<Contract>,
-  ContractManifest<Contract>,
-  SharedProjection,
   Projection
 >;
 

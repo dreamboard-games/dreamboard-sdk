@@ -7,7 +7,7 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   OptionsOfContract,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import { isPerPlayer } from "../../per-player";
 import { normalizeResult } from "./runtime-scope";
@@ -23,11 +23,11 @@ import type {
 export function createLifecycleRunner<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
->(scope: TrustedRuntimeScope<Contract, Definitions, Views>) {
+  View extends ViewOfContract<Contract>,
+>(scope: TrustedRuntimeScope<Contract, Definitions, View>) {
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
 
   function resolveInitialPhase(): PhaseName {

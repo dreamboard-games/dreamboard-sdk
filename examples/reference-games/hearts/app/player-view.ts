@@ -56,21 +56,12 @@ function projectPublic(state: GameState, q: typeof hearts.types.Queries) {
     outcome: state.publicState.outcome,
   };
 }
-
-export const sharedView = hearts.views.shared({
-  project({ state, q }) {
-    return projectPublic(state, q);
-  },
-});
-
-export const playerView = hearts.views.player({
-  project({ state, playerId, q }) {
-    return {
-      ...projectPublic(state, q),
-      playerId,
-      hand: q.zone
-        .playerCards(playerId, "hand")
-        .map((cardId) => cardView(q, cardId)),
-    };
-  },
+export const view = hearts.view(({ state, playerId, q }) => {
+  return {
+    ...projectPublic(state, q),
+    playerId,
+    hand: q.zone
+      .playerCards(playerId, "hand")
+      .map((cardId) => cardView(q, cardId)),
+  };
 });

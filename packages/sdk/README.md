@@ -45,8 +45,8 @@ codes. The returned value is three things at once:
 - the **type leaf**: `typeof game.types.State`, `.ErrorCode`, `.PlayerId`,
   `.Queries`, `.Tx` (phantom carriers; reading them at runtime throws),
 - the **factory namespace**: `game.phase(name)`, `phase.define`,
-  `phase.interaction`, `phase.inputs.*`, `game.views.*`,
-- the **assembler**: `game.assemble({ initial, initialPhase, phases, views })`.
+  `phase.interaction`, `phase.inputs.*`, `game.view`,
+- the **assembler**: `game.assemble({ initial, initialPhase, phases, view })`.
 
 Mutation callbacks (`enter`, `reduce`, `resolve`) receive an open transaction
 `tx`. Mutate through it and finish with a bare `return` (accept), or with
@@ -143,16 +143,11 @@ export default game.assemble({
   },
   initialPhase: "setup",
   phases: { setup, play },
-  views: {
-    shared: game.views.empty(),
-    player: game.views.player({
-      project: ({ state, playerId, q }) => ({
-        me: playerId,
-        hand: q.zone.playerCards(playerId, "hand"),
-        current: state.publicState.currentPlayerId,
-      }),
-    }),
-  },
+  view: game.view(({ state, playerId, q }) => ({
+    me: playerId,
+    hand: q.zone.playerCards(playerId, "hand"),
+    current: state.publicState.currentPlayerId,
+  })),
 });
 ```
 
@@ -211,3 +206,12 @@ Interactions use `actor` to override their phase actor; only authorized seats
 receive their input domains. Use ordinary form choices for responses and explicit
 rules plus transaction resource mutations for affordability. Prompt collectors,
 implicit costs, guidance metadata, and phase zone declarations are removed.
+
+A game authors one `view` for each requested seat. Public and private fields
+compose in that function; the transport never uses a seat view as a spectator
+payload. Static boards come directly from the compiled manifest.
+
+Use `memoize((input: SomeImmutableObject) => result)` for shared pure calculations.
+It caches by object identity with a WeakMap, including `undefined` results. Pass
+immutable snapshots (or stable immutable branches), not an open mutable transaction.
+There is no injected derived-value resolver.

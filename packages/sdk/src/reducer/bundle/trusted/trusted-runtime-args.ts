@@ -1,5 +1,3 @@
-import { createDerivedResolver } from "../../derived";
-import type { DerivedResolver } from "../../derived";
 import type { ReducerTransaction } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type {
@@ -92,7 +90,6 @@ export function buildRuntimeArgs<
   extra: Extra,
   options: {
     q?: TableQueriesOfState<BaseGameStateOfContract<Contract>>;
-    derived?: DerivedResolver;
     random?: import("./rng-sampler").MutableRandomHelpers;
   } = {},
 ) {
@@ -106,7 +103,6 @@ export function buildRuntimeArgs<
     ...buildContext(state, manifest),
     ...helpers,
     q,
-    derived: options.derived ?? createDerivedResolver(domainState, { q }),
     runtime: publicRuntime(state.runtime),
     random: options.random?.random ?? DISABLED_RANDOM_HELPERS,
     ...extra,

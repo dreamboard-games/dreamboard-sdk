@@ -2,7 +2,7 @@ import type {
   AnyInteractionSpec,
   PhaseMapOf,
   ReducerGameContractLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type { ProjectionContext } from "./projection-context";
 import type {
@@ -18,25 +18,23 @@ export const SIMULTANEOUS_SUBMIT_INTERACTION_ID = "submit";
 type ErasedPhase<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<
-  TrustedRuntimeScope<Contract, Definitions, Views>["phaseByName"]
->;
+  View extends ViewOfContract<Contract>,
+> = ReturnType<TrustedRuntimeScope<Contract, Definitions, View>["phaseByName"]>;
 
 export function isSimultaneousPhase<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
->(phase: ErasedPhase<Contract, Definitions, Views>): boolean {
+  View extends ViewOfContract<Contract>,
+>(phase: ErasedPhase<Contract, Definitions, View>): boolean {
   return phase.kind === "simultaneousPlayer";
 }
 
 export function simultaneousSubmitInteraction<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  phase: ErasedPhase<Contract, Definitions, Views>,
+  phase: ErasedPhase<Contract, Definitions, View>,
 ):
   | AnyInteractionSpec<TrustedDomainState<Contract>, TrustedManifest<Contract>>
   | undefined {
@@ -60,11 +58,11 @@ function resolvePromptToArray<PlayerId extends string>(
 export function resolveSimultaneousActors<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
   state: TrustedState<Contract>,
-  phase: ErasedPhase<Contract, Definitions, Views>,
+  phase: ErasedPhase<Contract, Definitions, View>,
   projection?: ProjectionContext<TrustedDomainState<Contract>>,
 ): TrustedPlayerId<Contract>[] {
   type PlayerId = TrustedPlayerId<Contract>;

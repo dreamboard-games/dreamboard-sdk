@@ -9,7 +9,7 @@ import type {
   ReducerGameContractLike,
   ReducerResult,
   RuntimeRngState,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type { createInteractionResolver } from "./interaction-resolver";
 import type { createLifecycleRunner } from "./lifecycle-runner";
@@ -38,27 +38,27 @@ import {
 type InteractionResolverFor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<typeof createInteractionResolver<Contract, Definitions, Views>>;
+  View extends ViewOfContract<Contract>,
+> = ReturnType<typeof createInteractionResolver<Contract, Definitions, View>>;
 
 type LifecycleRunnerFor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<typeof createLifecycleRunner<Contract, Definitions, Views>>;
+  View extends ViewOfContract<Contract>,
+> = ReturnType<typeof createLifecycleRunner<Contract, Definitions, View>>;
 
 export function createReducerExecutor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
-  interactions: InteractionResolverFor<Contract, Definitions, Views>,
-  lifecycle: LifecycleRunnerFor<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
+  interactions: InteractionResolverFor<Contract, Definitions, View>,
+  lifecycle: LifecycleRunnerFor<Contract, Definitions, View>,
 ) {
   type DomainState = TrustedDomainState<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 

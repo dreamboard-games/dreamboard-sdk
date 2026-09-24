@@ -1,6 +1,5 @@
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike } from "../table";
-import type { DerivedResolver } from "../../derived";
 import type { ValidationIssue } from "./runtime-args";
 
 // --- Interaction / Zone primitives ---
@@ -198,7 +197,6 @@ type DomainProjector<Domain extends InputDomainDescriptor> = (
   state: CollectorState,
   playerId: string,
   q: unknown,
-  derived: DerivedResolver,
   values?: Readonly<Record<string, unknown>>,
 ) => Domain;
 
@@ -293,7 +291,6 @@ type InputCollectorBase<
     state: CollectorState,
     playerId: string,
     q: unknown,
-    derived: DerivedResolver,
     domain: InputDomainDescriptor,
   ) => z.infer<Schema> | undefined;
 } & (Kind extends "rng"

@@ -4,7 +4,7 @@ import type {
   InputCollector,
   PhaseMapOf,
   ReducerGameContractLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import {
   collectCardZoneIds,
@@ -238,12 +238,12 @@ function interactionAvailabilityFromDecision(
 export function buildInteractionDescriptor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
   state: TrustedState<Contract>,
   playerId: TrustedPlayerId<Contract>,
-  interactionId: TrustedInteractionId<Contract, Definitions, Views>,
+  interactionId: TrustedInteractionId<Contract, Definitions, View>,
   interaction: AnyInteractionSpec<
     TrustedDomainState<Contract>,
     TrustedManifest<Contract>
@@ -254,12 +254,12 @@ export function buildInteractionDescriptor<
     includeEligibleTargets?: boolean;
     includeDiagnosticReasons?: boolean;
   } = {},
-): TrustedInteractionDescriptorShape<Contract, Definitions, Views> {
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+): TrustedInteractionDescriptorShape<Contract, Definitions, View> {
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type Descriptor = TrustedInteractionDescriptorShape<
     Contract,
     Definitions,
-    Views
+    View
   >;
   const domainState =
     options.projection?.domainState ?? scope.toDomainState(state);
@@ -271,14 +271,13 @@ export function buildInteractionDescriptor<
     interactionId: String(interactionId),
   });
   const queries = options.projection?.q ?? createStateQueries(domainState);
-  const derived = options.projection?.derived;
+
   const shouldMaterializeInputDomains =
     decision.available || decision.code !== FrameworkErrorCodes.NOT_YOUR_TURN;
   const inputs = shouldMaterializeInputDomains
     ? enrichResourceInputPresentation(
         collectInteractionInputs(interaction, domainState, playerId, {
           queries,
-          derived,
           eligibleTargetCache: options.projection?.eligibleTargets,
           eligibleTargetCachePrefix: `${phaseName}:${String(
             interactionId,

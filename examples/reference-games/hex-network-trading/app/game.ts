@@ -1,4 +1,3 @@
-import { boardStatic } from "./board-static";
 import { stormtrail } from "./game-model";
 import discardBarrier from "./phases/discard-barrier";
 import gameOver from "./phases/game-over";
@@ -8,8 +7,7 @@ import pendingTrade from "./phases/pending-trade";
 import roll from "./phases/roll";
 import setupCamp from "./phases/setup-camp";
 import setupTrail from "./phases/setup-trail";
-import { playerView, sharedView } from "./player-view";
-
+import { view } from "./player-view";
 export default stormtrail.assemble({
   initial: {
     public: () => ({
@@ -42,6 +40,5 @@ export default stormtrail.assemble({
     pendingTrade,
     gameOver,
   },
-  views: { shared: sharedView, player: playerView },
-  staticView: boardStatic,
+  view,
 });

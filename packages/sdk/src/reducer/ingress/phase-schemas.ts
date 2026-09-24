@@ -8,7 +8,7 @@ import type {
   ReducerGameContractLike,
   ReducerGameDefinition,
   SchemaLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 
 function createPhaseNameSchema<PhaseName extends string>(
@@ -25,9 +25,9 @@ function createPhaseNameSchema<PhaseName extends string>(
 export function collectIngressPhaseSchemas<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
 ): {
   phaseEntries: Array<
     [

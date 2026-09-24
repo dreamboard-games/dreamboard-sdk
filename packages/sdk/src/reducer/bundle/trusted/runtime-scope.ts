@@ -1,5 +1,3 @@
-import { createDerivedResolver } from "../../derived";
-import type { DerivedResolver } from "../../derived";
 import { createReducerEdit } from "../../transaction";
 import { createStateQueries } from "../../table-queries";
 import type { TrustedRuntimeInput } from "../../core/types";
@@ -22,7 +20,7 @@ import type {
   GameOutcome,
   GameEvent,
   ReducerAcceptOptions,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type {
   ActionContext,
@@ -53,8 +51,8 @@ export { rejectResult };
 export type TrustedDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReducerGameDefinition<Contract, Definitions, Views>;
+  View extends ViewOfContract<Contract>,
+> = ReducerGameDefinition<Contract, Definitions, View>;
 
 export type TrustedDomainState<Contract extends ReducerGameContractLike> =
   BaseGameStateOfContract<Contract>;
@@ -73,8 +71,8 @@ export type TrustedManifest<Contract extends ReducerGameContractLike> =
 export type TrustedPhaseName<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = PhaseNamesOfDefinition<TrustedDefinition<Contract, Definitions, Views>>;
+  View extends ViewOfContract<Contract>,
+> = PhaseNamesOfDefinition<TrustedDefinition<Contract, Definitions, View>>;
 
 export type TrustedPlayerId<Contract extends ReducerGameContractLike> =
   PlayerIdOfState<TrustedDomainState<Contract>>;
@@ -118,18 +116,18 @@ export interface TrustedRuntimeHelpers<
 export interface TrustedRuntimeScope<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > {
-  definition: TrustedDefinition<Contract, Definitions, Views>;
+  definition: TrustedDefinition<Contract, Definitions, View>;
   diagnostics: ReducerDiagnosticsEmitter;
-  registry: TrustedRuntimeRegistry<Contract, Definitions, Views>;
+  registry: TrustedRuntimeRegistry<Contract, Definitions, View>;
   phaseEntries: ReadonlyArray<
     readonly [
-      TrustedPhaseName<Contract, Definitions, Views>,
+      TrustedPhaseName<Contract, Definitions, View>,
       TrustedErasedPhase<Contract>,
     ]
   >;
-  defaultInitialPhase: TrustedPhaseName<Contract, Definitions, Views>;
+  defaultInitialPhase: TrustedPhaseName<Contract, Definitions, View>;
   runtimeHelpers: TrustedRuntimeHelpers<Contract>;
   toDomainState(state: TrustedState<Contract>): TrustedDomainState<Contract>;
   toCombinedState(
@@ -137,13 +135,13 @@ export interface TrustedRuntimeScope<
   ): TrustedState<Contract>;
   toSessionState(state: TrustedState<Contract>): TrustedSessionState<Contract>;
   phaseRegistryByName(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
-  ): TrustedPhaseRegistry<Contract, Definitions, Views> | undefined;
+    phaseName: TrustedPhaseName<Contract, Definitions, View>,
+  ): TrustedPhaseRegistry<Contract, Definitions, View> | undefined;
   phaseByName(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
+    phaseName: TrustedPhaseName<Contract, Definitions, View>,
   ): TrustedErasedPhase<Contract>;
   findInteractionInPhase(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
+    phaseName: TrustedPhaseName<Contract, Definitions, View>,
     interactionId: string,
   ):
     | AnyInteractionSpec<
@@ -152,8 +150,9 @@ export interface TrustedRuntimeScope<
       >
     | undefined;
   interactionEntriesForPhase(
-    phaseName: TrustedPhaseName<Contract, Definitions, Views>,
+    phaseName: TrustedPhaseName<Contract, Definitions, View>,
   ): ReadonlyArray<TrustedInteractionEntry<Contract>>;
+
   buildContext(
     state: TrustedState<Contract>,
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>>;
@@ -162,15 +161,11 @@ export interface TrustedRuntimeScope<
     extra: Extra,
     options?: {
       q?: TableQueriesOfState<TrustedDomainState<Contract>>;
-      derived?: DerivedResolver;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> &
     TrustedRuntimeHelpers<Contract> & {
       q: ReturnType<typeof createStateQueries<TrustedDomainState<Contract>>>;
-      derived: ReturnType<
-        typeof createDerivedResolver<TrustedDomainState<Contract>>
-      >;
       runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
       random: RandomHelpers;
     } & RuntimeArgsWithTransaction<TrustedDomainState<Contract>> &
@@ -180,16 +175,16 @@ export interface TrustedRuntimeScope<
 export function createTrustedRuntimeScope<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: TrustedDefinition<Contract, Definitions, Views>,
+  definition: TrustedDefinition<Contract, Definitions, View>,
   options: { diagnostics?: ReducerDiagnosticsSink } = {},
-): TrustedRuntimeScope<Contract, Definitions, Views> {
+): TrustedRuntimeScope<Contract, Definitions, View> {
   type DomainState = TrustedDomainState<Contract>;
   type SessionState = TrustedSessionState<Contract>;
   type State = TrustedState<Contract>;
   type Manifest = TrustedManifest<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   const registry = collectTrustedRuntimeRegistry(definition);
   const { phaseEntries } = registry;
   const defaultInitialPhase = definition.initialPhase ?? phaseEntries[0]?.[0];
@@ -214,7 +209,7 @@ export function createTrustedRuntimeScope<
 
   function phaseRegistryByName(
     phaseName: PhaseName,
-  ): TrustedPhaseRegistry<Contract, Definitions, Views> | undefined {
+  ): TrustedPhaseRegistry<Contract, Definitions, View> | undefined {
     return registry.phasesByName.get(phaseName);
   }
 
@@ -254,7 +249,6 @@ export function createTrustedRuntimeScope<
     extra: Extra,
     options?: {
       q?: TableQueriesOfState<DomainState>;
-      derived?: DerivedResolver;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
   ) {
@@ -274,6 +268,7 @@ export function createTrustedRuntimeScope<
     registry,
     phaseEntries,
     defaultInitialPhase,
+
     runtimeHelpers: helpers,
     toDomainState,
     toCombinedState,

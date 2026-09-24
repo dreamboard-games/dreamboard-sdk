@@ -10,7 +10,7 @@ import type {
   ReducerGameContractLike,
   ReducerGameDefinition,
   SchemaLike,
-  ViewMapOf,
+  ViewOfContract,
   OptionsOfContract,
 } from "./model";
 
@@ -40,10 +40,10 @@ export type ReducerIndexedInteractionEntry<
 export interface ReducerDefinitionPhaseIndex<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > {
   readonly phaseName: PhaseNamesOfDefinition<
-    ReducerGameDefinition<Contract, Definitions, Views>
+    ReducerGameDefinition<Contract, Definitions, View>
   >;
   readonly phase: ReducerIndexedPhase<Contract>;
   readonly interactions: ReadonlyArray<
@@ -54,36 +54,36 @@ export interface ReducerDefinitionPhaseIndex<
 export interface ReducerDefinitionIndex<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > {
   readonly phaseEntries: ReadonlyArray<
     readonly [
       PhaseNamesOfDefinition<
-        ReducerGameDefinition<Contract, Definitions, Views>
+        ReducerGameDefinition<Contract, Definitions, View>
       >,
       ReducerIndexedPhase<Contract>,
     ]
   >;
   readonly phasesByName: ReadonlyMap<
-    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, Views>>,
-    ReducerDefinitionPhaseIndex<Contract, Definitions, Views>
+    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, View>>,
+    ReducerDefinitionPhaseIndex<Contract, Definitions, View>
   >;
 }
 
 function phaseEntriesOf<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
 ): Array<
   readonly [
-    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, Views>>,
+    PhaseNamesOfDefinition<ReducerGameDefinition<Contract, Definitions, View>>,
     ReducerIndexedPhase<Contract>,
   ]
 > {
   type PhaseName = PhaseNamesOfDefinition<
-    ReducerGameDefinition<Contract, Definitions, Views>
+    ReducerGameDefinition<Contract, Definitions, View>
   >;
   return Object.entries(definition.phases) as unknown as Array<
     readonly [PhaseName, ReducerIndexedPhase<Contract>]
@@ -111,18 +111,18 @@ function simultaneousSubmitEntriesOf<Contract extends ReducerGameContractLike>(
 export function collectReducerDefinitionIndex<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
-): ReducerDefinitionIndex<Contract, Definitions, Views> {
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
+): ReducerDefinitionIndex<Contract, Definitions, View> {
   type PhaseName = PhaseNamesOfDefinition<
-    ReducerGameDefinition<Contract, Definitions, Views>
+    ReducerGameDefinition<Contract, Definitions, View>
   >;
 
   const phaseEntries = phaseEntriesOf(definition);
   const phasesByName = new Map<
     PhaseName,
-    ReducerDefinitionPhaseIndex<Contract, Definitions, Views>
+    ReducerDefinitionPhaseIndex<Contract, Definitions, View>
   >();
 
   for (const [phaseName, phase] of phaseEntries) {

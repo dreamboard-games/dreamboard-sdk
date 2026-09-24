@@ -86,7 +86,7 @@ const game = {
       },
     },
   },
-  views: {},
+  view: () => ({}),
 } as const;
 
 type Command = Extract<

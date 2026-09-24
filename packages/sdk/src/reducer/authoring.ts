@@ -7,7 +7,6 @@ export {
   createContractAuthoring,
   type BoundInputBuilders,
   type BoundTargetPredicate,
-  type BoundViewBuilders,
   type ContractAuthoring,
   type ContractTypes,
   type ContractWithPhases,
@@ -21,17 +20,11 @@ export {
   defineInteractionRule,
 } from "./authoring/interaction";
 export { definePhase } from "./authoring/phase";
-export {
-  defineEmptyView,
-  definePlayerView,
-  defineSharedView,
-  defineStaticView,
-} from "./authoring/views";
+export { defineView } from "./authoring/views";
 
 export type {
   ReducerPhaseDefinition,
-  ReducerPlayerViewDefinition,
-  ReducerSharedViewDefinition,
+  ReducerViewDefinition,
 } from "./authoring/types";
 
 export type {

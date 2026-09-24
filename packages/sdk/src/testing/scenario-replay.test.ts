@@ -5,12 +5,11 @@ import {
   asPlayerId,
   boardInput,
   boardTarget,
-  defineEmptyView,
   defineGameContract,
   defineInputs,
   defineInteraction,
   definePhase,
-  definePlayerView,
+  defineView,
   formInput,
   perPlayer,
   rngInput,
@@ -473,12 +472,9 @@ function createScenarioGame() {
         },
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: definePlayerView<typeof contract>()({
-        project: ({ state }) => ({ ...state.publicState }),
-      }),
-    },
+    view: defineView<typeof contract>()(({ state }) => ({
+      ...state.publicState,
+    })),
   });
 }
 

@@ -2,7 +2,7 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerValidationResult,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import { FrameworkErrorCodes } from "../../model";
 import {
@@ -45,9 +45,9 @@ import type {
 type AuthorizationFor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > = ReturnType<
-  typeof createInteractionAuthorization<Contract, Definitions, Views>
+  typeof createInteractionAuthorization<Contract, Definitions, View>
 >;
 
 type InteractionRuleIssue = {
@@ -87,21 +87,21 @@ function explanationAvailability(
 export function createInteractionDecisionResolver<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
-  authorization: AuthorizationFor<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
+  authorization: AuthorizationFor<Contract, Definitions, View>,
   options: { diagnostics?: InteractionDiagnosticsMode } = {},
 ) {
   type DomainState = TrustedDomainState<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
-  type InteractionId = TrustedInteractionId<Contract, Definitions, Views>;
+  type InteractionId = TrustedInteractionId<Contract, Definitions, View>;
   type Descriptor = TrustedInteractionDescriptorShape<
     Contract,
     Definitions,
-    Views
+    View
   >;
 
   const contractErrors =
@@ -172,7 +172,7 @@ export function createInteractionDecisionResolver<
   }: ResolveDecisionInput<Contract>): InteractionDecisionResult<
     Contract,
     Definitions,
-    Views
+    View
   > {
     const phaseName = state.flow.currentPhase as PhaseName;
     const interaction = scope.findInteractionInPhase(phaseName, interactionId);
@@ -375,7 +375,6 @@ export function createInteractionDecisionResolver<
             domainState: projection?.domainState ?? scope.toDomainState(state),
             playerId,
             queries: projection?.q,
-            derived: projection?.derived,
             initialValues: params,
             acceptsAssignment,
           })
@@ -512,7 +511,6 @@ export function createInteractionDecisionResolver<
               input.projection?.domainState ?? scope.toDomainState(input.state),
             playerId: input.playerId,
             queries: input.projection?.q,
-            derived: input.projection?.derived,
             acceptsAssignment: (assignment) =>
               acceptsSubmitAssignment({
                 state: input.state,

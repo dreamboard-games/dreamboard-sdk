@@ -33,7 +33,6 @@ export type {
   GameUiPlayers,
   GameUiTurn,
   GameUiView,
-  GameUiViewName,
   GameWorkspaceUI,
   ResourceCounterComponents,
   UIRootProps,

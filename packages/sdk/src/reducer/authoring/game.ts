@@ -12,7 +12,7 @@ import type {
   ReducerManifestContract,
   RuntimeTableRecord,
   SchemaLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import { createContractAuthoring } from "./contract-authoring";
 import {
@@ -29,13 +29,13 @@ import {
 export function defineGameDefinition<
   const Contract extends AnyReducerGameContract,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
   definition: { contract: Contract } & Omit<
-    ReducerGameDefinition<NoInfer<Contract>, Definitions, Views>,
+    ReducerGameDefinition<NoInfer<Contract>, Definitions, View>,
     "contract"
   >,
-): ReducerGameDefinition<Contract, Definitions, Views> {
+): ReducerGameDefinition<Contract, Definitions, View> {
   validateDefineGamePhaseNames(definition);
   validateDefineGameSimultaneousPhases(definition);
   return definition;
@@ -46,7 +46,7 @@ export function defineGameDefinition<
  *
  * This is the module-level primitive behind {@link defineGame}: the returned
  * value is the type leaf (`typeof game.types.State`), the factory namespace
- * (`game.phase(name)`, `game.views.*`), and the assembler (`game.assemble`).
+ * (`game.phase(name)`, `game.view`), and the assembler (`game.assemble`).
  * Phase files import it directly, so no factory wrappers or `*AuthoringOf`
  * parameter types are needed.
  */
@@ -216,7 +216,7 @@ export function defineGame<
     OptionsSchema
   >,
   Definitions extends PhaseMapOf<Contract> = PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract> = ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract> = ViewOfContract<Contract>,
 >(
   model: ReducerGameContractInput<
     Table,
@@ -230,19 +230,19 @@ export function defineGame<
   >,
   implement: (
     game: import("./contract-authoring").GameAuthoring<Contract>,
-  ) => Omit<ReducerGameDefinition<Contract, Definitions, Views>, "contract"> & {
+  ) => Omit<ReducerGameDefinition<Contract, Definitions, View>, "contract"> & {
     phases: NoUndeclaredPhases<Contract, Definitions>;
   },
-): ReducerGameDefinition<Contract, Definitions, Views> {
+): ReducerGameDefinition<Contract, Definitions, View> {
   const contract = defineGameContract(model) as Contract;
   const authoring = createContractAuthoring(contract);
   // The intersection with `NoUndeclaredPhases` only exists to reject extra
   // keys at the call site; the assembled definition keeps the inferred map.
   const implemented: Omit<
-    ReducerGameDefinition<Contract, Definitions, Views>,
+    ReducerGameDefinition<Contract, Definitions, View>,
     "contract"
   > = implement(authoring);
-  return defineGameDefinition<Contract, Definitions, Views>({
+  return defineGameDefinition<Contract, Definitions, View>({
     contract,
     ...implemented,
   });

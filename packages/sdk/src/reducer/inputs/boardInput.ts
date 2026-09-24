@@ -93,7 +93,6 @@ function makeBoardCollector<
         state: CollectorState,
         playerId: string,
         q: unknown,
-        _derived: unknown,
         values?: Readonly<Record<string, unknown>>,
       ) =>
         ({
@@ -196,7 +195,6 @@ export function playerSpaceInput<
       state: CollectorState,
       playerId: string,
       q: unknown,
-      _derived: unknown,
       values?: Readonly<Record<string, unknown>>,
     ) =>
       ({

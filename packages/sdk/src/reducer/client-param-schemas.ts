@@ -5,7 +5,7 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerGameDefinition,
-  ViewMapOf,
+  ViewOfContract,
 } from "./model";
 
 export type ClientParamSchema = {
@@ -39,9 +39,9 @@ function schemaForCollectors(
 export function createClientParamSchemasByPhase<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
 ): ClientParamSchemasByPhase {
   const index = collectReducerDefinitionIndex(definition);
   const out: Record<string, Record<string, ClientParamSchema>> = {};

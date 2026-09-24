@@ -6,7 +6,6 @@ import type {
   InteractionIdOfDefinitionPhase,
   InteractionSpecByNameOfDefinitionPhase,
   PhaseNamesOfDefinition,
-  ViewNamesOfDefinition,
   ViewOfDefinition,
 } from "../reducer/model/definition.js";
 import type { ManifestIdSchema } from "../reducer/model/manifest.js";
@@ -282,12 +281,7 @@ type DeepReadonly<Value> = Value extends
         ? { readonly [Key in keyof Value]: DeepReadonly<Value[Key]> }
         : Value;
 
-type ScenarioPlayerView<Game> =
-  Extract<"player", ViewNamesOfDefinition<Game>> extends infer ViewName
-    ? ViewName extends ViewNamesOfDefinition<Game>
-      ? ViewOfDefinition<Game, ViewName>
-      : unknown
-    : unknown;
+type ScenarioPlayerView<Game> = ViewOfDefinition<Game>;
 
 export type ScenarioFlowDiagnostics = {
   readonly currentPhase: string | null;

@@ -5,7 +5,6 @@
 // re-exported here.
 
 export type {
-  StaticViewQueries,
   PhaseEnterContext,
   ActionContext,
   ValidationIssue,
@@ -78,9 +77,4 @@ export type {
   PhaseDefinition,
 } from "./spec/phases";
 
-export type {
-  EmptyViewDefinition,
-  PlayerViewDefinition,
-  SharedViewDefinition,
-  StaticViewDefinition,
-} from "./spec/views";
+export type { ViewDefinition } from "./spec/views";

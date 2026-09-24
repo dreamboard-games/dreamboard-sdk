@@ -23,7 +23,7 @@ main -> gameOver (immediate fourth camp)
   `inputs.board.<kind>({ boardId: "frontier", where: [...] })`.
 - `phases/*.ts` each bind one phase (`const main = stormtrail.phase("main")`)
   and default-export `main.define({...})` with its interactions.
-- `player-view.ts` (`stormtrail.views.shared / .player`) is the privacy
+- `player-view.ts` (`stormtrail.view`) is the privacy
   boundary: public totals, owner-only inventory composition, private discard
   maps, and participant-only stolen type.
 
