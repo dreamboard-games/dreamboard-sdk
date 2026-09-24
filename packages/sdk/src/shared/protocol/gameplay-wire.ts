@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   InteractionResultSchema,
   PluginGameplayFrameSchema,
-  BoardStaticProjectionSchema,
   SubmitInteractionCommandSchema,
   CancelInteractionCommandSchema,
 } from "./schema.js";
@@ -73,7 +72,6 @@ export const GameplayBackpressureFrameSchema = z.object({
 export const SessionSnapshotFrameSchema = z.object({
   type: z.literal("session.snapshot"),
   frame: PluginGameplayFrameSchema,
-  boardStatic: BoardStaticProjectionSchema.nullable(),
 });
 export const ClientGameplayFrameSchema = z.discriminatedUnion("type", [
   AuthConnectFrameSchema,

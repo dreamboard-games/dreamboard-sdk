@@ -13,10 +13,7 @@ import {
   gameEvent,
 } from "../reducer";
 import { rngInput } from "./inputs";
-import {
-  type InputCollector,
-  type RuntimeTableRecord,
-} from "../reducer/model";
+import { type InputCollector, type RuntimeTableRecord } from "../reducer/model";
 
 import {
   getCloneRuntimeTableCallCount,

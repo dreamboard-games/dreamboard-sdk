@@ -75,3 +75,25 @@ remaining legacy callers await deletion. Local restore accepts untrusted JSON
 at its public type boundary and proves malformed input leaves the checkpoint and
 source snapshot unchanged. The revised provider layer passed the complete gate
 including both packed games (`/tmp/testing-browser-integrated-check.log`).
+
+## Integrated cutover receipt
+
+The final cutover combines the authored Hearts and Hex UIs, all nineteen registry
+items, browser-safe testing facade, template, canonical schemas, and deletion of
+the styled runtime, workbench, generated authoring contracts and Turbo. Hosted
+UIs import reducer game types only. The public export snapshot admits only root,
+react, reducer and testing plus package metadata; framework and styled UI
+dependencies are absent from the core runtime. React Store is an optional peer.
+
+The integrated `pnpm check` passed with 556 SDK tests and one packed artifact
+installed into Hearts, Hex and the template. `pnpm ui test` passed both real
+shadcn installation modes, 31 Storybook stories at two widths (62 renders),
+4 Hearts browser cases and 18 Hex desktop/touch cases. These exercise keyboard
+and physical touch commands, private seats, committed steps, cancellation,
+checkpoint restore, rejection retention, layout and accessibility. Logs:
+`/tmp/hardcut-integrated-check.log`, `/tmp/hardcut-integrated-ui.log`.
+
+Spectator authored views are explicitly null; canonical frame materialization
+adds only manifest-owned geometry. The socket snapshot carries that canonical
+frame without a second boardStatic payload. Registry hosting and publication
+remain separate delivery milestones.

@@ -28,28 +28,28 @@ Root updates it with implementation and verification evidence.
 - [x] Sources: hidden stale-action basis, deduplication/retry, close/reconnect behavior.
 - [x] Inspection/exploration/fuzz: reuse authoritative domains and engine commands.
 - [x] Layer 005: thin React selector adapter, provider/hook/Subscribe and type proofs.
-- [ ] Layer 005: reference games import game types in hosted UI, never reducer code.
-- [ ] Layer 005: both UIs migrated; old runtime/component API deleted.
+- [x] Layer 005: reference games import game types in hosted UI, never reducer code.
+- [x] Layer 005: both UIs migrated; old runtime/component API deleted.
 - [ ] Animation: optional registry-owned implementation with no false external-store promise.
 
 ## Registry and developer experience
 
 - [x] Layer 006 foundation: validated shadcn-compatible source registry and tokens; PR #32 local/hosted gates passed.
 - [x] Pure items: card, playing-card, pile, grids, players, resources, dice, event-log, standings.
-- [ ] Bound items: hand, hand-drawer, board-targets, interaction-form, actions, inspector.
-- [ ] Storybook lives with registry; installation smoke against an authored game.
-- [ ] Scenario dev UI/checkpoints and DOM-attribute browser helper replace workbench.
-- [ ] Both games: meaningful desktop/keyboard/touch/accessibility browser proof.
-- [ ] Remove styled SDK dependencies, theme API, old browser-interaction protocol.
+- [x] Bound items: hand, hand-drawer, board-targets, interaction-form, actions, inspector.
+- [x] Storybook lives with registry; installation smoke against an authored game.
+- [x] Scenario dev UI/checkpoints and DOM-attribute browser helper replace workbench.
+- [x] Both games: meaningful desktop/keyboard/touch/accessibility browser proof.
+- [x] Remove styled SDK dependencies, theme API, old browser-interaction protocol.
 
 ## Packaging, docs and adoption
 
-- [ ] Layer 007: four public subpaths: root, react, reducer, testing (package.json metadata exempt).
-- [ ] Dependency boundary: framework-free root; React optional adapter; no bundled styled kit.
-- [ ] Retain current useful scripts/gates, remove obsolete codegen/workbench tooling and Turbo.
-- [ ] Template game typechecks and runs against the new API.
+- [x] Layer 007: four public subpaths: root, react, reducer, testing (package.json metadata exempt).
+- [x] Dependency boundary: framework-free root; React optional adapter; no bundled styled kit.
+- [x] Retain current useful scripts/gates, remove obsolete codegen/workbench tooling and Turbo.
+- [x] Template game typechecks and runs against the new API.
 - [ ] Guides/API/registry docs and examples describe only the supported headless API.
-- [ ] One packed SDK artifact proves declarations, exports and complete reference games.
+- [x] One packed SDK artifact proves declarations, exports and complete reference games.
 - [ ] Public runtime/dev-host adapt worker, UI source and initialization boundaries.
 - [ ] Public exact-version release sequence: SDK → runtime → dev-host.
 - [ ] Internal adoption updates canonical schemas/adapters/scaffolds/pins.

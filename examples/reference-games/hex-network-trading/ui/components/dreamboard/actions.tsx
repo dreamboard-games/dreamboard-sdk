@@ -32,13 +32,11 @@ export function Actions({ interaction: key, className }: ActionsProps) {
               .cancel()
               .then((result) => {
                 if (!result.accepted) {
-                  interaction.game
-                    .getOptions()
-                    .onError?.(
-                      new Error(result.message ?? result.errorCode, {
-                        cause: result,
-                      }),
-                    );
+                  interaction.game.getOptions().onError?.(
+                    new Error(result.message ?? result.errorCode, {
+                      cause: result,
+                    }),
+                  );
                 }
               })
               .catch((error) => interaction.game.getOptions().onError?.(error));
