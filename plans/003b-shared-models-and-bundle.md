@@ -79,3 +79,15 @@ removal, but its authored `cardType` override fix and removal of the phantom
 `records.playerIds` helper remain relevant. Prefer receiving the upstream fix
 through main; if it has not landed, explicitly account for those behaviors in
 the final manifest review rather than blindly replaying the old template patch.
+
+## Integrated model receipt
+
+Plain records are integrated as `46bbc2d` in PR #34. Ownership, inline boards and
+canonical schema authority follow in `3d62955`, `79c5d56` and `3b6d90e`.
+The integrated schema source matches preparation `717213d`, whose full gate passed
+710 SDK tests, all registry/script/format/type/build checks and both packed games.
+003 pending/cancel shapes and inference now live in canonical Zod schemas; restore
+still validates authored step identity and unfinished prefix length. No generator
+or compatibility parser was retained. Logs: `/tmp/models-integrated-check.log` and
+`/tmp/records-integrated-check.log`. Bundle composition and bound test authoring
+remain open and are not claimed by this model receipt.

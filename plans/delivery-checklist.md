@@ -15,7 +15,7 @@ Root updates it with implementation and verification evidence.
 - [x] Layer 003: serialized private step selections and cancel command; integrated at `1542dd0`.
 - [x] Layer 003: ordered valid-prefix revalidation, phase-entry clearing, final rollback; combined repository gate passed.
 - [x] Layer 003: pure projection, nullable optional steps, durable intermediate commits; two real Hex browser workflows passed.
-- [ ] Shared models: ordinary per-player records; redundant type packages removed.
+- [x] Shared models: ordinary per-player records and all three redundant private type packages removed; combined gates passed.
 - [x] Manifest boards: honeycomb geometry, shapes, canonical identities and queries; combined gate and independent review passed.
 - [ ] Bundle: one execution authority with boundary validation retained.
 - [ ] Test authoring: remove legacy unbound helpers and legacy runtime argument keys.
