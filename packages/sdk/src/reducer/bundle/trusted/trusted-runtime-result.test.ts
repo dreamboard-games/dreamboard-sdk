@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { acceptResult, endGameResult } from "./trusted-runtime-result";
+import {
+  normalizeGameEvents,
+  normalizeGameOutcome,
+} from "./trusted-runtime-result";
 import { gameEvent } from "../../game-event";
 
 const state = {
@@ -7,25 +10,23 @@ const state = {
   flow: { currentPhase: "score" },
 };
 
-describe("endGameResult", () => {
-  test("acceptResult normalizes bounded system action events", () => {
-    const result = acceptResult(state, {
-      events: [
-        gameEvent.systemAction({
-          procedureId: "river-advance",
-          title: "The river advanced",
-          summary: "A card moved through the public river.",
-          details: [
-            { label: "Discarded", value: "Ford" },
-            { label: "Revealed", value: "Storm" },
-            { label: "Threat", value: 2 },
-            { label: "Safe", value: false },
-          ],
-        }),
-      ],
-    });
+describe("normalizeGameOutcome", () => {
+  test("normalizeGameEvents normalizes bounded system action events", () => {
+    const result = normalizeGameEvents([
+      gameEvent.systemAction({
+        procedureId: "river-advance",
+        title: "The river advanced",
+        summary: "A card moved through the public river.",
+        details: [
+          { label: "Discarded", value: "Ford" },
+          { label: "Revealed", value: "Storm" },
+          { label: "Threat", value: 2 },
+          { label: "Safe", value: false },
+        ],
+      }),
+    ]);
 
-    expect(result.events).toEqual([
+    expect(result).toEqual([
       {
         kind: "systemAction",
         procedureId: "river-advance",
@@ -41,33 +42,29 @@ describe("endGameResult", () => {
     ]);
   });
 
-  test("acceptResult rejects malformed game events", () => {
+  test("normalizeGameEvents rejects malformed game events", () => {
     expect(() =>
-      acceptResult(state, {
-        events: [
-          gameEvent.systemAction({
-            procedureId: "",
-            title: "Bad event",
-          }),
-        ],
-      }),
+      normalizeGameEvents([
+        gameEvent.systemAction({
+          procedureId: "",
+          title: "Bad event",
+        }),
+      ]),
     ).toThrow("procedureId must be a non-empty string");
 
     expect(() =>
-      acceptResult(state, {
-        events: [
-          gameEvent.systemAction({
-            procedureId: "bad-number",
-            title: "Bad number",
-            details: [{ label: "Amount", value: Infinity }],
-          }),
-        ],
-      }),
+      normalizeGameEvents([
+        gameEvent.systemAction({
+          procedureId: "bad-number",
+          title: "Bad number",
+          details: [{ label: "Amount", value: Infinity }],
+        }),
+      ]),
     ).toThrow("finite number");
   });
 
   test("normalizes canonical GameOutcome standings by rank then player order", () => {
-    const result = endGameResult(state, {
+    const result = normalizeGameOutcome(state, {
       reason: {
         code: "ROUND_LIMIT_REACHED",
         message: "The final round is complete.",
@@ -94,21 +91,22 @@ describe("endGameResult", () => {
       ],
     });
 
-    expect(
-      result.terminal.standings.map((standing) => standing.playerId),
-    ).toEqual(["player-1", "player-2"]);
+    expect(result.standings.map((standing) => standing.playerId)).toEqual([
+      "player-1",
+      "player-2",
+    ]);
   });
 
   test("rejects missing, duplicate, and unknown players", () => {
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "MISSING_PLAYER" },
         standings: [{ playerId: "player-1", rank: 1, result: "win" }],
       }),
     ).toThrow("missing player 'player-2'");
 
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "DUPLICATE_PLAYER" },
         standings: [
           { playerId: "player-1", rank: 1, result: "win" },
@@ -118,7 +116,7 @@ describe("endGameResult", () => {
     ).toThrow("duplicate player 'player-1'");
 
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "UNKNOWN_PLAYER" },
         standings: [
           { playerId: "player-1", rank: 1, result: "win" },
@@ -130,7 +128,7 @@ describe("endGameResult", () => {
 
   test("rejects invalid ranks, non-finite values, and duplicate evidence ids", () => {
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "BAD_RANK" },
         standings: [
           { playerId: "player-1", rank: 0, result: "win" },
@@ -140,7 +138,7 @@ describe("endGameResult", () => {
     ).toThrow("invalid rank");
 
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "BAD_SCORE" },
         standings: [
           { playerId: "player-1", rank: 1, result: "win", score: Infinity },
@@ -150,7 +148,7 @@ describe("endGameResult", () => {
     ).toThrow("finite number");
 
     expect(() =>
-      endGameResult(state, {
+      normalizeGameOutcome(state, {
         reason: { code: "DUPLICATE_BREAKDOWN" },
         standings: [
           {

@@ -15,4 +15,3 @@ export {
   type ClientParamSchema,
   type ClientParamSchemasByPhase,
 } from "./client-param-schemas";
-export { defineGameDefinition } from "./authoring/game";

@@ -1,17 +1,10 @@
-import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createGame as createModel } from "../reducer";
+
 import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineGameContract,
-  definePhase,
-  cardInput,
-  cardTarget,
-  formInput,
-  rngInput,
-  gameEvent,
-  many,
-} from "../reducer/internal";
+import { cardInput, cardTarget, formInput, rngInput } from "./inputs";
+import { gameEvent, many } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
@@ -237,7 +230,7 @@ function createGame({
   rejectRight?: boolean;
 } = {}) {
   const manifest = createManifestContract();
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest,
     phases: { choose: z.object({}) },
     state: {
@@ -250,9 +243,7 @@ function createGame({
       hidden: z.object({}),
     },
   });
-  const chooseState = z.object({});
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ resolved: [] }),
       private: () => ({}),
@@ -260,9 +251,8 @@ function createGame({
     },
     initialPhase: "choose",
     phases: {
-      choose: definePhase<typeof contract>()({
+      choose: contract.phase("choose").define({
         kind: "simultaneousPlayer",
-        state: chooseState,
         initialState: () => ({}),
         actors: ({ q }) => q.player.order().slice(0, 2),
         canResubmit,
@@ -322,7 +312,7 @@ function createCardPassGame(options?: {
     | "card-6"
     | "card-7";
   const manifest = createManifestContract();
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest,
     phases: { choose: z.object({}) },
     state: {
@@ -335,10 +325,8 @@ function createCardPassGame(options?: {
       hidden: z.object({}),
     },
   });
-  const chooseState = z.object({});
   const handCardTarget = cardTarget.zones<never, CardId>(["hand"]).build();
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ resolved: [] }),
       private: () => ({}),
@@ -346,9 +334,8 @@ function createCardPassGame(options?: {
     },
     initialPhase: "choose",
     phases: {
-      choose: definePhase<typeof contract>()({
+      choose: contract.phase("choose").define({
         kind: "simultaneousPlayer",
-        state: chooseState,
         initialState: () => ({}),
         actors: ({ q }) => q.player.order().slice(0, 2),
         submit: {
@@ -360,12 +347,13 @@ function createCardPassGame(options?: {
             }),
           },
         },
-        resolve({ submissions, accept, tx }) {
+        resolve({ submissions, tx }) {
           const resolved = Object.values(submissions).map((submission) => ({
             playerId: submission.playerId,
             cardIds: [...(submission.params.cardIds as readonly string[])],
           }));
-          return accept(tx.patchPublicState({ resolved }));
+          tx.patchPublicState({ resolved });
+          return;
         },
       }),
     },
@@ -448,7 +436,7 @@ describe("simultaneousPlayer phases", () => {
 
   test("automatic phases expose no actor or causal scheduler metadata", async () => {
     const manifest = createManifestContract();
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest,
       phases: { choose: z.object({}) },
       state: {
@@ -457,8 +445,7 @@ describe("simultaneousPlayer phases", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -466,11 +453,9 @@ describe("simultaneousPlayer phases", () => {
       },
       initialPhase: "choose",
       phases: {
-        choose: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        choose: contract
+          .phase("choose")
+          .define({ kind: "auto", initialState: () => ({}) }),
       },
       view: () => ({}),
     });

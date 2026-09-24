@@ -1,16 +1,11 @@
+import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
-import { defineGameDefinition as defineGame } from "./authoring/game";
+
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  defineInteraction,
-  defineGameContract,
-  definePhase,
-  formInput,
-  many,
-  GameStateOf,
-  PlayerId,
-} from "../reducer/internal";
+import { formInput } from "./inputs";
+import { many, PlayerId } from "../reducer";
+import { GameStateOf } from "./model";
 import {
   createManifestStringLiteralSchema,
   ClientParamsOfInteractionOfDefinition,
@@ -152,7 +147,7 @@ function buildContract() {
     TestPlayerZoneId,
     TestCardId
   >;
-  return defineGameContract({
+  return createModel({
     manifest,
     state: {
       public: z.object({}),
@@ -176,8 +171,8 @@ describe("interaction input id types", () => {
     expect(typeof assertRawFormInputsRejected).toBe("function");
   });
   test("contract-declared error maps type authored rule and reject codes", () => {
-    const contract = defineGameContract({
-      manifest: buildContract().manifest,
+    const contract = createModel({
+      manifest: buildContract().contract.manifest,
       state: {
         public: z.object({}),
         private: z.object({}),
@@ -190,25 +185,24 @@ describe("interaction input id types", () => {
         INSUFFICIENT_RESOURCES: "Cannot afford that action.",
       },
     });
-    const phaseState = z.object({});
     const assertErrorCodeTypes = () => {
-      defineInteractionRule<typeof contract, typeof phaseState>()({
+      contract.phase("play").rule({
         id: "known-code",
         errorCode: "INSUFFICIENT_RESOURCES",
         validate: () => ({
           errorCode: "INSUFFICIENT_RESOURCES",
         }),
       });
-      defineInteractionRule<typeof contract, typeof phaseState>()({
+      contract.phase("play").rule({
         id: "framework-code",
         errorCode: "NOT_YOUR_TURN",
       });
-      defineInteractionRule<typeof contract, typeof phaseState>()({
+      contract.phase("play").rule({
         id: "typo-code",
         // @ts-expect-error contracts with an errors map reject typo'd rule codes.
         errorCode: "INSUFFICIENT_RESOURCE",
       });
-      defineInteraction<typeof contract, typeof phaseState>()({
+      contract.phase("play").interaction({
         inputs: {},
         rules: [
           {
@@ -220,65 +214,59 @@ describe("interaction input id types", () => {
             }),
           },
         ],
-        reduce: ({ reject }) => {
+        reduce: ({ tx }) => {
           // @ts-expect-error reject codes come from the contract error union.
-          return reject("INSUFFICIENT_RESOURCE");
+          return tx.reject("INSUFFICIENT_RESOURCE");
         },
       });
     };
     expect(typeof assertErrorCodeTypes).toBe("function");
-    expect(phaseState.parse({})).toEqual({});
-    type State = GameStateOf<typeof contract>;
+    type State = GameStateOf<typeof contract.contract>;
     const assertStateExtraction = (state: State) => {
       const publicState: object = state.publicState;
       const phaseState: object = state.phase;
       return { publicState, phaseState };
     };
     expect(typeof assertStateExtraction).toBe("function");
-    expect(contract.errors?.INSUFFICIENT_RESOURCES).toBe(
+    expect(contract.contract.errors?.INSUFFICIENT_RESOURCES).toBe(
       "Cannot afford that action.",
     );
   });
   test("types playerId and form cardId from manifest schemas", () => {
     const contract = buildContract();
-    const phaseState = z.object({ step: z.literal("main") });
-    const interaction = defineInteraction<typeof contract, typeof phaseState>()(
-      {
-        inputs: {
-          cardId: formInput(contract.schemas.cardId),
-          cardType: formInput(contract.manifest.ids.cardType),
-        },
-        rules: [
-          {
-            id: "type-check-form-card",
-            errorCode: "type-check-form-card",
-            validate({ input }) {
-              const playerId: TestPlayerId = input.playerId;
-              const cardId: TestCardId = input.params.cardId;
-              const cardType: "action" = input.params.cardType;
-              void playerId;
-              void cardId;
-              void cardType;
-              return null;
-            },
-          },
-        ],
-        reduce({ input, accept, tx }) {
-          const playerId: TestPlayerId = input.playerId;
-          const cardId: TestCardId = input.params.cardId;
-          return accept(
-            tx.moveCardBetweenPlayerZones({
-              playerId,
-              fromZoneId: "hand",
-              toZoneId: "in-play",
-              cardId,
-            }),
-          );
-        },
+    const interaction = contract.phase("play").interaction({
+      inputs: {
+        cardId: formInput(contract.contract.schemas.cardId),
+        cardType: formInput(contract.contract.manifest.ids.cardType),
       },
-    );
+      rules: [
+        {
+          id: "type-check-form-card",
+          errorCode: "type-check-form-card",
+          validate({ input }) {
+            const playerId: TestPlayerId = input.playerId;
+            const cardId: TestCardId = input.params.cardId;
+            const cardType: "action" = input.params.cardType;
+            void playerId;
+            void cardId;
+            void cardType;
+            return null;
+          },
+        },
+      ],
+      reduce({ input, tx }) {
+        const playerId: TestPlayerId = input.playerId;
+        const cardId: TestCardId = input.params.cardId;
+        tx.moveCardBetweenPlayerZones({
+          playerId,
+          fromZoneId: "hand",
+          toZoneId: "in-play",
+          cardId,
+        });
+        return;
+      },
+    });
     expect(Object.keys(interaction.inputs)).toEqual(["cardId", "cardType"]);
-    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
   });
   test("state-bound formInput helpers type dynamic choice context", () => {
     type TestGameState = {
@@ -311,106 +299,96 @@ describe("interaction input id types", () => {
   });
   test("types interaction playerId and explicit cardId from manifest schemas", () => {
     const contract = buildContract();
-    const phaseState = z.object({ step: z.literal("main") });
-    const action = defineInteraction<typeof contract, typeof phaseState>()({
-      inputs: { cardId: formInput(contract.schemas.cardId) },
-      reduce({ input, accept, tx }) {
+    const action = contract.phase("play").interaction({
+      inputs: { cardId: formInput(contract.contract.schemas.cardId) },
+      reduce({ input, tx }) {
         const playerId: TestPlayerId = input.playerId;
         const cardId: TestCardId = input.params.cardId;
-        return accept(
-          tx.moveCardBetweenPlayerZones({
-            playerId,
-            fromZoneId: "hand",
-            toZoneId: "in-play",
-            cardId,
-          }),
-        );
+        tx.moveCardBetweenPlayerZones({
+          playerId,
+          fromZoneId: "hand",
+          toZoneId: "in-play",
+          cardId,
+        });
+        return;
       },
     });
     expect(action.inputs.cardId).toBeDefined();
-    expect(contract.phaseNames).toEqual(["play"]);
-    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
+    expect(contract.contract.phaseNames).toEqual(["play"]);
   });
   test("types many collectors as readonly arrays of base input values", () => {
     const contract = buildContract();
-    const phaseState = z.object({ step: z.literal("main") });
-    const interaction = defineInteraction<typeof contract, typeof phaseState>()(
-      {
-        inputs: {
-          cardIds: many(formInput(contract.schemas.cardId), {
-            count: 2,
-            distinct: true,
-          }),
-        },
-        rules: [
-          {
-            id: "type-check-many-cards",
-            errorCode: "type-check-many-cards",
-            validate({ input }) {
-              const cardIds: readonly TestCardId[] = input.params.cardIds;
-              // @ts-expect-error many collectors produce arrays, not scalars.
-              const cardId: TestCardId = input.params.cardIds;
-              void cardIds;
-              void cardId;
-              return null;
-            },
-          },
-        ],
-        reduce({ state, input, accept }) {
-          const cardIds: readonly TestCardId[] = input.params.cardIds;
-          void cardIds;
-          return accept(state);
-        },
+    const interaction = contract.phase("play").interaction({
+      inputs: {
+        cardIds: many(formInput(contract.contract.schemas.cardId), {
+          count: 2,
+          distinct: true,
+        }),
       },
-    );
+      rules: [
+        {
+          id: "type-check-many-cards",
+          errorCode: "type-check-many-cards",
+          validate({ input }) {
+            const cardIds: readonly TestCardId[] = input.params.cardIds;
+            // @ts-expect-error many collectors produce arrays, not scalars.
+            const cardId: TestCardId = input.params.cardIds;
+            void cardIds;
+            void cardId;
+            return null;
+          },
+        },
+      ],
+      reduce({ input }) {
+        const cardIds: readonly TestCardId[] = input.params.cardIds;
+        void cardIds;
+        return;
+      },
+    });
     const assertManyCommitTypes = () => {
-      defineInteraction<typeof contract, typeof phaseState>()({
+      contract.phase("play").interaction({
         // @ts-expect-error many(...) inputs are explicit draft selections and cannot auto-submit.
         commit: { mode: "autoWhenReady" },
         inputs: {
-          cardIds: many(formInput(contract.schemas.cardId), {
+          cardIds: many(formInput(contract.contract.schemas.cardId), {
             count: 2,
             distinct: true,
           }),
         },
-        reduce: ({ state, accept }) => accept(state),
+        reduce: () => {},
       });
-      defineInteraction<typeof contract, typeof phaseState>()({
+      contract.phase("play").interaction({
         inputs: {
-          cardId: formInput(contract.schemas.cardId),
-          cardIds: many(formInput(contract.schemas.cardId), {
+          cardId: formInput(contract.contract.schemas.cardId),
+          cardIds: many(formInput(contract.contract.schemas.cardId), {
             count: 2,
             distinct: true,
           }),
         },
         // @ts-expect-error many(...) card action inputs are explicit draft selections and cannot auto-submit.
         commit: { mode: "autoWhenReady" },
-        reduce: ({ state, accept }) => accept(state),
+        reduce: () => {},
       });
     };
     expect(Object.keys(interaction.inputs)).toEqual(["cardIds"]);
     expect(typeof assertManyCommitTypes).toBe("function");
-    expect(phaseState.parse({ step: "main" })).toEqual({ step: "main" });
   });
   test("types simultaneous submit params with precise input keys", () => {
     const contract = buildContract();
-    const phaseState = z.object({});
-    const play = definePhase<typeof contract>()({
+    const play = contract.phase("play").define({
       kind: "simultaneousPlayer",
-      state: phaseState,
       actors: () => ["player-1", "player-2"] as TestPlayerId[],
       submit: {
         inputs: {
-          cardIds: many(formInput(contract.schemas.cardId), {
+          cardIds: many(formInput(contract.contract.schemas.cardId), {
             count: 2,
             distinct: true,
           }),
         },
       },
-      resolve: ({ state, accept }) => accept(state),
+      resolve: () => {},
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -432,21 +410,20 @@ describe("interaction input id types", () => {
       // @ts-expect-error simultaneous submit params should expose authored keys, not arbitrary strings.
       const badKey: SubmitKeys = "whatever";
       void badKey;
-      definePhase<typeof contract>()({
+      contract.phase("play").define({
         kind: "simultaneousPlayer",
-        state: phaseState,
         actors: () => ["player-1", "player-2"] as TestPlayerId[],
         submit: {
           // @ts-expect-error many(...) simultaneous submit inputs are explicit draft selections and cannot auto-submit.
           commit: { mode: "autoWhenReady" },
           inputs: {
-            cardIds: many(formInput(contract.schemas.cardId), {
+            cardIds: many(formInput(contract.contract.schemas.cardId), {
               count: 2,
               distinct: true,
             }),
           },
         },
-        resolve: ({ state, accept }) => accept(state),
+        resolve: () => {},
       });
     };
     expect(Object.keys(play.submit?.inputs ?? {})).toEqual(["cardIds"]);
@@ -458,22 +435,19 @@ describe("interaction input id types", () => {
   });
   test("types collector-kind input keys for generated form maps", () => {
     const contract = buildContract();
-    const phaseState = z.object({});
-    const play = definePhase<typeof contract>()({
+    const play = contract.phase("play").define({
       kind: "player",
-      state: phaseState,
       initialState: () => ({}),
       interactions: {
-        chooseCard: defineInteraction<typeof contract, typeof phaseState>()({
+        chooseCard: contract.phase("play").interaction({
           inputs: {
-            cardId: formInput(contract.schemas.cardId),
+            cardId: formInput(contract.contract.schemas.cardId),
           },
-          reduce: ({ state, accept }) => accept(state),
+          reduce: () => {},
         }),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -531,12 +505,10 @@ describe("interaction input id types", () => {
   });
   test("types mutation random helper without exposing runtime rng", () => {
     const contract = buildContract();
-    const phaseState = z.object({});
-    const phase = definePhase<typeof contract>()({
+    const phase = contract.phase("play").define({
       kind: "player",
-      state: phaseState,
       initialState: () => ({}),
-      enter({ state, accept, random, runtime }) {
+      enter({ random, runtime }) {
         const dieResult: number = random.integer({
           minInclusive: 1,
           maxInclusive: 6,
@@ -554,12 +526,12 @@ describe("interaction input id types", () => {
         void dieResult;
         void cardId;
         void assertEnterRuntimeShape;
-        return accept(state);
+        return;
       },
       interactions: {
-        choose: defineInteraction<typeof contract, typeof phaseState>()({
+        choose: contract.phase("play").interaction({
           inputs: {},
-          reduce({ state, accept, random, runtime }) {
+          reduce({ random, runtime }) {
             const signedResult: number = random.integer({
               minInclusive: -2,
               maxInclusive: 2,
@@ -577,12 +549,12 @@ describe("interaction input id types", () => {
             void signedResult;
             void cardId;
             void assertReduceRuntimeShape;
-            return accept(state);
+            return;
           },
         }),
       },
     });
     expect(Object.keys(phase.interactions ?? {})).toEqual(["choose"]);
-    expect(contract.phaseNames).toEqual(["play"]);
+    expect(contract.contract.phaseNames).toEqual(["play"]);
   });
 });

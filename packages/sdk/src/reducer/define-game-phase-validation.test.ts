@@ -1,7 +1,6 @@
-import { defineGameDefinition as defineGame } from "./authoring/game";
+import { createGame } from "../reducer";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { defineGameContract, definePhase } from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
@@ -88,7 +87,7 @@ function buildMinimalManifest() {
 function buildContract<const PhaseNames extends readonly string[]>(
   phaseNames: PhaseNames,
 ) {
-  return defineGameContract({
+  return createGame({
     manifest: buildMinimalManifest(),
     state: {
       public: z.object({}),
@@ -101,70 +100,59 @@ function buildContract<const PhaseNames extends readonly string[]>(
   });
 }
 
-const autoPhase = <Contract>() =>
-  definePhase<Contract>()({
-    kind: "auto",
-    state: z.object({}),
-    initialState: () => ({}),
-  });
+const autoPhase = { kind: "auto", initialState: () => ({}) } as const;
+const initial = { public: () => ({}), private: () => ({}), hidden: () => ({}) };
 
-describe("defineGame phaseNames / phases cross-check", () => {
-  test("accepts when contract.phaseNames matches the phases record keys", () => {
-    const contract = buildContract(["alpha", "beta"] as const);
+describe("game.assemble phase names cross-check", () => {
+  test("accepts when declared names match the phases record keys", () => {
+    const game = buildContract(["alpha", "beta"] as const);
     expect(() =>
-      defineGame({
-        contract,
+      game.assemble({
+        initial,
+        view: () => ({}),
         initialPhase: "alpha",
         phases: {
-          alpha: autoPhase<typeof contract>(),
-          beta: autoPhase<typeof contract>(),
+          alpha: game.phase("alpha").define(autoPhase),
+          beta: game.phase("beta").define(autoPhase),
         },
       }),
     ).not.toThrow();
   });
-
-  test("throws when the phases record is missing a declared phase name", () => {
-    const contract = buildContract(["alpha", "beta"] as const);
+  test("throws when the phases record is missing a declared phase", () => {
+    const game = buildContract(["alpha", "beta"] as const);
+    const alpha = game.phase("alpha").define(autoPhase);
     expect(() =>
-      defineGame({
-        contract,
+      game.assemble({
+        initial,
+        view: () => ({}),
         initialPhase: "alpha",
-        phases: {
-          alpha: autoPhase<typeof contract>(),
-        } as unknown as Record<
-          "alpha" | "beta",
-          ReturnType<typeof autoPhase<typeof contract>>
-        >,
+        phases: { alpha } as unknown as {
+          alpha: typeof alpha;
+          beta: typeof alpha;
+        },
       }),
     ).toThrow(/missing: \[beta\]/);
   });
-
-  test("throws when the phases record has an extra undeclared phase name", () => {
-    const contract = buildContract(["alpha"] as const);
+  test("throws when the phases record has an undeclared phase", () => {
+    const game = buildContract(["alpha"] as const);
+    const alpha = game.phase("alpha").define(autoPhase);
     expect(() =>
-      defineGame({
-        contract,
+      game.assemble({
+        initial,
+        view: () => ({}),
         initialPhase: "alpha",
-        phases: {
-          alpha: autoPhase<typeof contract>(),
-          beta: autoPhase<typeof contract>(),
-        } as unknown as Record<
-          "alpha",
-          ReturnType<typeof autoPhase<typeof contract>>
-        >,
+        phases: { alpha, beta: alpha } as { alpha: typeof alpha },
       }),
     ).toThrow(/extra: \[beta\]/);
   });
-
-  test("throws when initialPhase is not in contract.phaseNames", () => {
-    const contract = buildContract(["alpha"] as const);
+  test("throws when initialPhase is not declared", () => {
+    const game = buildContract(["alpha"] as const);
     expect(() =>
-      defineGame({
-        contract,
+      game.assemble({
+        initial,
+        view: () => ({}),
         initialPhase: "ghost" as "alpha",
-        phases: {
-          alpha: autoPhase<typeof contract>(),
-        },
+        phases: { alpha: game.phase("alpha").define(autoPhase) },
       }),
     ).toThrow(/initialPhase 'ghost' is not declared/);
   });

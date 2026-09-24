@@ -1,7 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { InteractionSteps } from "../../authoring/steps";
-import { formInput, many, boardInput, boardTarget } from "../../internal";
+import { formInput, boardInput, boardTarget } from "../../inputs";
+import { many } from "../..";
 import { createTable } from "../../lifecycle-test-fixtures";
 import { evaluateStepPrefix } from "./step-prefix";
 

@@ -1,22 +1,18 @@
-import { createGame } from "../reducer";
 import { createTable } from "./lifecycle-test-fixtures";
 import * as ReducerWireZod from "../shared/runtime-schema";
 import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
 import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
-import { defineGameDefinition as defineGame } from "./authoring/game";
+
 import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
+  createGame,
   createReducerBundle,
   memoize,
-  defineGameContract,
-  defineInteraction,
-  defineView,
-  definePhase,
   gameEvent,
-  rngInput,
-} from "../reducer/internal";
+} from "../reducer";
+import { rngInput } from "./inputs";
 import {
   type InputCollector,
   type RuntimeTableRecord,
@@ -129,7 +125,7 @@ function expectProjectionTiming(timing: {
 
 describe("direct reducer lifecycle and seeded operations", () => {
   test("accepted mixed random helpers and transaction operations publish one contiguous RNG stream through entry", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -141,8 +137,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ values: [], finished: false }),
         private: () => ({}),
@@ -150,9 +145,8 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           enter({ tx }) {
             if (tx.state.publicState.finished)
@@ -161,7 +155,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
               });
           },
           interactions: {
-            mix: defineInteraction<typeof contract>()({
+            mix: contract.phase("takeTurn").interaction({
               inputs: {},
               reduce({ tx, random }) {
                 const first = random.integer({
@@ -261,7 +255,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   test.each(["phase", "roll", "dispatch"] as const)(
     "initialize preserves %s terminal outcomes and events",
     async (mode) => {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -285,8 +279,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         procedureId: "completed",
         title: "Completed initialization",
       });
-      const game = defineGame({
-        contract,
+      const game = contract.assemble({
         initial: {
           public: () => ({ complete: false }),
           private: () => ({}),
@@ -294,9 +287,8 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
             enter({ tx }) {
               if (mode === "dispatch" && !tx.state.publicState.complete) return;
@@ -308,7 +300,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
               return tx.endGame(outcome);
             },
             interactions: {
-              complete: defineInteraction<typeof contract>()({
+              complete: contract.phase("takeTurn").interaction({
                 inputs: {},
                 reduce({ tx }) {
                   tx.patchPublicState({ complete: true });
@@ -350,7 +342,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   );
 
   test("runner operations replay the same state independently of warm caches", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -359,8 +351,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         hidden: z.object({}),
       },
     });
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ count: 0 }),
         private: () => ({}),
@@ -368,25 +359,23 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            advance: defineInteraction<typeof contract>()({
+            advance: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce({ state, accept, tx }) {
-                return accept(
-                  tx.patchPublicState({
-                    count: state.publicState.count + 1,
-                  }),
-                );
+              reduce({ state, tx }) {
+                tx.patchPublicState({
+                  count: state.publicState.count + 1,
+                });
+                return;
               },
             }),
           },
         }),
       },
-      view: defineView<typeof contract>()(({ state }) => {
+      view: contract.view(({ state }) => {
         return { count: state.publicState.count };
       }),
     });
@@ -452,7 +441,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("reduce and dispatch materialize reducer-authored game events", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -464,8 +453,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ count: 0 }),
         private: () => ({}),
@@ -473,33 +461,29 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            advance: defineInteraction<typeof contract>()({
+            advance: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce({ state, accept, tx }) {
-                return accept(
-                  tx.patchPublicState({
-                    count: state.publicState.count + 1,
-                  }),
-                  {
-                    events: [
-                      gameEvent.systemAction({
-                        procedureId: "count-advance",
-                        title: "The count advanced",
-                        details: [
-                          {
-                            label: "Count",
-                            value: state.publicState.count + 1,
-                          },
-                        ],
-                      }),
+              reduce({ state, tx }) {
+                tx.patchPublicState({
+                  count: state.publicState.count + 1,
+                });
+                tx.emit(
+                  gameEvent.systemAction({
+                    procedureId: "count-advance",
+                    title: "The count advanced",
+                    details: [
+                      {
+                        label: "Count",
+                        value: state.publicState.count + 1,
+                      },
                     ],
-                  },
+                  }),
                 );
+                return;
               },
             }),
           },
@@ -547,7 +531,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("bundle project returns a plain view synchronously", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -561,8 +545,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           counter: 3,
@@ -574,13 +557,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
-          kind: "player",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        takeTurn: contract
+          .phase("takeTurn")
+          .define({ kind: "player", initialState: () => ({}) }),
       },
-      view: defineView<typeof contract>()(({ state }) => {
+      view: contract.view(({ state }) => {
         return {
           counter: state.publicState.counter,
           secret: state.hiddenState.secret,
@@ -619,7 +600,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("project actionsOnly projects interaction refs and timing", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -631,8 +612,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           counter: 3,
@@ -642,19 +622,18 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            advance: defineInteraction<typeof contract>()({
+            advance: contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
       },
-      view: defineView<typeof contract>()(({ state }) => ({
+      view: contract.view(({ state }) => ({
         counter: state.publicState.counter,
       })),
     });
@@ -687,7 +666,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expect(projection.timing.resolveZoneHandlesMs).toBe(0);
   });
   test("project evaluates only requested seats and never promotes private data to shared", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -699,8 +678,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
     const viewedPlayers: string[] = [];
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           counter: 3,
@@ -710,13 +688,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
-          kind: "player",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        takeTurn: contract
+          .phase("takeTurn")
+          .define({ kind: "player", initialState: () => ({}) }),
       },
-      view: defineView<typeof contract>()(({ playerId, state }) => {
+      view: contract.view(({ playerId, state }) => {
         viewedPlayers.push(playerId);
         return {
           playerId,
@@ -758,7 +734,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("project full projection resolves descriptors and views", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -771,8 +747,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
     let availableCalls = 0;
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           counter: 3,
@@ -782,12 +757,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            inspect: defineInteraction<typeof contract>()({
+            inspect: contract.phase("takeTurn").interaction({
               inputs: {},
               rules: [
                 {
@@ -799,12 +773,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   },
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
       },
-      view: defineView<typeof contract>()(({ state, playerId }) => {
+      view: contract.view(({ state, playerId }) => {
         return {
           playerId,
           counter: state.publicState.counter,
@@ -831,7 +805,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("ordinary memoized functions share immutable inputs across seats and descriptors", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -849,8 +823,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       return state.counter;
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           counter: 3,
@@ -860,12 +833,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            inspect: defineInteraction<typeof contract>()({
+            inspect: contract.phase("takeTurn").interaction({
               inputs: {},
               rules: [
                 {
@@ -882,7 +854,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
           },
         }),
       },
-      view: defineView<typeof contract>()(({ state }) => {
+      view: contract.view(({ state }) => {
         return { total: expensiveTotal(state.publicState) };
       }),
     });
@@ -903,7 +875,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("project skips target eligibility for unavailable descriptors", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -912,7 +884,6 @@ describe("direct reducer lifecycle and seeded operations", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     let eligibleTargetCalls = 0;
     const targetInput: InputCollector<z.ZodString, never, "board-edge"> = {
       kind: "board-edge",
@@ -938,8 +909,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     };
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -947,14 +917,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           interactions: {
-            blockedTarget: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            blockedTarget: contract.phase("takeTurn").interaction({
               inputs: {
                 edgeId: targetInput,
               },
@@ -966,7 +932,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   available: () => false,
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -998,7 +964,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("bundle dispatch rejects unsupported actions with the new discriminator", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1010,8 +976,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           pingCount: 0,
@@ -1021,11 +986,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
-          kind: "player",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
+        takeTurn: contract
+          .phase("takeTurn")
+          .define({ kind: "player", initialState: () => ({}) }),
       },
     });
 
@@ -1054,7 +1017,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("reduce and dispatch enforce action availability and reducer validation", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1067,8 +1030,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           lockedRan: false,
@@ -1079,12 +1041,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            locked: defineInteraction<typeof contract>()({
+            locked: contract.phase("takeTurn").interaction({
               inputs: {},
               rules: [
                 {
@@ -1094,17 +1055,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   available: () => false,
                 },
               ],
-              reduce({ state, accept }) {
-                return accept({
-                  ...state,
-                  publicState: {
-                    ...state.publicState,
-                    lockedRan: true,
-                  },
-                });
+              reduce({ tx }) {
+                tx.patchPublicState({ lockedRan: true });
+                return;
               },
             }),
-            invalid: defineInteraction<typeof contract>()({
+            invalid: contract.phase("takeTurn").interaction({
               inputs: {},
               rules: [
                 {
@@ -1114,14 +1070,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   validate: () => false,
                 },
               ],
-              reduce({ state, accept }) {
-                return accept({
-                  ...state,
-                  publicState: {
-                    ...state.publicState,
-                    invalidRan: true,
-                  },
-                });
+              reduce({ tx }) {
+                tx.patchPublicState({ invalidRan: true });
+                return;
               },
             }),
           },
@@ -1184,7 +1135,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("tx.roll consumes seeded RNG and returns the authoritative die value", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1197,8 +1148,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({
           recordedValue: null,
@@ -1209,12 +1159,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            rollVisibleDie: defineInteraction<typeof contract>()({
+            rollVisibleDie: contract.phase("takeTurn").interaction({
               inputs: {},
               reduce({ tx }) {
                 const value = tx.roll("die-1");
@@ -1289,7 +1238,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("reduce completes a direct roll without pending wire work", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1299,8 +1248,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1308,12 +1256,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            rollSilently: defineInteraction<typeof contract>()({
+            rollSilently: contract.phase("takeTurn").interaction({
               inputs: {},
               reduce({ tx }) {
                 tx.roll("die-1");
@@ -1374,7 +1321,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   });
 
   test("dispatch resolves multiple direct rolls with one table clone", async () => {
-    const contract = defineGameContract({
+    const contract = createGame({
       manifest: createManifestContract(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1384,8 +1331,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
 
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1393,12 +1339,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: z.object({}),
           initialState: () => ({}),
           interactions: {
-            rollTwice: defineInteraction<typeof contract>()({
+            rollTwice: contract.phase("takeTurn").interaction({
               inputs: {},
               reduce({ tx }) {
                 tx.roll("die-1");
@@ -1451,7 +1396,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
   // harness, or UI SDK) can regress it.
   describe("rngInput auto-sampling", () => {
     function defineDiceGame(sampleSchema = rngInput.d6(2).schema) {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -1464,8 +1409,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
 
-      return defineGame({
-        contract,
+      return contract.assemble({
         initial: {
           public: () => ({ totalRolled: 0, lastRoll: [] }),
           private: () => ({}),
@@ -1473,26 +1417,23 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
             interactions: {
-              rollDice: defineInteraction<typeof contract>()({
+              rollDice: contract.phase("takeTurn").interaction({
                 inputs: {
                   dice: { ...rngInput.d6(2), schema: sampleSchema },
                 },
-                reduce({ state, input, accept }) {
+                reduce({ state, input, tx }) {
                   const values = input.params.dice.values;
-                  return accept({
-                    ...state,
-                    publicState: {
-                      totalRolled:
-                        state.publicState.totalRolled +
-                        values.reduce((sum, v) => sum + v, 0),
-                      lastRoll: [...values],
-                    },
+                  tx.patchPublicState({
+                    totalRolled:
+                      state.publicState.totalRolled +
+                      values.reduce((sum, v) => sum + v, 0),
+                    lastRoll: [...values],
                   });
+                  return;
                 },
               }),
             },
@@ -1842,7 +1783,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
   describe("random.integer mutation helper", () => {
     function defineIntegerGame() {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -1854,8 +1795,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
 
-      return defineGame({
-        contract,
+      return contract.assemble({
         initial: {
           public: () => ({ results: [] }),
           private: () => ({}),
@@ -1863,24 +1803,21 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
-            enter({ state, accept, random }) {
+            enter({ state, random, tx }) {
               const result = random.integer({
                 minInclusive: 1,
                 maxInclusive: 6,
               });
-              return accept({
-                ...state,
-                publicState: {
-                  results: [...state.publicState.results, result],
-                },
+              tx.patchPublicState({
+                results: [...state.publicState.results, result],
               });
+              return;
             },
             interactions: {
-              drawAndReenter: defineInteraction<typeof contract>()({
+              drawAndReenter: contract.phase("takeTurn").interaction({
                 inputs: {},
                 reduce({ state, tx, random }) {
                   const result = random.integer({
@@ -2005,7 +1942,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     test("rejects invalid inclusive integer ranges before consuming RNG", async () => {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -2014,8 +1951,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
           hidden: z.object({}),
         },
       });
-      const game = defineGame({
-        contract,
+      const game = contract.assemble({
         initial: {
           public: () => ({}),
           private: () => ({}),
@@ -2023,16 +1959,15 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
             interactions: {
-              invalid: defineInteraction<typeof contract>()({
+              invalid: contract.phase("takeTurn").interaction({
                 inputs: {},
-                reduce({ state, accept, random }) {
+                reduce({ random }) {
                   random.integer({ minInclusive: 7, maxInclusive: 6 });
-                  return accept(state);
+                  return;
                 },
               }),
             },
@@ -2066,7 +2001,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
   describe("random.subset mutation helper", () => {
     function defineSubsetGame() {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -2078,8 +2013,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
 
-      return defineGame({
-        contract,
+      return contract.assemble({
         initial: {
           public: () => ({ drawn: [] }),
           private: () => ({}),
@@ -2087,12 +2021,11 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
             interactions: {
-              drawTwo: defineInteraction<typeof contract>()({
+              drawTwo: contract.phase("takeTurn").interaction({
                 inputs: {},
                 reduce({ tx, random }) {
                   const drawn = random.subset({
@@ -2102,7 +2035,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   tx.patchPublicState({ drawn: [...drawn] });
                 },
               }),
-              rejectAfterDraw: defineInteraction<typeof contract>()({
+              rejectAfterDraw: contract.phase("takeTurn").interaction({
                 inputs: {},
                 reduce({ tx, random }) {
                   random.subset({
@@ -2124,14 +2057,14 @@ describe("direct reducer lifecycle and seeded operations", () => {
                   return tx.reject("NOPE", "Rejected after sampling.");
                 },
               }),
-              drawTooMany: defineInteraction<typeof contract>()({
+              drawTooMany: contract.phase("takeTurn").interaction({
                 inputs: {},
-                reduce({ state, accept, random }) {
+                reduce({ random }) {
                   random.subset({
                     from: ["alpha"] as const,
                     count: 2,
                   });
-                  return accept(state);
+                  return;
                 },
               }),
             },
@@ -2266,7 +2199,7 @@ describe("implicit transaction acceptance", () => {
   test.each(["enter", "reduce"] as const)(
     "%s preserves events and immediate seeded mutations",
     async (mode) => {
-      const contract = defineGameContract({
+      const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
         state: {
@@ -2285,7 +2218,7 @@ describe("implicit transaction acceptance", () => {
       });
       const queue = (
         tx: import("./transaction").ReducerTransaction<
-          import("./model").GameStateOf<typeof contract>
+          import("./model").GameStateOf<typeof contract.contract>
         >,
       ) => {
         tx.emit(queued);
@@ -2294,8 +2227,7 @@ describe("implicit transaction acceptance", () => {
         tx.patchPublicState({ complete: true });
         tx.emit(completed);
       };
-      const game = defineGame({
-        contract,
+      const game = contract.assemble({
         initial: {
           public: () => ({ complete: false }),
           private: () => ({}),
@@ -2303,25 +2235,40 @@ describe("implicit transaction acceptance", () => {
         },
         initialPhase: "takeTurn",
         phases: {
-          takeTurn: definePhase<typeof contract>()({
+          takeTurn: contract.phase("takeTurn").define({
             kind: "player",
-            state: z.object({}),
             initialState: () => ({}),
             actor: () => "player-1",
-            enter({ tx }) {
-              if (mode === "enter") queue(tx);
+            enter(args) {
+              for (const key of ["accept", "edit", "reject", "endGame", "fx"])
+                expect(args).not.toHaveProperty(key);
+              expect(args.runtime).toHaveProperty("pending");
+              if (mode === "enter") queue(args.tx);
             },
             interactions: {
-              complete: defineInteraction<typeof contract>()({
+              complete: contract.phase("takeTurn").interaction({
                 inputs: {},
-                reduce({ tx }) {
-                  queue(tx);
+                reduce(args) {
+                  for (const key of [
+                    "accept",
+                    "edit",
+                    "reject",
+                    "endGame",
+                    "fx",
+                  ])
+                    expect(args).not.toHaveProperty(key);
+                  queue(args.tx);
                 },
               }),
             },
           }),
         },
-        view: () => ({}),
+        view: contract.view((args) => {
+          for (const key of ["accept", "edit", "reject", "endGame", "fx", "tx"])
+            expect(args).not.toHaveProperty(key);
+          expect(args.runtime).toHaveProperty("pending");
+          return {};
+        }),
       });
       const bundle = createReducerBundle(game);
       const initialized = await bundle.initialize({
@@ -2346,6 +2293,7 @@ describe("implicit transaction acceptance", () => {
       expect(result.events).toEqual([queued, completed]);
       expect(result.state.domain.publicState.complete).toBe(true);
       expect(result.state.runtime.rng.cursor).toBe(2);
+      bundle.project({ state: result.state, playerIds: ["player-1"] });
     },
   );
 });

@@ -17,9 +17,6 @@ import type {
   ReducerGameContractLike,
   ReducerGameDefinition,
   TableQueriesOfState,
-  GameOutcome,
-  GameEvent,
-  ReducerAcceptOptions,
   ViewOfContract,
 } from "../../model";
 import type {
@@ -38,7 +35,7 @@ import {
   buildRuntimeArgs as buildTrustedRuntimeArgs,
   type RuntimeArgsWithTransaction,
 } from "./trusted-runtime-args";
-import { rejectResult, runtimeResultHelpers } from "./trusted-runtime-result";
+import { rejectResult } from "./trusted-runtime-result";
 import {
   toCombinedState as codecToCombinedState,
   toDomainState as codecToDomainState,
@@ -82,37 +79,6 @@ export type TrustedInput<Contract extends ReducerGameContractLike> =
 
 export type { TrustedErasedPhase } from "./runtime-registry";
 
-export interface TrustedRuntimeHelpers<
-  Contract extends ReducerGameContractLike,
-> {
-  accept: (
-    state: TrustedDomainState<Contract>,
-    options?: ReducerAcceptOptions<TrustedDomainState<Contract>>,
-  ) => {
-    type: "accept";
-    state: TrustedDomainState<Contract>;
-    transition?: import("../../model").PhaseNameOfState<
-      TrustedDomainState<Contract>
-    >;
-    events: GameEvent[];
-  };
-  endGame: (
-    state: TrustedDomainState<Contract>,
-    outcome: GameOutcome<TrustedPlayerId<Contract>>,
-    options?: ReducerAcceptOptions<TrustedDomainState<Contract>>,
-  ) => {
-    type: "accept";
-    state: TrustedDomainState<Contract>;
-    transition?: import("../../model").PhaseNameOfState<
-      TrustedDomainState<Contract>
-    >;
-    events: GameEvent[];
-    terminal: GameOutcome<TrustedPlayerId<Contract>>;
-  };
-  reject: typeof rejectResult;
-  edit: ReturnType<typeof createReducerEdit<TrustedDomainState<Contract>>>;
-}
-
 export interface TrustedRuntimeScope<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
@@ -128,7 +94,6 @@ export interface TrustedRuntimeScope<
     ]
   >;
   defaultInitialPhase: TrustedPhaseName<Contract, Definitions, View>;
-  runtimeHelpers: TrustedRuntimeHelpers<Contract>;
   toDomainState(state: TrustedState<Contract>): TrustedDomainState<Contract>;
   toCombinedState(
     session: TrustedSessionState<Contract>,
@@ -163,12 +128,11 @@ export interface TrustedRuntimeScope<
       q?: TableQueriesOfState<TrustedDomainState<Contract>>;
       random?: import("./rng-sampler").MutableRandomHelpers;
     },
-  ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> &
-    TrustedRuntimeHelpers<Contract> & {
-      q: ReturnType<typeof createStateQueries<TrustedDomainState<Contract>>>;
-      runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
-      random: RandomHelpers;
-    } & RuntimeArgsWithTransaction<TrustedDomainState<Contract>> &
+  ): ActionContext<TrustedDomainState<Contract>, TrustedManifest<Contract>> & {
+    q: ReturnType<typeof createStateQueries<TrustedDomainState<Contract>>>;
+    runtime: Omit<TrustedState<Contract>["runtime"], "rng">;
+    random: RandomHelpers;
+  } & RuntimeArgsWithTransaction<TrustedDomainState<Contract>> &
     Extra;
 }
 
@@ -235,10 +199,7 @@ export function createTrustedRuntimeScope<
     return phaseRegistryByName(phaseName)?.interactions ?? [];
   }
 
-  const helpers: TrustedRuntimeHelpers<Contract> = {
-    ...runtimeResultHelpers,
-    edit: createReducerEdit<DomainState>(),
-  };
+  const createTransaction = createReducerEdit<DomainState>();
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {
     return buildTrustedContext<Contract>(state, definition.contract.manifest);
@@ -255,7 +216,7 @@ export function createTrustedRuntimeScope<
     return buildTrustedRuntimeArgs<Contract, Extra>(
       state,
       definition.contract.manifest,
-      helpers,
+      createTransaction,
       toDomainState,
       extra,
       options,
@@ -269,7 +230,6 @@ export function createTrustedRuntimeScope<
     phaseEntries,
     defaultInitialPhase,
 
-    runtimeHelpers: helpers,
     toDomainState,
     toCombinedState,
     toSessionState,

@@ -1,13 +1,13 @@
 export {
-  createGame,
   type BoundInputBuilders,
   type BoundTargetPredicate,
   type ContractTypes,
   type GameAuthoring,
   type PhaseAuthoring,
   type PhaseTypes,
-  type ReducerGameDefinition,
-} from "./reducer/authoring";
+} from "./reducer/authoring/contract-authoring";
+export { createGame } from "./reducer/authoring/game";
+export type { ReducerGameDefinition } from "./reducer/model";
 export { gameEvent } from "./reducer/game-event";
 export type {
   GameEvent,

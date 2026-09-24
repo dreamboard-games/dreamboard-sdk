@@ -1,18 +1,15 @@
+import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "../reducer/authoring/steps";
-import { defineGameDefinition as defineGame } from "../reducer/authoring/game";
+
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import { asPlayerId } from "../reducer";
 import {
-  asPlayerId,
   boardInput,
   boardTarget,
-  defineGameContract,
-  defineInteraction,
-  definePhase,
-  defineView,
   formInput,
   rngInput,
-} from "../reducer/internal";
+} from "../reducer/inputs";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
@@ -195,7 +192,7 @@ function createScenarioGame() {
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
   } as const;
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest,
     state: {
       public: z.object({
@@ -216,7 +213,6 @@ function createScenarioGame() {
       RECIPIENT_REQUIRED: "Choose a recipient for targeted mode.",
     },
   });
-  const phaseState = z.object({});
   const ownSurveyCell = boardTarget
     .playerSpace("survey-grid")
     .where({
@@ -226,8 +222,7 @@ function createScenarioGame() {
         target.playerId === playerId && target.spaceId === "cell-a",
     })
     .build();
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ count: 0, lastRoll: null, target: null }),
       private: () => ({}),
@@ -235,18 +230,15 @@ function createScenarioGame() {
     },
     initialPhase: "play",
     phases: {
-      play: definePhase<typeof contract>()({
+      play: contract.phase("play").define({
         kind: "player",
-        state: phaseState,
         initialState: () => ({}),
-        enter: ({ accept, tx, q }) =>
-          accept(tx.setActivePlayers([q.player.order()[0]!])),
+        enter: ({ tx, q }) => {
+          tx.setActivePlayers([q.player.order()[0]!]);
+        },
         actor: ({ q }) => q.player.order()[0] ?? null,
         interactions: {
-          dependentTask: defineInteraction<
-            typeof contract,
-            typeof phaseState
-          >()({
+          dependentTask: contract.phase("play").interaction({
             steps: new InteractionSteps()
               .input(
                 "mode",
@@ -270,12 +262,9 @@ function createScenarioGame() {
                   defaultValue: () => undefined,
                 }),
               ),
-            reduce: ({ state, accept }) => accept(state),
+            reduce: () => {},
           }),
-          neverLegalTask: defineInteraction<
-            typeof contract,
-            typeof phaseState
-          >()({
+          neverLegalTask: contract.phase("play").interaction({
             inputs: {
               task: formInput.choice({
                 choices: [
@@ -292,18 +281,15 @@ function createScenarioGame() {
                 validate: () => false,
               },
             ],
-            reduce: ({ state, accept }) => accept(state),
+            reduce: () => {},
           }),
-          markCell: defineInteraction<typeof contract, typeof phaseState>()({
+          markCell: contract.phase("play").interaction({
             inputs: {
               cell: boardInput.playerSpace({ target: ownSurveyCell }),
             },
-            reduce: ({ state, accept }) => accept(state),
+            reduce: () => {},
           }),
-          optionalRecipient: defineInteraction<
-            typeof contract,
-            typeof phaseState
-          >()({
+          optionalRecipient: contract.phase("play").interaction({
             steps: new InteractionSteps()
               .input(
                 "mode",
@@ -338,16 +324,11 @@ function createScenarioGame() {
                     : { errorCode: "RECIPIENT_REQUIRED" },
               },
             ],
-            reduce: ({ state, input, accept }) =>
-              accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  target: input.params.recipient ?? null,
-                },
-              }),
+            reduce: ({ input, tx }) => {
+              tx.patchPublicState({ target: input.params.recipient ?? null });
+            },
           }),
-          increment: defineInteraction<typeof contract, typeof phaseState>()({
+          increment: contract.phase("play").interaction({
             inputs: { amount: formInput.number({ min: 1, max: 5 }) },
             rules: [
               {
@@ -359,38 +340,28 @@ function createScenarioGame() {
                     : { errorCode: "COUNT_TOO_LARGE" },
               },
             ],
-            reduce: ({ state, input, accept }) =>
-              accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  count: state.publicState.count + input.params.amount,
-                },
-              }),
-          }),
-          choosePlayer: defineInteraction<typeof contract, typeof phaseState>()(
-            {
-              inputs: {
-                target: formInput.choice<(typeof playerIds)[number]>({
-                  choices: playerIds.map((playerId) => ({
-                    value: playerId,
-                    label: playerId,
-                  })),
-                  defaultValue: "player-1",
-                }),
-              },
-              paramsSchema: z.object({ target: playerIdSchema }),
-              reduce: ({ state, input, accept }) =>
-                accept({
-                  ...state,
-                  publicState: {
-                    ...state.publicState,
-                    target: input.params.target,
-                  },
-                }),
+            reduce: ({ state, input, tx }) => {
+              tx.patchPublicState({
+                count: state.publicState.count + input.params.amount,
+              });
             },
-          ),
-          respond: defineInteraction<typeof contract, typeof phaseState>()({
+          }),
+          choosePlayer: contract.phase("play").interaction({
+            inputs: {
+              target: formInput.choice<(typeof playerIds)[number]>({
+                choices: playerIds.map((playerId) => ({
+                  value: playerId,
+                  label: playerId,
+                })),
+                defaultValue: "player-1",
+              }),
+            },
+            paramsSchema: z.object({ target: playerIdSchema }),
+            reduce: ({ input, tx }) => {
+              tx.patchPublicState({ target: input.params.target });
+            },
+          }),
+          respond: contract.phase("play").interaction({
             actor: ({ state }) => state.publicState.target ?? undefined,
             inputs: {
               answer: formInput.choice({
@@ -401,35 +372,26 @@ function createScenarioGame() {
                 defaultValue: "accept",
               }),
             },
-            reduce: ({ state, accept }) =>
-              accept({
-                ...state,
-                publicState: { ...state.publicState, target: null },
-              }),
+            reduce: ({ tx }) => {
+              tx.patchPublicState({ target: null });
+            },
           }),
-          roll: defineInteraction<typeof contract, typeof phaseState>()({
+          roll: contract.phase("play").interaction({
             inputs: { die: rngInput.d6() },
-            reduce: ({ state, input, accept }) =>
-              accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  lastRoll: input.params.die.values[0] ?? null,
-                },
-              }),
+            reduce: ({ input, tx }) => {
+              tx.patchPublicState({
+                lastRoll: input.params.die.values[0] ?? null,
+              });
+            },
           }),
-          startGroupChoice: defineInteraction<
-            typeof contract,
-            typeof phaseState
-          >()({
+          startGroupChoice: contract.phase("play").interaction({
             inputs: {},
             reduce: ({ tx }) => tx.transition("chooseTogether"),
           }),
         },
       }),
-      chooseTogether: definePhase<typeof contract>()({
+      chooseTogether: contract.phase("chooseTogether").define({
         kind: "simultaneousPlayer",
-        state: phaseState,
         initialState: () => ({}),
         actors: ({ q }) => q.player.order().slice(0, 2),
         submit: {
@@ -445,20 +407,19 @@ function createScenarioGame() {
         },
         resolve: ({ tx }) => tx.transition("play"),
       }),
-      finish: definePhase<typeof contract>()({
+      finish: contract.phase("finish").define({
         kind: "player",
-        state: phaseState,
         initialState: () => ({}),
         actor: ({ q }) => q.player.order()[0] ?? null,
         interactions: {
-          confirm: defineInteraction<typeof contract, typeof phaseState>()({
+          confirm: contract.phase("finish").interaction({
             inputs: {},
-            reduce: ({ state, accept }) => accept(state),
+            reduce: () => {},
           }),
         },
       }),
     },
-    view: defineView<typeof contract>()(({ state }) => ({
+    view: contract.view(({ state }) => ({
       ...state.publicState,
     })),
   });

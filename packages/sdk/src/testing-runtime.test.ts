@@ -1,12 +1,9 @@
-import { defineGameDefinition as defineGame } from "./reducer/authoring/game";
+import { createGame as createModel } from "./reducer";
+
 import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
-import {
-  defineGameContract,
-  defineInteraction,
-  definePhase,
-} from "./reducer/internal";
+
 import type { RuntimeTableRecord } from "./reducer/advanced";
 import { asPlayerId } from "./reducer/per-player";
 import {
@@ -129,7 +126,7 @@ function createManifestContract() {
 }
 
 function createCandidateGame() {
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest: createManifestContract(),
     phases: { play: z.object({}) },
     state: {
@@ -139,8 +136,7 @@ function createCandidateGame() {
     },
   });
 
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ score: 0 }),
       private: () => ({}),
@@ -149,27 +145,21 @@ function createCandidateGame() {
     initialPhase: "play",
     view: () => ({}),
     phases: {
-      play: definePhase<typeof contract>()({
+      play: contract.phase("play").define({
         kind: "player",
-        state: z.object({}),
         initialState: () => ({}),
         interactions: {
-          score: defineInteraction<typeof contract>()({
+          score: contract.phase("play").interaction({
             inputs: {},
-            reduce({ state, accept }) {
-              return accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  score: state.publicState.score + 1,
-                },
-              });
+            reduce({ state, tx }) {
+              tx.patchPublicState({ score: state.publicState.score + 1 });
+              return;
             },
           }),
-          rejectNow: defineInteraction<typeof contract>()({
+          rejectNow: contract.phase("play").interaction({
             inputs: {},
-            reduce({ reject }) {
-              return reject("NOPE", "Rejected by candidate fixture.");
+            reduce({ tx }) {
+              return tx.reject("NOPE", "Rejected by candidate fixture.");
             },
           }),
         },

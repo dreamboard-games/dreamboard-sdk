@@ -1,3 +1,4 @@
+import type { RuntimeJson } from "../runtime-json";
 // Public SDK contract DTOs extracted from Dreamboard's public API schema.
 // This package owns these types for SDK consumers; backend API clients are published separately.
 
@@ -36,15 +37,7 @@ export type PresetCardSetDefinition = {
 /**
  * Arbitrary authored JSON value.
  */
-export type JsonValue =
-  | string
-  | number
-  | boolean
-  | null
-  | Array<JsonValue>
-  | {
-      [key: string]: JsonValue;
-    };
+export type JsonValue = RuntimeJson;
 
 export type PropertySchema = {
   /**

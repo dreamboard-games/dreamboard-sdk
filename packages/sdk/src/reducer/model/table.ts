@@ -1,10 +1,13 @@
 import { z } from "zod";
 
-export type RuntimeScalar = boolean | number | string | null;
-export interface RuntimeRecord {
-  [key: string]: RuntimePayload;
-}
-export type RuntimePayload = RuntimeScalar | RuntimePayload[] | RuntimeRecord;
+import type { RuntimeJson } from "../../shared/runtime-json";
+
+export type RuntimeScalar = Extract<
+  RuntimeJson,
+  boolean | number | string | null
+>;
+export type RuntimeRecord = Record<string, RuntimeJson>;
+export type RuntimePayload = RuntimeJson;
 export type RuntimeParams = RuntimeRecord;
 
 export type SchemaLike<Output> = z.ZodType<Output>;

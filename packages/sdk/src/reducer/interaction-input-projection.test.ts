@@ -8,7 +8,7 @@ import {
   cardInput,
   cardTarget,
   formInput,
-} from "../reducer/internal";
+} from "./inputs";
 import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
 
 describe("interaction input projection", () => {

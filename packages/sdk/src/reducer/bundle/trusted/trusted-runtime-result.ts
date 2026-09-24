@@ -6,7 +6,6 @@ import type {
   OutcomeScoreComponent,
   OutcomeStanding,
   OutcomeTieBreak,
-  ReducerAcceptOptions,
   ReducerReject,
   ReducerResult,
   SystemActionEvent,
@@ -134,7 +133,7 @@ function assertStandingValues<PlayerId extends string>(
   }
 }
 
-function normalizeGameOutcome<State, PlayerId extends string>(
+export function normalizeGameOutcome<State, PlayerId extends string>(
   state: State,
   outcome: GameOutcome<PlayerId>,
 ): GameOutcome<PlayerId> {
@@ -286,35 +285,6 @@ export function normalizeGameEvents(
   });
 }
 
-export function acceptResult<State>(
-  state: State,
-  options: ReducerAcceptOptions<State> = {},
-) {
-  const events = normalizeGameEvents(options.events);
-  return {
-    type: "accept" as const,
-    state,
-    ...(options.transition ? { transition: options.transition } : {}),
-    events,
-  };
-}
-
-export function endGameResult<State, PlayerId extends string = string>(
-  state: State,
-  outcome: GameOutcome<PlayerId>,
-  options: ReducerAcceptOptions<State> = {},
-) {
-  const terminal = normalizeGameOutcome(state, outcome);
-  const events = normalizeGameEvents(options.events);
-  return {
-    type: "accept" as const,
-    state,
-    ...(options.transition ? { transition: options.transition } : {}),
-    events,
-    terminal,
-  };
-}
-
 export function rejectResult(
   errorCode: string,
   message?: string,
@@ -335,7 +305,7 @@ export function normalizeResult<State>(
   }
   if (result.type === "accept") {
     // Results built by `tx.accept()` / `tx.transition()` / `tx.endGame()`
-    // arrive raw; apply the same limits as the legacy `accept` helper.
+    // arrive raw; enforce the canonical result limits before committing.
     return {
       ...result,
 
@@ -347,9 +317,3 @@ export function normalizeResult<State>(
   }
   return result;
 }
-
-export const runtimeResultHelpers = {
-  accept: acceptResult,
-  endGame: endGameResult,
-  reject: rejectResult,
-};

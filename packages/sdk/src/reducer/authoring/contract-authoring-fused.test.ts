@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { createGame } from "../authoring";
+import { createGame } from "../../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,

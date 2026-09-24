@@ -1,20 +1,12 @@
+import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
-import { defineGameDefinition as defineGame } from "./authoring/game";
+
 import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  cardInput,
-  cardTarget,
-  choiceTarget,
-  defineInteraction,
-  defineGameContract,
-  defineInteractionRule,
-  definePhase,
-  formInput,
-  many,
-} from "../reducer/internal";
+import { cardInput, cardTarget, choiceTarget, formInput } from "./inputs";
+import { many } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   RuntimeTableRecord,
@@ -278,7 +270,7 @@ function makeBundle(
     diagnostics?: "verbose";
   } = {},
 ) {
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest: buildManifest(),
     phases: { takeTurn: z.object({}) },
     state: {
@@ -287,7 +279,6 @@ function makeBundle(
       hidden: z.object({}),
     },
   });
-  const phaseState = z.object({});
   const inMain = <Interaction>(interaction: Interaction) => interaction;
   const inBlocked = <Interaction>(interaction: Interaction) => ({
     ...interaction,
@@ -305,12 +296,7 @@ function makeBundle(
     max: 10,
     defaultValue: 2,
   });
-  const enoughGoldRule = defineInteractionRule<
-    typeof contract,
-    typeof phaseState
-  >()<{
-    amount: typeof ruleBidAmountInput;
-  }>({
+  const enoughGoldRule = contract.phase("takeTurn").rule({
     id: "enough-gold",
     errorCode: "INSUFFICIENT_RESOURCES",
     message: "Need 2 gold.",
@@ -325,12 +311,7 @@ function makeBundle(
             message: "Not enough gold.",
           },
   });
-  const stringGoldRule = defineInteractionRule<
-    typeof contract,
-    typeof phaseState
-  >()<{
-    amount: typeof ruleBidAmountInput;
-  }>({
+  const stringGoldRule = contract.phase("takeTurn").rule({
     id: "string-gold",
     errorCode: "INSUFFICIENT_RESOURCES",
     validate: ({ state, input }) =>
@@ -342,8 +323,7 @@ function makeBundle(
   const answerTarget = choiceTarget
     .options([{ id: "yes", label: "Yes" }] as const)
     .build();
-  const game = defineGame({
-    contract,
+  const game = contract.assemble({
     initial: {
       public: () => ({}),
       private: () => ({}),
@@ -351,14 +331,12 @@ function makeBundle(
     },
     initialPhase: "takeTurn",
     phases: {
-      takeTurn: definePhase<typeof contract>()({
+      takeTurn: contract.phase("takeTurn").define({
         kind: "player",
         name: "Take turn",
-        state: phaseState,
-
         interactions: {
           spendGold: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               presentation: {
                 label: "Spend gold",
                 help: "Spend exactly two gold from your current resource pool.",
@@ -375,23 +353,23 @@ function makeBundle(
                     q.player.canAfford(input.playerId, { gold: 2 }),
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           stageBlocked: inBlocked(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           stepBlocked: inBlocked(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {},
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           answerPrompt: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               actor: () => "player-2",
               inputs: {
                 answer: formInput.choice({
@@ -403,11 +381,11 @@ function makeBundle(
                     })),
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           allocateGold: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 allocation: formInput.resourceMap({
                   resources: [
@@ -420,11 +398,11 @@ function makeBundle(
                   ],
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           bidGold: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 amount: formInput.number({
                   min: 0,
@@ -433,11 +411,11 @@ function makeBundle(
                   step: 1,
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           ruleGatedBid: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               presentation: {
                 label: "Bid gold",
                 help: "Choose a bid that your current gold can pay.",
@@ -446,11 +424,11 @@ function makeBundle(
                 amount: ruleBidAmountInput,
               },
               rules: [enoughGoldRule],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           stringRuleBid: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               presentation: {
                 label: "Choose mode",
               },
@@ -458,11 +436,11 @@ function makeBundle(
                 amount: ruleBidAmountInput,
               },
               rules: [stringGoldRule],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           chooseMode: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 mode: formInput.choice({
                   choices: [
@@ -486,11 +464,11 @@ function makeBundle(
                         },
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           chooseResource: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 resource: formInput.choice({
                   choices: formInput.resourceChoices({
@@ -505,11 +483,11 @@ function makeBundle(
                   defaultValue: "gold",
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           choosePlayer: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 player: formInput.choice({
                   choices: ({ state, playerId }) =>
@@ -519,11 +497,11 @@ function makeBundle(
                   defaultValue: ({ choices }) => choices[0]?.value,
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
           choosePlayers: inMain(
-            defineInteraction<typeof contract, typeof phaseState>()({
+            contract.phase("takeTurn").interaction({
               inputs: {
                 players: formInput.choiceList({
                   choices: ({ state, playerId }) =>
@@ -535,10 +513,10 @@ function makeBundle(
                   defaultValue: "all",
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           ),
-          playCard: defineInteraction<typeof contract, typeof phaseState>()({
+          playCard: contract.phase("takeTurn").interaction({
             inputs: {
               cardId: cardInput({
                 target: cardTarget
@@ -574,7 +552,7 @@ function makeBundle(
                     : undefined,
               },
             ],
-            reduce: ({ state, accept }) => accept(state),
+            reduce: () => {},
           }),
         },
       }),
@@ -586,7 +564,7 @@ function makeBundle(
 describe("trusted interaction decision pipeline", () => {
   test("dispatch hands explicit paramsSchema data to params-only reducers", async () => {
     const manifest = buildManifest();
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest,
       state: {
         public: z.object({
@@ -600,9 +578,7 @@ describe("trusted interaction decision pipeline", () => {
       },
       errors: {},
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ selectedCardId: null }),
         private: () => ({}),
@@ -610,28 +586,20 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            chooseCard: defineInteraction<typeof contract, typeof phaseState>()(
-              {
-                inputs: {},
-                paramsSchema: z.object({
-                  cardId: manifest.ids.cardId,
-                }),
-                reduce({ state, input, accept }) {
-                  return accept({
-                    ...state,
-                    publicState: {
-                      ...state.publicState,
-                      selectedCardId: input.params.cardId,
-                    },
-                  });
-                },
+            chooseCard: contract.phase("takeTurn").interaction({
+              inputs: {},
+              paramsSchema: z.object({
+                cardId: manifest.ids.cardId,
+              }),
+              reduce({ input, tx }) {
+                tx.patchPublicState({ selectedCardId: input.params.cardId });
+                return;
               },
-            ),
+            }),
           },
         }),
       },
@@ -1123,7 +1091,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({ valid: false, message: "Card is blocked." });
   });
   test("hand zones derive authored hand interactions from card inputs", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1132,12 +1100,10 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     const playZoneTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1145,28 +1111,24 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            playSelected: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            playSelected: contract.phase("takeTurn").interaction({
               inputs: {
                 cardId: cardInput({ target: playZoneTarget }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            playMany: defineInteraction<typeof contract, typeof phaseState>()({
+            playMany: contract.phase("takeTurn").interaction({
               inputs: {
                 cardIds: many(cardInput({ target: playZoneTarget }), {
                   count: 2,
                   distinct: true,
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1213,7 +1175,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({ commit: { mode: "manual" } });
   });
   test("card interactions with renderable form inputs default to manual commit", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildTwoZoneManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1222,9 +1184,7 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1232,16 +1192,11 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
-
           interactions: {
-            playWithChoices: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            playWithChoices: contract.phase("takeTurn").interaction({
               inputs: {
                 cardId: cardInput({
                   target: cardTarget
@@ -1264,7 +1219,7 @@ describe("trusted interaction decision pipeline", () => {
                   defaultValue: [],
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1285,7 +1240,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({ defaultValue: [] });
   });
   test("default commit policy follows the current input", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildTwoZoneManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1294,12 +1249,10 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     const playZoneTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1307,32 +1260,26 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            formOnly: defineInteraction<typeof contract, typeof phaseState>()({
+            formOnly: contract.phase("takeTurn").interaction({
               inputs: {
                 choice: formInput.choice({
                   choices: [{ value: "one", label: "One" }],
                   defaultValue: "one",
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            targetOnly: defineInteraction<typeof contract, typeof phaseState>()(
-              {
-                inputs: {
-                  cardId: cardInput({ target: playZoneTarget }),
-                },
-                reduce: ({ state, accept }) => accept(state),
+            targetOnly: contract.phase("takeTurn").interaction({
+              inputs: {
+                cardId: cardInput({ target: playZoneTarget }),
               },
-            ),
-            targetThenForm: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+              reduce: () => {},
+            }),
+            targetThenForm: contract.phase("takeTurn").interaction({
               steps: new InteractionSteps()
                 .input("cardId", cardInput({ target: playZoneTarget }))
                 .input("choice", ({ selected }) =>
@@ -1343,12 +1290,9 @@ describe("trusted interaction decision pipeline", () => {
                     defaultValue: () => undefined,
                   }),
                 ),
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            formThenTarget: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            formThenTarget: contract.phase("takeTurn").interaction({
               steps: new InteractionSteps()
                 .input(
                   "mode",
@@ -1358,12 +1302,9 @@ describe("trusted interaction decision pipeline", () => {
                   }),
                 )
                 .input("cardId", cardInput({ target: playZoneTarget })),
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            independentMixed: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            independentMixed: contract.phase("takeTurn").interaction({
               inputs: {
                 cardId: cardInput({ target: playZoneTarget }),
                 choice: formInput.choice({
@@ -1371,7 +1312,7 @@ describe("trusted interaction decision pipeline", () => {
                   defaultValue: "one",
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1395,7 +1336,7 @@ describe("trusted interaction decision pipeline", () => {
     expect(commitModeFor("independentMixed")).toBe("manual");
   });
   test("many-input interactions cannot opt into auto submit", () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1404,14 +1345,12 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     const playZoneTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-    expect(contract.phaseNames).toEqual(["takeTurn"]);
-    expect(phaseState.parse({})).toEqual({});
+    expect(contract.contract.phaseNames).toEqual(["takeTurn"]);
     expect(() =>
-      defineInteraction<typeof contract, typeof phaseState>()({
+      contract.phase("takeTurn").interaction({
         commit: { mode: "autoWhenReady" } as never,
         inputs: {
           cardIds: many(cardInput({ target: playZoneTarget }), {
@@ -1419,14 +1358,14 @@ describe("trusted interaction decision pipeline", () => {
             distinct: true,
           }),
         },
-        reduce: ({ state, accept }) => accept(state),
+        reduce: () => {},
       }),
     ).toThrow(
       'defineInteraction: interactions with many(...) inputs must use commit: { mode: "manual" }.',
     );
   });
   test("a committed selection controls the next target authority", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1435,9 +1374,7 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1445,15 +1382,11 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            playWithMode: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            playWithMode: contract.phase("takeTurn").interaction({
               steps: new InteractionSteps()
                 .input(
                   "mode",
@@ -1477,7 +1410,7 @@ describe("trusted interaction decision pipeline", () => {
                       .build(),
                   }),
                 ),
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1549,7 +1482,7 @@ describe("trusted interaction decision pipeline", () => {
     ).resolves.toMatchObject({ valid: false });
   });
   test("hand zones bind playable cards to the matching card input zone", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildTwoZoneManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1558,15 +1491,13 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     const discardTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["discardZone"])
       .build();
     const playTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1574,20 +1505,16 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            inspectThenPlay: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            inspectThenPlay: contract.phase("takeTurn").interaction({
               inputs: {
                 discardCardId: cardInput({ target: discardTarget }),
                 cardId: cardInput({ target: playTarget }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1619,7 +1546,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject([{ interactionId: "inspectThenPlay" }]);
   });
   test("hand zones derive simultaneous submit card inputs and hide submitted cards", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1628,12 +1555,10 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
     const playZoneTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({ submitted: [] }),
         private: () => ({}),
@@ -1641,12 +1566,10 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "simultaneousPlayer",
-          state: phaseState,
           initialState: () => ({}),
           actors: ({ q }) => q.player.order(),
-
           submit: {
             inputs: {
               cardIds: many(cardInput({ target: playZoneTarget }), {
@@ -1655,7 +1578,7 @@ describe("trusted interaction decision pipeline", () => {
               }),
             },
           },
-          resolve: ({ state, accept }) => accept(state),
+          resolve: () => {},
         }),
       },
       view: () => ({}),
@@ -1744,7 +1667,7 @@ describe("trusted interaction decision pipeline", () => {
     expect(cardAction).not.toHaveProperty("dispatchPriority");
   });
   test("card actions only surface for their authored card type", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1753,9 +1676,7 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1763,13 +1684,11 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
-
           interactions: {
-            castSpell: defineInteraction<typeof contract, typeof phaseState>()({
+            castSpell: contract.phase("takeTurn").interaction({
               inputs: {
                 cardId: cardInput({
                   target: cardTarget
@@ -1788,7 +1707,7 @@ describe("trusted interaction decision pipeline", () => {
                     .build(),
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),
@@ -1956,7 +1875,7 @@ describe("trusted interaction decision pipeline", () => {
     ).resolves.toMatchObject({ valid: true });
   });
   test("synchronizes proven input emptiness with production descriptors", async () => {
-    const contract = defineGameContract({
+    const contract = createModel({
       manifest: buildManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
@@ -1965,9 +1884,7 @@ describe("trusted interaction decision pipeline", () => {
         hidden: z.object({}),
       },
     });
-    const phaseState = z.object({});
-    const game = defineGame({
-      contract,
+    const game = contract.assemble({
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1975,27 +1892,20 @@ describe("trusted interaction decision pipeline", () => {
       },
       initialPhase: "takeTurn",
       phases: {
-        takeTurn: definePhase<typeof contract>()({
+        takeTurn: contract.phase("takeTurn").define({
           kind: "player",
-          state: phaseState,
           initialState: () => ({}),
           interactions: {
-            noLegalInput: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            noLegalInput: contract.phase("takeTurn").interaction({
               inputs: {
                 task: formInput.choice<string>({
                   choices: () => [],
                   defaultValue: () => undefined,
                 }),
               },
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            ruleRejectedInput: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            ruleRejectedInput: contract.phase("takeTurn").interaction({
               inputs: {
                 task: formInput.choice({
                   choices: [
@@ -2012,12 +1922,9 @@ describe("trusted interaction decision pipeline", () => {
                   validate: () => false,
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            costFilteredInput: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            costFilteredInput: contract.phase("takeTurn").interaction({
               inputs: {
                 amount: formInput.number({ min: 1, max: 2, defaultValue: 2 }),
               },
@@ -2031,15 +1938,12 @@ describe("trusted interaction decision pipeline", () => {
                     }),
                 },
               ],
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
-            opaqueInput: defineInteraction<
-              typeof contract,
-              typeof phaseState
-            >()({
+            opaqueInput: contract.phase("takeTurn").interaction({
               inputs: {},
               paramsSchema: z.object({ answer: z.string() }) as never,
-              reduce: ({ state, accept }) => accept(state),
+              reduce: () => {},
             }),
           },
         }),

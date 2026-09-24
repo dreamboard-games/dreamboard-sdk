@@ -1,15 +1,9 @@
-import { defineGameDefinition as defineGame } from "../../authoring/game";
+import { createGame as createModel } from "../../../reducer";
+
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  createReducerBundle,
-  defineGameContract,
-  defineInteraction,
-  defineView,
-  definePhase,
-  type ReducerDiagnosticEvent,
-} from "../../../reducer/internal";
+import { createReducerBundle, type ReducerDiagnosticEvent } from "../..";
 import type { RuntimeTableRecord } from "../../../reducer/advanced";
 import { asPlayerId } from "../../per-player";
 
@@ -150,7 +144,7 @@ function createManifestContract() {
 }
 
 function createCharacterizationGame() {
-  const contract = defineGameContract({
+  const contract = createModel({
     manifest: createManifestContract(),
     phases: {
       play: z.object({ visits: z.number().int() }),
@@ -166,8 +160,7 @@ function createCharacterizationGame() {
     },
   });
 
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ score: 0, recordedRoll: null }),
       private: () => ({}),
@@ -175,36 +168,30 @@ function createCharacterizationGame() {
     },
     initialPhase: "play",
     phases: {
-      play: definePhase<typeof contract>()({
+      play: contract.phase("play").define({
         kind: "player",
-        state: z.object({ visits: z.number().int() }),
         initialState: () => ({ visits: 1 }),
         interactions: {
-          score: defineInteraction<typeof contract>()({
+          score: contract.phase("play").interaction({
             inputs: {},
-            reduce({ state, accept }) {
-              return accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  score: state.publicState.score + 1,
-                },
-              });
+            reduce({ state, tx }) {
+              tx.patchPublicState({ score: state.publicState.score + 1 });
+              return;
             },
           }),
-          rejectNow: defineInteraction<typeof contract>()({
+          rejectNow: contract.phase("play").interaction({
             inputs: {},
-            reduce({ reject }) {
-              return reject("NOPE", "Rejected by golden fixture.");
+            reduce({ tx }) {
+              return tx.reject("NOPE", "Rejected by golden fixture.");
             },
           }),
-          finish: defineInteraction<typeof contract>()({
+          finish: contract.phase("play").interaction({
             inputs: {},
             reduce({ tx }) {
               return tx.transition("done");
             },
           }),
-          rollTwice: defineInteraction<typeof contract>()({
+          rollTwice: contract.phase("play").interaction({
             inputs: {},
             reduce({ tx }) {
               tx.roll("die-1");
@@ -213,13 +200,11 @@ function createCharacterizationGame() {
           }),
         },
       }),
-      done: definePhase<typeof contract>()({
-        kind: "player",
-        state: z.object({ visits: z.number().int() }),
-        initialState: () => ({ visits: 10 }),
-      }),
+      done: contract
+        .phase("done")
+        .define({ kind: "player", initialState: () => ({ visits: 10 }) }),
     },
-    view: defineView<typeof contract>()(({ state, playerId }) => {
+    view: contract.view(({ state, playerId }) => {
       return {
         playerId,
         phase: state.flow.currentPhase,

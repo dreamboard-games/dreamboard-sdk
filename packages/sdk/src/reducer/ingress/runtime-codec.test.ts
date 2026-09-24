@@ -1,27 +1,14 @@
-import { defineGameDefinition as defineGame } from "../authoring/game";
+import { createGame as createModel } from "../../reducer";
+
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { defineGameContract, definePhase } from "../authoring";
+
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
 } from "../model";
 import { asPlayerId } from "../per-player";
-import {
-  createIngressRuntimeCodec,
-  runtimePayloadSchema,
-  safeParseOrThrow,
-} from "./runtime-codec";
-import type { TrustedRuntimeInput } from "../core/types";
-import {
-  createIngressRuntimeCodec as createInputCodec,
-  runtimePayloadSchema as inputPayloadSchema,
-} from "./decode-runtime-input";
-import {
-  createIngressRuntimeCodec as createSessionDecoder,
-  runtimePayloadSchema as sessionPayloadSchema,
-} from "./decode-session-state";
-import { createIngressRuntimeCodec as createSessionEncoder } from "./encode-session-state";
+import { createIngressRuntimeCodec } from "./session-codec";
 
 function buildMinimalManifest<const PhaseNames extends readonly string[]>(
   phaseNames: PhaseNames,
@@ -164,21 +151,20 @@ function buildDefinition(
     playState?: z.ZodTypeAny;
   } = {},
 ) {
-  const contract = defineGameContract({
+  const setupState = z.object({ selectedFirstPlayer: z.string().nullable() });
+  const playState =
+    options.playState ?? z.object({ actionCount: z.number().int() });
+  const contract = createModel({
     manifest: buildMinimalManifest(["setup", "play"] as const),
-    phases: { setup: z.object({}), play: z.object({}) },
+    phases: { setup: setupState, play: playState },
     state: {
       public: z.object({ score: z.number().int() }),
       private: z.object({}),
       hidden: z.object({}),
     },
   });
-  const setupState = z.object({ selectedFirstPlayer: z.string().nullable() });
-  const playState =
-    options.playState ?? z.object({ actionCount: z.number().int() });
 
-  return defineGame({
-    contract,
+  return contract.assemble({
     initial: {
       public: () => ({ score: 0 }),
       private: () => ({}),
@@ -186,16 +172,13 @@ function buildDefinition(
     },
     initialPhase: "setup",
     phases: {
-      setup: definePhase<typeof contract>()({
+      setup: contract.phase("setup").define({
         kind: "player",
-        state: setupState,
         initialState: () => ({ selectedFirstPlayer: null }),
       }),
-      play: definePhase<typeof contract>()({
-        kind: "player",
-        state: playState,
-        initialState: () => ({ actionCount: 0 }),
-      }),
+      play: contract
+        .phase("play")
+        .define({ kind: "player", initialState: () => ({ actionCount: 0 }) }),
     },
   });
 }
@@ -434,22 +417,5 @@ describe("ingress runtime codec", () => {
     expect(changedCodec.parseState(encoded).domain.phase).toEqual({
       actionCount: 2,
     });
-  });
-
-  test("keeps facade and wrapper exports stable", () => {
-    const typedInput: TrustedRuntimeInput<"player-1"> = {
-      kind: "interaction",
-      playerId: "player-1",
-      interactionId: "takeAction",
-      params: {},
-    };
-
-    expect(typedInput.kind).toBe("interaction");
-    expect(createInputCodec).toBe(createIngressRuntimeCodec);
-    expect(createSessionDecoder).toBe(createIngressRuntimeCodec);
-    expect(createSessionEncoder).toBe(createIngressRuntimeCodec);
-    expect(inputPayloadSchema).toBe(runtimePayloadSchema);
-    expect(sessionPayloadSchema).toBe(runtimePayloadSchema);
-    expect(safeParseOrThrow(z.string(), "ok", "value")).toBe("ok");
   });
 });
