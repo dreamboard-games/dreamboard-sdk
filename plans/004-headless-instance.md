@@ -148,3 +148,10 @@ constraint; JSON admission remains in the runtime schemas. This avoids widening
 Hearts' inferred card views while preventing authored geometry from overwriting
 manifest boards. The integrated gate passed 769 SDK tests and both packed games
 (`/tmp/record-views-integrated-check-retry.log`).
+
+Concrete hand, board, drag and pan/zoom features are integrated with deliberate
+root exports. Feature checks cover immutable captured layouts, current authority
+for retained handlers, pointer capture cleanup, drag/tap distinction, atomic
+card/drop routing and canonical untransformed view boxes. Generic boards retain
+data without invented geometry. The combined gate passed 787 SDK tests and both
+packed reference games (`/tmp/features-integrated-check.log`).

@@ -11,3 +11,8 @@ export {
 } from "./headless/instance.js";
 export type * from "./headless/model.js";
 export * from "./headless/sources/index.js";
+
+export * from "./headless/features/hand.js";
+export * from "./headless/features/board.js";
+export * from "./headless/features/drag.js";
+export * from "./headless/features/pan-zoom.js";

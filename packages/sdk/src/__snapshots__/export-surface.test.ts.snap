@@ -173,9 +173,13 @@ exports[`public export surface > root export names are stable 1`] = `
   "DREAMBOARD_SDK_PACKAGES",
   "DREAMBOARD_SDK_PACKAGE_SET",
   "DREAMBOARD_SDK_VERSION",
+  "boardFeature",
   "createGameInstance",
+  "dragFeature",
+  "handFeature",
   "hostSource",
   "iframeSource",
+  "panZoomFeature",
   "staticSource",
 ]
 `;
