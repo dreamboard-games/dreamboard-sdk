@@ -1,3 +1,4 @@
+import type { ReducerValidationResult } from "../../reducer/model";
 import type * as Wire from "../../shared/runtime-types";
 import type { ReducerBundleContract } from "../../shared/worker-contract";
 
@@ -35,7 +36,7 @@ export type ReducerScenarioExchange =
       readonly operation: "validate";
       readonly fromFrameId: string;
       readonly input: Wire.GameInput;
-      readonly result: Wire.ReducerInputValidationResult;
+      readonly result: ReducerValidationResult;
     }
   | {
       readonly id: string;

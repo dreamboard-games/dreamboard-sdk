@@ -2,8 +2,8 @@ import type { z } from "zod";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type * as Wire from "../shared/runtime-types.js";
 import { digestPluginRuntimeJson } from "../shared/protocol/digest.js";
-import { createReducerTestingBundle } from "../reducer/bundle/ingress-bundle.js";
-import type { ReducerBundleTestingRuntime } from "../reducer/bundle/types.js";
+import { createReducerTestingBundle } from "./reducer-runtime.js";
+import type { ReducerBundleTestingRuntime } from "./reducer-runtime.js";
 import type {
   InteractionActionabilityResult,
   InteractionInputEnumerationResult,

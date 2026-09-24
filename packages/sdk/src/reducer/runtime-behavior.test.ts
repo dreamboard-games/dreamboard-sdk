@@ -4,7 +4,7 @@ import * as ReducerWireZod from "../shared/runtime-schema";
 import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
 import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
 import { defineGameDefinition as defineGame } from "./authoring/game";
-import { createReducerTestingBundle } from "./bundle/ingress-bundle";
+import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -685,25 +685,6 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expectProjectionTiming(projection.timing);
     expect(projection.timing.resolveViewMs).toBe(0);
     expect(projection.timing.resolveZoneHandlesMs).toBe(0);
-
-    const runtime = bundle.createInProcessRuntime();
-    await runtime.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
-    const runtimeProjection = runtime.project({
-      playerIds: ["player-1"],
-      projectionMode: "actionsOnly",
-    });
-    const runtimeSeat = runtimeProjection.seats["player-1"];
-
-    expect(runtimeSeat).toBeDefined();
-    expect("sharedView" in runtimeProjection).toBe(false);
-    expect("view" in runtimeSeat!).toBe(false);
-    expect("zones" in runtimeSeat!).toBe(false);
-    expectProjectionTiming(runtimeProjection.timing);
-    expect(runtimeProjection.timing.resolveViewMs).toBe(0);
-    expect(runtimeProjection.timing.resolveZoneHandlesMs).toBe(0);
   });
   test("project evaluates only requested seats and never promotes private data to shared", async () => {
     const contract = defineGameContract({
@@ -1365,7 +1346,6 @@ describe("direct reducer lifecycle and seeded operations", () => {
     }
     expect(reduced).not.toHaveProperty("effects");
     expect(reduced).not.toHaveProperty("continuations");
-    expect(ReducerWireZod.ReduceResultSchema.parse(reduced)).toEqual(reduced);
     const dispatched = await bundle.dispatch({
       state: initial,
       input: {

@@ -78,9 +78,9 @@ export function createReducerScenarioRunner(
           });
           const result =
             dispatched.kind === "accept"
-              ? { valid: true }
+              ? { valid: true as const }
               : {
-                  valid: false,
+                  valid: false as const,
                   errorCode: dispatched.errorCode,
                   message: dispatched.message,
                 };

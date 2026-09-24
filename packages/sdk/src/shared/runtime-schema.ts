@@ -108,12 +108,6 @@ export const GameInputSchema = z.discriminatedUnion("kind", [
   GameInputCancelSchema,
 ]);
 
-export const ReducerInputValidationResultSchema = z.strictObject({
-  valid: z.boolean(),
-  errorCode: z.string().optional(),
-  message: z.string().optional(),
-});
-
 export const GameOutcomeReasonSchema = z.strictObject({
   code: z.string().min(1),
   message: z.string().min(1).optional(),
@@ -187,43 +181,10 @@ export const InitializeRequestSchema = z.strictObject({
   options: z.record(z.string(), RuntimeJsonSchema).optional(),
 });
 
-export const InitializePhaseRequestSchema = z.strictObject({
-  state: ReducerSessionStateSchema,
-  to: z.string().min(1),
-});
-
-export const ValidateInputRequestSchema = z.strictObject({
-  state: ReducerSessionStateSchema,
-  input: GameInputSchema,
-});
-
-export const ReduceRequestSchema = z.strictObject({
-  state: ReducerSessionStateSchema,
-  input: GameInputSchema,
-});
-
 export const DispatchRequestSchema = z.strictObject({
   state: ReducerSessionStateSchema,
   input: GameInputSchema,
 });
-
-export const ReduceResultRejectSchema = z.strictObject({
-  kind: z.literal("reject"),
-  errorCode: z.string().min(1),
-  message: z.string().optional(),
-});
-
-export const ReduceResultAcceptSchema = z.strictObject({
-  kind: z.literal("accept"),
-  state: ReducerSessionStateSchema,
-  terminal: GameOutcomeSchema.optional(),
-  events: z.array(GameEventSchema).max(32),
-});
-
-export const ReduceResultSchema = z.discriminatedUnion("kind", [
-  ReduceResultRejectSchema,
-  ReduceResultAcceptSchema,
-]);
 
 export const DispatchTraceAcceptedClientInputSchema = z.strictObject({
   kind: z.literal("acceptedClientInput"),

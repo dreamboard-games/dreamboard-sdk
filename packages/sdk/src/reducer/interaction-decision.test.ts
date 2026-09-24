@@ -1,6 +1,6 @@
 import { InteractionSteps } from "./authoring/steps";
 import { defineGameDefinition as defineGame } from "./authoring/game";
-import { createReducerTestingBundle } from "./bundle/ingress-bundle";
+import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";

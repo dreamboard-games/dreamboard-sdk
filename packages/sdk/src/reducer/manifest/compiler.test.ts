@@ -4,7 +4,7 @@ import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
 import { cloneRuntimeTable } from "../table/clone";
-import { createReducerTestingBundle } from "../bundle/ingress-bundle";
+import { createReducerTestingBundle } from "../../testing/reducer-runtime.js";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
 
 const manifest = {
