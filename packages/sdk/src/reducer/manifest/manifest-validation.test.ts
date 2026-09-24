@@ -17,8 +17,6 @@ const BASE_MANIFEST: GameTopologyManifest = {
   dieTypes: [],
   dieSeeds: [],
   resources: [],
-  setupOptions: [],
-  setupProfiles: [],
 };
 
 test("validateManifestAuthoring rejects hex vertex refs that do not resolve to a shared corner", () => {
@@ -461,13 +459,6 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
     ],
     pieceTypes: [{ id: "worker", name: "Worker" }],
     pieceSeeds: [{ id: "__proto__", typeId: "worker" }],
-    setupOptions: [
-      {
-        id: "__proto__",
-        name: "Unsafe Option",
-        choices: [{ id: "constructor", label: "Unsafe Choice" }],
-      },
-    ],
   });
 
   expect(validation.errors).toContain(
@@ -481,9 +472,6 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
   );
   expect(validation.errors).toContain(
     "manifest.boards[0].spaces[0].id: 'constructor' is reserved and cannot be used as a generated record key.",
-  );
-  expect(validation.errors).toContain(
-    "manifest.setupOptions[0].id: '__proto__' is reserved and cannot be used as a generated record key.",
   );
   expect(validation.errors).toContain(
     "manifest.cardSets[0].cardSchema.properties.prototype: 'prototype' is reserved and cannot be used as a generated record key.",

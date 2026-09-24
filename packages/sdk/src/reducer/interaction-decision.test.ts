@@ -15,7 +15,6 @@ import {
   definePhase,
   formInput,
   many,
-  promptInput,
 } from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
@@ -33,8 +32,6 @@ function buildManifest() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes,
       deckIds: [] as const,
@@ -74,8 +71,6 @@ function buildManifest() {
     ids: {
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: createManifestStringLiteralSchema(phaseNames),
-      setupOptionId: createManifestStringLiteralSchema([] as const),
-      setupProfileId: createManifestStringLiteralSchema([] as const),
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema(cardTypes),
       cardId: createManifestStringLiteralSchema(cardIds),
@@ -114,9 +109,6 @@ function buildManifest() {
       visibility: () => ({}),
       resources: () => perPlayer([], () => ({})),
     },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
@@ -357,12 +349,8 @@ function makeBundle(
       takeTurn: definePhase<typeof contract>()({
         kind: "player",
         name: "Take turn",
-        guidance: {
-          summary: "Spend gold, answer prompts, or play a card.",
-          objective: "Use the best available action before passing priority.",
-        },
         state: phaseState,
-        zones: ["playZone"],
+
         interactions: {
           spendGold: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
@@ -372,7 +360,16 @@ function makeBundle(
               },
               commit: { mode: "autoWhenReady" },
               inputs: {},
-              cost: () => ({ gold: 2 }),
+              rules: [
+                {
+                  id: "affordable",
+                  errorCode: "INSUFFICIENT_RESOURCES",
+                  available: ({ q, input }) =>
+                    q.player.canAfford(input.playerId, { gold: 2 }),
+                  validate: ({ q, input }) =>
+                    q.player.canAfford(input.playerId, { gold: 2 }),
+                },
+              ],
               reduce: ({ state, accept }) => accept(state),
             }),
           ),
@@ -390,11 +387,15 @@ function makeBundle(
           ),
           answerPrompt: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
-              to: () => "player-2",
+              actor: () => "player-2",
               inputs: {
-                answer: promptInput({
-                  schema: z.enum(["yes"]),
-                  target: answerTarget,
+                answer: formInput.choice({
+                  defaultValue: () => undefined,
+                  choices: (context) =>
+                    answerTarget.options(context).map((option) => ({
+                      value: option.id,
+                      label: option.label ?? option.id,
+                    })),
                 }),
               },
               reduce: ({ state, accept }) => accept(state),
@@ -795,7 +796,7 @@ describe("trusted interaction decision pipeline", () => {
       label: "Spend gold",
       help: "Spend exactly two gold from your current resource pool.",
       availability: {
-        status: "insufficientResources",
+        status: "blocked",
         reason: "INSUFFICIENT_RESOURCES",
       },
     });
@@ -811,7 +812,41 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
   });
-  test("dynamic projection carries current phase guidance", async () => {
+  test("automatic zone projection respects hidden zones and component visibility", async () => {
+    const bundle = makeBundle();
+    const state = await bundle.initialize({
+      table: createTable(),
+      playerIds: ["player-1", "player-2"],
+    });
+    state.domain.table.zones.visibility.playZone = "hidden";
+    const hidden = bundle.project({
+      state,
+      playerIds: ["player-1", "player-2"],
+    });
+    expect(hidden.seats["player-1"].zones).not.toHaveProperty("playZone");
+    expect(hidden.seats["player-2"].zones).not.toHaveProperty("playZone");
+    state.domain.table.zones.visibility.playZone = "ownerOnly";
+    state.domain.table.visibility["card-a"] = {
+      faceUp: false,
+      visibleTo: ["player-1"],
+    };
+    const visible = bundle.project({
+      state,
+      playerIds: ["player-1", "player-2"],
+    });
+    expect(visible.seats["player-1"].zones.playZone.cardIds).toEqual([
+      "card-a",
+      "card-b",
+    ]);
+    expect(visible.seats["player-2"].zones.playZone.cardIds).toEqual([
+      "card-b",
+    ]);
+    expect(
+      visible.seats["player-2"].zones.playZone.cardViewsById,
+    ).not.toHaveProperty("card-a");
+  });
+
+  test("dynamic projection omits removed guidance metadata", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
@@ -821,14 +856,7 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-    expect(projection.guidance).toEqual({
-      phase: {
-        id: "takeTurn",
-        label: "Take turn",
-        summary: "Spend gold, answer prompts, or play a card.",
-        objective: "Use the best available action before passing priority.",
-      },
-    });
+    expect(projection).not.toHaveProperty("guidance");
   });
   test("prompt addressees stay hidden from non-addressees and reject with prompt-not-owned", async () => {
     const bundle = makeBundle();
@@ -846,9 +874,8 @@ describe("trusted interaction decision pipeline", () => {
         (descriptor) => descriptor.interactionId === "answerPrompt",
       ),
     ).toMatchObject({
-      kind: "prompt",
+      kind: "action",
       availability: { status: "available" },
-      context: { to: "player-2" },
     });
     await expect(
       bundle.validateInput({
@@ -862,7 +889,7 @@ describe("trusted interaction decision pipeline", () => {
       }),
     ).resolves.toMatchObject({
       valid: false,
-      errorCode: "prompt-not-owned",
+      errorCode: "NOT_YOUR_TURN",
     });
   });
   test("cost details and submit rejection come from the same decision path", async () => {
@@ -877,12 +904,9 @@ describe("trusted interaction decision pipeline", () => {
       ),
     ).toMatchObject({
       availability: {
-        status: "insufficientResources",
+        status: "blocked",
         reason: "INSUFFICIENT_RESOURCES",
-        missingResources: { gold: 1 },
       },
-      cost: { gold: 2 },
-      currentResources: { gold: 1 },
       commit: { mode: "autoWhenReady" },
     });
     expect(
@@ -1142,7 +1166,6 @@ describe("trusted interaction decision pipeline", () => {
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone"],
         }),
       },
       views: {
@@ -1213,7 +1236,7 @@ describe("trusted interaction decision pipeline", () => {
           kind: "player",
           state: phaseState,
           initialState: () => ({}),
-          zones: ["playZone"],
+
           interactions: {
             playWithChoices: defineInteraction<
               typeof contract,
@@ -1373,7 +1396,6 @@ describe("trusted interaction decision pipeline", () => {
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone"],
         }),
       },
       views: {
@@ -1491,7 +1513,6 @@ describe("trusted interaction decision pipeline", () => {
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone"],
         }),
       },
       views: {
@@ -1572,7 +1593,6 @@ describe("trusted interaction decision pipeline", () => {
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone", "discardZone"],
         }),
       },
       views: {
@@ -1632,7 +1652,7 @@ describe("trusted interaction decision pipeline", () => {
           state: phaseState,
           initialState: () => ({}),
           actors: ({ q }) => q.player.order(),
-          zones: ["playZone"],
+
           submit: {
             inputs: {
               cardIds: many(cardInput({ target: playZoneTarget }), {
@@ -1756,7 +1776,7 @@ describe("trusted interaction decision pipeline", () => {
           kind: "player",
           state: phaseState,
           initialState: () => ({}),
-          zones: ["playZone"],
+
           interactions: {
             castSpell: defineInteraction<typeof contract, typeof phaseState>()({
               inputs: {
@@ -1821,83 +1841,6 @@ describe("trusted interaction decision pipeline", () => {
       valid: false,
       errorCode: "CARD_TYPE_NOT_ALLOWED",
     });
-  });
-  test("defineGame rejects zones that do not point at manifest player zones", () => {
-    const contract = defineGameContract({
-      manifest: buildManifest(),
-      phases: { takeTurn: z.object({}) },
-      state: {
-        public: z.object({}),
-        private: z.object({}),
-        hidden: z.object({}),
-      },
-    });
-    const phaseState = z.object({});
-    expect(() =>
-      defineGame({
-        contract,
-        initial: {
-          public: () => ({}),
-          private: () => ({}),
-          hidden: () => ({}),
-        },
-        phases: {
-          takeTurn: definePhase<typeof contract>()({
-            kind: "player",
-            state: phaseState,
-            initialState: () => ({}),
-            zones: ["typo-zone" as never],
-          }),
-        },
-        views: {
-          shared: defineEmptyView<typeof contract>(),
-          player: defineEmptyView<typeof contract>(),
-        },
-      }),
-    ).toThrow(
-      "defineGame: phases.takeTurn.zones[0] 'typo-zone' is not declared in manifest.literals.playerZoneIds.",
-    );
-  });
-  test("defineGame rejects removed zone spec objects", () => {
-    const contract = defineGameContract({
-      manifest: buildManifest(),
-      phases: { takeTurn: z.object({}) },
-      state: {
-        public: z.object({}),
-        private: z.object({}),
-        hidden: z.object({}),
-      },
-    });
-    const phaseState = z.object({});
-    expect(() =>
-      defineGame({
-        contract,
-        initial: {
-          public: () => ({}),
-          private: () => ({}),
-          hidden: () => ({}),
-        },
-        phases: {
-          takeTurn: definePhase<typeof contract>()({
-            kind: "player",
-            state: phaseState,
-            initialState: () => ({}),
-            zones: {
-              playZone: {
-                cardsFrom: () => ["card-a"],
-                playableVia: ["typoAction"],
-              } as never,
-            } as never,
-          }),
-        },
-        views: {
-          shared: defineEmptyView<typeof contract>(),
-          player: defineEmptyView<typeof contract>(),
-        },
-      }),
-    ).toThrow(
-      'defineGame: phases.takeTurn.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] instead.',
-    );
   });
   test("domain-aware form inputs project server-authored input domains", async () => {
     const bundle = makeBundle();
@@ -2089,7 +2032,16 @@ describe("trusted interaction decision pipeline", () => {
               inputs: {
                 amount: formInput.number({ min: 1, max: 2, defaultValue: 2 }),
               },
-              cost: ({ input }) => ({ gold: input.params.amount }),
+              rules: [
+                {
+                  id: "affordable",
+                  errorCode: "INSUFFICIENT_RESOURCES",
+                  validate: ({ q, input }) =>
+                    q.player.canAfford(input.playerId, {
+                      gold: input.params.amount,
+                    }),
+                },
+              ],
               reduce: ({ state, accept }) => accept(state),
             }),
             opaqueInput: defineInteraction<

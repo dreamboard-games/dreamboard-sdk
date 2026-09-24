@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.scoring-and-outcome-ordinary-penalty",
   description:
     "Thirteen Hearts and the Queen of Spades produce exactly 26 ordinary penalty points.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: completeGamePath.slice(0, 55),
   when: [completeGamePath[55]],
   then: ({ expect, state }) => {

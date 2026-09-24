@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.scoring-and-outcome-tied-lowest",
   description:
     "Two equal lowest scores share rank one and both receive draw results.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: tiedLowestPath.slice(0, 55),
   when: [tiedLowestPath[55]],
   then: ({ expect, state }) => {

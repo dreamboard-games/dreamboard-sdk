@@ -39,11 +39,8 @@ export type {
   ActionInteractionDescriptor,
   GameEvent,
   GameEventDetail,
-  InteractionContext,
-  InteractionContextOption,
   InteractionDescriptor,
   InputDomainDependencyCase,
-  PromptInteractionDescriptor,
   SystemActionEvent,
 } from "./types/plugin-state.js";
 export type * from "./types/runtime-api.js";

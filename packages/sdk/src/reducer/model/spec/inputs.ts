@@ -9,8 +9,6 @@ import type { ValidationIssue } from "./runtime-args";
 //   - `interactions`: the set of authoring-level interactions routed by id.
 //     Each `InteractionSpec` has typed input collectors and a `reduce` that
 //     receives `params: ParamsOf<Collectors>`.
-//   - `stages`: first-match-wins sub-phase selectors with `allow` gating.
-//   - `zones`: manifest player card zones projected as behavior descriptors.
 
 export type InputCollectorKind =
   | "form"
@@ -19,13 +17,12 @@ export type InputCollectorKind =
   | "board-tile"
   | "board-space"
   | "card"
-  | "prompt"
   | "rng";
 
 export type TargetKind = "edge" | "vertex" | "space" | "tile" | "card";
 export type BoardInputCollectorKind = Exclude<
   InputCollectorKind,
-  "form" | "card" | "prompt" | "rng"
+  "form" | "card" | "rng"
 >;
 
 export type CardInputCollectorMeta = {
@@ -40,19 +37,6 @@ export type BoardInputCollectorMeta = {
   readonly valueKind?: "board-id" | "player-board-space";
 };
 
-export type PromptInputCollectorMeta = {
-  readonly options: (
-    state: unknown,
-    playerId: unknown,
-    q: unknown,
-  ) => ReadonlyArray<{ id: unknown; label?: string }>;
-  readonly eligibleOptions: (
-    state: unknown,
-    playerId: unknown,
-    q: unknown,
-  ) => ReadonlyArray<{ id: unknown; label?: string }>;
-};
-
 export type RngInputCollectorMeta =
   | { readonly rng: "d6"; readonly count: number }
   | { readonly rng: "coin" };
@@ -62,11 +46,9 @@ export type InputCollectorMetaForKind<Kind extends InputCollectorKind> =
     ? CardInputCollectorMeta
     : Kind extends BoardInputCollectorKind
       ? BoardInputCollectorMeta
-      : Kind extends "prompt"
-        ? PromptInputCollectorMeta | undefined
-        : Kind extends "rng"
-          ? RngInputCollectorMeta
-          : never;
+      : Kind extends "rng"
+        ? RngInputCollectorMeta
+        : never;
 
 export type InputSelectionDescriptor =
   | { readonly mode: "single" }
@@ -250,7 +232,7 @@ export type CollectorState = {
  *     calls to enumerate server-authoritative, submit-ready values accepted by
  *     the collector schema. The hook receives
  *     the same `q` table-queries helper that `validate` / `reduce` see, so
- *     board/card/prompt collectors can reuse whatever board-graph or zone
+ *     board/card/form collectors can reuse whatever board-graph or zone
  *     lookups they already use for validation without rebuilding them from
  *     raw state. Each collector helper narrows the return type to its own
  *     branded id (`CardIdOfState<State>` for `cardInput`, the caller-supplied

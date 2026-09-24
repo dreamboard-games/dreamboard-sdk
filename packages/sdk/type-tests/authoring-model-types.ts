@@ -69,8 +69,6 @@ const manifest = {
     playerIds,
     phaseNames,
     boardLayouts: [] as const,
-    setupOptionIds: [] as const,
-    setupProfileIds: [] as const,
     cardSetIds: ["cards"] as const,
     cardTypes: ["action"] as const,
     deckIds: [] as const,
@@ -98,7 +96,6 @@ const manifest = {
     spaceTypeIds: [] as const,
     handVisibilityById: { hand: "ownerOnly" } as const,
     zoneVisibilityById: { hand: "ownerOnly" } as const,
-    setupChoiceIdsByOptionId: {},
     cardSetIdByCardId: { "card-1": "cards", "card-2": "cards" },
     cardTypeByCardId: { "card-1": "action", "card-2": "action" },
     cardSetIdsBySharedZoneId: {},
@@ -108,8 +105,6 @@ const manifest = {
     playerId: createManifestStringLiteralSchema(playerIds),
     phaseName: createManifestStringLiteralSchema(phaseNames),
     boardLayout: z.never(),
-    setupOptionId: z.never(),
-    setupProfileId: z.never(),
     cardSetId: createManifestStringLiteralSchema(["cards"] as const),
     cardType: createManifestStringLiteralSchema(["action"] as const),
     cardId: createManifestStringLiteralSchema(cardIds),
@@ -144,9 +139,6 @@ const manifest = {
     visibility: () => ({}),
     resources: () => testPerPlayer<RuntimeRecord>(),
   },
-  setupOptionsById: {},
-  setupChoiceIdsByOptionId: {},
-  setupProfilesById: {},
   tableSchema: z.custom<TestTable>(),
   runtimeSchema: z.any(),
   createGameStateSchema: () => z.any(),
@@ -440,3 +432,94 @@ game.assemble({
 game.phase("playerTurm");
 
 export { definition };
+
+const optionsGame = createGame({
+  ...gameModel,
+  options: z.strictObject({
+    variant: z.enum(["short", "long"]),
+    rounds: z.number().int().default(3),
+  }),
+});
+optionsGame.phase("playerTurn").define({
+  kind: "player",
+  initialState: ({ options }) => {
+    const variant: "short" | "long" = options.variant;
+    const rounds: number = options.rounds;
+    // @ts-expect-error Options retain their model-bound keys.
+    options.undeclared;
+    return { rolled: variant === "short" && rounds > 0 };
+  },
+});
+optionsGame.assemble({
+  initial: {
+    public: ({ options, playerIds }) => {
+      const variant: "short" | "long" = options.variant;
+      // @ts-expect-error Parsed numeric options do not become strings.
+      const rounds: string = options.rounds;
+      void variant;
+      void rounds;
+      return { currentPlayerId: playerIds[0] ?? null };
+    },
+  },
+  phases: {
+    setup: optionsGame
+      .phase("setup")
+      .define({ kind: "auto", initialState: () => ({}) }),
+    playerTurn: optionsGame
+      .phase("playerTurn")
+      .define({ kind: "player", initialState: () => ({ rolled: false }) }),
+  },
+  views: {
+    shared: optionsGame.views.empty(),
+    player: optionsGame.views.empty(),
+  },
+});
+const optionPhase = optionsGame.phase("playerTurn");
+optionPhase.interaction({
+  inputs: {},
+  actor: ({ state }) => state.publicState.currentPlayerId,
+  reduce: () => {},
+});
+optionPhase.interaction({
+  inputs: {},
+  // @ts-expect-error Actor IDs stay model-bound.
+  actor: () => "unknown-seat",
+  reduce: () => {},
+});
+optionPhase.interaction({
+  inputs: {},
+  // @ts-expect-error Recipient routing uses actor.
+  to: () => playerIds[0],
+  reduce: () => {},
+});
+optionPhase.interaction({
+  inputs: {},
+  // @ts-expect-error Visibility is controlled by actor authorization.
+  visibility: "actorsOnly",
+  reduce: () => {},
+});
+optionPhase.interaction({
+  inputs: {},
+  // @ts-expect-error Affordability is an authored rule.
+  cost: () => ({ gold: 1 }),
+  reduce: () => {},
+});
+optionPhase.define({
+  kind: "player",
+  initialState: () => ({ rolled: false }),
+  // @ts-expect-error Phase guidance metadata was removed.
+  guidance: { summary: "Removed" },
+});
+optionPhase.define({
+  kind: "player",
+  initialState: () => ({ rolled: false }),
+  // @ts-expect-error Phase zone wiring metadata was removed.
+  zones: ["hand"],
+});
+// @ts-expect-error Ordinary form choices replace prompt collectors.
+optionPhase.inputs.prompt;
+optionsGame.assemble({
+  ...definition,
+  // @ts-expect-error Initialization uses model options and ordinary phase entry.
+  setupProfiles: {},
+});

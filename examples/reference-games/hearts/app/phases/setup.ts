@@ -23,8 +23,8 @@ export default setup.define({
       pointsByPlayer: zeroByPlayer,
     });
 
-    // Deal one card at a time in seat order. The setup profile has already
-    // performed the one trusted seeded shuffle of the shared draw pile.
+    // Shuffle once, then deal one card at a time in seat order.
+    tx.shuffle({ zoneId: "draw-pile" });
     for (let cardNumber = 0; cardNumber < 13; cardNumber += 1) {
       for (const playerId of playerIds) {
         tx.deal({

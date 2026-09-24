@@ -901,51 +901,6 @@ export type ResourceDefinition = {
 /**
  * One authored setup option choice
  */
-export type SetupOptionChoiceSpec = {
-  id: string;
-  label: string;
-  description?: string;
-};
-
-/**
- * Authored setup module/variant axis metadata
- */
-export type SetupOptionSpec = {
-  id: string;
-  name: string;
-  description?: string;
-  choices?: Array<SetupOptionChoiceSpec>;
-};
-
-/**
- * One player-facing setup guidance step. Completion state remains game-owned
- * view data; the framework only preserves authored copy.
- */
-export type SetupGuidanceStep = {
-  id: string;
-  label: string;
-  description?: string;
-};
-
-/**
- * Reducer-consumed authored setup profile, recipe, or loadout metadata
- */
-export type SetupProfileSpec = {
-  id: string;
-  name: string;
-  description?: string;
-  /**
-   * Selected setup-option values for this profile
-   */
-  optionValues?: {
-    [key: string]: string;
-  };
-  guidance?: {
-    summary?: string;
-    steps?: ReadonlyArray<SetupGuidanceStep>;
-  };
-};
-
 /**
  * Authoritative topology manifest for reducer-native games
  */
@@ -972,14 +927,6 @@ export type GameTopologyManifest = {
   dieTypes?: Array<DieTypeSpec>;
   dieSeeds?: Array<DieSeedSpec>;
   resources?: Array<ResourceDefinition>;
-  /**
-   * Authored setup-option metadata consumed by reducer-owned setup flows
-   */
-  setupOptions?: Array<SetupOptionSpec>;
-  /**
-   * Authored setup recipes, loadouts, or module profiles consumed by reducer setup code
-   */
-  setupProfiles?: Array<SetupProfileSpec>;
 };
 
 /**
@@ -1072,10 +1019,6 @@ export type HostSessionContext = {
   hostActor: SessionActor;
   gameSource: SessionGameSource;
   /**
-   * Selected authored setup profile for this session.
-   */
-  setupProfileId?: string;
-  /**
    * Player IDs the authenticated session actor may select.
    */
   switchablePlayerIds: Array<string>;
@@ -1118,10 +1061,6 @@ export type HostLobbyView = {
    * Session actor that hosts this session.
    */
   hostActor: SessionActor;
-  /**
-   * Selected authored setup profile for this session.
-   */
-  setupProfileId?: string;
 };
 
 export type HostLobbySessionSnapshot = {
@@ -1378,17 +1317,6 @@ export type NotYourTurnInteractionAvailability = {
   reason: string;
 };
 
-export type InsufficientResourcesInteractionAvailability = {
-  status: "insufficientResources";
-  reason: string;
-  /**
-   * Resource shortfall by resource id when a costed interaction is not currently affordable.
-   */
-  missingResources: {
-    [key: string]: number;
-  };
-};
-
 export type BlockedInteractionAvailability = {
   status: "blocked";
   reason: string;
@@ -1402,9 +1330,6 @@ export type InteractionAvailability =
   | ({
       status: "notYourTurn";
     } & NotYourTurnInteractionAvailability)
-  | ({
-      status: "insufficientResources";
-    } & InsufficientResourcesInteractionAvailability)
   | ({
       status: "blocked";
     } & BlockedInteractionAvailability);
@@ -1425,12 +1350,6 @@ export type InteractionDescriptorBase = {
    * Ordered input descriptors. Each entry is the canonical source for its collector key, collector kind, and valid-value domain.
    */
   inputs: Array<InteractionInputDescriptor>;
-  cost?: {
-    [key: string]: JsonValue;
-  };
-  currentResources?: {
-    [key: string]: JsonValue;
-  };
   availability: InteractionAvailability;
 };
 
@@ -1438,32 +1357,7 @@ export type ActionInteractionDescriptor = InteractionDescriptorBase & {
   kind: "action";
 };
 
-export type InteractionContextOption = {
-  id: string;
-  label: string;
-};
-
-export type InteractionContext = {
-  to: string;
-  title?: string;
-  payload?: {
-    [key: string]: JsonValue;
-  };
-  options?: Array<InteractionContextOption>;
-};
-
-export type PromptInteractionDescriptor = InteractionDescriptorBase & {
-  kind: "prompt";
-  context: InteractionContext;
-};
-
-export type InteractionDescriptor =
-  | ({
-      kind: "action";
-    } & ActionInteractionDescriptor)
-  | ({
-      kind: "prompt";
-    } & PromptInteractionDescriptor);
+export type InteractionDescriptor = ActionInteractionDescriptor;
 
 export type ZoneHandles = {
   cardIds: Array<string>;

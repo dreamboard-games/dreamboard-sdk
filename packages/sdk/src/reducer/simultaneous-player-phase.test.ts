@@ -144,8 +144,6 @@ function createManifestContract() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds,
       cardTypes,
       deckIds: [] as const,
@@ -182,8 +180,6 @@ function createManifestContract() {
     ids: {
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: createManifestStringLiteralSchema(phaseNames),
-      setupOptionId: createManifestStringLiteralSchema([] as const),
-      setupProfileId: createManifestStringLiteralSchema([] as const),
       cardSetId: createManifestStringLiteralSchema(cardSetIds),
       cardType: createManifestStringLiteralSchema(cardTypes),
       cardId: createManifestStringLiteralSchema(cardIds),
@@ -226,9 +222,6 @@ function createManifestContract() {
           () => ({}),
         ),
     },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),

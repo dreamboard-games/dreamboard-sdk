@@ -67,6 +67,12 @@ An empty next domain blocks progress but does not erase an otherwise valid prefi
 Cancel clears only the authenticated actor's matching unsealed pending choice;
 do not require the old interaction to remain actionable to cancel it.
 
+Use the existing rule distinction: `available` predicates apply during actor/
+interaction eligibility checks; complete-params `validate` rules run at final
+submission. Resolve a step domain using only its earlier committed values.
+Do not enumerate future choices or run complete-params rules with partial input
+to decide whether the current step can be shown.
+
 ## Privacy and simultaneous phases
 
 Project only the selected seat's pending values/current domain. Never put the

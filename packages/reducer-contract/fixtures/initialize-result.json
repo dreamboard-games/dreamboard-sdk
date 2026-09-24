@@ -31,17 +31,11 @@
         "cursor": 0,
         "trace": []
       },
-      "setup": {
-        "profileId": "short",
-        "optionValues": {
-          "difficulty": "normal",
-          "map": null
-        }
-      },
       "simultaneous": {
         "current": null
       },
-      "lastTransition": null
+      "lastTransition": null,
+      "options": {}
     }
   },
   "terminal": {

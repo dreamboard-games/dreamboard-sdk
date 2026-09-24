@@ -427,7 +427,6 @@ export function createExpectApi(
       }
       const actualReason =
         descriptor.availability?.status === "notYourTurn" ||
-        descriptor.availability?.status === "insufficientResources" ||
         descriptor.availability?.status === "blocked"
           ? descriptor.availability.reason
           : undefined;
@@ -466,34 +465,6 @@ export function createExpectApi(
             explanation,
           )}`,
         );
-      }
-    },
-    toBeActiveFor: (playerId, opts) => {
-      const descriptor = Array.isArray(actual)
-        ? (() => {
-            if (!opts?.interactionId) {
-              scenarioAssertionFailure(
-                "toBeActiveFor on a descriptor array requires opts.interactionId.",
-              );
-            }
-            return findInteraction(
-              asDescriptorList(actual),
-              opts.interactionId,
-            );
-          })()
-        : (actual as InteractionDescriptorLike | null);
-      if (!descriptor) {
-        scenarioAssertionFailure("Expected interaction descriptor to exist.");
-      }
-      if (descriptor.context?.to !== playerId) {
-        scenarioAssertionFailure(
-          `Expected interaction to target '${playerId}', received '${
-            descriptor.context?.to ?? "undefined"
-          }'.`,
-        );
-      }
-      if (descriptor.availability?.status !== "available") {
-        scenarioAssertionFailure("Expected interaction to be available.");
       }
     },
     not: {

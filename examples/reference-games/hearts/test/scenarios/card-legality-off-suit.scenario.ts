@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.card-legality-off-suit",
   description:
     "After trick one, a player void in the lead suit may discard any card.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: completeGamePath.slice(0, 21),
   when: [completeGamePath[21]],
   then: ({ expect, view }) => {

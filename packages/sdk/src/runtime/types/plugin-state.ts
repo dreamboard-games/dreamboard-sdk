@@ -1,32 +1,10 @@
 import type { PlayerId } from "./player-id";
 
-export interface GameplayPromptOption {
-  id: string;
-  label: string;
-}
-
-/** Choice option surfaced on a prompt-kind interaction's structured context. */
-export interface InteractionContextOption {
-  id: string;
-  label?: string;
-}
-
-/** Structured context attached to a prompt-kind InteractionDescriptor. */
-export interface InteractionContext {
-  /** Addressed player id. */
-  to: string;
-  title?: string;
-  /** Authored prompt payload. Shape is defined by the game's prompt schema. */
-  payload?: Record<string, unknown>;
-  /** Selectable options for choice-kind prompts. */
-  options?: readonly InteractionContextOption[];
-}
-
 /**
  * Authoritative interaction descriptor resolved by the trusted bundle.
- * Eligibility, cost, and availability are authoritative — clients MUST NOT recompute.
+ * Eligibility and availability are authoritative — clients MUST NOT recompute.
  */
-export type InteractionKind = "action" | "prompt";
+export type InteractionKind = "action";
 
 export type InteractionCommitPolicy =
   | { mode: "manual" }
@@ -169,35 +147,9 @@ export interface InteractionDiagnosticReason {
   errorCode: string;
 }
 
-export interface SetupGuidanceStep {
-  id: string;
-  label: string;
-  description?: string;
-}
-
-export interface GameGuidanceProjection {
-  phase: {
-    id: string;
-    label: string;
-    summary?: string;
-    objective?: string;
-  };
-  setup?: {
-    profileId: string;
-    name: string;
-    summary?: string;
-    steps: readonly SetupGuidanceStep[];
-  };
-}
-
 export type InteractionAvailability =
   | { status: "available" }
   | { status: "notYourTurn"; reason: string }
-  | {
-      status: "insufficientResources";
-      reason: string;
-      missingResources: Readonly<Record<string, number>>;
-    }
   | { status: "blocked"; reason: string; code?: string };
 
 interface InteractionDescriptorBase<Key extends string = string> {
@@ -220,10 +172,6 @@ interface InteractionDescriptorBase<Key extends string = string> {
   zoneIds?: readonly string[];
   /** Ordered input descriptors. This is the canonical source for input keys, collector kind, and valid-value domains. */
   inputs: readonly InteractionInputDescriptor[];
-  /** Resolved cost map keyed by resource id (if interaction declares one). */
-  cost?: Record<string, unknown>;
-  /** Snapshot of seat's currently available resources keyed by resource id. */
-  currentResources?: Record<string, unknown>;
   /** Authoritative availability state for this descriptor. */
   availability: InteractionAvailability;
   /** Optional verbose diagnostics for dev tooling; omitted from production projections. */
@@ -235,16 +183,8 @@ export type ActionInteractionDescriptor<Key extends string = string> =
     kind: "action";
   };
 
-export type PromptInteractionDescriptor<Key extends string = string> =
-  InteractionDescriptorBase<Key> & {
-    kind: "prompt";
-    /** Structured prompt context for prompt-kind interactions. */
-    context: InteractionContext;
-  };
-
 export type InteractionDescriptor<Key extends string = string> =
-  | ActionInteractionDescriptor<Key>
-  | PromptInteractionDescriptor<Key>;
+  ActionInteractionDescriptor<Key>;
 
 /**
  * Per-player view of a single zone. Mirrors the ZoneHandles wire shape from
@@ -293,7 +233,6 @@ export interface GameplaySnapshot<
   activePlayers: PlayerId[];
   simultaneousPhase?: SimultaneousPhaseSnapshot | null;
   availableInteractions: ReadonlyArray<InteractionDescriptor<InteractionType>>;
-  guidance?: GameGuidanceProjection | null;
   /**
    * Zone handles scoped to the controlling player. Keyed by zoneId.
    * Authored via phase `zones`; projected from `resolveZoneHandles`.

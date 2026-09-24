@@ -6,7 +6,7 @@ export default defineScenario({
   id: "hearts.card-legality-first-trick-penalty",
   description:
     "A Club-void player with safe discards cannot discard a Heart or the Queen of Spades on trick one.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: [
     ...firstTrickPenaltyPasses,
     play(1, "clubs-2"),

@@ -10,7 +10,6 @@ import {
   type ReducerDefinitionPhaseIndex,
   type ReducerIndexedInteractionEntry,
   type ReducerIndexedPhase,
-  type ReducerIndexedZoneEntry,
 } from "../../definition-index";
 
 export type TrustedErasedPhase<Contract extends ReducerGameContractLike> =
@@ -18,9 +17,6 @@ export type TrustedErasedPhase<Contract extends ReducerGameContractLike> =
 
 export type TrustedInteractionEntry<Contract extends ReducerGameContractLike> =
   ReducerIndexedInteractionEntry<Contract>;
-
-export type TrustedZoneEntry<Contract extends ReducerGameContractLike> =
-  ReducerIndexedZoneEntry<Contract>;
 
 export type TrustedPhaseRegistry<
   Contract extends ReducerGameContractLike,
@@ -68,7 +64,6 @@ export function collectTrustedRuntimeRegistry<
       phaseName: phaseIndex.phaseName,
       phase: phaseIndex.phase,
       interactions: phaseIndex.interactions,
-      zones: phaseIndex.zones,
     };
     phasesByName.set(phaseIndex.phaseName, trustedPhase);
   }

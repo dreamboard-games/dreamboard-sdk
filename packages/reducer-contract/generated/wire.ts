@@ -7,8 +7,6 @@ export type ReducerContractVersion = string;
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
-export type ReducerSetupSelection = { "profileId": string; "optionValues": Record<string, string | null> };
-
 export type RngOperationParameter = string | number | boolean;
 
 export type RngOperation = { "kind": string; "parameters": Record<string, RngOperationParameter> };
@@ -27,7 +25,7 @@ export type RuntimeSimultaneousState = { "current": RuntimeSimultaneousCurrent |
 
 export type TransitionRecord = { "from": string; "to": string };
 
-export type ReducerRuntimeState = { "rng": RngState; "setup": ReducerSetupSelection | null; "simultaneous": RuntimeSimultaneousState; "lastTransition": TransitionRecord | null };
+export type ReducerRuntimeState = { "rng": RngState; "simultaneous": RuntimeSimultaneousState; "lastTransition": TransitionRecord | null; "options": Record<string, JsonValue> };
 
 export type ReducerDomainState = { "table": JsonValue; "publicState": JsonValue; "privateState": Record<string, JsonValue>; "hiddenState": JsonValue; "flow": ReducerFlowState; "phase": JsonValue };
 
@@ -43,7 +41,7 @@ export type ReducerInputValidationResult = { "valid": boolean; "errorCode"?: str
 
 export type InitializeResult = { "state": ReducerSessionState; "terminal"?: GameOutcome; "events"?: Array<GameEvent> };
 
-export type InitializeRequest = { "table": JsonValue; "playerIds": Array<string>; "rngSeed"?: number | null; "setup"?: ReducerSetupSelection | null };
+export type InitializeRequest = { "table": JsonValue; "playerIds": Array<string>; "rngSeed"?: number | null; "options"?: Record<string, JsonValue> };
 
 export type InitializePhaseRequest = { "state": ReducerSessionState; "to": string };
 
@@ -105,17 +103,13 @@ export type SchedulerContinuationDependency = { "waiterPlayerId": string; "block
 
 export type SchedulerFlowAuthorityProjection = { "version": 1; "activePlayerIds": Array<string>; "pendingPlayerIds": Array<string>; "continuationDependencies": Array<SchedulerContinuationDependency> };
 
-export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "schedulerFlow"?: SchedulerFlowAuthorityProjection; "guidance"?: GameGuidanceProjection | null; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
+export type SeatProjectionBundle = { "currentStage"?: string | null; "stageSeats"?: Array<string>; "simultaneousPhase"?: SimultaneousPhaseProjection | null; "schedulerFlow"?: SchedulerFlowAuthorityProjection; "sharedView"?: JsonValue; "interactionsByRef"?: JsonValue; "seats": Record<string, SeatProjection>; "timing"?: ProjectionTimingMetadata };
 
 export type ProjectionTimingMetadata = { "resolveAvailableInteractionsMs": number; "resolveViewMs": number; "resolveZoneHandlesMs": number; "descriptorHashMs": number };
 
 export type ProjectRequest = { "state": ReducerSessionState; "playerIds": Array<string> };
 
 export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manifestVersion": string };
-
-export type SetupGuidanceStep = { "id": string; "label": string; "description"?: string };
-
-export type GameGuidanceProjection = { "phase": { "id": string; "label": string; "summary"?: string; "objective"?: string }; "setup"?: { "profileId": string; "name": string; "summary"?: string; "steps": Array<SetupGuidanceStep> } };
 
 export type DispatchTracePhaseEntered = { "kind": "phaseEntered"; "from": string; "to": string };
 

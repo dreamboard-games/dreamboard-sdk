@@ -86,3 +86,45 @@ command deduplication. Add same-command retry handling before stale-basis
 validation at that authority, rejecting ID reuse with different payloads. Keep
 it scoped to the session operation lifetime and reuse the existing runtime;
 do not introduce a second execution authority.
+
+## Type-only construction spike
+
+Root independently reran a strict TypeScript 5.9.3 proof at
+`/tmp/headless-instance-type-spike/additive.ts`. A small curried constructor
+`createGameInstance<Game>()({ source, features })` preserves explicit erased game
+typing while inferring enabled feature return types. The original executable
+`game` argument cannot cross the hosted UI boundary. A single-call API with only
+Game explicitly supplied cannot also infer a defaulted feature generic reliably.
+
+Ordinary feature factories can receive the typed core and return additive APIs;
+one return-type intersection preserves `game.boards` and other root ergonomics
+while disabled APIs fail checked compilation. Do not expose an unrelated
+`game.features.board` namespace merely to simplify implementation. Reject feature
+property ownership collisions at construction rather than silently overwrite.
+React can bind to the resulting instance type without executable reducer imports.
+
+This spike proves root API gating and model identity inference only. The actual
+implementation must also support the required input/card/object extension hooks,
+prototype behavior and lifecycle ownership; do not mistake this small proof for
+a completed feature framework or introduce global merging without a real need.
+
+## Per-object proof
+
+The isolated proof `/tmp/headless-instance-type-spike/per-object.ts` extends this
+to root/card/input/board hooks and canonical domain-object constructors. Both the
+executor and root passed strict TypeScript 5.9.3 and Node 24 execution. Enabled
+hooks preserve model IDs and generic input values; disabled root/object APIs
+fail checked compilation and are absent at runtime. Hooks live on shared
+prototypes, back-references retain root identity, handlers observe current
+options, and construction rejects overlapping property ownership.
+
+One localized constructor assertion handles dynamic descriptor composition;
+feature definitions and callers need none. Canonical object factories must own
+their enriched return types: arbitrary custom root factories do not automatically
+rewrite returned objects. The proof uses an explicit board capability to enable
+the typed root boards factory, with ordinary hooks adding board methods.
+
+This remains a proof, not shipped implementation. It does not prove selector
+stability or object-cache lifetime; the implementation must keep selector results
+stable while their selected values are unchanged and scope caches to source and
+snapshot lifetime. A plain per-call object factory alone cannot satisfy that.

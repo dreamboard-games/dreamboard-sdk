@@ -5,12 +5,10 @@ import {
   type Wire,
 } from "@dreamboard-games/reducer-contract";
 import type {
-  ManifestContractOf,
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerGameDefinition,
   ReducerReject,
-  RuntimeSetupSelectionInput,
   ViewMapOf,
 } from "../model";
 import type { DispatchTraceEntry } from "../core/types";
@@ -167,10 +165,8 @@ export function createReducerTestingBundle<
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
   options: ReducerBundleOptions = {},
 ): ReducerBundleTestingRuntime {
-  type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
   const trustedBundle = createTrustedReducerBundle(definition, options);
   const codec = createIngressRuntimeCodec(definition);
-  type Manifest = ManifestContractOf<Definition["contract"]>;
   type TrustedState = Awaited<
     ReturnType<typeof trustedBundle.initialize>
   >["state"];
@@ -200,7 +196,7 @@ export function createReducerTestingBundle<
       table,
       playerIds,
       rngSeed,
-      setup,
+      options,
     }: Wire.InitializeRequest) {
       const { table: parsedTable, playerIds: parsedPlayerIds } =
         codec.parseInitialTable(
@@ -211,7 +207,7 @@ export function createReducerTestingBundle<
         table: parsedTable,
         playerIds: parsedPlayerIds,
         rngSeed,
-        setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+        options: codec.parseInitialOptions(options),
       });
       return {
         state: codec.serializeState(initialized.state),
@@ -340,7 +336,7 @@ export function createReducerTestingBundle<
         return state;
       };
       return {
-        async initialize({ table, playerIds, rngSeed, setup }) {
+        async initialize({ table, playerIds, rngSeed, options }) {
           const { table: parsedTable, playerIds: parsedPlayerIds } =
             codec.parseInitialTable(
               table as Parameters<typeof codec.parseInitialTable>[0],
@@ -351,7 +347,7 @@ export function createReducerTestingBundle<
               table: parsedTable,
               playerIds: parsedPlayerIds,
               rngSeed,
-              setup: setup as RuntimeSetupSelectionInput<Manifest> | null,
+              options: codec.parseInitialOptions(options),
             })
           ).state;
         },

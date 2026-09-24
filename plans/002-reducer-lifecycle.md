@@ -1,6 +1,7 @@
 # Direct reducer execution and phase lifecycle
 
-Status: 002a implemented and reviewed; 002b is next. Base: layer 001 (`de6be2c`).
+Status: 002a implemented and reviewed; 002b executing; 002c prepared and reviewed.
+Base: layer 001 (`de6be2c`).
 First branch: `codex/sdk-reducer-lifecycle` (002a).
 
 ## Reviewable sublayers
@@ -98,6 +99,24 @@ private seat views. Update deliberate export snapshots. No gate weakening.
 Freeze the diff for root and independent review. Fix valid findings, then commit
 only this layer after the final gate; root submits the stack. Report exact
 commands, remaining downstream contract obligations and deleted public names.
+
+## 002c preparation receipt
+
+Commit `850e2d8061e128ced180053051b2535dee242277` is reviewed in
+`/Users/mac/code/worktrees/headless-sdk-views`; integration follows 002b.
+It replaces split authored shared/player/static views with one contextual seat
+view, derives static boards from the manifest, and removes injected derived
+resolvers in favor of ordinary functions and the small WeakMap `memoize` helper.
+Both games and the template are migrated. The temporary transport adapter leaves
+sharedView empty; spectator custom views intentionally remain empty and must
+never be populated by selecting a private seat.
+
+Full `pnpm check` passed: SDK 87 files/629 tests, contract suites, checked types,
+template and both packed games. Root independently reran 57 focused tests and
+checked types; independent review found no actionable regressions in privacy,
+collector argument migration or memoization. Logs: `/tmp/views-full-check.log`,
+`/tmp/views-root-focused.log`, `/tmp/views-root-types.log`.
+Integration must revalidate the combined initialization/actor/view branch.
 
 ## 002a implementation receipt
 

@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.projection-privacy",
   description:
     "Pass choices stay sealed, each player sees only their own hand, and public counts/history match for every perspective.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: completeGamePath.slice(0, 2),
   when: completeGamePath.slice(2, 4),
   then: ({ expect, view }) => {

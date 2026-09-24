@@ -15,12 +15,4 @@ export {
   type ClientParamSchema,
   type ClientParamSchemasByPhase,
 } from "./client-param-schemas";
-export { applySetupBootstrap } from "./setup-bootstrap";
 export { defineGameDefinition } from "./authoring/game";
-export {
-  dealToPlayerBoardContainer,
-  dealToPlayerZone,
-  seedSharedBoardContainer,
-  seedSharedBoardSpace,
-  shuffle,
-} from "./setup-bootstrap-helpers";

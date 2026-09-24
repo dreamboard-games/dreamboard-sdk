@@ -1,3 +1,8 @@
+import { createReducerTransaction } from "./transaction";
+import {
+  createTestRandom,
+  createTestTransaction,
+} from "./transaction-test-fixtures";
 import { defineGameDefinition as defineGame } from "./authoring/game";
 import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
@@ -9,10 +14,8 @@ import {
   definePhase,
 } from "../reducer/internal";
 import {
-  applySetupBootstrap,
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-  type SetupBootstrapStep,
 } from "../reducer/advanced";
 import {
   perPlayer,
@@ -74,7 +77,7 @@ function createEmptyTable(
   };
 }
 
-function createManifestContract(setupProfileIds: readonly string[]) {
+function createManifestContract() {
   const phaseNames = ["defaultPhase", "draftPhase"] as const;
   const playerIds = ["player-1", "player-2", "player-3", "player-4"] as const;
   const resolvePlayerIds = (selectedPlayerIds?: readonly string[]) =>
@@ -86,8 +89,6 @@ function createManifestContract(setupProfileIds: readonly string[]) {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: ["mode", "variant"] as const,
-      setupProfileIds,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -122,11 +123,6 @@ function createManifestContract(setupProfileIds: readonly string[]) {
     ids: {
       playerId: z.enum(playerIds),
       phaseName: z.enum(phaseNames),
-      setupOptionId: createManifestStringLiteralSchema([
-        "mode",
-        "variant",
-      ] as const),
-      setupProfileId: createManifestStringLiteralSchema(setupProfileIds),
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema([] as const),
       cardId: createManifestStringLiteralSchema([] as const),
@@ -180,40 +176,6 @@ function createManifestContract(setupProfileIds: readonly string[]) {
           () => ({ coins: 0 }),
         ),
     },
-    setupOptionsById: {
-      mode: {
-        id: "mode",
-        name: "Mode",
-        choices: [{ id: "draft", label: "Draft" }],
-      },
-      variant: {
-        id: "variant",
-        name: "Variant",
-        choices: [{ id: "advanced", label: "Advanced" }],
-      },
-    },
-    setupProfilesById: Object.fromEntries(
-      setupProfileIds.map((profileId) => [
-        profileId,
-        {
-          id: profileId,
-          name: profileId,
-          guidance: {
-            summary: `Use ${profileId} setup.`,
-            steps: [
-              {
-                id: "choose-mode",
-                label: "Choose mode",
-                description: "Select the setup mode before the draft begins.",
-              },
-            ],
-          },
-          optionValues: {
-            mode: "draft",
-          },
-        },
-      ]),
-    ),
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
@@ -222,7 +184,6 @@ function createManifestContract(setupProfileIds: readonly string[]) {
 
 const BOOTSTRAP_PLAYER_IDS = ["player-1", "player-2"] as const;
 const BOOTSTRAP_PHASE_NAMES = ["setup"] as const;
-const BOOTSTRAP_PROFILE_IDS = ["bootstrap-profile"] as const;
 const BOOTSTRAP_CARD_IDS = ["card-1", "card-2", "card-3", "card-4"] as const;
 
 function createBootstrapManifestContract() {
@@ -230,8 +191,6 @@ function createBootstrapManifestContract() {
     literals: {
       playerIds: BOOTSTRAP_PLAYER_IDS,
       phaseNames: BOOTSTRAP_PHASE_NAMES,
-      setupOptionIds: [] as const,
-      setupProfileIds: BOOTSTRAP_PROFILE_IDS,
       cardSetIds: ["main"] as const,
       cardTypes: ["card"] as const,
       deckIds: ["draw-deck"] as const,
@@ -283,8 +242,6 @@ function createBootstrapManifestContract() {
     ids: {
       playerId: z.enum(BOOTSTRAP_PLAYER_IDS),
       phaseName: z.enum(BOOTSTRAP_PHASE_NAMES),
-      setupOptionId: z.string(),
-      setupProfileId: z.enum(BOOTSTRAP_PROFILE_IDS),
       cardSetId: z.enum(["main"]),
       cardType: z.enum(["card"]),
       cardId: z.enum(BOOTSTRAP_CARD_IDS),
@@ -346,25 +303,21 @@ function createBootstrapManifestContract() {
       resources: (selectedPlayerIds?: readonly string[]) =>
         ppEmpty(selectedPlayerIds ?? BOOTSTRAP_PLAYER_IDS),
     },
-    setupOptionsById: {},
-    setupProfilesById: {
-      "bootstrap-profile": {
-        id: "bootstrap-profile",
-        name: "Bootstrap profile",
-        optionValues: {},
-      },
-    },
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
   };
 }
 
-type BootstrapManifest = ReturnType<typeof createBootstrapManifestContract>;
-
 function createBootstrapTable(): RuntimeTableRecord {
   return {
     ...createEmptyTable([...BOOTSTRAP_PLAYER_IDS]),
+    componentLocations: Object.fromEntries(
+      BOOTSTRAP_CARD_IDS.map((id, position) => [
+        id,
+        { type: "InDeck", deckId: "draw-deck", position, playedBy: null },
+      ]),
+    ),
     cards: Object.fromEntries(
       BOOTSTRAP_CARD_IDS.map((cardId) => [
         cardId,
@@ -380,7 +333,7 @@ function createBootstrapTable(): RuntimeTableRecord {
 }
 
 function createBootstrapGame(
-  bootstrap: readonly SetupBootstrapStep<BootstrapManifest>[],
+  initialize: (tx: ReturnType<typeof createTestTransaction>) => void,
 ) {
   const manifest = createBootstrapManifestContract();
   const contract = defineGameContract({
@@ -398,17 +351,12 @@ function createBootstrapGame(
   return defineGame({
     contract,
     initialPhase: "setup",
-    setupProfiles: {
-      "bootstrap-profile": {
-        initialPhase: "setup",
-        bootstrap,
-      },
-    },
     phases: {
       setup: definePhase<typeof contract>()({
         kind: "auto",
         state: z.object({}),
         initialState: () => ({}),
+        enter: ({ tx }) => initialize(tx),
       }),
     },
     views: {
@@ -418,175 +366,133 @@ function createBootstrapGame(
   });
 }
 
-describe("setup profile runtime", () => {
-  test("selected setup profile overrides the initial phase and is available in reducer initialization contexts", async () => {
-    const manifest = createManifestContract(["draft-profile"] as const);
+describe("initialization runtime", () => {
+  test("parsed options reach initial state and each phase initializer and survive restoration", async () => {
     const contract = defineGameContract({
-      manifest,
-      phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
+      manifest: createManifestContract(),
+      options: z.strictObject({
+        mode: z.enum(["draft", "quick"]),
+        rounds: z.number().int().positive().default(3),
+      }),
+      phases: {
+        defaultPhase: z.object({ mode: z.string() }),
+        draftPhase: z.object({ mode: z.string() }),
+      },
       state: {
-        public: z.object({
-          publicSetupProfileId: manifest.ids.setupProfileId.nullable(),
-          enterSetupProfileId: manifest.ids.setupProfileId.nullable(),
-          actionSetupProfileId: manifest.ids.setupProfileId.nullable(),
-        }),
-        private: z.object({
-          privateSetupProfileId: manifest.ids.setupProfileId.nullable(),
-        }),
-        hidden: z.object({
-          hiddenSetupProfileId: manifest.ids.setupProfileId.nullable(),
-        }),
+        public: z.object({ mode: z.string() }),
+        private: z.object({ rounds: z.number() }),
+        hidden: z.object({ mode: z.string() }),
       },
     });
-
-    const phases = {
-      defaultPhase: definePhase<typeof contract>()({
-        kind: "auto",
-        state: z.object({}),
-        initialState: () => ({}),
-      }),
-      draftPhase: definePhase<typeof contract>()({
-        kind: "player",
-        name: "Draft phase",
-        guidance: {
-          summary: "Draft using the selected setup profile.",
-          objective: "Record the setup profile before play continues.",
-        },
-        state: z.object({}),
-        initialState: () => ({}),
-        enter({ state, accept, setup }) {
-          return accept({
-            ...state,
-            publicState: {
-              ...state.publicState,
-              enterSetupProfileId: setup?.profileId ?? null,
-            },
-          });
-        },
-        interactions: {
-          recordSetup: defineInteraction<typeof contract>()({
-            inputs: {},
-            reduce({ state, accept, setup }) {
-              return accept({
-                ...state,
-                publicState: {
-                  ...state.publicState,
-                  actionSetupProfileId: setup?.profileId ?? null,
-                },
-              });
-            },
-          }),
-        },
-      }),
-    };
-
     const game = defineGame({
       contract,
       initial: {
-        public: ({ setup }) => ({
-          publicSetupProfileId: setup?.profileId ?? null,
-          enterSetupProfileId: null,
-          actionSetupProfileId: null,
-        }),
-        private: ({ setup }) => ({
-          privateSetupProfileId: setup?.profileId ?? null,
-        }),
-        hidden: ({ setup }) => ({
-          hiddenSetupProfileId: setup?.profileId ?? null,
-        }),
+        public: ({ options }) => ({ mode: options.mode }),
+        private: ({ options }) => ({ rounds: options.rounds }),
+        hidden: ({ options }) => ({ mode: options.mode }),
       },
       initialPhase: "defaultPhase",
-      setupProfiles: {
-        "draft-profile": {
-          initialPhase: "draftPhase",
-        },
+      phases: {
+        defaultPhase: definePhase<typeof contract>()({
+          kind: "auto",
+          state: contract.phases.defaultPhase,
+          initialState: ({ options }) => ({ mode: options.mode }),
+          enter: ({ tx }) => tx.transition("draftPhase"),
+        }),
+        draftPhase: definePhase<typeof contract>()({
+          kind: "player",
+          state: contract.phases.draftPhase,
+          initialState: ({ options }) => ({ mode: options.mode }),
+          interactions: {
+            next: defineInteraction<typeof contract>()({
+              inputs: {},
+              reduce: ({ tx }) => tx.transition("draftPhase"),
+            }),
+          },
+        }),
       },
-      phases,
       views: {
         shared: defineEmptyView<typeof contract>(),
         player: defineEmptyView<typeof contract>(),
       },
     });
-
     const bundle = createReducerTestingBundle(game);
-    const initialized = await bundle.initialize({
+    const request = {
       table: createEmptyTable(),
       playerIds: ["player-1", "player-2"],
       rngSeed: 42,
-      setup: {
-        profileId: "draft-profile",
-      },
+      options: { mode: "draft" },
+    };
+    const initialized = await bundle.initialize(request);
+    expect(initialized.runtime.options).toEqual({ mode: "draft", rounds: 3 });
+    expect(initialized.domain.publicState).toEqual({ mode: "draft" });
+    expect(initialized.domain.hiddenState).toEqual({ mode: "draft" });
+    expect(initialized.domain.privateState).toEqual({
+      "player-1": { rounds: 3 },
+      "player-2": { rounds: 3 },
     });
-
-    expect(initialized.domain.flow.currentPhase).toBe("draftPhase");
-    expect(initialized.runtime.setup).toEqual({
-      profileId: "draft-profile",
-      optionValues: {
-        mode: "draft",
-        variant: null,
-      },
-    });
-    expect(initialized.domain.publicState).toEqual({
-      publicSetupProfileId: "draft-profile",
-      enterSetupProfileId: "draft-profile",
-      actionSetupProfileId: null,
-    });
-    expect(initialized.domain.privateState["player-1"]).toEqual({
-      privateSetupProfileId: "draft-profile",
-    });
-    expect(initialized.domain.hiddenState).toEqual({
-      hiddenSetupProfileId: "draft-profile",
-    });
-    expect(
-      bundle.project({
-        state: initialized,
-        playerIds: ["player-1"],
-      }).guidance,
-    ).toEqual({
-      phase: {
-        id: "draftPhase",
-        label: "Draft phase",
-        summary: "Draft using the selected setup profile.",
-        objective: "Record the setup profile before play continues.",
-      },
-      setup: {
-        profileId: "draft-profile",
-        name: "draft-profile",
-        summary: "Use draft-profile setup.",
-        steps: [
-          {
-            id: "choose-mode",
-            label: "Choose mode",
-            description: "Select the setup mode before the draft begins.",
-          },
-        ],
-      },
-    });
-
-    const reduced = await bundle.reduce({
-      state: initialized,
+    expect(initialized.domain.phase).toEqual({ mode: "draft" });
+    const restored = JSON.parse(JSON.stringify(initialized));
+    const next = await bundle.reduce({
+      state: restored,
       input: {
         kind: "interaction",
         playerId: "player-1",
-        interactionId: "recordSetup",
+        interactionId: "next",
         params: {},
       },
     });
-
-    expect(reduced.kind).toBe("accept");
-    if (reduced.kind !== "accept") {
-      throw new Error("Expected reducer action to be accepted.");
+    expect(next.kind).toBe("accept");
+    if (next.kind !== "accept") throw new Error("Expected acceptance");
+    expect(next.state.runtime.options).toEqual(initialized.runtime.options);
+    expect(next.state.domain.phase).toEqual({ mode: "draft" });
+    for (const options of [
+      { mode: "invalid" },
+      { mode: "draft", rounds: "3" },
+      { mode: "draft", extra: true },
+      null,
+      { mode: "draft", rounds: Infinity },
+    ]) {
+      await expect(
+        bundle.initialize({ ...request, options }),
+      ).rejects.toThrow();
+      expect(() =>
+        bundle.project({
+          state: { ...restored, runtime: { ...restored.runtime, options } },
+          playerIds: ["player-1"],
+        }),
+      ).toThrow();
     }
-    expect(reduced.state.domain.publicState).toEqual({
-      publicSetupProfileId: "draft-profile",
-      enterSetupProfileId: "draft-profile",
-      actionSetupProfileId: "draft-profile",
-    });
+  });
+
+  test("options schemas reject transforms, preprocess, and nested lazy coercion", () => {
+    for (const options of [
+      z.object({ count: z.number().transform((n) => n + 1) }),
+      z.object({ count: z.number().overwrite((n) => n + 1) }),
+      z.preprocess((value) => value, z.object({ count: z.number() })),
+      z.object({
+        nested: z.lazy(() => z.object({ count: z.coerce.number() })),
+      }),
+      z.object({ date: z.date() }),
+    ]) {
+      expect(() =>
+        defineGameContract({
+          manifest: createManifestContract(),
+          options: options as never,
+          phases: { defaultPhase: z.object({}) },
+          state: {
+            public: z.object({}),
+            private: z.object({}),
+            hidden: z.object({}),
+          },
+        }),
+      ).toThrow();
+    }
   });
 
   test("initialize only materializes the actual session players for per-player hands and resources", async () => {
     const contract = defineGameContract({
-      manifest: createManifestContract(["draft-profile"] as const),
+      manifest: createManifestContract(),
       phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
       state: {
         public: z.object({}),
@@ -598,9 +504,6 @@ describe("setup profile runtime", () => {
     const game = defineGame({
       contract,
       initialPhase: "defaultPhase",
-      setupProfiles: {
-        "draft-profile": {},
-      },
       phases: {
         defaultPhase: definePhase<typeof contract>()({
           kind: "auto",
@@ -624,9 +527,6 @@ describe("setup profile runtime", () => {
       table: createEmptyTable(["player-1", "player-2"]),
       playerIds: ["player-1", "player-2"],
       rngSeed: 7,
-      setup: {
-        profileId: "draft-profile",
-      },
     });
 
     expect(perPlayerKeys(initialized.domain.table.hands.hand)).toEqual([
@@ -659,8 +559,6 @@ describe("setup profile runtime", () => {
         literals: {
           playerIds,
           phaseNames,
-          setupOptionIds: [] as const,
-          setupProfileIds: [] as const,
           cardSetIds: ["main"] as const,
           cardTypes: ["thing"] as const,
           deckIds,
@@ -708,8 +606,6 @@ describe("setup profile runtime", () => {
         ids: {
           playerId: z.enum(playerIds),
           phaseName: z.enum(phaseNames),
-          setupOptionId: z.string(),
-          setupProfileId: z.string(),
           cardSetId: z.enum(["main"]),
           cardType: z.enum(["thing"]),
           cardId: z.enum(cardIds),
@@ -778,8 +674,6 @@ describe("setup profile runtime", () => {
           }),
           resources: () => perPlayer([], () => ({})),
         },
-        setupOptionsById: {},
-        setupProfilesById: {},
         tableSchema: z.custom<RuntimeTableRecord>(),
         runtimeSchema: z.any(),
         createGameStateSchema: () => z.any(),
@@ -916,83 +810,30 @@ describe("setup profile runtime", () => {
     });
   });
 
-  test("bundle creation fails fast when reducer setup profiles do not match the manifest", () => {
-    const contract = defineGameContract({
-      manifest: createManifestContract([
-        "base-profile",
-        "draft-profile",
-      ] as const),
-      phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
-      state: {
-        public: z.object({}),
-        private: z.object({}),
-        hidden: z.object({}),
-      },
-    });
-
-    const game = defineGame({
-      contract,
-      initialPhase: "defaultPhase",
-      setupProfiles: {
-        "base-profile": {
-          initialPhase: "defaultPhase",
-        },
-        "draft-profile": {
-          initialPhase: "draftPhase",
-        },
-      },
-      phases: {
-        defaultPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
-        draftPhase: definePhase<typeof contract>()({
-          kind: "auto",
-          state: z.object({}),
-          initialState: () => ({}),
-        }),
-      },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
-    });
-
-    const mismatchedGame = {
-      ...game,
-      setupProfiles: {
-        "draft-profile": {
-          initialPhase: "draftPhase",
-        },
-      },
+  test("games without an options schema reject undeclared lobby options", async () => {
+    const bundle = createReducerTestingBundle(createBootstrapGame(() => {}));
+    const request = {
+      table: createBootstrapTable(),
+      playerIds: [...BOOTSTRAP_PLAYER_IDS],
+      rngSeed: 42,
     };
-
-    expect(() => createReducerTestingBundle(mismatchedGame)).toThrow(
-      "Reducer setupProfiles must exactly match manifest setupProfiles. Manifest=[base-profile, draft-profile], reducer=[draft-profile].",
-    );
+    expect((await bundle.initialize(request)).runtime.options).toEqual({});
+    await expect(
+      bundle.initialize({ ...request, options: { undeclared: true } }),
+    ).rejects.toThrow();
   });
 
-  test("bundle.initialize applies setup profile bootstrap shuffle steps", async () => {
+  test("phase entry shuffles with seeded entropy", async () => {
     const bundle = createReducerTestingBundle(
-      createBootstrapGame([
-        {
-          type: "shuffle",
-          container: {
-            type: "sharedZone",
-            zoneId: "draw-deck",
-          },
-        },
-      ]),
+      createBootstrapGame((tx) => {
+        tx.shuffle({ zoneId: "draw-deck" });
+      }),
     );
 
     const initialized = await bundle.initialize({
       table: createBootstrapTable(),
       playerIds: [...BOOTSTRAP_PLAYER_IDS],
       rngSeed: 42,
-      setup: {
-        profileId: "bootstrap-profile",
-      },
     });
     const order = initialized.domain.table.zones.shared["draw-deck"];
 
@@ -1007,31 +848,23 @@ describe("setup profile runtime", () => {
     ]);
   });
 
-  test("bundle.initialize applies setup profile bootstrap deal steps", async () => {
+  test("phase entry deals to each seat", async () => {
     const bundle = createReducerTestingBundle(
-      createBootstrapGame([
-        {
-          type: "deal",
-          from: {
-            type: "sharedZone",
-            zoneId: "draw-deck",
-          },
-          to: {
-            type: "playerZone",
-            zoneId: "hand",
-          },
-          count: 1,
-        },
-      ]),
+      createBootstrapGame((tx) => {
+        for (const playerId of tx.q.player.order())
+          tx.deal({
+            fromZoneId: "draw-deck",
+            toZoneId: "hand",
+            playerId,
+            count: 1,
+          });
+      }),
     );
 
     const initialized = await bundle.initialize({
       table: createBootstrapTable(),
       playerIds: [...BOOTSTRAP_PLAYER_IDS],
       rngSeed: 42,
-      setup: {
-        profileId: "bootstrap-profile",
-      },
     });
 
     expect(initialized.domain.table.zones.shared["draw-deck"]).toEqual([
@@ -1047,7 +880,7 @@ describe("setup profile runtime", () => {
     expect(initialized.runtime.rng.trace).toEqual([]);
   });
 
-  test("applySetupBootstrap shuffles, deals cards, and places pieces and dice onto board spaces", () => {
+  test("transaction initialization shuffles, deals cards, and places components", () => {
     const initialState = {
       table: {
         playerOrder: ["player-1", "player-2"],
@@ -1194,46 +1027,32 @@ describe("setup profile runtime", () => {
           trace: [],
           draws: [],
         },
-        setup: null,
+        options: {},
         simultaneous: { current: null },
         lastTransition: null,
       },
     };
 
-    const nextState = applySetupBootstrap(initialState, [
-      {
-        type: "shuffle",
-        container: {
-          type: "sharedZone",
-          zoneId: "draw-deck",
-        },
-      },
-      {
-        type: "deal",
-        from: {
-          type: "sharedZone",
-          zoneId: "draw-deck",
-        },
-        to: {
-          type: "playerZone",
-          zoneId: "hand",
-        },
+    const random = createTestRandom(initialState.runtime.rng.seed!);
+    const tx = createReducerTransaction(initialState, random);
+    tx.shuffle({ zoneId: "draw-deck" });
+    for (const playerId of tx.q.player.order())
+      tx.deal({
+        fromZoneId: "draw-deck",
+        toZoneId: "hand",
+        playerId,
         count: 1,
-      },
-      {
-        type: "move",
-        from: {
-          type: "sharedZone",
-          zoneId: "supply",
-        },
-        to: {
-          type: "sharedBoardSpace",
-          boardId: "main-board",
-          spaceId: "space-a",
-        },
-        componentIds: ["piece-1", "die-1"],
-      },
-    ]);
+      });
+    for (const componentId of ["piece-1", "die-1"])
+      tx.moveComponentToSpace({
+        componentId,
+        boardId: "main-board",
+        spaceId: "space-a",
+      });
+    const nextState = {
+      ...tx.state,
+      runtime: { ...tx.state.runtime, rng: random.currentRng() },
+    };
 
     expect(nextState.runtime.rng.cursor).toBe(2);
     expect(nextState.runtime.rng.trace).toHaveLength(2);
@@ -1264,7 +1083,7 @@ describe("setup profile runtime", () => {
     });
   });
 
-  test("applySetupBootstrap rejects cards entering incompatible zones and board containers", () => {
+  test("transaction initialization rejects incompatible card destinations", () => {
     const initialState = {
       table: {
         playerOrder: ["player-1"],
@@ -1351,52 +1170,32 @@ describe("setup profile runtime", () => {
           trace: [],
           draws: [],
         },
-        setup: null,
+        options: {},
         simultaneous: { current: null },
         lastTransition: null,
       },
     };
 
     expect(() =>
-      applySetupBootstrap(initialState, [
-        {
-          type: "deal",
-          from: {
-            type: "sharedZone",
-            zoneId: "draw-deck",
-          },
-          to: {
-            type: "playerZone",
-            zoneId: "hand",
-          },
-          count: 1,
-          playerIds: ["player-1"],
-        },
-      ]),
+      createTestTransaction(initialState).deal({
+        fromZoneId: "draw-deck",
+        toZoneId: "hand",
+        playerId: "player-1",
+        count: 1,
+      }),
     ).toThrow("cannot enter zone 'hand'");
-
     expect(() =>
-      applySetupBootstrap(initialState, [
-        {
-          type: "move",
-          from: {
-            type: "sharedZone",
-            zoneId: "draw-deck",
-          },
-          to: {
-            type: "sharedBoardContainer",
-            boardId: "main-board",
-            containerId: "restricted-row",
-          },
-          count: 1,
-        },
-      ]),
+      createTestTransaction(initialState).moveComponentToContainer({
+        componentId: "card-1",
+        boardId: "main-board",
+        containerId: "restricted-row",
+      }),
     ).toThrow("cannot enter container 'restricted-row'");
   });
 
   test("initialize injects table queries (q) into initial.public/private/hidden callbacks", async () => {
     const contract = defineGameContract({
-      manifest: createManifestContract(["draft-profile"] as const),
+      manifest: createManifestContract(),
       phases: { defaultPhase: z.object({}), draftPhase: z.object({}) },
       state: {
         public: z.object({
@@ -1432,9 +1231,6 @@ describe("setup profile runtime", () => {
         },
       },
       initialPhase: "defaultPhase",
-      setupProfiles: {
-        "draft-profile": {},
-      },
       phases: {
         defaultPhase: definePhase<typeof contract>()({
           kind: "auto",

@@ -28,12 +28,6 @@ export type TrustedInteractionId<
   Views extends ViewMapOf<Contract>,
 > = InteractionIdOfDefinition<TrustedDefinition<Contract, Definitions, Views>>;
 
-export type InteractionDescriptorContext<PlayerId extends string = string> = {
-  to: PlayerId;
-  title?: string;
-  options?: Array<{ id: string; label?: string }>;
-};
-
 export type InteractionCommitPolicyShape =
   | { mode: "manual" }
   | { mode: "autoWhenReady" };
@@ -41,22 +35,15 @@ export type InteractionCommitPolicyShape =
 export type InteractionAvailabilityShape =
   | { status: "available" }
   | { status: "notYourTurn"; reason: string }
-  | {
-      status: "insufficientResources";
-      reason: string;
-      missingResources: Record<string, number>;
-    }
   | { status: "blocked"; reason: string; code?: string };
 
 export type InteractionDecision =
-  | { available: true; cost?: Record<string, number> }
+  | { available: true }
   | {
       available: false;
       code: string;
       ruleId?: string;
       message?: string;
-      cost?: Record<string, number>;
-      missingResources?: Record<string, number>;
     };
 
 export type InteractionDiagnosticReasonShape = {
@@ -105,13 +92,11 @@ type InteractionDescriptorBaseShape<
   zoneId?: ZoneId;
   zoneIds?: readonly ZoneId[];
   inputs: InteractionInputDescriptorShape[];
-  cost?: Record<string, number>;
-  currentResources?: Record<string, number>;
   availability: InteractionAvailabilityShape;
   reasons?: readonly InteractionDiagnosticReasonShape[];
 };
 
-export type ActionInteractionDescriptorShape<
+export type InteractionDescriptorShape<
   PhaseName extends string = string,
   InteractionId extends string = string,
   ZoneId extends string = string,
@@ -119,38 +104,13 @@ export type ActionInteractionDescriptorShape<
   kind: "action";
 };
 
-export type PromptInteractionDescriptorShape<
-  PhaseName extends string = string,
-  InteractionId extends string = string,
-  PlayerId extends string = string,
-  ZoneId extends string = string,
-> = InteractionDescriptorBaseShape<PhaseName, InteractionId, ZoneId> & {
-  kind: "prompt";
-  context: InteractionDescriptorContext<PlayerId>;
-};
-
-export type InteractionDescriptorShape<
-  PhaseName extends string = string,
-  InteractionId extends string = string,
-  PlayerId extends string = string,
-  ZoneId extends string = string,
-> =
-  | ActionInteractionDescriptorShape<PhaseName, InteractionId, ZoneId>
-  | PromptInteractionDescriptorShape<
-      PhaseName,
-      InteractionId,
-      PlayerId,
-      ZoneId
-    >;
-
 export type TrustedInteractionDescriptorShape<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   Views extends ViewMapOf<Contract>,
 > = InteractionDescriptorShape<
   TrustedPhaseName<Contract, Definitions, Views>,
-  TrustedInteractionId<Contract, Definitions, Views>,
-  TrustedPlayerId<Contract>
+  TrustedInteractionId<Contract, Definitions, Views>
 >;
 
 export type InteractionInputDescriptorShape = {
@@ -161,7 +121,6 @@ export type InteractionInputDescriptorShape = {
 };
 
 export type InteractionActorAuthorization<PlayerId extends string> =
-  | { readonly mode: "addressees"; readonly addressees: ReadonlySet<PlayerId> }
   | { readonly mode: "actors"; readonly actors: ReadonlySet<PlayerId> }
   | { readonly mode: "active" };
 

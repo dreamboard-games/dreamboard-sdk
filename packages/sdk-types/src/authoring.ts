@@ -63,9 +63,6 @@ type PieceSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
 type DieSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
   NonNullable<Manifest["dieSeeds"]>
 >;
-type SetupOptionId<Manifest extends GameTopologyManifest> = IdsOf<
-  Manifest["setupOptions"]
->;
 type ManualCardSetOf<Manifest extends GameTopologyManifest> = Extract<
   ArrayItem<NonNullable<Manifest["cardSets"]>>,
   { type: "manual" }
@@ -703,17 +700,6 @@ type DerivedVertexIdOf<BoardLike> = BoardLike extends { layout: "square" }
     ? DerivedHexVertexIdOf<BoardLike>
     : never;
 
-type SetupOptionChoiceId<Option> = IdsOf<
-  Option extends { choices?: infer Choices } ? Choices : never
->;
-type SetupOptionOf<Manifest extends GameTopologyManifest> = ArrayItem<
-  NonNullable<Manifest["setupOptions"]>
->;
-type SetupOptionChoiceIdFor<
-  Manifest extends GameTopologyManifest,
-  OptionId extends SetupOptionId<Manifest>,
-> = SetupOptionChoiceId<Extract<SetupOptionOf<Manifest>, { id: OptionId }>>;
-
 type TypedSharedSpaceHomeSpec<Manifest extends GameTopologyManifest> = {
   [CurrentBoardId in SharedBoardId<Manifest>]: {
     type: "space";
@@ -1210,31 +1196,9 @@ type TypedDieSeed<Seed, Manifest extends GameTopologyManifest> = Seed extends {
       }
   : never;
 
-type TypedSetupOptionValues<Manifest extends GameTopologyManifest> = Partial<{
-  [OptionId in SetupOptionId<Manifest>]: SetupOptionChoiceIdFor<
-    Manifest,
-    OptionId
-  >;
-}>;
-
-type TypedSetupProfile<
-  Profile,
-  Manifest extends GameTopologyManifest,
-> = Profile extends object
-  ? Omit<Profile, "optionValues"> & {
-      optionValues?: TypedSetupOptionValues<Manifest>;
-    }
-  : Profile;
-
 export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   Manifest,
-  | "cardSets"
-  | "zones"
-  | "boardTemplates"
-  | "boards"
-  | "pieceSeeds"
-  | "dieSeeds"
-  | "setupProfiles"
+  "cardSets" | "zones" | "boardTemplates" | "boards" | "pieceSeeds" | "dieSeeds"
 > & {
   cardSets: ReadonlyArray<
     TypedCardSet<ArrayItem<Manifest["cardSets"]>, Manifest>
@@ -1258,11 +1222,6 @@ export type TypedTopologyManifest<Manifest extends GameTopologyManifest> = Omit<
   dieSeeds?: Manifest["dieSeeds"] extends readonly unknown[]
     ? ReadonlyArray<TypedDieSeed<ArrayItem<Manifest["dieSeeds"]>, Manifest>>
     : Manifest["dieSeeds"];
-  setupProfiles?: Manifest["setupProfiles"] extends readonly unknown[]
-    ? ReadonlyArray<
-        TypedSetupProfile<ArrayItem<Manifest["setupProfiles"]>, Manifest>
-      >
-    : Manifest["setupProfiles"];
 };
 
 type TopologyManifestValidation<Manifest> =

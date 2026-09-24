@@ -6,7 +6,7 @@ export default defineScenario({
   id: "hearts.trick-resolution",
   description:
     "Ace-high lead-suit comparison and a later penalty trick resolve atomically to the winner and next leader.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: completeGamePath.slice(0, 23),
   when: [completeGamePath[23]],
   then: ({ expect, state, view }) => {

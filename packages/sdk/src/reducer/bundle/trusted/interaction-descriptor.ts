@@ -11,10 +11,7 @@ import {
   collectFirstCardZoneId,
   interactionInputsOf,
 } from "./collector-introspection";
-import {
-  collectInteractionInputs,
-  collectPromptOptions,
-} from "./collector-domains";
+import { collectInteractionInputs } from "./collector-domains";
 import type {
   InteractionDecision,
   InteractionAvailabilityShape,
@@ -45,17 +42,6 @@ function humanizeInteractionId(id: string): string {
     .split(/\s+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-}
-
-function deriveInteractionKind(
-  inputs: Record<string, InputCollector>,
-): "action" | "prompt" {
-  for (const collector of Object.values(inputs)) {
-    if (collector.kind === "prompt") {
-      return "prompt";
-    }
-  }
-  return "action";
 }
 
 function isTargetCollector(collector: InputCollector): boolean {
@@ -132,7 +118,7 @@ function projectInteractionMetadata(interaction: {
   const label = normalizePresentationText(interaction.presentation?.label);
   const help = normalizePresentationText(interaction.presentation?.help);
   return {
-    kind: deriveInteractionKind(interaction.inputs),
+    kind: "action",
     commit: deriveCommitPolicy(interaction.inputs, interaction.commit),
     label: label ?? humanizeInteractionId(interaction.interactionId),
     help,
@@ -234,19 +220,6 @@ function interactionAvailabilityFromDecision(
         status: "notYourTurn",
         reason: decision.message ?? "Not your turn",
       };
-    case "INSUFFICIENT_RESOURCES":
-      if (decision.missingResources) {
-        return {
-          status: "insufficientResources",
-          reason: decision.message ?? decision.code,
-          missingResources: { ...decision.missingResources },
-        };
-      }
-      return {
-        status: "blocked",
-        reason: decision.message ?? decision.code,
-        code: decision.code,
-      };
     case FrameworkErrorCodes.NO_LEGAL_INPUT:
       return {
         status: "blocked",
@@ -301,21 +274,6 @@ export function buildInteractionDescriptor<
   const derived = options.projection?.derived;
   const shouldMaterializeInputDomains =
     decision.available || decision.code !== FrameworkErrorCodes.NOT_YOUR_TURN;
-  const promptContext =
-    metadata.kind === "prompt"
-      ? {
-          to: playerId,
-          title: metadata.label,
-          options: shouldMaterializeInputDomains
-            ? collectPromptOptions(
-                { inputs: interactionInputs },
-                domainState,
-                playerId as unknown as string,
-                queries,
-              )
-            : undefined,
-        }
-      : undefined;
   const inputs = shouldMaterializeInputDomains
     ? enrichResourceInputPresentation(
         collectInteractionInputs(interaction, domainState, playerId, {
@@ -341,30 +299,12 @@ export function buildInteractionDescriptor<
     zoneId: collectFirstCardZoneId(interaction),
     zoneIds: collectCardZoneIds(interaction),
     inputs,
-    cost: decision.cost ? { ...decision.cost } : undefined,
-    currentResources: decision.cost
-      ? {
-          ...(queries.player.resources(playerId) as
-            | Record<string, number>
-            | undefined),
-        }
-      : undefined,
     availability: interactionAvailabilityFromDecision(decision),
     reasons:
       options.includeDiagnosticReasons && !decision.available && decision.ruleId
         ? [{ ruleId: decision.ruleId, errorCode: decision.code }]
         : undefined,
   };
-  if (metadata.kind === "prompt") {
-    return {
-      ...baseDescriptor,
-      kind: "prompt",
-      context: promptContext ?? {
-        to: playerId,
-        title: humanizeInteractionId(interactionId),
-      },
-    } as Descriptor;
-  }
   return {
     ...baseDescriptor,
     kind: "action",

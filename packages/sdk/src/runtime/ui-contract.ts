@@ -11,8 +11,6 @@ import {
   Interaction as InteractionPrimitive,
   Phase as PhasePrimitive,
   PlayerRoster as PlayerRosterPrimitive,
-  Prompt as PromptPrimitive,
-  PromptInbox as PromptInboxPrimitive,
   UI as UIPrimitive,
   Zone as ZonePrimitive,
   type BoardHexGridProps,
@@ -42,12 +40,6 @@ import {
   type PlayerRosterListProps,
   type PlayerRosterPartProps,
   type PlayerRosterRootProps,
-  type PromptDialogProps,
-  type PromptInboxItemsProps,
-  type PromptOptionRenderItem,
-  type PromptOptionProps,
-  type PromptOptionsProps,
-  type PromptRootProps,
   type UIRootProps,
   type ZoneItemProps,
   type ZoneCardAtProps,
@@ -58,7 +50,6 @@ import {
   type ZonePileRootProps,
   type ZoneRootProps,
 } from "./primitives/index.js";
-import type { InteractionDescriptor } from "./types/plugin-state.js";
 import type {
   AnyHexBoardInput,
   AnySquareBoardInput,
@@ -81,8 +72,6 @@ export type UIContractBucket = Record<string, unknown>;
 export interface UIContract {
   interactions?: UIContractBucket;
   inputs?: UIContractBucket;
-  prompts?: UIContractBucket;
-  promptOptions?: UIContractBucket;
   players?: UIContractBucket;
   zones?: UIContractBucket;
   cards?: UIContractBucket;
@@ -121,12 +110,6 @@ export type InteractionKey<Contract extends UIContract = RegisteredUI> =
 
 export type InteractionInputKey<Contract extends UIContract = RegisteredUI> =
   StringKeysOrFallback<BucketOf<Contract, "inputs">>;
-
-export type PromptKey<Contract extends UIContract = RegisteredUI> =
-  StringKeysOrFallback<BucketOf<Contract, "prompts">>;
-
-export type PromptOptionKey<Contract extends UIContract = RegisteredUI> =
-  StringKeysOrFallback<BucketOf<Contract, "promptOptions">>;
 
 export type PlayerKey<Contract extends UIContract = RegisteredUI> =
   StringKeysOrFallback<BucketOf<Contract, "players">>;
@@ -287,45 +270,6 @@ export interface InteractionSubmitSlot {
     >
   >;
 }
-
-export type TypedPrompt<Contract extends UIContract> = Omit<
-  typeof PromptPrimitive,
-  "Root" | "Option" | "Options" | "Dialog"
-> & {
-  Root<Prompt extends PromptKey<Contract>>(
-    props: PromptRootProps<Prompt>,
-  ): ReactElement | null;
-  Option<Option extends PromptOptionKey<Contract>>(
-    props: Omit<PromptOptionProps, "value"> & { value: Option },
-  ): ReactElement;
-  Options(
-    props: Omit<PromptOptionsProps, "children"> & {
-      children: (
-        option: Omit<PromptOptionRenderItem, "id"> & {
-          id: PromptOptionKey<Contract>;
-        },
-      ) => ReactNode;
-    },
-  ): ReactElement;
-  Dialog<Prompt extends PromptKey<Contract>>(
-    props: PromptDialogProps<Prompt>,
-  ): ReactElement;
-};
-
-export type TypedPromptInbox<Contract extends UIContract> = Omit<
-  typeof PromptInboxPrimitive,
-  "Items"
-> & {
-  Items(
-    props: Omit<PromptInboxItemsProps, "children"> & {
-      children: (
-        prompt: Omit<InteractionDescriptor, "interactionKey"> & {
-          interactionKey: PromptKey<Contract>;
-        },
-      ) => ReactNode;
-    },
-  ): ReactElement;
-};
 
 type TypedPlayerRosterEntry<Player extends string> = Omit<
   PlayerRosterEntry,
@@ -504,8 +448,6 @@ export interface DreamboardUI<Contract extends UIContract = RegisteredUI> {
   Root(props: UIRootProps): ReactElement;
   readonly Game: TypedGame<Contract>;
   readonly Interaction: TypedInteraction<Contract>;
-  readonly Prompt: TypedPrompt<Contract>;
-  readonly PromptInbox: TypedPromptInbox<Contract>;
   readonly PlayerRoster: TypedPlayerRoster<Contract>;
   readonly Dice: DiceComponents;
   readonly Phase: TypedPhase<Contract>;
@@ -521,8 +463,6 @@ export function createDreamboardUI<const Contract extends UIContract>(
     Root: UIPrimitive.Root,
     Game: GamePrimitive,
     Interaction: InteractionPrimitive,
-    Prompt: PromptPrimitive,
-    PromptInbox: PromptInboxPrimitive,
     PlayerRoster: PlayerRosterPrimitive,
     Dice: DicePrimitive,
     Phase: PhasePrimitive,

@@ -1,10 +1,9 @@
 import type { Wire } from "@dreamboard-games/reducer-contract";
 import type {
-  ManifestContract,
   PlayerIdOfState,
   ReducerSessionForConfig,
   ReducerStateForConfig,
-  RuntimeSetupSelection,
+  RuntimeRecord,
   RuntimeTableRecord,
   SchemaLike,
 } from "../model";
@@ -16,23 +15,24 @@ export type RawRuntimeInput = Wire.GameInput;
 
 export type IngressRuntimeCodec<
   Table extends RuntimeTableRecord,
-  Manifest extends ManifestContract<Table>,
   PublicSchema extends SchemaLike<object>,
   PrivateSchema extends SchemaLike<object>,
   HiddenSchema extends SchemaLike<object>,
   PhaseName extends string,
+  Options extends RuntimeRecord,
 > = {
   defaultRuntimeState: (
-    seed?: number | null,
-    setup?: RuntimeSetupSelection<Manifest> | null,
+    seed: number | null,
+    options: Options,
   ) => ReducerSessionForConfig<
     Table,
     PublicSchema,
     PrivateSchema,
     HiddenSchema,
     PhaseName,
-    RuntimeSetupSelection<Manifest>
+    Options
   >["runtime"];
+  parseInitialOptions: (options: unknown) => Options;
   parseInitialTable: (
     rawTable: ReducerStateForConfig<
       Table,

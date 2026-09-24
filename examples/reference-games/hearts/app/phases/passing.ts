@@ -13,7 +13,6 @@ export default passing.define({
   kind: "simultaneousPlayer",
   initialState: () => ({}),
   actors: ({ q }) => q.player.order(),
-  zones: ["hand"],
   submit: {
     presentation: {
       label: "Pass three cards left",

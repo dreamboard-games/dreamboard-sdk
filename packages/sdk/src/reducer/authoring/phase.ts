@@ -3,7 +3,7 @@ import type {
   AnyInteractionSpec,
   InputCollector,
   PhaseDefinition,
-  PhaseZoneList,
+  OptionsOfContract,
   SchemaLike,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
@@ -27,7 +27,6 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
         ContractManifest<Contract>
       >
     > = Record<string, never>,
-    const Zones extends PhaseZoneList<ContractManifest<Contract>> = readonly [],
   >(
     definition: PhaseDefinition<
       PhaseStateSchema,
@@ -35,7 +34,7 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
       ContractManifest<Contract>,
       SubmitCollectors,
       Interactions,
-      Zones
+      OptionsOfContract<Contract>
     >,
   ): PhaseDefinition<
     PhaseStateSchema,
@@ -43,7 +42,7 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
     ContractManifest<Contract>,
     SubmitCollectors,
     Interactions,
-    Zones
+    OptionsOfContract<Contract>
   > => {
     return definition;
   };

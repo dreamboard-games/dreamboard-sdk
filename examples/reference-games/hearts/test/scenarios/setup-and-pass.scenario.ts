@@ -6,7 +6,7 @@ export default defineScenario({
   id: "hearts.setup-and-pass",
   description:
     "A seeded 52-card round-robin deal resolves four sealed three-card commitments left in one atomic barrier.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: completeGamePath.slice(0, 3),
   when: [completeGamePath[3]],
   then: ({ expect, interactions, state, view }) => {
@@ -38,8 +38,6 @@ export default defineScenario({
       }
     }
     expect(interactions({ seat: 1 })[0]?.interactionId).toBe("playCard");
-    expect(interactions({ seat: 0 })[0]?.availability?.status).toBe(
-      "notYourTurn",
-    );
+    expect(interactions({ seat: 0 })).toEqual([]);
   },
 });

@@ -6,7 +6,7 @@ export default defineScenario({
   id: "hearts.scoring-and-outcome-shoot-the-moon",
   description:
     "The player capturing all thirteen Hearts and the Queen scores zero while every opponent scores 26.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   given: shootTheMoonPath.slice(0, 55),
   when: [shootTheMoonPath[55]],
   then: ({ expect, state }) => {

@@ -38,7 +38,6 @@ export {
   cardTarget,
   choiceTarget,
   formInput,
-  promptInput,
   rngInput,
   type BoardTargetBuilder,
   type BoardTargetRule,

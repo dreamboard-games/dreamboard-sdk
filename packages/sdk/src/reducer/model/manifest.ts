@@ -1,3 +1,4 @@
+import type { RuntimeRecord } from "./table";
 import { Zod as ContractZod } from "@dreamboard-games/reducer-contract";
 import { z } from "zod";
 import type {
@@ -7,21 +8,10 @@ import type {
   SchemaLike,
 } from "./table";
 import type {
-  BoardBaseIdOfManifest,
-  BoardContainerIdOfManifest,
-  CardIdOfManifest,
   CardIdOfTable,
   DeckIdOfTable,
-  DieIdOfManifest,
   HandIdOfTable,
-  PieceIdOfManifest,
-  PlayerIdOfManifest,
   PlayerIdOfTable,
-  SetupSelectionInputOfManifest,
-  PlayerZoneIdOfManifest,
-  SetupSelectionOfManifest,
-  SharedZoneIdOfManifest,
-  SpaceIdOfManifest,
 } from "./extract";
 import type { TableQueriesOfState } from "./queries";
 
@@ -52,8 +42,6 @@ export type ManifestLiterals<
   playerIds: readonly PlayerId[];
   phaseNames: readonly PhaseName[];
   boardLayouts: readonly ("generic" | "hex" | "square")[];
-  setupOptionIds: readonly string[];
-  setupProfileIds: readonly string[];
   cardSetIds: readonly string[];
   cardTypes: readonly string[];
   deckIds: readonly DeckId[];
@@ -85,7 +73,6 @@ export type ManifestLiterals<
   spaceTypeIds: readonly string[];
   handVisibilityById: Record<HandId, RuntimeHandVisibilityMode>;
   zoneVisibilityById: Record<DeckId | HandId, RuntimeHandVisibilityMode>;
-  setupChoiceIdsByOptionId: Record<string, readonly string[]>;
   cardSetIdByCardId: Record<CardId, string>;
   cardTypeByCardId: Record<CardId, string>;
   cardSetIdsBySharedZoneId: Record<DeckId, readonly string[]>;
@@ -102,8 +89,6 @@ export type ManifestIds<
   playerId: z.ZodType<PlayerId>;
   phaseName: z.ZodType<PhaseName>;
   boardLayout: AnySchema;
-  setupOptionId: AnySchema;
-  setupProfileId: AnySchema;
   cardSetId: AnySchema;
   cardType: AnySchema;
   cardId: z.ZodType<CardId>;
@@ -153,34 +138,6 @@ export type StaticBoards<Table extends RuntimeTableRecord> = Pick<
   "byId" | "hex" | "square"
 >;
 
-export type SetupOptionChoiceMetadata = {
-  id: string;
-  label: string;
-  description?: string | null;
-};
-
-export type SetupOptionMetadata = {
-  id: string;
-  name: string;
-  description?: string | null;
-  choices: readonly SetupOptionChoiceMetadata[];
-};
-
-export type SetupProfileMetadata = {
-  id: string;
-  name: string;
-  description?: string | null;
-  optionValues?: Record<string, string> | null;
-  guidance?: {
-    summary?: string | null;
-    steps: readonly {
-      id: string;
-      label: string;
-      description?: string | null;
-    }[];
-  } | null;
-};
-
 export type ReducerManifestContract<
   Table extends RuntimeTableRecord,
   PhaseName extends string,
@@ -201,9 +158,6 @@ export type ReducerManifestContract<
    */
   normalSetup?: ManifestNormalSetup<Table>;
   staticBoards?: StaticBoards<Table>;
-  setupOptionsById: Record<string, SetupOptionMetadata>;
-  setupChoiceIdsByOptionId: Record<string, readonly string[]>;
-  setupProfilesById: Record<string, SetupProfileMetadata>;
   tableSchema: z.ZodType<Table>;
   runtimeSchema: AnySchema;
   createGameStateSchema: (config: {
@@ -347,32 +301,14 @@ export function resolveManifestPlayerIds<PlayerId extends string>(
 export function createManifestRuntimeSchema<
   PhaseNameSchema extends z.ZodTypeAny,
   PlayerId extends string,
-  SetupProfileId extends string,
 >({
   phaseNameSchema,
   playerIdSchema,
-  setupProfileIdSchema,
 }: {
   phaseNameSchema: PhaseNameSchema;
   playerIdSchema: z.ZodType<PlayerId>;
-  setupProfileIdSchema: z.ZodType<SetupProfileId>;
 }) {
   return z.object({
-    prompts: z
-      .array(
-        z.object({
-          id: z.string(),
-          promptId: z.string(),
-          to: playerIdSchema,
-          title: z.string().optional(),
-          payload: z.unknown().optional(),
-          options: z
-            .array(z.object({ id: z.string(), label: z.string() }))
-            .optional(),
-          resume: z.object({ id: z.string(), data: z.unknown() }),
-        }),
-      )
-      .default([]),
     rng: z
       .object({
         seed: z.number().nullable().optional(),
@@ -386,13 +322,7 @@ export function createManifestRuntimeSchema<
         trace: [],
         draws: [],
       }),
-    setup: z
-      .object({
-        profileId: setupProfileIdSchema,
-        optionValues: z.record(z.string(), z.string().nullable()).default({}),
-      })
-      .nullable()
-      .default(null),
+    options: z.record(z.string(), ContractZod.JsonValueSchema).default({}),
     simultaneous: z
       .object({
         current: z
@@ -429,11 +359,9 @@ export function createManifestGameStateSchema<
   HiddenSchema extends z.ZodTypeAny,
   PhasesSchema extends z.ZodTypeAny,
   PlayerId extends string,
-  SetupProfileId extends string,
 >({
   tableSchema,
   playerIdSchema,
-  setupProfileIdSchema,
   phaseNameSchema,
   publicSchema,
   privateSchema,
@@ -442,7 +370,6 @@ export function createManifestGameStateSchema<
 }: {
   tableSchema: z.ZodType<Table>;
   playerIdSchema: z.ZodType<PlayerId>;
-  setupProfileIdSchema: z.ZodType<SetupProfileId>;
   phaseNameSchema: PhaseNameSchema;
   publicSchema: PublicSchema;
   privateSchema: PrivateSchema;
@@ -464,7 +391,6 @@ export function createManifestGameStateSchema<
     runtime: createManifestRuntimeSchema({
       phaseNameSchema,
       playerIdSchema,
-      setupProfileIdSchema,
     }),
   });
 }
@@ -491,137 +417,12 @@ export type InitContext<
     string,
     string
   > = ManifestContract<Table>,
+  Options extends RuntimeRecord = RuntimeRecord,
 > = {
   manifest: Manifest;
   table: Table;
   playerIds: PlayerIdOfTable<Table>[];
   rngSeed?: number | null;
-  setup: SetupSelectionOfManifest<Manifest> | null;
+  options: Options;
   q: TableQueriesOfState<{ table: Table }>;
-};
-
-export type InitSetupSelectionInput<
-  Manifest extends ReducerManifestContract<
-    RuntimeTableRecord,
-    string,
-    string,
-    string,
-    string,
-    string
-  > = ReducerManifestContractLike,
-> = SetupSelectionInputOfManifest<Manifest>;
-
-// --- Setup Bootstrap Types ---
-
-export type SetupBootstrapSharedZoneRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "sharedZone";
-  zoneId: SharedZoneIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapPerPlayerZoneRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "playerZone";
-  zoneId: PlayerZoneIdOfManifest<Manifest>;
-  playerId: PlayerIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapSharedBoardContainerRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "sharedBoardContainer";
-  boardId: BoardBaseIdOfManifest<Manifest>;
-  containerId: BoardContainerIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapPerPlayerBoardContainerRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "playerBoardContainer";
-  boardId: BoardBaseIdOfManifest<Manifest>;
-  playerId: PlayerIdOfManifest<Manifest>;
-  containerId: BoardContainerIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapSharedBoardSpaceRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "sharedBoardSpace";
-  boardId: BoardBaseIdOfManifest<Manifest>;
-  spaceId: SpaceIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapPerPlayerBoardSpaceRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  type: "playerBoardSpace";
-  boardId: BoardBaseIdOfManifest<Manifest>;
-  playerId: PlayerIdOfManifest<Manifest>;
-  spaceId: SpaceIdOfManifest<Manifest>;
-};
-
-export type SetupBootstrapContainerRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> =
-  | SetupBootstrapSharedZoneRef<Manifest>
-  | SetupBootstrapPerPlayerZoneRef<Manifest>
-  | SetupBootstrapSharedBoardContainerRef<Manifest>
-  | SetupBootstrapPerPlayerBoardContainerRef<Manifest>;
-
-export type SetupBootstrapDestinationRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> =
-  | SetupBootstrapContainerRef<Manifest>
-  | SetupBootstrapSharedBoardSpaceRef<Manifest>
-  | SetupBootstrapPerPlayerBoardSpaceRef<Manifest>;
-
-export type SetupBootstrapPerPlayerContainerTemplateRef<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> =
-  | {
-      type: "playerZone";
-      zoneId: PlayerZoneIdOfManifest<Manifest>;
-    }
-  | {
-      type: "playerBoardContainer";
-      boardId: BoardBaseIdOfManifest<Manifest>;
-      containerId: BoardContainerIdOfManifest<Manifest>;
-    };
-
-export type SetupBootstrapStep<
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> =
-  | {
-      type: "shuffle";
-      container: SetupBootstrapContainerRef<Manifest>;
-    }
-  | {
-      type: "move";
-      from: SetupBootstrapContainerRef<Manifest>;
-      to: SetupBootstrapDestinationRef<Manifest>;
-      count?: number;
-      componentIds?: readonly (
-        | CardIdOfManifest<Manifest>
-        | PieceIdOfManifest<Manifest>
-        | DieIdOfManifest<Manifest>
-      )[];
-    }
-  | {
-      type: "deal";
-      from:
-        | SetupBootstrapSharedZoneRef<Manifest>
-        | SetupBootstrapSharedBoardContainerRef<Manifest>;
-      to: SetupBootstrapPerPlayerContainerTemplateRef<Manifest>;
-      count: number;
-      playerIds?: readonly PlayerIdOfManifest<Manifest>[];
-    };
-
-export type SetupProfileDefinition<
-  PhaseName extends string = string,
-  Manifest extends ReducerManifestContractLike = ReducerManifestContractLike,
-> = {
-  initialPhase?: PhaseName;
-  bootstrap?: readonly SetupBootstrapStep<Manifest>[];
 };

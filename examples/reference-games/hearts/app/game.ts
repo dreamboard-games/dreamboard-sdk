@@ -6,7 +6,6 @@ import playing from "./phases/playing";
 import scoreHand from "./phases/scoreHand";
 import setup from "./phases/setup";
 import { playerView, sharedView } from "./player-view";
-import setupProfiles from "./setup-profiles";
 
 export default hearts.assemble({
   initial: {
@@ -33,7 +32,6 @@ export default hearts.assemble({
     hidden: () => ({}),
   },
   initialPhase: "setup",
-  setupProfiles,
   phases: { setup, passing, playing, scoreHand, gameOver },
   views: { shared: sharedView, player: playerView },
 });

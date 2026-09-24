@@ -2,7 +2,7 @@ import type { RuntimePayload } from "../model";
 
 export type TrustedInteractionInput<PlayerId extends string> = {
   // Canonical single-kind player-originated input. `interactionId` addresses
-  // either an ordinary action or an addressed prompt; the trusted bundle
+  // an ordinary actor-authorized interaction; the trusted bundle
   // disambiguates from the interaction spec.
   kind: "interaction";
   playerId: PlayerId;

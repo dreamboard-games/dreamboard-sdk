@@ -58,7 +58,6 @@ describe("collectTrustedRuntimeRegistry", () => {
               }),
             }),
           },
-          zones: ["hand"],
         }),
         play: definePhase<typeof contract>()({
           kind: "player",
@@ -76,7 +75,6 @@ describe("collectTrustedRuntimeRegistry", () => {
               }),
             }),
           },
-          zones: ["hand"],
         }),
       },
     });
@@ -100,7 +98,7 @@ describe("collectTrustedRuntimeRegistry", () => {
     expect(
       registry.phasesByName.get("play")?.interactions.map(([id]) => id),
     ).toEqual(["takeAction"]);
-    expect(registry.phasesByName.get("setup")?.zones).toEqual(["hand"]);
+    expect(registry.phasesByName.get("setup")).not.toHaveProperty("zones");
     expect(registry).not.toHaveProperty("effectsById");
     expect(registry).not.toHaveProperty("continuationsById");
   });

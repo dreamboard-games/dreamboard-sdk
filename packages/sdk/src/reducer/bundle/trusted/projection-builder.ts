@@ -108,7 +108,9 @@ export function createProjectionBuilder<
     registry: DescriptorRegistry,
   ) {
     const phaseName = combinedState.flow.currentPhase as PhaseName;
-    const zoneIds = new Set<string>(scope.zonesForPhase(phaseName).map(String));
+    const zoneIds = new Set<string>(
+      scope.definition.contract.manifest.literals.playerZoneIds.map(String),
+    );
     for (const [, interaction] of scope.interactionEntriesForPhase(phaseName)) {
       for (const zoneId of collectCardZoneIds(interaction)) {
         zoneIds.add(String(zoneId));
@@ -126,6 +128,10 @@ export function createProjectionBuilder<
       }
     > = {};
     for (const zoneId of zones) {
+      const visibility =
+        combinedState.table.zones.visibility[zoneId] ??
+        combinedState.table.handVisibility[zoneId];
+      if (visibility === "hidden") continue;
       const table = combinedState.table as {
         decks?: Record<string, unknown>;
         hands?: Record<string, unknown>;
@@ -144,7 +150,14 @@ export function createProjectionBuilder<
               zoneId as never,
             ) as readonly string[])
           : (q.zone.sharedCards(zoneId as never) as readonly string[]),
-      );
+      ).filter((cardId) => {
+        const visibility = q.card.visibility(cardId as never);
+        return (
+          !visibility ||
+          visibility.faceUp ||
+          visibility.visibleTo?.includes(playerId)
+        );
+      });
       const cardInteractionIds = scope
         .interactionEntriesForPhase(phaseName)
         .filter(([, interaction]) =>
@@ -213,67 +226,6 @@ export function createProjectionBuilder<
     return combinedState.flow.currentPhase;
   }
 
-  function resolveGuidanceFor(combinedState: State) {
-    const phaseName = combinedState.flow.currentPhase as PhaseName;
-    const phase = scope.phaseByName(phaseName) as {
-      name?: unknown;
-      guidance?: { summary?: unknown; objective?: unknown };
-    };
-    const phaseSummary = normalizeGuidanceText(phase.guidance?.summary);
-    const phaseObjective = normalizeGuidanceText(phase.guidance?.objective);
-    const setupProfileId = combinedState.runtime.setup?.profileId;
-    const setupProfile =
-      setupProfileId == null
-        ? undefined
-        : scope.manifestSetupProfilesById[String(setupProfileId)];
-    const setupGuidance = setupProfile?.guidance;
-    const setupSummary = normalizeGuidanceText(setupGuidance?.summary);
-    const setup =
-      setupProfileId == null || !setupProfile
-        ? undefined
-        : {
-            profileId: String(setupProfileId),
-            name: setupProfile.name,
-            ...(setupSummary ? { summary: setupSummary } : {}),
-            steps: (setupGuidance?.steps ?? []).map((step) => ({
-              id: step.id,
-              label: step.label,
-              ...(step.description ? { description: step.description } : {}),
-            })),
-          };
-    return {
-      phase: {
-        id: String(phaseName),
-        label:
-          normalizeGuidanceText(phase.name) ??
-          humanizeGuidanceId(String(phaseName)),
-        ...(phaseSummary ? { summary: phaseSummary } : {}),
-        ...(phaseObjective ? { objective: phaseObjective } : {}),
-      },
-      ...(setup ? { setup } : {}),
-    };
-  }
-
-  function normalizeGuidanceText(value: unknown): string | undefined {
-    if (typeof value !== "string") return undefined;
-    const normalized = value.trim();
-    return normalized.length > 0 ? normalized : undefined;
-  }
-
-  function humanizeGuidanceId(id: string): string {
-    if (!id) return id;
-    const withSpaces = id
-      .replace(/[-_]+/g, " ")
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
-      .trim();
-    if (!withSpaces) return id;
-    return withSpaces
-      .split(/\s+/)
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  }
-
   function resolveStageSeatsFor(state: SessionState): string[] {
     const combinedState = scope.toCombinedState(state);
     const phaseName = combinedState.flow.currentPhase as PhaseName;
@@ -287,12 +239,6 @@ export function createProjectionBuilder<
         combinedState,
         interaction,
       );
-      if (authorization.mode === "addressees") {
-        for (const playerId of authorization.addressees) {
-          actors.add(String(playerId));
-        }
-        continue;
-      }
       if (authorization.mode === "actors") {
         for (const playerId of authorization.actors) {
           actors.add(String(playerId));
@@ -383,16 +329,12 @@ export function createProjectionBuilder<
           interaction,
           projection,
         );
-      if (actorAuthorization.mode === "addressees") {
-        for (const playerId of actorAuthorization.addressees) {
-          activePlayerIds.add(String(playerId));
-          pendingPlayerIds.add(String(playerId));
-        }
-        continue;
-      }
       if (actorAuthorization.mode === "actors") {
         for (const playerId of actorAuthorization.actors) {
           activePlayerIds.add(String(playerId));
+          if (interaction.actor) {
+            pendingPlayerIds.add(String(playerId));
+          }
         }
         continue;
       }
@@ -596,7 +538,6 @@ export function createProjectionBuilder<
         simultaneousPhase: resolveSimultaneousPhaseFor(state),
         schedulerFlow: resolveSchedulerFlowFor(state, projection),
         ...(projectionMode === "full" ? { sharedView } : {}),
-        guidance: resolveGuidanceFor(combinedState),
         interactionsByRef: registry.entries(),
         seats,
       },

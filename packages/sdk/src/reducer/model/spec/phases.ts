@@ -1,11 +1,7 @@
 import type { z } from "zod";
-import type { RuntimeTableRecord, SchemaLike } from "../table";
+import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "../table";
 import type { ManifestContract } from "../manifest";
-import type {
-  PlayerIdOfState,
-  TableOfState,
-  SetupSelectionOfManifest,
-} from "../extract";
+import type { PlayerIdOfState, TableOfState } from "../extract";
 import type { ReducerResult } from "../runtime";
 import type {
   ActorSelector,
@@ -18,12 +14,7 @@ import type {
   SimultaneousResolveArgs,
   SimultaneousSubmitSpec,
 } from "./simultaneous";
-import type { InteractionMap, PhaseZoneList } from "./interactions";
-
-export type PhaseGuidance = {
-  summary: string;
-  objective?: string;
-};
+import type { InteractionMap } from "./interactions";
 
 type PhaseDefinitionCommon<
   PhaseStateSchema extends SchemaLike<object>,
@@ -34,15 +25,15 @@ type PhaseDefinitionCommon<
   },
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
+  Options extends RuntimeRecord = RuntimeRecord,
 > = {
   name?: string;
-  guidance?: PhaseGuidance;
   state: PhaseStateSchema;
   initialState?: (ctx: {
     manifest: Manifest;
     state: State;
     playerIds: PlayerIdOfState<State>[];
-    setup: SetupSelectionOfManifest<Manifest> | null;
+    options: Options;
   }) => z.infer<PhaseStateSchema>;
   enter?: BivariantCallback<
     PhaseEnterArgs<
@@ -63,7 +54,14 @@ export type AutoPhaseDefinition<
   },
   Manifest extends ManifestContract<TableOfState<State>>,
   ErrorCode extends string = string,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
+  Options extends RuntimeRecord = RuntimeRecord,
+> = PhaseDefinitionCommon<
+  PhaseStateSchema,
+  State,
+  Manifest,
+  ErrorCode,
+  Options
+> & {
   kind: "auto";
   actor?: never;
   actors?: never;
@@ -71,7 +69,6 @@ export type AutoPhaseDefinition<
   canResubmit?: never;
   resolve?: never;
   interactions?: never;
-  zones?: never;
 };
 
 export type PlayerPhaseDefinition<
@@ -86,9 +83,15 @@ export type PlayerPhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Zones extends PhaseZoneList<Manifest> = readonly [],
+  Options extends RuntimeRecord = RuntimeRecord,
   ErrorCode extends string = string,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
+> = PhaseDefinitionCommon<
+  PhaseStateSchema,
+  State,
+  Manifest,
+  ErrorCode,
+  Options
+> & {
   kind: "player";
   /**
    * Default actor selector for interactions in this phase. When omitted the
@@ -104,7 +107,6 @@ export type PlayerPhaseDefinition<
   canResubmit?: never;
   resolve?: never;
   interactions?: Interactions;
-  zones?: Zones;
 };
 
 export type SimultaneousPlayerPhaseDefinition<
@@ -123,9 +125,15 @@ export type SimultaneousPlayerPhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Zones extends PhaseZoneList<Manifest> = readonly [],
+  Options extends RuntimeRecord = RuntimeRecord,
   ErrorCode extends string = string,
-> = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
+> = PhaseDefinitionCommon<
+  PhaseStateSchema,
+  State,
+  Manifest,
+  ErrorCode,
+  Options
+> & {
   kind: "simultaneousPlayer";
   actor?: never;
   /**
@@ -167,7 +175,6 @@ export type SimultaneousPlayerPhaseDefinition<
     ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
   >;
   interactions?: Interactions;
-  zones?: Zones;
 };
 
 export type PhaseDefinition<
@@ -186,16 +193,16 @@ export type PhaseDefinition<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Zones extends PhaseZoneList<Manifest> = readonly [],
+  Options extends RuntimeRecord = RuntimeRecord,
   ErrorCode extends string = string,
 > =
-  | AutoPhaseDefinition<PhaseStateSchema, State, Manifest, ErrorCode>
+  | AutoPhaseDefinition<PhaseStateSchema, State, Manifest, ErrorCode, Options>
   | PlayerPhaseDefinition<
       PhaseStateSchema,
       State,
       Manifest,
       Interactions,
-      Zones,
+      Options,
       ErrorCode
     >
   | SimultaneousPlayerPhaseDefinition<
@@ -204,6 +211,6 @@ export type PhaseDefinition<
       Manifest,
       SubmitCollectors,
       Interactions,
-      Zones,
+      Options,
       ErrorCode
     >;

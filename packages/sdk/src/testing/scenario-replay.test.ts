@@ -90,8 +90,6 @@ function createScenarioGame() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -124,14 +122,6 @@ function createScenarioGame() {
     ids: {
       playerId: playerIdSchema,
       phaseName: createManifestStringLiteralSchema(phaseNames, "phaseName"),
-      setupOptionId: createManifestStringLiteralSchema(
-        [] as const,
-        "setupOptionId",
-      ),
-      setupProfileId: createManifestStringLiteralSchema(
-        [] as const,
-        "setupProfileId",
-      ),
       cardSetId: createManifestStringLiteralSchema([] as const, "cardSetId"),
       cardType: createManifestStringLiteralSchema([] as const, "cardType"),
       cardId: createManifestStringLiteralSchema([] as const, "cardId"),
@@ -203,9 +193,6 @@ function createScenarioGame() {
         playerIds: readonly string[];
       }) => createTable(ids),
     },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
@@ -419,7 +406,7 @@ function createScenarioGame() {
             },
           ),
           respond: defineInteraction<typeof contract, typeof phaseState>()({
-            to: ({ state }) => state.publicState.target ?? undefined,
+            actor: ({ state }) => state.publicState.target ?? undefined,
             inputs: {
               answer: formInput.choice({
                 choices: [

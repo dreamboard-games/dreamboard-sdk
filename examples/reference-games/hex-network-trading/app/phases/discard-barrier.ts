@@ -12,13 +12,12 @@ import { stormtrail } from "../game-model";
 const discardBarrier = stormtrail.phase("discardBarrier");
 
 const discardSupplies = discardBarrier.interaction({
-  to: ({ state }) =>
+  actor: ({ state }) =>
     state.table.playerOrder.filter(
       (playerId) =>
         state.phase.requiredByPlayerId?.[playerId] !== undefined &&
         !(state.phase.completedPlayerIds ?? []).includes(playerId),
     ),
-  visibility: "actorsOnly",
   inputs: {
     resources: discardBarrier.inputs.form.resourceMap({
       resources: literals.resourceIds.map((resourceId) => ({

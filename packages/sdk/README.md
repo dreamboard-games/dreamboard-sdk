@@ -195,3 +195,19 @@ owns the monotonically increasing version, perspective, and action-set identity.
 The plugin frame basis contains `version`, `actionSetVersion`, and
 `perspectivePlayerId`; it has no generation counter. Hosts merge the separately
 cached board static projection when materializing plugin gameplay frames.
+
+### Initialization options and actors
+
+Declare lobby options once on `createGame({ options: z.strictObject({ ... }), ... })`.
+The bundle accepts JSON-safe `options` at initialization, validates them with that
+schema, persists the parsed values, and supplies them to initial state and phase
+initializers. Without a schema, only `{}` is accepted. Options schemas must be
+JSON-native: transforms, preprocessing, and coercion are rejected. Restored
+sessions validate their stored options with the same schema.
+
+Perform shuffle, deal, and other initialization mutations in an ordinary phase
+entry callback. Setup profiles and bootstrap instructions are removed.
+Interactions use `actor` to override their phase actor; only authorized seats
+receive their input domains. Use ordinary form choices for responses and explicit
+rules plus transaction resource mutations for affordability. Prompt collectors,
+implicit costs, guidance metadata, and phase zone declarations are removed.

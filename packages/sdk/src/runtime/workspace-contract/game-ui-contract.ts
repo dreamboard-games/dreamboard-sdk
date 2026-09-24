@@ -106,8 +106,7 @@ type CollectorKind =
   | "board-edge"
   | "board-tile"
   | "board-space"
-  | "card"
-  | "prompt";
+  | "card";
 
 type AuthoredInputKeys<Game, Key extends GameUiInteractionKey<Game>> =
   InputKeysWithCollectorKindOfDefinition<
@@ -432,10 +431,6 @@ type UiRegistry<Game, Manifest extends GameUiManifestTypes> = {
       input: Key;
     };
   };
-  prompts: {
-    [Key in GameUiInteractionKey<Game>]: { interaction: Key };
-  };
-  promptOptions: Record<string, { value: string }>;
   players: { [Key in Manifest["PlayerId"]]: { player: Key } };
   zones: { [Key in Manifest["ZoneId"]]: { zone: Key } };
   cards: { [Key in Manifest["CardId"]]: { card: Key } };
@@ -582,7 +577,7 @@ export type GameWorkspaceUI<
   SquareBoards,
 > = Omit<
   DreamboardUI<Contract>,
-  "Root" | "Game" | "Interaction" | "Board" | "Zone" | "Prompt" | "PromptInbox"
+  "Root" | "Game" | "Interaction" | "Board" | "Zone"
 > & {
   Root(props: UIRootProps): ReactElement;
   defineSurfaces<const Spec extends WorkspaceSurfaceSpec>(
@@ -696,8 +691,6 @@ export function createGameUiContract<
   const uiContract = {
     interactions: {},
     inputs: {},
-    prompts: {},
-    promptOptions: {},
     players: {},
     zones: {},
     cards: {},
@@ -732,10 +725,7 @@ export function createGameUiContract<
       (id === "submit" ? phaseRecord?.submit : undefined);
     return new Set(
       Object.entries(spec?.inputs ?? {})
-        .filter(
-          ([, collector]) =>
-            collector.kind === "form" || collector.kind === "prompt",
-        )
+        .filter(([, collector]) => collector.kind === "form")
         .map(([input]) => input),
     );
   };

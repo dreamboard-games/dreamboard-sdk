@@ -1,6 +1,9 @@
 {
-  "rng": { "seed": 2026, "cursor": 3, "trace": ["deal:card-1"] },
-  "setup": null,
+  "rng": {
+    "seed": 2026,
+    "cursor": 3,
+    "trace": ["deal:card-1"]
+  },
   "simultaneous": {
     "current": {
       "phaseName": "choose",
@@ -8,10 +11,16 @@
       "submissions": {
         "player-1": {
           "interactionId": "submit",
-          "params": { "choice": "left" }
+          "params": {
+            "choice": "left"
+          }
         }
       }
     }
   },
-  "lastTransition": { "from": "main", "to": "choose" }
+  "lastTransition": {
+    "from": "main",
+    "to": "choose"
+  },
+  "options": {}
 }

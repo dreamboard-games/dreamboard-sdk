@@ -32,8 +32,6 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: ["draw"] as const,
@@ -70,8 +68,6 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
     ids: {
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: createManifestStringLiteralSchema(phaseNames),
-      setupOptionId: createManifestStringLiteralSchema([] as const),
-      setupProfileId: createManifestStringLiteralSchema([] as const),
       cardSetId: createManifestStringLiteralSchema([] as const),
       cardType: createManifestStringLiteralSchema([] as const),
       cardId: createManifestStringLiteralSchema(["card-1", "card-2"] as const),
@@ -132,9 +128,6 @@ function buildMinimalManifest<const PhaseNames extends readonly string[]>(
           () => ({}),
         ),
     },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
     tableSchema: z
       .object({
         playerOrder: z.array(z.string()),
@@ -303,7 +296,7 @@ describe("ingress runtime codec", () => {
       },
       runtime: {
         rng: { seed: 42, cursor: 0, trace: [] },
-        setup: null,
+        options: {},
         simultaneous: { current: null },
         lastTransition: null,
       },
@@ -380,7 +373,7 @@ describe("ingress runtime codec", () => {
       },
       runtime: {
         rng: { seed: 42, cursor: 0, trace: [] },
-        setup: null,
+        options: {},
         simultaneous: { current: null },
         lastTransition: null,
       },

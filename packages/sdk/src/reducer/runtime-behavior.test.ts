@@ -39,8 +39,6 @@ function createManifestContract() {
     literals: {
       playerIds,
       phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -75,8 +73,6 @@ function createManifestContract() {
     ids: {
       playerId: z.enum(playerIds),
       phaseName: z.enum(phaseNames),
-      setupOptionId: z.string(),
-      setupProfileId: z.string(),
       cardSetId: z.string(),
       cardType: z.string(),
       cardId: z.string(),
@@ -116,8 +112,6 @@ function createManifestContract() {
       visibility: () => ({}),
       resources: () => perPlayer([], () => ({})),
     },
-    setupOptionsById: {},
-    setupProfilesById: {},
     tableSchema: z.custom<RuntimeTableRecord>(),
     runtimeSchema: z.any(),
     createGameStateSchema: () => z.any(),
@@ -459,9 +453,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     expect(SeatProjectionBundleSchema.parse(wireProjection)).toEqual(
       wireProjection,
     );
-    expect(wireProjection).toMatchObject({
-      guidance: { phase: { id: "takeTurn", label: "Take Turn" } },
-    });
+    expect(wireProjection).toMatchObject({});
     expect(warmTiming).toBeDefined();
     expect(freshTiming).toBeDefined();
     expect(warmProjection).not.toHaveProperty("version");

@@ -13,6 +13,7 @@ function makeContract(
   } = {},
 ) {
   return {
+    options: z.strictObject({}),
     manifest: {
       literals: {
         playerIds: ["player-1", "player-2"],

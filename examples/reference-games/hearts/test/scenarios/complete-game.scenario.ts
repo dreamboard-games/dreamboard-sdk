@@ -5,7 +5,7 @@ export default defineScenario({
   id: "hearts.complete-game",
   description:
     "Four players pass left and legally play all thirteen tricks before one automatic ordinary-score outcome.",
-  setup: { players: 4, seed: 1, setupProfileId: "default" },
+  setup: { players: 4, seed: 1 },
   checkpoints: {
     opening: { segment: "setup", completed: 0 },
     "sealed-pass": { segment: "given", completed: 2 },

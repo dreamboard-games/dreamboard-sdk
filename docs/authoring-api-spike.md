@@ -171,15 +171,15 @@ pass `pnpm reference`. The other seven games are unchanged on disk, listed in
 
 **Public authoring surface** (`@dreamboard-games/sdk/reducer`):
 
-| Name                                                                                                                                                              | Role                                                |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `createGame(model)`                                                                                                                                               | The only entry point. Returns the bound game value. |
-| `game.types.{State, ErrorCode, PlayerId, Queries, Tx, Manifest, Contract}`                                                                                        | Phantom type carriers.                              |
-| `game.phase(name)` → `phase.define / .interaction / .inputs.* / .types`                                                                                           | Phase authoring.                                    |
-| `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.prompt({ schema, choices, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.    |
-| `game.views.shared / player / empty / static`                                                                                                                     | Views.                                              |
-| `game.assemble({...})`                                                                                                                                            | Assembly; missing and extra phase keys fail here.   |
-| `defineInputs`, `many`                                                                                                                                            | Combinators that were already model-independent.    |
+| Name                                                                                                                       | Role                                                |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| `createGame(model)`                                                                                                        | The only entry point. Returns the bound game value. |
+| `game.types.{State, ErrorCode, PlayerId, Queries, Tx, Manifest, Contract}`                                                 | Phantom type carriers.                              |
+| `game.phase(name)` → `phase.define / .interaction / .inputs.* / .types`                                                    | Phase authoring.                                    |
+| `phase.inputs.card({ from, where })`, `.board.vertex/edge/space/tile/playerSpace({ boardId, where })`, `.form.*`, `.rng.*` | Fused inputs; no target builders, no `.build()`.    |
+| `game.views.shared / player / empty / static`                                                                              | Views.                                              |
+| `game.assemble({...})`                                                                                                     | Assembly; missing and extra phase keys fail here.   |
+| `defineInputs`, `many`                                                                                                     | Combinators that were already model-independent.    |
 
 **Mutation callbacks** (`enter`, `reduce`, `resolve`) receive
 `{ tx, random, q, derived, state, ...context }`. `tx` is the open transaction;
@@ -195,7 +195,7 @@ Removed from the facade: `defineGame`, `defineGameContract`,
 `defineInteraction`, `defineInteractionRule`, `defineCardAction`,
 `definePlayerView`, `defineSharedView`, `defineEmptyView`, `defineStaticView`,
 `defineStage`, `definePhaseStage`, `boardInput`, `cardInput`, `boardTarget`,
-`cardTarget`, `choiceTarget`, `formInput`, `promptInput`, `rngInput`,
+`cardTarget`, `choiceTarget`, `formInput`, `rngInput`,
 `createReducerEdit`, `createReducerTransaction`, `GameStateOf`,
 `ErrorCodeOfContract`, `PhaseMapOf`, `GameContractOf`, `GameAuthoringOf`,
 `PhaseAuthoringOf`, `phase.targets`, `game.game`, and the flat `game.*View`

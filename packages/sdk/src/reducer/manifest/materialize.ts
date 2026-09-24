@@ -155,39 +155,6 @@ interface ManifestAnalysis {
     string,
     { label: string; icon?: string | null }
   >;
-  setupOptionIds: string[];
-  setupProfileIds: string[];
-  setupChoiceIdsByOptionId: Map<string, string[]>;
-  setupOptionsById: Record<
-    string,
-    {
-      id: string;
-      name: string;
-      description?: string | null;
-      choices: ReadonlyArray<{
-        id: string;
-        label: string;
-        description?: string | null;
-      }>;
-    }
-  >;
-  setupProfilesById: Record<
-    string,
-    {
-      id: string;
-      name: string;
-      description?: string | null;
-      optionValues?: Record<string, string> | null;
-      guidance?: {
-        summary?: string | null;
-        steps: ReadonlyArray<{
-          id: string;
-          label: string;
-          description?: string | null;
-        }>;
-      } | null;
-    }
-  >;
   pieceTypeIds: string[];
   pieceIds: string[];
   pieceTypeIdByPieceId: Map<string, string>;
@@ -1522,67 +1489,6 @@ export function analyzeManifest(
       },
     ]),
   );
-  const setupOptionIds = dedupeSorted(
-    (manifest.setupOptions ?? []).map((option) => option.id),
-  );
-  const setupProfileIds = dedupeSorted(
-    (manifest.setupProfiles ?? []).map((profile) => profile.id),
-  );
-  const setupChoiceIdsByOptionId = new Map(
-    (manifest.setupOptions ?? []).map((option) => [
-      option.id,
-      dedupeSorted((option.choices ?? []).map((choice) => choice.id)),
-    ]),
-  );
-  const setupOptionsById = Object.fromEntries(
-    (manifest.setupOptions ?? [])
-      .slice()
-      .sort((left, right) => left.id.localeCompare(right.id))
-      .map((option) => [
-        option.id,
-        {
-          id: option.id,
-          name: option.name,
-          description: option.description ?? null,
-          choices: (option.choices ?? []).map((choice) => ({
-            id: choice.id,
-            label: choice.label,
-            description: choice.description ?? null,
-          })),
-        },
-      ]),
-  );
-  const setupProfilesById = Object.fromEntries(
-    (manifest.setupProfiles ?? [])
-      .slice()
-      .sort((left, right) => left.id.localeCompare(right.id))
-      .map((profile) => [
-        profile.id,
-        {
-          id: profile.id,
-          name: profile.name,
-          description: profile.description ?? null,
-          optionValues: profile.optionValues
-            ? Object.fromEntries(
-                Object.entries(profile.optionValues).filter(
-                  (entry): entry is [string, string] =>
-                    typeof entry[1] === "string",
-                ),
-              )
-            : null,
-          guidance: profile.guidance
-            ? {
-                summary: profile.guidance.summary ?? null,
-                steps: (profile.guidance.steps ?? []).map((step) => ({
-                  id: step.id,
-                  label: step.label,
-                  description: step.description ?? null,
-                })),
-              }
-            : null,
-        },
-      ]),
-  );
   const pieceTypeIds = dedupeSorted(
     (manifest.pieceTypes ?? []).map((pieceType) => pieceType.id),
   );
@@ -1891,11 +1797,6 @@ export function analyzeManifest(
     zoneVisibilityById,
     resourceIds,
     resourcePresentationById,
-    setupOptionIds,
-    setupProfileIds,
-    setupChoiceIdsByOptionId,
-    setupOptionsById,
-    setupProfilesById,
     pieceTypeIds,
     pieceIds,
     pieceTypeIdByPieceId,

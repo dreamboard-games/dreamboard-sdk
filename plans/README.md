@@ -66,11 +66,11 @@ host and browser runtime rather than the former CLI.
 | Layer                               | Scope                                                                          | Status                                                     |
 | ----------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------- |
 | [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                      |
-| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | 002a complete/reviewed; 002b next                          |
+| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | 002a local/hosted gates passed; 002b/002c executing        |
+| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | Preparation executing; integrate after 002c                |
 | [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | Specified; pending reducer foundation                      |
 | 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Pending steps                                              |
-| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | Preparation scoped; integrate after shared models          |
-| 004                                 | Headless instance, feature typing and sources                                  | Pending projection contract                                |
+| [004](004-headless-instance.md)     | Headless instance, feature typing and sources                                  | Specified; pending projection contract                     |
 | 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                           |
 | 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure registry preparation in parallel; cutover after React |
 | 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                                 |

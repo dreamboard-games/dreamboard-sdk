@@ -46,14 +46,14 @@
           }
         ]
       },
-      "setup": null,
       "simultaneous": {
         "current": null
       },
       "lastTransition": {
         "from": "main",
         "to": "takeTurn"
-      }
+      },
+      "options": {}
     }
   },
   "terminal": {

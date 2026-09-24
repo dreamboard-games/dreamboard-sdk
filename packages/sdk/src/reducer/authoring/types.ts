@@ -14,6 +14,7 @@ import type {
 
 export type AnyReducerGameContract = {
   manifest: ReducerManifestContractLike<RuntimeTableRecord>;
+  options: SchemaLike<import("../model").RuntimeRecord>;
   state: StateDefinition<
     SchemaLike<object>,
     SchemaLike<object>,

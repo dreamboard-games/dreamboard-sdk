@@ -9,7 +9,7 @@ Root updates it with implementation and verification evidence.
 - [x] Latest main baselines inspected; unrelated work preserved in source checkouts.
 - [x] Layer 001: one transaction mutation path, public immutable API removed.
 - [x] Layer 001: local and hosted SDK/browser gates passed (PR #26).
-- [ ] Layer 002: direct lifecycle/outcomes, effects/continuations/stages removed.
+- [x] Layer 002a: direct lifecycle/outcomes, effects/continuations/stages removed; PR #27 local/hosted gates passed.
 - [ ] Layer 002: seeded transaction operations, initial options, setup profiles removed.
 - [ ] Layer 002: actor interactions, one authored seat view, minimal memoize.
 - [ ] Layer 003: serialized private step selections and cancel command.

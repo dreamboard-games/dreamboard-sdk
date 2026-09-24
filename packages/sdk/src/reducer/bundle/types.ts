@@ -4,7 +4,6 @@ import type {
   GameOutcome,
   BaseGameStateOfContract,
   BaseGameSessionOfContract,
-  ManifestContractOf,
   PhaseMapOf,
   PhaseNamesOfDefinition,
   PlayerIdOfState,
@@ -12,7 +11,7 @@ import type {
   ReducerGameDefinition,
   ReducerReject,
   ReducerValidationResult,
-  RuntimeSetupSelectionInput,
+  OptionsOfContract,
   ViewMapOf,
 } from "../model";
 import type {
@@ -66,7 +65,7 @@ export type TrustedReducerBundle<
     table: BaseGameStateOfContract<Contract>["table"];
     playerIds: TrustedPlayerId<Contract>[];
     rngSeed?: number | null;
-    setup?: RuntimeSetupSelectionInput<ManifestContractOf<Contract>> | null;
+    options: OptionsOfContract<Contract>;
   }): Promise<{
     state: TrustedSessionState<Contract>;
     terminal?: GameOutcome<TrustedPlayerId<Contract>>;
@@ -182,7 +181,7 @@ type ReducerAuthoringBundle = Omit<ReducerBundleContract, "initialize"> & {
       table: unknown;
       playerIds: string[];
       rngSeed?: number | null;
-      setup?: unknown;
+      options?: unknown;
     }): Promise<void>;
     hydrate(input: { state: unknown }): void;
     dispatch(input: {

@@ -36,6 +36,5 @@ export type {
   TargetRuleBuilder,
 } from "./inputs/targetRule";
 export { cardInput } from "./inputs/cardInput";
-export { promptInput } from "./inputs/promptInput";
 export { rngInput } from "./inputs/rngInput";
 export { many, type ManyOptions } from "./inputs/many";
