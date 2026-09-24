@@ -1,3 +1,4 @@
+import type { ViewData } from "../model/spec/views";
 import type { z } from "zod";
 import type {
   BaseGameStateOfContract,
@@ -57,7 +58,7 @@ export type ReducerPhaseDefinition<
 
 export type ReducerViewDefinition<
   Contract extends AnyReducerGameContract,
-  Projection = unknown,
+  Projection extends ViewData = ViewData,
 > = ViewDefinition<
   ContractState<Contract>,
   ContractManifest<Contract>,

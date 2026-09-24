@@ -140,3 +140,11 @@ Native submit/selection handlers now report rejected reducer results through
 submission still returns its explicit result. The focused rejection proof and
 combined repository/packed-game gate passed
 (`/tmp/core-native-feedback-check.log`). Applications own the visible notice.
+
+The record-view correction reserves `boards` for manifest geometry and rejects
+primitive/array seat views at the canonical wire boundary. Authored views keep
+nested domain interfaces and readonly arrays through a top-level record
+constraint; JSON admission remains in the runtime schemas. This avoids widening
+Hearts' inferred card views while preventing authored geometry from overwriting
+manifest boards. The integrated gate passed 769 SDK tests and both packed games
+(`/tmp/record-views-integrated-check-retry.log`).

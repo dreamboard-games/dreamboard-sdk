@@ -406,3 +406,46 @@ test("worker and plugin boundaries share canonical output admission", () => {
       .success,
   ).toBe(false);
 });
+
+describe("manifest-owned boards in the single seat view", () => {
+  const boards = { byId: {}, hex: {}, square: {} };
+  function materialize(view: unknown, sharedView: unknown = {}) {
+    return materializePluginGameplayFrame({
+      currentPhase: "play",
+      activePlayers: ["player-1"],
+      perspectivePlayerId: "player-1",
+      version: 1,
+      actionSetVersion: "actions-1",
+      staticProjection: {
+        view: { boards },
+        hash: "static-1",
+        manifestVersion: "1",
+      },
+      // Deliberately cross the external admission boundary with untrusted data.
+      dynamicProjection: {
+        events: [],
+        sharedView,
+        seats: { "player-1": { view, availableInteractionRefs: [] } },
+      } as ReducerSeatProjectionBundle,
+    });
+  }
+  test("merges a seat record with canonical static boards, including a null seat view", () => {
+    expect(materialize({ score: 3 }).view).toEqual({ boards, score: 3 });
+    expect(materialize(null).view).toEqual({ boards });
+  });
+  test.each(["primitive", 3, true, [], [{ score: 3 }]])(
+    "rejects a non-record seat view: %j",
+    (view) => {
+      expect(() => materialize(view)).toThrow();
+      expect(() => materialize({}, view)).toThrow();
+    },
+  );
+  test("rejects authored boards instead of overwriting manifest geometry", () => {
+    expect(() => materialize({ boards: {} })).toThrow(
+      "reserved for manifest geometry",
+    );
+    expect(() => materialize({}, { boards: null })).toThrow(
+      "reserved for manifest geometry",
+    );
+  });
+});

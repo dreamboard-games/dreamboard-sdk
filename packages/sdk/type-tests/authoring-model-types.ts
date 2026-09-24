@@ -631,3 +631,19 @@ playerTurn.interaction({
     void faces;
   },
 });
+
+// Authored view records cannot shadow manifest-owned geometry.
+// @ts-expect-error Primitive projections are not authored seat records.
+game.view(() => 3);
+// @ts-expect-error Array projections are not authored seat records.
+game.view(() => ["hidden"]);
+// @ts-expect-error boards is reserved for manifest metadata.
+game.view(() => ({ boards: {} }));
+
+// Nested domain interfaces and readonly collections remain valid authoring data.
+interface ProjectedCard {
+  readonly id: string;
+}
+declare const projectedCards: readonly ProjectedCard[];
+const recordView = game.view(() => ({ cards: projectedCards }));
+void recordView;

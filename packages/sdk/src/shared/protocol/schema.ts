@@ -172,7 +172,7 @@ export const GameOutcomeSchema =
 export const SeatFrameSchema = z
   .object({
     events: z.array(GameEventSchema).max(32),
-    view: RuntimeJsonSchema.nullable(),
+    view: z.record(z.string(), RuntimeJsonSchema).nullable(),
     flow: z
       .object({
         currentPhase: z.string().nullable(),

@@ -1,3 +1,4 @@
+import type { ViewData } from "./spec/views";
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "./table";
 import type {
@@ -220,7 +221,10 @@ export type ResolvedGameSessionOf<
   OptionsOfContract<Contract>
 >;
 
-export type ViewOfContract<Contract, Projection = unknown> = ViewDefinition<
+export type ViewOfContract<
+  Contract,
+  Projection extends ViewData = ViewData,
+> = ViewDefinition<
   BaseGameStateOfContract<Contract>,
   ManifestContractOf<Contract>,
   Projection
