@@ -1,207 +1,77 @@
-import { parseArgs, type ParseArgsOptionsConfig } from "node:util";
-import path from "node:path";
-
-import {
-  defaultGeneratedWorkbenchRoot,
-  defaultSmokeScenarioIds,
-} from "./config.ts";
-import { root, spawnInherited } from "./support.ts";
+import { parseArgs } from "node:util";
+import { rootDir } from "../lib/paths.ts";
+import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
+import { discoverReferenceGames } from "../reference/games.ts";
 
 export class UIUsageError extends Error {
   readonly exitCode = 2;
 }
-
 export function uiHelp(): string {
   return `Usage:
   pnpm ui storybook
-  pnpm ui workbench [--scenario <id>] [--source]
-  pnpm ui test [--scenario <id> | --all]
-  pnpm ui snapshots update
+  pnpm ui dev --game <id>
+  pnpm ui test [--game <id>]
+
+Local game URLs accept ?scenario=<id>&at=<checkpoint>&as=<player-id>.
+Unfiltered tests run registry installation/Storybook proofs and both actual game browser suites.
 `;
 }
-
-function parseOptions(
-  args: readonly string[],
-  options: ParseArgsOptionsConfig,
-): Record<string, string | boolean | (string | boolean)[] | undefined> {
+export async function runUi(
+  argv: readonly string[],
+  run: AsyncCommandRunner = runAsync,
+): Promise<void> {
+  const [command, ...args] = argv;
+  if (
+    !command ||
+    command === "--help" ||
+    command === "-h" ||
+    args[0] === "--help"
+  ) {
+    process.stdout.write(uiHelp());
+    return;
+  }
+  if (!["storybook", "dev", "test"].includes(command))
+    throw new UIUsageError(`Unknown UI command '${command}'.\n${uiHelp()}`);
+  let game: string | undefined;
   try {
-    const result = parseArgs({
+    const parsed = parseArgs({
       args: [...args],
-      options,
-      allowPositionals: false,
+      options: command === "storybook" ? {} : { game: { type: "string" } },
       strict: true,
+      allowPositionals: false,
     });
-    return result.values;
+    game = parsed.values.game as string | undefined;
   } catch (error) {
     throw new UIUsageError(
       error instanceof Error ? error.message : String(error),
     );
   }
-}
-
-async function buildSdk(): Promise<void> {
-  await spawnInherited("pnpm", [
-    "exec",
-    "turbo",
-    "run",
-    "build",
-    "--filter=@dreamboard-games/sdk",
-  ]);
-}
-
-async function runStorybookChecks(updateSnapshots = false): Promise<void> {
-  await spawnInherited("pnpm", [
-    "--filter",
-    "@dreamboard-games/sdk",
-    "storybook:build",
-  ]);
-  if (updateSnapshots) {
-    await spawnInherited("pnpm", [
-      "--filter",
-      "@dreamboard-games/sdk",
-      "storybook:test:visual:update",
-    ]);
-    return;
-  }
-  await spawnInherited("pnpm", [
-    "--filter",
-    "@dreamboard-games/sdk",
-    "storybook:test",
-  ]);
-  await spawnInherited("pnpm", [
-    "--filter",
-    "@dreamboard-games/sdk",
-    "storybook:test:visual",
-  ]);
-}
-
-async function runWorkbenchTests(options: {
-  readonly scenario?: string;
-  readonly all: boolean;
-  readonly includeNormalLanes: boolean;
-}): Promise<void> {
-  const { materializeWorkbench, readScenarioIds } =
-    await import("./materialize.ts");
-  const scenarioIds = selectUiScenarios(options);
-  const gameIds = [
-    ...new Set(scenarioIds.map((id) => id.split(".", 1)[0] ?? id)),
-  ];
-  const materialization = await materializeWorkbench({ gameIds });
-  const available = await readScenarioIds(
-    path.join(materialization.generatedRoot, "fixtures/reference-games"),
-  );
-  const unknown = scenarioIds.filter((id) => !available.includes(id));
-  if (unknown.length > 0) {
-    throw new UIUsageError(`Unknown UI scenario '${unknown[0]}'.`);
-  }
-  const testFiles = workbenchTestFiles(options.includeNormalLanes);
-  await spawnInherited(
-    "pnpm",
-    [
-      "--filter",
-      "@dreamboard-games/ui-workbench",
-      "exec",
-      "playwright",
-      "test",
-      ...testFiles,
-    ],
-    root,
-    {
-      DREAMBOARD_WORKBENCH_GENERATED_ROOT: materialization.generatedRoot,
-      ...(options.all ? { UI_SCENARIO_ALL: "1" } : {}),
-      ...(scenarioIds.length > 0
-        ? { UI_SCENARIO_IDS: JSON.stringify(scenarioIds) }
-        : {}),
-    },
-  );
-}
-
-export function selectUiScenarios(options: {
-  readonly scenario?: string;
-  readonly all: boolean;
-}): readonly string[] {
-  return options.scenario
-    ? [options.scenario]
-    : options.all
+  if (command === "dev" && !game)
+    throw new UIUsageError("Local development requires --game <id>.");
+  const games =
+    command === "storybook"
       ? []
-      : [...defaultSmokeScenarioIds];
-}
-
-export function workbenchTestFiles(
-  includeNormalLanes: boolean,
-): readonly string[] {
-  return includeNormalLanes
-    ? [
-        "tests/driver",
-        "tests/scenario-keyboard.spec.ts",
-        "tests/scenario.spec.ts",
-      ]
-    : ["tests/scenario.spec.ts"];
-}
-
-export async function runUi(argv: readonly string[]): Promise<void> {
-  const [command, ...args] = argv;
-  if (!command || command === "--help" || command === "-h") {
-    process.stdout.write(uiHelp());
+      : await discoverReferenceGames({ root: rootDir, gameId: game });
+  await run("pnpm", ["--dir", "packages/sdk", "build"], { cwd: rootDir });
+  if (command === "storybook") {
+    await run("pnpm", ["--dir", "registry", "storybook"], { cwd: rootDir });
     return;
   }
-  if (args.length === 1 && (args[0] === "--help" || args[0] === "-h")) {
-    process.stdout.write(uiHelp());
+  if (command === "dev") {
+    await run("pnpm", ["run", "dev"], { cwd: games[0]!.dir });
     return;
   }
-  switch (command) {
-    case "storybook": {
-      parseOptions(args, {});
-      await spawnInherited("pnpm", [
-        "--filter",
-        "@dreamboard-games/sdk",
-        "storybook",
-      ]);
-      return;
+  if (!game) {
+    for (const script of [
+      "check",
+      "smoke",
+      "smoke:bound",
+      "storybook:build",
+      "browser:smoke",
+    ]) {
+      await run("pnpm", ["--dir", "registry", script], { cwd: rootDir });
     }
-    case "workbench": {
-      const values = parseOptions(args, {
-        scenario: { type: "string" },
-        source: { type: "boolean", default: false },
-      });
-      await buildSdk();
-      const { openWorkbench } = await import("./workbench.ts");
-      await openWorkbench({
-        ...(typeof values.scenario === "string"
-          ? { scenario: values.scenario }
-          : {}),
-        source: values.source === true,
-      });
-      return;
-    }
-    case "test": {
-      const values = parseOptions(args, {
-        scenario: { type: "string" },
-        all: { type: "boolean", default: false },
-      });
-      if (values.scenario && values.all) {
-        throw new UIUsageError("--scenario and --all are mutually exclusive.");
-      }
-      await buildSdk();
-      const focused = typeof values.scenario === "string";
-      if (!focused) await runStorybookChecks();
-      await runWorkbenchTests({
-        ...(focused ? { scenario: values.scenario as string } : {}),
-        all: values.all === true,
-        includeNormalLanes: !focused,
-      });
-      return;
-    }
-    case "snapshots": {
-      if (args.length !== 1 || args[0] !== "update") {
-        throw new UIUsageError("Usage: pnpm ui snapshots update");
-      }
-      await runStorybookChecks(true);
-      return;
-    }
-    default:
-      throw new UIUsageError(`Unknown UI command '${command}'.\n\n${uiHelp()}`);
   }
+  for (const game of games)
+    await run("pnpm", ["run", "test:browser"], { cwd: game.dir });
 }
-
-export { defaultGeneratedWorkbenchRoot };

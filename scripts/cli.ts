@@ -134,7 +134,7 @@ Commands:
   release:verify                Build the immutable release candidate
   test                          Run browser-free unit tests
   typecheck                     Type-check packages and repository scripts
-  ui <storybook|workbench|test|snapshots> ...
+  ui <storybook|dev|test> [--game <id>]
                                  Run the SDK UI product tooling
 `;
 }

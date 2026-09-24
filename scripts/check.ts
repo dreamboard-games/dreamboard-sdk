@@ -34,31 +34,11 @@ export function typecheck(): void {
 }
 
 export function build(): void {
-  run(
-    "pnpm",
-    [
-      "exec",
-      "turbo",
-      "run",
-      "build",
-      "--filter=!@dreamboard-games/ui-workbench",
-    ],
-    { cwd: rootDir },
-  );
+  run("pnpm", ["exec", "turbo", "run", "build"], { cwd: rootDir });
 }
 
 function testWorkspacePackages(): void {
-  run(
-    "pnpm",
-    [
-      "exec",
-      "turbo",
-      "run",
-      "test",
-      "--filter=!@dreamboard-games/ui-workbench",
-    ],
-    { cwd: rootDir },
-  );
+  run("pnpm", ["exec", "turbo", "run", "test"], { cwd: rootDir });
 }
 
 async function testRepositoryScripts(): Promise<void> {

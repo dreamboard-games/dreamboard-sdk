@@ -10,6 +10,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { readCatalogs, catalogVersion, type Catalogs } from "./catalogs.ts";
 
 import {
   discoverReferenceGames,
@@ -92,42 +93,43 @@ async function copyGame(source: string, destination: string): Promise<void> {
   });
 }
 
-async function installCandidate(
-  game: ReferenceGame,
+export async function prepareIsolatedReferenceGame(
+  game: Pick<ReferenceGame, "id" | "dir">,
   sandbox: string,
   sdkTarball: string,
-  run: AsyncCommandRunner,
+  root: string,
+  catalogs: Catalogs,
 ): Promise<void> {
-  await writeFile(
-    path.join(sandbox, "tsconfig.json"),
-    JSON.stringify({
-      compilerOptions: {
-        target: "ES2022",
-        module: "ESNext",
-        moduleResolution: "bundler",
-        strict: true,
-        skipLibCheck: true,
-        esModuleInterop: true,
-        jsx: "react-jsx",
-        allowImportingTsExtensions: true,
-        noEmit: true,
-        types: ["node"],
-      },
-      include: [
-        "manifest.ts",
-        "manifest/**/*.ts",
-        "app/**/*.ts",
-        "ui/**/*.ts",
-        "ui/**/*.tsx",
-        "test/**/*.ts",
-        "test/**/*.tsx",
-      ],
-    }),
-  );
+  const configPath = path.join(sandbox, "tsconfig.json");
+  const config = JSON.parse(await readFile(configPath, "utf8"));
+  if (config.extends) {
+    const base = path.resolve(game.dir, config.extends);
+    if (base !== path.join(root, "tsconfig.base.json"))
+      throw new Error(
+        `${game.id}: unexpected external tsconfig base '${config.extends}'.`,
+      );
+    await cp(base, path.join(sandbox, "tsconfig.base.json"));
+    config.extends = "./tsconfig.base.json";
+    await writeFile(configPath, JSON.stringify(config, null, 2) + "\n");
+  }
   const packagePath = path.join(sandbox, "package.json");
   const packageJson = JSON.parse(
     await readFile(packagePath, "utf8"),
   ) as PackageJson;
+  packageJson.packageManager = "pnpm@10.4.1";
+  for (const section of [
+    "dependencies",
+    "devDependencies",
+    "peerDependencies",
+    "optionalDependencies",
+  ] as const) {
+    const dependencies = packageJson[section];
+    if (!dependencies) continue;
+    for (const [name, specifier] of Object.entries(dependencies)) {
+      if (specifier.startsWith("catalog:"))
+        dependencies[name] = catalogVersion(catalogs, name, specifier);
+    }
+  }
   packageJson.dependencies = {
     ...packageJson.dependencies,
     [SDK_PACKAGE_NAME]: `file:${sdkTarball}`,
@@ -140,6 +142,17 @@ async function installCandidate(
       throw error;
     }
   });
+}
+
+async function installCandidate(
+  game: ReferenceGame,
+  sandbox: string,
+  sdkTarball: string,
+  run: AsyncCommandRunner,
+  root: string,
+  catalogs: Catalogs,
+): Promise<void> {
+  await prepareIsolatedReferenceGame(game, sandbox, sdkTarball, root, catalogs);
 
   await run(
     "pnpm",
@@ -203,6 +216,7 @@ export async function verifyReferenceGames(
     ...(options.gameId ? { gameId: options.gameId } : {}),
   });
 
+  const catalogs = await readCatalogs(options.root);
   const temporaryRoot = await mkdtemp(
     path.join(tmpdir(), "dreamboard-reference-"),
   );
@@ -217,7 +231,14 @@ export async function verifyReferenceGames(
       const sandbox = path.join(temporaryRoot, "games", game.id);
       try {
         await copyGame(game.dir, sandbox);
-        await installCandidate(game, sandbox, sdkTarball, run);
+        await installCandidate(
+          game,
+          sandbox,
+          sdkTarball,
+          run,
+          options.root,
+          catalogs,
+        );
       } catch (error) {
         throw new Error(
           `[reference:${game.id}] failed\n${error instanceof Error ? error.message : String(error)}`,

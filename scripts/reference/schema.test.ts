@@ -1,10 +1,11 @@
-import { describe, expect, test } from "vitest";
+import assert from "node:assert/strict";
+import { describe, test } from "node:test";
 
 import {
   REFERENCE_GAME_MANIFEST_SCHEMA_VERSION,
   parseReferenceGameManifest,
   type ReferenceGameManifest,
-} from "./index.js";
+} from "./schema.ts";
 
 function manifest(
   overrides: Partial<ReferenceGameManifest> = {},
@@ -38,13 +39,13 @@ function manifest(
 
 describe("reference game manifest v5", () => {
   test("parses the authored workspace and substantive rights metadata", () => {
-    expect(parseReferenceGameManifest(manifest())).toEqual(manifest());
+    assert.deepEqual(parseReferenceGameManifest(manifest()), manifest());
   });
 
   test("rejects older schema versions", () => {
-    expect(() =>
+    assert.throws(() =>
       parseReferenceGameManifest({ ...manifest(), schemaVersion: 4 }),
-    ).toThrow();
+    );
   });
 
   test("rejects workspace and read-first traversal", () => {
@@ -54,18 +55,22 @@ describe("reference game manifest v5", () => {
       "C:/tmp/game.ts",
       "app\\game.ts",
     ]) {
-      expect(() =>
+      assert.throws(
+        () =>
+          parseReferenceGameManifest({
+            ...manifest(),
+            workspace: { ...manifest().workspace, reducer },
+          }),
+        /path must stay inside/,
+      );
+    }
+    assert.throws(
+      () =>
         parseReferenceGameManifest({
           ...manifest(),
-          workspace: { ...manifest().workspace, reducer },
+          teaching: { ...manifest().teaching, readFirst: ["app/../game.ts"] },
         }),
-      ).toThrow("path must stay inside");
-    }
-    expect(() =>
-      parseReferenceGameManifest({
-        ...manifest(),
-        teaching: { ...manifest().teaching, readFirst: ["app/../game.ts"] },
-      }),
-    ).toThrow("path must stay inside");
+      /path must stay inside/,
+    );
   });
 });

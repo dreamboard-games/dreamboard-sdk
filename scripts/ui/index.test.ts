@@ -1,63 +1,36 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { runUi, uiHelp, UIUsageError } from "./index.ts";
+import type { AsyncCommandRunner } from "../lib/process.ts";
 
-import {
-  runUi,
-  selectUiScenarios,
-  uiHelp,
-  UIUsageError,
-  workbenchTestFiles,
-} from "./index.ts";
-
-test("default UI tests select the two interaction smoke scenarios", () => {
-  assert.deepEqual(selectUiScenarios({ all: false }), [
-    "hearts.dealt-hand.desktop",
-    "hearts.final-outcome.mobile",
-  ]);
+test("UI help describes real authored game and registry entry points", () => {
+  assert.match(uiHelp(), /dev --game/);
+  assert.match(uiHelp(), /at=<checkpoint>/);
+  assert.doesNotMatch(uiHelp(), /workbench|snapshots|tape/);
 });
-
-test("focused and all scenario selection are explicit", () => {
-  assert.deepEqual(
-    selectUiScenarios({ scenario: "hearts.dealt-hand.desktop", all: false }),
-    ["hearts.dealt-hand.desktop"],
-  );
-  assert.deepEqual(selectUiScenarios({ all: true }), []);
-});
-
-test("normal UI tests include driver, keyboard, and scenario suites", () => {
-  assert.deepEqual(workbenchTestFiles(true), [
-    "tests/driver",
-    "tests/scenario-keyboard.spec.ts",
-    "tests/scenario.spec.ts",
-  ]);
-  assert.deepEqual(workbenchTestFiles(false), ["tests/scenario.spec.ts"]);
-});
-
-test("UI help documents the four product operations", async () => {
-  let output = "";
-  const originalWrite = process.stdout.write.bind(process.stdout);
-  process.stdout.write = ((chunk: string | Uint8Array) => {
-    output += chunk.toString();
-    return true;
-  }) as typeof process.stdout.write;
-  try {
-    await runUi(["--help"]);
-  } finally {
-    process.stdout.write = originalWrite;
+test("obsolete selectors and unknown commands fail before launching anything", async () => {
+  for (const args of [
+    ["test", "--scenario", "old.tape"],
+    ["test", "--all"],
+    ["dev"],
+    ["workbench"],
+  ]) {
+    await assert.rejects(
+      runUi(args, async () => {
+        assert.fail("Unexpected process");
+      }),
+      UIUsageError,
+    );
   }
-  assert.equal(output, uiHelp());
-  assert.match(output, /workbench \[--scenario <id>\] \[--source\]/);
-  assert.match(output, /test \[--scenario <id> \| --all\]/);
 });
-
-test("UI selectors are mutually exclusive and options are strict", async () => {
-  await assert.rejects(
-    runUi(["test", "--scenario", "hearts.dealt-hand.desktop", "--all"]),
-    (error: unknown) =>
-      error instanceof UIUsageError && /mutually exclusive/.test(error.message),
-  );
-  await assert.rejects(
-    runUi(["test", "--unknown"]),
-    (error: unknown) => error instanceof UIUsageError,
-  );
+test("focused browser verification builds the SDK and executes the selected real game", async () => {
+  const calls: string[] = [];
+  const run: AsyncCommandRunner = async (_command, args, options) => {
+    calls.push(`${options?.cwd?.split("/").at(-1)}:${args.join(" ")}`);
+    return "";
+  };
+  await runUi(["test", "--game", "hearts"], run);
+  assert.equal(calls.length, 2);
+  assert.ok(calls[0]!.endsWith(":--dir packages/sdk build"));
+  assert.equal(calls[1], "hearts:run test:browser");
 });

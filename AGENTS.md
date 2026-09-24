@@ -1,7 +1,7 @@
 # Dreamboard SDK Agent Guide
 
 This repository owns the public `@dreamboard-games/sdk` package, the reference
-games, UI fixtures, Storybook, and the SDK UI Workbench. Keep operational rules
+games, source-copy UI registry, Storybook, and scenario developer tooling. Keep operational rules
 here; put durable design explanations in `docs/`.
 
 ## Environment and commands
@@ -24,9 +24,8 @@ pnpm test
 pnpm typecheck
 pnpm reference [game-id]
 pnpm ui storybook
-pnpm ui workbench [--scenario <id>] [--source]
-pnpm ui test [--scenario <id>|--all]
-pnpm ui snapshots update
+pnpm ui dev --game <id>
+pnpm ui test [--game <id>]
 pnpm release:verify
 ```
 
@@ -45,24 +44,23 @@ new behavior genuinely belongs in this repository.
   package. Its `rule.md` defines gameplay and the root lockfile owns dependency resolution.
 - `reference-game.json` uses schema V5. It contains workspace, teaching,
   mechanics, UI-pattern, and rights metadata only.
-- UI fixture compilation lives under `scripts/ui-fixtures/`, UI orchestration
-  under `scripts/ui/`, and Workbench runtime code under
-  `packages/ui-workbench/`.
+- UI orchestration lives under `scripts/ui/`. Registry Storybook and browser
+  proofs live under `registry/`; each reference game owns its real local scenario
+  development entry and Playwright suite.
 
 ## Generated output
 
 Runtime wire schemas and their inferred DTOs are authored in the SDK shared owner.
 
 Authoring uses ordinary source imports and in-memory manifest compilation.
-Workbench fixtures beneath `build/` are ignored local products; UI commands
-preserve the last good output after a failed rebuild.
+Storybook builds and browser screenshots beneath `build/` are ignored local products.
 
 ## Reference-game workflow
 
 Read the game-local `rule.md`, then a typed source under `test/scenarios/`.
-Use `dreamboard test inspect` and `dreamboard test explore` to examine named
-checkpoints and obtain replay-accepted commands. Keep the typed scenario as the
-authored authority; generated projections and fixtures are disposable.
+Use the local scenario developer entry to select named checkpoints, switch seats,
+and save or restore JSON checkpoints. Testing sources expose inspect/explore/apply
+for programmatic inspection. Keep typed scenarios as the authored authority.
 
 From the repository root:
 
@@ -78,24 +76,16 @@ uses `workspace:*` dependencies and one root lockfile.
 
 ## UI workflow
 
-- Use `pnpm ui storybook` for component presentation, responsive layout,
-  accessibility, and motion.
-- Use `pnpm ui workbench --scenario <id>` for reducer-backed runtime behavior.
-  Add `--source` only for the local HMR loop; proof paths consume the built SDK.
-- Use `pnpm ui test --scenario <id>` for one focused Workbench scenario.
-- Use `pnpm ui test` for Storybook checks, the complete browser-driver and
-  keyboard suites, and the two smoke scenarios: `hearts.dealt-hand.desktop`
-  and `hearts.final-outcome.mobile`. The mobile smoke is a projection-only
-  scenario until a converted game provides a mobile interaction scenario.
-- Use `pnpm ui test --all` to add every authored Workbench scenario.
-- Use `pnpm ui snapshots update` only when intentionally accepting new tracked
-  Storybook baselines.
+- Use `pnpm ui storybook` for source-registry components and real scenario stories.
+- Use `pnpm ui dev --game <id>` for the authored local development entry.
+  Its URL selects `scenario`, `at` checkpoint, and `as` player ID.
+- Use `pnpm ui test --game <id>` for one game's desktop/touch browser suite.
+- Use `pnpm ui test` for pure and bound registry installation proof, Storybook
+  browser checks, and both real game browser suites.
 
-Workbench browser tests must perform the physical action and assert measured
-projection, semantic, draft, submission, actuator, layout, motion, and Axe
-results directly. Touch-capable projects use `tap()`; desktop projects use
-`click()`. Drag coverage belongs to the browser-driver suite. Screenshots,
-traces, and video are ordinary failure artifacts.
+Browser tests perform physical actions and assert authoritative frame changes,
+private-seat isolation, drafts, cancellation, restore, keyboard/touch access,
+layout and Axe results directly. Screenshots and traces are failure artifacts.
 
 ## Release verification
 
@@ -104,8 +94,8 @@ smokes that artifact, and verifies the reference games against the
 same file. It writes the immutable candidate description to
 `build/release/candidate/candidate.json`.
 
-Browser UI verification remains a separate CI lane. Run `pnpm ui test` for a
-pull request and `pnpm ui test --all` on the main branch.
+Browser UI verification remains a separate CI lane. Run `pnpm ui test` for both
+pull requests and the main branch.
 
 ## Pull request handoff
 

@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
 import { readFile, readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
+import { readCatalogs, catalogVersion, type Catalogs } from "./catalogs.ts";
 
 import {
   parseReferenceGameManifest,
   type ReferenceGameManifest,
-} from "../../packages/sdk/src/reference-games/schema.ts";
+} from "./schema.ts";
 
 export const SDK_PACKAGE_NAME = "@dreamboard-games/sdk";
 
@@ -22,6 +23,7 @@ const dependencySections = [
 export type PackageJson = {
   readonly name?: string;
   readonly version?: string;
+  packageManager?: string;
   readonly scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   readonly devDependencies?: Record<string, string>;
@@ -83,7 +85,11 @@ async function assertWorkspaceFile(
   }
 }
 
-function validateDependencies(gameId: string, packageJson: PackageJson): void {
+function validateDependencies(
+  gameId: string,
+  packageJson: PackageJson,
+  catalogs: Catalogs,
+): void {
   const entries = dependencyEntries(packageJson);
   const sdkEntries = entries.filter(({ name }) => name === SDK_PACKAGE_NAME);
   if (
@@ -98,9 +104,7 @@ function validateDependencies(gameId: string, packageJson: PackageJson): void {
 
   for (const { section, name, specifier } of entries) {
     if (specifier.startsWith("catalog:")) {
-      throw new Error(
-        `${gameId}: ${section}.${name} must not use a pnpm catalog`,
-      );
+      catalogVersion(catalogs, name, specifier);
     }
     if (
       (specifier.startsWith("workspace:") && name !== SDK_PACKAGE_NAME) ||
@@ -132,6 +136,7 @@ function validateDependencies(gameId: string, packageJson: PackageJson): void {
 async function loadReferenceGame(
   dir: string,
   id: string,
+  catalogs: Catalogs,
 ): Promise<ReferenceGame> {
   const manifestPath = path.join(dir, "reference-game.json");
   const packageJsonPath = path.join(dir, "package.json");
@@ -150,7 +155,7 @@ async function loadReferenceGame(
     throw new Error(`${id}: reference-game.json id is ${manifest.id}`);
   }
   const packageJson = (await readJson(packageJsonPath)) as PackageJson;
-  validateDependencies(id, packageJson);
+  validateDependencies(id, packageJson, catalogs);
 
   for (const [label, relativePath] of Object.entries(manifest.workspace)) {
     await assertWorkspaceFile(dir, id, `workspace.${label}`, relativePath);
@@ -190,8 +195,11 @@ export async function discoverReferenceGames(
   }
   const selected = options.gameId ? [options.gameId] : ids;
   if (selected.length === 0) throw new Error("No reference games were found.");
+  const catalogs = await readCatalogs(options.root);
   return Promise.all(
-    selected.map((id) => loadReferenceGame(path.join(gamesRoot, id), id)),
+    selected.map((id) =>
+      loadReferenceGame(path.join(gamesRoot, id), id, catalogs),
+    ),
   );
 }
 
