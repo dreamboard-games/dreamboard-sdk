@@ -51,6 +51,7 @@ export type HostToPluginPayload =
 
 export type PluginToHostPayload =
   | { readonly type: "runtime.ready" }
+  | { readonly type: "runtime.resume" }
   | {
       readonly type: "runtime.ack";
       /** Echoes the host envelope sequence. It is delivery order only. */
