@@ -37,6 +37,8 @@ describe("source request lifecycle", () => {
       const promise = x.source.submit("move", { target: "a" });
       if (frameFirst) x.frame(frame(2));
       expect(x.source.store.get().request?.phase).toBe("awaiting-result");
+      expect(Object.isFrozen(x.source.store.get())).toBe(true);
+      expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
       x.result({
         type: "interaction.result",
         clientActionId: x.send.mock.calls[0][0].clientActionId,
@@ -45,6 +47,7 @@ describe("source request lifecycle", () => {
       expect((await promise).accepted).toBe(true);
       if (!frameFirst) {
         expect(x.source.store.get().request?.phase).toBe("awaiting-frame");
+        expect(Object.isFrozen(x.source.store.get().request)).toBe(true);
         x.frame(frame(1));
         expect(x.source.store.get().request).not.toBeNull();
         x.frame(frame(2));
@@ -129,7 +132,9 @@ describe("source request lifecycle", () => {
       true,
     );
     const previous = source.store.get().snapshot?.frame;
+    expect(Object.isFrozen(source.store.get())).toBe(true);
     source.dispose();
+    expect(Object.isFrozen(source.store.get())).toBe(true);
     expect(source.store.get().snapshot?.frame).toBe(previous);
   });
 });

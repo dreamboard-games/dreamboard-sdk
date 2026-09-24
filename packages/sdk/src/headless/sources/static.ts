@@ -21,18 +21,22 @@ export function staticSource(input: SourceSnapshot): GameSource {
   const snapshot = immutableCopy(snapshotSchema.parse(input));
   if (!snapshot.players.some((player) => player.playerId === snapshot.me))
     throw new Error("Gameplay seat is absent from session.");
-  const store = createStore<SourceState>({
-    snapshot,
-    connection: "ready",
-    request: null,
-  });
+  const store = createStore<SourceState>(
+    Object.freeze({
+      snapshot,
+      connection: "ready",
+      request: null,
+    }),
+  );
   return {
     store: {
       get: () => store.get(),
       subscribe: (listener) => store.subscribe(listener),
     },
     dispose() {
-      store.setState((state) => ({ ...state, connection: "closed" }));
+      store.setState((state) =>
+        Object.freeze({ ...state, connection: "closed" }),
+      );
     },
   };
 }

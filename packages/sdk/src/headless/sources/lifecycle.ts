@@ -33,11 +33,13 @@ export function createSourceLifecycle(options: {
   timeoutMs?: number;
 }) {
   let context = options.context ? immutableCopy(options.context) : null;
-  const store = createStore<SourceState>({
-    snapshot: null,
-    connection: "connecting",
-    request: null,
-  });
+  const store = createStore<SourceState>(
+    Object.freeze({
+      snapshot: null,
+      connection: "connecting",
+      request: null,
+    }),
+  );
   let session: PluginSessionDescriptor | null = null;
   let basis: GameplayBasis | null = null;
   let pending: Pending | null = null;
@@ -49,7 +51,13 @@ export function createSourceLifecycle(options: {
     timer = undefined;
   };
   const patch = (update: Partial<SourceState>) =>
-    store.setState((state) => Object.freeze({ ...state, ...update }));
+    store.setState((state) =>
+      Object.freeze({
+        ...state,
+        ...update,
+        ...(update.request ? { request: Object.freeze(update.request) } : {}),
+      }),
+    );
   const fail = (error: Error) => {
     if (closed) return;
     closed = true;

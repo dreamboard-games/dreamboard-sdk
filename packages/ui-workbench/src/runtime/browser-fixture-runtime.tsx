@@ -229,6 +229,9 @@ function createBrowserFixtureHostHarness(
       case "runtime.ack":
         record({ kind: "ack-received" });
         break;
+      case "runtime.resume":
+        if (currentFrameId) publishFrame(currentFrameId);
+        break;
       case "runtime.error":
         record({ kind: "diagnostic" });
         break;
