@@ -1,0 +1,282 @@
+@layer theme, base, components, utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #192b35;
+  --card: #ffffff;
+  --card-foreground: #192b35;
+  --popover: #ffffff;
+  --popover-foreground: #192b35;
+  --primary: #23576a;
+  --primary-foreground: #ffffff;
+  --secondary: #e4edf0;
+  --secondary-foreground: #203f4b;
+  --muted: #edf2f4;
+  --muted-foreground: #526570;
+  --accent: #d7e9ec;
+  --accent-foreground: #203f4b;
+  --destructive: #b32b37;
+  --border: #c7d4db;
+  --input: #c7d4db;
+  --ring: #147f97;
+  --radius: 0.5rem;
+  --table: #164d50;
+  --table-foreground: #f3fbfb;
+  --card-w: 6.5rem;
+  --card-aspect: 5 / 7;
+  --card-radius: 0.55rem;
+  --card-face: #fffefb;
+  --card-back: #23576a;
+  --card-lift: -0.5rem;
+  --eligible: #23794e;
+  --selected: #136fb0;
+  --invalid: #b32b37;
+  --seat-1: #1765a1;
+  --seat-2: #b23f4c;
+  --seat-3: #28734e;
+  --seat-4: #85622b;
+  --seat-5: #7552a2;
+  --seat-6: #237b80;
+}
+.dark {
+  --background: #172c35;
+  --foreground: #edf4f7;
+  --card: #213b46;
+  --card-foreground: #edf4f7;
+  --popover: #213b46;
+  --popover-foreground: #edf4f7;
+  --primary: #abd5e1;
+  --primary-foreground: #173b48;
+  --secondary: #304d59;
+  --secondary-foreground: #edf4f7;
+  --muted: #304d59;
+  --muted-foreground: #b6cbd4;
+  --accent: #345c65;
+  --accent-foreground: #edf4f7;
+  --border: #526d79;
+  --input: #526d79;
+  --ring: #abd5e1;
+  --eligible: #71cda0;
+  --selected: #79bdf0;
+  --invalid: #ff97a0;
+}
+@layer components {
+  [data-seat="1"] {
+    --seat-color: var(--seat-1);
+  }
+  [data-seat="2"] {
+    --seat-color: var(--seat-2);
+  }
+  [data-seat="3"] {
+    --seat-color: var(--seat-3);
+  }
+  [data-seat="4"] {
+    --seat-color: var(--seat-4);
+  }
+  [data-seat="5"] {
+    --seat-color: var(--seat-5);
+  }
+  [data-seat="6"] {
+    --seat-color: var(--seat-6);
+  }
+  .db-card {
+    position: relative;
+    box-sizing: border-box;
+    width: var(--card-w);
+    aspect-ratio: var(--card-aspect);
+    border: 1px solid #aebac1;
+    border-radius: var(--card-radius);
+    background: var(--card-face);
+    color: #192b35;
+    box-shadow: 0 2px 3px #00182326;
+    display: grid;
+    place-items: center;
+    font-family: Georgia, "Times New Roman", serif;
+    flex: none;
+  }
+  .db-card[data-card-state="eligible"] {
+    outline: 2px dashed var(--eligible);
+    outline-offset: 3px;
+  }
+  .db-card[data-card-state="selected"] {
+    outline: 3px solid var(--selected);
+    outline-offset: 3px;
+    transform: translateY(var(--card-lift));
+  }
+  .db-card[data-card-state="invalid"] {
+    outline: 3px double var(--invalid);
+    outline-offset: 3px;
+  }
+  .db-card-back {
+    background:
+      repeating-linear-gradient(45deg, transparent 0 5px, #ffffff22 5px 6px),
+      var(--card-back);
+    border: 5px solid var(--card-face);
+  }
+  .db-card[data-suit="hearts"],
+  .db-card[data-suit="diamonds"] {
+    color: #b32b37;
+  }
+  .db-card-corner {
+    position: absolute;
+    inset: 0.35rem auto auto 0.5rem;
+    font-size: 1.1rem;
+    line-height: 1;
+    text-align: center;
+  }
+  .db-card-corner-bottom {
+    inset: auto 0.5rem 0.35rem auto;
+    transform: rotate(180deg);
+  }
+  .db-card-suit {
+    font-size: 3rem;
+  }
+  .db-pile {
+    margin: 0;
+    width: max-content;
+  }
+  .db-pile-top {
+    width: var(--card-w);
+    aspect-ratio: var(--card-aspect);
+    display: grid;
+    place-items: center;
+  }
+  .db-pile-top[data-empty] {
+    box-sizing: border-box;
+    border: 1px dashed currentColor;
+    border-radius: var(--card-radius);
+    font-size: 0.875rem;
+  }
+  .db-pile figcaption {
+    margin-top: 0.65rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    font-size: 0.875rem;
+  }
+  .db-grid {
+    width: 100%;
+    max-width: 32rem;
+    height: auto;
+    overflow: visible;
+  }
+  .db-grid-cell {
+    stroke: var(--background);
+    stroke-width: 2;
+  }
+  .db-grid-label {
+    fill: var(--foreground);
+    font:
+      12px system-ui,
+      sans-serif;
+    pointer-events: none;
+  }
+  .db-players,
+  .db-dice,
+  .db-event-log {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .db-players {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .db-players li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .db-players small {
+    display: block;
+    color: var(--muted-foreground);
+    margin-top: 0.2rem;
+  }
+  .db-seat-mark {
+    width: 0.7rem;
+    height: 1.7rem;
+    border-radius: 0.25rem;
+    background: var(--seat-color);
+  }
+  .db-player-detail {
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+  }
+  .db-resources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
+  }
+  .db-resources > div {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--muted);
+    border-radius: 0.35rem;
+  }
+  .db-resources dt {
+    font-size: 0.875rem;
+  }
+  .db-resources dd {
+    margin: 0;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+  .db-dice {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+  }
+  .db-dice li {
+    display: grid;
+    place-items: center;
+    min-width: 2.75rem;
+    height: 2.75rem;
+    padding-inline: 0.25rem;
+    background: var(--card-face);
+    color: #192b35;
+    border: 1px solid #aebac1;
+    border-radius: 0.65rem;
+    box-shadow: 0 2px 0 #00182326;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .db-event-log li {
+    padding-block: 0.7rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .db-event-log small {
+    display: block;
+    color: var(--muted-foreground);
+    margin-top: 0.25rem;
+  }
+  .db-empty {
+    color: var(--muted-foreground);
+  }
+  .db-standings {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .db-standings caption {
+    text-align: start;
+    font-weight: 700;
+    padding-bottom: 0.75rem;
+  }
+  .db-standings th,
+  .db-standings td {
+    text-align: start;
+    padding: 0.65rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .db-standings thead {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+  }
+  .db-standings th:last-child,
+  .db-standings td:last-child {
+    text-align: end;
+  }
+}

@@ -16,8 +16,32 @@ Root inspected desktop/mobile renders and independently passed
 also passed the real shadcn SDK-free consumer installation/typecheck and 26 browser
 renders across desktop/mobile viewports.
 
-Integrate these two commits at layer 006, resolving the additive workspace and
-lockfile changes. Root `pnpm check` wiring, bound registry items, installation into
-both authored games, scenario stories and real interaction/accessibility browser
-proof remain required. This receipt does not mark layer 006 complete or claim the
-registry hostname has been deployed.
+The pure foundation is now integrated on `codex/sdk-source-registry` after board
+geometry, preserving honeycomb-grid 4.1.5. `scripts/check.ts` explicitly validates
+registry metadata/imports; existing workspace tasks typecheck its components,
+stories and scripts, then build all eleven installable items. Both jobs in the
+existing CI UI lane retain their SDK/workbench gates and additionally run registry
+validation, real shadcn installation/typecheck, Storybook build and browser smoke.
+
+Local integration proof commands (Node 24, pnpm 10.4.1):
+
+```sh
+pnpm check
+pnpm --dir registry smoke
+pnpm --dir registry storybook:build
+pnpm --dir registry browser:smoke
+```
+
+Integration verification passed on 2026-09-24: root `pnpm check` including both
+packed reference games; all eleven items installed and typechecked in a disposable
+SDK-free consumer; Storybook built; all thirteen stories rendered at both 390px
+and 1280px with keyboard, overflow, overlay and utility-override assertions.
+Local logs: `/tmp/registry-integration-check.log`,
+`/tmp/registry-integration-smoke.log`, `/tmp/registry-integration-storybook.log`
+and `/tmp/registry-integration-browser.log`. Root independently reviewed the
+four integration files and passed `pnpm --dir registry check` again
+(`/tmp/registry-integration-root-check.log`).
+
+Bound registry items, installation into both authored games, scenario stories and
+real game interaction/accessibility proof remain required. This receipt does not
+mark layer 006 complete or claim the registry hostname has been deployed.

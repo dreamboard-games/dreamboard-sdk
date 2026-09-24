@@ -1,0 +1,29 @@
+{
+  "name": "@dreamboard/registry",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "shadcn build registry.json --output build/r",
+    "validate": "node scripts/validate.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm validate && pnpm typecheck && pnpm build",
+    "storybook": "storybook dev -p 6007",
+    "storybook:build": "storybook build -o build/storybook",
+    "smoke": "node scripts/install-smoke.ts",
+    "browser:smoke": "node scripts/browser-smoke.ts"
+  },
+  "devDependencies": {
+    "shadcn": "4.21.0",
+    "typescript": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/node": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "storybook": "10.4.6",
+    "@storybook/react-vite": "10.4.6",
+    "vite": "catalog:",
+    "@playwright/test": "catalog:",
+    "zod": "catalog:"
+  }
+}
