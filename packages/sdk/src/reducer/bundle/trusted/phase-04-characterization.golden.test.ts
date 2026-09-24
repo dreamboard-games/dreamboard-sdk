@@ -4,10 +4,9 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createReducerBundle,
-  defineEmptyView,
   defineGameContract,
   defineInteraction,
-  definePlayerView,
+  defineView,
   definePhase,
   type ReducerDiagnosticEvent,
 } from "../../../reducer/internal";
@@ -220,19 +219,14 @@ function createCharacterizationGame() {
         initialState: () => ({ visits: 10 }),
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: definePlayerView<typeof contract>()({
-        project({ state, playerId }) {
-          return {
-            playerId,
-            phase: state.flow.currentPhase,
-            score: state.publicState.score,
-            visits: state.phase.visits,
-          };
-        },
-      }),
-    },
+    view: defineView<typeof contract>()(({ state, playerId }) => {
+      return {
+        playerId,
+        phase: state.flow.currentPhase,
+        score: state.publicState.score,
+        visits: state.phase.visits,
+      };
+    }),
   });
 }
 

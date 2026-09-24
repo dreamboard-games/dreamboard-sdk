@@ -1,4 +1,3 @@
-import { createDerivedResolver, type DerivedResolver } from "../../derived";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -209,9 +208,6 @@ export function collectInputDomains<
     (queriesLazy ??= createStateQueries(
       domainState as unknown as { table: CollectorState["table"] },
     ) as unknown as TableQueriesOfState<DomainState>);
-  let derivedLazy: DerivedResolver | null = options.derived ?? null;
-  const derived = () =>
-    (derivedLazy ??= createDerivedResolver(domainState, { q: queries() }));
   const result: Record<string, InputDomainDescriptor> = {};
   for (const [key, collector] of Object.entries(collectors)) {
     if (collector.kind === "rng") {
@@ -239,7 +235,7 @@ export function collectInputDomains<
           domainState,
           playerId as string,
           queries() as unknown,
-          derived(),
+
           {},
         ),
         collector,
@@ -268,7 +264,7 @@ export function collectInputDomains<
               domainState,
               playerId as string,
               queries() as unknown,
-              derived(),
+
               values,
             ),
             collector,
@@ -330,9 +326,6 @@ export function collectInteractionInputs<
     (queriesLazy ??= createStateQueries(
       domainState as unknown as { table: CollectorState["table"] },
     ) as unknown as TableQueriesOfState<DomainState>);
-  let derivedLazy: DerivedResolver | null = options.derived ?? null;
-  const derived = () =>
-    (derivedLazy ??= createDerivedResolver(domainState, { q: queries() }));
   return Object.entries(collectors).flatMap(([key, collector]) => {
     if (collector.kind === "rng") {
       return [];
@@ -345,7 +338,7 @@ export function collectInteractionInputs<
       domainState,
       playerId as string,
       queries() as unknown,
-      derived(),
+
       domain,
     );
     const defaultValue =

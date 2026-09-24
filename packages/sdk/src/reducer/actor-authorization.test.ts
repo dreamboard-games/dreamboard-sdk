@@ -4,7 +4,6 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   choiceTarget,
-  defineEmptyView,
   defineGameContract,
   defineInteraction,
   formInput,
@@ -185,10 +184,7 @@ describe("recipient-based response authorization", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     return createReducerTestingBundle(game);
   }
@@ -335,10 +331,7 @@ describe("phase actor, step, and cost resolution", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     return createReducerTestingBundle(game);
   }
@@ -515,10 +508,7 @@ describe("default action-kind authorization", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     return createReducerTestingBundle(game);
   }
@@ -648,10 +638,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     return createReducerTestingBundle(game);
   }
@@ -727,10 +714,7 @@ describe("action-kind interactions with a `actor` selector", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({
@@ -795,10 +779,7 @@ describe("author `available` predicate composes with authorization", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const initial = await bundle.initialize({

@@ -18,5 +18,5 @@ export default game.assemble({
       interactions: {},
     }),
   },
-  views: { shared: game.views.empty(), player: game.views.empty() },
+  view: () => ({}),
 });

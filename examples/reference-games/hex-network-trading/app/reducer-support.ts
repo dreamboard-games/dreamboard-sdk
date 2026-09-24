@@ -1,3 +1,4 @@
+import { memoize } from "@dreamboard-games/sdk/reducer";
 import type {
   GameEvent,
   GameOutcome,
@@ -77,20 +78,16 @@ type Occupancy = {
   readonly banditsHexId: SpaceId | null;
 };
 
-const occupancyCache = new WeakMap<
-  GameState["table"]["componentLocations"],
-  Occupancy
->();
-
-function ownerIdOf(pieceId: PieceId, state: GameState): PlayerId | null {
-  const result = ids.playerId.safeParse(state.table.pieces[pieceId]?.ownerId);
+function ownerIdOf(
+  pieceId: PieceId,
+  table: GameState["table"],
+): PlayerId | null {
+  const result = ids.playerId.safeParse(table.pieces[pieceId]?.ownerId);
   return result.success ? result.data : null;
 }
 
-function occupancy(state: GameState): Occupancy {
-  const locations = state.table.componentLocations;
-  const cached = occupancyCache.get(locations);
-  if (cached) return cached;
+const occupancyForTable = memoize((table: GameState["table"]): Occupancy => {
+  const locations = table.componentLocations;
 
   const campsByIntersectionId: Partial<Record<VertexId, PlayerId>> = {};
   const trailsByEdgeId: Partial<Record<EdgeId, PlayerId>> = {};
@@ -98,10 +95,10 @@ function occupancy(state: GameState): Occupancy {
   let banditsHexId: SpaceId | null = null;
 
   for (const pieceId of literals.pieceIds) {
-    const piece = state.table.pieces[pieceId];
+    const piece = table.pieces[pieceId];
     const location = locations[pieceId];
     if (!piece || !location) continue;
-    const ownerId = ownerIdOf(pieceId, state);
+    const ownerId = ownerIdOf(pieceId, table);
     if (
       location.type === "Detached" &&
       ownerId &&
@@ -144,8 +141,11 @@ function occupancy(state: GameState): Occupancy {
     detachedByPlayerAndType,
     banditsHexId,
   };
-  occupancyCache.set(locations, resolved);
   return resolved;
+});
+
+function occupancy(state: GameState): Occupancy {
+  return occupancyForTable(state.table);
 }
 
 export function campsByIntersectionId(

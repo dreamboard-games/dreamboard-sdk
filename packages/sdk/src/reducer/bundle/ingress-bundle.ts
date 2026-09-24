@@ -9,7 +9,7 @@ import type {
   ReducerGameContractLike,
   ReducerGameDefinition,
   ReducerReject,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import type { DispatchTraceEntry } from "../core/types";
 import type {
@@ -160,9 +160,9 @@ function toWireDispatchTrace<State, PlayerId extends string>(result: {
 export function createReducerTestingBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
 ): ReducerBundleTestingRuntime {
   const trustedBundle = createTrustedReducerBundle(definition, options);
@@ -308,8 +308,8 @@ export function createReducerTestingBundle<
     /**
      * Wire-side passthrough for the session-scoped static projection. The
      * host calls this once per reducer session, caches the payload, and
-     * thereafter merges it back into every seat view on the client. Returns
-     * `null` when `defineGame` did not declare a `staticView`.
+     * thereafter merges it back into every seat view on the client.
+     * Board data is owned by the compiled manifest.
      */
     boardStatic() {
       return trustedBundle.boardStatic() as Wire.BoardStaticProjection | null;
@@ -430,9 +430,9 @@ export function createReducerTestingBundle<
 export function createReducerBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
 ): ReducerBundle {
   const runtime = createReducerTestingBundle(definition, options);

@@ -6,7 +6,6 @@ import {
   type InputKeysWithCollectorKindOfDefinition,
   type InteractionIdOfDefinitionPhase,
   type PhaseNamesOfDefinition,
-  type ViewNamesOfDefinition,
   type ViewOfDefinition,
 } from "../../reducer/advanced.js";
 import type { InteractionDescriptor } from "../types/plugin-state.js";
@@ -60,11 +59,7 @@ export interface GameUiManifestTypes {
 }
 
 export type GameUiPhaseName<Game> = PhaseNamesOfDefinition<Game>;
-export type GameUiViewName<Game> = ViewNamesOfDefinition<Game>;
-export type GameUiView<Game> =
-  Extract<"player", GameUiViewName<Game>> extends never
-    ? never
-    : ViewOfDefinition<Game, Extract<"player", GameUiViewName<Game>>>;
+export type GameUiView<Game> = ViewOfDefinition<Game>;
 
 export type GameUiInteractionIdForPhase<
   Game,

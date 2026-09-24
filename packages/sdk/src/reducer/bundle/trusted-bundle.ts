@@ -5,7 +5,7 @@ import type {
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerGameDefinition,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import type { InteractionDiagnosticsMode } from "./trusted/interaction-types";
 import { createReducerExecutor } from "./trusted/reducer-executor";
@@ -42,11 +42,11 @@ function inputIdentity(input: { playerId: string; interactionId: string }) {
 export function createTrustedReducerBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
   options: ReducerBundleOptions = {},
-): TrustedReducerBundle<Contract, Definitions, Views> {
+): TrustedReducerBundle<Contract, Definitions, View> {
   const scope = createTrustedRuntimeScope(definition, {
     diagnostics: resolveDiagnosticsSink(options),
   });

@@ -51,7 +51,7 @@ const game = {
       },
     },
   },
-  views: {},
+  view: () => ({}),
 } as const;
 
 const { defineScenario } = createScenarioAuthoring(game);

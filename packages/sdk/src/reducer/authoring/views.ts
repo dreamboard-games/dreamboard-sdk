@@ -1,69 +1,17 @@
-import type {
-  ExactManifestContractOf,
-  StaticViewDefinition,
-  EmptyViewDefinition,
-  PlayerViewDefinition,
-  SharedViewDefinition,
-} from "../model";
-
+import type { ViewDefinition } from "../model";
 import type {
   AnyReducerGameContract,
   ContractManifest,
   ContractState,
 } from "./types";
 
-export function defineSharedView<Contract extends AnyReducerGameContract>() {
+/** Contextual typing for a view defined outside the game assembly module. */
+export function defineView<Contract extends AnyReducerGameContract>() {
   return <Projection>(
-    definition: SharedViewDefinition<
+    view: ViewDefinition<
       ContractState<Contract>,
       ContractManifest<Contract>,
       Projection
     >,
-  ): SharedViewDefinition<
-    ContractState<Contract>,
-    ContractManifest<Contract>,
-    Projection
-  > => definition;
-}
-
-export function definePlayerView<Contract extends AnyReducerGameContract>() {
-  return <SharedProjection = unknown, Projection = unknown>(
-    definition: PlayerViewDefinition<
-      ContractState<Contract>,
-      ContractManifest<Contract>,
-      SharedProjection,
-      Projection
-    >,
-  ): PlayerViewDefinition<
-    ContractState<Contract>,
-    ContractManifest<Contract>,
-    SharedProjection,
-    Projection
-  > => definition;
-}
-
-export function defineEmptyView<
-  Contract extends AnyReducerGameContract,
->(): EmptyViewDefinition<ContractState<Contract>, ContractManifest<Contract>> {
-  return {
-    project: () => ({}),
-  } as EmptyViewDefinition<ContractState<Contract>, ContractManifest<Contract>>;
-}
-
-/**
- * Factory for the session-scoped static view (see {@link StaticViewDefinition}).
- * Kept separate from dynamic view helpers because the argument shape is
- * structurally different: it exposes only the manifest and generated static
- * queries, with no `state`, `playerId`, `runtime`, or
- * `accept/reject`. That shape is what prevents authors from accidentally
- * projecting per-tick state into the once-per-session payload.
- */
-export function defineStaticView<Contract extends AnyReducerGameContract>() {
-  return <Projection>(
-    definition: StaticViewDefinition<
-      ExactManifestContractOf<Contract>,
-      Projection
-    >,
-  ): StaticViewDefinition<ExactManifestContractOf<Contract>, Projection> =>
-    definition;
+  ) => view;
 }

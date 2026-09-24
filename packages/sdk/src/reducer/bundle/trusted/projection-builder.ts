@@ -2,7 +2,7 @@ import type { Wire } from "@dreamboard-games/reducer-contract";
 import type {
   PhaseMapOf,
   ReducerGameContractLike,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import type {
   InteractionDescriptorShape,
@@ -51,21 +51,21 @@ type CanonicalJson =
 type InteractionResolverFor<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<typeof createInteractionResolver<Contract, Definitions, Views>>;
+  View extends ViewOfContract<Contract>,
+> = ReturnType<typeof createInteractionResolver<Contract, Definitions, View>>;
 
 export function createProjectionBuilder<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
-  interactions: InteractionResolverFor<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
+  interactions: InteractionResolverFor<Contract, Definitions, View>,
 ) {
   type SessionState = TrustedSessionState<Contract>;
   type DomainState = TrustedDomainState<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, Views>;
+  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
 
   function createDescriptorRegistry(
@@ -424,38 +424,20 @@ export function createProjectionBuilder<
     };
   }
 
-  function resolveSharedViewFor(
-    combinedState: State,
-    projection: ProjectionContext<DomainState>,
-  ): unknown {
-    const view = scope.definition.views.shared;
-    const viewArgs = {
-      ...scope.buildContext(combinedState),
-      ...scope.runtimeHelpers,
-      q: projection.q,
-      derived: projection.derived,
-      state: projection.domainState,
-    } as unknown as Parameters<typeof view.project>[0];
-    return view.project(viewArgs);
-  }
-
   function resolvePlayerViewFor(
     combinedState: State,
     playerId: PlayerId,
-    sharedView: unknown,
     projection: ProjectionContext<DomainState>,
   ): unknown {
-    const view = scope.definition.views.player;
+    const view = scope.definition.view;
     const viewArgs = {
       ...scope.buildContext(combinedState),
       ...scope.runtimeHelpers,
       q: projection.q,
-      derived: projection.derived,
       state: projection.domainState,
       playerId,
-      shared: sharedView,
-    } as unknown as Parameters<typeof view.project>[0];
-    return view.project(viewArgs);
+    } as unknown as Parameters<typeof view>[0];
+    return view(viewArgs);
   }
 
   function project({
@@ -479,12 +461,6 @@ export function createProjectionBuilder<
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
     };
     const seats: Record<string, SeatProjection> = {};
-    const sharedView =
-      projectionMode === "full"
-        ? measureProjectionTiming(timing, "resolveViewMs", () =>
-            resolveSharedViewFor(combinedState, projection),
-          )
-        : undefined;
     for (const [actorSeat, playerId] of playerIds.entries()) {
       const availableInteractions = measureProjectionTiming(
         timing,
@@ -505,12 +481,7 @@ export function createProjectionBuilder<
         projectionMode === "full"
           ? {
               view: measureProjectionTiming(timing, "resolveViewMs", () =>
-                resolvePlayerViewFor(
-                  combinedState,
-                  playerId,
-                  sharedView,
-                  projection,
-                ),
+                resolvePlayerViewFor(combinedState, playerId, projection),
               ),
               zones: measureProjectionTiming(
                 timing,
@@ -537,7 +508,8 @@ export function createProjectionBuilder<
         stageSeats: resolveStageSeatsFor(state),
         simultaneousPhase: resolveSimultaneousPhaseFor(state),
         schedulerFlow: resolveSchedulerFlowFor(state, projection),
-        ...(projectionMode === "full" ? { sharedView } : {}),
+        // Legacy transport slot stays empty: a seat view is never public data.
+        ...(projectionMode === "full" ? { sharedView: {} } : {}),
         interactionsByRef: registry.entries(),
         seats,
       },
@@ -551,7 +523,6 @@ export function createProjectionBuilder<
     resolveSchedulerFlowFor,
     resolveStageSeatsFor,
     resolvePlayerViewFor,
-    resolveSharedViewFor,
     resolveZoneHandlesFor,
   };
 }

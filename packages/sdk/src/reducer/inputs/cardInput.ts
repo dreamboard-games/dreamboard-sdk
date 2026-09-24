@@ -63,7 +63,7 @@ export function cardInput<
         ) => ReturnType<CardTargetRule<CollectorState, string>["validate"]>)
       | undefined,
     ...(dependsOn ? { dependsOn } : {}),
-    domain: (state, playerId, q, _derived, values) => ({
+    domain: (state, playerId, q, values) => ({
       type: "cardTarget" as const,
       projection: "resolved" as const,
       targetKind: target.targetKind,

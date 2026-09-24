@@ -27,9 +27,7 @@ import type {
   InputCollector,
   InteractionMap,
   PhaseDefinition,
-  PlayerViewDefinition,
-  SharedViewDefinition,
-  StaticViewDefinition,
+  ViewDefinition,
 } from "./spec";
 
 export type ReducerGameContract<
@@ -222,23 +220,11 @@ export type ResolvedGameSessionOf<
   OptionsOfContract<Contract>
 >;
 
-export type ViewMapOf<
-  Contract,
-  SharedProjection = unknown,
-  PlayerProjection = unknown,
-> = {
-  shared: SharedViewDefinition<
-    BaseGameStateOfContract<Contract>,
-    ManifestContractOf<Contract>,
-    SharedProjection
-  >;
-  player: PlayerViewDefinition<
-    BaseGameStateOfContract<Contract>,
-    ManifestContractOf<Contract>,
-    SharedProjection,
-    PlayerProjection
-  >;
-};
+export type ViewOfContract<Contract, Projection = unknown> = ViewDefinition<
+  BaseGameStateOfContract<Contract>,
+  ManifestContractOf<Contract>,
+  Projection
+>;
 
 type PhasesOfDefinition<Definition> = Definition extends {
   phases: infer Definitions extends Record<string, unknown>;
@@ -246,35 +232,15 @@ type PhasesOfDefinition<Definition> = Definition extends {
   ? Definitions
   : never;
 
-export type ViewsOfDefinition<Definition> = Definition extends {
-  views: infer Views;
-}
-  ? Views
-  : never;
-
 type NonNeverKeys<Registry> = {
   [Key in keyof Registry]-?: [Registry[Key]] extends [never] ? never : Key;
 }[keyof Registry];
 
-export type ViewNamesOfDefinition<Definition> = NonNeverKeys<
-  ViewsOfDefinition<Definition>
-> &
-  string;
-
-export type ViewDefinitionByName<
-  Definition,
-  ViewName extends ViewNamesOfDefinition<Definition>,
-> = ViewsOfDefinition<Definition>[ViewName];
-
-export type ViewOfDefinition<
-  Definition,
-  ViewName extends ViewNamesOfDefinition<Definition>,
-> =
-  ViewDefinitionByName<Definition, ViewName> extends {
-    project: (...args: never[]) => infer Projection;
-  }
-    ? Projection
-    : never;
+export type ViewOfDefinition<Definition> = Definition extends {
+  view: (...args: never[]) => infer Projection;
+}
+  ? Projection
+  : never;
 
 export type PhaseNamesOfDefinition<Definition> =
   keyof PhasesOfDefinition<Definition> & string;
@@ -344,30 +310,19 @@ export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
 export type ReducerGameDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > = {
   contract: Contract;
   initial?: InitialStateCallbacks<NoInfer<Contract>>;
   initialPhase?: keyof Definitions & string;
   phases: Definitions;
-  views: Views;
-  /**
-   * Optional session-scoped static projection. Authored via
-   * {@link StaticViewDefinition}; computed once per reducer session from the
-   * manifest and cached by the host. The client merges the
-   * cached payload into every seat view, so the per-tick `project`
-   * call no longer needs to re-serialize static board topology.
-   */
-  staticView?: StaticViewDefinition<
-    ExactManifestContractOf<NoInfer<Contract>>,
-    unknown
-  >;
+  view: View;
 };
 
 export type AnyReducerGameDefinition = ReducerGameDefinition<
   ReducerGameContractLike,
   PhaseMapOf<ReducerGameContractLike>,
-  ViewMapOf<ReducerGameContractLike>
+  ViewOfContract<ReducerGameContractLike>
 >;
 
 // --- Interaction / Zone extractors -------------------------------

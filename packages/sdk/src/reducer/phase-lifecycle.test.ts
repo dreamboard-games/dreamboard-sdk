@@ -6,7 +6,6 @@ import {
   defineGameContract,
   definePhase,
   defineInteraction,
-  defineEmptyView,
   gameEvent,
 } from "./internal";
 import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
@@ -128,10 +127,7 @@ async function lifecycleGame(
         },
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
   });
   const bundle = createReducerBundle(game);
   const initialized = await bundle.initialize({

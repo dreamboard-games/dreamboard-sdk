@@ -1,3 +1,4 @@
+import type { ViewDefinition } from "../model";
 import type { z } from "zod";
 import type {
   CardIdOfManifest,
@@ -10,17 +11,14 @@ import type {
   PhaseNameOfContract,
   PhaseSchemasOfContract,
   OptionsOfContract,
-  PlayerViewDefinition,
   PlayerIdOfState,
   SchemaLike,
-  SharedViewDefinition,
-  StaticViewDefinition,
   TableOfManifest,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
   TiledSpaceIdOfTable,
   TiledVertexIdOfTable,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type {
@@ -48,13 +46,7 @@ import type {
 import { defineGameDefinition } from "./game";
 import { defineInteraction, defineInteractionRule } from "./interaction";
 import { definePhase } from "./phase";
-import {
-  defineEmptyView,
-  definePlayerView,
-  defineSharedView,
-  defineStaticView,
-} from "./views";
-
+import { defineView } from "./views";
 export type ContractWithPhases = AnyReducerGameContract & {
   readonly phases: Record<string, SchemaLike<object>>;
 };
@@ -289,51 +281,6 @@ export type ContractTypes<Contract extends ContractWithPhases> = {
 };
 
 /**
- * View factories bound to the contract's state and manifest. Grouped under
- * `game.views` so the assembled `views: { shared, player }` map reads the same
- * way it is authored.
- */
-export type BoundViewBuilders<Contract extends ContractWithPhases> = {
-  shared<Projection>(
-    definition: SharedViewDefinition<
-      BoundState<Contract>,
-      BoundManifest<Contract>,
-      Projection
-    >,
-  ): SharedViewDefinition<
-    BoundState<Contract>,
-    BoundManifest<Contract>,
-    Projection
-  >;
-  player<SharedProjection = unknown, Projection = unknown>(
-    definition: PlayerViewDefinition<
-      BoundState<Contract>,
-      BoundManifest<Contract>,
-      SharedProjection,
-      Projection
-    >,
-  ): PlayerViewDefinition<
-    BoundState<Contract>,
-    BoundManifest<Contract>,
-    SharedProjection,
-    Projection
-  >;
-  empty(): import("../model").EmptyViewDefinition<
-    BoundState<Contract>,
-    BoundManifest<Contract>
-  >;
-  static<Projection>(
-    definition: StaticViewDefinition<
-      import("../model").ExactManifestContractOf<Contract>,
-      Projection
-    >,
-  ): StaticViewDefinition<
-    import("../model").ExactManifestContractOf<Contract>,
-    Projection
-  >;
-};
-
-/**
  * Rejects phase keys the model did not declare. `PhaseMapOf<Contract>` already
  * requires every declared phase; this closes the other direction so an extra
  * key fails at `assemble` instead of at runtime.
@@ -347,19 +294,27 @@ type NoUndeclaredPhases<Contract, Definitions> = {
 
 export type GameAuthoring<Contract extends ContractWithPhases> = {
   readonly contract: Contract;
-  readonly views: BoundViewBuilders<Contract>;
+  view<Projection>(
+    view: ViewDefinition<
+      BoundState<Contract>,
+      BoundManifest<Contract>,
+      Projection
+    >,
+  ): ViewDefinition<BoundState<Contract>, BoundManifest<Contract>, Projection>;
   /** Compile-time only. Reading any member at runtime throws. */
   readonly types: ContractTypes<Contract>;
-  /** Assemble the final game definition from phases and views. */
+  /** Assemble the final game definition from phases and the seat view. */
   assemble<
     Definitions extends PhaseMapOf<Contract>,
-    Views extends ViewMapOf<Contract>,
+    View extends ViewOfContract<Contract>,
   >(
     definition: Omit<
-      import("../model").ReducerGameDefinition<Contract, Definitions, Views>,
+      import("../model").ReducerGameDefinition<Contract, Definitions, View>,
       "contract"
-    > & { phases: NoUndeclaredPhases<Contract, Definitions> },
-  ): import("../model").ReducerGameDefinition<Contract, Definitions, Views>;
+    > & {
+      phases: NoUndeclaredPhases<Contract, Definitions>;
+    },
+  ): import("../model").ReducerGameDefinition<Contract, Definitions, View>;
   phase<Name extends PhaseNameOfContract<Contract>>(
     name: Name,
   ): PhaseAuthoring<Contract, PhaseSchemasOfContract<Contract>[Name]>;
@@ -503,12 +458,6 @@ export function createContractAuthoring<
   const Contract extends ContractWithPhases,
 >(contract: Contract): GameAuthoring<Contract> {
   const phaseCache = new Map<string, unknown>();
-  const views: BoundViewBuilders<Contract> = {
-    shared: (definition) => defineSharedView<Contract>()(definition),
-    player: (definition) => definePlayerView<Contract>()(definition),
-    empty: () => defineEmptyView<Contract>(),
-    static: (definition) => defineStaticView<Contract>()(definition),
-  };
   const assemble: GameAuthoring<Contract>["assemble"] = (definition) =>
     defineGameDefinition({
       contract,
@@ -516,14 +465,14 @@ export function createContractAuthoring<
         import("../model").ReducerGameDefinition<
           Contract,
           PhaseMapOf<Contract>,
-          ViewMapOf<Contract>
+          ViewOfContract<Contract>
         >,
         "contract"
       >),
     }) as never;
   return {
     contract,
-    views,
+    view: defineView<Contract>(),
     types: phantomTypes<ContractTypes<Contract>>(),
     assemble,
     phase: (name) => {

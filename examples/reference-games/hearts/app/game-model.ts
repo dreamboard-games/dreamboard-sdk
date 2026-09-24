@@ -67,7 +67,7 @@ export const gameOverPhaseStateSchema = z.object({});
 /**
  * The Hearts game: manifest ids, state schemas, phase-state schemas, and error
  * codes, bound once. Phase files call `hearts.phase("<name>")`, views call
- * `hearts.views.*`, `game.ts` calls `hearts.assemble(...)`, and every module
+ * `hearts.view`, `game.ts` calls `hearts.assemble(...)`, and every module
  * names types through `typeof hearts.types.*`.
  */
 export const hearts = createGame({

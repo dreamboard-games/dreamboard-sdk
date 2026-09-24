@@ -3,7 +3,6 @@ import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
 import {
-  defineEmptyView,
   defineGameContract,
   defineInteraction,
   definePhase,
@@ -148,10 +147,7 @@ function createCandidateGame() {
       hidden: () => ({}),
     },
     initialPhase: "play",
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
     phases: {
       play: definePhase<typeof contract>()({
         kind: "player",
@@ -226,7 +222,7 @@ describe("runCandidateVerification", () => {
       given: [],
       when: [],
       then: () => {
-        throw new Error(`assertion failed: ${"x".repeat(3_000)}`);
+        throw new Error(`assertion failed: ${"x".repeat(3000)}`);
       },
     });
     const result = await runCandidateVerification({
@@ -240,7 +236,7 @@ describe("runCandidateVerification", () => {
     });
     expect(
       result.scenarioSummary.scenarios[0]?.diagnostic?.message,
-    ).toHaveLength(2_000);
+    ).toHaveLength(2000);
   });
 
   test("preserves machine-readable replay rejection details", async () => {
@@ -419,5 +415,5 @@ describe("compileScenarioReplay", () => {
     expect(serialized).not.toContain("publicState");
     expect(serialized).not.toContain("privateState");
     expect(serialized).not.toContain("player-1");
-  }, 30_000);
+  }, 30000);
 });

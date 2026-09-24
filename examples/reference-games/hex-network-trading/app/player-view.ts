@@ -52,33 +52,24 @@ function projectPublic(state: GameState, q: typeof stormtrail.types.Queries) {
     outcome: state.publicState.outcome,
   };
 }
-
-export const sharedView = stormtrail.views.shared({
-  project({ state, q }) {
-    return projectPublic(state, q);
-  },
-});
-
-export const playerView = stormtrail.views.player({
-  project({ state, playerId, q }) {
-    const privateState = state.privateState[playerId];
-    const lastSteal = state.publicState.lastSteal;
-    const participatedInLastSteal =
-      lastSteal?.thiefPlayerId === playerId ||
-      lastSteal?.victimPlayerId === playerId;
-    return {
-      ...projectPublic(state, q),
-      playerId,
-      mySupplies: q.player.resources(playerId),
-      myDiscardRequired:
-        state.flow.currentPhase === "discardBarrier" &&
-        !(state.phase.completedPlayerIds ?? []).includes(playerId)
-          ? (state.phase.requiredByPlayerId?.[playerId] ?? 0)
-          : 0,
-      myLastDiscard: privateState.lastDiscard,
-      myLastStolenResourceId: participatedInLastSteal
-        ? privateState.lastStolenResourceId
-        : null,
-    };
-  },
+export const view = stormtrail.view(({ state, playerId, q }) => {
+  const privateState = state.privateState[playerId];
+  const lastSteal = state.publicState.lastSteal;
+  const participatedInLastSteal =
+    lastSteal?.thiefPlayerId === playerId ||
+    lastSteal?.victimPlayerId === playerId;
+  return {
+    ...projectPublic(state, q),
+    playerId,
+    mySupplies: q.player.resources(playerId),
+    myDiscardRequired:
+      state.flow.currentPhase === "discardBarrier" &&
+      !(state.phase.completedPlayerIds ?? []).includes(playerId)
+        ? (state.phase.requiredByPlayerId?.[playerId] ?? 0)
+        : 0,
+    myLastDiscard: privateState.lastDiscard,
+    myLastStolenResourceId: participatedInLastSteal
+      ? privateState.lastStolenResourceId
+      : null,
+  };
 });

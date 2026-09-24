@@ -16,7 +16,7 @@ import type {
   ReducerGameDefinition,
   OptionsOfContract,
   TableOfManifest,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import { contractFingerprint } from "../contract-fingerprint";
 import { StaleContractArtifactError } from "../stale-contract-artifact-error";
@@ -193,9 +193,9 @@ const currentRuntimeTableSchema = z
 export function createIngressRuntimeCodec<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  definition: ReducerGameDefinition<Contract, Definitions, Views>,
+  definition: ReducerGameDefinition<Contract, Definitions, View>,
 ): IngressRuntimeCodec<
   TableOfManifest<ManifestOf<Contract>>,
   PublicSchemaOfContract<Contract>,
@@ -204,7 +204,7 @@ export function createIngressRuntimeCodec<
   PhaseNameOfContract<Contract>,
   OptionsOfContract<Contract>
 > {
-  type Definition = ReducerGameDefinition<Contract, Definitions, Views>;
+  type Definition = ReducerGameDefinition<Contract, Definitions, View>;
   type DomainState = GameStateOf<Definition>;
   type State = BaseGameSessionOfContract<Contract>;
   type PhaseName = PhaseNameOfContract<Contract>;

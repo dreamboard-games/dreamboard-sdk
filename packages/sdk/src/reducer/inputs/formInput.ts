@@ -11,7 +11,6 @@ import type {
 } from "../model/spec";
 import type { PlayerIdOfState } from "../model/extract";
 import type { TableQueriesOfState } from "../model/queries";
-import type { DerivedResolver } from "../derived";
 import { isPerPlayer } from "../per-player";
 import type { DependencyValues, InputFieldRef } from "./defineInputs";
 
@@ -22,7 +21,6 @@ type DomainContext<
   state: State;
   playerId: PlayerIdOfState<State>;
   q: TableQueriesOfState<State>;
-  derived: DerivedResolver;
   values: Values;
 };
 
@@ -358,12 +356,11 @@ function resourceMapInput<State extends CollectorState = CollectorState>(
     ...("defaultValue" in options
       ? { defaultValue: options.defaultValue }
       : {}),
-    domain: (state, playerId, q, derived): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): FormInputDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        derived,
         values: {},
       };
       return {
@@ -405,12 +402,11 @@ function numberInput<State extends CollectorState = CollectorState>(options: {
     ...("defaultValue" in options
       ? { defaultValue: options.defaultValue }
       : {}),
-    domain: (state, playerId, q, derived): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): FormInputDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        derived,
         values: {},
       };
       return {
@@ -536,18 +532,11 @@ function choiceInput<
     schema,
     ...(hasStaticDefault ? { defaultValue: staticDefault as Value } : {}),
     ...(dependsOn ? { dependsOn } : {}),
-    domain: (
-      state,
-      playerId,
-      q,
-      derived,
-      values,
-    ): FormInputDomainDescriptor => {
+    domain: (state, playerId, q, values): FormInputDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        derived,
       };
       const choices = dependsOn
         ? resolveDependentDomainChoices(
@@ -581,7 +570,7 @@ function choiceInput<
     },
     ...(dynamicDefault
       ? {
-          resolveDefaultValue: (state, playerId, q, derived, domain) => {
+          resolveDefaultValue: (state, playerId, q, domain) => {
             const choices =
               domain.type === "choice"
                 ? domain.choices.map((choice) => ({
@@ -598,7 +587,6 @@ function choiceInput<
               state: state as State,
               playerId: playerId as PlayerIdOfState<State>,
               q: q as TableQueriesOfState<State>,
-              derived,
               values: {},
               choices,
             });
@@ -656,12 +644,11 @@ function choiceListInput<
     ...(staticDefaultValue !== undefined
       ? { defaultValue: staticDefaultValue }
       : {}),
-    domain: (state, playerId, q, derived): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): FormInputDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
         q: q as TableQueriesOfState<State>,
-        derived,
         values: {},
       };
       const choices = resolveDomainChoices(options.choices, context).map(
@@ -679,7 +666,7 @@ function choiceListInput<
     },
     ...(dynamicDefaultValue
       ? {
-          resolveDefaultValue: (state, playerId, q, derived, domain) => {
+          resolveDefaultValue: (state, playerId, q, domain) => {
             const choices =
               domain.type === "choiceList"
                 ? domain.choices.map((choice) => ({
@@ -699,7 +686,6 @@ function choiceListInput<
               state: state as State,
               playerId: playerId as PlayerIdOfState<State>,
               q: q as TableQueriesOfState<State>,
-              derived,
               values: {},
               choices,
             });

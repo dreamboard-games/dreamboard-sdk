@@ -3,7 +3,7 @@ import type {
   ReducerGameContractLike,
   ReducerReject,
   ReducerValidationResult,
-  ViewMapOf,
+  ViewOfContract,
 } from "../../model";
 import { collectEligibleTargets } from "./collector-eligibility";
 import {
@@ -28,9 +28,9 @@ export type { InteractionDescriptorShape } from "./interaction-types";
 export function createInteractionResolver<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 >(
-  scope: TrustedRuntimeScope<Contract, Definitions, Views>,
+  scope: TrustedRuntimeScope<Contract, Definitions, View>,
   options: { diagnostics?: InteractionDiagnosticsMode } = {},
 ) {
   type State = TrustedState<Contract>;

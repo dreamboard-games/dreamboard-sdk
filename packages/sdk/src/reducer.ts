@@ -2,7 +2,6 @@ export {
   createGame,
   type BoundInputBuilders,
   type BoundTargetPredicate,
-  type BoundViewBuilders,
   type ContractTypes,
   type GameAuthoring,
   type PhaseAuthoring,
@@ -96,12 +95,7 @@ export {
   type PlayerId,
   type SharedBoardRef,
 } from "./reducer/per-player";
-export {
-  defineDerived,
-  createDerivedResolver,
-  type DerivedDefinition,
-  type DerivedResolver,
-} from "./reducer/derived";
+export { memoize } from "./reducer/memoize";
 // Flat `getX` table helpers were removed from the public surface in favour
 // of the opinionated `q.*` namespace returned by `createTableQueries` /
 // `createStateQueries` (also injected into every reducer callback as `q`).

@@ -444,7 +444,7 @@ test("submission-time validation rejects illegal and stale card commands without
   assert.equal(staleReplay.checkpointDigest, staleDigest);
 });
 
-test("player and spectator inspections reveal public trick evidence but no opponent hand or sealed pass identity", async () => {
+test("seat views reveal public trick evidence while spectators receive no private seat view", async () => {
   const partialPass = await Promise.all([
     inspectScenario({
       game,
@@ -486,7 +486,7 @@ test("player and spectator inspections reveal public trick evidence but no oppon
       at: { segment: "given", completed: 6 },
     }),
   ]);
-  for (const { node } of openTrick) {
+  for (const { node } of openTrick.slice(0, 4)) {
     const publicView = node.view as {
       currentTrickPlays: readonly { playerId: string; cardId: string }[];
     };
@@ -518,6 +518,8 @@ test("player and spectator inspections reveal public trick evidence but no oppon
       at: { segment: "given", completed: 32 },
     }),
   ]);
+  assert.deepEqual(openTrick[4]!.node.view, {});
+  assert.deepEqual(midHand[4]!.node.view, {});
   const [first, ...others] = midHand;
   assert.ok(first);
   for (const inspected of others) {

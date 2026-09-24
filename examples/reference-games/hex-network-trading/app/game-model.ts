@@ -99,7 +99,7 @@ export const stormtrailPhaseSchema = z.object({
 /**
  * The Stormtrail game: manifest ids, state schemas, phase-state schemas, and
  * error codes, bound once. Phase files call `stormtrail.phase("<name>")`,
- * views call `stormtrail.views.*`, `game.ts` calls `stormtrail.assemble(...)`,
+ * views call `stormtrail.view`, `game.ts` calls `stormtrail.assemble(...)`,
  * and every module names types through `typeof stormtrail.types.*`.
  */
 export const stormtrail = createGame({

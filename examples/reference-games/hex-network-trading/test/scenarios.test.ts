@@ -524,11 +524,14 @@ test("seeded stolen supply type is participant-only and reproducible", async () 
     at: { segment: "when", completed: 1 },
   });
   assert.equal(JSON.stringify(spectator.node).includes("myLastStolen"), false);
-  assert.equal(JSON.stringify(spectator.node).includes("provisions"), true);
-  assert.deepEqual((spectator.node.view as { lastSteal: unknown }).lastSteal, {
-    thiefPlayerId: "player-1",
-    victimPlayerId: "player-2",
-  });
+  assert.deepEqual(spectator.node.view, {});
+  assert.deepEqual(
+    (spectator.node.publicState as { lastSteal: unknown }).lastSteal,
+    {
+      thiefPlayerId: "player-1",
+      victimPlayerId: "player-2",
+    },
+  );
 });
 
 test("privacy projection exposes exact inventories only to their owners", async () => {
@@ -592,7 +595,7 @@ test("privacy projection exposes exact inventories only to their owners", async 
   assert.equal(firstView.myLastStolenResourceId, "brick");
   assert.equal(secondView.myLastStolenResourceId, "brick");
   assert.equal(thirdView.myLastStolenResourceId, null);
-  for (const view of [firstView, secondView, thirdView, spectatorView]) {
+  for (const view of [firstView, secondView, thirdView]) {
     assert.deepEqual(view.supplyCountByPlayerId, {
       "player-1": 5,
       "player-2": 4,
@@ -605,6 +608,7 @@ test("privacy projection exposes exact inventories only to their owners", async 
       want: { provisions: 1 },
     });
   }
+  assert.deepEqual(spectatorView, {});
   assert.equal(Object.hasOwn(spectatorView, "mySupplies"), false);
   assert.equal(Object.hasOwn(spectatorView, "myLastDiscard"), false);
   assert.equal(Object.hasOwn(spectatorView, "myLastStolenResourceId"), false);

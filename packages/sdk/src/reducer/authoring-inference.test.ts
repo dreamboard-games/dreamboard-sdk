@@ -2,7 +2,6 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   createContractAuthoring,
-  defineEmptyView,
   defineGame,
   defineGameContract,
   defineInteraction,
@@ -173,10 +172,7 @@ describe("defineGame", () => {
             },
           }),
         },
-        views: {
-          shared: authoring.views.empty(),
-          player: authoring.views.empty(),
-        },
+        view: () => ({}),
       };
     });
 
@@ -267,10 +263,7 @@ describe("createContractAuthoring", () => {
         setup: setupPhase,
         playerTurn: playerTurnPhase,
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
 
     type PhaseNames = PhaseNamesOfDefinition<typeof game>;

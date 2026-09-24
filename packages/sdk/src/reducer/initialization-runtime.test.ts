@@ -8,7 +8,6 @@ import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  defineEmptyView,
   defineGameContract,
   defineInteraction,
   definePhase,
@@ -359,10 +358,7 @@ function createBootstrapGame(
         enter: ({ tx }) => initialize(tx),
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
   });
 }
 
@@ -411,10 +407,7 @@ describe("initialization runtime", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const request = {
@@ -516,10 +509,7 @@ describe("initialization runtime", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -698,10 +688,7 @@ describe("initialization runtime", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
 
     const bundle = createReducerTestingBundle(game);
@@ -1243,10 +1230,7 @@ describe("initialization runtime", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
 
     const bundle = createReducerTestingBundle(game);

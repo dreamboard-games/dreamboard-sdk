@@ -3,7 +3,6 @@ import { createReducerTestingBundle } from "./bundle/ingress-bundle";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  defineEmptyView,
   defineGameContract,
   definePhase,
   cardInput,
@@ -231,7 +230,10 @@ function createManifestContract() {
 function createGame({
   canResubmit = false,
   rejectRight = false,
-}: { canResubmit?: boolean; rejectRight?: boolean } = {}) {
+}: {
+  canResubmit?: boolean;
+  rejectRight?: boolean;
+} = {}) {
   const manifest = createManifestContract();
   const contract = defineGameContract({
     manifest,
@@ -300,15 +302,14 @@ function createGame({
         },
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
   });
 }
 
 function createCardPassGame(options?: {
-  commit?: { mode: "manual" | "autoWhenReady" };
+  commit?: {
+    mode: "manual" | "autoWhenReady";
+  };
 }) {
   type CardId =
     | "card-1"
@@ -366,10 +367,7 @@ function createCardPassGame(options?: {
         },
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
   });
 }
 
@@ -472,10 +470,7 @@ describe("simultaneousPlayer phases", () => {
           initialState: () => ({}),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({

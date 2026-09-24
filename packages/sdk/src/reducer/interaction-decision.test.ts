@@ -8,7 +8,6 @@ import {
   cardTarget,
   choiceTarget,
   defineInteraction,
-  defineEmptyView,
   defineGameContract,
   defineInputs,
   defineInteractionRule,
@@ -578,10 +577,7 @@ function makeBundle(
         },
       }),
     },
-    views: {
-      shared: defineEmptyView<typeof contract>(),
-      player: defineEmptyView<typeof contract>(),
-    },
+    view: () => ({}),
   });
   return createReducerTestingBundle(game, options);
 }
@@ -637,10 +633,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1168,10 +1161,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1269,10 +1259,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1398,10 +1385,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1515,10 +1499,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1595,10 +1576,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1664,10 +1642,7 @@ describe("trusted interaction decision pipeline", () => {
           resolve: ({ state, accept }) => accept(state),
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1802,10 +1777,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({
@@ -1842,6 +1814,7 @@ describe("trusted interaction decision pipeline", () => {
       errorCode: "CARD_TYPE_NOT_ALLOWED",
     });
   });
+
   test("domain-aware form inputs project server-authored input domains", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -2055,10 +2028,7 @@ describe("trusted interaction decision pipeline", () => {
           },
         }),
       },
-      views: {
-        shared: defineEmptyView<typeof contract>(),
-        player: defineEmptyView<typeof contract>(),
-      },
+      view: () => ({}),
     });
     const bundle = createReducerTestingBundle(game);
     const state = await bundle.initialize({

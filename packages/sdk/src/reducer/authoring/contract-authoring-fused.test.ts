@@ -108,12 +108,22 @@ describe("createGame", () => {
   test("phantom `types` throws on any runtime read", () => {
     const game = createGame(createModel());
     const play = game.phase("play");
-    expect(() => (game.types as { State: unknown }).State).toThrow(
-      /compile-time carrier/,
-    );
-    expect(() => (play.types as { State: unknown }).State).toThrow(
-      /compile-time carrier/,
-    );
+    expect(
+      () =>
+        (
+          game.types as {
+            State: unknown;
+          }
+        ).State,
+    ).toThrow(/compile-time carrier/);
+    expect(
+      () =>
+        (
+          play.types as {
+            State: unknown;
+          }
+        ).State,
+    ).toThrow(/compile-time carrier/);
   });
 
   test("fused card input builds a card collector with the declared zones", () => {
@@ -146,7 +156,7 @@ describe("createGame", () => {
           initialState: () => ({}),
         }),
       },
-      views: { shared: game.views.empty(), player: game.views.empty() },
+      view: () => ({}),
     });
     expect(definition.contract).toBe(game.contract);
     expect(Object.keys(definition.phases)).toEqual(["play"]);

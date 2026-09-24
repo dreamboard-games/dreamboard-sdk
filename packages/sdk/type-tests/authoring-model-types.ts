@@ -3,7 +3,7 @@
  *
  * `createGame(model)` is the only entry point. The returned value is the type
  * leaf (`typeof game.types.*`), the factory namespace (`game.phase(name)`,
- * `phase.inputs.*`, `game.views.*`), and the assembler (`game.assemble`).
+ * `phase.inputs.*`, `game.view`), and the assembler (`game.assemble`).
  * Mutation callbacks receive an open transaction `tx` and end with a bare
  * `return`, `tx.transition(...)`, `tx.endGame(...)`, or `tx.reject(...)`.
  */
@@ -354,7 +354,7 @@ playerTurn.define({
   },
 });
 
-// --- Assembly. Views are plain objects with no factory argument. ------------
+// --- Assembly. View are plain objects with no factory argument. ------------
 
 const definition = game.assemble({
   initial: {
@@ -371,16 +371,11 @@ const definition = game.assemble({
     }),
     playerTurn: playerTurnPhase,
   },
-  views: {
-    shared: game.views.empty(),
-    player: game.views.player({
-      project: ({ state, playerId }) => ({
-        me: playerId,
-        current: state.publicState.currentPlayerId,
-        rolled: state.phase.get("playerTurn")?.rolled ?? false,
-      }),
-    }),
-  },
+  view: game.view(({ state, playerId }) => ({
+    me: playerId,
+    current: state.publicState.currentPlayerId,
+    rolled: state.phase.get("playerTurn")?.rolled ?? false,
+  })),
 });
 
 type _PhaseNamesSurvive = Expect<
@@ -410,7 +405,7 @@ game.assemble({
       .phase("setup")
       .define({ kind: "auto", initialState: () => ({}) }),
   },
-  views: { shared: game.views.empty(), player: game.views.empty() },
+  view: () => ({}),
 });
 
 game.assemble({
@@ -425,7 +420,7 @@ game.assemble({
       .phase("setup")
       .define({ kind: "auto", initialState: () => ({}) }),
   },
-  views: { shared: game.views.empty(), player: game.views.empty() },
+  view: () => ({}),
 });
 
 // @ts-expect-error misspelled phase name is rejected at `game.phase`.
@@ -469,10 +464,7 @@ optionsGame.assemble({
       .phase("playerTurn")
       .define({ kind: "player", initialState: () => ({ rolled: false }) }),
   },
-  views: {
-    shared: optionsGame.views.empty(),
-    player: optionsGame.views.empty(),
-  },
+  view: () => ({}),
 });
 const optionPhase = optionsGame.phase("playerTurn");
 optionPhase.interaction({
@@ -523,3 +515,24 @@ optionsGame.assemble({
   // @ts-expect-error Initialization uses model options and ordinary phase entry.
   setupProfiles: {},
 });
+
+// One contextual seat view; legacy projection roles and resolver injection are absent.
+const seatView = game.view(({ state, playerId, q, ...args }) => {
+  // @ts-expect-error A seat view cannot consume a separate shared projection.
+  args.shared;
+  // @ts-expect-error Derived values are ordinary memoized functions.
+  args.derived;
+  return {
+    me: playerId,
+    current: state.publicState.currentPlayerId,
+    hand: q.zone.playerCards(playerId, "hand"),
+  };
+});
+type _SeatViewInference = Expect<
+  Equal<
+    ReturnType<typeof seatView>["me"],
+    GameState["table"]["playerOrder"][number]
+  >
+>;
+// @ts-expect-error Split shared/player/static view builders were removed.
+game.views;

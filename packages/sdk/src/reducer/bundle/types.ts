@@ -12,7 +12,7 @@ import type {
   ReducerReject,
   ReducerValidationResult,
   OptionsOfContract,
-  ViewMapOf,
+  ViewOfContract,
 } from "../model";
 import type {
   ReducerBundleContract,
@@ -59,7 +59,7 @@ type ProjectionTimingMetadata = {
 export type TrustedReducerBundle<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
 > = {
   initialize(input: {
     table: BaseGameStateOfContract<Contract>["table"];
@@ -74,7 +74,7 @@ export type TrustedReducerBundle<
   initializePhase(input: {
     state: TrustedSessionState<Contract>;
     to: PhaseNamesOfDefinition<
-      ReducerGameDefinition<Contract, Definitions, Views>
+      ReducerGameDefinition<Contract, Definitions, View>
     >;
   }): Promise<TrustedSessionState<Contract>>;
   validateInput(input: {
