@@ -24,7 +24,10 @@ import type {
 } from "../../shared/domain/contracts.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 
-import { createHexBoardGeometry, resolveHexSpaces } from "../../shared/hex-board.js";
+import {
+  createHexBoardGeometry,
+  resolveHexSpaces,
+} from "../../shared/hex-board.js";
 
 import {
   addStandardDecksIfNeeded,

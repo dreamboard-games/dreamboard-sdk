@@ -11,7 +11,10 @@ import type {
   DieTypeSpec,
   GameTopologyManifest,
 } from "../../shared/domain/manifest.js";
-import { createHexBoardGeometry, resolveHexSpaces } from "../../shared/hex-board.js";
+import {
+  createHexBoardGeometry,
+  resolveHexSpaces,
+} from "../../shared/hex-board.js";
 
 export type ManifestAuthoringValidationResult = {
   errors: string[];
