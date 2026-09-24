@@ -5,7 +5,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "tsx --tsconfig tsconfig.json --test test/scenarios.test.ts test/ui/**/*.test.tsx test/ui-scenarios/**/*.test.ts",
-    "dev": "dreamboard-dev"
+    "check": "pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",

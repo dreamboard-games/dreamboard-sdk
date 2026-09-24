@@ -5,7 +5,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "dreamboard-dev"
+    "check": "pnpm typecheck && pnpm test"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",
