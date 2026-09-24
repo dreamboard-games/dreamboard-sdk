@@ -1,118 +1,14 @@
+import { buildMinimalManifest } from "../../lifecycle-test-fixtures";
 import { defineGameDefinition as defineGame } from "../../authoring/game";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  defineEffect,
   defineGameContract,
   defineInteraction,
   definePhase,
-  definePhaseStage,
 } from "../../authoring";
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../../model";
-import { perPlayer } from "../../per-player";
-import { collectTrustedRuntimeRegistry } from "./runtime-registry";
 
-function buildMinimalManifest<const PhaseNames extends readonly string[]>(
-  phaseNames: PhaseNames,
-) {
-  const playerIds = ["player-1", "player-2"] as const;
-  const handIds = ["hand"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      setupOptionIds: [] as const,
-      setupProfileIds: [] as const,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds,
-      sharedZoneIds: [] as const,
-      playerZoneIds: handIds,
-      zoneIds: handIds,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: ["d6"] as const,
-      dieIds: ["setupDie", "playDie"] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {},
-      zoneVisibilityById: {},
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      setupOptionId: createManifestStringLiteralSchema([] as const),
-      setupProfileId: createManifestStringLiteralSchema([] as const),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema([] as const),
-      cardId: createManifestStringLiteralSchema([] as const),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema(handIds),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema(handIds),
-      zoneId: createManifestStringLiteralSchema(handIds),
-      resourceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema(["d6"] as const),
-      dieId: createManifestStringLiteralSchema([
-        "setupDie",
-        "playDie",
-      ] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      tileId: createManifestStringLiteralSchema([] as const),
-      tileTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      portId: createManifestStringLiteralSchema([] as const),
-      portTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => perPlayer([], () => ({})),
-    },
-    setupOptionsById: {},
-    setupChoiceIdsByOptionId: {},
-    setupProfilesById: {},
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
-}
+import { collectTrustedRuntimeRegistry } from "./runtime-registry";
 
 function buildContract<const PhaseNames extends readonly string[]>(
   phaseNames: PhaseNames,
@@ -139,19 +35,6 @@ describe("collectTrustedRuntimeRegistry", () => {
     const playState = z.object({
       actionCount: z.number().int(),
     });
-    const setupRoll = defineEffect<typeof contract>()({
-      type: "rollDie",
-      id: "setupRoll",
-      reduce: ({ state }) => ({
-        type: "accept",
-        state,
-      }),
-    });
-    const playRoll = defineEffect<typeof contract>()({
-      type: "rollDie",
-      id: "playRoll",
-    });
-
     const game = defineGame({
       contract,
       initialPhase: "setup",
@@ -160,9 +43,6 @@ describe("collectTrustedRuntimeRegistry", () => {
           kind: "player",
           state: setupState,
           initialState: () => ({ selectedFirstPlayer: null }),
-          effects: {
-            setupRoll,
-          },
           interactions: {
             chooseFirstPlayer: defineInteraction<
               typeof contract,
@@ -178,21 +58,12 @@ describe("collectTrustedRuntimeRegistry", () => {
               }),
             }),
           },
-          stages: {
-            choosing: definePhaseStage<typeof contract, typeof setupState>()({
-              allow: ["chooseFirstPlayer"],
-              when: ({ state }) => state.phase.selectedFirstPlayer === null,
-            }),
-          },
           zones: ["hand"],
         }),
         play: definePhase<typeof contract>()({
           kind: "player",
           state: playState,
           initialState: () => ({ actionCount: 0 }),
-          effects: {
-            playRoll,
-          },
           interactions: {
             takeAction: defineInteraction<typeof contract, typeof playState>()({
               inputs: {},
@@ -203,12 +74,6 @@ describe("collectTrustedRuntimeRegistry", () => {
                   phase: { actionCount: state.phase.actionCount + 1 },
                 },
               }),
-            }),
-          },
-          stages: {
-            acting: definePhaseStage<typeof contract, typeof playState>()({
-              allow: ["takeAction"],
-              when: ({ state }) => state.phase.actionCount < 2,
             }),
           },
           zones: ["hand"],
@@ -233,11 +98,10 @@ describe("collectTrustedRuntimeRegistry", () => {
         ?.interactions.map(([interactionId]) => interactionId),
     ).toEqual(["chooseFirstPlayer"]);
     expect(
-      registry.phasesByName.get("play")?.stages.map(([stageId]) => stageId),
-    ).toEqual(["acting"]);
+      registry.phasesByName.get("play")?.interactions.map(([id]) => id),
+    ).toEqual(["takeAction"]);
     expect(registry.phasesByName.get("setup")?.zones).toEqual(["hand"]);
-    expect(registry.continuationsById.has("setupRoll")).toBe(true);
-    expect(registry.continuationsById.has("playRoll")).toBe(false);
-    expect([...registry.effectsById.keys()]).toEqual(["setupRoll", "playRoll"]);
+    expect(registry).not.toHaveProperty("effectsById");
+    expect(registry).not.toHaveProperty("continuationsById");
   });
 });

@@ -1,7 +1,6 @@
 import { createTrustedReducerBundle } from "./trusted-bundle";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
 import {
-  Builders,
   REDUCER_CONTRACT_VERSION,
   type Wire,
 } from "@dreamboard-games/reducer-contract";
@@ -14,7 +13,6 @@ import type {
   RuntimeSetupSelectionInput,
   ViewMapOf,
 } from "../model";
-import type { RuntimeInstructionForState } from "../core/runtime-instruction";
 import type { DispatchTraceEntry } from "../core/types";
 import type {
   UntrustedReducerSessionState,
@@ -35,7 +33,6 @@ import type {
  * The wire schema admits exactly one player-originated variant
  * (`{ kind: "interaction" }`) and the engine's `TrustedRuntimeInput`
  * uses the same discriminator, so this is a straight pass-through.
- * Continuation inputs are engine-internal and never traverse this routing.
  */
 function routeInteraction(input: UntrustedRuntimeInput): {
   kind: "interaction";
@@ -51,93 +48,7 @@ function routeInteraction(input: UntrustedRuntimeInput): {
   };
 }
 
-// ---------------------------------------------------------------------------
-// Wire-protocol adapter.
-//
-// The trusted bundle (see ./trusted-bundle.ts) keeps the SDK reducer runtime
-// instruction shape at reducer boundaries where:
-//   - Results discriminate on `type: "accept" | "reject"`.
-//   - Reducer-returned instructions carry `kind`.
-//   - Dispatch traces use normalized runtime instructions.
-// The generated reducer-contract (`packages/reducer-contract`) defines the
-// canonical wire shape consumed by the Kotlin host:
-//   - Results discriminate on `kind: "accept" | "reject"`.
-//   - Each effect carries an `effectId`, never an inline `resume`.
-//   - Continuations live in a sibling `continuations: Record<effectId, ...>`
-//     map on reduce results, or on the matching `appliedEffect` trace entry
-//     for dispatch results.
-//   - Each DispatchTrace entry discriminates on `kind` (no `type` field).
-//
-// This module is the ONLY place in the SDK reducer that converts runtime
-// instructions into wire effects. It does so through
-// `@dreamboard-games/reducer-contract` (the single source of truth for
-// wire-effect construction) rather than hand-rolling the mapping locally —
-// hand-rolled mappings are how wire drift sneaks in (see the catan
-// rollDie regression).
-// ---------------------------------------------------------------------------
-
-type InternalInstruction<State> = RuntimeInstructionForState<State>;
-
-function extractContinuation<State>(
-  instruction: InternalInstruction<State>,
-): Wire.ContinuationToken | undefined {
-  const continuation = (
-    instruction as {
-      continuation?: Wire.ContinuationToken | null | undefined;
-    }
-  ).continuation;
-  if (continuation === undefined || continuation === null) return undefined;
-  return {
-    id: continuation.id,
-    data: continuation.data as Wire.JsonValue,
-  };
-}
-
-/**
- * Route one engine-internal effect through the generated builder that owns
- * its wire shape. The builder mints the effectId, enforces the correct
- * required/optional key set, and attaches the continuation privately via
- * `__continuation` so `materializeAccept` can split it out at the wire
- * boundary.
- *
- * Why dispatch through the builder instead of constructing `Wire.Effect`
- * directly? The schema + builders are the SSOT for wire shapes. Duplicating
- * that knowledge here once caused the catan rollDie bug; never again.
- */
-function toPendingEffect<State>(
-  instruction: InternalInstruction<State>,
-  fx: Builders.EffectBuilders,
-): Builders.PendingEffect {
-  const continuation = extractContinuation<State>(instruction);
-  switch (instruction.kind) {
-    case "flow.transition":
-      return fx.transition({ to: instruction.to as string }, continuation);
-    case "engine.rollDie":
-      return fx.rollDie(
-        { dieId: (instruction as { dieId: string }).dieId },
-        continuation,
-      );
-    case "engine.shuffleSharedZone":
-      return fx.shuffleSharedZone(
-        { zoneId: (instruction as { zoneId: string }).zoneId as string },
-        continuation,
-      );
-    case "engine.shufflePlayerZone":
-      return fx.shufflePlayerZone(
-        {
-          zoneId: (instruction as { zoneId: string }).zoneId as string,
-          playerId: (instruction as { playerId: string }).playerId as string,
-        },
-        continuation,
-      );
-    default: {
-      const _exhaustive: never = instruction;
-      throw new Error(
-        `toPendingEffect: unsupported instruction kind '${(_exhaustive as { kind: string }).kind}'.`,
-      );
-    }
-  }
-}
+// Adapt trusted results to the generated, validated host contract.
 
 function toWireReduceResult<State>(
   result:
@@ -145,7 +56,6 @@ function toWireReduceResult<State>(
     | {
         type: "accept";
         state: State;
-        instructions?: InternalInstruction<State>[];
         terminal?: Wire.GameOutcome;
         events?: Wire.GameEvent[];
       },
@@ -160,18 +70,10 @@ function toWireReduceResult<State>(
           message: result.message,
         };
   }
-  const mint = Builders.createEffectIdMinter();
-  const fx = Builders.createEffectBuilders(mint);
-  const pending = (result.instructions ?? []).map((instruction) =>
-    toPendingEffect<State>(instruction, fx),
-  );
-  const { effects, continuations } = Builders.materializeAccept(pending);
   return {
     kind: "accept",
     state: serializeState(result.state),
     ...(result.terminal ? { terminal: result.terminal } : {}),
-    effects,
-    continuations,
     events: result.events ?? [],
   };
 }
@@ -197,65 +99,27 @@ function toWireDispatchResult<State, PlayerId extends string>(
           message: result.message,
         };
   }
-  const mint = Builders.createEffectIdMinter();
-  const fx = Builders.createEffectBuilders(mint);
   const trace: Wire.DispatchTrace[] = [];
   for (const entry of result.trace) {
     switch (entry.type) {
-      case "acceptedClientInput": {
-        const engineInput = entry.input as {
-          kind: "interaction" | "continuation";
-          playerId?: string;
-          interactionId?: string;
-          params?: Wire.JsonValue;
-        };
-        let wireInput: Wire.GameInput;
-        if (engineInput.kind === "interaction") {
-          wireInput = {
-            kind: "interaction",
-            playerId: engineInput.playerId ?? "",
-            interactionId: engineInput.interactionId ?? "",
-            params: engineInput.params ?? {},
-          };
-        } else {
-          // Continuation inputs are engine-internal and shouldn't appear in
-          // client-addressed dispatch traces; synthesize a best-effort wire
-          // shape so the trace stays well-typed.
-          wireInput = {
-            kind: "interaction",
-            playerId: "",
-            interactionId: "",
-            params: {},
-          };
-        }
+      case "acceptedClientInput":
         trace.push({
           kind: "acceptedClientInput",
-          input: wireInput,
+          input: {
+            kind: "interaction",
+            playerId: entry.input.playerId,
+            interactionId: entry.input.interactionId,
+            params: entry.input.params as Wire.JsonValue,
+          },
         });
         break;
-      }
-      case "appliedInstruction": {
-        const pending = toPendingEffect<State>(
-          entry.instruction as InternalInstruction<State>,
-          fx,
-        );
-        const { effects, continuations } = Builders.materializeAccept([
-          pending,
-        ]);
-        const [wireEffect] = effects;
-        if (wireEffect === undefined) {
-          throw new Error(
-            "materializeAccept returned no effects for a single pending effect",
-          );
-        }
-        const continuation = continuations[wireEffect.effectId];
-        trace.push(
-          continuation === undefined
-            ? { kind: "appliedEffect", effect: wireEffect }
-            : { kind: "appliedEffect", effect: wireEffect, continuation },
-        );
+      case "phaseEntered":
+        trace.push({
+          kind: "phaseEntered",
+          from: String(entry.from),
+          to: String(entry.to),
+        });
         break;
-      }
       case "rngConsumption":
         trace.push({
           kind: "rngConsumption",

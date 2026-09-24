@@ -1,4 +1,3 @@
-import type { RuntimeInstructionForState } from "./runtime-instruction";
 import type { TrustedRuntimeInput } from "./runtime-input";
 import type { GameEvent, GameOutcome } from "../model/runtime";
 
@@ -12,8 +11,9 @@ export type DispatchTraceEntry<
       input: Input;
     }
   | {
-      type: "appliedInstruction";
-      instruction: RuntimeInstructionForState<State>;
+      type: "phaseEntered";
+      from: import("../model").PhaseNameOfState<State>;
+      to: import("../model").PhaseNameOfState<State>;
     }
   | {
       type: "rngConsumption";
@@ -37,31 +37,8 @@ export type TrustedReducerDispatchResult<State, PlayerId extends string> =
       events?: readonly GameEvent[];
     };
 
-export type TrustedInstructionResolutionResult<
-  State,
-  PlayerId extends string,
-  Input extends TrustedRuntimeInput<PlayerId> = TrustedRuntimeInput<PlayerId>,
-> = {
-  state: State;
-  queuedInputs: Input[];
-  queuedInstructions: RuntimeInstructionForState<State>[];
-  trace: DispatchTraceEntry<State, PlayerId, Input>[];
-};
-
-export type TrustedReducerEngine<State, PlayerId extends string> = {
-  dispatch: (
-    state: State,
-    input: TrustedRuntimeInput<PlayerId>,
-  ) => TrustedReducerDispatchResult<State, PlayerId>;
-  drainInstructions: (
-    state: State,
-    instructions: RuntimeInstructionForState<State>[],
-  ) => State;
-};
-
 export type {
   DecodedReducerInput,
-  TrustedContinuationInput,
   TrustedInteractionInput,
   TrustedRuntimeInput,
 } from "./runtime-input";

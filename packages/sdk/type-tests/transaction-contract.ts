@@ -15,11 +15,12 @@ type Board<Id extends string> = Omit<
 
 type Table = Omit<
   RuntimeTableRecord,
-  "boards" | "decks" | "hands" | "cards" | "componentLocations"
+  "boards" | "decks" | "hands" | "cards" | "componentLocations" | "dice"
 > & {
   boards: Omit<RuntimeTableRecord["boards"], "byId"> & {
     byId: { north: Board<"north">; south: Board<"south"> };
   };
+  dice: { d6: RuntimeTableRecord["dice"][string] };
   decks: { draw: "red"[]; special: "blue"[] };
   hands: {
     hand: PerPlayer<"red"[]>;
@@ -37,6 +38,26 @@ type State = { table: Table };
 export function assertTransactionContract(
   tx: ReducerTransaction<State>,
 ): State {
+  const result: number = tx.roll("d6");
+  void result;
+  tx.shuffle({ zoneId: "draw" });
+  tx.shuffle({ zoneId: "hand", playerId: "player" });
+  // @ts-expect-error A declared die ID is required.
+  tx.roll("missing");
+  // @ts-expect-error A player zone needs its seat.
+  tx.shuffle({ zoneId: "hand" });
+  // @ts-expect-error Shared zones cannot be shuffled as player zones.
+  tx.shuffle({ zoneId: "draw", playerId: "player" });
+  // @ts-expect-error Effects have been removed.
+  tx.effect({});
+  // @ts-expect-error Scheduling has been removed.
+  tx.schedule({});
+  // @ts-expect-error The old deal name has been removed.
+  tx.dealCardsToPlayerZone({});
+  // @ts-expect-error Staged authoring has been removed.
+  reducer.defineStepPhase();
+  // @ts-expect-error Card actions use ordinary interactions.
+  reducer.defineCardAction();
   tx.moveComponentToSpace({
     componentId: "piece",
     boardId: "north",
@@ -102,7 +123,7 @@ export function assertTransactionContract(
     toZoneId: "hand",
     cardId: "red",
   });
-  tx.dealCardsToPlayerZone({
+  tx.deal({
     playerId: "player",
     fromZoneId: "draw",
     toZoneId: "hand",
@@ -129,7 +150,7 @@ export function assertTransactionContract(
     // @ts-expect-error The card must be accepted by both source deck and hand.
     cardId: "blue",
   });
-  tx.dealCardsToPlayerZone({
+  tx.deal({
     playerId: "player",
     fromZoneId: "draw",
     // @ts-expect-error Dealing requires compatible deck and hand card sets.

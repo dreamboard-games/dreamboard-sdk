@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 
 import { FIXTURES } from "../fixtures";
-import * as Builders from "../generated/builders";
 import * as Wire from "../generated/wire";
 import * as Zod from "../generated/zod";
 import { REDUCER_CONTRACT_VERSION } from "../generated/version";
@@ -14,7 +13,6 @@ describe("wire fixtures parse under generated Zod", () => {
   const schemaForTypeName: Record<string, { parse: (v: unknown) => unknown }> =
     {
       DispatchRequest: Zod.DispatchRequestSchema,
-      Effect: Zod.EffectSchema,
       ReduceResult: Zod.ReduceResultSchema,
       DispatchResult: Zod.DispatchResultSchema,
       GameInput: Zod.GameInputSchema,
@@ -108,144 +106,32 @@ describe("ReducerSessionState meta", () => {
   });
 });
 
-describe("generated builders produce wire-valid effects", () => {
-  test("rollDie without continuation has NO __continuation and NO resume key", () => {
-    const mint = Builders.createEffectIdMinter();
-    const fx = Builders.createEffectBuilders(mint);
-
-    const pending = fx.rollDie({ dieId: "die-red" });
-
-    expect(pending.effectId).toBe("ef0");
-    expect(pending.type).toBe("rollDie");
-    // The old catan bug: wire shouldn't have a `resume` key at all.
-    expect("resume" in pending).toBe(false);
-    // And no `__continuation` tag either.
-    expect("__continuation" in pending).toBe(false);
-
-    // Zod should accept it as a bare Effect.
-    const parsed = Zod.EffectSchema.parse(pending);
-    expect(parsed).toEqual(pending);
+describe("completed reductions", () => {
+  test("accepts final state and events and rejects pending work", () => {
+    const fixture = FIXTURES.find(
+      (entry) => entry.name === "reduce-result-accept-mixed",
+    )!;
+    const accepted = Zod.ReduceResultSchema.parse(fixture.value);
+    expect(accepted.kind).toBe("accept");
+    expect(() =>
+      Zod.ReduceResultSchema.parse({ ...accepted, effects: [] }),
+    ).toThrow();
+    expect(() =>
+      Zod.ReduceResultSchema.parse({ ...accepted, continuations: {} }),
+    ).toThrow();
   });
-
-  test("rollDie with continuation carries __continuation privately but not on the wire effect", () => {
-    const mint = Builders.createEffectIdMinter();
-    const fx = Builders.createEffectBuilders(mint);
-    const continuation: Wire.ContinuationToken = {
-      id: "afterRoll",
-      data: { dieId: "die-red" },
-    };
-
-    const pending = fx.rollDie({ dieId: "die-red" }, continuation);
-
-    expect(pending.effectId).toBe("ef0");
+  test("records actual phase entries, including same-phase reentry", () => {
+    const entry = { kind: "phaseEntered", from: "play", to: "play" } as const;
+    expect(Zod.DispatchTraceSchema.parse(entry)).toEqual(entry);
     expect(
-      (pending as unknown as { __continuation: unknown }).__continuation,
-    ).toEqual(continuation);
-
-    // materializeAccept strips the tag and routes to the continuations map.
-    const materialized = Builders.materializeAccept([pending]);
-    expect(materialized.effects).toHaveLength(1);
-    expect("__continuation" in materialized.effects[0]!).toBe(false);
-    expect("resume" in materialized.effects[0]!).toBe(false);
-    expect(materialized.continuations).toEqual({ ef0: continuation });
-  });
-
-  test("shufflePlayerZone is a wire-valid Effect with playerId scope", () => {
-    const mint = Builders.createEffectIdMinter();
-    const fx = Builders.createEffectBuilders(mint);
-
-    const pending = fx.shufflePlayerZone({
-      zoneId: "deck",
-      playerId: "player-1",
-    });
-
-    const parsed = Zod.EffectSchema.parse(
-      pending,
-    ) as Wire.EffectShufflePlayerZone;
-    expect(parsed.type).toBe("shufflePlayerZone");
-    expect(parsed.zoneId).toBe("deck");
-    expect(parsed.playerId).toBe("player-1");
-    expect("resume" in parsed).toBe(false);
-  });
-
-  test("materializeAccept builds a Zod-valid ReduceResult.Accept from mixed pending effects", () => {
-    const mint = Builders.createEffectIdMinter();
-    const fx = Builders.createEffectBuilders(mint);
-
-    const pending = [
-      fx.transition({ to: "resolve" }),
-      fx.rollDie({ dieId: "die-red" }),
-      fx.shuffleSharedZone(
-        { zoneId: "dev-deck" },
-        { id: "afterShuffle", data: {} },
-      ),
-      fx.shufflePlayerZone({ zoneId: "deck", playerId: "player-1" }),
-    ];
-
-    const { effects, continuations } = Builders.materializeAccept(pending);
-
-    const accept: Wire.ReduceResult = {
-      kind: "accept",
-      state: {
-        domain: {
-          table: {
-            playerOrder: ["player-1", "player-2"],
-            zones: { shared: {}, perPlayer: {}, visibility: {} },
-          },
-          publicState: {},
-          privateState: { "player-1": {}, "player-2": {} },
-          hiddenState: {},
-          flow: {
-            currentPhase: "takeTurn",
-            turn: 0,
-            round: 0,
-            activePlayers: ["player-1"],
-          },
-          phase: {},
-        },
-        runtime: {
-          rng: { seed: 1337, cursor: 0, trace: [] },
-          setup: null,
-          simultaneous: { current: null },
-          lastTransition: null,
-        },
-      },
-      effects,
-      continuations,
-      events: [],
-    };
-
-    expect(() => Zod.ReduceResultSchema.parse(accept)).not.toThrow();
-
-    // Continuations map only contains the effect that actually has a
-    // continuation — no "resume: null" anywhere.
-    expect(Object.keys(continuations)).toEqual(["ef2"]);
-    for (const effect of effects) {
-      expect("resume" in effect).toBe(false);
-    }
-  });
-
-  test("Zod rejects a rogue effect that carries the legacy `resume` key", () => {
-    // Regression guard: if anyone hand-constructs the old shape, the generated
-    // Zod schema must reject it because `resume` is no longer in any variant.
-    const legacy = {
-      effectId: "ef0",
-      type: "rollDie",
-      dieId: "die-red",
-      resume: { id: "afterRoll", data: {} },
-    };
-    expect(() => Zod.EffectSchema.parse(legacy)).toThrow();
-  });
-
-  test("Zod rejects a rogue effect that carries resume: null", () => {
-    // The literal catan bug payload shape. New wire format makes it unparseable.
-    const legacy = {
-      effectId: "ef0",
-      type: "rollDie",
-      dieId: "die-red",
-      resume: null,
-    };
-    expect(() => Zod.EffectSchema.parse(legacy)).toThrow();
+      Zod.ReducerRuntimeLogEntrySchema.parse({ ...entry, version: 1 }),
+    ).toEqual({ ...entry, version: 1 });
+    expect(() =>
+      Zod.DispatchTraceSchema.parse({
+        kind: "appliedEffect",
+        effect: { type: "transition", to: "play" },
+      }),
+    ).toThrow();
   });
 });
 
@@ -377,14 +263,15 @@ describe("GameOutcome wire shape", () => {
 // unknown fields would silently pass through and we'd lose the wire-drift
 // signal that the whole contract package exists to provide.
 describe("strict zod rejects unknown keys", () => {
-  test("effects reject an extra field", () => {
-    const effectWithExtra = {
-      effectId: "ef0",
-      type: "rollDie",
-      dieId: "die-red",
-      hacked: true,
-    };
-    expect(() => Zod.EffectSchema.parse(effectWithExtra)).toThrow();
+  test("phase entries reject an extra field", () => {
+    expect(() =>
+      Zod.DispatchTraceSchema.parse({
+        kind: "phaseEntered",
+        from: "play",
+        to: "end",
+        hacked: true,
+      }),
+    ).toThrow();
   });
 
   test("reduce result rejects an extra top-level field", () => {
@@ -402,8 +289,9 @@ describe("strict zod rejects unknown keys", () => {
       state: {},
       trace: [
         {
-          kind: "appliedEffect",
-          effect: { effectId: "ef0", type: "transition", to: "main" },
+          kind: "phaseEntered",
+          from: "setup",
+          to: "main",
           bogus: "please fail",
         },
       ],
@@ -506,37 +394,35 @@ describe("round-trip stability", () => {
   for (const fixture of FIXTURES) {
     test(`${fixture.name} round-trips stably`, () => {
       const schema: { parse: (v: unknown) => unknown } =
-        fixture.typeName === "Effect"
-          ? Zod.EffectSchema
-          : fixture.typeName === "InitializeResult"
-            ? Zod.InitializeResultSchema
-            : fixture.typeName === "InitializeRequest"
-              ? Zod.InitializeRequestSchema
-              : fixture.typeName === "InitializePhaseRequest"
-                ? Zod.InitializePhaseRequestSchema
-                : fixture.typeName === "ValidateInputRequest"
-                  ? Zod.ValidateInputRequestSchema
-                  : fixture.typeName === "ReduceRequest"
-                    ? Zod.ReduceRequestSchema
-                    : fixture.typeName === "DispatchRequest"
-                      ? Zod.DispatchRequestSchema
-                      : fixture.typeName === "ProjectRequest"
-                        ? Zod.ProjectRequestSchema
-                        : fixture.typeName === "SeatProjection"
-                          ? Zod.SeatProjectionSchema
-                          : fixture.typeName === "SeatProjectionBundle"
-                            ? Zod.SeatProjectionBundleSchema
-                            : fixture.typeName === "ReducerSessionState"
-                              ? Zod.ReducerSessionStateSchema
-                              : fixture.typeName === "ReducerRuntimeState"
-                                ? Zod.ReducerRuntimeStateSchema
-                                : fixture.typeName === "ReducerRuntimeLogEntry"
-                                  ? Zod.ReducerRuntimeLogEntrySchema
-                                  : fixture.typeName === "ReduceResult"
-                                    ? Zod.ReduceResultSchema
-                                    : fixture.typeName === "DispatchResult"
-                                      ? Zod.DispatchResultSchema
-                                      : Zod.GameInputSchema;
+        fixture.typeName === "InitializeResult"
+          ? Zod.InitializeResultSchema
+          : fixture.typeName === "InitializeRequest"
+            ? Zod.InitializeRequestSchema
+            : fixture.typeName === "InitializePhaseRequest"
+              ? Zod.InitializePhaseRequestSchema
+              : fixture.typeName === "ValidateInputRequest"
+                ? Zod.ValidateInputRequestSchema
+                : fixture.typeName === "ReduceRequest"
+                  ? Zod.ReduceRequestSchema
+                  : fixture.typeName === "DispatchRequest"
+                    ? Zod.DispatchRequestSchema
+                    : fixture.typeName === "ProjectRequest"
+                      ? Zod.ProjectRequestSchema
+                      : fixture.typeName === "SeatProjection"
+                        ? Zod.SeatProjectionSchema
+                        : fixture.typeName === "SeatProjectionBundle"
+                          ? Zod.SeatProjectionBundleSchema
+                          : fixture.typeName === "ReducerSessionState"
+                            ? Zod.ReducerSessionStateSchema
+                            : fixture.typeName === "ReducerRuntimeState"
+                              ? Zod.ReducerRuntimeStateSchema
+                              : fixture.typeName === "ReducerRuntimeLogEntry"
+                                ? Zod.ReducerRuntimeLogEntrySchema
+                                : fixture.typeName === "ReduceResult"
+                                  ? Zod.ReduceResultSchema
+                                  : fixture.typeName === "DispatchResult"
+                                    ? Zod.DispatchResultSchema
+                                    : Zod.GameInputSchema;
       const parsed = schema.parse(fixture.value);
       const reparsed = schema.parse(JSON.parse(JSON.stringify(parsed)));
       expect(reparsed).toEqual(parsed);
@@ -572,7 +458,6 @@ describe("fixture parity: zod-parsed fixtures match raw fixture JSON", () => {
       > = {
         DispatchRequest: Zod.DispatchRequestSchema,
         DispatchResult: Zod.DispatchResultSchema,
-        Effect: Zod.EffectSchema,
         GameInput: Zod.GameInputSchema,
         InitializePhaseRequest: Zod.InitializePhaseRequestSchema,
         InitializeRequest: Zod.InitializeRequestSchema,

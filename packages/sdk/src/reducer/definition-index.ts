@@ -1,10 +1,6 @@
-import { cardInput } from "./inputs/cardInput";
-import { cardTarget } from "./inputs/cardTarget";
 import type {
-  AnyCardActionSpec,
   AnyInteractionSpec,
   BaseGameStateOfContract,
-  EffectMap,
   InputCollector,
   InteractionMap,
   ManifestContractOf,
@@ -14,13 +10,10 @@ import type {
   ReducerGameContractLike,
   ReducerGameDefinition,
   SchemaLike,
-  StageMap,
-  StageSpec,
   ViewMapOf,
   PhaseZoneList,
   PlayerZoneIdOfManifest,
 } from "./model";
-import type { AnyContinuationCallable } from "./model/spec/runtime-args";
 
 export type ReducerIndexedPhase<Contract extends ReducerGameContractLike> =
   PhaseDefinition<
@@ -28,12 +21,10 @@ export type ReducerIndexedPhase<Contract extends ReducerGameContractLike> =
     BaseGameStateOfContract<Contract>,
     ManifestContractOf<Contract>,
     Record<string, InputCollector>,
-    EffectMap<BaseGameStateOfContract<Contract>, ManifestContractOf<Contract>>,
     InteractionMap<
       BaseGameStateOfContract<Contract>,
       ManifestContractOf<Contract>
     >,
-    StageMap<BaseGameStateOfContract<Contract>, ManifestContractOf<Contract>>,
     PhaseZoneList<ManifestContractOf<Contract>>
   >;
 
@@ -47,39 +38,8 @@ export type ReducerIndexedInteractionEntry<
   >,
 ];
 
-export type ReducerIndexedStageEntry<Contract extends ReducerGameContractLike> =
-  readonly [
-    string,
-    StageSpec<BaseGameStateOfContract<Contract>, ManifestContractOf<Contract>>,
-  ];
-
 export type ReducerIndexedZoneEntry<Contract extends ReducerGameContractLike> =
   PlayerZoneIdOfManifest<ManifestContractOf<Contract>>;
-
-export type ReducerIndexedCardActionEntry<
-  Contract extends ReducerGameContractLike,
-> = readonly [
-  string,
-  AnyCardActionSpec<
-    BaseGameStateOfContract<Contract>,
-    ManifestContractOf<Contract>
-  >,
-];
-
-export type ReducerIndexedEffectEntry<
-  Contract extends ReducerGameContractLike,
-> = readonly [
-  string,
-  {
-    readonly id: string;
-    readonly type: string;
-    readonly continuation?: AnyContinuationCallable<
-      BaseGameStateOfContract<Contract>
-    > & {
-      readonly id?: string;
-    };
-  },
-];
 
 export interface ReducerDefinitionPhaseIndex<
   Contract extends ReducerGameContractLike,
@@ -93,10 +53,7 @@ export interface ReducerDefinitionPhaseIndex<
   readonly interactions: ReadonlyArray<
     ReducerIndexedInteractionEntry<Contract>
   >;
-  readonly stages: ReadonlyArray<ReducerIndexedStageEntry<Contract>>;
   readonly zones: ReadonlyArray<ReducerIndexedZoneEntry<Contract>>;
-  readonly cardActions: ReadonlyArray<ReducerIndexedCardActionEntry<Contract>>;
-  readonly effects: ReadonlyArray<ReducerIndexedEffectEntry<Contract>>;
 }
 
 export interface ReducerDefinitionIndex<
@@ -117,19 +74,6 @@ export interface ReducerDefinitionIndex<
     ReducerDefinitionPhaseIndex<Contract, Definitions, Views>
   >;
 }
-
-type RawEffectEntry<Contract extends ReducerGameContractLike> = readonly [
-  string,
-  {
-    id?: string;
-    type?: string;
-    __continuation?: AnyContinuationCallable<
-      BaseGameStateOfContract<Contract>
-    > & {
-      id?: string;
-    };
-  },
-];
 
 function phaseEntriesOf<
   Contract extends ReducerGameContractLike,
@@ -169,36 +113,12 @@ function simultaneousSubmitEntriesOf<Contract extends ReducerGameContractLike>(
   ];
 }
 
-function cardActionEntriesOf<Contract extends ReducerGameContractLike>(
-  phase: ReducerIndexedPhase<Contract>,
-): Array<ReducerIndexedCardActionEntry<Contract>> {
-  return Object.entries(
-    (phase as { cardActions?: Record<string, unknown> }).cardActions ?? {},
-  ) as Array<ReducerIndexedCardActionEntry<Contract>>;
-}
-
-function stageEntriesOf<Contract extends ReducerGameContractLike>(
-  phase: ReducerIndexedPhase<Contract>,
-): Array<ReducerIndexedStageEntry<Contract>> {
-  return Object.entries(
-    (phase as { stages?: Record<string, unknown> }).stages ?? {},
-  ) as Array<ReducerIndexedStageEntry<Contract>>;
-}
-
 function zoneEntriesOf<Contract extends ReducerGameContractLike>(
   phase: ReducerIndexedPhase<Contract>,
 ): Array<ReducerIndexedZoneEntry<Contract>> {
   return Array.from(
     (phase as { zones?: readonly unknown[] }).zones ?? [],
   ) as Array<ReducerIndexedZoneEntry<Contract>>;
-}
-
-function effectEntriesOf<Contract extends ReducerGameContractLike>(
-  phase: ReducerIndexedPhase<Contract>,
-): Array<RawEffectEntry<Contract>> {
-  return Object.entries(
-    (phase as { effects?: Record<string, unknown> }).effects ?? {},
-  ) as Array<RawEffectEntry<Contract>>;
 }
 
 export function collectReducerDefinitionIndex<
@@ -208,8 +128,6 @@ export function collectReducerDefinitionIndex<
 >(
   definition: ReducerGameDefinition<Contract, Definitions, Views>,
 ): ReducerDefinitionIndex<Contract, Definitions, Views> {
-  type State = BaseGameStateOfContract<Contract>;
-  type Manifest = ManifestContractOf<Contract>;
   type PhaseName = PhaseNamesOfDefinition<
     ReducerGameDefinition<Contract, Definitions, Views>
   >;
@@ -225,48 +143,11 @@ export function collectReducerDefinitionIndex<
       ...interactionEntriesOf(phase),
       ...simultaneousSubmitEntriesOf(phase),
     ];
-    const cardActionEntries: Array<ReducerIndexedInteractionEntry<Contract>> =
-      cardActionEntriesOf(phase).map(([cardActionId, cardAction]) => [
-        cardActionId,
-        {
-          ...cardAction,
-          __steps: cardAction.__steps,
-          inputs: {
-            cardId: cardInput<State>({
-              target: cardTarget
-                .zones<State>([cardAction.playFrom])
-                .where({
-                  id: "card-type",
-                  errorCode: "WRONG_CARD_TYPE",
-                  message: `Card must be ${cardAction.cardType}.`,
-                  test: ({ q, targetId }) =>
-                    q.card.get(targetId).cardType === cardAction.cardType,
-                })
-                .build(),
-            }),
-            ...(cardAction.inputs ?? {}),
-          },
-        } satisfies AnyInteractionSpec<State, Manifest>,
-      ]);
-    const effects: Array<ReducerIndexedEffectEntry<Contract>> = effectEntriesOf(
-      phase,
-    ).map(([effectKey, effectValue]) => [
-      effectKey,
-      {
-        id: effectValue.id ?? effectKey,
-        type: effectValue.type ?? "rollDie",
-        continuation: effectValue.__continuation,
-      },
-    ]);
-
     phasesByName.set(phaseName, {
       phaseName,
       phase,
-      interactions: [...interactionEntries, ...cardActionEntries],
-      stages: stageEntriesOf(phase),
+      interactions: interactionEntries,
       zones: zoneEntriesOf(phase),
-      cardActions: cardActionEntriesOf(phase),
-      effects,
     });
   }
 

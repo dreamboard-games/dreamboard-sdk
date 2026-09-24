@@ -1,7 +1,4 @@
-import { createReducerFx } from "./effects";
 import type {
-  EffectInvokeOptions,
-  EffectSpecLike,
   GameEvent,
   GameOutcome,
   PhaseNameOfState,
@@ -15,14 +12,25 @@ import {
   transactionMutations,
   type TransactionMutations,
 } from "./transaction-mutations";
-import type { RuntimeInstructionForState } from "./core/runtime-instruction";
+import type {
+  DeckIdOfState,
+  PlayerZoneIdOfState,
+  PlayerIdOfTable,
+  TableOfState,
+  StringKeyOf,
+} from "./model";
+import { shufflePlayerZoneCards } from "./table";
+
+export type TransactionRandom = {
+  roll(sides: number): number;
+  shuffle<Value>(
+    values: readonly Value[],
+    operation: "shuffleSharedZone" | "shufflePlayerZone",
+  ): Value[];
+};
 import { createStateQueries } from "./table-queries";
 
 type IsAny<Value> = 0 extends 1 & Value ? true : false;
-
-type WithFlow<State> = State extends { flow: { currentPhase: string } }
-  ? State
-  : State & { flow: { currentPhase: string } };
 
 /** Phase names a transaction may transition to; `string` when state is erased. */
 type TransitionTarget<State> =
@@ -41,13 +49,6 @@ export type ReducerTransactionOutcome<
 > = {
   /** Record events on the eventual accept result. */
   emit(...events: GameEvent[]): void;
-  /** Queue runtime instructions on the eventual accept result. */
-  schedule(...instructions: RuntimeInstructionForState<State>[]): void;
-  /** Queue an engine effect authored with `defineEffect`. */
-  effect<Effect extends EffectSpecLike>(
-    effect: Effect,
-    options: EffectInvokeOptions<Effect, WithFlow<State>>,
-  ): void;
   /** Accept with the current transaction state. Same as a bare `return`. */
   accept(): ReducerAccept<State>;
   /** Accept and move the flow to another declared phase. */
@@ -71,12 +72,22 @@ export type ReducerTransaction<
   ReducerTransactionOutcome<State, ErrorCode> & {
     readonly state: State;
     readonly q: TableQueriesOfState<State>;
+    roll(dieId: StringKeyOf<TableOfState<State>["dice"]>): number;
+    shuffle(
+      args:
+        | { zoneId: DeckIdOfState<State> }
+        | {
+            zoneId: PlayerZoneIdOfState<State>;
+            playerId: PlayerIdOfTable<TableOfState<State>>;
+          },
+    ): void;
   };
 
 export type ReducerEdit<State extends { table: RuntimeTableRecord }> = <
   DraftState extends State,
 >(
   state: DraftState,
+  random: TransactionRandom,
 ) => ReducerTransaction<DraftState>;
 
 const transactionContext = Symbol("dreamboard.reducerTransactionContext");
@@ -86,52 +97,35 @@ type TransactionContext<State extends { table: RuntimeTableRecord }> = {
   currentQueries: TableQueriesOfState<State> | null;
   methodCache: Record<string, (...args: readonly unknown[]) => State>;
   events: GameEvent[];
-  instructions: RuntimeInstructionForState<State>[];
+  random: TransactionRandom;
+  rollMethod?: (dieId: string) => number;
+  shuffleMethod?: (args: { zoneId: string; playerId?: string }) => void;
   outcome?: ReducerTransactionOutcome<State>;
 };
 
 function createOutcomeMethods<State extends { table: RuntimeTableRecord }>(
   context: TransactionContext<State>,
 ): ReducerTransactionOutcome<State> {
-  const fx = createReducerFx<never>();
   const accept = (): ReducerAccept<State> => ({
     type: "accept",
     state: context.currentState,
-    instructions: [...context.instructions],
     events: [...context.events],
   });
   return {
     emit(...events) {
       context.events.push(...events);
     },
-    schedule(...instructions) {
-      context.instructions.push(...instructions);
-    },
-    effect(effect, options) {
-      context.instructions.push(fx.effect(effect, options as never) as never);
-    },
     accept,
     transition(to) {
-      const result = accept();
-      return {
-        ...result,
-        instructions: [
-          ...(result.instructions ?? []),
-          fx.transition(to as never) as never,
-        ],
-      };
+      return { ...accept(), transition: to as PhaseNameOfState<State> };
     },
     endGame(outcome, options) {
-      const result = accept();
       return {
-        ...result,
-        instructions: options?.transition
-          ? [
-              ...(result.instructions ?? []),
-              fx.transition(options.transition as never) as never,
-            ]
-          : result.instructions,
+        ...accept(),
         terminal: outcome,
+        ...(options?.transition
+          ? { transition: options.transition as PhaseNameOfState<State> }
+          : {}),
       };
     },
     reject(errorCode, message) {
@@ -198,8 +192,6 @@ function createReducerTransactionSurface<
 
   for (const key of [
     "emit",
-    "schedule",
-    "effect",
     "accept",
     "transition",
     "endGame",
@@ -230,13 +222,85 @@ function createReducerTransactionSurface<
     };
   }
 
+  descriptors.roll = {
+    enumerable: true,
+    get(this: unknown) {
+      const context = getTransactionContext<State>(this);
+      return (context.rollMethod ??= (dieId: string) => {
+        const die = context.currentState.table.dice[dieId];
+        if (!die) throw new Error(`Cannot roll unknown die '${dieId}'.`);
+        const value = context.random.roll(die.sides);
+        context.currentState.table.dice[dieId] = { ...die, value };
+        invalidate(context);
+        return value;
+      });
+    },
+  };
+  descriptors.shuffle = {
+    enumerable: true,
+    get(this: unknown) {
+      const context = getTransactionContext<State>(this);
+      return (context.shuffleMethod ??= (args: {
+        zoneId: string;
+        playerId?: string;
+      }) => {
+        const table = context.currentState.table;
+        if (args.playerId !== undefined) {
+          const cards = shufflePlayerZoneCards(
+            table,
+            args.zoneId,
+            args.playerId,
+          );
+          const shuffled = context.random.shuffle(cards, "shufflePlayerZone");
+          shufflePlayerZoneCards(table, args.zoneId, args.playerId, shuffled);
+          for (const [position, cardId] of shuffled.entries()) {
+            const location = table.componentLocations[cardId];
+            table.componentLocations[cardId] = {
+              ...location,
+              type: "InHand",
+              handId: args.zoneId,
+              playerId: args.playerId,
+              position,
+            };
+          }
+        } else {
+          const cards = table.decks[args.zoneId];
+          if (!cards)
+            throw new Error(
+              `Cannot shuffle unknown shared zone '${args.zoneId}'.`,
+            );
+          const shuffled = context.random.shuffle(cards, "shuffleSharedZone");
+          table.decks[args.zoneId] = shuffled;
+          table.zones.shared[args.zoneId] = [...shuffled];
+          for (const [position, cardId] of shuffled.entries()) {
+            const location = table.componentLocations[cardId];
+            table.componentLocations[cardId] = {
+              ...location,
+              type: "InDeck",
+              deckId: args.zoneId,
+              position,
+              playedBy:
+                location?.type === "InDeck" || location?.type === "InZone"
+                  ? (location.playedBy ?? null)
+                  : null,
+            };
+          }
+        }
+        invalidate(context);
+      });
+    },
+  };
   Object.defineProperties(surface, descriptors);
   return surface;
 }
 
 function createReducerTransactionFromSurface<
   State extends { table: RuntimeTableRecord },
->(initialState: State, surface: object): ReducerTransaction<State> {
+>(
+  initialState: State,
+  surface: object,
+  random: TransactionRandom,
+): ReducerTransaction<State> {
   const transaction = Object.create(surface) as ReducerTransaction<State> &
     TransactionHost<State>;
   Object.defineProperty(transaction, transactionContext, {
@@ -248,7 +312,7 @@ function createReducerTransactionFromSurface<
       currentQueries: null,
       methodCache: {},
       events: [],
-      instructions: [],
+      random,
     } satisfies TransactionContext<State>,
   });
   return transaction;
@@ -256,10 +320,11 @@ function createReducerTransactionFromSurface<
 
 export function createReducerTransaction<
   State extends { table: RuntimeTableRecord },
->(initialState: State): ReducerTransaction<State> {
+>(initialState: State, random: TransactionRandom): ReducerTransaction<State> {
   return createReducerTransactionFromSurface(
     initialState,
     createReducerTransactionSurface<State>(),
+    random,
   );
 }
 
@@ -267,6 +332,8 @@ export function createReducerEdit<
   State extends { table: RuntimeTableRecord },
 >(): ReducerEdit<State> {
   const surface = createReducerTransactionSurface<State>();
-  return <DraftState extends State>(state: DraftState) =>
-    createReducerTransactionFromSurface(state, surface);
+  return <DraftState extends State>(
+    state: DraftState,
+    random: TransactionRandom,
+  ) => createReducerTransactionFromSurface(state, surface, random);
 }

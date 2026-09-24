@@ -238,11 +238,12 @@ function projectDispatchTrace<Game>(
                 },
               ];
         }
-        case "appliedInstruction":
+        case "phaseEntered":
           return [
             {
-              kind: "appliedInstruction",
-              instructionKind: trace.instruction,
+              kind: "phaseEntered",
+              from: trace.from,
+              to: trace.to,
             },
           ];
         case "rngConsumption":

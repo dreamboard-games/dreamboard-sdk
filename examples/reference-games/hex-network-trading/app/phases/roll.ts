@@ -14,12 +14,10 @@ import { stormtrail } from "../game-model";
 const roll = stormtrail.phase("roll");
 
 const rollDice = roll.interaction({
-  inputs: { dice: roll.inputs.rng.d6(2) },
+  inputs: {},
   reduce({ state, tx, input, q }) {
-    const [first, second] = input.params.dice.values;
-    if (first === undefined || second === undefined) {
-      throw new Error("Stormtrail roll requires two dice.");
-    }
+    const first = tx.roll("stormtrail-die-1");
+    const second = tx.roll("stormtrail-die-2");
     const total = first + second;
     const ownerPlayerId = turnOwnerPlayerId(state, q);
     tx.patchPublicState({

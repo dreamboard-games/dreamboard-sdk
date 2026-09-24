@@ -75,8 +75,9 @@ export type ScenarioDispatchTraceEntry =
       readonly interactionId: string;
     }
   | {
-      readonly kind: "appliedInstruction";
-      readonly instructionKind: string;
+      readonly kind: "phaseEntered";
+      readonly from: string;
+      readonly to: string;
     }
   | {
       readonly kind: "entropyDraw";

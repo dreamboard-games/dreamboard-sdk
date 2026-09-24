@@ -5,12 +5,6 @@
 
 export type ReducerContractVersion = string;
 
-export type EffectId = string;
-
-export type ContinuationToken = { "id": string; "data": JsonValue };
-
-export type ContinuationMap = Record<string, ContinuationToken>;
-
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 
 export type ReducerSetupSelection = { "profileId": string; "optionValues": Record<string, string | null> };
@@ -45,16 +39,6 @@ export type GameInput = GameInputInteraction;
 
 export type GameInputInteraction = { "kind": "interaction"; "playerId": string; "interactionId": string; "params": JsonValue };
 
-export type Effect = EffectTransition | EffectRollDie | EffectShuffleSharedZone | EffectShufflePlayerZone;
-
-export type EffectTransition = { "effectId": EffectId; "type": "transition"; "to": string };
-
-export type EffectRollDie = { "effectId": EffectId; "type": "rollDie"; "dieId": string };
-
-export type EffectShuffleSharedZone = { "effectId": EffectId; "type": "shuffleSharedZone"; "zoneId": string };
-
-export type EffectShufflePlayerZone = { "effectId": EffectId; "type": "shufflePlayerZone"; "zoneId": string; "playerId": string };
-
 export type ReducerInputValidationResult = { "valid": boolean; "errorCode"?: string; "message"?: string };
 
 export type InitializeResult = { "state": ReducerSessionState; "terminal"?: GameOutcome; "events"?: Array<GameEvent> };
@@ -73,13 +57,11 @@ export type ReduceResult = ReduceResultReject | ReduceResultAccept;
 
 export type ReduceResultReject = { "kind": "reject"; "errorCode": string; "message"?: string };
 
-export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "effects": Array<Effect>; "continuations": ContinuationMap; "events": Array<GameEvent> };
+export type ReduceResultAccept = { "kind": "accept"; "state": ReducerSessionState; "terminal"?: GameOutcome; "events": Array<GameEvent> };
 
-export type DispatchTrace = DispatchTraceAcceptedClientInput | DispatchTraceAppliedEffect | DispatchTraceRngConsumption;
+export type DispatchTrace = DispatchTraceAcceptedClientInput | DispatchTracePhaseEntered | DispatchTraceRngConsumption;
 
 export type DispatchTraceAcceptedClientInput = { "kind": "acceptedClientInput"; "input": GameInput };
-
-export type DispatchTraceAppliedEffect = { "kind": "appliedEffect"; "effect": Effect; "continuation"?: ContinuationToken };
 
 export type DispatchTraceRngConsumption = { "kind": "rngConsumption"; "version": 2; "operation": string; "drawIndex": number; "traceEntry": string };
 
@@ -107,11 +89,9 @@ export type GameOutcomeReason = { "code": string; "message"?: string };
 
 export type GameOutcome = { "reason": GameOutcomeReason; "standings": Array<OutcomeStanding> };
 
-export type ReducerRuntimeLogEntry = ReducerRuntimeLogEntryAcceptedClientInput | ReducerRuntimeLogEntryAppliedEffect | ReducerRuntimeLogEntryRngConsumption | ReducerRuntimeLogEntryStateCommit;
+export type ReducerRuntimeLogEntry = ReducerRuntimeLogEntryAcceptedClientInput | ReducerRuntimeLogEntryPhaseEntered | ReducerRuntimeLogEntryRngConsumption | ReducerRuntimeLogEntryStateCommit;
 
 export type ReducerRuntimeLogEntryAcceptedClientInput = { "kind": "acceptedClientInput"; "version": number; "input": GameInput };
-
-export type ReducerRuntimeLogEntryAppliedEffect = { "kind": "appliedEffect"; "version": number; "effect": Effect; "continuation": ContinuationToken | null };
 
 export type ReducerRuntimeLogEntryRngConsumption = { "kind": "rngConsumption"; "version": number; "operation": string; "drawIndex"?: number; "traceEntry": string };
 
@@ -136,3 +116,7 @@ export type BoardStaticProjection = { "view": JsonValue; "hash": string; "manife
 export type SetupGuidanceStep = { "id": string; "label": string; "description"?: string };
 
 export type GameGuidanceProjection = { "phase": { "id": string; "label": string; "summary"?: string; "objective"?: string }; "setup"?: { "profileId": string; "name": string; "summary"?: string; "steps": Array<SetupGuidanceStep> } };
+
+export type DispatchTracePhaseEntered = { "kind": "phaseEntered"; "from": string; "to": string };
+
+export type ReducerRuntimeLogEntryPhaseEntered = { "kind": "phaseEntered"; "from": string; "to": string; "version": number };

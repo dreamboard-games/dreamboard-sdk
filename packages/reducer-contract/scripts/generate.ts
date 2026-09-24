@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Emits TS types, Zod schemas, typed effect builders, and a version constant
+// Emits TS types, Zod schemas, and a version constant
 // from schema/reducer-runtime.schema.json. Outputs to ./generated.
 //
 // Why a bespoke generator and not `json-schema-to-ts` + `json-schema-to-zod`?
 // - The schema is small and has specific conventions (oneOf-with-const-tag as
 //   our sum-type idiom). Hand-rolling ~250 lines lets us emit *exactly* the
-//   shapes we want (e.g. union members as named types, builders with the
-//   effectId enforced, a single `version.ts` file). It also keeps the
+//   shapes we want (e.g. union members as named types and a single
+//   `version.ts` file). It also keeps the
 //   reducer-contract package free of extra third-party codegen deps whose
 //   output we'd still have to post-process.
 // - If the schema grows large, swap this for `json-schema-to-zod` behind the
@@ -1268,186 +1268,6 @@ export function renderReducerContract(
   artifacts.set("generated/zod.ts", zodLines.join("\n"));
 
   // -----------------------------------------------------------------------------
-  // emit builders.ts (typed constructors for every Effect variant)
-  // -----------------------------------------------------------------------------
-
-  type EffectVariant = {
-    tag: string;
-    props: Array<{ name: string; type: string; required: boolean }>;
-  };
-
-  const effectDefinition = defs.Effect;
-  if (!effectDefinition?.oneOf) {
-    inputError(
-      SCHEMA_PATH,
-      "/$defs/Effect/oneOf",
-      "Effect must declare oneOf[]",
-    );
-  }
-  const effectVariants: EffectVariant[] = effectDefinition.oneOf.map(
-    (member, index) => {
-      const memberPath = `/$defs/Effect/oneOf/${index}`;
-      if (!member.$ref) {
-        inputError(SCHEMA_PATH, memberPath, "Effect variants must use $ref");
-      }
-      const name = refName(member.$ref, `${memberPath}/$ref`);
-      const definition = defs[name];
-      if (!definition?.properties) {
-        inputError(
-          SCHEMA_PATH,
-          `/$defs/${pointerSegment(name)}`,
-          "Effect variants must be object schemas with properties",
-        );
-      }
-      const tag = definition.properties.type?.const;
-      if (typeof tag !== "string" || !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(tag)) {
-        inputError(
-          SCHEMA_PATH,
-          `/$defs/${pointerSegment(name)}/properties/type/const`,
-          "effect type must be a valid TypeScript method name",
-        );
-      }
-      const required = new Set(definition.required ?? []);
-      if (!required.has("type") || !required.has("effectId")) {
-        inputError(
-          SCHEMA_PATH,
-          `/$defs/${pointerSegment(name)}/required`,
-          "effect variants must require type and effectId",
-        );
-      }
-      const propEntries = Object.entries(definition.properties)
-        .filter(([key]) => key !== "type" && key !== "effectId")
-        .map(([key, value]) => {
-          if (!/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key)) {
-            inputError(
-              SCHEMA_PATH,
-              `/$defs/${pointerSegment(name)}/properties/${pointerSegment(key)}`,
-              "effect builder properties must be valid TypeScript identifiers",
-            );
-          }
-          return {
-            name: key,
-            type: tsTypeOf(
-              value,
-              "Wire.",
-              `/$defs/${pointerSegment(name)}/properties/${pointerSegment(key)}`,
-            ),
-            required: required.has(key),
-          };
-        });
-      return { tag, props: propEntries };
-    },
-  );
-
-  const builderLines = [GENERATED_HEADER];
-  builderLines.push(`/* eslint-disable */`);
-  builderLines.push(`import type * as Wire from "./wire";`);
-  builderLines.push(``);
-  builderLines.push(
-    `/**`,
-    ` * Typed effect constructors. Authors MUST go through these; hand-constructing`,
-    ` * Wire.Effect objects is banned by convention because it's how wire drift`,
-    ` * re-enters the codebase.`,
-    ` *`,
-    ` * The \`effectId\` is minted by the runtime (see createEffectIdMinter below),`,
-    ` * not by the author. Each builder returns a \`PendingEffect\` that carries`,
-    ` * the optional continuation; the reducer bundle's accept materializer splits`,
-    ` * pending effects into the wire's \`effects[]\` + \`continuations\` map.`,
-    ` */`,
-  );
-  builderLines.push(``);
-  builderLines.push(`export type PendingEffect = Wire.Effect & {`);
-  builderLines.push(`  readonly __continuation?: Wire.ContinuationToken;`);
-  builderLines.push(`};`);
-  builderLines.push(``);
-  builderLines.push(`export type EffectIdMinter = () => Wire.EffectId;`);
-  builderLines.push(``);
-  builderLines.push(`/**`);
-  builderLines.push(
-    ` * Produces sequential, deterministic effect ids scoped to a single accept`,
-  );
-  builderLines.push(
-    ` * payload: "ef0", "ef1", ... . Uniqueness only needs to be local to the`,
-  );
-  builderLines.push(
-    ` * payload because the host consumes and discards them per dispatch.`,
-  );
-  builderLines.push(` */`);
-  builderLines.push(`export function createEffectIdMinter(): EffectIdMinter {`);
-  builderLines.push(`  let i = 0;`);
-  builderLines.push(`  return () => \`ef\${i++}\` as Wire.EffectId;`);
-  builderLines.push(`}`);
-  builderLines.push(``);
-  builderLines.push(`export type EffectBuilders = {`);
-  for (const v of effectVariants) {
-    const args = v.props.map(
-      (p) => `${p.name}${p.required ? "" : "?"}: ${p.type}`,
-    );
-    builderLines.push(
-      `  ${v.tag}(args: { ${args.join("; ")} }, continuation?: Wire.ContinuationToken): PendingEffect;`,
-    );
-  }
-  builderLines.push(`};`);
-  builderLines.push(``);
-  builderLines.push(
-    `export function createEffectBuilders(mint: EffectIdMinter): EffectBuilders {`,
-  );
-  builderLines.push(`  return {`);
-  for (const v of effectVariants) {
-    const argNames = v.props.map((p) => p.name);
-    const argSpread = argNames.map((n) => `${n}: args.${n}`).join(", ");
-    builderLines.push(`    ${v.tag}(args, continuation) {`);
-    builderLines.push(
-      `      const effect = { effectId: mint(), type: "${v.tag}" as const, ${argSpread} };`,
-    );
-    builderLines.push(`      return continuation === undefined`);
-    builderLines.push(`        ? (effect as PendingEffect)`);
-    builderLines.push(
-      `        : Object.assign(effect, { __continuation: continuation });`,
-    );
-    builderLines.push(`    },`);
-  }
-  builderLines.push(`  };`);
-  builderLines.push(`}`);
-  builderLines.push(``);
-  builderLines.push(`/**`);
-  builderLines.push(
-    ` * Takes a list of PendingEffects and splits them into the canonical wire`,
-  );
-  builderLines.push(
-    ` * shape: \`effects[]\` (stripped of \`__continuation\`) + \`continuations\` map`,
-  );
-  builderLines.push(
-    ` * keyed by effectId. Use at the boundary where reduce/dispatch results leave`,
-  );
-  builderLines.push(` * author code and enter the wire.`);
-  builderLines.push(` */`);
-  builderLines.push(
-    `export function materializeAccept(pending: ReadonlyArray<PendingEffect>): {`,
-  );
-  builderLines.push(`  effects: Wire.Effect[];`);
-  builderLines.push(`  continuations: Wire.ContinuationMap;`);
-  builderLines.push(`} {`);
-  builderLines.push(`  const effects: Wire.Effect[] = [];`);
-  builderLines.push(`  const continuations: Wire.ContinuationMap = {};`);
-  builderLines.push(`  for (const pe of pending) {`);
-  builderLines.push(
-    `    const { __continuation, ...effect } = pe as PendingEffect & { __continuation?: Wire.ContinuationToken };`,
-  );
-  builderLines.push(`    effects.push(effect as Wire.Effect);`);
-  builderLines.push(`    if (__continuation !== undefined) {`);
-  builderLines.push(
-    `      continuations[(effect as Wire.Effect).effectId] = __continuation;`,
-  );
-  builderLines.push(`    }`);
-  builderLines.push(`  }`);
-  builderLines.push(`  return { effects, continuations };`);
-  builderLines.push(`}`);
-  builderLines.push(``);
-
-  artifacts.set("generated/builders.ts", builderLines.join("\n"));
-
-  // -----------------------------------------------------------------------------
   // emit version.ts
   // -----------------------------------------------------------------------------
 
@@ -1630,7 +1450,7 @@ export function runGenerateCli(argv: readonly string[]): number {
   console.log(
     values.check
       ? `✓ reducer-contract generated artifacts are clean (${result.version}).`
-      : `✓ reducer-contract codegen: emitted wire.ts, zod.ts, builders.ts, version.ts, and bundle.ts (${result.version})`,
+      : `✓ reducer-contract codegen: emitted wire.ts, zod.ts, version.ts, and bundle.ts (${result.version})`,
   );
   return 0;
 }

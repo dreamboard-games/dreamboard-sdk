@@ -18,7 +18,6 @@ import {
 import { interactionDomainEligibleCount } from "./interaction-domain-metadata";
 import { buildInteractionDescriptor } from "./interaction-descriptor";
 import type { createInteractionAuthorization } from "./interaction-authorization";
-import type { createStageResolver } from "./stage-resolver";
 import {
   makeValidationError,
   type InteractionDecision,
@@ -44,12 +43,6 @@ import type {
   TrustedRuntimeScope,
   TrustedState,
 } from "./runtime-scope";
-
-type StageResolverFor<
-  Contract extends ReducerGameContractLike,
-  Definitions extends PhaseMapOf<Contract>,
-  Views extends ViewMapOf<Contract>,
-> = ReturnType<typeof createStageResolver<Contract, Definitions, Views>>;
 
 type AuthorizationFor<
   Contract extends ReducerGameContractLike,
@@ -99,7 +92,6 @@ export function createInteractionDecisionResolver<
   Views extends ViewMapOf<Contract>,
 >(
   scope: TrustedRuntimeScope<Contract, Definitions, Views>,
-  stages: StageResolverFor<Contract, Definitions, Views>,
   authorization: AuthorizationFor<Contract, Definitions, Views>,
   options: { diagnostics?: InteractionDiagnosticsMode } = {},
 ) {
@@ -158,7 +150,7 @@ export function createInteractionDecisionResolver<
     interaction: AnyInteractionSpec<DomainState, Manifest>,
     playerId: PlayerId,
     params: Record<string, unknown>,
-    projection?: ProjectionContext<DomainState, State>,
+    projection?: ProjectionContext<DomainState>,
   ):
     | { cost?: Record<string, number>; missing?: Record<string, number> }
     | { error: unknown } {
@@ -190,7 +182,7 @@ export function createInteractionDecisionResolver<
     playerId: PlayerId;
     interactionId: string;
     assignment: Readonly<Record<string, unknown>>;
-    projection?: ProjectionContext<DomainState, State>;
+    projection?: ProjectionContext<DomainState>;
   }): boolean {
     const decision = resolveInteractionDecision({
       state: input.state,
@@ -299,17 +291,6 @@ export function createInteractionDecisionResolver<
     if (alreadySubmitted && !canResubmit && mode !== "submit") {
       visible = false;
     }
-    const stageAllow = candidateInvariantsValidated
-      ? null
-      : stages.resolveActiveStageAllowlist(state, phaseName, projection);
-    const stageAllowed =
-      candidateInvariantsValidated ||
-      !stageAllow ||
-      stageAllow.has(interactionId);
-    const stepAllowed =
-      candidateInvariantsValidated ||
-      stages.isInteractionAllowedInStep(state, interaction, projection);
-
     let validation: ReducerValidationResult = { valid: true };
     if (!authorized) {
       validation =
@@ -327,20 +308,10 @@ export function createInteractionDecisionResolver<
         "ALREADY_SUBMITTED",
         `Interaction '${interactionId}' has already been submitted by '${playerId}'.`,
       );
-    } else if (!stageAllowed) {
-      validation = makeValidationError(
-        "action-unavailable",
-        `Interaction '${interactionId}' is not allowed in the current stage.`,
-      );
-    } else if (!stepAllowed) {
-      validation = makeValidationError(
-        "action-unavailable",
-        `Interaction '${interactionId}' is not allowed in the current step.`,
-      );
     }
 
     const canEvaluateProjectionDetails =
-      mode !== "submit" && visible && authorized && stageAllowed && stepAllowed;
+      mode !== "submit" && visible && authorized;
     const canContinueSubmitValidation = mode === "submit" && validation.valid;
     let cost: Record<string, number> | undefined;
     let missingResources: Record<string, number> | undefined;
@@ -467,8 +438,7 @@ export function createInteractionDecisionResolver<
       }
     }
 
-    const candidateInvariantAvailable =
-      stageAllowed && stepAllowed && authorized && !ruleAvailabilityIssue;
+    const candidateInvariantAvailable = authorized && !ruleAvailabilityIssue;
     const acceptsAssignment = (
       assignment: Readonly<Record<string, unknown>>,
     ): boolean =>
@@ -506,60 +476,46 @@ export function createInteractionDecisionResolver<
             message: "Not your turn",
             cost,
           }
-        : !stageAllowed
+        : ruleAvailabilityIssue
           ? {
               available: false,
-              code: FrameworkErrorCodes.WRONG_PHASE,
-              message: "Interaction not allowed in current stage",
+              code: ruleAvailabilityIssue.errorCode,
+              ruleId: ruleAvailabilityIssue.ruleId,
+              message:
+                ruleAvailabilityIssue.message ??
+                ruleAvailabilityIssue.errorCode,
               cost,
             }
-          : !stepAllowed
+          : !costAffordable
             ? {
                 available: false,
-                code: FrameworkErrorCodes.WRONG_STEP,
-                message: "Interaction not allowed in current step",
+                code: "INSUFFICIENT_RESOURCES",
+                message: "INSUFFICIENT_RESOURCES",
                 cost,
+                missingResources,
               }
-            : ruleAvailabilityIssue
+            : authoredValidation
               ? {
                   available: false,
-                  code: ruleAvailabilityIssue.errorCode,
-                  ruleId: ruleAvailabilityIssue.ruleId,
+                  code: authoredValidation.errorCode,
+                  ruleId: authoredValidation.ruleId,
                   message:
-                    ruleAvailabilityIssue.message ??
-                    ruleAvailabilityIssue.errorCode,
+                    authoredValidation.message ?? "Interaction unavailable",
                   cost,
                 }
-              : !costAffordable
+              : inputSatisfiability?.status === "no"
                 ? {
                     available: false,
-                    code: "INSUFFICIENT_RESOURCES",
-                    message: "INSUFFICIENT_RESOURCES",
+                    code: FrameworkErrorCodes.NO_LEGAL_INPUT,
+                    message: "No legal input is currently available.",
                     cost,
-                    missingResources,
                   }
-                : authoredValidation
-                  ? {
-                      available: false,
-                      code: authoredValidation.errorCode,
-                      ruleId: authoredValidation.ruleId,
-                      message:
-                        authoredValidation.message ?? "Interaction unavailable",
-                      cost,
-                    }
-                  : inputSatisfiability?.status === "no"
-                    ? {
-                        available: false,
-                        code: FrameworkErrorCodes.NO_LEGAL_INPUT,
-                        message: "No legal input is currently available.",
-                        cost,
-                      }
-                    : {
-                        available: false,
-                        code: "action-unavailable",
-                        message: "Interaction unavailable",
-                        cost,
-                      };
+                : {
+                    available: false,
+                    code: "action-unavailable",
+                    message: "Interaction unavailable",
+                    cost,
+                  };
     const descriptor = buildInteractionDescriptor(
       scope,
       state,
@@ -587,7 +543,7 @@ export function createInteractionDecisionResolver<
   function resolveAvailableInteractionsFor(
     state: State,
     playerId: PlayerId,
-    options: { projection?: ProjectionContext<DomainState, State> } = {},
+    options: { projection?: ProjectionContext<DomainState> } = {},
   ) {
     const phaseName = state.flow.currentPhase as PhaseName;
     const descriptors: Descriptor[] = [];
@@ -610,7 +566,7 @@ export function createInteractionDecisionResolver<
     state: State;
     playerId: PlayerId;
     interactionId: string;
-    projection?: ProjectionContext<DomainState, State>;
+    projection?: ProjectionContext<DomainState>;
   }): InteractionActionabilityResult {
     const decision = resolveInteractionDecision({
       ...input,
@@ -632,7 +588,7 @@ export function createInteractionDecisionResolver<
     playerId: PlayerId;
     interactionId: string;
     maxEvaluations: number;
-    projection?: ProjectionContext<DomainState, State>;
+    projection?: ProjectionContext<DomainState>;
   }): InteractionInputEnumerationResult {
     const decision = resolveInteractionDecision({
       state: input.state,
@@ -677,7 +633,7 @@ export function createInteractionDecisionResolver<
     state: State;
     playerId: PlayerId;
     interactionId: string;
-    projection?: ProjectionContext<DomainState, State>;
+    projection?: ProjectionContext<DomainState>;
   }): InteractionExplanation {
     const { state, playerId, interactionId, projection } = input;
     const phaseName = state.flow.currentPhase as PhaseName;
@@ -753,9 +709,7 @@ export function createInteractionDecisionResolver<
                 };
 
     const ruleOutcomes: Array<InteractionExplanation["rules"][number]> = [];
-    const canEvaluateRules =
-      authorized &&
-      stages.isInteractionAllowedInStep(state, interaction, projection);
+    const canEvaluateRules = authorized;
     let sawFailure = false;
     const availabilityArgs = canEvaluateRules
       ? scope.buildRuntimeArgs(

@@ -66,12 +66,7 @@ test("renders the checked-in artifacts byte-for-byte", () => {
     assert.equal(result.status, 0, result.stderr);
 
     const generatedFiles = listFiles(path.join(outputRoot, "generated"));
-    assert.deepEqual(generatedFiles, [
-      "builders.ts",
-      "version.ts",
-      "wire.ts",
-      "zod.ts",
-    ]);
+    assert.deepEqual(generatedFiles, ["version.ts", "wire.ts", "zod.ts"]);
     for (const relative of generatedFiles) {
       assert.equal(
         fs.readFileSync(path.join(outputRoot, "generated", relative), "utf8"),
@@ -119,7 +114,7 @@ test("unsupported schema forms fail with their input path", () => {
     const schema = JSON.parse(fs.readFileSync(schemaPath, "utf8")) as {
       $defs: Record<string, Record<string, unknown>>;
     };
-    schema.$defs.EffectTransition!.unsupportedKeyword = true;
+    schema.$defs.DispatchTracePhaseEntered!.unsupportedKeyword = true;
     const invalidSchemaPath = path.join(directory, "invalid-schema.json");
     fs.writeFileSync(invalidSchemaPath, `${JSON.stringify(schema, null, 2)}\n`);
 
@@ -132,7 +127,7 @@ test("unsupported schema forms fail with their input path", () => {
     assert.equal(result.status, 1);
     assert.match(
       result.stderr,
-      /invalid-schema\.json#\/\$defs\/EffectTransition\/unsupportedKeyword/,
+      /invalid-schema\.json#\/\$defs\/DispatchTracePhaseEntered\/unsupportedKeyword/,
     );
     assert.match(result.stderr, /unsupported keyword/);
   } finally {

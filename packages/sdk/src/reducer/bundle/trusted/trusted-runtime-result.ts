@@ -292,7 +292,7 @@ export function acceptResult<State>(
   return {
     type: "accept" as const,
     state,
-    instructions: [...(options.instructions ?? [])],
+    ...(options.transition ? { transition: options.transition } : {}),
     events,
   };
 }
@@ -307,7 +307,7 @@ export function endGameResult<State, PlayerId extends string = string>(
   return {
     type: "accept" as const,
     state,
-    instructions: [...(options.instructions ?? [])],
+    ...(options.transition ? { transition: options.transition } : {}),
     events,
     terminal,
   };
@@ -336,7 +336,7 @@ export function normalizeResult<State>(
     // arrive raw; apply the same limits as the legacy `accept` helper.
     return {
       ...result,
-      instructions: [...(result.instructions ?? [])],
+
       events: normalizeGameEvents(result.events),
       ...(result.terminal
         ? { terminal: normalizeGameOutcome(result.state, result.terminal) }

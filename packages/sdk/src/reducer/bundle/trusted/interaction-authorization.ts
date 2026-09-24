@@ -46,7 +46,7 @@ export function createInteractionAuthorization<
   function resolveInteractionActorAuthorization(
     state: State,
     interaction: AnyInteractionSpec<DomainState, Manifest>,
-    projection?: ProjectionContext<DomainState, State>,
+    projection?: ProjectionContext<DomainState>,
   ): InteractionActorAuthorization<PlayerId> {
     if (interaction.to) {
       const resolved = interaction.to({

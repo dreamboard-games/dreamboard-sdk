@@ -1,3 +1,4 @@
+import { createMutableRandomHelpers } from "../src/reducer/bundle/trusted/rng-sampler";
 import {
   createReducerEdit,
   perPlayer,
@@ -159,7 +160,10 @@ const baseState = createBenchState();
 const edit = createReducerEdit<BenchState>();
 
 function runFiveOpTransaction(): BenchState {
-  const tx = edit(baseState);
+  const tx = edit(
+    baseState,
+    createMutableRandomHelpers({ seed: 42, cursor: 0, trace: [], draws: [] }),
+  );
   tx.spendResources({
     playerId: playerIds[0]!,
     amounts: { wood: 1, brick: 1 },

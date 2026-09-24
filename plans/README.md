@@ -1,7 +1,8 @@
 # Headless SDK delivery
 
-Status: implementation started on 2026-09-24. Root orchestrates and reviews;
+Status: full delivery authorized on 2026-09-24. Root orchestrates and reviews;
 implementation and independent audits use GPT-6 Astra with Medium reasoning.
+Track every original requirement in [the delivery checklist](delivery-checklist.md).
 
 ## Current baseline
 
@@ -62,16 +63,18 @@ host and browser runtime rather than the former CLI.
 
 ## Execution order
 
-| Layer                               | Scope                                                                    | Status                          |
-| ----------------------------------- | ------------------------------------------------------------------------ | ------------------------------- |
-| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins            | Implemented; review gate passed |
-| 002                                 | Remaining reducer authoring simplification and lifecycle hard cut        | Pending 001 and reviewed scope  |
-| 003                                 | Committed steps, private projection and command contracts                | Pending reducer foundation      |
-| 004                                 | Headless instance, feature typing and sources                            | Pending projection contract     |
-| 005                                 | React adapter, both reference UIs, removal of old public runtime         | Pending instance                |
-| 006                                 | Registry, scenario development UI, browser helpers and workbench removal | Pending React cutover           |
-| 007                                 | Final packaging, documentation and public release proof                  | Pending complete SDK stack      |
-| Downstream                          | Public runtime/offline host and internal consumer adoption               | Published SDK required          |
+| Layer                               | Scope                                                                          | Status                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------- |
+| [001](001-transaction-mutations.md) | One transaction mutation path; remove immutable ops and twins                  | PR #26; local and hosted gates passed                      |
+| [002](002-reducer-lifecycle.md)     | Reducer execution, setup/actors, views/cache (three sublayers)                 | 002a complete/reviewed; 002b next                          |
+| [003](003-committed-steps.md)       | Committed steps, private projection and command contracts                      | Specified; pending reducer foundation                      |
+| 003b                                | Canonical shared models, plain player records, bundle and schema consolidation | Pending steps                                              |
+| [003c](003c-board-geometry.md)      | Honeycomb board shapes, identities, queries and layouts                        | Preparation scoped; integrate after shared models          |
+| 004                                 | Headless instance, feature typing and sources                                  | Pending projection contract                                |
+| 005                                 | React adapter, both reference UIs, removal of old public runtime               | Pending instance                                           |
+| 006                                 | Registry, scenario development UI, browser helpers and workbench removal       | Pure registry preparation in parallel; cutover after React |
+| 007                                 | Final packaging, documentation and public release proof                        | Pending complete SDK stack                                 |
+| Downstream                          | Public runtime/offline host and internal consumer adoption                     | Published SDK required                                     |
 
 The original six-layer sketch is split at the reducer foundation so the
 transaction rewrite can be reviewed and verified on its own. Future layers get
@@ -105,3 +108,13 @@ the current `authoring:cohort:check`, `verify:offline`, and owned stack/browser/
 integration lanes as appropriate. Do not reuse the retired CLI release-set flow.
 No staging/production operations are part of this implementation. Merging and
 publication are not implied by starting development.
+
+## Latest receipt
+
+Layer 002a is implemented and independently reviewed on `codex/sdk-reducer-lifecycle`.
+The full browser-free `pnpm check` passed, including SDK 635 tests, checked type
+proofs and both packed reference games; root's independent 48 tests and type proofs
+also passed. See [the lifecycle receipt](002-reducer-lifecycle.md#002a-implementation-receipt).
+Next: [002b initialization and actors](002b-initialization-and-actors.md).
+The final tooling layer must pin pnpm in isolated packed-game copies; this run used
+the repository's pnpm 10.4.1 and the copies' global pnpm 12.5.1 successfully.

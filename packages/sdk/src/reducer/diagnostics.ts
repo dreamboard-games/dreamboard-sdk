@@ -2,7 +2,7 @@ import type { DispatchTraceEntry } from "./core/types";
 
 export type DispatchTraceSummaryEntry =
   | { kind: "acceptedClientInput"; interactionId: string; playerId: string }
-  | { kind: "appliedInstruction"; instruction: string }
+  | { kind: "phaseEntered"; from: string; to: string }
   | {
       kind: "rngConsumption";
       version: 2;
@@ -112,10 +112,11 @@ export function summarizeDispatchTrace<State, PlayerId extends string>(
           playerId:
             entry.input.kind === "interaction" ? entry.input.playerId : "",
         };
-      case "appliedInstruction":
+      case "phaseEntered":
         return {
-          kind: "appliedInstruction" as const,
-          instruction: entry.instruction.kind,
+          kind: "phaseEntered" as const,
+          from: String(entry.from),
+          to: String(entry.to),
         };
       case "rngConsumption":
         return {

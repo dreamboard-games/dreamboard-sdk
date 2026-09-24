@@ -277,10 +277,7 @@ export function buildInteractionDescriptor<
   >,
   decision: InteractionDecision,
   options: {
-    projection?: ProjectionContext<
-      TrustedDomainState<Contract>,
-      TrustedState<Contract>
-    >;
+    projection?: ProjectionContext<TrustedDomainState<Contract>>;
     includeEligibleTargets?: boolean;
     includeDiagnosticReasons?: boolean;
   } = {},

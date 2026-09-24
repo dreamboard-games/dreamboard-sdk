@@ -4,10 +4,19 @@
     "domain": {
       "table": {
         "playerOrder": ["player-1", "player-2"],
-        "zones": { "shared": {}, "perPlayer": {}, "visibility": {} }
+        "zones": {
+          "shared": {},
+          "perPlayer": {},
+          "visibility": {}
+        }
       },
-      "publicState": { "turnCount": 1 },
-      "privateState": { "player-1": {}, "player-2": {} },
+      "publicState": {
+        "turnCount": 1
+      },
+      "privateState": {
+        "player-1": {},
+        "player-2": {}
+      },
       "hiddenState": {},
       "flow": {
         "currentPhase": "takeTurn",
@@ -18,25 +27,19 @@
       "phase": {}
     },
     "runtime": {
-      "rng": { "seed": 1337, "cursor": 0, "trace": [] },
+      "rng": {
+        "seed": 1337,
+        "cursor": 0,
+        "trace": []
+      },
       "setup": null,
-      "simultaneous": { "current": null },
-      "lastTransition": { "from": "main", "to": "takeTurn" }
-    }
-  },
-  "effects": [
-    { "effectId": "ef0", "type": "transition", "to": "resolve" },
-    { "effectId": "ef1", "type": "rollDie", "dieId": "die-red" },
-    {
-      "effectId": "ef2",
-      "type": "shuffleSharedZone",
-      "zoneId": "dev-deck"
-    }
-  ],
-  "continuations": {
-    "ef2": {
-      "id": "afterShuffle",
-      "data": {}
+      "simultaneous": {
+        "current": null
+      },
+      "lastTransition": {
+        "from": "main",
+        "to": "takeTurn"
+      }
     }
   },
   "events": [],
@@ -52,10 +55,24 @@
         "result": "win",
         "score": 18,
         "scoreBreakdown": [
-          { "id": "routes", "label": "Routes", "value": 12 },
-          { "id": "bonuses", "label": "Bonuses", "value": 6 }
+          {
+            "id": "routes",
+            "label": "Routes",
+            "value": 12
+          },
+          {
+            "id": "bonuses",
+            "label": "Bonuses",
+            "value": 6
+          }
         ],
-        "tieBreaks": [{ "id": "cards-left", "label": "Cards left", "value": 2 }]
+        "tieBreaks": [
+          {
+            "id": "cards-left",
+            "label": "Cards left",
+            "value": 2
+          }
+        ]
       },
       {
         "playerId": "player-2",
@@ -63,10 +80,24 @@
         "result": "loss",
         "score": 16,
         "scoreBreakdown": [
-          { "id": "routes", "label": "Routes", "value": 10 },
-          { "id": "bonuses", "label": "Bonuses", "value": 6 }
+          {
+            "id": "routes",
+            "label": "Routes",
+            "value": 10
+          },
+          {
+            "id": "bonuses",
+            "label": "Bonuses",
+            "value": 6
+          }
         ],
-        "tieBreaks": [{ "id": "cards-left", "label": "Cards left", "value": 1 }]
+        "tieBreaks": [
+          {
+            "id": "cards-left",
+            "label": "Cards left",
+            "value": 1
+          }
+        ]
       }
     ]
   }

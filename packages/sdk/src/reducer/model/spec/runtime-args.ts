@@ -1,5 +1,4 @@
-import type { z } from "zod";
-import type { AnySchema, RuntimeTableRecord, StringKeyOf } from "../table";
+import type { RuntimeTableRecord, StringKeyOf } from "../table";
 import type { ManifestContract } from "../manifest";
 import type {
   PhaseNameOfState,
@@ -7,12 +6,7 @@ import type {
   TableOfState,
   SetupSelectionOfManifest,
 } from "../extract";
-import type {
-  AnyContinuationToken,
-  ContinuationToken,
-  ReducerResult,
-  ReducerRuntimeStateForState,
-} from "../runtime";
+import type { ReducerRuntimeStateForState } from "../runtime";
 import type { TableQueriesOfState } from "../queries";
 import type { ReducerTransaction } from "../../transaction";
 import type { DerivedResolver } from "../../derived";
@@ -66,67 +60,6 @@ export type StaticViewQueries<
   };
 };
 
-// --- Continuation Input Types ---
-
-// Engine-level routing kind. Retained as a single-value alias for clarity at
-// engine boundaries; every continuation is effect-sourced in the canonical
-// SDK.
-export type ContinuationSourceKind = "effect";
-
-// Names of engine effects that can resume a typed continuation.
-export type ResumableEffectKind =
-  | "rollDie"
-  | "shuffleSharedZone"
-  | "shufflePlayerZone";
-
-// Internal tag shared between the continuation callable and the engine.
-export type ContinuationKind = ResumableEffectKind;
-
-// Per-effect response shapes. These are produced by the engine after an effect
-// runs and delivered back to the continuation's reduce callback as input.response.
-export type RollDieContinuationResponse = {
-  dieId: string;
-  value: number;
-};
-
-export type ShuffleSharedZoneContinuationResponse = {
-  zoneId: string;
-  orderedCardIds: readonly string[];
-};
-
-export type ShufflePlayerZoneContinuationResponse = {
-  zoneId: string;
-  playerId: string;
-  orderedCardIds: readonly string[];
-};
-
-export type EffectContinuationResponse<Kind extends ResumableEffectKind> =
-  Kind extends "rollDie"
-    ? RollDieContinuationResponse
-    : Kind extends "shuffleSharedZone"
-      ? ShuffleSharedZoneContinuationResponse
-      : Kind extends "shufflePlayerZone"
-        ? ShufflePlayerZoneContinuationResponse
-        : never;
-
-export type EffectContinuationInput<
-  DataSchema extends AnySchema,
-  Kind extends ResumableEffectKind = ResumableEffectKind,
-> = {
-  source: "effect";
-  effectKind: Kind;
-  data: z.infer<DataSchema>;
-  response: EffectContinuationResponse<Kind>;
-};
-
-export type ContinuationInput<DataSchema extends AnySchema> =
-  EffectContinuationInput<DataSchema, ResumableEffectKind>;
-
-export type ContinuationInputForSource<
-  DataSchema extends AnySchema,
-  EffectType extends ResumableEffectKind = ResumableEffectKind,
-> = EffectContinuationInput<DataSchema, EffectType>;
-
 // --- Context Types ---
 
 export type PhaseEnterContext = {
@@ -174,8 +107,7 @@ export type RandomHelpers = {
 };
 
 /**
- * Helpers available only to mutation callbacks (`enter`, `reduce`, `resolve`,
- * continuations). `tx` is the open transaction: mutate through it and end the
+ * Helpers available only to mutation callbacks (`enter`, `reduce`, `resolve`). `tx` is the open transaction: mutate through it and end the
  * callback with a bare `return`, `tx.transition(...)`, `tx.endGame(...)`, or
  * `tx.reject(...)`.
  */
@@ -222,18 +154,6 @@ export type ActorSelector<
   ActorSelection<State>
 >;
 
-export type ContinuationReduceArgs<
-  DataSchema extends AnySchema,
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-  EffectType extends ResumableEffectKind = ResumableEffectKind,
-> = ActionContext<State, Manifest> &
-  ReadHelpers<State> &
-  MutationHelpers<State> & {
-    state: State;
-    input: ContinuationInputForSource<DataSchema, EffectType>;
-  };
-
 export type ScopedPhaseState<
   State extends {
     table: RuntimeTableRecord;
@@ -242,52 +162,3 @@ export type ScopedPhaseState<
   },
   PhaseState extends object,
 > = State & { phase: PhaseState };
-
-// --- Continuation Callables ---
-
-export type ContinuationCallable<
-  DataSchema extends AnySchema,
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-  ContinuationId extends string = string,
-  EffectType extends ResumableEffectKind = ResumableEffectKind,
-> = ((
-  data: z.infer<DataSchema>,
-) => ContinuationToken<
-  z.infer<DataSchema>,
-  ContinuationId,
-  EffectContinuationResponse<EffectType>
->) & {
-  id: ContinuationId;
-  source: "effect";
-  dataSchema: DataSchema;
-  responseSchema: AnySchema;
-  effectKind?: EffectType;
-  reduce: BivariantCallback<
-    ContinuationReduceArgs<DataSchema, State, Manifest, EffectType>,
-    ReducerResult<State>
-  >;
-};
-
-export type AnyContinuationCallable<
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-> = {
-  (data: never): AnyContinuationToken;
-  id: string;
-  source: "effect";
-  dataSchema: AnySchema;
-  responseSchema: AnySchema;
-  effectKind?: ResumableEffectKind;
-  // Heterogeneously-typed erasure: the concrete args shape is determined by
-  // `effectKind` and validated at runtime via `dataSchema` +
-  // `responseSchema`. Consumers must cast at the call site.
-  reduce: (args: unknown) => ReducerResult<State>;
-};
-
-export type EffectContinuationCallable<
-  DataSchema extends AnySchema,
-  State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
-  Manifest extends ManifestContract<TableOfState<State>>,
-  ContinuationId extends string = string,
-  Kind extends ResumableEffectKind = ResumableEffectKind,
-> = ContinuationCallable<DataSchema, State, Manifest, ContinuationId, Kind>;

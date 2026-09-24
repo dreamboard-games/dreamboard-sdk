@@ -245,6 +245,10 @@ export function mutateTypedDraft(tx: Tx, playerId: PlayerId): GameState {
 // --- A phase file: the bound handle, fused inputs, tx-first reducer. --------
 
 const playerTurn = game.phase("playerTurn");
+// @ts-expect-error Phase stages have been removed.
+playerTurn.stepPhase({});
+// @ts-expect-error Cards use ordinary interactions with explicit card inputs.
+playerTurn.cardAction({});
 
 // `state.phase` is the phase fields plus the cross-phase `PhaseAccessor`.
 type _PhaseScopedState = Expect<
@@ -313,6 +317,12 @@ const playerTurnPhase = playerTurn.define({
       reduce: ({ tx, input, ...args }) => {
         // @ts-expect-error Mutation callbacks no longer receive an ops namespace.
         args.ops;
+        // @ts-expect-error Mutation callbacks have no effect namespace.
+        args.fx;
+        // @ts-expect-error Outcome builders do not schedule effects.
+        tx.schedule({ kind: "engine.rollDie" });
+        // @ts-expect-error Effect continuations have been removed.
+        tx.effect({});
         type _ParamsAreLiteral = Expect<
           Equal<typeof input.params.mood, "ready" | "wait">
         >;

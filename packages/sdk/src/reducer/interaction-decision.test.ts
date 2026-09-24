@@ -7,25 +7,21 @@ import {
   cardInput,
   cardTarget,
   choiceTarget,
-  defineCardAction,
+  defineInteraction,
   defineEmptyView,
   defineGameContract,
   defineInputs,
-  defineInteraction,
   defineInteractionRule,
   definePhase,
-  definePhaseStage,
-  defineStepPhase,
   formInput,
   many,
   promptInput,
 } from "../reducer/internal";
 import {
   createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
+  RuntimeTableRecord,
 } from "../reducer/advanced";
 import { asPlayerId, perPlayer, perPlayerGet } from "../reducer/per-player";
-
 function buildManifest() {
   const playerIds = ["player-1", "player-2"] as const;
   const phaseNames = ["takeTurn"] as const;
@@ -126,7 +122,6 @@ function buildManifest() {
     createGameStateSchema: () => z.any(),
   } as const;
 }
-
 function buildTwoZoneManifest() {
   const base = buildManifest();
   const playerIds = ["player-1", "player-2"] as const;
@@ -162,9 +157,10 @@ function buildTwoZoneManifest() {
     },
   } as const;
 }
-
 function createTable(
-  options: { player1Gold?: number } = {},
+  options: {
+    player1Gold?: number;
+  } = {},
 ): RuntimeTableRecord {
   const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
   return {
@@ -210,7 +206,6 @@ function createTable(
     dice: {},
   };
 }
-
 function createTwoZoneTable(): RuntimeTableRecord {
   const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
   return {
@@ -225,7 +220,6 @@ function createTwoZoneTable(): RuntimeTableRecord {
     },
   };
 }
-
 function getAvailableInteractions(
   bundle: ReturnType<typeof createReducerTestingBundle>,
   state: Parameters<typeof bundle.project>[0]["state"],
@@ -240,20 +234,17 @@ function getAvailableInteractions(
     projection.seats[playerId]?.availableInteractionRefs,
   );
 }
-
 function hydrateRefs<T>(
   interactionsByRef: Record<string, T>,
   refs: readonly string[] | undefined,
 ): T[] {
   return (refs ?? []).map((ref) => interactionsByRef[ref]).filter(Boolean);
 }
-
 function nodeSha256Digest(value: unknown): string {
   return `sha256:${createHash("sha256")
     .update(JSON.stringify(canonicalizeJson(value)))
     .digest("hex")}`;
 }
-
 function canonicalizeJson(value: unknown): unknown {
   if (
     value === null ||
@@ -276,15 +267,19 @@ function canonicalizeJson(value: unknown): unknown {
   }
   return null;
 }
-
 function hydrateCardRefs<T>(
-  projection: { interactionsByRef: Record<string, T> },
+  projection: {
+    interactionsByRef: Record<string, T>;
+  },
   refs: readonly string[] | undefined,
 ): T[] {
   return hydrateRefs(projection.interactionsByRef, refs);
 }
-
-function makeBundle(options: { diagnostics?: "verbose" } = {}) {
+function makeBundle(
+  options: {
+    diagnostics?: "verbose";
+  } = {},
+) {
   const contract = defineGameContract({
     manifest: buildManifest(),
     phases: { takeTurn: z.object({}) },
@@ -295,13 +290,17 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
     },
   });
   const phaseState = z.object({});
-  const inMain = <Interaction>(interaction: Interaction) => ({
-    steps: ["main"] as const,
-    interaction,
-  });
+  const inMain = <Interaction>(interaction: Interaction) => interaction;
   const inBlocked = <Interaction>(interaction: Interaction) => ({
-    steps: ["blocked"] as const,
-    interaction,
+    ...interaction,
+    rules: [
+      {
+        id: "blocked",
+        errorCode: "action-unavailable",
+        message: "Interaction is blocked by its rule.",
+        available: () => false,
+      },
+    ],
   });
   const ruleBidAmountInput = formInput.number({
     min: 0,
@@ -355,15 +354,15 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
     },
     initialPhase: "takeTurn",
     phases: {
-      takeTurn: defineStepPhase<typeof contract>()({
+      takeTurn: definePhase<typeof contract>()({
         kind: "player",
         name: "Take turn",
         guidance: {
           summary: "Spend gold, answer prompts, or play a card.",
           objective: "Use the best available action before passing priority.",
         },
-        steps: ["main", "blocked"],
         state: phaseState,
+        zones: ["playZone"],
         interactions: {
           spendGold: inMain(
             defineInteraction<typeof contract, typeof phaseState>()({
@@ -377,7 +376,7 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
               reduce: ({ state, accept }) => accept(state),
             }),
           ),
-          stageBlocked: inMain(
+          stageBlocked: inBlocked(
             defineInteraction<typeof contract, typeof phaseState>()({
               inputs: {},
               reduce: ({ state, accept }) => accept(state),
@@ -537,52 +536,45 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
               reduce: ({ state, accept }) => accept(state),
             }),
           ),
-        },
-        cardActions: {
-          playCard: {
-            steps: ["main"],
-            action: defineCardAction<typeof contract, typeof phaseState>()({
-              presentation: {
-                label: "Play spell",
-                help: "Choose a spell from your play zone.",
+          playCard: defineInteraction<typeof contract, typeof phaseState>()({
+            inputs: {
+              cardId: cardInput({
+                target: cardTarget
+                  .zones<
+                    {
+                      table: RuntimeTableRecord;
+                    },
+                    string
+                  >(["playZone"])
+                  .where({
+                    id: "card-type",
+                    errorCode: "CARD_TYPE_NOT_ALLOWED",
+                    test: ({ state, targetId }) =>
+                      state.table.cards[targetId]?.cardType === "spell",
+                  })
+                  .build(),
+              }),
+            },
+            presentation: {
+              label: "Play spell",
+              help: "Choose a spell from your play zone.",
+            },
+            rules: [
+              {
+                id: "card-blocked",
+                errorCode: "card-blocked",
+                validate: ({ input }) =>
+                  input.params.cardId === "card-a"
+                    ? {
+                        errorCode: "card-blocked",
+                        message: "Card is blocked.",
+                      }
+                    : undefined,
               },
-              cardType: "spell",
-              playFrom: "playZone",
-              rules: [
-                {
-                  id: "card-blocked",
-                  errorCode: "card-blocked",
-                  validate: ({ input }) =>
-                    input.params.cardId === "card-a"
-                      ? {
-                          errorCode: "card-blocked",
-                          message: "Card is blocked.",
-                        }
-                      : undefined,
-                },
-              ],
-              reduce: ({ state, accept }) => accept(state),
-            }),
-          },
-        },
-        stages: {
-          open: definePhaseStage<typeof contract, typeof phaseState>()({
-            allow: [
-              "spendGold",
-              "stepBlocked",
-              "answerPrompt",
-              "playCard",
-              "allocateGold",
-              "bidGold",
-              "chooseMode",
-              "chooseResource",
-              "ruleGatedBid",
-              "stringRuleBid",
             ],
-            when: () => true,
+            reduce: ({ state, accept }) => accept(state),
           }),
         },
-        zones: ["playZone"],
       }),
     },
     views: {
@@ -592,7 +584,6 @@ function makeBundle(options: { diagnostics?: "verbose" } = {}) {
   });
   return createReducerTestingBundle(game, options);
 }
-
 describe("trusted interaction decision pipeline", () => {
   test("dispatch hands explicit paramsSchema data to params-only reducers", async () => {
     const manifest = buildManifest();
@@ -655,7 +646,6 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     const result = await bundle.dispatch({
       state,
       input: {
@@ -665,14 +655,12 @@ describe("trusted interaction decision pipeline", () => {
         params: { cardId: "card-a" },
       },
     });
-
     expect(result.kind).toBe("accept");
     if (result.kind !== "accept") return;
     expect(result.state.domain.publicState).toMatchObject({
       selectedCardId: "card-a",
     });
   });
-
   test("projected descriptors carry stable descriptor digests and seat-scoped initial draft digests", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -695,7 +683,6 @@ describe("trusted interaction decision pipeline", () => {
       shiftedSeatProjection.interactionsByRef,
       shiftedSeatProjection.seats["player-1"]?.availableInteractionRefs,
     ).find((descriptor) => descriptor.interactionId === "stageBlocked");
-
     expect(oneSeatDescriptor).toBeDefined();
     const inputDefaults = Object.fromEntries(
       (oneSeatDescriptor?.inputs ?? []).flatMap((input) =>
@@ -739,21 +726,19 @@ describe("trusted interaction decision pipeline", () => {
       oneSeatDescriptor?.draftDigest,
     );
   });
-
-  test("stage and step gating share descriptor and submit decisions", async () => {
+  test("rules share descriptor and submit decisions", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
-
     expect(
       descriptors.find((d) => d.interactionId === "stageBlocked"),
     ).toMatchObject({
       availability: {
         status: "blocked",
-        reason: "Interaction not allowed in current stage",
+        reason: "Interaction is blocked by its rule.",
       },
     });
     expect(
@@ -761,10 +746,9 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({
       availability: {
         status: "blocked",
-        reason: "Interaction not allowed in current step",
+        reason: "Interaction is blocked by its rule.",
       },
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -778,8 +762,7 @@ describe("trusted interaction decision pipeline", () => {
     ).resolves.toMatchObject({
       valid: false,
       errorCode: "action-unavailable",
-      message:
-        "Interaction 'stageBlocked' is not allowed in the current stage.",
+      message: "Interaction is blocked by its rule.",
     });
     await expect(
       bundle.validateInput({
@@ -794,10 +777,9 @@ describe("trusted interaction decision pipeline", () => {
     ).resolves.toMatchObject({
       valid: false,
       errorCode: "action-unavailable",
-      message: "Interaction 'stepBlocked' is not allowed in the current step.",
+      message: "Interaction is blocked by its rule.",
     });
   });
-
   test("descriptor projection carries authored presentation and fallback labels", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -805,7 +787,6 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1", "player-2"],
     });
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
-
     expect(
       descriptors.find(
         (descriptor) => descriptor.interactionId === "spendGold",
@@ -826,11 +807,10 @@ describe("trusted interaction decision pipeline", () => {
       label: "Stage Blocked",
       availability: {
         status: "blocked",
-        reason: "Interaction not allowed in current stage",
+        reason: "Interaction is blocked by its rule.",
       },
     });
   });
-
   test("dynamic projection carries current phase guidance", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -841,7 +821,6 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-
     expect(projection.guidance).toEqual({
       phase: {
         id: "takeTurn",
@@ -851,14 +830,12 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
   });
-
   test("prompt addressees stay hidden from non-addressees and reject with prompt-not-owned", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       getAvailableInteractions(bundle, state, "player-1").some(
         (descriptor) => descriptor.interactionId === "answerPrompt",
@@ -873,7 +850,6 @@ describe("trusted interaction decision pipeline", () => {
       availability: { status: "available" },
       context: { to: "player-2" },
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -889,14 +865,12 @@ describe("trusted interaction decision pipeline", () => {
       errorCode: "prompt-not-owned",
     });
   });
-
   test("cost details and submit rejection come from the same decision path", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       getAvailableInteractions(bundle, state, "player-1").find(
         (descriptor) => descriptor.interactionId === "spendGold",
@@ -911,7 +885,6 @@ describe("trusted interaction decision pipeline", () => {
       currentResources: { gold: 1 },
       commit: { mode: "autoWhenReady" },
     });
-
     expect(
       getAvailableInteractions(bundle, state, "player-1").find(
         (descriptor) => descriptor.interactionId === "stageBlocked",
@@ -919,7 +892,6 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({
       commit: { mode: "manual" },
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -935,14 +907,12 @@ describe("trusted interaction decision pipeline", () => {
       errorCode: "INSUFFICIENT_RESOURCES",
     });
   });
-
   test("interaction rules drive both descriptor availability and submit validation", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       getAvailableInteractions(bundle, state, "player-1").find(
         (descriptor) => descriptor.interactionId === "ruleGatedBid",
@@ -953,7 +923,6 @@ describe("trusted interaction decision pipeline", () => {
         reason: "Need 2 gold.",
       },
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -969,12 +938,10 @@ describe("trusted interaction decision pipeline", () => {
       errorCode: "INSUFFICIENT_RESOURCES",
       message: "Need 2 gold.",
     });
-
     const fundedState = await bundle.initialize({
       table: createTable({ player1Gold: 2 }),
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       getAvailableInteractions(bundle, fundedState, "player-1").find(
         (descriptor) => descriptor.interactionId === "ruleGatedBid",
@@ -982,7 +949,6 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({
       availability: { status: "available" },
     });
-
     await expect(
       bundle.validateInput({
         state: fundedState,
@@ -999,14 +965,12 @@ describe("trusted interaction decision pipeline", () => {
       message: "Not enough gold.",
     });
   });
-
   test("rule validation may return a dynamic message string", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable({ player1Gold: 2 }),
       playerIds: ["player-1", "player-2"],
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -1023,14 +987,12 @@ describe("trusted interaction decision pipeline", () => {
       message: "Need that much gold.",
     });
   });
-
   test("explainInteraction reports structured rule and input diagnostics", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       bundle.explainInteraction({
         state,
@@ -1040,7 +1002,7 @@ describe("trusted interaction decision pipeline", () => {
     ).toMatchObject({
       interactionId: "ruleGatedBid",
       phase: "takeTurn",
-      step: "main",
+      step: null,
       availability: "blocked",
       actor: { required: [], playerIsActor: true },
       rules: [
@@ -1060,7 +1022,6 @@ describe("trusted interaction decision pipeline", () => {
       ],
     });
   });
-
   test("verbose diagnostics opt in to descriptor reasons", async () => {
     const defaultBundle = makeBundle();
     const verboseBundle = makeBundle({ diagnostics: "verbose" });
@@ -1072,7 +1033,6 @@ describe("trusted interaction decision pipeline", () => {
       table: createTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     const defaultDescriptor = getAvailableInteractions(
       defaultBundle,
       defaultState,
@@ -1092,7 +1052,6 @@ describe("trusted interaction decision pipeline", () => {
       ],
     });
   });
-
   test("hand zones derive card actions and preserve card-mode validation", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -1104,14 +1063,12 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1"],
     });
     const playZone = projection.seats["player-1"]?.zones.playZone;
-
     expect(playZone?.cardIds).toEqual(["card-a", "card-b"]);
     expect(JSON.parse(playZone!.cardViewsById["card-a"]!)).toEqual({
       id: "card-a",
       cardType: "spell",
       properties: {},
     });
-
     expect(
       hydrateCardRefs(projection, playZone?.playableByCardId["card-a"]),
     ).toMatchObject([
@@ -1138,7 +1095,6 @@ describe("trusted interaction decision pipeline", () => {
     ]);
     expect(playZone?.playableByCardId["card-b"]).toEqual([]);
   });
-
   test("hand zones derive authored hand interactions from card inputs", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1204,7 +1160,6 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1"],
     });
     const playZone = projection.seats["player-1"]?.zones.playZone;
-
     expect(
       hydrateCardRefs(projection, playZone?.playableByCardId["card-a"]).find(
         (descriptor) => descriptor.interactionId === "playSelected",
@@ -1234,7 +1189,6 @@ describe("trusted interaction decision pipeline", () => {
       ),
     ).toMatchObject({ commit: { mode: "manual" } });
   });
-
   test("card interactions with renderable form inputs default to manual commit", async () => {
     const contract = defineGameContract({
       manifest: buildTwoZoneManifest(),
@@ -1259,14 +1213,29 @@ describe("trusted interaction decision pipeline", () => {
           kind: "player",
           state: phaseState,
           initialState: () => ({}),
-          cardActions: {
-            playWithChoices: defineCardAction<
+          zones: ["playZone"],
+          interactions: {
+            playWithChoices: defineInteraction<
               typeof contract,
               typeof phaseState
             >()({
-              cardType: "spell",
-              playFrom: "playZone",
               inputs: {
+                cardId: cardInput({
+                  target: cardTarget
+                    .zones<
+                      {
+                        table: RuntimeTableRecord;
+                      },
+                      string
+                    >(["playZone"])
+                    .where({
+                      id: "card-type",
+                      errorCode: "CARD_TYPE_NOT_ALLOWED",
+                      test: ({ state, targetId }) =>
+                        state.table.cards[targetId]?.cardType === "spell",
+                    })
+                    .build(),
+                }),
                 selectedCardIds: formInput.choiceList({
                   choices: [{ value: "card-a", label: "Card A" }],
                   defaultValue: [],
@@ -1275,7 +1244,6 @@ describe("trusted interaction decision pipeline", () => {
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone"],
         }),
       },
       views: {
@@ -1288,7 +1256,6 @@ describe("trusted interaction decision pipeline", () => {
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     const descriptor = getAvailableInteractions(bundle, state, "player-1").find(
       (candidate) => candidate.interactionId === "playWithChoices",
     );
@@ -1297,7 +1264,6 @@ describe("trusted interaction decision pipeline", () => {
       descriptor?.inputs.find((input) => input.key === "selectedCardIds"),
     ).toMatchObject({ defaultValue: [] });
   });
-
   test("default commit policy follows terminal input dependencies", async () => {
     const contract = defineGameContract({
       manifest: buildTwoZoneManifest(),
@@ -1425,14 +1391,12 @@ describe("trusted interaction decision pipeline", () => {
       descriptors.find(
         (descriptor) => descriptor.interactionId === interactionId,
       )?.commit.mode;
-
     expect(commitModeFor("formOnly")).toBe("manual");
     expect(commitModeFor("targetOnly")).toBe("autoWhenReady");
     expect(commitModeFor("targetThenForm")).toBe("manual");
     expect(commitModeFor("formThenTarget")).toBe("autoWhenReady");
     expect(commitModeFor("independentMixed")).toBe("manual");
   });
-
   test("many-input interactions cannot opt into auto submit", () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1447,7 +1411,6 @@ describe("trusted interaction decision pipeline", () => {
     const playZoneTarget = cardTarget
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
-
     expect(contract.phaseNames).toEqual(["takeTurn"]);
     expect(phaseState.parse({})).toEqual({});
     expect(() =>
@@ -1465,7 +1428,6 @@ describe("trusted interaction decision pipeline", () => {
       'defineInteraction: interactions with many(...) inputs must use commit: { mode: "manual" }.',
     );
   });
-
   test("submit target validation receives collector dependency values", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1542,7 +1504,6 @@ describe("trusted interaction decision pipeline", () => {
       table: createTwoZoneTable(),
       playerIds: ["player-1", "player-2"],
     });
-
     await expect(
       bundle.validateInput({
         state,
@@ -1569,7 +1530,6 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
   });
-
   test("hand zones bind playable cards to the matching card input zone", async () => {
     const contract = defineGameContract({
       manifest: buildTwoZoneManifest(),
@@ -1629,7 +1589,6 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-
     expect(
       hydrateCardRefs(
         projection,
@@ -1645,7 +1604,6 @@ describe("trusted interaction decision pipeline", () => {
       ),
     ).toMatchObject([{ interactionId: "inspectThenPlay" }]);
   });
-
   test("hand zones derive simultaneous submit card inputs and hide submitted cards", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1700,7 +1658,6 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-
     expect(
       hydrateCardRefs(
         projection,
@@ -1713,7 +1670,6 @@ describe("trusted interaction decision pipeline", () => {
         zoneId: "playZone",
       },
     ]);
-
     const submitted = await bundle.dispatch({
       state,
       input: {
@@ -1729,7 +1685,6 @@ describe("trusted interaction decision pipeline", () => {
       state: submitted.state,
       playerIds: ["player-1", "player-2"],
     });
-
     expect(
       afterSubmit.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
     ).toEqual([]);
@@ -1748,7 +1703,6 @@ describe("trusted interaction decision pipeline", () => {
       },
     ]);
   });
-
   test("descriptors omit reducer-owned dispatch priority metadata", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -1759,7 +1713,6 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-
     const interaction = hydrateRefs(
       projection.interactionsByRef,
       projection.seats["player-1"]?.availableInteractionRefs,
@@ -1768,7 +1721,6 @@ describe("trusted interaction decision pipeline", () => {
       projection,
       projection.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
     ).find((descriptor) => descriptor.interactionId === "playCard");
-
     expect(interaction).toMatchObject({
       interactionId: "spendGold",
       kind: "action",
@@ -1780,7 +1732,6 @@ describe("trusted interaction decision pipeline", () => {
     expect(interaction).not.toHaveProperty("dispatchPriority");
     expect(cardAction).not.toHaveProperty("dispatchPriority");
   });
-
   test("card actions only surface for their authored card type", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1805,14 +1756,30 @@ describe("trusted interaction decision pipeline", () => {
           kind: "player",
           state: phaseState,
           initialState: () => ({}),
-          cardActions: {
-            castSpell: defineCardAction<typeof contract, typeof phaseState>()({
-              cardType: "spell",
-              playFrom: "playZone",
+          zones: ["playZone"],
+          interactions: {
+            castSpell: defineInteraction<typeof contract, typeof phaseState>()({
+              inputs: {
+                cardId: cardInput({
+                  target: cardTarget
+                    .zones<
+                      {
+                        table: RuntimeTableRecord;
+                      },
+                      string
+                    >(["playZone"])
+                    .where({
+                      id: "card-type",
+                      errorCode: "CARD_TYPE_NOT_ALLOWED",
+                      test: ({ state, targetId }) =>
+                        state.table.cards[targetId]?.cardType === "spell",
+                    })
+                    .build(),
+                }),
+              },
               reduce: ({ state, accept }) => accept(state),
             }),
           },
-          zones: ["playZone"],
         }),
       },
       views: {
@@ -1829,7 +1796,6 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-
     expect(
       hydrateCardRefs(
         projection,
@@ -1853,10 +1819,9 @@ describe("trusted interaction decision pipeline", () => {
       }),
     ).resolves.toMatchObject({
       valid: false,
-      errorCode: "WRONG_CARD_TYPE",
+      errorCode: "CARD_TYPE_NOT_ALLOWED",
     });
   });
-
   test("defineGame rejects zones that do not point at manifest player zones", () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1868,7 +1833,6 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const phaseState = z.object({});
-
     expect(() =>
       defineGame({
         contract,
@@ -1894,7 +1858,6 @@ describe("trusted interaction decision pipeline", () => {
       "defineGame: phases.takeTurn.zones[0] 'typo-zone' is not declared in manifest.literals.playerZoneIds.",
     );
   });
-
   test("defineGame rejects removed zone spec objects", () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -1906,7 +1869,6 @@ describe("trusted interaction decision pipeline", () => {
       },
     });
     const phaseState = z.object({});
-
     expect(() =>
       defineGame({
         contract,
@@ -1934,10 +1896,9 @@ describe("trusted interaction decision pipeline", () => {
         },
       }),
     ).toThrow(
-      'defineGame: phases.takeTurn.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] and cardActions[*].playFrom instead.',
+      'defineGame: phases.takeTurn.zones uses removed zone spec objects. Use zones: ["manifest-player-zone-id"] instead.',
     );
   });
-
   test("domain-aware form inputs project server-authored input domains", async () => {
     const bundle = makeBundle();
     const state = await bundle.initialize({
@@ -1945,7 +1906,6 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1", "player-2"],
     });
     const descriptors = getAvailableInteractions(bundle, state, "player-2");
-
     expect(
       descriptors.find((d) => d.interactionId === "allocateGold"),
     ).toMatchObject({
@@ -2063,7 +2023,6 @@ describe("trusted interaction decision pipeline", () => {
       }),
     ).resolves.toMatchObject({ valid: true });
   });
-
   test("synchronizes proven input emptiness with production descriptors", async () => {
     const contract = defineGameContract({
       manifest: buildManifest(),
@@ -2155,7 +2114,6 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1", "player-2"],
     });
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
-
     expect(
       descriptors.find(
         (descriptor) => descriptor.interactionId === "noLegalInput",

@@ -1,4 +1,4 @@
-import { createReducerTransaction } from "../transaction";
+import { createTestTransaction } from "../transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
 import type { RuntimeTableRecord } from "../../reducer/advanced";
 import { perPlayer, type PlayerId } from "../per-player";
@@ -38,7 +38,7 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      createReducerTransaction({ table }).moveCardBetweenSharedZones({
+      createTestTransaction({ table }).moveCardBetweenSharedZones({
         fromZoneId: "draw-deck",
         toZoneId: "special-deck",
         cardId: "card-1",
@@ -46,7 +46,7 @@ describe("table ops spatial helpers", () => {
     ).toThrow("cannot enter zone 'special-deck'");
 
     expect(() =>
-      createReducerTransaction({ table }).moveComponentToContainer({
+      createTestTransaction({ table }).moveComponentToContainer({
         componentId: "card-1",
         boardId: "main-board",
         containerId: "restricted-row",
@@ -58,7 +58,7 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      createReducerTransaction({
+      createTestTransaction({
         table,
       }).moveCardFromPlayerZoneToSharedZone({
         playerId: PLAYER_1,
@@ -78,7 +78,7 @@ describe("table ops spatial helpers", () => {
     );
 
     expect(() =>
-      createReducerTransaction({
+      createTestTransaction({
         table,
       }).moveCardFromPlayerZoneToSharedZone({
         playerId: PLAYER_1,
@@ -105,7 +105,7 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
 
-    const next = createReducerTransaction({ table }).addCardToSharedZone({
+    const next = createTestTransaction({ table }).addCardToSharedZone({
       deckId: DRAW_DECK,
       cardId: CARD_2,
       playedBy: null,
@@ -140,7 +140,7 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
 
-    const next = createReducerTransaction({ table }).addCardToSharedZone({
+    const next = createTestTransaction({ table }).addCardToSharedZone({
       deckId: DRAW_DECK,
       cardId: CARD_2,
     }).table;
@@ -178,7 +178,7 @@ describe("table ops spatial helpers", () => {
     // Make draw-deck and special-deck cardSet-compatible for this test.
     table.zones.cardSetIdsByZoneId!["special-deck"] = ["main", "special"];
 
-    const next = createReducerTransaction({
+    const next = createTestTransaction({
       table,
     }).moveCardBetweenSharedZones({
       fromZoneId: DRAW_DECK,
@@ -233,7 +233,7 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-other"] = null;
     table.visibility["card-other"] = { faceUp: true };
 
-    const next = createReducerTransaction({
+    const next = createTestTransaction({
       table,
     }).moveCardFromPlayerZoneToSharedZone({
       playerId: PLAYER_1,
@@ -279,7 +279,7 @@ describe("table ops spatial helpers", () => {
     table.ownerOfCard["card-1"] = "player-1";
     table.visibility["card-1"] = { faceUp: false, visibleTo: ["player-1"] };
 
-    const afterPlay = createReducerTransaction({
+    const afterPlay = createTestTransaction({
       table,
     }).moveCardBetweenPlayerZones({
       playerId: PLAYER_1,
@@ -306,7 +306,7 @@ describe("table ops spatial helpers", () => {
     afterPlay.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
     afterPlay.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
 
-    const afterCleanup = createReducerTransaction({
+    const afterCleanup = createTestTransaction({
       table: afterPlay,
     }).moveCardBetweenPlayerZones({
       playerId: PLAYER_1,
@@ -332,7 +332,7 @@ describe("table ops spatial helpers", () => {
     table.zones.perPlayer["in-play"] = perPlayer(PLAYER_1_ONLY, () => []);
 
     expect(() =>
-      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
+      createTestTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: HAND,
         toZoneId: IN_PLAY,
@@ -345,7 +345,7 @@ describe("table ops spatial helpers", () => {
     const table = createSpatialTable();
 
     expect(() =>
-      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
+      createTestTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: DRAW_DECK,
         toZoneId: DRAW_DECK,
@@ -374,7 +374,7 @@ describe("table ops spatial helpers", () => {
     };
 
     expect(() =>
-      createReducerTransaction({ table }).moveCardBetweenPlayerZones({
+      createTestTransaction({ table }).moveCardBetweenPlayerZones({
         playerId: PLAYER_1,
         fromZoneId: HAND,
         toZoneId: ONLY_SPECIAL,
@@ -390,7 +390,7 @@ describe("table ops spatial helpers", () => {
     table.hands["discard"] = perPlayer(PLAYER_IDS, () => []);
     table.zones.perPlayer["discard"] = perPlayer(PLAYER_IDS, () => []);
 
-    const next = createReducerTransaction({
+    const next = createTestTransaction({
       table,
     }).moveCardFromSharedZoneToPlayerZone({
       playerId: PLAYER_1,
@@ -421,7 +421,7 @@ describe("table ops spatial helpers", () => {
     table.hands["public-area"] = perPlayer(PLAYER_IDS, () => []);
     table.zones.perPlayer["public-area"] = perPlayer(PLAYER_IDS, () => []);
 
-    const next = createReducerTransaction({
+    const next = createTestTransaction({
       table,
     }).moveCardFromSharedZoneToPlayerZone({
       playerId: PLAYER_1,
@@ -445,7 +445,7 @@ describe("table ops spatial helpers", () => {
     );
 
     expect(() =>
-      createReducerTransaction({
+      createTestTransaction({
         table,
       }).moveCardFromSharedZoneToPlayerZone({
         playerId: PLAYER_1,
@@ -463,7 +463,7 @@ describe("table ops spatial helpers", () => {
     table.zones.perPlayer["discard"] = perPlayer(PLAYER_1_ONLY, () => []);
 
     expect(() =>
-      createReducerTransaction({
+      createTestTransaction({
         table,
       }).moveCardFromSharedZoneToPlayerZone({
         playerId: PLAYER_1,

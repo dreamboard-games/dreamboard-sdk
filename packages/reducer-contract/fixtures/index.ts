@@ -10,11 +10,6 @@
 import dispatchResultAccept from "./dispatch-result-accept.json" with { type: "json" };
 import dispatchResultReject from "./dispatch-result-reject.json" with { type: "json" };
 import dispatchRequest from "./dispatch-request.json" with { type: "json" };
-import effectRollDieFireAndForget from "./effect-roll-die-fire-and-forget.json" with { type: "json" };
-import effectRollDieWithContinuation from "./effect-roll-die-with-continuation.json" with { type: "json" };
-import effectShuffleFireAndForget from "./effect-shuffle-fire-and-forget.json" with { type: "json" };
-import effectShufflePlayerZoneFireAndForget from "./effect-shuffle-player-zone-fire-and-forget.json" with { type: "json" };
-import effectTransition from "./effect-transition.json" with { type: "json" };
 import gameInputInteractionAction from "./game-input-interaction-action.json" with { type: "json" };
 import gameInputInteractionPrompt from "./game-input-interaction-prompt.json" with { type: "json" };
 import initializePhaseRequest from "./initialize-phase-request.json" with { type: "json" };
@@ -58,39 +53,9 @@ export const FIXTURES = [
     value: reducerRuntimeLogEntryStateCommit,
   },
   {
-    name: "effect-transition",
-    typeName: "Effect" as const,
-    why: "Baseline effect: only required fields, no continuation concept.",
-    value: effectTransition,
-  },
-  {
-    name: "effect-roll-die-fire-and-forget",
-    typeName: "Effect" as const,
-    why: "The catan regression: rollDie emitted without a continuation. The old shape had `resume: null/missing`; the new shape has no resume field at all.",
-    value: effectRollDieFireAndForget,
-  },
-  {
-    name: "effect-roll-die-with-continuation",
-    typeName: "Effect" as const,
-    why: "rollDie whose continuation lives OUTSIDE the effect in the sibling map. The effect itself is still monomorphic.",
-    value: effectRollDieWithContinuation,
-  },
-  {
-    name: "effect-shuffle-fire-and-forget",
-    typeName: "Effect" as const,
-    why: "Parallel to rollDie fire-and-forget. Guards the effect union's player-zone shuffle variant.",
-    value: effectShuffleFireAndForget,
-  },
-  {
-    name: "effect-shuffle-player-zone-fire-and-forget",
-    typeName: "Effect" as const,
-    why: "Per-player shuffle effect. Mirrors shuffleSharedZone but scoped to a single player's perPlayer zone (e.g. deck-builder reshuffle of discard into deck).",
-    value: effectShufflePlayerZoneFireAndForget,
-  },
-  {
     name: "reduce-result-accept-mixed",
     typeName: "ReduceResult" as const,
-    why: "Full accept payload containing fire-and-forget + with-continuation effects side by side. Locks in the sparse-map idiom.",
+    why: "A completed reduction contains its final state and events without pending work.",
     value: reduceResultAcceptMixed,
   },
   {
@@ -126,7 +91,7 @@ export const FIXTURES = [
   {
     name: "initialize-result",
     typeName: "InitializeResult" as const,
-    why: "Initialization can complete the game and carries its authoritative state and effects.",
+    why: "Initialization can complete the game and carries its authoritative state and events.",
     value: initializeResult,
   },
   {

@@ -172,10 +172,18 @@ No authoring generation step or shared workspace files are needed.
 
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.5.0`; hosts must
-require that exact version. Dispatch includes validation and effect execution. Initialization returns
+and `project({ state, playerIds })`. The runner contract is `0.6.0`; hosts must
+require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
+Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial
-phase entry and automatic continuations.
+phase entry and returned transitions.
+
+Mutation callbacks use `tx.roll(dieId)`, `tx.shuffle({ zoneId, playerId? })`, and
+`tx.deal({ fromZoneId, toZoneId, playerId, count })` directly. Return
+`tx.transition(phaseName)` to enter a phase, including reentering the current
+phase. An unreturned outcome schedules no work. Entry chains are bounded to
+1,000 entries per dispatch. `tx.endGame(outcome, { transition })` enters the
+final phase once; that entry must not return another transition.
 
 The authoritative state is explicit on every dispatch and projection. A host
 may retain a warm worker and SDK caches, but replaying the same state and input

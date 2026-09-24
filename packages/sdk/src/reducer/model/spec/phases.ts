@@ -13,18 +13,12 @@ import type {
   PhaseEnterArgs,
   ScopedPhaseState,
 } from "./runtime-args";
-import type { EffectMap } from "./effects";
 import type { InputCollector } from "./inputs";
 import type {
   SimultaneousResolveArgs,
   SimultaneousSubmitSpec,
 } from "./simultaneous";
-import type {
-  CardActionMap,
-  InteractionMap,
-  PhaseZoneList,
-  StageMap,
-} from "./interactions";
+import type { InteractionMap, PhaseZoneList } from "./interactions";
 
 export type PhaseGuidance = {
   summary: string;
@@ -76,11 +70,8 @@ export type AutoPhaseDefinition<
   submit?: never;
   canResubmit?: never;
   resolve?: never;
-  effects?: never;
   interactions?: never;
-  stages?: never;
   zones?: never;
-  cardActions?: never;
 };
 
 export type PlayerPhaseDefinition<
@@ -91,20 +82,11 @@ export type PlayerPhaseDefinition<
     phase: object;
   },
   Manifest extends ManifestContract<TableOfState<State>>,
-  Effects extends EffectMap<State, Manifest> = Record<string, never>,
   Interactions extends InteractionMap<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Stages extends StageMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   Zones extends PhaseZoneList<Manifest> = readonly [],
-  CardActions extends CardActionMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   ErrorCode extends string = string,
 > = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
   kind: "player";
@@ -121,11 +103,8 @@ export type PlayerPhaseDefinition<
   submit?: never;
   canResubmit?: never;
   resolve?: never;
-  effects?: Effects;
   interactions?: Interactions;
-  stages?: Stages;
   zones?: Zones;
-  cardActions?: CardActions;
 };
 
 export type SimultaneousPlayerPhaseDefinition<
@@ -140,20 +119,11 @@ export type SimultaneousPlayerPhaseDefinition<
     string,
     InputCollector
   >,
-  Effects extends EffectMap<State, Manifest> = Record<string, never>,
   Interactions extends InteractionMap<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Stages extends StageMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   Zones extends PhaseZoneList<Manifest> = readonly [],
-  CardActions extends CardActionMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   ErrorCode extends string = string,
 > = PhaseDefinitionCommon<PhaseStateSchema, State, Manifest, ErrorCode> & {
   kind: "simultaneousPlayer";
@@ -196,11 +166,8 @@ export type SimultaneousPlayerPhaseDefinition<
     >,
     ReducerResult<ScopedPhaseState<State, z.infer<PhaseStateSchema>>> | void
   >;
-  effects?: Effects;
   interactions?: Interactions;
-  stages?: Stages;
   zones?: Zones;
-  cardActions?: CardActions;
 };
 
 export type PhaseDefinition<
@@ -215,20 +182,11 @@ export type PhaseDefinition<
     string,
     InputCollector
   >,
-  Effects extends EffectMap<State, Manifest> = Record<string, never>,
   Interactions extends InteractionMap<
     ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
     Manifest
   > = Record<string, never>,
-  Stages extends StageMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   Zones extends PhaseZoneList<Manifest> = readonly [],
-  CardActions extends CardActionMap<
-    ScopedPhaseState<State, z.infer<PhaseStateSchema>>,
-    Manifest
-  > = Record<string, never>,
   ErrorCode extends string = string,
 > =
   | AutoPhaseDefinition<PhaseStateSchema, State, Manifest, ErrorCode>
@@ -236,11 +194,8 @@ export type PhaseDefinition<
       PhaseStateSchema,
       State,
       Manifest,
-      Effects,
       Interactions,
-      Stages,
       Zones,
-      CardActions,
       ErrorCode
     >
   | SimultaneousPlayerPhaseDefinition<
@@ -248,10 +203,7 @@ export type PhaseDefinition<
       State,
       Manifest,
       SubmitCollectors,
-      Effects,
       Interactions,
-      Stages,
       Zones,
-      CardActions,
       ErrorCode
     >;

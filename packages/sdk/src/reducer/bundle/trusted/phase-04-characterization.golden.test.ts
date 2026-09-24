@@ -5,7 +5,6 @@ import { z } from "zod";
 import {
   createReducerBundle,
   defineEmptyView,
-  defineEffect,
   defineGameContract,
   defineInteraction,
   definePlayerView,
@@ -174,11 +173,6 @@ function createCharacterizationGame() {
     },
   });
 
-  const rollDieEffect = defineEffect<typeof contract>()({
-    type: "rollDie",
-    id: "rollDie",
-  });
-
   return defineGame({
     contract,
     initial: {
@@ -192,7 +186,6 @@ function createCharacterizationGame() {
         kind: "player",
         state: z.object({ visits: z.number().int() }),
         initialState: () => ({ visits: 1 }),
-        effects: { rollDieEffect },
         interactions: {
           score: defineInteraction<typeof contract>()({
             inputs: {},
@@ -214,19 +207,15 @@ function createCharacterizationGame() {
           }),
           finish: defineInteraction<typeof contract>()({
             inputs: {},
-            reduce({ state, accept, fx }) {
-              return accept(state, { instructions: [fx.transition("done")] });
+            reduce({ tx }) {
+              return tx.transition("done");
             },
           }),
           rollTwice: defineInteraction<typeof contract>()({
             inputs: {},
-            reduce({ state, accept, fx }) {
-              return accept(state, {
-                instructions: [
-                  fx.effect(rollDieEffect, { dieId: "die-1" }),
-                  fx.effect(rollDieEffect, { dieId: "die-1" }),
-                ],
-              });
+            reduce({ tx }) {
+              tx.roll("die-1");
+              tx.roll("die-1");
             },
           }),
         },
@@ -343,7 +332,7 @@ describe("phase 4 trusted-bundle characterization", () => {
     }).toMatchSnapshot();
   });
 
-  test("rng effect traces and state digest stay golden", async () => {
+  test("seeded roll traces and state digest stay golden", async () => {
     const bundle = createReducerBundle(createCharacterizationGame());
     const { state: initial } = await bundle.initialize({
       table: createTable(),
@@ -425,12 +414,10 @@ describe("phase 4 trusted-bundle characterization", () => {
             playerId: "player-1",
             interactionId: "rollTwice",
           },
-          { kind: "appliedInstruction", instruction: "engine.rollDie" },
           expect.objectContaining({
             kind: "rngConsumption",
             operation: "rollDie",
           }),
-          { kind: "appliedInstruction", instruction: "engine.rollDie" },
           expect.objectContaining({
             kind: "rngConsumption",
             operation: "rollDie",
