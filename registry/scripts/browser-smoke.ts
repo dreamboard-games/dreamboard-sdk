@@ -57,6 +57,23 @@ try {
         await page.keyboard.press("Enter");
         await expect(button).toHaveAttribute("aria-pressed", "false");
       }
+      if (story.id.endsWith("consumer-composition")) {
+        const card = page.getByTestId("utility-card");
+        await expect(card).toHaveCSS("width", "180px");
+        await expect(card).toHaveCSS("border-radius", "0px");
+        await expect(card).toHaveCSS("box-shadow", "none");
+        for (const kind of ["hex", "square"]) {
+          const overlay = page.getByTestId(`${kind}-overlay`);
+          await expect(overlay).toHaveCSS("fill", "rgb(255, 165, 0)");
+          await expect(overlay).toHaveCSS("stroke", "rgb(128, 0, 128)");
+          await expect(overlay).toHaveCSS("stroke-width", "7px");
+          const label = page.getByTestId(`${kind}-label`);
+          await expect(label).toHaveCSS("fill", "rgb(255, 0, 0)");
+          await expect(label).toHaveCSS("font-family", "monospace");
+          await expect(label).toHaveCSS("font-size", "18px");
+          await expect(label).toHaveCSS("pointer-events", "all");
+        }
+      }
       const fits = await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
       );

@@ -41,3 +41,16 @@ body {
   padding: 1rem;
   border-left: 1rem solid var(--seat-color);
 }
+
+/* The emitted Tailwind v4 utility shape, without requiring Tailwind for stories. */
+@layer utilities {
+  .w-full {
+    width: 100%;
+  }
+  .rounded-none {
+    border-radius: 0;
+  }
+  .shadow-none {
+    box-shadow: none;
+  }
+}

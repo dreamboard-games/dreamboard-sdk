@@ -227,3 +227,77 @@ export const Results: Story = {
     </div>
   ),
 };
+
+export const ConsumerComposition: Story = {
+  render: () => (
+    <div className="story-panel">
+      <div style={{ width: 180 }}>
+        <Card
+          data-testid="utility-card"
+          className="w-full rounded-none shadow-none"
+        >
+          Owned styles
+        </Card>
+      </div>
+      <HexGrid
+        label="Custom hex overlays"
+        viewBox="0 0 180 100"
+        tiles={[
+          {
+            id: "hex",
+            points: "5,30 45,7 85,30 85,76 45,99 5,76",
+            center: { x: 45, y: 53 },
+            label: "Hex",
+          },
+        ]}
+      >
+        <polygon
+          data-testid="hex-overlay"
+          points="100,10 170,10 170,80"
+          fill="orange"
+          stroke="purple"
+          strokeWidth={7}
+        />
+        <text
+          data-testid="hex-label"
+          x={100}
+          y={95}
+          fill="red"
+          fontFamily="monospace"
+          fontSize={18}
+          pointerEvents="all"
+        >
+          Overlay
+        </text>
+      </HexGrid>
+      <SquareGrid
+        label="Custom square overlays"
+        viewBox="0 0 180 100"
+        cellSize={60}
+        cells={[{ id: "square", x: 5, y: 5, label: "Square" }]}
+      >
+        <rect
+          data-testid="square-overlay"
+          x={95}
+          y={5}
+          width={60}
+          height={60}
+          fill="orange"
+          stroke="purple"
+          strokeWidth={7}
+        />
+        <text
+          data-testid="square-label"
+          x={95}
+          y={95}
+          fill="red"
+          fontFamily="monospace"
+          fontSize={18}
+          pointerEvents="all"
+        >
+          Overlay
+        </text>
+      </SquareGrid>
+    </div>
+  ),
+};

@@ -31,6 +31,7 @@ export function SquareGrid({
       {cells.map((cell) => (
         <g key={cell.id} data-space-id={cell.id}>
           <rect
+            className="db-grid-cell"
             x={cell.x}
             y={cell.y}
             width={cellSize}
@@ -39,6 +40,7 @@ export function SquareGrid({
           />
           {cell.label && (
             <text
+              className="db-grid-label"
               x={cell.x + cellSize / 2}
               y={cell.y + cellSize / 2}
               textAnchor="middle"

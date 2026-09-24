@@ -35,7 +35,7 @@ The hostname is the design's intended deployment target, not a claim that this b
 pnpm dlx shadcn@4.21.0 add @dreamboard/playing-card @dreamboard/pile
 ```
 
-Sources install below the consumer's `components` alias in `dreamboard/`. Each component imports the copied `tokens.css`; shadcn resolves the `@dreamboard/tokens` dependency and the playing-card's `@dreamboard/card` dependency. The CSS supplies shadcn base tokens, game tokens, seat colors and component styles. It works without Tailwind or a theme provider. Edit the copied source and override variables after its import; `.dark` supplies a dark base palette while playing-card faces stay readable.
+Sources install below the consumer's `components` alias in `dreamboard/`. Each component imports the copied `tokens.css`; shadcn resolves the `@dreamboard/tokens` dependency and the playing-card's `@dreamboard/card` dependency. The CSS supplies shadcn base tokens, game tokens, seat colors and component styles. Component defaults live in the `components` CSS layer, so Tailwind v4 layered utilities and unlayered application CSS can override them. Grid cell and label styles target only generated elements, leaving overlay children untouched. It works without Tailwind or a theme provider. Edit the copied source and override variables after its import; `.dark` supplies a dark base palette while playing-card faces stay readable.
 
 ```tsx
 import { PlayingCard } from "@/components/dreamboard/playing-card";

@@ -29,9 +29,14 @@ export function HexGrid({
     >
       {tiles.map((tile) => (
         <g key={tile.id} data-space-id={tile.id}>
-          <polygon points={tile.points} fill={tile.fill ?? "var(--muted)"} />
+          <polygon
+            className="db-grid-cell"
+            points={tile.points}
+            fill={tile.fill ?? "var(--muted)"}
+          />
           {tile.label && (
             <text
+              className="db-grid-label"
               x={tile.center.x}
               y={tile.center.y}
               textAnchor="middle"
