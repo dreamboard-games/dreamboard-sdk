@@ -1,6 +1,4 @@
 {
-  "currentStage": "play",
-  "stageSeats": ["player-1"],
   "schedulerFlow": {
     "version": 1,
     "activePlayerIds": ["player-2"],
@@ -12,24 +10,20 @@
       }
     ]
   },
-  "sharedView": {
-    "market": ["c1", "c2"]
-  },
   "seats": {
     "player-1": {
       "view": {
         "coins": 3
       },
-      "availableInteractionRefs": [
-        {
-          "interactionId": "claim",
-          "label": "Claim"
-        }
-      ],
+      "availableInteractionRefs": ["claim-ref"],
       "zones": {
-        "player-1": {
-          "hand": {
-            "visibleCardIds": ["c1"]
+        "hand": {
+          "cardIds": ["c1"],
+          "cardViewsById": {
+            "c1": "{}"
+          },
+          "playableByCardId": {
+            "c1": ["claim-ref"]
           }
         }
       }
@@ -42,5 +36,21 @@
       "zones": {}
     }
   },
-  "events": []
+  "events": [],
+  "interactionsByRef": {
+    "claim-ref": {
+      "kind": "action",
+      "phaseName": "play",
+      "interactionKey": "play.claim",
+      "interactionId": "claim",
+      "label": "Claim",
+      "commit": {
+        "mode": "manual"
+      },
+      "inputs": [],
+      "availability": {
+        "status": "available"
+      }
+    }
+  }
 }

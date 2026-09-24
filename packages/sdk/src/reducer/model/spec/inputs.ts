@@ -1,3 +1,8 @@
+import type {
+  InputDomain,
+  InputSelection,
+  InteractionInputDescriptor,
+} from "../../../shared/interaction-schema";
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike } from "../table";
 import type { ValidationIssue } from "./runtime-args";
@@ -9,16 +14,11 @@ import type { ValidationIssue } from "./runtime-args";
 //     Each `InteractionSpec` has typed input collectors and a `reduce` that
 //     receives `params: ParamsOf<Collectors>`.
 
-export type InputCollectorKind =
-  | "form"
-  | "board-vertex"
-  | "board-edge"
-  | "board-tile"
-  | "board-space"
-  | "card"
-  | "rng";
-
-export type TargetKind = "edge" | "vertex" | "space" | "tile" | "card";
+export type InputCollectorKind = InteractionInputDescriptor["kind"];
+export type TargetKind = Extract<
+  InputDomain,
+  { type: "cardTarget" | "boardTarget" }
+>["targetKind"];
 export type BoardInputCollectorKind = Exclude<
   InputCollectorKind,
   "form" | "card" | "rng"
@@ -49,95 +49,31 @@ export type InputCollectorMetaForKind<Kind extends InputCollectorKind> =
         ? RngInputCollectorMeta
         : never;
 
-export type InputSelectionDescriptor =
-  | { readonly mode: "single" }
-  | {
-      readonly mode: "many";
-      readonly min: number;
-      readonly max?: number;
-      readonly distinct?: boolean;
-    };
-
-export type CardTargetDomainDescriptor = ResolvedCardTargetDomainDescriptor;
-
-export type ResolvedCardTargetDomainDescriptor = {
-  readonly type: "cardTarget";
-  readonly projection: "resolved";
-  readonly targetKind: "card";
-  readonly zoneIds: readonly string[];
-  readonly eligibleTargets: readonly string[];
-  readonly selection?: InputSelectionDescriptor;
-};
-
-export type BoardTargetDomainDescriptor = ResolvedBoardTargetDomainDescriptor;
-
-export type ResolvedBoardTargetDomainDescriptor = {
-  readonly type: "boardTarget";
-  readonly projection: "resolved";
-  readonly targetKind: Exclude<TargetKind, "card">;
-  readonly boardId: string;
-  readonly valueKind?: "board-id" | "player-board-space";
-  readonly eligibleTargets: readonly string[];
-  readonly selection?: InputSelectionDescriptor;
-};
-
-export type ResourceMapDomainDescriptor = {
-  type: "resourceMap";
-  resources: Array<{
-    resourceId: string;
-    label?: string;
-    icon?: string;
-    min: number;
-    max: number;
-  }>;
-  selection?: InputSelectionDescriptor;
-};
-
-export type BoundedNumberDomainDescriptor = {
-  type: "boundedNumber";
-  min: number;
-  max: number;
-  step?: number;
-  selection?: InputSelectionDescriptor;
-};
-
-export type ChoiceDomainDescriptor = {
-  type: "choice";
-  choices: Array<{
-    value: string | null;
-    label: string;
-    icon?: string;
-    badge?: string;
-    description?: string;
-    disabled?: boolean;
-    disabledReason?: string;
-  }>;
-  selection?: InputSelectionDescriptor;
-};
-
-export type ChoiceListDomainDescriptor = {
-  type: "choiceList";
-  choices: Array<{
-    value: string;
-    label: string;
-    icon?: string;
-    badge?: string;
-    description?: string;
-    disabled?: boolean;
-    disabledReason?: string;
-  }>;
-  min?: number;
-  max?: number;
-  selection?: InputSelectionDescriptor;
-};
-
-export type InputDomainDescriptor =
-  | CardTargetDomainDescriptor
-  | BoardTargetDomainDescriptor
-  | ResourceMapDomainDescriptor
-  | BoundedNumberDomainDescriptor
-  | ChoiceDomainDescriptor
-  | ChoiceListDomainDescriptor;
+export type InputSelectionDescriptor = InputSelection;
+export type InputDomainDescriptor = InputDomain;
+export type CardTargetDomainDescriptor = Extract<
+  InputDomain,
+  { type: "cardTarget" }
+>;
+export type ResolvedCardTargetDomainDescriptor = CardTargetDomainDescriptor;
+export type BoardTargetDomainDescriptor = Extract<
+  InputDomain,
+  { type: "boardTarget" }
+>;
+export type ResolvedBoardTargetDomainDescriptor = BoardTargetDomainDescriptor;
+export type ResourceMapDomainDescriptor = Extract<
+  InputDomain,
+  { type: "resourceMap" }
+>;
+export type BoundedNumberDomainDescriptor = Extract<
+  InputDomain,
+  { type: "boundedNumber" }
+>;
+export type ChoiceDomainDescriptor = Extract<InputDomain, { type: "choice" }>;
+export type ChoiceListDomainDescriptor = Extract<
+  InputDomain,
+  { type: "choiceList" }
+>;
 
 type DomainProjector<Domain extends InputDomainDescriptor> = (
   state: CollectorState,

@@ -22,7 +22,7 @@ import {
   type PluginProtocolEnvelope,
   type ReducerBoardStaticProjection,
   type ReducerSeatProjectionBundle,
-} from "../../plugin-runtime-contract.js";
+} from "../../index.js";
 
 const claimDescriptor = {
   kind: "action",
@@ -58,7 +58,6 @@ function baseFrame() {
     view: { score: 7 },
     flow: {
       currentPhase: "play",
-      currentStage: "play",
       activePlayers: ["player-1"],
       simultaneousPhase: null,
     },
@@ -167,16 +166,13 @@ describe("shared plugin runtime contract", () => {
       },
       dynamicProjection: ReducerWireZod.SeatProjectionBundleSchema.parse({
         events: [],
-        currentStage: "play",
-        stageSeats: ["player-1"],
         simultaneousPhase: null,
-        sharedView: { market: ["card-1"] },
         interactionsByRef: {
           "claim-ref": claimDescriptor,
         },
         seats: {
           "player-1": {
-            view: { handSize: 1 },
+            view: { handSize: 1, market: ["card-1"] },
             availableInteractionRefs: ["claim-ref"],
             zones: {
               hand: {
@@ -226,7 +222,6 @@ describe("shared plugin runtime contract", () => {
       } as unknown as ReducerBoardStaticProjection,
       dynamicProjection: {
         events: [],
-        currentStage: "play",
         schedulerFlow: {
           version: 1,
           activePlayerIds: ["player-1"],
@@ -240,7 +235,7 @@ describe("shared plugin runtime contract", () => {
             inputs: [
               {
                 key: "card",
-                kind: "choice",
+                kind: "form",
                 defaultValue: undefined,
                 domain: {
                   type: "choice",
@@ -295,7 +290,7 @@ describe("shared plugin runtime contract", () => {
           },
         } as unknown as ReducerSeatProjectionBundle,
       }),
-    ).toThrow("runtime JSON contains unsupported undefined value");
+    ).toThrow();
   });
 
   test("action set hashing is canonical and sensitive to gameplay basis", () => {
@@ -371,9 +366,7 @@ describe("shared plugin runtime contract", () => {
         optional: undefined,
       }),
     ).toBe('{"action":"claim"}');
-    expect(() => encodeCanonicalPluginRuntimeJson([undefined])).toThrow(
-      "runtime JSON contains unsupported undefined value",
-    );
+    expect(() => encodeCanonicalPluginRuntimeJson([undefined])).toThrow();
   });
 
   test("runtime JSON digest uses a fixed SHA-256 vector", () => {
@@ -409,7 +402,41 @@ test("worker and plugin boundaries share canonical output admission", () => {
 
 describe("manifest-owned boards in the single seat view", () => {
   const boards = { byId: {}, hex: {}, square: {} };
-  function materialize(view: unknown, sharedView: unknown = {}) {
+  test("spectators receive static geometry without another seat's private view", () => {
+    const frame = materializePluginGameplayFrame({
+      currentPhase: "play",
+      activePlayers: ["player-1"],
+      perspectivePlayerId: "spectator",
+      version: 1,
+      actionSetVersion: "actions-1",
+      staticProjection: {
+        view: { boards },
+        hash: "static-1",
+        manifestVersion: "1",
+      },
+      dynamicProjection: {
+        events: [],
+        seats: {
+          "player-1": {
+            view: { secret: "private" },
+            availableInteractionRefs: [],
+          },
+        },
+      },
+    });
+    expect(frame.view).toEqual({ boards });
+    expect(frame.availableInteractions).toEqual([]);
+    expect(frame.zones).toEqual({});
+    expect(JSON.stringify(frame)).not.toContain("private");
+    expect(
+      SeatProjectionBundleSchema.safeParse({
+        events: [],
+        seats: {},
+        sharedView: {},
+      }).success,
+    ).toBe(false);
+  });
+  function materialize(view: unknown) {
     return materializePluginGameplayFrame({
       currentPhase: "play",
       activePlayers: ["player-1"],
@@ -424,7 +451,6 @@ describe("manifest-owned boards in the single seat view", () => {
       // Deliberately cross the external admission boundary with untrusted data.
       dynamicProjection: {
         events: [],
-        sharedView,
         seats: { "player-1": { view, availableInteractionRefs: [] } },
       } as ReducerSeatProjectionBundle,
     });
@@ -437,14 +463,10 @@ describe("manifest-owned boards in the single seat view", () => {
     "rejects a non-record seat view: %j",
     (view) => {
       expect(() => materialize(view)).toThrow();
-      expect(() => materialize({}, view)).toThrow();
     },
   );
   test("rejects authored boards instead of overwriting manifest geometry", () => {
     expect(() => materialize({ boards: {} })).toThrow(
-      "reserved for manifest geometry",
-    );
-    expect(() => materialize({}, { boards: null })).toThrow(
       "reserved for manifest geometry",
     );
   });

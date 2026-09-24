@@ -79,32 +79,6 @@ export interface PluginProtocolEnvelope<Payload> {
 export type HostToPluginEnvelope = PluginProtocolEnvelope<HostToPluginPayload>;
 export type PluginToHostEnvelope = PluginProtocolEnvelope<PluginToHostPayload>;
 
-export interface PluginProtocolFrame {
-  readonly id: string;
-  readonly frame: PluginGameplayFrame;
-  readonly projectionDigest: string;
-}
-
-export interface PluginProtocolTape {
-  readonly session: PluginSessionDescriptor;
-  readonly frames: readonly PluginProtocolFrame[];
-  readonly steps: readonly PluginProtocolStep[];
-}
-
-export type PluginProtocolStep =
-  | {
-      readonly id: string;
-      readonly kind: "host.frame";
-      readonly frameId: string;
-    }
-  | {
-      readonly id: string;
-      readonly kind: "client.submit";
-      readonly fromFrameId: string;
-      readonly requestDigest: string;
-      readonly response: InteractionResult;
-    };
-
 export type ActionSetVersionInput = {
   readonly version: number;
   readonly availableInteractions: readonly InteractionDescriptor[];

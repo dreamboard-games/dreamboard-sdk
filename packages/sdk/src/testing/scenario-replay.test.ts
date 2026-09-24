@@ -744,7 +744,7 @@ describe("scenario inspection and exploration", () => {
     });
     expect(spectator.node.interactions).toEqual([]);
     expect(spectator.node.actions).toEqual([]);
-    expect(spectator.node.view).toEqual({});
+    expect(spectator.node.view).toBeNull();
   });
 
   test("enumerates accepted dependent non-board commands in canonical order", async () => {

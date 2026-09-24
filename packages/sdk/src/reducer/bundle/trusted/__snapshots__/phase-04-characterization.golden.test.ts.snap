@@ -36,7 +36,7 @@ exports[`phase 4 trusted-bundle characterization > lifecycle transition and phas
 
 exports[`phase 4 trusted-bundle characterization > seat projection digest stays golden 1`] = `
 {
-  "digest": "e6736087f2694501d598ba96040fc1ea1df06b4e0bcb5b008a3401e761f02d73",
+  "digest": "fd82473ba3551da4c36e25468fd4914ebab305c9455a13c9d9cd6c4b18eedd9c",
   "schedulerFlow": {
     "activePlayerIds": [
       "player-1",
@@ -49,10 +49,10 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
   "seats": {
     "player-1": {
       "availableInteractionRefs": [
-        "score:8f49027da851ebe3",
-        "rejectNow:c586ac142d2a06c1",
-        "finish:4422df62aae120d7",
-        "rollTwice:3a1b1c2025550510",
+        "score:6b0e56a4eda8124e",
+        "rejectNow:0326ce44b3399e8c",
+        "finish:8fc27907c7572b42",
+        "rollTwice:13b486fcf782a631",
       ],
       "view": {
         "phase": "play",
@@ -64,10 +64,10 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
     },
     "player-2": {
       "availableInteractionRefs": [
-        "score:58e077ac6dc03b2f",
-        "rejectNow:e1104c444a9387da",
-        "finish:ea3e05f93f50ec91",
-        "rollTwice:aa1ef0a0cf45b88f",
+        "score:938229b1f673552a",
+        "rejectNow:e8c453ce9a2cf9af",
+        "finish:f998e541dabf73d4",
+        "rollTwice:f588c74da36a06ce",
       ],
       "view": {
         "phase": "play",
@@ -78,10 +78,6 @@ exports[`phase 4 trusted-bundle characterization > seat projection digest stays 
       "zones": {},
     },
   },
-  "stageSeats": [
-    "player-1",
-    "player-2",
-  ],
 }
 `;
 

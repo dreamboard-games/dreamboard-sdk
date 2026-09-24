@@ -304,7 +304,6 @@ type ScenarioPlayerView<Game> = ViewOfDefinition<Game>;
 
 export type ScenarioFlowDiagnostics = {
   readonly currentPhase: string | null;
-  readonly currentStage: string | null;
   readonly activeSeats: readonly ScenarioSeatRef[];
 };
 

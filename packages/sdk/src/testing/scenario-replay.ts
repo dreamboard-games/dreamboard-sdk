@@ -270,13 +270,11 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
 
   get diagnostics(): ScenarioDiagnostics {
     const flow = readFlowState(this.reducerState);
-    const projection = this.project(this.playerIds[0]!);
     return {
       events: structuredClone(this.events),
       lastDispatch: lastAcceptedDispatch(this.events),
       flow: {
         currentPhase: flow.currentPhase,
-        currentStage: projection.currentStage ?? null,
         activeSeats: flow.activePlayers.flatMap((playerId) => {
           const seat = this.playerIds.indexOf(playerId);
           return seat < 0 ? [] : [{ seat }];
@@ -365,16 +363,12 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       view: structuredClone(
         selectedPlayerId
           ? (projection.seats[selectedPlayerId]?.view ?? null)
-          : (projection.sharedView ?? null),
+          : null,
       ),
       scheduler: {
         phase: flow.currentPhase ?? "",
         step: readPhaseStep(this.reducerState.domain.phase),
-        activePlayerIds: [
-          ...(projection.schedulerFlow?.activePlayerIds ??
-            projection.stageSeats ??
-            []),
-        ],
+        activePlayerIds: [...(projection.schedulerFlow?.activePlayerIds ?? [])],
         pendingPlayerIds: [
           ...(projection.schedulerFlow?.pendingPlayerIds ??
             projection.simultaneousPhase?.pendingPlayerIds ??

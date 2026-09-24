@@ -725,7 +725,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       playerIds: ["player-1", "player-2"],
     });
     expect(viewedPlayers).toEqual(["player-1", "player-2"]);
-    expect(projection.sharedView).toEqual({});
+    expect(projection).not.toHaveProperty("sharedView");
     expect(projection.seats["player-1"]?.view).toEqual({
       playerId: "player-1",
       counter: 3,
@@ -737,7 +737,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       secret: "private:player-2",
     });
     const spectator = bundle.project({ state: session, playerIds: [] });
-    expect(spectator.sharedView).toEqual({});
+    expect(spectator).not.toHaveProperty("sharedView");
     expect(spectator.seats).toEqual({});
     expect(viewedPlayers).toEqual(["player-1", "player-2"]);
     const seat = bundle.project({ state: session, playerIds: ["player-2"] });

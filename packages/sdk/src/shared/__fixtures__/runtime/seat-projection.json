@@ -2,16 +2,15 @@
   "view": {
     "coins": 3
   },
-  "availableInteractionRefs": [
-    {
-      "interactionId": "claim",
-      "label": "Claim"
-    }
-  ],
+  "availableInteractionRefs": ["claim-ref"],
   "zones": {
-    "player-1": {
-      "hand": {
-        "visibleCardIds": ["c1"]
+    "hand": {
+      "cardIds": ["c1"],
+      "cardViewsById": {
+        "c1": "{}"
+      },
+      "playableByCardId": {
+        "c1": ["claim-ref"]
       }
     }
   }

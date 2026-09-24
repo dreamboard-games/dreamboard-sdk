@@ -1,3 +1,7 @@
+import {
+  InteractionDescriptorSchema,
+  ZoneInteractionRefsSchema,
+} from "./interaction-schema";
 import { z } from "zod";
 import { RuntimeJsonSchema } from "./runtime-json.js";
 
@@ -278,8 +282,8 @@ export const AuthoredViewSchema = z
 
 export const SeatProjectionSchema = z.strictObject({
   view: AuthoredViewSchema.nullable().optional(),
-  availableInteractionRefs: RuntimeJsonSchema.optional(),
-  zones: RuntimeJsonSchema.optional(),
+  availableInteractionRefs: z.array(z.string()).optional(),
+  zones: z.record(z.string(), ZoneInteractionRefsSchema).optional(),
 });
 
 export const SimultaneousPhaseProjectionSchema = z.strictObject({
@@ -311,14 +315,13 @@ export const ProjectionTimingMetadataSchema = z.strictObject({
 
 export const SeatProjectionBundleSchema = z.strictObject({
   events: z.array(GameEventSchema).max(32),
-  currentStage: z.union([z.string().min(1), z.null()]).optional(),
-  stageSeats: z.array(z.string().min(1)).optional(),
   simultaneousPhase: z
     .union([SimultaneousPhaseProjectionSchema, z.null()])
     .optional(),
   schedulerFlow: SchedulerFlowAuthorityProjectionSchema.optional(),
-  sharedView: AuthoredViewSchema.nullable().optional(),
-  interactionsByRef: RuntimeJsonSchema.optional(),
+  interactionsByRef: z
+    .record(z.string(), InteractionDescriptorSchema)
+    .optional(),
   seats: z.record(z.string(), SeatProjectionSchema),
   timing: ProjectionTimingMetadataSchema.optional(),
 });

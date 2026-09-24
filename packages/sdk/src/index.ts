@@ -45,7 +45,7 @@ export type {
   SystemActionEvent,
   ZoneHandlesSnapshot,
 } from "./shared/protocol/frame.js";
-export type { CanonicalJson, RuntimeJson } from "./shared/runtime-json.js";
+export type { RuntimeJson } from "./shared/runtime-json.js";
 export type {
   ActionSetVersionInput,
   HostToPluginEnvelope,
