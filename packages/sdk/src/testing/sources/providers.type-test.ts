@@ -9,6 +9,8 @@ export async function checkLocalProviderTypes() {
     seed: 1,
     options: { finishImmediately: false },
   });
+  const untrusted: unknown = JSON.parse("{}");
+  source.restore(untrusted);
   const result: Promise<SubmitResult> = source.apply({
     actor: { seat: 0 },
     interactionId: "add",

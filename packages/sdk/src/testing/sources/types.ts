@@ -21,7 +21,8 @@ export interface LocalSource<Game>
     ApplySource<ScenarioCommandOf<Game>, Promise<SubmitResult>> {
   switchSeat(playerId: string): void;
   checkpoint(): LocalCheckpoint;
-  restore(checkpoint: LocalCheckpoint): void;
+  /** Parses untrusted checkpoint JSON before replacing state. */
+  restore(checkpoint: unknown): void;
   inspect(): SourceSnapshot;
   explore(options: {
     maxEvaluations: number;

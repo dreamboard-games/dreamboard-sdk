@@ -222,3 +222,15 @@ describe("production-backed local sources", () => {
     source.dispose();
   });
 });
+
+it("rejects malformed checkpoint JSON without changing state or source version", async () => {
+  const source = await localSource(hearts, { players: 4, seed: 1 });
+  const before = source.checkpoint();
+  const frame = source.inspect();
+  for (const value of [null, [], { state: {}, terminal: null }]) {
+    expect(() => source.restore(value)).toThrow();
+    expect(source.checkpoint()).toEqual(before);
+    expect(source.inspect()).toBe(frame);
+  }
+  source.dispose();
+});
