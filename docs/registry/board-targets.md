@@ -6,7 +6,7 @@ pnpm dlx shadcn@4.21.0 add @dreamboard/board-targets
 
 Workspace-bound headless UI; copied source owned by the game.
 
-Local development helper; do not import executable game code in the hosted entry.
+Hosted-safe control; the game binding imports reducer types only.
 
 Follow [registry installation](../../registry/README.md) first. Installation copies
 source into your workspace; read its exported props and compose normal DOM props

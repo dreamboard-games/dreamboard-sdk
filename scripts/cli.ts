@@ -54,10 +54,7 @@ function parseReferenceArgs(args: readonly string[]): readonly string[] | null {
     process.stdout.write("Usage: pnpm reference [game-id]\n");
     return null;
   }
-  if (
-    args.some((argument) => argument.startsWith("-")) ||
-    (args[0] === "pin" ? args.length !== 2 : args.length > 1)
-  ) {
+  if (args.some((argument) => argument.startsWith("-")) || args.length > 1) {
     throw new CliUsageError("Usage: pnpm reference [game-id]");
   }
   return args;

@@ -77,11 +77,12 @@ After publication:
 SDK_VERSION="$(node -p "require('./packages/sdk/package.json').version")"
 npm view "@dreamboard-games/sdk@$SDK_VERSION" version dist.tarball dist.integrity --registry=https://registry.npmjs.org/
 npm view @dreamboard-games/sdk dist-tags --json --registry=https://registry.npmjs.org/
-pnpm reference pin "$SDK_VERSION"
 pnpm reference
 ```
 
-Commit the updated game manifests and root lockfile. If rollback is necessary,
+Reference games consume the SDK as workspace packages; they need no release pin.
+Downstream repositories must pin the published SDK version with their owning
+repin command and run their installed-package gates. If rollback is necessary,
 move the npm tag to a known-good published version; do not delete a published
 version.
 

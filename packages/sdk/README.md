@@ -103,8 +103,11 @@ export default play.define({
         });
         tx.patchPhaseState({ leadCardId: input.params.cardId });
         const next = q.player.nextInOrder(input.playerId);
-        if (next) tx.setActivePlayers([next]);
-        if (q.zone.playerCards(input.playerId, "hand").length === 0) {
+        if (next) {
+          tx.patchPublicState({ currentPlayerId: next });
+          tx.setActivePlayers([next]);
+        }
+        if (tx.q.zone.playerCards(input.playerId, "hand").length === 0) {
           return tx.transition("setup");
         }
       },
