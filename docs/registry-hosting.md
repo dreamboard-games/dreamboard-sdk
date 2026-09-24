@@ -6,7 +6,7 @@ requires the default branch, verifies pure and SDK-bound installation, and
 publishes an artifact with `revision.txt` identifying the exact source commit.
 It does not run on push or pull requests.
 
-Hosting is not active yet: the repository Pages API returned404 on2026-09-24.
+Hosting is not active yet: the repository Pages API returned 404 on 2026-09-24.
 Adding this workflow does not enable Pages, configure DNS, or publish a site.
 Those operator actions are a separate delivery step after review:
 
