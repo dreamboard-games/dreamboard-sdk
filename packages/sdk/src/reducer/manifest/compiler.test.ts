@@ -49,6 +49,16 @@ describe("in-memory manifests", () => {
       cardSets: [
         {
           ...manifest.cardSets[0],
+          cardSchema: {
+            variants: {
+              "ranked-card": {
+                properties: {
+                  color: { type: "enum", enums: ["red"] },
+                  points: { type: "integer", default: 0 },
+                },
+              },
+            },
+          },
           cards: [
             {
               type: "ace",
@@ -64,6 +74,10 @@ describe("in-memory manifests", () => {
     expect(compiled.createInitialTable().cards.ace.cardType).toBe(
       "ranked-card",
     );
+    expect(compiled.createInitialTable().cards.ace.properties).toEqual({
+      color: "red",
+      points: 0,
+    });
     expect(compiled.literals.cardTypes).toEqual(["ranked-card"]);
     expect(compiled.literals.cardTypeByCardId.ace).toBe("ranked-card");
   });

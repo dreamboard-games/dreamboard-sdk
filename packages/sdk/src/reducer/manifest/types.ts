@@ -97,14 +97,6 @@ type Cards<M> =
       : never
     : never;
 type Zone<M, Scope> = Id<Extract<Entries<M, "zones">, { scope: Scope }>>;
-type CardZone<M, Scope> =
-  Entries<M, "zones"> extends infer Z
-    ? Z extends { scope: Scope; id: infer I extends string }
-      ? [Entry<Get<Z, "allowedCardSetIds">>] extends [never]
-        ? never
-        : I
-      : never
-    : never;
 type BoardLike<M> =
   Boards<M> extends infer B
     ? B extends unknown
@@ -330,17 +322,9 @@ export type CompiledManifest<M extends AuthoredManifest> = Omit<
       string,
       string
     >["literals"],
-    | `${keyof ManifestIdsOf<M>}s`
-    | "cardSetIdsBySharedZoneId"
-    | "cardSetIdsByPlayerZoneId"
+    `${keyof ManifestIdsOf<M>}s`
   > & {
     [K in keyof ManifestIdsOf<M> as `${K}s`]: readonly ManifestIdsOf<M>[K][];
-  } & {
-    cardSetIdsBySharedZoneId: Record<CardZone<M, "shared">, readonly string[]>;
-    cardSetIdsByPlayerZoneId: Record<
-      CardZone<M, "perPlayer">,
-      readonly string[]
-    >;
   };
   records: {
     [K in Exclude<keyof ManifestIdsOf<M>, "playerId"> as `${K}s`]: <V>(

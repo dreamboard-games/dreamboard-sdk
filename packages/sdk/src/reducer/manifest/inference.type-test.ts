@@ -41,13 +41,13 @@ const manifest = {
       allowedCardSetIds: ["cards"],
       visibility: "ownerOnly",
     },
-    { id: "pieces", name: "Pieces", scope: "shared", allowedCardSetIds: [] },
     {
-      id: "player-pieces",
-      name: "Player pieces",
-      scope: "perPlayer",
+      id: "open-pile",
+      name: "Open pile",
+      scope: "shared",
       allowedCardSetIds: [],
     },
+    { id: "open-hand", name: "Open hand", scope: "perPlayer" },
   ],
   boards: [],
 } as const;
@@ -71,12 +71,8 @@ const game = createGame({
 });
 const input = game.phase("play");
 type UiManifest = GameUiManifestOf<typeof game>;
-const cardZone: UiManifest["CardZoneId"] = "draw";
-const playerCardZone: UiManifest["PlayerCardZoneId"] = "hand";
-// @ts-expect-error A piece-only shared zone cannot host a card surface.
-const pieceZone: UiManifest["CardZoneId"] = "pieces";
-// @ts-expect-error A piece-only player zone cannot host a hand.
-const playerPieceZone: UiManifest["PlayerCardZoneId"] = "player-pieces";
+const unrestrictedPile: UiManifest["CardZoneId"] = "open-pile";
+const unrestrictedHand: UiManifest["PlayerCardZoneId"] = "open-hand";
 void [
   invalidCard,
   points,
@@ -84,10 +80,8 @@ void [
   input,
   missingDeck,
   placeholderPlayers,
-  cardZone,
-  playerCardZone,
-  pieceZone,
-  playerPieceZone,
+  unrestrictedPile,
+  unrestrictedHand,
 ];
 
 import type { ManifestIdsOf } from "./types";
