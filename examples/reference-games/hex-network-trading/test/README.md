@@ -10,15 +10,20 @@ production, the discard barrier, Bandits, network/costs, depot trades,
 bilateral trade, and projection privacy. `test/scenarios.test.ts` adds exact
 checkpoint, probe, explore, scheduler, and privacy assertions.
 
-`test/ui-scenarios/` contains derived Workbench checkpoints for setup,
-production, discard, pending trade, a growing network, and terminal victory.
+`test/ui/scenario-source.test.tsx` exercises the actual headless instance over
+production-backed scenario sources: board placement, atomic Depot exchange,
+committed Bandits choices, restore/cancel and selected-seat privacy.
+`test/ui/app.test.tsx` bundles the hosted UI and rejects executable game, reducer,
+testing or Node imports.
 
-Generated workspace contracts, projections, and Workbench fixtures are ignored
-local outputs. They are not assertion authority and must not be edited or
-committed.
+`test/browser/game.spec.ts` drives the same local UI with desktop keyboard/pointer
+and mobile touch. It covers every former Workbench checkpoint, private discards,
+trade responses, saved choices, errors, terminal standings and Axe checks. Browser
+traces go to `build/browser`; screenshots for review are written beneath `/tmp`.
 
-Run:
+Run from this game directory:
 
 ```sh
-pnpm verify
+pnpm check
+pnpm test:browser
 ```

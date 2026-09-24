@@ -14,7 +14,7 @@ import {
   RuntimeCardData,
   RuntimeRecord,
   RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";
 type TestPlayerZoneId = "hand" | "in-play" | "discard";

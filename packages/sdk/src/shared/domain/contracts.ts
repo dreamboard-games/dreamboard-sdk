@@ -993,14 +993,6 @@ export type HostGameplaySharedView = {
    */
   currentPhase: string;
   /**
-   * Current stage within the phase. Null when the phase has no active stage.
-   */
-  currentStage: string | null;
-  /**
-   * Player IDs this stage currently admits.
-   */
-  stageSeats: Array<string>;
-  /**
    * Visibility-safe progress metadata for an active simultaneous-player phase.
    */
   simultaneousPhase?: SimultaneousPhaseSnapshot | null;
@@ -1018,210 +1010,50 @@ export type HostGameplaySharedView = {
   boardStaticHash?: string | null;
 };
 
-/**
- * Draft commit policy consumed by default UI surfaces.
- */
-export type InteractionCommitPolicy = {
-  mode: "manual" | "autoWhenReady";
-};
-
-/**
- * Single-value input selection.
- */
-export type SingleInputSelection = {
-  mode: "single";
-};
-
-/**
- * Multi-value input selection.
- */
-export type ManyInputSelection = {
-  mode: "many";
-  min: number;
-  max?: number;
-  distinct?: boolean;
-};
-
-export type InputSelection =
-  | ({
-      mode: "single";
-    } & SingleInputSelection)
-  | ({
-      mode: "many";
-    } & ManyInputSelection);
-
-export type InputDomain =
-  | ({
-      type: "cardTarget";
-    } & CardTargetDomain)
-  | ({
-      type: "boardTarget";
-    } & BoardTargetDomain)
-  | ({
-      type: "resourceMap";
-    } & ResourceMapDomain)
-  | ({
-      type: "boundedNumber";
-    } & BoundedNumberDomain)
-  | ({
-      type: "choice";
-    } & ChoiceDomain)
-  | ({
-      type: "choiceList";
-    } & ChoiceListDomain);
-
-export type ResolvedCardTargetDomain = {
-  type: "cardTarget";
-  projection: "resolved";
-  targetKind: "card";
-  zoneIds: Array<string>;
-  eligibleTargets: Array<string>;
-  selection?: InputSelection;
-};
-
-export type CardTargetDomain = ResolvedCardTargetDomain;
-
-export type ResolvedBoardTargetDomain = {
-  type: "boardTarget";
-  projection: "resolved";
-  targetKind: "edge" | "vertex" | "space" | "tile";
-  boardId: string;
-  valueKind?: "board-id" | "player-board-space";
-  eligibleTargets: Array<string>;
-  selection?: InputSelection;
-};
-
-export type BoardTargetDomain = ResolvedBoardTargetDomain;
-
-export type ResourceMapDomainEntry = {
-  resourceId: string;
-  label?: string;
-  icon?: string;
-  min: number;
-  max: number;
-};
-
-export type ResourceMapDomain = {
-  type: "resourceMap";
-  resources: Array<ResourceMapDomainEntry>;
-  selection?: InputSelection;
-};
-
-export type BoundedNumberDomain = {
-  type: "boundedNumber";
-  min: number;
-  max: number;
-  step?: number;
-  selection?: InputSelection;
-};
-
-export type ChoiceDomainOption = {
-  value: string | null;
-  label: string;
-  icon?: string;
-  badge?: string;
-  description?: string;
-  disabled?: boolean;
-  disabledReason?: string;
-};
-
-export type ChoiceDomain = {
-  type: "choice";
-  choices: Array<ChoiceDomainOption>;
-  selection?: InputSelection;
-};
-
-export type ChoiceListDomain = {
-  type: "choiceList";
-  choices: Array<ChoiceDomainOption>;
-  min?: number;
-  max?: number;
-  selection?: InputSelection;
-};
-
-/**
- * Canonical descriptor for one interaction input collector.
- */
-export type InteractionInputDescriptor = {
-  key: string;
-  kind: string;
-  domain: InputDomain;
-  /**
-   * Optional default value applied to this input when the player has not
-   * yet drafted a value. Mirrors the input collector's `defaultValue`
-   * from the authored interaction, so plugins can render a sensible
-   * starting state (e.g. a pre-selected resource for a bank trade).
-   *
-   */
-  defaultValue?: JsonValue;
-};
-
-export type AvailableInteractionAvailability = {
-  status: "available";
-};
-
-export type NotYourTurnInteractionAvailability = {
-  status: "notYourTurn";
-  reason: string;
-};
-
-export type BlockedInteractionAvailability = {
-  status: "blocked";
-  reason: string;
-  code?: string;
-};
-
-export type InteractionAvailability =
-  | ({
-      status: "available";
-    } & AvailableInteractionAvailability)
-  | ({
-      status: "notYourTurn";
-    } & NotYourTurnInteractionAvailability)
-  | ({
-      status: "blocked";
-    } & BlockedInteractionAvailability);
-
-/**
- * Authoritative interaction descriptor resolved by the trusted bundle.
- */
-export type InteractionDescriptorBase = {
-  phaseName: string;
-  interactionKey: string;
-  interactionId: string;
-  zoneId?: string;
-  /**
-   * Draft commit policy materialized by the trusted reducer bundle. Omitted authoring specs default to manual before this descriptor crosses the runtime boundary.
-   */
-  commit: InteractionCommitPolicy;
-  /**
-   * Ordered input descriptors. Each entry is the canonical source for its collector key, collector kind, and valid-value domain.
-   */
-  inputs: Array<InteractionInputDescriptor>;
-  step?: {
-    index: number;
-    total: number;
-    selected: Record<string, JsonValue>;
-    canCancel: boolean;
-  };
-  availability: InteractionAvailability;
-};
-
-export type ActionInteractionDescriptor = InteractionDescriptorBase & {
-  kind: "action";
-};
-
-export type InteractionDescriptor = ActionInteractionDescriptor;
-
-export type ZoneHandles = {
-  cardIds: Array<string>;
-  cardViewsById: {
-    [key: string]: string;
-  };
-  playableByCardId: {
-    [key: string]: Array<string>;
-  };
-};
+export type {
+  InteractionCommitPolicy,
+  InputSelection,
+  InputDomain,
+  InteractionInputDescriptor,
+  InteractionAvailability,
+  InteractionDescriptor,
+} from "../interaction-schema";
+import type {
+  InputDomain,
+  InputSelection,
+  InteractionAvailability,
+  InteractionDescriptor,
+} from "../interaction-schema";
+export type SingleInputSelection = Extract<InputSelection, { mode: "single" }>;
+export type ManyInputSelection = Extract<InputSelection, { mode: "many" }>;
+export type CardTargetDomain = Extract<InputDomain, { type: "cardTarget" }>;
+export type ResolvedCardTargetDomain = CardTargetDomain;
+export type BoardTargetDomain = Extract<InputDomain, { type: "boardTarget" }>;
+export type ResolvedBoardTargetDomain = BoardTargetDomain;
+export type ResourceMapDomain = Extract<InputDomain, { type: "resourceMap" }>;
+export type ResourceMapDomainEntry = ResourceMapDomain["resources"][number];
+export type BoundedNumberDomain = Extract<
+  InputDomain,
+  { type: "boundedNumber" }
+>;
+export type ChoiceDomain = Extract<InputDomain, { type: "choice" }>;
+export type ChoiceDomainOption = ChoiceDomain["choices"][number];
+export type ChoiceListDomain = Extract<InputDomain, { type: "choiceList" }>;
+export type AvailableInteractionAvailability = Extract<
+  InteractionAvailability,
+  { status: "available" }
+>;
+export type NotYourTurnInteractionAvailability = Extract<
+  InteractionAvailability,
+  { status: "notYourTurn" }
+>;
+export type BlockedInteractionAvailability = Extract<
+  InteractionAvailability,
+  { status: "blocked" }
+>;
+export type InteractionDescriptorBase = Omit<InteractionDescriptor, "kind">;
+export type ActionInteractionDescriptor = InteractionDescriptor;
+export type ZoneHandles = import("../interaction-schema").ZoneInteractionRefs;
 
 export type HostGameplaySeatView = {
   /**

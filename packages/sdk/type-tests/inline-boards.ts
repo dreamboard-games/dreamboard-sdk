@@ -1,7 +1,7 @@
 import { compileManifest, createTableQueries } from "../src/reducer";
-import type { GameTopologyManifest, SquareBoardSpec } from "../src/types";
+import type { GameTopologyManifest, SquareBoardSpec } from "../src/reducer";
 // @ts-expect-error Reusable board template contracts are removed.
-import type { BoardTemplateSpec } from "../src/types";
+import type { BoardTemplateSpec } from "../src/reducer";
 
 const square = {
   id: "map",

@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { z } from "zod";
-import { materializePluginGameplayFrame } from "../plugin-runtime-contract";
+import { materializePluginGameplayFrame } from "../index";
 import { createGame, createReducerBundle } from "../reducer";
 import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
 const event = (title: string) => ({

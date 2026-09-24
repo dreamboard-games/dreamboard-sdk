@@ -10,7 +10,9 @@
     "storybook": "storybook dev -p 6007",
     "storybook:build": "storybook build -o build/storybook",
     "smoke": "node scripts/install-smoke.ts",
-    "browser:smoke": "node scripts/browser-smoke.ts"
+    "browser:smoke": "node scripts/browser-smoke.ts",
+    "smoke:bound": "node scripts/install-smoke.ts --bound",
+    "install:games": "node scripts/install-games.ts"
   },
   "devDependencies": {
     "shadcn": "4.21.0",
@@ -24,6 +26,8 @@
     "@storybook/react-vite": "10.4.6",
     "vite": "catalog:",
     "@playwright/test": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@dreamboard-games/sdk": "workspace:*",
+    "@tanstack/react-store": "0.11.1"
   }
 }

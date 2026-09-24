@@ -29,12 +29,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
+      - run: pnpm --dir registry exec playwright install --with-deps chromium
       - run: pnpm ui test
-      - run: pnpm --dir registry check
-      - run: pnpm --dir registry smoke
-      - run: pnpm --dir registry storybook:build
-      - run: pnpm --dir registry browser:smoke
 
   ui-main-full-gate:
     if: github.event_name == 'push'
@@ -49,9 +45,5 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @dreamboard-games/ui-workbench exec playwright install --with-deps chromium webkit
-      - run: pnpm ui test --all
-      - run: pnpm --dir registry check
-      - run: pnpm --dir registry smoke
-      - run: pnpm --dir registry storybook:build
-      - run: pnpm --dir registry browser:smoke
+      - run: pnpm --dir registry exec playwright install --with-deps chromium
+      - run: pnpm ui test

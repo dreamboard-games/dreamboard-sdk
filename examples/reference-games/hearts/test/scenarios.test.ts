@@ -145,10 +145,7 @@ test("normal setup shuffles once, deals 52 unique private cards round-robin, and
   for (const inspected of rest) {
     assert.deepEqual(inspected.node.publicState, first.node.publicState);
   }
-  const spectatorView = inspections[4]!.node.view as Record<string, unknown>;
-  assert.equal("hand" in spectatorView, false);
-  assert.equal(JSON.stringify(spectatorView).includes("draw-pile"), false);
-  assert.equal(JSON.stringify(spectatorView).includes("runtime.rng"), false);
+  assert.equal(inspections[4]!.node.view, null);
 });
 
 test("the sealed pass barrier derives actors, waits, blockers, and perspective actions", async () => {
@@ -495,10 +492,7 @@ test("seat views reveal public trick evidence while spectators receive no privat
       { playerId: "player-3", cardId: "clubs-A" },
     ]);
   }
-  assert.equal(
-    "hand" in (openTrick[4]!.node.view as Record<string, unknown>),
-    false,
-  );
+  assert.equal(openTrick[4]!.node.view, null);
 
   const midHand = await Promise.all([
     ...[0, 1, 2, 3].map((seat) =>
@@ -518,8 +512,7 @@ test("seat views reveal public trick evidence while spectators receive no privat
       at: { segment: "given", completed: 32 },
     }),
   ]);
-  assert.deepEqual(openTrick[4]!.node.view, {});
-  assert.deepEqual(midHand[4]!.node.view, {});
+  assert.equal(midHand[4]!.node.view, null);
   const [first, ...others] = midHand;
   assert.ok(first);
   for (const inspected of others) {
@@ -529,14 +522,6 @@ test("seat views reveal public trick evidence while spectators receive no privat
     (first.node.view as { trickHistory: readonly unknown[] }).trickHistory
       .length,
     7,
-  );
-  assert.equal(
-    "hand" in (midHand[4]!.node.view as Record<string, unknown>),
-    false,
-  );
-  assert.equal(
-    JSON.stringify(midHand[4]!.node.view).includes("draw-pile"),
-    false,
   );
 });
 

@@ -1,11 +1,12 @@
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 
-import type { CanonicalJson, RuntimeJson } from "../runtime-json.js";
+import { RuntimeJsonSchema, type RuntimeJson } from "../runtime-json.js";
 
-export function canonicalizePluginRuntimeJson(value: unknown): CanonicalJson {
-  assertRuntimeJson(value);
-  return canonicalizeJson(value);
+export function canonicalizePluginRuntimeJson(value: unknown): RuntimeJson {
+  return canonicalizeJson(
+    RuntimeJsonSchema.parse(omitOptionalProperties(value)),
+  );
 }
 
 export function encodeCanonicalPluginRuntimeJson(value: unknown): string {
@@ -16,7 +17,7 @@ export function digestPluginRuntimeJson(value: unknown): string {
   return `sha256:${sha256Hex(encodeCanonicalPluginRuntimeJson(value))}`;
 }
 
-function canonicalizeJson(value: RuntimeJson): CanonicalJson {
+function canonicalizeJson(value: RuntimeJson): RuntimeJson {
   if (
     value === null ||
     typeof value === "boolean" ||
@@ -24,50 +25,34 @@ function canonicalizeJson(value: RuntimeJson): CanonicalJson {
   ) {
     return value;
   }
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      throw new Error("canonical JSON contains a non-finite number");
-    }
-    return value;
-  }
+  if (typeof value === "number") return value;
   if (Array.isArray(value)) {
     return value.map((item) => canonicalizeJson(item));
   }
   return Object.fromEntries(
     Object.entries(value)
-      .filter(([, item]) => item !== undefined)
       .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
       .map(([key, item]) => [key, canonicalizeJson(item)]),
   );
 }
 
-function assertRuntimeJson(value: unknown): asserts value is RuntimeJson {
+// Authored descriptors may explicitly carry undefined optional properties.
+// Omit only those JSON object fields; z.json rejects every other unsupported value.
+function omitOptionalProperties(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(omitOptionalProperties);
   if (
-    value === null ||
-    typeof value === "boolean" ||
-    typeof value === "string"
+    value !== null &&
+    typeof value === "object" &&
+    (Object.getPrototypeOf(value) === Object.prototype ||
+      Object.getPrototypeOf(value) === null)
   ) {
-    return;
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([, item]) => item !== undefined)
+        .map(([key, item]) => [key, omitOptionalProperties(item)]),
+    );
   }
-  if (typeof value === "number") {
-    if (!Number.isFinite(value)) {
-      throw new Error("runtime JSON contains a non-finite number");
-    }
-    return;
-  }
-  if (Array.isArray(value)) {
-    value.forEach(assertRuntimeJson);
-    return;
-  }
-  if (typeof value === "object") {
-    Object.values(value).forEach((item) => {
-      if (item !== undefined) {
-        assertRuntimeJson(item);
-      }
-    });
-    return;
-  }
-  throw new Error(`runtime JSON contains unsupported ${typeof value} value`);
+  return value;
 }
 
 function sha256Hex(input: string): string {

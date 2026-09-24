@@ -82,7 +82,7 @@ function source(board: RuntimeBoardState = hexBoard()) {
         view: { boards: { byId: { [board.id]: board }, hex: {}, square: {} } },
         flow: {
           currentPhase: "play",
-          currentStage: null,
+
           activePlayers: ["alice"],
           simultaneousPhase: null,
         },

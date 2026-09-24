@@ -124,13 +124,11 @@ describe("canonical runtime schemas", () => {
       current.SeatProjectionBundleSchema.parse({
         seats: {},
         events: [],
-        currentStage: null,
         simultaneousPhase: null,
       }),
     ).toEqual({
       seats: {},
       events: [],
-      currentStage: null,
       simultaneousPhase: null,
     });
     expect(

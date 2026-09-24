@@ -1,4 +1,4 @@
-import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing-runtime";
+import { materializeScenarioRuntimeCheckpoint } from "@dreamboard-games/sdk/testing";
 import { FRONTIER_GEOMETRY } from "../app/model";
 import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
@@ -550,7 +550,7 @@ test("seeded stolen supply type is participant-only and reproducible", async () 
     at: { segment: "when", completed: 2 },
   });
   assert.equal(JSON.stringify(spectator.node).includes("myLastStolen"), false);
-  assert.deepEqual(spectator.node.view, {});
+  assert.equal(spectator.node.view, null);
   assert.deepEqual(
     (spectator.node.publicState as { lastSteal: unknown }).lastSteal,
     {
@@ -599,7 +599,6 @@ test("privacy projection exposes exact inventories only to their owners", async 
   const firstView = playerOne.node.view as Record<string, unknown>;
   const secondView = playerTwo.node.view as Record<string, unknown>;
   const thirdView = playerThree.node.view as Record<string, unknown>;
-  const spectatorView = spectator.node.view as Record<string, unknown>;
   assert.deepEqual(firstView.mySupplies, {
     brick: 3,
     provisions: 0,
@@ -634,10 +633,7 @@ test("privacy projection exposes exact inventories only to their owners", async 
       want: { provisions: 1 },
     });
   }
-  assert.deepEqual(spectatorView, {});
-  assert.equal(Object.hasOwn(spectatorView, "mySupplies"), false);
-  assert.equal(Object.hasOwn(spectatorView, "myLastDiscard"), false);
-  assert.equal(Object.hasOwn(spectatorView, "myLastStolenResourceId"), false);
+  assert.equal(spectator.node.view, null);
   assert.equal(Object.hasOwn(spectator.node, "privateState"), false);
   assert.equal(Object.hasOwn(spectator.node, "table"), false);
 });

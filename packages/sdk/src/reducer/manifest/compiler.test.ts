@@ -4,7 +4,7 @@ import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
 import { cloneRuntimeTable } from "../table/clone";
-import { createReducerTestingBundle } from "../../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../../testing/reducer-runtime.js";
 import { createIngressRuntimeCodec } from "../ingress/runtime-codec";
 
 const manifest = {
@@ -214,17 +214,19 @@ describe("active player records", () => {
     });
     const playerIds = ["zulu", "alpha"];
     const table = game.contract.manifest.createInitialTable({ playerIds });
-    const bundle = createReducerTestingBundle(definition);
-    const initialized = await bundle.initialize({
-      table: {
-        ...table,
-        hands: {},
-        zones: { ...table.zones, perPlayer: {} },
-        resources: {},
-      },
-      playerIds,
-      rngSeed: 7,
-    });
+    const bundle = createReducerTestingRuntime(definition);
+    const initialized = (
+      await bundle.initialize({
+        table: {
+          ...table,
+          hands: {},
+          zones: { ...table.zones, perPlayer: {} },
+          resources: {},
+        },
+        playerIds,
+        rngSeed: 7,
+      })
+    ).state;
     const codec = createIngressRuntimeCodec(definition);
     const restored = codec.parseState(JSON.parse(JSON.stringify(initialized)));
     expect(restored.domain.table.playerOrder).toEqual(playerIds);

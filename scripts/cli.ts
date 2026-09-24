@@ -105,10 +105,12 @@ export async function runCli(argv: readonly string[]): Promise<void> {
     }
     case "test":
       requireNoArgs(parsed.command, parsed.args);
+      build();
       await test();
       return;
     case "typecheck":
       requireNoArgs(parsed.command, parsed.args);
+      build();
       typecheck();
       return;
     case "ui": {
@@ -134,7 +136,7 @@ Commands:
   release:verify                Build the immutable release candidate
   test                          Run browser-free unit tests
   typecheck                     Type-check packages and repository scripts
-  ui <storybook|workbench|test|snapshots> ...
+  ui <storybook|dev|test> [--game <id>]
                                  Run the SDK UI product tooling
 `;
 }

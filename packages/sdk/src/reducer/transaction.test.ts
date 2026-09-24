@@ -2,7 +2,7 @@ import { createReducerTransaction } from "./transaction";
 import { createTestEdit, createTestRandom } from "./transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { createStateQueries } from "../reducer";
-import type { RuntimeTableRecord } from "../reducer/advanced";
+import type { RuntimeTableRecord } from "../reducer/model";
 import type { PlayerId } from "./per-player";
 import { createSpatialTable } from "./table/table-test-fixtures";
 import {

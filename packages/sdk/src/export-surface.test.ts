@@ -12,17 +12,7 @@ const facades = {
   root: () => import("./index.js"),
   react: () => import("./react.js"),
   reducer: () => import("./reducer.js"),
-  "plugin-runtime-contract": () => import("./plugin-runtime-contract.js"),
-  "reducer/advanced": () => import("./reducer/advanced.js"),
-  runtime: () => import("./runtime.js"),
-  "runtime/primitives": () => import("./runtime/primitives.js"),
-  "runtime/workspace-contract": () => import("./runtime/workspace-contract.js"),
-  "reference-games": () => import("./reference-games/index.js"),
-  ui: () => import("./ui.js"),
-  types: () => import("./types.js"),
   testing: () => import("./testing.js"),
-  "testing-compiler": () => import("./testing-compiler.js"),
-  "browser-interaction": () => import("./browser-interaction.js"),
 } as const;
 
 describe("public export surface", () => {

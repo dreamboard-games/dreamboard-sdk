@@ -19,7 +19,7 @@ const snapshot: SourceSnapshot = {
     view: { score: 0 },
     flow: {
       currentPhase: "play",
-      currentStage: null,
+
       activePlayers: ["alice"],
       simultaneousPhase: null,
     },

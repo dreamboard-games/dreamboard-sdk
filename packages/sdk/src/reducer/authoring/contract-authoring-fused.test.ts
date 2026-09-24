@@ -4,7 +4,7 @@ import { createGame } from "../../reducer";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../advanced";
+} from "../model";
 
 function createModel() {
   const playerIds = ["player-1", "player-2"] as const;

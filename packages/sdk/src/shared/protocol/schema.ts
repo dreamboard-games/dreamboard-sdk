@@ -8,7 +8,6 @@ import { RuntimeJsonSchema } from "../runtime-json.js";
 import type {
   GameOutcome,
   GameplayBasis,
-  InteractionDescriptor,
   PluginGameplayFrame,
   PluginSessionDescriptor,
   ZoneHandlesSnapshot,
@@ -17,7 +16,6 @@ import type {
   HostToPluginPayload,
   InteractionResult,
   PluginProtocolEnvelope,
-  PluginProtocolTape,
   PluginToHostPayload,
 } from "./protocol.js";
 
@@ -46,103 +44,16 @@ export const PluginSessionDescriptorSchema = z
   })
   .strict() satisfies z.ZodType<PluginSessionDescriptor>;
 
-export const InteractionCommitPolicySchema = z.discriminatedUnion("mode", [
-  z.object({ mode: z.literal("manual") }).strict(),
-  z.object({ mode: z.literal("autoWhenReady") }).strict(),
-]);
-
-export const InputSelectionSchema = z.discriminatedUnion("mode", [
-  z.object({ mode: z.literal("single") }).strict(),
-  z
-    .object({
-      mode: z.literal("many"),
-      min: z.number().int(),
-      max: z.number().int().optional(),
-      distinct: z.boolean().optional(),
-    })
-    .strict(),
-]);
-
-export const InputDomainSchema = z
-  .object({
-    type: z.string(),
-    selection: InputSelectionSchema.optional(),
-  })
-  .catchall(RuntimeJsonSchema);
-
-export const InteractionChoiceOptionSchema = z
-  .object({
-    value: z.string().nullable(),
-    label: z.string(),
-    icon: z.string().optional(),
-    badge: z.string().optional(),
-    description: z.string().optional(),
-    disabled: z.boolean().optional(),
-    disabledReason: z.string().optional(),
-  })
-  .strict();
-
-export const InteractionInputDescriptorSchema = z
-  .object({
-    key: z.string().min(1),
-    kind: z.string().min(1),
-    domain: InputDomainSchema,
-    defaultValue: RuntimeJsonSchema.optional(),
-  })
-  .strict();
-
-export const InteractionAvailabilitySchema = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("available") }).strict(),
-  z.object({ status: z.literal("notYourTurn"), reason: z.string() }).strict(),
-  z
-    .object({
-      status: z.literal("blocked"),
-      reason: z.string(),
-      code: z.string().optional(),
-    })
-    .strict(),
-]);
-
-const InteractionBaseSchema = z
-  .object({
-    phaseName: z.string().min(1),
-    interactionKey: z.string().min(1),
-    interactionId: z.string().min(1),
-    label: z.string().min(1),
-    help: z.string().optional(),
-    zoneId: z.string().optional(),
-    zoneIds: z.array(z.string()).optional(),
-    commit: InteractionCommitPolicySchema,
-    descriptorDigest: z.string().optional(),
-    actorSeat: z.number().int().optional(),
-    draftDigest: z.string().optional(),
-    inputs: z.array(InteractionInputDescriptorSchema),
-    step: z
-      .object({
-        index: z.number().int().nonnegative(),
-        total: z.number().int().positive(),
-        selected: z.record(z.string(), RuntimeJsonSchema),
-        canCancel: z.boolean(),
-      })
-      .strict()
-      .optional(),
-    availability: InteractionAvailabilitySchema,
-    reasons: z
-      .array(
-        z
-          .object({
-            ruleId: z.string(),
-            errorCode: z.string(),
-          })
-          .strict(),
-      )
-      .optional(),
-  })
-  .strict();
-
-export const InteractionDescriptorSchema = InteractionBaseSchema.extend({
-  kind: z.literal("action"),
-}).strict() as unknown as z.ZodType<InteractionDescriptor>;
+export {
+  InteractionCommitPolicySchema,
+  InputSelectionSchema,
+  InputDomainSchema,
+  InteractionChoiceOptionSchema,
+  InteractionInputDescriptorSchema,
+  InteractionAvailabilitySchema,
+  InteractionDescriptorSchema,
+} from "../interaction-schema.js";
+import { InteractionDescriptorSchema } from "../interaction-schema.js";
 
 export const ZoneHandlesSnapshotSchema = z
   .object({
@@ -153,7 +64,7 @@ export const ZoneHandlesSnapshotSchema = z
       z.array(InteractionDescriptorSchema),
     ),
   })
-  .strict() as unknown as z.ZodType<ZoneHandlesSnapshot>;
+  .strict() satisfies z.ZodType<ZoneHandlesSnapshot>;
 
 export const SimultaneousPhaseSnapshotSchema =
   ReducerWireZod.SimultaneousPhaseProjectionSchema;
@@ -176,7 +87,6 @@ export const SeatFrameSchema = z
     flow: z
       .object({
         currentPhase: z.string().nullable(),
-        currentStage: z.string().nullable(),
         activePlayers: z.array(PlayerIdSchema),
         simultaneousPhase: SimultaneousPhaseSnapshotSchema.nullable(),
       })
@@ -188,7 +98,7 @@ export const SeatFrameSchema = z
 
 export const PluginGameplayFrameSchema = SeatFrameSchema.extend({
   basis: GameplayBasisSchema,
-}) as unknown as z.ZodType<PluginGameplayFrame>;
+}) satisfies z.ZodType<PluginGameplayFrame>;
 
 export const InteractionResultSchema = z.discriminatedUnion("accepted", [
   z
@@ -238,7 +148,7 @@ export const HostToPluginPayloadSchema = z.discriminatedUnion("type", [
     })
     .strict(),
   InteractionResultSchema,
-]) as unknown as z.ZodType<HostToPluginPayload>;
+]) satisfies z.ZodType<HostToPluginPayload>;
 
 export const PluginToHostPayloadSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("runtime.ready") }).strict(),
@@ -283,41 +193,6 @@ export const HostToPluginEnvelopeSchema = createPluginProtocolEnvelopeSchema(
 export const PluginToHostEnvelopeSchema = createPluginProtocolEnvelopeSchema(
   PluginToHostPayloadSchema,
 );
-
-export const PluginProtocolFrameSchema = z
-  .object({
-    id: z.string().min(1),
-    frame: PluginGameplayFrameSchema,
-    projectionDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-  })
-  .strict();
-
-export const PluginProtocolStepSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      id: z.string().min(1),
-      kind: z.literal("host.frame"),
-      frameId: z.string().min(1),
-    })
-    .strict(),
-  z
-    .object({
-      id: z.string().min(1),
-      kind: z.literal("client.submit"),
-      fromFrameId: z.string().min(1),
-      requestDigest: z.string().regex(/^sha256:[a-f0-9]{64}$/),
-      response: InteractionResultSchema,
-    })
-    .strict(),
-]);
-
-export const PluginProtocolTapeSchema = z
-  .object({
-    session: PluginSessionDescriptorSchema,
-    frames: z.array(PluginProtocolFrameSchema),
-    steps: z.array(PluginProtocolStepSchema),
-  })
-  .strict() as unknown as z.ZodType<PluginProtocolTape>;
 
 export function parsePluginSessionDescriptor(
   value: unknown,

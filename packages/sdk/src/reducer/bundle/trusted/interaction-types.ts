@@ -1,7 +1,12 @@
 import type {
+  InteractionDescriptor,
+  InteractionCommitPolicy,
+  InteractionAvailability,
+  InteractionDiagnosticReason,
+  InteractionInputDescriptor,
+} from "../../../shared/interaction-schema";
+import type {
   AnyInteractionSpec,
-  InputCollectorKind,
-  InputDomainDescriptor,
   InteractionIdOfDefinition,
   PhaseMapOf,
   ReducerGameContractLike,
@@ -28,14 +33,8 @@ export type TrustedInteractionId<
   View extends ViewOfContract<Contract>,
 > = InteractionIdOfDefinition<TrustedDefinition<Contract, Definitions, View>>;
 
-export type InteractionCommitPolicyShape =
-  | { mode: "manual" }
-  | { mode: "autoWhenReady" };
-
-export type InteractionAvailabilityShape =
-  | { status: "available" }
-  | { status: "notYourTurn"; reason: string }
-  | { status: "blocked"; reason: string; code?: string };
+export type InteractionCommitPolicyShape = InteractionCommitPolicy;
+export type InteractionAvailabilityShape = InteractionAvailability;
 
 export type InteractionDecision =
   | { available: true }
@@ -46,10 +45,7 @@ export type InteractionDecision =
       message?: string;
     };
 
-export type InteractionDiagnosticReasonShape = {
-  ruleId: string;
-  errorCode: string;
-};
+export type InteractionDiagnosticReasonShape = InteractionDiagnosticReason;
 
 export type InteractionExplanation = {
   interactionId: string;
@@ -75,39 +71,32 @@ export type InteractionExplanation = {
   }>;
 };
 
-type InteractionDescriptorBaseShape<
-  PhaseName extends string = string,
-  InteractionId extends string = string,
-  ZoneId extends string = string,
-> = {
-  phaseName: PhaseName;
-  interactionKey: `${PhaseName}.${InteractionId}`;
-  interactionId: InteractionId;
-  label: string;
-  help?: string;
-  commit: InteractionCommitPolicyShape;
-  descriptorDigest?: string;
-  actorSeat?: number;
-  draftDigest?: string;
-  zoneId?: ZoneId;
-  zoneIds?: readonly ZoneId[];
-  inputs: InteractionInputDescriptorShape[];
-  step?: {
-    index: number;
-    total: number;
-    selected: Record<string, unknown>;
-    canCancel: boolean;
-  };
-  availability: InteractionAvailabilityShape;
-  reasons?: readonly InteractionDiagnosticReasonShape[];
-};
-
+// Before projection admission, authored collectors may still return unknown values.
+// All transport fields derive from the admitting schema; only game identity and
+// the not-yet-admitted authored values are narrowed here.
 export type InteractionDescriptorShape<
   PhaseName extends string = string,
   InteractionId extends string = string,
   ZoneId extends string = string,
-> = InteractionDescriptorBaseShape<PhaseName, InteractionId, ZoneId> & {
-  kind: "action";
+> = Omit<
+  InteractionDescriptor,
+  | "phaseName"
+  | "interactionKey"
+  | "interactionId"
+  | "zoneId"
+  | "zoneIds"
+  | "inputs"
+  | "step"
+> & {
+  phaseName: PhaseName;
+  interactionKey: `${PhaseName}.${InteractionId}`;
+  interactionId: InteractionId;
+  zoneId?: ZoneId;
+  zoneIds?: readonly ZoneId[];
+  inputs: readonly InteractionInputDescriptorShape[];
+  step?: Omit<NonNullable<InteractionDescriptor["step"]>, "selected"> & {
+    selected: Record<string, unknown>;
+  };
 };
 
 export type TrustedInteractionDescriptorShape<
@@ -119,12 +108,10 @@ export type TrustedInteractionDescriptorShape<
   TrustedInteractionId<Contract, Definitions, View>
 >;
 
-export type InteractionInputDescriptorShape = {
-  key: string;
-  kind: InputCollectorKind;
-  domain: InputDomainDescriptor;
-  defaultValue?: unknown;
-};
+export type InteractionInputDescriptorShape = Omit<
+  InteractionInputDescriptor,
+  "defaultValue"
+> & { defaultValue?: unknown };
 
 export type InteractionActorAuthorization<PlayerId extends string> =
   | { readonly mode: "actors"; readonly actors: ReadonlySet<PlayerId> }

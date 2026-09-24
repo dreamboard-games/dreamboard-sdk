@@ -23,21 +23,38 @@ it. The implementation plays exactly one complete 13-trick hand.
 - `app/phases/passing.ts`
 - `app/phases/playing.ts`
 - `app/rules.ts`
-- `ui/interaction-routes.tsx`
+- `ui/game.ts` and `ui/components/hand-row.tsx`
 - `test/scenarios/complete-game.scenario.ts`
 - `test/scenarios/setup-and-pass.scenario.ts`
 
 ## Agent Authoring Workflow
 
-Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Use
-`dreamboard test inspect` with the relevant player perspective to see the
-sealed pass or playable-card domain, then use `dreamboard test explore` to
-obtain concrete replay-accepted commands as JSON. Add a returned command to the
-typed scenario; passing and trick checkpoints derive from that same replay, not
-from checked-in hands or mid-game state.
+Read `rule.md` and `test/scenarios/complete-game.scenario.ts`. Start a seeded game
+with `localSource(game, { players: 4, seed: 1 })`, or open a named checkpoint with
+`scenarioSource(game, scenario, { at, as })`. Use the source's selected-seat
+`inspect()` and bounded `explore({ maxEvaluations: 5000 })` to obtain commands;
+`apply(command)` uses the production reducer admission path. Add accepted commands
+to the typed scenario. Local UI checkpoint controls restore saved JSON state
+without replaying initialization or commands.
 
 ## Verification
 
 ```sh
-pnpm verify
+pnpm check
+pnpm test:browser
 ```
+
+## Hosted and local UI
+
+`ui/index.tsx` mounts the selected-seat iframe source. Its game import is type-only;
+reducer execution and scenario replay belong to `ui/dev.tsx` and its local source.
+Registry components are installed as editable code under `ui/components/dreamboard`.
+
+Run `pnpm dev`, then open `/?scenario=complete&at=opening&as=player-1`.
+Other complete-game checkpoints include `sealed-pass`, `first-trick`, `mid-hand`,
+`developed`, and `game-over`. The local controls switch actual seats and save or
+restore a JSON checkpoint; they never replay an old seat's intent. Omit `scenario`
+for a new seeded game. Local inspector data contains only the selected-seat view.
+
+The browser suite plays all 56 commands through native keyboard and touch controls,
+checks private hands and sealed passes, and verifies final standings and accessibility.

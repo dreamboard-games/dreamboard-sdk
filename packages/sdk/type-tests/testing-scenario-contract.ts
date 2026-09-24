@@ -1,3 +1,4 @@
+import { resolveScenarioCommandParams } from "../src/testing/scenario-player-refs.js";
 import { z } from "zod";
 import { many } from "../src/reducer/inputs/many.js";
 import type { PlayerSpaceInputSchema } from "../src/reducer/inputs/boardInput.js";
@@ -7,10 +8,9 @@ import * as testingFacade from "../src/testing.js";
 import * as testingDefinitions from "../src/testing/definitions.js";
 import {
   digestScenarioProjection,
-  resolveScenarioCommandParams,
   scenarioProjectionInputMetadata,
   scenarioProjectionParityFromInspectNode,
-} from "../src/testing-runtime.js";
+} from "../src/testing/scenario-projection-digest.js";
 import {
   createScenarioAuthoring,
   type ScenarioCommandOf,
@@ -190,3 +190,13 @@ void digestScenarioProjection;
 void resolveScenarioCommandParams;
 void scenarioProjectionInputMetadata;
 void scenarioProjectionParityFromInspectNode;
+
+// Candidate verification must execute an explicit production artifact.
+type CandidateInput =
+  import("../src/testing/candidate-verification").CandidateVerificationInput<
+    import("../src/testing/scenario-definition-validation").ScenarioDefinitionGameLike
+  >;
+declare const authoredCandidateInput: Omit<CandidateInput, "bundle">;
+// @ts-expect-error Authored definitions alone are not compiled artifact verification.
+const missingCandidateBundle: CandidateInput = authoredCandidateInput;
+void missingCandidateBundle;

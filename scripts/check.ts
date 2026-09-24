@@ -22,12 +22,20 @@ export function format(write: boolean): void {
 }
 
 export function lint(): void {
-  run("pnpm", ["exec", "turbo", "run", "lint"], { cwd: rootDir });
+  run(
+    "pnpm",
+    ["-r", "--workspace-concurrency=1", "--if-present", "run", "lint"],
+    { cwd: rootDir },
+  );
   run("pnpm", ["exec", "eslint", "scripts/**/*.ts"], { cwd: rootDir });
 }
 
 export function typecheck(): void {
-  run("pnpm", ["exec", "turbo", "run", "typecheck"], { cwd: rootDir });
+  run(
+    "pnpm",
+    ["-r", "--workspace-concurrency=1", "--if-present", "run", "typecheck"],
+    { cwd: rootDir },
+  );
   run("pnpm", ["exec", "tsc", "-p", "tsconfig.scripts.json"], {
     cwd: rootDir,
   });
@@ -36,13 +44,7 @@ export function typecheck(): void {
 export function build(): void {
   run(
     "pnpm",
-    [
-      "exec",
-      "turbo",
-      "run",
-      "build",
-      "--filter=!@dreamboard-games/ui-workbench",
-    ],
+    ["-r", "--workspace-concurrency=1", "--if-present", "run", "build"],
     { cwd: rootDir },
   );
 }
@@ -50,13 +52,7 @@ export function build(): void {
 function testWorkspacePackages(): void {
   run(
     "pnpm",
-    [
-      "exec",
-      "turbo",
-      "run",
-      "test",
-      "--filter=!@dreamboard-games/ui-workbench",
-    ],
+    ["-r", "--workspace-concurrency=1", "--if-present", "run", "test"],
     { cwd: rootDir },
   );
 }
@@ -83,11 +79,11 @@ export async function runCoreCheck(
 ): Promise<void> {
   const includeReferenceGames = options.referenceGames !== false;
   format(false);
-  // Workspace Turbo tasks below include registry typecheck and shadcn build.
+  // pnpm runs workspace tasks in dependency order, including the registry.
   run("pnpm", ["--dir", "registry", "validate"], { cwd: rootDir });
   lint();
-  typecheck();
   build();
+  typecheck();
   await assertPublicationBoundary();
   await assertSdkExportParity();
   await testRepositoryScripts();

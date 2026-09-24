@@ -1,37 +1,34 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "node:test";
+import { build } from "esbuild";
+import { fileURLToPath } from "node:url";
 
-function read(path: string) {
-  return readFileSync(new URL(path, import.meta.url), "utf8");
-}
-
-test("Stormtrail UI binds every canonical phase through typed surfaces", () => {
-  const app = read("../../ui/App.tsx");
-  const routes = read("../../ui/interaction-routes.tsx");
-  assert.match(
-    app,
-    /UI\.defineSurfaces\(\{\s*frontier: Board\.surface\("frontier"\)/,
+test("hosted Stormtrail UI bundles without executable reducer or testing code", async () => {
+  const result = await build({
+    entryPoints: [
+      fileURLToPath(new URL("../../ui/index.tsx", import.meta.url)),
+    ],
+    bundle: true,
+    write: false,
+    metafile: true,
+    platform: "browser",
+    format: "esm",
+    packages: "bundle",
+    external: ["*.css"],
+  });
+  const files = Object.keys(result.metafile!.inputs);
+  assert.equal(
+    files.some((path) => /hex-network-trading\/app\//.test(path)),
+    false,
   );
-  assert.match(app, /<Board\.HexGrid/);
-  assert.match(app, /data-reference-game="hex-network-trading"/);
-  assert.match(app, />\s*Stormtrail\s*</);
-  assert.match(routes, /satisfies InteractionRoutes/);
-  for (const interaction of [
-    "setupCamp.placeStartingCamp",
-    "setupTrail.placeStartingTrail",
-    "roll.rollDice",
-    "discardBarrier.discardSupplies",
-    "moveBandits.moveBandits",
-    "main.buildTrail",
-    "main.buildCamp",
-    "main.tradeWithSupplyDepot",
-    "main.offerTrade",
-    "main.endTurn",
-    "pendingTrade.acceptTrade",
-    "pendingTrade.rejectTrade",
-  ]) {
-    assert.equal(routes.includes(`"${interaction}"`), true, interaction);
-  }
-  assert.doesNotMatch(app + routes, /charter|town|port trade|moveStorm/i);
+  assert.equal(
+    files.some((path) =>
+      /\/(?:testing|reducer)(?:\/|\.[cm]?js$)|node:/.test(path),
+    ),
+    false,
+  );
+  assert.equal(
+    files.some((path) => /ui\/game\.ts$/.test(path)),
+    true,
+  );
 });

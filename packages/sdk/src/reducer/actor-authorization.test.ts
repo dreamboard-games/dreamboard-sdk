@@ -1,13 +1,13 @@
 import { createGame as createModel } from "../reducer";
 
-import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { choiceTarget, formInput } from "./inputs";
-import { RuntimeTableRecord } from "../reducer/advanced";
+import { RuntimeTableRecord } from "../reducer/model";
 import { asPlayerId } from "../reducer/per-player";
 function getAvailableInteractions(
-  bundle: ReturnType<typeof createReducerTestingBundle>,
+  bundle: ReturnType<typeof createReducerTestingRuntime>,
   state: Parameters<typeof bundle.project>[0]["state"],
   playerId: string,
 ) {
@@ -180,14 +180,16 @@ describe("recipient-based response authorization", () => {
       },
       view: () => ({}),
     });
-    return createReducerTestingBundle(game);
+    return createReducerTestingRuntime(game);
   }
   test("descriptor: recipient sees the response as available even when they are not active", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const offerer = getAvailableInteractions(bundle, initial, "player-1");
     expect(
       bundle.project({ state: initial, playerIds: ["player-1", "player-2"] })
@@ -223,10 +225,12 @@ describe("recipient-based response authorization", () => {
   });
   test("submit: the recipient (non-active) can submit the response", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const accepted = await bundle.validateInput({
       state: initial,
       input: {
@@ -240,10 +244,12 @@ describe("recipient-based response authorization", () => {
   });
   test("submit: a non-recipient (even the active player) gets NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const rejected = await bundle.validateInput({
       state: initial,
       input: {
@@ -324,7 +330,7 @@ describe("phase actor, step, and cost resolution", () => {
       },
       view: () => ({}),
     });
-    return createReducerTestingBundle(game);
+    return createReducerTestingRuntime(game);
   }
   function createResourceTable(): RuntimeTableRecord {
     const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
@@ -337,10 +343,12 @@ describe("phase actor, step, and cost resolution", () => {
   }
   test("phase actor defaults drive descriptors and submit authorization", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createResourceTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createResourceTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const actorDescriptors = getAvailableInteractions(
       bundle,
       state,
@@ -378,10 +386,12 @@ describe("phase actor, step, and cost resolution", () => {
   });
   test("interaction actor overrides its phase actor", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createResourceTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createResourceTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const actorDescriptors = getAvailableInteractions(
       bundle,
       state,
@@ -417,10 +427,12 @@ describe("phase actor, step, and cost resolution", () => {
   });
   test("cost and step decisions are enforced at submit validation", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createResourceTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createResourceTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     await expect(
       bundle.validateInput({
         state,
@@ -502,14 +514,16 @@ describe("default action-kind authorization", () => {
       },
       view: () => ({}),
     });
-    return createReducerTestingBundle(game);
+    return createReducerTestingRuntime(game);
   }
   test("descriptor: active player sees available status; non-active sees notYourTurn availability", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const active = getAvailableInteractions(bundle, initial, "player-1");
     expect(active.find((d) => d.interactionId === "act")).toMatchObject({
       availability: { status: "available" },
@@ -527,10 +541,12 @@ describe("default action-kind authorization", () => {
   });
   test("descriptor and submit: authorization reason wins over step mismatch for non-active player", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const active = getAvailableInteractions(bundle, initial, "player-1");
     expect(active.find((d) => d.interactionId === "rollOnly")).toMatchObject({
       availability: {
@@ -556,10 +572,12 @@ describe("default action-kind authorization", () => {
   });
   test("submit: non-active player is rejected with NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const rejected = await bundle.validateInput({
       state: initial,
       input: {
@@ -574,10 +592,12 @@ describe("default action-kind authorization", () => {
   });
   test("submit: active player is accepted", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const accepted = await bundle.validateInput({
       state: initial,
       input: {
@@ -631,14 +651,16 @@ describe("closed response (`actor` resolves to empty set)", () => {
       },
       view: () => ({}),
     });
-    return createReducerTestingBundle(game);
+    return createReducerTestingRuntime(game);
   }
   test("descriptor: the closed response is invisible to every seat (no leak to the active player)", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     for (const playerId of ["player-1", "player-2"] as const) {
       const descriptors = getAvailableInteractions(bundle, initial, playerId);
       expect(descriptors).toEqual([]);
@@ -646,10 +668,12 @@ describe("closed response (`actor` resolves to empty set)", () => {
   });
   test("submit: every seat is rejected with NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     for (const playerId of ["player-1", "player-2"] as const) {
       const rejected = await bundle.validateInput({
         state: initial,
@@ -706,11 +730,13 @@ describe("action-kind interactions with a `actor` selector", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const activeNonAddressee = getAvailableInteractions(
       bundle,
       initial,
@@ -769,11 +795,13 @@ describe("author `available` predicate composes with authorization", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const initial = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const initial = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, initial, "player-2");
     expect(descriptors).toHaveLength(1);
     expect(descriptors[0].availability.status).toBe("blocked");

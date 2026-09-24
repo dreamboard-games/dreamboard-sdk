@@ -1,3 +1,4 @@
+import type { ReducerBundleContract } from "../shared/worker-contract.js";
 import { type RuntimeJson } from "../shared/runtime-json";
 import type { z } from "zod";
 import type {
@@ -304,7 +305,6 @@ type ScenarioPlayerView<Game> = ViewOfDefinition<Game>;
 
 export type ScenarioFlowDiagnostics = {
   readonly currentPhase: string | null;
-  readonly currentStage: string | null;
   readonly activeSeats: readonly ScenarioSeatRef[];
 };
 
@@ -428,6 +428,8 @@ export type ScenarioReplay<Game> = {
 };
 
 export type ReplayScenarioOptions<Game> = {
+  /** Exact production artifact to execute; omitted for ordinary authored replay. */
+  readonly bundle?: ReducerBundleContract;
   readonly game: Game;
   readonly scenario: ScenarioReplayDefinition<Game>;
   readonly at?: ScenarioCheckpoint;

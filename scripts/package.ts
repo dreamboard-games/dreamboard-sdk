@@ -47,13 +47,8 @@ export type PackedSdk = {
 
 const publicPackageName = "@dreamboard-games/sdk";
 const privatePackagePrefix = "@dreamboard-games/";
-const requiredPeers = ["framer-motion", "react", "react-dom", "zod"];
-const buildOnlyDependencies = [
-  "@tailwindcss/cli",
-  "tailwindcss",
-  "typescript",
-  "tsup",
-];
+const requiredPeers = ["@tanstack/react-store", "react", "react-dom", "zod"];
+const buildOnlyDependencies = ["esbuild", "typescript", "tsup"];
 
 export function assertPeerHygiene(
   manifest: PackageManifest,

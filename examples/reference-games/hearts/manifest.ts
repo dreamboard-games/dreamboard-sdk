@@ -1,4 +1,4 @@
-import { defineTopologyManifest } from "@dreamboard-games/sdk/types";
+import { defineTopologyManifest } from "@dreamboard-games/sdk/reducer";
 
 const SUITS = ["clubs", "diamonds", "spades", "hearts"] as const;
 const RANKS = [

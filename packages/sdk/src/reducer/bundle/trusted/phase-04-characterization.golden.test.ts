@@ -4,7 +4,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createReducerBundle, type ReducerDiagnosticEvent } from "../..";
-import type { RuntimeTableRecord } from "../../../reducer/advanced";
+import type { RuntimeTableRecord } from "../../../reducer/model";
 import { asPlayerId } from "../../per-player";
 
 function digest(value: unknown): string {
@@ -299,7 +299,6 @@ describe("phase 4 trusted-bundle characterization", () => {
 
     expect({
       digest: digest(projection),
-      stageSeats: projection.stageSeats,
       schedulerFlow: projection.schedulerFlow,
       seats: projection.seats,
     }).toMatchSnapshot();

@@ -16,7 +16,7 @@ export const frame = (
   view: { score: version },
   flow: {
     currentPhase: "play",
-    currentStage: null,
+
     activePlayers: ["alice"],
     simultaneousPhase: null,
   },

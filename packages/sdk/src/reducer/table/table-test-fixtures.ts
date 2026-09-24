@@ -1,4 +1,4 @@
-import type { RuntimeTableRecord } from "../../reducer/advanced";
+import type { RuntimeTableRecord } from "../../reducer/model";
 import { type PlayerId } from "../per-player";
 
 export function createSpatialTable(): RuntimeTableRecord {

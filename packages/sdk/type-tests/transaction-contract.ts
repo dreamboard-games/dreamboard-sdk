@@ -1,6 +1,6 @@
 import * as reducer from "../src/reducer.js";
 import type { ReducerTransaction } from "../src/reducer.js";
-import type { RuntimeTableRecord } from "../src/reducer/advanced.js";
+import type { RuntimeTableRecord } from "../src/reducer/model.js";
 
 type HexBoard = RuntimeTableRecord["boards"]["hex"][string];
 type Board<Id extends string> = Omit<

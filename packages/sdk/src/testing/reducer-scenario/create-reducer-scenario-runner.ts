@@ -1,6 +1,6 @@
 import { computePluginActionSetVersion } from "../../shared/protocol/digest.js";
 import { materializePluginGameplayFrame } from "../../shared/protocol/projection.js";
-import { digestUIFixtureJson } from "../ui-fixture/canonical.js";
+import { digestScenarioJson } from "../canonical.js";
 import type {
   CreateReducerScenarioRunnerOptions,
   ReducerScenarioFrame,
@@ -49,7 +49,7 @@ export function createReducerScenarioRunner(
           staticProjection,
           gameVersion,
           actionSetVersion,
-          projectionDigest: digestUIFixtureJson({
+          projectionDigest: digestScenarioJson({
             digestVersion: "reducer-scenario-frame@2",
             scenarioId: options.scenarioId,
             frameId: id,

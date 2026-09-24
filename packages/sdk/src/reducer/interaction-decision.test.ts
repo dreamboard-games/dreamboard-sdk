@@ -1,7 +1,7 @@
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
 
-import { createReducerTestingBundle } from "../testing/reducer-runtime.js";
+import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -10,7 +10,7 @@ import { many } from "../reducer";
 import {
   createManifestStringLiteralSchema,
   RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 import { asPlayerId } from "../reducer/per-player";
 function buildManifest() {
   const playerIds = ["player-1", "player-2"] as const;
@@ -211,7 +211,7 @@ function createTwoZoneTable(): RuntimeTableRecord {
   };
 }
 function getAvailableInteractions(
-  bundle: ReturnType<typeof createReducerTestingBundle>,
+  bundle: ReturnType<typeof createReducerTestingRuntime>,
   state: Parameters<typeof bundle.project>[0]["state"],
   playerId: string,
 ) {
@@ -559,7 +559,7 @@ function makeBundle(
     },
     view: () => ({}),
   });
-  return createReducerTestingBundle(game, options);
+  return createReducerTestingRuntime(game, options);
 }
 describe("trusted interaction decision pipeline", () => {
   test("dispatch hands explicit paramsSchema data to params-only reducers", async () => {
@@ -605,11 +605,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const result = await bundle.dispatch({
       state,
       input: {
@@ -627,10 +629,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("projected descriptors carry stable descriptor digests and seat-scoped initial draft digests", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const oneSeatProjection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -692,10 +696,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("rules share descriptor and submit decisions", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
     expect(
       descriptors.find((d) => d.interactionId === "stageBlocked"),
@@ -746,10 +752,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("descriptor projection carries authored presentation and fallback labels", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
     expect(
       descriptors.find(
@@ -777,10 +785,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("automatic zone projection respects hidden zones and component visibility", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     state.domain.table.zones.visibility.playZone = "hidden";
     const hidden = bundle.project({
       state,
@@ -811,10 +821,12 @@ describe("trusted interaction decision pipeline", () => {
 
   test("dynamic projection omits removed guidance metadata", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -823,10 +835,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("prompt addressees stay hidden from non-addressees and reject with prompt-not-owned", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     expect(
       getAvailableInteractions(bundle, state, "player-1").some(
         (descriptor) => descriptor.interactionId === "answerPrompt",
@@ -857,10 +871,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("cost details and submit rejection come from the same decision path", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     expect(
       getAvailableInteractions(bundle, state, "player-1").find(
         (descriptor) => descriptor.interactionId === "spendGold",
@@ -896,10 +912,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("interaction rules drive both descriptor availability and submit validation", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     expect(
       getAvailableInteractions(bundle, state, "player-1").find(
         (descriptor) => descriptor.interactionId === "ruleGatedBid",
@@ -925,10 +943,12 @@ describe("trusted interaction decision pipeline", () => {
       errorCode: "INSUFFICIENT_RESOURCES",
       message: "Need 2 gold.",
     });
-    const fundedState = await bundle.initialize({
-      table: createTable({ player1Gold: 2 }),
-      playerIds: ["player-1", "player-2"],
-    });
+    const fundedState = (
+      await bundle.initialize({
+        table: createTable({ player1Gold: 2 }),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     expect(
       getAvailableInteractions(bundle, fundedState, "player-1").find(
         (descriptor) => descriptor.interactionId === "ruleGatedBid",
@@ -954,10 +974,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("rule validation may return a dynamic message string", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable({ player1Gold: 2 }),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable({ player1Gold: 2 }),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     await expect(
       bundle.validateInput({
         state,
@@ -976,10 +998,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("explainInteraction reports structured rule and input diagnostics", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     expect(
       bundle.explainInteraction({
         state,
@@ -1012,14 +1036,18 @@ describe("trusted interaction decision pipeline", () => {
   test("verbose diagnostics opt in to descriptor reasons", async () => {
     const defaultBundle = makeBundle();
     const verboseBundle = makeBundle({ diagnostics: "verbose" });
-    const defaultState = await defaultBundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
-    const verboseState = await verboseBundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const defaultState = (
+      await defaultBundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
+    const verboseState = (
+      await verboseBundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const defaultDescriptor = getAvailableInteractions(
       defaultBundle,
       defaultState,
@@ -1041,10 +1069,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("hand zones derive card actions and preserve card-mode validation", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1135,11 +1165,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1226,11 +1258,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTwoZoneTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTwoZoneTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptor = getAvailableInteractions(bundle, state, "player-1").find(
       (candidate) => candidate.interactionId === "playWithChoices",
     );
@@ -1319,11 +1353,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTwoZoneTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTwoZoneTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
     const commitModeFor = (interactionId: string) =>
       descriptors.find(
@@ -1417,11 +1453,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTwoZoneTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTwoZoneTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const first = await bundle.dispatch({
       state,
       input: {
@@ -1521,11 +1559,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTwoZoneTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTwoZoneTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1583,11 +1623,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1639,10 +1681,12 @@ describe("trusted interaction decision pipeline", () => {
   });
   test("descriptors omit reducer-owned dispatch priority metadata", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1714,11 +1758,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const projection = bundle.project({
       state,
       playerIds: ["player-1"],
@@ -1752,10 +1798,12 @@ describe("trusted interaction decision pipeline", () => {
 
   test("domain-aware form inputs project server-authored input domains", async () => {
     const bundle = makeBundle();
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, state, "player-2");
     expect(
       descriptors.find((d) => d.interactionId === "allocateGold"),
@@ -1950,11 +1998,13 @@ describe("trusted interaction decision pipeline", () => {
       },
       view: () => ({}),
     });
-    const bundle = createReducerTestingBundle(game);
-    const state = await bundle.initialize({
-      table: createTable(),
-      playerIds: ["player-1", "player-2"],
-    });
+    const bundle = createReducerTestingRuntime(game);
+    const state = (
+      await bundle.initialize({
+        table: createTable(),
+        playerIds: ["player-1", "player-2"],
+      })
+    ).state;
     const descriptors = getAvailableInteractions(bundle, state, "player-1");
     expect(
       descriptors.find(

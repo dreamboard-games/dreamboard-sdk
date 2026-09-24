@@ -1,9 +1,8 @@
+import { canonicalizePluginRuntimeJson } from "./json";
 import {
   BoardStaticProjectionSchema,
-  InteractionDescriptorSchema,
   PluginGameplayFrameSchema,
   SeatProjectionBundleSchema,
-  ZoneHandlesSnapshotSchema,
 } from "./schema.js";
 import type {
   InteractionDescriptor,
@@ -13,7 +12,6 @@ import type {
   ReducerSeatProjectionBundle,
   ZoneHandlesSnapshot,
 } from "./frame.js";
-import { canonicalizePluginRuntimeJson } from "./json.js";
 import type { RuntimeJson } from "../runtime-json.js";
 
 export interface MaterializePluginGameplayFrameInput {
@@ -31,18 +29,16 @@ export function materializePluginGameplayFrame(
   input: MaterializePluginGameplayFrameInput,
 ): PluginGameplayFrame {
   const dynamicProjection = SeatProjectionBundleSchema.parse(
-    canonicalizeReducerProjection(input.dynamicProjection),
-  ) as ReducerSeatProjectionBundle;
+    canonicalizePluginRuntimeJson(input.dynamicProjection),
+  );
   const staticProjection =
     input.staticProjection == null
       ? null
-      : (BoardStaticProjectionSchema.parse(
-          canonicalizeReducerProjection(input.staticProjection),
-        ) as ReducerBoardStaticProjection);
+      : BoardStaticProjectionSchema.parse(
+          canonicalizePluginRuntimeJson(input.staticProjection),
+        );
 
-  const registry = parseInteractionRegistry(
-    dynamicProjection.interactionsByRef,
-  );
+  const registry = dynamicProjection.interactionsByRef ?? {};
   const seat = dynamicProjection.seats[input.perspectivePlayerId] ?? null;
 
   const availableInteractions =
@@ -50,7 +46,7 @@ export function materializePluginGameplayFrame(
       ? []
       : hydrateInteractionRefs(
           registry,
-          seat.availableInteractionRefs,
+          seat.availableInteractionRefs ?? [],
           "availableInteractionRefs",
         );
   const zones =
@@ -63,10 +59,9 @@ export function materializePluginGameplayFrame(
       actionSetVersion: input.actionSetVersion,
       perspectivePlayerId: input.perspectivePlayerId,
     },
-    view: materializeView(staticProjection, dynamicProjection, seat?.view),
+    view: materializeView(staticProjection, seat?.view),
     flow: {
       currentPhase: input.currentPhase,
-      currentStage: dynamicProjection.currentStage ?? null,
       activePlayers: [...input.activePlayers],
       simultaneousPhase: dynamicProjection.simultaneousPhase ?? null,
     },
@@ -79,103 +74,48 @@ export function materializePluginGameplayFrame(
 
 function materializeView(
   staticProjection: ReducerBoardStaticProjection | null,
-  dynamicProjection: ReducerSeatProjectionBundle,
   seatView: unknown,
 ): RuntimeJson | null {
-  const parts = [
-    staticProjection?.view,
-    dynamicProjection.sharedView,
-    seatView,
-  ].filter((part) => part !== undefined && part !== null);
+  const parts = [staticProjection?.view, seatView].filter(
+    (part) => part !== undefined && part !== null,
+  );
   if (parts.length === 0) return null;
   // Admitting schemas guarantee records and reject authored `boards` fields.
   return Object.assign({}, ...parts) as Record<string, RuntimeJson>;
 }
 
-function canonicalizeReducerProjection(value: unknown): unknown {
-  return canonicalizePluginRuntimeJson(value);
-}
-
-function parseInteractionRegistry(
-  value: ReducerSeatProjectionBundle["interactionsByRef"],
-): Record<string, InteractionDescriptor> {
-  if (value == null) return {};
-  if (!isRecord(value)) {
-    throw new Error("Seat projection interactionsByRef must be an object.");
-  }
-  return Object.fromEntries(
-    Object.entries(value).map(([ref, descriptor]) => [
-      ref,
-      InteractionDescriptorSchema.parse(descriptor),
-    ]),
-  );
-}
-
 function hydrateZones(
   registry: Readonly<Record<string, InteractionDescriptor>>,
-  value: unknown,
+  value: NonNullable<ReducerSeatProjectionBundle["seats"][string]["zones"]>,
   path: string,
 ): Record<string, ZoneHandlesSnapshot> {
-  if (!isRecord(value)) {
-    throw new Error(`Seat projection ${path} must be an object.`);
-  }
   return Object.fromEntries(
-    Object.entries(value).map(([zoneId, zoneValue]) => [
+    Object.entries(value).map(([zoneId, zone]) => [
       zoneId,
-      hydrateZone(registry, zoneValue, `${path}.${zoneId}`),
+      {
+        cardIds: zone.cardIds,
+        cardViewsById: zone.cardViewsById,
+        playableByCardId: Object.fromEntries(
+          Object.entries(zone.playableByCardId).map(([cardId, refs]) => [
+            cardId,
+            hydrateInteractionRefs(
+              registry,
+              refs,
+              `${path}.${zoneId}.playableByCardId.${cardId}`,
+            ),
+          ]),
+        ),
+      },
     ]),
   );
-}
-
-function hydrateZone(
-  registry: Readonly<Record<string, InteractionDescriptor>>,
-  value: unknown,
-  path: string,
-): ZoneHandlesSnapshot {
-  if (!isRecord(value)) {
-    throw new Error(`Seat projection ${path} must be an object.`);
-  }
-  const cardIds = arrayOfStrings(value.cardIds, `${path}.cardIds`);
-  const cardViewsById = stringRecord(
-    value.cardViewsById,
-    `${path}.cardViewsById`,
-  );
-  if (!isRecord(value.playableByCardId)) {
-    throw new Error(
-      `Seat projection ${path}.playableByCardId must be an object.`,
-    );
-  }
-  const playableByCardId = Object.fromEntries(
-    Object.entries(value.playableByCardId).map(([cardId, refs]) => [
-      cardId,
-      hydrateInteractionRefs(
-        registry,
-        refs,
-        `${path}.playableByCardId.${cardId}`,
-      ),
-    ]),
-  );
-  return ZoneHandlesSnapshotSchema.parse({
-    cardIds,
-    cardViewsById,
-    playableByCardId,
-  });
 }
 
 function hydrateInteractionRefs(
   registry: Readonly<Record<string, InteractionDescriptor>>,
-  value: unknown,
+  value: readonly string[],
   path: string,
 ): InteractionDescriptor[] {
-  if (!Array.isArray(value)) {
-    throw new Error(`Seat projection ${path} must be an array of refs.`);
-  }
   return value.map((ref, index) => {
-    if (typeof ref !== "string") {
-      throw new Error(
-        `Seat projection ${path}[${index}] must be a ref string.`,
-      );
-    }
     const descriptor = registry[ref];
     if (!descriptor) {
       throw new Error(
@@ -184,35 +124,4 @@ function hydrateInteractionRefs(
     }
     return descriptor;
   });
-}
-
-function arrayOfStrings(value: unknown, path: string): string[] {
-  if (!Array.isArray(value) || value.some((item) => typeof item !== "string")) {
-    throw new Error(`Seat projection ${path} must be an array of strings.`);
-  }
-  return value;
-}
-
-function stringRecord(value: unknown, path: string): Record<string, string> {
-  if (!isRecord(value)) {
-    throw new Error(`Seat projection ${path} must be an object.`);
-  }
-  const result: Record<string, string> = {};
-  for (const [key, item] of Object.entries(value)) {
-    if (typeof item !== "string") {
-      throw new Error(`Seat projection ${path}.${key} must be a string.`);
-    }
-    result[key] = item;
-  }
-  return result;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return (
-    value !== null &&
-    typeof value === "object" &&
-    !Array.isArray(value) &&
-    (Object.getPrototypeOf(value) === Object.prototype ||
-      Object.getPrototypeOf(value) === null)
-  );
 }

@@ -4,7 +4,7 @@ import { z } from "zod";
 import {
   createManifestStringLiteralSchema,
   type RuntimeTableRecord,
-} from "../reducer/advanced";
+} from "../reducer/model";
 
 function buildMinimalManifest() {
   const playerIds = ["player-1", "player-2"] as const;

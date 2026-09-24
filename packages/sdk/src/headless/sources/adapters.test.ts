@@ -43,7 +43,6 @@ const accepted = {
 const snapshot = (version = 1) => ({
   type: "session.snapshot",
   frame: frame(version),
-  boardStatic: null,
   history: { entries: [] },
   lifecycle: { status: "active" },
 });
