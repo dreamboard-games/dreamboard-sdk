@@ -113,6 +113,43 @@ describe("source request lifecycle", () => {
     await expect(p).rejects.toThrow("session changed");
     expect(x.close).toHaveBeenCalledOnce();
   });
+  it("resolves delivered card images once and revokes them on close", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    const front = new Blob(["front"], { type: "image/webp" });
+    const card = {
+      id: "card-1",
+      cardType: "spell",
+      frontImage: "assets/cards/spell.webp",
+      backImage: "assets/cards/missing.webp",
+      properties: {},
+    };
+    const assets = { "assets/cards/spell.webp": front };
+    x.session({ ...session, assets });
+    x.session({ ...session, assets });
+    x.frame({
+      ...frame(),
+      zones: {
+        hand: {
+          cardIds: ["card-1"],
+          cardViewsById: { "card-1": JSON.stringify(card) },
+          playableByCardId: {},
+        },
+      },
+    });
+    const view = JSON.parse(
+      x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById["card-1"]!,
+    );
+    expect(view.frontImage).toMatch(/^blob:/);
+    expect(view.backImage).toBe("assets/cards/missing.webp");
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    x.source.dispose();
+    expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
+    revoke.mockRestore();
+  });
   it("static source is immutable and connection updates reuse frame", () => {
     const original = frame();
     const source = staticSource({

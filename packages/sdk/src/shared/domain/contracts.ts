@@ -242,9 +242,14 @@ export type BoardCard = {
    */
   name: string;
   /**
-   * URL to the card's image
+   * Front face image: a repository path under `assets/`, such as
+   * `assets/cards/queen-of-fire.webp`. Game UIs receive it as a loadable URL.
    */
-  imageUrl?: string;
+  frontImage?: string;
+  /**
+   * Back face image, in the same form as `frontImage`.
+   */
+  backImage?: string;
   /**
    * Text content on the card
    */
@@ -806,6 +811,11 @@ export type ResourceDefinition = {
    * Optional compact icon or emoji rendered by generic UI resource controls.
    */
   icon?: string;
+  /**
+   * Who sees each player's balance in seat projections. Defaults to
+   * `"public"`; `"owner"` balances reach only the player who holds them.
+   */
+  visibility?: "public" | "owner";
 };
 
 /**

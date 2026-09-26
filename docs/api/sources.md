@@ -20,6 +20,10 @@
 | testing | `scenarioSource(definition, scenario, { at, as })`                  | Named scenario checkpoint                    |
 | testing | `createTestSource(snapshot)`                                        | Deterministic request/frame ordering fixture |
 
+Hosts may add `assets` to the `runtime.init` session: image `Blob`s keyed by
+manifest path. Sources turn them into object URLs once, replace matching card
+`frontImage`/`backImage` paths in every frame, and revoke the URLs on close.
+
 `SourceState` contains `snapshot`, `connection`, `request`. A snapshot contains
 `me`, `players`, basis-free `frame`, and `version`. Sources expose a subscribable
 store and dispose. Command sources provide submit/cancel; their transport details
