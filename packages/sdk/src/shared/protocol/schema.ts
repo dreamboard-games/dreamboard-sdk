@@ -41,6 +41,7 @@ export const PluginSessionDescriptorSchema = z
   .object({
     sessionId: z.string().min(1),
     players: z.array(PluginPlayerSummarySchema),
+    assets: z.record(z.string(), z.instanceof(Blob)).optional(),
   })
   .strict() satisfies z.ZodType<PluginSessionDescriptor>;
 

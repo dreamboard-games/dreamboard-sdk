@@ -42,6 +42,10 @@ export function compileManifest<const M extends AuthoredManifest>(
     sharedZoneIds,
     playerZoneIds,
     resourcePresentationById: analysis.resourcePresentationById,
+    ownerResourceIds: (source.resources ?? [])
+      .filter((resource) => resource.visibility === "owner")
+      .map((resource) => resource.id)
+      .sort(),
     handVisibilityById: Object.fromEntries(
       playerZoneIds.map((id) => [
         id,

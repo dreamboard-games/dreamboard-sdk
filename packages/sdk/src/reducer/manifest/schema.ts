@@ -104,6 +104,8 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
         cardType: z.literal(type),
         name: z.string().optional(),
         text: z.string().optional(),
+        frontImage: z.string().optional(),
+        backImage: z.string().optional(),
         properties,
       });
     },

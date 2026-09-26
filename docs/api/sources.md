@@ -21,6 +21,10 @@
 | testing | `scenarioSource(definition, scenario, { at, as })`                  | Named scenario checkpoint                    |
 | testing | `createTestSource(snapshot)`                                        | Deterministic request/frame ordering fixture |
 
+Hosts may add `assets` to the `runtime.init` session: image `Blob`s keyed by
+manifest path. Sources turn them into object URLs once, replace matching card
+`frontImage`/`backImage` paths in every frame, and revoke the URLs on close.
+
 `SourceState` is a union tagged by `connection`: `connecting`, `ready`,
 `recovering`, `failed`, or `closed`. Ready requires a snapshot; recovery and
 terminal states retain any last snapshot. Failed requires a diagnostic `failure`;
