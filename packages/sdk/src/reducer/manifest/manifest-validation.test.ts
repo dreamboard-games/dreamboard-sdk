@@ -554,3 +554,36 @@ test("validateManifestAuthoring warns when board-scoped category type ids are am
     "Ambiguous edge.typeId 'route' is authored on multiple boards (alpha, beta). Prefer boardHelpers.edgeIdsByBoardIdAndTypeId for board-scoped lookups.",
   );
 });
+
+test("validateManifestAuthoring requires card images under assets/", () => {
+  const card = (type: string, frontImage: string) => ({
+    type,
+    name: type,
+    count: 1,
+    frontImage,
+    backImage: "assets/cards/back.webp",
+    properties: {},
+  });
+  const validation = validateManifestAuthoring({
+    ...BASE_MANIFEST,
+    cardSets: [
+      {
+        type: "manual",
+        id: "cards",
+        name: "Cards",
+        defaultHome: { type: "detached" },
+        cardSchema: { properties: {} },
+        cards: [
+          card("ace", "assets/cards/ace.webp"),
+          card("king", "https://example.com/king.png"),
+          card("queen", "assets/../secrets.png"),
+        ],
+      },
+    ],
+  });
+
+  expect(validation.errors).toEqual([
+    "manifest.cardSets[0].cards[1].frontImage: 'https://example.com/king.png' must be an image path under assets/, such as assets/cards/front.webp.",
+    "manifest.cardSets[0].cards[2].frontImage: 'assets/../secrets.png' must be an image path under assets/, such as assets/cards/front.webp.",
+  ]);
+});

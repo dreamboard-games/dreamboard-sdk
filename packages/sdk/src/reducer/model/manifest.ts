@@ -56,6 +56,8 @@ export type ManifestLiterals<
     string,
     { label: string; icon?: string | null }
   >;
+  /** Resources whose balances are projected only to their holder. */
+  ownerResourceIds?: readonly string[];
   pieceTypeIds: readonly string[];
   pieceIds: readonly string[];
   dieTypeIds: readonly string[];

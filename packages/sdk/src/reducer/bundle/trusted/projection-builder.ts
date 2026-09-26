@@ -379,6 +379,30 @@ export function createProjectionBuilder<
     };
   }
 
+  /** Every player's public balances plus the seat's own owner-only ones. */
+  function resolveResourcesFor(
+    combinedState: State,
+    playerId: PlayerId,
+  ): Record<string, Record<string, number>> {
+    const ownerOnly = new Set<string>(
+      scope.definition.contract.manifest.literals.ownerResourceIds ?? [],
+    );
+    const balances = combinedState.table.resources as Record<
+      string,
+      Record<string, number>
+    >;
+    return Object.fromEntries(
+      Object.entries(balances).map(([holder, resources]) => [
+        holder,
+        holder === playerId
+          ? { ...resources }
+          : Object.fromEntries(
+              Object.entries(resources).filter(([id]) => !ownerOnly.has(id)),
+            ),
+      ]),
+    );
+  }
+
   function resolvePlayerViewFor(
     combinedState: State,
     playerId: PlayerId,
@@ -413,6 +437,7 @@ export function createProjectionBuilder<
       view?: ReturnType<typeof resolvePlayerViewFor>;
       availableInteractionRefs: string[];
       zones?: ReturnType<typeof resolveZoneHandlesFor>;
+      resources?: ReturnType<typeof resolveResourcesFor>;
     };
     const seats: Record<string, SeatProjection> = {};
     for (const [actorSeat, playerId] of playerIds.entries()) {
@@ -449,6 +474,7 @@ export function createProjectionBuilder<
                     registry,
                   ),
               ),
+              resources: resolveResourcesFor(combinedState, playerId),
             }
           : {};
       seats[playerId as unknown as string] = {

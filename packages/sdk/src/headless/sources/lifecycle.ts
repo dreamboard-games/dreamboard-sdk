@@ -7,6 +7,7 @@ import {
 } from "../../shared/protocol/schema.js";
 import type {
   GameplayBasis,
+  PluginGameplayFrame,
   PluginSessionDescriptor,
 } from "../../shared/protocol/frame.js";
 import { immutableCopy } from "./immutable.js";
@@ -40,7 +41,8 @@ export function createSourceLifecycle(options: {
       request: null,
     }),
   );
-  let session: PluginSessionDescriptor | null = null;
+  let session: Omit<PluginSessionDescriptor, "assets"> | null = null;
+  let assetUrls: Readonly<Record<string, string>> | null = null;
   let basis: GameplayBasis | null = null;
   let pending: Pending | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -62,6 +64,7 @@ export function createSourceLifecycle(options: {
     if (closed) return;
     closed = true;
     clearTimer();
+    for (const url of Object.values(assetUrls ?? {})) URL.revokeObjectURL(url);
     pending?.reject(error);
     pending = null;
     options.close();
@@ -160,7 +163,7 @@ export function createSourceLifecycle(options: {
     },
     session(value: unknown) {
       if (closed) return;
-      const parsed = PluginSessionDescriptorSchema.parse(value);
+      const { assets, ...parsed } = PluginSessionDescriptorSchema.parse(value);
       if (
         (context?.sessionId ?? session?.sessionId) &&
         parsed.sessionId !== (context?.sessionId ?? session?.sessionId)
@@ -176,6 +179,13 @@ export function createSourceLifecycle(options: {
         return;
       }
       session = immutableCopy(parsed);
+      // Hosts repeat initialization until ready; the first delivery wins.
+      assetUrls ??= Object.fromEntries(
+        Object.entries(assets ?? {}).map(([path, blob]) => [
+          path,
+          URL.createObjectURL(blob),
+        ]),
+      );
     },
     frame(value: unknown) {
       if (closed) return;
@@ -199,7 +209,9 @@ export function createSourceLifecycle(options: {
         return;
       }
       if (basis && parsed.basis.version < basis.version) return;
-      const { basis: nextBasis, ...frame } = immutableCopy(parsed);
+      const { basis: nextBasis, ...frame } = immutableCopy(
+        withCardImageUrls(parsed, assetUrls),
+      );
       basis = nextBasis;
       patch({
         snapshot: Object.freeze({
@@ -250,4 +262,37 @@ export function createSourceLifecycle(options: {
 }
 function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
+}
+
+/** Replaces card image paths in encoded card views with delivered URLs. */
+function withCardImageUrls(
+  frame: PluginGameplayFrame,
+  urls: Readonly<Record<string, string>> | null,
+): PluginGameplayFrame {
+  if (urls === null || Object.keys(urls).length === 0) return frame;
+  const resolve = (encoded: string) => {
+    const card = JSON.parse(encoded) as Record<string, unknown>;
+    for (const key of ["frontImage", "backImage"]) {
+      const url = typeof card[key] === "string" ? urls[card[key]] : undefined;
+      if (url !== undefined) card[key] = url;
+    }
+    return JSON.stringify(card);
+  };
+  return {
+    ...frame,
+    zones: Object.fromEntries(
+      Object.entries(frame.zones).map(([zoneId, zone]) => [
+        zoneId,
+        {
+          ...zone,
+          cardViewsById: Object.fromEntries(
+            Object.entries(zone.cardViewsById).map(([cardId, encoded]) => [
+              cardId,
+              resolve(encoded),
+            ]),
+          ),
+        },
+      ]),
+    ),
+  };
 }

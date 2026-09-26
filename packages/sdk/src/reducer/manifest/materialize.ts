@@ -1549,6 +1549,8 @@ export function materializeManifestTable(options: {
           cardType: card.cardType ?? card.type,
           name: card.name,
           text: card.text,
+          frontImage: card.frontImage,
+          backImage: card.backImage,
           properties: {
             ...materializeCardPropertiesDefaults(
               materializedCardSet.cardSchema,

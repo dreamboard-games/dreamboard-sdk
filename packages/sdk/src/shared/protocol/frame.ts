@@ -19,6 +19,11 @@ export interface PluginSessionDescriptor {
   readonly sessionId: string;
   /** Turn order is the order of this array. */
   readonly players: readonly PluginPlayerSummary[];
+  /**
+   * Game image files by manifest path, such as `assets/cards/front.webp`.
+   * Sources replace card `frontImage` and `backImage` paths with object URLs.
+   */
+  readonly assets?: Readonly<Record<string, Blob>>;
 }
 
 export type {

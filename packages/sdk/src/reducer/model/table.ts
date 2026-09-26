@@ -156,6 +156,8 @@ export type RuntimeCardData = {
   cardType: string;
   name?: string;
   text?: string;
+  frontImage?: string;
+  backImage?: string;
   properties: RuntimeRecord;
 };
 export type RuntimePieceData = {

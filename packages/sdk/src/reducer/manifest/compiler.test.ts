@@ -248,6 +248,66 @@ describe("active player records", () => {
     ).not.toThrow();
   });
 
+  test("projects owner-only resources to their holder and card images with cards", async () => {
+    const game = createGame({
+      manifest: {
+        ...manifest,
+        cardSets: [
+          {
+            ...manifest.cardSets[0],
+            cards: [
+              {
+                ...manifest.cardSets[0].cards[0],
+                frontImage: "assets/cards/ace.webp",
+                backImage: "assets/cards/back.webp",
+              },
+            ],
+          },
+        ],
+        zones: [{ ...manifest.zones[0], visibility: "public" }],
+        resources: [
+          { id: "points", name: "Points" },
+          { id: "secret", name: "Secret", visibility: "owner" },
+        ],
+      },
+      state: {
+        public: z.object({}),
+        private: z.object({}),
+        hidden: z.object({}),
+      },
+      phases: { play: z.object({}) },
+    });
+    const definition = game.assemble({
+      initialPhase: "play",
+      phases: {
+        play: game
+          .phase("play")
+          .define({ kind: "auto", initialState: () => ({}) }),
+      },
+      view: () => ({}),
+    });
+    const playerIds = ["alpha", "zulu"];
+    const bundle = createReducerTestingRuntime(definition);
+    const { state } = await bundle.initialize({
+      table: game.contract.manifest.createInitialTable({ playerIds }),
+      playerIds,
+      rngSeed: 7,
+    });
+    expect(state.domain.table.cards["ace-1"]).toMatchObject({
+      frontImage: "assets/cards/ace.webp",
+      backImage: "assets/cards/back.webp",
+    });
+    const { seats } = bundle.project({ state, playerIds });
+    expect(seats.alpha?.resources).toEqual({
+      alpha: { points: 0, secret: 0 },
+      zulu: { points: 0 },
+    });
+    expect(seats.zulu?.resources).toEqual({
+      alpha: { points: 0 },
+      zulu: { points: 0, secret: 0 },
+    });
+  });
+
   test("roundtrips a partial roster and takes traversal order only from playerOrder", () => {
     const compiled = compileManifest(manifest);
     const table = compiled.createInitialTable({ playerIds: ["10", "2"] });
