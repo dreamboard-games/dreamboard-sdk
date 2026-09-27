@@ -18,7 +18,6 @@ const compiled = compileManifest({
   players: { minPlayers: 1, maxPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "cards",
       name: "Cards",
       defaultHome: { type: "detached" },

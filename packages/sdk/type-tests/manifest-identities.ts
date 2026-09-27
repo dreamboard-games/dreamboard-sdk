@@ -5,7 +5,6 @@ const manifest = defineTopologyManifest({
   players: { minPlayers: 1, maxPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "references",
       name: "References",
       defaultHome: { type: "detached" },

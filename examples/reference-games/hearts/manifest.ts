@@ -35,7 +35,6 @@ export default defineTopologyManifest({
   },
   cardSets: [
     {
-      type: "manual",
       id: "playing-cards",
       name: "Playing Cards",
       defaultHome: { type: "zone", zoneId: "draw-pile" },

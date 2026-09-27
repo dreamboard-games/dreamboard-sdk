@@ -4,7 +4,6 @@ defineTopologyManifest({
   players: { minPlayers: 2, maxPlayers: 2, optimalPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "typed-cards",
       name: "Typed Cards",
       defaultHome: { type: "detached" },
@@ -67,7 +66,6 @@ defineTopologyManifest({
   // @ts-expect-error -- `vp` is required by the schema and missing from the seed.
   cardSets: [
     {
-      type: "manual",
       id: "missing-required-property",
       name: "Missing Required Property",
       defaultHome: { type: "detached" },
@@ -110,7 +108,6 @@ defineTopologyManifest({
   players: { minPlayers: 2, maxPlayers: 2, optimalPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "variant-cards",
       name: "Variant Cards",
       defaultHome: { type: "detached" },
@@ -162,7 +159,6 @@ defineTopologyManifest({
   players: { minPlayers: 2, maxPlayers: 2, optimalPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "defaulted-card-properties",
       name: "Defaulted Card Properties",
       defaultHome: { type: "detached" },
@@ -203,7 +199,6 @@ defineTopologyManifest({
   // @ts-expect-error -- `coins` is required for the copper variant.
   cardSets: [
     {
-      type: "manual",
       id: "variant-missing-required-property",
       name: "Variant Missing Required Property",
       defaultHome: { type: "detached" },

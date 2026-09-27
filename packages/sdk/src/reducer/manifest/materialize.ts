@@ -12,7 +12,7 @@ import type {
   HexSpaceSpec,
   HexVertexRef,
   DieSeedSpec,
-  ManualCardSetDefinition,
+  CardSetDefinition,
   ObjectSchema,
   PieceSeedSpec,
   PropertySchema,
@@ -29,12 +29,8 @@ import {
   resolveHexSpaces,
 } from "../../shared/hex-board.js";
 
-import {
-  addStandardDecksIfNeeded,
-  materializeCardSet,
-} from "./preset-card-sets.js";
-
 import { assertValidManifest } from "./manifest-validation.js";
+import { validateManifestAuthoring } from "./manifest-validation.js";
 
 interface AnalyzedGenericBoard {
   layout: "generic";
@@ -131,7 +127,7 @@ interface ManifestAnalysis {
   sharedZones: ZoneSpec[];
   playerZones: ZoneSpec[];
   zoneIds: string[];
-  cardSets: ManualCardSetDefinition[];
+  cardSets: CardSetDefinition[];
   cardSetIds: string[];
   cardTypes: string[];
   cardIds: string[];
@@ -726,11 +722,10 @@ function isSingletonExplicitSeed(seed: {
 }
 
 export function analyzeManifest(
-  inputManifest: GameTopologyManifest,
+  manifest: GameTopologyManifest,
   runtimePlayerIds?: readonly string[],
 ): ManifestAnalysis {
-  assertValidManifest(inputManifest);
-  const manifest = addStandardDecksIfNeeded(inputManifest);
+  assertValidManifest(manifest);
   const playerIds = runtimePlayerIds
     ? [...runtimePlayerIds]
     : Array.from(
@@ -744,7 +739,7 @@ export function analyzeManifest(
     (zone) => zone.scope === "perPlayer",
   );
   const zoneIds = dedupeSorted((manifest.zones ?? []).map((zone) => zone.id));
-  const cardSets = manifest.cardSets.map(materializeCardSet);
+  const cardSets = manifest.cardSets;
   const cardSetIds = dedupeSorted(cardSets.map((cardSet) => cardSet.id));
   const cardTypes = dedupeSorted(
     cardSets.flatMap((cardSet) => cardSet.cards.map((card) => card.cardType)),
@@ -1528,26 +1523,25 @@ export function materializeManifestTable(options: {
   };
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
-    const materializedCardSet = materializeCardSet(cardSet);
-    for (const [cardIndex, card] of materializedCardSet.cards.entries()) {
+    for (const [cardIndex, card] of cardSet.cards.entries()) {
       const cardInstanceIds = renderCardInstanceIds(card);
       for (const [instanceIndex, cardId] of cardInstanceIds.entries()) {
         cards[cardId] = {
           id: cardId,
-          cardSetId: materializedCardSet.id,
+          cardSetId: cardSet.id,
           cardType: card.cardType,
           name: card.name,
           text: card.text,
           properties: {
             ...materializeCardPropertiesDefaults(
-              materializedCardSet.cardSchema,
+              cardSet.cardSchema,
               card.cardType,
               analysis,
             ),
             ...(card.properties ?? {}),
           },
         };
-        const resolvedHome = card.home ?? materializedCardSet.defaultHome;
+        const resolvedHome = card.home ?? cardSet.defaultHome;
         const path =
           card.home === undefined
             ? `manifest.cardSets[${cardSetIndex}].defaultHome`

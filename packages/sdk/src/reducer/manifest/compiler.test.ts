@@ -13,7 +13,6 @@ const manifest = {
   players: { minPlayers: 2, maxPlayers: 4 },
   cardSets: [
     {
-      type: "manual",
       id: "cards",
       name: "Cards",
       defaultHome: { type: "zone", zoneId: "draw" },
@@ -54,6 +53,58 @@ const manifest = {
   resources: [{ id: "points", name: "Points" }],
 } as const;
 describe("in-memory manifests", () => {
+  test("treats playing-card names as ordinary authored inventory", () => {
+    const compiled = compileManifest({
+      ...manifest,
+      cardSets: [
+        {
+          id: "standard_52_deck",
+          name: "Authored playing cards",
+          defaultHome: { type: "zone", zoneId: "draw" },
+          cardSchema: {
+            properties: {
+              suit: { type: "enum", enums: ["SPADES", "HEARTS"] },
+              rank: { type: "string" },
+            },
+          },
+          cards: [
+            {
+              id: "SPADES_A",
+              cardType: "SPADES_A",
+              name: "Ace of spades",
+              count: 1,
+              properties: { suit: "SPADES", rank: "A" },
+            },
+            {
+              id: "HEARTS_Q",
+              cardType: "HEARTS_Q",
+              name: "Queen of hearts",
+              count: 1,
+              properties: { suit: "HEARTS", rank: "Q" },
+            },
+          ],
+        },
+      ],
+      zones: [
+        {
+          id: "draw",
+          name: "Draw",
+          scope: "shared",
+          allowedCardSetIds: ["standard_52_deck"],
+        },
+      ],
+    });
+    const table = compiled.createInitialTable();
+    expect(Object.keys(table.cards).sort()).toEqual(["HEARTS_Q", "SPADES_A"]);
+    expect(table.cards.SPADES_A).toMatchObject({
+      id: "SPADES_A",
+      cardSetId: "standard_52_deck",
+      cardType: "SPADES_A",
+      properties: { suit: "SPADES", rank: "A" },
+    });
+    expect(compiled.ids.cardId.safeParse("CLUBS_2").success).toBe(false);
+  });
+
   test("uses an authored card category distinct from its instance type", () => {
     const compiled = compileManifest({
       ...manifest,
@@ -116,7 +167,6 @@ describe("in-memory manifests", () => {
       players: { minPlayers: 1, maxPlayers: 2 },
       cardSets: [
         {
-          type: "manual",
           id: "actions",
           name: "Actions",
           defaultHome: { type: "detached" },
@@ -156,7 +206,6 @@ describe("in-memory manifests", () => {
           ],
         },
         {
-          type: "manual",
           id: "spells",
           name: "Spells",
           defaultHome: { type: "detached" },

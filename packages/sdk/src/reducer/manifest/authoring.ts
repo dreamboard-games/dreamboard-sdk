@@ -72,12 +72,11 @@ type PieceSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
 type DieSeedOf<Manifest extends GameTopologyManifest> = ArrayItem<
   NonNullable<Manifest["dieSeeds"]>
 >;
-type ManualCardSetOf<Manifest extends GameTopologyManifest> = Extract<
-  ArrayItem<NonNullable<Manifest["cardSets"]>>,
-  { type: "manual" }
+type CardSetOf<Manifest extends GameTopologyManifest> = ArrayItem<
+  NonNullable<Manifest["cardSets"]>
 >;
 type CardOf<Manifest extends GameTopologyManifest> =
-  ManualCardSetOf<Manifest> extends infer CardSet
+  CardSetOf<Manifest> extends infer CardSet
     ? CardSet extends { cards: infer Cards extends readonly unknown[] }
       ? ArrayItem<Cards>
       : never
@@ -929,7 +928,6 @@ type TypedCardSet<
   CardSet,
   Manifest extends GameTopologyManifest,
 > = CardSet extends {
-  type: "manual";
   cardSchema: infer CardSchema;
   cards: infer Cards extends readonly unknown[];
 }
