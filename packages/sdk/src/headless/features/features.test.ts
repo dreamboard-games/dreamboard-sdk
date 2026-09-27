@@ -1,7 +1,11 @@
-import { createStore } from "@tanstack/store";
 import { describe, expect, it, vi } from "vitest";
 import { createGameInstance, AmbiguousTargetError } from "../instance.js";
-import type { InteractionDescriptor, SourceState } from "../model.js";
+import type { InteractionDescriptor } from "../model.js";
+import {
+  createTestSource,
+  type TestSource,
+} from "../../testing/sources/test-source.js";
+import type { SourceSnapshot } from "../sources/types.js";
 import type {
   RuntimeBoardState,
   RuntimeHexBoardState,
@@ -56,7 +60,7 @@ function descriptor(): InteractionDescriptor {
       },
       {
         key: "space",
-        kind: "space",
+        kind: "board-space",
         domain: {
           type: "boardTarget",
           projection: "resolved",
@@ -70,42 +74,42 @@ function descriptor(): InteractionDescriptor {
 }
 function source(board: RuntimeBoardState = hexBoard()) {
   const action = descriptor();
-  const store = createStore<SourceState>({
-    connection: "ready",
-    request: null,
-    snapshot: {
-      me: "alice",
-      players: [{ playerId: "alice", displayName: "Alice" }],
-      version: 1,
-      frame: {
-        events: [],
-        view: { boards: { byId: { [board.id]: board }, hex: {}, square: {} } },
-        flow: {
-          currentPhase: "play",
-
-          activePlayers: ["alice"],
-          simultaneousPhase: null,
+  return createTestSource({
+    me: "alice",
+    players: [{ playerId: "alice", displayName: "Alice" }],
+    version: 1,
+    frame: {
+      events: [],
+      view: {
+        boards: {
+          byId: { [board.id]: JSON.parse(JSON.stringify(board)) },
+          hex: {},
+          square: {},
         },
-        availableInteractions: [action],
-        zones: {
-          hand: {
-            cardIds: ["red", "blue", "hidden"],
-            cardViewsById: {
-              red: JSON.stringify({ rank: 2 }),
-              blue: JSON.stringify({ rank: 1 }),
-            },
-            playableByCardId: { red: [action], blue: [action] },
+      },
+      flow: {
+        currentPhase: "play",
+
+        activePlayers: ["alice"],
+        simultaneousPhase: null,
+      },
+      availableInteractions: [action],
+      zones: {
+        hand: {
+          cardIds: ["red", "blue", "hidden"],
+          cardViewsById: {
+            red: JSON.stringify({ rank: 2 }),
+            blue: JSON.stringify({ rank: 1 }),
           },
+          playableByCardId: { red: [action], blue: [action] },
         },
       },
     },
   });
-  return {
-    store,
-    dispose: vi.fn(),
-    submit: vi.fn(async () => ({ accepted: true as const })),
-    cancel: vi.fn(async () => ({ accepted: true as const })),
-  };
+}
+function emitFrame(source: TestSource, frame: SourceSnapshot["frame"]) {
+  const snapshot = source.store.get().snapshot!;
+  source.emit({ ...snapshot, version: snapshot.version + 1, frame });
 }
 function setup(board?: RuntimeBoardState) {
   const input = source(board);
@@ -245,26 +249,19 @@ describe("headless features", () => {
   it("keeps old board getters captured while handlers resolve current eligibility", () => {
     const { game, input } = setup();
     const emit = (eligibleTargets: string[]) =>
-      input.store.setState((state) => ({
-        ...state,
-        snapshot: {
-          ...state.snapshot!,
-          version: state.snapshot!.version + 1,
-          frame: {
-            ...state.snapshot!.frame,
-            availableInteractions: [
-              {
-                ...descriptor(),
-                inputs: descriptor().inputs.map((value) =>
-                  value.key === "space"
-                    ? { ...value, domain: { ...value.domain, eligibleTargets } }
-                    : value,
-                ),
-              },
-            ],
+      emitFrame(input, {
+        ...input.store.get().snapshot!.frame,
+        availableInteractions: [
+          {
+            ...descriptor(),
+            inputs: descriptor().inputs.map((value) =>
+              value.key === "space"
+                ? { ...value, domain: { ...value.domain, eligibleTargets } }
+                : value,
+            ),
           },
-        },
-      }));
+        ],
+      });
     emit([]);
     const cell = game.boards
       .get("island")!
@@ -414,23 +411,16 @@ describe("headless features", () => {
     });
     const broad = narrow(["center", "other"]);
     const emit = (ids: string[]) =>
-      input.store.setState((state) => ({
-        ...state,
-        snapshot: {
-          ...state.snapshot!,
-          version: state.snapshot!.version + 1,
-          frame: {
-            ...state.snapshot!.frame,
-            availableInteractions: [broad],
-            zones: {
-              hand: {
-                ...state.snapshot!.frame.zones.hand!,
-                playableByCardId: { red: [narrow(ids)] },
-              },
-            },
+      emitFrame(input, {
+        ...input.store.get().snapshot!.frame,
+        availableInteractions: [broad],
+        zones: {
+          hand: {
+            ...input.store.get().snapshot!.frame.zones.hand!,
+            playableByCardId: { red: [narrow(ids)] },
           },
         },
-      }));
+      });
     emit(["center"]);
     const p = pointer();
     game.cards.get("red")!.getDragProps().onPointerDown(p.event());
@@ -456,16 +446,10 @@ describe("headless features", () => {
           : value,
       ),
     };
-    input.store.setState((state) => ({
-      ...state,
-      snapshot: {
-        ...state.snapshot!,
-        frame: {
-          ...state.snapshot!.frame,
-          availableInteractions: [descriptor(), alternate],
-        },
-      },
-    }));
+    emitFrame(input, {
+      ...input.store.get().snapshot!.frame,
+      availableInteractions: [descriptor(), alternate],
+    });
     const cell = game.boards
       .get("island")!
       .getLayout({ hexSize: 10 })
