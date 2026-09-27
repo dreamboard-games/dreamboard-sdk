@@ -1,5 +1,6 @@
 import { createStore } from "@tanstack/store";
 import { z } from "zod";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import {
   PluginGameplayFrameSchema,
   PluginSessionDescriptorSchema,
@@ -30,7 +31,7 @@ interface Pending {
 const CardImageViewSchema = z.looseObject({
   frontImage: z.string().optional(),
   backImage: z.string().optional(),
-});
+}) satisfies z.ZodType<Pick<ViewCard, "frontImage" | "backImage">>;
 
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
 export function createSourceLifecycle(options: {

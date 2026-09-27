@@ -155,8 +155,11 @@ describe("source request lifecycle", () => {
       ...frame(),
       zones: {
         hand: {
-          cardIds: ["card-1"],
-          cardViewsById: { "card-1": JSON.stringify(card) },
+          cardIds: ["card-1", "card-2"],
+          cardViewsById: {
+            "card-1": JSON.stringify(card),
+            "card-2": JSON.stringify({ rank: "A" }),
+          },
           playableByCardId: {},
         },
       },
@@ -167,6 +170,13 @@ describe("source request lifecycle", () => {
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
     expect(view.properties).toEqual({ power: 7 });
+    expect(
+      JSON.parse(
+        x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById[
+          "card-2"
+        ]!,
+      ),
+    ).toEqual({ rank: "A" });
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     x.source.dispose();
     expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
