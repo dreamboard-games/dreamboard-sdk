@@ -38,6 +38,7 @@ export function createSourceLifecycle(options: {
       snapshot: null,
       connection: "connecting",
       request: null,
+      failure: null,
     }),
   );
   let session: PluginSessionDescriptor | null = null;
@@ -58,15 +59,20 @@ export function createSourceLifecycle(options: {
         ...(update.request ? { request: Object.freeze(update.request) } : {}),
       }),
     );
-  const fail = (error: Error) => {
+  const close = (failure: Error | null) => {
     if (closed) return;
     closed = true;
     clearTimer();
-    pending?.reject(error);
+    pending?.reject(failure ?? new Error("Gameplay source disposed."));
     pending = null;
     options.close();
-    patch({ connection: "closed", request: null });
+    patch({
+      connection: "closed",
+      request: null,
+      failure: failure ? Object.freeze(failure) : null,
+    });
   };
+  const fail = (error: Error) => close(error);
   const arm = () => {
     clearTimer();
     timer = setTimeout(() => {
@@ -141,7 +147,7 @@ export function createSourceLifecycle(options: {
     },
     submit: (interactionId, params) => start("submit", interactionId, params),
     cancel: (interactionId) => start("cancel", interactionId),
-    dispose: () => fail(new Error("Gameplay source disposed.")),
+    dispose: () => close(null),
   };
   return {
     source,

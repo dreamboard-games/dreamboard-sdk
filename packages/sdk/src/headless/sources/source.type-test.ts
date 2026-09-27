@@ -5,6 +5,13 @@ export function sourceCapabilities(
   fixed: GameSource,
   local: ApplySource<{ type: "advance"; count: number }>,
 ) {
+  const failure: Readonly<Error> | null = hosted.store.get().failure;
+  if (failure) {
+    const message: string = failure.message;
+    void message;
+    // @ts-expect-error Source diagnostics cannot be reassigned by consumers.
+    failure.message = "changed";
+  }
   void hosted.submit("move", { destination: "a" });
   void hosted.cancel("move");
   // @ts-expect-error Retry belongs to transport lifecycle recovery.

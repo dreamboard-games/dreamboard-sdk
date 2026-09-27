@@ -94,6 +94,9 @@ describe("source request lifecycle", () => {
     expect(x.send).toHaveBeenCalledOnce();
     vi.advanceTimersByTime(100);
     expect(x.source.store.get().connection).toBe("closed");
+    expect(x.source.store.get().failure?.message).toBe(
+      "Gameplay source recovery timed out.",
+    );
     expect(x.close).toHaveBeenCalledOnce();
   });
   it("disposal rejects unresolved promise and ignores obsolete ingress", async () => {
@@ -102,9 +105,19 @@ describe("source request lifecycle", () => {
     x.source.dispose();
     await expect(p).rejects.toThrow("disposed");
     const state = x.source.store.get();
+    expect(state.failure).toBeNull();
     x.frame(frame(9));
     x.session(session);
     expect(x.source.store.get()).toBe(state);
+  });
+  it("retains the original idle failure and ignores later failures", () => {
+    const x = setup();
+    const failure = new Error("Permission denied.");
+    x.fail(failure);
+    expect(x.source.store.get().failure).toBe(failure);
+    x.fail(new Error("Later error"));
+    x.source.dispose();
+    expect(x.source.store.get().failure).toBe(failure);
   });
   it("closes on changed session without replaying across context", async () => {
     const x = setup();

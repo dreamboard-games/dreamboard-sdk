@@ -29,6 +29,8 @@ export type SubmitResult =
     };
 export interface SourceState {
   readonly snapshot: SourceSnapshot | null;
+  /** Terminal diagnostic, retained locally. Intentional disposal leaves this null. */
+  readonly failure: Readonly<Error> | null;
   readonly connection: "connecting" | "ready" | "recovering" | "closed";
   readonly request: {
     readonly interactionId: string;

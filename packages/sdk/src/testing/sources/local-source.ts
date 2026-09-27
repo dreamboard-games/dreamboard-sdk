@@ -89,6 +89,7 @@ export function createLocalProvider<Game extends ScenarioDefinitionGameLike>(
     snapshot: null,
     connection: "connecting",
     request: null,
+    failure: null,
   });
   let lifecycle: ReturnType<typeof createSourceLifecycle>;
   function assertOpen() {

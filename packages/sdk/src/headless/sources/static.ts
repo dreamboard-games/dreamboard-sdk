@@ -26,6 +26,7 @@ export function staticSource(input: SourceSnapshot): GameSource {
       snapshot,
       connection: "ready",
       request: null,
+      failure: null,
     }),
   );
   return {

@@ -350,3 +350,23 @@ describe("socket recovery deadlines", () => {
     expect(before?.version).toBe(1);
   });
 });
+
+it("preserves a startup credential failure before any snapshot or request", async () => {
+  const failure = new Error("Credential unavailable.");
+  const source = hostSource({
+    url: "wss://host/gameplay",
+    session,
+    playerId: "alice",
+    getCredential: async () => {
+      throw failure;
+    },
+  });
+  await Promise.resolve();
+  expect(source.store.get()).toMatchObject({
+    connection: "closed",
+    snapshot: null,
+    request: null,
+    failure,
+  });
+  expect(source.store.get().failure).toBe(failure);
+});
