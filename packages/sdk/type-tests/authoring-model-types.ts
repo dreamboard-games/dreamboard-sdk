@@ -12,6 +12,7 @@ import {
   createGame,
   type BoundTargetPredicate,
   type PlayerId,
+  type ReducerGameDefinitionInput,
 } from "../src/reducer.js";
 import type { GameStateOf } from "../src/reducer/model.js";
 import {
@@ -425,6 +426,43 @@ game.assemble({
       .define({ kind: "auto", initialState: () => ({}) }),
   },
   view: () => ({}),
+});
+
+// Named inputs preserve the same public checks without exposing output-only fields.
+const assemblyInput: ReducerGameDefinitionInput<
+  typeof game.contract,
+  typeof definition.phases,
+  typeof definition.view
+> = {
+  phases: definition.phases,
+  initialPhase: "setup",
+  view: definition.view,
+};
+const reassembled = game.assemble(assemblyInput);
+type _AssemblyPreservesView = Expect<
+  Equal<typeof reassembled.view, typeof definition.view>
+>;
+
+const phasesWithExtraKey = {
+  ...definition.phases,
+  bonus: definition.phases.setup,
+};
+game.assemble({
+  // @ts-expect-error Extra phase keys are rejected even through a variable.
+  phases: phasesWithExtraKey,
+  view: definition.view,
+});
+game.assemble({
+  ...assemblyInput,
+  // @ts-expect-error Initial phase must be declared by the model.
+  initialPhase: "bonus",
+});
+game.assemble({
+  ...assemblyInput,
+  initial: {
+    // @ts-expect-error Initial state callbacks retain their model output type.
+    public: () => ({ currentPlayerId: 42 }),
+  },
 });
 
 // @ts-expect-error misspelled phase name is rejected at `game.phase`.

@@ -7,7 +7,10 @@ export {
   type PhaseTypes,
 } from "./reducer/authoring/contract-authoring";
 export { createGame } from "./reducer/authoring/game";
-export type { ReducerGameDefinition } from "./reducer/model";
+export type {
+  ReducerGameDefinition,
+  ReducerGameDefinitionInput,
+} from "./reducer/model";
 export { gameEvent } from "./reducer/game-event";
 export type {
   GameEvent,

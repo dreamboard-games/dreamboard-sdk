@@ -1,4 +1,3 @@
-import { validatedReducerDefinition } from "../model/definition";
 import type { ManifestCountValidation } from "../manifest/identity-types";
 import type { RuntimeRecord } from "../model/table";
 import { compileManifest } from "../manifest/compiler";
@@ -8,12 +7,9 @@ import type {
   ManifestTable,
 } from "../manifest/types";
 import type {
-  PhaseMapOf,
-  ReducerGameDefinition,
   ReducerManifestContract,
   RuntimeTableRecord,
   SchemaLike,
-  ViewOfContract,
 } from "../model";
 import { createContractAuthoring } from "./contract-authoring";
 import {
@@ -21,27 +17,6 @@ import {
   type DefinedGameContract,
   type ReducerGameContractInput,
 } from "./contract";
-import type { AnyReducerGameContract } from "./types";
-import {
-  validateDefineGamePhaseNames,
-  validateDefineGamePhases,
-} from "./validation";
-
-export function defineGameDefinition<
-  const Contract extends AnyReducerGameContract,
-  Definitions extends PhaseMapOf<Contract>,
-  View extends ViewOfContract<Contract>,
->(
-  definition: { contract: Contract } & Omit<
-    ReducerGameDefinition<NoInfer<Contract>, Definitions, View>,
-    "contract" | typeof validatedReducerDefinition
-  >,
-): ReducerGameDefinition<Contract, Definitions, View> {
-  validateDefineGamePhaseNames(definition);
-  validateDefineGamePhases(definition);
-  return { ...definition, [validatedReducerDefinition]: true };
-}
-
 /**
  * Creates the bound authoring object for a model without assembling the game.
  *

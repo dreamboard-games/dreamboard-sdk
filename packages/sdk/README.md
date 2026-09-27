@@ -199,6 +199,10 @@ Player bounds must be positive safe integers with `minPlayers <= maxPlayers`.
 materialization. Both snapshot the authored input so later source edits do not
 change the validated value or future initial tables. Literal IDs remain inferred.
 
+`ReducerGameDefinitionInput` describes the authored assembly fields. The assembled
+`ReducerGameDefinition` adds the bound contract and validation brand; authors never
+supply those output-only fields.
+
 `game.assemble` checks phase names, the initial phase, interaction declarations,
 and simultaneous-phase requirements, then returns a branded `ReducerGameDefinition`.
 Runtime consumers such as `createReducerBundle` require that assembled type;
