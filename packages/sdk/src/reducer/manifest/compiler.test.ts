@@ -111,6 +111,134 @@ describe("in-memory manifests", () => {
     expect(compiled.literals.cardTypeByCardId.king).toBe("ranked-card");
     expect(compiled.records).not.toHaveProperty("playerIds");
   });
+  test("keeps each card definition's category and variant fields in the runtime table schema", () => {
+    const compiled = compileManifest({
+      players: { minPlayers: 1, maxPlayers: 2 },
+      cardSets: [
+        {
+          type: "manual",
+          id: "actions",
+          name: "Actions",
+          defaultHome: { type: "detached" },
+          cardSchema: {
+            shared: {
+              value: { type: "string", default: "shared" },
+              status: { type: "string", optional: true, nullable: true },
+            },
+            variants: {
+              attack: {
+                properties: {
+                  value: { type: "integer", default: 3 },
+                  damage: { type: "integer", default: 2 },
+                  status: { type: "integer", nullable: true, default: 5 },
+                },
+              },
+              defense: {
+                properties: { shield: { type: "boolean", default: true } },
+              },
+            },
+          },
+          cards: [
+            {
+              id: "strike",
+              cardType: "attack",
+              name: "Strike",
+              count: 2,
+              properties: {},
+            },
+            {
+              id: "block",
+              cardType: "defense",
+              name: "Block",
+              count: 1,
+              properties: {},
+            },
+          ],
+        },
+        {
+          type: "manual",
+          id: "spells",
+          name: "Spells",
+          defaultHome: { type: "detached" },
+          cardSchema: {
+            variants: {
+              attack: {
+                properties: { mana: { type: "integer", default: 4 } },
+              },
+            },
+          },
+          cards: [
+            {
+              id: "spark",
+              cardType: "attack",
+              name: "Spark",
+              count: 1,
+              properties: {},
+            },
+          ],
+        },
+      ],
+      zones: [],
+      boards: [],
+    } as const);
+    const table = compiled.createInitialTable();
+    expect(table.cards["strike-1"]).toMatchObject({
+      id: "strike-1",
+      cardSetId: "actions",
+      cardType: "attack",
+      properties: { value: 3, damage: 2, status: 5 },
+    });
+    expect(table.cards.block).toMatchObject({
+      cardSetId: "actions",
+      cardType: "defense",
+      properties: { value: "shared", shield: true },
+    });
+    expect(table.cards.spark).toMatchObject({
+      cardSetId: "spells",
+      cardType: "attack",
+      properties: { mana: 4 },
+    });
+    expect(compiled.tableSchema.safeParse(table).success).toBe(true);
+    expect(
+      compiled.tableSchema.safeParse({
+        ...table,
+        cards: {
+          ...table.cards,
+          "strike-1": {
+            ...table.cards["strike-1"],
+            properties: {
+              ...table.cards["strike-1"].properties,
+              status: null,
+            },
+          },
+        },
+      }).success,
+    ).toBe(true);
+    expect(
+      compiled.tableSchema.safeParse({
+        ...table,
+        cards: {
+          ...table.cards,
+          "strike-1": {
+            ...table.cards["strike-1"],
+            properties: { value: "shared", damage: 2, status: 5 },
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      compiled.tableSchema.safeParse({
+        ...table,
+        cards: {
+          ...table.cards,
+          "strike-1": {
+            ...table.cards["strike-1"],
+            properties: { value: 3, damage: 2, status: "old" },
+          },
+        },
+      }).success,
+    ).toBe(false);
+  });
   test.each([
     { shared: undefined },
     { shared: { points: { type: "integer" as const } } },
