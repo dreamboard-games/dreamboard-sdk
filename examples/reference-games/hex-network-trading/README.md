@@ -32,11 +32,12 @@ serialized base states are not gameplay authority.
 
 ## Agent Authoring Workflow
 
-Read `rule.md` and the closest typed file under `test/scenarios/`. Use
-`dreamboard test inspect` to see perspective-visible inventory, the current
-actor or barrier, blockers, and progressive inputs. Use
-`dreamboard test explore` to obtain concrete replay-accepted commands as JSON,
-then add one command to the typed scenario. Normal rolls, sevens, discards,
+Read `rule.md` and the closest typed file under `test/scenarios/`. Open a named
+checkpoint with `scenarioSource(game, scenario, { at, as })`. The source's
+selected-seat `inspect()` shows perspective-visible inventory, the current actor
+or barrier, blockers, and progressive inputs; bounded
+`explore({ maxEvaluations: 5000 })` returns concrete replay-accepted commands.
+Add one accepted command to the typed scenario. Normal rolls, sevens, discards,
 Bandit movement, trades, and network growth all use this one path; scenarios do
 not inject dice, resources, or mid-game state.
 
