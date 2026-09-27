@@ -837,11 +837,7 @@ class Controller {
       (error) => {
         if (!active()) return;
         const state = source.store.get();
-        if (
-          state.failure === error ||
-          (state.connection === "closed" && !state.failure)
-        )
-          return;
+        if (state.failure === error || state.connection === "closed") return;
         this.options.onError?.(error);
       },
     );
@@ -913,7 +909,10 @@ class Controller {
       operation.epoch !== this.epoch
     )
       return;
-    if (this.sourceState.connection === "closed") {
+    if (
+      this.sourceState.connection === "closed" ||
+      this.sourceState.connection === "failed"
+    ) {
       this.pending = null;
       this.refresh();
       return;
@@ -1051,11 +1050,7 @@ class Controller {
     this.subscription?.unsubscribe();
     this.pending = null;
     this.options.source.dispose();
-    this.sourceState = {
-      ...this.sourceState,
-      connection: "closed",
-      request: null,
-    };
+    this.sourceState = this.options.source.store.get();
     this.refresh();
   }
   assertCoverage() {

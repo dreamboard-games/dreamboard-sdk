@@ -51,14 +51,14 @@ export function createSourceLifecycle(options: {
     clearTimeout(timer);
     timer = undefined;
   };
-  const patch = (update: Partial<SourceState>) =>
-    store.setState((state) =>
-      Object.freeze({
-        ...state,
-        ...update,
-        ...(update.request ? { request: Object.freeze(update.request) } : {}),
-      }),
-    );
+  const publish = (state: SourceState) => {
+    if (state.request) Object.freeze(state.request);
+    store.setState(() => Object.freeze(state));
+  };
+  const recovering = () => {
+    if (closed) return;
+    publish({ ...store.get(), connection: "recovering", failure: null });
+  };
   const close = (failure: Error | null) => {
     if (closed) return;
     closed = true;
@@ -66,11 +66,17 @@ export function createSourceLifecycle(options: {
     pending?.reject(failure ?? new Error("Gameplay source disposed."));
     pending = null;
     options.close();
-    patch({
-      connection: "closed",
-      request: null,
-      failure: failure ? Object.freeze(failure) : null,
-    });
+    const snapshot = store.get().snapshot;
+    publish(
+      failure
+        ? {
+            connection: "failed",
+            snapshot,
+            request: null,
+            failure: Object.freeze(failure),
+          }
+        : { connection: "closed", snapshot, request: null, failure: null },
+    );
   };
   const fail = (error: Error) => close(error);
   const arm = () => {
@@ -81,7 +87,7 @@ export function createSourceLifecycle(options: {
         return;
       }
       recovered = true;
-      patch({ connection: "recovering" });
+      recovering();
       try {
         options.recover();
         if (pending && !pending.accepted) options.send(pending.command);
@@ -97,7 +103,12 @@ export function createSourceLifecycle(options: {
     if (!frame || frame.version <= pending.command.basis.version) return;
     clearTimer();
     pending = null;
-    patch({ request: null, connection: "ready" });
+    publish({
+      snapshot: frame,
+      request: null,
+      connection: "ready",
+      failure: null,
+    });
   };
   const start = async (
     operation: "submit" | "cancel",
@@ -125,7 +136,8 @@ export function createSourceLifecycle(options: {
     const promise = new Promise<SubmitResult>((resolve, reject) => {
       pending = { command, resolve, reject, accepted: false };
     });
-    patch({
+    publish({
+      ...state,
       request: {
         interactionId,
         operation,
@@ -161,9 +173,7 @@ export function createSourceLifecycle(options: {
       }
     },
     fail,
-    recovering() {
-      if (!closed) patch({ connection: "recovering" });
-    },
+    recovering,
     session(value: unknown) {
       if (closed) return;
       const parsed = PluginSessionDescriptorSchema.parse(value);
@@ -207,7 +217,9 @@ export function createSourceLifecycle(options: {
       if (basis && parsed.basis.version < basis.version) return;
       const { basis: nextBasis, ...frame } = immutableCopy(parsed);
       basis = nextBasis;
-      patch({
+      publish({
+        failure: null,
+        request: store.get().request,
         snapshot: Object.freeze({
           me: context.playerId,
           players: session.players,
@@ -243,12 +255,24 @@ export function createSourceLifecycle(options: {
       if (!result.accepted) {
         clearTimer();
         pending = null;
-        patch({ request: null, connection: "ready" });
+        publish({
+          snapshot: store.get().snapshot!,
+          request: null,
+          connection: "ready",
+          failure: null,
+        });
         return;
       }
       pending.accepted = true;
       recovered = false;
-      patch({ request: { ...store.get().request!, phase: "awaiting-frame" } });
+      const state = store.get();
+      // A pending command was submitted from ready, so its snapshot exists.
+      publish({
+        connection: state.connection === "recovering" ? "recovering" : "ready",
+        snapshot: state.snapshot!,
+        failure: null,
+        request: { ...state.request!, phase: "awaiting-frame" },
+      });
       arm();
       finishBarrier();
     },

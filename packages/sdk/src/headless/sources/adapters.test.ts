@@ -91,7 +91,7 @@ describe("iframe source", () => {
     receive({ type: "gameplay.frame", frame: {} }, "unrelated");
     expect(source.store.get().connection).toBe("connecting");
     receive({ type: "gameplay.frame", frame: {} });
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
     expect(parent.postMessage.mock.calls.at(-1)?.[0].payload.type).toBe(
       "runtime.error",
     );
@@ -151,13 +151,43 @@ describe("iframe source", () => {
     receive({ type: "gameplay.frame", frame: frame(2) });
     expect(source.store.get().request).toBeNull();
     receive({ type: "gameplay.frame", frame: frame(3, "bob") });
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
     const state = source.store.get();
     receive({ type: "gameplay.frame", frame: frame(4) });
     expect(source.store.get()).toBe(state);
   });
 });
 describe("websocket source", () => {
+  it("recovers before the first snapshot and becomes ready when one arrives", async () => {
+    vi.stubGlobal("WebSocket", TestSocket);
+    const source = hostSource({
+      url: "wss://host/gameplay",
+      session,
+      playerId: "alice",
+      getCredential: async () => ({ kind: "demo", secret: "fixture" }),
+    });
+    expect(source.store.get()).toMatchObject({
+      connection: "connecting",
+      snapshot: null,
+    });
+    await Promise.resolve();
+    TestSocket.instances.at(-1)!.disconnect();
+    expect(source.store.get()).toEqual({
+      connection: "recovering",
+      snapshot: null,
+      request: null,
+      failure: null,
+    });
+    await Promise.resolve();
+    const replacement = TestSocket.instances.at(-1)!;
+    replacement.open();
+    replacement.receive(accepted);
+    replacement.receive(snapshot());
+    expect(source.store.get().connection).toBe("ready");
+    expect(source.store.get().snapshot?.version).toBe(1);
+    source.dispose();
+  });
+
   it("automatically retries the original intent after a newer frame without inferring a missing ACK", async () => {
     vi.useFakeTimers();
     const { source, socket } = await socketSource();
@@ -196,7 +226,7 @@ describe("websocket source", () => {
     expect(await result).toEqual(
       new Error("Gameplay source recovery timed out."),
     );
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
     expect(source.store.get().request).toBeNull();
     expect(vi.getTimerCount()).toBe(0);
     expect(removeListener.mock.calls.map(([type]) => type).sort()).toEqual([
@@ -260,7 +290,7 @@ describe("websocket source", () => {
     socket.receive({ type: "gameplay.logs", entries: [] });
     expect(source.store.get().connection).toBe("ready");
     socket.receive({ type: "session.snapshot", frame: {} });
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
   });
   it("disposal during credential acquisition cannot create a late socket", async () => {
     vi.stubGlobal("WebSocket", TestSocket);
@@ -296,7 +326,7 @@ describe("socket recovery deadlines", () => {
     const socket = TestSocket.instances.at(-1)!;
     socket.open();
     vi.advanceTimersByTime(100);
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
     socket.receive(accepted);
     socket.receive(snapshot());
     expect(source.store.get().snapshot).toBeNull();
@@ -316,7 +346,7 @@ describe("socket recovery deadlines", () => {
     socket.open();
     socket.receive(accepted);
     vi.advanceTimersByTime(100);
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
   });
   it("refreshes credentials without replacing the snapshot and times out a missing refresh ACK", async () => {
     vi.useFakeTimers();
@@ -346,7 +376,7 @@ describe("socket recovery deadlines", () => {
     expect(getCredential).toHaveBeenCalledTimes(2);
     socket.receive(snapshot(2));
     await vi.advanceTimersByTimeAsync(100);
-    expect(source.store.get().connection).toBe("closed");
+    expect(source.store.get().connection).toBe("failed");
     expect(before?.version).toBe(1);
   });
 });
@@ -363,7 +393,7 @@ it("preserves a startup credential failure before any snapshot or request", asyn
   });
   await Promise.resolve();
   expect(source.store.get()).toMatchObject({
-    connection: "closed",
+    connection: "failed",
     snapshot: null,
     request: null,
     failure,

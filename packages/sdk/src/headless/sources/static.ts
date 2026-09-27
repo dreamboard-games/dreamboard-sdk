@@ -36,7 +36,12 @@ export function staticSource(input: SourceSnapshot): GameSource {
     },
     dispose() {
       store.setState((state) =>
-        Object.freeze({ ...state, connection: "closed" }),
+        Object.freeze({
+          snapshot: state.snapshot,
+          connection: "closed",
+          request: null,
+          failure: null,
+        }),
       );
     },
   };

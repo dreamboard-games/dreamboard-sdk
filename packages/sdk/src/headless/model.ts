@@ -17,6 +17,7 @@ import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   GameSource,
   SourceState,
+  SourceRequest,
   SourceSnapshot,
   SubmitResult,
 } from "./sources/types.js";
@@ -384,6 +385,7 @@ export type GameInstance<
 export type {
   GameSource,
   SourceState,
+  SourceRequest,
   SourceSnapshot,
   SubmitResult,
   InteractionDescriptor,

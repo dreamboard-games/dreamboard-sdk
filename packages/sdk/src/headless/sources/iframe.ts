@@ -37,6 +37,10 @@ export function iframeSource(
     recover: () => send({ type: "runtime.resume" }),
     close: () => target.removeEventListener("message", receive),
   });
+  const isOpen = () => {
+    const { connection } = lifecycle.source.store.get();
+    return connection !== "closed" && connection !== "failed";
+  };
   function receive(event: MessageEvent) {
     if (event.source !== parent) return;
     const parsed = HostToPluginEnvelopeSchema.safeParse(event.data);
@@ -77,13 +81,11 @@ export function iframeSource(
     const payload = envelope.payload;
     if (payload.type === "runtime.init") {
       lifecycle.session(payload.session);
-      if (lifecycle.source.store.get().connection !== "closed")
-        send({ type: "runtime.ready" });
+      if (isOpen()) send({ type: "runtime.ready" });
     } else if (payload.type === "gameplay.frame")
       lifecycle.frame(payload.frame);
     else lifecycle.result(payload);
-    if (lifecycle.source.store.get().connection !== "closed")
-      send({ type: "runtime.ack", sequence: envelope.sequence });
+    if (isOpen()) send({ type: "runtime.ack", sequence: envelope.sequence });
   }
   target.addEventListener("message", receive);
   return lifecycle.source;

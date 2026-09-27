@@ -27,17 +27,43 @@ export type SubmitResult =
       readonly errorCode: string;
       readonly message?: string;
     };
-export interface SourceState {
-  readonly snapshot: SourceSnapshot | null;
-  /** Terminal diagnostic, retained locally. Intentional disposal leaves this null. */
-  readonly failure: Readonly<Error> | null;
-  readonly connection: "connecting" | "ready" | "recovering" | "closed";
-  readonly request: {
-    readonly interactionId: string;
-    readonly operation: "submit" | "cancel";
-    readonly phase: "awaiting-result" | "awaiting-frame";
-  } | null;
+export interface SourceRequest {
+  readonly interactionId: string;
+  readonly operation: "submit" | "cancel";
+  readonly phase: "awaiting-result" | "awaiting-frame";
 }
+export type SourceState =
+  | {
+      readonly connection: "connecting";
+      readonly snapshot: null;
+      readonly request: null;
+      readonly failure: null;
+    }
+  | {
+      readonly connection: "ready";
+      readonly snapshot: SourceSnapshot;
+      readonly request: SourceRequest | null;
+      readonly failure: null;
+    }
+  | {
+      readonly connection: "recovering";
+      readonly snapshot: SourceSnapshot | null;
+      readonly request: SourceRequest | null;
+      readonly failure: null;
+    }
+  | {
+      readonly connection: "failed";
+      readonly snapshot: SourceSnapshot | null;
+      readonly request: null;
+      /** Terminal diagnostic, retained locally. */
+      readonly failure: Readonly<Error>;
+    }
+  | {
+      readonly connection: "closed";
+      readonly snapshot: SourceSnapshot | null;
+      readonly request: null;
+      readonly failure: null;
+    };
 export interface GameSource {
   readonly store: Pick<Store<SourceState>, "get" | "subscribe">;
   dispose(): void;

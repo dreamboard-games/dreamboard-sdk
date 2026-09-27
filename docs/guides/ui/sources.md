@@ -10,8 +10,10 @@ iframeSource connects to a parent host; hostSource connects to the canonical web
 Terminal source failures are available as `source.store.get().failure` and
 `game.failure` (also `game.getSnapshot().failure`). The value is the original,
 frozen `Error`, retained locally for diagnostics; do not serialize it or display
-arbitrary diagnostic details to players. A normal `dispose()` closes the source
-with `failure: null`. Disposing an already failed source preserves its failure.
+arbitrary diagnostic details to players. A terminal failure sets `connection: "failed"`. A normal `dispose()` closes the source
+with `failure: null`. Disposing an already failed source preserves its failed state and error.
+Both terminal states retain the last snapshot, or `null` if none arrived.
+A ready source always has a snapshot; recovery can begin before the first snapshot.
 
 ```ts
 const source = iframeSource();

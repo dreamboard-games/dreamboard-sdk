@@ -312,7 +312,7 @@ describe("instance boundaries", () => {
     x.ack();
     await submitted;
     x.source.fail(new Error("Recovery exhausted"));
-    expect(game.connection).toBe("closed");
+    expect(game.connection).toBe("failed");
     expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
     game.dispose();
   });
@@ -744,7 +744,11 @@ it.each(["idle", "pending", "accepted"] as const)(
     expect(Object.isFrozen(failure)).toBe(true);
     expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
     game.setOptions({ source: x.source, onError });
+    const snapshot = game.getSnapshot().snapshot;
     game.dispose();
+    expect(game.connection).toBe("failed");
+    expect(game.getSnapshot().snapshot).toBe(snapshot);
+    expect(game.failure).toBe(failure);
     expect(onError).toHaveBeenCalledTimes(1);
   },
 );
