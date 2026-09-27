@@ -910,6 +910,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         eligibleTargetCalls++;
         return {
           type: "boardTarget",
+          valueKind: "board-id",
           projection: "resolved",
           targetKind: "edge",
           boardId: "board",

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PlayerBoardSpaceTargetSchema } from "./board-target.js";
 import { RuntimeJsonSchema } from "./runtime-json.js";
 
 export const InteractionCommitPolicySchema = z.discriminatedUnion("mode", [
@@ -40,15 +41,26 @@ export const InputDomainSchema = z.discriminatedUnion("type", [
     eligibleTargets: z.array(z.string()),
     ...selection,
   }),
-  z.strictObject({
-    type: z.literal("boardTarget"),
-    projection: z.literal("resolved"),
-    targetKind: z.enum(["edge", "vertex", "space", "tile"]),
-    boardId: z.string(),
-    valueKind: z.enum(["board-id", "player-board-space"]).optional(),
-    eligibleTargets: z.array(z.string()),
-    ...selection,
-  }),
+  z.discriminatedUnion("valueKind", [
+    z.strictObject({
+      type: z.literal("boardTarget"),
+      projection: z.literal("resolved"),
+      targetKind: z.enum(["edge", "vertex", "space", "tile"]),
+      boardId: z.string(),
+      valueKind: z.literal("board-id"),
+      eligibleTargets: z.array(z.string()),
+      ...selection,
+    }),
+    z.strictObject({
+      type: z.literal("boardTarget"),
+      projection: z.literal("resolved"),
+      targetKind: z.literal("space"),
+      boardId: z.string(),
+      valueKind: z.literal("player-board-space"),
+      eligibleTargets: z.array(PlayerBoardSpaceTargetSchema),
+      ...selection,
+    }),
+  ]),
   z.strictObject({
     type: z.literal("resourceMap"),
     resources: z.array(

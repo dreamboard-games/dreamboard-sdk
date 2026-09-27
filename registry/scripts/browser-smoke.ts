@@ -64,6 +64,7 @@ try {
           "hex-setup-targets": "setupCamp",
           "hex-opening": "setupCamp",
           "resource-partial-draft": "play",
+          "player-board-targets": "play",
           "hex-discard": "discardBarrier",
           "hex-production": "main",
           "hex-growing-network": "main",
@@ -105,6 +106,26 @@ try {
           await expect(label).toHaveCSS("font-size", "18px");
           await expect(label).toHaveCSS("pointer-events", "all");
         }
+      }
+      if (story.id.endsWith("player-board-targets")) {
+        const own = page.locator(
+          'svg [data-board="mat:player-1"][data-action="select"]',
+        );
+        const opponent = page.locator(
+          'svg [data-board="mat:player-2"][data-action="select"]',
+        );
+        await own.focus();
+        await page.keyboard.press("Enter");
+        await expect(own).toHaveAttribute("aria-pressed", "true");
+        await expect(opponent).toHaveAttribute("aria-pressed", "false");
+        await opponent.click();
+        await expect(opponent).toHaveAttribute("aria-pressed", "true");
+        await page
+          .locator('[data-action="submit"][data-interaction="play.choose"]')
+          .click();
+        await expect(page.getByTestId("scenario-view")).toContainText(
+          '"selected":[{"boardId":"mat","playerId":"player-1","spaceId":"slot"},{"boardId":"mat","playerId":"player-2","spaceId":"slot"}]',
+        );
       }
       if (story.id.endsWith("hearts-passing")) {
         await expect(

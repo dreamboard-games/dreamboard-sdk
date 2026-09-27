@@ -7,10 +7,7 @@ import type {
   TableQueriesOfState,
 } from "../../model";
 import { createStateQueries } from "../../table-queries";
-import {
-  normalizeCollectorValue,
-  validateCollectorValue,
-} from "./collector-params";
+import { validateCollectorValue } from "./collector-params";
 
 /** Evaluate in order against authoritative state. Never samples RNG or applies defaults. */
 export function evaluateStepPrefix<State extends CollectorState>(
@@ -33,9 +30,7 @@ export function evaluateStepPrefix<State extends CollectorState>(
     current = { key: entry.key, collector, domain };
     if (validValues.length === values.length) break;
     const value = values[validValues.length];
-    const parsed = collector.schema.safeParse(
-      normalizeCollectorValue(collector, value, playerId),
-    );
+    const parsed = collector.schema.safeParse(value);
     if (!parsed.success || value === undefined || parsed.data === undefined) {
       issue = `Invalid value for step '${entry.key}'.`;
       break;

@@ -40,6 +40,7 @@ test("routeCardInputIntent applies card and destination inputs atomically", () =
         boardId: "main",
 
         type: "boardTarget",
+        valueKind: "board-id",
         projection: "resolved",
         targetKind: "space",
         eligibleTargets: ["hex-a"],

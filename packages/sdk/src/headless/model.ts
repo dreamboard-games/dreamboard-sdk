@@ -1,3 +1,4 @@
+import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
 import type { z } from "zod";
 import type { Store } from "@tanstack/store";
 import type {
@@ -124,15 +125,18 @@ export interface FeatureContext<G> {
   ): BoardBase<G, K> & { readonly data: Readonly<Data> };
   routeTarget(
     kind: "card" | "space" | "edge" | "vertex" | "tile",
-    id: string,
-    options?: { interaction?: InteractionKey<G>; boardId?: IdOf<G, "boardId"> },
+    id: string | PlayerBoardSpaceTarget,
+    options?: {
+      interaction?: InteractionKey<G>;
+      boardId?: IdOf<G, "boardId"> | IdOf<G, "boardBaseId">;
+    },
   ): void;
   routeCardDrop(
     cardId: IdOf<G, "cardId">,
     target: {
       kind: "space" | "edge" | "vertex" | "tile";
-      id: string;
-      boardId?: IdOf<G, "boardId">;
+      id: string | PlayerBoardSpaceTarget;
+      boardId?: IdOf<G, "boardId"> | IdOf<G, "boardBaseId">;
       interaction?: InteractionKey<G>;
     },
   ): void;

@@ -34,7 +34,7 @@ export interface RoutedCardInputIntent {
   cardId: string;
   dropTarget?: {
     inputKey: string;
-    value: string;
+    value: RuntimeJson;
   };
 }
 

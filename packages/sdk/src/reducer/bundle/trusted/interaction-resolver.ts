@@ -5,7 +5,6 @@ import type {
   ReducerValidationResult,
   ViewOfContract,
 } from "../../model";
-import { collectEligibleTargets } from "./collector-eligibility";
 import {
   collectFirstCardZoneId,
   findCardInputKey,
@@ -88,7 +87,6 @@ export function createInteractionResolver<
 
   return {
     currentClientParamSchema: decisions.currentClientParamSchema,
-    collectEligibleTargets,
     collectFirstCardZoneId,
     enumerateInteractionParams: decisions.enumerateInteractionParams,
     explainInteraction: decisions.explainInteraction,

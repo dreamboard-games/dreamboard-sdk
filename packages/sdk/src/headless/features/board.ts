@@ -1,3 +1,4 @@
+import { AmbiguousTargetError } from "../instance.js";
 import { createHexBoardGeometry } from "../../shared/hex-board.js";
 import type {
   RuntimeBoardCollections,
@@ -213,7 +214,11 @@ export function boardFeature<G>(
             x: value.x * viewport.scale + viewport.x,
             y: value.y * viewport.scale + viewport.y,
           });
-        function matchingTargets(model: ReadModel<G>, kind: TargetKind) {
+        function matchingTargets(
+          model: ReadModel<G>,
+          kind: TargetKind,
+          id: string,
+        ) {
           const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
           return model.interactions.list().flatMap((interaction) =>
             interaction
@@ -223,21 +228,40 @@ export function boardFeature<G>(
                 return (
                   domain.type === "boardTarget" &&
                   inputKinds.includes(String(domain.targetKind)) &&
-                  (domain.boardId === board.id ||
-                    domain.boardId === board.baseId) &&
-                  (board.scope !== "perPlayer" ||
-                    board.playerId === model.me?.id)
+                  (domain.valueKind === "player-board-space"
+                    ? board.scope === "perPlayer" &&
+                      domain.boardId === board.baseId
+                    : domain.boardId === board.id)
                 );
               })
-              .map((input) => ({ interaction, input })),
+              .map((input) => {
+                const domain = input.getDomain();
+                return {
+                  interaction,
+                  input,
+                  value:
+                    domain.type === "boardTarget" &&
+                    domain.valueKind === "player-board-space"
+                      ? Object.freeze({
+                          boardId: board.baseId!,
+                          playerId: board.playerId!,
+                          spaceId: id,
+                        })
+                      : id,
+                };
+              }),
           );
         }
         function target(kind: TargetKind, id: string) {
-          const matches = matchingTargets(captured.model, kind);
-          const eligible = matches.some(({ input }) => input.getIsEligible(id));
-          const selected = matches.some(({ input }) => input.getIsSelected(id));
+          const matches = matchingTargets(captured.model, kind, id);
+          const eligible = matches.some(({ input, value }) =>
+            input.getIsEligible(value),
+          );
+          const selected = matches.some(({ input, value }) =>
+            input.getIsSelected(value),
+          );
           const selectable = matches.some(
-            ({ input }) => !input.getTargetProps(id).disabled,
+            ({ input, value }) => !input.getTargetProps(value).disabled,
           );
           function select(options?: { interaction?: InteractionKey<G> }) {
             if (
@@ -245,18 +269,25 @@ export function boardFeature<G>(
               game.snapshot?.me !== captured.model.snapshot?.me
             )
               return;
-            const matching = matchingTargets(game.getSnapshot(), kind).filter(
-              ({ interaction, input }) =>
+            const matching = matchingTargets(
+              game.getSnapshot(),
+              kind,
+              id,
+            ).filter(
+              ({ interaction, input, value }) =>
                 (!options?.interaction ||
                   options.interaction === interaction.key) &&
-                !input.getTargetProps(id).disabled,
+                !input.getTargetProps(value).disabled,
             );
             if (!matching.length) return;
+            if (matching.length > 1) throw new AmbiguousTargetError(id);
             const domain = matching[0]!.input.getDomain();
             if (domain.type !== "boardTarget") return;
-            context.routeTarget(kind, id, {
+            context.routeTarget(kind, matching[0]!.value, {
               ...options,
-              boardId: String(domain.boardId) as IdOf<G, "boardId">,
+              boardId: domain.boardId as
+                | IdOf<G, "boardId">
+                | IdOf<G, "boardBaseId">,
             });
           }
           return {
@@ -269,17 +300,20 @@ export function boardFeature<G>(
                 select(options),
             getTargetProps(options?: { interaction?: InteractionKey<G> }) {
               const candidates = matches.filter(
-                ({ interaction, input }) =>
+                ({ interaction, input, value }) =>
                   (!options?.interaction ||
                     interaction.key === options.interaction) &&
-                  !input.getTargetProps(id).disabled,
+                  !input.getTargetProps(value).disabled,
               );
               const only = candidates.length === 1 ? candidates[0] : undefined;
               return {
                 type: "button" as const,
                 disabled: candidates.length === 0,
                 "data-action": "select",
-                "data-value": id,
+                "data-value":
+                  only && typeof only.value !== "string"
+                    ? JSON.stringify(only.value)
+                    : id,
                 "data-board": board.id,
                 "data-interaction":
                   options?.interaction ?? only?.interaction.key,

@@ -235,7 +235,6 @@ export function buildInteractionDescriptor<
   decision: InteractionDecision,
   options: {
     projection?: ProjectionContext<TrustedDomainState<Contract>>;
-    includeEligibleTargets?: boolean;
     includeDiagnosticReasons?: boolean;
     stepPrefix?: ReturnType<typeof evaluateStepPrefix>;
   } = {},
@@ -288,12 +287,6 @@ export function buildInteractionDescriptor<
     ? enrichResourceInputPresentation(
         collectInteractionInputs(projectedInteraction, domainState, playerId, {
           queries,
-          eligibleTargetCache: options.projection?.eligibleTargets,
-          eligibleTargetCachePrefix: `${phaseName}:${String(
-            interactionId,
-          )}:${String(playerId)}`,
-          includeEligibleTargets: options.includeEligibleTargets,
-          diagnostics: scope.diagnostics,
         }),
         scope.definition.contract.manifest,
       )
