@@ -146,7 +146,7 @@ describe("source request lifecycle", () => {
       cardType: "spell",
       frontImage: "assets/cards/spell.webp",
       backImage: "assets/cards/missing.webp",
-      properties: {},
+      properties: { power: 7 },
     };
     const assets = { "assets/cards/spell.webp": front };
     x.session({ ...session, assets });
@@ -166,10 +166,37 @@ describe("source request lifecycle", () => {
     );
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
+    expect(view.properties).toEqual({ power: 7 });
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     x.source.dispose();
     expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
     revoke.mockRestore();
+  });
+  it("rejects malformed image fields in encoded card views", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    x.session({
+      ...session,
+      assets: { "assets/cards/spell.webp": new Blob(["front"]) },
+    });
+    expect(() =>
+      x.frame({
+        ...frame(),
+        zones: {
+          hand: {
+            cardIds: ["card-1"],
+            cardViewsById: {
+              "card-1": JSON.stringify({ frontImage: 42 }),
+            },
+            playableByCardId: {},
+          },
+        },
+      }),
+    ).toThrow(/frontImage/);
+    x.source.dispose();
   });
   it("static source is immutable and connection updates reuse frame", () => {
     const original = frame();

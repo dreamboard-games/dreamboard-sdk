@@ -1,4 +1,5 @@
 import { createStore } from "@tanstack/store";
+import { z } from "zod";
 import {
   PluginGameplayFrameSchema,
   PluginSessionDescriptorSchema,
@@ -25,6 +26,12 @@ interface Pending {
   readonly reject: (error: Error) => void;
   accepted: boolean;
 }
+
+const CardImageViewSchema = z.looseObject({
+  frontImage: z.string().optional(),
+  backImage: z.string().optional(),
+});
+
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
 export function createSourceLifecycle(options: {
   context?: SourceContext;
@@ -301,9 +308,10 @@ function withCardImageUrls(
 ): PluginGameplayFrame {
   if (urls === null || Object.keys(urls).length === 0) return frame;
   const resolve = (encoded: string) => {
-    const card = JSON.parse(encoded) as Record<string, unknown>;
-    for (const key of ["frontImage", "backImage"]) {
-      const url = typeof card[key] === "string" ? urls[card[key]] : undefined;
+    const card = CardImageViewSchema.parse(JSON.parse(encoded) as unknown);
+    for (const key of ["frontImage", "backImage"] as const) {
+      const path = card[key];
+      const url = path === undefined ? undefined : urls[path];
       if (url !== undefined) card[key] = url;
     }
     return JSON.stringify(card);
