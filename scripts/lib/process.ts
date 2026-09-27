@@ -13,6 +13,17 @@ export type AsyncCommandRunner = (
   options?: RunOptions,
 ) => Promise<string>;
 
+export type RunningCommand = {
+  completed: Promise<void>;
+  stop(signal?: NodeJS.Signals): void;
+};
+
+export type CommandStarter = (
+  command: string,
+  args: readonly string[],
+  options?: RunOptions,
+) => RunningCommand;
+
 export class CommandError extends Error {
   readonly exitCode: number;
 
@@ -99,6 +110,56 @@ export const runAsync: AsyncCommandRunner = (command, args, options = {}) => {
       );
     });
   });
+};
+
+/** Long-lived commands own a process group so stopping pnpm also stops its child server. */
+export const startCommand: CommandStarter = (command, args, options = {}) => {
+  const child = spawn(command, [...args], {
+    cwd: options.cwd,
+    env: options.env ?? process.env,
+    stdio: "inherit",
+    detached: process.platform !== "win32",
+  });
+  let settled = false;
+  let stopped = false;
+  const completed = new Promise<void>((resolve, reject) => {
+    child.once("error", (error) => {
+      settled = true;
+      reject(
+        new CommandError(
+          `Unable to run ${formatCommand(command, args)}: ${error.message}`,
+        ),
+      );
+    });
+    child.once("close", (code, signal) => {
+      if (settled) return;
+      settled = true;
+      if (code === 0) resolve();
+      else
+        reject(
+          new CommandError(
+            `${formatCommand(command, args)} failed with ${signal ? `signal ${signal}` : `exit code ${code ?? 1}`}`,
+            code ?? 1,
+          ),
+        );
+    });
+  });
+  return {
+    completed,
+    stop(signal = "SIGTERM") {
+      if (stopped || child.pid === undefined) return;
+      stopped = true;
+      try {
+        if (process.platform === "win32")
+          spawnSync("taskkill", ["/PID", String(child.pid), "/T", "/F"], {
+            stdio: "ignore",
+          });
+        else process.kill(-child.pid, signal);
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+      }
+    },
+  };
 };
 
 export function formatCommand(
