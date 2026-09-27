@@ -31,6 +31,12 @@ type ReadonlyValue<T> = T extends readonly (infer V)[]
   : T extends object
     ? { readonly [K in keyof T]: ReadonlyValue<T[K]> }
     : T;
+declare const validatedManifest: unique symbol;
+/** Authored topology that passed the SDK's semantic validation. */
+export type ValidatedManifest<M extends AuthoredManifest = AuthoredManifest> =
+  ReadonlyValue<M> & { readonly [validatedManifest]: true };
+
+declare const compiledManifest: unique symbol;
 export type AuthoredManifest = ReadonlyValue<GameTopologyManifest>;
 type Entry<T> = T extends readonly (infer V)[] ? V : never;
 type Get<T, K extends PropertyKey> = T extends unknown
@@ -322,6 +328,7 @@ export type CompiledManifest<M extends AuthoredManifest> = Omit<
   >,
   "ids" | "literals" | "records" | "staticBoards"
 > & {
+  readonly [compiledManifest]: true;
   staticBoards: Pick<InferredBoards<M>, "byId" | "hex" | "square">;
   literals: Omit<
     ReducerManifestContract<

@@ -1,3 +1,6 @@
+import { assertValidManifest } from "./manifest-validation";
+import type { ValidatedManifest } from "./types";
+import type { ManifestCountValidation } from "./identity-types";
 import type {
   HexSpaceId,
   HexEdgeId,
@@ -1034,11 +1037,17 @@ type TopologyManifestValidation<Manifest> =
     : GameTopologyManifest;
 
 type DefinedTopologyManifest<Manifest> = Manifest extends GameTopologyManifest
-  ? Manifest
-  : GameTopologyManifest;
+  ? ValidatedManifest<Manifest>
+  : ValidatedManifest<GameTopologyManifest>;
 
 export function defineTopologyManifest<const Manifest>(
-  manifest: Manifest & TopologyManifestValidation<NoInfer<Manifest>>,
+  manifest: Manifest &
+    TopologyManifestValidation<NoInfer<Manifest>> &
+    ManifestCountValidation<NoInfer<Manifest>>,
 ): DefinedTopologyManifest<Manifest> {
-  return manifest as DefinedTopologyManifest<Manifest>;
+  const validated = structuredClone(manifest);
+  assertValidManifest(
+    validated as unknown as import("../../shared/domain/manifest").GameTopologyManifest,
+  );
+  return validated as DefinedTopologyManifest<Manifest>;
 }

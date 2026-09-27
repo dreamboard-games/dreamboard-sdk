@@ -1,3 +1,5 @@
+import { validatedReducerDefinition } from "../model/definition";
+import type { ManifestCountValidation } from "../manifest/identity-types";
 import type { RuntimeRecord } from "../model/table";
 import { compileManifest } from "../manifest/compiler";
 import type {
@@ -22,7 +24,7 @@ import {
 import type { AnyReducerGameContract } from "./types";
 import {
   validateDefineGamePhaseNames,
-  validateDefineGameSimultaneousPhases,
+  validateDefineGamePhases,
 } from "./validation";
 
 export function defineGameDefinition<
@@ -32,12 +34,12 @@ export function defineGameDefinition<
 >(
   definition: { contract: Contract } & Omit<
     ReducerGameDefinition<NoInfer<Contract>, Definitions, View>,
-    "contract"
+    "contract" | typeof validatedReducerDefinition
   >,
 ): ReducerGameDefinition<Contract, Definitions, View> {
   validateDefineGamePhaseNames(definition);
-  validateDefineGameSimultaneousPhases(definition);
-  return definition;
+  validateDefineGamePhases(definition);
+  return { ...definition, [validatedReducerDefinition]: true };
 }
 
 /**
@@ -59,7 +61,7 @@ export function createGame<
     Record<string, never>
   >,
 >(model: {
-  manifest: Manifest;
+  manifest: Manifest & ManifestCountValidation<NoInfer<Manifest>>;
   state: { public: PublicSchema; private: PrivateSchema; hidden: HiddenSchema };
   phases: Phases;
   errors?: Errors;

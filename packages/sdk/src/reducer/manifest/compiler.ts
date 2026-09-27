@@ -1,3 +1,4 @@
+import type { ManifestCountValidation } from "./identity-types";
 import { z } from "zod";
 import { buildTypedRecord } from "./generated-helpers.js";
 import { type GameTopologyManifest } from "../../shared/domain/manifest.js";
@@ -16,9 +17,9 @@ import type { AuthoredManifest, CompiledManifest } from "./types";
 
 /** Compile authored topology once, in memory, with the same validation used by initialization. */
 export function compileManifest<const M extends AuthoredManifest>(
-  manifest: M,
+  manifest: M & ManifestCountValidation<NoInfer<M>>,
 ): CompiledManifest<M> {
-  const source = manifest as unknown as GameTopologyManifest;
+  const source = structuredClone(manifest) as unknown as GameTopologyManifest;
   const analysis = analyzeManifest(source);
   const initial = materializeManifestTable({
     manifest: source,

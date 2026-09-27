@@ -1,3 +1,4 @@
+import type { validatedReducerDefinition } from "../model/definition";
 import type { ViewData } from "../model/spec/views";
 import { InteractionSteps } from "./steps";
 import type { ViewDefinition } from "../model";
@@ -335,7 +336,7 @@ export type GameAuthoring<Contract extends ContractWithPhases> = {
   >(
     definition: Omit<
       import("../model").ReducerGameDefinition<Contract, Definitions, View>,
-      "contract"
+      "contract" | typeof validatedReducerDefinition
     > & {
       phases: NoUndeclaredPhases<Contract, Definitions>;
     },
@@ -481,7 +482,7 @@ export function createContractAuthoring<
           PhaseMapOf<Contract>,
           ViewOfContract<Contract>
         >,
-        "contract"
+        "contract" | typeof validatedReducerDefinition
       >),
     }) as never;
   return {

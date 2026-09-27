@@ -157,3 +157,21 @@ describe("game.assemble phase names cross-check", () => {
     ).toThrow(/initialPhase 'ghost' is not declared/);
   });
 });
+
+test("assembly validates inline interactions even when authoring types were bypassed", () => {
+  const game = buildContract(["alpha"] as const);
+  const alpha = game.phase("alpha").define(autoPhase);
+  const malformed = {
+    ...alpha,
+    interactions: {
+      choose: { steps: { entries: [] } },
+    },
+  } as unknown as typeof alpha;
+  expect(() =>
+    game.assemble({
+      initial,
+      view: () => ({}),
+      phases: { alpha: malformed },
+    }),
+  ).toThrow("An interaction requires at least one step");
+});

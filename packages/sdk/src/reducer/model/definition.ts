@@ -311,11 +311,16 @@ export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
   ) => z.infer<HiddenSchemaOfContract<Contract>>;
 };
 
+export const validatedReducerDefinition: unique symbol = Symbol(
+  "validatedReducerDefinition",
+);
+
 export type ReducerGameDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   View extends ViewOfContract<Contract>,
 > = {
+  readonly [validatedReducerDefinition]: true;
   contract: Contract;
   initial?: InitialStateCallbacks<NoInfer<Contract>>;
   initialPhase?: keyof Definitions & string;

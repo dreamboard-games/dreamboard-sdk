@@ -92,6 +92,7 @@ export type {
 export { compileManifest } from "./reducer/manifest/compiler";
 export type {
   AuthoredManifest,
+  ValidatedManifest,
   CompiledManifest,
   ManifestIdsOf,
   ManifestTable,
