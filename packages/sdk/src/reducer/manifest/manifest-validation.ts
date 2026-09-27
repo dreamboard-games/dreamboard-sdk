@@ -77,41 +77,6 @@ function collectKeyIssues(
   return entries.flatMap(({ value, path }) => validateRecordKey(value, path));
 }
 
-function toHandleKey(input: string): string {
-  if (!/[_-]/.test(input)) {
-    return input.charAt(0).toLowerCase() + input.slice(1);
-  }
-  const [first = "", ...rest] = input.split(/[_-]/g).filter(Boolean);
-  return [
-    first.toLowerCase(),
-    ...rest.map((part) => {
-      const lower = part.toLowerCase();
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    }),
-  ].join("");
-}
-
-function collectHandleKeyCollisions(
-  values: readonly string[],
-  label: string,
-): string[] {
-  const idsByHandle = new Map<string, string[]>();
-  for (const value of values) {
-    const handle = toHandleKey(value);
-    idsByHandle.set(handle, [...(idsByHandle.get(handle) ?? []), value]);
-  }
-  return [...idsByHandle.entries()]
-    .filter(([, ids]) => ids.length > 1)
-    .map(
-      ([handle, ids]) =>
-        `${label} values ${ids.join(", ")} all generate handle '${handle}'.`,
-    );
-}
-
-function dedupeSorted(values: Iterable<string>): string[] {
-  return Array.from(new Set(values)).sort();
-}
-
 function renderCardInstanceIds(card: BoardCard): string[] {
   return card.count > 1
     ? Array.from(
@@ -858,14 +823,6 @@ function collectManifestRecordKeyIssues(
       ),
     ),
     ...collectBoardRecordKeyIssues(manifest),
-    ...collectHandleKeyCollisions(
-      dedupeSorted(manualCards.map(({ card }) => card.cardType ?? card.type)),
-      "Card type",
-    ),
-    ...collectHandleKeyCollisions(
-      dedupeSorted((manifest.zones ?? []).map((zone) => zone.id)),
-      "Zone",
-    ),
   ];
 }
 

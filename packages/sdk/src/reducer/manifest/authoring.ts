@@ -10,6 +10,7 @@ import type {
   GameTopologyManifest as ApiGameTopologyManifest,
   JsonValue,
 } from "../../shared/domain/contracts.js";
+import type { RuntimeIdsFromCount } from "./identity-types.js";
 
 type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
   sides?: ApiDieTypeSpec["sides"];
@@ -104,14 +105,6 @@ type ContainerIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
 > = ContainerIdOf<BoardOf<Manifest, CurrentBoardId>>;
-
-type RuntimeIdsFromCount<BaseId extends string, Count> = Count extends number
-  ? number extends Count
-    ? BaseId | `${BaseId}-${number}`
-    : Count extends 1
-      ? BaseId
-      : `${BaseId}-${OneTo<Count>}`
-  : BaseId;
 
 type CardRuntimeId<Card> = Card extends { type: infer TypeId extends string }
   ? RuntimeIdsFromCount<
