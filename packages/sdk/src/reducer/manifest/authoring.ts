@@ -109,9 +109,9 @@ type ContainerIdForBoard<
   CurrentBoardId extends BoardId<Manifest>,
 > = ContainerIdOf<BoardOf<Manifest, CurrentBoardId>>;
 
-type CardRuntimeId<Card> = Card extends { type: infer TypeId extends string }
+type CardRuntimeId<Card> = Card extends { id: infer Id extends string }
   ? RuntimeIdsFromCount<
-      TypeId,
+      Id,
       Card extends { count: infer Count extends number } ? Count : never
     >
   : never;
@@ -903,14 +903,12 @@ type AuthoredCardType<Card> = Card extends {
   cardType: infer Category extends string;
 }
   ? Category
-  : Card extends { type: infer Type extends string }
-    ? Type
-    : never;
+  : never;
 type TypedCard<
   Card,
   Manifest extends GameTopologyManifest,
   CardSchema,
-> = Card extends { type: string }
+> = Card extends { id: string; cardType: string }
   ? Omit<TypedVisibility<Card, Manifest>, "home" | "properties"> & {
       home?: TypedComponentHomeSpec<Manifest>;
       properties: CardSchema extends {

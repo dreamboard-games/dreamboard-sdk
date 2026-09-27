@@ -210,11 +210,8 @@ function isCardPropertySchemaVariants(
 function mergeSharedCardProperties(
   schema: CardPropertySchemaVariants,
   cardType: string,
-): ObjectSchema | null {
-  const variant = schema.variants[cardType];
-  if (!variant) {
-    return null;
-  }
+): ObjectSchema {
+  const variant = schema.variants[cardType]!;
   return {
     properties: {
       ...(schema.shared ?? {}),
@@ -249,10 +246,10 @@ function renderCardInstanceIds(card: BoardCard): string[] {
   if (card.count > 1) {
     return Array.from(
       { length: card.count },
-      (_, index) => `${card.type}-${index + 1}`,
+      (_, index) => `${card.id}-${index + 1}`,
     );
   }
-  return [card.type];
+  return [card.id];
 }
 
 function expandSeedIds(
@@ -750,9 +747,7 @@ export function analyzeManifest(
   const cardSets = manifest.cardSets.map(materializeCardSet);
   const cardSetIds = dedupeSorted(cardSets.map((cardSet) => cardSet.id));
   const cardTypes = dedupeSorted(
-    cardSets.flatMap((cardSet) =>
-      cardSet.cards.map((card) => card.cardType ?? card.type),
-    ),
+    cardSets.flatMap((cardSet) => cardSet.cards.map((card) => card.cardType)),
   );
   const cardIds = dedupeSorted(
     cardSets.flatMap((cardSet) => cardSet.cards.flatMap(renderCardInstanceIds)),
@@ -763,7 +758,7 @@ export function analyzeManifest(
     for (const card of cardSet.cards) {
       for (const cardId of renderCardInstanceIds(card)) {
         cardSetIdByCardId.set(cardId, cardSet.id);
-        cardTypeByCardId.set(cardId, card.cardType ?? card.type);
+        cardTypeByCardId.set(cardId, card.cardType);
       }
     }
   }
@@ -816,7 +811,7 @@ export function analyzeManifest(
       ) {
         continue;
       }
-      const cardType = card.cardType ?? card.type;
+      const cardType = card.cardType;
       const zoneIds = homeSharedZoneIdsByCardType.get(cardType) ?? [];
       zoneIds.push(card.home.zoneId);
       homeSharedZoneIdsByCardType.set(cardType, zoneIds);
@@ -1540,13 +1535,13 @@ export function materializeManifestTable(options: {
         cards[cardId] = {
           id: cardId,
           cardSetId: materializedCardSet.id,
-          cardType: card.cardType ?? card.type,
+          cardType: card.cardType,
           name: card.name,
           text: card.text,
           properties: {
             ...materializeCardPropertiesDefaults(
               materializedCardSet.cardSchema,
-              card.cardType ?? card.type,
+              card.cardType,
               analysis,
             ),
             ...(card.properties ?? {}),
@@ -1561,7 +1556,7 @@ export function materializeManifestTable(options: {
           resolvedHome,
           {
             path,
-            label: `Card '${card.type}' instance ${instanceIndex + 1}`,
+            label: `Card '${card.id}' instance ${instanceIndex + 1}`,
           },
         );
       }

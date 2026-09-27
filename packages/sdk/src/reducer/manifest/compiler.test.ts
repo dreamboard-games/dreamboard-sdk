@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
+import type { BoardCard } from "../../shared/domain/contracts.js";
+import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
 import { createTableQueries } from "../table-queries";
@@ -22,7 +24,13 @@ const manifest = {
         },
       },
       cards: [
-        { type: "ace", name: "Ace", count: 2, properties: { color: "red" } },
+        {
+          id: "ace",
+          cardType: "ace",
+          name: "Ace",
+          count: 2,
+          properties: { color: "red" },
+        },
       ],
     },
   ],
@@ -53,6 +61,7 @@ describe("in-memory manifests", () => {
         {
           ...manifest.cardSets[0],
           cardSchema: {
+            shared: { cost: { type: "integer", default: 2 } },
             variants: {
               "ranked-card": {
                 properties: {
@@ -64,9 +73,16 @@ describe("in-memory manifests", () => {
           },
           cards: [
             {
-              type: "ace",
+              id: "ace",
               cardType: "ranked-card",
               name: "Ace",
+              count: 2,
+              properties: { color: "red" },
+            },
+            {
+              id: "king",
+              cardType: "ranked-card",
+              name: "King",
               count: 1,
               properties: { color: "red" },
             },
@@ -74,16 +90,99 @@ describe("in-memory manifests", () => {
         },
       ],
     } as const);
-    expect(compiled.createInitialTable().cards.ace.cardType).toBe(
+    expect(compiled.createInitialTable().cards["ace-1"].cardType).toBe(
       "ranked-card",
     );
-    expect(compiled.createInitialTable().cards.ace.properties).toEqual({
+    expect(compiled.createInitialTable().cards["ace-1"].properties).toEqual({
       color: "red",
       points: 0,
+      cost: 2,
     });
+    expect(Object.keys(compiled.createInitialTable().cards)).toEqual([
+      "ace-1",
+      "ace-2",
+      "king",
+    ]);
+    expect(compiled.createInitialTable().cards.king.cardType).toBe(
+      "ranked-card",
+    );
     expect(compiled.literals.cardTypes).toEqual(["ranked-card"]);
-    expect(compiled.literals.cardTypeByCardId.ace).toBe("ranked-card");
+    expect(compiled.literals.cardTypeByCardId["ace-1"]).toBe("ranked-card");
+    expect(compiled.literals.cardTypeByCardId.king).toBe("ranked-card");
     expect(compiled.records).not.toHaveProperty("playerIds");
+  });
+  test.each([
+    { shared: undefined },
+    { shared: { points: { type: "integer" as const } } },
+  ])("rejects an unknown card category with shared schema %j", ({ shared }) => {
+    const invalidManifest = {
+      ...manifest,
+      cardSets: [
+        {
+          ...manifest.cardSets[0],
+          cardSchema: {
+            ...(shared ? { shared } : {}),
+            variants: {
+              ranked: { properties: { rank: { type: "integer" } } },
+            },
+          },
+          cards: [
+            {
+              id: "ace",
+              cardType: "missing",
+              name: "Ace",
+              count: 1,
+              properties: {},
+            },
+          ],
+        },
+      ],
+    } as const;
+    const error =
+      "manifest.cardSets[0].cards[0].cardType: Unknown card category 'missing' for card set 'cards'.";
+    expect(() => compileManifest(invalidManifest)).toThrow(error);
+    expect(() =>
+      createGame({
+        manifest: invalidManifest,
+        state: {
+          public: z.object({}),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+        phases: { play: z.object({}) },
+      }),
+    ).toThrow(error);
+  });
+  test.each([
+    {
+      card: { type: "ace", name: "Ace", count: 1, properties: {} },
+      error:
+        "manifest.cardSets[0].cards[0].id: Card definition id is required.",
+    },
+    {
+      card: { id: "ace", name: "Ace", count: 1, properties: {} },
+      error:
+        "manifest.cardSets[0].cards[0].cardType: Card category is required.",
+    },
+  ])("rejects missing authored card identity fields %#", ({ card, error }) => {
+    const invalidManifest: GameTopologyManifest = {
+      ...manifest,
+      cardSets: [
+        { ...manifest.cardSets[0], cards: [card as unknown as BoardCard] },
+      ],
+    };
+    expect(() => compileManifest(invalidManifest)).toThrow(error);
+    expect(() =>
+      createGame({
+        manifest: invalidManifest,
+        state: {
+          public: z.object({}),
+          private: z.object({}),
+          hidden: z.object({}),
+        },
+        phases: { play: z.object({}) },
+      }),
+    ).toThrow(error);
   });
   test("materializes fresh defaults for the active roster and preserves card field schemas", () => {
     const compiled = compileManifest(manifest);

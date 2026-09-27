@@ -19,7 +19,8 @@ const RANKS = [
 
 const cards = SUITS.flatMap((suit) =>
   RANKS.map((rank) => ({
-    type: `${suit}-${rank}` as const,
+    id: `${suit}-${rank}` as const,
+    cardType: `${suit}-${rank}` as const,
     name: `${rank} of ${suit}`,
     count: 1 as const,
     properties: { suit, rank },

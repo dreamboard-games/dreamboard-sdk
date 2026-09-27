@@ -234,9 +234,9 @@ export type ComponentVisibilitySpec = {
 
 export type BoardCard = {
   /**
-   * Card type identifier used to generate runtime CardIds. When count > 1, runtime IDs are generated as '{type}-1', '{type}-2', etc.
+   * Card definition identifier used to generate runtime CardIds. When count > 1, runtime IDs are generated as '{id}-1', '{id}-2', etc.
    */
-  type: string;
+  id: string;
   /**
    * Display name of the card
    */
@@ -254,9 +254,9 @@ export type BoardCard = {
    */
   count: number;
   /**
-   * Optional authored card category or subtype identifier
+   * Authored card category or subtype identifier
    */
-  cardType?: string;
+  cardType: string;
   /**
    * Optional per-card initial home. Omitted cards use their manual card set's
    * defaultHome. Compatibility declarations such as allowedCardSetIds never

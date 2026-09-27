@@ -210,6 +210,21 @@ handwritten structural lookalikes do not satisfy it. These brands record SDK
 construction checks, not correctness of arbitrary reducer callbacks, and do not
 replace validation of runtime commands or state. As with other TypeScript types,
 explicit assertions can bypass them; treat constructed definitions as immutable.
+Each card in a manual card set requires `id` for its definition and `cardType`
+for its category:
+
+```ts
+cards: [
+  { id: "ace", cardType: "ranked", name: "Ace", count: 2, properties: {} },
+  { id: "king", cardType: "ranked", name: "King", count: 1, properties: {} },
+];
+```
+
+These definitions create runtime IDs `ace-1`, `ace-2`, and `king`, all in the
+`ranked` category. When the card schema has `variants`, every `cardType` must
+name one of them; `compileManifest` and `createGame` reject unknown categories.
+To migrate an older manifest, replace each card's `type` with `id` and set
+`cardType` explicitly (often to the former `type` value).
 
 ## Reducer runner contract
 

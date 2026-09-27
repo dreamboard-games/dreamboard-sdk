@@ -167,7 +167,8 @@ test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids",
         },
         cards: [
           {
-            type: "ace",
+            id: "ace",
+            cardType: "ace",
             name: "Ace",
             count: 1,
             properties: {},
@@ -358,14 +359,16 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
         cardSchema: { properties: {} },
         cards: [
           {
-            type: "scout",
+            id: "scout",
+            cardType: "scout",
             name: "Scout",
             count: 1,
             home: { type: "zone", zoneId: "player-hand" },
             properties: {},
           },
           {
-            type: "camp",
+            id: "camp",
+            cardType: "camp",
             name: "Camp",
             count: 1,
             home: {
@@ -430,7 +433,8 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
         },
         cards: [
           {
-            type: "__proto__",
+            id: "__proto__",
+            cardType: "unsafe",
             name: "Unsafe Card",
             count: 1,
             properties: {},
@@ -461,7 +465,7 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
   });
 
   expect(validation.errors).toContain(
-    "manifest.cardSets[0].cards[0].type: '__proto__' is reserved and cannot be used as a generated record key.",
+    "manifest.cardSets[0].cards[0].id: '__proto__' is reserved and cannot be used as a generated record key.",
   );
   expect(validation.errors).toContain(
     "manifest.pieceSeeds[*][0]: '__proto__' is reserved and cannot be used as a generated record key.",
@@ -491,8 +495,20 @@ test("distinct literal ids remain distinct when their old handles matched", () =
         defaultHome: { type: "detached" },
         cardSchema: { properties: {} },
         cards: [
-          { type: "foo-bar", name: "Foo Bar", count: 1, properties: {} },
-          { type: "foo_bar", name: "Foo Bar 2", count: 1, properties: {} },
+          {
+            id: "foo-bar",
+            cardType: "foo-bar",
+            name: "Foo Bar",
+            count: 1,
+            properties: {},
+          },
+          {
+            id: "foo_bar",
+            cardType: "foo_bar",
+            name: "Foo Bar 2",
+            count: 1,
+            properties: {},
+          },
         ],
       },
     ],

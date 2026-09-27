@@ -17,7 +17,8 @@ const manifest = {
       },
       cards: [
         {
-          type: "ace",
+          id: "ace",
+          cardType: "ace",
           name: "Ace",
           count: 2,
           properties: { color: "red", points: 0 },
