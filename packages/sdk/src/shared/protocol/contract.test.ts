@@ -77,7 +77,7 @@ function baseFrame() {
 }
 
 describe("shared plugin runtime contract", () => {
-  test("strict frame and protocol schemas accept version 5 gameplay frames", () => {
+  test("strict frame and protocol schemas accept version 6 gameplay frames", () => {
     const frame = PluginGameplayFrameSchema.parse(baseFrame());
     expect(frame.basis.version).toBe(42);
 
@@ -92,12 +92,12 @@ describe("shared plugin runtime contract", () => {
       },
     } satisfies PluginProtocolEnvelope<unknown>);
 
-    expect(envelope.version).toBe(5);
+    expect(envelope.version).toBe(6);
     expect(() =>
       PluginGameplayFrameSchema.parse({ ...baseFrame(), syncId: 9 }),
     ).toThrow();
     expect(() =>
-      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 2 }),
+      HostToPluginEnvelopeSchema.parse({ ...envelope, version: 5 }),
     ).toThrow();
   });
 
