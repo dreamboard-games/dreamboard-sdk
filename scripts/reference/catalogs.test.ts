@@ -87,3 +87,92 @@ test("portable game preparation preserves authored aliases and resolves canonica
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test("copied starter resolves TypeScript settings without a repository parent", async () => {
+  const { cp } = await import("node:fs/promises");
+  const ts = (await import("typescript")).default;
+  const repository = path.resolve(import.meta.dirname, "../..");
+  const sandbox = await mkdtemp(path.join(tmpdir(), "standalone-starter-"));
+  try {
+    await cp(path.join(repository, "templates/game"), sandbox, {
+      recursive: true,
+      filter: (file) => !file.split(path.sep).includes("node_modules"),
+    });
+    const configPath = path.join(sandbox, "tsconfig.json");
+    const config = ts.readConfigFile(configPath, ts.sys.readFile);
+    const parsed = ts.parseJsonConfigFileContent(
+      config.config,
+      ts.sys,
+      sandbox,
+    );
+    assert.deepEqual(parsed.errors, []);
+    assert.equal(parsed.options.strict, true);
+    assert.deepEqual(parsed.options.paths, { "@game": ["./ui/game.tsx"] });
+    const before = await readFile(configPath, "utf8");
+    const catalogs = await readCatalogs(repository);
+    await prepareIsolatedReferenceGame(
+      { id: "template", dir: path.join(repository, "templates/game") },
+      sandbox,
+      "/tmp/candidate.tgz",
+      repository,
+      catalogs,
+    );
+    assert.equal(await readFile(configPath, "utf8"), before);
+    await assert.rejects(readFile(path.join(sandbox, "tsconfig.base.json")), {
+      code: "ENOENT",
+    });
+    const prepared = JSON.parse(
+      await readFile(path.join(sandbox, "package.json"), "utf8"),
+    );
+    const authored = JSON.parse(
+      await readFile(
+        path.join(repository, "templates/game/package.json"),
+        "utf8",
+      ),
+    );
+    for (const section of ["dependencies", "devDependencies"]) {
+      for (const [name, specifier] of Object.entries(authored[section])) {
+        if (typeof specifier === "string" && specifier.startsWith("catalog:"))
+          assert.equal(
+            prepared[section][name],
+            catalogVersion(catalogs, name, specifier),
+          );
+      }
+    }
+    assert.equal(
+      prepared.dependencies["@dreamboard-games/sdk"],
+      "file:/tmp/candidate.tgz",
+    );
+    prepared.devDependencies["undocumented-dependency"] = "catalog:";
+    await writeFile(
+      path.join(sandbox, "package.json"),
+      JSON.stringify(prepared),
+    );
+    await assert.rejects(
+      prepareIsolatedReferenceGame(
+        { id: "template", dir: path.join(repository, "templates/game") },
+        sandbox,
+        "/tmp/candidate.tgz",
+        repository,
+        catalogs,
+      ),
+      /documented preparation left unresolved dependency 'undocumented-dependency'/,
+    );
+    await writeFile(
+      configPath,
+      JSON.stringify({ ...config.config, extends: "../../tsconfig.base.json" }),
+    );
+    await assert.rejects(
+      prepareIsolatedReferenceGame(
+        { id: "template", dir: path.join(repository, "templates/game") },
+        sandbox,
+        "/tmp/candidate.tgz",
+        repository,
+        catalogs,
+      ),
+      /standalone starter must not require an external tsconfig base/,
+    );
+  } finally {
+    await rm(sandbox, { recursive: true, force: true });
+  }
+});

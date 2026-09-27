@@ -6,7 +6,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "check": "pnpm typecheck && pnpm test",
-    "dev": "vite --host 127.0.0.1"
+    "dev": "vite --host 127.0.0.1",
+    "build": "vite build"
   },
   "dependencies": {
     "@dreamboard-games/sdk": "workspace:*",
