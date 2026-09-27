@@ -1,4 +1,7 @@
-import { inputValueInDomain } from "../../../shared/input-domain";
+import {
+  inputValueInDomain,
+  inputValueKey,
+} from "../../../shared/input-domain";
 import { formatIssue } from "../../parse-utils";
 import { createStateQueries } from "../../table-queries";
 import type {
@@ -198,7 +201,7 @@ export function validateCollectorSelection(
   if (selection.distinct) {
     const seen = new Set<string>();
     for (const item of value) {
-      const key = stableValueKey(item);
+      const key = inputValueKey(item);
       if (seen.has(key)) {
         return {
           errorCode: "DUPLICATE_INPUT_VALUE",
@@ -209,18 +212,4 @@ export function validateCollectorSelection(
     }
   }
   return null;
-}
-
-function stableValueKey(value: unknown): string {
-  if (value === null) return "null";
-  switch (typeof value) {
-    case "string":
-      return `string:${value}`;
-    case "number":
-    case "boolean":
-    case "undefined":
-      return `${typeof value}:${String(value)}`;
-    default:
-      return `json:${JSON.stringify(value)}`;
-  }
 }

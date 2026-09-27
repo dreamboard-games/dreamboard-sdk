@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import type { InteractionDescriptor } from "../shared/protocol/frame.js";
 import { routeCardInputIntent } from "./interaction-router.js";
+import { toggleManyValue } from "./interaction-inputs.js";
 
 function descriptor(
   inputs: InteractionDescriptor["inputs"],
@@ -103,4 +104,13 @@ test("a card drop cannot prefill a future committed step", () => {
   expect(result.params).toEqual({ cardId: "card-1" });
   expect(draft).toEqual({ cardId: "card-1" });
   expect(result.readiness.ready).toBe(true);
+});
+
+test("many toggles retain object values and remove an equal selected object", () => {
+  const selection = { mode: "many" as const, min: 0, max: 2, distinct: true };
+  const value = { resourceId: "gold", amount: 1 };
+  const selected = toggleManyValue([], value, selection);
+  expect(selected).toEqual([value]);
+  expect(selected[0]).toBe(value);
+  expect(toggleManyValue(selected, { ...value }, selection)).toEqual([]);
 });
