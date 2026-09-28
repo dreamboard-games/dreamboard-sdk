@@ -160,8 +160,7 @@ export function boardFeature<G>(
     const result: BoardCollection<G> = Object.freeze({
       get<K extends IdOf<G, "boardId">>(id: K) {
         return byId.get(id) as
-          | (BoardBase<G, K> & { readonly game: CoreInstance<G> })
-          | undefined;
+          (BoardBase<G, K> & { readonly game: CoreInstance<G> }) | undefined;
       },
       getAll: () => Object.freeze(boards),
     });

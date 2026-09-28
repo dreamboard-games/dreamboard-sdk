@@ -414,8 +414,7 @@ function validateCommand(options: {
 
   let firstSeatError: ScenarioSchemaValueError | undefined;
   let firstIssue:
-    | { readonly path: PropertyKey[]; readonly message: string }
-    | undefined;
+    { readonly path: PropertyKey[]; readonly message: string } | undefined;
   for (const schema of schemas) {
     try {
       const resolved = resolveScenarioSeatReferences({

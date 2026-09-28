@@ -444,10 +444,7 @@ function validateCardImages(manifest: GameTopologyManifest): string[] {
 
 function homeTargetsBoard(
   home:
-    | BoardCard["home"]
-    | PieceSeedSpec["home"]
-    | DieSeedSpec["home"]
-    | undefined,
+    BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"] | undefined,
 ): home is Extract<
   NonNullable<BoardCard["home"] | PieceSeedSpec["home"] | DieSeedSpec["home"]>,
   { type: "space" | "container" | "edge" | "vertex" }

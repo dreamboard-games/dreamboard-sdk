@@ -53,11 +53,7 @@ export type InteractionAvailabilityArgs<
   };
 
 export type InteractionRuleValidationResult<ErrorCode extends string = string> =
-  | boolean
-  | string
-  | ValidationIssue<ErrorCode>
-  | null
-  | undefined;
+  boolean | string | ValidationIssue<ErrorCode> | null | undefined;
 
 export type InteractionRule<
   Collectors extends Record<string, InputCollector> = Record<
@@ -107,8 +103,7 @@ export type InteractionRule<
 };
 
 export type InteractionCommitPolicy =
-  | { mode: "manual" }
-  | { mode: "autoWhenReady" };
+  { mode: "manual" } | { mode: "autoWhenReady" };
 
 type HasManyInputCollector<Collectors extends Record<string, InputCollector>> =
   Extract<

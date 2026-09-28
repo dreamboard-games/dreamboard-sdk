@@ -24,8 +24,7 @@ type ManifestFormInputSchema =
   | z.ZodNullable<ManifestIdSchema<unknown>>;
 
 type DomainNumber<State extends CollectorState> =
-  | number
-  | ((context: DomainContext<State>) => number);
+  number | ((context: DomainContext<State>) => number);
 
 type ResourceMapInputOptions<State extends CollectorState> = {
   resources: ReadonlyArray<{

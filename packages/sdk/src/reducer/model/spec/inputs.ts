@@ -37,8 +37,7 @@ export type BoardInputCollectorMeta = {
 };
 
 export type RngInputCollectorMeta =
-  | { readonly rng: "d6"; readonly count: number }
-  | { readonly rng: "coin" };
+  { readonly rng: "d6"; readonly count: number } | { readonly rng: "coin" };
 
 export type InputCollectorMetaForKind<Kind extends InputCollectorKind> =
   Kind extends "card"
@@ -231,19 +230,19 @@ type ClientCollectorKeys<Collectors extends Record<string, InputCollector>> =
 type OptionalClientCollectorKeys<
   Collectors extends Record<string, InputCollector>,
 > = {
-  [K in ClientCollectorKeys<Collectors>]: undefined extends ClientCollectorValue<
-    Collectors[K]
-  >
-    ? K
-    : never;
+  [
+    K in ClientCollectorKeys<Collectors>
+  ]: undefined extends ClientCollectorValue<Collectors[K]> ? K : never;
 }[ClientCollectorKeys<Collectors>];
 
 export type ClientParamsOf<Collectors extends Record<string, InputCollector>> =
   {
-    [K in Exclude<
-      ClientCollectorKeys<Collectors>,
-      OptionalClientCollectorKeys<Collectors>
-    >]: ClientCollectorValue<Collectors[K]>;
+    [
+      K in Exclude<
+        ClientCollectorKeys<Collectors>,
+        OptionalClientCollectorKeys<Collectors>
+      >
+    ]: ClientCollectorValue<Collectors[K]>;
   } & {
     [K in OptionalClientCollectorKeys<Collectors>]?: Exclude<
       ClientCollectorValue<Collectors[K]>,

@@ -716,8 +716,7 @@ class Controller {
   }
   current(key: string) {
     return this.store.get().interactions.get(key) as unknown as
-      | InteractionObject
-      | undefined;
+      InteractionObject | undefined;
   }
   editable(key: string) {
     const interaction = this.current(key);
@@ -795,8 +794,7 @@ class Controller {
   }
   selectCard(id: string, explicit?: string) {
     const card = this.store.get().cards.get(id) as unknown as
-      | CardObject
-      | undefined;
+      CardObject | undefined;
     if (!card) return;
     let routes = card.routes.filter(
       (route) =>
@@ -1107,8 +1105,7 @@ class Controller {
     )
       return;
     const card = this.store.get().cards.get(cardId) as unknown as
-      | CardObject
-      | undefined;
+      CardObject | undefined;
     if (!card) return;
     const candidates = card.routes.flatMap((interaction) => {
       if (

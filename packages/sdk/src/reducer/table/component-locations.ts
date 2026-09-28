@@ -37,8 +37,7 @@ export function getComponentLocation<
   componentId: ComponentId,
 ): ComponentLocationOfTable<Table, ComponentId> | undefined {
   return table.componentLocations[componentId] as
-    | ComponentLocationOfTable<Table, ComponentId>
-    | undefined;
+    ComponentLocationOfTable<Table, ComponentId> | undefined;
 }
 
 export function getComponentDeckLocation<

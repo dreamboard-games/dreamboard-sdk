@@ -19,10 +19,7 @@ export type Brand<Value, Name extends string> = Value & {
 };
 
 export type RuntimeHandVisibilityMode =
-  | "all"
-  | "ownerOnly"
-  | "public"
-  | "hidden";
+  "all" | "ownerOnly" | "public" | "hidden";
 export type RuntimeDeckMap = Record<string, string[]>;
 // Records contain exactly the active roster; playerOrder owns traversal order.
 export type RuntimeHandMap = Record<string, Record<string, string[]>>;
@@ -88,8 +85,7 @@ export type RuntimeSquareSpaceState = RuntimeBoardSpaceState & {
   col: number;
 };
 export type RuntimeTiledSpaceState =
-  | RuntimeHexSpaceState
-  | RuntimeSquareSpaceState;
+  RuntimeHexSpaceState | RuntimeSquareSpaceState;
 export type RuntimeTiledEdgeState = {
   id: string;
   spaceIds: readonly string[];
@@ -132,11 +128,9 @@ export type RuntimeSquareBoardState = RuntimeTiledBoardBaseState & {
   vertices: RuntimeSquareVertexState[];
 };
 export type RuntimeTiledBoardState =
-  | RuntimeHexBoardState
-  | RuntimeSquareBoardState;
+  RuntimeHexBoardState | RuntimeSquareBoardState;
 export type RuntimeBoardState =
-  | RuntimeGenericBoardState
-  | RuntimeTiledBoardState;
+  RuntimeGenericBoardState | RuntimeTiledBoardState;
 export type RuntimeBoardCollections = {
   byId: Record<string, RuntimeBoardState>;
   hex: Record<string, RuntimeHexBoardState>;

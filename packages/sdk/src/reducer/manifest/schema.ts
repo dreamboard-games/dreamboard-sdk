@@ -8,13 +8,9 @@ import type { ManifestIds } from "../model";
 import type { analyzeManifest } from "./materialize";
 type Analysis = ReturnType<typeof analyzeManifest>;
 export type RuntimeManifestIds = {
-  [K in keyof ManifestIds<
-    string,
-    string,
-    string,
-    string,
-    string
-  >]: z.ZodType<string>;
+  [
+    K in keyof ManifestIds<string, string, string, string, string>
+  ]: z.ZodType<string>;
 };
 type Ids = RuntimeManifestIds;
 export function createTableSchema(analysis: Analysis, ids: Ids) {

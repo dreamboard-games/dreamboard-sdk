@@ -28,9 +28,7 @@ export function definePhase<Contract extends AnyReducerGameContract>() {
       >
     > = Record<string, never>,
     const Kind extends "player" | "simultaneousPlayer" | "auto" =
-      | "player"
-      | "simultaneousPlayer"
-      | "auto",
+      "player" | "simultaneousPlayer" | "auto",
   >(
     definition: PhaseDefinition<
       PhaseStateSchema,

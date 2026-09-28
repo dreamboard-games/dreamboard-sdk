@@ -246,9 +246,7 @@ export type PhaseAuthoring<
       BoundManifest<Contract>
     > = Record<string, never>,
     const Kind extends "player" | "simultaneousPlayer" | "auto" =
-      | "player"
-      | "simultaneousPlayer"
-      | "auto",
+      "player" | "simultaneousPlayer" | "auto",
   >(
     definition: Omit<
       PhaseDefinition<

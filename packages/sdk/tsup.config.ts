@@ -14,7 +14,10 @@ export default defineConfig((options) => ({
     __DREAMBOARD_SDK_VERSION__: JSON.stringify(packageManifest.version),
   },
   outDir: "dist",
-  dts: true,
+  dts: {
+    // tsup injects baseUrl into declaration builds; TypeScript 6 deprecates it.
+    compilerOptions: { ignoreDeprecations: "6.0" },
+  },
   // The first watch build runs while Vite/Storybook starts; keep the initial dist available.
   clean: !options.watch,
   sourcemap: true,

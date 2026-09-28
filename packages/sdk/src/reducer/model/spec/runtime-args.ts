@@ -88,10 +88,7 @@ export type ActorSelectorArgs<
 export type ActorSelection<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
 > =
-  | PlayerIdOfState<State>
-  | readonly PlayerIdOfState<State>[]
-  | null
-  | undefined;
+  PlayerIdOfState<State> | readonly PlayerIdOfState<State>[] | null | undefined;
 
 export type ActorSelector<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },

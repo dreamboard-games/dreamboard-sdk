@@ -4,7 +4,7 @@
     "jsx": "react-jsx",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./ui/*"],
       "@game": ["./ui/game.ts"]

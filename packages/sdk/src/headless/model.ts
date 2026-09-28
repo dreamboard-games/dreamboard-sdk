@@ -30,7 +30,9 @@ export type InteractionKey<G> = unknown extends G
   : [PhaseNamesOfDefinition<G>] extends [never]
     ? string
     : {
-        [P in PhaseNamesOfDefinition<G>]: `${P}.${InteractionIdOfDefinitionPhase<G, P>}`;
+        [
+          P in PhaseNamesOfDefinition<G>
+        ]: `${P}.${InteractionIdOfDefinitionPhase<G, P>}`;
       }[PhaseNamesOfDefinition<G>];
 export type InteractionParams<
   G,

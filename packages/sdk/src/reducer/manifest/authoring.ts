@@ -395,8 +395,7 @@ type Negate<Count extends number> = Count extends 0
       ? Value
       : `-${Count}`}`>;
 type AddPositive<Left extends number, Right extends number> = number extends
-  | Left
-  | Right
+  Left | Right
   ? number
   : [...BuildTuple<Left>, ...BuildTuple<Right>]["length"] & number;
 type ComparePositive<
@@ -420,8 +419,7 @@ type SubtractPositive<
     ? Rest["length"] & number
     : never;
 type AddSigned<Left extends number, Right extends number> = number extends
-  | Left
-  | Right
+  Left | Right
   ? number
   : IsNegative<Left> extends IsNegative<Right>
     ? IsNegative<Left> extends true
@@ -478,21 +476,19 @@ type SquareEdgeGeometryKey<
 type DerivedSquareEdgeIdOf<BoardLike> =
   SquareSpaceOf<BoardLike> extends infer Space
     ? Space extends { row: number; col: number }
-      ?
-          | `square-edge:${SquareEdgeGeometryKey<Space, "north">}`
-          | `square-edge:${SquareEdgeGeometryKey<Space, "east">}`
-          | `square-edge:${SquareEdgeGeometryKey<Space, "south">}`
-          | `square-edge:${SquareEdgeGeometryKey<Space, "west">}`
+      ? | `square-edge:${SquareEdgeGeometryKey<Space, "north">}`
+        | `square-edge:${SquareEdgeGeometryKey<Space, "east">}`
+        | `square-edge:${SquareEdgeGeometryKey<Space, "south">}`
+        | `square-edge:${SquareEdgeGeometryKey<Space, "west">}`
       : never
     : never;
 type DerivedSquareVertexIdOf<BoardLike> =
   SquareSpaceOf<BoardLike> extends infer Space
     ? Space extends { row: number; col: number }
-      ?
-          | `square-vertex:${SquareCornerGeometryKey<Space, "nw">}`
-          | `square-vertex:${SquareCornerGeometryKey<Space, "ne">}`
-          | `square-vertex:${SquareCornerGeometryKey<Space, "se">}`
-          | `square-vertex:${SquareCornerGeometryKey<Space, "sw">}`
+      ? | `square-vertex:${SquareCornerGeometryKey<Space, "nw">}`
+        | `square-vertex:${SquareCornerGeometryKey<Space, "ne">}`
+        | `square-vertex:${SquareCornerGeometryKey<Space, "se">}`
+        | `square-vertex:${SquareCornerGeometryKey<Space, "sw">}`
       : never
     : never;
 type DerivedHexEdgeIdOf<BoardLike> = BoardLike extends {

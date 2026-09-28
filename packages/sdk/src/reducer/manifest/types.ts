@@ -135,8 +135,7 @@ type PropertyValue<P, M> = PropertySchema extends P
                     : never
     : never;
 type PropertyOutput<P, M> =
-  | PropertyValue<P, M>
-  | (P extends { nullable: true } ? null : never);
+  PropertyValue<P, M> | (P extends { nullable: true } ? null : never);
 type OptionalKeys<P> = {
   [K in keyof P]: P[K] extends { optional: true }
     ? P[K] extends { default: unknown }
@@ -280,10 +279,9 @@ type InferredBoards<M> = {
     >;
   };
   square: {
-    [B in Extract<
-      Boards<M>,
-      { layout: "square" }
-    > as RuntimeBoardId<B>]: Extract<BoardState<M, B>, RuntimeSquareBoardState>;
+    [
+      B in Extract<Boards<M>, { layout: "square" }> as RuntimeBoardId<B>
+    ]: Extract<BoardState<M, B>, RuntimeSquareBoardState>;
   };
   network: Record<string, RuntimeRecord>;
   track: Record<string, RuntimeRecord>;

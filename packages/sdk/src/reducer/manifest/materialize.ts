@@ -116,9 +116,7 @@ interface AnalyzedSquareBoard {
 }
 
 type AnalyzedBoard =
-  | AnalyzedGenericBoard
-  | AnalyzedHexBoard
-  | AnalyzedSquareBoard;
+  AnalyzedGenericBoard | AnalyzedHexBoard | AnalyzedSquareBoard;
 
 interface ManifestAnalysis {
   manifest: GameTopologyManifest;

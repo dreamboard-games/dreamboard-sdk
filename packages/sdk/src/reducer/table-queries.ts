@@ -114,8 +114,7 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
         (table.cards[componentId] ??
           table.pieces[componentId] ??
           table.dice[componentId]) as
-          | ComponentDataOfTable<Table, ComponentId>
-          | undefined,
+          ComponentDataOfTable<Table, ComponentId> | undefined,
       location: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentLocation(table, componentId),

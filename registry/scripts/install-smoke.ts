@@ -61,8 +61,8 @@ try {
       type: "module",
       packageManager: "pnpm@10.4.1",
       dependencies: {
-        react: "19.2.7",
-        "react-dom": "19.2.7",
+        react: "19.3.0",
+        "react-dom": "19.3.0",
         ...(bound
           ? {
               "@dreamboard-games/sdk": `file:${sdkArchive}`,
@@ -71,10 +71,10 @@ try {
           : {}),
       },
       devDependencies: {
-        ...(bound ? { "@playwright/test": "1.60.0" } : {}),
-        typescript: "5.9.3",
-        "@types/react": "19.2.14",
-        "@types/react-dom": "19.2.3",
+        ...(bound ? { "@playwright/test": "1.63.0" } : {}),
+        typescript: "6.0.3",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
       },
     }),
   );
@@ -89,11 +89,14 @@ try {
         strict: true,
         noEmit: true,
         skipLibCheck: true,
-        baseUrl: ".",
         paths: { "@/*": ["./src/*"], "@game": ["./src/game.ts"] },
       },
       include: ["src"],
     }),
+  );
+  await writeFile(
+    path.join(project, "src/styles.d.ts"),
+    'declare module "*.css";\n',
   );
   await writeFile(
     path.join(project, "src/style.css"),

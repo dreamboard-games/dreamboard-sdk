@@ -446,8 +446,7 @@ export type HexSpaceSpec = {
  * Hex edge identified by two adjacent hex spaces
  */
 export type HexEdgeRef =
-  | { spaces: [string, string] }
-  | { space: string; side: 0 | 1 | 2 | 3 | 4 | 5 };
+  { spaces: [string, string] } | { space: string; side: 0 | 1 | 2 | 3 | 4 | 5 };
 
 /**
  * Authored metadata attached to one derived hex edge

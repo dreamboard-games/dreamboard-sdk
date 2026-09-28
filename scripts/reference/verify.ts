@@ -154,9 +154,11 @@ export async function prepareIsolatedReferenceGame(
   };
   await writeFile(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
   await unlink(path.join(sandbox, "pnpm-lock.yaml")).catch((error: unknown) => {
-    if (
-      !(error instanceof Error && "code" in error && error.code === "ENOENT")
-    ) {
+    if (!(
+      error instanceof Error &&
+      "code" in error &&
+      error.code === "ENOENT"
+    )) {
       throw error;
     }
   });
