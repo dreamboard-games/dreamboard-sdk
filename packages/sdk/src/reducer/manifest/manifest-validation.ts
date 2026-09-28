@@ -429,18 +429,16 @@ const CARD_IMAGE_PATH =
 /** Card images are repository files that hosts publish and deliver offline. */
 function validateCardImages(manifest: GameTopologyManifest): string[] {
   return manifest.cardSets.flatMap((cardSet, cardSetIndex) =>
-    cardSet.type === "manual"
-      ? cardSet.cards.flatMap((card, cardIndex) =>
-          (["frontImage", "backImage"] as const).flatMap((key) => {
-            const image = card[key];
-            return image === undefined || CARD_IMAGE_PATH.test(image)
-              ? []
-              : [
-                  `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].${key}: '${image}' must be an image path under assets/, such as assets/cards/front.webp.`,
-                ];
-          }),
-        )
-      : [],
+    cardSet.cards.flatMap((card, cardIndex) =>
+      (["frontImage", "backImage"] as const).flatMap((key) => {
+        const image = card[key];
+        return image === undefined || CARD_IMAGE_PATH.test(image)
+          ? []
+          : [
+              `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].${key}: '${image}' must be an image path under assets/, such as assets/cards/front.webp.`,
+            ];
+      }),
+    ),
   );
 }
 
@@ -842,14 +840,9 @@ function validateCounts(manifest: GameTopologyManifest): string[] {
     }
   };
   manifest.cardSets.forEach((set, setIndex) => {
-    if (set.type === "manual") {
-      set.cards.forEach((card, index) =>
-        check(
-          card.count,
-          `manifest.cardSets[${setIndex}].cards[${index}].count`,
-        ),
-      );
-    }
+    set.cards.forEach((card, index) =>
+      check(card.count, `manifest.cardSets[${setIndex}].cards[${index}].count`),
+    );
   });
   for (const family of ["pieceSeeds", "dieSeeds"] as const) {
     manifest[family]?.forEach((seed, index) => {

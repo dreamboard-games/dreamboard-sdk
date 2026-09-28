@@ -30,7 +30,6 @@ import {
 } from "../../shared/hex-board.js";
 
 import { assertValidManifest } from "./manifest-validation.js";
-import { validateManifestAuthoring } from "./manifest-validation.js";
 
 interface AnalyzedGenericBoard {
   layout: "generic";

@@ -570,9 +570,10 @@ test("validateManifestAuthoring warns when board-scoped category type ids are am
 });
 
 test("validateManifestAuthoring requires card images under assets/", () => {
-  const card = (type: string, frontImage: string) => ({
-    type,
-    name: type,
+  const card = (id: string, frontImage: string) => ({
+    id,
+    cardType: id,
+    name: id,
     count: 1,
     frontImage,
     backImage: "assets/cards/back.webp",
@@ -582,7 +583,6 @@ test("validateManifestAuthoring requires card images under assets/", () => {
     ...BASE_MANIFEST,
     cardSets: [
       {
-        type: "manual",
         id: "cards",
         name: "Cards",
         defaultHome: { type: "detached" },
