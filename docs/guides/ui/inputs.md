@@ -19,3 +19,5 @@ collector. An ordinary array-valued form input still selects a complete array.
 `getInputs()` and interaction lists preserve discriminated unions, so narrowing by `key`
 retains the matching value type. Hidden cards similarly narrow by `hidden`: visible cards
 have a non-null view, and hidden cards have `view: null`.
+
+`many(collector, options)` removes the wrapped collector's static and dynamic defaults. The resulting input starts without a value; selections build its array draft.

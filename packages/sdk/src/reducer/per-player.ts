@@ -133,24 +133,35 @@ export function parseBoardRefKey(key: string): BoardRef | null {
  * Feed a manifest-scoped `baseIdSchema` and `playerIdSchema` to bind
  * the ref to a specific workspace.
  */
+export function boardRefSchema(): z.ZodType<BoardRef>;
+export function boardRefSchema<BaseId extends string>(options: {
+  readonly baseIdSchema: z.ZodType<BaseId>;
+  readonly playerIdSchema?: never;
+}): z.ZodType<BoardRef<BaseId>>;
+export function boardRefSchema<Id extends PlayerId>(options: {
+  readonly baseIdSchema?: never;
+  readonly playerIdSchema: z.ZodType<Id>;
+}): z.ZodType<BoardRef<string, Id>>;
 export function boardRefSchema<
-  BaseId extends string = string,
-  Id extends PlayerId = PlayerId,
->(
+  BaseId extends string,
+  Id extends PlayerId,
+>(options: {
+  readonly baseIdSchema: z.ZodType<BaseId>;
+  readonly playerIdSchema: z.ZodType<Id>;
+}): z.ZodType<BoardRef<BaseId, Id>>;
+export function boardRefSchema(
   options: {
-    readonly baseIdSchema?: z.ZodType<BaseId>;
-    readonly playerIdSchema?: z.ZodType<Id>;
+    readonly baseIdSchema?: z.ZodType<string>;
+    readonly playerIdSchema?: z.ZodType<PlayerId>;
   } = {},
-): z.ZodType<BoardRef<BaseId, Id>> {
-  const baseSchema =
-    options.baseIdSchema ?? (z.string().min(1) as unknown as z.ZodType<BaseId>);
+): z.ZodType<BoardRef> {
+  const baseSchema = options.baseIdSchema ?? z.string().min(1);
   const playerSchema =
-    options.playerIdSchema ?? (z.string().min(1) as unknown as z.ZodType<Id>);
-  const shared = z.strictObject({ baseId: baseSchema });
-  const perPlayer = z.strictObject({ baseId: baseSchema, seat: playerSchema });
-  return z.union([perPlayer, shared]) as unknown as z.ZodType<
-    BoardRef<BaseId, Id>
-  >;
+    options.playerIdSchema ?? z.string().min(1).transform(asPlayerId);
+  return z.union([
+    z.strictObject({ baseId: baseSchema, seat: playerSchema }),
+    z.strictObject({ baseId: baseSchema }),
+  ]);
 }
 
 /** True when `ref` targets a shared board (no seat). */
