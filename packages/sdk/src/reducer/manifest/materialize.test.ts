@@ -135,30 +135,40 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
           defaultHome: { type: "zone", zoneId: "shared-deck" },
           cardSchema: { properties: {} },
           cards: [
-            { type: "omitted", name: "Omitted", count: 1, properties: {} },
             {
-              type: "detached",
+              id: "omitted",
+              cardType: "omitted",
+              name: "Omitted",
+              count: 1,
+              properties: {},
+            },
+            {
+              id: "detached",
+              cardType: "detached",
               name: "Detached",
               count: 1,
               home: { type: "detached" },
               properties: {},
             },
             {
-              type: "zone-card",
+              id: "zone-card",
+              cardType: "zone-card",
               name: "Zone",
               count: 1,
               home: { type: "zone", zoneId: "shared-deck" },
               properties: {},
             },
             {
-              type: "space-card",
+              id: "space-card",
+              cardType: "space-card",
               name: "Space",
               count: 1,
               home: { type: "space", boardId: "square-board", spaceId: "a1" },
               properties: {},
             },
             {
-              type: "container-card",
+              id: "container-card",
+              cardType: "container-card",
               name: "Container",
               count: 1,
               home: {
@@ -169,7 +179,8 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
               properties: {},
             },
             {
-              type: "edge-card",
+              id: "edge-card",
+              cardType: "edge-card",
               name: "Edge",
               count: 1,
               home: {
@@ -180,7 +191,8 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
               properties: {},
             },
             {
-              type: "vertex-card",
+              id: "vertex-card",
+              cardType: "vertex-card",
               name: "Vertex",
               count: 1,
               home: {
@@ -191,7 +203,8 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
               properties: {},
             },
             {
-              type: "slot-card",
+              id: "slot-card",
+              cardType: "slot-card",
               name: "Slot",
               count: 1,
               home: {
@@ -328,7 +341,8 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
         cardSchema: { properties: {} },
         cards: [
           {
-            type: "__proto__",
+            id: "__proto__",
+            cardType: "unsafe",
             name: "Unsafe Card",
             count: 1,
             properties: {},

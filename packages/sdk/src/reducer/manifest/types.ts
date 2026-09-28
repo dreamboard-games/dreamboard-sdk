@@ -52,8 +52,8 @@ type SeedIds<S> = S extends { typeId: infer T extends string }
       Get<S, "count">
     >
   : never;
-type CardIds<C> = C extends { type: infer T extends string }
-  ? RuntimeIdsFromCount<T, Get<C, "count">>
+type CardIds<C> = C extends { id: infer I extends string }
+  ? RuntimeIdsFromCount<I, Get<C, "count">>
   : never;
 type StandardSuit = "SPADES" | "HEARTS" | "CLUBS" | "DIAMONDS";
 type StandardRank =
@@ -76,7 +76,11 @@ type ResolvedCardSet<S> = S extends {
 }
   ? Omit<S, "type"> & {
       type: "manual";
-      cards: readonly { type: `${StandardSuit}_${StandardRank}`; count: 1 }[];
+      cards: readonly {
+        id: `${StandardSuit}_${StandardRank}`;
+        cardType: `${StandardSuit}_${StandardRank}`;
+        count: 1;
+      }[];
       cardSchema: {
         properties: {
           suit: { type: "enum"; enums: readonly StandardSuit[] };
@@ -99,9 +103,7 @@ type RuntimeBoardId<B> = B extends { id: infer I extends string }
     ? `${I}:${string}`
     : I
   : never;
-type CardTypeOf<C> = C extends { cardType: infer T extends string }
-  ? T
-  : Extract<Get<C, "type">, string>;
+type CardTypeOf<C> = C extends { cardType: infer T extends string } ? T : never;
 export type ManifestIdsOf<M> = {
   playerId: PlayerId;
   phaseName: string;

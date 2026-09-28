@@ -81,9 +81,9 @@ function renderCardInstanceIds(card: BoardCard): string[] {
   return card.count > 1
     ? Array.from(
         { length: card.count },
-        (_, index) => `${card.type}-${index + 1}`,
+        (_, index) => `${card.id}-${index + 1}`,
       )
-    : [card.type];
+    : [card.id];
 }
 
 function collectPropertySchemaKeyIssues(
@@ -427,7 +427,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
       : []
     ).entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
-      validateCardHome(card.home, path, `Card '${card.type}'`);
+      validateCardHome(card.home, path, `Card '${card.id}'`);
     }
   }
 
@@ -758,8 +758,8 @@ function collectManifestRecordKeyIssues(
       })),
       ...manualCards.flatMap(({ card, cardId, cardIndex, cardSetIndex }) => [
         {
-          value: card.type,
-          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].type`,
+          value: card.id,
+          path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].id`,
         },
         {
           value: card.cardType,
@@ -890,7 +890,7 @@ export function validateManifestAuthoring(
           ? cardSet.cards.flatMap((card, cardIndex) =>
               renderCardInstanceIds(card).map((cardId) => ({
                 id: cardId,
-                path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].type`,
+                path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].id`,
               })),
             )
           : [],
@@ -973,6 +973,27 @@ export function validateManifestAuthoring(
   errors.push(...validateSlotHostsAndHomes(manifest));
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
+  for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
+    if (cardSet.type !== "manual") {
+      continue;
+    }
+    for (const [cardIndex, card] of cardSet.cards.entries()) {
+      const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
+      if (typeof card.id !== "string" || card.id.length === 0) {
+        errors.push(`${path}.id: Card definition id is required.`);
+      }
+      if (typeof card.cardType !== "string" || card.cardType.length === 0) {
+        errors.push(`${path}.cardType: Card category is required.`);
+      } else if (
+        "variants" in cardSet.cardSchema &&
+        !Object.hasOwn(cardSet.cardSchema.variants, card.cardType)
+      ) {
+        errors.push(
+          `${path}.cardType: Unknown card category '${card.cardType}' for card set '${cardSet.id}'.`,
+        );
+      }
+    }
+  }
   errors.push(...validateHexBoardVertexRefs(manifest));
 
   return {

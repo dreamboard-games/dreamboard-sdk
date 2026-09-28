@@ -19,7 +19,8 @@ defineTopologyManifest({
       },
       cards: [
         {
-          type: "copper",
+          id: "copper",
+          cardType: "copper",
           name: "Copper",
           count: 60,
           properties: {
@@ -30,7 +31,8 @@ defineTopologyManifest({
           },
         },
         {
-          type: "estate",
+          id: "estate",
+          cardType: "estate",
           name: "Estate",
           count: 24,
           properties: {
@@ -78,7 +80,8 @@ defineTopologyManifest({
       },
       cards: [
         {
-          type: "copper",
+          id: "copper",
+          cardType: "copper",
           name: "Copper",
           count: 60,
           properties: { coins: 1, cost: 0 },
@@ -130,13 +133,14 @@ defineTopologyManifest({
       },
       cards: [
         {
-          type: "copper",
+          id: "copper",
+          cardType: "copper",
           name: "Copper",
           count: 60,
           properties: { coins: 1, cost: 0 },
         },
         {
-          type: "estate",
+          id: "estate",
           cardType: "ranked-card",
           name: "Estate",
           count: 24,
@@ -176,7 +180,8 @@ defineTopologyManifest({
       },
       cards: [
         {
-          type: "copper",
+          id: "copper",
+          cardType: "copper",
           name: "Copper",
           count: 60,
           properties: { coins: 1 },
@@ -213,7 +218,8 @@ defineTopologyManifest({
       },
       cards: [
         {
-          type: "copper",
+          id: "copper",
+          cardType: "copper",
           name: "Copper",
           count: 60,
           properties: {},

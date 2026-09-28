@@ -52,7 +52,7 @@ export function createStandard52CardDeck(
   for (const suit of suits) {
     for (const rank of ranks) {
       cards.push({
-        type: `${suit}_${rank}`,
+        id: `${suit}_${rank}`,
         name: `${rank} of ${suit}`,
         imageUrl: `/cards/${suit.toLowerCase()}_${rank.toLowerCase()}.png`,
         text: `A playing card: ${rank} of ${suit}. Value: ${getBigTwoCardValue(rank)}, Suit value: ${getSuitValue(suit)}`,

@@ -17,19 +17,22 @@ const manifest = defineTopologyManifest({
       },
       cards: [
         {
-          type: "omitted-count",
+          id: "omitted-count",
+          cardType: "reference",
           name: "Omitted Count",
           count: 1,
           properties: { piece: "worker", die: "roll" },
         },
         {
-          type: "explicit-count",
+          id: "explicit-count",
+          cardType: "reference",
           name: "Explicit Count",
           count: 1,
           properties: { piece: "single-worker", die: "single-roll" },
         },
         {
-          type: "multiple-copies",
+          id: "multiple-copies",
+          cardType: "reference",
           name: "Multiple Copies",
           count: 1,
           properties: { piece: "workers-2", die: "rolls-3" },
