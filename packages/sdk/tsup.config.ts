@@ -5,7 +5,7 @@ const packageManifest = JSON.parse(
   readFileSync(new URL("./package.json", import.meta.url), "utf8"),
 ) as { version: string };
 
-export default defineConfig({
+export default defineConfig((options) => ({
   entry: ["src/index.ts", "src/react.ts", "src/reducer.ts", "src/testing.ts"],
   format: ["esm"],
   platform: "neutral",
@@ -15,8 +15,9 @@ export default defineConfig({
   },
   outDir: "dist",
   dts: true,
-  clean: true,
+  // The first watch build runs while Vite/Storybook starts; keep the initial dist available.
+  clean: !options.watch,
   sourcemap: true,
   splitting: true,
   external: ["react", "react-dom", "@tanstack/react-store", "zod"],
-});
+}));
