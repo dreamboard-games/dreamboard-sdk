@@ -143,8 +143,7 @@ export type ReducerSessionState<
 // --- Results ---
 
 export type ReducerValidationResult =
-  | { valid: true }
-  | { valid: false; errorCode: string; message?: string };
+  { valid: true } | { valid: false; errorCode: string; message?: string };
 
 export type ReducerReject = {
   type: "reject";

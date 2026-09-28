@@ -307,12 +307,10 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     const projection = this.project(playerId);
     const refs =
       (projection.seats?.[playerId]?.availableInteractionRefs as
-        | readonly string[]
-        | undefined) ?? [];
+        readonly string[] | undefined) ?? [];
     const interactionsByRef =
       (projection.interactionsByRef as
-        | Readonly<Record<string, InteractionDescriptorLike>>
-        | undefined) ?? {};
+        Readonly<Record<string, InteractionDescriptorLike>> | undefined) ?? {};
     return structuredClone(
       refs.flatMap((ref) => {
         const descriptor = interactionsByRef[ref];
@@ -679,12 +677,10 @@ function descriptorsForPlayer(
 ): InteractionDescriptorLike[] {
   const refs =
     (projection.seats[playerId]?.availableInteractionRefs as
-      | readonly string[]
-      | undefined) ?? [];
+      readonly string[] | undefined) ?? [];
   const interactionsByRef =
     (projection.interactionsByRef as
-      | Readonly<Record<string, InteractionDescriptorLike>>
-      | undefined) ?? {};
+      Readonly<Record<string, InteractionDescriptorLike>> | undefined) ?? {};
   return refs.flatMap((ref) => {
     const descriptor = interactionsByRef[ref];
     return descriptor ? [descriptor] : [];

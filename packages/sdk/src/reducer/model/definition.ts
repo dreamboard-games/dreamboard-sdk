@@ -534,11 +534,13 @@ type ParamsOfCollectors<Collectors> =
 type ClientParamsOfCollectors<Collectors> =
   Collectors extends Record<string, InputCollector>
     ? {
-        [K in keyof Collectors as Collectors[K] extends {
-          readonly kind: "rng";
-        }
-          ? never
-          : K]: Collectors[K] extends InputCollector<infer S>
+        [
+          K in keyof Collectors as Collectors[K] extends {
+            readonly kind: "rng";
+          }
+            ? never
+            : K
+        ]: Collectors[K] extends InputCollector<infer S>
           ? S extends SchemaLike<infer V>
             ? V
             : never
@@ -551,10 +553,9 @@ type InteractionIdsWithCollectorKindOfDefinitionPhase<
   PhaseName extends PhaseNamesOfDefinition<Definition>,
   Kind extends string,
 > = {
-  [InteractionId in InteractionIdOfDefinitionPhase<
-    Definition,
-    PhaseName
-  >]: InteractionSpecByNameOfDefinitionPhase<
+  [
+    InteractionId in InteractionIdOfDefinitionPhase<Definition, PhaseName>
+  ]: InteractionSpecByNameOfDefinitionPhase<
     Definition,
     PhaseName,
     InteractionId
@@ -579,7 +580,9 @@ type QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
     : never;
 
 export type BoardInteractionKeyOfDefinition<Definition> = {
-  [PhaseName in PhaseNamesOfDefinition<Definition>]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
+  [
+    PhaseName in PhaseNamesOfDefinition<Definition>
+  ]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
     Definition,
     PhaseName,
     "board-edge" | "board-space" | "board-tile" | "board-vertex"
@@ -587,7 +590,9 @@ export type BoardInteractionKeyOfDefinition<Definition> = {
 }[PhaseNamesOfDefinition<Definition>];
 
 export type CardInteractionKeyOfDefinition<Definition> = {
-  [PhaseName in PhaseNamesOfDefinition<Definition>]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
+  [
+    PhaseName in PhaseNamesOfDefinition<Definition>
+  ]: QualifiedInteractionIdsWithCollectorKindOfDefinitionPhase<
     Definition,
     PhaseName,
     "card"

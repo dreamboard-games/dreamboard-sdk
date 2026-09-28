@@ -42,11 +42,7 @@ export type InteractionExplanationLike = {
   phase: string;
   step: string | null;
   availability:
-    | "available"
-    | "notYourTurn"
-    | "wrongPhase"
-    | "wrongStep"
-    | "blocked";
+    "available" | "notYourTurn" | "wrongPhase" | "wrongStep" | "blocked";
   rules: ReadonlyArray<{
     ruleId: string;
     outcome: "passed" | "failed" | "notEvaluated";
@@ -128,10 +124,9 @@ type OptionalScenarioObjectKeys<Shape extends z.core.$ZodShape> = {
 }[keyof Shape];
 
 type ScenarioObjectOutput<Shape extends z.core.$ZodShape> = {
-  readonly [Key in Exclude<
-    keyof Shape,
-    OptionalScenarioObjectKeys<Shape>
-  >]: ScenarioSchemaOutput<Shape[Key]>;
+  readonly [
+    Key in Exclude<keyof Shape, OptionalScenarioObjectKeys<Shape>>
+  ]: ScenarioSchemaOutput<Shape[Key]>;
 } & {
   readonly [Key in OptionalScenarioObjectKeys<Shape>]?: ScenarioSchemaOutput<
     Shape[Key]
@@ -212,11 +207,13 @@ type InputCollectorsOfInteraction<Interaction> = Interaction extends {
 type ScenarioParamsOfCollectors<
   Collectors extends Readonly<Record<string, unknown>>,
 > = {
-  readonly [Key in keyof Collectors as Collectors[Key] extends {
-    readonly kind: "rng";
-  }
-    ? never
-    : Key]: Collectors[Key] extends {
+  readonly [
+    Key in keyof Collectors as Collectors[Key] extends {
+      readonly kind: "rng";
+    }
+      ? never
+      : Key
+  ]: Collectors[Key] extends {
     readonly schema: infer Schema extends z.core.SomeType;
   }
     ? ScenarioSchemaOutput<Schema>
@@ -256,10 +253,9 @@ type ScenarioCommandForPhase<
   Game,
   Phase extends PhaseNamesOfDefinition<Game>,
 > = {
-  [InteractionId in InteractionIdOfDefinitionPhase<
-    Game,
-    Phase
-  >]: ScenarioCommand<
+  [
+    InteractionId in InteractionIdOfDefinitionPhase<Game, Phase>
+  ]: ScenarioCommand<
     InteractionId,
     ScenarioParamsOfInteraction<
       InteractionSpecByNameOfDefinitionPhase<Game, Phase, InteractionId>
@@ -287,11 +283,7 @@ export type ScenarioReplayDefinition<Game> = {
 };
 
 type DeepReadonly<Value> = Value extends
-  | string
-  | number
-  | boolean
-  | bigint
-  | symbol
+  string | number | boolean | bigint | symbol
   ? Value
   : Value extends (...args: never[]) => unknown
     ? Value
@@ -337,8 +329,7 @@ export type ScenarioProbeRejected<Game> = {
 };
 
 export type ScenarioProbeResult<Game> =
-  | ScenarioProbeAccepted<Game>
-  | ScenarioProbeRejected<Game>;
+  ScenarioProbeAccepted<Game> | ScenarioProbeRejected<Game>;
 
 export type ScenarioAssertionContext<Game> = {
   readonly expect: ExpectFn;
@@ -371,8 +362,7 @@ export type ScenarioCheckpoint =
 export type ScenarioCheckpointId = string;
 
 export type ScenarioCheckpointSelector =
-  | ScenarioCheckpoint
-  | ScenarioCheckpointId;
+  ScenarioCheckpoint | ScenarioCheckpointId;
 
 /** Resolve authored names while keeping replay DTOs structurally checkpointed. */
 export function resolveScenarioCheckpoint<Game>(

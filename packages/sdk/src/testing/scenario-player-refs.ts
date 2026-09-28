@@ -65,8 +65,7 @@ export function resolveScenarioCommandParams(options: {
   const candidateSchemas = clientParamSchemaCandidates(options);
   let firstSeatError: ScenarioSchemaValueError | undefined;
   let firstIssue:
-    | { readonly path: PropertyKey[]; readonly message: string }
-    | undefined;
+    { readonly path: PropertyKey[]; readonly message: string } | undefined;
   for (const schema of candidateSchemas) {
     try {
       const resolved = resolveScenarioSeatReferences({
@@ -159,15 +158,13 @@ function clientParamSchemaCandidates(options: {
   if (options.currentSchema) return [options.currentSchema];
   const schemas = createClientParamSchemasByPhase(options.game as never);
   const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
-    | z.ZodTypeAny
-    | undefined;
+    z.ZodTypeAny | undefined;
   const candidateSchemas = [
     ...(currentPhaseSchema ? [currentPhaseSchema] : []),
     ...Object.entries(schemas).flatMap(([phase, schemasForPhase]) => {
       if (phase === options.phase) return [];
       const schema = schemasForPhase[options.interactionId] as
-        | z.ZodTypeAny
-        | undefined;
+        z.ZodTypeAny | undefined;
       return schema ? [schema] : [];
     }),
   ];

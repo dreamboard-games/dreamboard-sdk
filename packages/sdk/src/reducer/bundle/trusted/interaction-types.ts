@@ -52,11 +52,7 @@ export type InteractionExplanation = {
   phase: string;
   step: string | null;
   availability:
-    | "available"
-    | "notYourTurn"
-    | "wrongPhase"
-    | "wrongStep"
-    | "blocked";
+    "available" | "notYourTurn" | "wrongPhase" | "wrongStep" | "blocked";
   rules: ReadonlyArray<{
     ruleId: string;
     outcome: "passed" | "failed" | "notEvaluated";

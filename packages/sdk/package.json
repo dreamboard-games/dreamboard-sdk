@@ -42,12 +42,12 @@
   },
   "dependencies": {
     "@noble/hashes": "catalog:",
-    "@tanstack/store": "0.11.1",
-    "honeycomb-grid": "4.1.5"
+    "@tanstack/store": "catalog:",
+    "honeycomb-grid": "catalog:"
   },
   "devDependencies": {
-    "@happy-dom/global-registrator": "^20.9.0",
-    "@tanstack/react-store": "0.11.1",
+    "@happy-dom/global-registrator": "catalog:",
+    "@tanstack/react-store": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

@@ -46,8 +46,7 @@ export class InteractionSteps<
   input<const Key extends string, Collector extends StepCollector>(
     key: Key extends keyof Collectors ? never : Key,
     collector:
-      | Collector
-      | ((args: StepFactoryArgs<State, Collectors>) => Collector),
+      Collector | ((args: StepFactoryArgs<State, Collectors>) => Collector),
   ): InteractionSteps<State, Collectors & Record<Key, Collector>> {
     if (this.entries.some((entry) => entry.key === key)) {
       throw new Error(`Duplicate interaction step '${key}'.`);

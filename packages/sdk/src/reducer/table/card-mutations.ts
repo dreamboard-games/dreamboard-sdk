@@ -33,8 +33,7 @@ function playerZoneCards<Table extends RuntimeTableRecord>(
   return [
     ...ensureArray(
       (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[playerId] as
-        | readonly string[]
-        | undefined,
+        readonly string[] | undefined,
     ),
   ];
 }

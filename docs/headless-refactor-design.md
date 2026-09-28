@@ -205,8 +205,7 @@ export interface Snapshot<Game> {
   boardStatic: BoardStatic | null;
 }
 export type SubmitResult =
-  | { accepted: true }
-  | { accepted: false; errorCode: string; message?: string };
+  { accepted: true } | { accepted: false; errorCode: string; message?: string };
 ```
 
 `submit` resolves on acknowledgement and does not carry the next frame;

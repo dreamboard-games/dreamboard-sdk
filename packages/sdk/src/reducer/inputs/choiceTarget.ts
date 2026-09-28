@@ -49,8 +49,7 @@ export type ChoiceTargetBuilder<
 
 function normalizeOptions<State extends CollectorState, Id extends string>(
   options:
-    | ReadonlyArray<ChoiceTargetOption<Id>>
-    | ChoiceOptionsFactory<State, Id>,
+    ReadonlyArray<ChoiceTargetOption<Id>> | ChoiceOptionsFactory<State, Id>,
 ): ChoiceOptionsFactory<State, Id> {
   if (typeof options === "function") return options;
   return () => options;
@@ -61,8 +60,7 @@ function createChoiceTargetBuilder<
   Id extends string,
 >(
   options:
-    | ReadonlyArray<ChoiceTargetOption<Id>>
-    | ChoiceOptionsFactory<State, Id>,
+    ReadonlyArray<ChoiceTargetOption<Id>> | ChoiceOptionsFactory<State, Id>,
 ): ChoiceTargetBuilder<State, Id> {
   const optionsFactory = normalizeOptions(options);
   return createTargetRuleBuilder<State, Id, ChoiceTargetRule<State, Id>>(
@@ -96,8 +94,7 @@ function createChoiceTargetBuilder<
 export const choiceTarget = {
   options<State extends CollectorState, Id extends string>(
     options:
-      | ReadonlyArray<ChoiceTargetOption<Id>>
-      | ChoiceOptionsFactory<State, Id>,
+      ReadonlyArray<ChoiceTargetOption<Id>> | ChoiceOptionsFactory<State, Id>,
   ): ChoiceTargetBuilder<State, Id> {
     return createChoiceTargetBuilder(options);
   },
