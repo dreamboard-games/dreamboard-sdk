@@ -30,7 +30,6 @@ import {
 } from "../../shared/hex-board.js";
 
 import { assertValidManifest } from "./manifest-validation.js";
-import { validateManifestAuthoring } from "./manifest-validation.js";
 
 interface AnalyzedGenericBoard {
   layout: "generic";
@@ -1532,6 +1531,8 @@ export function materializeManifestTable(options: {
           cardType: card.cardType,
           name: card.name,
           text: card.text,
+          frontImage: card.frontImage,
+          backImage: card.backImage,
           properties: {
             ...materializeCardPropertiesDefaults(
               cardSet.cardSchema,

@@ -7,6 +7,10 @@ export interface ViewCard<
   cardType: CardTypeValue;
   name?: string;
   text?: string;
+  /** Manifest asset path; game UIs receive a loadable URL. */
+  frontImage?: string;
+  /** Manifest asset path; game UIs receive a loadable URL. */
+  backImage?: string;
   properties: Properties;
 }
 

@@ -132,6 +132,8 @@ const currentRuntimeTableSchema = z
           cardType: z.string(),
           name: z.string().optional(),
           text: z.string().optional(),
+          frontImage: z.string().optional(),
+          backImage: z.string().optional(),
           properties: runtimeRecordSchema,
         })
         .strict(),

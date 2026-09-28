@@ -233,7 +233,7 @@ To migrate an older manifest, replace each card's `type` with `id` and set
 
 `createReducerBundle(game)` returns exactly the contract version and four
 operations: `boardStatic()`, `initialize(input)`, `dispatch({ state, input })`,
-and `project({ state, playerIds })`. The runner contract is `0.6.0`; hosts must
+and `project({ state, playerIds })`. The runner contract is `0.7.0`; hosts must
 require that exact version. Dispatch includes validation, direct transaction mutations, and phase entry.
 Initialization returns
 `{ state, terminal?, events? }`, preserving outcomes and events from initial

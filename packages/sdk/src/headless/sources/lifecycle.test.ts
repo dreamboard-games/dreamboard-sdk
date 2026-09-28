@@ -134,6 +134,80 @@ describe("source request lifecycle", () => {
     await expect(p).rejects.toThrow("session changed");
     expect(x.close).toHaveBeenCalledOnce();
   });
+  it("resolves delivered card images once and revokes them on close", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    const front = new Blob(["front"], { type: "image/webp" });
+    const card = {
+      id: "card-1",
+      cardType: "spell",
+      frontImage: "assets/cards/spell.webp",
+      backImage: "assets/cards/missing.webp",
+      properties: { power: 7 },
+    };
+    const assets = { "assets/cards/spell.webp": front };
+    x.session({ ...session, assets });
+    x.session({ ...session, assets });
+    x.frame({
+      ...frame(),
+      zones: {
+        hand: {
+          cardIds: ["card-1", "card-2"],
+          cardViewsById: {
+            "card-1": JSON.stringify(card),
+            "card-2": JSON.stringify({ rank: "A" }),
+          },
+          playableByCardId: {},
+        },
+      },
+    });
+    const view = JSON.parse(
+      x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById["card-1"]!,
+    );
+    expect(view.frontImage).toMatch(/^blob:/);
+    expect(view.backImage).toBe("assets/cards/missing.webp");
+    expect(view.properties).toEqual({ power: 7 });
+    expect(
+      JSON.parse(
+        x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById[
+          "card-2"
+        ]!,
+      ),
+    ).toEqual({ rank: "A" });
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    x.source.dispose();
+    expect(revoke).toHaveBeenCalledExactlyOnceWith(view.frontImage);
+    revoke.mockRestore();
+  });
+  it("rejects malformed image fields in encoded card views", () => {
+    const x = createSourceLifecycle({
+      send: vi.fn(),
+      recover: vi.fn(),
+      close: vi.fn(),
+    });
+    x.session({
+      ...session,
+      assets: { "assets/cards/spell.webp": new Blob(["front"]) },
+    });
+    expect(() =>
+      x.frame({
+        ...frame(),
+        zones: {
+          hand: {
+            cardIds: ["card-1"],
+            cardViewsById: {
+              "card-1": JSON.stringify({ frontImage: 42 }),
+            },
+            playableByCardId: {},
+          },
+        },
+      }),
+    ).toThrow(/frontImage/);
+    x.source.dispose();
+  });
   it("static source is immutable and connection updates reuse frame", () => {
     const original = frame();
     const source = staticSource({

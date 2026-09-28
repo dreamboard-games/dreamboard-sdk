@@ -1,4 +1,6 @@
 import { createStore } from "@tanstack/store";
+import { z } from "zod";
+import type { ViewCard } from "../../shared/domain/cards.js";
 import {
   PluginGameplayFrameSchema,
   PluginSessionDescriptorSchema,
@@ -7,6 +9,7 @@ import {
 } from "../../shared/protocol/schema.js";
 import type {
   GameplayBasis,
+  PluginGameplayFrame,
   PluginSessionDescriptor,
 } from "../../shared/protocol/frame.js";
 import { immutableCopy } from "./immutable.js";
@@ -24,6 +27,12 @@ interface Pending {
   readonly reject: (error: Error) => void;
   accepted: boolean;
 }
+
+const CardImageViewSchema = z.looseObject({
+  frontImage: z.string().optional(),
+  backImage: z.string().optional(),
+}) satisfies z.ZodType<Pick<ViewCard, "frontImage" | "backImage">>;
+
 /** Adapter-private lifecycle. Transport callbacks must belong to this lifetime. */
 export function createSourceLifecycle(options: {
   context?: SourceContext;
@@ -41,7 +50,8 @@ export function createSourceLifecycle(options: {
       failure: null,
     }),
   );
-  let session: PluginSessionDescriptor | null = null;
+  let session: Omit<PluginSessionDescriptor, "assets"> | null = null;
+  let assetUrls: Readonly<Record<string, string>> | null = null;
   let basis: GameplayBasis | null = null;
   let pending: Pending | null = null;
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -63,6 +73,7 @@ export function createSourceLifecycle(options: {
     if (closed) return;
     closed = true;
     clearTimer();
+    for (const url of Object.values(assetUrls ?? {})) URL.revokeObjectURL(url);
     pending?.reject(failure ?? new Error("Gameplay source disposed."));
     pending = null;
     options.close();
@@ -176,7 +187,7 @@ export function createSourceLifecycle(options: {
     recovering,
     session(value: unknown) {
       if (closed) return;
-      const parsed = PluginSessionDescriptorSchema.parse(value);
+      const { assets, ...parsed } = PluginSessionDescriptorSchema.parse(value);
       if (
         (context?.sessionId ?? session?.sessionId) &&
         parsed.sessionId !== (context?.sessionId ?? session?.sessionId)
@@ -192,6 +203,13 @@ export function createSourceLifecycle(options: {
         return;
       }
       session = immutableCopy(parsed);
+      // Hosts repeat initialization until ready; the first delivery wins.
+      assetUrls ??= Object.fromEntries(
+        Object.entries(assets ?? {}).map(([path, blob]) => [
+          path,
+          URL.createObjectURL(blob),
+        ]),
+      );
     },
     frame(value: unknown) {
       if (closed) return;
@@ -215,7 +233,9 @@ export function createSourceLifecycle(options: {
         return;
       }
       if (basis && parsed.basis.version < basis.version) return;
-      const { basis: nextBasis, ...frame } = immutableCopy(parsed);
+      const { basis: nextBasis, ...frame } = immutableCopy(
+        withCardImageUrls(parsed, assetUrls),
+      );
       basis = nextBasis;
       publish({
         failure: null,
@@ -280,4 +300,38 @@ export function createSourceLifecycle(options: {
 }
 function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error));
+}
+
+/** Replaces card image paths in encoded card views with delivered URLs. */
+function withCardImageUrls(
+  frame: PluginGameplayFrame,
+  urls: Readonly<Record<string, string>> | null,
+): PluginGameplayFrame {
+  if (urls === null || Object.keys(urls).length === 0) return frame;
+  const resolve = (encoded: string) => {
+    const card = CardImageViewSchema.parse(JSON.parse(encoded) as unknown);
+    for (const key of ["frontImage", "backImage"] as const) {
+      const path = card[key];
+      const url = path === undefined ? undefined : urls[path];
+      if (url !== undefined) card[key] = url;
+    }
+    return JSON.stringify(card);
+  };
+  return {
+    ...frame,
+    zones: Object.fromEntries(
+      Object.entries(frame.zones).map(([zoneId, zone]) => [
+        zoneId,
+        {
+          ...zone,
+          cardViewsById: Object.fromEntries(
+            Object.entries(zone.cardViewsById).map(([cardId, encoded]) => [
+              cardId,
+              resolve(encoded),
+            ]),
+          ),
+        },
+      ]),
+    ),
+  };
 }

@@ -217,6 +217,8 @@ export function getCard<
     cardType: card.cardType,
     name: card.name,
     text: card.text,
+    frontImage: card.frontImage,
+    backImage: card.backImage,
     properties: card.properties,
   } as ViewCardForTable<Table, CardId>;
 }
