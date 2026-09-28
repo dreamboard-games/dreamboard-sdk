@@ -19,6 +19,10 @@ import {
   type ReferenceGame,
 } from "./games.ts";
 import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
+import {
+  readStarterPreparation,
+  readQuickStart,
+} from "../docs/starter-examples.ts";
 
 export type VerifyReferenceGamesOptions = {
   readonly root: string;
@@ -104,6 +108,17 @@ export async function prepareIsolatedReferenceGame(
 ): Promise<void> {
   const configPath = path.join(sandbox, "tsconfig.json");
   const config = JSON.parse(await readFile(configPath, "utf8"));
+  if (game.id === "template") {
+    if (config.extends)
+      throw new Error(
+        "The standalone starter must not require an external tsconfig base.",
+      );
+    await runAsync(
+      process.execPath,
+      ["--input-type=module", "--eval", await readStarterPreparation(root)],
+      { cwd: sandbox, capture: true },
+    );
+  }
   if (config.extends) {
     const base = path.resolve(game.dir, config.extends);
     if (base !== path.join(root, "tsconfig.base.json"))
@@ -128,8 +143,17 @@ export async function prepareIsolatedReferenceGame(
     const dependencies = packageJson[section];
     if (!dependencies) continue;
     for (const [name, specifier] of Object.entries(dependencies)) {
-      if (specifier.startsWith("catalog:"))
+      if (game.id === "template") {
+        if (
+          specifier.startsWith("catalog:") ||
+          specifier.startsWith("workspace:")
+        )
+          throw new Error(
+            `Starter documented preparation left unresolved dependency '${name}': ${specifier}.`,
+          );
+      } else if (specifier.startsWith("catalog:")) {
         dependencies[name] = catalogVersion(catalogs, name, specifier);
+      }
     }
   }
   packageJson.dependencies = {
@@ -161,8 +185,26 @@ async function installCandidate(
     [...isolatedInstallArgs, "--no-frozen-lockfile", "--lockfile=false"],
     { cwd: sandbox, capture: true },
   );
-  for (const script of ["typecheck", "test"]) {
+  const quickStartPath = path.join(sandbox, "test", "docs-quick-start.ts");
+  if (game.id === "template")
+    await writeFile(quickStartPath, await readQuickStart(root));
+  for (const script of [
+    "typecheck",
+    "test",
+    ...(game.id === "template" ? ["build"] : []),
+  ]) {
     await run("pnpm", ["run", script], { cwd: sandbox, capture: true });
+  }
+
+  if (game.id === "template") {
+    const output = await run(process.execPath, [quickStartPath], {
+      cwd: sandbox,
+      capture: true,
+    });
+    if (output.trim() !== '{"count":1}')
+      throw new Error(
+        `Quick start did not increment the counter: ${output.trim()}`,
+      );
   }
 
   const installedPackage = JSON.parse(

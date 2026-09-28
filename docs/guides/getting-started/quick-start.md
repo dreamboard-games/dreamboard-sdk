@@ -47,9 +47,13 @@ const definition = model.assemble({
 const source = await localSource(definition, { players: 2, seed: 1 });
 const game = createGameInstance<typeof definition>()({ source });
 await game.interactions.get("play.increment")?.submit();
-console.log(game.view);
+console.log(JSON.stringify({ count: game.view?.count }));
 game.dispose();
 ```
+
+The output is `{"count":1}`. This complete example is typechecked and executed
+against the packed SDK by `pnpm check`. For a standalone browser project, follow
+the [starter preparation steps](../../../templates/game/README.md).
 
 For hosted rendering, move the executable definition into the reducer entry and
 replace `localSource` with `iframeSource`; import only its type in UI modules.
