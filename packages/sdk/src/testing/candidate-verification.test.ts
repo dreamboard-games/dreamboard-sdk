@@ -199,7 +199,7 @@ describe("runCandidateVerification", () => {
         calls.dispatch++;
         const result = await production.dispatch(input);
         if (result.kind === "accept")
-          result.state.domain.publicState.score = 99;
+          result.state.domain.publicState = { score: 99 };
         return result;
       },
       project(input: Parameters<typeof production.project>[0]) {
@@ -233,7 +233,7 @@ describe("runCandidateVerification", () => {
       async dispatch(request: Parameters<typeof production.dispatch>[0]) {
         const result = await production.dispatch(request);
         if (result.kind === "accept")
-          result.state.domain.publicState.score = 99;
+          result.state.domain.publicState = { score: 99 };
         return result;
       },
     };

@@ -1,3 +1,4 @@
+import { catalogVersion, readCatalogs } from "./reference/catalogs.ts";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import {
@@ -470,6 +471,7 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
       }
     }
 
+    const catalogs = await readCatalogs(rootDir);
     const consumer = path.join(tempRoot, "consumer");
     await mkdir(consumer);
     await writeFile(
@@ -487,6 +489,16 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
           dependencies: {
             // This consumer exercises every facade, including optional adapters.
             ...manifest.peerDependencies,
+            "@types/react": catalogVersion(
+              catalogs,
+              "@types/react",
+              "catalog:",
+            ),
+            "@types/react-dom": catalogVersion(
+              catalogs,
+              "@types/react-dom",
+              "catalog:",
+            ),
             [publicPackageName]: `file:${path.resolve(tarballPath)}`,
           },
         },
@@ -519,6 +531,35 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
       "utf8",
     );
     run(process.execPath, [probe], { cwd: consumer });
+    for (const file of await readdir(path.join(sdkDir, "consumer-tests"))) {
+      await writeFile(
+        path.join(consumer, file),
+        await readFile(path.join(sdkDir, "consumer-tests", file)),
+      );
+    }
+    await writeFile(
+      path.join(consumer, "tsconfig.json"),
+      JSON.stringify({
+        compilerOptions: {
+          strict: true,
+          noEmit: true,
+          target: "ES2022",
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          skipLibCheck: true,
+        },
+        include: ["contracts.ts"],
+      }),
+    );
+    run(
+      process.execPath,
+      [
+        path.join(rootDir, "node_modules/typescript/bin/tsc"),
+        "-p",
+        path.join(consumer, "tsconfig.json"),
+      ],
+      { cwd: consumer },
+    );
   } finally {
     await rm(tempRoot, { recursive: true, force: true });
   }

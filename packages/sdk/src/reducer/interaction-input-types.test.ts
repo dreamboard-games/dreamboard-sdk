@@ -208,8 +208,8 @@ describe("interaction input id types", () => {
           {
             id: "typo-validation-code",
             errorCode: "INSUFFICIENT_RESOURCES",
+            // @ts-expect-error ValidationIssue codes come from the contract error union.
             validate: () => ({
-              // @ts-expect-error ValidationIssue codes come from the contract error union.
               errorCode: "INSUFFICIENT_RESOURCE",
             }),
           },
@@ -346,8 +346,8 @@ describe("interaction input id types", () => {
       },
     });
     const assertManyCommitTypes = () => {
+      // @ts-expect-error many(...) inputs are explicit draft selections and cannot auto-submit.
       contract.phase("play").interaction({
-        // @ts-expect-error many(...) inputs are explicit draft selections and cannot auto-submit.
         commit: { mode: "autoWhenReady" },
         inputs: {
           cardIds: many(formInput(contract.contract.schemas.cardId), {
@@ -357,6 +357,7 @@ describe("interaction input id types", () => {
         },
         reduce: () => {},
       });
+      // @ts-expect-error many(...) card action inputs cannot auto-submit.
       contract.phase("play").interaction({
         inputs: {
           cardId: formInput(contract.contract.schemas.cardId),
@@ -365,7 +366,6 @@ describe("interaction input id types", () => {
             distinct: true,
           }),
         },
-        // @ts-expect-error many(...) card action inputs are explicit draft selections and cannot auto-submit.
         commit: { mode: "autoWhenReady" },
         reduce: () => {},
       });
@@ -389,6 +389,7 @@ describe("interaction input id types", () => {
       resolve: () => {},
     });
     const game = contract.assemble({
+      view: contract.view(() => ({})),
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -448,6 +449,7 @@ describe("interaction input id types", () => {
       },
     });
     const game = contract.assemble({
+      view: contract.view(() => ({})),
       initial: {
         public: () => ({}),
         private: () => ({}),

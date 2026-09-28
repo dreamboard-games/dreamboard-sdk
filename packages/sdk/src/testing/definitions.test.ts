@@ -8,6 +8,7 @@ import {
   ScenarioReplayError,
   toScenarioReplayDefinition,
   type ScenarioCommandOf,
+  type ScenarioDefinition,
   type ScenarioSchemaOutput,
   type ScenarioSeatRef,
 } from "./definitions";
@@ -83,7 +84,7 @@ function validScenario() {
       developed: { segment: "given", completed: 1 },
     },
     then: () => {},
-  } as const;
+  } satisfies ScenarioDefinition<typeof game>;
 }
 
 function expectValidationError(
@@ -105,7 +106,7 @@ function expectValidationError(
 describe("createScenarioAuthoring", () => {
   test("accepts serializable self-contained commands and strips assertions from replay data", () => {
     const definition = defineScenario(validScenario());
-    const replay = toScenarioReplayDefinition(definition);
+    const replay = toScenarioReplayDefinition<typeof game>(definition);
 
     expect(replay).toEqual({
       id: "scenario.valid",
@@ -122,19 +123,21 @@ describe("createScenarioAuthoring", () => {
 
   test("resolves named checkpoints without adding them to replay DTOs", () => {
     const definition = defineScenario(validScenario());
-    expect(resolveScenarioCheckpoint(definition, "developed")).toEqual({
+    expect(
+      resolveScenarioCheckpoint<typeof game>(definition, "developed"),
+    ).toEqual({
       segment: "given",
       completed: 1,
     });
     expect(
-      resolveScenarioCheckpoint(definition, {
+      resolveScenarioCheckpoint<typeof game>(definition, {
         segment: "given",
         completed: 0,
       }),
     ).toEqual({ segment: "given", completed: 0 });
-    expect(() => resolveScenarioCheckpoint(definition, "missing")).toThrow(
-      /available checkpoints: developed, opening/,
-    );
+    expect(() =>
+      resolveScenarioCheckpoint<typeof game>(definition, "missing"),
+    ).toThrow(/available checkpoints: developed, opening/);
   });
 
   test("rejects invalid, out-of-range, reserved, and duplicate checkpoints", () => {
