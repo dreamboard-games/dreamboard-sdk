@@ -37,15 +37,27 @@ export type InteractionKey<G> = unknown extends G
           P in PhaseNamesOfDefinition<G>
         ]: `${P}.${InteractionIdOfDefinitionPhase<G, P>}`;
       }[PhaseNamesOfDefinition<G>];
+type InteractionIdentity<G, K> = {
+  [P in PhaseNamesOfDefinition<G>]: {
+    [I in InteractionIdOfDefinitionPhase<G, P>]: `${P}.${I}` extends K
+      ? { phase: P; id: I }
+      : never;
+  }[InteractionIdOfDefinitionPhase<G, P>];
+}[PhaseNamesOfDefinition<G>];
 type RawInteractionParams<G, K extends InteractionKey<G>> = unknown extends G
   ? Record<string, RuntimeJson>
-  : K extends `${infer P}.${infer I}`
-    ? P extends PhaseNamesOfDefinition<G>
-      ? I extends InteractionIdOfDefinitionPhase<G, P>
-        ? ClientParamsOfInteractionOfDefinition<G, P, I>
+  : [PhaseNamesOfDefinition<G>] extends [never]
+    ? Record<string, RuntimeJson>
+    : InteractionIdentity<G, K> extends infer Identity
+      ? Identity extends {
+          phase: infer P extends PhaseNamesOfDefinition<G>;
+          id: infer I;
+        }
+        ? I extends InteractionIdOfDefinitionPhase<G, P>
+          ? ClientParamsOfInteractionOfDefinition<G, P, I>
+          : never
         : never
-      : Record<string, RuntimeJson>
-    : Record<string, RuntimeJson>;
+      : never;
 type UnionKeys<T> = T extends unknown ? keyof T : never;
 type UnionValue<T, Key> = T extends unknown
   ? Key extends keyof T
@@ -58,13 +70,17 @@ export type InteractionParams<G, K extends InteractionKey<G>> = {
     N
   >;
 };
-type CollectorOf<G, K, N extends string> = K extends `${infer P}.${infer I}`
-  ? P extends PhaseNamesOfDefinition<G>
-    ? I extends InteractionIdOfDefinitionPhase<G, P>
-      ? InputCollectorOfDefinition<G, P, I, N>
+type CollectorOf<G, K, N extends string> =
+  InteractionIdentity<G, K> extends infer Identity
+    ? Identity extends {
+        phase: infer P extends PhaseNamesOfDefinition<G>;
+        id: infer I;
+      }
+      ? I extends InteractionIdOfDefinitionPhase<G, P>
+        ? InputCollectorOfDefinition<G, P, I, N>
+        : never
       : never
-    : never
-  : never;
+    : never;
 export type InputKind<
   G,
   K extends InteractionKey<G>,
@@ -268,8 +284,12 @@ export type Input<
   };
 export interface InteractionBase<G, K extends InteractionKey<G>> {
   readonly key: K;
-  readonly id: K extends `${string}.${infer I}` ? I : string;
-  readonly phase: K extends `${infer P}.${string}` ? P : PhaseName<G>;
+  readonly id: [InteractionIdentity<G, K>] extends [never]
+    ? string
+    : InteractionIdentity<G, K>["id"];
+  readonly phase: [InteractionIdentity<G, K>] extends [never]
+    ? PhaseName<G>
+    : InteractionIdentity<G, K>["phase"];
   readonly label: string;
   readonly help?: string;
   readonly kind: "inputs" | "steps";
