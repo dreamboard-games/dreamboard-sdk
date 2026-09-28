@@ -45,7 +45,7 @@ const boardId: "island" = board.id;
 board.getLabel();
 board.getLayout({ hexSize: 12, viewport: game.viewport.getTransform() });
 board.game.boards.get("island").getLabel();
-const card = game.zones.get("hand").getCards()[0]!;
+const card = game.zones.get("hand").getCards()[0];
 game.drag.begin(card.id, { interaction: "playerTurn.pick" });
 card.getBadge();
 const selected: readonly ("card-1" | "card-2")[] = game.zones
@@ -60,6 +60,7 @@ bare.drag;
 // @ts-expect-error Drag card identities remain model-bound.
 game.drag.begin("missing");
 // @ts-expect-error Disabled per-zone APIs are absent.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled per-zone APIs are absent.
 bare.zones.get("hand").getSelectedCardIds();
 // @ts-expect-error Board identities remain model-bound.
 game.boards.get("unknown");
@@ -69,11 +70,12 @@ void [boardId, selected];
 
 const layout = board.getLayout({ hexSize: 12 });
 // @ts-expect-error Captured layout arrays are readonly.
-layout.getSpaces().push(layout.getSpaces()[0]!);
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Captured layout arrays are readonly.
+layout.getSpaces().push(layout.getSpaces()[0]);
 // @ts-expect-error Captured element properties are readonly.
-layout.getSpaces()[0]!.center = { x: 0, y: 0 };
+layout.getSpaces()[0].center = { x: 0, y: 0 };
 // @ts-expect-error Captured point coordinates are readonly.
-layout.getEdges()[0]!.line[0].x = 1;
+layout.getEdges()[0].line[0].x = 1;
 // @ts-expect-error Captured viewBox is readonly.
 layout.viewBox.width = 1;
 

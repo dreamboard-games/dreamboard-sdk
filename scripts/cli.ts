@@ -2,6 +2,7 @@
 
 import { pathToFileURL } from "node:url";
 import { build, format, lint, runCoreCheck, test, typecheck } from "./check.ts";
+import { auditTypes } from "./types/type-audit.ts";
 import { CommandError } from "./lib/process.ts";
 import { runReferenceCommand } from "./reference/index.ts";
 import { verifyRelease } from "./release.ts";
@@ -16,6 +17,7 @@ export const rootCommands = [
   "release:verify",
   "test",
   "typecheck",
+  "type-audit",
   "ui",
 ] as const;
 
@@ -37,10 +39,11 @@ export function parseCli(argv: readonly string[]): ParsedCli {
     return { args: [], help: true };
   }
   const [candidate, ...args] = argv;
-  if (!rootCommands.includes(candidate as RootCommand)) {
+  const command = rootCommands.find((command) => command === candidate);
+  if (!command) {
     throw new CliUsageError(`Unknown command '${candidate}'.\n\n${rootHelp()}`);
   }
-  return { command: candidate as RootCommand, args, help: false };
+  return { command, args, help: false };
 }
 
 function requireNoArgs(command: RootCommand, args: readonly string[]): void {
@@ -85,6 +88,7 @@ export async function runCli(argv: readonly string[]): Promise<void> {
       return;
     case "lint":
       requireNoArgs(parsed.command, parsed.args);
+      build();
       lint();
       return;
     case "reference": {
@@ -104,6 +108,10 @@ export async function runCli(argv: readonly string[]): Promise<void> {
       requireNoArgs(parsed.command, parsed.args);
       build();
       await test();
+      return;
+    case "type-audit":
+      requireNoArgs(parsed.command, parsed.args);
+      await auditTypes();
       return;
     case "typecheck":
       requireNoArgs(parsed.command, parsed.args);
@@ -132,6 +140,7 @@ Commands:
   reference [game-id]           Verify one or all packed reference games
   release:verify                Build the immutable release candidate
   test                          Run browser-free unit tests
+  type-audit                    Inventory assertions, unknown and any
   typecheck                     Type-check packages and repository scripts
   ui <storybook|dev|test> [--game <id>]
                                  Run the SDK UI product tooling
@@ -145,7 +154,7 @@ export function errorExitCode(error: unknown): number {
     (typeof error === "object" &&
       error !== null &&
       "exitCode" in error &&
-      (error as { exitCode?: unknown }).exitCode === 2)
+      error.exitCode === 2)
   ) {
     return 2;
   }

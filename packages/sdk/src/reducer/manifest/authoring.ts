@@ -1039,6 +1039,7 @@ export function defineTopologyManifest<const Manifest>(
 ): DefinedTopologyManifest<Manifest> {
   const validated = structuredClone(manifest);
   assertValidManifest(
+    // eslint-disable-next-line no-restricted-syntax -- The authoring parameter enforces the topology shape; this cloned copy is passed to semantic validation before branding.
     validated as unknown as import("../../shared/domain/manifest").GameTopologyManifest,
   );
   return validated as DefinedTopologyManifest<Manifest>;

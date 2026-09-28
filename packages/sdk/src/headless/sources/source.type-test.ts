@@ -21,17 +21,21 @@ export function sourceCapabilities(
   void hosted.submit("move", { destination: "a" });
   void hosted.cancel("move");
   // @ts-expect-error Retry belongs to transport lifecycle recovery.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Retry belongs to transport lifecycle recovery.
   hosted.retry();
   local.apply({ type: "advance", count: 2 });
   // @ts-expect-error Hosted transports cannot execute local reducers.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Hosted transports cannot execute local reducers.
   hosted.apply({ type: "advance", count: 2 });
   // @ts-expect-error Static sources cannot issue commands.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Static sources cannot issue commands.
   fixed.submit("move", {});
   // @ts-expect-error Local capabilities preserve their action contract.
   local.apply({ type: "advance", count: "two" });
   // @ts-expect-error Basis is private to the source lifetime.
   void hosted.store.get().snapshot?.frame.basis;
   // @ts-expect-error Store mutation is source-owned.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Store mutation is source-owned.
   hosted.store.setState({});
   void hosted.submit("move", {}).then((result) => {
     // @ts-expect-error Transport receipt identities are not instance results.

@@ -13,6 +13,7 @@ import type { CollectorState, ParamsOf } from "../src/reducer/model.js";
  */
 import { z } from "zod";
 import {
+  asPlayerId,
   createGame,
   type BoundTargetPredicate,
   type PlayerId,
@@ -57,10 +58,10 @@ function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
   return Object.fromEntries([]);
 }
 
-const playerIds = [
-  "player-1",
-  "player-2",
-] as const as unknown as readonly PlayerId[];
+const playerIds: readonly PlayerId[] = [
+  asPlayerId("player-1"),
+  asPlayerId("player-2"),
+];
 const phaseNames = ["setup", "playerTurn"] as const;
 const cardIds = ["card-1", "card-2"] as const;
 const playerZoneIds = ["hand"] as const;
@@ -228,6 +229,7 @@ export function mutateTypedDraft(tx: Tx, playerId: PlayerId): GameState {
     cardId: "unknown-card",
   });
   // @ts-expect-error A transaction has no immutable-op escape hatch.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: A transaction has no immutable-op escape hatch.
   tx.apply((state: GameState) => state);
   // @ts-expect-error Patch field types remain constrained by the state schema.
   tx.patchPublicState({ currentPlayerId: 12 });
@@ -238,8 +240,10 @@ export function mutateTypedDraft(tx: Tx, playerId: PlayerId): GameState {
 
 const playerTurn = game.phase("playerTurn");
 // @ts-expect-error Phase stages have been removed.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Phase stages have been removed.
 playerTurn.stepPhase({});
 // @ts-expect-error Cards use ordinary interactions with explicit card inputs.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Cards use ordinary interactions with explicit card inputs.
 playerTurn.cardAction({});
 
 // `state.phase` is the phase fields plus the cross-phase `PhaseAccessor`.
@@ -320,8 +324,10 @@ const playerTurnPhase = playerTurn.define({
         // @ts-expect-error Mutation callbacks have no effect namespace.
         args.fx;
         // @ts-expect-error Outcome builders do not schedule effects.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Outcome builders do not schedule effects.
         tx.schedule({ kind: "engine.rollDie" });
         // @ts-expect-error Effect continuations have been removed.
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Effect continuations have been removed.
         tx.effect({});
         type _ParamsAreLiteral = Expect<
           Equal<typeof input.params.mood, "ready" | "wait">
@@ -644,6 +650,7 @@ playerTurn.inputs.form.choice({
 });
 playerTurn.inputs.form.choice({
   // @ts-expect-error Previous values are closed over from the step factory selected argument.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access -- Negative compiler proof: Previous values are closed over from the step factory selected argument.
   choices: ({ values }) => [{ value: values.previous, label: "A" }],
   defaultValue: () => undefined,
 });

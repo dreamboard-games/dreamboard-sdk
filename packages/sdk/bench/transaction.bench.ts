@@ -1,9 +1,11 @@
 import { createMutableRandomHelpers } from "../src/reducer/bundle/trusted/rng-sampler";
-import {
-  createReducerEdit,
-  type PlayerId,
-  type RuntimeTableRecord,
-} from "../src/reducer";
+import { asPlayerId, type PlayerId } from "../src/reducer";
+
+import type {
+  RuntimeTableRecord,
+  RuntimeHexBoardState,
+} from "../src/reducer/model";
+import { createReducerEdit } from "../src/reducer/transaction";
 
 type BenchState = {
   table: RuntimeTableRecord;
@@ -14,62 +16,83 @@ type BenchState = {
   privateState: Record<string, Record<string, never>>;
 };
 
-const playerIds = ["player-1", "player-2", "player-3", "player-4"].map(
-  (id) => id as PlayerId,
-);
+const playerIds = [
+  asPlayerId("player-1"),
+  asPlayerId("player-2"),
+  asPlayerId("player-3"),
+  asPlayerId("player-4"),
+] satisfies [PlayerId, PlayerId, PlayerId, PlayerId];
 
-function createBenchState(): BenchState {
-  const cards = Object.fromEntries(
-    Array.from({ length: 60 }, (_, index) => [
-      `card-${index}`,
-      {
-        id: `card-${index}`,
-        cardSetId: "main",
-        cardType: "resource",
-        properties: {},
-      },
-    ]),
+function createBenchState() {
+  const cards = Object.fromEntries<RuntimeTableRecord["cards"][string]>(
+    Array.from(
+      { length: 60 },
+      (_, index) =>
+        [
+          `card-${index}`,
+          {
+            id: `card-${index}`,
+            cardSetId: "main",
+            cardType: "resource",
+            properties: {},
+          },
+        ] as const,
+    ),
   );
-  const pieces = Object.fromEntries([
+  const pieces = Object.fromEntries<RuntimeTableRecord["pieces"][string]>([
     ["trail", { id: "trail", pieceTypeId: "trail", properties: {} }],
     ["camp", { id: "camp", pieceTypeId: "camp", properties: {} }],
-    ...Array.from({ length: 58 }, (_, index) => [
-      `piece-${index}`,
-      {
-        id: `piece-${index}`,
-        pieceTypeId: "marker",
-        properties: {},
-      },
-    ]),
+    ...Array.from(
+      { length: 58 },
+      (_, index) =>
+        [
+          `piece-${index}`,
+          {
+            id: `piece-${index}`,
+            pieceTypeId: "marker",
+            properties: {},
+          },
+        ] as const,
+    ),
   ]);
-  const componentLocations = Object.fromEntries([
-    ...Array.from({ length: 60 }, (_, index) => [
-      `card-${index}`,
-      {
-        type: "InDeck" as const,
-        deckId: "main-deck",
-        playedBy: null,
-        position: index,
-      },
-    ]),
+  const componentLocations = Object.fromEntries<
+    RuntimeTableRecord["componentLocations"][string]
+  >([
+    ...Array.from(
+      { length: 60 },
+      (_, index) =>
+        [
+          `card-${index}`,
+          {
+            type: "InDeck" as const,
+            deckId: "main-deck",
+            playedBy: null,
+            position: index,
+          },
+        ] as const,
+    ),
     ["trail", { type: "Detached" as const }],
     ["camp", { type: "Detached" as const }],
-    ...Array.from({ length: 58 }, (_, index) => [
-      `piece-${index}`,
-      { type: "Detached" as const },
-    ]),
+    ...Array.from(
+      { length: 58 },
+      (_, index) => [`piece-${index}`, { type: "Detached" as const }] as const,
+    ),
   ]);
   const spaces = Object.fromEntries(
-    Array.from({ length: 19 }, (_, index) => [
-      `tile-${index}`,
-      {
-        id: `tile-${index}`,
-        q: index % 5,
-        r: Math.floor(index / 5),
-        typeId: "land",
-        fields: {},
-      },
-    ]),
+    Array.from(
+      { length: 19 },
+      (_, index) =>
+        [
+          `tile-${index}`,
+          {
+            id: `tile-${index}`,
+            q: index % 5,
+            r: Math.floor(index / 5),
+            typeId: "land",
+            fields: {},
+          },
+        ] as const,
+    ),
   );
   const edges = Array.from({ length: 72 }, (_, index) => ({
     id: `edge-${index}`,
@@ -91,6 +114,20 @@ function createBenchState(): BenchState {
     fields: {},
   }));
 
+  const island = {
+    id: "island",
+    baseId: "island",
+    layout: "hex",
+    typeId: "map",
+    scope: "shared",
+    orientation: "pointy",
+    fields: {},
+    spaces,
+    relations: [],
+    containers: {},
+    edges,
+    vertices,
+  } satisfies RuntimeHexBoardState;
   return {
     table: {
       playerOrder: playerIds,
@@ -117,49 +154,42 @@ function createBenchState(): BenchState {
         Array.from({ length: 60 }, (_, index) => [`card-${index}`, null]),
       ),
       visibility: Object.fromEntries(
-        Array.from({ length: 60 }, (_, index) => [
-          `card-${index}`,
-          { faceUp: true },
-        ]),
+        Array.from(
+          { length: 60 },
+          (_, index) => [`card-${index}`, { faceUp: true }] as const,
+        ),
       ),
       resources: Object.fromEntries(
-        playerIds.map((playerId) => [
-          playerId,
-          playerId === ("player-1" as PlayerId)
-            ? { wood: 8, brick: 8 }
-            : { wood: 3, brick: 3 },
-        ]),
+        playerIds.map(
+          (playerId) =>
+            [
+              playerId,
+              playerId === "player-1"
+                ? { wood: 8, brick: 8 }
+                : { wood: 3, brick: 3 },
+            ] as const,
+        ),
       ),
       boards: {
         byId: {
-          island: {
-            id: "island",
-            baseId: "island",
-            layout: "hex",
-            typeId: "map",
-            scope: "shared",
-            orientation: "pointy-top",
-            fields: {},
-            spaces,
-            relations: [],
-            containers: {},
-            edges,
-            vertices,
-          },
+          island,
         },
+        hex: { island },
+        square: {},
+        network: {},
+        track: {},
       },
-      slots: {},
     },
-    flow: { currentPhase: "build", activePlayers: [playerIds[0]!] },
+    flow: { currentPhase: "build", activePlayers: [playerIds[0]] },
     phase: {},
     publicState: {},
     hiddenState: {},
     privateState: {},
-  };
+  } satisfies BenchState;
 }
 
 const baseState = createBenchState();
-const edit = createReducerEdit<BenchState>();
+const edit = createReducerEdit<typeof baseState>();
 
 function runFiveOpTransaction(): BenchState {
   const tx = edit(
@@ -167,7 +197,7 @@ function runFiveOpTransaction(): BenchState {
     createMutableRandomHelpers({ seed: 42, cursor: 0, trace: [], draws: [] }),
   );
   tx.spendResources({
-    playerId: playerIds[0]!,
+    playerId: playerIds[0],
     amounts: { wood: 1, brick: 1 },
   });
   tx.moveComponentToEdge({
@@ -181,11 +211,11 @@ function runFiveOpTransaction(): BenchState {
     vertexId: "vertex-0",
   });
   tx.transferResources({
-    fromPlayerId: playerIds[0]!,
-    toPlayerId: playerIds[1]!,
+    fromPlayerId: playerIds[0],
+    toPlayerId: playerIds[1],
     amounts: { wood: 1 },
   });
-  tx.setActivePlayers([playerIds[1]!]);
+  tx.setActivePlayers([playerIds[1]]);
   return tx.state;
 }
 

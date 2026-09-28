@@ -19,6 +19,7 @@ import type { AuthoredManifest, CompiledManifest } from "./types";
 export function compileManifest<const M extends AuthoredManifest>(
   manifest: M & ManifestCountValidation<NoInfer<M>>,
 ): CompiledManifest<M> {
+  // eslint-disable-next-line no-restricted-syntax -- AuthoredManifest is the readonly topology shape; structuredClone produces the owned mutable copy consumed by analysis.
   const source = structuredClone(manifest) as unknown as GameTopologyManifest;
   const analysis = analyzeManifest(source);
   const initial = materializeManifestTable({
@@ -108,6 +109,7 @@ export function compileManifest<const M extends AuthoredManifest>(
     "spaceId",
     "spaceTypeId",
   ] as const;
+  // eslint-disable-next-line no-restricted-syntax -- The complete families list constructs each ID schema from its matching literals; playerId is added explicitly.
   const ids = {
     ...Object.fromEntries(
       families.map((family) => {
@@ -189,6 +191,7 @@ export function compileManifest<const M extends AuthoredManifest>(
         shuffleItems: options.shuffleItems ?? ((values) => [...values]),
       }),
     );
+  // eslint-disable-next-line no-restricted-syntax -- Analysis of M supplies every literal, schema, record, and setup factory; this compiler binds those runtime results to the M-derived facade.
   return {
     literals,
     ids,

@@ -9,7 +9,7 @@ test("hosted core has no executable game, reducer, React, or Node import closure
     format: "esm",
     metafile: true,
   });
-  const files = Object.keys(result.metafile!.inputs);
+  const files = Object.keys(result.metafile.inputs);
   expect(files.some((file) => file.includes("/reducer/"))).toBe(false);
   expect(
     files.some((file) => file.includes("react/") || file.includes("node:")),

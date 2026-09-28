@@ -8,6 +8,7 @@ import { localSource } from "./local-source.js";
 import { scenarioSource } from "./scenario-source.js";
 import { fuzz } from "./fuzz.js";
 import { createTestSource } from "./test-source.js";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import type { SourceSnapshot } from "../../headless/sources/types.js";
 
 const snapshot: SourceSnapshot = {
@@ -154,7 +155,10 @@ describe("production-backed local sources", () => {
   it("switches selected-seat privacy and invalidates in-flight intent without replay", async () => {
     const source = await localSource(hearts, { players: 4, seed: 1 });
     const first = source.inspect();
-    const pending = source.submit("submit", completeHearts.given[0].params);
+    const pending = source.submit(
+      "submit",
+      RuntimeJsonSchema.parse(completeHearts.given[0].params),
+    );
     source.switchSeat("player-2");
     await expect(pending).rejects.toThrow("disposed");
     expect(source.inspect().me).toBe("player-2");

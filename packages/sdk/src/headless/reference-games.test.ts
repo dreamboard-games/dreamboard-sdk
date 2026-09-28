@@ -52,7 +52,7 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   const saved = source.checkpoint();
   expect(
     game.interactions
-      .get(key)!
+      .get(key)
       .getInputs()
       .map((input) => input.key),
   ).toEqual(["targetPlayerId"]);

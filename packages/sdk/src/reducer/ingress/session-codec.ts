@@ -297,6 +297,7 @@ export function createIngressRuntimeCodec<
   // The return type uses branded/mapped types derived from the contract generic.
   // TypeScript cannot verify that plain objects satisfy these deep mapped types,
   // but the runtime Zod parsing ensures correctness.
+  // eslint-disable-next-line no-restricted-syntax -- Every codec method is constructed from this Contract's schemas; the return binding restores its conditional state and identity types.
   return {
     defaultRuntimeState(
       seed: number | null = null,
@@ -321,6 +322,7 @@ export function createIngressRuntimeCodec<
       return parseOptions(rawOptions === undefined ? {} : rawOptions);
     },
     parseInitialTable(rawTable: unknown, playerIds: string[] | undefined) {
+      // eslint-disable-next-line no-restricted-syntax -- The ingress schema checks table syntax here; initialization applies this Contract's manifest defaults and table schema before trusted use.
       const table = safeParseOrThrow(
         currentRuntimeTableSchema,
         rawTable,
@@ -404,6 +406,7 @@ export function createIngressRuntimeCodec<
       return parsedState;
     },
     serializeState(state: State) {
+      // eslint-disable-next-line no-restricted-syntax -- The serialized domain and runtime come from this codec's typed session; the wire envelope erases the authored state generics.
       return {
         domain: { ...state.domain },
         runtime: state.runtime,

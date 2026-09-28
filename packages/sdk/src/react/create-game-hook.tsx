@@ -84,7 +84,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         };
         // Construction belongs to this committed provider lifetime. Current
         // options are installed separately without recreating features.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- Construct once per committed provider lifetime; the next effect updates options.
       }, []);
       useLayoutEffect(() => {
         lifetime.current?.instance.setOptions(options);

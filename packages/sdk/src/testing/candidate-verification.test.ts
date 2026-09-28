@@ -410,20 +410,24 @@ describe("runCandidateVerification", () => {
     expect(typeof assertRemovedTypes).toBe("function");
 
     await expect(
-      runCandidateVerification({
-        reducer: game,
-        bundle: createReducerBundle(game),
-        scenarios: [passingScenario],
-        bases: {},
-      } as never),
+      Reflect.apply(runCandidateVerification, undefined, [
+        {
+          reducer: game,
+          bundle: createReducerBundle(game),
+          scenarios: [passingScenario],
+          bases: {},
+        },
+      ]),
     ).rejects.toThrow("unsupported field 'bases'");
     await expect(
-      runCandidateVerification({
-        reducer: game,
-        bundle: createReducerBundle(game),
-        scenarios: [passingScenario],
-        snapshot: {},
-      } as never),
+      Reflect.apply(runCandidateVerification, undefined, [
+        {
+          reducer: game,
+          bundle: createReducerBundle(game),
+          scenarios: [passingScenario],
+          snapshot: {},
+        },
+      ]),
     ).rejects.toThrow("unsupported field 'snapshot'");
   });
 

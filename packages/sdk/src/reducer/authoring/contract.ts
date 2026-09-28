@@ -193,6 +193,7 @@ export function defineGameContract<
     }
   }
   const phaseNameSchema = createManifestStringLiteralSchema(phaseNames);
+  // eslint-disable-next-line no-restricted-syntax -- Both phaseNames and the replacement phase schema come from the same validated nonempty Phases keys.
   const narrowedManifest = {
     ...definition.manifest,
     literals: {

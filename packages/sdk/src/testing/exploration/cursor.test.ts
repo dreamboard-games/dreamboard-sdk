@@ -41,24 +41,27 @@ describe("explore cursor", () => {
   test.each([
     ["source", { ...scenario, sourceDigest: "sha256:changed" }],
     ["checkpoint", scenario],
-  ])("rejects a stale %s authority", (kind, selectedScenario) => {
-    const cursor = createExploreCursor({
-      scenario,
-      checkpointDigest: "sha256:checkpoint",
-      perspective,
-      nextOrdinal: 1,
-    });
-
-    expect(() =>
-      readExploreCursor({
-        cursor,
-        scenario: selectedScenario,
-        checkpointDigest:
-          kind === "checkpoint" ? "sha256:changed" : "sha256:checkpoint",
+  ] satisfies [string, ScenarioIdentity][])(
+    "rejects a stale %s authority",
+    (kind, selectedScenario) => {
+      const cursor = createExploreCursor({
+        scenario,
+        checkpointDigest: "sha256:checkpoint",
         perspective,
-      }),
-    ).toThrow(ExploreCursorError);
-  });
+        nextOrdinal: 1,
+      });
+
+      expect(() =>
+        readExploreCursor({
+          cursor,
+          scenario: selectedScenario,
+          checkpointDigest:
+            kind === "checkpoint" ? "sha256:changed" : "sha256:checkpoint",
+          perspective,
+        }),
+      ).toThrow(ExploreCursorError);
+    },
+  );
 
   test("rejects tampering", () => {
     const cursor = createExploreCursor({

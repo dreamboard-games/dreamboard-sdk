@@ -4,7 +4,7 @@ import { many } from "./many";
 import { rngInput } from "./rngInput";
 
 describe("many defaults", () => {
-  test.each(["a", () => "a", () => undefined] as const)(
+  test.each(["a", (): string => "a", (): undefined => undefined] as const)(
     "removes inner defaults when lifting a scalar schema (%s)",
     (defaultValue) => {
       const choices = [{ value: "a", label: "A" }];

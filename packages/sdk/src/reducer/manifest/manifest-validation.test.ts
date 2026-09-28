@@ -423,7 +423,7 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
             nested: {
               type: "object",
               properties: {
-                constructor: { type: "integer" },
+                constructor: { type: "integer" as const },
               },
             },
           },
@@ -512,7 +512,7 @@ test("distinct literal ids remain distinct when their old handles matched", () =
       { id: "draw-zone", name: "Draw Zone", scope: "shared" },
       { id: "draw_zone", name: "Draw Zone 2", scope: "shared" },
     ],
-  } as const;
+  } satisfies GameTopologyManifest;
 
   expect(validateManifestAuthoring(manifest).errors).toEqual([]);
   const compiled = compileManifest(manifest);

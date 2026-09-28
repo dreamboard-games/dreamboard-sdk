@@ -3,7 +3,7 @@ import { createTestEdit, createTestRandom } from "./transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { createStateQueries } from "../reducer";
 import type { RuntimeTableRecord } from "../reducer/model";
-import type { PlayerId } from "./per-player";
+import { asPlayerId, type PlayerId } from "./per-player";
 import { createSpatialTable } from "./table/table-test-fixtures";
 import {
   getCloneRuntimeTableCallCount,
@@ -20,7 +20,7 @@ type TestState = {
 };
 
 function player(id: string): PlayerId {
-  return id as PlayerId;
+  return asPlayerId(id);
 }
 
 function createState(): TestState {
@@ -137,13 +137,12 @@ function createState(): TestState {
         "card-d": { faceUp: false, visibleTo: ["player-3"] },
       },
       resources: Object.fromEntries(
-        players.map((id) => [
+        players.map((id): [PlayerId, Record<string, number>] => [
           id,
           id === player("player-1") ? { coins: 3 } : {},
         ]),
       ),
-      boards: { byId: {} },
-      slots: {},
+      boards: { byId: {}, hex: {}, square: {}, network: {}, track: {} },
     },
     flow: { currentPhase: "draft", activePlayers: players },
     phase: { round: 1 },

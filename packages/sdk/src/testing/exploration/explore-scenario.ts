@@ -26,7 +26,7 @@ import {
   inspectScenarioReplayNode,
   type InspectScenarioOptions,
 } from "../inspection/inspect-scenario.js";
-import type { InspectNode, Sha256Digest } from "../inspection/types.js";
+import type { InspectNode } from "../inspection/types.js";
 import { createExploreCursor, readExploreCursor } from "./cursor.js";
 import type {
   ExploreScenarioResult,
@@ -233,10 +233,8 @@ async function exploreTransitions<
         after: {
           checkpointDigest: afterNode.checkpointDigest,
           flow: afterNode.flow,
-          publicStateDigest: digestScenarioJson(
-            afterNode.publicState,
-          ) as Sha256Digest,
-          viewDigest: digestScenarioJson(afterNode.view) as Sha256Digest,
+          publicStateDigest: digestScenarioJson(afterNode.publicState),
+          viewDigest: digestScenarioJson(afterNode.view),
           actions: afterNode.actions.map(({ actor, interactionId }) => ({
             actor,
             interactionId,
@@ -414,10 +412,12 @@ function defaultCheckpoint<Game>(
   scenario: ScenarioReplayDefinition<Game>,
   at: ScenarioCheckpoint | undefined,
 ): ScenarioCheckpoint {
-  return (at ?? {
-    segment: "given",
-    completed: scenario.given.length,
-  }) as ScenarioCheckpoint;
+  return (
+    at ?? {
+      segment: "given",
+      completed: scenario.given.length,
+    }
+  );
 }
 
 function assertTransitionLimits(limit: number, maxEvaluations: number): void {

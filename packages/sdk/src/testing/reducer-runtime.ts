@@ -63,6 +63,7 @@ export function createReducerTestingRuntime<
   // The codec validates the authored schemas; its erased phase return type
   // cannot express the contract-specific phase-state mapping.
   const parseState = (state: Wire.ReducerSessionState) =>
+    // eslint-disable-next-line no-restricted-syntax -- This codec parses the same Contract schemas and current phase before the testing runtime receives its trusted session state.
     codec.parseState(state) as unknown as TrustedSessionState<Contract>;
   const parseInput = (input: Wire.GameInput) =>
     codec.parseInput(input) as TrustedInput<Contract>;
@@ -103,6 +104,7 @@ export function createReducerTestingRuntime<
     project({ state, playerIds, projectionMode }) {
       if (projectionMode !== "actionsOnly")
         return bundle.project({ state, playerIds });
+      // eslint-disable-next-line no-restricted-syntax -- This game-bound actions-only projector assembles the wire seat bundle from parsed session and player IDs.
       return projection.project({
         state: parseState(state),
         playerIds: playerIds.map((id) => codec.parsePlayerId(id)),

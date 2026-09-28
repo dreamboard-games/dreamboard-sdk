@@ -5,7 +5,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { formInput, rngInput } from "./inputs";
 import { many } from "../reducer";
-import { RuntimeTableRecord } from "../reducer/model";
+import { RuntimeTableRecord, type CollectorState } from "../reducer/model";
 import { createManifestStringLiteralSchema } from "./model";
 
 import { createClientParamSchemasByPhase } from "./client-param-schemas";
@@ -18,6 +18,9 @@ function createContract() {
   return createModel({
     manifest: {
       literals: {
+        boardLayouts: [] as const,
+        boardTypeIds: [] as const,
+        relationTypeIds: [] as const,
         playerIds,
         phaseNames,
         cardSetIds: [] as const,
@@ -54,6 +57,7 @@ function createContract() {
         cardSetIdsByPlayerZoneId: {},
       },
       ids: {
+        boardLayout: z.enum(["hex", "square", "network", "track"]),
         playerId: createManifestStringLiteralSchema(playerIds),
         phaseName: createManifestStringLiteralSchema(phaseNames),
         cardSetId: createManifestStringLiteralSchema([] as const),
@@ -116,6 +120,8 @@ describe("createClientParamSchemasByPhase", () => {
       explicit: z.literal("schema"),
     });
     const game = contract.assemble({
+      initial: { public: () => ({}), private: () => ({}), hidden: () => ({}) },
+      view: () => ({}),
       initialPhase: "setup",
       phases: {
         setup: contract.phase("setup").define({
@@ -152,8 +158,11 @@ describe("createClientParamSchemasByPhase", () => {
             }),
             explicit: contract.phase("setup").interaction({
               inputs: {
-                ignored: formInput.choice({
-                  choices: [{ value: "ignored", label: "Ignored" }],
+                explicit: formInput.choice({
+                  choices: [
+                    { value: "ignored", label: "Ignored" },
+                    { value: "schema", label: "Schema" },
+                  ],
                   defaultValue: "ignored",
                 }),
               },
@@ -164,17 +173,12 @@ describe("createClientParamSchemasByPhase", () => {
               inputs: {
                 cardId: cardInput({
                   target: cardTarget
-                    .zones<
-                      {
-                        table: RuntimeTableRecord;
-                      },
-                      string
-                    >(["hand"])
+                    .zones<CollectorState, string>(["hand"])
                     .where({
                       id: "card-type",
                       errorCode: "CARD_TYPE_NOT_ALLOWED",
                       test: ({ state, targetId }) =>
-                        state.table.cards[targetId]?.type === "play-card",
+                        state.table.cards[targetId]?.cardType === "play-card",
                     })
                     .build(),
                 }),

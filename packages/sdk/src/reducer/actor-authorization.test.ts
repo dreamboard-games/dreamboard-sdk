@@ -1,10 +1,11 @@
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { createGame as createModel } from "../reducer";
 
 import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { choiceTarget, formInput } from "./inputs";
-import { RuntimeTableRecord } from "../reducer/model";
 import { asPlayerId } from "../reducer/per-player";
 function getAvailableInteractions(
   bundle: ReturnType<typeof createReducerTestingRuntime>,
@@ -16,122 +17,24 @@ function getAvailableInteractions(
     playerIds: [playerId],
   });
   return (projection.seats[playerId]?.availableInteractionRefs ?? [])
-    .map((ref) => projection.interactionsByRef[ref])
-    .filter(Boolean);
+    .map((ref) => projection.interactionsByRef?.[ref])
+    .filter((interaction) => interaction !== undefined);
 }
-function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
-  const ids = playerIds.map((id) => asPlayerId(id));
-  return {
-    playerOrder: [...playerIds],
-    zones: { shared: {}, perPlayer: {}, visibility: {} },
-    decks: {},
-    hands: {},
-    handVisibility: {},
-    cards: {},
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: Object.fromEntries(ids.map((id) => [id, {}])),
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
-    },
-    dice: {},
-  };
-}
-function createManifestContract() {
-  const phaseNames = ["takeTurn"] as const;
-  const playerIds = ["player-1", "player-2"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      vertexIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {} as const,
-      zoneVisibilityById: {} as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: z.enum(playerIds),
-      phaseName: z.enum(phaseNames),
-      cardSetId: z.string(),
-      cardType: z.string(),
-      cardId: z.string(),
-      deckId: z.string(),
-      handId: z.string(),
-      sharedZoneId: z.string(),
-      playerZoneId: z.string(),
-      zoneId: z.string(),
-      resourceId: z.string(),
-      dieId: z.string(),
-      boardId: z.string(),
-      boardBaseId: z.string(),
-      boardContainerId: z.string(),
-      tileId: z.string(),
-      tileTypeId: z.string(),
-      edgeId: z.string(),
-      edgeTypeId: z.string(),
-      vertexId: z.string(),
-      vertexTypeId: z.string(),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: z.string(),
-      spaceTypeId: z.string(),
-      pieceId: z.string(),
-      pieceTypeId: z.string(),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
-}
+const manifest = compileManifest({
+  players: { minPlayers: 2, maxPlayers: 2 },
+  cardSets: [],
+  resources: [{ id: "gold", name: "Gold" }],
+} as const);
+const createTable = (playerIds = ["player-1", "player-2"]) =>
+  manifest.createInitialTable({ playerIds });
 describe("recipient-based response authorization", () => {
   function makeBundle() {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({
-          askPlayer: z.enum(["player-1", "player-2"]),
+          askPlayer: manifest.ids.playerId,
         }),
         private: z.object({}),
         hidden: z.object({}),
@@ -145,7 +48,7 @@ describe("recipient-based response authorization", () => {
       .build();
     const game = contract.assemble({
       initial: {
-        public: () => ({ askPlayer: "player-2" as const }),
+        public: () => ({ askPlayer: asPlayerId("player-2") }),
         private: () => ({}),
         hidden: () => ({}),
       },
@@ -155,7 +58,7 @@ describe("recipient-based response authorization", () => {
           kind: "player",
           initialState: () => ({}),
           enter({ tx }) {
-            tx.setActivePlayers(["player-1"]);
+            tx.setActivePlayers([asPlayerId("player-1")]);
             return;
           },
           interactions: {
@@ -186,7 +89,7 @@ describe("recipient-based response authorization", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -227,7 +130,7 @@ describe("recipient-based response authorization", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -246,7 +149,7 @@ describe("recipient-based response authorization", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -259,18 +162,20 @@ describe("recipient-based response authorization", () => {
         params: { answer: "yes" },
       },
     });
-    expect(rejected.valid).toBe(false);
-    expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
+    expect(rejected).toMatchObject({
+      valid: false,
+      errorCode: "NOT_YOUR_TURN",
+    });
   });
 });
 describe("phase actor, step, and cost resolution", () => {
   function makeBundle() {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({
-          actor: z.enum(["player-1", "player-2"]),
+          actor: manifest.ids.playerId,
         }),
         private: z.object({}),
         hidden: z.object({}),
@@ -278,7 +183,7 @@ describe("phase actor, step, and cost resolution", () => {
     });
     const game = contract.assemble({
       initial: {
-        public: () => ({ actor: "player-2" as const }),
+        public: () => ({ actor: asPlayerId("player-2") }),
         private: () => ({}),
         hidden: () => ({}),
       },
@@ -320,7 +225,7 @@ describe("phase actor, step, and cost resolution", () => {
             }),
             actorOnlyOverride: contract.phase("takeTurn").interaction({
               inputs: {},
-              actor: () => "player-1",
+              actor: () => asPlayerId("player-1"),
               reduce() {
                 return;
               },
@@ -332,7 +237,7 @@ describe("phase actor, step, and cost resolution", () => {
     });
     return createReducerTestingRuntime(game);
   }
-  function createResourceTable(): RuntimeTableRecord {
+  function createResourceTable() {
     const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
     return {
       ...createTable(["player-1", "player-2"]),
@@ -345,7 +250,7 @@ describe("phase actor, step, and cost resolution", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createResourceTable(),
+        table: RuntimeJsonSchema.parse(createResourceTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -388,7 +293,7 @@ describe("phase actor, step, and cost resolution", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createResourceTable(),
+        table: RuntimeJsonSchema.parse(createResourceTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -429,7 +334,7 @@ describe("phase actor, step, and cost resolution", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createResourceTable(),
+        table: RuntimeJsonSchema.parse(createResourceTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -466,7 +371,7 @@ describe("phase actor, step, and cost resolution", () => {
 describe("default action-kind authorization", () => {
   function makeBundle() {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({}),
@@ -485,7 +390,7 @@ describe("default action-kind authorization", () => {
         takeTurn: contract.phase("takeTurn").define({
           kind: "player",
           enter({ tx }) {
-            tx.setActivePlayers(["player-1"]);
+            tx.setActivePlayers([asPlayerId("player-1")]);
             return;
           },
           interactions: {
@@ -520,7 +425,7 @@ describe("default action-kind authorization", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -543,7 +448,7 @@ describe("default action-kind authorization", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -567,14 +472,16 @@ describe("default action-kind authorization", () => {
         params: {},
       },
     });
-    expect(rejected.valid).toBe(false);
-    expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
+    expect(rejected).toMatchObject({
+      valid: false,
+      errorCode: "NOT_YOUR_TURN",
+    });
   });
   test("submit: non-active player is rejected with NOT_YOUR_TURN", async () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -587,14 +494,16 @@ describe("default action-kind authorization", () => {
         params: {},
       },
     });
-    expect(rejected.valid).toBe(false);
-    expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
+    expect(rejected).toMatchObject({
+      valid: false,
+      errorCode: "NOT_YOUR_TURN",
+    });
   });
   test("submit: active player is accepted", async () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -613,11 +522,11 @@ describe("default action-kind authorization", () => {
 describe("closed response (`actor` resolves to empty set)", () => {
   function makeBundle() {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({
-          pendingRespondents: z.array(z.enum(["player-1", "player-2"])),
+          pendingRespondents: z.array(manifest.ids.playerId),
         }),
         private: z.object({}),
         hidden: z.object({}),
@@ -635,7 +544,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
           kind: "player",
           initialState: () => ({}),
           enter({ tx }) {
-            tx.setActivePlayers(["player-1"]);
+            tx.setActivePlayers([asPlayerId("player-1")]);
             return;
           },
           interactions: {
@@ -657,7 +566,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -670,7 +579,7 @@ describe("closed response (`actor` resolves to empty set)", () => {
     const bundle = makeBundle();
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -684,19 +593,21 @@ describe("closed response (`actor` resolves to empty set)", () => {
           params: {},
         },
       });
-      expect(rejected.valid).toBe(false);
-      expect(rejected.errorCode).toBe("NOT_YOUR_TURN");
+      expect(rejected).toMatchObject({
+        valid: false,
+        errorCode: "NOT_YOUR_TURN",
+      });
     }
   });
 });
 describe("action-kind interactions with a `actor` selector", () => {
   test("descriptor: only recipients see an action-kind interaction with `actor`; non-recipients (incl. active player) do not", async () => {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({
-          mustDiscard: z.array(z.enum(["player-1", "player-2"])),
+          mustDiscard: z.array(manifest.ids.playerId),
         }),
         private: z.object({}),
         hidden: z.object({}),
@@ -704,7 +615,7 @@ describe("action-kind interactions with a `actor` selector", () => {
     });
     const game = contract.assemble({
       initial: {
-        public: () => ({ mustDiscard: ["player-2"] as const }),
+        public: () => ({ mustDiscard: [asPlayerId("player-2")] }),
         private: () => ({}),
         hidden: () => ({}),
       },
@@ -714,7 +625,7 @@ describe("action-kind interactions with a `actor` selector", () => {
           kind: "player",
           initialState: () => ({}),
           enter({ tx }) {
-            tx.setActivePlayers(["player-1"]);
+            tx.setActivePlayers([asPlayerId("player-1")]);
             return;
           },
           interactions: {
@@ -733,7 +644,7 @@ describe("action-kind interactions with a `actor` selector", () => {
     const bundle = createReducerTestingRuntime(game);
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -753,11 +664,11 @@ describe("action-kind interactions with a `actor` selector", () => {
 describe("author `available` predicate composes with authorization", () => {
   test("recipient's availability still respects the author's `available` predicate", async () => {
     const contract = createModel({
-      manifest: createManifestContract(),
+      manifest,
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({
-          askPlayer: z.enum(["player-1", "player-2"]),
+          askPlayer: manifest.ids.playerId,
         }),
         private: z.object({}),
         hidden: z.object({}),
@@ -765,7 +676,7 @@ describe("author `available` predicate composes with authorization", () => {
     });
     const game = contract.assemble({
       initial: {
-        public: () => ({ askPlayer: "player-2" as const }),
+        public: () => ({ askPlayer: asPlayerId("player-2") }),
         private: () => ({}),
         hidden: () => ({}),
       },
@@ -798,14 +709,16 @@ describe("author `available` predicate composes with authorization", () => {
     const bundle = createReducerTestingRuntime(game);
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
     const descriptors = getAvailableInteractions(bundle, initial, "player-2");
     expect(descriptors).toHaveLength(1);
-    expect(descriptors[0].availability.status).toBe("blocked");
-    expect(descriptors[0].availability.reason).toBe("Interaction unavailable");
+    expect(descriptors[0].availability).toMatchObject({
+      status: "blocked",
+      reason: "Interaction unavailable",
+    });
     const rejected = await bundle.validateInput({
       state: initial,
       input: {
@@ -815,7 +728,9 @@ describe("author `available` predicate composes with authorization", () => {
         params: {},
       },
     });
-    expect(rejected.valid).toBe(false);
-    expect(rejected.errorCode).toBe("action-unavailable");
+    expect(rejected).toMatchObject({
+      valid: false,
+      errorCode: "action-unavailable",
+    });
   });
 });

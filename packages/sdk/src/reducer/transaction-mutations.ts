@@ -576,8 +576,10 @@ type TableMoveComponentToVertexInPlaceInternal = (
 ) => void;
 
 const moveComponentToEdgeInPlaceInternal =
+  // eslint-disable-next-line no-restricted-syntax -- The typed transaction edge method supplies IDs from its State; this internal adapter erases only those manifest-derived ID unions.
   tableMoveComponentToEdgeInPlace as unknown as TableMoveComponentToEdgeInPlaceInternal;
 const moveComponentToVertexInPlaceInternal =
+  // eslint-disable-next-line no-restricted-syntax -- The typed transaction vertex method supplies IDs from its State; this internal adapter erases only those manifest-derived ID unions.
   tableMoveComponentToVertexInPlace as unknown as TableMoveComponentToVertexInPlaceInternal;
 const dealCardsFromDeckToHandInPlaceInternal =
   tableDealCardsFromDeckToHandInPlace;

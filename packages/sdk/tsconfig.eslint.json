@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.runtime-contract.json",
+  "compilerOptions": {
+    "rootDir": "../..",
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "type-tests/**/*.ts",
+    "consumer-tests/**/*.ts",
+    "tsup.config.ts",
+    "bench/**/*.ts",
+    "test-support/**/*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build"]
+}

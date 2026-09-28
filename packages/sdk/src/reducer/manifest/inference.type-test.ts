@@ -53,6 +53,7 @@ const points: number = table.cards[card].properties.points;
 // @ts-expect-error Card property enums remain narrow.
 const badColor: "green" = table.cards[card].properties.color;
 // @ts-expect-error Unknown decks are not part of the manifest.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Unknown decks are not part of the manifest.
 const missingDeck = compiled.defaults.decks().missing;
 const game = createGame({
   manifest,

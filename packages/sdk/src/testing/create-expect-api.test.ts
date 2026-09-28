@@ -111,7 +111,7 @@ describe("createExpectApi — value matchers", () => {
     expectFn("hello world").toContain("world");
     expect(() => expectFn([1, 2, 3]).toContain(4)).toThrow();
     expect(() => expectFn("hello").toContain("world")).toThrow();
-    expect(() => expectFn(42 as unknown).toContain(1)).toThrow();
+    expect(() => expectFn(42).toContain(1)).toThrow();
   });
 
   test("toContainEqual checks deep equality in arrays", () => {
@@ -123,22 +123,20 @@ describe("createExpectApi — value matchers", () => {
     expectFn([1, 2, 3]).toHaveLength(3);
     expectFn("abcd").toHaveLength(4);
     expect(() => expectFn([1]).toHaveLength(2)).toThrow();
-    expect(() => expectFn(42 as unknown).toHaveLength(0)).toThrow();
+    expect(() => expectFn(42).toHaveLength(0)).toThrow();
   });
 
   test("toBeGreaterThanOrEqual checks numeric ordering", () => {
     expectFn(5).toBeGreaterThanOrEqual(5);
     expectFn(6).toBeGreaterThanOrEqual(5);
     expect(() => expectFn(4).toBeGreaterThanOrEqual(5)).toThrow();
-    expect(() =>
-      expectFn("five" as unknown).toBeGreaterThanOrEqual(1),
-    ).toThrow();
+    expect(() => expectFn("five").toBeGreaterThanOrEqual(1)).toThrow();
   });
 
   test("toBeGreaterThan checks numeric ordering", () => {
     expectFn(6).toBeGreaterThan(5);
     expect(() => expectFn(5).toBeGreaterThan(5)).toThrow();
-    expect(() => expectFn("five" as unknown).toBeGreaterThan(1)).toThrow();
+    expect(() => expectFn("five").toBeGreaterThan(1)).toThrow();
   });
 
   test("toThrow with predicate variants", () => {

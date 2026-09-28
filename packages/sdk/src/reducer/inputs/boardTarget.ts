@@ -54,34 +54,19 @@ function candidateIdsForKind<State extends CollectorState, Id extends string>(
   targetKind: BoardTargetKind,
 ): readonly Id[] {
   const board = q.board(boardId as BoardIdOfTable<TableOfState<State>>).state;
-  if (targetKind === "edge")
-    return idsFromCollection<Id>(board.layout === "generic" ? [] : board.edges);
-  if (targetKind === "vertex")
-    return idsFromCollection<Id>(
-      board.layout === "generic" ? [] : board.vertices,
-    );
-  return idsFromCollection<Id>(board.spaces);
-}
-
-function idsFromCollection<Id extends string>(
-  collection: unknown,
-): readonly Id[] {
-  if (!collection) return [];
-  const values = Array.isArray(collection)
-    ? collection
-    : Object.values(collection as Record<string, unknown>);
-  return values.flatMap((value) => {
-    if (typeof value === "string") return [value as Id];
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      "id" in value &&
-      typeof (value as { id?: unknown }).id === "string"
-    ) {
-      return [(value as { id: string }).id as Id];
-    }
-    return [];
-  });
+  const collection:
+    Readonly<Record<string, { id: string }>> | readonly { id: string }[] =
+    targetKind === "edge"
+      ? board.layout === "generic"
+        ? []
+        : board.edges
+      : targetKind === "vertex"
+        ? board.layout === "generic"
+          ? []
+          : board.vertices
+        : board.spaces;
+  // This builder binds Id to the selected board and target kind in the same State.
+  return Object.values(collection).map((value) => value.id) as Id[];
 }
 
 function createBoardTargetBuilder<

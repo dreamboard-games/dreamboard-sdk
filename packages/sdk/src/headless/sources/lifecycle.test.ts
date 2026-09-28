@@ -176,9 +176,9 @@ describe("source request lifecycle", () => {
       })
       .parse(
         JSON.parse(
-          x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById[
+          x.source.store.get().snapshot!.frame.zones.hand.cardViewsById[
             "card-1"
-          ]!,
+          ],
         ),
       );
     expect(view.frontImage).toMatch(/^blob:/);
@@ -186,9 +186,7 @@ describe("source request lifecycle", () => {
     expect(view.properties).toEqual({ power: 7 });
     expect(
       JSON.parse(
-        x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById[
-          "card-2"
-        ]!,
+        x.source.store.get().snapshot!.frame.zones.hand.cardViewsById["card-2"],
       ),
     ).toEqual({ rank: "A" });
     const revoke = vi.spyOn(URL, "revokeObjectURL");

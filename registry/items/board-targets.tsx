@@ -144,7 +144,7 @@ export function BoardTargets({
   }
   function control(target: Space | Edge | Vertex) {
     // SVG groups do not accept the native button type.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Strip the native button type before spreading props on an SVG group.
     const { disabled, type: _type, onClick, ...data } = target.getTargetProps();
     return {
       ...data,

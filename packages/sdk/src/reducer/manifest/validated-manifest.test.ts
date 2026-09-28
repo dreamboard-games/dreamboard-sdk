@@ -7,7 +7,7 @@ import { compileManifest } from "./compiler";
 import { materializeManifestTable } from "./materialize";
 import { validateManifestAuthoring } from "./manifest-validation";
 
-const base: GameTopologyManifest = {
+const base = {
   players: { minPlayers: 1, maxPlayers: 2 },
   cardSets: [],
   boards: [],
@@ -30,10 +30,19 @@ test.each([
         ...base,
         cardSets: [
           {
-            type: "manual",
             id: "cards",
             name: "Cards",
-            cards: [{ type: "ace", name: "Ace", count, properties: {} }],
+            cardSchema: { properties: {} },
+            defaultHome: { type: "detached" },
+            cards: [
+              {
+                id: "ace",
+                cardType: "ace",
+                name: "Ace",
+                count,
+                properties: {},
+              },
+            ],
           },
         ],
       },
@@ -45,7 +54,7 @@ test.each([
         expect.stringMatching(/\.count: Expected a positive safe integer/),
       ]);
       const boundaries = [
-        () => defineTopologyManifest(manifest),
+        () => void Reflect.apply(defineTopologyManifest, undefined, [manifest]),
         () => compileManifest(manifest),
         () =>
           createGame({
@@ -91,7 +100,7 @@ test("compiled initialization keeps the validated source snapshot", () => {
     pieceSeeds: [{ typeId: "token", count: 1 }],
   };
   const compiled = compileManifest(source);
-  source.pieceSeeds[0]!.count = -1;
+  source.pieceSeeds[0].count = -1;
   expect(Object.keys(compiled.createInitialTable().pieces)).toEqual(["token"]);
 });
 
@@ -102,12 +111,12 @@ test("defined topology validates duplicate identities and snapshots its input", 
     pieceSeeds: [{ typeId: "token", count: 1 }],
   };
   const validated = defineTopologyManifest(source);
-  source.pieceSeeds[0]!.count = -1;
-  expect(validated.pieceSeeds[0]!.count).toBe(1);
+  source.pieceSeeds[0].count = -1;
+  expect(validated.pieceSeeds[0].count).toBe(1);
   expect(() =>
     defineTopologyManifest({
       ...base,
-      pieceTypes: [source.pieceTypes[0]!, source.pieceTypes[0]!],
+      pieceTypes: [source.pieceTypes[0], source.pieceTypes[0]],
     }),
   ).toThrow(/Duplicate piece type id/);
 });

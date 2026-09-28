@@ -2,21 +2,22 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": "../..",
+    "allowImportingTsExtensions": true,
+    "paths": {
+      "@dreamboard-games/sdk": ["./src/index.ts"],
+      "@dreamboard-games/sdk/reducer": ["./src/reducer.ts"],
+      "@dreamboard-games/sdk/testing": ["./src/testing.ts"],
+      "@dreamboard-games/sdk/react": ["./src/react.ts"]
+    },
+    "declaration": false,
+    "declarationMap": false
   },
   "include": [
-    "src/reducer/runtime-behavior.test.ts",
-    "src/reducer/manifest/compiler.test.ts",
-    "src/reducer/bundle/trusted/collector-input-solver.test.ts",
-    "src/reducer/target-rules.test.ts",
-    "src/reducer/interaction-input-projection.test.ts",
-    "src/reducer/bundle/trusted/step-prefix.test.ts",
-
-    "src/reducer/interaction-input-types.test.ts",
-    "src/testing/definitions.test.ts",
-    "src/testing/candidate-verification.test.ts",
-    "src/reducer/core/runtime-input.test.ts",
-    "src/reducer/bundle/trusted/runtime-registry.test.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "bench/**/*.ts",
+    "test-support/**/*.ts"
   ],
   "exclude": []
 }

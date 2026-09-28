@@ -1,3 +1,4 @@
+import { compileManifest } from "../reducer/manifest/compiler";
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "../reducer/authoring/steps";
 
@@ -11,10 +12,6 @@ import {
   rngInput,
 } from "../reducer/inputs";
 import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../reducer/model";
-import {
   assertScenario,
   createScenarioAuthoring,
   exploreScenario,
@@ -27,171 +24,24 @@ import {
   type ScenarioReplay,
 } from "./index";
 
-function createTable(playerIds: readonly string[]): RuntimeTableRecord {
-  const brandedPlayerIds = playerIds.map(asPlayerId);
-  const personalBoards = Object.fromEntries(
-    brandedPlayerIds.map((playerId) => {
-      const id = `survey-grid:${playerId}`;
-      return [
-        id,
-        {
-          id,
-          baseId: "survey-grid",
-          layout: "generic" as const,
-          scope: "perPlayer" as const,
-          playerId,
-          fields: {},
-          spaces: {
-            "cell-a": { id: "cell-a", fields: {} },
-            "cell-b": { id: "cell-b", fields: {} },
-          },
-          relations: [],
-          containers: {},
-        },
-      ];
-    }),
-  );
-  return {
-    playerOrder: brandedPlayerIds,
-    zones: { shared: {}, perPlayer: {}, visibility: {} },
-    decks: {},
-    hands: {},
-    handVisibility: {},
-    cards: {},
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: Object.fromEntries(brandedPlayerIds.map((id) => [id, {}])),
-    boards: {
-      byId: personalBoards,
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
-    },
-    dice: {},
-  };
-}
-
 function createScenarioGame() {
-  const playerIds = ["player-1", "player-2"] as const;
-  const phaseNames = ["play", "chooseTogether", "finish"] as const;
-  const playerIdSchema = createManifestStringLiteralSchema(
-    playerIds,
-    "playerId",
-  );
-  const manifest = {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {},
-      zoneVisibilityById: {},
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: playerIdSchema,
-      phaseName: createManifestStringLiteralSchema(phaseNames, "phaseName"),
-      cardSetId: createManifestStringLiteralSchema([] as const, "cardSetId"),
-      cardType: createManifestStringLiteralSchema([] as const, "cardType"),
-      cardId: createManifestStringLiteralSchema([] as const, "cardId"),
-      deckId: createManifestStringLiteralSchema([] as const, "deckId"),
-      handId: createManifestStringLiteralSchema([] as const, "handId"),
-      sharedZoneId: createManifestStringLiteralSchema(
-        [] as const,
-        "sharedZoneId",
-      ),
-      playerZoneId: createManifestStringLiteralSchema(
-        [] as const,
-        "playerZoneId",
-      ),
-      zoneId: createManifestStringLiteralSchema([] as const, "zoneId"),
-      resourceId: createManifestStringLiteralSchema([] as const, "resourceId"),
-      pieceTypeId: createManifestStringLiteralSchema(
-        [] as const,
-        "pieceTypeId",
-      ),
-      pieceId: createManifestStringLiteralSchema([] as const, "pieceId"),
-      dieTypeId: createManifestStringLiteralSchema([] as const, "dieTypeId"),
-      dieId: createManifestStringLiteralSchema([] as const, "dieId"),
-      boardTypeId: createManifestStringLiteralSchema(
-        [] as const,
-        "boardTypeId",
-      ),
-      boardBaseId: createManifestStringLiteralSchema(
-        [] as const,
-        "boardBaseId",
-      ),
-      boardId: createManifestStringLiteralSchema([] as const, "boardId"),
-      boardContainerId: createManifestStringLiteralSchema(
-        [] as const,
-        "boardContainerId",
-      ),
-      relationTypeId: createManifestStringLiteralSchema(
-        [] as const,
-        "relationTypeId",
-      ),
-      edgeId: createManifestStringLiteralSchema([] as const, "edgeId"),
-      edgeTypeId: createManifestStringLiteralSchema([] as const, "edgeTypeId"),
-      vertexId: createManifestStringLiteralSchema([] as const, "vertexId"),
-      vertexTypeId: createManifestStringLiteralSchema(
-        [] as const,
-        "vertexTypeId",
-      ),
-      spaceId: createManifestStringLiteralSchema([] as const, "spaceId"),
-      spaceTypeId: createManifestStringLiteralSchema(
-        [] as const,
-        "spaceTypeId",
-      ),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: (ids?: readonly string[]) =>
-        Object.fromEntries((ids ?? []).map(asPlayerId).map((id) => [id, {}])),
-    },
-    normalSetup: {
-      minPlayers: 2,
-      maxPlayers: 2,
-      createInitialTable: ({
-        playerIds: ids,
-      }: {
-        playerIds: readonly string[];
-      }) => createTable(ids),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
+  const manifest = compileManifest({
+    players: { minPlayers: 2, maxPlayers: 2 },
+    cardSets: [],
+    boards: [
+      {
+        id: "survey-grid",
+        name: "Survey grid",
+        layout: "generic",
+        scope: "perPlayer",
+        spaces: [{ id: "cell-a" }, { id: "cell-b" }],
+        relations: [],
+        containers: [],
+      },
+    ],
+  } as const);
+  const playerIds = manifest.literals.playerIds;
+  const playerIdSchema = manifest.ids.playerId;
   const contract = createModel({
     manifest,
     state: {
@@ -210,6 +60,7 @@ function createScenarioGame() {
     },
     errors: {
       COUNT_TOO_LARGE: "The count cannot exceed five.",
+      TASK_REJECTED: "The task is rejected.",
       RECIPIENT_REQUIRED: "Choose a recipient for targeted mode.",
     },
   });
@@ -234,7 +85,7 @@ function createScenarioGame() {
         kind: "player",
         initialState: () => ({}),
         enter: ({ tx, q }) => {
-          tx.setActivePlayers([q.player.order()[0]!]);
+          tx.setActivePlayers([q.player.order()[0]]);
         },
         actor: ({ q }) => q.player.order()[0] ?? null,
         interactions: {
@@ -305,7 +156,7 @@ function createScenarioGame() {
                 formInput.choice({
                   choices:
                     selected.mode === "targeted"
-                      ? [{ value: "player-2", label: "Player 2" }]
+                      ? [{ value: asPlayerId("player-2"), label: "Player 2" }]
                       : [{ value: null, label: "No recipient" }],
                   defaultValue: () => undefined,
                 }),
@@ -353,7 +204,7 @@ function createScenarioGame() {
                   value: playerId,
                   label: playerId,
                 })),
-                defaultValue: "player-1",
+                defaultValue: asPlayerId("player-1"),
               }),
             },
             paramsSchema: z.object({ target: playerIdSchema }),
@@ -597,6 +448,10 @@ describe("replayScenario", () => {
     });
 
     accepted.toBeAccepted();
+    acceptedAgain.toBeAccepted();
+    if (accepted.kind !== "accepted" || acceptedAgain.kind !== "accepted") {
+      throw new Error("Expected both probes to be accepted");
+    }
     expect(accepted.checkpointDigest).toBe(acceptedAgain.checkpointDigest);
     rejected.toRejectWith({ errorCode: "NOT_YOUR_TURN" });
     expect(() => accepted.toRejectWith({ errorCode: "NOT_YOUR_TURN" })).toThrow(
@@ -799,7 +654,7 @@ describe("scenario inspection and exploration", () => {
     const command = explored.candidates.find(
       (candidate) => candidate.command.interactionId === "markCell",
     )?.command;
-    expect(command).toEqual({
+    const expectedCommand = {
       actor: { seat: 0 },
       interactionId: "markCell",
       params: {
@@ -809,7 +664,8 @@ describe("scenario inspection and exploration", () => {
           spaceId: "cell-a",
         },
       },
-    });
+    } as const;
+    expect(command).toEqual(expectedCommand);
     if (!command) return;
 
     const replayed = await replayScenario({
@@ -818,7 +674,7 @@ describe("scenario inspection and exploration", () => {
         id: "replay-explored-player-board-command",
         setup: scenario.setup,
         given: [],
-        when: [command as never],
+        when: [expectedCommand],
         then: () => {},
       }),
     });
@@ -842,11 +698,12 @@ describe("scenario inspection and exploration", () => {
         candidate.interactionId === "optionalRecipient" &&
         candidate.params.mode === "solo",
     )?.command;
-    expect(command).toEqual({
+    const expectedCommand = {
       actor: { seat: 0 },
       interactionId: "optionalRecipient",
       params: { mode: "solo" },
-    });
+    } as const;
+    expect(command).toEqual(expectedCommand);
     expect(command?.params).not.toHaveProperty("recipient");
     if (!command) return;
 
@@ -857,12 +714,12 @@ describe("scenario inspection and exploration", () => {
         setup: scenario.setup,
         given: [],
         when: [
-          command as never,
+          expectedCommand,
           {
             actor: { seat: 0 },
             interactionId: "optionalRecipient",
             params: { recipient: null },
-          } as never,
+          },
         ],
         then: () => {},
       }),

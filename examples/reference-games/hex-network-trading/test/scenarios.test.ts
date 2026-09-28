@@ -4,6 +4,7 @@ import { asPlayerId } from "@dreamboard-games/sdk/reducer";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  type ScenarioCommandOf,
   assertScenario,
   exploreScenario,
   inspectScenario,
@@ -30,7 +31,6 @@ import {
   DISCARD_BARRIER_PREFIX_COMMANDS,
   discard,
   accept,
-  end,
   offer,
   roll,
   STANDARD_SETUP_COMMANDS,
@@ -480,7 +480,8 @@ test("Bandits exploration commits the destination before discovering victims", a
       const replay = await replayScenario({ game, scenario });
       const result = await probeScenarioCommand({
         replay,
-        command: candidate.command as never,
+        // This candidate was enumerated and validated for this same game above.
+        command: candidate.command as ScenarioCommandOf<typeof game>,
       });
       assert.equal(result.kind, "accepted");
     }

@@ -119,6 +119,7 @@ export function createReducerBundle<
   // The codec validates the authored schemas; its erased phase return type
   // cannot express the contract-specific phase-state mapping.
   const parseState = (state: Wire.ReducerSessionState) =>
+    // eslint-disable-next-line no-restricted-syntax -- This codec parses the same Contract schemas and current phase before the trusted runtime receives its session state.
     codec.parseState(state) as unknown as TrustedSessionState<Contract>;
   const parseInput = (input: Wire.GameInput) =>
     codec.parseInput(input) as TrustedInput<Contract>;
@@ -192,6 +193,7 @@ export function createReducerBundle<
     boardStatic: () =>
       staticProjection.boardStatic() as Wire.BoardStaticProjection | null,
     project({ state, playerIds }) {
+      // eslint-disable-next-line no-restricted-syntax -- This game-bound projector assembles the seat bundle from parsed session and player IDs; the wire facade erases its generic view type.
       return projection.project({
         state: parseState(state),
         playerIds: playerIds.map((id) => codec.parsePlayerId(id)),

@@ -136,6 +136,7 @@ export function getPlayerZoneCards<
   const cards =
     table.zones.perPlayer[zoneId]?.[playerId as string] ??
     table.hands[zoneId]?.[playerId as string];
+  // eslint-disable-next-line no-restricted-syntax -- The checked player-zone key selects cards from this Table; copying them preserves its zone-specific card ID union.
   return [
     ...ensureArray(cards as readonly string[] | undefined),
   ] as unknown as HandCardsForZone<Table, ZoneId>;

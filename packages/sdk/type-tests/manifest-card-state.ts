@@ -93,10 +93,13 @@ const spellAttack: "attack" = spark.cardType;
 const mana: number = spark.properties.mana;
 
 // @ts-expect-error The attack variant has no shield field.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: The attack variant has no shield field.
 const noShield = strike.properties.shield;
 // @ts-expect-error The defense variant has no damage field.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: The defense variant has no damage field.
 const noDamage = block.properties.damage;
 // @ts-expect-error A shared category in another set does not share fields.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: A shared category in another set does not share fields.
 const noSpellDamage = spark.properties.damage;
 // @ts-expect-error The variant's integer value overrides the shared string.
 const wrongOverride: string = strike.properties.value;
@@ -107,6 +110,7 @@ const missingRequiredStatus: typeof strike.properties = {
   damage: 2,
 };
 // @ts-expect-error Definition ids with multiple copies are suffixed.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Definition ids with multiple copies are suffixed.
 const unsuffixed = table.cards.strike;
 
 const defenseWithoutStatus: typeof block.properties = {

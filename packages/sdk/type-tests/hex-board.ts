@@ -39,13 +39,13 @@ const b = createHexBoardGeometry({
   id: "b",
   spaces: [{ id: "home", q: 0, r: 0 }],
 });
-a.spacesAlong(a.edgesOf("home")[0]!);
+a.spacesAlong(a.edgesOf("home")[0]);
 // @ts-expect-error Edge identities belong to one board.
-a.spacesAlong(b.edgesOf("home")[0]!);
+a.spacesAlong(b.edgesOf("home")[0]);
 // @ts-expect-error Manual strings are not canonical edge identities.
 a.spacesAlong("a:edge:home:0");
 // @ts-expect-error Edge identities cannot stand in for vertices.
-a.spacesAt(a.edgesOf("home")[0]!);
+a.spacesAt(a.edgesOf("home")[0]);
 
 const pair = compileManifest({
   players: { minPlayers: 1, maxPlayers: 1 },

@@ -1,7 +1,6 @@
 import { createTestTransaction } from "../transaction-test-fixtures";
 import { describe, expect, test } from "vitest";
-import type { RuntimeTableRecord } from "../../reducer/model";
-import { type PlayerId } from "../per-player";
+import { asPlayerId } from "../per-player";
 import {
   addCardToSharedZoneInPlace,
   dealCardsBetweenPlayerZonesInPlace,
@@ -12,11 +11,8 @@ import {
 } from "./index";
 import { createSpatialTable } from "./table-test-fixtures";
 
-const asRuntimePlayerId = (value: string): PlayerId =>
-  value as unknown as PlayerId;
-
-const PLAYER_1 = asRuntimePlayerId("player-1");
-const PLAYER_2 = asRuntimePlayerId("player-2");
+const PLAYER_1 = asPlayerId("player-1");
+const PLAYER_2 = asPlayerId("player-2");
 const PLAYER_IDS = [PLAYER_1, PLAYER_2] as const;
 
 const DRAW_DECK = "draw-deck";
@@ -97,7 +93,7 @@ describe("table ops spatial helpers", () => {
       cardSetId: "main",
       cardType: "card",
       properties: {},
-    } as RuntimeTableRecord["cards"][string];
+    };
     table.componentLocations["card-2"] = {
       type: "Detached",
     };
@@ -134,7 +130,7 @@ describe("table ops spatial helpers", () => {
       cardSetId: "main",
       cardType: "card",
       properties: {},
-    } as RuntimeTableRecord["cards"][string];
+    };
     table.componentLocations["card-2"] = { type: "Detached" };
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
@@ -163,7 +159,7 @@ describe("table ops spatial helpers", () => {
       cardSetId: "special",
       cardType: "card",
       properties: {},
-    } as RuntimeTableRecord["cards"][string];
+    };
     table.decks["special-deck"] = ["card-special"];
     table.zones.shared["special-deck"] = ["card-special"];
     table.componentLocations["card-special"] = {
@@ -220,7 +216,7 @@ describe("table ops spatial helpers", () => {
       cardSetId: "main",
       cardType: "card",
       properties: {},
-    } as RuntimeTableRecord["cards"][string];
+    };
     table.decks["draw-deck"] = ["card-other"];
     table.zones.shared["draw-deck"] = ["card-other"];
     table.componentLocations["card-other"] = {
@@ -515,7 +511,7 @@ describe("table ops spatial helpers", () => {
       cardSetId: "main",
       cardType: "card",
       properties: {},
-    } as RuntimeTableRecord["cards"][string];
+    };
     table.componentLocations["card-2"] = { type: "Detached" };
     table.ownerOfCard["card-2"] = null;
     table.visibility["card-2"] = { faceUp: true };
@@ -537,7 +533,7 @@ describe("table ops spatial helpers", () => {
         cardSetId: "main",
         cardType: "card",
         properties: {},
-      } as RuntimeTableRecord["cards"][string];
+      };
       table.ownerOfCard[cardId] = null;
       table.visibility[cardId] = { faceUp: true };
     }

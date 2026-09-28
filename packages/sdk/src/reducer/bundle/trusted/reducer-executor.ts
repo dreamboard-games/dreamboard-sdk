@@ -145,10 +145,7 @@ export function createReducerExecutor<
       input.interactionId,
     );
     if (!interaction) return { state, input, consumptions: [] };
-    const collectors = (interaction.inputs ?? {}) as Record<
-      string,
-      InputCollector
-    >;
+    const collectors = interaction.inputs ?? {};
     let nextRng = state.runtime.rng;
     const sampled: Record<string, unknown> = {};
     const consumptions: RngConsumption[] = [];

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { createGame, many } from "../../reducer.js";
 import { localSource } from "../../testing/sources/local-source.js";
 import { createGameInstance } from "../instance.js";
@@ -20,7 +21,15 @@ function authoredGame() {
           id: "cards",
           name: "Cards",
           cardSchema: { properties: {} },
-          cards: [{ id: "card", cardType: "card", count: 1, properties: {} }],
+          cards: [
+            {
+              id: "card",
+              name: "Card",
+              cardType: "card",
+              count: 1,
+              properties: {},
+            },
+          ],
           defaultHome: { type: "zone", zoneId: "table" },
         },
       ],
@@ -149,14 +158,14 @@ async function setup() {
     source,
     game,
     space: (id: string) =>
-      game.boards.get(id).getLayout({ hexSize: 20 }).getSpaces()[0]!,
+      game.boards.get(id).getLayout({ hexSize: 20 }).getSpaces()[0],
   };
 }
 
 describe("per-player board target identity through local sources", () => {
   it("projects complete tuples and allows the opponent selected by the authored domain", async () => {
     const { source, game, space } = await setup();
-    const input = game.interactions.get("play.single").getInputs()[0]!;
+    const input = game.interactions.get("play.single").getInputs()[0];
     expect(input.getEligibleTargets()).toEqual([ownTarget, opponentTarget]);
     expect(input.getIsEligible("slot")).toBe(false);
     expect(input.getIsEligible({ ...opponentTarget, boardId: "other" })).toBe(
@@ -172,7 +181,7 @@ describe("per-player board target identity through local sources", () => {
     expect(space("mat:player-1").getIsSelected()).toBe(false);
     expect(space("mat:player-2").getIsSelected()).toBe(true);
     expect(
-      game.interactions.get("play.single").getInputs()[0]!.getIsSelected({
+      game.interactions.get("play.single").getInputs()[0].getIsSelected({
         spaceId: "slot",
         playerId: "player-2",
         boardId: "mat",
@@ -181,7 +190,9 @@ describe("per-player board target identity through local sources", () => {
     expect(await game.interactions.get("play.single").submit()).toEqual({
       accepted: true,
     });
-    expect(source.inspect().frame.view.selected).toEqual([opponentTarget]);
+    expect(source.inspect().frame.view).toMatchObject({
+      selected: [opponentTarget],
+    });
     game.dispose();
   });
 
@@ -189,22 +200,21 @@ describe("per-player board target identity through local sources", () => {
     const { source, game, space } = await setup();
     space("mat:player-1").getSelectHandler({ interaction: "play.several" })();
     space("mat:player-2").getSelectHandler({ interaction: "play.several" })();
-    const input = game.interactions.get("play.several").getInputs()[0]!;
+    const input = game.interactions.get("play.several").getInputs()[0];
     expect(input.getValue()).toEqual([ownTarget, opponentTarget]);
     input
       .getTargetProps({ spaceId: "slot", playerId: "player-2", boardId: "mat" })
       .onClick();
     expect(
-      game.interactions.get("play.several").getInputs()[0]!.getValue(),
+      game.interactions.get("play.several").getInputs()[0].getValue(),
     ).toEqual([ownTarget]);
     space("mat:player-2").getSelectHandler({ interaction: "play.several" })();
     expect(await game.interactions.get("play.several").submit()).toEqual({
       accepted: true,
     });
-    expect(source.inspect().frame.view.selected).toEqual([
-      ownTarget,
-      opponentTarget,
-    ]);
+    expect(source.inspect().frame.view).toMatchObject({
+      selected: [ownTarget, opponentTarget],
+    });
     game.dispose();
   });
 
@@ -231,7 +241,10 @@ describe("per-player board target identity through local sources", () => {
       ],
     ] as const) {
       const before = source.checkpoint();
-      expect((await source.submit(interaction, params)).accepted).toBe(false);
+      expect(
+        (await source.submit(interaction, RuntimeJsonSchema.parse(params)))
+          .accepted,
+      ).toBe(false);
       expect(source.checkpoint()).toEqual(before);
     }
     expect(await source.submit("own", { space: ownTarget })).toEqual({
@@ -243,15 +256,15 @@ describe("per-player board target identity through local sources", () => {
   it("rechecks stale click eligibility while retaining old snapshot values", async () => {
     const { source, game, space } = await setup();
     const old = space("mat:player-2");
-    const oldInput = game.interactions.get("play.single").getInputs()[0]!;
+    const oldInput = game.interactions.get("play.single").getInputs()[0];
     old.getSelectHandler({ interaction: "play.single" })();
     expect(await source.submit("close", {})).toEqual({ accepted: true });
     expect(
-      game.interactions.get("play.single").getInputs()[0]!.getValue(),
+      game.interactions.get("play.single").getInputs()[0].getValue(),
     ).toBeUndefined();
     old.getSelectHandler({ interaction: "play.single" })();
     expect(
-      game.interactions.get("play.single").getInputs()[0]!.getValue(),
+      game.interactions.get("play.single").getInputs()[0].getValue(),
     ).toBeUndefined();
     expect(oldInput.getEligibleTargets()).toEqual([ownTarget, opponentTarget]);
     expect(Object.isFrozen(oldInput.getEligibleTargets()[0])).toBe(true);
@@ -275,7 +288,7 @@ describe("per-player board target identity through local sources", () => {
 
   it("drops a real projected card on the opponent's complete tuple", async () => {
     const { source, game } = await setup();
-    game.drag.begin(game.zones.get("table").getCards()[0]!.id, {
+    game.drag.begin(game.zones.get("table").getCards()[0].id, {
       interaction: "play.drop",
     });
     const targets = game.drag.getDropTargets();
@@ -283,19 +296,24 @@ describe("per-player board target identity through local sources", () => {
       ownTarget,
       opponentTarget,
     ]);
+    const target = targets[1];
+    if (target.valueKind !== "player-board-space")
+      throw new Error("Expected a player-space drop target");
     game.drag.setDropTarget({
-      ...targets[1]!,
+      ...target,
       value: { spaceId: "slot", playerId: "player-2", boardId: "mat" },
     });
     game.drag.drop();
     expect(game.state.drafts["play.drop"]).toEqual({
-      card: game.zones.get("table").getCards()[0]!.id,
+      card: game.zones.get("table").getCards()[0].id,
       space: opponentTarget,
     });
     expect(await game.interactions.get("play.drop").submit()).toEqual({
       accepted: true,
     });
-    expect(source.inspect().frame.view.selected).toEqual([opponentTarget]);
+    expect(source.inspect().frame.view).toMatchObject({
+      selected: [opponentTarget],
+    });
     game.dispose();
   });
 });

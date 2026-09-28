@@ -189,7 +189,7 @@ test("source replacement keeps the instance and discards old source intent", asy
   expect(dispose).toHaveBeenCalledTimes(1);
   expect(game.state.drafts).toEqual({});
   expect(mounted.host.textContent).toBe("4");
-  old.submissions[0]!.resolve({ accepted: true });
+  old.submissions[0].resolve({ accepted: true });
   expect(next.submissions).toEqual([]);
 });
 
@@ -242,7 +242,7 @@ test("controlled drafts use current callbacks and preserve newer edits through A
   });
   await act(async () => edit({ "play.move": { choice: "b" } }));
   await act(async () => {
-    source.submissions[0]!.resolve({ accepted: true });
+    source.submissions[0].resolve({ accepted: true });
     await pending;
     source.emit(snapshot(2));
   });
@@ -278,7 +278,7 @@ test("request-only updates preserve selected domain objects and old snapshot val
   expect(views).toHaveLength(1);
   expect(requestRenders).toBe(2);
   await act(async () => {
-    source.submissions[0]!.resolve({ accepted: false, errorCode: "rejected" });
+    source.submissions[0].resolve({ accepted: false, errorCode: "rejected" });
     await pending;
   });
   expect(views).toHaveLength(1);

@@ -1,3 +1,4 @@
+import { auditTypes } from "./types/type-audit.ts";
 import { mkdtemp, rm } from "node:fs/promises";
 import { checkApiDocs } from "./docs/check-api.ts";
 import { tmpdir } from "node:os";
@@ -25,10 +26,17 @@ export function format(write: boolean): void {
 export function lint(): void {
   run(
     "pnpm",
-    ["-r", "--workspace-concurrency=1", "--if-present", "run", "lint"],
+    [
+      "exec",
+      "eslint",
+      "packages/sdk",
+      "registry",
+      "examples/reference-games",
+      "templates/game",
+      "scripts",
+    ],
     { cwd: rootDir },
   );
-  run("pnpm", ["exec", "eslint", "scripts/**/*.ts"], { cwd: rootDir });
 }
 
 export function typecheck(): void {
@@ -82,8 +90,9 @@ export async function runCoreCheck(
   format(false);
   // pnpm runs workspace tasks in dependency order, including the registry.
   run("pnpm", ["--dir", "registry", "validate"], { cwd: rootDir });
-  lint();
   build();
+  lint();
+  await auditTypes();
   typecheck();
   await assertPublicationBoundary();
   await assertSdkExportParity();

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  type PluginToHostEnvelope,
   DREAMBOARD_PLUGIN_PROTOCOL,
   DREAMBOARD_PLUGIN_PROTOCOL_VERSION,
 } from "../../shared/protocol/protocol.js";
@@ -7,17 +8,22 @@ import { iframeSource } from "./iframe.js";
 import { hostSource } from "./host-websocket.js";
 import { frame, session } from "./__fixtures__/frames.js";
 
+import {
+  ClientGameplayFrameSchema,
+  type ClientGameplayFrame,
+} from "../../shared/protocol/gameplay-wire.js";
+
 class TestSocket extends EventTarget {
   static OPEN = 1;
   static instances: TestSocket[] = [];
   readyState = 0;
-  sent: Record<string, unknown>[] = [];
+  sent: ClientGameplayFrame[] = [];
   constructor(readonly url: string) {
     super();
     TestSocket.instances.push(this);
   }
   send(value: string) {
-    this.sent.push(JSON.parse(value));
+    this.sent.push(ClientGameplayFrameSchema.parse(JSON.parse(value)));
   }
   close() {
     this.readyState = 3;
@@ -70,7 +76,10 @@ afterEach(() => {
 describe("iframe source", () => {
   it("closes and reports malformed pinned host ingress but ignores other channels", () => {
     const target = new EventTarget();
-    const parent = { postMessage: vi.fn() };
+    const parent = {
+      postMessage:
+        vi.fn<(message: PluginToHostEnvelope, targetOrigin: string) => void>(),
+    };
     vi.stubGlobal("window", Object.assign(target, { parent }));
     const source = iframeSource();
     const receive = (payload: unknown, channelId = "channel") =>
@@ -100,7 +109,10 @@ describe("iframe source", () => {
   it("pins sender/origin/channel, binds seat and requests missing frames", async () => {
     vi.useFakeTimers();
     const target = new EventTarget();
-    const parent = { postMessage: vi.fn() };
+    const parent = {
+      postMessage:
+        vi.fn<(message: PluginToHostEnvelope, targetOrigin: string) => void>(),
+    };
     vi.stubGlobal("window", Object.assign(target, { parent }));
     const source = iframeSource({ timeoutMs: 100 });
     let sequence = 0;
@@ -136,6 +148,7 @@ describe("iframe source", () => {
     const command = parent.postMessage.mock.calls
       .map((call) => call[0].payload)
       .find((payload) => payload.type === "interaction.cancel");
+    if (!command) throw new Error("Expected cancellation command");
     receive({
       type: "interaction.result",
       clientActionId: command.clientActionId,
@@ -252,6 +265,8 @@ describe("websocket source", () => {
     expect(source.store.get().connection).toBe("ready");
     const p = source.submit("move", { target: "a" });
     const command = socket.sent.at(-1)!;
+    if (command.type !== "interaction.submit")
+      throw new Error("Expected submit command");
     socket.receive({
       type: "interaction.result",
       clientActionId: command.clientActionId,
@@ -267,6 +282,8 @@ describe("websocket source", () => {
     const { source, socket } = await socketSource();
     const p = source.cancel("move");
     const original = socket.sent.at(-1);
+    if (original?.type !== "interaction.cancel")
+      throw new Error("Expected cancellation command");
     socket.disconnect();
     await Promise.resolve();
     const replacement = TestSocket.instances.at(-1)!;
@@ -278,7 +295,7 @@ describe("websocket source", () => {
     replacement.receive(snapshot(2));
     replacement.receive({
       type: "interaction.result",
-      clientActionId: original!.clientActionId,
+      clientActionId: original.clientActionId,
       accepted: true,
     });
     await p;

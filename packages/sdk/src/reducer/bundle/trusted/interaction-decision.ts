@@ -412,9 +412,9 @@ export function createInteractionDecisionResolver<
             }
           : {
               ok: true as const,
-              params: (finalStepSchema?.success
+              params: finalStepSchema?.success
                 ? finalStepSchema.data
-                : submittedPrefix.selected) as Record<string, unknown>,
+                : submittedPrefix.selected,
             }
         : parseForSubmit
           ? parseInteractionParams(interaction, params, {

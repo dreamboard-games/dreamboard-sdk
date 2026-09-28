@@ -25,6 +25,9 @@ function createModel() {
   return {
     manifest: {
       literals: {
+        boardLayouts: [] as const,
+        boardTypeIds: [] as const,
+        relationTypeIds: [] as const,
         playerIds,
         phaseNames,
         cardSetIds: [] as const,
@@ -61,6 +64,7 @@ function createModel() {
         cardSetIdsByPlayerZoneId: {},
       },
       ids: {
+        boardLayout: z.enum(["hex", "square", "network", "track"]),
         playerId: createManifestStringLiteralSchema(playerIds),
         phaseName: createManifestStringLiteralSchema(phaseNames),
         cardSetId: createManifestStringLiteralSchema([] as const),
@@ -132,7 +136,9 @@ describe("createGame", () => {
     const game = authoring.assemble({
       initial: {
         public: ({ playerIds }) => ({
-          currentPlayerId: playerIds[0] ?? null,
+          currentPlayerId: authoring.contract.manifest.ids.playerId
+            .nullable()
+            .parse(playerIds[0] ?? null),
         }),
         private: () => ({}),
         hidden: () => ({}),
@@ -238,7 +244,9 @@ describe("bound game authoring", () => {
     const game = authoring.assemble({
       initial: {
         public: ({ playerIds }) => ({
-          currentPlayerId: playerIds[0] ?? null,
+          currentPlayerId: authoring.contract.manifest.ids.playerId
+            .nullable()
+            .parse(playerIds[0] ?? null),
         }),
         private: () => ({}),
         hidden: () => ({}),

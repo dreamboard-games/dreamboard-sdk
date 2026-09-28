@@ -104,7 +104,7 @@ it("preserves boundary identity and exact incidence for one and two cells", () =
         (vertex) => vertex.spaceIds.length === 2,
       );
       expect(shared).toHaveLength(2);
-      expect(shared[0]!.id).not.toBe(shared[1]!.id);
+      expect(shared[0].id).not.toBe(shared[1].id);
     }
   }
 });

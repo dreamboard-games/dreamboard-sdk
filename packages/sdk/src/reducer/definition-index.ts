@@ -85,6 +85,7 @@ function phaseEntriesOf<
   type PhaseName = PhaseNamesOfDefinition<
     ReducerGameDefinition<Contract, Definitions, View>
   >;
+  // eslint-disable-next-line no-restricted-syntax -- Each entry comes from the assembled definition phases; enumeration erases their correlated phase-name and contract types.
   return Object.entries(definition.phases) as unknown as Array<
     readonly [PhaseName, ReducerIndexedPhase<Contract>]
   >;
@@ -104,6 +105,7 @@ function simultaneousSubmitEntriesOf<Contract extends ReducerGameContractLike>(
   const submit = (phase as { submit?: unknown }).submit;
   if (!submit) return [];
   return [
+    // eslint-disable-next-line no-restricted-syntax -- The assembled phase owns submit; indexing it preserves the same Contract while erasing its specific collector map.
     ["submit", submit] as unknown as ReducerIndexedInteractionEntry<Contract>,
   ];
 }
