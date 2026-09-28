@@ -286,8 +286,7 @@ export function boardFeature<G>(
             context.routeTarget(kind, matching[0]!.value, {
               ...options,
               boardId: domain.boardId as
-                | IdOf<G, "boardId">
-                | IdOf<G, "boardBaseId">,
+                IdOf<G, "boardId"> | IdOf<G, "boardBaseId">,
             });
           }
           return {
