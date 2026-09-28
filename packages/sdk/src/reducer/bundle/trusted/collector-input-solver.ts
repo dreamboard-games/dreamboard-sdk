@@ -64,9 +64,12 @@ type ValueSource = {
 const ABSENT_COLLECTOR_VALUE = Symbol("absentCollectorValue");
 
 type SolverContext = {
-  readonly interaction: AnyInteractionSpec<
-    CollectorState,
-    ManifestContract<CollectorState["table"]>
+  readonly interaction: Pick<
+    AnyInteractionSpec<
+      CollectorState,
+      ManifestContract<CollectorState["table"]>
+    >,
+    "paramsSchema"
   >;
   readonly domainState: CollectorState;
   readonly playerId: string;
@@ -230,16 +233,9 @@ function createSolverContext<
   let queriesLazy: TableQueriesOfState<DomainState> | null =
     options.queries ?? null;
   const queries = () =>
-    (queriesLazy ??= createStateQueries(
-      options.domainState as unknown as {
-        table: CollectorState["table"];
-      },
-    ) as unknown as TableQueriesOfState<DomainState>);
+    (queriesLazy ??= createStateQueries(options.domainState));
   return {
-    interaction: options.interaction as unknown as AnyInteractionSpec<
-      CollectorState,
-      ManifestContract<CollectorState["table"]>
-    >,
+    interaction: options.interaction,
     domainState: options.domainState,
     playerId: options.playerId,
     collectors: Object.entries(interactionInputsOf(options.interaction)),
@@ -691,7 +687,7 @@ function* enumerateCombinations<Value>(
   for (let index = start; index < values.length; index += 1) {
     yield* enumerateCombinations(values, count, index + 1, [
       ...current,
-      values[index]!,
+      values[index],
     ]);
   }
 }

@@ -145,7 +145,7 @@ test("normal setup shuffles once, deals 52 unique private cards round-robin, and
   for (const inspected of rest) {
     assert.deepEqual(inspected.node.publicState, first.node.publicState);
   }
-  assert.equal(inspections[4]!.node.view, null);
+  assert.equal(inspections[4].node.view, null);
 });
 
 test("the sealed pass barrier derives actors, waits, blockers, and perspective actions", async () => {
@@ -167,16 +167,16 @@ test("the sealed pass barrier derives actors, waits, blockers, and perspective a
       at: { segment: "setup", completed: 0 },
     }),
   ]);
-  assert.deepEqual(seatsOf(opening[0]!.node.flow.activeActors), [0, 1, 2, 3]);
-  assert.deepEqual(seatsOf(opening[0]!.node.flow.pendingActors), [0, 1, 2, 3]);
-  assert.deepEqual(opening[0]!.node.flow.continuationWaiters, []);
-  assert.deepEqual(opening[0]!.node.flow.blockedBy, []);
+  assert.deepEqual(seatsOf(opening[0].node.flow.activeActors), [0, 1, 2, 3]);
+  assert.deepEqual(seatsOf(opening[0].node.flow.pendingActors), [0, 1, 2, 3]);
+  assert.deepEqual(opening[0].node.flow.continuationWaiters, []);
+  assert.deepEqual(opening[0].node.flow.blockedBy, []);
   assert.deepEqual(
     opening.map(({ node }) => node.actions.map(({ actor }) => actor.seat)),
     [[0], [1], [2], [3], []],
   );
-  assert.equal(opening[0]!.node.actions[0]?.interactionId, "submit");
-  assert.equal(opening[0]!.node.actions[0]?.inputs[0]?.eligibleCount, 13);
+  assert.equal(opening[0].node.actions[0]?.interactionId, "submit");
+  assert.equal(opening[0].node.actions[0]?.inputs[0]?.eligibleCount, 13);
 
   const partial = await Promise.all([
     ...[0, 1, 2, 3].map((seat) =>
@@ -196,11 +196,11 @@ test("the sealed pass barrier derives actors, waits, blockers, and perspective a
       at: { segment: "given", completed: 2 },
     }),
   ]);
-  assert.deepEqual(seatsOf(partial[0]!.node.flow.activeActors), [2, 3]);
-  assert.deepEqual(seatsOf(partial[0]!.node.flow.pendingActors), [2, 3]);
-  assert.deepEqual(seatsOf(partial[0]!.node.flow.continuationWaiters), [0, 1]);
+  assert.deepEqual(seatsOf(partial[0].node.flow.activeActors), [2, 3]);
+  assert.deepEqual(seatsOf(partial[0].node.flow.pendingActors), [2, 3]);
+  assert.deepEqual(seatsOf(partial[0].node.flow.continuationWaiters), [0, 1]);
   assert.deepEqual(
-    partial[0]!.node.flow.blockedBy.map(({ actor, blockers, source }) => ({
+    partial[0].node.flow.blockedBy.map(({ actor, blockers, source }) => ({
       waiter: actor.seat,
       blockers: seatsOf(blockers),
       source,
@@ -492,7 +492,7 @@ test("seat views reveal public trick evidence while spectators receive no privat
       { playerId: "player-3", cardId: "clubs-A" },
     ]);
   }
-  assert.equal(openTrick[4]!.node.view, null);
+  assert.equal(openTrick[4].node.view, null);
 
   const midHand = await Promise.all([
     ...[0, 1, 2, 3].map((seat) =>
@@ -512,7 +512,7 @@ test("seat views reveal public trick evidence while spectators receive no privat
       at: { segment: "given", completed: 32 },
     }),
   ]);
-  assert.equal(midHand[4]!.node.view, null);
+  assert.equal(midHand[4].node.view, null);
   const [first, ...others] = midHand;
   assert.ok(first);
   for (const inspected of others) {

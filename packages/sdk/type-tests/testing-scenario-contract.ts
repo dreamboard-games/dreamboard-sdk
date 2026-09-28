@@ -1,3 +1,4 @@
+import { createGame } from "../src/reducer.js";
 import { resolveScenarioCommandParams } from "../src/testing/scenario-player-refs.js";
 import { z } from "zod";
 import { many } from "../src/reducer/inputs/many.js";
@@ -64,30 +65,33 @@ const nested = z.object({
   label: ordinaryString,
 });
 
-const game = {
-  contract: {
-    manifest: {
-      normalSetup: {
-        minPlayers: 2,
-        maxPlayers: 3,
-        createInitialTable: () => ({}),
-      },
-      literals: { playerIds: ["player-1", "player-2", "player-3"] },
-    },
+const model = createGame({
+  manifest: {
+    players: { minPlayers: 2, maxPlayers: 3 },
+    cardSets: [],
+    zones: [],
   },
+  options: z.object({}),
+  phases: { play: z.object({}) },
+  state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
+});
+const play = model.phase("play");
+const game = model.assemble({
+  initialPhase: "play",
   phases: {
-    play: {
+    play: play.define({
+      kind: "player",
+      initialState: () => ({}),
       interactions: {
-        choose: {
-          inputs: {
-            selection: { kind: "form", schema: nested },
-          },
-        },
+        choose: play.interaction({
+          inputs: { selection: { kind: "form", schema: nested } },
+          reduce() {},
+        }),
       },
-    },
+    }),
   },
-  view: () => ({}),
-} as const;
+  view: model.view(() => ({})),
+});
 
 type Command = Extract<
   ScenarioCommandOf<typeof game>,
@@ -127,9 +131,7 @@ const manyRuntimeIdsAreRejected: ScenarioSchemaOutput<
   "player-1",
 ];
 
-type PlayerSpace = ScenarioSchemaOutput<
-  PlayerSpaceInputSchema<"mat", "slot-a", string>
->;
+type PlayerSpace = ScenarioSchemaOutput<PlayerSpaceInputSchema<"mat">>;
 const playerSpace: PlayerSpace = {
   boardId: "mat",
   playerId: { seat: 1 },
@@ -194,7 +196,7 @@ void scenarioProjectionParityFromInspectNode;
 // Candidate verification must execute an explicit production artifact.
 type CandidateInput =
   import("../src/testing/candidate-verification").CandidateVerificationInput<
-    import("../src/testing/scenario-definition-validation").ScenarioDefinitionGameLike
+    typeof game
   >;
 declare const authoredCandidateInput: Omit<CandidateInput, "bundle">;
 // @ts-expect-error Authored definitions alone are not compiled artifact verification.

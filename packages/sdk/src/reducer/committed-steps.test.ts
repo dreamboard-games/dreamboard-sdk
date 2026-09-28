@@ -1,8 +1,19 @@
+import { asPlayerId } from "./per-player";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
+const playerOne = asPlayerId("player-1");
+const playerTwo = asPlayerId("player-2");
+import { ReducerSessionStateSchema } from "../shared/runtime-schema";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { createGame } from "../reducer";
 import { createReducerBundle } from "../reducer";
-import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
+const minimalManifest = {
+  players: { minPlayers: 2, maxPlayers: 2 },
+  cardSets: [],
+  zones: [
+    { id: "hand", name: "Hand", scope: "perPlayer", visibility: "ownerOnly" },
+  ],
+} as const;
 
 async function fixture(
   options: {
@@ -14,7 +25,7 @@ async function fixture(
   let reductions = 0;
   let validations = 0;
   const game = createGame({
-    manifest: buildMinimalManifest(["play"] as const),
+    manifest: minimalManifest,
     phases: { play: z.object({}) },
     state: {
       public: z.object({ blocked: z.boolean(), result: z.string().nullable() }),
@@ -24,7 +35,7 @@ async function fixture(
   });
   const play = game.phase("play");
   const choose = play.interaction({
-    actor: options.exclusive ? () => "player-1" : undefined,
+    actor: options.exclusive ? () => playerOne : undefined,
     steps: play
       .steps()
       .input(
@@ -38,7 +49,7 @@ async function fixture(
         }),
       )
       .input("second", ({ selected, state, playerId }) => {
-        if (options.exclusive && playerId !== "player-1")
+        if (options.exclusive && playerId !== playerOne)
           throw new Error("Unauthorized private domain");
         return play.inputs.form.choice({
           choices: state.publicState.blocked
@@ -75,7 +86,7 @@ async function fixture(
       play: options.simultaneous
         ? play.define({
             kind: "simultaneousPlayer",
-            actors: () => ["player-1", "player-2"],
+            actors: () => [playerOne, playerTwo],
             initialState: () => ({}),
             submit: choose,
             resolve({ tx, random, submissions }) {
@@ -93,7 +104,7 @@ async function fixture(
             kind: "player",
             initialState: () => ({}),
             enter: ({ tx }) => {
-              tx.setActivePlayers(["player-1", "player-2"]);
+              tx.setActivePlayers([playerOne, playerTwo]);
             },
             interactions: {
               choose,
@@ -113,11 +124,13 @@ async function fixture(
     view: game.view(() => ({})),
   });
   const bundle = createReducerBundle(definition);
-  const table = createTable();
-  table.hands.hand = { "player-1": [], "player-2": [] };
+  const table = game.contract.manifest.createInitialTable({
+    playerIds: [playerOne, playerTwo],
+  });
+  table.hands.hand = { [playerOne]: [], [playerTwo]: [] };
   const initialized = await bundle.initialize({
-    table,
-    playerIds: ["player-1", "player-2"],
+    table: RuntimeJsonSchema.parse(table),
+    playerIds: [playerOne, playerTwo],
     rngSeed: 42,
   });
   return { bundle, initialized, counts: () => ({ reductions, validations }) };
@@ -130,7 +143,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "b" },
       },
@@ -138,25 +151,27 @@ describe("committed interaction steps", () => {
     expect(first.kind).toBe("accept");
     if (first.kind !== "accept") return;
     expect(counts()).toEqual({ reductions: 0, validations: 0 });
-    expect(first.state.runtime.pending["player-1"]).toEqual({
+    expect(first.state.runtime.pending[playerOne]).toEqual({
       phaseName: "play",
       interactionId: "choose",
       values: ["b"],
     });
     expect(initialized.state.runtime.pending).toEqual({});
-    const restored = JSON.parse(JSON.stringify(first.state));
+    const restored = ReducerSessionStateSchema.parse(
+      JSON.parse(JSON.stringify(first.state)),
+    );
     const last = await bundle.dispatch({
       state: restored,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { second: "b" },
       },
     });
     expect(last.kind).toBe("accept");
     if (last.kind !== "accept") return;
-    expect(last.state.domain.publicState.result).toBe("bb");
+    expect(last.state.domain.publicState).toMatchObject({ result: "bb" });
     expect(last.state.runtime.pending).toEqual({});
     expect(counts()).toEqual({ reductions: 1, validations: 1 });
   });
@@ -169,10 +184,10 @@ describe("committed interaction steps", () => {
       { phaseName: "play", interactionId: "choose", values: [] },
       { phaseName: "play", interactionId: "choose", values: ["a", "a"] },
     ]) {
-      const malformed = JSON.parse(JSON.stringify(initialized.state));
-      malformed.runtime.pending["player-1"] = pending;
+      const malformed = structuredClone(initialized.state);
+      malformed.runtime.pending[playerOne] = pending;
       expect(() =>
-        bundle.project({ state: malformed, playerIds: ["player-1"] }),
+        bundle.project({ state: malformed, playerIds: [playerOne] }),
       ).toThrow();
     }
   });
@@ -183,7 +198,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "a", second: "a" },
       },
@@ -193,7 +208,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "a" },
       },
@@ -203,7 +218,7 @@ describe("committed interaction steps", () => {
       state: first.state,
       input: {
         kind: "interaction.cancel",
-        playerId: "player-2",
+        playerId: playerTwo,
         interactionId: "choose",
       },
     });
@@ -212,7 +227,7 @@ describe("committed interaction steps", () => {
       state: first.state,
       input: {
         kind: "interaction.cancel",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
       },
     });
@@ -226,7 +241,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "a" },
       },
@@ -234,15 +249,23 @@ describe("committed interaction steps", () => {
     if (first.kind !== "accept") throw new Error("first step rejected");
     const projection = bundle.project({
       state: first.state,
-      playerIds: ["player-1", "player-2"],
+      playerIds: [playerOne, playerTwo],
     });
-    const own = projection.seats["player-1"]!;
-    const other = projection.seats["player-2"]!;
+    const own = projection.seats[playerOne];
+    const other = projection.seats[playerTwo];
+    if (
+      !own.availableInteractionRefs ||
+      !other.availableInteractionRefs ||
+      !projection.interactionsByRef
+    ) {
+      throw new Error("Expected projected interaction references");
+    }
+    const interactionsByRef = projection.interactionsByRef;
     const ownDescriptors = own.availableInteractionRefs.map(
-      (ref) => projection.interactionsByRef[ref],
+      (ref) => interactionsByRef[ref],
     );
     const otherDescriptors = other.availableInteractionRefs.map(
-      (ref) => projection.interactionsByRef[ref],
+      (ref) => interactionsByRef[ref],
     );
     expect(
       ownDescriptors.find((descriptor) => descriptor.interactionId === "choose")
@@ -261,7 +284,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "b" },
       },
@@ -272,7 +295,7 @@ describe("committed interaction steps", () => {
       state: first.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { second: "b" },
       },
@@ -288,7 +311,7 @@ describe("committed interaction steps", () => {
       state: initialized.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "choose",
         params: { first: "b" },
       },
@@ -298,18 +321,18 @@ describe("committed interaction steps", () => {
       state: first.state,
       input: {
         kind: "interaction",
-        playerId: "player-2",
+        playerId: playerTwo,
         interactionId: "block",
         params: {},
       },
     });
     if (blocked.kind !== "accept") throw new Error("block rejected");
-    expect(blocked.state.runtime.pending["player-1"]?.values).toEqual(["b"]);
+    expect(blocked.state.runtime.pending[playerOne]?.values).toEqual(["b"]);
     const reset = await bundle.dispatch({
       state: blocked.state,
       input: {
         kind: "interaction",
-        playerId: "player-2",
+        playerId: playerTwo,
         interactionId: "reset",
         params: {},
       },
@@ -325,9 +348,9 @@ describe("committed interaction steps", () => {
     });
     let state = initialized.state;
     for (const [playerId, params] of [
-      ["player-1", { first: "a" }],
-      ["player-1", { second: "a" }],
-      ["player-2", { first: "b" }],
+      [playerOne, { first: "a" }],
+      [playerOne, { second: "a" }],
+      [playerTwo, { first: "b" }],
     ] as const) {
       const result = await bundle.dispatch({
         state,
@@ -335,23 +358,23 @@ describe("committed interaction steps", () => {
           kind: "interaction",
           playerId,
           interactionId: "submit",
-          params,
+          params: RuntimeJsonSchema.parse(params),
         },
       });
       if (result.kind !== "accept") throw new Error("setup step rejected");
       state = result.state;
     }
     expect(
-      state.runtime.simultaneous.current?.submissions["player-1"],
+      state.runtime.simultaneous.current?.submissions[playerOne],
     ).toMatchObject({ params: { first: "a", second: "a" } });
-    expect(state.runtime.pending["player-1"]).toBeUndefined();
-    expect(state.runtime.pending["player-2"]?.values).toEqual(["b"]);
+    expect(state.runtime.pending[playerOne]).toBeUndefined();
+    expect(state.runtime.pending[playerTwo]?.values).toEqual(["b"]);
     const before = JSON.stringify(state);
     const result = await bundle.dispatch({
       state,
       input: {
         kind: "interaction",
-        playerId: "player-2",
+        playerId: playerTwo,
         interactionId: "submit",
         params: { second: "b" },
       },
@@ -363,7 +386,7 @@ describe("committed interaction steps", () => {
       state,
       input: {
         kind: "interaction.cancel",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "submit",
       },
     });
@@ -376,10 +399,10 @@ describe("committed interaction steps", () => {
     });
     let state = initialized.state;
     for (const [playerId, params] of [
-      ["player-1", { first: "a" }],
-      ["player-2", { first: "b" }],
-      ["player-1", { second: "a" }],
-      ["player-2", { second: "b" }],
+      [playerOne, { first: "a" }],
+      [playerTwo, { first: "b" }],
+      [playerOne, { second: "a" }],
+      [playerTwo, { second: "b" }],
     ] as const) {
       const result = await bundle.dispatch({
         state,
@@ -387,14 +410,14 @@ describe("committed interaction steps", () => {
           kind: "interaction",
           playerId,
           interactionId: "submit",
-          params,
+          params: RuntimeJsonSchema.parse(params),
         },
       });
       if (result.kind !== "accept") throw new Error("step rejected");
       state = result.state;
     }
     expect(state.runtime.pending).toEqual({});
-    expect(state.domain.publicState.result).toBe("aa:bb");
+    expect(state.domain.publicState).toMatchObject({ result: "aa:bb" });
     expect(counts()).toEqual({ reductions: 1, validations: 2 });
     expect(state.runtime.rng.cursor).toBeGreaterThan(
       initialized.state.runtime.rng.cursor,
@@ -408,7 +431,7 @@ describe("prepared final step parameters", () => {
       const seen: unknown[] = [];
       let finalParses = 0;
       const game = createGame({
-        manifest: buildMinimalManifest(["play"] as const),
+        manifest: minimalManifest,
         phases: { play: z.object({}) },
         state: {
           public: z.object({}),
@@ -453,11 +476,11 @@ describe("prepared final step parameters", () => {
           play: simultaneous
             ? play.define({
                 kind: "simultaneousPlayer",
-                actors: () => ["player-1"],
+                actors: () => [playerOne],
                 initialState: () => ({}),
                 submit: action,
                 resolve({ submissions, random }) {
-                  seen.push(submissions["player-1"].params);
+                  seen.push(submissions[playerOne].params);
                   random.integer({ minInclusive: 1, maxInclusive: 6 });
                 },
               })
@@ -465,7 +488,7 @@ describe("prepared final step parameters", () => {
                 kind: "player",
                 initialState: () => ({}),
                 enter: ({ tx }) => {
-                  tx.setActivePlayers(["player-1"]);
+                  tx.setActivePlayers([playerOne]);
                 },
                 interactions: { action },
               }),
@@ -474,8 +497,12 @@ describe("prepared final step parameters", () => {
       });
       const bundle = createReducerBundle(definition);
       const initialized = await bundle.initialize({
-        table: createTable(),
-        playerIds: ["player-1", "player-2"],
+        table: RuntimeJsonSchema.parse(
+          game.contract.manifest.createInitialTable({
+            playerIds: [playerOne, playerTwo],
+          }),
+        ),
+        playerIds: [playerOne, playerTwo],
         rngSeed: 42,
       });
       const interactionId = simultaneous ? "submit" : "action";
@@ -483,18 +510,18 @@ describe("prepared final step parameters", () => {
         state: initialized.state,
         input: {
           kind: "interaction",
-          playerId: "player-1",
+          playerId: playerOne,
           interactionId,
           params: { first: 1 },
         },
       });
       if (first.kind !== "accept") throw new Error("first step rejected");
-      expect(first.state.runtime.pending["player-1"]?.values).toEqual([1]);
+      expect(first.state.runtime.pending[playerOne]?.values).toEqual([1]);
       const second = await bundle.dispatch({
         state: first.state,
         input: {
           kind: "interaction",
-          playerId: "player-1",
+          playerId: playerOne,
           interactionId,
           params: { second: 2 },
         },
@@ -517,7 +544,7 @@ for (const change of [
 ] as const) {
   test(`reconciles committed prefixes after ${change}`, async () => {
     const model = createGame({
-      manifest: buildMinimalManifest(["play", "detour"] as const),
+      manifest: minimalManifest,
       phases: { play: z.object({}), detour: z.object({}) },
       state: {
         public: z.object({
@@ -549,12 +576,12 @@ for (const change of [
           kind: "player",
           initialState: () => ({}),
           enter: ({ tx }) => {
-            tx.setActivePlayers(["player-1", "player-2"]);
+            tx.setActivePlayers([playerOne, playerTwo]);
           },
           interactions: {
             choose: play.interaction({
               actor: ({ state }) =>
-                state.publicState.actor ? "player-1" : "player-2",
+                state.publicState.actor ? playerOne : playerTwo,
               steps: play
                 .steps()
                 .input(
@@ -592,7 +619,7 @@ for (const change of [
               reduce: () => {},
             }),
             change: play.interaction({
-              actor: () => "player-2",
+              actor: () => playerTwo,
               inputs: {},
               reduce({ tx }) {
                 if (change === "roundTrip") return tx.transition("detour");
@@ -615,19 +642,24 @@ for (const change of [
       view: model.view(() => ({})),
     });
     const bundle = createReducerBundle(definition);
-    const table = createTable();
-    table.hands.hand = { "player-1": [], "player-2": [] };
+    const table = model.contract.manifest.createInitialTable({
+      playerIds: [playerOne, playerTwo],
+    });
+    table.hands.hand = { [playerOne]: [], [playerTwo]: [] };
     let state = (
-      await bundle.initialize({ table, playerIds: ["player-1", "player-2"] })
+      await bundle.initialize({
+        table: RuntimeJsonSchema.parse(table),
+        playerIds: [playerOne, playerTwo],
+      })
     ).state;
-    for (const params of [{ first: "a" }, { second: "b" }]) {
+    for (const params of [{ first: "a" }, { second: "b" }] as const) {
       const result = await bundle.dispatch({
         state,
         input: {
           kind: "interaction",
-          playerId: "player-1",
+          playerId: playerOne,
           interactionId: "choose",
-          params,
+          params: RuntimeJsonSchema.parse(params),
         },
       });
       if (result.kind !== "accept") throw new Error("prefix rejected");
@@ -638,14 +670,14 @@ for (const change of [
       state,
       input: {
         kind: "interaction",
-        playerId: "player-2",
+        playerId: playerTwo,
         interactionId: "change",
         params: {},
       },
     });
     if (changed.kind !== "accept") throw new Error("change rejected");
     expect(JSON.stringify(state)).toBe(before);
-    expect(changed.state.runtime.pending["player-1"]?.values).toEqual(
+    expect(changed.state.runtime.pending[playerOne]?.values).toEqual(
       change === "touch"
         ? ["a", "b"]
         : change === "invalidate"
@@ -657,13 +689,13 @@ for (const change of [
         state: changed.state,
         input: {
           kind: "interaction",
-          playerId: "player-1",
+          playerId: playerOne,
           interactionId: "choose",
           params: { third: "done" },
         },
       });
       expect(stale.kind).toBe("reject");
-      expect(changed.state.runtime.pending["player-1"]?.values).toEqual(["a"]);
+      expect(changed.state.runtime.pending[playerOne]?.values).toEqual(["a"]);
     }
     if (change === "roundTrip")
       expect(changed.state.domain.flow.currentPhase).toBe("play");

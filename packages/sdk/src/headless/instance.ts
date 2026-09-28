@@ -52,7 +52,18 @@ import type {
 
 type Values = Readonly<Record<string, RuntimeJson>>;
 type DraftMap = Readonly<Record<string, Values | undefined>>;
-type RuntimeOptions = InstanceOptions<unknown>;
+type RuntimeLocalState = { drafts: DraftMap; activeInteraction: string | null };
+/** Concrete controller options; game-specific keys are bound by createGameInstance. */
+type RuntimeOptions = {
+  readonly source: GameSource;
+  readonly initialState?: Partial<RuntimeLocalState>;
+  readonly state?: Partial<RuntimeLocalState>;
+  readonly onDraftsChange?: (drafts: DraftMap) => void;
+  readonly onActiveInteractionChange?: (key: string | null) => void;
+  readonly onError?: (error: unknown) => void;
+  readonly coverage?: Readonly<Record<string, unknown>>;
+  readonly debug?: boolean;
+};
 const EMPTY: Values = Object.freeze({});
 const EMPTY_DRAFTS: DraftMap = Object.freeze({});
 const equalValue = (a: unknown, b: unknown) =>
@@ -623,8 +634,7 @@ class Controller {
     features?: (core: RuntimeCore, context: RuntimeContext) => Features,
   ) {
     this.options = options;
-    this.localDrafts =
-      (options.initialState?.drafts as DraftMap) ?? EMPTY_DRAFTS;
+    this.localDrafts = options.initialState?.drafts ?? EMPTY_DRAFTS;
     this.localActive = options.initialState?.activeInteraction ?? null;
     this.sourceState = options.source.store.get();
     const current = () => this.building ?? this.store.get();
@@ -763,7 +773,8 @@ class Controller {
             Object.getOwnPropertyDescriptor(feature.root, key)!,
           );
           Object.defineProperty(root, key, {
-            get: () => Reflect.get(this.building ?? this.store.get(), key),
+            get: (): unknown =>
+              Reflect.get(this.building ?? this.store.get(), key),
           });
         }
       for (const hook of [
@@ -816,7 +827,8 @@ class Controller {
     );
   }
   object<T extends object>(hook: keyof Controller["prototypes"], value: T): T {
-    return Object.freeze(Object.setPrototypeOf(value, this.prototypes[hook]));
+    Object.setPrototypeOf(value, this.prototypes[hook]);
+    return Object.freeze(value);
   }
   drafts() {
     if (
@@ -824,7 +836,7 @@ class Controller {
       this.options.state === this.invalidControlledState
     )
       return EMPTY_DRAFTS;
-    return (this.options.state?.drafts as DraftMap) ?? this.localDrafts;
+    return this.options.state?.drafts ?? this.localDrafts;
   }
   active() {
     if (
@@ -1029,7 +1041,7 @@ class Controller {
       key,
       draft: this.drafts()[key] ?? EMPTY,
       revision: this.revisions.get(key) ?? 0,
-      version: this.sourceState.snapshot!.version,
+      version: this.sourceState.snapshot.version,
       epoch: this.epoch,
       accepted: false,
       cancel,

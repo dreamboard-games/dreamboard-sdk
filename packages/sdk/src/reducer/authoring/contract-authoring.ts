@@ -18,8 +18,6 @@ import type {
   PhaseMapOf,
   ReducerGameDefinition,
   ReducerGameDefinitionInput,
-  PhaseNameOfContract,
-  PhaseSchemasOfContract,
   OptionsOfContract,
   PlayerIdOfState,
   SchemaLike,
@@ -32,7 +30,12 @@ import type {
 } from "../model";
 import type { ScopedPhaseState } from "../model/spec/runtime-args";
 import type { PlayerBoardSpaceTarget, PlayerSpaceInputSchema } from "../inputs";
-import type { TargetPredicate } from "../inputs/targetRule";
+import type {
+  TargetPredicate,
+  TargetRule,
+  TargetRuleBuilder,
+} from "../inputs/targetRule";
+import type { CollectorState } from "../model";
 import type { TableQueriesOfState } from "../model/queries";
 import type { ReducerTransaction } from "../transaction";
 import {
@@ -54,7 +57,6 @@ import {
   validateDefineGamePhases,
 } from "./validation";
 import { defineInteraction, defineInteractionRule } from "./interaction";
-import { definePhase } from "./phase";
 import { defineView } from "./views";
 export type ContractWithPhases = AnyReducerGameContract & {
   readonly phases: Record<string, SchemaLike<object>>;
@@ -107,9 +109,10 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       TiledVertexIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
   ): InputCollector<
-    z.ZodType<TiledVertexIdOfTable<BoundTable<Contract>, B>>,
+    z.ZodString,
     BoundState<Contract>,
-    "board-vertex"
+    "board-vertex",
+    TiledVertexIdOfTable<BoundTable<Contract>, B>
   >;
   edge<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
     options: BoundBoardInputOptions<
@@ -118,9 +121,10 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       TiledEdgeIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
   ): InputCollector<
-    z.ZodType<TiledEdgeIdOfTable<BoundTable<Contract>, B>>,
+    z.ZodString,
     BoundState<Contract>,
-    "board-edge"
+    "board-edge",
+    TiledEdgeIdOfTable<BoundTable<Contract>, B>
   >;
   tile<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
     options: BoundBoardInputOptions<
@@ -129,9 +133,10 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       TiledSpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
   ): InputCollector<
-    z.ZodType<TiledSpaceIdOfTable<BoundTable<Contract>, B>>,
+    z.ZodString,
     BoundState<Contract>,
-    "board-tile"
+    "board-tile",
+    TiledSpaceIdOfTable<BoundTable<Contract>, B>
   >;
   space<B extends BoardIdOfTable<BoundTable<Contract>>>(
     options: BoundBoardInputOptions<
@@ -140,9 +145,10 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       SpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
   ): InputCollector<
-    z.ZodType<SpaceIdOfTable<BoundTable<Contract>, B>>,
+    z.ZodString,
     BoundState<Contract>,
-    "board-space"
+    "board-space",
+    SpaceIdOfTable<BoundTable<Contract>, B>
   >;
   playerSpace<B extends PlayerBoardBaseId<BoundTable<Contract>>>(options: {
     boardId: B;
@@ -158,16 +164,17 @@ type BoundBoardInputs<Contract extends ContractWithPhases> = {
       >
     >;
   }): InputCollector<
-    PlayerSpaceInputSchema<
+    PlayerSpaceInputSchema<B>,
+    BoundState<Contract>,
+    "board-space",
+    PlayerBoardSpaceTarget<
       B,
       SpaceIdOfTable<
         BoundTable<Contract>,
         PlayerBoardRuntimeId<BoundTable<Contract>, B>
       >,
       PlayerIdOfState<BoundState<Contract>>
-    >,
-    BoundState<Contract>,
-    "board-space"
+    >
   >;
 };
 
@@ -190,7 +197,7 @@ type BoundCardCollector<
   Contract extends ContractWithPhases,
   Id extends string,
   ZoneIds extends readonly string[],
-> = InputCollector<z.ZodType<Id>, BoundState<Contract>, "card"> & {
+> = InputCollector<z.ZodString, BoundState<Contract>, "card", Id> & {
   readonly meta: {
     readonly zoneId: ZoneIds[number];
     readonly zoneIds: ZoneIds;
@@ -226,6 +233,11 @@ export type BoundInputBuilders<Contract extends ContractWithPhases> = {
   readonly form: BoundFormInputs<Contract>;
   readonly rng: BoundRngInputs<Contract>;
 };
+
+/** Preserve each phase kind's required fields while binding its state schema. */
+type PhaseDefinitionWithoutState<Definition> = Definition extends unknown
+  ? Omit<Definition, "state">
+  : never;
 
 export type PhaseAuthoring<
   Contract extends ContractWithPhases,
@@ -300,7 +312,7 @@ export type PhaseAuthoring<
     const Kind extends "player" | "simultaneousPlayer" | "auto" =
       "player" | "simultaneousPlayer" | "auto",
   >(
-    definition: Omit<
+    definition: PhaseDefinitionWithoutState<
       PhaseDefinition<
         PhaseStateSchema,
         BoundState<Contract>,
@@ -309,8 +321,7 @@ export type PhaseAuthoring<
         Interactions,
         OptionsOfContract<Contract>,
         ContractErrorCode<Contract>
-      >,
-      "state"
+      >
     > & { kind: Kind },
   ): PhaseDefinition<
     PhaseStateSchema,
@@ -379,9 +390,9 @@ export type GameAuthoring<Contract extends ContractWithPhases> = {
   >(
     definition: ReducerGameDefinitionInput<Contract, Definitions, View>,
   ): ReducerGameDefinition<Contract, Definitions, View>;
-  phase<Name extends PhaseNameOfContract<Contract>>(
+  phase<Name extends keyof Contract["phases"] & string>(
     name: Name,
-  ): PhaseAuthoring<Contract, PhaseSchemasOfContract<Contract>[Name]>;
+  ): PhaseAuthoring<Contract, Contract["phases"][Name]>;
 };
 
 const PHANTOM_TYPES_MESSAGE =
@@ -395,21 +406,21 @@ function phantomTypes<Types>(): Types {
   }) as Types;
 }
 
-type AnyPredicate = TargetPredicate<never, never>;
-
-function toPredicateList(
-  where: AnyPredicate | readonly AnyPredicate[] | undefined,
-): readonly AnyPredicate[] {
-  if (!where) return [];
-  return Array.isArray(where) ? where : [where as AnyPredicate];
-}
-
-function applyWhere<Builder extends { where: (p: never) => Builder }>(
-  builder: Builder,
-  where: AnyPredicate | readonly AnyPredicate[] | undefined,
-): Builder {
-  return toPredicateList(where).reduce(
-    (current, predicate) => current.where(predicate as never),
+function applyWhere<
+  State extends CollectorState,
+  Target,
+  Rule extends TargetRule<State, Target>,
+>(
+  builder: TargetRuleBuilder<State, Target, Rule>,
+  where:
+    | TargetPredicate<State, Target>
+    | readonly TargetPredicate<State, Target>[]
+    | undefined,
+): TargetRuleBuilder<State, Target, Rule> {
+  const predicates =
+    where === undefined ? [] : "test" in where ? [where] : where;
+  return predicates.reduce(
+    (current, predicate) => current.where(predicate),
     builder,
   );
 }
@@ -417,54 +428,78 @@ function applyWhere<Builder extends { where: (p: never) => Builder }>(
 function createFusedCardInput<
   Contract extends ContractWithPhases,
 >(): BoundCardInput<Contract> {
-  return ((options: {
-    from: readonly string[];
-    where?: AnyPredicate | readonly AnyPredicate[];
-  }) => {
-    const target = applyWhere(
-      cardTarget.zones<never, string, readonly string[]>(options.from),
-      options.where,
-    ).build();
-    return cardInput({
-      target: target as never,
+  return (options) =>
+    cardInput({
+      target: applyWhere(
+        cardTarget.zones<
+          BoundState<Contract>,
+          CardIdOfManifest<BoundManifest<Contract>>,
+          typeof options.from
+        >(options.from),
+        options.where,
+      ).build(),
     });
-  }) as unknown as BoundCardInput<Contract>;
 }
 
 function createFusedBoardInputs<
   Contract extends ContractWithPhases,
 >(): BoundBoardInputs<Contract> {
-  const fuse =
-    (kind: "vertex" | "edge" | "space" | "tile") =>
-    (options: {
-      boardId: string;
-      where?: AnyPredicate | readonly AnyPredicate[];
-    }) => {
-      const target = applyWhere(
-        boardTarget[kind]<never, string>(options.boardId),
-        options.where,
-      ).build();
-      return boardInput[kind]({
-        target: target as never,
-      });
-    };
-  const playerSpace = (options: {
-    boardId: string;
-    where?: AnyPredicate | readonly AnyPredicate[];
-  }) =>
-    boardInput.playerSpace({
-      target: applyWhere(
-        boardTarget.playerSpace<never, string, string>(options.boardId),
-        options.where,
-      ).build() as never,
-    });
   return {
-    vertex: fuse("vertex"),
-    edge: fuse("edge"),
-    space: fuse("space"),
-    tile: fuse("tile"),
-    playerSpace,
-  } as unknown as BoundBoardInputs<Contract>;
+    vertex: (options) =>
+      boardInput.vertex({
+        target: applyWhere(
+          boardTarget.vertex<
+            BoundState<Contract>,
+            TiledVertexIdOfTable<BoundTable<Contract>, typeof options.boardId>
+          >(options.boardId),
+          options.where,
+        ).build(),
+      }),
+    edge: (options) =>
+      boardInput.edge({
+        target: applyWhere(
+          boardTarget.edge<
+            BoundState<Contract>,
+            TiledEdgeIdOfTable<BoundTable<Contract>, typeof options.boardId>
+          >(options.boardId),
+          options.where,
+        ).build(),
+      }),
+    tile: (options) =>
+      boardInput.tile({
+        target: applyWhere(
+          boardTarget.tile<
+            BoundState<Contract>,
+            TiledSpaceIdOfTable<BoundTable<Contract>, typeof options.boardId>
+          >(options.boardId),
+          options.where,
+        ).build(),
+      }),
+    space: (options) =>
+      boardInput.space({
+        target: applyWhere(
+          boardTarget.space<
+            BoundState<Contract>,
+            SpaceIdOfTable<BoundTable<Contract>, typeof options.boardId>
+          >(options.boardId),
+          options.where,
+        ).build(),
+      }),
+    playerSpace: (options) =>
+      boardInput.playerSpace({
+        target: applyWhere(
+          boardTarget.playerSpace<
+            BoundState<Contract>,
+            typeof options.boardId,
+            SpaceIdOfTable<
+              BoundTable<Contract>,
+              PlayerBoardRuntimeId<BoundTable<Contract>, typeof options.boardId>
+            >
+          >(options.boardId),
+          options.where,
+        ).build(),
+      }),
+  };
 }
 
 function createBoundInputBuilders<
@@ -474,7 +509,7 @@ function createBoundInputBuilders<
     board: createFusedBoardInputs<Contract>(),
     card: createFusedCardInput<Contract>(),
     form: formInput.forState<BoundState<Contract>>(),
-    rng: rngInput as BoundRngInputs<Contract>,
+    rng: rngInput,
   };
 }
 
@@ -497,11 +532,7 @@ function createPhaseAuthoring<
           ReturnType<typeof defineInteractionRule<Contract, PhaseStateSchema>>
         >[0],
       ) as typeof rule,
-    define: (definition) =>
-      definePhase<Contract>()({
-        ...definition,
-        state: schema,
-      } as Parameters<ReturnType<typeof definePhase<Contract>>>[0]) as never,
+    define: (definition) => ({ ...definition, state: schema }),
     inputs: createBoundInputBuilders<Contract>(),
     types: phantomTypes<PhaseTypes<Contract, PhaseStateSchema>>(),
   };
@@ -510,7 +541,7 @@ function createPhaseAuthoring<
 export function createContractAuthoring<
   const Contract extends ContractWithPhases,
 >(contract: Contract): GameAuthoring<Contract> {
-  const phaseCache = new Map<string, unknown>();
+  const phases: Contract["phases"] = contract.phases;
   const assemble: GameAuthoring<Contract>["assemble"] = (definition) => {
     const game = { ...definition, contract };
     validateDefineGamePhaseNames(game);
@@ -522,13 +553,6 @@ export function createContractAuthoring<
     view: defineView<Contract>(),
     types: phantomTypes<ContractTypes<Contract>>(),
     assemble,
-    phase: (name) => {
-      const cached = phaseCache.get(name);
-      if (cached) return cached as never;
-      const schema = contract.phases[name];
-      const bound = createPhaseAuthoring(contract, schema);
-      phaseCache.set(name, bound);
-      return bound as never;
-    },
+    phase: (name) => createPhaseAuthoring(contract, phases[name]),
   };
 }

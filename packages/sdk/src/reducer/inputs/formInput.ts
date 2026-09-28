@@ -46,7 +46,8 @@ type FormCollector<
     | BoundedNumberDomainDescriptor
     | ChoiceDomainDescriptor
     | ChoiceListDomainDescriptor,
-> = Omit<InputCollector<Schema, State, "form">, "domain"> & {
+  Value = z.infer<Schema>,
+> = Omit<InputCollector<Schema, State, "form", Value>, "domain"> & {
   readonly domain: (
     state: CollectorState,
     playerId: string,
@@ -382,9 +383,9 @@ function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
 >(options: {
-  choices: DomainChoices<Value, State>;
+  choices: ReadonlyArray<DomainChoice<Value>>;
   defaultValue: Value;
-}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> & {
+}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor, Value> & {
   readonly defaultValue: Value;
 };
 function choiceInput<
@@ -392,15 +393,46 @@ function choiceInput<
   State extends CollectorState = CollectorState,
 >(options: {
   choices: DomainChoices<Value, State>;
+  defaultValue: Value;
+}): FormCollector<
+  SchemaLike<ChoiceValue>,
+  State,
+  ChoiceDomainDescriptor,
+  Value
+> & {
+  readonly defaultValue: Value;
+};
+function choiceInput<
+  Value extends ChoiceValue,
+  State extends CollectorState = CollectorState,
+>(options: {
+  choices: ReadonlyArray<DomainChoice<Value>>;
   defaultValue: ChoiceDefaultResolver<Value, State>;
-}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor>;
+}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor, Value>;
+function choiceInput<
+  Value extends ChoiceValue,
+  State extends CollectorState = CollectorState,
+>(options: {
+  choices: DomainChoices<Value, State>;
+  defaultValue: ChoiceDefaultResolver<Value, State>;
+}): FormCollector<
+  SchemaLike<ChoiceValue>,
+  State,
+  ChoiceDomainDescriptor,
+  Value
+>;
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
 >(options: {
   choices: DomainChoices<Value, State>;
   defaultValue: ChoiceDefaultValue<Value, State>;
-}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> {
+}): FormCollector<
+  SchemaLike<ChoiceValue>,
+  State,
+  ChoiceDomainDescriptor,
+  Value
+> {
   const staticChoices = Array.isArray(options.choices) ? options.choices : null;
   const hasStaticDefault = typeof options.defaultValue !== "function";
   const staticDefault = options.defaultValue as ChoiceValue;
@@ -412,8 +444,8 @@ function choiceInput<
     );
   }
   const schema = staticChoices
-    ? (choiceSchema(staticChoices) as SchemaLike<Value>)
-    : (z.string().nullable() as unknown as SchemaLike<Value>);
+    ? choiceSchema<Value>(staticChoices)
+    : z.string().nullable();
   const dynamicDefault =
     typeof options.defaultValue === "function"
       ? options.defaultValue
@@ -475,7 +507,7 @@ function choiceInput<
 type ChoiceListCollector<
   Value extends string,
   State extends CollectorState,
-> = InputCollector<SchemaLike<Value[]>, State, "form"> & {
+> = InputCollector<z.ZodArray<z.ZodString>, State, "form", Value[]> & {
   readonly domain: (
     state: CollectorState,
     playerId: string,
@@ -524,7 +556,7 @@ function choiceListInput<
       : undefined;
   return {
     kind: "form",
-    schema: z.array(z.string()) as unknown as SchemaLike<Value[]>,
+    schema: z.array(z.string()),
     ...(staticDefaultValue !== undefined
       ? { defaultValue: staticDefaultValue }
       : {}),
@@ -611,15 +643,35 @@ type FormInputForState<State extends CollectorState> = {
   }): ResourceMapChoiceSource<State>;
   number: typeof numberInput<State>;
   choice<Value extends ChoiceValue>(options: {
-    choices: DomainChoices<Value, State>;
+    choices: ReadonlyArray<DomainChoice<Value>>;
     defaultValue: Value;
-  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> & {
+  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor, Value> & {
     readonly defaultValue: Value;
   };
   choice<Value extends ChoiceValue>(options: {
     choices: DomainChoices<Value, State>;
+    defaultValue: Value;
+  }): FormCollector<
+    SchemaLike<ChoiceValue>,
+    State,
+    ChoiceDomainDescriptor,
+    Value
+  > & {
+    readonly defaultValue: Value;
+  };
+  choice<Value extends ChoiceValue>(options: {
+    choices: ReadonlyArray<DomainChoice<Value>>;
     defaultValue: ChoiceDefaultResolver<Value, State>;
-  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor>;
+  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor, Value>;
+  choice<Value extends ChoiceValue>(options: {
+    choices: DomainChoices<Value, State>;
+    defaultValue: ChoiceDefaultResolver<Value, State>;
+  }): FormCollector<
+    SchemaLike<ChoiceValue>,
+    State,
+    ChoiceDomainDescriptor,
+    Value
+  >;
   choiceList<Value extends string>(options: {
     choices: DomainChoices<Value, State>;
     min?: DomainNumber<State>;

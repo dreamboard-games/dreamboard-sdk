@@ -32,8 +32,7 @@ function playerZoneCards<Table extends RuntimeTableRecord>(
 ): string[] {
   return [
     ...ensureArray(
-      (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[playerId] as
-        readonly string[] | undefined,
+      (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[playerId],
     ),
   ];
 }
@@ -167,7 +166,7 @@ function appendCardToSharedZoneCollectionInPlace<
   position: "top" | "bottom" = "bottom",
 ): void {
   const nextCards = insertCard(
-    sharedZoneCards(table, deckId as string),
+    sharedZoneCards(table, deckId),
     cardId,
     position,
   );
@@ -176,7 +175,7 @@ function appendCardToSharedZoneCollectionInPlace<
     deckId,
     nextCards as DeckCardsOfTable<Table, DeckId>,
   );
-  reindexSharedZoneCards(table, deckId as string, nextCards, {
+  reindexSharedZoneCards(table, deckId, nextCards, {
     [cardId]: playedBy,
   });
 }
@@ -185,16 +184,13 @@ function removeCardFromSharedZoneCollectionInPlace<
   Table extends RuntimeTableRecord,
   DeckId extends DeckIdOfTable<Table>,
 >(table: Table, deckId: DeckId, cardId: string): void {
-  const remaining = removeCard(
-    sharedZoneCards(table, deckId as string),
-    cardId,
-  );
+  const remaining = removeCard(sharedZoneCards(table, deckId), cardId);
   syncSharedZoneWithDeck(
     table,
     deckId,
     remaining as DeckCardsOfTable<Table, DeckId>,
   );
-  reindexSharedZoneCards(table, deckId as string, remaining);
+  reindexSharedZoneCards(table, deckId, remaining);
 }
 
 function setPlayerZoneCardsInPlace<
@@ -208,7 +204,7 @@ function setPlayerZoneCardsInPlace<
   cardIds: readonly string[],
 ): void {
   syncPlayerZoneWithHand(table, zoneId, playerId, cardIds);
-  reindexPlayerZoneCards(table, zoneId as string, playerId as string, cardIds);
+  reindexPlayerZoneCards(table, zoneId, playerId, cardIds);
 }
 
 /**
@@ -228,17 +224,17 @@ export function shufflePlayerZoneCards(
   if (nextCards === undefined) {
     const fromZone = (table.zones.perPlayer[zoneId] ?? table.hands[zoneId])?.[
       playerId
-    ] as readonly string[] | undefined;
+    ];
     return [...ensureArray(fromZone)];
   }
   table.hands[zoneId] = {
     ...table.hands[zoneId],
     [playerId]: [...nextCards],
-  } as (typeof table.hands)[string];
+  };
   table.zones.perPlayer[zoneId] = {
     ...table.zones.perPlayer[zoneId],
     [playerId]: [...nextCards],
-  } as (typeof table.zones.perPlayer)[string];
+  };
   return [...nextCards];
 }
 
@@ -252,21 +248,15 @@ export function appendToDeckInPlace<
   playedBy: PlayerIdOfTable<Table> | null = null,
   position: "top" | "bottom" = "bottom",
 ): void {
-  assertZoneScope(
-    table,
-    deckId as string,
-    "shared",
-    "addCardToSharedZone",
-    "zoneId",
-  );
-  assertCardDetached(table, cardId as string);
-  assertCardAbsentFromSharedZone(table, deckId as string, cardId as string);
+  assertZoneScope(table, deckId, "shared", "addCardToSharedZone", "zoneId");
+  assertCardDetached(table, cardId);
+  assertCardAbsentFromSharedZone(table, deckId, cardId);
   assertCardAllowedInZone(table, deckId, cardId);
   appendCardToSharedZoneCollectionInPlace(
     table,
     deckId,
-    cardId as string,
-    playedBy as string | null,
+    cardId,
+    playedBy,
     position,
   );
   table.ownerOfCard[cardId] = playedBy;
@@ -285,14 +275,14 @@ export function removeFromDeckInPlace<
 ): void {
   assertZoneScope(
     table,
-    deckId as string,
+    deckId,
     "shared",
     "removeCardFromSharedZone",
     "zoneId",
   );
-  assertCardInSharedZone(table, deckId as string, cardId as string);
-  removeCardFromSharedZoneCollectionInPlace(table, deckId, cardId as string);
-  table.componentLocations[cardId as string] = { type: "Detached" };
+  assertCardInSharedZone(table, deckId, cardId);
+  removeCardFromSharedZoneCollectionInPlace(table, deckId, cardId);
+  table.componentLocations[cardId] = { type: "Detached" };
 }
 
 function computeVisibilityForPlayerZone(
@@ -323,41 +313,33 @@ function moveFromHandToDeckInPlace<
 }): void {
   assertZoneScope(
     options.table,
-    options.handId as string,
+    options.handId,
     "perPlayer",
     "moveCardFromPlayerZoneToSharedZone",
     "fromZoneId",
   );
   assertZoneScope(
     options.table,
-    options.deckId as string,
+    options.deckId,
     "shared",
     "moveCardFromPlayerZoneToSharedZone",
     "toZoneId",
   );
   assertCardInPlayerZone(
     options.table,
-    options.handId as string,
-    options.playerId as string,
-    options.cardId as string,
+    options.handId,
+    options.playerId,
+    options.cardId,
   );
-  assertCardAbsentFromSharedZone(
-    options.table,
-    options.deckId as string,
-    options.cardId as string,
-  );
-  assertCardAllowedInZone(
-    options.table,
-    options.deckId as string,
-    options.cardId as string,
-  );
+  assertCardAbsentFromSharedZone(options.table, options.deckId, options.cardId);
+  assertCardAllowedInZone(options.table, options.deckId, options.cardId);
 
   const currentHand = playerZoneCards(
     options.table,
-    options.handId as string,
-    options.playerId as string,
+    options.handId,
+    options.playerId,
   );
-  const nextHand = removeCard(currentHand, options.cardId as string);
+  const nextHand = removeCard(currentHand, options.cardId);
   setPlayerZoneCardsInPlace(
     options.table,
     options.handId,
@@ -367,8 +349,8 @@ function moveFromHandToDeckInPlace<
   appendCardToSharedZoneCollectionInPlace(
     options.table,
     options.deckId,
-    options.cardId as string,
-    (options.playedBy ?? options.playerId) as string | null,
+    options.cardId,
+    options.playedBy ?? options.playerId,
     options.position ?? "bottom",
   );
   options.table.ownerOfCard[options.cardId] =
@@ -419,47 +401,48 @@ export function dealCardsBetweenPlayerZonesInPlace<
   if (options.count === 0) return;
   assertZoneScope(
     options.table,
-    options.fromZoneId as string,
+    options.fromZoneId,
     "perPlayer",
     "dealCardsBetweenPlayerZones",
     "fromZoneId",
   );
   assertZoneScope(
     options.table,
-    options.toZoneId as string,
+    options.toZoneId,
     "perPlayer",
     "dealCardsBetweenPlayerZones",
     "toZoneId",
   );
-  if ((options.fromZoneId as string) === (options.toZoneId as string)) {
+  const fromZoneId: string = options.fromZoneId;
+  if (fromZoneId === options.toZoneId) {
     throw new Error("Deal source and destination must differ.");
   }
 
   const sourceCards = playerZoneCards(
     options.table,
-    options.fromZoneId as string,
-    options.playerId as string,
+    options.fromZoneId,
+    options.playerId,
   );
   const selectedCards = sourceCards.slice(0, options.count);
   const destinationCards = playerZoneCards(
     options.table,
-    options.toZoneId as string,
-    options.playerId as string,
+    options.toZoneId,
+    options.playerId,
   );
   for (const cardId of selectedCards) {
     assertCardInPlayerZone(
       options.table,
-      options.fromZoneId as string,
-      options.playerId as string,
+      options.fromZoneId,
+      options.playerId,
       cardId,
     );
     assertCardAbsentFromPlayerZone(
       options.table,
-      options.toZoneId as string,
-      options.playerId as string,
+      options.toZoneId,
+      options.playerId,
       cardId,
     );
-    assertCardAllowedInZone(options.table, options.toZoneId as string, cardId);
+    assertCardAllowedInZone(options.table, options.toZoneId, cardId);
   }
 
   const remainingSource = sourceCards.slice(selectedCards.length);
@@ -479,8 +462,8 @@ export function dealCardsBetweenPlayerZonesInPlace<
   for (const cardId of selectedCards) {
     options.table.visibility[cardId] = computeVisibilityForPlayerZone(
       options.table,
-      options.toZoneId as string,
-      options.playerId as string,
+      options.toZoneId,
+      options.playerId,
     );
   }
 }
@@ -500,50 +483,42 @@ export function moveCardFromSharedZoneToPlayerZoneInPlace<
 }): void {
   assertZoneScope(
     options.table,
-    options.fromZoneId as string,
+    options.fromZoneId,
     "shared",
     "moveCardFromSharedZoneToPlayerZone",
     "fromZoneId",
   );
   assertZoneScope(
     options.table,
-    options.toZoneId as string,
+    options.toZoneId,
     "perPlayer",
     "moveCardFromSharedZoneToPlayerZone",
     "toZoneId",
   );
 
-  assertCardInSharedZone(
-    options.table,
-    options.fromZoneId as string,
-    options.cardId as string,
-  );
+  assertCardInSharedZone(options.table, options.fromZoneId, options.cardId);
   assertCardAbsentFromPlayerZone(
     options.table,
-    options.toZoneId as string,
-    options.playerId as string,
-    options.cardId as string,
+    options.toZoneId,
+    options.playerId,
+    options.cardId,
   );
-  assertCardAllowedInZone(
-    options.table,
-    options.toZoneId as string,
-    options.cardId as string,
-  );
+  assertCardAllowedInZone(options.table, options.toZoneId, options.cardId);
 
   const destinationCards = playerZoneCards(
     options.table,
-    options.toZoneId as string,
-    options.playerId as string,
+    options.toZoneId,
+    options.playerId,
   );
   const nextDestination = insertCard(
     destinationCards,
-    options.cardId as string,
+    options.cardId,
     options.position ?? "bottom",
   );
   removeCardFromSharedZoneCollectionInPlace(
     options.table,
     options.fromZoneId,
-    options.cardId as string,
+    options.cardId,
   );
   setPlayerZoneCardsInPlace(
     options.table,
@@ -551,14 +526,12 @@ export function moveCardFromSharedZoneToPlayerZoneInPlace<
     options.playerId,
     nextDestination,
   );
-  options.table.ownerOfCard[options.cardId as string] =
-    options.playerId as string;
-  options.table.visibility[options.cardId as string] =
-    computeVisibilityForPlayerZone(
-      options.table,
-      options.toZoneId as string,
-      options.playerId as string,
-    );
+  options.table.ownerOfCard[options.cardId] = options.playerId;
+  options.table.visibility[options.cardId] = computeVisibilityForPlayerZone(
+    options.table,
+    options.toZoneId,
+    options.playerId,
+  );
 }
 
 export function moveCardBetweenPlayerZonesInPlace<
@@ -576,14 +549,14 @@ export function moveCardBetweenPlayerZonesInPlace<
 }): void {
   assertZoneScope(
     options.table,
-    options.fromZoneId as string,
+    options.fromZoneId,
     "perPlayer",
     "moveCardBetweenPlayerZones",
     "fromZoneId",
   );
   assertZoneScope(
     options.table,
-    options.toZoneId as string,
+    options.toZoneId,
     "perPlayer",
     "moveCardBetweenPlayerZones",
     "toZoneId",
@@ -591,36 +564,32 @@ export function moveCardBetweenPlayerZonesInPlace<
 
   assertCardInPlayerZone(
     options.table,
-    options.fromZoneId as string,
-    options.playerId as string,
-    options.cardId as string,
+    options.fromZoneId,
+    options.playerId,
+    options.cardId,
   );
   assertCardAbsentFromPlayerZone(
     options.table,
-    options.toZoneId as string,
-    options.playerId as string,
-    options.cardId as string,
+    options.toZoneId,
+    options.playerId,
+    options.cardId,
   );
-  assertCardAllowedInZone(
-    options.table,
-    options.toZoneId as string,
-    options.cardId as string,
-  );
+  assertCardAllowedInZone(options.table, options.toZoneId, options.cardId);
 
   const sourceCards = playerZoneCards(
     options.table,
-    options.fromZoneId as string,
-    options.playerId as string,
+    options.fromZoneId,
+    options.playerId,
   );
   const destinationCards = playerZoneCards(
     options.table,
-    options.toZoneId as string,
-    options.playerId as string,
+    options.toZoneId,
+    options.playerId,
   );
-  const remainingSource = removeCard(sourceCards, options.cardId as string);
+  const remainingSource = removeCard(sourceCards, options.cardId);
   const nextDestination = insertCard(
     destinationCards,
-    options.cardId as string,
+    options.cardId,
     options.position ?? "bottom",
   );
   setPlayerZoneCardsInPlace(
@@ -635,12 +604,11 @@ export function moveCardBetweenPlayerZonesInPlace<
     options.playerId,
     nextDestination,
   );
-  options.table.visibility[options.cardId as string] =
-    computeVisibilityForPlayerZone(
-      options.table,
-      options.toZoneId as string,
-      options.playerId as string,
-    );
+  options.table.visibility[options.cardId] = computeVisibilityForPlayerZone(
+    options.table,
+    options.toZoneId,
+    options.playerId,
+  );
 }
 
 export function moveCardBetweenSharedZonesInPlace<
@@ -657,49 +625,40 @@ export function moveCardBetweenSharedZonesInPlace<
 }): void {
   assertZoneScope(
     options.table,
-    options.fromZoneId as string,
+    options.fromZoneId,
     "shared",
     "moveCardBetweenSharedZones",
     "fromZoneId",
   );
   assertZoneScope(
     options.table,
-    options.toZoneId as string,
+    options.toZoneId,
     "shared",
     "moveCardBetweenSharedZones",
     "toZoneId",
   );
-  assertCardInSharedZone(
-    options.table,
-    options.fromZoneId as string,
-    options.cardId as string,
-  );
+  assertCardInSharedZone(options.table, options.fromZoneId, options.cardId);
   assertCardAbsentFromSharedZone(
     options.table,
-    options.toZoneId as string,
-    options.cardId as string,
+    options.toZoneId,
+    options.cardId,
   );
-  assertCardAllowedInZone(
-    options.table,
-    options.toZoneId as string,
-    options.cardId as string,
-  );
+  assertCardAllowedInZone(options.table, options.toZoneId, options.cardId);
 
   removeCardFromSharedZoneCollectionInPlace(
     options.table,
     options.fromZoneId,
-    options.cardId as string,
+    options.cardId,
   );
   appendCardToSharedZoneCollectionInPlace(
     options.table,
     options.toZoneId,
-    options.cardId as string,
-    (options.playedBy ?? null) as string | null,
+    options.cardId,
+    options.playedBy ?? null,
     options.position ?? "bottom",
   );
-  options.table.ownerOfCard[options.cardId as string] =
-    options.playedBy ?? null;
-  options.table.visibility[options.cardId as string] = {
+  options.table.ownerOfCard[options.cardId] = options.playedBy ?? null;
+  options.table.visibility[options.cardId] = {
     faceUp: true,
   };
 }
@@ -744,36 +703,27 @@ export function dealCardsFromDeckToHandInPlace<
   if (count === 0) return;
   assertZoneScope(
     table,
-    fromZoneId as string,
+    fromZoneId,
     "shared",
     "dealCardsFromDeckToHand",
     "fromZoneId",
   );
   assertZoneScope(
     table,
-    toZoneId as string,
+    toZoneId,
     "perPlayer",
     "dealCardsFromDeckToHand",
     "toZoneId",
   );
 
-  const sourceCards = sharedZoneCards(table, fromZoneId as string);
+  const sourceCards = sharedZoneCards(table, fromZoneId);
   const selectedCards = sourceCards.slice(0, count);
-  const destinationCards = playerZoneCards(
-    table,
-    toZoneId as string,
-    playerId as string,
-  );
+  const destinationCards = playerZoneCards(table, toZoneId, playerId);
 
   for (const cardId of selectedCards) {
-    assertCardInSharedZone(table, fromZoneId as string, cardId);
-    assertCardAbsentFromPlayerZone(
-      table,
-      toZoneId as string,
-      playerId as string,
-      cardId,
-    );
-    assertCardAllowedInZone(table, toZoneId as string, cardId);
+    assertCardInSharedZone(table, fromZoneId, cardId);
+    assertCardAbsentFromPlayerZone(table, toZoneId, playerId, cardId);
+    assertCardAllowedInZone(table, toZoneId, cardId);
   }
 
   const remainingSource = sourceCards.slice(selectedCards.length);
@@ -783,15 +733,15 @@ export function dealCardsFromDeckToHandInPlace<
     fromZoneId,
     remainingSource as DeckCardsOfTable<Table, DeckId>,
   );
-  reindexSharedZoneCards(table, fromZoneId as string, remainingSource);
+  reindexSharedZoneCards(table, fromZoneId, remainingSource);
   setPlayerZoneCardsInPlace(table, toZoneId, playerId, nextHand);
 
   for (const cardId of selectedCards) {
     table.ownerOfCard[cardId] = playerId;
     table.visibility[cardId] = computeVisibilityForPlayerZone(
       table,
-      toZoneId as string,
-      playerId as string,
+      toZoneId,
+      playerId,
     );
   }
 }

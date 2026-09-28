@@ -73,7 +73,7 @@ export async function runUi(
   }
   if (command === "dev") {
     await runLiveUi(
-      { args: ["run", "dev"], cwd: games[0]!.dir },
+      { args: ["run", "dev"], cwd: games[0].dir },
       start,
       signals,
     );

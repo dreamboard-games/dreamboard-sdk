@@ -10,7 +10,7 @@ import { view } from "./player-view";
 export default hearts.assemble({
   initial: {
     public: ({ playerIds }) => ({
-      playerIds: playerIds as PlayerId[],
+      playerIds: playerIds,
       heartsBroken: false,
       tricksCompleted: 0,
       capturedHeartsByPlayer: Object.fromEntries(

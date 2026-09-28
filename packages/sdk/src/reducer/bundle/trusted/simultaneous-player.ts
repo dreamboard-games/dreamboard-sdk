@@ -47,12 +47,10 @@ export function simultaneousSubmitInteraction<
 }
 
 function resolvePromptToArray<PlayerId extends string>(
-  value: unknown,
+  value: PlayerId | readonly PlayerId[] | null | undefined,
 ): PlayerId[] {
   if (value === undefined || value === null) return [];
-  if (Array.isArray(value)) return value as PlayerId[];
-  if (typeof value === "string") return [value as PlayerId];
-  return [];
+  return typeof value === "string" ? [value] : [...value];
 }
 
 export function resolveSimultaneousActors<
@@ -66,9 +64,7 @@ export function resolveSimultaneousActors<
   projection?: ProjectionContext<TrustedDomainState<Contract>>,
 ): TrustedPlayerId<Contract>[] {
   type PlayerId = TrustedPlayerId<Contract>;
-  const selector =
-    (phase as { actors?: unknown; actor?: unknown }).actors ??
-    (phase as { actor?: unknown }).actor;
+  const selector = phase.actors ?? phase.actor;
   if (typeof selector === "function") {
     const selected = selector(
       scope.buildRuntimeArgs(

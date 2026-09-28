@@ -57,7 +57,6 @@ function buildContract() {
       pieceIds: [] as const,
       dieTypeIds: [] as const,
       dieIds: [] as const,
-      boardTemplateIds: [] as const,
       boardTypeIds: [] as const,
       boardBaseIds: [] as const,
       boardIds: [] as const,

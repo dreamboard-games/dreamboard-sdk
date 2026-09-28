@@ -1,3 +1,8 @@
+import type { CollectorValueOf } from "../reducer/model/spec/inputs";
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../reducer/model.js";
 import type { ReducerBundleContract } from "../shared/worker-contract.js";
 import { type RuntimeJson } from "../shared/runtime-json";
 import type { z } from "zod";
@@ -17,7 +22,6 @@ import type {
 import {
   ScenarioDefinitionValidationError,
   validateScenarioDefinition,
-  type ScenarioDefinitionGameLike,
 } from "./scenario-definition-validation.js";
 
 export {
@@ -110,26 +114,41 @@ export type ScenarioSetup = {
 type ScenarioTupleOutput<
   Items extends readonly z.core.SomeType[],
   Rest extends z.core.SomeType | null,
+  Value,
 > = Rest extends z.core.SomeType
   ? readonly [
-      ...{ [Index in keyof Items]: ScenarioSchemaOutput<Items[Index]> },
+      ...{
+        [Index in keyof Items]: ScenarioSchemaOutput<
+          Items[Index],
+          Index extends keyof Value ? Value[Index] : z.output<Items[Index]>
+        >;
+      },
       ...ScenarioSchemaOutput<Rest>[],
     ]
   : readonly [
-      ...{ [Index in keyof Items]: ScenarioSchemaOutput<Items[Index]> },
+      ...{
+        [Index in keyof Items]: ScenarioSchemaOutput<
+          Items[Index],
+          Index extends keyof Value ? Value[Index] : z.output<Items[Index]>
+        >;
+      },
     ];
 
 type OptionalScenarioObjectKeys<Shape extends z.core.$ZodShape> = {
   [Key in keyof Shape]: undefined extends z.output<Shape[Key]> ? Key : never;
 }[keyof Shape];
 
-type ScenarioObjectOutput<Shape extends z.core.$ZodShape> = {
+type ScenarioObjectOutput<Shape extends z.core.$ZodShape, Value> = {
   readonly [
     Key in Exclude<keyof Shape, OptionalScenarioObjectKeys<Shape>>
-  ]: ScenarioSchemaOutput<Shape[Key]>;
+  ]: ScenarioSchemaOutput<
+    Shape[Key],
+    Key extends keyof Value ? Value[Key] : z.output<Shape[Key]>
+  >;
 } & {
   readonly [Key in OptionalScenarioObjectKeys<Shape>]?: ScenarioSchemaOutput<
-    Shape[Key]
+    Shape[Key],
+    Key extends keyof Value ? Value[Key] : z.output<Shape[Key]>
   >;
 };
 
@@ -137,32 +156,40 @@ type ScenarioObjectOutput<Shape extends z.core.$ZodShape> = {
  * Authoring projection of an input schema. Only semantic player-id leaves are
  * replaced; ordinary strings retain their original type.
  */
-export type ScenarioSchemaOutput<Schema extends z.core.SomeType> =
+export type ScenarioSchemaOutput<
+  Schema extends z.core.SomeType,
+  Value = z.output<Schema>,
+> =
   Schema extends ManifestIdSchema<unknown, "playerId">
     ? ScenarioSeatRef
     : Schema extends z.ZodOptional<infer Inner>
-      ? ScenarioSchemaOutput<Inner> | undefined
+      ? ScenarioSchemaOutput<Inner, Value> | undefined
       : Schema extends z.ZodExactOptional<infer Inner>
-        ? ScenarioSchemaOutput<Inner> | undefined
+        ? ScenarioSchemaOutput<Inner, Value> | undefined
         : Schema extends z.ZodNullable<infer Inner>
-          ? ScenarioSchemaOutput<Inner> | null
+          ? ScenarioSchemaOutput<Inner, Value> | null
           : Schema extends z.ZodDefault<infer Inner>
-            ? ScenarioSchemaOutput<Inner>
+            ? ScenarioSchemaOutput<Inner, Value>
             : Schema extends z.ZodPrefault<infer Inner>
-              ? ScenarioSchemaOutput<Inner>
+              ? ScenarioSchemaOutput<Inner, Value>
               : Schema extends z.ZodCatch<infer Inner>
-                ? ScenarioSchemaOutput<Inner>
+                ? ScenarioSchemaOutput<Inner, Value>
                 : Schema extends z.ZodReadonly<infer Inner>
-                  ? Readonly<ScenarioSchemaOutput<Inner>>
+                  ? Readonly<ScenarioSchemaOutput<Inner, Value>>
                   : Schema extends z.ZodNonOptional<infer Inner>
-                    ? Exclude<ScenarioSchemaOutput<Inner>, undefined>
+                    ? Exclude<ScenarioSchemaOutput<Inner, Value>, undefined>
                     : Schema extends z.ZodArray<infer Element>
-                      ? readonly ScenarioSchemaOutput<Element>[]
+                      ? Value extends readonly (infer Item)[]
+                        ? readonly ScenarioSchemaOutput<Element, Item>[]
+                        : never
                       : Schema extends z.ZodTuple<infer Items, infer Rest>
-                        ? ScenarioTupleOutput<Items, Rest>
+                        ? ScenarioTupleOutput<Items, Rest, Value>
                         : Schema extends z.ZodObject<infer Shape>
-                          ? ScenarioObjectOutput<Shape>
-                          : Schema extends z.ZodRecord<infer Key, infer Value>
+                          ? ScenarioObjectOutput<
+                              Shape,
+                              Value & z.output<Schema>
+                            >
+                          : Schema extends z.ZodRecord<infer Key, infer Element>
                             ? Key extends ManifestIdSchema<unknown, "playerId">
                               ? never
                               : Readonly<
@@ -171,22 +198,32 @@ export type ScenarioSchemaOutput<Schema extends z.core.SomeType> =
                                       z.output<Key>,
                                       string | number | symbol
                                     >,
-                                    ScenarioSchemaOutput<Value>
+                                    ScenarioSchemaOutput<
+                                      Element,
+                                      Value extends Readonly<
+                                        Record<string, infer Item>
+                                      >
+                                        ? Item
+                                        : z.output<Element>
+                                    >
                                   >
                                 >
                             : Schema extends z.ZodIntersection<
                                   infer Left,
                                   infer Right
                                 >
-                              ? ScenarioSchemaOutput<Left> &
-                                  ScenarioSchemaOutput<Right>
+                              ? ScenarioSchemaOutput<Left, Value> &
+                                  ScenarioSchemaOutput<Right, Value>
                               : Schema extends z.ZodPipe<infer Input, z.ZodType>
                                 ? ScenarioSchemaOutput<Input>
                                 : Schema extends z.ZodLazy<infer Inner>
-                                  ? ScenarioSchemaOutput<Inner>
+                                  ? ScenarioSchemaOutput<Inner, Value>
                                   : Schema extends z.ZodUnion<infer Options>
-                                    ? ScenarioSchemaOutput<Options[number]>
-                                    : z.output<Schema>;
+                                    ? ScenarioSchemaOutput<
+                                        Options[number],
+                                        Value
+                                      >
+                                    : Value & z.output<Schema>;
 
 type InputCollectorsOfInteraction<Interaction> = Interaction extends {
   readonly steps: {
@@ -216,7 +253,7 @@ type ScenarioParamsOfCollectors<
   ]: Collectors[Key] extends {
     readonly schema: infer Schema extends z.core.SomeType;
   }
-    ? ScenarioSchemaOutput<Schema>
+    ? ScenarioSchemaOutput<Schema, CollectorValueOf<Collectors[Key]>>
     : never;
 };
 
@@ -479,8 +516,9 @@ export type ScenarioAuthoring<Game> = {
 };
 
 export function createScenarioAuthoring<
-  const Game extends ScenarioDefinitionGameLike,
->(game: Game): ScenarioAuthoring<Game> {
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
+>(game: Game & { readonly contract: Contract }): ScenarioAuthoring<Game> {
   return {
     defineScenario<const Definition extends ScenarioDefinition<Game>>(
       definition: Definition &

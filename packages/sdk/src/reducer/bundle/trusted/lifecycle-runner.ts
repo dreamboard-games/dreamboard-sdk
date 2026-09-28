@@ -50,7 +50,7 @@ export function createLifecycleRunner<
     const phase = scope.phaseByName(phaseName);
     const phaseState = phase.initialState
       ? phase.initialState({
-          manifest: scope.definition.contract.manifest,
+          manifest: scope.manifest,
           state,
           playerIds,
           options: state.runtime.options,
@@ -133,11 +133,11 @@ export function createLifecycleRunner<
       nextState = {
         ...entered.state,
         runtime: { ...workingState.runtime, rng: random.currentRng() },
-      } as State;
+      };
       terminal ??= entered.terminal;
       events.push(...(entered.events ?? []));
       consumptions.push(...random.consumptions());
-      transition = entered.transition as PhaseName | undefined;
+      transition = entered.transition;
     }
 
     return {
@@ -162,7 +162,7 @@ export function createLifecycleRunner<
     return enterPhase({
       state,
       phaseName,
-      playerIds: scope.buildContext(state).playerOrder as PlayerId[],
+      playerIds: scope.buildContext(state).playerOrder,
       event: "transition",
     });
   }
@@ -183,7 +183,7 @@ export function createLifecycleRunner<
       playerIds,
     );
     const parsedTable = safeParseOrThrow(
-      scope.definition.contract.manifest.tableSchema,
+      scope.manifest.tableSchema,
       tableWithManifestDefaults,
       "table",
     ) as State["table"];
@@ -196,7 +196,7 @@ export function createLifecycleRunner<
         publicState: safeParseOrThrow(
           scope.definition.contract.state.public,
           scope.definition.initial?.public?.({
-            manifest: scope.definition.contract.manifest,
+            manifest: scope.manifest,
             table: parsedTable,
             playerIds,
             rngSeed,
@@ -211,7 +211,7 @@ export function createLifecycleRunner<
             safeParseOrThrow(
               scope.definition.contract.state.private,
               scope.definition.initial?.private?.({
-                manifest: scope.definition.contract.manifest,
+                manifest: scope.manifest,
                 table: parsedTable,
                 playerIds,
                 playerId,
@@ -226,7 +226,7 @@ export function createLifecycleRunner<
         hiddenState: safeParseOrThrow(
           scope.definition.contract.state.hidden,
           scope.definition.initial?.hidden?.({
-            manifest: scope.definition.contract.manifest,
+            manifest: scope.manifest,
             table: parsedTable,
             playerIds,
             rngSeed,
@@ -254,7 +254,7 @@ export function createLifecycleRunner<
           pending: {},
           simultaneous: { current: null },
           lastTransition: null,
-        } as State["runtime"],
+        },
       },
     };
   }
@@ -263,7 +263,7 @@ export function createLifecycleRunner<
     table: State["table"],
     playerIds: PlayerId[],
   ): State["table"] {
-    const manifest = scope.definition.contract.manifest;
+    const manifest = scope.manifest;
     const defaultZones = manifest.defaults.zones(playerIds);
     const tableZones = table.zones ?? {};
     const tableResources = table.resources;
@@ -317,7 +317,7 @@ export function createLifecycleRunner<
         Object.keys(tableResources).length > 0
           ? tableResources
           : manifest.defaults.resources(playerIds),
-    } as State["table"];
+    };
   }
 
   function initializeSession(

@@ -26,17 +26,17 @@ export type TargetPredicate<State extends CollectorState, Target> = {
 
 export type BoundTargetRule<Target> = {
   readonly eligible: () => readonly Target[];
-  readonly validate: (target: Target) => ValidationIssue | null;
-  readonly isEligible: (target: Target) => boolean;
+  readonly validate: (target: unknown) => ValidationIssue | null;
+  readonly isEligible: (target: unknown) => boolean;
 };
 
 export type TargetRule<State extends CollectorState, Target> = {
   readonly eligible: (ctx: TargetContext<State>) => readonly Target[];
   readonly validate: (
     ctx: TargetContext<State>,
-    target: Target,
+    target: unknown,
   ) => ValidationIssue | null;
-  readonly isEligible: (ctx: TargetContext<State>, target: Target) => boolean;
+  readonly isEligible: (ctx: TargetContext<State>, target: unknown) => boolean;
   readonly bind: (ctx: TargetContext<State>) => BoundTargetRule<Target>;
 };
 
@@ -76,20 +76,20 @@ export function createTargetRule<State extends CollectorState, Target>(
 
   const validate = (
     ctx: TargetContext<State>,
-    target: Target,
+    target: unknown,
   ): ValidationIssue | null => {
-    if (!candidates(ctx).some((candidate) => equals(candidate, target))) {
-      return missingCandidateIssue;
-    }
-    for (const predicate of predicates) {
-      if (!predicate.test({ ...ctx, targetId: target, target })) {
-        return {
-          errorCode: predicate.errorCode,
-          message: predicate.message,
-        };
+    for (const candidate of candidates(ctx)) {
+      if (!equals(candidate, target)) continue;
+      for (const predicate of predicates) {
+        if (
+          !predicate.test({ ...ctx, targetId: candidate, target: candidate })
+        ) {
+          return { errorCode: predicate.errorCode, message: predicate.message };
+        }
       }
+      return null;
     }
-    return null;
+    return missingCandidateIssue;
   };
 
   const rule: TargetRule<State, Target> = {

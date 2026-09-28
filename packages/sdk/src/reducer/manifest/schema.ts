@@ -89,7 +89,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
           ? objectSchema({
               properties: {
                 ...schema.shared,
-                ...schema.variants[type]!.properties,
+                ...schema.variants[type].properties,
               },
             })
           : objectSchema(schema);

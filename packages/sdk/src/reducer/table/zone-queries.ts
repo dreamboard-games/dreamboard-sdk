@@ -83,17 +83,17 @@ function componentData<Table extends RuntimeTableRecord>(
 ): Record<string, unknown> | undefined {
   const piece = table.pieces[componentId];
   if (piece) {
-    return piece.properties as Record<string, unknown>;
+    return piece.properties;
   }
 
   const die = table.dice[componentId];
   if (die) {
-    return die.properties as Record<string, unknown>;
+    return die.properties;
   }
 
   const card = table.cards[componentId];
   if (card) {
-    return card.properties as Record<string, unknown>;
+    return card.properties;
   }
 
   return undefined;
@@ -117,13 +117,7 @@ export function getSharedZoneCards<
   Table extends RuntimeTableRecord,
   ZoneId extends SharedZoneIdOfTable<Table>,
 >(table: Table, zoneId: ZoneId): DeckCardsForZone<Table, ZoneId> {
-  assertZoneScope(
-    table,
-    zoneId as string,
-    "shared",
-    "getSharedZoneCards",
-    "zoneId",
-  );
+  assertZoneScope(table, zoneId, "shared", "getSharedZoneCards", "zoneId");
   return [
     ...ensureArray(table.zones.shared[zoneId] ?? table.decks[zoneId]),
   ] as DeckCardsForZone<Table, ZoneId>;
@@ -138,13 +132,7 @@ export function getPlayerZoneCards<
   playerId: PlayerId,
   zoneId: ZoneId,
 ): HandCardsForZone<Table, ZoneId> {
-  assertZoneScope(
-    table,
-    zoneId as string,
-    "perPlayer",
-    "getPlayerZoneCards",
-    "zoneId",
-  );
+  assertZoneScope(table, zoneId, "perPlayer", "getPlayerZoneCards", "zoneId");
   const cards =
     table.zones.perPlayer[zoneId]?.[playerId as string] ??
     table.hands[zoneId]?.[playerId as string];
@@ -171,10 +159,7 @@ export function getAllSharedZoneCards<Table extends RuntimeTableRecord>(
 ): {
   readonly [Z in SharedZoneIdOfTable<Table>]: DeckCardsOfTable<Table, Z>;
 } {
-  const zoneIds = collectZoneIds(
-    table.zones.shared as Record<string, unknown> | undefined,
-    table.decks as Record<string, unknown> | undefined,
-  );
+  const zoneIds = collectZoneIds(table.zones.shared, table.decks);
   const result: Record<string, readonly unknown[]> = {};
   for (const zoneId of zoneIds) {
     result[zoneId] = getSharedZoneCards(
@@ -241,9 +226,7 @@ export function getCardsById<
 }> {
   return Object.fromEntries(
     cardIds.map((cardId) => [cardId, getCard(table, cardId)]),
-  ) as Readonly<{
-    [Id in CardIds[number]]: ViewCardForTable<Table, Id>;
-  }>;
+  );
 }
 
 export function getSharedZoneCardCollection<
@@ -279,7 +262,7 @@ export function getPlayerZoneCardCollection<
   const cardIds = getPlayerZoneCards(table, playerId, zoneId);
 
   return {
-    cardIds: cardIds as readonly (CardIdOfTable<Table> & string)[],
+    cardIds: cardIds,
     cardsById: getCardsById(table, cardIds as readonly CardIdOfTable<Table>[]),
   };
 }

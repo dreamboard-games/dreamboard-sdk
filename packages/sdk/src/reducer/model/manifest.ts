@@ -62,7 +62,6 @@ export type ManifestLiterals<
   pieceIds: readonly string[];
   dieTypeIds: readonly string[];
   dieIds: readonly string[];
-  boardTemplateIds: readonly string[];
   boardTypeIds: readonly string[];
   boardBaseIds: readonly string[];
   boardIds: readonly string[];
@@ -198,7 +197,7 @@ function toNonEmptyStringTuple<Values extends readonly string[]>(
   if (typeof first === "undefined") {
     throw new Error("Expected a non-empty literal tuple");
   }
-  return [first as Values[number], ...(rest as Array<Values[number]>)];
+  return [first, ...(rest as Array<Values[number]>)];
 }
 
 /**
@@ -225,7 +224,7 @@ export function markManifestScopedSchema<
   schema: Schema,
   family?: Family,
 ): Schema & ManifestIdSchema<z.infer<Schema>, Family> {
-  manifestScopedSchemas.set(schema as unknown as object, family);
+  manifestScopedSchemas.set(schema, family);
   return schema as Schema & ManifestIdSchema<z.infer<Schema>, Family>;
 }
 
@@ -233,7 +232,7 @@ export function isManifestScopedSchema(schema: unknown): boolean {
   return (
     typeof schema === "object" &&
     schema !== null &&
-    manifestScopedSchemas.has(schema as object)
+    manifestScopedSchemas.has(schema)
   );
 }
 
@@ -243,7 +242,7 @@ export function manifestSchemaFamily(
   if (typeof schema !== "object" || schema === null) {
     return undefined;
   }
-  return manifestScopedSchemas.get(schema as object);
+  return manifestScopedSchemas.get(schema);
 }
 
 export function createManifestStringLiteralSchema<

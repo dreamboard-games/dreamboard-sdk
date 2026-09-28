@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { digestPluginRuntimeJson } from "../../shared/protocol/digest.js";
 import type {
   PerspectiveRef,
@@ -7,14 +8,25 @@ import type {
 
 const CURSOR_VERSION = 1;
 
-type CursorPayload = {
-  readonly version: typeof CURSOR_VERSION;
-  readonly scenarioSourceDigest: Sha256Digest;
-  readonly checkpointDigest: Sha256Digest;
-  readonly perspective: PerspectiveRef;
-  readonly seedOverride: number | null;
-  readonly nextOrdinal: number;
-};
+const cursorPayloadSchema = z.strictObject({
+  version: z.literal(CURSOR_VERSION),
+  scenarioSourceDigest: z.templateLiteral(["sha256:", z.string()]),
+  checkpointDigest: z.templateLiteral(["sha256:", z.string()]),
+  perspective: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("player"),
+      actor: z.strictObject({
+        seat: z.number().int().nonnegative(),
+        playerId: z.string(),
+      }),
+    }),
+    z.strictObject({ kind: z.literal("spectator") }),
+  ]),
+  seedOverride: z.number().nullable(),
+  nextOrdinal: z.number().int().nonnegative(),
+});
+
+type CursorPayload = z.infer<typeof cursorPayloadSchema>;
 
 export class ExploreCursorError extends Error {
   readonly code = "TEST_EXPLORE_CURSOR_STALE";
@@ -78,21 +90,22 @@ export function readExploreCursor(options: {
 
   let payload: CursorPayload;
   try {
-    payload = JSON.parse(
-      new TextDecoder("utf-8", { fatal: true }).decode(
-        Uint8Array.from(
-          atob(encoded.replaceAll("-", "+").replaceAll("_", "/")),
-          (character) => character.charCodeAt(0),
+    payload = cursorPayloadSchema.parse(
+      JSON.parse(
+        new TextDecoder("utf-8", { fatal: true }).decode(
+          Uint8Array.from(
+            atob(encoded.replaceAll("-", "+").replaceAll("_", "/")),
+            (character) => character.charCodeAt(0),
+          ),
         ),
       ),
-    ) as CursorPayload;
+    );
   } catch {
     return stale();
   }
 
   if (
     digestPluginRuntimeJson(payload).slice("sha256:".length) !== digest ||
-    payload.version !== CURSOR_VERSION ||
     payload.scenarioSourceDigest !== options.scenario.sourceDigest ||
     payload.checkpointDigest !== options.checkpointDigest ||
     payload.seedOverride !== (options.seedOverride ?? null) ||
@@ -100,7 +113,6 @@ export function readExploreCursor(options: {
   ) {
     return stale();
   }
-  assertOrdinal(payload.nextOrdinal);
   return payload.nextOrdinal;
 }
 

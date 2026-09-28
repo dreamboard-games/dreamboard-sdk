@@ -40,6 +40,7 @@ export type {
   InputDomainDescriptor,
   CollectorState,
   InputCollector,
+  CollectorValueOf,
   ParamsOf,
   ClientParamsOf,
 } from "./spec/inputs";

@@ -112,7 +112,7 @@ export function StormtrailBoard({ view }: { view: GameView }) {
               y2={edge.line[1].y}
               stroke={
                 owner
-                  ? PLAYER_STYLE[owner]!.color
+                  ? PLAYER_STYLE[owner].color
                   : edge.getIsSelected()
                     ? "#f59e0b"
                     : edge.getIsSelectable()
@@ -134,8 +134,8 @@ export function StormtrailBoard({ view }: { view: GameView }) {
                 cx={vertex.center.x}
                 cy={vertex.center.y}
                 r={13}
-                fill={PLAYER_STYLE[owner]!.pale}
-                stroke={PLAYER_STYLE[owner]!.color}
+                fill={PLAYER_STYLE[owner].pale}
+                stroke={PLAYER_STYLE[owner].color}
                 strokeWidth={4}
               />
               <text
@@ -196,7 +196,7 @@ function Roster({ view }: { view: GameView }) {
       className="stormtrail-players"
       players={players.map((player, index) => ({
         id: player.id,
-        name: `${PLAYER_STYLE[player.id]!.label}${view.playerId === player.id ? " · you" : ""}`,
+        name: `${PLAYER_STYLE[player.id].label}${view.playerId === player.id ? " · you" : ""}`,
         seat: index === 0 ? 1 : index === 1 ? 2 : 3,
         status: view.activePlayerId === player.id ? "Active" : "Waiting",
         detail: `${view.supplyCountByPlayerId[player.id]} supplies · ${4 - view.remainingCampsByPlayerId[player.id]}/4 camps · ${10 - view.remainingTrailsByPlayerId[player.id]}/10 trails`,
@@ -271,7 +271,7 @@ function StormtrailGame() {
               standings={view.outcome.standings.map((row) => ({
                 id: row.playerId,
                 rank: row.rank,
-                name: PLAYER_STYLE[row.playerId]!.label,
+                name: PLAYER_STYLE[row.playerId].label,
                 score: row.rank === 1 ? "Winner" : "Complete",
               }))}
             />
@@ -302,10 +302,10 @@ function StormtrailGame() {
             <section className="rounded-2xl border-2 border-sky-700 bg-sky-50 p-4">
               <h2 className="font-black">Pending offer</h2>
               <p className="mt-1 text-sm">
-                {PLAYER_STYLE[view.currentTrade.offerorPlayerId]!.label} offers{" "}
+                {PLAYER_STYLE[view.currentTrade.offerorPlayerId].label} offers{" "}
                 {JSON.stringify(view.currentTrade.give)} for{" "}
                 {JSON.stringify(view.currentTrade.want)} from{" "}
-                {PLAYER_STYLE[view.currentTrade.targetPlayerId]!.label}.
+                {PLAYER_STYLE[view.currentTrade.targetPlayerId].label}.
               </p>
             </section>
           ) : null}

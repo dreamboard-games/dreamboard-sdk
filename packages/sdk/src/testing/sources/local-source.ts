@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../../reducer/model.js";
 import { resolvePlayerRoster } from "../player-roster.js";
 import { createStore } from "@tanstack/store";
 import { z } from "zod";
@@ -15,11 +19,13 @@ import type {
   GameInput,
   ReducerSessionState,
 } from "../../shared/runtime-types.js";
-import type { RuntimeJson } from "../../shared/runtime-json.js";
+import {
+  RuntimeJsonSchema,
+  type RuntimeJson,
+} from "../../shared/runtime-json.js";
 import { materializePluginGameplayFrame } from "../../shared/protocol/projection.js";
 import { computePluginActionSetVersion } from "../../shared/protocol/digest.js";
 import { createReducerTestingRuntime } from "../reducer-runtime.js";
-import type { ScenarioDefinitionGameLike } from "../scenario-definition-validation.js";
 import type { OptionsOfContract } from "../../reducer/model/extract.js";
 import type { ScenarioCommandOf } from "../definitions.js";
 import {
@@ -37,9 +43,10 @@ const checkpointSchema = z
   .strict();
 type Runtime = ReturnType<typeof createReducerTestingRuntime>;
 export async function localSource<
-  const Game extends ScenarioDefinitionGameLike,
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
 >(
-  game: Game,
+  game: Game & { readonly contract: Contract },
   options: {
     players: number;
     seed: number;
@@ -50,9 +57,9 @@ export async function localSource<
   const setup = game.contract.manifest.normalSetup;
   if (!setup) throw new Error("Game manifest does not expose normal setup.");
   const playerIds = resolvePlayerRoster(game, options.players);
-  const runtime = createReducerTestingRuntime(game as never);
+  const runtime = createReducerTestingRuntime(game);
   const initial = await runtime.initialize({
-    table: setup.createInitialTable({ playerIds }) as RuntimeJson,
+    table: RuntimeJsonSchema.parse(setup.createInitialTable({ playerIds })),
     playerIds,
     rngSeed: options.seed,
     options: options.options,
@@ -67,8 +74,11 @@ export async function localSource<
 }
 
 /** Scenario materialization enters here without initializing/replaying on restore. */
-export function createLocalProvider<Game extends ScenarioDefinitionGameLike>(
-  game: Game,
+export function createLocalProvider<
+  Contract extends ReducerGameContractLike,
+  Game extends AnyReducerGameDefinition<Contract>,
+>(
+  game: Game & { readonly contract: Contract },
   runtime: Runtime,
   playerIds: readonly string[],
   initial: LocalCheckpoint,

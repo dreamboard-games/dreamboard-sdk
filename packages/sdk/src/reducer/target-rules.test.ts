@@ -1,3 +1,5 @@
+import { createInputTestState } from "./input-test-fixtures";
+import { createStateQueries } from "./table-queries";
 import { describe, expect, test } from "vitest";
 import {
   boardInput,
@@ -8,35 +10,9 @@ import {
 } from "./inputs";
 import type { CollectorState } from "./model/spec";
 
-const state = {
-  table: {
-    playerOrder: ["player-1", "player-2"],
-    hands: { hand: {} },
-    zones: { perPlayer: { hand: {} }, shared: {} },
-  },
-  flow: { currentPhase: "play" },
-} as CollectorState;
-
-const q = {
-  board: () => ({
-    state: {
-      layout: "hex",
-      spaces: ["s1", "s2"],
-      vertices: ["v1", "v2"],
-      edges: ["e1", "e2"],
-    },
-  }),
-  zone: {
-    playerCards: () => ["card-a", "card-b"],
-    sharedCards: () => [],
-  },
-};
-
-const ctx = {
-  state,
-  playerId: "player-1",
-  q,
-} as never;
+const state = createInputTestState();
+const q = createStateQueries(state);
+const ctx = { state, playerId: "player-1", q };
 
 describe("target rules", () => {
   test("board targets expose eligible, validate, isEligible, and bind", () => {
@@ -71,7 +47,7 @@ describe("target rules", () => {
 
   test("per-player board targets use structured target values", () => {
     const target = boardTarget
-      .playerSpace<CollectorState, "workshop-mat", "cell-a">("workshop-mat")
+      .playerSpace<CollectorState, "workshop-mat", "s1" | "s2">("workshop-mat")
       .where({
         id: "own-cell",
         errorCode: "not-owned",
@@ -95,7 +71,7 @@ describe("target rules", () => {
     expect(input.eligibleTargets?.(state, "player-1", q)).toContainEqual(
       ownedTarget,
     );
-    expect(input.domain?.(state, "player-1", q, {} as never)).toMatchObject({
+    expect(input.domain?.(state, "player-1", q)).toMatchObject({
       type: "boardTarget",
       projection: "resolved",
       valueKind: "player-board-space",
@@ -197,5 +173,93 @@ describe("target rules", () => {
       { id: "yes", label: "Yes" },
       { id: "no", label: "No" },
     ]);
+  });
+});
+
+describe("runtime target admission", () => {
+  test.each([null, undefined, 1, [], {}, "missing-card", { id: "card-a" }])(
+    "rejects unknown card target %# before predicates",
+    (value) => {
+      let predicateCalls = 0;
+      const input = cardInput({
+        target: cardTarget
+          .zones(["hand"])
+          .where({
+            id: "record-calls",
+            errorCode: "PREDICATE_REJECTED",
+            test: () => {
+              predicateCalls++;
+              return true;
+            },
+          })
+          .build(),
+      });
+      expect(input.validateTarget?.(state, "player-1", q, value)).toMatchObject(
+        { errorCode: "CARD_TARGET_NOT_ELIGIBLE" },
+      );
+      expect(predicateCalls).toBe(0);
+    },
+  );
+
+  test.each([
+    null,
+    undefined,
+    "s1",
+    {},
+    {
+      boardId: "workshop-mat",
+      playerId: "player-1",
+      spaceId: "s1",
+      injected: true,
+    },
+    { boardId: "wrong", playerId: "player-1", spaceId: "s1" },
+    { boardId: "workshop-mat", playerId: "missing-player", spaceId: "s1" },
+  ])(
+    "rejects unknown structured board target %# before predicates",
+    (value) => {
+      let predicateCalls = 0;
+      const input = boardInput.playerSpace({
+        target: boardTarget
+          .playerSpace("workshop-mat")
+          .where({
+            id: "record-calls",
+            errorCode: "PREDICATE_REJECTED",
+            test: () => {
+              predicateCalls++;
+              return true;
+            },
+          })
+          .build(),
+      });
+      expect(input.validateTarget?.(state, "player-1", q, value)).toMatchObject(
+        { errorCode: "BOARD_TARGET_NOT_ELIGIBLE" },
+      );
+      expect(predicateCalls).toBe(0);
+    },
+  );
+
+  test("predicates receive the canonical candidate instead of the submitted object", () => {
+    const seen: unknown[] = [];
+    const target = boardTarget
+      .playerSpace("workshop-mat")
+      .where({
+        id: "record-candidate",
+        errorCode: "REJECTED",
+        test: ({ target }) => {
+          seen.push(target);
+          return true;
+        },
+      })
+      .build();
+    const submitted = {
+      boardId: "workshop-mat",
+      playerId: "player-1",
+      spaceId: "s1",
+    };
+    expect(target.validate(ctx, submitted)).toBeNull();
+    expect(seen).toEqual([
+      { boardId: "workshop-mat", playerId: "player-1", spaceId: "s1" },
+    ]);
+    expect(seen[0]).not.toBe(submitted);
   });
 });

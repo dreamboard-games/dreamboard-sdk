@@ -1,4 +1,4 @@
-import { evaluateStepPrefix } from "./step-prefix";
+import { evaluateStepPrefix, type StepPrefix } from "./step-prefix";
 import { createStateQueries } from "../../table-queries";
 import type {
   AnyInteractionSpec,
@@ -236,7 +236,7 @@ export function buildInteractionDescriptor<
   options: {
     projection?: ProjectionContext<TrustedDomainState<Contract>>;
     includeDiagnosticReasons?: boolean;
-    stepPrefix?: ReturnType<typeof evaluateStepPrefix>;
+    stepPrefix?: StepPrefix;
   } = {},
 ): TrustedInteractionDescriptorShape<Contract, Definitions, View> {
   type PhaseName = TrustedPhaseName<Contract, Definitions, View>;

@@ -29,11 +29,26 @@ export function compileManifest<const M extends AuthoredManifest>(
   const sharedZoneIds = analysis.sharedZones.map((zone) => zone.id).sort();
   const playerZoneIds = analysis.playerZones.map((zone) => zone.id).sort();
   const literals = {
-    ...Object.fromEntries(
-      Object.entries(analysis)
-        .filter(([key]) => key.endsWith("Ids") || key === "cardTypes")
-        .map(([key, value]) => [key, value]),
-    ),
+    cardSetIds: analysis.cardSetIds,
+    cardTypes: analysis.cardTypes,
+    cardIds: analysis.cardIds,
+    zoneIds: analysis.zoneIds,
+    resourceIds: analysis.resourceIds,
+    pieceTypeIds: analysis.pieceTypeIds,
+    pieceIds: analysis.pieceIds,
+    dieTypeIds: analysis.dieTypeIds,
+    dieIds: analysis.dieIds,
+    boardTypeIds: analysis.boardTypeIds,
+    boardBaseIds: analysis.boardBaseIds,
+    boardIds: analysis.boardIds,
+    boardContainerIds: analysis.boardContainerIds,
+    relationTypeIds: analysis.relationTypeIds,
+    edgeIds: analysis.edgeIds,
+    edgeTypeIds: analysis.edgeTypeIds,
+    vertexIds: analysis.vertexIds,
+    vertexTypeIds: analysis.vertexTypeIds,
+    spaceIds: analysis.spaceIds,
+    spaceTypeIds: analysis.spaceTypeIds,
     playerIds: analysis.playerIds.map(asPlayerId),
     phaseNames: [],
     boardLayouts: ["generic", "hex", "square"],
@@ -57,7 +72,7 @@ export function compileManifest<const M extends AuthoredManifest>(
     cardTypeByCardId: Object.fromEntries(analysis.cardTypeByCardId),
     cardSetIdsBySharedZoneId: Object.fromEntries(analysis.sharedZoneCardSetIds),
     cardSetIdsByPlayerZoneId: Object.fromEntries(analysis.playerZoneCardSetIds),
-  } as unknown as ReducerManifestContract<
+  } satisfies ReducerManifestContract<
     RuntimeTableRecord,
     string,
     string,
@@ -96,9 +111,7 @@ export function compileManifest<const M extends AuthoredManifest>(
   const ids = {
     ...Object.fromEntries(
       families.map((family) => {
-        const values = literals[
-          `${family}s` as keyof typeof literals
-        ] as readonly string[];
+        const values = literals[`${family}s`];
         return [
           family,
           family === "phaseName"
@@ -184,12 +197,7 @@ export function compileManifest<const M extends AuthoredManifest>(
       families.map((family) => [
         `${family}s`,
         <V>(initial: V | ((id: string) => V)) =>
-          buildTypedRecord(
-            literals[
-              `${family}s` as keyof typeof literals
-            ] as readonly string[],
-            initial,
-          ),
+          buildTypedRecord(literals[`${family}s`], initial),
       ]),
     ),
     tableSchema,

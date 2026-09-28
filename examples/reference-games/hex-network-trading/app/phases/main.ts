@@ -261,7 +261,7 @@ const endTurn = main.interaction({
       lastProduction: [],
       lastSteal: null,
     });
-    tx.setActivePlayers([q.player.order()[nextIndex]!]);
+    tx.setActivePlayers([q.player.order()[nextIndex]]);
     appendHistory(tx, {
       kind: "endTurn",
       actorPlayerId: input.playerId,

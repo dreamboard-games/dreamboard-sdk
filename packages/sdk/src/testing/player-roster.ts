@@ -1,8 +1,8 @@
-import type { ScenarioDefinitionGameLike } from "./scenario-definition-validation.js";
+import type { AnyReducerGameDefinition } from "../reducer/model.js";
 
 /** Authored manifest roster is the authority for both replay and local sources. */
 export function resolvePlayerRoster(
-  game: ScenarioDefinitionGameLike,
+  game: Pick<AnyReducerGameDefinition, "contract">,
   count: number,
 ): string[] {
   const setup = game.contract.manifest.normalSetup;

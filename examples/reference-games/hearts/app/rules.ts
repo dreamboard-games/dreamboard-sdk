@@ -191,7 +191,7 @@ export function scoreCompletedHand(options: {
   const ordered = [...options.playerIds].sort(
     (left, right) => pointsByPlayer[left] - pointsByPlayer[right],
   );
-  const lowest = pointsByPlayer[ordered[0]!];
+  const lowest = pointsByPlayer[ordered[0]];
   const lowestCount = ordered.filter(
     (playerId) => pointsByPlayer[playerId] === lowest,
   ).length;

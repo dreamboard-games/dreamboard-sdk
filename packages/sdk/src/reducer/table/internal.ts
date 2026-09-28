@@ -105,9 +105,9 @@ export function syncPlayerZoneWithHand<
   table.hands[zoneId] = {
     ...table.hands[zoneId],
     [playerId as string]: [...nextCards],
-  } as Table["hands"][ZoneId];
+  };
   table.zones.perPlayer[zoneId] = {
     ...table.zones.perPlayer[zoneId],
     [playerId as string]: [...nextCards],
-  } as Table["zones"]["perPlayer"][ZoneId];
+  };
 }

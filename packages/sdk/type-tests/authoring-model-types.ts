@@ -1,3 +1,7 @@
+import type { ScenarioCommandOf } from "../src/testing/definitions.js";
+import { many } from "../src/reducer.js";
+import { boardInput, boardTarget } from "../src/reducer/inputs.js";
+import type { CollectorState, ParamsOf } from "../src/reducer/model.js";
 /**
  * Type-level proof for the public authoring surface.
  *
@@ -79,7 +83,6 @@ const manifest = {
     pieceIds: [] as const,
     dieTypeIds: [] as const,
     dieIds: [] as const,
-    boardTemplateIds: [] as const,
     boardTypeIds: [] as const,
     boardBaseIds: [] as const,
     boardIds: [] as const,
@@ -633,10 +636,10 @@ const secondStepParams: StepCommandParams = { choice: null };
 const combinedStepParams: StepCommandParams = { count: 1, choice: null };
 // @ts-expect-error The current step command requires one declared value.
 const emptyStepParams: StepCommandParams = {};
-// @ts-expect-error Removed dependency declaration is not an input option.
 playerTurn.inputs.form.choice({
   choices: [{ value: "a", label: "A" }],
   dependsOn: [],
+  // @ts-expect-error No overload accepts the removed dependsOn option.
   defaultValue: "a",
 });
 playerTurn.inputs.form.choice({
@@ -692,3 +695,161 @@ steppedInstance.inputs.get("playerTurn.choose", "count").setValue(1);
 steppedInstance.inputs.get("playerTurn.choose", "choice").setValue(null);
 // @ts-expect-error Step input value types remain distinct.
 steppedInstance.inputs.get("playerTurn.choose", "count").setValue("bad");
+
+// Syntax parsing does not establish manifest membership; complete collection does.
+type _CardSyntaxIsString = Expect<
+  Equal<z.infer<typeof readyCard.schema>, string>
+>;
+const collectedCards = many(readyCard, { min: 1, max: 2 });
+type _ManyCardSyntax = Expect<
+  Equal<z.infer<typeof collectedCards.schema>, string[]>
+>;
+type _ManyCardValue = Expect<
+  Equal<ParamsOf<{ cards: typeof collectedCards }>["cards"], TestCardId[]>
+>;
+const collectedSpaces = boardInput.space({
+  target: boardTarget.space<CollectorState, "s1" | "s2">("board").build(),
+});
+type _SpaceSyntax = Expect<
+  Equal<z.infer<typeof collectedSpaces.schema>, string>
+>;
+type _SpaceValue = Expect<
+  Equal<ParamsOf<{ space: typeof collectedSpaces }>["space"], "s1" | "s2">
+>;
+const collectedPlayerSpace = boardInput.playerSpace({
+  target: boardTarget
+    .playerSpace<CollectorState, "mat", "s1" | "s2">("mat")
+    .build(),
+});
+type _PlayerSpaceSyntax = Expect<
+  Equal<
+    z.infer<typeof collectedPlayerSpace.schema>,
+    { boardId: "mat"; playerId: string; spaceId: string }
+  >
+>;
+type _PlayerSpaceValue = Expect<
+  Equal<
+    ParamsOf<{ space: typeof collectedPlayerSpace }>["space"]["spaceId"],
+    "s1" | "s2"
+  >
+>;
+const parsedSyntax = readyCard.schema.parse("unrelated-id");
+// @ts-expect-error A syntax parse is not proof of manifest membership.
+const unvalidatedCard: TestCardId = parsedSyntax;
+void unvalidatedCard;
+type _ScenarioCardValue = Expect<
+  Equal<
+    Extract<
+      ScenarioCommandOf<typeof definition>,
+      { interactionId: "pick" }
+    >["params"]["cardId"],
+    TestCardId
+  >
+>;
+const nestedCollectedCards = many(collectedCards, { count: 2 });
+type _NestedCardValue = Expect<
+  Equal<
+    ParamsOf<{ cards: typeof nestedCollectedCards }>["cards"],
+    TestCardId[][]
+  >
+>;
+
+// Bound phases preserve simultaneous-only requirements after supplying state.
+playerTurn.define({
+  kind: "simultaneousPlayer",
+  actors: ({ state }) => state.table.playerOrder,
+  submit: { inputs: {} },
+  resolve: () => {},
+});
+// @ts-expect-error Simultaneous phases require a resolver.
+playerTurn.define({
+  kind: "simultaneousPlayer",
+  actors: ({ state }) => state.table.playerOrder,
+  submit: { inputs: {} },
+});
+// @ts-expect-error Simultaneous phases require an actor selector.
+playerTurn.define({
+  kind: "simultaneousPlayer",
+  submit: { inputs: {} },
+  resolve: () => {},
+});
+// @ts-expect-error Simultaneous phases require a submit definition.
+playerTurn.define({
+  kind: "simultaneousPlayer",
+  actors: ({ state }) => state.table.playerOrder,
+  resolve: () => {},
+});
+
+const dynamicChoice = playerTurn.inputs.form.choice({
+  choices: () => [{ value: "ready" as const, label: "Ready" }],
+  defaultValue: () => "ready" as const,
+});
+const dynamicList = playerTurn.inputs.form.choiceList({
+  choices: () => [{ value: "ready" as const, label: "Ready" }],
+});
+const staticChoice = playerTurn.inputs.form.choice({
+  choices: [{ value: "ready", label: "Ready" }],
+  defaultValue: "ready",
+});
+type _StaticChoiceSyntax = Expect<
+  Equal<z.output<typeof staticChoice.schema>, "ready">
+>;
+type _DynamicChoiceSyntax = Expect<
+  Equal<z.output<typeof dynamicChoice.schema>, string | null>
+>;
+type _DynamicListSyntax = Expect<
+  Equal<z.output<typeof dynamicList.schema>, string[]>
+>;
+type _DynamicChoiceValue = Expect<
+  Equal<ParamsOf<{ mode: typeof dynamicChoice }>["mode"], "ready">
+>;
+type _DynamicListValue = Expect<
+  Equal<ParamsOf<{ modes: typeof dynamicList }>["modes"], "ready"[]>
+>;
+// @ts-expect-error Dynamic syntax parsing does not establish choice membership.
+const unvalidatedChoice: "ready" = dynamicChoice.schema.parse("not-a-choice");
+// @ts-expect-error List syntax parsing does not establish choice membership.
+const unvalidatedChoices: "ready"[] = dynamicList.schema.parse([
+  "not-a-choice",
+]);
+const dynamicPhase = playerTurn.define({
+  kind: "player",
+  interactions: {
+    choose: playerTurn.interaction({
+      inputs: { mode: dynamicChoice, modes: dynamicList },
+      paramsSchema: z.object({
+        mode: z.string().nullable(),
+        modes: z.array(z.string()),
+      }),
+      reduce: ({ input }) => {
+        type _ValidatedMode = Expect<Equal<typeof input.params.mode, "ready">>;
+        type _ValidatedModes = Expect<
+          Equal<typeof input.params.modes, "ready"[]>
+        >;
+      },
+    }),
+  },
+});
+const dynamicDefinition = game.assemble({
+  phases: { setup: definition.phases.setup, playerTurn: dynamicPhase },
+  view: definition.view,
+});
+type _ScenarioDynamicChoice = Expect<
+  Equal<
+    Extract<
+      ScenarioCommandOf<typeof dynamicDefinition>,
+      { interactionId: "choose" }
+    >["params"]["mode"],
+    "ready"
+  >
+>;
+type _ScenarioDynamicList = Expect<
+  Equal<
+    Extract<
+      ScenarioCommandOf<typeof dynamicDefinition>,
+      { interactionId: "choose" }
+    >["params"]["modes"],
+    readonly "ready"[]
+  >
+>;
+void [unvalidatedChoice, unvalidatedChoices];

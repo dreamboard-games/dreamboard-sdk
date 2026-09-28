@@ -34,13 +34,7 @@ export type IngressRuntimeCodec<
   >["runtime"];
   parseInitialOptions: (options: unknown) => Options;
   parseInitialTable: (
-    rawTable: ReducerStateForConfig<
-      Table,
-      PublicSchema,
-      PrivateSchema,
-      HiddenSchema,
-      PhaseName
-    >["table"],
+    rawTable: unknown,
     playerIds?: readonly string[],
   ) => {
     playerIds: PlayerIdOfState<
@@ -61,7 +55,7 @@ export type IngressRuntimeCodec<
     >["table"];
   };
   parseState: (
-    rawState: RawReducerSessionState,
+    rawState: unknown,
   ) => ReducerSessionForConfig<
     Table,
     PublicSchema,

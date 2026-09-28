@@ -1,3 +1,4 @@
+import { z } from "zod";
 import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -5,6 +6,12 @@ import path from "node:path";
 import test from "node:test";
 import { readCatalogs, catalogVersion } from "./catalogs.ts";
 import { prepareIsolatedReferenceGame } from "./verify.ts";
+
+const packageSchema = z.looseObject({
+  packageManager: z.string().optional(),
+  dependencies: z.record(z.string(), z.string()),
+  devDependencies: z.record(z.string(), z.string()),
+});
 
 test("portable game preparation preserves authored aliases and resolves canonical catalogs exactly", async () => {
   const root = await mkdtemp(path.join(tmpdir(), "reference-catalog-"));
@@ -51,7 +58,7 @@ test("portable game preparation preserves authored aliases and resolves canonica
       root,
       catalogs,
     );
-    const portable = JSON.parse(
+    const portable: unknown = JSON.parse(
       await readFile(path.join(sandbox, "tsconfig.json"), "utf8"),
     );
     assert.deepEqual(portable, { ...config, extends: "./tsconfig.base.json" });
@@ -61,8 +68,8 @@ test("portable game preparation preserves authored aliases and resolves canonica
       ),
       { compilerOptions: { strict: true } },
     );
-    const pkg = JSON.parse(
-      await readFile(path.join(sandbox, "package.json"), "utf8"),
+    const pkg = packageSchema.parse(
+      JSON.parse(await readFile(path.join(sandbox, "package.json"), "utf8")),
     );
     assert.equal(pkg.packageManager, "pnpm@10.4.1");
     assert.equal(
@@ -121,13 +128,15 @@ test("standalone starter needs no dependency conversion or repository parent", a
     await assert.rejects(readFile(path.join(sandbox, "tsconfig.base.json")), {
       code: "ENOENT",
     });
-    const prepared = JSON.parse(
-      await readFile(path.join(sandbox, "package.json"), "utf8"),
+    const prepared = packageSchema.parse(
+      JSON.parse(await readFile(path.join(sandbox, "package.json"), "utf8")),
     );
-    const authored = JSON.parse(
-      await readFile(
-        path.join(repository, "templates/game/package.json"),
-        "utf8",
+    const authored = packageSchema.parse(
+      JSON.parse(
+        await readFile(
+          path.join(repository, "templates/game/package.json"),
+          "utf8",
+        ),
       ),
     );
     assert.deepEqual(prepared, {

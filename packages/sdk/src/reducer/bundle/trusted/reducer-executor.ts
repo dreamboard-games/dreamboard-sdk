@@ -7,6 +7,7 @@ import type {
   GameEvent,
   GameOutcome,
   InputCollector,
+  SimultaneousResolveArgs,
   PhaseMapOf,
   ReducerGameContractLike,
   ReducerResult,
@@ -21,7 +22,6 @@ import {
   type RngConsumption,
 } from "./rng-sampler";
 import {
-  isSimultaneousPhase,
   resolveSimultaneousActors,
   simultaneousSubmitInteraction,
   SIMULTANEOUS_SUBMIT_INTERACTION_ID,
@@ -31,6 +31,7 @@ import {
   rejectResult,
   type TrustedDomainState,
   type TrustedInput,
+  type TrustedManifest,
   type TrustedPhaseName,
   type TrustedPlayerId,
   type TrustedRuntimeScope,
@@ -184,7 +185,7 @@ export function createReducerExecutor<
       state: {
         ...state,
         runtime: { ...state.runtime, rng: nextRng },
-      } as State,
+      },
       input: { ...input, params: mergedParams } as Extract<
         ReducerInput,
         { kind: "interaction" }
@@ -200,7 +201,7 @@ export function createReducerExecutor<
         ...state.runtime,
         simultaneous: { current: null },
       },
-    } as State;
+    };
   }
 
   function reduceSimultaneousSubmit(
@@ -217,7 +218,7 @@ export function createReducerExecutor<
 
     const phaseName = state.flow.currentPhase as PhaseName;
     const phase = scope.phaseByName(phaseName);
-    if (!isSimultaneousPhase(phase)) {
+    if (phase.kind !== "simultaneousPlayer") {
       return null;
     }
 
@@ -228,16 +229,10 @@ export function createReducerExecutor<
         `Simultaneous phase '${phaseName}' does not declare submit.`,
       );
     }
-    const resolve = (phase as { resolve?: unknown }).resolve;
-    if (typeof resolve !== "function") {
-      return rejectResult(
-        "missing-simultaneous-resolve",
-        `Simultaneous phase '${phaseName}' does not declare resolve.`,
-      );
-    }
+    const resolve = phase.resolve;
 
     const actors = resolveSimultaneousActors(scope, state, phase);
-    if (!actors.includes(input.playerId as PlayerId)) {
+    if (!actors.includes(input.playerId)) {
       return rejectResult(
         "NOT_YOUR_TURN",
         `It is not your turn (interaction '${input.interactionId}').`,
@@ -295,6 +290,8 @@ export function createReducerExecutor<
       };
     }
 
+    // Each stored submission passed collector validation; the barrier above
+    // establishes an entry for every actor. Bind that validated record once.
     const resolvedSubmissions = Object.fromEntries(
       actors.map((actor) => [
         actor,
@@ -303,7 +300,11 @@ export function createReducerExecutor<
           params: submissions[actor]?.params ?? {},
         },
       ]),
-    );
+    ) as SimultaneousResolveArgs<
+      Record<string, InputCollector>,
+      DomainState,
+      TrustedManifest<Contract>
+    >["submissions"];
     const random = createMutableRandomHelpers(stateWithSubmission.runtime.rng);
     const resolveArgs = scope.buildRuntimeArgs(
       stateWithSubmission,
@@ -315,9 +316,8 @@ export function createReducerExecutor<
       },
       { random },
     );
-    const resolved = normalizeResult(
-      resolve(resolveArgs) as ReducerResult<DomainState>,
-      () => implicitResultOf(resolveArgs),
+    const resolved = normalizeResult(resolve(resolveArgs), () =>
+      implicitResultOf(resolveArgs),
     );
     if (resolved.type === "reject") {
       return resolved;
@@ -327,7 +327,7 @@ export function createReducerExecutor<
       state: clearSimultaneousCurrent({
         ...resolved.state,
         runtime: { ...stateWithSubmission.runtime, rng: random.currentRng() },
-      } as State),
+      }),
       ...(resolved.transition ? { transition: resolved.transition } : {}),
       ...(resolved.terminal ? { terminal: resolved.terminal } : {}),
       events: resolved.events ?? [],
@@ -388,7 +388,7 @@ export function createReducerExecutor<
         State["runtime"]["pending"][PlayerId]
       >;
       const interaction = scope.findInteractionInPhase(
-        state.flow.currentPhase as PhaseName,
+        state.flow.currentPhase,
         saved.interactionId,
       );
       const eligibility = interactions.resolveInteractionEligibility({
@@ -461,7 +461,7 @@ export function createReducerExecutor<
           "A terminal phase entry cannot request another transition.",
         );
       }
-      transition = entered.transition as PhaseName | undefined;
+      transition = entered.transition;
     }
     const committedEvents = normalizeGameEvents(events);
     return {
@@ -524,7 +524,7 @@ export function createReducerExecutor<
     if (result.type === "reject") return result;
     return complete({
       ...result,
-      transition: result.transition as PhaseName | undefined,
+      transition: result.transition,
       trace: [{ type: "acceptedClientInput", input }, ...(result.trace ?? [])],
     });
   }

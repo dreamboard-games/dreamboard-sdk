@@ -1,5 +1,11 @@
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
+import { ReducerSessionStateSchema } from "../shared/runtime-schema";
 import { createGame as createModel } from "../reducer";
-import { createReducerTransaction } from "./transaction";
+import {
+  createReducerTransaction,
+  type ReducerTransaction,
+} from "./transaction";
 import {
   createTestRandom,
   createTestTransaction,
@@ -10,10 +16,11 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
 import {
-  createManifestStringLiteralSchema,
+  type BaseGameStateOfContract,
   type RuntimeTableRecord,
+  type RuntimeRecord,
 } from "../reducer/model";
-import { type PlayerId } from "./per-player";
+import { asPlayerId } from "./per-player";
 
 function pp<T>(
   playerIds: readonly string[],
@@ -21,25 +28,15 @@ function pp<T>(
   fallback: T,
 ) {
   return Object.fromEntries(
-    playerIds
-      .map((id) => id as PlayerId)
-      .map((id) => [
-        id,
-        Object.prototype.hasOwnProperty.call(source, id as string)
-          ? source[id as string]!
-          : fallback,
-      ]),
+    playerIds.map((id) => [
+      id,
+      Object.prototype.hasOwnProperty.call(source, id) ? source[id] : fallback,
+    ]),
   );
 }
 
-function ppEmpty(
-  playerIds: readonly string[],
-): Record<PlayerId, Record<string, unknown>> {
-  return Object.fromEntries(
-    playerIds
-      .map((id) => id as PlayerId)
-      .map((id) => [id, {} as Record<string, unknown>]),
-  );
+function ppEmpty(playerIds: readonly string[]): Record<string, RuntimeRecord> {
+  return Object.fromEntries(playerIds.map((id) => [id, {}]));
 }
 
 function createEmptyTable(
@@ -60,7 +57,7 @@ function createEmptyTable(
     componentLocations: {},
     ownerOfCard: {},
     visibility: {},
-    resources: Object.fromEntries(([] as PlayerId[]).map((id) => [id, {}])),
+    resources: {},
     boards: {
       byId: {},
       hex: {},
@@ -73,278 +70,90 @@ function createEmptyTable(
 }
 
 function createManifestContract() {
-  const phaseNames = ["defaultPhase", "draftPhase"] as const;
-  const playerIds = ["player-1", "player-2", "player-3", "player-4"] as const;
-  const resolvePlayerIds = (selectedPlayerIds?: readonly string[]) =>
-    selectedPlayerIds && selectedPlayerIds.length > 0
-      ? [...selectedPlayerIds]
-      : [...playerIds];
-
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: ["hand"] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: ["hand"] as const,
-      zoneIds: ["hand"] as const,
-      cardIds: [] as const,
-      resourceIds: ["coins"] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      vertexIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: { hand: "ownerOnly" } as const,
-      zoneVisibilityById: { hand: "ownerOnly" } as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: z.enum(playerIds),
-      phaseName: z.enum(phaseNames),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema([] as const),
-      cardId: createManifestStringLiteralSchema([] as const),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema(["hand"] as const),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema(["hand"] as const),
-      zoneId: createManifestStringLiteralSchema(["hand"] as const),
-      resourceId: createManifestStringLiteralSchema(["coins"] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      tileId: z.string(),
-      tileTypeId: z.string(),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: (selectedPlayerIds?: readonly string[]) => ({
-        shared: {},
-        perPlayer: {
-          hand: Object.fromEntries(
-            resolvePlayerIds(selectedPlayerIds)
-              .map((id) => id as PlayerId)
-              .map((id) => [id, [] as string[]]),
-          ),
-        },
-        visibility: {},
-      }),
-      decks: () => ({}),
-      hands: (selectedPlayerIds?: readonly string[]) => ({
-        hand: Object.fromEntries(
-          resolvePlayerIds(selectedPlayerIds)
-            .map((id) => id as PlayerId)
-            .map((id) => [id, [] as string[]]),
-        ),
-      }),
-      handVisibility: () => ({ hand: "ownerOnly" }),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: (selectedPlayerIds?: readonly string[]) =>
-        Object.fromEntries(
-          resolvePlayerIds(selectedPlayerIds)
-            .map((id) => id as PlayerId)
-            .map((id) => [id, { coins: 0 }]),
-        ),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
+  return compileManifest({
+    players: { minPlayers: 2, maxPlayers: 4 },
+    cardSets: [],
+    zones: [
+      {
+        id: "hand",
+        name: "Hand",
+        scope: "perPlayer",
+        allowedCardSetIds: [],
+        visibility: "ownerOnly",
+      },
+    ],
+    resources: [{ id: "coins", name: "Coins" }],
+  });
 }
 
 const BOOTSTRAP_PLAYER_IDS = ["player-1", "player-2"] as const;
-const BOOTSTRAP_PHASE_NAMES = ["setup"] as const;
 const BOOTSTRAP_CARD_IDS = ["card-1", "card-2", "card-3", "card-4"] as const;
 
 function createBootstrapManifestContract() {
-  return {
-    literals: {
-      playerIds: BOOTSTRAP_PLAYER_IDS,
-      phaseNames: BOOTSTRAP_PHASE_NAMES,
-      cardSetIds: ["main"] as const,
-      cardTypes: ["card"] as const,
-      deckIds: ["draw-deck"] as const,
-      handIds: ["hand"] as const,
-      sharedZoneIds: ["draw-deck"] as const,
-      playerZoneIds: ["hand"] as const,
-      zoneIds: ["draw-deck", "hand"] as const,
-      cardIds: BOOTSTRAP_CARD_IDS,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      vertexIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: { hand: "ownerOnly" } as const,
-      zoneVisibilityById: {
-        "draw-deck": "public",
-        hand: "ownerOnly",
-      } as const,
-      cardSetIdByCardId: {
-        "card-1": "main",
-        "card-2": "main",
-        "card-3": "main",
-        "card-4": "main",
-      } as const,
-      cardTypeByCardId: {
-        "card-1": "card",
-        "card-2": "card",
-        "card-3": "card",
-        "card-4": "card",
-      } as const,
-      cardSetIdsBySharedZoneId: {
-        "draw-deck": ["main"],
-      } as const,
-      cardSetIdsByPlayerZoneId: {
-        hand: ["main"],
-      } as const,
-    },
-    ids: {
-      playerId: z.enum(BOOTSTRAP_PLAYER_IDS),
-      phaseName: z.enum(BOOTSTRAP_PHASE_NAMES),
-      cardSetId: z.enum(["main"]),
-      cardType: z.enum(["card"]),
-      cardId: z.enum(BOOTSTRAP_CARD_IDS),
-      deckId: z.enum(["draw-deck"]),
-      handId: z.enum(["hand"]),
-      sharedZoneId: z.enum(["draw-deck"]),
-      playerZoneId: z.enum(["hand"]),
-      zoneId: z.enum(["draw-deck", "hand"]),
-      resourceId: z.string(),
-      dieId: z.string(),
-      boardId: z.string(),
-      boardBaseId: z.string(),
-      boardContainerId: z.string(),
-      tileId: z.string(),
-      tileTypeId: z.string(),
-      edgeId: z.string(),
-      edgeTypeId: z.string(),
-      vertexId: z.string(),
-      vertexTypeId: z.string(),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: z.string(),
-      spaceTypeId: z.string(),
-      pieceId: z.string(),
-      pieceTypeId: z.string(),
-    },
-    defaults: {
-      zones: (selectedPlayerIds?: readonly string[]) => ({
-        shared: {
-          "draw-deck": [...BOOTSTRAP_CARD_IDS],
-        },
-        perPlayer: {
-          hand: pp<string[]>(selectedPlayerIds ?? BOOTSTRAP_PLAYER_IDS, {}, []),
-        },
-        visibility: {
-          "draw-deck": "public",
-          hand: "ownerOnly",
-        },
-        cardSetIdsByZoneId: {
-          "draw-deck": ["main"],
-          hand: ["main"],
-        },
-      }),
-      decks: () => ({
-        "draw-deck": [...BOOTSTRAP_CARD_IDS],
-      }),
-      hands: (selectedPlayerIds?: readonly string[]) => ({
-        hand: pp<string[]>(selectedPlayerIds ?? BOOTSTRAP_PLAYER_IDS, {}, []),
-      }),
-      handVisibility: () => ({
-        hand: "ownerOnly",
-      }),
-      ownerOfCard: () =>
-        Object.fromEntries(BOOTSTRAP_CARD_IDS.map((cardId) => [cardId, null])),
-      visibility: () =>
-        Object.fromEntries(
-          BOOTSTRAP_CARD_IDS.map((cardId) => [cardId, { faceUp: true }]),
-        ),
-      resources: (selectedPlayerIds?: readonly string[]) =>
-        ppEmpty(selectedPlayerIds ?? BOOTSTRAP_PLAYER_IDS),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
-}
-
-function createBootstrapTable(): RuntimeTableRecord {
-  return {
-    ...createEmptyTable([...BOOTSTRAP_PLAYER_IDS]),
-    componentLocations: Object.fromEntries(
-      BOOTSTRAP_CARD_IDS.map((id, position) => [
-        id,
-        { type: "InDeck", deckId: "draw-deck", position, playedBy: null },
-      ]),
-    ),
-    cards: Object.fromEntries(
-      BOOTSTRAP_CARD_IDS.map((cardId) => [
-        cardId,
-        {
-          id: cardId,
-          cardSetId: "main",
+  return compileManifest({
+    players: { minPlayers: 2, maxPlayers: 2 },
+    cardSets: [
+      {
+        id: "main",
+        name: "Main",
+        defaultHome: { type: "zone", zoneId: "draw-deck" },
+        cardSchema: { properties: {} },
+        cards: BOOTSTRAP_CARD_IDS.map((id) => ({
+          id,
+          name: id,
           cardType: "card",
+          count: 1,
           properties: {},
-        },
-      ]),
-    ),
-  } as RuntimeTableRecord;
+        })),
+      },
+    ],
+    zones: [
+      {
+        id: "draw-deck",
+        name: "Draw",
+        scope: "shared",
+        allowedCardSetIds: ["main"],
+        visibility: "public",
+      },
+      {
+        id: "hand",
+        name: "Hand",
+        scope: "perPlayer",
+        allowedCardSetIds: ["main"],
+        visibility: "ownerOnly",
+      },
+    ],
+  });
 }
 
-function createBootstrapGame(
-  initialize: (tx: ReturnType<typeof createTestTransaction>) => void,
-) {
-  const manifest = createBootstrapManifestContract();
-  const contract = createModel({
-    manifest,
+function createBootstrapTable() {
+  return createBootstrapManifestContract().createInitialTable({
+    playerIds: [...BOOTSTRAP_PLAYER_IDS],
+  });
+}
+
+function createBootstrapModel() {
+  return createModel({
+    manifest: createBootstrapManifestContract(),
     state: {
       public: z.object({}),
       private: z.object({}),
       hidden: z.object({}),
     },
-    phases: {
-      setup: z.object({}),
-    },
+    phases: { setup: z.object({}) },
   });
+}
+
+function createBootstrapGame(
+  initialize: (
+    tx: ReducerTransaction<
+      BaseGameStateOfContract<
+        ReturnType<typeof createBootstrapModel>["contract"]
+      >
+    >,
+  ) => void,
+) {
+  const contract = createBootstrapModel();
 
   return contract.assemble({
     initialPhase: "setup",
@@ -405,7 +214,7 @@ describe("initialization runtime", () => {
     });
     const bundle = createReducerTestingRuntime(game);
     const request = {
-      table: createEmptyTable(),
+      table: RuntimeJsonSchema.parse(createEmptyTable()),
       playerIds: ["player-1", "player-2"],
       rngSeed: 42,
       options: { mode: "draft" },
@@ -419,7 +228,9 @@ describe("initialization runtime", () => {
       "player-2": { rounds: 3 },
     });
     expect(initialized.domain.phase).toEqual({ mode: "draft" });
-    const restored = JSON.parse(JSON.stringify(initialized));
+    const restored = ReducerSessionStateSchema.parse(
+      JSON.parse(JSON.stringify(initialized)),
+    );
     const next = await bundle.reduce({
       state: restored,
       input: {
@@ -440,15 +251,20 @@ describe("initialization runtime", () => {
       null,
       { mode: "draft", rounds: Infinity },
     ]) {
-      await expect(
-        bundle.initialize({ ...request, options }),
-      ).rejects.toThrow();
-      expect(() =>
-        bundle.project({
-          state: { ...restored, runtime: { ...restored.runtime, options } },
-          playerIds: ["player-1"],
-        }),
-      ).toThrow();
+      const invalidInitialization: unknown = Reflect.apply(
+        bundle.initialize,
+        bundle,
+        [{ ...request, options }],
+      );
+      await expect(invalidInitialization).rejects.toThrow();
+      expect(() => {
+        Reflect.apply(bundle.project, bundle, [
+          {
+            state: { ...restored, runtime: { ...restored.runtime, options } },
+            playerIds: ["player-1"],
+          },
+        ]);
+      }).toThrow();
     }
   });
 
@@ -462,18 +278,20 @@ describe("initialization runtime", () => {
       }),
       z.object({ date: z.date() }),
     ]) {
-      expect(() =>
-        createModel({
-          manifest: createManifestContract(),
-          options: options as never,
-          phases: { defaultPhase: z.object({}) },
-          state: {
-            public: z.object({}),
-            private: z.object({}),
-            hidden: z.object({}),
+      expect(() => {
+        Reflect.apply(createModel, undefined, [
+          {
+            manifest: createManifestContract(),
+            options,
+            phases: { defaultPhase: z.object({}) },
+            state: {
+              public: z.object({}),
+              private: z.object({}),
+              hidden: z.object({}),
+            },
           },
-        }),
-      ).toThrow();
+        ]);
+      }).toThrow();
     }
   });
 
@@ -504,161 +322,70 @@ describe("initialization runtime", () => {
     const bundle = createReducerTestingRuntime(game);
     const initialized = (
       await bundle.initialize({
-        table: createEmptyTable(["player-1", "player-2"]),
+        table: RuntimeJsonSchema.parse(
+          createEmptyTable(["player-1", "player-2"]),
+        ),
         playerIds: ["player-1", "player-2"],
         rngSeed: 7,
       })
     ).state;
+    const table = game.contract.manifest.tableSchema.parse(
+      initialized.domain.table,
+    );
 
-    expect(Object.keys(initialized.domain.table.hands.hand)).toEqual([
-      "player-1",
-      "player-2",
-    ]);
-    expect(Object.keys(initialized.domain.table.resources)).toEqual([
-      "player-1",
-      "player-2",
-    ]);
-    expect(initialized.domain.table.resources["player-1" as PlayerId]).toEqual({
+    expect(Object.keys(table.hands.hand)).toEqual(["player-1", "player-2"]);
+    expect(Object.keys(table.resources)).toEqual(["player-1", "player-2"]);
+    expect(table.resources[asPlayerId("player-1")]).toEqual({
       coins: 0,
     });
-    expect(
-      initialized.domain.table.resources["player-3" as PlayerId],
-    ).toBeUndefined();
+    expect(table.resources[asPlayerId("player-3")]).toBeUndefined();
   });
 
   test("initialize preserves explicit deck, hand, and component location state", async () => {
-    const playerIds = ["player-1", "player-2"] as const;
-    const phaseNames = ["defaultPhase"] as const;
-    const deckIds = ["draw-deck"] as const;
-    const handIds = ["hand"] as const;
-    const cardIds = ["card-1", "card-2"] as const;
-
     const contract = createModel({
-      manifest: {
-        literals: {
-          playerIds,
-          phaseNames,
-          cardSetIds: ["main"] as const,
-          cardTypes: ["thing"] as const,
-          deckIds,
-          handIds,
-          sharedZoneIds: deckIds,
-          playerZoneIds: handIds,
-          zoneIds: ["draw-deck", "hand"] as const,
-          cardIds,
-          resourceIds: [] as const,
-          pieceTypeIds: [] as const,
-          pieceIds: [] as const,
-          dieTypeIds: [] as const,
-          dieIds: [] as const,
-          boardBaseIds: [] as const,
-          boardIds: [] as const,
-          boardContainerIds: [] as const,
-          tileIds: [] as const,
-          tileTypeIds: [] as const,
-          edgeIds: [] as const,
-          vertexIds: [] as const,
-          portIds: [] as const,
-          portTypeIds: [] as const,
-          spaceIds: [] as const,
-          spaceTypeIds: [] as const,
-          handVisibilityById: { hand: "ownerOnly" } as const,
-          zoneVisibilityById: {
-            "draw-deck": "public",
-            hand: "ownerOnly",
-          } as const,
-          cardSetIdByCardId: {
-            "card-1": "main",
-            "card-2": "main",
-          } as const,
-          cardTypeByCardId: {
-            "card-1": "thing",
-            "card-2": "thing",
-          } as const,
-          cardSetIdsBySharedZoneId: {
-            "draw-deck": ["main"],
-          } as const,
-          cardSetIdsByPlayerZoneId: {
-            hand: ["main"],
-          } as const,
-        },
-        ids: {
-          playerId: z.enum(playerIds),
-          phaseName: z.enum(phaseNames),
-          cardSetId: z.enum(["main"]),
-          cardType: z.enum(["thing"]),
-          cardId: z.enum(cardIds),
-          deckId: z.enum(deckIds),
-          handId: z.enum(handIds),
-          sharedZoneId: z.enum(deckIds),
-          playerZoneId: z.enum(handIds),
-          zoneId: z.enum(["draw-deck", "hand"]),
-          resourceId: z.string(),
-          dieId: z.string(),
-          boardId: z.string(),
-          boardBaseId: z.string(),
-          boardContainerId: z.string(),
-          tileId: z.string(),
-          tileTypeId: z.string(),
-          edgeId: z.string(),
-          edgeTypeId: z.string(),
-          vertexId: z.string(),
-          vertexTypeId: z.string(),
-          portId: z.string(),
-          portTypeId: z.string(),
-          spaceId: z.string(),
-          spaceTypeId: z.string(),
-          pieceId: z.string(),
-          pieceTypeId: z.string(),
-        },
-        defaults: {
-          zones: (selectedPlayerIds?: readonly string[]) => ({
-            shared: {
-              "draw-deck": [],
-            },
-            perPlayer: {
-              hand: Object.fromEntries(
-                (selectedPlayerIds ?? playerIds)
-                  .map((id) => id as PlayerId)
-                  .map((id) => [id, [] as string[]]),
-              ),
-            },
-            visibility: {
-              "draw-deck": "public",
-              hand: "ownerOnly",
-            },
-            cardSetIdsByZoneId: {
-              "draw-deck": ["main"],
-              hand: ["main"],
-            },
-          }),
-          decks: () => ({
-            "draw-deck": [],
-          }),
-          hands: (selectedPlayerIds?: readonly string[]) => ({
-            hand: Object.fromEntries(
-              (selectedPlayerIds ?? playerIds)
-                .map((id) => id as PlayerId)
-                .map((id) => [id, [] as string[]]),
-            ),
-          }),
-          handVisibility: () => ({
-            hand: "ownerOnly",
-          }),
-          ownerOfCard: () => ({
-            "card-1": null,
-            "card-2": null,
-          }),
-          visibility: () => ({
-            "card-1": { faceUp: true },
-            "card-2": { faceUp: false, visibleTo: ["player-2"] },
-          }),
-          resources: () => Object.fromEntries([].map((id) => [id, {}])),
-        },
-        tableSchema: z.custom<RuntimeTableRecord>(),
-        runtimeSchema: z.any(),
-        createGameStateSchema: () => z.any(),
-      },
+      manifest: compileManifest({
+        players: { minPlayers: 2, maxPlayers: 2 },
+        cardSets: [
+          {
+            id: "main",
+            name: "Main",
+            defaultHome: { type: "zone", zoneId: "draw-deck" },
+            cardSchema: { properties: {} },
+            cards: [
+              {
+                id: "card-1",
+                name: "Card 1",
+                cardType: "thing",
+                count: 1,
+                properties: {},
+              },
+              {
+                id: "card-2",
+                name: "Card 2",
+                cardType: "thing",
+                count: 1,
+                properties: {},
+              },
+            ],
+          },
+        ],
+        zones: [
+          {
+            id: "draw-deck",
+            name: "Draw",
+            scope: "shared",
+            allowedCardSetIds: ["main"],
+            visibility: "public",
+          },
+          {
+            id: "hand",
+            name: "Hand",
+            scope: "perPlayer",
+            allowedCardSetIds: ["main"],
+            visibility: "ownerOnly",
+          },
+        ],
+      }),
       state: {
         public: z.object({}),
         private: z.object({}),
@@ -761,25 +488,21 @@ describe("initialization runtime", () => {
         playerIds: ["player-1", "player-2"],
       })
     ).state;
+    const table = game.contract.manifest.tableSchema.parse(
+      initialized.domain.table,
+    );
 
-    expect(initialized.domain.table.playerOrder).toEqual([
-      "player-1",
-      "player-2",
-    ]);
-    expect(initialized.domain.table.decks["draw-deck"]).toEqual(["card-1"]);
-    expect(initialized.domain.table.hands.hand["player-1" as PlayerId]).toEqual(
-      [],
-    );
-    expect(initialized.domain.table.hands.hand["player-2" as PlayerId]).toEqual(
-      ["card-2"],
-    );
-    expect(initialized.domain.table.componentLocations["card-1"]).toEqual({
+    expect(table.playerOrder).toEqual(["player-1", "player-2"]);
+    expect(table.decks["draw-deck"]).toEqual(["card-1"]);
+    expect(table.hands.hand[asPlayerId("player-1")]).toEqual([]);
+    expect(table.hands.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
+    expect(table.componentLocations["card-1"]).toEqual({
       type: "InDeck",
       deckId: "draw-deck",
       playedBy: null,
       position: 0,
     });
-    expect(initialized.domain.table.componentLocations["card-2"]).toEqual({
+    expect(table.componentLocations["card-2"]).toEqual({
       type: "InHand",
       handId: "hand",
       playerId: "player-2",
@@ -790,7 +513,7 @@ describe("initialization runtime", () => {
   test("games without an options schema reject undeclared lobby options", async () => {
     const bundle = createReducerTestingRuntime(createBootstrapGame(() => {}));
     const request = {
-      table: createBootstrapTable(),
+      table: RuntimeJsonSchema.parse(createBootstrapTable()),
       playerIds: [...BOOTSTRAP_PLAYER_IDS],
       rngSeed: 42,
     };
@@ -803,20 +526,22 @@ describe("initialization runtime", () => {
   });
 
   test("phase entry shuffles with seeded entropy", async () => {
-    const bundle = createReducerTestingRuntime(
-      createBootstrapGame((tx) => {
-        tx.shuffle({ zoneId: "draw-deck" });
-      }),
-    );
+    const game = createBootstrapGame((tx) => {
+      tx.shuffle({ zoneId: "draw-deck" });
+    });
+    const bundle = createReducerTestingRuntime(game);
 
     const initialized = (
       await bundle.initialize({
-        table: createBootstrapTable(),
+        table: RuntimeJsonSchema.parse(createBootstrapTable()),
         playerIds: [...BOOTSTRAP_PLAYER_IDS],
         rngSeed: 42,
       })
     ).state;
-    const order = initialized.domain.table.zones.shared["draw-deck"];
+    const table = game.contract.manifest.tableSchema.parse(
+      initialized.domain.table,
+    );
+    const order = table.zones.shared["draw-deck"];
 
     expect(order).toHaveLength(BOOTSTRAP_CARD_IDS.length);
     expect([...order].sort()).toEqual([...BOOTSTRAP_CARD_IDS].sort());
@@ -830,36 +555,31 @@ describe("initialization runtime", () => {
   });
 
   test("phase entry deals to each seat", async () => {
-    const bundle = createReducerTestingRuntime(
-      createBootstrapGame((tx) => {
-        for (const playerId of tx.q.player.order())
-          tx.deal({
-            fromZoneId: "draw-deck",
-            toZoneId: "hand",
-            playerId,
-            count: 1,
-          });
-      }),
-    );
+    const game = createBootstrapGame((tx) => {
+      for (const playerId of tx.q.player.order())
+        tx.deal({
+          fromZoneId: "draw-deck",
+          toZoneId: "hand",
+          playerId,
+          count: 1,
+        });
+    });
+    const bundle = createReducerTestingRuntime(game);
 
     const initialized = (
       await bundle.initialize({
-        table: createBootstrapTable(),
+        table: RuntimeJsonSchema.parse(createBootstrapTable()),
         playerIds: [...BOOTSTRAP_PLAYER_IDS],
         rngSeed: 42,
       })
     ).state;
+    const table = game.contract.manifest.tableSchema.parse(
+      initialized.domain.table,
+    );
 
-    expect(initialized.domain.table.zones.shared["draw-deck"]).toEqual([
-      "card-3",
-      "card-4",
-    ]);
-    expect(initialized.domain.table.hands.hand["player-1" as PlayerId]).toEqual(
-      ["card-1"],
-    );
-    expect(initialized.domain.table.hands.hand["player-2" as PlayerId]).toEqual(
-      ["card-2"],
-    );
+    expect(table.zones.shared["draw-deck"]).toEqual(["card-3", "card-4"]);
+    expect(table.hands.hand[asPlayerId("player-1")]).toEqual(["card-1"]);
+    expect(table.hands.hand[asPlayerId("player-2")]).toEqual(["card-2"]);
     expect(initialized.runtime.rng.trace).toEqual([]);
   });
 
@@ -1017,7 +737,7 @@ describe("initialization runtime", () => {
       },
     };
 
-    const random = createTestRandom(initialState.runtime.rng.seed!);
+    const random = createTestRandom(initialState.runtime.rng.seed);
     const tx = createReducerTransaction(initialState, random);
     tx.shuffle({ zoneId: "draw-deck" });
     for (const playerId of tx.q.player.order())
@@ -1027,7 +747,7 @@ describe("initialization runtime", () => {
         playerId,
         count: 1,
       });
-    for (const componentId of ["piece-1", "die-1"])
+    for (const componentId of ["piece-1", "die-1"] as const)
       tx.moveComponentToSpace({
         componentId,
         boardId: "main-board",
@@ -1040,10 +760,10 @@ describe("initialization runtime", () => {
 
     expect(nextState.runtime.rng.cursor).toBe(2);
     expect(nextState.runtime.rng.trace).toHaveLength(2);
-    expect(nextState.table.hands.hand["player-1" as PlayerId]).toHaveLength(1);
-    expect(nextState.table.hands.hand["player-2" as PlayerId]).toHaveLength(1);
-    expect(nextState.table.hands.hand["player-1" as PlayerId]).not.toEqual(
-      nextState.table.hands.hand["player-2" as PlayerId],
+    expect(nextState.table.hands.hand[asPlayerId("player-1")]).toHaveLength(1);
+    expect(nextState.table.hands.hand[asPlayerId("player-2")]).toHaveLength(1);
+    expect(nextState.table.hands.hand[asPlayerId("player-1")]).not.toEqual(
+      nextState.table.hands.hand[asPlayerId("player-2")],
     );
     expect(nextState.table.decks["draw-deck"]).toHaveLength(1);
     expect(nextState.table.zones.shared.supply).toEqual([]);
@@ -1223,7 +943,9 @@ describe("initialization runtime", () => {
     const bundle = createReducerTestingRuntime(game);
     const initialized = (
       await bundle.initialize({
-        table: createEmptyTable(["player-1", "player-2"]),
+        table: RuntimeJsonSchema.parse(
+          createEmptyTable(["player-1", "player-2"]),
+        ),
         playerIds: ["player-1", "player-2"],
         rngSeed: 1,
       })

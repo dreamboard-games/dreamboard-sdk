@@ -2,9 +2,6 @@ import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
   ComponentIdOfTable,
-  HexBoardIdOfTable,
-  HexEdgeIdOfTable,
-  HexVertexIdOfTable,
   PlayerIdOfTable,
   PlayerZoneIdOfTable,
   RuntimeComponentLocation,
@@ -67,11 +64,11 @@ function reindexContainerOccupants<
   );
 }
 
-function reindexEdgeOccupants<
-  Table extends RuntimeTableRecord,
-  BoardId extends HexBoardIdOfTable<Table>,
-  EdgeId extends HexEdgeIdOfTable<Table, BoardId>,
->(table: Table, boardId: BoardId, edgeId: EdgeId): void {
+function reindexEdgeOccupants(
+  table: RuntimeTableRecord,
+  boardId: string,
+  edgeId: string,
+): void {
   orderedComponentIdsForLocation(
     table,
     (location) =>
@@ -89,11 +86,11 @@ function reindexEdgeOccupants<
   });
 }
 
-function reindexVertexOccupants<
-  Table extends RuntimeTableRecord,
-  BoardId extends HexBoardIdOfTable<Table>,
-  VertexId extends HexVertexIdOfTable<Table, BoardId>,
->(table: Table, boardId: BoardId, vertexId: VertexId): void {
+function reindexVertexOccupants(
+  table: RuntimeTableRecord,
+  boardId: string,
+  vertexId: string,
+): void {
   orderedComponentIdsForLocation(
     table,
     (location) =>
@@ -237,11 +234,8 @@ function removeComponentFromCurrentLocation<
     delete table.componentLocations[componentId];
     reindexEdgeOccupants(
       table,
-      currentLocation.boardId as HexBoardIdOfTable<Table>,
-      currentLocation.edgeId as HexEdgeIdOfTable<
-        Table,
-        HexBoardIdOfTable<Table>
-      >,
+      currentLocation.boardId,
+      currentLocation.edgeId,
     );
     return;
   }
@@ -250,11 +244,8 @@ function removeComponentFromCurrentLocation<
     delete table.componentLocations[componentId];
     reindexVertexOccupants(
       table,
-      currentLocation.boardId as HexBoardIdOfTable<Table>,
-      currentLocation.vertexId as HexVertexIdOfTable<
-        Table,
-        HexBoardIdOfTable<Table>
-      >,
+      currentLocation.boardId,
+      currentLocation.vertexId,
     );
     return;
   }

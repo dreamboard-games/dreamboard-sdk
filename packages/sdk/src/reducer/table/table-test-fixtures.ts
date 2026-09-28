@@ -1,8 +1,8 @@
 import type { RuntimeTableRecord } from "../../reducer/model";
 import { type PlayerId } from "../per-player";
 
-export function createSpatialTable(): RuntimeTableRecord {
-  return {
+export function createSpatialTable() {
+  const table = {
     playerOrder: ["player-1", "player-2"],
     zones: {
       shared: {
@@ -306,5 +306,7 @@ export function createSpatialTable(): RuntimeTableRecord {
         properties: {},
       },
     },
-  };
+  } satisfies RuntimeTableRecord;
+  const runtimeTable: RuntimeTableRecord = table;
+  return { ...runtimeTable, boards: table.boards };
 }

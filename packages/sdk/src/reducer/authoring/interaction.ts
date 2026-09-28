@@ -31,14 +31,7 @@ export function defineInteraction<
     ContractManifest<Contract>,
     ContractErrorCode<Contract>
   > => {
-    validateInteractionLikeDefinition(
-      definition as {
-        inputs?: Record<string, InputCollector>;
-        commit?: { mode: string };
-        paramsSchema?: unknown;
-      },
-      "defineInteraction",
-    );
+    validateInteractionLikeDefinition(definition, "defineInteraction");
     return definition;
   };
 }

@@ -1,3 +1,4 @@
+import type { RuntimeTableRecord } from "../../model";
 import { assertJsonWithinLimits } from "../../../runtime-json";
 import type {
   GameEvent,
@@ -133,10 +134,10 @@ function assertStandingValues<PlayerId extends string>(
   }
 }
 
-export function normalizeGameOutcome<State, PlayerId extends string>(
-  state: State,
-  outcome: GameOutcome<PlayerId>,
-): GameOutcome<PlayerId> {
+export function normalizeGameOutcome<
+  State extends { table: Pick<RuntimeTableRecord, "playerOrder"> },
+  PlayerId extends string,
+>(state: State, outcome: GameOutcome<PlayerId>): GameOutcome<PlayerId> {
   assertJsonWithinLimits(
     outcome,
     {
@@ -162,9 +163,8 @@ export function normalizeGameOutcome<State, PlayerId extends string>(
     failOutcome("standings contains too many rows");
   }
 
-  const playerOrder = (state as { table?: { playerOrder?: readonly string[] } })
-    .table?.playerOrder;
-  if (!Array.isArray(playerOrder) || playerOrder.length === 0) {
+  const playerOrder = state.table.playerOrder;
+  if (playerOrder.length === 0) {
     failOutcome("state.table.playerOrder must list configured players");
   }
   const playerOrderIndex = new Map(
@@ -296,7 +296,9 @@ export function rejectResult(
   };
 }
 
-export function normalizeResult<State>(
+export function normalizeResult<
+  State extends { table: Pick<RuntimeTableRecord, "playerOrder"> },
+>(
   result: ReducerResult<State> | void,
   implicitResult: () => ReducerResult<State>,
 ): ReducerResult<State> {

@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../../reducer/model.js";
 import { currentScenarioClientParamSchema } from "../scenario-replay.js";
 import {
   advanceScenarioReplay,
@@ -7,11 +11,11 @@ import {
 import type {
   ScenarioCheckpoint,
   ScenarioCommand,
+  ScenarioCommandOf,
   ScenarioReplay,
   ScenarioReplayDefinition,
 } from "../definitions.js";
 import { ScenarioReplayError } from "../definitions.js";
-import type { ScenarioDefinitionGameLike } from "../scenario-definition-validation.js";
 import { projectScenarioCommandParams } from "../scenario-player-refs.js";
 import {
   compareCanonicalScenarioJson,
@@ -57,18 +61,25 @@ type SeedRange = {
   readonly end: number;
 };
 
-export type ExploreScenarioOptions<Game extends ScenarioDefinitionGameLike> =
-  Omit<InspectScenarioOptions<Game>, "seed"> & {
-    readonly seed?: number;
-    readonly seedRange?: SeedRange;
-    readonly limit?: number;
-    readonly maxEvaluations?: number;
-    readonly cursor?: string;
-  };
+export type ExploreScenarioOptions<Game> = Omit<
+  InspectScenarioOptions<Game>,
+  "seed"
+> & {
+  readonly seed?: number;
+  readonly seedRange?: SeedRange;
+  readonly limit?: number;
+  readonly maxEvaluations?: number;
+  readonly cursor?: string;
+};
 
 export async function exploreScenario<
-  const Game extends ScenarioDefinitionGameLike,
->(options: ExploreScenarioOptions<Game>): Promise<ExploreScenarioResult> {
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: ExploreScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
+): Promise<ExploreScenarioResult> {
   if (options.seedRange) {
     if (
       options.seed !== undefined ||
@@ -87,8 +98,13 @@ export async function exploreScenario<
   return exploreTransitions(options);
 }
 
-async function exploreTransitions<Game extends ScenarioDefinitionGameLike>(
-  options: ExploreScenarioOptions<Game>,
+async function exploreTransitions<
+  Contract extends ReducerGameContractLike,
+  Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: ExploreScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
 ): Promise<ExploreTransitionResult> {
   const limit = options.limit ?? DEFAULT_EXPLORE_LIMIT;
   const maxEvaluations = options.maxEvaluations ?? DEFAULT_EXPLORE_EVALUATIONS;
@@ -202,7 +218,9 @@ async function exploreTransitions<Game extends ScenarioDefinitionGameLike>(
       };
       const advanced = await advanceScenarioReplay({
         replay,
-        command: command as never,
+        // Both the action and assignment came from this game's authoritative
+        // collector enumeration; bind their dynamic keys at the replay boundary.
+        command: command as ScenarioCommandOf<Game>,
       });
       if (advanced.kind !== "accepted") continue;
       const afterNode = inspectScenarioReplayNode({
@@ -258,8 +276,13 @@ async function exploreTransitions<Game extends ScenarioDefinitionGameLike>(
   };
 }
 
-async function exploreSeeds<Game extends ScenarioDefinitionGameLike>(
-  options: ExploreScenarioOptions<Game>,
+async function exploreSeeds<
+  Contract extends ReducerGameContractLike,
+  Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: ExploreScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
   range: SeedRange,
 ): Promise<ExploreSeedResult> {
   assertSeedRange(range);
@@ -329,8 +352,13 @@ async function exploreSeeds<Game extends ScenarioDefinitionGameLike>(
   };
 }
 
-async function inspectSeedPerspective<Game extends ScenarioDefinitionGameLike>(
-  options: ExploreScenarioOptions<Game>,
+async function inspectSeedPerspective<
+  Contract extends ReducerGameContractLike,
+  Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: ExploreScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
 ) {
   return inspectScenario({
     game: options.game,

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createGame } from "./game";
 import { boardInput, boardTarget } from "../inputs";
-import type { CollectorState } from "../model/spec";
+import type { CollectorState, CollectorValueOf } from "../model/spec";
 import { createTableQueries } from "../table-queries";
 
 const game = createGame({
@@ -37,11 +37,11 @@ const game = createGame({
 });
 const phase = game.phase("play");
 const space = phase.inputs.board.space({ boardId: "market" });
-const supply: z.output<typeof space.schema> = "supply";
+const supply: CollectorValueOf<typeof space> = "supply";
 // @ts-expect-error Space IDs belong to the selected board.
-const wrongSpace: z.output<typeof space.schema> = "slot";
+const wrongSpace: CollectorValueOf<typeof space> = "slot";
 const playerSpace = phase.inputs.board.playerSpace({ boardId: "mat" });
-const target: z.output<typeof playerSpace.schema> = {
+const target: CollectorValueOf<typeof playerSpace> = {
   boardId: "mat",
   playerId: game.contract.manifest.ids.playerId.parse("player-2"),
   spaceId: "slot",

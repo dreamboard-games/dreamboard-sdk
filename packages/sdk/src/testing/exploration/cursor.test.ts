@@ -1,3 +1,4 @@
+import { digestPluginRuntimeJson } from "../../shared/protocol/digest.js";
 import { describe, expect, test } from "vitest";
 import {
   createExploreCursor,
@@ -77,3 +78,58 @@ describe("explore cursor", () => {
     ).toThrow(ExploreCursorError);
   });
 });
+
+test.each([
+  null,
+  [],
+  {},
+  {
+    version: 1,
+    scenarioSourceDigest: "sha256:source",
+    checkpointDigest: "sha256:checkpoint",
+    perspective,
+    seedOverride: null,
+    nextOrdinal: -1,
+  },
+  {
+    version: 1,
+    scenarioSourceDigest: "sha256:source",
+    checkpointDigest: "sha256:checkpoint",
+    perspective,
+    seedOverride: null,
+    nextOrdinal: 0.5,
+  },
+  {
+    version: 1,
+    scenarioSourceDigest: "sha256:source",
+    checkpointDigest: "sha256:checkpoint",
+    perspective,
+    seedOverride: null,
+    nextOrdinal: Number.MAX_SAFE_INTEGER + 1,
+  },
+  {
+    version: 1,
+    scenarioSourceDigest: "sha256:source",
+    checkpointDigest: "sha256:checkpoint",
+    perspective: { kind: "player", actor: null },
+    seedOverride: null,
+    nextOrdinal: 1,
+  },
+])(
+  "rejects malformed checksummed payload %# with the cursor error",
+  (payload) => {
+    const encoded = btoa(JSON.stringify(payload))
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replace(/=+$/, "");
+    const digest = digestPluginRuntimeJson(payload).slice("sha256:".length);
+    expect(() =>
+      readExploreCursor({
+        cursor: `dbx1.${encoded}.${digest}`,
+        scenario,
+        checkpointDigest: "sha256:checkpoint",
+        perspective,
+      }),
+    ).toThrow(ExploreCursorError);
+  },
+);

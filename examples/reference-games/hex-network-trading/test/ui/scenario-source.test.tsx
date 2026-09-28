@@ -1,15 +1,16 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { boardFeature, createGameInstance } from "@dreamboard-games/sdk";
-import { scenarioSource } from "@dreamboard-games/sdk/testing";
+import {
+  scenarioSource,
+  type LocalSource,
+} from "@dreamboard-games/sdk/testing";
 import game from "../../app/game";
 import bandits from "../scenarios/bandits.scenario";
 import depot from "../scenarios/depot-trades.scenario";
 import setup from "../scenarios/topology-and-setup.scenario";
 
-function instance(
-  source: Awaited<ReturnType<typeof scenarioSource<typeof game>>>,
-) {
+function instance(source: LocalSource<typeof game>) {
   return createGameInstance<typeof game>()({
     source,
     features: (core, context) => ({ board: boardFeature(core, context) }),
@@ -23,7 +24,7 @@ test("live opening geometry commits one legal camp through its canonical handler
   });
   const ui = instance(source);
   const vertex = ui.boards
-    .get("frontier")!
+    .get("frontier")
     .getLayout({ hexSize: 30 })
     .getVertices()
     .find((value) => value.getIsSelectable())!;
@@ -42,12 +43,10 @@ test("Supply Depot draft inputs stay independent and one submit exchanges atomic
   const ui = instance(source);
   const before = structuredClone(ui.view!.mySupplies);
   ui.inputs
-    .get("main.tradeWithSupplyDepot", "receiveResource")!
+    .get("main.tradeWithSupplyDepot", "receiveResource")
     .setValue("brick");
   assert.deepEqual(ui.view!.mySupplies, before);
-  ui.inputs
-    .get("main.tradeWithSupplyDepot", "giveResource")!
-    .setValue("timber");
+  ui.inputs.get("main.tradeWithSupplyDepot", "giveResource").setValue("timber");
   assert.deepEqual(ui.view!.mySupplies, before);
   assert.equal(
     (await ui.interactions.get("main.tradeWithSupplyDepot").submit()).accepted,
@@ -71,7 +70,7 @@ test("Bandits saved district survives restore, cancels, and accepts explicit no-
     true,
   );
   assert.equal(ui.view!.banditsHexId, "centralBarrens");
-  const saved = JSON.parse(JSON.stringify(source.checkpoint()));
+  const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
   source.restore(saved);
   assert.deepEqual(
     ui.interactions.get("moveBandits.moveBandits").getStep()!.selected,

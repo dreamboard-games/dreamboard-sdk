@@ -1,3 +1,4 @@
+import type { PlayerIdOfState, TableQueriesOfState } from "../model";
 import { z } from "zod";
 import type {
   BoardTargetDomainDescriptor,
@@ -11,14 +12,10 @@ import {
 } from "../model/manifest";
 import type { BoardTargetRule, PlayerBoardSpaceTarget } from "./boardTarget";
 
-export type PlayerSpaceInputSchema<
-  BoardId extends string,
-  SpaceId extends string,
-  PlayerId extends string,
-> = z.ZodObject<{
+export type PlayerSpaceInputSchema<BoardId extends string> = z.ZodObject<{
   boardId: z.ZodLiteral<BoardId>;
-  playerId: ManifestIdSchema<PlayerId, "playerId">;
-  spaceId: z.ZodType<SpaceId>;
+  playerId: ManifestIdSchema<string, "playerId">;
+  spaceId: z.ZodString;
 }>;
 
 /**
@@ -54,58 +51,46 @@ function makeBoardCollector<
         ? Target
         : never
     >;
-  }): InputCollector<z.ZodType<Id>, State, Kind> {
+  }): InputCollector<z.ZodString, State, Kind, Id> {
     const target = options.target;
+    const eligible = (
+      state: State,
+      playerId: PlayerIdOfState<State>,
+      q: TableQueriesOfState<State>,
+    ) => target.eligible({ state, playerId, q });
+    // Assembly binds state/player/queries to one validated game contract.
+    // Schemas check wire shape only; validateTarget must resolve a canonical
+    // candidate before the runtime exposes the refined Id to authored reducers.
+    // This is the explicit binding of both invariants into the runtime registry.
     return {
       kind,
-      schema: z.string() as unknown as z.ZodType<Id>,
-      eligibleTargets: ((state, playerId, q) =>
-        target.eligible({
-          state: state as State,
-          playerId: playerId as never,
-          q: q as never,
-        })) as
-        | ((
-            state: CollectorState,
-            playerId: string,
-            q: unknown,
-          ) => ReadonlyArray<unknown>)
-        | undefined,
-      validateTarget: ((state, playerId, q, targetId) =>
-        target.validate(
-          {
-            state: state as State,
-            playerId: playerId as never,
-            q: q as never,
-          },
-          targetId as Id,
-        )) as
-        | ((
-            state: CollectorState,
-            playerId: string,
-            q: unknown,
-            targetId: unknown,
-          ) => ReturnType<BoardTargetRule<CollectorState, string>["validate"]>)
-        | undefined,
-      domain: (state: CollectorState, playerId: string, q: unknown) =>
+      schema: z.string(),
+      eligibleTargets: eligible,
+      validateTarget: (
+        state: State,
+        playerId: PlayerIdOfState<State>,
+        q: TableQueriesOfState<State>,
+        targetId: unknown,
+      ) => target.validate({ state, playerId, q }, targetId),
+      domain: (
+        state: State,
+        playerId: PlayerIdOfState<State>,
+        q: TableQueriesOfState<State>,
+      ) =>
         ({
-          type: "boardTarget" as const,
-          projection: "resolved" as const,
-          targetKind: target.targetKind as Exclude<TargetKind, "card">,
+          type: "boardTarget",
+          projection: "resolved",
+          targetKind: target.targetKind,
           boardId: target.boardId,
-          valueKind: "board-id" as const,
-          eligibleTargets: target.eligible({
-            state: state as State,
-            playerId: playerId as never,
-            q: q as never,
-          }),
+          valueKind: "board-id",
+          eligibleTargets: eligible(state, playerId, q),
         }) satisfies BoardTargetDomainDescriptor,
       meta: {
         targetKind: target.targetKind,
         boardId: target.boardId,
-        valueKind: "board-id" as const,
+        valueKind: "board-id",
       },
-    } as unknown as InputCollector<z.ZodType<Id>, State, Kind>;
+    } as unknown as InputCollector<z.ZodString, State, Kind, Id>;
   };
 }
 
@@ -126,74 +111,60 @@ export function playerSpaceInput<
     "space"
   >;
 }): InputCollector<
-  PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
+  PlayerSpaceInputSchema<BoardId>,
   State,
-  "board-space"
+  "board-space",
+  PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
 > {
   const target = options.target;
-  const playerIdSchema = markManifestScopedSchema(
-    z.string(),
-    "playerId",
-  ) as unknown as ManifestIdSchema<PlayerId, "playerId">;
+  const playerIdSchema = markManifestScopedSchema(z.string(), "playerId");
+  const eligible = (
+    state: State,
+    playerId: PlayerIdOfState<State>,
+    q: TableQueriesOfState<State>,
+  ) => target.eligible({ state, playerId, q });
+  // Assembly binds state/player/queries to one validated game contract.
+  // Schemas check wire shape only; validateTarget must resolve a canonical
+  // candidate before the runtime exposes the refined Id to authored reducers.
+  // This is the explicit binding of both invariants into the runtime registry.
   return {
     kind: "board-space",
     schema: z.strictObject({
       boardId: z.literal(target.boardId),
       playerId: playerIdSchema,
-      spaceId: z.string() as unknown as z.ZodType<SpaceId>,
-    }) as PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
-    eligibleTargets: ((state, playerId, q) =>
-      target.eligible({
-        state: state as State,
-        playerId: playerId as never,
-        q: q as never,
-      })) as
-      | ((
-          state: CollectorState,
-          playerId: string,
-          q: unknown,
-        ) => ReadonlyArray<unknown>)
-      | undefined,
-    validateTarget: ((state, playerId, q, targetValue) =>
-      target.validate(
-        {
-          state: state as State,
-          playerId: playerId as never,
-          q: q as never,
-        },
-        targetValue as PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>,
-      )) as
-      | ((
-          state: CollectorState,
-          playerId: string,
-          q: unknown,
-          targetId: unknown,
-        ) => ReturnType<
-          BoardTargetRule<
-            CollectorState,
-            PlayerBoardSpaceTarget<string, string, string>
-          >["validate"]
-        >)
-      | undefined,
-    domain: (state: CollectorState, playerId: string, q: unknown) =>
+      spaceId: z.string(),
+    }),
+    eligibleTargets: eligible,
+    validateTarget: (
+      state: State,
+      playerId: PlayerIdOfState<State>,
+      q: TableQueriesOfState<State>,
+      targetValue: unknown,
+    ) => target.validate({ state, playerId, q }, targetValue),
+    domain: (
+      state: State,
+      playerId: PlayerIdOfState<State>,
+      q: TableQueriesOfState<State>,
+    ) =>
       ({
-        type: "boardTarget" as const,
-        projection: "resolved" as const,
-        targetKind: "space" as const,
+        type: "boardTarget",
+        projection: "resolved",
+        targetKind: "space",
         boardId: target.boardId,
-        valueKind: "player-board-space" as const,
-        eligibleTargets: target.eligible({
-          state: state as State,
-          playerId: playerId as never,
-          q: q as never,
-        }),
+        valueKind: "player-board-space",
+        eligibleTargets: eligible(state, playerId, q),
       }) satisfies BoardTargetDomainDescriptor,
     meta: {
       targetKind: target.targetKind,
       boardId: target.boardId,
-      valueKind: "player-board-space" as const,
+      valueKind: "player-board-space",
     },
-  };
+  } as unknown as InputCollector<
+    PlayerSpaceInputSchema<BoardId>,
+    State,
+    "board-space",
+    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
+  >;
 }
 
 export const boardInput = {

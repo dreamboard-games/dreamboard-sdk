@@ -51,7 +51,7 @@ function requirePlainObject(
   value: object,
   label: string,
 ): Record<string, unknown> {
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
   if (prototype !== Object.prototype && prototype !== null) {
     throw jsonError("non-json", label, "contains a non-plain object");
   }

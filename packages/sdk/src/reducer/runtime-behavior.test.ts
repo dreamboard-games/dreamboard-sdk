@@ -1,4 +1,6 @@
-import { createTable } from "./lifecycle-test-fixtures";
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
+import { asPlayerId } from "./per-player";
 import * as ReducerWireZod from "../shared/runtime-schema";
 import { canonicalizePluginRuntimeJson } from "../shared/protocol/digest.js";
 import { SeatProjectionBundleSchema } from "../shared/protocol/schema.js";
@@ -13,107 +15,56 @@ import {
   gameEvent,
 } from "../reducer";
 import { rngInput } from "./inputs";
-import { type InputCollector, type RuntimeTableRecord } from "../reducer/model";
+import { type InputCollector, type SchemaLike } from "../reducer/model";
 
 import {
   getCloneRuntimeTableCallCount,
   resetCloneRuntimeTableCallCount,
 } from "./table/clone";
 
-function createManifestContract() {
-  const phaseNames = ["takeTurn"] as const;
-  const playerIds = ["player-1", "player-2"] as const;
-  const dieIds = ["die-1"] as const;
+const runtimeManifest = compileManifest({
+  players: { minPlayers: 2, maxPlayers: 2 },
+  cardSets: [
+    {
+      id: "main",
+      name: "Main",
+      defaultHome: { type: "zone", zoneId: "draw" },
+      cardSchema: { properties: {} },
+      cards: ["a", "b", "c"].map((id) => ({
+        id,
+        cardType: "card",
+        name: id,
+        count: 1,
+        properties: {},
+      })),
+    },
+  ],
+  zones: [
+    {
+      id: "draw",
+      name: "Draw",
+      scope: "shared",
+      allowedCardSetIds: ["main"],
+      visibility: "hidden",
+    },
+  ],
+  resources: [{ id: "coins", name: "Coins" }],
+  dieTypes: [{ id: "d6", name: "Test die", sides: 6 }],
+  dieSeeds: [{ id: "die-1", typeId: "d6", home: { type: "detached" } }],
+} as const);
+const createManifestContract = () => runtimeManifest;
+const createTable = () =>
+  RuntimeJsonSchema.parse(
+    runtimeManifest.createInitialTable({ playerIds: ["player-1", "player-2"] }),
+  );
 
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: ["d6"] as const,
-      dieIds,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      vertexIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {} as const,
-      zoneVisibilityById: {} as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: z.enum(playerIds),
-      phaseName: z.enum(phaseNames),
-      cardSetId: z.string(),
-      cardType: z.string(),
-      cardId: z.string(),
-      deckId: z.string(),
-      handId: z.string(),
-      sharedZoneId: z.string(),
-      playerZoneId: z.string(),
-      zoneId: z.string(),
-      resourceId: z.string(),
-      dieId: z.enum(dieIds),
-      boardId: z.string(),
-      boardBaseId: z.string(),
-      boardContainerId: z.string(),
-      tileId: z.string(),
-      tileTypeId: z.string(),
-      edgeId: z.string(),
-      edgeTypeId: z.string(),
-      vertexId: z.string(),
-      vertexTypeId: z.string(),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: z.string(),
-      spaceTypeId: z.string(),
-      pieceId: z.string(),
-      pieceTypeId: z.string(),
-    },
-    defaults: {
-      zones: () => ({
-        shared: {},
-        perPlayer: {},
-        visibility: {},
-      }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
-}
-
-function expectProjectionTiming(timing: {
-  resolveAvailableInteractionsMs: number;
-  resolveViewMs: number;
-  resolveZoneHandlesMs: number;
-  descriptorHashMs: number;
-}) {
+type ProjectionTiming = NonNullable<
+  z.infer<typeof ReducerWireZod.SeatProjectionBundleSchema>["timing"]
+>;
+function expectProjectionTiming(
+  timing: ProjectionTiming | undefined,
+): asserts timing is ProjectionTiming {
+  if (!timing) throw new Error("Expected projection timing");
   for (const value of Object.values(timing)) {
     expect(Number.isFinite(value)).toBe(true);
     expect(value >= 0).toBe(true);
@@ -135,6 +86,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       },
     });
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({ values: [], finished: false }),
         private: () => ({}),
@@ -176,32 +128,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         }),
       },
     });
-    const makeTable = () => {
-      const table = createTable();
-      const ids = ["a", "b", "c"];
-      table.decks.draw = [...ids];
-      table.zones.shared.draw = [...ids];
-      for (const [position, id] of ids.entries()) {
-        table.cards[id] = {
-          id,
-          cardSetId: "main",
-          cardType: "card",
-          properties: {},
-        };
-        table.componentLocations[id] = {
-          type: "InDeck",
-          deckId: "draw",
-          position,
-          playedBy: null,
-        };
-        table.ownerOfCard[id] = null;
-      }
-      return table;
-    };
     const bundle = createReducerTestingRuntime(game);
     const initial = (
       await bundle.initialize({
-        table: makeTable(),
+        table: createTable(),
         playerIds: ["player-1", "player-2"],
         rngSeed: 42,
       })
@@ -217,7 +147,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     const freshBundle = createReducerTestingRuntime(game);
     const fresh = (
       await freshBundle.initialize({
-        table: makeTable(),
+        table: createTable(),
         playerIds: ["player-1", "player-2"],
         rngSeed: 42,
       })
@@ -250,7 +180,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
       from: "takeTurn",
       to: "takeTurn",
     });
-    expect(accepted.state.domain.publicState.values).toHaveLength(5);
+    expect(
+      game.contract.state.public.parse(accepted.state.domain.publicState)
+        .values,
+    ).toHaveLength(5);
   });
 
   test.each(["phase", "roll", "dispatch"] as const)(
@@ -268,8 +201,16 @@ describe("direct reducer lifecycle and seeded operations", () => {
       const outcome = {
         reason: { code: "INITIAL_STATE_COMPLETE" },
         standings: [
-          { playerId: "player-1", rank: 1, result: "draw" as const },
-          { playerId: "player-2", rank: 1, result: "draw" as const },
+          {
+            playerId: asPlayerId("player-1"),
+            rank: 1,
+            result: "draw" as const,
+          },
+          {
+            playerId: asPlayerId("player-2"),
+            rank: 1,
+            result: "draw" as const,
+          },
         ],
       };
       const entered = gameEvent.systemAction({
@@ -331,8 +272,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
               },
             })
           : initialized;
-      if ("kind" in result && result.kind === "reject")
-        throw new Error("Expected completion");
+      if (!("state" in result)) throw new Error("Expected completion");
       expect(result.terminal).toEqual(outcome);
       expect(result.events).toEqual(
         mode === "roll" ? [entered, completed] : [entered],
@@ -455,6 +395,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({ count: 0 }),
         private: () => ({}),
@@ -661,11 +602,13 @@ describe("direct reducer lifecycle and seeded operations", () => {
 
     expect(seat).toBeDefined();
     expect("sharedView" in projection).toBe(false);
-    expect("view" in seat!).toBe(false);
-    expect("zones" in seat!).toBe(false);
+    expect("view" in seat).toBe(false);
+    expect("zones" in seat).toBe(false);
     expect(Array.isArray(refs)).toBe(true);
-    expect((refs as string[]).length).toBe(1);
-    expect(projection.interactionsByRef[(refs as string[])[0]!]).toMatchObject({
+    if (!refs || !projection.interactionsByRef)
+      throw new Error("Expected interaction references");
+    expect(refs).toHaveLength(1);
+    expect(projection.interactionsByRef[refs[0]]).toMatchObject({
       interactionId: "advance",
     });
     expectProjectionTiming(projection.timing);
@@ -965,10 +908,12 @@ describe("direct reducer lifecycle and seeded operations", () => {
       state: session,
       playerIds: ["player-1"],
     });
+    const interactionsByRef = projection.interactionsByRef;
+    if (!interactionsByRef) throw new Error("Expected interaction descriptors");
     const descriptor = (
       projection.seats["player-1"]?.availableInteractionRefs ?? []
     )
-      .map((ref) => projection.interactionsByRef[ref])
+      .map((ref) => interactionsByRef[ref])
       .find((interaction) => interaction.interactionId === "blockedTarget");
 
     expect(eligibleTargetCalls).toBe(0);
@@ -993,6 +938,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({
           pingCount: 0,
@@ -1049,6 +995,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({
           lockedRan: false,
@@ -1169,6 +1116,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({
           recordedValue: null,
@@ -1273,6 +1221,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1358,6 +1307,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
     });
 
     const game = contract.assemble({
+      view: () => ({}),
       initial: {
         public: () => ({}),
         private: () => ({}),
@@ -1423,7 +1373,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
   // tests pin the contract at the reducer layer so no surface (route,
   // harness, or UI SDK) can regress it.
   describe("rngInput auto-sampling", () => {
-    function defineDiceGame(sampleSchema = rngInput.d6(2).schema) {
+    function defineDiceGame(
+      sampleSchema: SchemaLike<{ values: number[] }> = rngInput.d6(2).schema,
+    ) {
       const contract = createGame({
         manifest: createManifestContract(),
         phases: { takeTurn: z.object({}) },
@@ -1438,6 +1390,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       });
 
       return contract.assemble({
+        view: () => ({}),
         initial: {
           public: () => ({ totalRolled: 0, lastRoll: [] }),
           private: () => ({}),
@@ -1720,7 +1673,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
       expect(clientParses).toBe(1);
       expect(validationParams).toEqual({ bonus: 3 });
       if (accepted.kind === "accept") {
-        const result = accepted.state.domain.publicState;
+        const result = game.contract.state.public.parse(
+          accepted.state.domain.publicState,
+        );
         expect(result.faces).toHaveLength(2);
         expect(result.faces.every((face) => face >= 1 && face <= 6)).toBe(true);
         expect(result.total).toBe(
@@ -1758,9 +1713,9 @@ describe("direct reducer lifecycle and seeded operations", () => {
       expect(parses).toBe(1);
       if (accepted.kind === "accept")
         expect(
-          accepted.state.domain.publicState.lastRoll.every(
-            (face) => face >= 11 && face <= 16,
-          ),
+          game.contract.state.public
+            .parse(accepted.state.domain.publicState)
+            .lastRoll.every((face) => face >= 11 && face <= 16),
         ).toBe(true);
       const rejecting = createReducerTestingRuntime(
         defineDiceGame(
@@ -1840,6 +1795,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       });
 
       return contract.assemble({
+        view: () => ({}),
         initial: {
           public: () => ({ results: [] }),
           private: () => ({}),
@@ -1925,8 +1881,10 @@ describe("direct reducer lifecycle and seeded operations", () => {
         throw new Error("Expected drawAndReenter to accept.");
       }
 
+      const initialDraws = initialized.runtime.rng.draws;
+      if (!initialDraws) throw new Error("Expected initialization RNG draws");
       expect(dispatched.state.runtime.rng.draws).toEqual([
-        initialized.runtime.rng.draws[0],
+        initialDraws[0],
         {
           index: 1,
           cursorBefore: 1,
@@ -1998,6 +1956,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
         },
       });
       const game = contract.assemble({
+        view: () => ({}),
         initial: {
           public: () => ({}),
           private: () => ({}),
@@ -2062,6 +2021,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
       });
 
       return contract.assemble({
+        view: () => ({}),
         initial: {
           public: () => ({ drawn: [] }),
           private: () => ({}),
@@ -2091,7 +2051,7 @@ describe("direct reducer lifecycle and seeded operations", () => {
                     count: 2,
                   });
                   tx.addResources({
-                    playerId: "player-1",
+                    playerId: asPlayerId("player-1"),
                     amounts: { coins: 9 },
                   });
                   tx.patchPublicState({ drawn: ["discarded"] });
@@ -2296,7 +2256,7 @@ describe("implicit transaction acceptance", () => {
           takeTurn: contract.phase("takeTurn").define({
             kind: "player",
             initialState: () => ({}),
-            actor: () => "player-1",
+            actor: () => asPlayerId("player-1"),
             enter(args) {
               for (const key of ["accept", "edit", "reject", "endGame", "fx"])
                 expect(args).not.toHaveProperty(key);
@@ -2346,10 +2306,9 @@ describe("implicit transaction acceptance", () => {
                 params: {},
               },
             });
-      if ("kind" in result && result.kind === "reject")
-        throw new Error("Expected acceptance");
+      if (!("state" in result)) throw new Error("Expected acceptance");
       expect(result.events).toEqual([queued, completed]);
-      expect(result.state.domain.publicState.complete).toBe(true);
+      expect(result.state.domain.publicState).toMatchObject({ complete: true });
       expect(result.state.runtime.rng.cursor).toBe(2);
       bundle.project({ state: result.state, playerIds: ["player-1"] });
     },

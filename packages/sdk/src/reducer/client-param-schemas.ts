@@ -33,7 +33,7 @@ export function schemaForCollectors(
         ? schema.default(collector.defaultValue)
         : schema;
   }
-  return z.object(shape) as unknown as ClientParamSchema;
+  return z.object(shape);
 }
 
 export function createClientParamSchemasByPhase<

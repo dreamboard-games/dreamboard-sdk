@@ -38,7 +38,7 @@ export function parseInteractionParams<
           .join("; "),
       };
     }
-    return { ok: true, params: result.data as Record<string, unknown> };
+    return { ok: true, params: result.data };
   }
   const parsed: Record<string, unknown> = {};
   const issues: string[] = [];
@@ -106,10 +106,7 @@ export function validateCollectorTargets<
 ): ReducerValidationResult {
   const collectors = interactionInputsOf(interaction);
   let queriesLazy: ReturnType<typeof createStateQueries> | null = null;
-  const queries = () =>
-    (queriesLazy ??= createStateQueries(
-      domainState as unknown as { table: CollectorState["table"] },
-    ));
+  const queries = () => (queriesLazy ??= createStateQueries(domainState));
   for (const [key, collector] of Object.entries(collectors)) {
     const issue = validateCollectorValue(
       collector,

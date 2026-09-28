@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../../reducer/model.js";
 import { materializeScenarioRuntimeCheckpoint } from "../scenario-replay.js";
 import { createReducerTestingRuntime } from "../reducer-runtime.js";
 import {
@@ -5,14 +9,14 @@ import {
   type ScenarioDefinition,
   type ScenarioCheckpointSelector,
 } from "../definitions.js";
-import type { ScenarioDefinitionGameLike } from "../scenario-definition-validation.js";
 import { createLocalProvider } from "./local-source.js";
 import type { LocalSource } from "./types.js";
 
 export async function scenarioSource<
-  const Game extends ScenarioDefinitionGameLike,
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
 >(
-  game: Game,
+  game: Game & { readonly contract: Contract },
   scenario: ScenarioDefinition<Game>,
   options: { at?: ScenarioCheckpointSelector; as?: string } = {},
 ): Promise<LocalSource<Game>> {
@@ -25,7 +29,7 @@ export async function scenarioSource<
   });
   return createLocalProvider(
     game,
-    createReducerTestingRuntime(game as never),
+    createReducerTestingRuntime(game),
     materialized.playerIds,
     { state: materialized.state, terminal: materialized.terminal },
     options.as ?? materialized.playerIds[0],

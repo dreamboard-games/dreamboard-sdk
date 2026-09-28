@@ -1,3 +1,4 @@
+import { RuntimeJsonSchema } from "../../shared/runtime-json.js";
 import { describe, expect, it, vi } from "vitest";
 import { createGameInstance, AmbiguousTargetError } from "../instance.js";
 import type { InteractionDescriptor } from "../model.js";
@@ -105,7 +106,11 @@ function source(board: RuntimeBoardState = hexBoard()) {
       events: [],
       view: {
         boards: {
-          byId: { [board.id]: JSON.parse(JSON.stringify(board)) },
+          byId: {
+            [board.id]: RuntimeJsonSchema.parse(
+              JSON.parse(JSON.stringify(board)),
+            ),
+          },
           hex: {},
           square: {},
         },
@@ -328,11 +333,12 @@ describe("headless features", () => {
       .get("square")!
       .getLayout({ hexSize: 10, viewport: { x: 5, y: 3, scale: 2 } });
     expect(layout.getEdges().map((edge) => edge.id)).toEqual(["authored-edge"]);
-    expect(game.boards.get("square").data).toMatchObject({
-      edges: expect.arrayContaining([
+    expect(game.boards.get("square").data).toHaveProperty(
+      "edges",
+      expect.arrayContaining([
         { id: "unlocated-boundary", spaceIds: ["a"], fields: {} },
       ]),
-    });
+    );
     for (const cell of layout.getSpaces())
       expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe(cell.id);
     game.dispose();
