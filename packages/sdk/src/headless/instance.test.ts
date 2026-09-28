@@ -1,9 +1,12 @@
 import { createStore } from "@tanstack/store";
 import { describe, expect, it, vi } from "vitest";
+import { z } from "zod";
+import { createGame, many } from "../reducer.js";
 import { createGameInstance, AmbiguousTargetError } from "./instance.js";
 import { frame, session } from "./sources/__fixtures__/frames.js";
 import { createTestSource } from "../testing/sources/test-source.js";
 import { scenarioSource } from "../testing/sources/scenario-source.js";
+import { localSource } from "../testing/sources/local-source.js";
 import hex from "../../../../examples/reference-games/hex-network-trading/app/game.ts";
 import bandits from "../../../../examples/reference-games/hex-network-trading/test/scenarios/bandits.scenario.ts";
 import type {
@@ -74,6 +77,175 @@ function setup(descriptors: readonly InteractionDescriptor[] = [action()]) {
       );
   return { source, emit, ack };
 }
+
+function multiChoiceGame() {
+  const model = createGame({
+    manifest: {
+      players: { minPlayers: 2, maxPlayers: 2 },
+      cardSets: [],
+      zones: [],
+    },
+    options: z.object({}),
+    phases: { play: z.object({}) },
+    state: {
+      public: z.object({ selected: z.array(z.string()) }),
+      private: z.object({}),
+      hidden: z.object({}),
+    },
+  });
+  const play = model.phase("play");
+  return model.assemble({
+    initial: { public: () => ({ selected: [] as string[] }) },
+    initialPhase: "play",
+    phases: {
+      play: play.define({
+        kind: "player",
+        initialState: () => ({}),
+        enter({ tx, state }) {
+          tx.setActivePlayers([state.table.playerOrder[0]]);
+        },
+        interactions: {
+          choose: play.interaction({
+            commit: { mode: "manual" },
+            inputs: {
+              picks: many(
+                play.inputs.form.choice({
+                  choices: [
+                    { value: "a", label: "A" },
+                    { value: "b", label: "B" },
+                    { value: "c", label: "C", disabled: true },
+                    { value: "d", label: "D" },
+                  ],
+                  defaultValue: () => undefined,
+                }),
+                { min: 2, max: 2, distinct: true },
+              ),
+            },
+            reduce({ tx, input }) {
+              tx.patchPublicState({ selected: input.params.picks });
+            },
+          }),
+        },
+      }),
+    },
+    view: model.view(({ state }) => ({ selected: state.publicState.selected })),
+  });
+}
+
+it("selects authored many choices through headless and submits the array to the reducer", async () => {
+  const source = await localSource(multiChoiceGame(), { players: 2, seed: 1 });
+  const game = createGameInstance()({ source });
+  const key = "play.choose";
+  let interaction = game.interactions.get(key)!;
+  let picks = interaction.getInput("picks")!;
+  expect(picks.getEligibleTargets()).toEqual(["a", "b", "d"]);
+  expect(picks.getTargetProps("c").disabled).toBe(true);
+  picks.setValue(["a", "c"]);
+  expect(game.interactions.get(key)!.getIsReady()).toBe(false);
+  game.interactions.get(key)!.getInput("picks")!.clear();
+  picks = game.interactions.get(key)!.getInput("picks")!;
+  picks.getTargetProps("a").onClick();
+  interaction = game.interactions.get(key)!;
+  picks = interaction.getInput("picks")!;
+  expect(picks.getValue()).toEqual(["a"]);
+  expect(interaction.getIsReady()).toBe(false);
+  picks.getTargetProps("b").onClick();
+  interaction = game.interactions.get(key)!;
+  picks = interaction.getInput("picks")!;
+  expect(picks.getValue()).toEqual(["a", "b"]);
+  expect(interaction.getIsReady()).toBe(true);
+  expect(picks.getTargetProps("a")["data-selected"]).toBe(true);
+  expect(picks.getTargetProps("d").disabled).toBe(true);
+  picks.getTargetProps("a").onClick();
+  interaction = game.interactions.get(key)!;
+  picks = interaction.getInput("picks")!;
+  expect(picks.getValue()).toEqual(["b"]);
+  expect(interaction.getIsReady()).toBe(false);
+  picks.getTargetProps("d").onClick();
+  interaction = game.interactions.get(key)!;
+  expect(interaction.getInput("picks")!.getValue()).toEqual(["b", "d"]);
+  expect(await interaction.submit()).toEqual({ accepted: true });
+  expect(game.view).toMatchObject({ selected: ["b", "d"] });
+  game.dispose();
+  source.dispose();
+});
+
+it("uses stock choiceList option props for defaults, selection and reset", () => {
+  const input: InteractionInputDescriptor = {
+    key: "options",
+    kind: "form",
+    defaultValue: ["a"],
+    domain: {
+      type: "choiceList",
+      choices: [
+        { value: "a", label: "A" },
+        { value: "b", label: "B" },
+        { value: "c", label: "C", disabled: true },
+        { value: "d", label: "D" },
+      ],
+      min: 1,
+      max: 2,
+    },
+  };
+  const x = setup([action([input])]);
+  const game = createGameInstance()({ source: x.source });
+  const key = "play.move";
+  let current = game.interactions.get(key)!.getInput("options")!;
+  expect(current.getEligibleTargets()).toEqual(["a", "b", "d"]);
+  expect(current.getTargetProps("a")["data-selected"]).toBe(true);
+  expect(current.getTargetProps("c").disabled).toBe(true);
+  current.getTargetProps("b").onClick();
+  current = game.interactions.get(key)!.getInput("options")!;
+  expect(current.getValue()).toEqual(["a", "b"]);
+  expect(current.getIsReady()).toBe(true);
+  expect(current.getTargetProps("d").disabled).toBe(true);
+  current.getTargetProps("a").onClick();
+  current = game.interactions.get(key)!.getInput("options")!;
+  expect(current.getValue()).toEqual(["b"]);
+  game.interactions.get(key)!.reset();
+  expect(game.interactions.get(key)!.getInput("options")!.getValue()).toEqual([
+    "a",
+  ]);
+  game.dispose();
+});
+
+it("retains valid partial many choices when projection removes a stale option", () => {
+  const input = {
+    ...choice("options", ["a", "b", null]),
+    domain: {
+      ...choice("options", ["a", "b", null]).domain,
+      selection: { mode: "many" as const, min: 2, max: 3, distinct: true },
+    },
+  } as InteractionInputDescriptor;
+  const x = setup([action([input])]);
+  const game = createGameInstance()({ source: x.source });
+  let current = game.interactions.get("play.move")!.getInput("options")!;
+  expect(current.getTargetProps(null).disabled).toBe(false);
+  current.getTargetProps(null).onClick();
+  current = game.interactions.get("play.move")!.getInput("options")!;
+  expect(current.getValue()).toEqual([null]);
+  current.setValue([null, "b"]);
+  expect(game.interactions.get("play.move")!.getIsReady()).toBe(true);
+  x.emit(2, [
+    action([
+      {
+        ...input,
+        domain: {
+          ...input.domain,
+          choices: [
+            { value: "a", label: "a" },
+            { value: null, label: "null" },
+          ],
+        },
+      } as InteractionInputDescriptor,
+    ]),
+  ]);
+  expect(
+    game.interactions.get("play.move")!.getInput("options")!.getValue(),
+  ).toEqual([null]);
+  expect(game.interactions.get("play.move")!.getIsReady()).toBe(false);
+  game.dispose();
+});
 describe("headless instance", () => {
   it.each([true, false])(
     "clears only after both ACK and frame, frame first=%s",
@@ -502,6 +674,75 @@ it("many draft reconciliation retains valid members and enforces a lowered maxim
   expect(x.source.submissions).toHaveLength(0);
   game.dispose();
 });
+
+it.each([
+  {
+    change: "removed choice",
+    choices: ["a", "c"],
+    max: 3,
+    expected: ["a", "c"],
+  },
+  {
+    change: "disabled choice",
+    choices: ["a", "b", "c"],
+    disabled: "b",
+    max: 3,
+    expected: ["a", "c"],
+  },
+  {
+    change: "lowered maximum",
+    choices: ["a", "b", "c"],
+    max: 2,
+    expected: ["a", "b"],
+  },
+  { change: "implicit maximum", choices: ["a"], expected: ["a"] },
+])(
+  "choiceList reconciliation retains eligible selections after $change without submitting",
+  ({ choices, disabled, max, expected }) => {
+    const input: InteractionInputDescriptor = {
+      key: "options",
+      kind: "form",
+      domain: {
+        type: "choiceList",
+        choices: ["a", "b", "c"].map((value) => ({ value, label: value })),
+        min: 2,
+        max: 3,
+      },
+    };
+    const x = setup([action([input], { commit: { mode: "autoWhenReady" } })]);
+    const game = createGameInstance()({ source: x.source });
+    game.interactions
+      .get("play.move")!
+      .getInput("options")!
+      .setValue(["a", "b", "c"]);
+    x.emit(2, [
+      action(
+        [
+          {
+            ...input,
+            domain: {
+              type: "choiceList",
+              choices: choices.map((value) => ({
+                value,
+                label: value,
+                disabled: value === disabled,
+              })),
+              min: 2,
+              ...(max === undefined ? {} : { max }),
+            },
+          },
+        ],
+        { commit: { mode: "autoWhenReady" } },
+      ),
+    ]);
+    expect(game.state.drafts["play.move"]).toEqual({ options: expected });
+    expect(game.interactions.get("play.move")!.getIsReady()).toBe(
+      expected.length >= 2,
+    );
+    expect(x.source.submissions).toHaveLength(0);
+    game.dispose();
+  },
+);
 
 it("per-card descriptor identity resolves against the latest frame and drop writes atomically", () => {
   const cardInput: InteractionInputDescriptor = {

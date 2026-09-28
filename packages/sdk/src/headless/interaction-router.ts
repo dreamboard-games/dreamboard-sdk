@@ -4,12 +4,12 @@ import {
   hasInteractionFieldErrors,
   inputByKey,
   interactionInputKeys,
-  isManyInput,
+  inputSelection,
   isInputValueReady,
-  isTargetDomain,
   toggleManyValue,
   validateInteractionInputDomains,
 } from "./interaction-inputs.js";
+import type { RuntimeJson } from "../shared/runtime-json.js";
 
 export interface InteractionDraftMutation {
   key: string;
@@ -25,7 +25,7 @@ export interface InteractionDraftReadiness {
 
 export interface RoutedInteractionTarget {
   inputKey: string;
-  value: string;
+  value: RuntimeJson;
   extraInputs?: Record<string, unknown>;
 }
 
@@ -113,12 +113,14 @@ export function routeInteractionTarget(
 ): RoutedInteractionTargetResult {
   const input = inputByKey(descriptor, target.inputKey);
   const currentDraft = store.getDraft(descriptor.interactionKey);
-  const selection = isTargetDomain(input?.domain)
-    ? input.domain.selection
-    : undefined;
+  const selection = input ? inputSelection(input) : undefined;
   const targetValue =
     selection?.mode === "many"
-      ? toggleManyValue(currentDraft[target.inputKey], target.value, selection)
+      ? toggleManyValue(
+          currentDraft[target.inputKey] ?? input?.defaultValue,
+          target.value,
+          selection,
+        )
       : target.value;
   const params = applyInteractionDraftMutation(store, descriptor, [
     ...Object.entries(target.extraInputs ?? {}).map(([key, value]) => ({
@@ -152,7 +154,7 @@ export function shouldAutoSubmitInteraction(
 ): boolean {
   return (
     descriptor.commit.mode === "autoWhenReady" &&
-    !descriptor.inputs.some((input) => isManyInput(input))
+    !descriptor.inputs.some((input) => input.domain.selection?.mode === "many")
   );
 }
 

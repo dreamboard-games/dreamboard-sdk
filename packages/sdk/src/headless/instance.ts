@@ -1,13 +1,20 @@
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
-import { inputValueInDomain } from "../shared/input-domain.js";
+import {
+  inputTargetInDomain,
+  inputValueInDomain,
+} from "../shared/input-domain.js";
 import {
   getInteractionDraftReadiness,
   routeInteractionTarget,
   routeCardInputIntent,
   shouldAutoSubmitInteraction,
 } from "./interaction-router.js";
-import { isManyInput, isManyTargetSelectable } from "./interaction-inputs.js";
+import {
+  inputSelection,
+  isManyInput,
+  isManyTargetSelectable,
+} from "./interaction-inputs.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   Features,
@@ -144,15 +151,7 @@ class InteractionObject {
     return this.inputObjects;
   }
   readiness() {
-    const readiness = getInteractionDraftReadiness(this.descriptor, this.draft);
-    return {
-      ...readiness,
-      ready:
-        readiness.ready &&
-        this.descriptor.inputs.every((input) =>
-          inDomain(input, readiness.values[input.key]),
-        ),
-    };
+    return getInteractionDraftReadiness(this.descriptor, this.draft);
   }
   getIsReady() {
     return this.readiness().ready;
@@ -246,11 +245,9 @@ class InputObject {
       ...this.interaction.descriptor,
       inputs: [this.descriptor],
     };
-    return (
-      getInteractionDraftReadiness(descriptor, {
-        [this.key]: this.getValue(),
-      }).ready && inDomain(this.descriptor, this.getValue())
-    );
+    return getInteractionDraftReadiness(descriptor, {
+      [this.key]: this.getValue(),
+    }).ready;
   }
   getEligibleTargets(): readonly RuntimeJson[] {
     const domain = this.descriptor.domain;
@@ -264,15 +261,9 @@ class InputObject {
   }
   getIsEligible(value: RuntimeJson) {
     const input = this.descriptor;
-    const selection = input.domain.selection;
     return (
-      inDomain(
-        { ...input, domain: { ...input.domain, selection: undefined } },
-        value,
-      ) &&
-      (!selection ||
-        selection.mode !== "many" ||
-        isManyTargetSelectable(input, this.getValue(), String(value)))
+      inputTargetInDomain(input.domain, value) &&
+      isManyTargetSelectable(input, this.getValue(), value)
     );
   }
   getIsSelected(value: RuntimeJson) {
@@ -762,9 +753,10 @@ class Controller {
     const input = interaction?.getInput(inputKey);
     if (!interaction || !input?.getIsEligible(value)) return;
     if (
-      typeof value === "string" &&
-      (input.descriptor.domain.type === "cardTarget" ||
-        input.descriptor.domain.type === "boardTarget")
+      isManyInput(input.descriptor) ||
+      (typeof value === "string" &&
+        (input.descriptor.domain.type === "cardTarget" ||
+          input.descriptor.domain.type === "boardTarget"))
     ) {
       let next: Record<string, unknown> = { ...this.drafts()[key] };
       routeInteractionTarget(
@@ -1009,11 +1001,12 @@ class Controller {
       for (const [name, value] of Object.entries(values)) {
         const input = descriptor.inputs.find((input) => input.key === name);
         if (!input && this.pending?.key === key) continue;
-        if (input?.domain.selection?.mode === "many" && Array.isArray(value)) {
+        const selection = input && inputSelection(input);
+        if (input && selection?.mode === "many" && Array.isArray(value)) {
           const eligible = value.filter((item) =>
-            inputValueInDomain(input.domain, item),
+            inputTargetInDomain(input.domain, item),
           );
-          const max = input.domain.selection.max;
+          const max = selection.max;
           const retained =
             max === undefined ? eligible : eligible.slice(0, max);
           if (retained.length !== value.length) {
