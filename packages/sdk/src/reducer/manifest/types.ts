@@ -333,6 +333,33 @@ type InferredBoards<M> = {
   network: Record<string, RuntimeRecord>;
   track: Record<string, RuntimeRecord>;
 };
+type SeedSlotLocation<
+  Seed,
+  Definition,
+  Kind extends "piece" | "die",
+> = Seed extends { typeId: infer TypeId extends string }
+  ? Id<
+      Entries<Extract<Definition, { id: TypeId }>, "slots">
+    > extends infer SlotId extends string
+    ? [SlotId] extends [never]
+      ? never
+      : {
+          type: "InSlot";
+          host: { kind: Kind; id: SeedIds<Seed> };
+          slotId: SlotId;
+          position?: number | null;
+        }
+    : never
+  : never;
+type ManifestComponentLocation<M> =
+  | Exclude<RuntimeComponentLocation, { type: "InSlot" }>
+  | SeedSlotLocation<
+      Entries<M, "pieceSeeds">,
+      Entries<M, "pieceTypes">,
+      "piece"
+    >
+  | SeedSlotLocation<Entries<M, "dieSeeds">, Entries<M, "dieTypes">, "die">;
+
 export type ManifestTable<M> = AuthoredManifest extends M
   ? RuntimeTableRecord
   : Omit<
@@ -359,7 +386,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
       dice: InferredDice<M>;
       componentLocations: Record<
         ManifestIdsOf<M>["cardId" | "pieceId" | "dieId"],
-        RuntimeComponentLocation
+        ManifestComponentLocation<M>
       >;
       resources: Record<
         PlayerId,
