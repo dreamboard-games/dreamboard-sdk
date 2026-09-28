@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "build": "tsup",
-    "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.testing-contract.json && tsc -p tsconfig.runtime-contract.json",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "test": "vitest run src"
   },

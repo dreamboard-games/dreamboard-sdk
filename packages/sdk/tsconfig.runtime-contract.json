@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "."
+  },
+  "include": [
+    "src/reducer/interaction-input-types.test.ts",
+    "src/testing/definitions.test.ts",
+    "src/testing/candidate-verification.test.ts",
+    "src/reducer/core/runtime-input.test.ts",
+    "src/reducer/bundle/trusted/runtime-registry.test.ts"
+  ],
+  "exclude": []
+}

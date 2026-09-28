@@ -1,5 +1,4 @@
 import { createGame as createModel } from "../../../reducer";
-import { buildMinimalManifest } from "../../lifecycle-test-fixtures";
 
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
@@ -15,7 +14,11 @@ describe("collectTrustedRuntimeRegistry", () => {
       actionCount: z.number().int(),
     });
     const contract = createModel({
-      manifest: buildMinimalManifest(["setup", "play"] as const),
+      manifest: {
+        players: { minPlayers: 2, maxPlayers: 2 },
+        cardSets: [],
+        zones: [],
+      },
       state: {
         public: z.object({}),
         private: z.object({}),
@@ -25,6 +28,7 @@ describe("collectTrustedRuntimeRegistry", () => {
     });
     const game = contract.assemble({
       initialPhase: "setup",
+      view: contract.view(() => ({})),
       phases: {
         setup: contract.phase("setup").define({
           kind: "player",

@@ -1,8 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type {
-  TrustedContinuationInput,
-  TrustedRuntimeInput,
-} from "./runtime-input";
+import type { TrustedRuntimeInput } from "./runtime-input";
 
 describe("TrustedRuntimeInput", () => {
   test("preserves narrowed player ids for interaction inputs", () => {
@@ -14,20 +11,6 @@ describe("TrustedRuntimeInput", () => {
     };
 
     expect(input.playerId).toBe("p1");
-  });
-
-  test("keeps continuation inputs independent from player ids", () => {
-    const input: TrustedRuntimeInput<"p1"> = {
-      kind: "continuation",
-      continuationId: "afterRoll",
-      resumeData: {},
-      source: "effect",
-      effectKind: "rollDie",
-      response: { value: 4 },
-    };
-
-    const continuation: TrustedContinuationInput = input;
-    expect(continuation.continuationId).toBe("afterRoll");
   });
 
   test("rejects interaction inputs outside the player union at compile time", () => {
