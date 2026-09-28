@@ -11,7 +11,7 @@ pnpm check
 pnpm dev
 ```
 
-Open the URL printed by `dreamboard-dev`. Click Increment to play the counter,
+Open the URL printed by `dreamboard-dev`. Click Add one to play the counter,
 switch seats to inspect player perspectives, and use Reset to start again.
 Only the first seat can increment in this example. Refresh after source edits to
 rebuild. The host saves the session in browser storage and offers Save checkpoint
