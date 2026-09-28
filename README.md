@@ -7,6 +7,9 @@ Hex Network Trading examples.
 Start with the [documentation](docs/index.md), [package API](packages/sdk/README.md),
 or [reference games](examples/reference-games/README.md).
 
+To make your own local game, [bootstrap the starter with Giget](templates/game/README.md).
+It installs published packages and runs without a Dreamboard account.
+
 ```sh
 corepack pnpm install --frozen-lockfile
 pnpm check
