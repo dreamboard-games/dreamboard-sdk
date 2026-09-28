@@ -177,6 +177,54 @@ export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
       ? ReadonlyData<Boards[K]> & { readonly id: K }
       : never
     : never;
+export type BoardSpaceId<G, B extends IdOf<G, "boardId">> = B extends unknown
+  ? BoardDataOf<G, B> extends { readonly spaces: infer Spaces }
+    ? keyof Spaces & string
+    : never
+  : never;
+export type BoardSpaceData<
+  G,
+  B extends IdOf<G, "boardId">,
+  S extends BoardSpaceId<G, B>,
+> = B extends unknown
+  ? BoardDataOf<G, B> extends { readonly spaces: infer Spaces }
+    ? S extends keyof Spaces
+      ? ReadonlyData<Spaces[S]> & { readonly id: S }
+      : never
+    : never
+  : never;
+export interface BoardSpace<
+  G,
+  F extends Features = Record<never, never>,
+  B extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
+  S extends BoardSpaceId<G, B> = BoardSpaceId<G, B>,
+> {
+  readonly id: S;
+  readonly data: BoardSpaceData<G, B, S>;
+  readonly board: Board<G, F, B>;
+  getIsEligible(): boolean;
+  getIsSelectable(): boolean;
+  getIsSelected(): boolean;
+  getSelectHandler(options?: TargetOptions<G>): () => void;
+  getTargetProps(options?: TargetOptions<G>): ActionProps;
+}
+export interface BoardSpaceCollection<
+  G,
+  F extends Features = Record<never, never>,
+  B extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
+> {
+  get<S extends BoardSpaceId<G, B>>(id: S): BoardSpace<G, F, B, S>;
+  find<S extends BoardSpaceId<G, B>>(id: S): BoardSpace<G, F, B, S> | undefined;
+  getAll(): readonly BoardSpace<G, F, B>[];
+}
+type BoardHooks<G, F extends Features, B extends IdOf<G, "boardId">> = {
+  [K in keyof Hook<F, "board">]: Hook<
+    F,
+    "board"
+  >[K] extends BoardSpaceCollection<G>
+    ? BoardSpaceCollection<G, F, B>
+    : Hook<F, "board">[K];
+};
 export interface BoardBase<
   G,
   K extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
@@ -189,7 +237,8 @@ export type Board<
   G,
   F extends Features,
   K extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
-> = BoardBase<G, K> & Hook<F, "board"> & { readonly game: GameInstance<G, F> };
+> = BoardBase<G, K> &
+  BoardHooks<G, F, K> & { readonly game: GameInstance<G, F> };
 export interface BoardCollection<G, F extends Features = Record<never, never>> {
   get<K extends IdOf<G, "boardId">>(id: K): Board<G, F, K>;
   find<K extends IdOf<G, "boardId">>(id: K): Board<G, F, K> | undefined;

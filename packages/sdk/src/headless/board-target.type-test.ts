@@ -132,3 +132,26 @@ void board.data.spaces.missing;
 // @ts-expect-error Projected data is deeply readonly.
 board.data.spaces.slot.row = 2;
 void [boardScope, boardIdentity, spaceIdentity];
+
+import { createGameInstance } from "./instance.js";
+import { boardFeature } from "./features/board.js";
+import type { GameSource } from "./model.js";
+declare const source: GameSource;
+const ui = createGameInstance<typeof game>()({
+  source,
+  features: (core, context) => ({ board: boardFeature(core, context) }),
+});
+const semanticSpace = ui.boards.get("mat:player-2").spaces.get("slot");
+const semanticId: "slot" = semanticSpace.id;
+const ownerId: "mat:player-2" = semanticSpace.board.id;
+const row: number = semanticSpace.data.row;
+semanticSpace.board.game.boards.get("mat:player-2").spaces.get("slot");
+semanticSpace.getSelectHandler({
+  interaction: "play.choose",
+  input: "space",
+})();
+// @ts-expect-error A board-scoped lookup rejects an unknown space.
+ui.boards.get("mat:player-2").spaces.get("missing");
+// @ts-expect-error Space selection retains interaction identity.
+semanticSpace.getSelectHandler({ interaction: "play.missing" });
+void [semanticId, ownerId, row];

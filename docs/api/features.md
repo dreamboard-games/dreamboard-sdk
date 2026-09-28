@@ -47,14 +47,15 @@ export const game = createGameInstance<typeof definition>()({
   features: (core, context) => ({ board: boardFeature(core, context) }),
 });
 export function selectedSpaces() {
-  const layout = game.boards.get("frontier")?.getLayout({ hexSize: 40 });
+  const layout = game.boards.find("frontier")?.getLayout({ hexSize: 40 });
   return layout?.getSpaces().filter((space) => space.getIsSelected()) ?? [];
 }
 ```
 
 The snippet reads after frames arrive; no board exists before the first snapshot.
-Target handlers accept an optional interaction key to resolve ambiguity. Generic
-boards expose data but reject spatial layout requests.
+Target handlers accept correlated `interaction` and `input` options to resolve ambiguity.
+All boards expose `board.spaces.get/find/getAll` with typed data and selection handlers.
+Generic boards reject spatial layout requests; square and hex layouts reuse the semantic controls.
 
 ## Hand, drag and viewport
 

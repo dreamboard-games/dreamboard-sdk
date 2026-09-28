@@ -17,7 +17,7 @@ import { Hand } from "../items/hand";
 import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
 import { InteractionForm } from "../items/interaction-form";
-import { playerBoardGame } from "./player-board-game";
+import { playerBoardGame, genericBoardGame } from "./player-board-game";
 import { resourceGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
 function ScenarioModel() {
@@ -25,9 +25,23 @@ function ScenarioModel() {
   return (
     <main style={{ width: "min(900px, 90vw)" }}>
       <h2>{model.phase.current}</h2>
-      {model.boards.getAll().map((board) => (
-        <BoardTargets key={board.id} boardId={board.id} hexSize={40} />
-      ))}
+      {model.boards.getAll().map((board) =>
+        board.data.layout === "generic" ? (
+          <section key={board.id} aria-label={board.id}>
+            {board.spaces.getAll().map((space) => (
+              <button
+                key={space.id}
+                {...space.getTargetProps()}
+                aria-pressed={space.getIsSelected()}
+              >
+                {board.id}: {space.id}
+              </button>
+            ))}
+          </section>
+        ) : (
+          <BoardTargets key={board.id} boardId={board.id} hexSize={40} />
+        ),
+      )}
       {model.zones
         .getAll()
         .filter((zone) => !zone.getIsEmpty())
@@ -51,6 +65,7 @@ function ScenarioModel() {
   );
 }
 const fixtures = {
+  genericBoards: () => localSource(genericBoardGame, { players: 2, seed: 1 }),
   playerBoards: () => localSource(playerBoardGame, { players: 2, seed: 1 }),
   hearts: () => localSource(hearts, { players: 4, seed: 1, as: "player-1" }),
   hex: () =>
@@ -176,3 +191,5 @@ export const HexDepot: Story = { args: { kind: "HexDepot" } };
 export const HexTrade: Story = { args: { kind: "HexTrade" } };
 
 export const PlayerBoardTargets: Story = { args: { kind: "playerBoards" } };
+
+export const GenericBoardSpaces: Story = { args: { kind: "genericBoards" } };

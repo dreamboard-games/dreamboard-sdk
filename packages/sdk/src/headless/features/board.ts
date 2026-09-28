@@ -1,4 +1,9 @@
-import type { BoardDataOf, TargetOptions } from "../model.js";
+import type {
+  BoardDataOf,
+  BoardSpaceId,
+  BoardSpaceCollection,
+  TargetOptions,
+} from "../model.js";
 import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
 import { createHexBoardGeometry } from "../../shared/hex-board.js";
@@ -105,7 +110,7 @@ function squareGeometry(
   };
 }
 
-/** Static topology plus captured seat selection. Generic boards remain data-only. */
+/** Semantic board spaces and captured selection, with optional spatial geometry. */
 export function boardFeature<G>(
   game: CoreInstance<G>,
   context: FeatureContext<G>,
@@ -182,6 +187,153 @@ export function boardFeature<G>(
     };
     return result;
   }
+  function targetsFor(owner: BoardBase<G>) {
+    const board = owner.data as RuntimeBoardState;
+    const captured = captures.get(owner)!;
+    function matchingTargets(
+      model: ReadModel<G>,
+      kind: TargetKind,
+      id: string,
+    ) {
+      const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
+      return (model as unknown as ReadModel<unknown>).interactions
+        .list()
+        .flatMap((interaction) =>
+          interaction
+            .getInputs()
+            .filter((input) => {
+              const domain = input.getDomain();
+              return (
+                domain.type === "boardTarget" &&
+                inputKinds.includes(String(domain.targetKind)) &&
+                (domain.valueKind === "player-board-space"
+                  ? board.scope === "perPlayer" &&
+                    domain.boardId === board.baseId
+                  : domain.boardId === board.id)
+              );
+            })
+            .map((input) => {
+              const domain = input.getDomain();
+              return {
+                interaction,
+                input,
+                value:
+                  domain.type === "boardTarget" &&
+                  domain.valueKind === "player-board-space"
+                    ? Object.freeze({
+                        boardId: board.baseId!,
+                        playerId: board.playerId!,
+                        spaceId: id,
+                      })
+                    : id,
+              };
+            }),
+        );
+    }
+    function target(kind: TargetKind, id: string) {
+      const matches = matchingTargets(captured.model, kind, id);
+      const eligible = matches.some(({ input, value }) =>
+        input.getIsEligible(value),
+      );
+      const selected = matches.some(({ input, value }) =>
+        input.getIsSelected(value),
+      );
+      const selectable = matches.some(
+        ({ input, value }) => !input.getTargetProps(value).disabled,
+      );
+      function select(options?: TargetOptions<G>) {
+        if (
+          game.getOptions().source !== captured.source ||
+          game.snapshot?.me !== captured.model.snapshot?.me
+        )
+          return;
+        const matching = matchingTargets(game.getSnapshot(), kind, id).filter(
+          ({ interaction, input, value }) =>
+            (!options?.interaction ||
+              options.interaction === interaction.key) &&
+            (!options?.input || options.input === input.key) &&
+            !input.getTargetProps(value).disabled,
+        );
+        if (!matching.length) return;
+        if (matching.length > 1) throw new AmbiguousTargetError(id);
+        const domain = matching[0]!.input.getDomain();
+        if (domain.type !== "boardTarget") return;
+        const value = matching[0]!.value;
+        const target =
+          domain.valueKind === "player-board-space" && typeof value !== "string"
+            ? { kind: "space" as const, valueKind: domain.valueKind, value }
+            : {
+                kind,
+                valueKind: "board-id" as const,
+                value: id,
+                boardId: board.id,
+              };
+        (context as unknown as FeatureContext<unknown>).routeTarget(target, {
+          interaction: matching[0]!.interaction.key,
+          input: matching[0]!.input.key,
+        });
+      }
+      return {
+        id,
+        getIsEligible: () => eligible,
+        getIsSelectable: () => selectable,
+        getIsSelected: () => selected,
+        getSelectHandler: (options?: TargetOptions<G>) => () => select(options),
+        getTargetProps(options?: TargetOptions<G>) {
+          const candidates = matches.filter(
+            ({ interaction, input, value }) =>
+              (!options?.interaction ||
+                interaction.key === options.interaction) &&
+              (!options?.input || options.input === input.key) &&
+              !input.getTargetProps(value).disabled,
+          );
+          const only = candidates.length === 1 ? candidates[0] : undefined;
+          return {
+            type: "button" as const,
+            disabled: candidates.length === 0,
+            "data-action": "select",
+            "data-value":
+              only && typeof only.value !== "string"
+                ? JSON.stringify(only.value)
+                : id,
+            "data-board": board.id,
+            "data-interaction": options?.interaction ?? only?.interaction.key,
+            "data-input": only?.input.key,
+            "data-eligible": eligible,
+            "data-selected": selected,
+            "data-disabled": candidates.length === 0,
+            onClick: () => select(options),
+          };
+        },
+      };
+    }
+    return target;
+  }
+  const spaceCollections = new WeakMap<object, BoardSpaceCollection<G>>();
+  function spacesFor(owner: BoardBase<G>): BoardSpaceCollection<G> {
+    const cached = spaceCollections.get(owner);
+    if (cached) return cached;
+    const target = targetsFor(owner);
+    const data = owner.data as RuntimeBoardState;
+    const values = Object.freeze(
+      Object.values(data.spaces).map((space) =>
+        Object.freeze({
+          ...target("space", space.id),
+          data: space,
+          board: owner,
+        }),
+      ),
+    );
+    const byId = new Map(values.map((space) => [space.id, space]));
+    const spaces = Object.freeze({
+      get: (id: string) =>
+        requireLookup(byId.get(id), `Space on board ${owner.id}`, id),
+      find: (id: string) => byId.get(id),
+      getAll: () => values,
+    }) as unknown as BoardSpaceCollection<G>;
+    spaceCollections.set(owner, spaces);
+    return spaces;
+  }
   return {
     root: {
       get boards() {
@@ -189,11 +341,14 @@ export function boardFeature<G>(
       },
     },
     board: {
+      get spaces(): BoardSpaceCollection<G> {
+        return spacesFor(this as unknown as BoardBase<G>);
+      },
       getLayout(this: BoardBase<G>, options: BoardLayoutOptions) {
         const board = this.data as RuntimeBoardState;
         if (board.layout === "generic")
           throw new Error(
-            `Board '${board.id}' has no spatial geometry; read its data instead.`,
+            `Board '${board.id}' has no spatial geometry; use board.spaces for semantic selection.`,
           );
         const {
           hexSize,
@@ -223,140 +378,16 @@ export function boardFeature<G>(
             x: value.x * viewport.scale + viewport.x,
             y: value.y * viewport.scale + viewport.y,
           });
-        function matchingTargets(
-          model: ReadModel<G>,
-          kind: TargetKind,
-          id: string,
-        ) {
-          const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
-          return (model as unknown as ReadModel<unknown>).interactions
-            .list()
-            .flatMap((interaction) =>
-              interaction
-                .getInputs()
-                .filter((input) => {
-                  const domain = input.getDomain();
-                  return (
-                    domain.type === "boardTarget" &&
-                    inputKinds.includes(String(domain.targetKind)) &&
-                    (domain.valueKind === "player-board-space"
-                      ? board.scope === "perPlayer" &&
-                        domain.boardId === board.baseId
-                      : domain.boardId === board.id)
-                  );
-                })
-                .map((input) => {
-                  const domain = input.getDomain();
-                  return {
-                    interaction,
-                    input,
-                    value:
-                      domain.type === "boardTarget" &&
-                      domain.valueKind === "player-board-space"
-                        ? Object.freeze({
-                            boardId: board.baseId!,
-                            playerId: board.playerId!,
-                            spaceId: id,
-                          })
-                        : id,
-                  };
-                }),
-            );
-        }
-        function target(kind: TargetKind, id: string) {
-          const matches = matchingTargets(captured.model, kind, id);
-          const eligible = matches.some(({ input, value }) =>
-            input.getIsEligible(value),
-          );
-          const selected = matches.some(({ input, value }) =>
-            input.getIsSelected(value),
-          );
-          const selectable = matches.some(
-            ({ input, value }) => !input.getTargetProps(value).disabled,
-          );
-          function select(options?: TargetOptions<G>) {
-            if (
-              game.getOptions().source !== captured.source ||
-              game.snapshot?.me !== captured.model.snapshot?.me
-            )
-              return;
-            const matching = matchingTargets(
-              game.getSnapshot(),
-              kind,
-              id,
-            ).filter(
-              ({ interaction, input, value }) =>
-                (!options?.interaction ||
-                  options.interaction === interaction.key) &&
-                (!options?.input || options.input === input.key) &&
-                !input.getTargetProps(value).disabled,
-            );
-            if (!matching.length) return;
-            if (matching.length > 1) throw new AmbiguousTargetError(id);
-            const domain = matching[0]!.input.getDomain();
-            if (domain.type !== "boardTarget") return;
-            const value = matching[0]!.value;
-            const target =
-              domain.valueKind === "player-board-space" &&
-              typeof value !== "string"
-                ? { kind: "space" as const, valueKind: domain.valueKind, value }
-                : {
-                    kind,
-                    valueKind: "board-id" as const,
-                    value: id,
-                    boardId: board.id,
-                  };
-            (context as unknown as FeatureContext<unknown>).routeTarget(
-              target,
-              {
-                interaction: matching[0]!.interaction.key,
-                input: matching[0]!.input.key,
-              },
-            );
-          }
-          return {
-            id,
-            getIsEligible: () => eligible,
-            getIsSelectable: () => selectable,
-            getIsSelected: () => selected,
-            getSelectHandler: (options?: TargetOptions<G>) => () =>
-              select(options),
-            getTargetProps(options?: TargetOptions<G>) {
-              const candidates = matches.filter(
-                ({ interaction, input, value }) =>
-                  (!options?.interaction ||
-                    interaction.key === options.interaction) &&
-                  (!options?.input || options.input === input.key) &&
-                  !input.getTargetProps(value).disabled,
-              );
-              const only = candidates.length === 1 ? candidates[0] : undefined;
-              return {
-                type: "button" as const,
-                disabled: candidates.length === 0,
-                "data-action": "select",
-                "data-value":
-                  only && typeof only.value !== "string"
-                    ? JSON.stringify(only.value)
-                    : id,
-                "data-board": board.id,
-                "data-interaction":
-                  options?.interaction ?? only?.interaction.key,
-                "data-input": only?.input.key,
-                "data-eligible": eligible,
-                "data-selected": selected,
-                "data-disabled": candidates.length === 0,
-                onClick: () => select(options),
-              };
-            },
-          };
-        }
+        const target = targetsFor(this);
+        const semanticSpaces = spacesFor(this);
         const spaces = Object.freeze(
           geometry.spaces.map((space) => {
             const corners = Object.freeze(space.corners.map(point));
             const center = point(space.center);
             return Object.freeze({
-              ...target("space", space.id),
-              data: board.spaces[space.id],
+              ...semanticSpaces.get(
+                space.id as BoardSpaceId<G, IdOf<G, "boardId">>,
+              ),
               center,
               points: () => corners,
               transform: `translate(${center.x} ${center.y})`,
