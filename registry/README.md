@@ -100,6 +100,12 @@ the actual pinned shadcn CLI for each reference game's selected items, then writ
 the intended registry URL back to their `components.json`. This proves local
 installation, not deployment of the registry hostname.
 
+Before deploying bound items, publish and pin an SDK version containing the
+registry's input-control APIs (`InputControl` and `getControl`). The currently
+published `0.5.0-alpha.4` predates those APIs. The packed-SDK smoke test proves
+source compatibility; production consumers and the compiler must use the matching
+public npm release and updated lockfile.
+
 `browser-game` installs test-only Playwright locators under `test/helpers/`, using the public gameplay DOM attributes without a command tape or executable authority.
 
 ## Compiler and authored CSS
