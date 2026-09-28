@@ -21,3 +21,17 @@ test("inventory includes multiline assertions, all unknowns and angle-bracket as
   );
   assert.equal(entries[1]?.line, 2);
 });
+
+test("inventory includes definite-assignment boundaries in variables and class fields", () => {
+  const entries = inspectTypeBoundaries(
+    "fixture.ts",
+    "let resolve!: () => void;\nclass Session { game!: string; }",
+  );
+  assert.deepEqual(
+    entries.map(({ kind, line, syntax }) => ({ kind, line, syntax })),
+    [
+      { kind: "definite-assignment", line: 1, syntax: "resolve!: () => void" },
+      { kind: "definite-assignment", line: 2, syntax: "game!: string;" },
+    ],
+  );
+});

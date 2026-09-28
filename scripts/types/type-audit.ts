@@ -6,7 +6,7 @@ import { rootDir } from "../lib/paths.ts";
 export type TypeAuditEntry = {
   file: string;
   line: number;
-  kind: "assertion" | "non-null" | "unknown" | "any";
+  kind: "assertion" | "non-null" | "definite-assignment" | "unknown" | "any";
   syntax: string;
 };
 
@@ -28,11 +28,15 @@ export function inspectTypeBoundaries(
         ? "assertion"
         : ts.isNonNullExpression(node)
           ? "non-null"
-          : node.kind === ts.SyntaxKind.UnknownKeyword
-            ? "unknown"
-            : node.kind === ts.SyntaxKind.AnyKeyword
-              ? "any"
-              : undefined;
+          : (ts.isVariableDeclaration(node) ||
+                ts.isPropertyDeclaration(node)) &&
+              node.exclamationToken
+            ? "definite-assignment"
+            : node.kind === ts.SyntaxKind.UnknownKeyword
+              ? "unknown"
+              : node.kind === ts.SyntaxKind.AnyKeyword
+                ? "any"
+                : undefined;
     if (kind)
       entries.push({
         file,
