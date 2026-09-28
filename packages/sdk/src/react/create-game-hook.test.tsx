@@ -334,3 +334,39 @@ test("one hook binding supports independently owned provider sources", async () 
   await act(async () => other.emit(snapshot(5)));
   expect(second.host.textContent).toBe("5");
 });
+
+test("source failures use the current callback and do not leak across provider source lifetimes", async () => {
+  const source = createTestSource(snapshot());
+  const replacement = createTestSource(snapshot());
+  const first = vi.fn();
+  const current = vi.fn();
+  const { GameProvider, useGame } = createGameHook()({});
+  function Status() {
+    return <span>{useGame((s) => s.failure?.message ?? "ready")}</span>;
+  }
+  const mounted = await mount(
+    <GameProvider source={source} onError={first}>
+      <Status />
+    </GameProvider>,
+  );
+  await mounted.render(
+    <GameProvider source={source} onError={current}>
+      <Status />
+    </GameProvider>,
+  );
+  const failure = new Error("Connection lost.");
+  await act(async () => source.fail(failure));
+  expect(first).not.toHaveBeenCalled();
+  expect(current).toHaveBeenCalledExactlyOnceWith(failure);
+  expect(mounted.host.textContent).toBe("Connection lost.");
+  await mounted.render(
+    <GameProvider source={replacement} onError={current}>
+      <Status />
+    </GameProvider>,
+  );
+  expect(mounted.host.textContent).toBe("ready");
+  await act(async () => source.fail(new Error("Obsolete failure")));
+  expect(current).toHaveBeenCalledTimes(1);
+  await act(async () => mounted.root.unmount());
+  expect(current).toHaveBeenCalledTimes(1);
+});

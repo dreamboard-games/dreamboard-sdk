@@ -312,7 +312,7 @@ describe("instance boundaries", () => {
     x.ack();
     await submitted;
     x.source.fail(new Error("Recovery exhausted"));
-    expect(game.connection).toBe("closed");
+    expect(game.connection).toBe("failed");
     expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
     game.dispose();
   });
@@ -719,5 +719,150 @@ it("native submit reports rejection while preserving the selected draft", async 
   expect(error.cause).toEqual({ accepted: false, errorCode: "RULE_REJECT" });
   expect(game.state.drafts).toEqual({ "play.move": { choice: "a" } });
   expect(game.interactions.get("play.move")!.getIsReady()).toBe(true);
+  game.dispose();
+});
+
+it.each(["idle", "pending", "accepted"] as const)(
+  "reports %s source failure once and exposes the original cause",
+  async (phase) => {
+    const x = setup();
+    const onError = vi.fn();
+    const game = createGameInstance()({ source: x.source, onError });
+    if (phase !== "idle") {
+      game.inputs.get("play.move", "choice")!.setValue("a");
+      game.interactions.get("play.move")!.getSubmitHandler()();
+      if (phase === "accepted") {
+        x.ack();
+        await Promise.resolve();
+      }
+    }
+    const failure = new Error("Transport failed.");
+    x.source.fail(failure);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(game.failure).toBe(failure);
+    expect(game.getSnapshot().failure).toBe(failure);
+    expect(Object.isFrozen(failure)).toBe(true);
+    expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+    game.setOptions({ source: x.source, onError });
+    const snapshot = game.getSnapshot().snapshot;
+    game.dispose();
+    expect(game.connection).toBe("failed");
+    expect(game.getSnapshot().snapshot).toBe(snapshot);
+    expect(game.failure).toBe(failure);
+    expect(onError).toHaveBeenCalledTimes(1);
+  },
+);
+it("keeps public submit rejection identical to the observable failure", async () => {
+  const x = setup();
+  const onError = vi.fn();
+  const game = createGameInstance()({ source: x.source, onError });
+  game.inputs.get("play.move", "choice")!.setValue("a");
+  const submitted = game.interactions.get("play.move")!.submit();
+  const failure = new Error("Failed pending request.");
+  x.source.fail(failure);
+  await expect(submitted).rejects.toBe(failure);
+  expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+  game.dispose();
+});
+it.each(["dispose", "swap"] as const)(
+  "does not report pending disposal as a failure during %s",
+  async (operation) => {
+    const x = setup();
+    const onError = vi.fn();
+    const game = createGameInstance()({ source: x.source, onError });
+    game.inputs.get("play.move", "choice")!.setValue("a");
+    game.interactions.get("play.move")!.getSubmitHandler()();
+    if (operation === "dispose") game.dispose();
+    else game.setOptions({ source: setup().source, onError });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    expect(onError).not.toHaveBeenCalled();
+    expect(game.failure).toBeNull();
+    game.dispose();
+  },
+);
+it("observes an already failed source once on construction and replacement", () => {
+  const x = setup();
+  const y = setup();
+  const onError = vi.fn();
+  const failure = new Error("Already closed.");
+  x.source.fail(failure);
+  y.source.fail(failure);
+  const game = createGameInstance()({ source: x.source, onError });
+  expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+  game.setOptions({ source: y.source, onError });
+  expect(onError).toHaveBeenCalledTimes(2);
+  game.setOptions({ source: y.source, onError });
+  expect(onError).toHaveBeenCalledTimes(2);
+  game.dispose();
+});
+
+it("delivers a retained failure when an error callback is first attached", () => {
+  const x = setup();
+  const onError = vi.fn();
+  const failure = new Error("Startup failed.");
+  x.source.fail(failure);
+  const game = createGameInstance()({ source: x.source });
+  game.setOptions({ source: x.source, onError });
+  expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+  game.setOptions({ source: x.source, onError: vi.fn() });
+  expect(onError).toHaveBeenCalledTimes(1);
+  game.dispose();
+});
+
+it("publishes the replacement failure before notifying observers", () => {
+  const x = setup();
+  const y = setup();
+  const game = createGameInstance()({ source: x.source });
+  const failure = new Error("Replacement failed.");
+  y.source.fail(failure);
+  const onError = vi.fn(() => expect(game.failure).toBe(failure));
+  game.setOptions({ source: y.source, onError });
+  expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+  game.dispose();
+});
+it("notifies once when an accepted request exhausts frame recovery", async () => {
+  vi.useFakeTimers();
+  const x = setup();
+  const onError = vi.fn();
+  const game = createGameInstance()({ source: x.source, onError });
+  try {
+    game.inputs.get("play.move", "choice")!.setValue("a");
+    const submitted = game.interactions.get("play.move")!.submit();
+    x.ack();
+    await expect(submitted).resolves.toEqual({ accepted: true });
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(game.failure?.message).toBe("Gameplay source recovery timed out.");
+    expect(onError).toHaveBeenCalledExactlyOnceWith(game.failure);
+    expect(game.state.drafts["play.move"]).toEqual({ choice: "a" });
+  } finally {
+    game.dispose();
+    vi.useRealTimers();
+  }
+});
+
+it("does not deliver a synchronous submit failure into a replacement source lifetime", async () => {
+  const x = setup();
+  const replacement = setup();
+  const failure = new Error("Synchronous transport failure.");
+  const source = {
+    ...x.source,
+    submit(...args: Parameters<typeof x.source.submit>) {
+      const pending = x.source.submit(...args);
+      x.source.fail(failure);
+      return pending;
+    },
+  };
+  const replacementError = vi.fn();
+  const onError = vi.fn(() => {
+    game.setOptions({ source: replacement.source, onError: replacementError });
+  });
+  const game = createGameInstance()({ source, onError });
+  game.inputs.get("play.move", "choice")!.setValue("a");
+  game.interactions.get("play.move")!.getSubmitHandler()();
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  expect(onError).toHaveBeenCalledExactlyOnceWith(failure);
+  expect(replacementError).not.toHaveBeenCalled();
+  expect(game.connection).toBe("ready");
+  expect(game.failure).toBeNull();
   game.dispose();
 });

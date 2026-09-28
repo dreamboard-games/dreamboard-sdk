@@ -189,7 +189,7 @@ class InteractionObject {
   getSubmitHandler() {
     return (event?: NativeEvent) => {
       event?.preventDefault();
-      this.owner.handle(this.submit());
+      this.owner.handle(() => this.submit());
     };
   }
   getSubmitProps() {
@@ -479,6 +479,7 @@ class Controller {
   };
   subscription: { unsubscribe(): void } | undefined;
   sourceState: SourceState;
+  reportedFailures = new WeakMap<GameSource, Readonly<Error>>();
   pending: {
     source: GameSource;
     key: string;
@@ -539,6 +540,7 @@ class Controller {
       "view",
       "version",
       "connection",
+      "failure",
       "request",
       "state",
       "phase",
@@ -620,6 +622,7 @@ class Controller {
     }
     this.refresh();
     this.subscribeSource();
+    this.reportSourceFailure();
   }
   install(target: object, extension: object | undefined) {
     if (!extension) return;
@@ -788,7 +791,7 @@ class Controller {
       shouldAutoSubmitInteraction(current.descriptor) &&
       current.getIsReady()
     )
-      this.handle(this.submit(key, false));
+      this.handle(() => this.submit(key, false));
   }
   selectCard(id: string, explicit?: string) {
     const card = this.store.get().cards.get(id) as unknown as
@@ -821,15 +824,22 @@ class Controller {
       );
     if (route && input) this.select(route.key, input.key, id, route);
   }
-  handle(promise: Promise<SubmitResult>) {
-    void promise.then(
+  handle(submit: () => Promise<SubmitResult>) {
+    const source = this.options.source;
+    const active = () => !this.disposed && this.options.source === source;
+    void submit().then(
       (result) => {
-        if (!result.accepted)
+        if (active() && !result.accepted)
           this.options.onError?.(
             new Error(result.message ?? result.errorCode, { cause: result }),
           );
       },
-      (error) => this.options.onError?.(error),
+      (error) => {
+        if (!active()) return;
+        const state = source.store.get();
+        if (state.failure === error || state.connection === "closed") return;
+        this.options.onError?.(error);
+      },
     );
   }
   async submit(key: string, cancel: boolean): Promise<SubmitResult> {
@@ -899,7 +909,10 @@ class Controller {
       operation.epoch !== this.epoch
     )
       return;
-    if (this.sourceState.connection === "closed") {
+    if (
+      this.sourceState.connection === "closed" ||
+      this.sourceState.connection === "failed"
+    ) {
       this.pending = null;
       this.refresh();
       return;
@@ -913,6 +926,17 @@ class Controller {
     if ((this.revisions.get(operation.key) ?? 0) === operation.revision)
       this.reset(operation.key);
     else this.refresh();
+  }
+  reportSourceFailure() {
+    const failure = this.sourceState.failure;
+    if (
+      !failure ||
+      !this.options.onError ||
+      this.reportedFailures.get(this.options.source) === failure
+    )
+      return;
+    this.reportedFailures.set(this.options.source, failure);
+    this.options.onError?.(failure);
   }
   subscribeSource() {
     const source = this.options.source;
@@ -937,6 +961,7 @@ class Controller {
       this.reconcile();
       this.refresh();
       this.finishBarrier();
+      this.reportSourceFailure();
     });
   }
   setOptions(next: RuntimeOptions) {
@@ -960,6 +985,7 @@ class Controller {
     }
     this.reconcile();
     this.refresh();
+    this.reportSourceFailure();
   }
   reconcile() {
     const snapshot = this.sourceState.snapshot;
@@ -1024,11 +1050,7 @@ class Controller {
     this.subscription?.unsubscribe();
     this.pending = null;
     this.options.source.dispose();
-    this.sourceState = {
-      ...this.sourceState,
-      connection: "closed",
-      request: null,
-    };
+    this.sourceState = this.options.source.store.get();
     this.refresh();
   }
   assertCoverage() {
@@ -1146,7 +1168,7 @@ class Controller {
       shouldAutoSubmitInteraction(current.descriptor) &&
       current.getIsReady()
     )
-      this.handle(current.submit());
+      this.handle(() => current.submit());
   }
   warnUnread() {
     const environment =
@@ -1172,7 +1194,7 @@ class Controller {
   }
   build(previous?: ReadModel<unknown>): ReadModel<unknown> {
     this.trackDrafts();
-    const { snapshot, connection, request } = this.sourceState;
+    const { snapshot, connection, request, failure } = this.sourceState;
     const old = previous?.snapshot;
     const drafts = this.drafts();
     const active = this.active();
@@ -1362,6 +1384,7 @@ class Controller {
       version: snapshot?.version ?? null,
       connection,
       request,
+      failure,
       state: capturedState,
       phase:
         sameSnapshot && previous

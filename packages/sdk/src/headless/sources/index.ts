@@ -6,6 +6,7 @@ export type {
   CommandSource,
   ApplySource,
   SourceState,
+  SourceRequest,
   SourceSnapshot,
   SubmitResult,
 } from "./types.js";

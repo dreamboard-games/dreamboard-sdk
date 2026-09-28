@@ -4,6 +4,7 @@
 <!-- api: root hostSource -->
 <!-- api: root staticSource -->
 <!-- api: root SourceState -->
+<!-- api: root SourceRequest -->
 <!-- api: root SourceSnapshot -->
 <!-- api: root SubmitResult -->
 <!-- api: testing localSource -->
@@ -20,7 +21,12 @@
 | testing | `scenarioSource(definition, scenario, { at, as })`                  | Named scenario checkpoint                    |
 | testing | `createTestSource(snapshot)`                                        | Deterministic request/frame ordering fixture |
 
-`SourceState` contains `snapshot`, `connection`, `request`. A snapshot contains
+`SourceState` is a union tagged by `connection`: `connecting`, `ready`,
+`recovering`, `failed`, or `closed`. Ready requires a snapshot; recovery and
+terminal states retain any last snapshot. Failed requires a diagnostic `failure`;
+other states have `failure: null`. Connecting and terminal states have no request.
+`SourceRequest` tracks submit/cancel progress through `awaiting-result` and
+`awaiting-frame`. A snapshot contains
 `me`, `players`, basis-free `frame`, and `version`. Sources expose a subscribable
 store and dispose. Command sources provide submit/cancel; their transport details
 remain private. `SubmitResult` discriminates accepted from rejection; exceptions

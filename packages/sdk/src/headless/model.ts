@@ -17,6 +17,7 @@ import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   GameSource,
   SourceState,
+  SourceRequest,
   SourceSnapshot,
   SubmitResult,
 } from "./sources/types.js";
@@ -295,6 +296,7 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
   readonly view: ViewOf<G> | null;
   readonly version: number | null;
   readonly connection: SourceState["connection"];
+  readonly failure: SourceState["failure"];
   readonly request: SourceState["request"];
   readonly state: LocalState<G>;
   readonly phase: Phase<G>;
@@ -383,6 +385,7 @@ export type GameInstance<
 export type {
   GameSource,
   SourceState,
+  SourceRequest,
   SourceSnapshot,
   SubmitResult,
   InteractionDescriptor,
