@@ -64,10 +64,18 @@ function assertNonNegativeInteger(value: number, label: string): void {
   }
 }
 
+// JavaScript callers can bypass the public NonRngCollector constraint.
+function assertManyKind(kind: InputCollector["kind"]): void {
+  if (kind === "rng") {
+    throw new Error("many(...) cannot wrap rngInput collectors.");
+  }
+}
+
 export function many<Collector extends NonRngCollector>(
   collector: Collector,
   options: ManyOptions,
 ): ManyInputCollector<Collector> {
+  assertManyKind(collector.kind);
   const {
     schema,
     selection: _selection,

@@ -93,3 +93,9 @@ picks.resolveDefaultValue;
 // @ts-expect-error Numbers remain an array after wrapping.
 const wrongNumbers: z.infer<typeof numbers.schema> = 2;
 void [choiceDomain, numberDomain, numbersDomain, values, wrongNumbers];
+
+// Engine-sampled values cannot become client-authored selections.
+// @ts-expect-error many rejects dice collectors at the authoring boundary.
+many(play.inputs.rng.d6(), { count: 2 });
+// @ts-expect-error many rejects coin collectors at the authoring boundary.
+many(play.inputs.rng.coin(), { min: 1 });
