@@ -101,15 +101,17 @@ export function many<Collector extends NonRngCollector>(
   const selection = normalizeManyOptions(options);
   const rest = { ...collector } as Omit<
     Collector,
-    "schema" | "selection" | "defaultValue"
+    "schema" | "selection" | "defaultValue" | "resolveDefaultValue"
   > & {
     schema?: unknown;
     selection?: unknown;
     defaultValue?: unknown;
+    resolveDefaultValue?: unknown;
   };
   delete rest.schema;
   delete rest.selection;
   delete rest.defaultValue;
+  delete rest.resolveDefaultValue;
   return {
     ...rest,
     schema: z.array(

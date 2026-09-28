@@ -79,12 +79,28 @@ describe("BoardRef", () => {
     expect(() => schema.parse({ baseId: "" })).toThrow();
   });
 
+  test("partially bound schemas validate only the supplied identity", () => {
+    const byBoard = boardRefSchema({ baseIdSchema: z.literal("main") });
+    expect(byBoard.safeParse({ baseId: "other" }).success).toBe(false);
+    expect(byBoard.parse({ baseId: "main", seat: "any-seat" }).seat).toBe(
+      "any-seat",
+    );
+    const byPlayer = boardRefSchema({
+      playerIdSchema: z.literal("seat").transform(asPlayerId),
+    });
+    expect(
+      byPlayer.safeParse({ baseId: "any-board", seat: "other" }).success,
+    ).toBe(false);
+    expect(byPlayer.parse({ baseId: "any-board", seat: "seat" }).baseId).toBe(
+      "any-board",
+    );
+  });
+
   test("boardRefSchema enforces manifest-scoped base and seat schemas", () => {
     const baseIdSchema = z.enum(["market", "ring"]);
-    const playerIdSchema = z.enum([
-      "player-1",
-      "player-2",
-    ]) as unknown as z.ZodType<PlayerId>;
+    const playerIdSchema = z
+      .enum(["player-1", "player-2"])
+      .transform(asPlayerId);
     const schema = boardRefSchema({ baseIdSchema, playerIdSchema });
     expect(() =>
       schema.parse({ baseId: "ring", seat: "player-2" }),
