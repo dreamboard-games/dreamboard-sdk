@@ -675,6 +675,75 @@ it("many draft reconciliation retains valid members and enforces a lowered maxim
   game.dispose();
 });
 
+it.each([
+  {
+    change: "removed choice",
+    choices: ["a", "c"],
+    max: 3,
+    expected: ["a", "c"],
+  },
+  {
+    change: "disabled choice",
+    choices: ["a", "b", "c"],
+    disabled: "b",
+    max: 3,
+    expected: ["a", "c"],
+  },
+  {
+    change: "lowered maximum",
+    choices: ["a", "b", "c"],
+    max: 2,
+    expected: ["a", "b"],
+  },
+  { change: "implicit maximum", choices: ["a"], expected: ["a"] },
+])(
+  "choiceList reconciliation retains eligible selections after $change without submitting",
+  ({ choices, disabled, max, expected }) => {
+    const input: InteractionInputDescriptor = {
+      key: "options",
+      kind: "form",
+      domain: {
+        type: "choiceList",
+        choices: ["a", "b", "c"].map((value) => ({ value, label: value })),
+        min: 2,
+        max: 3,
+      },
+    };
+    const x = setup([action([input], { commit: { mode: "autoWhenReady" } })]);
+    const game = createGameInstance()({ source: x.source });
+    game.interactions
+      .get("play.move")!
+      .getInput("options")!
+      .setValue(["a", "b", "c"]);
+    x.emit(2, [
+      action(
+        [
+          {
+            ...input,
+            domain: {
+              type: "choiceList",
+              choices: choices.map((value) => ({
+                value,
+                label: value,
+                disabled: value === disabled,
+              })),
+              min: 2,
+              ...(max === undefined ? {} : { max }),
+            },
+          },
+        ],
+        { commit: { mode: "autoWhenReady" } },
+      ),
+    ]);
+    expect(game.state.drafts["play.move"]).toEqual({ options: expected });
+    expect(game.interactions.get("play.move")!.getIsReady()).toBe(
+      expected.length >= 2,
+    );
+    expect(x.source.submissions).toHaveLength(0);
+    game.dispose();
+  },
+);
+
 it("per-card descriptor identity resolves against the latest frame and drop writes atomically", () => {
   const cardInput: InteractionInputDescriptor = {
     key: "card",

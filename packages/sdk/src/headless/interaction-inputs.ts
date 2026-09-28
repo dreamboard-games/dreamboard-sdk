@@ -125,7 +125,7 @@ export function inputSelection(
   input: InteractionInputDescriptor,
 ): InputSelection | undefined {
   if (input.domain.selection) return input.domain.selection;
-  // choiceList is already an array domain; only its option buttons need many-style toggling.
+  // choiceList is already an array domain; expose its selection bounds for toggling and reconciliation.
   if (input.domain.type === "choiceList")
     return {
       mode: "many",

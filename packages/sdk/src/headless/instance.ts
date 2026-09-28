@@ -10,7 +10,11 @@ import {
   routeCardInputIntent,
   shouldAutoSubmitInteraction,
 } from "./interaction-router.js";
-import { isManyInput, isManyTargetSelectable } from "./interaction-inputs.js";
+import {
+  inputSelection,
+  isManyInput,
+  isManyTargetSelectable,
+} from "./interaction-inputs.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import type {
   Features,
@@ -997,11 +1001,12 @@ class Controller {
       for (const [name, value] of Object.entries(values)) {
         const input = descriptor.inputs.find((input) => input.key === name);
         if (!input && this.pending?.key === key) continue;
-        if (input?.domain.selection?.mode === "many" && Array.isArray(value)) {
+        const selection = input && inputSelection(input);
+        if (input && selection?.mode === "many" && Array.isArray(value)) {
           const eligible = value.filter((item) =>
-            inputValueInDomain(input.domain, item),
+            inputTargetInDomain(input.domain, item),
           );
-          const max = input.domain.selection.max;
+          const max = selection.max;
           const retained =
             max === undefined ? eligible : eligible.slice(0, max);
           if (retained.length !== value.length) {
