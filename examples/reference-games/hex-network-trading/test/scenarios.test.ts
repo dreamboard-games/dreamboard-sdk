@@ -117,11 +117,11 @@ test("discard barrier actors and blockers are scheduler-derived", async () => {
     ],
   );
   assert.deepEqual(
-    (before[0]!.node.view as { mySupplies: unknown }).mySupplies,
+    (before[0].node.view as { mySupplies: unknown }).mySupplies,
     { brick: 6, provisions: 0, timber: 2 },
   );
   assert.deepEqual(
-    (before[1]!.node.view as { mySupplies: unknown }).mySupplies,
+    (before[1].node.view as { mySupplies: unknown }).mySupplies,
     { brick: 3, provisions: 6, timber: 0 },
   );
 
@@ -156,11 +156,11 @@ test("discard barrier actors and blockers are scheduler-derived", async () => {
     [[{ seat: 0, interactionId: "discardSupplies" }], [], []],
   );
   assert.equal(
-    (afterFirst[0]!.node.view as { myLastDiscard: unknown }).myLastDiscard,
+    (afterFirst[0].node.view as { myLastDiscard: unknown }).myLastDiscard,
     null,
   );
   assert.deepEqual(
-    (afterFirst[1]!.node.view as { myLastDiscard: unknown }).myLastDiscard,
+    (afterFirst[1].node.view as { myLastDiscard: unknown }).myLastDiscard,
     { brick: 1, provisions: 3 },
   );
 
@@ -459,7 +459,7 @@ test("Bandits exploration commits the destination before discovering victims", a
     const scenario = defineScenario({
       id: `bandits-${hexId}`,
       setup: banditsScenario.setup,
-      given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]!],
+      given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]],
       when: [],
       then: () => {},
     });
@@ -496,7 +496,7 @@ test("Bandits rejects the current hex and invalid victim values without changing
   const digest = replay.checkpointDigest;
   const currentHex = await probeScenarioCommand({
     replay,
-    command: bandits(0, "centralBarrens")[0]!,
+    command: bandits(0, "centralBarrens")[0],
   });
   assert.equal(currentHex.kind, "rejected");
   for (const [hexId, targetPlayerId] of [
@@ -508,7 +508,7 @@ test("Bandits rejects the current hex and invalid victim values without changing
       scenario: defineScenario({
         id: `invalid-victim-${hexId}`,
         setup: banditsScenario.setup,
-        given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]!],
+        given: [...BANDITS_PREFIX_COMMANDS, bandits(0, hexId)[0]],
         when: [],
         then: () => {},
       }),

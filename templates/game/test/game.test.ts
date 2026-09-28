@@ -56,7 +56,7 @@ test("the hosted entry excludes executable game and testing code", async () => {
     write: false,
     metafile: true,
   });
-  const inputs = Object.keys(result.metafile!.inputs);
+  const inputs = Object.keys(result.metafile.inputs);
   expect(inputs.some((path) => /(?:^|\/)app\//.test(path))).toBe(false);
   expect(
     inputs.some((path) =>

@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { proveCardDrag } from "./card-drag-proof.ts";
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
@@ -80,7 +81,7 @@ try {
         const expected = phases[story.id.replace("actual-scenarios--", "")];
         expect(expected).toBeDefined();
         await expect(page.getByRole("heading", { level: 2 })).toHaveText(
-          expected!,
+          expected,
         );
         await expect(page.getByRole("alert")).toHaveCount(0);
       }
@@ -232,9 +233,14 @@ try {
         await expect
           .poll(
             async () =>
-              JSON.parse(
-                (await page.getByTestId("scenario-view").textContent()) ?? "{}",
-              ).total,
+              z
+                .object({ total: z.number() })
+                .parse(
+                  JSON.parse(
+                    (await page.getByTestId("scenario-view").textContent()) ??
+                      "{}",
+                  ),
+                ).total,
           )
           .toBe(5);
       }

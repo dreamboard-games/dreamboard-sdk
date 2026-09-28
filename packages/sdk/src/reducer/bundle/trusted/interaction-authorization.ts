@@ -7,7 +7,6 @@ import type {
 import type {
   TrustedDomainState,
   TrustedManifest,
-  TrustedPhaseName,
   TrustedPlayerId,
   TrustedRuntimeScope,
   TrustedState,
@@ -40,7 +39,6 @@ export function createInteractionAuthorization<
   type DomainState = TrustedDomainState<Contract>;
   type Manifest = TrustedManifest<Contract>;
   type State = TrustedState<Contract>;
-  type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
   type PlayerId = TrustedPlayerId<Contract>;
 
   function resolveInteractionActorAuthorization(
@@ -63,7 +61,7 @@ export function createInteractionAuthorization<
         actors: resolveActorSet<PlayerId>(resolved),
       };
     }
-    const phase = scope.phaseByName(state.flow.currentPhase as PhaseName);
+    const phase = scope.phaseByName(state.flow.currentPhase);
     if (isSimultaneousPhase(phase)) {
       return {
         mode: "actors",

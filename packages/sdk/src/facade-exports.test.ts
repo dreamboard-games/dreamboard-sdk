@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 const subpaths = [
@@ -12,9 +13,16 @@ describe("SDK facades", () => {
       expect(await import(subpath)).toBeDefined();
     });
   test("publishes exactly four facades and package metadata", () => {
-    const manifest = JSON.parse(
-      readFileSync(new URL("../package.json", import.meta.url), "utf8"),
-    );
+    const manifest = z
+      .object({
+        exports: z.record(z.string(), z.unknown()),
+        bin: z.unknown().optional(),
+      })
+      .parse(
+        JSON.parse(
+          readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+        ),
+      );
     expect(Object.keys(manifest.exports).sort()).toEqual([
       ".",
       "./package.json",

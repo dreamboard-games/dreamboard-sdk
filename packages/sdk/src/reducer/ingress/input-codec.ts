@@ -21,6 +21,6 @@ export function createRuntimeInputParser<PlayerId extends string>(
     return {
       ...input,
       playerId,
-    } as RawRuntimeInput;
+    };
   };
 }

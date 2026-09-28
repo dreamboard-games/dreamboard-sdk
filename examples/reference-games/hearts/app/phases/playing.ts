@@ -13,7 +13,7 @@ const legalHandCard = playing.inputs.card({
     test: ({ state, playerId, q, targetId }) =>
       validateCardPlay({
         state,
-        playerId: playerId as PlayerId,
+        playerId: playerId,
         cardId: targetId,
         q,
       }) === null,

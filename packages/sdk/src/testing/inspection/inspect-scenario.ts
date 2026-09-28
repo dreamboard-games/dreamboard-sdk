@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../../reducer/model.js";
 import type { InteractionDescriptorLike } from "../definitions.js";
 import type {
   ScenarioCheckpoint,
@@ -5,7 +9,6 @@ import type {
   ScenarioReplay,
   ScenarioReplayDefinition,
 } from "../definitions.js";
-import type { ScenarioDefinitionGameLike } from "../scenario-definition-validation.js";
 import {
   inspectScenarioReplayAuthority,
   replayScenario,
@@ -43,7 +46,7 @@ export class ScenarioInspectionError extends Error {
   }
 }
 
-export type InspectScenarioOptions<Game extends ScenarioDefinitionGameLike> = {
+export type InspectScenarioOptions<Game> = {
   readonly game: Game;
   readonly scenario: ScenarioReplayDefinition<Game>;
   readonly identity: ScenarioIdentity;
@@ -53,8 +56,13 @@ export type InspectScenarioOptions<Game extends ScenarioDefinitionGameLike> = {
 };
 
 export async function inspectScenario<
-  const Game extends ScenarioDefinitionGameLike,
->(options: InspectScenarioOptions<Game>): Promise<InspectScenarioResult> {
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: InspectScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
+): Promise<InspectScenarioResult> {
   assertScenarioIdentity(options.identity, options.scenario);
   assertSeed(options.seed);
   const selectedScenario =

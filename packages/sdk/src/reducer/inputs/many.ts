@@ -1,3 +1,7 @@
+import type {
+  CollectorValueOf,
+  CollectorValueWitness,
+} from "../model/spec/inputs";
 import { z } from "zod";
 import type {
   CollectorState,
@@ -24,11 +28,16 @@ type NonRngCollector = InputCollector<SchemaLike<unknown>, CollectorState> & {
 /** Lift the value schema while retaining the collector's exact domain and routing. */
 export type ManyInputCollector<Collector extends NonRngCollector> = Omit<
   Collector,
-  "schema" | "selection" | "defaultValue" | "resolveDefaultValue"
-> & {
-  readonly schema: z.ZodArray<Collector["schema"]>;
-  readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
-};
+  | "schema"
+  | "selection"
+  | "defaultValue"
+  | "resolveDefaultValue"
+  | keyof CollectorValueWitness<unknown>
+> &
+  CollectorValueWitness<CollectorValueOf<Collector>[]> & {
+    readonly schema: z.ZodArray<Collector["schema"]>;
+    readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
+  };
 
 function normalizeManyOptions(
   options: ManyOptions,
@@ -85,7 +94,15 @@ export function many<Collector extends NonRngCollector>(
   } = collector;
   void [_selection, _defaultValue, _resolveDefaultValue];
   return {
-    ...rest,
+    // The witness is type-only; the runtime object carries no witness value.
+    ...(rest as Omit<
+      Collector,
+      | "schema"
+      | "selection"
+      | "defaultValue"
+      | "resolveDefaultValue"
+      | keyof CollectorValueWitness<unknown>
+    >),
     schema: z.array<Collector["schema"]>(schema),
     selection: normalizeManyOptions(options),
   };

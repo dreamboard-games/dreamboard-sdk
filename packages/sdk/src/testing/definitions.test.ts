@@ -1,3 +1,4 @@
+import { createGame } from "../reducer.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { markManifestScopedSchema } from "../reducer/model/manifest";
@@ -25,35 +26,37 @@ const nestedPlayerSchema = z.object({
   ordinary: ordinaryStringSchema,
 });
 
-const game = {
-  contract: {
-    manifest: {
-      normalSetup: {
-        minPlayers: 2,
-        maxPlayers: 3,
-        createInitialTable: () => ({}),
-      },
-      literals: { playerIds: ["player-1", "player-2", "player-3"] },
-    },
+const model = createGame({
+  manifest: {
+    players: { minPlayers: 2, maxPlayers: 3 },
+    cardSets: [],
+    zones: [],
   },
+  options: z.object({}),
+  phases: { play: z.object({}) },
+  state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
+});
+const play = model.phase("play");
+const game = model.assemble({
+  initialPhase: "play",
   phases: {
-    play: {
+    play: play.define({
+      kind: "player",
+      initialState: () => ({}),
       interactions: {
-        choose: {
-          inputs: {
-            selection: { kind: "form", schema: nestedPlayerSchema },
-          },
-        },
-        label: {
-          inputs: {
-            value: { kind: "form", schema: ordinaryStringSchema },
-          },
-        },
+        choose: play.interaction({
+          inputs: { selection: { kind: "form", schema: nestedPlayerSchema } },
+          reduce() {},
+        }),
+        label: play.interaction({
+          inputs: { value: { kind: "form", schema: ordinaryStringSchema } },
+          reduce() {},
+        }),
       },
-    },
+    }),
   },
-  view: () => ({}),
-} as const;
+  view: model.view(() => ({})),
+});
 
 const { defineScenario } = createScenarioAuthoring(game);
 

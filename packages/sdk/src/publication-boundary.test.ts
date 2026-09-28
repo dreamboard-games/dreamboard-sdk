@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { expect, test } from "vitest";
@@ -35,9 +36,19 @@ test("retired leaf package source directories stay removed", async () => {
 });
 
 test("authoring generation is absent from the published package", async () => {
-  const manifest = JSON.parse(
-    await readFile(path.join(repoRoot, "packages/sdk/package.json"), "utf8"),
-  );
+  const manifest = z
+    .object({
+      exports: z.record(z.string(), z.unknown()),
+      bin: z.unknown().optional(),
+    })
+    .parse(
+      JSON.parse(
+        await readFile(
+          path.join(repoRoot, "packages/sdk/package.json"),
+          "utf8",
+        ),
+      ),
+    );
   expect(manifest.bin).toBeUndefined();
   for (const name of ["./authoring", "./authoring-compiler", "./codegen"])
     expect(manifest.exports[name]).toBeUndefined();

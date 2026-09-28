@@ -5,6 +5,13 @@
     "rootDir": "."
   },
   "include": [
+    "src/reducer/runtime-behavior.test.ts",
+    "src/reducer/manifest/compiler.test.ts",
+    "src/reducer/bundle/trusted/collector-input-solver.test.ts",
+    "src/reducer/target-rules.test.ts",
+    "src/reducer/interaction-input-projection.test.ts",
+    "src/reducer/bundle/trusted/step-prefix.test.ts",
+
     "src/reducer/interaction-input-types.test.ts",
     "src/testing/definitions.test.ts",
     "src/testing/candidate-verification.test.ts",

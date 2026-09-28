@@ -139,10 +139,7 @@ export function createReducerBundle<
   return {
     reducerContractVersion: REDUCER_CONTRACT_VERSION,
     async initialize({ table, playerIds, rngSeed, options }) {
-      const parsed = codec.parseInitialTable(
-        table as unknown as Parameters<typeof codec.parseInitialTable>[0],
-        playerIds,
-      );
+      const parsed = codec.parseInitialTable(table, playerIds);
       const result = lifecycle.initializeSession(
         { ...parsed, rngSeed, options: codec.parseInitialOptions(options) },
         executor.complete,

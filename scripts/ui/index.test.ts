@@ -37,7 +37,7 @@ test("focused browser verification builds the SDK and executes the selected real
   };
   await runUi(["test", "--game", "hearts"], run);
   assert.equal(calls.length, 2);
-  assert.ok(calls[0]!.endsWith(":--dir packages/sdk build"));
+  assert.ok(calls[0].endsWith(":--dir packages/sdk build"));
   assert.equal(calls[1], "hearts:run test:browser");
 });
 
@@ -98,9 +98,9 @@ test("storybook starts SDK watch and server after initial build, then stops serv
     live.children.map(({ args }) => args.join(" ")),
     ["--dir packages/sdk exec tsup --watch", "--dir registry storybook"],
   );
-  live.children[0]!.reject(new CommandError("watch failed"));
+  live.children[0].reject(new CommandError("watch failed"));
   await assert.rejects(operation, /watch failed/);
-  assert.deepEqual(live.children[1]!.stopped, ["SIGTERM"]);
+  assert.deepEqual(live.children[1].stopped, ["SIGTERM"]);
   assert.equal(live.signals.listenerCount("SIGINT"), 0);
   assert.equal(live.signals.listenerCount("SIGTERM"), 0);
 });
@@ -109,9 +109,9 @@ test("live server exit stops the SDK watcher and reports the unexpected exit", a
   const live = liveCommands();
   const operation = runUi(["storybook"], live.run, live.start, live.signals);
   await new Promise(setImmediate);
-  live.children[1]!.resolve();
+  live.children[1].resolve();
   await assert.rejects(operation, /exited unexpectedly/);
-  assert.deepEqual(live.children[0]!.stopped, ["SIGTERM"]);
+  assert.deepEqual(live.children[0].stopped, ["SIGTERM"]);
 });
 
 test("SIGINT reaches both live children and removes signal listeners", async () => {

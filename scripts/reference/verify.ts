@@ -1,3 +1,5 @@
+import { readPackageJson } from "../lib/package-json.ts";
+import { z } from "zod";
 import {
   cp,
   mkdir,
@@ -15,7 +17,6 @@ import { readCatalogs, catalogVersion, type Catalogs } from "./catalogs.ts";
 import {
   discoverReferenceGames,
   SDK_PACKAGE_NAME,
-  type PackageJson,
   type ReferenceGame,
 } from "./games.ts";
 import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
@@ -104,7 +105,9 @@ export async function prepareIsolatedReferenceGame(
   catalogs: Catalogs,
 ): Promise<void> {
   const configPath = path.join(sandbox, "tsconfig.json");
-  const config = JSON.parse(await readFile(configPath, "utf8"));
+  const config = z
+    .looseObject({ extends: z.string().optional() })
+    .parse(JSON.parse(await readFile(configPath, "utf8")));
   if (game.id === "template") {
     if (config.extends)
       throw new Error(
@@ -122,9 +125,7 @@ export async function prepareIsolatedReferenceGame(
     await writeFile(configPath, JSON.stringify(config, null, 2) + "\n");
   }
   const packagePath = path.join(sandbox, "package.json");
-  const packageJson = JSON.parse(
-    await readFile(packagePath, "utf8"),
-  ) as PackageJson;
+  const packageJson = await readPackageJson(packagePath);
   packageJson.packageManager = "pnpm@10.4.1";
   for (const section of [
     "dependencies",
@@ -201,17 +202,14 @@ async function installCandidate(
       );
   }
 
-  const installedPackage = JSON.parse(
-    await readFile(
-      path.join(
-        sandbox,
-        "node_modules",
-        ...SDK_PACKAGE_NAME.split("/"),
-        "package.json",
-      ),
-      "utf8",
+  const installedPackage = await readPackageJson(
+    path.join(
+      sandbox,
+      "node_modules",
+      ...SDK_PACKAGE_NAME.split("/"),
+      "package.json",
     ),
-  ) as PackageJson;
+  );
   if (!installedPackage.version) {
     throw new Error(`${game.id}: packed SDK did not install as a package`);
   }

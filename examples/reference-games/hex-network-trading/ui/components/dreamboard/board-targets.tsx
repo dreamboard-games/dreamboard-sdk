@@ -140,7 +140,7 @@ export function BoardTargets({
             target.inputKey === dropRoute.inputKey)),
     );
     // An ambiguous visual destination must be bound to an explicit route.
-    return matches.length === 1 ? matches[0]! : null;
+    return matches.length === 1 ? matches[0] : null;
   }
   function control(target: Space | Edge | Vertex) {
     // SVG groups do not accept the native button type.

@@ -243,7 +243,7 @@ function parseReleaseCli(args: readonly string[]): {
         candidate: { type: "string" },
         expect: { type: "string" },
       },
-    }) as typeof parsed;
+    });
   } catch (error) {
     throw new ReleaseUsageError(
       error instanceof Error ? error.message : String(error),

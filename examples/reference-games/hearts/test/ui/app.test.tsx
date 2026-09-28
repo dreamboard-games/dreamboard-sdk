@@ -12,7 +12,7 @@ test("hosted Hearts has no executable game, reducer or testing source in its bro
     metafile: true,
     loader: { ".css": "empty" },
   });
-  const inputs = Object.keys(result.metafile!.inputs);
+  const inputs = Object.keys(result.metafile.inputs);
   expect(inputs.some((path) => /hearts\/(app|test)\//.test(path))).toBe(false);
   expect(
     inputs.some((path) =>
@@ -47,9 +47,9 @@ test("local seat switching keeps private hands separate without reinitialization
   const source = await createDevelopmentSource(new URLSearchParams());
   try {
     const checkpoint = source.checkpoint();
-    const first = source.inspect().frame.zones.hand!.cardIds;
+    const first = source.inspect().frame.zones.hand.cardIds;
     source.switchSeat("player-2");
-    const second = source.inspect().frame.zones.hand!.cardIds;
+    const second = source.inspect().frame.zones.hand.cardIds;
     expect(first).toHaveLength(13);
     expect(second).toHaveLength(13);
     expect(first.some((id) => second.includes(id))).toBe(false);

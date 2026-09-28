@@ -1,10 +1,13 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../reducer/model.js";
 import {
   assertReducerBundleContract,
   type ReducerBundleContract,
 } from "../shared/worker-contract.js";
 import type { DispatchTraceSummaryEntry } from "../reducer/diagnostics.js";
 import { ScenarioReplayError, type ScenarioDefinition } from "./definitions.js";
-import type { ScenarioDefinitionGameLike } from "./scenario-definition-validation.js";
 import { assertScenario, replayScenario } from "./scenario-replay.js";
 
 export {
@@ -12,13 +15,9 @@ export {
   type ScenarioRuntimeCheckpointMaterialization,
 } from "./scenario-replay.js";
 
-export type CandidateVerificationScenario<
-  Game extends ScenarioDefinitionGameLike,
-> = ScenarioDefinition<Game>;
+export type CandidateVerificationScenario<Game> = ScenarioDefinition<Game>;
 
-export type CandidateVerificationInput<
-  Game extends ScenarioDefinitionGameLike,
-> = {
+export type CandidateVerificationInput<Game> = {
   /** The exact compiled production artifact under verification. */
   readonly bundle: ReducerBundleContract;
   /** Authored scenario schemas and inspection metadata; not execution authority. */
@@ -84,9 +83,12 @@ const MAX_DIAGNOSTIC_MESSAGE_LENGTH = 2_000;
 const MAX_DIAGNOSTIC_TRACE_ENTRIES = 100;
 
 export async function runCandidateVerification<
-  const Game extends ScenarioDefinitionGameLike,
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
 >(
-  input: CandidateVerificationInput<Game>,
+  input: CandidateVerificationInput<Game> & {
+    readonly reducer: { readonly contract: Contract };
+  },
 ): Promise<CandidateVerificationResult> {
   assertCandidateInputFields(input);
   assertReducerBundleContract(input.bundle, "candidate verification");
@@ -130,8 +132,11 @@ export async function runCandidateVerification<
   };
 }
 
-async function runScenario<Game extends ScenarioDefinitionGameLike>(input: {
-  readonly reducer: Game;
+async function runScenario<
+  Contract extends ReducerGameContractLike,
+  Game extends AnyReducerGameDefinition<Contract>,
+>(input: {
+  readonly reducer: Game & { readonly contract: Contract };
   readonly bundle: ReducerBundleContract;
   readonly scenario: CandidateVerificationScenario<Game>;
   readonly maxStepsPerScenario: number;
@@ -198,7 +203,7 @@ function assertPositiveInteger(value: number, field: string): void {
   }
 }
 
-function normalizeScenarios<Game extends ScenarioDefinitionGameLike>(
+function normalizeScenarios<Game>(
   input:
     | Readonly<Record<string, CandidateVerificationScenario<Game>>>
     | readonly CandidateVerificationScenario<Game>[],
@@ -208,7 +213,7 @@ function normalizeScenarios<Game extends ScenarioDefinitionGameLike>(
       "Candidate verification scenarios must be an array or record.",
     );
   }
-  const scenarios = Array.isArray(input) ? [...input] : Object.values(input);
+  const scenarios: CandidateVerificationScenario<Game>[] = Object.values(input);
   const seenIds = new Set<string>();
   for (const scenario of scenarios) {
     if (typeof scenario?.id !== "string" || scenario.id.length === 0) {

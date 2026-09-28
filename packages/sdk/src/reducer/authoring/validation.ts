@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import { isManifestScopedSchema, type SchemaLike } from "../model";
 import type { InputCollector } from "../model";
 import {
@@ -6,10 +7,8 @@ import {
   isEnumKeyedRecordSchema,
   isPlainZodString,
   isSparseMapSchema,
-  isZodArray,
   unwrapWrappers,
 } from "../schema-helpers";
-import type { AnyReducerGameContract } from "./types";
 
 /**
  * Canonical set of manifest-scoped id field names. `defineGameContract`
@@ -70,7 +69,7 @@ function matchManifestScopedIdName(
 }
 
 export function validateInteractionParamsSchema(
-  schema: unknown,
+  schema: z.core.$ZodType,
   context: string,
   path: string,
 ): void {
@@ -133,7 +132,7 @@ export function validateInteractionLikeDefinition(
     inputs?: Record<string, InputCollector>;
     steps?: { entries: readonly { key: string }[] };
     commit?: { mode: string };
-    paramsSchema?: unknown;
+    paramsSchema?: z.core.$ZodType;
   },
   context: string,
 ): void {
@@ -162,17 +161,14 @@ export function validateInteractionLikeDefinition(
 }
 
 export function validateStateSchemaIdBranding(
-  schema: unknown,
+  schema: z.core.$ZodType,
   scope: "public" | "private" | "hidden",
 ): void {
   const def = getZodDef(schema);
   if (def.type !== "object") {
     return;
   }
-  const shape = def.shape as Record<string, unknown> | undefined;
-  if (!shape) {
-    return;
-  }
+  const shape = def.shape;
   for (const [key, fieldSchema] of Object.entries(shape)) {
     const match = matchManifestScopedIdName(key);
     if (!match) {
@@ -190,8 +186,9 @@ export function validateStateSchemaIdBranding(
       }
       continue;
     }
-    if (match.kind === "plural" && isZodArray(inner)) {
-      const element = unwrapWrappers(getZodDef(inner).element);
+    const innerDef = getZodDef(inner);
+    if (match.kind === "plural" && innerDef.type === "array") {
+      const element = unwrapWrappers(innerDef.element);
       if (isPlainZodString(element) && !isManifestScopedSchema(element)) {
         throw new Error(
           `defineGameContract: state.${scope}.${key} uses z.array(z.string()) ` +
@@ -205,18 +202,11 @@ export function validateStateSchemaIdBranding(
 }
 
 export function validateDefineGamePhaseNames(definition: {
-  contract: AnyReducerGameContract;
+  contract: { readonly phases: Readonly<Record<string, unknown>> };
   phases: Record<string, unknown>;
   initialPhase?: string;
 }): void {
-  const contractPhaseNames = (
-    definition.contract as AnyReducerGameContract & {
-      phaseNames?: readonly string[];
-    }
-  ).phaseNames;
-  if (!Array.isArray(contractPhaseNames)) {
-    return;
-  }
+  const contractPhaseNames = Object.keys(definition.contract.phases);
   const declared = new Set(contractPhaseNames);
   const actual = new Set(Object.keys(definition.phases));
   const missing = [...declared].filter((name) => !actual.has(name));

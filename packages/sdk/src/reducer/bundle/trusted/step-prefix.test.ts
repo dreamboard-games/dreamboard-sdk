@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
-import { z } from "zod";
 import { InteractionSteps } from "../../authoring/steps";
-import { formInput, boardInput, boardTarget } from "../../inputs";
-import { many } from "../..";
+import { formInput, boardInput, boardTarget, rngInput } from "../../inputs";
+import { many } from "../../../reducer";
 import { createTable } from "../../lifecycle-test-fixtures";
 import { evaluateStepPrefix } from "./step-prefix";
 
@@ -134,20 +133,19 @@ describe("ordered committed prefix evaluation", () => {
       "value",
       choice(["a"]),
     );
-    expect(() => steps.input("value" as never, choice(["b"]))).toThrow(
-      "Duplicate",
-    );
-    const rng = {
-      kind: "rng",
-      schema: z.number(),
-      meta: { rng: "d6", count: 1 },
-    };
-    expect(() => new InteractionSteps().input("roll", rng as never)).toThrow(
-      "RNG",
-    );
+    expect(() => {
+      // @ts-expect-error Deliberately duplicate an authored key to verify runtime rejection.
+      steps.input("value", choice(["b"]));
+    }).toThrow("Duplicate");
+    const rng = rngInput.d6();
+    expect(() => {
+      // @ts-expect-error RNG collectors are forbidden in user-authored steps.
+      new InteractionSteps().input("roll", rng);
+    }).toThrow("RNG");
     const dynamic = new InteractionSteps<typeof state>().input(
       "roll",
-      (() => rng) as never,
+      // @ts-expect-error A dynamic collector must also reject RNG at runtime.
+      () => rng,
     );
     expect(() => evaluateStepPrefix(dynamic, state, "player-1", [])).toThrow(
       "RNG",

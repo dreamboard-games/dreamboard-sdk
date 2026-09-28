@@ -11,7 +11,12 @@ import type {
   ReadHelpers,
   ValidationIssue,
 } from "./runtime-args";
-import type { ClientParamsOf, InputCollector, ParamsOf } from "./inputs";
+import type {
+  ClientParamsOf,
+  ClientSyntaxParamsOf,
+  InputCollector,
+  ParamsOf,
+} from "./inputs";
 
 export type InteractionReduceInput<
   Collectors extends Record<string, InputCollector>,
@@ -147,7 +152,7 @@ export type InteractionSpec<
   | { inputs: Collectors; steps?: never }
   | { inputs?: never; steps: StepDefinition<Collectors> }
 ) & {
-  paramsSchema?: SchemaLike<ClientParamsOf<Collectors>>;
+  paramsSchema?: SchemaLike<ClientSyntaxParamsOf<Collectors>>;
   presentation?: InteractionPresentation;
   /**
    * Draft commit policy. The input collectors still own value shape and
@@ -174,33 +179,15 @@ export type InteractionSpec<
   >;
 };
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-type AnyInteractionRule = Omit<
-  InteractionRule<any, any, any, any>,
-  "available" | "validate"
-> & {
-  available?: BivariantCallback<any, boolean>;
-  validate?: BivariantCallback<any, InteractionRuleValidationResult<any>>;
-};
-
 /**
- * Type-safe erasure of {@link InteractionSpec} used by the runtime when it
- * stores heterogeneous interactions in a single map. The collectors generic is
- * intentionally erased with `any`: each authored interaction keeps a specific
- * params shape, but phase registries need to store all of them together.
+ * Runtime storage keeps metadata and results precise while existentially erasing
+ * each interaction's collected parameter keys. Assembly binds narrower authored
+ * callbacks to this registry after validating their collectors and state schema.
  */
 export type AnyInteractionSpec<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },
   Manifest extends ManifestContract<TableOfState<State>>,
-> = Omit<
-  InteractionSpec<any, State, Manifest, any>,
-  "actor" | "rules" | "reduce"
-> & {
-  actor?: BivariantCallback<any, any>;
-  rules?: readonly AnyInteractionRule[];
-  reduce: BivariantCallback<any, ReducerResult<any> | void>;
-};
-/* eslint-enable @typescript-eslint/no-explicit-any */
+> = InteractionSpec<Record<string, InputCollector>, State, Manifest, string>;
 
 export type InteractionMap<
   State extends { table: RuntimeTableRecord; flow: { currentPhase: string } },

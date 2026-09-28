@@ -21,7 +21,7 @@ export function sparseMap<
   const schema = z.partialRecord(keySchema, valueSchema) as z.ZodType<
     SparseMap<z.infer<KeySchema>, z.infer<ValueSchema>>
   >;
-  sparseSchemas.set(schema as unknown as object, {
+  sparseSchemas.set(schema, {
     keySchema,
     valueSchema,
   });
@@ -31,111 +31,64 @@ export function sparseMap<
 export function sparseCounts<KeySchema extends z.ZodType<string>>(
   keySchema: KeySchema,
 ): z.ZodType<SparseCounts<z.infer<KeySchema>>> {
-  return sparseMap(keySchema, z.number().int().min(0)) as z.ZodType<
-    SparseCounts<z.infer<KeySchema>>
-  >;
+  return sparseMap(keySchema, z.number().int().min(0));
 }
 
-export function getZodDef(schema: unknown): {
-  type?: string;
-} & Record<string, unknown> {
-  const anySchema = schema as {
-    _zod?: { def?: Record<string, unknown> };
-    def?: Record<string, unknown>;
-  };
-  const fromInternal = anySchema?._zod?.def;
-  if (fromInternal && typeof fromInternal === "object") {
-    return fromInternal;
-  }
-  const fromLegacy = anySchema?.def;
-  if (fromLegacy && typeof fromLegacy === "object") {
-    return fromLegacy;
-  }
-  return {};
+/** Zod 4 core definitions are the sole introspection vocabulary. */
+export function getZodDef(schema: z.core.$ZodType) {
+  // Zod's base class erases the definition discriminant. All authored schemas
+  // use the installed Zod 4 vocabulary; validation tests cover nested wrappers.
+  return (schema as z.core.$ZodTypes)._zod.def;
 }
 
-export function unwrapWrappers(schema: unknown): unknown {
+export function unwrapWrappers(schema: z.core.$ZodType): z.core.$ZodType {
   let current = schema;
   while (true) {
     const def = getZodDef(current);
-    const innerType = def.innerType;
-    if (
-      (def.type === "nullable" ||
-        def.type === "optional" ||
-        def.type === "default" ||
-        def.type === "readonly" ||
-        def.type === "catch") &&
-      innerType
-    ) {
-      current = innerType;
-      continue;
+    switch (def.type) {
+      case "nullable":
+      case "optional":
+      case "default":
+      case "prefault":
+      case "readonly":
+      case "catch":
+      case "nonoptional":
+        current = def.innerType;
+        break;
+      default:
+        return current;
     }
-    return current;
   }
 }
-
-export function isPlainZodString(schema: unknown): boolean {
+export function isPlainZodString(schema: z.core.$ZodType): boolean {
   return getZodDef(schema).type === "string";
 }
-
-export function isZodArray(schema: unknown): boolean {
-  return getZodDef(schema).type === "array";
-}
-
-export function isEnumKeyedRecordSchema(schema: unknown): boolean {
+export function isEnumKeyedRecordSchema(schema: z.core.$ZodType): boolean {
   const def = getZodDef(schema);
-  const keyType = def.keyType;
-  return (
-    def.type === "record" &&
-    typeof keyType === "object" &&
-    keyType !== null &&
-    getZodDef(keyType).type === "enum"
-  );
+  return def.type === "record" && getZodDef(def.keyType).type === "enum";
 }
-
-export function isSparseMapSchema(schema: unknown): boolean {
-  const inner = unwrapWrappers(schema);
-  return (
-    typeof inner === "object" &&
-    inner !== null &&
-    sparseSchemas.has(inner as object)
-  );
+export function isSparseMapSchema(schema: z.core.$ZodType): boolean {
+  return sparseSchemas.has(unwrapWrappers(schema));
 }
-
 function getSparseSchemaMetadata(
-  schema: unknown,
+  schema: z.core.$ZodType,
 ): SparseSchemaMetadata | undefined {
-  const inner = unwrapWrappers(schema);
-  if (typeof inner !== "object" || inner === null) {
-    return undefined;
-  }
-  return sparseSchemas.get(inner as object);
+  return sparseSchemas.get(unwrapWrappers(schema));
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function getObjectShape(
-  schema: unknown,
-): Record<string, unknown> | null {
+export function getObjectShape(schema: z.core.$ZodType) {
   const def = getZodDef(schema);
-  if (def.type !== "object") {
-    return null;
-  }
-  const shape = def.shape;
-  if (typeof shape === "function") {
-    const resolved = shape();
-    return resolved && typeof resolved === "object"
-      ? (resolved as Record<string, unknown>)
-      : null;
-  }
-  return shape && typeof shape === "object"
-    ? (shape as Record<string, unknown>)
-    : null;
+  return def.type === "object" ? def.shape : null;
 }
 
-function normalizeSchemaInput(schema: unknown, input: unknown): unknown {
+function normalizeSchemaInput(
+  schema: z.core.$ZodType,
+  input: unknown,
+): unknown {
   const inner = unwrapWrappers(schema);
   const sparse = getSparseSchemaMetadata(inner);
   if (sparse && isPlainObject(input)) {

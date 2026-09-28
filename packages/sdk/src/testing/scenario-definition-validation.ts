@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../reducer/model.js";
 import { collectReducerDefinitionIndex } from "../reducer/definition-index.js";
 import type { RuntimeJson } from "../shared/runtime-json.js";
 import { z } from "zod";
@@ -36,24 +40,6 @@ export class ScenarioDefinitionValidationError extends Error {
     this.path = options.path;
   }
 }
-
-type NormalSetupLike = {
-  readonly minPlayers: number;
-  readonly maxPlayers: number;
-  readonly createInitialTable: (options: {
-    readonly playerIds: readonly string[];
-  }) => unknown;
-};
-
-export type ScenarioDefinitionGameLike = {
-  readonly contract: {
-    readonly manifest: {
-      readonly normalSetup?: NormalSetupLike;
-      readonly literals: { readonly playerIds: readonly string[] };
-    };
-  };
-  readonly phases: Readonly<Record<string, unknown>>;
-};
 
 type ScenarioDefinitionLike = {
   readonly id: string;
@@ -151,7 +137,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
 
@@ -312,7 +298,7 @@ function assertJsonSerializable(
 }
 
 function playerIdsForDefinition(
-  game: ScenarioDefinitionGameLike,
+  game: Pick<AnyReducerGameDefinition, "contract">,
   players: number,
 ): readonly string[] {
   const declared = game.contract.manifest.literals.playerIds;
@@ -322,22 +308,18 @@ function playerIdsForDefinition(
   );
 }
 
-function commandSchemas(
-  game: ScenarioDefinitionGameLike,
+function commandSchemas<Contract extends ReducerGameContractLike>(
+  game: AnyReducerGameDefinition<Contract>,
   interactionId: string,
 ): readonly z.ZodTypeAny[] {
-  const schemasByPhase = createClientParamSchemasByPhase(
-    game as Parameters<typeof createClientParamSchemasByPhase>[0],
-  );
+  const schemasByPhase = createClientParamSchemasByPhase(game);
   const schemas = Object.values(schemasByPhase).flatMap((schemas) => {
     const schema = schemas[interactionId];
     return schema ? [schema as z.ZodTypeAny] : [];
   });
   // Dependent collectors require replay state; authoring can check only the
   // declared key and atomic command shape before that state exists.
-  const index = collectReducerDefinitionIndex(
-    game as Parameters<typeof collectReducerDefinitionIndex>[0],
-  );
+  const index = collectReducerDefinitionIndex(game);
   for (const phase of index.phasesByName.values()) {
     const steps = phase.interactions.find(([id]) => id === interactionId)?.[1]
       .steps;
@@ -361,8 +343,8 @@ function issuePath(
   return issue.path.reduce(appendScenarioPath, path);
 }
 
-function validateCommand(options: {
-  readonly game: ScenarioDefinitionGameLike;
+function validateCommand<Contract extends ReducerGameContractLike>(options: {
+  readonly game: AnyReducerGameDefinition<Contract>;
   readonly command: unknown;
   readonly path: string;
   readonly playerIds: readonly string[];
@@ -452,8 +434,10 @@ function validateCommand(options: {
   });
 }
 
-export function validateScenarioDefinition(
-  game: ScenarioDefinitionGameLike,
+export function validateScenarioDefinition<
+  Contract extends ReducerGameContractLike,
+>(
+  game: AnyReducerGameDefinition<Contract>,
   value: unknown,
 ): asserts value is ScenarioDefinitionLike {
   const definition = requireObject(value, "scenario");

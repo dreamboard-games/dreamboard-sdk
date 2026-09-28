@@ -16,7 +16,6 @@ import { createInteractionDecisionResolver } from "./interaction-decision";
 import {
   rejectResult,
   type TrustedInput,
-  type TrustedPlayerId,
   type TrustedRuntimeScope,
   type TrustedState,
 } from "./runtime-scope";
@@ -33,7 +32,6 @@ export function createInteractionResolver<
   options: { diagnostics?: InteractionDiagnosticsMode } = {},
 ) {
   type State = TrustedState<Contract>;
-  type PlayerId = TrustedPlayerId<Contract>;
   type ReducerInput = TrustedInput<Contract>;
 
   const authorization = createInteractionAuthorization(scope);
@@ -60,7 +58,7 @@ export function createInteractionResolver<
     if (input.kind === "interaction") {
       const decision = decisions.resolveInteractionDecision({
         state,
-        playerId: input.playerId as PlayerId,
+        playerId: input.playerId,
         interactionId: input.interactionId,
         params: (input.params ?? {}) as Record<string, unknown>,
         mode: "submit",
@@ -78,10 +76,7 @@ export function createInteractionResolver<
     if (validation.valid) {
       return null;
     }
-    const invalidValidation = validation as Exclude<
-      ReducerValidationResult,
-      { valid: true }
-    >;
+    const invalidValidation = validation;
     return rejectResult(invalidValidation.errorCode, invalidValidation.message);
   }
 

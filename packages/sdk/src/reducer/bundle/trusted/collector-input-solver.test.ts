@@ -1,3 +1,4 @@
+import { createInputTestState } from "../../input-test-fixtures";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
@@ -7,19 +8,17 @@ import {
   cardTarget,
   formInput,
 } from "../../inputs";
-import { many } from "../..";
+import { many } from "../../../reducer";
 import {
   enumerateCollectorInputAssignments,
   hasAnyCollectorInputAssignment,
 } from "./collector-input-solver";
 
-const domainState = {
-  table: {},
-  flow: { currentPhase: "work" },
-};
+const domainState = createInputTestState();
 
 function finiteFormInteraction(options: { allBlocked?: boolean } = {}) {
   return {
+    reduce() {},
     inputs: {
       mode: formInput.choice({
         choices: [{ value: "beta", label: "Beta" }],
@@ -45,16 +44,16 @@ describe("trusted collector input solver", () => {
 
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
 
     const enumeration = enumerateCollectorInputAssignments({
-      interaction: interaction as never,
-      domainState: domainState as never,
-      playerId: "player-1" as never,
+      interaction: interaction,
+      domainState: domainState,
+      playerId: "player-1",
       maxEvaluations: 100,
     });
     expect(enumeration).toMatchObject({ status: "enumerated" });
@@ -70,16 +69,16 @@ describe("trusted collector input solver", () => {
 
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
       }),
     ).toMatchObject({ status: "no" });
     expect(
       enumerateCollectorInputAssignments({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
         maxEvaluations: 100,
       }),
     ).toMatchObject({ status: "enumerated", assignments: [] });
@@ -91,9 +90,9 @@ describe("trusted collector input solver", () => {
 
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
         acceptsAssignment: (assignment) => {
           evaluatedForActionability.push(assignment);
           return assignment.task === "two";
@@ -107,9 +106,9 @@ describe("trusted collector input solver", () => {
 
     expect(
       enumerateCollectorInputAssignments({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
         acceptsAssignment: (assignment) => assignment.task === "two",
         maxEvaluations: 100,
       }),
@@ -119,9 +118,9 @@ describe("trusted collector input solver", () => {
     });
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
         acceptsAssignment: () => false,
       }),
     ).toEqual({ status: "no", inputKey: "mode" });
@@ -132,35 +131,37 @@ describe("trusted collector input solver", () => {
 
     expect(
       enumerateCollectorInputAssignments({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
         maxEvaluations: 1,
       }),
     ).toMatchObject({ status: "budget", assignments: [], evaluated: 1 });
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: interaction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: interaction,
+        domainState: domainState,
+        playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
   });
 
   test("distinguishes opaque and unbounded domains from proven emptiness", () => {
     const opaqueInteraction = {
+      reduce() {},
       inputs: {},
       paramsSchema: z.object({ answer: z.string() }),
     };
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: opaqueInteraction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: opaqueInteraction,
+        domainState: domainState,
+        playerId: "player-1",
       }),
     ).toEqual({ status: "notEnumerable" });
 
     const unboundedInteraction = {
+      reduce() {},
       inputs: {
         tags: many(
           formInput.choice({
@@ -173,16 +174,16 @@ describe("trusted collector input solver", () => {
     };
     expect(
       hasAnyCollectorInputAssignment({
-        interaction: unboundedInteraction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: unboundedInteraction,
+        domainState: domainState,
+        playerId: "player-1",
       }),
     ).toEqual({ status: "yes" });
     expect(
       enumerateCollectorInputAssignments({
-        interaction: unboundedInteraction as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: unboundedInteraction,
+        domainState: domainState,
+        playerId: "player-1",
         maxEvaluations: 100,
       }),
     ).toMatchObject({
@@ -195,9 +196,9 @@ describe("trusted collector input solver", () => {
   test("rejects invalid evaluation budgets before touching collector state", () => {
     expect(() =>
       enumerateCollectorInputAssignments({
-        interaction: finiteFormInteraction() as never,
-        domainState: domainState as never,
-        playerId: "player-1" as never,
+        interaction: finiteFormInteraction(),
+        domainState: domainState,
+        playerId: "player-1",
         maxEvaluations: 0,
       }),
     ).toThrow("maxEvaluations must be a positive safe integer");
@@ -211,7 +212,7 @@ describe("trusted collector input solver", () => {
           id: "own-open-space",
           errorCode: "SPACE_BLOCKED",
           test: ({ playerId, target }) =>
-            target.playerId === playerId && target.spaceId === "space-a",
+            target.playerId === playerId && target.spaceId === "s1",
         })
         .build(),
     });
@@ -225,32 +226,11 @@ describe("trusted collector input solver", () => {
         })
         .build(),
     });
-    const interaction = { inputs: { playerSpace, card } };
-    const queries = {
-      board: (boardId: string) => ({
-        state: {
-          layout: "generic",
-          spaces: boardId.startsWith("workshop-mat:")
-            ? ["space-a", "space-b"]
-            : [],
-        },
-      }),
-      zone: {
-        playerCards: () => ["card-a", "card-b"],
-        sharedCards: () => [],
-      },
-    };
+    const interaction = { inputs: { playerSpace, card }, reduce() {} };
     const enumeration = enumerateCollectorInputAssignments({
-      interaction: interaction as never,
-      domainState: {
-        table: {
-          playerOrder: ["player-1", "player-2"],
-          hands: { hand: {} },
-        },
-        flow: { currentPhase: "work" },
-      } as never,
-      playerId: "player-1" as never,
-      queries: queries as never,
+      interaction: interaction,
+      domainState,
+      playerId: "player-1",
       acceptsAssignment: (assignment) =>
         playerSpace.schema.safeParse(assignment.playerSpace).success &&
         card.schema.safeParse(assignment.card).success,
@@ -265,7 +245,7 @@ describe("trusted collector input solver", () => {
         playerSpace: {
           boardId: "workshop-mat",
           playerId: "player-1",
-          spaceId: "space-a",
+          spaceId: "s1",
         },
       },
     ]);

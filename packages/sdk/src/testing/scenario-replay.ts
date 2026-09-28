@@ -1,7 +1,11 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../reducer/model.js";
 import type { ReducerBundleContract } from "../shared/worker-contract.js";
 import { resolvePlayerRoster } from "./player-roster.js";
 import type { z } from "zod";
-import type { RuntimeJson } from "../shared/runtime-json.js";
+import { RuntimeJsonSchema, type RuntimeJson } from "../shared/runtime-json.js";
 import type * as Wire from "../shared/runtime-types.js";
 import { digestPluginRuntimeJson } from "../shared/protocol/digest.js";
 import { createReducerTestingRuntime } from "./reducer-runtime.js";
@@ -34,10 +38,7 @@ import {
   type ScenarioReplaySegment,
   type ScenarioSeatRef,
 } from "./definitions.js";
-import {
-  validateScenarioDefinition,
-  type ScenarioDefinitionGameLike,
-} from "./scenario-definition-validation.js";
+import { validateScenarioDefinition } from "./scenario-definition-validation.js";
 import {
   resolveScenarioCommandParams,
   resolveScenarioSeatRef,
@@ -45,8 +46,14 @@ import {
 
 type ScenarioBundle = ReturnType<typeof createReducerTestingRuntime>;
 
-type ScenarioReplayState<Game> = {
-  readonly productionBundle?: ReducerBundleContract;
+type ScenarioRuntimeOperations = {
+  readonly createBundle: (events: ReducerDiagnosticEvent[]) => ScenarioBundle;
+  readonly resolveCommandParams: (
+    options: Omit<Parameters<typeof resolveScenarioCommandParams>[0], "game">,
+  ) => Record<string, unknown>;
+};
+
+type ScenarioReplayState<Game> = ScenarioRuntimeOperations & {
   readonly game: Game;
   readonly scenario: ScenarioReplayDefinition<Game>;
   readonly playerIds: readonly string[];
@@ -105,14 +112,25 @@ export type ScenarioReplayAdvanceResult<Game> =
     };
 
 export async function replayScenario<
-  const Game extends ScenarioDefinitionGameLike,
->(options: ReplayScenarioOptions<Game>): Promise<ScenarioReplay<Game>> {
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
+>(
+  options: ReplayScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
+): Promise<ScenarioReplay<Game>> {
   validateReplayDefinition(options.game, options.scenario);
   const scenario = cloneReplayDefinition(options.scenario);
   const checkpoint = normalizeCheckpoint(scenario, options.at);
   const playerIds = resolvePlayerRoster(options.game, scenario.setup.players);
   const events: ReducerDiagnosticEvent[] = [];
-  const bundle = createScenarioBundle(options.game, events, options.bundle);
+  const operations: ScenarioRuntimeOperations = {
+    createBundle: (events) =>
+      createScenarioBundle(options.game, events, options.bundle),
+    resolveCommandParams: (params) =>
+      resolveScenarioCommandParams({ ...params, game: options.game }),
+  };
+  const bundle = operations.createBundle(events);
   const normalSetup = options.game.contract.manifest.normalSetup;
   if (!normalSetup) {
     throw new ScenarioDefinitionValidationError({
@@ -123,15 +141,15 @@ export async function replayScenario<
   }
   const table = normalSetup.createInitialTable({ playerIds });
   const initialized = await bundle.initialize({
-    table: table as RuntimeJson,
+    table: RuntimeJsonSchema.parse(table),
     playerIds: [...playerIds],
     rngSeed: scenario.setup.seed,
     options: scenario.setup.options,
   });
 
   const runtime = new ScenarioReplayImplementation<Game>({
+    ...operations,
     game: options.game,
-    productionBundle: options.bundle,
     scenario,
     playerIds,
     reducerState: initialized.state,
@@ -157,9 +175,12 @@ export type ScenarioRuntimeCheckpointMaterialization = {
  * The returned reducer snapshot must never cross a player/browser boundary.
  */
 export async function materializeScenarioRuntimeCheckpoint<
-  const Game extends ScenarioDefinitionGameLike,
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
 >(
-  options: ReplayScenarioOptions<Game>,
+  options: ReplayScenarioOptions<Game> & {
+    readonly game: { readonly contract: Contract };
+  },
 ): Promise<ScenarioRuntimeCheckpointMaterialization> {
   const replay = requireScenarioReplayImplementation(
     await replayScenario(options),
@@ -222,12 +243,12 @@ export async function probeScenarioCommand<Game>(options: {
 }
 
 class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
+  readonly operations: ScenarioRuntimeOperations;
   readonly scenarioId: string;
   readonly scenario: ScenarioReplayDefinition<Game>;
   readonly game: Game;
   readonly playerIds: readonly string[];
   readonly bundle: ScenarioBundle;
-  readonly productionBundle?: ReducerBundleContract;
   readonly events: ReducerDiagnosticEvent[];
   checkpoint: ScenarioCheckpoint;
   reducerState: Wire.ReducerSessionState;
@@ -246,12 +267,11 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       state.trace,
     ) as ScenarioCommandTraceEntry<Game>[];
     this.events = structuredClone(state.events) as ReducerDiagnosticEvent[];
-    this.productionBundle = state.productionBundle;
-    this.bundle = createScenarioBundle(
-      state.game as never,
-      this.events,
-      this.productionBundle,
-    );
+    this.operations = {
+      createBundle: state.createBundle,
+      resolveCommandParams: state.resolveCommandParams,
+    };
+    this.bundle = this.operations.createBundle(this.events);
 
     this.state = this.state.bind(this);
     this.view = this.view.bind(this);
@@ -292,14 +312,21 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     };
   }
 
-  state(): never {
-    return structuredClone(this.reducerState.domain) as never;
+  state(): ReturnType<ScenarioReplay<Game>["state"]> {
+    // The bound runtime decoded this state with Game's schemas. Reconstruct
+    // the public readonly projection at this single replay facade boundary.
+    return structuredClone(this.reducerState.domain) as ReturnType<
+      ScenarioReplay<Game>["state"]
+    >;
   }
 
-  view(seat: ScenarioSeatRef): never {
+  view(seat: ScenarioSeatRef): ReturnType<ScenarioReplay<Game>["view"]> {
     const playerId = this.playerId(seat, "seat");
     const projection = this.project(playerId);
-    return structuredClone(projection.seats?.[playerId]?.view ?? null) as never;
+    // This projection was produced by the view callback bound to the same Game.
+    return structuredClone(
+      projection.seats?.[playerId]?.view ?? null,
+    ) as ReturnType<ScenarioReplay<Game>["view"]>;
   }
 
   interactions(seat: ScenarioSeatRef): readonly InteractionDescriptorLike[] {
@@ -334,8 +361,8 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
 
   clone(): ScenarioReplay<Game> {
     return new ScenarioReplayImplementation<Game>({
+      ...this.operations,
       game: this.game,
-      productionBundle: this.productionBundle,
       scenario: this.scenario,
       playerIds: this.playerIds,
       reducerState: this.reducerState,
@@ -438,8 +465,8 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
     command: ScenarioCommandOf<Game>,
   ): Promise<ScenarioReplayAdvanceResult<Game>> {
     const clone = new ScenarioReplayImplementation<Game>({
+      ...this.operations,
       game: this.game,
-      productionBundle: this.productionBundle,
       scenario: this.scenario,
       playerIds: this.playerIds,
       reducerState: this.reducerState,
@@ -578,8 +605,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
       playerIds: this.playerIds,
       path: `scenario.${segment}[${index}].actor`,
     });
-    const params = resolveScenarioCommandParams({
-      game: this.game as never,
+    const params = this.operations.resolveCommandParams({
       currentSchema: this.currentClientParamSchema(
         command.actor.seat,
         command.interactionId,
@@ -687,13 +713,13 @@ function descriptorsForPlayer(
   });
 }
 
-function createScenarioBundle(
-  game: ScenarioDefinitionGameLike,
+function createScenarioBundle<Contract extends ReducerGameContractLike>(
+  game: AnyReducerGameDefinition<Contract>,
   events: ReducerDiagnosticEvent[],
   bundle?: ReducerBundleContract,
 ): ScenarioBundle {
   return createReducerTestingRuntime(
-    game as never,
+    game,
     {
       diagnostics: {
         event(event) {
@@ -702,11 +728,14 @@ function createScenarioBundle(
       },
     },
     bundle,
-  ) as ScenarioBundle;
+  );
 }
 
-function validateReplayDefinition<Game>(
-  game: ScenarioDefinitionGameLike,
+function validateReplayDefinition<
+  Contract extends ReducerGameContractLike,
+  Game,
+>(
+  game: AnyReducerGameDefinition<Contract>,
   replay: ScenarioReplayDefinition<Game>,
 ): void {
   validateScenarioDefinition(game, {

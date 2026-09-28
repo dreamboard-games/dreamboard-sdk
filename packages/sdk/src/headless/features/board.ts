@@ -105,13 +105,13 @@ function squareGeometry(
     edges: board.edges.flatMap((edge) => {
       const corners = sharedCorners(edge.spaceIds);
       return corners.length === 2
-        ? [{ id: edge.id, from: corners[0]!, to: corners[1]! }]
+        ? [{ id: edge.id, from: corners[0], to: corners[1] }]
         : [];
     }),
     vertices: board.vertices.flatMap((vertex) => {
       const corners = sharedCorners(vertex.spaceIds);
       return corners.length === 1
-        ? [{ id: vertex.id, center: corners[0]! }]
+        ? [{ id: vertex.id, center: corners[0] }]
         : [];
     }),
     pointToSpace(point) {
@@ -251,9 +251,9 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
         );
         if (!matching.length) return;
         if (matching.length > 1) throw new AmbiguousTargetError(id);
-        const domain = matching[0]!.input.getDomain();
+        const domain = matching[0].input.getDomain();
         if (domain.type !== "boardTarget") return;
-        const value = matching[0]!.value;
+        const value = matching[0].value;
         const target =
           domain.valueKind === "player-board-space" && typeof value !== "string"
             ? { kind: "space" as const, valueKind: domain.valueKind, value }
@@ -264,8 +264,8 @@ function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
                 boardId: board.id,
               };
         context.routeTarget(target, {
-          interaction: matching[0]!.interaction.key,
-          input: matching[0]!.input.key,
+          interaction: matching[0].interaction.key,
+          input: matching[0].input.key,
         });
       }
       return {

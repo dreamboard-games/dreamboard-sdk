@@ -66,7 +66,9 @@ export async function proveCardDrag(page: Page, touch: boolean) {
   } else await page.mouse.up();
   await expect(active).toHaveText("null");
   await expect
-    .poll(async () => JSON.parse((await drafts.textContent())!))
+    .poll(async (): Promise<unknown> =>
+      JSON.parse((await drafts.textContent())!),
+    )
     .toEqual({
       "play.place": {
         card: cardId,

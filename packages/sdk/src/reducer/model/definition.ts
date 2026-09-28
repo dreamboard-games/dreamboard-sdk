@@ -1,9 +1,11 @@
+import type { CollectorValueOf } from "./spec/inputs";
 import type { ViewData } from "./spec/views";
 import type { z } from "zod";
 import type { RuntimeTableRecord, SchemaLike, RuntimeRecord } from "./table";
 import type {
   InitContext,
   ReducerManifestContract,
+  ReducerManifestContractLike,
   StateDefinition,
 } from "./manifest";
 import type {
@@ -142,7 +144,7 @@ export type AnyPhaseDefinitionForContract<Contract> =
  * check below can infer `PhaseStateSchema`.
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Conditional type extraction matches all authored callback parameter types; no runtime any is exposed. */
 export type PhaseStateMapOfDefinitions<
   Definitions extends Record<
     string,
@@ -182,6 +184,7 @@ export type PhaseStateOfDefinitions<
     ? z.infer<PhaseStateSchema>
     : never;
 }[keyof Definitions & string];
+
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 export type ResolvedGameStateOf<
@@ -256,7 +259,7 @@ export type PhaseDefinitionByName<
   ? PhasesOfDefinition<Definition>[PhaseName]
   : never;
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any -- Infer a game contract from arbitrary authored phase callback types. */
 export type GameStateOf<Source> = Source extends {
   contract: infer Contract extends ReducerGameContractLike;
   phases: infer Definitions;
@@ -267,20 +270,12 @@ export type GameStateOf<Source> = Source extends {
   : Source extends ReducerGameContract<any, any, any, any, any, any, any, any>
     ? BaseGameStateOfContract<Source>
     : never;
+
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-/**
- * Public structural upper bound for a reducer game contract.
- *
- * The `manifest` slot is intentionally erased with `any` because concrete
- * manifests bind per-contract branded literals (e.g. `PlayerId` unions with
- * specific string literals). Using a ground `ManifestContract<...>` type
- * here would prevent assignability from contract-bound manifests in a
- * contravariant position.
- */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/** Structural contract used by the runtime; authored generics retain their exact schemas. */
 export type ReducerGameContractLike = {
-  manifest: any;
+  manifest: ReducerManifestContractLike<RuntimeTableRecord>;
   options: SchemaLike<RuntimeRecord>;
   state: StateDefinition<
     SchemaLike<object>,
@@ -288,7 +283,6 @@ export type ReducerGameContractLike = {
     SchemaLike<object>
   >;
 };
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 type InitialStateContextOf<Contract extends ReducerGameContractLike> =
   InitContext<
@@ -343,10 +337,12 @@ export type ReducerGameDefinition<
   view: View;
 };
 
-export type AnyReducerGameDefinition = ReducerGameDefinition<
-  ReducerGameContractLike,
-  PhaseMapOf<ReducerGameContractLike>,
-  ViewOfContract<ReducerGameContractLike>
+export type AnyReducerGameDefinition<
+  Contract extends ReducerGameContractLike = ReducerGameContractLike,
+> = ReducerGameDefinition<
+  Contract,
+  PhaseMapOf<Contract>,
+  ViewOfContract<Contract>
 >;
 
 // --- Interaction / Zone extractors -------------------------------
@@ -547,11 +543,7 @@ type CardInputZoneIdsOfInteractionDefinition<
 type ParamsOfCollectors<Collectors> =
   Collectors extends Record<string, InputCollector>
     ? {
-        [K in keyof Collectors]: Collectors[K] extends InputCollector<infer S>
-          ? S extends SchemaLike<infer V>
-            ? V
-            : never
-          : never;
+        [K in keyof Collectors]: CollectorValueOf<Collectors[K]>;
       }
     : never;
 
@@ -564,11 +556,7 @@ type ClientParamsOfCollectors<Collectors> =
           }
             ? never
             : K
-        ]: Collectors[K] extends InputCollector<infer S>
-          ? S extends SchemaLike<infer V>
-            ? V
-            : never
-          : never;
+        ]: CollectorValueOf<Collectors[K]>;
       }
     : never;
 

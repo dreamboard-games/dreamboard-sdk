@@ -19,6 +19,7 @@ import type {
   ResourceAmountsOfTable,
   ResourceIdOfTable,
   RuntimeTableRecord,
+  ReducerGameState,
   SharedZoneIdOfTable,
   SpaceIdOfTable,
   TableOfState,
@@ -389,7 +390,15 @@ export interface TransactionMutations<
 }
 
 type AnyTable = RuntimeTableRecord;
-type AnyState = { table: AnyTable };
+type RuntimeState = ReducerGameState<
+  AnyTable,
+  object,
+  object,
+  object,
+  object,
+  string
+>;
+type AnyState = Pick<RuntimeState, "table">;
 
 function computePlayerZoneVisibility(
   table: RuntimeTableRecord,
@@ -510,7 +519,7 @@ function rotatePlayerZoneTableInPlace(options: {
   for (const [index, fromPlayerId] of players.entries()) {
     const offset = options.direction === "left" ? 1 : -1;
     const recipient =
-      players[(index + offset + players.length) % players.length]!;
+      players[(index + offset + players.length) % players.length];
     additionsByPlayer
       .get(recipient)!
       .push(...(selectedByPlayer.get(fromPlayerId) ?? []));
@@ -566,93 +575,78 @@ type TableMoveComponentToVertexInPlaceInternal = (
   vertexId: string,
 ) => void;
 
-type TableDealCardsFromDeckToHandInPlaceInternal = (
-  table: RuntimeTableRecord,
-  fromZoneId: string,
-  playerId: string,
-  toZoneId: string,
-  count: number,
-) => void;
-
 const moveComponentToEdgeInPlaceInternal =
   tableMoveComponentToEdgeInPlace as unknown as TableMoveComponentToEdgeInPlaceInternal;
 const moveComponentToVertexInPlaceInternal =
   tableMoveComponentToVertexInPlace as unknown as TableMoveComponentToVertexInPlaceInternal;
 const dealCardsFromDeckToHandInPlaceInternal =
-  tableDealCardsFromDeckToHandInPlace as unknown as TableDealCardsFromDeckToHandInPlaceInternal;
+  tableDealCardsFromDeckToHandInPlace;
 
 const applyPatch = <T extends object>(
   prev: T,
   patch: Partial<T> | ((prev: T) => T),
 ): T => {
   if (typeof patch === "function") {
-    return (patch as (prev: T) => T)(prev);
+    return patch(prev);
   }
   return { ...prev, ...patch };
 };
 
 export const transactionMutations = {
-  setActivePlayers<S extends AnyState>(
+  setActivePlayers<S extends AnyState & Pick<RuntimeState, "flow">>(
     state: S,
     activePlayers: ReadonlyArray<string>,
   ): S {
-    const flow = (state as S & { flow: object }).flow;
     return Object.assign(state, {
-      flow: { ...flow, activePlayers: [...activePlayers] },
+      flow: { ...state.flow, activePlayers: [...activePlayers] },
     });
   },
-  advanceActivePlayer<S extends AnyState>(state: S): S {
-    const table = (state as unknown as { table: RuntimeTableRecord }).table;
-    const order = table.playerOrder as ReadonlyArray<string>;
+  advanceActivePlayer<S extends AnyState & Pick<RuntimeState, "flow">>(
+    state: S,
+  ): S {
+    const order = state.table.playerOrder;
     if (order.length === 0) return state;
-    const flow = (
-      state as unknown as { flow?: { activePlayers?: readonly string[] } }
-    ).flow;
-    const current = flow?.activePlayers?.[0];
+    const current = state.flow.activePlayers[0];
     const idx = current ? order.indexOf(current) : -1;
     const nextIdx = idx < 0 ? 0 : (idx + 1) % order.length;
     const nextId = order[nextIdx];
     if (nextId === undefined) return state;
     return transactionMutations.setActivePlayers(state, [nextId]);
   },
-  patchPhaseState<S extends AnyState>(state: S, patch: unknown): S {
-    const prev = (state as unknown as { phase?: object }).phase ?? {};
-    const next = applyPatch(
-      prev as object,
-      patch as Partial<object> | ((prev: object) => object),
-    );
-    return Object.assign(state, { phase: next });
-  },
-  patchPublicState<S extends AnyState>(state: S, patch: unknown): S {
-    const prev =
-      (state as unknown as { publicState?: object }).publicState ?? {};
-    const next = applyPatch(
-      prev as object,
-      patch as Partial<object> | ((prev: object) => object),
-    );
-    return Object.assign(state, { publicState: next });
-  },
-  patchHiddenState<S extends AnyState>(state: S, patch: unknown): S {
-    const prev =
-      (state as unknown as { hiddenState?: object }).hiddenState ?? {};
-    const next = applyPatch(
-      prev as object,
-      patch as Partial<object> | ((prev: object) => object),
-    );
-    return Object.assign(state, { hiddenState: next });
-  },
-  patchPlayerPrivateState<S extends AnyState>(
+  patchPhaseState<S extends AnyState & Pick<RuntimeState, "phase">>(
     state: S,
-    args: { playerId: string; patch: unknown },
+    patch: StatePatch<S["phase"]>,
   ): S {
-    const privateByPlayer =
-      (state as unknown as { privateState?: Record<string, object> })
-        .privateState ?? {};
-    const prev = (privateByPlayer[args.playerId] ?? {}) as object;
-    const next = applyPatch(
-      prev,
-      args.patch as Partial<object> | ((prev: object) => object),
-    );
+    return Object.assign(state, { phase: applyPatch(state.phase, patch) });
+  },
+  patchPublicState<S extends AnyState & Pick<RuntimeState, "publicState">>(
+    state: S,
+    patch: StatePatch<S["publicState"]>,
+  ): S {
+    return Object.assign(state, {
+      publicState: applyPatch(state.publicState, patch),
+    });
+  },
+  patchHiddenState<S extends AnyState & Pick<RuntimeState, "hiddenState">>(
+    state: S,
+    patch: StatePatch<S["hiddenState"]>,
+  ): S {
+    return Object.assign(state, {
+      hiddenState: applyPatch(state.hiddenState, patch),
+    });
+  },
+  patchPlayerPrivateState<
+    Private extends object,
+    S extends AnyState &
+      Pick<
+        ReducerGameState<AnyTable, object, Private, object, object, string>,
+        "privateState"
+      >,
+  >(state: S, args: { playerId: string; patch: StatePatch<Private> }): S {
+    const privateByPlayer = state.privateState;
+    // The transaction player id belongs to the initialized roster.
+    const prev = privateByPlayer[args.playerId];
+    const next = applyPatch(prev, args.patch);
     return Object.assign(state, {
       privateState: { ...privateByPlayer, [args.playerId]: next },
     });

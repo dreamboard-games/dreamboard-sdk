@@ -1,10 +1,12 @@
+import { z } from "zod";
+import type { SourceCommand } from "./types.js";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createSourceLifecycle } from "./lifecycle.js";
 import { staticSource } from "./static.js";
 
 import { session, frame } from "./__fixtures__/frames.js";
 function setup() {
-  const send = vi.fn();
+  const send = vi.fn<(command: SourceCommand) => void>();
   const recover = vi.fn();
   const close = vi.fn();
   const lifecycle = createSourceLifecycle({
@@ -64,7 +66,9 @@ describe("source request lifecycle", () => {
     x.frame(frame(2));
     x.retry();
     expect(x.send.mock.calls[1][0]).toBe(x.send.mock.calls[0][0]);
-    expect(x.send.mock.calls[0][0].params).toEqual({ target: ["a"] });
+    expect(x.send.mock.calls[0][0]).toMatchObject({
+      params: { target: ["a"] },
+    });
     expect(Object.isFrozen(x.send.mock.calls[0][0].basis)).toBe(true);
     await expect(x.source.cancel("move")).rejects.toThrow("already pending");
     x.result({
@@ -164,9 +168,19 @@ describe("source request lifecycle", () => {
         },
       },
     });
-    const view = JSON.parse(
-      x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById["card-1"]!,
-    );
+    const view = z
+      .object({
+        frontImage: z.string(),
+        backImage: z.string(),
+        properties: z.unknown(),
+      })
+      .parse(
+        JSON.parse(
+          x.source.store.get().snapshot!.frame.zones.hand!.cardViewsById[
+            "card-1"
+          ]!,
+        ),
+      );
     expect(view.frontImage).toMatch(/^blob:/);
     expect(view.backImage).toBe("assets/cards/missing.webp");
     expect(view.properties).toEqual({ power: 7 });

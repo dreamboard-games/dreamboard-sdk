@@ -145,11 +145,11 @@ export function createHexBoardGeometry<
     cornersBySpace.set(space.id, cornerKeys);
     const edgeKeys: string[] = [];
     corners.forEach((point, corner) => {
-      const key = cornerKeys[corner]!;
+      const key = cornerKeys[corner];
       const vertex = cornerOwners.get(key) ?? { point, owners: [] };
       vertex.owners.push({ id: space.id, corner });
       cornerOwners.set(key, vertex);
-      const pair = [key, cornerKeys[(corner + 1) % 6]!] as [string, string];
+      const pair = [key, cornerKeys[(corner + 1) % 6]] as [string, string];
       const edgeKey = [...pair].sort(compare).join("|");
       const edge = edgeOwners.get(edgeKey) ?? { corners: pair, owners: [] };
       edge.owners.push({ id: space.id, side: corner });
@@ -165,7 +165,7 @@ export function createHexBoardGeometry<
       const owners = [...vertex.owners].sort((a, b) => compare(a.id, b.id));
       return [
         key,
-        `${board.id}:vertex:${owners.map((owner) => encodeURIComponent(owner.id)).join("|")}${owners.length < 3 ? `:${owners[0]!.corner}` : ""}` as HexVertexId<BoardId>,
+        `${board.id}:vertex:${owners.map((owner) => encodeURIComponent(owner.id)).join("|")}${owners.length < 3 ? `:${owners[0].corner}` : ""}` as HexVertexId<BoardId>,
       ];
     }),
   );
@@ -174,7 +174,7 @@ export function createHexBoardGeometry<
       const owners = [...edge.owners].sort((a, b) => compare(a.id, b.id));
       return [
         key,
-        `${board.id}:edge:${owners.map((owner) => encodeURIComponent(owner.id)).join("|")}${owners.length === 1 ? `:${owners[0]!.side}` : ""}` as HexEdgeId<BoardId>,
+        `${board.id}:edge:${owners.map((owner) => encodeURIComponent(owner.id)).join("|")}${owners.length === 1 ? `:${owners[0].side}` : ""}` as HexEdgeId<BoardId>,
       ];
     }),
   );

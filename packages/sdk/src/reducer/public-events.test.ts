@@ -1,8 +1,19 @@
+import { asPlayerId } from "./per-player";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
+const playerOne = asPlayerId("player-1");
+const playerTwo = asPlayerId("player-2");
+import { ReducerSessionStateSchema } from "../shared/runtime-schema";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { materializePluginGameplayFrame } from "../index";
 import { createGame, createReducerBundle } from "../reducer";
-import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
+const minimalManifest = {
+  players: { minPlayers: 2, maxPlayers: 2 },
+  cardSets: [],
+  zones: [
+    { id: "hand", name: "Hand", scope: "perPlayer", visibility: "ownerOnly" },
+  ],
+} as const;
 const event = (title: string) => ({
   kind: "systemAction" as const,
   procedureId: "test",
@@ -10,7 +21,7 @@ const event = (title: string) => ({
 });
 async function fixture() {
   const model = createGame({
-    manifest: buildMinimalManifest(["start", "play"] as const),
+    manifest: minimalManifest,
     phases: { start: z.object({}), play: z.object({}) },
     state: {
       public: z.object({}),
@@ -44,7 +55,7 @@ async function fixture() {
         kind: "player",
         initialState: () => ({}),
         enter({ tx }) {
-          tx.setActivePlayers(["player-1"]);
+          tx.setActivePlayers([playerOne]);
           tx.emit(event("Entered"));
         },
         interactions: {
@@ -55,7 +66,7 @@ async function fixture() {
             },
           }),
           otherPublish: play.interaction({
-            actor: () => "player-2",
+            actor: () => playerTwo,
             inputs: {},
             reduce({ tx }) {
               tx.emit(event("Other player published"));
@@ -99,14 +110,16 @@ async function fixture() {
     view: model.view(() => ({})),
   });
   const bundle = createReducerBundle(definition);
-  const table = createTable();
+  const table = model.contract.manifest.createInitialTable({
+    playerIds: [playerOne, playerTwo],
+  });
   table.hands = {
-    hand: { "player-1": [], "player-2": [] },
+    hand: { [playerOne]: [], [playerTwo]: [] },
   };
   table.handVisibility = { hand: "ownerOnly" };
   const initial = await bundle.initialize({
-    table,
-    playerIds: ["player-1", "player-2"],
+    table: RuntimeJsonSchema.parse(table),
+    playerIds: [playerOne, playerTwo],
     rngSeed: 3,
   });
   return { bundle, initial };
@@ -124,7 +137,7 @@ test("public batches replace on every accepted operation and survive JSON checkp
       state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId,
         params,
       },
@@ -145,7 +158,7 @@ test("public batches replace on every accepted operation and survive JSON checkp
     state,
     input: {
       kind: "interaction",
-      playerId: "player-1",
+      playerId: playerOne,
       interactionId: "reject",
       params: {},
     },
@@ -154,13 +167,13 @@ test("public batches replace on every accepted operation and survive JSON checkp
   expect(JSON.stringify(state)).toBe(checkpoint);
   await dispatch("quiet");
   expect(state.runtime.events).toEqual([]);
-  state = JSON.parse(checkpoint);
-  const projection = bundle.project({ state, playerIds: ["player-1"] });
+  state = ReducerSessionStateSchema.parse(JSON.parse(checkpoint));
+  const projection = bundle.project({ state, playerIds: [playerOne] });
   const frame = materializePluginGameplayFrame({
     dynamicProjection: projection,
     currentPhase: "play",
-    activePlayers: ["player-1"],
-    perspectivePlayerId: "player-1",
+    activePlayers: [playerOne],
+    perspectivePlayerId: playerOne,
     version: 10,
     actionSetVersion: "restored",
   });
@@ -174,7 +187,7 @@ test("public batches replace on every accepted operation and survive JSON checkp
     state,
     input: {
       kind: "interaction",
-      playerId: "player-2",
+      playerId: playerTwo,
       interactionId: "otherPublish",
       params: {},
     },
@@ -182,8 +195,8 @@ test("public batches replace on every accepted operation and survive JSON checkp
   expect(other.kind).toBe("accept");
   if (other.kind !== "accept")
     throw new Error("Expected other player acceptance");
-  expect(other.state.runtime.pending["player-1"]).toEqual(
-    state.runtime.pending["player-1"],
+  expect(other.state.runtime.pending[playerOne]).toEqual(
+    state.runtime.pending[playerOne],
   );
   expect(other.state.runtime.events).toEqual([event("Other player published")]);
   state = other.state;
@@ -191,7 +204,7 @@ test("public batches replace on every accepted operation and survive JSON checkp
     state,
     input: {
       kind: "interaction.cancel",
-      playerId: "player-1",
+      playerId: playerOne,
       interactionId: "choose",
     },
   });
@@ -212,7 +225,7 @@ test("the canonical event limit applies to the full operation and restored batch
       state: initial.state,
       input: {
         kind: "interaction",
-        playerId: "player-1",
+        playerId: playerOne,
         interactionId: "overflow",
         params: {},
       },
@@ -222,6 +235,6 @@ test("the canonical event limit applies to the full operation and restored batch
   const oversized = structuredClone(initial.state);
   oversized.runtime.events = Array.from({ length: 33 }, () => event("Invalid"));
   expect(() =>
-    bundle.project({ state: oversized, playerIds: ["player-1"] }),
+    bundle.project({ state: oversized, playerIds: [playerOne] }),
   ).toThrow();
 });

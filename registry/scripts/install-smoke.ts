@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createServer } from "node:http";
 import { mkdtemp, mkdir, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -42,9 +43,11 @@ try {
   let sdkArchive = "";
   if (bound) {
     const sdk = path.resolve(root, "../packages/sdk");
-    const pkg = JSON.parse(
-      await readFile(path.join(sdk, "package.json"), "utf8"),
-    );
+    const pkg = z
+      .object({ version: z.string() })
+      .parse(
+        JSON.parse(await readFile(path.join(sdk, "package.json"), "utf8")),
+      );
     await run(["pack", "--pack-destination", project], sdk);
     sdkArchive = path.join(project, `dreamboard-games-sdk-${pkg.version}.tgz`);
     await writeFile(

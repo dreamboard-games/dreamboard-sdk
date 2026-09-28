@@ -81,9 +81,7 @@ export function getComponentHandLocation<
     handId: location.handId as HandIdOfTable<Table>,
     playerId: location.playerId as PlayerIdOfTable<Table>,
     cards:
-      table.hands[location.handId as HandIdOfTable<Table>]?.[
-        location.playerId as string
-      ],
+      table.hands[location.handId as HandIdOfTable<Table>]?.[location.playerId],
     location,
   } as unknown as ResolvedHandLocation<Table, ComponentId>;
 }

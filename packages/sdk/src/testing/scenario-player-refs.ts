@@ -1,3 +1,7 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../reducer/model.js";
 import type { z } from "zod";
 import { createClientParamSchemasByPhase } from "../reducer/client-param-schemas.js";
 import type { ScenarioSeatRef } from "./definitions.js";
@@ -6,10 +10,6 @@ import {
   resolveScenarioSeatReferences,
   ScenarioSchemaValueError,
 } from "./scenario-schema.js";
-
-type GameLike = {
-  readonly phases: Readonly<Record<string, unknown>>;
-};
 
 export class ScenarioCommandParamsError extends Error {
   readonly path: string;
@@ -53,8 +53,10 @@ export function resolveScenarioSeatRef(options: {
   return playerId;
 }
 
-export function resolveScenarioCommandParams(options: {
-  readonly game: GameLike;
+export function resolveScenarioCommandParams<
+  Contract extends ReducerGameContractLike,
+>(options: {
+  readonly game: AnyReducerGameDefinition<Contract>;
   readonly phase: string;
   readonly interactionId: string;
   readonly params: unknown;
@@ -107,8 +109,10 @@ export function resolveScenarioCommandParams(options: {
 }
 
 /** Convert runtime command params into the semantic, pasteable scenario form. */
-export function projectScenarioCommandParams(options: {
-  readonly game: GameLike;
+export function projectScenarioCommandParams<
+  Contract extends ReducerGameContractLike,
+>(options: {
+  readonly game: AnyReducerGameDefinition<Contract>;
   readonly phase: string;
   readonly interactionId: string;
   readonly params: unknown;
@@ -148,15 +152,17 @@ export function projectScenarioCommandParams(options: {
   );
 }
 
-function clientParamSchemaCandidates(options: {
-  readonly game: GameLike;
+function clientParamSchemaCandidates<
+  Contract extends ReducerGameContractLike,
+>(options: {
+  readonly game: AnyReducerGameDefinition<Contract>;
   readonly phase: string;
   readonly interactionId: string;
   readonly path: string;
   readonly currentSchema?: z.ZodTypeAny | null;
 }): z.ZodTypeAny[] {
   if (options.currentSchema) return [options.currentSchema];
-  const schemas = createClientParamSchemasByPhase(options.game as never);
+  const schemas = createClientParamSchemasByPhase(options.game);
   const currentPhaseSchema = schemas[options.phase]?.[options.interactionId] as
     z.ZodTypeAny | undefined;
   const candidateSchemas = [
@@ -181,6 +187,6 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }

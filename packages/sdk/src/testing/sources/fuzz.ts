@@ -1,6 +1,9 @@
+import type {
+  AnyReducerGameDefinition,
+  ReducerGameContractLike,
+} from "../../reducer/model.js";
 import { nextRandomInt } from "../../reducer/rng.js";
 import type { RuntimeRngState } from "../../reducer/model/runtime.js";
-import type { ScenarioDefinitionGameLike } from "../scenario-definition-validation.js";
 import type { ScenarioCommandOf } from "../definitions.js";
 import { localSource } from "./local-source.js";
 import type { LocalCheckpoint } from "./types.js";
@@ -11,8 +14,11 @@ export interface FuzzResult<Game> {
   readonly error?: Error;
 }
 /** Deterministic testing choice RNG is independent from the game's authoritative RNG. */
-export async function fuzz<const Game extends ScenarioDefinitionGameLike>(
-  game: Game,
+export async function fuzz<
+  Contract extends ReducerGameContractLike,
+  const Game extends AnyReducerGameDefinition<Contract>,
+>(
+  game: Game & { readonly contract: Contract },
   options: {
     seed: number;
     steps: number;

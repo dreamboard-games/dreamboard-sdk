@@ -103,7 +103,7 @@ export type CollectorState = {
 /**
  * An input collector declares:
  *   - a Zod schema for the parameter value the interaction expects. The
- *     schema's `z.infer` feeds `ParamsOf<Collectors>`, so downstream
+ *     schema owns wire syntax; the collected-value witness feeds `ParamsOf<Collectors>`, so downstream
  *     `reduce({ input: { params } })` sees branded ids from `cardInput` /
  *     `boardInput` without a second declaration.
  *   - an optional `eligibleTargets(state, playerId, q)` hook that the runtime
@@ -135,6 +135,20 @@ type InputCollectorMetaSlot<Kind extends InputCollectorKind> = [
       }
     : { readonly meta: InputCollectorMetaForKind<Kind> };
 
+declare const collectedValue: unique symbol;
+
+/** Type-only result of the complete schema and target-validation pipeline. */
+export type CollectorValueWitness<Value> = {
+  readonly [collectedValue]?: () => Value;
+};
+
+export type CollectorValueOf<Collector> =
+  Collector extends CollectorValueWitness<infer Value>
+    ? Value
+    : Collector extends { readonly schema: SchemaLike<infer Value> }
+      ? Value
+      : never;
+
 type InputCollectorBase<
   Schema extends SchemaLike<unknown> = SchemaLike<unknown>,
   // `State` is retained as a generic slot so factory helpers (`cardInput`,
@@ -145,13 +159,14 @@ type InputCollectorBase<
   // `InputCollector<_, GameState>`) where the interaction spec expected
   // `InputCollector<_, CollectorState>`. Strong typing lives at the factory
   // boundary; the interface itself keeps the runtime-visible hook generic.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- State is a public collector inference slot; runtime hooks use the assembly-bound context.
   State extends CollectorState = CollectorState,
   Kind extends InputCollectorKind = InputCollectorKind,
-> = {
+  Value = z.infer<Schema>,
+> = CollectorValueWitness<Value> & {
   readonly kind: Kind;
   readonly schema: Schema;
-  readonly defaultValue?: z.infer<Schema>;
+  readonly defaultValue?: Value;
   readonly selection?: InputSelectionDescriptor;
   readonly eligibleTargets?: (
     state: CollectorState,
@@ -169,34 +184,31 @@ type InputCollectorBase<
     playerId: string,
     q: unknown,
     domain: InputDomainDescriptor,
-  ) => z.infer<Schema> | undefined;
+  ) => Value | undefined;
 } & (Kind extends "rng"
-  ? { readonly domain?: never }
-  : Kind extends "card" | BoardInputCollectorKind
-    ? { readonly domain: DomainProjector<InputDomainForCollectorKind<Kind>> }
-    : {
-        readonly domain?: DomainProjector<InputDomainForCollectorKind<Kind>>;
-      }) &
+    ? { readonly domain?: never }
+    : Kind extends "card" | BoardInputCollectorKind
+      ? { readonly domain: DomainProjector<InputDomainForCollectorKind<Kind>> }
+      : {
+          readonly domain?: DomainProjector<InputDomainForCollectorKind<Kind>>;
+        }) &
   InputCollectorMetaSlot<Kind>;
 
 export type InputCollector<
   Schema extends SchemaLike<unknown> = SchemaLike<unknown>,
   State extends CollectorState = CollectorState,
   Kind extends InputCollectorKind = InputCollectorKind,
+  Value = z.infer<Schema>,
 > = Kind extends InputCollectorKind
-  ? InputCollectorBase<Schema, State, Kind>
+  ? InputCollectorBase<Schema, State, Kind, Value>
   : never;
 
 // Infer the typed params bag from an input-collector map.
 //
-// Each collector contributes `{ [key]: z.infer<schema> }`. The result is the
-// typed shape handed to `reduce({ input: { params } })`.
+// Collector values describe the complete validation pipeline. A target collector
+// can refine its syntax schema after membership validation.
 export type ParamsOf<Collectors extends Record<string, InputCollector>> = {
-  [K in keyof Collectors]: Collectors[K] extends InputCollector<infer S>
-    ? S extends SchemaLike<infer V>
-      ? V
-      : never
-    : never;
+  [K in keyof Collectors]: CollectorValueOf<Collectors[K]>;
 };
 
 // Keys of `Collectors` whose values are engine-sampled (currently only
@@ -217,35 +229,28 @@ type EngineSampledCollectorKeys<
 // shape clients pass to `submitInteraction` / `handle.submit` — the bundle
 // fills the engine-sampled fields before handing the merged record to
 // `reduce`.
-type ClientCollectorValue<Collector> =
-  Collector extends InputCollector<infer S>
-    ? S extends SchemaLike<infer V>
-      ? V
-      : never
-    : never;
 
 type ClientCollectorKeys<Collectors extends Record<string, InputCollector>> =
   Exclude<keyof Collectors, EngineSampledCollectorKeys<Collectors>>;
 
-type OptionalClientCollectorKeys<
-  Collectors extends Record<string, InputCollector>,
-> = {
-  [
-    K in ClientCollectorKeys<Collectors>
-  ]: undefined extends ClientCollectorValue<Collectors[K]> ? K : never;
-}[ClientCollectorKeys<Collectors>];
+type OptionalParamKeys<Values> = {
+  [Key in keyof Values]: undefined extends Values[Key] ? Key : never;
+}[keyof Values];
+
+type ClientParamRecord<Values> = {
+  [Key in Exclude<keyof Values, OptionalParamKeys<Values>>]: Values[Key];
+} & {
+  [Key in OptionalParamKeys<Values>]?: Exclude<Values[Key], undefined>;
+};
 
 export type ClientParamsOf<Collectors extends Record<string, InputCollector>> =
-  {
-    [
-      K in Exclude<
-        ClientCollectorKeys<Collectors>,
-        OptionalClientCollectorKeys<Collectors>
-      >
-    ]: ClientCollectorValue<Collectors[K]>;
-  } & {
-    [K in OptionalClientCollectorKeys<Collectors>]?: Exclude<
-      ClientCollectorValue<Collectors[K]>,
-      undefined
-    >;
-  };
+  ClientParamRecord<{
+    [Key in ClientCollectorKeys<Collectors>]: CollectorValueOf<Collectors[Key]>;
+  }>;
+
+/** Parsed client syntax, before authoritative target membership is checked. */
+export type ClientSyntaxParamsOf<
+  Collectors extends Record<string, InputCollector>,
+> = ClientParamRecord<{
+  [Key in ClientCollectorKeys<Collectors>]: z.infer<Collectors[Key]["schema"]>;
+}>;

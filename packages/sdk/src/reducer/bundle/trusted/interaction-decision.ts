@@ -385,7 +385,7 @@ export function createInteractionDecisionResolver<
         ...interaction,
         steps: undefined,
         inputs: stepComplete
-          ? submittedPrefix!.collectors
+          ? submittedPrefix.collectors
           : prefix.current
             ? { [prefix.current.key]: prefix.current.collector }
             : {},
@@ -396,7 +396,7 @@ export function createInteractionDecisionResolver<
     const parseForSubmit = mode === "submit";
     const finalStepSchema =
       stepComplete && originalInteraction.paramsSchema
-        ? originalInteraction.paramsSchema.safeParse(submittedPrefix!.selected)
+        ? originalInteraction.paramsSchema.safeParse(submittedPrefix.selected)
         : undefined;
     const parsed = !stepParamsValid
       ? {

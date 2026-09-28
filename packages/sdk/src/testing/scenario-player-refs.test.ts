@@ -1,3 +1,4 @@
+import { createGame } from "../reducer.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { markManifestScopedSchema } from "../reducer/model/manifest";
@@ -14,6 +15,18 @@ import {
 
 const playerIdSchema = markManifestScopedSchema(z.string(), "playerId");
 const playerIds = ["runtime-player-a", "runtime-player-b"] as const;
+
+const model = createGame({
+  manifest: {
+    players: { minPlayers: 2, maxPlayers: 2 },
+    cardSets: [],
+    zones: [],
+  },
+  options: z.object({}),
+  phases: { work: z.object({}) },
+  state: { public: z.object({}), private: z.object({}), hidden: z.object({}) },
+});
+const work = model.phase("work");
 
 describe("scenario semantic player references", () => {
   test("projects and resolves only contract-marked player leaves", () => {
@@ -71,22 +84,27 @@ describe("scenario semantic player references", () => {
   });
 
   test("projects runtime command params into the same authored command schema", () => {
-    const game = {
+    const game = model.assemble({
+      initialPhase: "work",
       phases: {
-        work: {
+        work: work.define({
+          kind: "player",
+          initialState: () => ({}),
           interactions: {
-            assign: {
+            assign: work.interaction({
               inputs: {
                 target: { kind: "form", schema: playerIdSchema },
                 label: { kind: "form", schema: z.string() },
               },
-            },
+              reduce() {},
+            }),
           },
-        },
+        }),
       },
-    };
+      view: model.view(() => ({})),
+    });
     const projected = projectScenarioCommandParams({
-      game: game as never,
+      game,
       phase: "work",
       interactionId: "assign",
       params: {
@@ -102,7 +120,7 @@ describe("scenario semantic player references", () => {
     });
     expect(
       resolveScenarioCommandParams({
-        game: game as never,
+        game,
         phase: "work",
         interactionId: "assign",
         params: projected,
@@ -116,22 +134,27 @@ describe("scenario semantic player references", () => {
   });
 
   test("does not expose an unassigned runtime player id through command projection", () => {
-    const game = {
+    const game = model.assemble({
+      initialPhase: "work",
       phases: {
-        work: {
+        work: work.define({
+          kind: "player",
+          initialState: () => ({}),
           interactions: {
-            assign: {
+            assign: work.interaction({
               inputs: {
                 target: { kind: "form", schema: playerIdSchema },
               },
-            },
+              reduce() {},
+            }),
           },
-        },
+        }),
       },
-    };
+      view: model.view(() => ({})),
+    });
     expect(() =>
       projectScenarioCommandParams({
-        game: game as never,
+        game,
         phase: "work",
         interactionId: "assign",
         params: { target: "unknown-player" },

@@ -1,3 +1,5 @@
+import { createInputTestState } from "./input-test-fixtures";
+import type { InputCollector } from "./model";
 import { InteractionSteps } from "./authoring/steps";
 import { evaluateStepPrefix } from "./bundle/trusted/step-prefix";
 import { describe, expect, test } from "vitest";
@@ -14,30 +16,25 @@ import { collectInteractionInputs } from "./bundle/trusted/collector-domains";
 describe("interaction input projection", () => {
   test("rejects domainless form collectors instead of emitting opaque inputs", () => {
     const interaction = {
+      reduce() {},
       inputs: {
         // This shape is no longer constructible through public formInput
         // helpers, but projection still owns the runtime invariant.
         payload: {
-          kind: "form",
+          kind: "form" as const,
           schema: z.object({ value: z.string() }),
         },
       },
     };
 
     expect(() =>
-      collectInteractionInputs(
-        interaction as never,
-        {
-          table: {},
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-      ),
+      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
     ).toThrow("has no renderable domain");
   });
 
   test("projected default form inputs are explicit renderable domains", () => {
     const interaction = {
+      reduce() {},
       inputs: {
         mode: formInput.choice({
           choices: [{ value: "fast", label: "Fast" }],
@@ -47,14 +44,7 @@ describe("interaction input projection", () => {
     };
 
     expect(
-      collectInteractionInputs(
-        interaction as never,
-        {
-          table: {},
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-      ),
+      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
     ).toMatchObject([
       {
         key: "mode",
@@ -75,12 +65,9 @@ describe("interaction input projection", () => {
 
     expect(
       collectInteractionInputs(
-        { inputs: { bonus: nullableChoice } } as never,
-        {
-          table: {},
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
+        { inputs: { bonus: nullableChoice }, reduce() {} },
+        createInputTestState(),
+        "player-1",
       ),
     ).toMatchObject([
       {
@@ -100,6 +87,7 @@ describe("interaction input projection", () => {
 
   test("projected choice list inputs preserve an empty list default", () => {
     const interaction = {
+      reduce() {},
       inputs: {
         selectedCardIds: formInput.choiceList({
           choices: [{ value: "card-a", label: "Card A" }],
@@ -109,14 +97,7 @@ describe("interaction input projection", () => {
     };
 
     expect(
-      collectInteractionInputs(
-        interaction as never,
-        {
-          table: {},
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-      ),
+      collectInteractionInputs(interaction, createInputTestState(), "player-1"),
     ).toMatchObject([
       {
         key: "selectedCardIds",
@@ -128,35 +109,19 @@ describe("interaction input projection", () => {
 
   test("card and board targets project renderable domains", () => {
     const cardRule = cardTarget
-      .zones<
-        {
-          table: {
-            playerOrder: string[];
-            hands: Record<string, unknown>;
-            zones: {
-              perPlayer: Record<string, unknown>;
-              shared: Record<string, unknown>;
-            };
-          };
-          flow: { currentPhase: string };
-        },
-        "card-1" | "card-2"
-      >(["hand"])
+      .zones<typeof stepState, "card-a" | "card-b">(["hand"])
       .where({
         id: "only-first",
         errorCode: "wrong-card",
-        test: ({ targetId }) => targetId === "card-1",
+        test: ({ targetId }) => targetId === "card-a",
       })
       .build();
     const boardRule = boardTarget
-      .space<
-        { table: { playerOrder: string[] }; flow: { currentPhase: string } },
-        "space-a" | "space-b"
-      >("main-board")
+      .space<typeof stepState, "s1" | "s2">("main-board")
       .where({
         id: "only-space-a",
         errorCode: "wrong-space",
-        test: ({ targetId }) => targetId === "space-a",
+        test: ({ targetId }) => targetId === "s1",
       })
       .build();
     const inputs = {
@@ -166,24 +131,9 @@ describe("interaction input projection", () => {
 
     expect(
       collectInteractionInputs(
-        { inputs } as never,
-        {
-          table: {
-            playerOrder: ["player-1"],
-            hands: { hand: {} },
-            zones: { perPlayer: {}, shared: {} },
-          },
-          flow: { currentPhase: "play" },
-        } as never,
-        "player-1" as never,
-        {
-          queries: {
-            zone: { playerCards: () => ["card-1", "card-2"] },
-            board: () => ({
-              state: { layout: "generic", spaces: ["space-a", "space-b"] },
-            }),
-          } as never,
-        },
+        { inputs, reduce() {} },
+        createInputTestState(),
+        "player-1",
       ),
     ).toMatchObject([
       {
@@ -193,7 +143,7 @@ describe("interaction input projection", () => {
           projection: "resolved",
           targetKind: "card",
           zoneIds: ["hand"],
-          eligibleTargets: ["card-1"],
+          eligibleTargets: ["card-a"],
         },
       },
       {
@@ -204,14 +154,14 @@ describe("interaction input projection", () => {
           projection: "resolved",
           targetKind: "space",
           boardId: "main-board",
-          eligibleTargets: ["space-a"],
+          eligibleTargets: ["s1"],
         },
       },
     ]);
   });
 });
 
-const stepState = { table: {}, flow: { currentPhase: "play" } };
+const stepState = createInputTestState();
 const select = (values: readonly string[], defaultValue?: string) =>
   formInput.choice({
     choices: () => values.map((value) => ({ value, label: value })),
@@ -228,7 +178,11 @@ function projectCurrent(
   const inputs = evaluated.current
     ? { [evaluated.current.key]: evaluated.current.collector }
     : {};
-  return collectInteractionInputs({ inputs } as never, stepState, "player-1");
+  return collectInteractionInputs(
+    { inputs, reduce() {} },
+    stepState,
+    "player-1",
+  );
 }
 describe("committed current input projection", () => {
   test("projects only the current domain, never future branch choices", () => {
@@ -269,32 +223,39 @@ describe("committed current input projection", () => {
         .input("mode", select(["a", "b"]))
         .input(
           "target",
-          ({ selected }) =>
-            ({
-              kind,
-              schema: z.string(),
-              meta:
-                kind === "card"
-                  ? { targetKind: "card", zoneId: "hand" }
-                  : { targetKind: "space", boardId: "main" },
-              domain: () =>
-                kind === "card"
-                  ? {
-                      type: "cardTarget",
-                      projection: "resolved",
-                      targetKind: "card",
-                      zoneIds: ["hand"],
-                      eligibleTargets: [selected.mode],
-                    }
-                  : {
-                      type: "boardTarget",
-                      valueKind: "board-id",
-                      projection: "resolved",
-                      targetKind: "space",
-                      boardId: "main",
-                      eligibleTargets: [selected.mode],
-                    },
-            }) as never,
+          ({
+            selected,
+          }): InputCollector<
+            z.ZodString,
+            typeof stepState,
+            "card" | "board-space"
+          > =>
+            kind === "card"
+              ? {
+                  kind: "card",
+                  schema: z.string(),
+                  meta: { targetKind: "card", zoneId: "hand" },
+                  domain: () => ({
+                    type: "cardTarget",
+                    projection: "resolved",
+                    targetKind: "card",
+                    zoneIds: ["hand"],
+                    eligibleTargets: [selected.mode],
+                  }),
+                }
+              : {
+                  kind: "board-space",
+                  schema: z.string(),
+                  meta: { targetKind: "space", boardId: "main" },
+                  domain: () => ({
+                    type: "boardTarget",
+                    valueKind: "board-id",
+                    projection: "resolved",
+                    targetKind: "space",
+                    boardId: "main",
+                    eligibleTargets: [selected.mode],
+                  }),
+                },
         );
       expect(projectCurrent(steps, ["b"])).toMatchObject([
         {

@@ -4,10 +4,20 @@ import type {
   InputCollector,
   InputDomainDescriptor,
   PlayerIdOfState,
-  TableQueriesOfState,
 } from "../../model";
 import { createStateQueries } from "../../table-queries";
 import { validateCollectorValue } from "./collector-params";
+
+export type StepPrefix = {
+  selected: Record<string, unknown>;
+  collectors: Record<string, InputCollector>;
+  values: unknown[];
+  current:
+    | { key: string; collector: InputCollector; domain?: InputDomainDescriptor }
+    | undefined;
+  issue: string | undefined;
+  complete: boolean;
+};
 
 /** Evaluate in order against authoritative state. Never samples RNG or applies defaults. */
 export function evaluateStepPrefix<State extends CollectorState>(
@@ -15,8 +25,8 @@ export function evaluateStepPrefix<State extends CollectorState>(
   state: State,
   playerId: PlayerIdOfState<State>,
   values: readonly unknown[],
-) {
-  const q = createStateQueries(state) as TableQueriesOfState<State>;
+): StepPrefix {
+  const q = createStateQueries(state);
   const selected: Record<string, unknown> = {};
   const collectors: Record<string, InputCollector> = {};
   const validValues: unknown[] = [];

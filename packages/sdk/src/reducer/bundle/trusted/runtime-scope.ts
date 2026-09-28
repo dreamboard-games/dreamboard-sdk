@@ -11,6 +11,7 @@ import type {
   BaseGameSessionOfContract,
   BaseGameStateOfContract,
   ManifestContractOf,
+  ExactManifestContractOf,
   PhaseMapOf,
   PhaseNamesOfDefinition,
   PlayerIdOfState,
@@ -85,6 +86,7 @@ export interface TrustedRuntimeScope<
   View extends ViewOfContract<Contract>,
 > {
   definition: TrustedDefinition<Contract, Definitions, View>;
+  manifest: TrustedManifest<Contract> & ExactManifestContractOf<Contract>;
   diagnostics: ReducerDiagnosticsEmitter;
   registry: TrustedRuntimeRegistry<Contract, Definitions, View>;
   phaseEntries: ReadonlyArray<
@@ -149,6 +151,10 @@ export function createTrustedRuntimeScope<
   type State = TrustedState<Contract>;
   type Manifest = TrustedManifest<Contract>;
   type PhaseName = TrustedPhaseName<Contract, Definitions, View>;
+  // The manifest is supplied by this same Contract. Bind its conditional
+  // table and identity projections once at the runtime composition boundary.
+  const manifest = definition.contract.manifest as TrustedManifest<Contract> &
+    ExactManifestContractOf<Contract>;
   const registry = collectTrustedRuntimeRegistry(definition);
   const { phaseEntries } = registry;
   const defaultInitialPhase = definition.initialPhase ?? phaseEntries[0]?.[0];
@@ -202,7 +208,7 @@ export function createTrustedRuntimeScope<
   const createTransaction = createReducerEdit<DomainState>();
 
   function buildContext(state: State): ActionContext<DomainState, Manifest> {
-    return buildTrustedContext<Contract>(state, definition.contract.manifest);
+    return buildTrustedContext<Contract>(state, manifest);
   }
 
   function buildRuntimeArgs<Extra extends object>(
@@ -215,7 +221,7 @@ export function createTrustedRuntimeScope<
   ) {
     return buildTrustedRuntimeArgs<Contract, Extra>(
       state,
-      definition.contract.manifest,
+      manifest,
       createTransaction,
       toDomainState,
       extra,
@@ -225,6 +231,7 @@ export function createTrustedRuntimeScope<
 
   return {
     definition,
+    manifest,
     diagnostics: createReducerDiagnosticsEmitter(options.diagnostics),
     registry,
     phaseEntries,

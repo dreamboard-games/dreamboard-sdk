@@ -32,7 +32,6 @@ function createModel() {
         pieceIds: emptyIds,
         dieTypeIds: emptyIds,
         dieIds: emptyIds,
-        boardTemplateIds: emptyIds,
         boardTypeIds: emptyIds,
         boardBaseIds: emptyIds,
         boardIds: emptyIds,

@@ -61,7 +61,7 @@ const placeStartingTrail = setupTrail.interaction({
       ...(finalPlacement ? { activePlayerIndex: 0 } : {}),
     });
     if (finalPlacement) {
-      tx.setActivePlayers([q.player.order()[0]!]);
+      tx.setActivePlayers([q.player.order()[0]]);
     }
     appendHistory(tx, {
       kind: "startingTrail",

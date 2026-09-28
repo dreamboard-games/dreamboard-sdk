@@ -78,7 +78,7 @@ const moveBandits = moveBanditsPhase.interaction({
       if (cards.length === 0) {
         throw new Error("Eligible Bandits victim has no supply cards.");
       }
-      const resourceId = random.subset({ from: cards, count: 1 })[0]!;
+      const resourceId = random.subset({ from: cards, count: 1 })[0];
       tx.transferResources({
         fromPlayerId: victimPlayerId,
         toPlayerId: ownerPlayerId,

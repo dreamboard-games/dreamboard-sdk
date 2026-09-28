@@ -51,8 +51,8 @@ function isDeepStrictEqual(actual: unknown, expected: unknown): boolean {
     );
   }
 
-  const actualPrototype = Object.getPrototypeOf(actual);
-  const expectedPrototype = Object.getPrototypeOf(expected);
+  const actualPrototype: unknown = Object.getPrototypeOf(actual);
+  const expectedPrototype: unknown = Object.getPrototypeOf(expected);
   if (actualPrototype !== expectedPrototype) return false;
 
   const actualRecord = actual as Record<string, unknown>;

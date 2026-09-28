@@ -1,4 +1,4 @@
-import type { SpaceId } from "../manifest";
+import { literals, type PlayerId } from "../manifest";
 import type { ProductionGrant } from "../types";
 import { HEX_RULES } from "../model";
 import {
@@ -55,7 +55,8 @@ const rollDice = roll.interaction({
 
     const grants: ProductionGrant[] = [];
     const camps = campsByIntersectionId(tx.state);
-    for (const [hexId, rule] of Object.entries(HEX_RULES)) {
+    for (const hexId of literals.spaceIds) {
+      const rule = HEX_RULES[hexId];
       if (
         rule.number !== total ||
         !rule.resourceId ||
@@ -63,23 +64,21 @@ const rollDice = roll.interaction({
       ) {
         continue;
       }
-      const counts = new Map<string, number>();
-      for (const intersectionId of q
-        .board("frontier")
-        .spaceVertices(hexId as SpaceId)) {
+      const counts = new Map<PlayerId, number>();
+      for (const intersectionId of q.board("frontier").spaceVertices(hexId)) {
         const playerId = camps[intersectionId];
         if (playerId) counts.set(playerId, (counts.get(playerId) ?? 0) + 1);
       }
       for (const [playerId, count] of counts) {
         tx.addResources({
-          playerId: playerId as never,
+          playerId,
           amounts: { [rule.resourceId]: count },
         });
         grants.push({
-          playerId: playerId as never,
+          playerId,
           resourceId: rule.resourceId,
           count,
-          hexId: hexId as never,
+          hexId,
         });
       }
     }

@@ -1,3 +1,5 @@
+import { getPlayerZoneCards, getSharedZoneCards } from "../table";
+import type { RuntimeTableRecord } from "../model";
 import type { CollectorState } from "../model/spec";
 import type { CardIdOfState } from "../model/extract";
 import {
@@ -29,36 +31,16 @@ export type CardTargetBuilder<
   ZoneIds extends readonly string[] = readonly string[],
 > = TargetRuleBuilder<State, Id, CardTargetRule<State, Id, ZoneIds>>;
 
-function cardIdsForZone<State extends CollectorState, Id extends string>(
-  state: State,
+function cardIdsForZone(
+  table: RuntimeTableRecord,
   playerId: string,
-  q: {
-    zone: {
-      sharedCards: (zoneId: never) => readonly unknown[];
-      playerCards: (playerId: never, zoneId: never) => readonly unknown[];
-    };
-  },
   zoneId: string,
-): readonly Id[] {
-  const table = state.table as {
-    decks?: Record<string, unknown>;
-    hands?: Record<string, unknown>;
-    zones?: {
-      shared?: Record<string, unknown>;
-      perPlayer?: Record<string, unknown>;
-    };
-  };
-  if (
-    zoneId in (table.hands ?? {}) ||
-    zoneId in (table.zones?.perPlayer ?? {})
-  ) {
-    return q.zone.playerCards(
-      playerId as never,
-      zoneId as never,
-    ) as readonly Id[];
+): readonly string[] {
+  if (zoneId in table.hands || zoneId in table.zones.perPlayer) {
+    return getPlayerZoneCards(table, playerId, zoneId);
   }
-  if (zoneId in (table.decks ?? {}) || zoneId in (table.zones?.shared ?? {})) {
-    return q.zone.sharedCards(zoneId as never) as readonly Id[];
+  if (zoneId in table.decks || zoneId in table.zones.shared) {
+    return getSharedZoneCards(table, zoneId);
   }
   return [];
 }
@@ -71,9 +53,10 @@ function createCardTargetBuilder<
   return createTargetRuleBuilder<State, Id, CardTargetRule<State, Id, ZoneIds>>(
     (predicates) => ({
       ...createTargetRule(
-        ({ state, playerId, q }) =>
-          zoneIds.flatMap((zoneId) =>
-            cardIdsForZone<State, Id>(state, playerId, q, zoneId),
+        ({ state, playerId }) =>
+          zoneIds.flatMap(
+            (zoneId) =>
+              cardIdsForZone(state.table, playerId, zoneId) as readonly Id[],
           ),
         predicates,
         {
@@ -84,7 +67,7 @@ function createCardTargetBuilder<
         },
       ),
       zoneIds,
-      zoneId: zoneIds[0] as ZoneIds[number],
+      zoneId: zoneIds[0],
       targetKind: "card",
     }),
   );

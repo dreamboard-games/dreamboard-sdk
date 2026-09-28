@@ -1,3 +1,10 @@
+import { z } from "zod";
+import {
+  readPackageJson,
+  packageJsonSchema,
+  type PackageJson,
+  type PackageExportTarget,
+} from "./lib/package-json.ts";
 import { catalogVersion, readCatalogs } from "./reference/catalogs.ts";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
@@ -17,27 +24,6 @@ import { pathExists, readJson, walkFiles } from "./lib/files.ts";
 import { packagesDir, rootDir, sdkDir } from "./lib/paths.ts";
 import { run } from "./lib/process.ts";
 
-type ExportTarget =
-  | string
-  | {
-      types?: string;
-      import?: string;
-      default?: string;
-    };
-
-type PackageManifest = {
-  name?: string;
-  version?: string;
-  private?: boolean;
-  publishConfig?: { access?: string };
-  files?: string[];
-  exports?: Record<string, ExportTarget>;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-  peerDependencies?: Record<string, string>;
-  optionalDependencies?: Record<string, string>;
-};
-
 export type PackedSdk = {
   name: "@dreamboard-games/sdk";
   version: string;
@@ -52,7 +38,7 @@ const requiredPeers = ["@tanstack/react-store", "react", "react-dom", "zod"];
 const buildOnlyDependencies = ["esbuild", "typescript", "tsup"];
 
 export function assertPeerHygiene(
-  manifest: PackageManifest,
+  manifest: PackageJson,
   label = "packages/sdk/package.json",
 ): void {
   const dependencies = manifest.dependencies ?? {};
@@ -93,7 +79,7 @@ export function assertPeerHygiene(
 }
 
 export async function assertPublicationBoundary(): Promise<void> {
-  const rootManifest = await readJson<PackageManifest>(
+  const rootManifest = await readPackageJson(
     path.join(rootDir, "package.json"),
   );
   if (rootManifest.private !== true) {
@@ -105,7 +91,7 @@ export async function assertPublicationBoundary(): Promise<void> {
     if (!entry.isDirectory()) continue;
     const manifestPath = path.join(packagesDir, entry.name, "package.json");
     if (!(await pathExists(manifestPath))) continue;
-    const manifest = await readJson<PackageManifest>(manifestPath);
+    const manifest = await readPackageJson(manifestPath);
     if (manifest.private !== true)
       publicPackages.push(manifest.name ?? entry.name);
     if (manifest.name === publicPackageName) {
@@ -129,18 +115,16 @@ export async function assertPublicationBoundary(): Promise<void> {
       `Expected only ${publicPackageName} to be public; found ${publicPackages.join(", ") || "none"}.`,
     );
   }
-  assertPeerHygiene(
-    await readJson<PackageManifest>(path.join(sdkDir, "package.json")),
-  );
+  assertPeerHygiene(await readPackageJson(path.join(sdkDir, "package.json")));
 }
 
-function exportTarget(target: ExportTarget): string | undefined {
+function exportTarget(target: PackageExportTarget): string | undefined {
   return typeof target === "string"
     ? target
     : (target.import ?? target.default);
 }
 
-function declarationTarget(target: ExportTarget): string | undefined {
+function declarationTarget(target: PackageExportTarget): string | undefined {
   return typeof target === "string" ? undefined : target.types;
 }
 
@@ -181,7 +165,7 @@ function declarationExports(filePath: string): {
 export async function assertSdkExportParity(
   packageRoot = sdkDir,
 ): Promise<void> {
-  const manifest = await readJson<PackageManifest>(
+  const manifest = await readPackageJson(
     path.join(packageRoot, "package.json"),
   );
   const failures: string[] = [];
@@ -242,7 +226,7 @@ export async function assertSdkExportParity(
 export async function assertSdkExportTargets(
   packageRoot: string,
 ): Promise<void> {
-  const manifest = await readJson<PackageManifest>(
+  const manifest = await readPackageJson(
     path.join(packageRoot, "package.json"),
   );
   const failures: string[] = [];
@@ -300,18 +284,17 @@ export async function packSdk(outputDirectory: string): Promise<PackedSdk> {
     ["pack", "--json", "--pack-destination", outputDirectory],
     { cwd: sdkDir, capture: true },
   );
-  const metadata = JSON.parse(output) as {
-    name?: string;
-    version?: string;
-    filename?: string;
-  };
-  if (
-    metadata.name !== publicPackageName ||
-    !metadata.version ||
-    !metadata.filename
-  ) {
+  const parsed = z
+    .looseObject({
+      name: z.literal(publicPackageName),
+      version: z.string().min(1),
+      filename: z.string().min(1),
+    })
+    .safeParse(JSON.parse(output));
+  if (!parsed.success) {
     throw new Error(`pnpm pack returned invalid SDK metadata:\n${output}`);
   }
+  const metadata = parsed.data;
   const createdTarballs = (await readdir(outputDirectory)).filter(
     (name) => name.endsWith(".tgz") && !before.has(name),
   );
@@ -329,7 +312,7 @@ export async function packSdk(outputDirectory: string): Promise<PackedSdk> {
   };
 }
 
-function publicSpecifiers(manifest: PackageManifest): {
+function publicSpecifiers(manifest: PackageJson): {
   js: string[];
   css: string[];
 } {
@@ -429,7 +412,7 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
         `The SDK tarball contains unexpected top-level entries: ${unexpectedTopLevel.join(", ")}.`,
       );
     }
-    const manifest = await readJson<PackageManifest>(
+    const manifest = await readPackageJson(
       path.join(packageRoot, "package.json"),
     );
     if (manifest.name !== publicPackageName || !manifest.version) {
@@ -481,11 +464,10 @@ export async function verifyPackedSdk(tarballPath: string): Promise<void> {
           name: "dreamboard-sdk-package-smoke",
           private: true,
           type: "module",
-          packageManager: (
-            await readJson<{ packageManager: string }>(
-              path.join(rootDir, "package.json"),
-            )
-          ).packageManager,
+          packageManager: packageJsonSchema
+            .required({ packageManager: true })
+            .parse(await readJson(path.join(rootDir, "package.json")))
+            .packageManager,
           dependencies: {
             // This consumer exercises every facade, including optional adapters.
             ...manifest.peerDependencies,

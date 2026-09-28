@@ -87,13 +87,14 @@ describe("production-backed local sources", () => {
       seed: 1,
       options: { finishImmediately: true },
     });
-    const saved = JSON.parse(JSON.stringify(source.checkpoint()));
-    expect(saved.terminal.reason.code).toBe("complete");
+    const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
+    const terminal = source.checkpoint().terminal;
+    expect(terminal?.reason.code).toBe("complete");
     expect(initialize).toHaveBeenCalledTimes(1);
     source.restore(saved);
     source.restore(saved);
     expect(initialize).toHaveBeenCalledTimes(1);
-    expect(source.checkpoint().terminal).toEqual(saved.terminal);
+    expect(source.checkpoint().terminal).toEqual(terminal);
     source.dispose();
     const scenario = await scenarioSource(game, {
       id: "terminal",
@@ -103,7 +104,7 @@ describe("production-backed local sources", () => {
       then() {},
     });
     expect(initialize).toHaveBeenCalledTimes(2);
-    expect(scenario.checkpoint().terminal).toEqual(saved.terminal);
+    expect(scenario.checkpoint().terminal).toEqual(terminal);
     scenario.restore(JSON.parse(JSON.stringify(scenario.checkpoint())));
     expect(initialize).toHaveBeenCalledTimes(2);
     scenario.dispose();
@@ -138,11 +139,12 @@ describe("production-backed local sources", () => {
     expect(source.checkpoint().terminal?.standings[0].playerId).toBe(
       "player-4",
     );
-    const ended = JSON.parse(JSON.stringify(source.checkpoint()));
+    const terminal = source.checkpoint().terminal;
+    const ended: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
     const oldVersion = source.inspect().version;
     source.restore(ended);
     expect(source.inspect().version).toBeGreaterThan(oldVersion);
-    expect(source.checkpoint().terminal).toEqual(ended.terminal);
+    expect(source.checkpoint().terminal).toEqual(terminal);
     expect(await source.submit("playCard", { cardId: "clubs-2" })).toEqual({
       accepted: false,
       errorCode: "game-ended",
@@ -172,7 +174,7 @@ describe("production-backed local sources", () => {
     expect(
       await source.submit("moveBandits", { hexId: "northForest" }),
     ).toEqual({ accepted: true });
-    const saved = JSON.parse(JSON.stringify(source.checkpoint()));
+    const saved: unknown = JSON.parse(JSON.stringify(source.checkpoint()));
     const oldVersion = source.inspect().version;
     const step = source
       .inspect()

@@ -1,5 +1,7 @@
+import { readJson } from "../lib/files.ts";
+import { readPackageJson, type PackageJson } from "../lib/package-json.ts";
 import { existsSync } from "node:fs";
-import { readFile, readdir, realpath, stat } from "node:fs/promises";
+import { readdir, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { readCatalogs, catalogVersion, type Catalogs } from "./catalogs.ts";
 
@@ -20,17 +22,6 @@ const dependencySections = [
   "optionalDependencies",
 ] as const;
 
-export type PackageJson = {
-  readonly name?: string;
-  readonly version?: string;
-  packageManager?: string;
-  readonly scripts?: Record<string, string>;
-  dependencies?: Record<string, string>;
-  readonly devDependencies?: Record<string, string>;
-  readonly peerDependencies?: Record<string, string>;
-  readonly optionalDependencies?: Record<string, string>;
-};
-
 export type ReferenceGame = {
   readonly id: string;
   readonly dir: string;
@@ -44,10 +35,6 @@ export type DiscoverReferenceGamesOptions = {
   readonly root: string;
   readonly gameId?: string;
 };
-
-async function readJson(filePath: string): Promise<unknown> {
-  return JSON.parse(await readFile(filePath, "utf8"));
-}
 
 function dependencyEntries(packageJson: PackageJson) {
   return dependencySections.flatMap((section) =>
@@ -153,7 +140,7 @@ async function loadReferenceGame(
   if (manifest.id !== id) {
     throw new Error(`${id}: reference-game.json id is ${manifest.id}`);
   }
-  const packageJson = (await readJson(packageJsonPath)) as PackageJson;
+  const packageJson = await readPackageJson(packageJsonPath);
   validateDependencies(id, packageJson, catalogs);
 
   for (const [label, relativePath] of Object.entries(manifest.workspace)) {

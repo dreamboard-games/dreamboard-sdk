@@ -136,7 +136,7 @@ interface ManifestAnalysis {
   homeSharedZoneIdByCardType: Map<string, string>;
   playerZoneCardSetIds: Map<string, string[]>;
   zoneCardSetIdsById: Map<string, string[]>;
-  zoneVisibilityById: Map<string, string>;
+  zoneVisibilityById: Map<string, NonNullable<ZoneSpec["visibility"]>>;
   resourceIds: string[];
   resourcePresentationById: Record<
     string,
@@ -204,7 +204,7 @@ function mergeSharedCardProperties(
   schema: CardPropertySchemaVariants,
   cardType: string,
 ): ObjectSchema {
-  const variant = schema.variants[cardType]!;
+  const variant = schema.variants[cardType];
   return {
     properties: {
       ...(schema.shared ?? {}),
@@ -525,8 +525,7 @@ function indexSquareEdgeMetadata(
       geometryKey,
       typeId: spec.typeId ?? null,
       label: spec.label ?? null,
-      fields:
-        (spec.fields as Record<string, unknown> | null | undefined) ?? null,
+      fields: spec.fields ?? null,
     });
   }
   return metadataByKey;
@@ -550,8 +549,7 @@ function indexSquareVertexMetadata(
       geometryKey,
       typeId: spec.typeId ?? null,
       label: spec.label ?? null,
-      fields:
-        (spec.fields as Record<string, unknown> | null | undefined) ?? null,
+      fields: spec.fields ?? null,
     });
   }
   return metadataByKey;
@@ -819,7 +817,10 @@ export function analyzeManifest(
     }
   }
 
-  const zoneVisibilityById = new Map<string, string>(
+  const zoneVisibilityById = new Map<
+    string,
+    NonNullable<ZoneSpec["visibility"]>
+  >(
     (manifest.zones ?? []).map((zone) => [
       zone.id,
       zone.visibility ?? "public",

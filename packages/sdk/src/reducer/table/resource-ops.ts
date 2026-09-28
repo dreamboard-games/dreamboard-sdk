@@ -1,7 +1,6 @@
 import type {
   PlayerIdOfTable,
   ResourceBalancesOfTable,
-  RuntimeRecord,
   RuntimeTableRecord,
 } from "../model";
 
@@ -152,8 +151,8 @@ function writePlayerResources<Table extends RuntimeTableRecord>(
 ): void {
   table.resources = {
     ...table.resources,
-    [playerId]: nextForPlayer as RuntimeRecord,
-  } as Table["resources"];
+    [playerId]: nextForPlayer,
+  };
 }
 
 export function addPlayerResourcesInPlace<Table extends RuntimeTableRecord>(

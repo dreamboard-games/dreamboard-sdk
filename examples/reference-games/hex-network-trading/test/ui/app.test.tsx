@@ -16,7 +16,7 @@ test("hosted Stormtrail UI bundles without executable reducer or testing code", 
     packages: "bundle",
     external: ["*.css"],
   });
-  const files = Object.keys(result.metafile!.inputs);
+  const files = Object.keys(result.metafile.inputs);
   assert.equal(
     files.some((path) => /hex-network-trading\/app\//.test(path)),
     false,

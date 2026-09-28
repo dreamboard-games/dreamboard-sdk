@@ -1,3 +1,5 @@
+import { createTableQueries } from "../../table-queries";
+import type { RuntimeTableRecord } from "../../model";
 import type { RuntimeJson } from "../../../shared/runtime-json";
 import {
   canonicalizePluginRuntimeJson as toCanonicalJson,
@@ -116,7 +118,7 @@ export function createProjectionBuilder<
     }
     const zones = [...zoneIds];
     if (zones.length === 0) return {};
-    const q = projection.q;
+    const q = createTableQueries<RuntimeTableRecord>(combinedState.table);
     const result: Record<
       string,
       {
@@ -130,26 +132,15 @@ export function createProjectionBuilder<
         combinedState.table.zones.visibility[zoneId] ??
         combinedState.table.handVisibility[zoneId];
       if (visibility === "hidden") continue;
-      const table = combinedState.table as {
-        decks?: Record<string, unknown>;
-        hands?: Record<string, unknown>;
-        zones?: {
-          shared?: Record<string, unknown>;
-          perPlayer?: Record<string, unknown>;
-        };
-      };
+      const table = combinedState.table;
       const isPlayerZone =
-        zoneId in (table.hands ?? {}) ||
-        zoneId in (table.zones?.perPlayer ?? {});
+        zoneId in table.hands || zoneId in table.zones.perPlayer;
       const cardIds = Array.from(
         isPlayerZone
-          ? (q.zone.playerCards(
-              playerId as never,
-              zoneId as never,
-            ) as readonly string[])
-          : (q.zone.sharedCards(zoneId as never) as readonly string[]),
+          ? q.zone.playerCards(playerId, zoneId)
+          : q.zone.sharedCards(zoneId),
       ).filter((cardId) => {
-        const visibility = q.card.visibility(cardId as never);
+        const visibility = q.card.visibility(cardId);
         return (
           !visibility ||
           visibility.faceUp ||
@@ -165,7 +156,7 @@ export function createProjectionBuilder<
       const cardViewsById: Record<string, string> = {};
       const playableByCardId: Record<string, string[]> = {};
       for (const cardId of cardIds) {
-        cardViewsById[cardId] = JSON.stringify(q.card.get(cardId as never));
+        cardViewsById[cardId] = JSON.stringify(q.card.get(cardId));
         const perCard: string[] = [];
         for (const interactionId of cardInteractionIds) {
           const interaction = scope.findInteractionInPhase(
@@ -293,17 +284,16 @@ export function createProjectionBuilder<
         }
         continue;
       }
-      const active = combinedState.flow.activePlayers as readonly string[];
+      const active = combinedState.flow.activePlayers;
       for (const playerId of active.length > 0
         ? active
-        : (combinedState.table.playerOrder as readonly string[])) {
+        : combinedState.table.playerOrder) {
         activePlayerIds.add(String(playerId));
       }
     }
 
     if (!sawScheduledInteraction) {
-      for (const playerId of combinedState.flow
-        .activePlayers as readonly string[]) {
+      for (const playerId of combinedState.flow.activePlayers) {
         activePlayerIds.add(String(playerId));
       }
     }
@@ -318,7 +308,7 @@ export function createProjectionBuilder<
     );
     const continuationDependencies = orderKnownPlayerIds(
       combinedState,
-      combinedState.flow.activePlayers as readonly string[],
+      combinedState.flow.activePlayers,
     ).flatMap((waiterPlayerId) => {
       const blockerPlayerIds = orderedPendingPlayerIds.filter(
         (playerId) => playerId !== waiterPlayerId,
@@ -349,7 +339,7 @@ export function createProjectionBuilder<
     playerIds: Iterable<string>,
   ): string[] {
     const selected = new Set([...playerIds].map(String));
-    return (state.table.playerOrder as readonly string[])
+    return state.table.playerOrder
       .map(String)
       .filter((playerId) => selected.has(playerId));
   }
@@ -477,7 +467,7 @@ export function createProjectionBuilder<
               resources: resolveResourcesFor(combinedState, playerId),
             }
           : {};
-      seats[playerId as unknown as string] = {
+      seats[playerId] = {
         ...fullProjection,
         availableInteractionRefs,
       };

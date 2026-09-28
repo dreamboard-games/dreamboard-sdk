@@ -218,6 +218,12 @@ export function createIngressRuntimeCodec<
   >;
   type PlayerId = PlayerIdOfState<DomainState>;
 
+  // This schema belongs to Contract; preserve its exact table output where
+  // the generic contract enters the codec. All parsed tables use this schema.
+  const tableSchema = definition.contract.manifest.tableSchema as z.ZodType<
+    TableOfManifest<ManifestOf<Contract>>
+  >;
+
   const { phaseNameSchema } = collectIngressPhaseSchemas(definition);
   const definitionIndex = collectReducerDefinitionIndex(definition);
   const playerIdSchema = definition.contract.manifest.ids
@@ -329,14 +335,14 @@ export function createIngressRuntimeCodec<
         ),
       };
     },
-    parseState(rawState: RawReducerSessionState) {
+    parseState(rawState: unknown) {
       const envelope = safeParseOrThrow(
         ContractZod.ReducerSessionStateSchema,
         rawState,
         "state",
       );
       const table = safeParseOrThrow(
-        definition.contract.manifest.tableSchema,
+        tableSchema,
         envelope.domain.table,
         "domain.table",
       );
@@ -393,7 +399,7 @@ export function createIngressRuntimeCodec<
           runtimeStateSchema,
           envelope.runtime,
           "runtime",
-        ) as unknown as State["runtime"],
+        ),
       };
       return parsedState;
     },

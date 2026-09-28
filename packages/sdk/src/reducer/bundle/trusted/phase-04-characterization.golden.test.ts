@@ -3,7 +3,10 @@ import { createGame as createModel } from "../../../reducer";
 import { createHash } from "node:crypto";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { createReducerBundle, type ReducerDiagnosticEvent } from "../..";
+import {
+  createReducerBundle,
+  type ReducerDiagnosticEvent,
+} from "../../../reducer";
 import type { RuntimeTableRecord } from "../../../reducer/model";
 import { asPlayerId } from "../../per-player";
 
@@ -27,7 +30,7 @@ function stableStringify(value: unknown): string {
     .join(",")}}`;
 }
 
-function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
+function createTable(playerIds = ["player-1", "player-2"]) {
   const ids = playerIds.map((id) => asPlayerId(id));
   return {
     playerOrder: [...playerIds],
@@ -56,96 +59,17 @@ function createTable(playerIds = ["player-1", "player-2"]): RuntimeTableRecord {
         properties: {},
       },
     },
-  };
-}
-
-function createManifestContract() {
-  const phaseNames = ["play", "done"] as const;
-  const playerIds = ["player-1", "player-2"] as const;
-  const dieIds = ["die-1"] as const;
-
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: ["d6"] as const,
-      dieIds,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      vertexIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {} as const,
-      zoneVisibilityById: {} as const,
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: z.enum(playerIds),
-      phaseName: z.enum(phaseNames),
-      cardSetId: z.string(),
-      cardType: z.string(),
-      cardId: z.string(),
-      deckId: z.string(),
-      handId: z.string(),
-      sharedZoneId: z.string(),
-      playerZoneId: z.string(),
-      zoneId: z.string(),
-      resourceId: z.string(),
-      dieId: z.enum(dieIds),
-      boardId: z.string(),
-      boardBaseId: z.string(),
-      boardContainerId: z.string(),
-      tileId: z.string(),
-      tileTypeId: z.string(),
-      edgeId: z.string(),
-      edgeTypeId: z.string(),
-      vertexId: z.string(),
-      vertexTypeId: z.string(),
-      portId: z.string(),
-      portTypeId: z.string(),
-      spaceId: z.string(),
-      spaceTypeId: z.string(),
-      pieceId: z.string(),
-      pieceTypeId: z.string(),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  };
+  } satisfies RuntimeTableRecord;
 }
 
 function createCharacterizationGame() {
   const contract = createModel({
-    manifest: createManifestContract(),
+    manifest: {
+      players: { minPlayers: 2, maxPlayers: 2 },
+      cardSets: [],
+      dieTypes: [{ id: "d6", name: "Test die", sides: 6 }],
+      dieSeeds: [{ id: "die-1", typeId: "d6", home: { type: "detached" } }],
+    },
     phases: {
       play: z.object({ visits: z.number().int() }),
       done: z.object({ visits: z.number().int() }),
@@ -277,7 +201,9 @@ describe("phase 4 trusted-bundle characterization", () => {
       result.kind === "accept"
         ? {
             phase: result.state.domain.flow.currentPhase,
-            phaseState: { visits: result.state.domain.phase.visits },
+            phaseState: z
+              .object({ visits: z.number().int() })
+              .parse(result.state.domain.phase),
             lastTransition: result.state.runtime.lastTransition,
             traceKinds: result.trace.map((entry) => entry.kind),
           }

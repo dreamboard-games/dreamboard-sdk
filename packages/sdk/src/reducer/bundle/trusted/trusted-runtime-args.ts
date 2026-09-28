@@ -24,12 +24,8 @@ export function buildContext<Contract extends ReducerGameContractLike>(
 > {
   type DomainState = BaseGameStateOfContract<Contract>;
   type PlayerId = PlayerIdOfState<DomainState>;
-  type Manifest = ManifestContractOf<Contract>;
   return {
-    currentPhase: state.flow.currentPhase as ActionContext<
-      DomainState,
-      Manifest
-    >["currentPhase"],
+    currentPhase: state.flow.currentPhase,
     manifest,
     playerOrder: [...state.table.playerOrder] as PlayerId[],
     activePlayers: [...state.flow.activePlayers] as PlayerId[],

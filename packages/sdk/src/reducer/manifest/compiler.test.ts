@@ -1,6 +1,7 @@
+import { RuntimeJsonSchema } from "../../shared/runtime-json";
+import { ReducerSessionStateSchema } from "../../shared/runtime-schema.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import type { BoardCard } from "../../shared/domain/contracts.js";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { compileManifest } from "./compiler";
 import { createGame } from "../authoring/game";
@@ -345,7 +346,11 @@ describe("in-memory manifests", () => {
     const invalidManifest: GameTopologyManifest = {
       ...manifest,
       cardSets: [
-        { ...manifest.cardSets[0], cards: [card as unknown as BoardCard] },
+        {
+          ...manifest.cardSets[0],
+          // @ts-expect-error Deliberately omit required identity fields to exercise runtime authoring validation.
+          cards: [card],
+        },
       ],
     };
     expect(() => compileManifest(invalidManifest)).toThrow(error);
@@ -493,18 +498,20 @@ describe("active player records", () => {
     const bundle = createReducerTestingRuntime(definition);
     const initialized = (
       await bundle.initialize({
-        table: {
+        table: RuntimeJsonSchema.parse({
           ...table,
           hands: {},
           zones: { ...table.zones, perPlayer: {} },
           resources: {},
-        },
+        }),
         playerIds,
         rngSeed: 7,
       })
     ).state;
     const codec = createIngressRuntimeCodec(definition);
-    const restored = codec.parseState(JSON.parse(JSON.stringify(initialized)));
+    const restored = codec.parseState(
+      ReducerSessionStateSchema.parse(JSON.parse(JSON.stringify(initialized))),
+    );
     expect(restored.domain.table.playerOrder).toEqual(playerIds);
     expect(restored.domain.table.hands.hand).toEqual({ zulu: [], alpha: [] });
     expect(restored.domain.table.zones.perPlayer.hand).toEqual({
@@ -518,7 +525,9 @@ describe("active player records", () => {
     expect(codec.serializeState(restored)).toEqual(initialized);
     expect(() =>
       bundle.project({
-        state: JSON.parse(JSON.stringify(initialized)),
+        state: ReducerSessionStateSchema.parse(
+          JSON.parse(JSON.stringify(initialized)),
+        ),
         playerIds,
       }),
     ).not.toThrow();
@@ -565,11 +574,14 @@ describe("active player records", () => {
     const playerIds = ["alpha", "zulu"];
     const bundle = createReducerTestingRuntime(definition);
     const { state } = await bundle.initialize({
-      table: game.contract.manifest.createInitialTable({ playerIds }),
+      table: RuntimeJsonSchema.parse(
+        game.contract.manifest.createInitialTable({ playerIds }),
+      ),
       playerIds,
       rngSeed: 7,
     });
-    expect(state.domain.table.cards["ace-1"]).toMatchObject({
+    const table = game.contract.manifest.tableSchema.parse(state.domain.table);
+    expect(table.cards["ace-1"]).toMatchObject({
       frontImage: "assets/cards/ace.webp",
       backImage: "assets/cards/back.webp",
     });
@@ -595,7 +607,7 @@ describe("active player records", () => {
     expect(Object.keys(restored.resources)).toEqual(["2", "10"]);
     const q = createTableQueries(restored);
     expect(q.player.order()).toEqual(["10", "2"]);
-    expect(q.player.nextInOrder(restored.playerOrder[0]!)).toBe("2");
+    expect(q.player.nextInOrder(restored.playerOrder[0])).toBe("2");
     expect(restored.hands.hand).toEqual({ "10": [], "2": [] });
     expect(restored.zones.perPlayer.hand).toEqual({ "10": [], "2": [] });
     expect(restored.resources).toEqual({
@@ -603,12 +615,12 @@ describe("active player records", () => {
       "2": { points: 0 },
     });
     const clone = cloneRuntimeTable(restored);
-    clone.hands.hand[restored.playerOrder[0]!].push("ace-1");
-    clone.zones.perPlayer.hand!["10"].push("ace-2");
-    clone.resources[restored.playerOrder[0]!].points = 8;
-    expect(restored.hands.hand[restored.playerOrder[0]!]).toEqual([]);
-    expect(restored.zones.perPlayer.hand!["10"]).toEqual([]);
-    expect(restored.resources[restored.playerOrder[0]!].points).toBe(0);
+    clone.hands.hand[restored.playerOrder[0]].push("ace-1");
+    clone.zones.perPlayer.hand["10"].push("ace-2");
+    clone.resources[restored.playerOrder[0]].points = 8;
+    expect(restored.hands.hand[restored.playerOrder[0]]).toEqual([]);
+    expect(restored.zones.perPlayer.hand["10"]).toEqual([]);
+    expect(restored.resources[restored.playerOrder[0]].points).toBe(0);
   });
 
   test("rejects missing or foreign active players and old wrappers at the manifest boundary", () => {

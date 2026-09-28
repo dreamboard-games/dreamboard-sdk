@@ -27,7 +27,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
     return false;
   }
-  const prototype = Object.getPrototypeOf(value);
+  const prototype: unknown = Object.getPrototypeOf(value);
   return prototype === Object.prototype || prototype === null;
 }
 
@@ -94,30 +94,6 @@ function projectPlayerSeatReference(options: {
   return { seat };
 }
 
-type TupleDefinition = {
-  readonly items?: readonly z.core.SomeType[];
-  readonly rest?: z.core.SomeType | null;
-};
-
-type IntersectionDefinition = {
-  readonly left: z.core.SomeType;
-  readonly right: z.core.SomeType;
-};
-
-function tupleDefinition(schema: z.ZodTuple): TupleDefinition {
-  return schema._zod.def as unknown as TupleDefinition;
-}
-
-function intersectionDefinition(
-  schema: z.ZodIntersection,
-): IntersectionDefinition {
-  return schema._zod.def as unknown as IntersectionDefinition;
-}
-
-function asClassicSchema(schema: z.core.SomeType): z.ZodTypeAny {
-  return schema as unknown as z.ZodTypeAny;
-}
-
 type ScenarioSchemaTransformOptions = {
   readonly schema: z.core.SomeType;
   readonly value: unknown;
@@ -162,7 +138,7 @@ function transformScenarioSchemaValue(
     return value === undefined
       ? value
       : transformScenarioSchemaValue({
-          schema: asClassicSchema(schema.unwrap()),
+          schema: schema.unwrap(),
           value,
           playerIds,
           path,
@@ -173,7 +149,7 @@ function transformScenarioSchemaValue(
     return value === null
       ? value
       : transformScenarioSchemaValue({
-          schema: asClassicSchema(schema.unwrap()),
+          schema: schema.unwrap(),
           value,
           playerIds,
           path,
@@ -188,7 +164,7 @@ function transformScenarioSchemaValue(
     schema instanceof z.ZodNonOptional
   ) {
     return transformScenarioSchemaValue({
-      schema: asClassicSchema(schema.unwrap()),
+      schema: schema.unwrap(),
       value,
       playerIds,
       path,
@@ -199,7 +175,7 @@ function transformScenarioSchemaValue(
     if (!Array.isArray(value)) return value;
     return value.map((item, index) =>
       transformScenarioSchemaValue({
-        schema: asClassicSchema(schema.element),
+        schema: schema.element,
         value: item,
         playerIds,
         path: appendScenarioPath(path, index),
@@ -209,13 +185,13 @@ function transformScenarioSchemaValue(
   }
   if (schema instanceof z.ZodTuple) {
     if (!Array.isArray(value)) return value;
-    const definition = tupleDefinition(schema);
+    const definition = schema._zod.def;
     const items = definition.items ?? [];
-    return value.map((item, index) => {
+    return value.map((item: unknown, index) => {
       const itemSchema = items[index] ?? definition.rest;
       return itemSchema
         ? transformScenarioSchemaValue({
-            schema: asClassicSchema(itemSchema),
+            schema: itemSchema,
             value: item,
             playerIds,
             path: appendScenarioPath(path, index),
@@ -227,10 +203,12 @@ function transformScenarioSchemaValue(
   if (schema instanceof z.ZodObject) {
     if (!isPlainObject(value)) return value;
     const output: Record<string, unknown> = { ...value };
-    for (const [key, childSchema] of Object.entries(schema.shape)) {
+    for (const [key, childSchema] of Object.entries<z.core.SomeType>(
+      schema.shape,
+    )) {
       if (!Object.prototype.hasOwnProperty.call(value, key)) continue;
       output[key] = transformScenarioSchemaValue({
-        schema: asClassicSchema(childSchema),
+        schema: childSchema,
         value: value[key],
         playerIds,
         path: appendScenarioPath(path, key),
@@ -251,7 +229,7 @@ function transformScenarioSchemaValue(
       Object.entries(value).map(([key, item]) => [
         key,
         transformScenarioSchemaValue({
-          schema: asClassicSchema(schema.valueType),
+          schema: schema.valueType,
           value: item,
           playerIds,
           path: appendScenarioPath(path, key),
@@ -266,12 +244,12 @@ function transformScenarioSchemaValue(
       try {
         if (
           options.direction === "project" &&
-          !asClassicSchema(option).safeParse(value).success
+          !z.core.safeParse(option, value).success
         ) {
           continue;
         }
         const resolved = transformScenarioSchemaValue({
-          schema: asClassicSchema(option),
+          schema: option,
           value,
           playerIds,
           path,
@@ -279,7 +257,7 @@ function transformScenarioSchemaValue(
         });
         if (
           options.direction === "project" ||
-          asClassicSchema(option).safeParse(resolved).success
+          z.core.safeParse(option, resolved).success
         ) {
           return resolved;
         }
@@ -296,16 +274,16 @@ function transformScenarioSchemaValue(
     return value;
   }
   if (schema instanceof z.ZodIntersection) {
-    const definition = intersectionDefinition(schema);
+    const definition = schema._zod.def;
     const leftResolved = transformScenarioSchemaValue({
-      schema: asClassicSchema(definition.left),
+      schema: definition.left,
       value,
       playerIds,
       path,
       direction: options.direction,
     });
     return transformScenarioSchemaValue({
-      schema: asClassicSchema(definition.right),
+      schema: definition.right,
       value: leftResolved,
       playerIds,
       path,
@@ -314,7 +292,7 @@ function transformScenarioSchemaValue(
   }
   if (schema instanceof z.ZodPipe) {
     return transformScenarioSchemaValue({
-      schema: asClassicSchema(schema.in),
+      schema: schema.in,
       value,
       playerIds,
       path,
@@ -323,7 +301,7 @@ function transformScenarioSchemaValue(
   }
   if (schema instanceof z.ZodLazy) {
     return transformScenarioSchemaValue({
-      schema: asClassicSchema(schema.unwrap()),
+      schema: schema.unwrap(),
       value,
       playerIds,
       path,
