@@ -160,7 +160,6 @@ test("validateManifestAuthoring rejects invalid strict slot hosts and slot ids",
       {
         id: "main",
         name: "Main",
-        type: "manual",
         defaultHome: { type: "detached" },
         cardSchema: {
           properties: {},
@@ -352,7 +351,6 @@ test("validateManifestAuthoring rejects player-scoped card homes", () => {
     ...BASE_MANIFEST,
     cardSets: [
       {
-        type: "manual",
         id: "market",
         name: "Market",
         defaultHome: { type: "detached" },
@@ -416,7 +414,6 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
     ...BASE_MANIFEST,
     cardSets: [
       {
-        type: "manual",
         id: "unsafe-cards",
         name: "Unsafe Cards",
         defaultHome: { type: "detached" },
@@ -489,7 +486,6 @@ test("distinct literal ids remain distinct when their old handles matched", () =
     ...BASE_MANIFEST,
     cardSets: [
       {
-        type: "manual",
         id: "market",
         name: "Market",
         defaultHome: { type: "detached" },

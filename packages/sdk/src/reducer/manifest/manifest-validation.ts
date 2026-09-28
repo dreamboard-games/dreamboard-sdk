@@ -141,9 +141,6 @@ function collectCardSchemaKeyIssues(
   cardSet: GameTopologyManifest["cardSets"][number],
   path: string,
 ): string[] {
-  if (cardSet.type !== "manual") {
-    return [];
-  }
   const schema = cardSet.cardSchema;
   if ("variants" in schema) {
     return [
@@ -298,9 +295,6 @@ function validateSlotHostsAndHomes(manifest: GameTopologyManifest): string[] {
   };
 
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
-    if (cardSet.type !== "manual") {
-      continue;
-    }
     validateHome(
       cardSet.defaultHome,
       `manifest.cardSets[${cardSetIndex}].defaultHome`,
@@ -388,9 +382,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
     if (!cardSet.defaultHome) {
       issues.push(
-        `manifest.cardSets[${cardSetIndex}].defaultHome: ${
-          cardSet.type === "manual" ? "Manual" : "Preset"
-        } card sets must declare defaultHome.`,
+        `manifest.cardSets[${cardSetIndex}].defaultHome: Card sets must declare defaultHome.`,
       );
       continue;
     }
@@ -422,10 +414,7 @@ function validateCardHomes(manifest: GameTopologyManifest): string[] {
       `manifest.cardSets[${cardSetIndex}].defaultHome`,
       `Card set '${cardSet.id}' defaultHome`,
     );
-    for (const [cardIndex, card] of (cardSet.type === "manual"
-      ? cardSet.cards
-      : []
-    ).entries()) {
+    for (const [cardIndex, card] of cardSet.cards.entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].home`;
       validateCardHome(card.home, path, `Card '${card.id}'`);
     }
@@ -737,17 +726,15 @@ function collectManifestRecordKeyIssues(
   manifest: GameTopologyManifest,
 ): string[] {
   const cardSets = manifest.cardSets;
-  const manualCards = cardSets.flatMap((cardSet, cardSetIndex) =>
-    cardSet.type === "manual"
-      ? cardSet.cards.flatMap((card, cardIndex) =>
-          renderCardInstanceIds(card).map((cardId) => ({
-            card,
-            cardId,
-            cardIndex,
-            cardSetIndex,
-          })),
-        )
-      : [],
+  const cards = cardSets.flatMap((cardSet, cardSetIndex) =>
+    cardSet.cards.flatMap((card, cardIndex) =>
+      renderCardInstanceIds(card).map((cardId) => ({
+        card,
+        cardId,
+        cardIndex,
+        cardSetIndex,
+      })),
+    ),
   );
 
   return [
@@ -756,7 +743,7 @@ function collectManifestRecordKeyIssues(
         value: cardSet.id,
         path: `manifest.cardSets[${index}].id`,
       })),
-      ...manualCards.flatMap(({ card, cardId, cardIndex, cardSetIndex }) => [
+      ...cards.flatMap(({ card, cardId, cardIndex, cardSetIndex }) => [
         {
           value: card.id,
           path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].id`,
@@ -886,14 +873,12 @@ export function validateManifestAuthoring(
   errors.push(
     ...collectDuplicateIdIssues({
       entries: manifest.cardSets.flatMap((cardSet, cardSetIndex) =>
-        cardSet.type === "manual"
-          ? cardSet.cards.flatMap((card, cardIndex) =>
-              renderCardInstanceIds(card).map((cardId) => ({
-                id: cardId,
-                path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].id`,
-              })),
-            )
-          : [],
+        cardSet.cards.flatMap((card, cardIndex) =>
+          renderCardInstanceIds(card).map((cardId) => ({
+            id: cardId,
+            path: `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}].id`,
+          })),
+        ),
       ),
       label: "card runtime id",
     }),
@@ -974,9 +959,6 @@ export function validateManifestAuthoring(
   errors.push(...validatePlayerScopedSeedHomes(manifest));
   errors.push(...validateCardHomes(manifest));
   for (const [cardSetIndex, cardSet] of manifest.cardSets.entries()) {
-    if (cardSet.type !== "manual") {
-      continue;
-    }
     for (const [cardIndex, card] of cardSet.cards.entries()) {
       const path = `manifest.cardSets[${cardSetIndex}].cards[${cardIndex}]`;
       if (typeof card.id !== "string" || card.id.length === 0) {

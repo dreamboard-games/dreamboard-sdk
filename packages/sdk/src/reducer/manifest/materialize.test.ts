@@ -129,7 +129,6 @@ test("materializeManifestTable assigns every accepted shared card home explicitl
       ...EMPTY_MANIFEST,
       cardSets: [
         {
-          type: "manual",
           id: "market",
           name: "Market",
           defaultHome: { type: "zone", zoneId: "shared-deck" },
@@ -334,7 +333,6 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
     ...EMPTY_MANIFEST,
     cardSets: [
       {
-        type: "manual",
         id: "unsafe",
         name: "Unsafe",
         defaultHome: { type: "detached" },

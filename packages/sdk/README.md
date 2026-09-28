@@ -314,3 +314,7 @@ Hosts import `assertReducerBundleContract`, `REDUCER_CONTRACT_VERSION`,
 and gameplay websocket schemas plus `materializePluginGameplayFrame` live at the
 root. Materialize the seat projection with static board data before publishing it;
 sources publish the canonical seat view and keep command bases private.
+
+Card sets contain their authored `cards`, `cardSchema`, and `defaultHome` directly.
+Standard playing cards are game-owned definitions with ordinary suit/rank
+properties; the SDK does not synthesize inventories or assign built-in rules.

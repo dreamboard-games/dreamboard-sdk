@@ -4,7 +4,6 @@ const compiled = compileManifest({
   players: { minPlayers: 1, maxPlayers: 2 },
   cardSets: [
     {
-      type: "manual",
       id: "actions",
       name: "Actions",
       defaultHome: { type: "detached" },
@@ -45,7 +44,6 @@ const compiled = compileManifest({
       ],
     },
     {
-      type: "manual",
       id: "spells",
       name: "Spells",
       defaultHome: { type: "detached" },
@@ -166,3 +164,44 @@ void [
   unsuffixed,
   defenseWithoutStatus,
 ];
+
+// Game-owned playing-card definitions use the same correlated state inference.
+const playingCards = compileManifest({
+  players: { minPlayers: 1, maxPlayers: 2 },
+  cardSets: [
+    {
+      id: "playing-cards",
+      name: "Playing cards",
+      defaultHome: { type: "detached" },
+      cardSchema: {
+        properties: {
+          suit: { type: "enum", enums: ["SPADES", "HEARTS"] },
+          rank: { type: "string" },
+        },
+      },
+      cards: [
+        {
+          id: "SPADES_A",
+          cardType: "SPADES_A",
+          name: "Ace of spades",
+          count: 1,
+          properties: { suit: "SPADES", rank: "A" },
+        },
+        {
+          id: "HEARTS_Q",
+          cardType: "HEARTS_Q",
+          name: "Queen of hearts",
+          count: 1,
+          properties: { suit: "HEARTS", rank: "Q" },
+        },
+      ],
+    },
+  ],
+  zones: [],
+  boards: [],
+});
+const aceCategory: "SPADES_A" =
+  playingCards.createInitialTable().cards.SPADES_A.cardType;
+// @ts-expect-error Playing-card IDs come only from the authored inventory.
+playingCards.createInitialTable().cards.CLUBS_2;
+void aceCategory;

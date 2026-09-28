@@ -11,29 +11,6 @@ export type PlayersDefinition = {
   optimalPlayers?: number;
 };
 
-export type PresetCardSetDefinition = {
-  /**
-   * Unique local identifier for the authored card set
-   */
-  id: string;
-  /**
-   * Built-in preset card-set selector
-   */
-  presetId: string;
-  /**
-   * Display name of the card set
-   */
-  name: string;
-  /**
-   * Type of card set source
-   */
-  type: "preset";
-  /**
-   * Default initial home for cards materialized from the preset.
-   */
-  defaultHome: ComponentHomeSpec;
-};
-
 /**
  * Arbitrary authored JSON value.
  */
@@ -118,7 +95,7 @@ export type CardPropertySchemaVariants = {
     [key: string]: PropertySchema;
   };
   /**
-   * Property schema for each card type in this manual card set.
+   * Property schema for each card type in this card set.
    */
   variants: {
     [key: string]: ObjectSchema;
@@ -258,7 +235,7 @@ export type BoardCard = {
    */
   cardType: string;
   /**
-   * Optional per-card initial home. Omitted cards use their manual card set's
+   * Optional per-card initial home. Omitted cards use their card set's
    * defaultHome. Compatibility declarations such as allowedCardSetIds never
    * imply placement. Player-scoped distribution belongs in reducer setup.
    */
@@ -275,7 +252,7 @@ export type BoardCard = {
   };
 };
 
-export type ManualCardSetDefinition = {
+export type CardSetDefinition = {
   /**
    * Unique identifier for the card set
    */
@@ -284,10 +261,6 @@ export type ManualCardSetDefinition = {
    * Display name of the card set
    */
   name: string;
-  /**
-   * Type of card set source
-   */
-  type: "manual";
   /**
    * Schema definition for authored card properties in this card set
    */
@@ -301,14 +274,6 @@ export type ManualCardSetDefinition = {
    */
   cards: Array<BoardCard>;
 };
-
-export type CardSetDefinition =
-  | ({
-      type: "preset";
-    } & PresetCardSetDefinition)
-  | ({
-      type: "manual";
-    } & ManualCardSetDefinition);
 
 /**
  * Whether authored topology exists once for the table or once per player
@@ -1212,11 +1177,6 @@ export type ActionDefinition = {
    */
   errorCodes?: Array<string>;
 };
-
-/**
- * Type of source for the card set
- */
-export type CardSetSourceType = "preset" | "csv" | "manual";
 
 /**
  * Engine-level structural board layout discriminator

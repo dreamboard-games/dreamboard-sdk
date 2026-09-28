@@ -55,41 +55,7 @@ type SeedIds<S> = S extends { typeId: infer T extends string }
 type CardIds<C> = C extends { id: infer I extends string }
   ? RuntimeIdsFromCount<I, Get<C, "count">>
   : never;
-type StandardSuit = "SPADES" | "HEARTS" | "CLUBS" | "DIAMONDS";
-type StandardRank =
-  | "2"
-  | "3"
-  | "4"
-  | "5"
-  | "6"
-  | "7"
-  | "8"
-  | "9"
-  | "10"
-  | "J"
-  | "Q"
-  | "K"
-  | "A";
-type ResolvedCardSet<S> = S extends {
-  type: "preset";
-  presetId: "standard_52_deck";
-}
-  ? Omit<S, "type"> & {
-      type: "manual";
-      cards: readonly {
-        id: `${StandardSuit}_${StandardRank}`;
-        cardType: `${StandardSuit}_${StandardRank}`;
-        count: 1;
-      }[];
-      cardSchema: {
-        properties: {
-          suit: { type: "enum"; enums: readonly StandardSuit[] };
-          rank: { type: "string" };
-        };
-      };
-    }
-  : S;
-type CardSets<M> = ResolvedCardSet<Entries<M, "cardSets">>;
+type CardSets<M> = Entries<M, "cardSets">;
 type Cards<M> =
   CardSets<M> extends infer S
     ? S extends { cards: infer C }
