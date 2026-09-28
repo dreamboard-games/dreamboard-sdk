@@ -440,7 +440,7 @@ type LayoutTarget<G, Value> = Omit<
   getSelectHandler(options?: TargetOptions<G>): () => void;
   getTargetProps(options?: TargetOptions<G>): ActionProps;
 };
-export type BoardLayout<G> = Omit<
+type BoardLayout<G> = Omit<
   RuntimeLayout,
   "getSpaces" | "getEdges" | "getVertices"
 > & {

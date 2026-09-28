@@ -692,6 +692,22 @@ class Controller {
       assertCoverage: () => this.assertCoverage(),
       inspect: () => this.store.get(),
     };
+    // Keep live projections out of enumeration, spreads, and serialization.
+    for (const [key, descriptor] of Object.entries(
+      Object.getOwnPropertyDescriptors(root),
+    )) {
+      if (descriptor.get) {
+        Object.defineProperty(root, key, {
+          enumerable: false,
+          configurable: false,
+        });
+      }
+    }
+    Object.defineProperty(root, "store", {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+    });
     this.instance = root;
     this.store = createStore(Object.freeze(this.build()));
     if ("apply" in options.source)

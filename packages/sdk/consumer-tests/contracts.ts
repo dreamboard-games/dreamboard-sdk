@@ -80,3 +80,6 @@ if (control.type === "boundedNumber" && control.mode === "many") {
   // @ts-expect-error A many numeric control never accepts a scalar.
   control.setValue(1);
 }
+
+// @ts-expect-error Board layout types are inferred from instances, not exported as aliases.
+type PrivateBoardLayout = import("@dreamboard-games/sdk").BoardLayout;
