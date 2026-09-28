@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useGame, useCardDrag } from "@game";
 import type { ReactNode } from "react";
 import "./tokens.css";
@@ -24,7 +25,10 @@ export function Hand({
   const zone = useGame((game) => game.zones.find(zoneId));
   const cards = zone?.getCards({ sort }) ?? [];
   return (
-    <section aria-label={label} className={`db-hand ${className}`}>
+    <section
+      aria-label={label}
+      className={`db-hand flex items-start gap-2 overflow-x-auto p-2 ${className}`}
+    >
       {cards.map((card) => (
         <HandCard
           key={card.id}
@@ -53,8 +57,13 @@ function HandCard({
 }) {
   const drag = useCardDrag(card.id);
   return (
-    <div ref={drag.ref} data-dragging={drag.isDragging || undefined}>
+    <div
+      className="grid shrink-0 gap-1"
+      ref={drag.ref}
+      data-dragging={drag.isDragging || undefined}
+    >
       <button
+        className="shrink-0 rounded-lg border-0 bg-transparent p-0 outline-ring outline-offset-2 aria-pressed:outline-3 focus-visible:outline-3"
         {...card.getProps()}
         aria-label={label}
         aria-pressed={card.getIsSelected()}
@@ -62,13 +71,15 @@ function HandCard({
         {children}
       </button>
       {drag.canDrag && (
-        <button
+        <Button
+          variant="outline"
+          className="min-h-11 cursor-grab"
           ref={drag.handleRef}
           {...drag.handleProps}
           aria-label={`Drag ${label}`}
         >
           Drag
-        </button>
+        </Button>
       )}
     </div>
   );

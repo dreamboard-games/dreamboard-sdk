@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useGame } from "@game";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
@@ -16,12 +17,16 @@ export function Actions({ interaction: key, className }: ActionsProps) {
   const step = interaction.getStep();
   const busy = interaction.getStatus() !== "open" || connection !== "ready";
   return (
-    <div className={`db-actions ${className ?? ""}`}>
-      <button {...interaction.getSubmitProps()}>
+    <div
+      className={`db-actions flex flex-wrap items-center gap-3 ${className ?? ""}`}
+    >
+      <Button className="min-h-11" {...interaction.getSubmitProps()}>
         {busy ? "Submitting…" : step ? "Continue" : interaction.label}
-      </button>
+      </Button>
       {step?.canCancel && (
-        <button
+        <Button
+          variant="outline"
+          className="min-h-11"
           type="button"
           data-action="cancel"
           data-interaction={key}
@@ -43,9 +48,11 @@ export function Actions({ interaction: key, className }: ActionsProps) {
           }}
         >
           Cancel
-        </button>
+        </Button>
       )}
-      <button
+      <Button
+        variant="outline"
+        className="min-h-11"
         type="button"
         data-action="reset"
         data-interaction={key}
@@ -54,7 +61,7 @@ export function Actions({ interaction: key, className }: ActionsProps) {
         onClick={() => interaction.reset()}
       >
         Reset selection
-      </button>
+      </Button>
       {interaction.getUnavailableReason() && (
         <p role="status">{interaction.getUnavailableReason()}</p>
       )}

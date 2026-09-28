@@ -10,26 +10,30 @@
     "test:browser": "playwright test"
   },
   "dependencies": {
+    "@base-ui/react": "^1.8.0",
     "@dreamboard-games/sdk": "workspace:*",
+    "@tanstack/react-store": "catalog:",
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
+    "lucide-react": "^1.48.0",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "zod": "catalog:",
-    "@tanstack/react-store": "catalog:"
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@playwright/test": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "axe-playwright": "catalog:",
     "csstype": "catalog:",
+    "esbuild": "catalog:",
+    "tailwindcss": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "@tailwindcss/vite": "catalog:",
-    "tailwindcss": "catalog:",
-    "@playwright/test": "catalog:",
-    "vitest": "catalog:",
-    "esbuild": "catalog:",
-    "axe-playwright": "catalog:"
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@10.4.1"
 }

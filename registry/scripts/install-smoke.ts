@@ -220,7 +220,15 @@ try {
     await expect(proof).toHaveCSS("height", "44px");
     await expect(proof).toHaveCSS("width", "173px");
     await expect(proof).toHaveCSS("background-color", "rgb(35, 87, 106)");
+    await page.evaluate(() => document.documentElement.classList.add("dark"));
+    await expect(proof).toHaveCSS("background-color", "rgb(171, 213, 225)");
+    await page.evaluate(() =>
+      document.documentElement.classList.remove("dark"),
+    );
     if (bound) {
+      await expect(
+        page.getByRole("button", { name: "Save checkpoint" }),
+      ).toHaveCSS("min-height", "44px");
       await expect(
         page.getByRole("button", { name: "Restore checkpoint" }),
       ).toBeDisabled();

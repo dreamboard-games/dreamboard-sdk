@@ -1,5 +1,11 @@
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import "./tokens.css";
-import { useState } from "react";
+import { useId, useState } from "react";
 /** Mount only in a local development entry, with testing-source callbacks. */
 export interface ScenarioControlsProps {
   scenarios: readonly string[];
@@ -17,15 +23,23 @@ export function ScenarioControls({
   onCheckpoint,
   onRestore,
 }: ScenarioControlsProps) {
+  const fieldId = useId();
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   return (
-    <details open className="db-scenario-controls">
-      <summary>Local scenario tools</summary>
-      <div className="db-scenario-toolbar">
-        <label>
-          Scenario
-          <select
+    <details
+      open
+      className="db-scenario-controls rounded-lg border border-border p-4"
+    >
+      <summary className="mb-3 w-full cursor-pointer font-semibold">
+        Local scenario tools
+      </summary>
+      <div className="db-scenario-toolbar flex flex-wrap items-center gap-3">
+        <div className="m-1 flex flex-col items-start gap-1">
+          <Label htmlFor={`${fieldId}-scenario`}>Scenario</Label>
+          <NativeSelect
+            className="[&_select]:min-h-11"
+            id={`${fieldId}-scenario`}
             aria-label="Scenario"
             defaultValue={
               new URLSearchParams(location.search).get("scenario") ?? ""
@@ -37,27 +51,31 @@ export function ScenarioControls({
               location.assign(url);
             }}
           >
-            <option value="">New game</option>
+            <NativeSelectOption value="">New game</NativeSelectOption>
             {scenarios.map((id) => (
-              <option key={id}>{id}</option>
+              <NativeSelectOption key={id}>{id}</NativeSelectOption>
             ))}
-          </select>
-        </label>
-        <label>
-          Selected seat
-          <select
+          </NativeSelect>
+        </div>
+        <div className="m-1 flex flex-col items-start gap-1">
+          <Label htmlFor={`${fieldId}-seat`}>Selected seat</Label>
+          <NativeSelect
+            className="[&_select]:min-h-11"
+            id={`${fieldId}-seat`}
             aria-label="Selected seat"
             value={me}
             onChange={(event) => onSeatChange(event.currentTarget.value)}
           >
             {players.map((player) => (
-              <option key={player.playerId} value={player.playerId}>
+              <NativeSelectOption key={player.playerId} value={player.playerId}>
                 {player.displayName ?? player.playerId}
-              </option>
+              </NativeSelectOption>
             ))}
-          </select>
-        </label>
-        <button
+          </NativeSelect>
+        </div>
+        <Button
+          variant="outline"
+          className="min-h-11"
           type="button"
           onClick={() => {
             setSaved(JSON.stringify(onCheckpoint()));
@@ -65,8 +83,10 @@ export function ScenarioControls({
           }}
         >
           Save checkpoint
-        </button>
-        <button
+        </Button>
+        <Button
+          variant="outline"
+          className="min-h-11"
           type="button"
           disabled={saved === null}
           onClick={() => {
@@ -79,7 +99,7 @@ export function ScenarioControls({
           }}
         >
           Restore checkpoint
-        </button>
+        </Button>
         {error && <p role="alert">{error}</p>}
       </div>
     </details>

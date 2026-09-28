@@ -146,12 +146,24 @@ importers:
 
   examples/reference-games/hearts:
     dependencies:
+      '@base-ui/react':
+        specifier: ^1.8.0
+        version: 1.8.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@dreamboard-games/sdk':
         specifier: workspace:*
         version: link:../../../packages/sdk
       '@tanstack/react-store':
         specifier: 'catalog:'
         version: 0.11.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      cn:
+        specifier: ^0.4.0
+        version: 0.4.0
+      lucide-react:
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.3.0)
       react:
         specifier: 'catalog:'
         version: 19.3.0
@@ -204,12 +216,24 @@ importers:
 
   examples/reference-games/hex-network-trading:
     dependencies:
+      '@base-ui/react':
+        specifier: ^1.8.0
+        version: 1.8.0(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@dreamboard-games/sdk':
         specifier: workspace:*
         version: link:../../../packages/sdk
       '@tanstack/react-store':
         specifier: 'catalog:'
         version: 0.11.1(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      class-variance-authority:
+        specifier: ^0.7.1
+        version: 0.7.1
+      cn:
+        specifier: ^0.4.0
+        version: 0.4.0
+      lucide-react:
+        specifier: ^1.48.0
+        version: 1.48.0(react@19.3.0)
       react:
         specifier: 'catalog:'
         version: 19.3.0

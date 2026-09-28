@@ -84,6 +84,17 @@ try {
           expected,
         );
         await expect(page.getByRole("alert")).toHaveCount(0);
+        for (const control of await page
+          .locator(
+            '[data-slot="button"], [data-slot="input"], [data-slot="native-select"]',
+          )
+          .all()) {
+          if (await control.isVisible()) {
+            expect(
+              (await control.boundingBox())!.height,
+            ).toBeGreaterThanOrEqual(44);
+          }
+        }
       }
       if (story.id === "registry-primitives--controls") {
         const primary = page.getByRole("button", { name: "Primary action" });
@@ -92,6 +103,16 @@ try {
         await expect(
           page.getByRole("button", { name: "Unavailable" }),
         ).toBeDisabled();
+        await page.evaluate(() =>
+          document.documentElement.classList.add("dark"),
+        );
+        await expect(primary).toHaveCSS(
+          "background-color",
+          "rgb(171, 213, 225)",
+        );
+        await page.evaluate(() =>
+          document.documentElement.classList.remove("dark"),
+        );
         await primary.focus();
         await expect(primary).toBeFocused();
         await page.getByRole("spinbutton", { name: "Quantity" }).fill("3");
