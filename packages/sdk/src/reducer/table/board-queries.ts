@@ -317,6 +317,7 @@ export function getIncidentVertices<
     const edge = geometry.edges.find((edge) => edge.id === edgeId);
     if (!edge)
       throw new Error(`Unknown edge '${edgeId}' on board '${boardId}'.`);
+    // eslint-disable-next-line no-restricted-syntax -- The edge was found in this board geometry; its vertex IDs belong to the same manifest-derived BoardId.
     return edge.vertexIds as unknown as TiledVertexIdOfTable<Table, BoardId>[];
   }
 
@@ -670,6 +671,7 @@ export function bindBoardQueries<
       incidentVertices: verticesOf,
       ...queries
     } = geometry;
+    // eslint-disable-next-line no-restricted-syntax -- The hex layout branch constructs the complete hex query surface from this board geometry and the same Table.
     return {
       ...common,
       ...queries,
@@ -683,8 +685,10 @@ export function bindBoardQueries<
     >;
   }
   if (state.layout === "square") {
+    // eslint-disable-next-line no-restricted-syntax -- The selected board has square layout; its original key therefore belongs to this Table's square and tiled board ID sets.
     const tiledId = boardId as unknown as SquareBoardIdOfTable<Table> &
       TiledBoardIdOfTable<Table>;
+    // eslint-disable-next-line no-restricted-syntax -- The square layout branch constructs the complete square query surface bound to this Table and BoardId.
     return {
       ...common,
       edgesOf: (id: TiledVertexIdOfTable<Table, typeof tiledId>) =>

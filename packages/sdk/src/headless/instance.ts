@@ -1634,6 +1634,7 @@ export function createGameInstance<G>() {
       options.features as
         ((core: RuntimeCore, context: RuntimeContext) => Features) | undefined,
     );
+    // eslint-disable-next-line no-restricted-syntax -- Controller construction binds this source and feature map to the public G/F/S facade.
     return controller.instance as unknown as GameInstance<G, F, S>;
   };
 }

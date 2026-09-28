@@ -472,6 +472,7 @@ export function boardFeature<G>(
 ): BoardFeature<G> {
   // Game-binding boundary: source identities and installed hooks belong to G.
   // Proven by headless-features/inline-boards type tests and board behavior tests.
+  // eslint-disable-next-line no-restricted-syntax -- Instance composition binds these runtime source identities and feature hooks to the same game G.
   return createRuntimeBoardFeature(
     context[runtimeFeatures],
   ) as unknown as BoardFeature<G>;

@@ -100,19 +100,33 @@ describe("table ops spatial helpers", () => {
   test("moveComponentToEdge and moveComponentToVertex validate targets and preserve stable ordering", () => {
     const table = createSpatialTable();
 
-    expect(() =>
-      createTestTransaction({ table }).moveComponentToEdge({
-        componentId: "piece-1",
-        boardId: "square-board",
-        edgeId: "missing-edge" as never,
-      }),
+    expect(
+      () =>
+        void Reflect.apply(
+          createTestTransaction({ table }).moveComponentToEdge,
+          undefined,
+          [
+            {
+              componentId: "piece-1",
+              boardId: "square-board",
+              edgeId: "missing-edge",
+            },
+          ],
+        ),
     ).toThrow("Unknown edge");
-    expect(() =>
-      createTestTransaction({ table }).moveComponentToVertex({
-        componentId: "piece-1",
-        boardId: "square-board",
-        vertexId: "missing-vertex" as never,
-      }),
+    expect(
+      () =>
+        void Reflect.apply(
+          createTestTransaction({ table }).moveComponentToVertex,
+          undefined,
+          [
+            {
+              componentId: "piece-1",
+              boardId: "square-board",
+              vertexId: "missing-vertex",
+            },
+          ],
+        ),
     ).toThrow("Unknown vertex");
 
     const withPieceOnEdge = createTestTransaction({

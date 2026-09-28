@@ -159,12 +159,12 @@ function runInternal<State extends { table: RuntimeTableRecord }>(
   key: keyof TransactionMutations<State>,
   args: readonly unknown[],
 ): State {
-  (
-    transactionMutations[key] as unknown as (
-      state: State,
-      ...args: readonly unknown[]
-    ) => State
-  )(context.currentState, ...args);
+  // eslint-disable-next-line no-restricted-syntax -- The transaction surface forwards each typed method to the identically keyed mutation with the same State and arguments.
+  const mutate = transactionMutations[key] as unknown as (
+    state: State,
+    ...args: readonly unknown[]
+  ) => State;
+  mutate(context.currentState, ...args);
   invalidate(context);
   return context.currentState;
 }

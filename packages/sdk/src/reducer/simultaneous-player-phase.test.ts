@@ -1,225 +1,84 @@
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
 import { createGame as createModel } from "../reducer";
 
 import { createReducerTestingRuntime } from "../testing/reducer-runtime.js";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { cardInput, cardTarget, formInput, rngInput } from "./inputs";
+import { formInput, rngInput } from "./inputs";
 import { gameEvent, many } from "../reducer";
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../reducer/model";
+import { dealCardsFromDeckToHandInPlace } from "./table/card-mutations";
 import { asPlayerId } from "../reducer/per-player";
 
 function hydrateRefs<T>(
-  interactionsByRef: Record<string, T>,
+  interactionsByRef: Record<string, T> | undefined,
   refs: readonly string[] | undefined,
 ): T[] {
+  if (!interactionsByRef) throw new Error("Expected interaction projection");
   return (refs ?? []).map((ref) => interactionsByRef[ref]).filter(Boolean);
 }
 
-function createTable(): RuntimeTableRecord {
-  const playerIds = ["player-1", "player-2", "player-3"];
-  return {
-    playerOrder: [...playerIds],
-    zones: {
-      shared: {},
-      perPlayer: {
-        hand: Object.fromEntries(
-          playerIds.map((id) => asPlayerId(id)).map((id) => [id, []]),
-        ),
-      },
-      visibility: { hand: "ownerOnly" },
+const manifest = compileManifest({
+  players: { minPlayers: 3, maxPlayers: 3 },
+  cardSets: [
+    {
+      id: "cards",
+      name: "Cards",
+      defaultHome: { type: "zone", zoneId: "draw" },
+      cardSchema: { properties: {} },
+      cards: (
+        [
+          "card-1",
+          "card-2",
+          "card-3",
+          "card-4",
+          "card-5",
+          "card-6",
+          "card-7",
+        ] as const
+      ).map((id) => ({
+        id,
+        name: id,
+        cardType: "test-card",
+        count: 1,
+        properties: {},
+      })),
     },
-    decks: {},
-    hands: {
-      hand: Object.fromEntries(
-        playerIds.map((id) => asPlayerId(id)).map((id) => [id, []]),
-      ),
+  ],
+  zones: [
+    {
+      id: "draw",
+      name: "Draw",
+      scope: "shared",
+      visibility: "hidden",
+      allowedCardSetIds: ["cards"],
     },
-    handVisibility: {},
-    cards: {},
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: Object.fromEntries(
-      playerIds.map((id) => asPlayerId(id)).map((id) => [id, {}]),
-    ),
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
+    {
+      id: "hand",
+      name: "Hand",
+      scope: "perPlayer",
+      visibility: "ownerOnly",
+      allowedCardSetIds: ["cards"],
     },
-    dice: {},
-  };
-}
-
-function createCardTable(): RuntimeTableRecord {
+  ],
+  resources: [{ id: "gold", name: "Gold" }],
+} as const);
+const createTable = () =>
+  manifest.createInitialTable({
+    playerIds: ["player-1", "player-2", "player-3"],
+  });
+function createCardTable() {
   const table = createTable();
-  return {
-    ...table,
-    cards: Object.fromEntries(
-      [
-        "card-1",
-        "card-2",
-        "card-3",
-        "card-4",
-        "card-5",
-        "card-6",
-        "card-7",
-      ].map((cardId) => [
-        cardId,
-        {
-          id: cardId,
-          cardSetId: "cards",
-          cardType: "test-card",
-          properties: {},
-        },
-      ]),
-    ),
-    zones: {
-      ...table.zones,
-      perPlayer: {
-        hand: Object.fromEntries(
-          ["player-1", "player-2", "player-3"]
-            .map((id) => asPlayerId(id))
-            .map((playerId) => [
-              playerId,
-              playerId === "player-1"
-                ? ["card-1", "card-2", "card-3"]
-                : playerId === "player-2"
-                  ? ["card-4", "card-5", "card-6"]
-                  : ["card-7"],
-            ]),
-        ),
-      },
-    },
-    hands: {
-      hand: Object.fromEntries(
-        ["player-1", "player-2", "player-3"]
-          .map((id) => asPlayerId(id))
-          .map((playerId) => [
-            playerId,
-            playerId === "player-1"
-              ? ["card-1", "card-2", "card-3"]
-              : playerId === "player-2"
-                ? ["card-4", "card-5", "card-6"]
-                : ["card-7"],
-          ]),
-      ),
-    },
-  };
-}
-
-function createManifestContract() {
-  const playerIds = ["player-1", "player-2", "player-3"] as const;
-  const phaseNames = ["choose"] as const;
-  const cardIds = [
-    "card-1",
-    "card-2",
-    "card-3",
-    "card-4",
-    "card-5",
-    "card-6",
-    "card-7",
-  ] as const;
-  const cardSetIds = ["cards"] as const;
-  const cardTypes = ["test-card"] as const;
-  const handIds = ["hand"] as const;
-  const cardSetIdByCardId = Object.fromEntries(
-    cardIds.map((cardId) => [cardId, "cards"]),
-  ) as Record<(typeof cardIds)[number], "cards">;
-  const cardTypeByCardId = Object.fromEntries(
-    cardIds.map((cardId) => [cardId, "test-card"]),
-  ) as Record<(typeof cardIds)[number], "test-card">;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds,
-      cardTypes,
-      deckIds: [] as const,
-      handIds,
-      sharedZoneIds: [] as const,
-      playerZoneIds: handIds,
-      zoneIds: handIds,
-      cardIds,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: { hand: "ownerOnly" },
-      zoneVisibilityById: { hand: "ownerOnly" },
-      cardSetIdByCardId,
-      cardTypeByCardId,
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: { hand: ["cards"] },
-    },
-    ids: {
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      cardSetId: createManifestStringLiteralSchema(cardSetIds),
-      cardType: createManifestStringLiteralSchema(cardTypes),
-      cardId: createManifestStringLiteralSchema(cardIds),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema(handIds),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema(handIds),
-      zoneId: createManifestStringLiteralSchema(handIds),
-      resourceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      tileId: createManifestStringLiteralSchema([] as const),
-      tileTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      portId: createManifestStringLiteralSchema([] as const),
-      portTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({ hand: Object.fromEntries([].map((id) => [id, []])) }),
-      handVisibility: () => ({ hand: "ownerOnly" }),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: (ids: readonly string[]) =>
-        Object.fromEntries(
-          ids.map((id) => asPlayerId(id)).map((id) => [id, {}]),
-        ),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
+  for (const playerId of table.playerOrder) {
+    dealCardsFromDeckToHandInPlace(
+      table,
+      "draw",
+      playerId,
+      "hand",
+      playerId === "player-3" ? 1 : 3,
+    );
+  }
+  return table;
 }
 
 function createGame({
@@ -229,7 +88,6 @@ function createGame({
   canResubmit?: boolean;
   rejectRight?: boolean;
 } = {}) {
-  const manifest = createManifestContract();
   const contract = createModel({
     manifest,
     phases: { choose: z.object({}) },
@@ -276,7 +134,7 @@ function createGame({
           tx.patchPublicState({ resolved });
           if (rejectRight) {
             tx.addResources({
-              playerId: "player-1",
+              playerId: asPlayerId("player-1"),
               amounts: {
                 gold: random.integer({ minInclusive: 1, maxInclusive: 6 }),
               },
@@ -300,12 +158,9 @@ function createGame({
 
 function createCardPassGame(options?: {
   commit?: {
-    mode: "manual" | "autoWhenReady";
+    mode: "manual";
   };
 }) {
-  type CardId =
-    "card-1" | "card-2" | "card-3" | "card-4" | "card-5" | "card-6" | "card-7";
-  const manifest = createManifestContract();
   const contract = createModel({
     manifest,
     phases: { choose: z.object({}) },
@@ -319,7 +174,6 @@ function createCardPassGame(options?: {
       hidden: z.object({}),
     },
   });
-  const handCardTarget = cardTarget.zones<never, CardId>(["hand"]).build();
   return contract.assemble({
     initial: {
       public: () => ({ resolved: [] }),
@@ -335,16 +189,19 @@ function createCardPassGame(options?: {
         submit: {
           commit: options?.commit,
           inputs: {
-            cardIds: many(cardInput({ target: handCardTarget }), {
-              count: 3,
-              distinct: true,
-            }),
+            cardIds: many(
+              contract.phase("choose").inputs.card({ from: ["hand"] }),
+              {
+                count: 3,
+                distinct: true,
+              },
+            ),
           },
         },
         resolve({ submissions, tx }) {
           const resolved = Object.values(submissions).map((submission) => ({
             playerId: submission.playerId,
-            cardIds: [...(submission.params.cardIds as readonly string[])],
+            cardIds: [...submission.params.cardIds],
           }));
           tx.patchPublicState({ resolved });
           return;
@@ -369,7 +226,7 @@ function submitCardsInput(playerId: string, cardIds: readonly string[]) {
     kind: "interaction" as const,
     interactionId: "submit",
     playerId,
-    params: { cardIds },
+    params: { cardIds: [...cardIds] },
   };
 }
 
@@ -380,7 +237,7 @@ describe("simultaneousPlayer phases", () => {
     );
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2", "player-3"],
         rngSeed: 42,
       })
@@ -410,7 +267,7 @@ describe("simultaneousPlayer phases", () => {
     const accepted = await submit(first.state, "player-2", "left");
     const fresh = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2", "player-3"],
         rngSeed: 42,
       })
@@ -433,7 +290,6 @@ describe("simultaneousPlayer phases", () => {
   });
 
   test("automatic phases expose no actor or causal scheduler metadata", async () => {
-    const manifest = createManifestContract();
     const contract = createModel({
       manifest,
       phases: { choose: z.object({}) },
@@ -460,7 +316,7 @@ describe("simultaneousPlayer phases", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2", "player-3"],
       })
     ).state;
@@ -482,7 +338,7 @@ describe("simultaneousPlayer phases", () => {
     const bundle = createReducerTestingRuntime(createGame());
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2", "player-3"],
       })
     ).state;
@@ -523,7 +379,7 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(first.kind).toBe("accept");
     if (first.kind !== "accept") return;
-    expect(first.state.domain.publicState.resolved).toEqual([]);
+    expect(first.state.domain.publicState).toEqual({ resolved: [] });
 
     const afterFirstProjection = bundle.project({
       state: first.state,
@@ -571,10 +427,12 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(second.kind).toBe("accept");
     if (second.kind !== "accept") return;
-    expect(second.state.domain.publicState.resolved).toEqual([
-      { playerId: "player-1", choice: "left" },
-      { playerId: "player-2", choice: "right" },
-    ]);
+    expect(second.state.domain.publicState).toEqual({
+      resolved: [
+        { playerId: "player-1", choice: "left" },
+        { playerId: "player-2", choice: "right" },
+      ],
+    });
     expect(second.state.runtime.simultaneous.current).toBeNull();
   });
 
@@ -584,7 +442,7 @@ describe("simultaneousPlayer phases", () => {
     );
     const initial = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2", "player-3"],
       })
     ).state;
@@ -609,17 +467,19 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(resolved.kind).toBe("accept");
     if (resolved.kind !== "accept") return;
-    expect(resolved.state.domain.publicState.resolved).toEqual([
-      { playerId: "player-1", choice: "right" },
-      { playerId: "player-2", choice: "left" },
-    ]);
+    expect(resolved.state.domain.publicState).toEqual({
+      resolved: [
+        { playerId: "player-1", choice: "right" },
+        { playerId: "player-2", choice: "left" },
+      ],
+    });
   });
 
   test("collects three-card simultaneous submissions with server-authoritative validation", async () => {
     const bundle = createReducerTestingRuntime(createCardPassGame());
     const initial = (
       await bundle.initialize({
-        table: createCardTable(),
+        table: RuntimeJsonSchema.parse(createCardTable()),
         playerIds: ["player-1", "player-2", "player-3"],
       })
     ).state;
@@ -686,7 +546,7 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(first.kind).toBe("accept");
     if (first.kind !== "accept") return;
-    expect(first.state.domain.publicState.resolved).toEqual([]);
+    expect(first.state.domain.publicState).toEqual({ resolved: [] });
 
     const second = await bundle.dispatch({
       state: first.state,
@@ -694,20 +554,23 @@ describe("simultaneousPlayer phases", () => {
     });
     expect(second.kind).toBe("accept");
     if (second.kind !== "accept") return;
-    expect(second.state.domain.publicState.resolved).toEqual([
-      {
-        playerId: "player-1",
-        cardIds: ["card-1", "card-2", "card-3"],
-      },
-      {
-        playerId: "player-2",
-        cardIds: ["card-4", "card-5", "card-6"],
-      },
-    ]);
+    expect(second.state.domain.publicState).toEqual({
+      resolved: [
+        {
+          playerId: "player-1",
+          cardIds: ["card-1", "card-2", "card-3"],
+        },
+        {
+          playerId: "player-2",
+          cardIds: ["card-4", "card-5", "card-6"],
+        },
+      ],
+    });
   });
 
   test("rejects auto submit for many-input simultaneous submissions", () => {
     expect(() =>
+      // @ts-expect-error -- Deliberately reject automatic commit for a many-input simultaneous phase at runtime.
       createCardPassGame({ commit: { mode: "autoWhenReady" } }),
     ).toThrow(
       'defineGame: phases.choose.submit: interactions with many(...) inputs must use commit: { mode: "manual" }.',

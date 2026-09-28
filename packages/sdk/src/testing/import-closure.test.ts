@@ -11,6 +11,6 @@ test("the complete testing facade bundles for browsers without Node externals", 
     metafile: true,
   });
   expect(
-    Object.values(result.metafile!.outputs).flatMap((output) => output.imports),
+    Object.values(result.metafile.outputs).flatMap((output) => output.imports),
   ).toEqual([]);
 });

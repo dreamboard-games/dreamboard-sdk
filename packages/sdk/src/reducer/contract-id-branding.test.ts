@@ -12,8 +12,11 @@ function buildMinimalManifest() {
   const zoneIds = ["hand", "discard"] as const;
   return {
     literals: {
+      boardLayouts: [] as const,
+      boardTypeIds: [] as const,
+      relationTypeIds: [] as const,
       playerIds,
-      phases: { "phase-1": z.object({}) },
+      phaseNames: ["phase-1"] as const,
       cardSetIds: ["deck-set"] as const,
       cardTypes: ["standard"] as const,
       deckIds: ["deck"] as const,
@@ -44,6 +47,7 @@ function buildMinimalManifest() {
       cardSetIdsByPlayerZoneId: {},
     },
     ids: {
+      boardLayout: z.enum(["hex", "square", "network", "track"]),
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: z.enum(["phase-1"] as const),
       cardSetId: createManifestStringLiteralSchema(["deck-set"] as const),

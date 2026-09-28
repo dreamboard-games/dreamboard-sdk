@@ -356,7 +356,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
         playerId: this.playerId(seat, "seat"),
         interactionId,
       }),
-    ) as InteractionExplanationLike;
+    );
   }
 
   clone(): ScenarioReplay<Game> {
@@ -421,7 +421,7 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
             playerId: selectedPlayerId!,
             interactionId: String(descriptor.interactionId ?? ""),
           }),
-        ) as InteractionExplanationLike,
+        ),
         actionability: structuredClone(
           this.bundle.resolveInteractionActionability({
             state: this.reducerState,
@@ -506,11 +506,11 @@ class ScenarioReplayImplementation<Game> implements ScenarioReplay<Game> {
           : this.scenario.given.length;
     const whenCount = target.segment === "when" ? target.completed : 0;
     for (let index = 0; index < givenCount; index += 1) {
-      await this.dispatchRequired("given", index, this.scenario.given[index]!);
+      await this.dispatchRequired("given", index, this.scenario.given[index]);
     }
     this.checkpoint = { segment: "given", completed: givenCount };
     for (let index = 0; index < whenCount; index += 1) {
-      await this.dispatchRequired("when", index, this.scenario.when[index]!);
+      await this.dispatchRequired("when", index, this.scenario.when[index]);
     }
     this.checkpoint = structuredClone(target);
   }

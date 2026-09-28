@@ -18,7 +18,8 @@
     "release:verify": "node scripts/cli.ts release:verify",
     "test": "node scripts/cli.ts test",
     "typecheck": "node scripts/cli.ts typecheck",
-    "ui": "node scripts/cli.ts ui"
+    "ui": "node scripts/cli.ts ui",
+    "type-audit": "node scripts/cli.ts type-audit"
   },
   "devDependencies": {
     "@eslint/js": "catalog:",
@@ -31,7 +32,8 @@
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "yaml": "catalog:",
-    "zod": "catalog:"
+    "zod": "catalog:",
+    "@eslint-community/eslint-plugin-eslint-comments": "catalog:"
   },
   "repository": {
     "type": "git",

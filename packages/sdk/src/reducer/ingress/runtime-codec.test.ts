@@ -3,159 +3,67 @@ import { createGame as createModel } from "../../reducer";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../model";
+import type { RuntimeTableRecord } from "../model";
+import { compileManifest } from "../manifest/compiler";
 import { asPlayerId } from "../per-player";
 import { createIngressRuntimeCodec } from "./session-codec";
 
-function buildMinimalManifest<const PhaseNames extends readonly string[]>(
-  phaseNames: PhaseNames,
-) {
-  const playerIds = ["player-1", "player-2"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: ["draw"] as const,
-      handIds: ["hand"] as const,
-      sharedZoneIds: ["draw"] as const,
-      playerZoneIds: ["hand"] as const,
-      zoneIds: ["draw", "hand"] as const,
-      cardIds: ["card-1", "card-2"] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: { hand: "ownerOnly" },
-      zoneVisibilityById: { draw: "public", hand: "ownerOnly" },
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema([] as const),
-      cardId: createManifestStringLiteralSchema(["card-1", "card-2"] as const),
-      deckId: createManifestStringLiteralSchema(["draw"] as const),
-      handId: createManifestStringLiteralSchema(["hand"] as const),
-      sharedZoneId: createManifestStringLiteralSchema(["draw"] as const),
-      playerZoneId: createManifestStringLiteralSchema(["hand"] as const),
-      zoneId: createManifestStringLiteralSchema(["draw", "hand"] as const),
-      resourceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      tileId: createManifestStringLiteralSchema([] as const),
-      tileTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      portId: createManifestStringLiteralSchema([] as const),
-      portTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: () => ({
-        shared: { draw: [] },
-        perPlayer: {
-          hand: Object.fromEntries(
-            playerIds
-              .map((playerId) => asPlayerId(playerId))
-              .map((id) => [id, []]),
-          ),
-        },
-        visibility: { draw: "public", hand: "ownerOnly" },
-        cardSetIdsByZoneId: {},
-      }),
-      decks: () => ({ draw: [] }),
-      hands: () => ({
-        hand: Object.fromEntries(
-          playerIds
-            .map((playerId) => asPlayerId(playerId))
-            .map((id) => [id, []]),
-        ),
-      }),
-      handVisibility: () => ({ hand: "ownerOnly" }),
-      ownerOfCard: () => ({ "card-1": null, "card-2": null }),
-      visibility: () => ({
-        "card-1": { faceUp: true },
-        "card-2": { faceUp: true },
-      }),
-      resources: () =>
-        Object.fromEntries(
-          playerIds
-            .map((playerId) => asPlayerId(playerId))
-            .map((id) => [id, {}]),
-        ),
-    },
-    tableSchema: z
-      .object({
-        playerOrder: z.array(z.string()),
-        zones: z.object({
-          shared: z.record(z.string(), z.array(z.string())),
-          perPlayer: z.record(z.string(), z.custom()),
-          visibility: z.record(z.string(), z.string()),
-          cardSetIdsByZoneId: z.record(z.string(), z.array(z.string())),
-        }),
-        decks: z.record(z.string(), z.array(z.string())),
-        hands: z.record(z.string(), z.custom()),
-        handVisibility: z.record(z.string(), z.string()),
-        cards: z.record(z.string(), z.object({}).passthrough()),
-        pieces: z.record(z.string(), z.object({}).passthrough()),
-        componentLocations: z.record(z.string(), z.object({}).passthrough()),
-        ownerOfCard: z.record(z.string(), z.string().nullable()),
-        visibility: z.record(z.string(), z.object({}).passthrough()),
-        resources: z.custom(),
-        boards: z.object({
-          byId: z.record(z.string(), z.object({}).passthrough()),
-        }),
-        dice: z.record(z.string(), z.object({}).passthrough()),
-      })
-      .strict() as unknown as z.ZodType<RuntimeTableRecord>,
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
+function buildMinimalManifest() {
+  return compileManifest({
+    players: { minPlayers: 2, maxPlayers: 2, optimalPlayers: 2 },
+    cardSets: [
+      {
+        id: "cards",
+        name: "Cards",
+        defaultHome: { type: "zone", zoneId: "draw" },
+        cardSchema: { properties: { rank: { type: "integer" } } },
+        cards: [
+          {
+            id: "card-1",
+            name: "One",
+            cardType: "card-1",
+            count: 1,
+            properties: { rank: 1 },
+          },
+          {
+            id: "card-2",
+            name: "Two",
+            cardType: "card-2",
+            count: 1,
+            properties: { rank: 2 },
+          },
+        ],
+      },
+    ],
+    zones: [
+      {
+        id: "draw",
+        name: "Draw",
+        scope: "shared",
+        allowedCardSetIds: ["cards"],
+        visibility: "public",
+      },
+      {
+        id: "hand",
+        name: "Hand",
+        scope: "perPlayer",
+        allowedCardSetIds: ["cards"],
+        visibility: "ownerOnly",
+      },
+    ],
+  });
 }
 
 function buildDefinition(
   options: {
-    playState?: z.ZodTypeAny;
+    playState?: z.ZodType<{ actionCount: number }>;
   } = {},
 ) {
   const setupState = z.object({ selectedFirstPlayer: z.string().nullable() });
   const playState =
     options.playState ?? z.object({ actionCount: z.number().int() });
   const contract = createModel({
-    manifest: buildMinimalManifest(["setup", "play"] as const),
+    manifest: buildMinimalManifest(),
     phases: { setup: setupState, play: playState },
     state: {
       public: z.object({ score: z.number().int() }),
@@ -165,6 +73,7 @@ function buildDefinition(
   });
 
   return contract.assemble({
+    view: () => ({}),
     initial: {
       public: () => ({ score: 0 }),
       private: () => ({}),
@@ -198,7 +107,7 @@ function rawCanonicalTable() {
         ),
       },
       visibility: { draw: "public", hand: "ownerOnly" },
-      cardSetIdsByZoneId: {},
+      cardSetIdsByZoneId: { draw: ["cards"], hand: ["cards"] },
     },
     decks: { draw: ["card-1"] },
     hands: {
@@ -239,7 +148,7 @@ function rawCanonicalTable() {
     },
     resources: Object.fromEntries(players.map((id) => [id, {}])),
     pieces: {},
-    boards: { byId: {}, hex: {}, square: {} },
+    boards: { byId: {}, hex: {}, square: {}, network: {}, track: {} },
     dice: {},
   } satisfies RuntimeTableRecord;
 }
@@ -254,7 +163,7 @@ describe("ingress runtime codec", () => {
         {
           playerOrder: ["player-1", "player-2"],
           decks: { draw: ["card-1"] },
-        } as RuntimeTableRecord,
+        },
         ["player-1", "player-2"],
       ),
     ).toThrow(/zones/);
@@ -263,7 +172,7 @@ describe("ingress runtime codec", () => {
   test("admits player records and rejects wrapper objects at initial wire ingress", () => {
     const codec = createIngressRuntimeCodec(buildDefinition());
     const table = rawCanonicalTable();
-    const wire = JSON.parse(JSON.stringify(table));
+    const wire: unknown = JSON.parse(JSON.stringify(table));
     expect(codec.parseInitialTable(wire, table.playerOrder).table).toEqual(
       table,
     );
@@ -275,9 +184,9 @@ describe("ingress runtime codec", () => {
       ],
     };
     for (const invalid of [
-      { ...wire, resources: wrapper },
-      { ...wire, hands: { hand: wrapper } },
-      { ...wire, zones: { ...wire.zones, perPlayer: { hand: wrapper } } },
+      { ...table, resources: wrapper },
+      { ...table, hands: { hand: wrapper } },
+      { ...table, zones: { ...table.zones, perPlayer: { hand: wrapper } } },
     ]) {
       expect(() =>
         codec.parseInitialTable(invalid, table.playerOrder),
@@ -340,7 +249,7 @@ describe("ingress runtime codec", () => {
         kind: "interaction",
         playerId: "player-1",
         interactionId: "takeAction",
-      } as never),
+      }),
     ).toThrow(/params/);
     expect(() =>
       codec.parseInput({
@@ -357,7 +266,7 @@ describe("ingress runtime codec", () => {
         interactionId: "takeAction",
         params: {},
         extra: true,
-      } as never),
+      }),
     ).toThrow(/Unrecognized key/);
     expect(
       codec.parseInput({

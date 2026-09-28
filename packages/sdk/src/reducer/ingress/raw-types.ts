@@ -89,7 +89,7 @@ export type IngressRuntimeCodec<
    * ingress bundle) are responsible for routing it onto the engine-internal
    * action/continuation discriminator.
    */
-  parseInput: (rawInput: RawRuntimeInput) => RawRuntimeInput;
+  parseInput: (rawInput: unknown) => RawRuntimeInput;
 };
 
 export type UntrustedRuntimeTable = RuntimeTableRecord;

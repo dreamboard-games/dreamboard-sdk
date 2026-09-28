@@ -1,4 +1,3 @@
-import type { PlayerId } from "./manifest";
 import { hearts } from "./game-model";
 import gameOver from "./phases/gameOver";
 import passing from "./phases/passing";

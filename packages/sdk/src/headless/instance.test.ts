@@ -341,7 +341,7 @@ describe("headless instance", () => {
     const game = createGameInstance()({ source: x.source });
     expect(x.source.submissions).toHaveLength(0);
     game.interactions
-      .get("play.move")!
+      .get("play.move")
       .getInput("first")
       .getSelectHandler("b")();
     expect(x.source.submissions.at(-1)?.params).toEqual({ first: "b" });
@@ -554,7 +554,7 @@ describe("instance boundaries", () => {
   it("feature roots capture immutable branches on initial build and explicit invalidation", () => {
     const x = setup();
     let invalidate = () => {};
-    let branch = Object.freeze({ x: 1 });
+    let branch: Readonly<{ x: number }> = Object.freeze({ x: 1 });
     const game = createGameInstance()({
       source: x.source,
       features: (core, context) => {
@@ -604,11 +604,11 @@ describe("instance boundaries", () => {
     game.dispose();
   });
   it("numeric and resource drafts use the canonical domain bounds", () => {
-    const bounded: InteractionInputDescriptor = {
+    const bounded = {
       key: "count",
       kind: "form",
       domain: { type: "boundedNumber", min: 0, max: 5, step: 1 },
-    };
+    } satisfies InteractionInputDescriptor;
     const resources: InteractionInputDescriptor = {
       key: "supplies",
       kind: "form",
@@ -621,7 +621,7 @@ describe("instance boundaries", () => {
     const game = createGameInstance()({ source: x.source });
     game.interactions.get("play.move").getInput("count").setValue(4);
     game.interactions
-      .get("play.move")!
+      .get("play.move")
       .getInput("supplies")
       .setValue({ wood: 2 });
     x.emit(2, [
@@ -636,7 +636,7 @@ describe("instance boundaries", () => {
 });
 
 it("many draft reconciliation retains valid members and enforces a lowered maximum without submitting", () => {
-  const input: InteractionInputDescriptor = {
+  const input = {
     key: "cards",
     kind: "card",
     domain: {
@@ -648,11 +648,11 @@ it("many draft reconciliation retains valid members and enforces a lowered maxim
       eligibleTargets: ["a", "b", "c"],
       selection: { mode: "many", min: 1, max: 3 },
     },
-  };
+  } satisfies InteractionInputDescriptor;
   const x = setup([action([input], { commit: { mode: "autoWhenReady" } })]);
   const game = createGameInstance()({ source: x.source });
   game.interactions
-    .get("play.move")!
+    .get("play.move")
     .getInput("cards")
     .setValue(["a", "b", "c"]);
   x.emit(2, [
@@ -712,7 +712,7 @@ it.each([
     const x = setup([action([input], { commit: { mode: "autoWhenReady" } })]);
     const game = createGameInstance()({ source: x.source });
     game.interactions
-      .get("play.move")!
+      .get("play.move")
       .getInput("options")
       .setValue(["a", "b", "c"]);
     x.emit(2, [
@@ -889,7 +889,7 @@ it("controlled nested values are immutable snapshots without freezing owner data
     state: { drafts: { "play.move": { cards: owned } } },
   });
   const captured = game.interactions
-    .get("play.move")!
+    .get("play.move")
     .getInput("cards")
     .getValue() as string[];
   expect(Object.isFrozen(captured)).toBe(true);
@@ -960,7 +960,7 @@ it("native submit reports rejection while preserving the selected draft", async 
   game.interactions.get("play.move").getSubmitHandler()();
   x.ack(false);
   await vi.waitFor(() => expect(onError).toHaveBeenCalledTimes(1));
-  const error = onError.mock.calls[0]![0] as Error;
+  const error = onError.mock.calls[0][0] as Error;
   expect(error.message).toBe("RULE_REJECT");
   expect(error.cause).toEqual({ accepted: false, errorCode: "RULE_REJECT" });
   expect(game.state.drafts).toEqual({ "play.move": { choice: "a" } });

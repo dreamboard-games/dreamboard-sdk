@@ -62,6 +62,7 @@ function makeBoardCollector<
     // Schemas check wire shape only; validateTarget must resolve a canonical
     // candidate before the runtime exposes the refined Id to authored reducers.
     // This is the explicit binding of both invariants into the runtime registry.
+    // eslint-disable-next-line no-restricted-syntax -- Assembly binds these hooks to State; canonical target membership supplies Id after the string schema parses.
     return {
       kind,
       schema: z.string(),
@@ -127,6 +128,7 @@ export function playerSpaceInput<
   // Schemas check wire shape only; validateTarget must resolve a canonical
   // candidate before the runtime exposes the refined Id to authored reducers.
   // This is the explicit binding of both invariants into the runtime registry.
+  // eslint-disable-next-line no-restricted-syntax -- Assembly binds these hooks to State; the strict object schema and canonical target membership supply the player-space value.
   return {
     kind: "board-space",
     schema: z.strictObject({

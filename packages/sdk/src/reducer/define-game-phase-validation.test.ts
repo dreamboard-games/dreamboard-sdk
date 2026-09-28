@@ -1,94 +1,18 @@
 import { createGame } from "../reducer";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  createManifestStringLiteralSchema,
-  type RuntimeTableRecord,
-} from "../reducer/model";
+import { compileManifest } from "./manifest/compiler";
 
-function buildMinimalManifest() {
-  const playerIds = ["player-1", "player-2"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames: [] as readonly string[],
-      cardSetIds: [] as const,
-      cardTypes: [] as const,
-      deckIds: [] as const,
-      handIds: [] as const,
-      sharedZoneIds: [] as const,
-      playerZoneIds: [] as const,
-      zoneIds: [] as const,
-      cardIds: [] as const,
-      resourceIds: [] as const,
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {},
-      zoneVisibilityById: {},
-      cardSetIdByCardId: {},
-      cardTypeByCardId: {},
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: z.string(),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema([] as const),
-      cardId: createManifestStringLiteralSchema([] as const),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema([] as const),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema([] as const),
-      zoneId: createManifestStringLiteralSchema([] as const),
-      resourceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
-}
+const manifest = compileManifest({
+  players: { minPlayers: 2, maxPlayers: 2 },
+  cardSets: [],
+});
 
 function buildContract<const PhaseNames extends readonly string[]>(
   phaseNames: PhaseNames,
 ) {
   return createGame({
-    manifest: buildMinimalManifest(),
+    manifest,
     state: {
       public: z.object({}),
       private: z.object({}),
@@ -121,39 +45,45 @@ describe("game.assemble phase names cross-check", () => {
   test("throws when the phases record is missing a declared phase", () => {
     const game = buildContract(["alpha", "beta"] as const);
     const alpha = game.phase("alpha").define(autoPhase);
-    expect(() =>
-      game.assemble({
-        initial,
-        view: () => ({}),
-        initialPhase: "alpha",
-        phases: { alpha } as unknown as {
-          alpha: typeof alpha;
-          beta: typeof alpha;
-        },
-      }),
+    expect(
+      () =>
+        void Reflect.apply(game.assemble, game, [
+          {
+            initial,
+            view: () => ({}),
+            initialPhase: "alpha",
+            phases: { alpha },
+          },
+        ]),
     ).toThrow(/missing: \[beta\]/);
   });
   test("throws when the phases record has an undeclared phase", () => {
     const game = buildContract(["alpha"] as const);
     const alpha = game.phase("alpha").define(autoPhase);
-    expect(() =>
-      game.assemble({
-        initial,
-        view: () => ({}),
-        initialPhase: "alpha",
-        phases: { alpha, beta: alpha } as { alpha: typeof alpha },
-      }),
+    expect(
+      () =>
+        void Reflect.apply(game.assemble, game, [
+          {
+            initial,
+            view: () => ({}),
+            initialPhase: "alpha",
+            phases: { alpha, beta: alpha },
+          },
+        ]),
     ).toThrow(/extra: \[beta\]/);
   });
   test("throws when initialPhase is not declared", () => {
     const game = buildContract(["alpha"] as const);
-    expect(() =>
-      game.assemble({
-        initial,
-        view: () => ({}),
-        initialPhase: "ghost" as "alpha",
-        phases: { alpha: game.phase("alpha").define(autoPhase) },
-      }),
+    expect(
+      () =>
+        void Reflect.apply(game.assemble, game, [
+          {
+            initial,
+            view: () => ({}),
+            initialPhase: "ghost",
+            phases: { alpha: game.phase("alpha").define(autoPhase) },
+          },
+        ]),
     ).toThrow(/initialPhase 'ghost' is not declared/);
   });
 });
@@ -166,12 +96,15 @@ test("assembly validates inline interactions even when authoring types were bypa
     interactions: {
       choose: { steps: { entries: [] } },
     },
-  } as unknown as typeof alpha;
-  expect(() =>
-    game.assemble({
-      initial,
-      view: () => ({}),
-      phases: { alpha: malformed },
-    }),
+  };
+  expect(
+    () =>
+      void Reflect.apply(game.assemble, game, [
+        {
+          initial,
+          view: () => ({}),
+          phases: { alpha: malformed },
+        },
+      ]),
   ).toThrow("An interaction requires at least one step");
 });

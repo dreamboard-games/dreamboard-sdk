@@ -193,7 +193,7 @@ describe("headless features", () => {
       "hidden",
     ]);
     expect(hand.getSelectableCardIds()).toEqual(["red", "blue"]);
-    expect(hand.getCards()[2]!.view).toBeNull();
+    expect(hand.getCards()[2].view).toBeNull();
     game.cards.get("red").select();
     expect(game.zones.get("hand").getSelectedCardIds()).toEqual(["red"]);
     expect(hand.getSelectedCardIds()).toEqual([]);
@@ -217,7 +217,7 @@ describe("headless features", () => {
     expect(
       layout.getEdges().every((edge) => edge.id.startsWith("island:edge:")),
     ).toBe(true);
-    const cell = layout.getSpaces()[0]!;
+    const cell = layout.getSpaces()[0];
     expect(layout.pointToSpace(cell.center.x, cell.center.y)).toBe("center");
     expect(layout.pointToSpace(9999, 9999)).toBeUndefined();
     expect(cell.getIsSelectable()).toBe(true);
@@ -228,9 +228,9 @@ describe("headless features", () => {
     expect(cell.getIsSelected()).toBe(false);
     expect(
       game.boards
-        .get("island:alice")!
+        .get("island:alice")
         .getLayout({ hexSize: 24 })
-        .getSpaces()[0]!
+        .getSpaces()[0]
         .getIsSelected(),
     ).toBe(true);
     game.dispose();
@@ -241,9 +241,9 @@ describe("headless features", () => {
     const origin = { x: 12, y: 9 };
     const viewport = { x: 4, y: 7, scale: 2 };
     const layout = game.boards
-      .get("island")!
+      .get("island")
       .getLayout({ hexSize: 12, origin, viewport });
-    const cell = layout.getSpaces()[0]!;
+    const cell = layout.getSpaces()[0];
     const points = cell.points();
     for (const value of [
       layout,
@@ -285,7 +285,9 @@ describe("headless features", () => {
           {
             ...descriptor(),
             inputs: descriptor().inputs.map((value) =>
-              value.key === "space"
+              value.key === "space" &&
+              value.domain.type === "boardTarget" &&
+              value.domain.valueKind === "board-id"
                 ? { ...value, domain: { ...value.domain, eligibleTargets } }
                 : value,
             ),
@@ -294,9 +296,9 @@ describe("headless features", () => {
       });
     emit([]);
     const cell = game.boards
-      .get("island")!
+      .get("island")
       .getLayout({ hexSize: 12 })
-      .getSpaces()[0]!;
+      .getSpaces()[0];
     const props = cell.getTargetProps();
     expect(props.disabled).toBe(true);
     emit(["center"]);
@@ -330,7 +332,7 @@ describe("headless features", () => {
     };
     const { game } = setup(square);
     const layout = game.boards
-      .get("square")!
+      .get("square")
       .getLayout({ hexSize: 10, viewport: { x: 5, y: 3, scale: 2 } });
     expect(layout.getEdges().map((edge) => edge.id)).toEqual(["authored-edge"]);
     expect(game.boards.get("square").data).toHaveProperty(
@@ -398,7 +400,7 @@ describe("headless features", () => {
       cardInputKey: "card",
       inputKey: "space",
     });
-    game.drag.setDropTarget(target!);
+    game.drag.setDropTarget(target);
     game.drag.drop();
     expect(game.state.drafts["play.move"]).toEqual({
       card: "red",
@@ -428,7 +430,9 @@ describe("headless features", () => {
     const narrow = (ids: string[]): InteractionDescriptor => ({
       ...descriptor(),
       inputs: descriptor().inputs.map((value) =>
-        value.key === "space"
+        value.key === "space" &&
+        value.domain.type === "boardTarget" &&
+        value.domain.valueKind === "board-id"
           ? { ...value, domain: { ...value.domain, eligibleTargets: ids } }
           : value,
       ),
@@ -440,7 +444,7 @@ describe("headless features", () => {
         availableInteractions: [broad],
         zones: {
           hand: {
-            ...input.store.get().snapshot!.frame.zones.hand!,
+            ...input.store.get().snapshot!.frame.zones.hand,
             playableByCardId: { red: [narrow(ids)] },
           },
         },
@@ -470,7 +474,9 @@ describe("headless features", () => {
       interactionId: "alternate",
       interactionKey: "play.alternate",
       inputs: descriptor().inputs.map((value) =>
-        value.key === "space"
+        value.key === "space" &&
+        value.domain.type === "boardTarget" &&
+        value.domain.valueKind === "board-id"
           ? { ...value, domain: { ...value.domain, targetKind: "tile" } }
           : value,
       ),
@@ -480,9 +486,9 @@ describe("headless features", () => {
       availableInteractions: [descriptor(), alternate],
     });
     const cell = game.boards
-      .get("island")!
+      .get("island")
       .getLayout({ hexSize: 10 })
-      .getSpaces()[0]!;
+      .getSpaces()[0];
     expect(() => cell.getSelectHandler()()).toThrow(AmbiguousTargetError);
     expect(cell.getTargetProps({ interaction: "play.missing" }).disabled).toBe(
       true,
@@ -511,12 +517,12 @@ describe("headless features", () => {
     game.drag.drop();
     expect(game.state.drafts).toEqual({});
     game.drag.begin("red");
-    game.drag.setDropTarget(game.drag.getDropTargets()[0]!);
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]);
     game.drag.cancel();
     game.drag.drop();
     expect(game.state.drafts).toEqual({});
     game.drag.begin("red");
-    const target = game.drag.getDropTargets()[0]!;
+    const target = game.drag.getDropTargets()[0];
     game.drag.setDropTarget(target);
     game.drag.setDropTarget({ ...target, inputKey: "missing" });
     expect(game.drag.active?.target).toBeNull();
@@ -527,9 +533,9 @@ describe("headless features", () => {
   it("does not route a per-player target absent from its projected domain", () => {
     const { game } = setup(hexBoard("island:bob", "bob"));
     const cell = game.boards
-      .get("island:bob")!
+      .get("island:bob")
       .getLayout({ hexSize: 10 })
-      .getSpaces()[0]!;
+      .getSpaces()[0];
     expect(cell.getIsSelectable()).toBe(false);
     expect(cell.getTargetProps().disabled).toBe(true);
     cell.getSelectHandler()();
@@ -560,8 +566,8 @@ it("retains both input keys when one interaction has multiple card and board inp
     ...original,
     inputs: [
       ...original.inputs,
-      { ...original.inputs[0]!, key: "secondCard" },
-      { ...original.inputs[1]!, key: "secondSpace" },
+      { ...original.inputs[0], key: "secondCard" },
+      { ...original.inputs[1], key: "secondSpace" },
     ],
   };
   const frame = input.store.get().snapshot!.frame;
@@ -570,7 +576,7 @@ it("retains both input keys when one interaction has multiple card and board inp
     availableInteractions: [multi],
     zones: {
       hand: {
-        ...frame.zones.hand!,
+        ...frame.zones.hand,
         playableByCardId: { red: [multi], blue: [multi] },
       },
     },
@@ -591,7 +597,7 @@ it("retains both input keys when one interaction has multiple card and board inp
     ["secondCard", "space"],
     ["secondCard", "secondSpace"],
   ]);
-  game.drag.setDropTarget(targets[1]!);
+  game.drag.setDropTarget(targets[1]);
   game.drag.drop();
   expect(game.state.drafts["play.move"]).toEqual({
     secondCard: "red",
@@ -601,7 +607,7 @@ it("retains both input keys when one interaction has multiple card and board inp
   game.boards
     .get("island")
     .getLayout({ hexSize: 20 })
-    .getSpaces()[0]!
+    .getSpaces()[0]
     .getSelectHandler({ interaction: "play.move", input: "secondSpace" })();
   expect(game.state.drafts["play.move"]).toEqual({ secondSpace: "center" });
   game.dispose();
@@ -614,7 +620,7 @@ it("shares semantic space handlers with geometry and captures immutable selectio
   expect(board.spaces).toBe(board.spaces);
   expect(board.spaces.getAll()).toEqual([space]);
   expect(space.board).toBe(board);
-  const spatial = board.getLayout({ hexSize: 20 }).getSpaces()[0]!;
+  const spatial = board.getLayout({ hexSize: 20 }).getSpaces()[0];
   expect(spatial.getSelectHandler).toBe(space.getSelectHandler);
   expect(spatial.getTargetProps).toBe(space.getTargetProps);
   space.getSelectHandler({ interaction: "play.move" })();
@@ -672,7 +678,7 @@ it.each(["frame", "seat", "recovering"] as const)(
   (change) => {
     const { game, input } = setup();
     game.drag.begin("red");
-    game.drag.setDropTarget(game.drag.getDropTargets()[0]!);
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]);
     if (change === "recovering") input.recovering();
     else {
       const current = input.store.get().snapshot!;

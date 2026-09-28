@@ -107,7 +107,7 @@ describe("nextRandomInt", () => {
     }
     const adjacentDiffs = values
       .slice(1)
-      .map((v, i) => (v - values[i]! + 6) % 6);
+      .map((v, i) => (v - values[i] + 6) % 6);
     const allPlusOne = adjacentDiffs.every((d) => d === 1);
     expect(allPlusOne).toBe(false);
   });

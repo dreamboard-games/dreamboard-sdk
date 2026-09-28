@@ -13,7 +13,7 @@ test("features bundle without React, executable reducer, or browser globals", as
     format: "esm",
     metafile: true,
   });
-  const files = Object.keys(result.metafile!.inputs);
+  const files = Object.keys(result.metafile.inputs);
   expect(
     files.some(
       (file) =>

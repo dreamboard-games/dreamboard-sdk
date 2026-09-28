@@ -164,13 +164,7 @@ export function createTableSchema(analysis: Analysis, ids: Ids) {
     ),
   );
   const slotLocationSchema = slotVariants.length
-    ? z.union(
-        slotVariants as unknown as [
-          z.ZodTypeAny,
-          z.ZodTypeAny,
-          ...z.ZodTypeAny[],
-        ],
-      )
+    ? z.union(slotVariants)
     : z.never();
   const boardSpaceTypeIdSchema = ids.spaceTypeId.nullable().optional();
   const boardSpaceStateSchema = z.object({

@@ -76,6 +76,7 @@ export function getComponentHandLocation<
     return null;
   }
 
+  // eslint-disable-next-line no-restricted-syntax -- The InHand discriminant selects the hand and player in this Table; the facade restores their dependent card/location types.
   return {
     componentId,
     handId: location.handId as HandIdOfTable<Table>,

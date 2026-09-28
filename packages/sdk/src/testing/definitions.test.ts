@@ -195,10 +195,12 @@ describe("createScenarioAuthoring", () => {
     );
     expectValidationError(
       () =>
-        defineScenario({
-          ...validScenario(),
-          setup: { players: 2, seed: 0, setupProfileId: "removed" } as never,
-        }),
+        void Reflect.apply(defineScenario, undefined, [
+          {
+            ...validScenario(),
+            setup: { players: 2, seed: 0, setupProfileId: "removed" },
+          },
+        ]),
       {
         code: "UNKNOWN_FIELD",
         path: "scenario.setup.setupProfileId",
@@ -249,16 +251,18 @@ describe("createScenarioAuthoring", () => {
   test("does not infer seat semantics from ordinary string fields", () => {
     expectValidationError(
       () =>
-        defineScenario({
-          ...validScenario(),
-          given: [
-            {
-              actor: { seat: 0 },
-              interactionId: "label",
-              params: { value: { seat: 99 } },
-            },
-          ],
-        } as never),
+        void Reflect.apply(defineScenario, undefined, [
+          {
+            ...validScenario(),
+            given: [
+              {
+                actor: { seat: 0 },
+                interactionId: "label",
+                params: { value: { seat: 99 } },
+              },
+            ],
+          },
+        ]),
       {
         code: "INVALID_COMMAND_PARAMS",
         path: "scenario.given[0].params.value",
@@ -279,25 +283,29 @@ describe("createScenarioAuthoring", () => {
     ] as const) {
       expectValidationError(
         () =>
-          defineScenario({
-            ...validScenario(),
-            given: [
-              {
-                actor: { seat: 0 },
-                interactionId: "label",
-                params: { value },
-              },
-            ],
-          } as never),
+          void Reflect.apply(defineScenario, undefined, [
+            {
+              ...validScenario(),
+              given: [
+                {
+                  actor: { seat: 0 },
+                  interactionId: "label",
+                  params: { value },
+                },
+              ],
+            },
+          ]),
         { code: "NON_SERIALIZABLE", path },
       );
     }
     expectValidationError(
       () =>
-        defineScenario({
-          ...validScenario(),
-          from: "legacy-base",
-        } as never),
+        void Reflect.apply(defineScenario, undefined, [
+          {
+            ...validScenario(),
+            from: "legacy-base",
+          },
+        ]),
       { code: "UNKNOWN_FIELD", path: "scenario.from" },
     );
   });

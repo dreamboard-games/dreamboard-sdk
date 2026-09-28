@@ -1,16 +1,22 @@
+import { asPlayerId } from "./per-player";
 import { createGame as createModel } from "../reducer";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 
 import { createReducerBundle, gameEvent } from "../reducer";
-import { buildMinimalManifest, createTable } from "./lifecycle-test-fixtures";
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
 
 async function lifecycleGame(
   mode: "ignored" | "chain" | "terminal" | "invalid-terminal" | "runaway",
 ) {
   const observations: unknown[] = [];
+  const manifest = compileManifest({
+    players: { minPlayers: 2, maxPlayers: 2 },
+    cardSets: [],
+  });
   const contract = createModel({
-    manifest: buildMinimalManifest(["start", "next", "done"] as const),
+    manifest,
     phases: {
       start: z.object({ visits: z.number() }),
       next: z.object({ visits: z.number() }),
@@ -27,8 +33,8 @@ async function lifecycleGame(
   const outcome = {
     reason: { code: "COMPLETE" },
     standings: [
-      { playerId: "player-1", rank: 1, result: "win" as const },
-      { playerId: "player-2", rank: 2, result: "loss" as const },
+      { playerId: asPlayerId("player-1"), rank: 1, result: "win" as const },
+      { playerId: asPlayerId("player-2"), rank: 2, result: "loss" as const },
     ],
   };
   const game = contract.assemble({
@@ -42,12 +48,7 @@ async function lifecycleGame(
       start: contract.phase("start").define({
         kind: "player",
         initialState: ({ state }) => {
-          observations.push([
-            "initial",
-            state.flow.currentPhase,
-            state.runtime.lastTransition,
-            state.runtime.simultaneous.current,
-          ]);
+          observations.push(["initial", state.flow.currentPhase]);
           return { visits: 1 };
         },
         enter: ({ tx }) => {
@@ -77,12 +78,7 @@ async function lifecycleGame(
       next: contract.phase("next").define({
         kind: "auto",
         initialState: ({ state }) => {
-          observations.push([
-            "initial",
-            state.flow.currentPhase,
-            state.runtime.lastTransition,
-            state.runtime.simultaneous.current,
-          ]);
+          observations.push(["initial", state.flow.currentPhase]);
           return { visits: state.publicState.entries + 1 };
         },
         enter: ({ tx }) => {
@@ -103,12 +99,7 @@ async function lifecycleGame(
       done: contract.phase("done").define({
         kind: "player",
         initialState: ({ state }) => {
-          observations.push([
-            "initial",
-            state.flow.currentPhase,
-            state.runtime.lastTransition,
-            state.runtime.simultaneous.current,
-          ]);
+          observations.push(["initial", state.flow.currentPhase]);
           return { visits: 99 };
         },
         enter: ({ tx }) => {
@@ -122,7 +113,7 @@ async function lifecycleGame(
   });
   const bundle = createReducerBundle(game);
   const initialized = await bundle.initialize({
-    table: createTable(),
+    table: RuntimeJsonSchema.parse(manifest.createInitialTable()),
     playerIds: ["player-1", "player-2"],
     rngSeed: 42,
   });
@@ -149,23 +140,29 @@ describe("direct phase entry", () => {
     expect(result.events.map((e) => e.procedureId)).toEqual(["go"]);
     expect(result.trace.filter((e) => e.kind === "phaseEntered")).toEqual([]);
   });
-  test("every entry resets phase state and exposes destination metadata before initialState", async () => {
+  test("every entry resets phase state and exposes the destination phase before initialState", async () => {
     const { observations, initialized, dispatch } =
       await lifecycleGame("chain");
     const original = structuredClone(initialized.state);
     const result = await dispatch();
     if (result.kind !== "accept") throw new Error("Expected acceptance");
     expect(observations).toEqual([
-      ["initial", "start", null, null],
+      ["initial", "start"],
       ["enter", "start", { visits: 1 }],
-      ["initial", "next", { from: "start", to: "next" }, null],
+      ["initial", "next"],
       ["enter", "next", { visits: 1 }],
-      ["initial", "next", { from: "next", to: "next" }, null],
+      ["initial", "next"],
       ["enter", "next", { visits: 2 }],
-      ["initial", "done", { from: "next", to: "done" }, null],
+      ["initial", "done"],
     ]);
+    expect(initialized.state.runtime.lastTransition).toBeNull();
+    expect(result.state.runtime.lastTransition).toEqual({
+      from: "next",
+      to: "done",
+    });
+    expect(result.state.runtime.simultaneous.current).toBeNull();
     expect(result.state.domain.phase).toEqual({ visits: 99 });
-    expect(result.state.domain.publicState.entries).toBe(3);
+    expect(result.state.domain.publicState).toMatchObject({ entries: 3 });
     expect(result.events.map((e) => e.procedureId)).toEqual([
       "go",
       "next",
@@ -185,7 +182,7 @@ describe("direct phase entry", () => {
     const result = await dispatch();
     if (result.kind !== "accept") throw new Error("Expected acceptance");
     expect(result.terminal).toEqual(outcome);
-    expect(result.state.domain.publicState.entries).toBe(1);
+    expect(result.state.domain.publicState).toMatchObject({ entries: 1 });
     expect(result.events.map((e) => e.procedureId)).toEqual(["go", "done"]);
     expect(result.state.domain.flow.currentPhase).toBe("done");
   });

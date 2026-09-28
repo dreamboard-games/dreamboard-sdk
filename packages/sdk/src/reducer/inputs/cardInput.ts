@@ -36,6 +36,7 @@ export function cardInput<
   // validateTarget before exposing a manifest Id to authored reducers; matching
   // a canonical candidate supplies that refinement. This assertion binds both
   // invariants when hooks enter the heterogeneous collector registry.
+  // eslint-disable-next-line no-restricted-syntax -- Assembly binds these hooks to State; canonical card membership refines the parsed string to the manifest Id.
   return {
     kind: "card",
     schema: z.string(),

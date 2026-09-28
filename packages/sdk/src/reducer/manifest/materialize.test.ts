@@ -1,3 +1,4 @@
+import { compileManifest } from "./compiler";
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
 import { materializeManifestTable } from "./materialize";
@@ -401,7 +402,11 @@ test("inline square metadata and schemas survive topology materialization", () =
       playerIds: ["player-1"],
       shuffleItems: (values) => [...values],
     });
-  const result = materialize().boards.square.map;
+  const result = compileManifest({
+    ...EMPTY_MANIFEST,
+    boards: [board],
+  }).tableSchema.parse(materialize()).boards.byId.map;
+  if (result.layout !== "square") throw new Error("Expected square board");
   expect(result.fields).toEqual({ round: 2 });
   expect(result.spaces.a.fields).toEqual({ terrain: "grass" });
   expect(
@@ -417,7 +422,7 @@ test("inline square metadata and schemas survive topology materialization", () =
   expect(() =>
     materialize({
       ...board,
-      vertices: [{ ...board.vertices[0]!, ref: { spaces: ["missing"] } }],
+      vertices: [{ ...board.vertices[0], ref: { spaces: ["missing"] } }],
     }),
   ).toThrow("unknown space 'missing'");
 });

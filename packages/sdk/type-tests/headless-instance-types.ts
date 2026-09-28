@@ -68,12 +68,16 @@ game.interactions.get("playerTurn.pick").getInput("invalid");
 // @ts-expect-error Value retains literal choice union.
 mood.setValue("invalid");
 // @ts-expect-error Disabled root feature is absent.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled root feature is absent.
 bare.getRolled();
 // @ts-expect-error Disabled card feature is absent.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled card feature is absent.
 bare.cards.get("card-1").isSpecial();
 // @ts-expect-error Disabled input feature is absent.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled input feature is absent.
 bare.interactions.get("playerTurn.pick").getInput("mood").suggested();
 // @ts-expect-error Hosted sources cannot apply local commands.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Hosted sources cannot apply local commands.
 bare.apply({});
 declare const local: CommandSource & {
   apply(action: { kind: "local" }): Promise<number>;
@@ -85,12 +89,13 @@ void [inferredMood, id, localResult];
 // @ts-expect-error undefined is not a submitted value; clear() owns omission.
 mood.setValue(undefined);
 
-game.cards.get("card-1").getInteractions()[0]!.getInputs();
-game.cards.get("card-1").getInteractions()[0]!.customLabel();
+game.cards.get("card-1").getInteractions()[0].getInputs();
+game.cards.get("card-1").getInteractions()[0].customLabel();
 mood.interaction.customLabel();
 game.inspect().getRolled();
 // @ts-expect-error Disabled interaction feature is absent through card navigation.
-bare.cards.get("card-1").getInteractions()[0]!.customLabel();
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Disabled interaction feature is absent through card navigation.
+bare.cards.get("card-1").getInteractions()[0].customLabel();
 
 // @ts-expect-error Auto phases do not manufacture interaction keys.
 game.interactions.get("setup.anything");
@@ -137,6 +142,6 @@ void [moodKind, moods, handId];
 const erased: Pick<InputBase<unknown, string, string>, "setValue"> = mood;
 void erased;
 const options = mood.getTargetOptions();
-const optionValue: "ready" | "wait" = options[0]!.value;
-options[0]!.props.onClick();
+const optionValue: "ready" | "wait" = options[0].value;
+options[0].props.onClick();
 void optionValue;

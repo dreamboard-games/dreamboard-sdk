@@ -15,6 +15,7 @@ import {
   RuntimeRecord,
   RuntimeTableRecord,
 } from "../reducer/model";
+import { asPlayerId } from "./per-player";
 type TestPlayerId = PlayerId;
 type TestCardId = "card-1" | "card-2";
 type TestPlayerZoneId = "hand" | "in-play" | "discard";
@@ -32,10 +33,7 @@ function testPlayerRecord<Value>(): TestPlayerRecord<Value> {
   return Object.fromEntries([]);
 }
 function buildContract() {
-  const playerIds = [
-    "player-1",
-    "player-2",
-  ] as const as unknown as readonly PlayerId[];
+  const playerIds = [asPlayerId("player-1"), asPlayerId("player-2")];
   const cardIds = ["card-1", "card-2"] as const;
   const playerZoneIds = ["hand", "in-play", "discard"] as const;
   const phaseNames = ["play"] as const;
@@ -163,7 +161,7 @@ describe("interaction input id types", () => {
     expect("raw" in formInput).toBe(false);
     const assertRawFormInputsRejected = () => {
       // @ts-expect-error raw Zod schemas are not default-renderable inputs.
-      formInput.raw(z.string());
+      void formInput.raw;
       // @ts-expect-error arbitrary Zod schemas are not default-renderable inputs.
       formInput(z.string());
     };
@@ -518,11 +516,10 @@ describe("interaction input id types", () => {
           from: ["card-1", "card-2"] as const,
           count: 1,
         });
-        const cardId: TestCardId = selected[0]!;
+        const cardId: TestCardId = selected[0];
         const assertEnterRuntimeShape = () => {
           // @ts-expect-error runtime rng is internal; authored mutation callbacks use random helpers.
-          const rng = runtime.rng;
-          void rng;
+          void runtime.rng;
         };
         void dieResult;
         void cardId;
@@ -541,11 +538,10 @@ describe("interaction input id types", () => {
               from: ["card-1", "card-2"] as const,
               count: 1,
             });
-            const cardId: TestCardId = selected[0]!;
+            const cardId: TestCardId = selected[0];
             const assertReduceRuntimeShape = () => {
               // @ts-expect-error runtime rng is internal; authored reducers use random helpers.
-              const rng = runtime.rng;
-              void rng;
+              void runtime.rng;
             };
             void signedResult;
             void cardId;

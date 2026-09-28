@@ -8,4 +8,5 @@ const manifest = compileManifest({
 });
 
 // @ts-expect-error Player records require a runtime roster, not placeholder seats.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Player records require a runtime roster, not placeholder seats.
 manifest.records.playerIds(() => 0);

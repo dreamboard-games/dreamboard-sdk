@@ -1,4 +1,3 @@
-import type { PlayerId } from "../manifest";
 import { hearts, type Suit } from "../game-model";
 import { trickWinner, validateCardPlay } from "../rules";
 

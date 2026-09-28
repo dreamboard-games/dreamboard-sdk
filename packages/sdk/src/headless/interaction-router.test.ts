@@ -10,7 +10,6 @@ function descriptor(
     phaseName: "play",
     interactionKey: "play.placeCard",
     interactionId: "placeCard",
-    surface: "panel",
     kind: "action",
     label: "Place card",
     inputs,

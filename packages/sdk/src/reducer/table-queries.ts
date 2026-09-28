@@ -153,6 +153,7 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
 export function createStateQueries<State extends { table: RuntimeTableRecord }>(
   state: State,
 ): TableQueriesOfState<State> {
+  // eslint-disable-next-line no-restricted-syntax -- Queries are constructed from this State.table; the conditional TableOfState type denotes that same table.
   return createTableQueries(
     state.table,
   ) as unknown as TableQueriesOfState<State>;

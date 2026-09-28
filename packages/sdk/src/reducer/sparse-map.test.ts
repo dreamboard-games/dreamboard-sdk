@@ -14,8 +14,11 @@ function buildMinimalManifest() {
   const resourceIds = ["brick", "grain", "lumber"] as const;
   return {
     literals: {
+      boardLayouts: [] as const,
+      boardTypeIds: [] as const,
+      relationTypeIds: [] as const,
       playerIds,
-      phases: { "phase-1": z.object({}) },
+      phaseNames: ["phase-1"] as const,
       cardSetIds: [] as const,
       cardTypes: [] as const,
       deckIds: [] as const,
@@ -46,6 +49,7 @@ function buildMinimalManifest() {
       cardSetIdsByPlayerZoneId: {} as const,
     },
     ids: {
+      boardLayout: z.enum(["hex", "square", "network", "track"]),
       playerId: createManifestStringLiteralSchema(playerIds),
       phaseName: z.enum(["phase-1"] as const),
       cardSetId: createManifestStringLiteralSchema([] as const),
@@ -136,6 +140,7 @@ describe("sparse map helpers", () => {
       defineInteraction<typeof contract>()({
         inputs: {
           give: formInput(
+            // @ts-expect-error Deliberately raw schema exercises the runtime enum-record rejection.
             z.record(
               z.enum(["brick", "grain", "lumber"] as const),
               z.number().int().min(0),
@@ -151,10 +156,16 @@ describe("sparse map helpers", () => {
     expect(() =>
       defineInteraction<typeof contract>()({
         inputs: {
-          give: formInput(
-            sparseCounts(z.enum(["brick", "grain", "lumber"] as const)),
-          ),
+          give: formInput.resourceMap({
+            resources: ["brick", "grain", "lumber"].map((resourceId) => ({
+              resourceId,
+              max: 10,
+            })),
+          }),
         },
+        paramsSchema: z.object({
+          give: sparseCounts(z.enum(["brick", "grain", "lumber"] as const)),
+        }),
         reduce() {
           return;
         },

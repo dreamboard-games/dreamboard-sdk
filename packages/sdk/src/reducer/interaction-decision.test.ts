@@ -1,3 +1,6 @@
+import { compileManifest } from "./manifest/compiler";
+import { RuntimeJsonSchema } from "../shared/runtime-json";
+import { getPlayerResourceAmount } from "./table/resource-ops";
 import { createGame as createModel } from "../reducer";
 import { InteractionSteps } from "./authoring/steps";
 
@@ -7,208 +10,71 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { cardInput, cardTarget, choiceTarget, formInput } from "./inputs";
 import { many } from "../reducer";
-import {
-  createManifestStringLiteralSchema,
-  RuntimeTableRecord,
-} from "../reducer/model";
+import { RuntimeTableRecord } from "../reducer/model";
 import { asPlayerId } from "../reducer/per-player";
-function buildManifest() {
-  const playerIds = ["player-1", "player-2"] as const;
-  const phaseNames = ["takeTurn"] as const;
-  const resourceIds = ["gold"] as const;
-  const cardIds = ["card-a", "card-b"] as const;
-  const cardTypes = ["spell", "trap"] as const;
-  const playerZoneIds = ["playZone"] as const;
-  return {
-    literals: {
-      playerIds,
-      phaseNames,
-      cardSetIds: [] as const,
-      cardTypes,
-      deckIds: [] as const,
-      handIds: playerZoneIds,
-      sharedZoneIds: [] as const,
-      playerZoneIds,
-      zoneIds: playerZoneIds,
-      cardIds,
-      resourceIds,
-      resourcePresentationById: {
-        gold: { label: "Gold", icon: "🪙" },
-      },
-      pieceTypeIds: [] as const,
-      pieceIds: [] as const,
-      dieTypeIds: [] as const,
-      dieIds: [] as const,
-      boardBaseIds: [] as const,
-      boardIds: [] as const,
-      boardContainerIds: [] as const,
-      tileIds: [] as const,
-      tileTypeIds: [] as const,
-      edgeIds: [] as const,
-      edgeTypeIds: [] as const,
-      vertexIds: [] as const,
-      vertexTypeIds: [] as const,
-      portIds: [] as const,
-      portTypeIds: [] as const,
-      spaceIds: [] as const,
-      spaceTypeIds: [] as const,
-      handVisibilityById: {},
-      zoneVisibilityById: {},
-      cardSetIdByCardId: {},
-      cardTypeByCardId: { "card-a": "spell", "card-b": "trap" },
-      cardSetIdsBySharedZoneId: {},
-      cardSetIdsByPlayerZoneId: {},
-    },
-    ids: {
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      cardSetId: createManifestStringLiteralSchema([] as const),
-      cardType: createManifestStringLiteralSchema(cardTypes),
-      cardId: createManifestStringLiteralSchema(cardIds),
-      deckId: createManifestStringLiteralSchema([] as const),
-      handId: createManifestStringLiteralSchema(playerZoneIds),
-      sharedZoneId: createManifestStringLiteralSchema([] as const),
-      playerZoneId: createManifestStringLiteralSchema(playerZoneIds),
-      zoneId: createManifestStringLiteralSchema(playerZoneIds),
-      resourceId: createManifestStringLiteralSchema(resourceIds),
-      dieTypeId: createManifestStringLiteralSchema([] as const),
-      dieId: createManifestStringLiteralSchema([] as const),
-      boardBaseId: createManifestStringLiteralSchema([] as const),
-      boardId: createManifestStringLiteralSchema([] as const),
-      boardContainerId: createManifestStringLiteralSchema([] as const),
-      boardTypeId: createManifestStringLiteralSchema([] as const),
-      tileId: createManifestStringLiteralSchema([] as const),
-      tileTypeId: createManifestStringLiteralSchema([] as const),
-      edgeId: createManifestStringLiteralSchema([] as const),
-      edgeTypeId: createManifestStringLiteralSchema([] as const),
-      vertexId: createManifestStringLiteralSchema([] as const),
-      vertexTypeId: createManifestStringLiteralSchema([] as const),
-      portId: createManifestStringLiteralSchema([] as const),
-      portTypeId: createManifestStringLiteralSchema([] as const),
-      spaceId: createManifestStringLiteralSchema([] as const),
-      spaceTypeId: createManifestStringLiteralSchema([] as const),
-      pieceId: createManifestStringLiteralSchema([] as const),
-      pieceTypeId: createManifestStringLiteralSchema([] as const),
-      relationTypeId: createManifestStringLiteralSchema([] as const),
-    },
-    defaults: {
-      zones: () => ({ shared: {}, perPlayer: {}, visibility: {} }),
-      decks: () => ({}),
-      hands: () => ({}),
-      handVisibility: () => ({}),
-      ownerOfCard: () => ({}),
-      visibility: () => ({}),
-      resources: () => Object.fromEntries([].map((id) => [id, {}])),
-    },
-    tableSchema: z.custom<RuntimeTableRecord>(),
-    runtimeSchema: z.any(),
-    createGameStateSchema: () => z.any(),
-  } as const;
-}
-function buildTwoZoneManifest() {
-  const base = buildManifest();
-  const playerIds = ["player-1", "player-2"] as const;
-  const phaseNames = ["takeTurn"] as const;
-  const resourceIds = ["gold"] as const;
-  const cardIds = ["card-a", "card-b"] as const;
-  const cardTypes = ["spell", "trap"] as const;
-  const playerZoneIds = ["playZone", "discardZone"] as const;
-  return {
-    ...base,
-    literals: {
-      ...base.literals,
-      playerIds,
-      phaseNames,
-      resourceIds,
-      cardIds,
-      cardTypes,
-      handIds: playerZoneIds,
-      playerZoneIds,
-      zoneIds: playerZoneIds,
-      cardTypeByCardId: { "card-a": "spell", "card-b": "trap" },
-    },
-    ids: {
-      ...base.ids,
-      playerId: createManifestStringLiteralSchema(playerIds),
-      phaseName: createManifestStringLiteralSchema(phaseNames),
-      cardType: createManifestStringLiteralSchema(cardTypes),
-      cardId: createManifestStringLiteralSchema(cardIds),
-      handId: createManifestStringLiteralSchema(playerZoneIds),
-      playerZoneId: createManifestStringLiteralSchema(playerZoneIds),
-      zoneId: createManifestStringLiteralSchema(playerZoneIds),
-      resourceId: createManifestStringLiteralSchema(resourceIds),
-    },
-  } as const;
-}
-function createTable(
-  options: {
-    player1Gold?: number;
-  } = {},
-): RuntimeTableRecord {
-  const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
-  return {
-    playerOrder: ["player-1", "player-2"],
-    zones: {
-      shared: {},
-      perPlayer: {
-        playZone: Object.fromEntries(
-          ids.map((id) => [id, ["card-a", "card-b"]]),
-        ),
-      },
-      visibility: {},
-    },
-    decks: {},
-    hands: {},
-    handVisibility: {},
-    cards: {
-      "card-a": {
-        id: "card-a",
-        cardSetId: "cards",
-        cardType: "spell",
-        properties: {},
-      },
-      "card-b": {
-        id: "card-b",
-        cardSetId: "cards",
-        cardType: "trap",
-        properties: {},
-      },
-    },
-    pieces: {},
-    componentLocations: {},
-    ownerOfCard: {},
-    visibility: {},
-    resources: Object.fromEntries(
-      ids.map((id) => [
-        id,
+const topology = {
+  players: { minPlayers: 2, maxPlayers: 2 },
+  resources: [{ id: "gold", name: "Gold", icon: "🪙" }],
+  cardSets: [
+    {
+      id: "cards",
+      name: "Cards",
+      defaultHome: { type: "detached" },
+      cardSchema: { properties: {} },
+      cards: [
         {
-          gold: id === "player-1" ? (options.player1Gold ?? 1) : 5,
+          id: "card-a",
+          name: "A",
+          cardType: "spell",
+          count: 1,
+          properties: {},
         },
-      ]),
-    ),
-    boards: {
-      byId: {},
-      hex: {},
-      network: {},
-      square: {},
-      track: {},
+        { id: "card-b", name: "B", cardType: "trap", count: 1, properties: {} },
+      ],
     },
-    dice: {},
-  };
-}
-function createTwoZoneTable(): RuntimeTableRecord {
-  const ids = [asPlayerId("player-1"), asPlayerId("player-2")];
-  return {
-    ...createTable(),
-    zones: {
-      shared: {},
-      perPlayer: {
-        playZone: Object.fromEntries(ids.map((id) => [id, ["card-a"]])),
-        discardZone: Object.fromEntries(ids.map((id) => [id, ["card-b"]])),
+  ],
+  zones: [
+    {
+      id: "playZone",
+      name: "Play",
+      scope: "perPlayer",
+      allowedCardSetIds: ["cards"],
+      visibility: "public",
+    },
+  ],
+} as const;
+const buildManifest = () => compileManifest(topology);
+const buildTwoZoneManifest = () =>
+  compileManifest({
+    ...topology,
+    zones: [
+      ...topology.zones,
+      {
+        id: "discardZone",
+        name: "Discard",
+        scope: "perPlayer",
+        allowedCardSetIds: ["cards"],
+        visibility: "public",
       },
-      visibility: {},
-    },
-  };
+    ],
+  });
+function createTable(options: { player1Gold?: number } = {}) {
+  const table = buildManifest().createInitialTable();
+  for (const playerId of table.playerOrder) {
+    table.zones.perPlayer.playZone[playerId] = ["card-a", "card-b"];
+    table.resources[playerId].gold =
+      playerId === "player-1" ? (options.player1Gold ?? 1) : 5;
+  }
+  return table;
+}
+function createTwoZoneTable() {
+  const table = buildTwoZoneManifest().createInitialTable();
+  for (const playerId of table.playerOrder) {
+    table.zones.perPlayer.playZone[playerId] = ["card-a"];
+    table.zones.perPlayer.discardZone[playerId] = ["card-b"];
+    table.resources[playerId].gold = playerId === "player-1" ? 1 : 5;
+  }
+  return table;
 }
 function getAvailableInteractions(
   bundle: ReturnType<typeof createReducerTestingRuntime>,
@@ -225,10 +91,12 @@ function getAvailableInteractions(
   );
 }
 function hydrateRefs<T>(
-  interactionsByRef: Record<string, T>,
+  interactionsByRef: Record<string, T> | undefined,
   refs: readonly string[] | undefined,
 ): T[] {
-  return (refs ?? []).map((ref) => interactionsByRef[ref]).filter(Boolean);
+  return (refs ?? [])
+    .map((ref) => interactionsByRef?.[ref])
+    .filter((value): value is T => value !== undefined);
 }
 function nodeSha256Digest(value: unknown): string {
   return `sha256:${createHash("sha256")
@@ -259,7 +127,7 @@ function canonicalizeJson(value: unknown): unknown {
 }
 function hydrateCardRefs<T>(
   projection: {
-    interactionsByRef: Record<string, T>;
+    interactionsByRef?: Record<string, T>;
   },
   refs: readonly string[] | undefined,
 ): T[] {
@@ -296,30 +164,34 @@ function makeBundle(
     max: 10,
     defaultValue: 2,
   });
-  const enoughGoldRule = contract.phase("takeTurn").rule({
-    id: "enough-gold",
-    errorCode: "INSUFFICIENT_RESOURCES",
-    message: "Need 2 gold.",
-    available: ({ state, input }) =>
-      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >= 2,
-    validate: ({ state, input }) =>
-      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >=
-      input.params.amount
-        ? null
-        : {
-            errorCode: "INSUFFICIENT_RESOURCES",
-            message: "Not enough gold.",
-          },
-  });
-  const stringGoldRule = contract.phase("takeTurn").rule({
-    id: "string-gold",
-    errorCode: "INSUFFICIENT_RESOURCES",
-    validate: ({ state, input }) =>
-      (state.table.resources[asPlayerId(input.playerId)]?.gold ?? 0) >=
-      input.params.amount
-        ? null
-        : "Need that much gold.",
-  });
+  const enoughGoldRule = contract
+    .phase("takeTurn")
+    .rule<{ amount: typeof ruleBidAmountInput }>({
+      id: "enough-gold",
+      errorCode: "INSUFFICIENT_RESOURCES",
+      message: "Need 2 gold.",
+      available: ({ state, input }) =>
+        getPlayerResourceAmount(state.table, input.playerId, "gold") >= 2,
+      validate: ({ state, input }) =>
+        getPlayerResourceAmount(state.table, input.playerId, "gold") >=
+        input.params.amount
+          ? null
+          : {
+              errorCode: "INSUFFICIENT_RESOURCES",
+              message: "Not enough gold.",
+            },
+    });
+  const stringGoldRule = contract
+    .phase("takeTurn")
+    .rule<{ amount: typeof ruleBidAmountInput }>({
+      id: "string-gold",
+      errorCode: "INSUFFICIENT_RESOURCES",
+      validate: ({ state, input }) =>
+        getPlayerResourceAmount(state.table, input.playerId, "gold") >=
+        input.params.amount
+          ? null
+          : "Need that much gold.",
+    });
   const answerTarget = choiceTarget
     .options([{ id: "yes", label: "Yes" }] as const)
     .build();
@@ -370,7 +242,7 @@ function makeBundle(
           ),
           answerPrompt: inMain(
             contract.phase("takeTurn").interaction({
-              actor: () => "player-2",
+              actor: () => asPlayerId("player-2"),
               inputs: {
                 answer: formInput.choice({
                   defaultValue: () => undefined,
@@ -393,7 +265,7 @@ function makeBundle(
                       resourceId: "gold",
                       label: "Gold",
                       max: ({ state, playerId }) =>
-                        state.table.resources[asPlayerId(playerId)]?.gold ?? 0,
+                        getPlayerResourceAmount(state.table, playerId, "gold"),
                     },
                   ],
                 }),
@@ -407,7 +279,7 @@ function makeBundle(
                 amount: formInput.number({
                   min: 0,
                   max: ({ state, playerId }) =>
-                    state.table.resources[asPlayerId(playerId)]?.gold ?? 0,
+                    getPlayerResourceAmount(state.table, playerId, "gold"),
                   step: 1,
                 }),
               },
@@ -523,6 +395,7 @@ function makeBundle(
                   .zones<
                     {
                       table: RuntimeTableRecord;
+                      flow: { currentPhase: string };
                     },
                     string
                   >(["playZone"])
@@ -592,11 +465,10 @@ describe("trusted interaction decision pipeline", () => {
           interactions: {
             chooseCard: contract.phase("takeTurn").interaction({
               inputs: {},
-              paramsSchema: z.object({
-                cardId: manifest.ids.cardId,
-              }),
+              paramsSchema: z.object({ cardId: manifest.ids.cardId }),
               reduce({ input, tx }) {
-                tx.patchPublicState({ selectedCardId: input.params.cardId });
+                expect(input.params).toEqual({ cardId: "card-a" });
+                tx.patchPublicState({ selectedCardId: "card-a" });
                 return;
               },
             }),
@@ -608,7 +480,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -631,7 +503,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -698,7 +570,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -754,7 +626,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -787,35 +659,38 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
-    state.domain.table.zones.visibility.playZone = "hidden";
+    const table = createTable();
+    table.zones.visibility.playZone = "hidden";
+    state.domain.table = RuntimeJsonSchema.parse(table);
     const hidden = bundle.project({
       state,
       playerIds: ["player-1", "player-2"],
     });
     expect(hidden.seats["player-1"].zones).not.toHaveProperty("playZone");
     expect(hidden.seats["player-2"].zones).not.toHaveProperty("playZone");
-    state.domain.table.zones.visibility.playZone = "ownerOnly";
-    state.domain.table.visibility["card-a"] = {
+    table.zones.visibility.playZone = "ownerOnly";
+    table.visibility["card-a"] = {
       faceUp: false,
       visibleTo: ["player-1"],
     };
+    state.domain.table = RuntimeJsonSchema.parse(table);
     const visible = bundle.project({
       state,
       playerIds: ["player-1", "player-2"],
     });
-    expect(visible.seats["player-1"].zones.playZone.cardIds).toEqual([
+    expect(visible.seats["player-1"].zones?.playZone.cardIds).toEqual([
       "card-a",
       "card-b",
     ]);
-    expect(visible.seats["player-2"].zones.playZone.cardIds).toEqual([
+    expect(visible.seats["player-2"].zones?.playZone.cardIds).toEqual([
       "card-b",
     ]);
     expect(
-      visible.seats["player-2"].zones.playZone.cardViewsById,
+      visible.seats["player-2"].zones?.playZone.cardViewsById,
     ).not.toHaveProperty("card-a");
   });
 
@@ -823,7 +698,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -837,7 +712,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -873,7 +748,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -914,7 +789,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -945,7 +820,7 @@ describe("trusted interaction decision pipeline", () => {
     });
     const fundedState = (
       await bundle.initialize({
-        table: createTable({ player1Gold: 2 }),
+        table: RuntimeJsonSchema.parse(createTable({ player1Gold: 2 })),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -976,7 +851,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable({ player1Gold: 2 }),
+        table: RuntimeJsonSchema.parse(createTable({ player1Gold: 2 })),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1000,7 +875,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1038,13 +913,13 @@ describe("trusted interaction decision pipeline", () => {
     const verboseBundle = makeBundle({ diagnostics: "verbose" });
     const defaultState = (
       await defaultBundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
     const verboseState = (
       await verboseBundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1071,7 +946,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1079,10 +954,11 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-    const playZone = projection.seats["player-1"]?.zones.playZone;
+    const playZone = projection.seats["player-1"]?.zones?.playZone;
     expect(playZone?.cardIds).toEqual(["card-a", "card-b"]);
-    expect(JSON.parse(playZone!.cardViewsById["card-a"]!)).toEqual({
+    expect(JSON.parse(playZone?.cardViewsById["card-a"] ?? "null")).toEqual({
       id: "card-a",
+      name: "A",
       cardType: "spell",
       properties: {},
     });
@@ -1168,7 +1044,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1176,7 +1052,7 @@ describe("trusted interaction decision pipeline", () => {
       state,
       playerIds: ["player-1"],
     });
-    const playZone = projection.seats["player-1"]?.zones.playZone;
+    const playZone = projection.seats["player-1"]?.zones?.playZone;
     expect(
       hydrateCardRefs(projection, playZone?.playableByCardId["card-a"]).find(
         (descriptor) => descriptor.interactionId === "playSelected",
@@ -1235,6 +1111,7 @@ describe("trusted interaction decision pipeline", () => {
                     .zones<
                       {
                         table: RuntimeTableRecord;
+                        flow: { currentPhase: string };
                       },
                       string
                     >(["playZone"])
@@ -1261,7 +1138,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTwoZoneTable(),
+        table: RuntimeJsonSchema.parse(createTwoZoneTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1356,7 +1233,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTwoZoneTable(),
+        table: RuntimeJsonSchema.parse(createTwoZoneTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1385,24 +1262,27 @@ describe("trusted interaction decision pipeline", () => {
       .zones<never, "card-a" | "card-b">(["playZone"])
       .build();
     expect(contract.contract.phaseNames).toEqual(["takeTurn"]);
-    expect(() =>
-      contract.phase("takeTurn").interaction({
-        commit: { mode: "autoWhenReady" } as never,
-        inputs: {
-          cardIds: many(cardInput({ target: playZoneTarget }), {
-            count: 2,
-            distinct: true,
-          }),
-        },
-        reduce: () => {},
-      }),
+    expect(
+      () =>
+        void Reflect.apply(contract.phase("takeTurn").interaction, undefined, [
+          {
+            commit: { mode: "autoWhenReady" },
+            inputs: {
+              cardIds: many(cardInput({ target: playZoneTarget }), {
+                count: 2,
+                distinct: true,
+              }),
+            },
+            reduce: () => {},
+          },
+        ]),
     ).toThrow(
       'defineInteraction: interactions with many(...) inputs must use commit: { mode: "manual" }.',
     );
   });
   test("a committed selection controls the next target authority", async () => {
     const contract = createModel({
-      manifest: buildManifest(),
+      manifest: buildTwoZoneManifest(),
       phases: { takeTurn: z.object({}) },
       state: {
         public: z.object({}),
@@ -1456,7 +1336,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTwoZoneTable(),
+        table: RuntimeJsonSchema.parse(createTwoZoneTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1562,7 +1442,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTwoZoneTable(),
+        table: RuntimeJsonSchema.parse(createTwoZoneTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1573,13 +1453,15 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
+        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
+          "card-a"
+        ],
       ),
     ).toMatchObject([{ interactionId: "inspectThenPlay" }]);
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones.discardZone.playableByCardId[
+        projection.seats["player-1"]?.zones?.discardZone.playableByCardId[
           "card-b"
         ],
       ),
@@ -1626,7 +1508,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1637,7 +1519,9 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
+        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
+          "card-a"
+        ],
       ),
     ).toMatchObject([
       {
@@ -1662,12 +1546,12 @@ describe("trusted interaction decision pipeline", () => {
       playerIds: ["player-1", "player-2"],
     });
     expect(
-      afterSubmit.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
+      afterSubmit.seats["player-1"]?.zones?.playZone.playableByCardId["card-a"],
     ).toEqual([]);
     expect(
       hydrateCardRefs(
         afterSubmit,
-        afterSubmit.seats["player-2"]?.zones.playZone.playableByCardId[
+        afterSubmit.seats["player-2"]?.zones?.playZone.playableByCardId[
           "card-a"
         ],
       ),
@@ -1683,7 +1567,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1697,7 +1581,7 @@ describe("trusted interaction decision pipeline", () => {
     ).find((descriptor) => descriptor.interactionId === "spendGold");
     const cardAction = hydrateCardRefs(
       projection,
-      projection.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
+      projection.seats["player-1"]?.zones?.playZone.playableByCardId["card-a"],
     ).find((descriptor) => descriptor.interactionId === "playCard");
     expect(interaction).toMatchObject({
       interactionId: "spendGold",
@@ -1739,6 +1623,7 @@ describe("trusted interaction decision pipeline", () => {
                     .zones<
                       {
                         table: RuntimeTableRecord;
+                        flow: { currentPhase: string };
                       },
                       string
                     >(["playZone"])
@@ -1761,7 +1646,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1772,13 +1657,15 @@ describe("trusted interaction decision pipeline", () => {
     expect(
       hydrateCardRefs(
         projection,
-        projection.seats["player-1"]?.zones.playZone.playableByCardId["card-a"],
+        projection.seats["player-1"]?.zones?.playZone.playableByCardId[
+          "card-a"
+        ],
       ),
     ).toMatchObject([
       { interactionId: "castSpell", availability: { status: "available" } },
     ]);
     expect(
-      projection.seats["player-1"]?.zones.playZone.playableByCardId["card-b"],
+      projection.seats["player-1"]?.zones?.playZone.playableByCardId["card-b"],
     ).toEqual([]);
     await expect(
       bundle.validateInput({
@@ -1800,7 +1687,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = makeBundle();
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;
@@ -1990,7 +1877,7 @@ describe("trusted interaction decision pipeline", () => {
             }),
             opaqueInput: contract.phase("takeTurn").interaction({
               inputs: {},
-              paramsSchema: z.object({ answer: z.string() }) as never,
+              paramsSchema: z.object({ answer: z.string() }),
               reduce: () => {},
             }),
           },
@@ -2001,7 +1888,7 @@ describe("trusted interaction decision pipeline", () => {
     const bundle = createReducerTestingRuntime(game);
     const state = (
       await bundle.initialize({
-        table: createTable(),
+        table: RuntimeJsonSchema.parse(createTable()),
         playerIds: ["player-1", "player-2"],
       })
     ).state;

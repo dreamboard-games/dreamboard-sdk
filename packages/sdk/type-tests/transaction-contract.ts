@@ -49,14 +49,19 @@ export function assertTransactionContract(
   // @ts-expect-error Shared zones cannot be shuffled as player zones.
   tx.shuffle({ zoneId: "draw", playerId: "player" });
   // @ts-expect-error Effects have been removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Effects have been removed.
   tx.effect({});
   // @ts-expect-error Scheduling has been removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Scheduling has been removed.
   tx.schedule({});
   // @ts-expect-error The old deal name has been removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: The old deal name has been removed.
   tx.dealCardsToPlayerZone({});
   // @ts-expect-error Staged authoring has been removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Staged authoring has been removed.
   reducer.defineStepPhase();
   // @ts-expect-error Card actions use ordinary interactions.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Card actions use ordinary interactions.
   reducer.defineCardAction();
   tx.moveComponentToSpace({
     componentId: "piece",
@@ -158,12 +163,16 @@ export function assertTransactionContract(
     count: 1,
   });
   // @ts-expect-error Immutable operation composition is removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Immutable operation composition is removed.
   reducer.createReducerOps<State>();
   // @ts-expect-error Immutable operation composition is removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Immutable operation composition is removed.
   reducer.pipe(tx.state);
   // @ts-expect-error Flat state mutation is removed.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Flat state mutation is removed.
   reducer.setActivePlayers(tx.state, []);
   // @ts-expect-error Transactions have no immutable-operation escape hatch.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Transactions have no immutable-operation escape hatch.
   tx.apply((state: State) => state);
   return tx.state;
 }

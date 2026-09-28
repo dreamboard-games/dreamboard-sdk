@@ -60,13 +60,15 @@ const componentId: ComponentIdOfTable<typeof table> = "battle";
 // @ts-expect-error Component identity includes only authored cards, pieces and dice.
 const missingComponent: ComponentIdOfTable<typeof table> = "missing";
 // @ts-expect-error A worker does not have a marker's properties.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: A worker does not have a marker's properties.
 const wrongProperty = table.pieces["pawn-1"].properties.color;
 // @ts-expect-error Literal seed counts retain their bounds.
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Negative compiler proof: Literal seed counts retain their bounds.
 const missingPiece = table.pieces["pawn-3"];
 const q = createTableQueries(table);
 // @ts-expect-error Queries retain canonical component identity.
 q.component.data("missing");
-const queriedStrength: number = q.component.data("pawn-1")!.properties.strength;
+const queriedStrength: number = q.component.data("pawn-1").properties.strength;
 void [
   pieceId,
   pieceType,

@@ -40,7 +40,7 @@ const game = model.assemble({
           inputs: { space: collector, spaces: several },
           reduce({ input }) {
             const base: "mat" = input.params.space.boardId;
-            const manyBase: "mat" = input.params.spaces[0]!.boardId;
+            const manyBase: "mat" = input.params.spaces[0].boardId;
             // @ts-expect-error A player-space value is not a scalar ID.
             const scalar: string = input.params.space;
             void [base, manyBase, scalar];
@@ -56,9 +56,9 @@ if (
   domain.type === "boardTarget" &&
   domain.valueKind === "player-board-space"
 ) {
-  const player: string = domain.eligibleTargets[0]!.playerId;
+  const player: string = domain.eligibleTargets[0].playerId;
   // @ts-expect-error The tuple domain cannot expose scalar targets.
-  const scalar: string = domain.eligibleTargets[0]!;
+  const scalar: string = domain.eligibleTargets[0];
   void [player, scalar];
 }
 declare const drop: DropTarget<typeof game>;

@@ -77,6 +77,7 @@ export function getNextPlayerInOrder<Table extends RuntimeTableRecord>(
   table: Table,
   playerId: string,
 ): PlayerIdOfTable<Table> | null {
+  // eslint-disable-next-line no-restricted-syntax -- The table roster owns PlayerIdOfTable; reading its seating order preserves that manifest-specific player ID union.
   const order = table.playerOrder as unknown as ReadonlyArray<
     PlayerIdOfTable<Table>
   >;

@@ -44,8 +44,10 @@ function TypeProof() {
   useGame((snapshot) => snapshot.rolled());
   const result: Promise<number> = localHook.useGame().apply({ kind: "local" });
   // @ts-expect-error Hosted source has no local apply capability.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Hosted source has no local apply capability.
   game.apply({ kind: "local" });
   // @ts-expect-error Feature is absent when not enabled.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- Negative compiler proof: Feature is absent when not enabled.
   bare.useGame().rolled();
   // @ts-expect-error Misspelled interaction is not admitted.
   game.interactions.get("playerTurn.pik");

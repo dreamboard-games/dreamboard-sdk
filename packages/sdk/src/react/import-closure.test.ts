@@ -11,7 +11,7 @@ test("React adapter bundles maintained subscriptions without reducer execution o
     external: ["react", "react-dom", "react/jsx-runtime"],
     metafile: true,
   });
-  const inputs = Object.keys(result.metafile!.inputs);
+  const inputs = Object.keys(result.metafile.inputs);
   expect(inputs.some((path) => path.includes("@tanstack/react-store"))).toBe(
     true,
   );
@@ -23,7 +23,7 @@ test("React adapter bundles maintained subscriptions without reducer execution o
         path.startsWith("node:"),
     ),
   ).toBe(false);
-  const imports = Object.values(result.metafile!.outputs).flatMap((output) =>
+  const imports = Object.values(result.metafile.outputs).flatMap((output) =>
     output.imports.map((item) => item.path),
   );
   expect(

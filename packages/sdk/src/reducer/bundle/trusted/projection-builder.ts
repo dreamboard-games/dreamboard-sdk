@@ -399,6 +399,7 @@ export function createProjectionBuilder<
     projection: ProjectionContext<DomainState>,
   ): unknown {
     const view = scope.definition.view;
+    // eslint-disable-next-line no-restricted-syntax -- Context, projected state, queries, and player all come from the same Contract bound to this view callback.
     const viewArgs = {
       ...scope.buildContext(combinedState),
       q: projection.q,
