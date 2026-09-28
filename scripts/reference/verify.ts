@@ -19,10 +19,7 @@ import {
   type ReferenceGame,
 } from "./games.ts";
 import { runAsync, type AsyncCommandRunner } from "../lib/process.ts";
-import {
-  readStarterPreparation,
-  readQuickStart,
-} from "../docs/starter-examples.ts";
+import { readQuickStart } from "../docs/starter-examples.ts";
 
 export type VerifyReferenceGamesOptions = {
   readonly root: string;
@@ -113,11 +110,6 @@ export async function prepareIsolatedReferenceGame(
       throw new Error(
         "The standalone starter must not require an external tsconfig base.",
       );
-    await runAsync(
-      process.execPath,
-      ["--input-type=module", "--eval", await readStarterPreparation(root)],
-      { cwd: sandbox, capture: true },
-    );
   }
   if (config.extends) {
     const base = path.resolve(game.dir, config.extends);
@@ -149,7 +141,7 @@ export async function prepareIsolatedReferenceGame(
           specifier.startsWith("workspace:")
         )
           throw new Error(
-            `Starter documented preparation left unresolved dependency '${name}': ${specifier}.`,
+            `Standalone starter contains repository-only dependency '${name}': ${specifier}.`,
           );
       } else if (specifier.startsWith("catalog:")) {
         dependencies[name] = catalogVersion(catalogs, name, specifier);

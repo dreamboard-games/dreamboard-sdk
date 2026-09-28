@@ -88,7 +88,7 @@ test("portable game preparation preserves authored aliases and resolves canonica
   }
 });
 
-test("copied starter resolves TypeScript settings without a repository parent", async () => {
+test("standalone starter needs no dependency conversion or repository parent", async () => {
   const { cp } = await import("node:fs/promises");
   const ts = (await import("typescript")).default;
   const repository = path.resolve(import.meta.dirname, "../..");
@@ -130,15 +130,13 @@ test("copied starter resolves TypeScript settings without a repository parent", 
         "utf8",
       ),
     );
-    for (const section of ["dependencies", "devDependencies"]) {
-      for (const [name, specifier] of Object.entries(authored[section])) {
-        if (typeof specifier === "string" && specifier.startsWith("catalog:"))
-          assert.equal(
-            prepared[section][name],
-            catalogVersion(catalogs, name, specifier),
-          );
-      }
-    }
+    assert.deepEqual(prepared, {
+      ...authored,
+      dependencies: {
+        ...authored.dependencies,
+        "@dreamboard-games/sdk": "file:/tmp/candidate.tgz",
+      },
+    });
     assert.equal(
       prepared.dependencies["@dreamboard-games/sdk"],
       "file:/tmp/candidate.tgz",
@@ -156,7 +154,7 @@ test("copied starter resolves TypeScript settings without a repository parent", 
         repository,
         catalogs,
       ),
-      /documented preparation left unresolved dependency 'undocumented-dependency'/,
+      /Standalone starter contains repository-only dependency 'undocumented-dependency'/,
     );
     await writeFile(
       configPath,

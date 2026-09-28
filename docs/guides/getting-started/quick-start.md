@@ -53,7 +53,7 @@ game.dispose();
 
 The output is `{"count":1}`. This complete example is typechecked and executed
 against the packed SDK by `pnpm check`. For a standalone browser project, follow
-the [starter preparation steps](../../../templates/game/README.md).
+[create a local project with Giget](../../../templates/game/README.md).
 
 For hosted rendering, move the executable definition into the reducer entry and
 replace `localSource` with `iframeSource`; import only its type in UI modules.

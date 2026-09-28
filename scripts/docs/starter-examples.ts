@@ -1,22 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-/** Read the one documented preparation script, so isolation uses the author's steps. */
-export async function readStarterPreparation(root: string): Promise<string> {
-  const content = await readFile(
-    path.join(root, "templates/game/README.md"),
-    "utf8",
-  );
-  const script = content.match(
-    /node --input-type=module <<'JS'\n([\s\S]*?)\nJS/,
-  );
-  if (!script)
-    throw new Error(
-      "Starter README must include its dependency preparation script.",
-    );
-  return script[1];
-}
-
 /** Only the complete quick-start example is executable documentation. */
 export async function readQuickStart(root: string): Promise<string> {
   const content = await readFile(
