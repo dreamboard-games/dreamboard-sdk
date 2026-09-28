@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { formInput } from "./formInput";
 import { many } from "./many";
+import { rngInput } from "./rngInput";
 
 describe("many defaults", () => {
   test.each(["a", () => "a", () => undefined] as const)(
@@ -16,6 +17,17 @@ describe("many defaults", () => {
       expect(input).not.toHaveProperty("resolveDefaultValue");
       expect(input.schema.safeParse(["a"]).success).toBe(true);
       expect(input.schema.safeParse("a").success).toBe(false);
+    },
+  );
+});
+
+describe("many authoring validation", () => {
+  test.each([rngInput.d6(), rngInput.coin()])(
+    "rejects engine-sampled collectors from untyped callers (%j)",
+    (collector) => {
+      expect(() => {
+        Reflect.apply(many, undefined, [collector, { count: 2 }]);
+      }).toThrow("many(...) cannot wrap rngInput collectors.");
     },
   );
 });
