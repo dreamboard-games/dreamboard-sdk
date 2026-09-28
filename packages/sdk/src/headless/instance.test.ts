@@ -1194,3 +1194,67 @@ it("descriptor controls preserve numeric and resource array drafts and captured 
   expect(game.state.drafts).toEqual({});
   game.dispose();
 });
+
+it("keeps connected instance projections live and nonenumerable", () => {
+  const { source, emit } = setup();
+  const game = createGameInstance()({ source });
+  try {
+    expect(game.connection).toBe("ready");
+    expect(game.me?.id).toBe("alice");
+    const projections = [
+      "snapshot",
+      "view",
+      "version",
+      "connection",
+      "failure",
+      "request",
+      "state",
+      "phase",
+      "turn",
+      "me",
+      "players",
+      "interactions",
+      "inputs",
+      "zones",
+      "cards",
+      "events",
+    ] as const;
+    for (const key of projections) {
+      const descriptor = Object.getOwnPropertyDescriptor(game, key);
+      expect(descriptor?.get).toBeTypeOf("function");
+      expect(descriptor).toMatchObject({
+        set: undefined,
+        enumerable: false,
+        configurable: false,
+      });
+    }
+    expect(Object.getOwnPropertyDescriptor(game, "store")).toEqual({
+      value: game.store,
+      writable: false,
+      enumerable: false,
+      configurable: false,
+    });
+    const methods = [
+      "getSnapshot",
+      "getOptions",
+      "setOptions",
+      "subscribe",
+      "dispose",
+      "assertCoverage",
+      "inspect",
+    ];
+    expect(Object.keys(game)).toEqual(methods);
+    expect(Object.keys({ ...game })).toEqual(methods);
+    expect(JSON.stringify(game)).toBe("{}");
+    const before = game.getSnapshot();
+    emit(2, undefined, { view: { score: 2 } });
+    expect(game.version).toBe(2);
+    expect(game.view).toEqual({ score: 2 });
+    expect(game.getSnapshot()).not.toBe(before);
+    expect(before.version).toBe(1);
+    expect(JSON.stringify(game)).toBe("{}");
+  } finally {
+    game.dispose();
+    source.dispose();
+  }
+});

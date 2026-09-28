@@ -16,7 +16,7 @@ import {
   PointerActivationConstraints,
 } from "@dnd-kit/dom";
 import { pointerIntersection } from "@dnd-kit/collision";
-import type { CoreInstance } from "../headless/model.js";
+import type { IdOf } from "../headless/model.js";
 import type { DragController } from "../headless/features/drag.js";
 import type { DropTarget, TargetOptions } from "../headless/targets.js";
 
@@ -24,10 +24,11 @@ import type { DropTarget, TargetOptions } from "../headless/targets.js";
 export interface BoardDropOptions {
   containsPoint?(point: { x: number; y: number }): boolean;
 }
-export type DragGame = CoreInstance<unknown> & {
-  readonly drag?: DragController<unknown>;
-};
-type DragData = { begin?: () => boolean; target?: DropTarget<unknown> | null };
+export interface DragBinding<G> {
+  subscribe(listener: () => void): () => void;
+  readonly drag?: DragController<G>;
+}
+type DragData<G> = { begin?: () => boolean; target?: DropTarget<G> | null };
 const sensors = [
   PointerSensor.configure({
     activationConstraints: [
@@ -62,7 +63,7 @@ const plugins = defaultPreset.plugins.map((plugin) =>
     : plugin,
 );
 
-function DragLifetime({ game }: { game: DragGame }) {
+function DragLifetime<G>({ game }: { game: DragBinding<G> }) {
   const manager = useDragDropManager();
   useLayoutEffect(
     () =>
@@ -80,15 +81,15 @@ function DragLifetime({ game }: { game: DragGame }) {
   return null;
 }
 /** Installed by GameProvider when dragFeature is enabled. */
-export function GameDragProvider({
+export function GameDragProvider<G>({
   game,
   children,
 }: {
-  game: DragGame;
+  game: DragBinding<G>;
   children?: ReactNode;
 }) {
   return (
-    <DragDropProvider<DragData>
+    <DragDropProvider<DragData<G>>
       sensors={sensors}
       plugins={plugins}
       onBeforeDragStart={(event) => {
@@ -112,14 +113,14 @@ export function GameDragProvider({
 }
 
 /** Bound by createGameHook so card and interaction IDs use the authored game. */
-export function useCardDraggable(
-  game: DragGame,
-  cardId: string,
-  options?: TargetOptions<unknown>,
+export function useCardDraggable<G>(
+  game: DragBinding<G>,
+  cardId: IdOf<G, "cardId">,
+  options?: TargetOptions<G>,
 ) {
   const id = useId();
   const canDrag = game.drag?.getCanDrag(cardId, options) ?? false;
-  const { ref, handleRef, isDragging } = useDraggable<DragData>({
+  const { ref, handleRef, isDragging } = useDraggable<DragData<G>>({
     id,
     disabled: !canDrag,
     data: { begin: () => game.drag?.begin(cardId, options) ?? false },
@@ -141,8 +142,8 @@ export function useCardDraggable(
 }
 
 /** Targets retain the exact interaction, card-input and destination-input route. */
-export function useBoardDroppable(
-  target: DropTarget<unknown> | null,
+export function useBoardDroppable<G>(
+  target: DropTarget<G> | null,
   options?: BoardDropOptions,
 ) {
   const id = useId();
@@ -154,7 +155,7 @@ export function useBoardDroppable(
       ? collision
       : null;
   };
-  const { ref, isDropTarget } = useDroppable<DragData>({
+  const { ref, isDropTarget } = useDroppable<DragData<G>>({
     id,
     disabled: target === null,
     data: { target },

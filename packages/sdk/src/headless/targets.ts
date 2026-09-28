@@ -28,6 +28,16 @@ export type RuntimeBoardTarget =
       readonly kind: "space";
       readonly value: PlayerBoardSpaceTarget;
     };
+export type RuntimeSelectionTarget =
+  RuntimeBoardTarget | { readonly kind: "card"; readonly value: string };
+export type RuntimeTargetOptions =
+  | { readonly interaction?: undefined; readonly input?: never }
+  | { readonly interaction: string; readonly input?: string };
+export type RuntimeDropTarget = RuntimeBoardTarget & {
+  readonly interactionKey: string;
+  readonly cardInputKey: string;
+  readonly inputKey: string;
+};
 type TargetOnBoard<Table, B extends BoardIdOfTable<Table>> =
   | ({ readonly valueKind: "board-id"; readonly boardId: B } & (
       | { readonly kind: "space"; readonly value: SpaceIdOfTable<Table, B> }

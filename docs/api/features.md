@@ -104,7 +104,7 @@ Native wheel listeners must be non-passive. SVG rendering must convert client
 coordinates to user coordinates; the copied BoardTargets demonstrates this.
 
 Custom features return root/interaction/input/zone/card/board prototype objects
-and optional dispose. FeatureContext provides board construction, target routing,
+and optional dispose. `FeatureContext.createBoard(data)` derives the board ID from its data. FeatureContext also provides target routing,
 atomic card-drop routing and invalidate. Keep domain legality at its canonical
 owner. Local feature state resets across source/seat lifetimes; final dispose
 releases subscriptions and browser gestures. Rendering, wheel listener options, coordinate

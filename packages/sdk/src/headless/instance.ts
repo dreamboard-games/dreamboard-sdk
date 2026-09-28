@@ -1,10 +1,20 @@
+import {
+  runtimeFeatures,
+  type RuntimeFeatureContext,
+  type RuntimeCollection,
+} from "./runtime-features.js";
+import type {
+  RuntimeBoardCollections,
+  RuntimeBoardState,
+} from "../reducer/model/table.js";
+import type { ReadonlyData } from "./model.js";
 import { createInputControl } from "./input-control.js";
 import { requireLookup } from "../shared/lookup.js";
 import type {
   RuntimeBoardTarget,
-  SelectionTarget,
-  TargetOptions,
-  DropTarget,
+  RuntimeSelectionTarget,
+  RuntimeTargetOptions,
+  RuntimeDropTarget,
 } from "./targets.js";
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
@@ -31,7 +41,6 @@ import type {
   GameInstance,
   CoreInstance,
   InstanceOptions,
-  ReadModel,
   GameSource,
   SourceState,
   SourceSnapshot,
@@ -405,7 +414,7 @@ class CardObject {
         ),
     );
   }
-  getCanSelect(options?: TargetOptions<unknown>) {
+  getCanSelect(options?: RuntimeTargetOptions) {
     return this.routes.some(
       (route) =>
         route.getIsAvailable() &&
@@ -422,14 +431,14 @@ class CardObject {
           ),
     );
   }
-  select(options?: TargetOptions<unknown>) {
+  select(options?: RuntimeTargetOptions) {
     if (this.epoch !== this.owner.epoch || this.owner.disposed) return;
     this.owner.selectCard(this.id, options);
   }
-  getSelectHandler(options?: TargetOptions<unknown>) {
+  getSelectHandler(options?: RuntimeTargetOptions) {
     return () => this.select(options);
   }
-  getProps(options?: TargetOptions<unknown>) {
+  getProps(options?: RuntimeTargetOptions) {
     return {
       type: "button" as const,
       disabled: !this.getCanSelect(options),
@@ -500,14 +509,75 @@ class PhaseObject {
   }
 }
 
+interface RuntimeModel {
+  readonly snapshot: SourceSnapshot | null;
+  readonly view: SourceSnapshot["frame"]["view"] | null;
+  readonly version: number | null;
+  readonly connection: SourceState["connection"];
+  readonly request: SourceState["request"];
+  readonly failure: SourceState["failure"];
+  readonly state: {
+    readonly drafts: DraftMap;
+    readonly activeInteraction: string | null;
+  };
+  readonly phase: PhaseObject;
+  readonly turn: {
+    readonly activePlayerIds: readonly string[];
+    readonly currentPlayerId: string | null;
+    readonly order: readonly string[];
+    readonly isMine: boolean;
+  };
+  readonly me: {
+    readonly id: string;
+    readonly player: PlayerObject;
+    getCanAct(): boolean;
+  } | null;
+  readonly players: RuntimeCollection<PlayerObject> & {
+    readonly order: readonly string[];
+    next(id: string): PlayerObject;
+  };
+  readonly interactions: {
+    get(key: string): InteractionObject;
+    find(key: string): InteractionObject | undefined;
+    list(): readonly InteractionObject[];
+    listAvailable(): readonly InteractionObject[];
+  };
+  readonly inputs: {
+    get(key: string, name: string): InputObject;
+    find(key: string, name: string): InputObject | undefined;
+  };
+  readonly zones: RuntimeCollection<ZoneObject>;
+  readonly cards: Pick<RuntimeCollection<CardObject>, "get" | "find">;
+  readonly events: { readonly recent: SourceSnapshot["frame"]["events"] };
+}
+interface RuntimeCore extends RuntimeModel {
+  readonly store: Pick<
+    ReturnType<typeof createStore<RuntimeModel>>,
+    "get" | "subscribe"
+  >;
+  getSnapshot(): RuntimeModel;
+  getOptions(): RuntimeOptions;
+  setOptions(options: RuntimeOptions): void;
+  subscribe(listener: () => void): () => void;
+  dispose(): void;
+  assertCoverage(): void;
+  inspect(): RuntimeModel;
+}
+interface RuntimeContext extends Omit<
+  RuntimeFeatureContext,
+  "game" | "getBoards"
+> {
+  readonly [runtimeFeatures]: RuntimeFeatureContext;
+}
+
 class Controller {
   epoch = 0;
   options: RuntimeOptions;
   localDrafts: DraftMap;
   localActive: string | null;
   disposed = false;
-  readonly instance: CoreInstance<unknown>;
-  readonly store: ReturnType<typeof createStore<ReadModel<unknown>>>;
+  readonly instance: RuntimeCore;
+  readonly store: ReturnType<typeof createStore<RuntimeModel>>;
   readonly prototypes = {
     interaction: Object.create(InteractionObject.prototype) as object,
     input: Object.create(InputObject.prototype) as object,
@@ -528,7 +598,7 @@ class Controller {
     accepted: boolean;
     cancel: boolean;
   } | null = null;
-  building: ReadModel<unknown> | undefined;
+  building: RuntimeModel | undefined;
   rootProperties = new Map<PropertyKey, PropertyDescriptor>();
   featureDisposals: (() => void)[] = [];
   warned = new Set<string>();
@@ -550,17 +620,67 @@ class Controller {
   }
   constructor(
     options: RuntimeOptions,
-    features?: (
-      core: CoreInstance<unknown>,
-      context: FeatureContext<unknown>,
-    ) => Features,
+    features?: (core: RuntimeCore, context: RuntimeContext) => Features,
   ) {
     this.options = options;
     this.localDrafts =
       (options.initialState?.drafts as DraftMap) ?? EMPTY_DRAFTS;
     this.localActive = options.initialState?.activeInteraction ?? null;
     this.sourceState = options.source.store.get();
-    const root = {
+    const current = () => this.building ?? this.store.get();
+    const root: RuntimeCore = {
+      get snapshot() {
+        return current().snapshot;
+      },
+      get view() {
+        return current().view;
+      },
+      get version() {
+        return current().version;
+      },
+      get connection() {
+        return current().connection;
+      },
+      get failure() {
+        return current().failure;
+      },
+      get request() {
+        return current().request;
+      },
+      get state() {
+        return current().state;
+      },
+      get phase() {
+        return current().phase;
+      },
+      get turn() {
+        return current().turn;
+      },
+      get me() {
+        return current().me;
+      },
+      get players() {
+        return current().players;
+      },
+      get interactions() {
+        return current().interactions;
+      },
+      get inputs() {
+        return current().inputs;
+      },
+      get zones() {
+        return current().zones;
+      },
+      get cards() {
+        return current().cards;
+      },
+      get events() {
+        return current().events;
+      },
+      store: {
+        get: () => this.store.get(),
+        subscribe: (listener: () => void) => this.store.subscribe(listener),
+      },
       getSnapshot: () => this.building ?? this.store.get(),
       getOptions: () => this.options,
       setOptions: (next: RuntimeOptions) => this.setOptions(next),
@@ -572,35 +692,24 @@ class Controller {
       assertCoverage: () => this.assertCoverage(),
       inspect: () => this.store.get(),
     };
-    this.instance = root as CoreInstance<unknown>;
-    for (const key of [
-      "snapshot",
-      "view",
-      "version",
-      "connection",
-      "failure",
-      "request",
-      "state",
-      "phase",
-      "turn",
-      "me",
-      "players",
-      "interactions",
-      "inputs",
-      "zones",
-      "cards",
-      "events",
-    ] as const)
-      Object.defineProperty(root, key, {
-        get: () => (this.building ?? this.store.get())[key],
-      });
-    this.store = createStore(Object.freeze(this.build()));
+    // Keep live projections out of enumeration, spreads, and serialization.
+    for (const [key, descriptor] of Object.entries(
+      Object.getOwnPropertyDescriptors(root),
+    )) {
+      if (descriptor.get) {
+        Object.defineProperty(root, key, {
+          enumerable: false,
+          configurable: false,
+        });
+      }
+    }
     Object.defineProperty(root, "store", {
-      value: {
-        get: () => this.store.get(),
-        subscribe: (listener: () => void) => this.store.subscribe(listener),
-      },
+      enumerable: false,
+      configurable: false,
+      writable: false,
     });
+    this.instance = root;
+    this.store = createStore(Object.freeze(this.build()));
     if ("apply" in options.source)
       Object.defineProperty(root, "apply", {
         value: (action: unknown) =>
@@ -619,10 +728,19 @@ class Controller {
             }
           ).explore(...args),
       });
-    const context: FeatureContext<unknown> = {
-      createBoard: (id, data) =>
+    const runtime: RuntimeFeatureContext = {
+      game: this.instance,
+      getBoards: () => {
+        // The materializer owns the reserved boards projection. Source/game binding
+        // admits that projection once; feature algorithms never cast facade values.
+        const view = this.instance.view as {
+          boards?: Pick<RuntimeBoardCollections, "byId">;
+        } | null;
+        return view?.boards?.byId ?? {};
+      },
+      createBoard: (data: ReadonlyData<RuntimeBoardState>) =>
         this.object("board", {
-          id,
+          id: data.id,
           data: immutableCopy(data),
           game: this.instance,
         }),
@@ -632,6 +750,7 @@ class Controller {
         if (!this.disposed) this.refresh();
       },
     };
+    const context: RuntimeContext = { ...runtime, [runtimeFeatures]: runtime };
     for (const feature of Object.values(
       features?.(this.instance, context) ?? {},
     )) {
@@ -752,8 +871,7 @@ class Controller {
     return base;
   }
   current(key: string) {
-    return this.store.get().interactions.find(key) as unknown as
-      InteractionObject | undefined;
+    return this.store.get().interactions.find(key);
   }
   editable(key: string) {
     const interaction = this.current(key);
@@ -830,9 +948,8 @@ class Controller {
     )
       this.handle(() => this.submit(key, false));
   }
-  selectCard(id: string, options?: TargetOptions<unknown>) {
-    const card = this.store.get().cards.find(id) as unknown as
-      CardObject | undefined;
+  selectCard(id: string, options?: RuntimeTargetOptions) {
+    const card = this.store.get().cards.find(id);
     if (
       !card ||
       this.sourceState.request ||
@@ -1108,10 +1225,7 @@ class Controller {
     if (missing.length)
       throw new Error(`Interactions not read: ${missing.join(", ")}`);
   }
-  routeTarget(
-    target: SelectionTarget<unknown>,
-    options?: TargetOptions<unknown>,
-  ) {
+  routeTarget(target: RuntimeSelectionTarget, options?: RuntimeTargetOptions) {
     if (target.kind === "card") {
       this.selectCard(target.value, options);
       return;
@@ -1136,7 +1250,7 @@ class Controller {
     if (match)
       this.select(match.interaction.key, match.input.key, target.value);
   }
-  routeCardDrop(cardId: string, target: DropTarget<unknown>) {
+  routeCardDrop(cardId: string, target: RuntimeDropTarget) {
     if (
       this.disposed ||
       this.sourceState.request ||
@@ -1144,8 +1258,7 @@ class Controller {
       this.sourceState.connection !== "ready"
     )
       return;
-    const card = this.store.get().cards.find(cardId) as unknown as
-      CardObject | undefined;
+    const card = this.store.get().cards.find(cardId);
     const interaction = card?.routes.find(
       (route) => route.key === target.interactionKey,
     );
@@ -1212,7 +1325,7 @@ class Controller {
       }
     });
   }
-  build(previous?: ReadModel<unknown>): ReadModel<unknown> {
+  build(previous?: RuntimeModel): RuntimeModel {
     this.trackDrafts();
     const { snapshot, connection, request, failure } = this.sourceState;
     const old = previous?.snapshot;
@@ -1437,7 +1550,7 @@ class Controller {
     this.lastSnapshotDrafts = drafts;
     for (const value of [players, me, interactions, inputs, zones, cards])
       if (value) Object.freeze(value);
-    const model = {
+    const model: RuntimeModel = {
       snapshot,
       view: snapshot?.frame.view ?? null,
       version: snapshot?.version ?? null,
@@ -1472,7 +1585,7 @@ class Controller {
           : Object.freeze({
               recent: snapshot?.frame.events ?? Object.freeze([]),
             }),
-    } as unknown as ReadModel<unknown>;
+    };
     this.building = model;
     try {
       for (const [key, descriptor] of this.rootProperties)
@@ -1502,14 +1615,12 @@ export function createGameInstance<G>() {
       features?: (core: CoreInstance<G>, context: FeatureContext<G>) => F;
     },
   ): GameInstance<G, F, S> {
+    // Composition boundary: callers bind this source and feature callbacks to G.
+    // Runtime classes keep concrete descriptor contracts; only this facade exposes G/F.
     const controller = new Controller(
       options as RuntimeOptions,
       options.features as
-        | ((
-            core: CoreInstance<unknown>,
-            context: FeatureContext<unknown>,
-          ) => Features)
-        | undefined,
+        ((core: RuntimeCore, context: RuntimeContext) => Features) | undefined,
     );
     return controller.instance as unknown as GameInstance<G, F, S>;
   };

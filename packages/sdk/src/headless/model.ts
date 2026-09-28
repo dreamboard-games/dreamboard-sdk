@@ -1,3 +1,7 @@
+import {
+  runtimeFeatures,
+  type RuntimeFeatureContext,
+} from "./runtime-features.js";
 import type { InputControl, InputTargetOption } from "./input-control.js";
 export type { InputControl, InputTargetOption } from "./input-control.js";
 import type { SelectionTarget, DropTarget, TargetOptions } from "./targets.js";
@@ -252,9 +256,9 @@ type RootHooks<G, F extends Features> = {
     : Hook<F, "root">[K];
 };
 export interface FeatureContext<G> {
+  readonly [runtimeFeatures]: RuntimeFeatureContext;
   createBoard<K extends IdOf<G, "boardId">>(
-    id: K,
-    data: BoardDataOf<G, K>,
+    data: BoardDataOf<G, K> & { readonly id: K },
   ): BoardBase<G, K>;
   routeTarget(target: SelectionTarget<G>, options?: TargetOptions<G>): void;
   routeCardDrop(cardId: IdOf<G, "cardId">, target: DropTarget<G>): void;
