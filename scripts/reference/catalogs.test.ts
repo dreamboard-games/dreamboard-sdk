@@ -114,7 +114,10 @@ test("standalone starter needs no dependency conversion or repository parent", a
     );
     assert.deepEqual(parsed.errors, []);
     assert.equal(parsed.options.strict, true);
-    assert.deepEqual(parsed.options.paths, { "@game": ["./ui/game.tsx"] });
+    assert.deepEqual(parsed.options.paths, {
+      "@game": ["./ui/game.tsx"],
+      "@/*": ["./ui/*"],
+    });
     const before = await readFile(configPath, "utf8");
     const catalogs = await readCatalogs(repository);
     await prepareIsolatedReferenceGame(

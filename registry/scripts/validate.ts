@@ -13,8 +13,9 @@ for (const item of registry.items) {
   registryItemSchema.parse(item);
   for (const dependency of item.registryDependencies ?? []) {
     if (
-      !dependency.startsWith("@dreamboard/") ||
-      !names.has(dependency.slice(12))
+      dependency.startsWith("@dreamboard/")
+        ? !names.has(dependency.slice(12))
+        : !/^[a-z][a-z0-9-]*$/.test(dependency)
     )
       throw new Error(`Unknown dependency: ${dependency}`);
   }
@@ -41,6 +42,12 @@ for (const item of registry.items) {
       if (
         name !== "react" &&
         !name.startsWith("./") &&
+        !(
+          name.startsWith("@/components/ui/") &&
+          item.registryDependencies?.includes(
+            name.slice("@/components/ui/".length),
+          )
+        ) &&
         !(item.meta?.binding === "workspace" && name === "@game") &&
         // Workspace-bound renderers may share SDK types without a runtime import.
         !(

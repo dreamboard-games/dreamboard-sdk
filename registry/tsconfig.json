@@ -10,7 +10,8 @@
     "allowImportingTsExtensions": true,
     "types": ["node", "vite/client"],
     "paths": {
-      "@game": ["./typecheck/game.ts"]
+      "@game": ["./typecheck/game.ts"],
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -18,6 +19,7 @@
     "stories/**/*.tsx",
     "scripts/**/*.ts",
     ".storybook/**/*.ts",
-    "items/**/*.ts"
+    "items/**/*.ts",
+    "components/**/*.tsx"
   ]
 }
