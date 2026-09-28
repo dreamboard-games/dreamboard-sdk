@@ -1,4 +1,5 @@
-import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
+import type { SelectionTarget, DropTarget, TargetOptions } from "./targets.js";
+export type * from "./targets.js";
 import type { z } from "zod";
 import type { Store } from "@tanstack/store";
 import type {
@@ -6,6 +7,7 @@ import type {
   InteractionIdOfDefinitionPhase,
   ClientParamsOfInteractionOfDefinition,
   ViewOfDefinition,
+  InputCollectorOfDefinition,
 } from "../reducer/model/definition.js";
 import type {
   InputDomain,
@@ -35,10 +37,7 @@ export type InteractionKey<G> = unknown extends G
           P in PhaseNamesOfDefinition<G>
         ]: `${P}.${InteractionIdOfDefinitionPhase<G, P>}`;
       }[PhaseNamesOfDefinition<G>];
-export type InteractionParams<
-  G,
-  K extends InteractionKey<G>,
-> = unknown extends G
+type RawInteractionParams<G, K extends InteractionKey<G>> = unknown extends G
   ? Record<string, RuntimeJson>
   : K extends `${infer P}.${infer I}`
     ? P extends PhaseNamesOfDefinition<G>
@@ -47,6 +46,60 @@ export type InteractionParams<
         : never
       : Record<string, RuntimeJson>
     : Record<string, RuntimeJson>;
+type UnionKeys<T> = T extends unknown ? keyof T : never;
+type UnionValue<T, Key> = T extends unknown
+  ? Key extends keyof T
+    ? T[Key]
+    : never
+  : never;
+export type InteractionParams<G, K extends InteractionKey<G>> = {
+  [N in UnionKeys<RawInteractionParams<G, K>>]: UnionValue<
+    RawInteractionParams<G, K>,
+    N
+  >;
+};
+type CollectorOf<G, K, N extends string> = K extends `${infer P}.${infer I}`
+  ? P extends PhaseNamesOfDefinition<G>
+    ? I extends InteractionIdOfDefinitionPhase<G, P>
+      ? InputCollectorOfDefinition<G, P, I, N>
+      : never
+    : never
+  : never;
+export type InputKind<
+  G,
+  K extends InteractionKey<G>,
+  N extends InputKey<G, K>,
+> = [CollectorOf<G, K, N>] extends [never]
+  ? InteractionInputDescriptor["kind"]
+  : CollectorOf<G, K, N> extends {
+        readonly kind: infer Kind extends InteractionInputDescriptor["kind"];
+      }
+    ? Kind
+    : InteractionInputDescriptor["kind"];
+type SelectionValue<Collector, Value> = Collector extends
+  | { readonly selection: { readonly mode: "many" } }
+  | { readonly domain: (...args: never[]) => { readonly type: "choiceList" } }
+  ? Value extends readonly (infer Item)[]
+    ? Item
+    : never
+  : Value;
+export type InputTarget<
+  G,
+  K extends InteractionKey<G>,
+  N extends InputKey<G, K>,
+> = [CollectorOf<G, K, N>] extends [never]
+  ? Exclude<InteractionParams<G, K>[N], undefined>
+  : SelectionValue<
+      CollectorOf<G, K, N>,
+      Exclude<InteractionParams<G, K>[N], undefined>
+    >;
+export type AnyInput<G, F extends Features, K extends InteractionKey<G>> = {
+  [N in InputKey<G, K>]: Input<G, F, K, N>;
+}[InputKey<G, K>];
+export type AnyInteraction<G, F extends Features = Record<never, never>> = {
+  [K in InteractionKey<G>]: Interaction<G, F, K>;
+}[InteractionKey<G>];
+
 export type InputKey<G, K extends InteractionKey<G>> = keyof InteractionParams<
   G,
   K
@@ -96,13 +149,25 @@ export type Hook<
           : Record<never, never>;
       }[keyof F]
     >;
+export type TableOfGame<G> = G extends {
+  contract: { manifest: { tableSchema: infer Schema extends z.ZodType } };
+}
+  ? z.output<Schema>
+  : never;
+export type BoardDataOf<G, K extends string> = [TableOfGame<G>] extends [never]
+  ? ReadonlyData<import("../reducer/model/table.js").RuntimeBoardState>
+  : TableOfGame<G> extends { boards: { byId: infer Boards } }
+    ? K extends keyof Boards
+      ? ReadonlyData<Boards[K]> & { readonly id: K }
+      : never
+    : never;
 export interface BoardBase<
   G,
   K extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
 > {
   readonly id: K;
   readonly game: CoreInstance<G>;
-  readonly data: Readonly<object>;
+  readonly data: BoardDataOf<G, K>;
 }
 export type Board<
   G,
@@ -120,27 +185,12 @@ type RootHooks<G, F extends Features> = {
     : Hook<F, "root">[K];
 };
 export interface FeatureContext<G> {
-  createBoard<K extends IdOf<G, "boardId">, Data extends object>(
+  createBoard<K extends IdOf<G, "boardId">>(
     id: K,
-    data: Data,
-  ): BoardBase<G, K> & { readonly data: Readonly<Data> };
-  routeTarget(
-    kind: "card" | "space" | "edge" | "vertex" | "tile",
-    id: string | PlayerBoardSpaceTarget,
-    options?: {
-      interaction?: InteractionKey<G>;
-      boardId?: IdOf<G, "boardId"> | IdOf<G, "boardBaseId">;
-    },
-  ): void;
-  routeCardDrop(
-    cardId: IdOf<G, "cardId">,
-    target: {
-      kind: "space" | "edge" | "vertex" | "tile";
-      id: string | PlayerBoardSpaceTarget;
-      boardId?: IdOf<G, "boardId"> | IdOf<G, "boardBaseId">;
-      interaction?: InteractionKey<G>;
-    },
-  ): void;
+    data: BoardDataOf<G, K>,
+  ): BoardBase<G, K>;
+  routeTarget(target: SelectionTarget<G>, options?: TargetOptions<G>): void;
+  routeCardDrop(cardId: IdOf<G, "cardId">, target: DropTarget<G>): void;
   invalidate(): void;
 }
 export interface NativeEvent {
@@ -158,8 +208,11 @@ export type ActionProps = {
   readonly type: "button";
   readonly [key: `data-${string}`]: string | number | boolean | undefined;
 };
-export interface Player<G> {
-  readonly id: IdOf<G, "playerId">;
+export interface Player<
+  G,
+  K extends IdOf<G, "playerId"> = IdOf<G, "playerId">,
+> {
+  readonly id: K;
   readonly index: number;
   readonly name: string;
   readonly color?: string;
@@ -183,7 +236,7 @@ export interface InputBase<
   N extends InputKey<G, K>,
 > {
   readonly key: N;
-  readonly kind: string;
+  readonly kind: InputKind<G, K, N>;
   readonly game: CoreInstance<G>;
   readonly interaction: InteractionBase<G, K>;
   getDomain(): InputDomain;
@@ -191,13 +244,13 @@ export interface InputBase<
   setValue(value: Exclude<InteractionParams<G, K>[N], undefined>): void;
   clear(): void;
   getIsReady(): boolean;
-  getEligibleTargets(): readonly RuntimeJson[];
-  getIsEligible(value: RuntimeJson): boolean;
-  getIsSelected(value: RuntimeJson): boolean;
-  getSelectHandler(value: RuntimeJson): () => void;
-  getTargetProps(value: RuntimeJson): ActionProps;
+  getEligibleTargets(): readonly InputTarget<G, K, N>[];
+  getIsEligible(value: InputTarget<G, K, N>): boolean;
+  getIsSelected(value: InputTarget<G, K, N>): boolean;
+  getSelectHandler(value: InputTarget<G, K, N>): () => void;
+  getTargetProps(value: InputTarget<G, K, N>): ActionProps;
   getFieldProps(): {
-    value: InteractionParams<G, K>[N] | "";
+    value: Exclude<InteractionParams<G, K>[N], null | undefined> | "";
     disabled: boolean;
     onChange(event: FieldEvent): void;
     readonly [key: `data-${string}`]: string | number | boolean | undefined;
@@ -215,8 +268,8 @@ export type Input<
   };
 export interface InteractionBase<G, K extends InteractionKey<G>> {
   readonly key: K;
-  readonly id: string;
-  readonly phase: PhaseName<G>;
+  readonly id: K extends `${string}.${infer I}` ? I : string;
+  readonly phase: K extends `${infer P}.${string}` ? P : PhaseName<G>;
   readonly label: string;
   readonly help?: string;
   readonly kind: "inputs" | "steps";
@@ -227,7 +280,7 @@ export interface InteractionBase<G, K extends InteractionKey<G>> {
   getStep(): InteractionDescriptor["step"] | null;
   getStepIndex(): number | null;
   getIsReady(): boolean;
-  getMissingInputs(): readonly string[];
+  getMissingInputs(): readonly InputKey<G, K>[];
   getStatus(): "open" | "submitting" | "submitted";
   submit(): Promise<SubmitResult>;
   cancel(): Promise<SubmitResult>;
@@ -245,7 +298,7 @@ export type Interaction<
     readonly game: GameInstance<G, F>;
     getInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N>;
     findInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N> | undefined;
-    getInputs(): readonly Input<G, F, K, InputKey<G, K>>[];
+    getInputs(): readonly AnyInput<G, F, K>[];
   };
 export type ReadonlyData<T> = T extends readonly (infer Item)[]
   ? readonly ReadonlyData<Item>[]
@@ -257,41 +310,52 @@ export type CardDataOf<G, K extends string> = G extends {
 }
   ? z.output<Schema> extends { cards: infer Cards }
     ? K extends keyof Cards
-      ? ReadonlyData<Cards[K]>
+      ? ReadonlyData<Cards[K]> & { readonly id: K }
       : never
     : never
   : Readonly<Record<string, RuntimeJson>>;
-export interface CardBase<G, K extends IdOf<G, "cardId"> = IdOf<G, "cardId">> {
+interface CardEntity<G, K extends IdOf<G, "cardId"> = IdOf<G, "cardId">> {
   readonly id: K;
   readonly zone: IdOf<G, "zoneId">;
   readonly index: number;
-  readonly view: CardDataOf<G, K> | null;
-  readonly hidden: boolean;
+
   readonly game: CoreInstance<G>;
-  getInteractions(): readonly InteractionBase<G, InteractionKey<G>>[];
+  getInteractions(): readonly AnyInteraction<G>[];
   getIsEligible(): boolean;
   getIsSelected(): boolean;
-  getCanSelect(): boolean;
-  select(options?: { interaction?: InteractionKey<G> }): void;
-  getSelectHandler(options?: { interaction?: InteractionKey<G> }): () => void;
-  getProps(options?: { interaction?: InteractionKey<G> }): ActionProps;
+  getCanSelect(options?: TargetOptions<G>): boolean;
+  select(options?: TargetOptions<G>): void;
+  getSelectHandler(options?: TargetOptions<G>): () => void;
+  getProps(options?: TargetOptions<G>): ActionProps;
 }
+type CardVisibility<G, K extends string> =
+  | { readonly hidden: true; readonly view: null }
+  | { readonly hidden: false; readonly view: CardDataOf<G, K> };
+export type CardBase<
+  G,
+  K extends IdOf<G, "cardId"> = IdOf<G, "cardId">,
+> = CardEntity<G, K> & CardVisibility<G, K>;
 export type Card<
   G,
   F extends Features,
   K extends IdOf<G, "cardId"> = IdOf<G, "cardId">,
-> = Omit<CardBase<G, K>, "getInteractions" | "game"> &
+> = Omit<CardEntity<G, K>, "getInteractions" | "game"> &
+  CardVisibility<G, K> &
   Hook<F, "card"> & {
     readonly game: GameInstance<G, F>;
-    getInteractions(): readonly Interaction<G, F, InteractionKey<G>>[];
+    getInteractions(): readonly AnyInteraction<G, F>[];
   };
-export interface ZoneBase<G> {
-  readonly id: IdOf<G, "zoneId">;
+export interface ZoneBase<G, K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">> {
+  readonly id: K;
   readonly count: number;
   readonly game: CoreInstance<G>;
   getIsEmpty(): boolean;
 }
-export type Zone<G, F extends Features> = ZoneBase<G> &
+export type Zone<
+  G,
+  F extends Features,
+  K extends IdOf<G, "zoneId"> = IdOf<G, "zoneId">,
+> = ZoneBase<G, K> &
   Hook<F, "zone"> & {
     readonly game: GameInstance<G, F>;
     getCards(options?: {
@@ -316,8 +380,8 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     getCanAct(): boolean;
   } | null;
   readonly players: {
-    get(id: IdOf<G, "playerId">): Player<G>;
-    find(id: IdOf<G, "playerId">): Player<G> | undefined;
+    get<K extends IdOf<G, "playerId">>(id: K): Player<G, K>;
+    find<K extends IdOf<G, "playerId">>(id: K): Player<G, K> | undefined;
     getAll(): readonly Player<G>[];
     next(id: IdOf<G, "playerId">): Player<G>;
     readonly order: readonly IdOf<G, "playerId">[];
@@ -325,8 +389,8 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
   readonly interactions: {
     get<K extends InteractionKey<G>>(key: K): Interaction<G, F, K>;
     find<K extends InteractionKey<G>>(key: K): Interaction<G, F, K> | undefined;
-    list(): readonly Interaction<G, F, InteractionKey<G>>[];
-    listAvailable(): readonly Interaction<G, F, InteractionKey<G>>[];
+    list(): readonly AnyInteraction<G, F>[];
+    listAvailable(): readonly AnyInteraction<G, F>[];
   };
   readonly inputs: {
     get<K extends InteractionKey<G>, N extends InputKey<G, K>>(
@@ -339,8 +403,8 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     ): Input<G, F, K, N> | undefined;
   };
   readonly zones: {
-    get(id: IdOf<G, "zoneId">): Zone<G, F>;
-    find(id: IdOf<G, "zoneId">): Zone<G, F> | undefined;
+    get<K extends IdOf<G, "zoneId">>(id: K): Zone<G, F, K>;
+    find<K extends IdOf<G, "zoneId">>(id: K): Zone<G, F, K> | undefined;
     getAll(): readonly Zone<G, F>[];
   };
   readonly cards: {

@@ -1,5 +1,10 @@
 import { requireLookup } from "../shared/lookup.js";
-import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
+import type {
+  RuntimeBoardTarget,
+  SelectionTarget,
+  TargetOptions,
+  DropTarget,
+} from "./targets.js";
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
 import {
@@ -55,6 +60,20 @@ function inDomain(
     ignoreMinimum: partial,
   });
 }
+function matchesBoardTarget(
+  input: InteractionInputDescriptor,
+  target: RuntimeBoardTarget,
+) {
+  const domain = input.domain;
+  return (
+    domain.type === "boardTarget" &&
+    domain.valueKind === target.valueKind &&
+    (domain.targetKind === target.kind ||
+      (target.kind === "space" && domain.targetKind === "tile")) &&
+    domain.boardId ===
+      (target.valueKind === "board-id" ? target.boardId : target.value.boardId)
+  );
+}
 function immutableValues(value: Values): Values {
   return immutableCopy(value);
 }
@@ -79,7 +98,7 @@ function data(
 export class AmbiguousTargetError extends Error {
   constructor(id: string) {
     super(
-      `Target '${id}' belongs to more than one interaction. Choose an interaction explicitly.`,
+      `Target '${id}' belongs to more than one eligible input. Choose an interaction and input explicitly.`,
     );
     this.name = "AmbiguousTargetError";
   }
@@ -220,7 +239,7 @@ class InteractionObject {
 }
 class InputObject {
   readonly key: string;
-  readonly kind: string;
+  readonly kind: InteractionInputDescriptor["kind"];
   constructor(
     readonly interaction: InteractionObject,
     readonly descriptor: InteractionInputDescriptor,
@@ -374,10 +393,11 @@ class CardObject {
         ),
     );
   }
-  getCanSelect() {
+  getCanSelect(options?: TargetOptions<unknown>) {
     return this.routes.some(
       (route) =>
         route.getIsAvailable() &&
+        (!options?.interaction || route.key === options.interaction) &&
         route.status === "open" &&
         route.connected &&
         route
@@ -385,27 +405,29 @@ class CardObject {
           .some(
             (input) =>
               input.descriptor.domain.type === "cardTarget" &&
+              (!options?.input || input.key === options.input) &&
               input.getIsEligible(this.id),
           ),
     );
   }
-  select(options?: { interaction?: string }) {
+  select(options?: TargetOptions<unknown>) {
     if (this.epoch !== this.owner.epoch || this.owner.disposed) return;
-    this.owner.selectCard(this.id, options?.interaction);
+    this.owner.selectCard(this.id, options);
   }
-  getSelectHandler(options?: { interaction?: string }) {
+  getSelectHandler(options?: TargetOptions<unknown>) {
     return () => this.select(options);
   }
-  getProps(options?: { interaction?: string }) {
+  getProps(options?: TargetOptions<unknown>) {
     return {
       type: "button" as const,
-      disabled: !this.getCanSelect(),
+      disabled: !this.getCanSelect(options),
       "data-action": "select",
       "data-value": this.id,
       "data-interaction": options?.interaction,
+      "data-input": options?.input,
       "data-eligible": this.getIsEligible(),
       "data-selected": this.getIsSelected(),
-      "data-disabled": !this.getCanSelect(),
+      "data-disabled": !this.getCanSelect(options),
       "data-hidden": this.hidden,
       "data-seat": this.seat,
       onClick: this.getSelectHandler(options),
@@ -592,8 +614,7 @@ class Controller {
           data: immutableCopy(data),
           game: this.instance,
         }),
-      routeTarget: (kind, id, options) =>
-        this.routeTarget(kind, id, options?.interaction, options?.boardId),
+      routeTarget: (target, options) => this.routeTarget(target, options),
       routeCardDrop: (cardId, target) => this.routeCardDrop(cardId, target),
       invalidate: () => {
         if (!this.disposed) this.refresh();
@@ -797,35 +818,41 @@ class Controller {
     )
       this.handle(() => this.submit(key, false));
   }
-  selectCard(id: string, explicit?: string) {
+  selectCard(id: string, options?: TargetOptions<unknown>) {
     const card = this.store.get().cards.find(id) as unknown as
       CardObject | undefined;
-    if (!card) return;
-    let routes = card.routes.filter(
-      (route) =>
-        route.getIsAvailable() &&
-        route.currentLifetime() &&
-        !this.sourceState.request &&
-        this.sourceState.connection === "ready" &&
-        route
-          .getInputs()
-          .some(
-            (input) =>
-              input.descriptor.domain.type === "cardTarget" &&
-              input.getIsEligible(id),
-          ),
-    );
-    if (explicit) routes = routes.filter((route) => route.key === explicit);
-    if (routes.length > 1) throw new AmbiguousTargetError(id);
-    const route = routes[0];
-    const input = route
-      ?.getInputs()
-      .find(
-        (input) =>
-          input.descriptor.domain.type === "cardTarget" &&
-          input.getIsEligible(id),
+    if (
+      !card ||
+      this.sourceState.request ||
+      this.sourceState.connection !== "ready"
+    )
+      return;
+    const candidates = card.routes.flatMap((interaction) => {
+      if (
+        !interaction.getIsAvailable() ||
+        !interaction.currentLifetime() ||
+        (options?.interaction && interaction.key !== options.interaction)
+      )
+        return [];
+      return interaction
+        .getInputs()
+        .filter(
+          (input) =>
+            input.descriptor.domain.type === "cardTarget" &&
+            (!options?.input || input.key === options.input) &&
+            input.getIsEligible(id),
+        )
+        .map((input) => ({ interaction, input }));
+    });
+    if (candidates.length > 1) throw new AmbiguousTargetError(id);
+    const candidate = candidates[0];
+    if (candidate)
+      this.select(
+        candidate.interaction.key,
+        candidate.input.key,
+        id,
+        candidate.interaction,
       );
-    if (route && input) this.select(route.key, input.key, id, route);
   }
   handle(submit: () => Promise<SubmitResult>) {
     const source = this.options.source;
@@ -1070,13 +1097,11 @@ class Controller {
       throw new Error(`Interactions not read: ${missing.join(", ")}`);
   }
   routeTarget(
-    kind: string,
-    id: string | PlayerBoardSpaceTarget,
-    explicit?: string,
-    boardId?: string,
+    target: SelectionTarget<unknown>,
+    options?: TargetOptions<unknown>,
   ) {
-    if (kind === "card" && typeof id === "string") {
-      this.selectCard(id, explicit);
+    if (target.kind === "card") {
+      this.selectCard(target.value, options);
       return;
     }
     const candidates = this.lastInteractions.flatMap((interaction) =>
@@ -1084,33 +1109,22 @@ class Controller {
         .getInputs()
         .filter(
           (input) =>
-            input.descriptor.domain.type === "boardTarget" &&
-            (input.descriptor.domain.targetKind === kind ||
-              (kind === "space" &&
-                input.descriptor.domain.targetKind === "tile")) &&
-            (!boardId || input.descriptor.domain.boardId === boardId) &&
-            input.getIsEligible(id) &&
+            matchesBoardTarget(input.descriptor, target) &&
+            input.getIsEligible(target.value) &&
             interaction.getIsAvailable() &&
-            (!explicit || interaction.key === explicit),
+            (!options?.interaction ||
+              interaction.key === options.interaction) &&
+            (!options?.input || input.key === options.input),
         )
         .map((input) => ({ interaction, input })),
     );
     if (candidates.length > 1)
-      throw new AmbiguousTargetError(
-        typeof id === "string" ? id : JSON.stringify(id),
-      );
+      throw new AmbiguousTargetError(JSON.stringify(target.value));
     const match = candidates[0];
-    if (match) this.select(match.interaction.key, match.input.key, id);
+    if (match)
+      this.select(match.interaction.key, match.input.key, target.value);
   }
-  routeCardDrop(
-    cardId: string,
-    target: {
-      kind: string;
-      id: string | PlayerBoardSpaceTarget;
-      boardId?: string;
-      interaction?: string;
-    },
-  ) {
+  routeCardDrop(cardId: string, target: DropTarget<unknown>) {
     if (
       this.disposed ||
       this.sourceState.request ||
@@ -1120,42 +1134,22 @@ class Controller {
       return;
     const card = this.store.get().cards.find(cardId) as unknown as
       CardObject | undefined;
-    if (!card) return;
-    const candidates = card.routes.flatMap((interaction) => {
-      if (
-        !interaction.getIsAvailable() ||
-        (target.interaction && interaction.key !== target.interaction)
-      )
-        return [];
-      const cardInput = interaction
-        .getInputs()
-        .find(
-          (input) =>
-            input.descriptor.domain.type === "cardTarget" &&
-            input.getIsEligible(cardId),
-        );
-      if (!cardInput) return [];
-      return interaction
-        .getInputs()
-        .filter(
-          (input) =>
-            input.descriptor.domain.type === "boardTarget" &&
-            (input.descriptor.domain.targetKind === target.kind ||
-              (target.kind === "space" &&
-                input.descriptor.domain.targetKind === "tile")) &&
-            (!target.boardId ||
-              input.descriptor.domain.boardId === target.boardId) &&
-            input.getIsEligible(target.id),
-        )
-        .map((input) => ({ interaction, cardInput, input }));
-    });
-    if (candidates.length > 1)
-      throw new AmbiguousTargetError(
-        typeof target.id === "string" ? target.id : JSON.stringify(target.id),
-      );
-    const candidate = candidates[0];
-    if (!candidate) return;
-    const { interaction, cardInput, input } = candidate;
+    const interaction = card?.routes.find(
+      (route) => route.key === target.interactionKey,
+    );
+    if (!interaction?.currentLifetime() || !interaction.getIsAvailable())
+      return;
+    const cardInput = interaction.findInput(target.cardInputKey);
+    const input = interaction.findInput(target.inputKey);
+    if (
+      !cardInput ||
+      cardInput.descriptor.domain.type !== "cardTarget" ||
+      !cardInput.getIsEligible(cardId) ||
+      !input ||
+      !matchesBoardTarget(input.descriptor, target) ||
+      !input.getIsEligible(target.value)
+    )
+      return;
     let next: Record<string, unknown> = { ...this.drafts()[interaction.key] };
     routeCardInputIntent(
       {
@@ -1171,7 +1165,7 @@ class Controller {
       {
         cardId,
         cardInputKey: cardInput.key,
-        dropTarget: { inputKey: input.key, value: target.id },
+        dropTarget: { inputKey: input.key, value: target.value },
       },
     );
     this.writeDraft(interaction.key, next as Values);

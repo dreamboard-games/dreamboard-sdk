@@ -94,3 +94,40 @@ bare.cards.get("card-1").getInteractions()[0]!.customLabel();
 
 // @ts-expect-error Auto phases do not manufacture interaction keys.
 game.interactions.get("setup.anything");
+
+const moodKind: "form" = mood.kind;
+const moods: readonly ("ready" | "wait")[] = mood.getEligibleTargets();
+mood.getSelectHandler("ready");
+// @ts-expect-error Selection values preserve the collector's value type.
+mood.getSelectHandler("invalid");
+// @ts-expect-error Eligibility predicates are not untyped JSON APIs.
+mood.getIsEligible(42);
+// @ts-expect-error Selection predicates are typed too.
+mood.getIsSelected(false);
+// @ts-expect-error Target props preserve the value type.
+mood.getTargetProps({ value: "ready" });
+const visibleCard = game.cards.get("card-1");
+if (!visibleCard.hidden) {
+  const visibleId: "card-1" = visibleCard.view.id;
+  void visibleId;
+} else {
+  const hiddenView: null = visibleCard.view;
+  void hiddenView;
+}
+const handId: "hand" = game.zones.get("hand").id;
+for (const interaction of game.interactions.list()) {
+  if (interaction.key === "playerTurn.pick") {
+    for (const input of interaction.getInputs()) {
+      if (input.key === "mood") {
+        const value: "ready" | "wait" | undefined = input.getValue();
+        input.setValue("ready");
+        // @ts-expect-error Narrowed collection inputs retain their own value type.
+        input.setValue("card-1");
+        void value;
+      }
+    }
+  }
+}
+// @ts-expect-error Input disambiguation belongs to the selected interaction.
+visibleCard.select({ interaction: "playerTurn.pick", input: "missing" });
+void [moodKind, moods, handId];

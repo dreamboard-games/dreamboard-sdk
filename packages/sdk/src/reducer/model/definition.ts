@@ -493,6 +493,30 @@ type CollectorsOfInteractionDefinition<Spec> = Spec extends {
       : Record<string, never>
     : Record<string, never>;
 
+/** The canonical collector for a named interaction input, including step inputs. */
+export type InputCollectorOfDefinition<
+  Definition,
+  PhaseName extends PhaseNamesOfDefinition<Definition>,
+  InteractionId extends InteractionIdOfDefinitionPhase<Definition, PhaseName>,
+  Input extends string,
+> =
+  InteractionSpecByNameOfDefinitionPhase<
+    Definition,
+    PhaseName,
+    InteractionId
+  > extends infer Spec
+    ? Input extends keyof CollectorsOfInteractionDefinition<Spec>
+      ? CollectorsOfInteractionDefinition<Spec>[Input]
+      : Input extends "cardId"
+        ? Spec extends {
+            readonly cardType: unknown;
+            readonly playFrom: unknown;
+          }
+          ? { readonly kind: "card" }
+          : never
+        : never
+    : never;
+
 type CollectorKindsOfInteractionDefinition<Spec> =
   | (Spec extends { readonly cardType: unknown; readonly playFrom: unknown }
       ? "card"

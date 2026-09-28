@@ -1,33 +1,13 @@
-import type { PlayerBoardSpaceTarget } from "../../shared/board-target.js";
+import type { DropTarget, TargetOptions } from "../targets.js";
+export type { DropTarget } from "../targets.js";
 import { inputValueKey } from "../../shared/input-domain.js";
-import type {
-  CardBase,
-  CoreInstance,
-  FeatureContext,
-  IdOf,
-  InteractionKey,
-} from "../model.js";
+import type { CardBase, CoreInstance, FeatureContext, IdOf } from "../model.js";
 import {
   createPointerSession,
   type Point,
   type PointerInput,
 } from "./pointer-session.js";
 
-export type DropTarget<G> = {
-  readonly kind: "space" | "edge" | "vertex" | "tile";
-  readonly interaction: InteractionKey<G>;
-} & (
-  | {
-      readonly valueKind: "board-id";
-      readonly id: string;
-      readonly boardId: IdOf<G, "boardId">;
-    }
-  | {
-      readonly valueKind: "player-board-space";
-      readonly id: PlayerBoardSpaceTarget;
-      readonly boardId: IdOf<G, "boardBaseId">;
-    }
-);
 export interface DragState<G> {
   readonly cardId: IdOf<G, "cardId">;
   readonly offset: Point;
@@ -40,7 +20,7 @@ export function dragFeature<G>(
   context: FeatureContext<G>,
 ) {
   let active: DragState<G> | null = null;
-  let interaction: InteractionKey<G> | undefined;
+  let selection: TargetOptions<G> | undefined;
   let source = game.getOptions().source;
   let seat = game.snapshot?.me;
   let disposed = false;
@@ -61,62 +41,70 @@ export function dragFeature<G>(
   function targets(): readonly DropTarget<G>[] {
     if (!active) return [];
     const cardId = active.cardId;
-    return (game.cards.find(cardId)?.getInteractions() ?? [])
-      .filter(
-        (candidate) =>
-          candidate.getIsAvailable() &&
-          (!interaction || candidate.key === interaction) &&
-          candidate
-            .getInputs()
-            .some(
-              (input) =>
-                input.getDomain().type === "cardTarget" &&
-                input.getIsEligible(cardId),
-            ),
+    // Runtime projections are validated by the source; public results carry the bound game types.
+    const runtime = game as unknown as CoreInstance<unknown>;
+    const options = selection as TargetOptions<unknown> | undefined;
+    const resolved = (
+      runtime.cards.find(cardId)?.getInteractions() ?? []
+    ).flatMap((candidate) => {
+      if (
+        !candidate.getIsAvailable() ||
+        (options?.interaction && candidate.key !== options.interaction)
       )
-      .flatMap((candidate) =>
-        candidate.getInputs().flatMap((input): DropTarget<G>[] => {
+        return [];
+      const inputs = candidate.getInputs();
+      const cardInputs = inputs.filter(
+        (input) =>
+          input.getDomain().type === "cardTarget" &&
+          (!options?.input || input.key === options.input) &&
+          input.getIsEligible(cardId),
+      );
+      return cardInputs.flatMap((cardInput) =>
+        inputs.flatMap((input): DropTarget<unknown>[] => {
           const domain = input.getDomain();
-          if (
-            domain.type !== "boardTarget" ||
-            !["space", "edge", "vertex", "tile"].includes(
-              String(domain.targetKind),
-            )
-          )
-            return [];
-          if (domain.valueKind === "player-board-space") {
+          if (domain.type !== "boardTarget") return [];
+          const route = {
+            interactionKey: candidate.key,
+            cardInputKey: cardInput.key,
+            inputKey: input.key,
+          };
+          if (domain.valueKind === "player-board-space")
             return domain.eligibleTargets
-              .filter((id) => !input.getTargetProps(id).disabled)
-              .map((id) =>
+              .filter((value) => !input.getTargetProps(value).disabled)
+              .map((value) =>
                 Object.freeze({
-                  kind: domain.targetKind,
+                  kind: "space",
                   valueKind: domain.valueKind,
-                  id,
-                  boardId: domain.boardId as IdOf<G, "boardBaseId">,
-                  interaction: candidate.key,
+                  value,
+                  ...route,
                 }),
               );
-          }
           return domain.eligibleTargets
-            .filter((id) => !input.getTargetProps(id).disabled)
-            .map((id) =>
+            .filter((value) => !input.getTargetProps(value).disabled)
+            .map((value) =>
               Object.freeze({
                 kind: domain.targetKind,
                 valueKind: domain.valueKind,
-                id,
-                boardId: domain.boardId as IdOf<G, "boardId">,
-                interaction: candidate.key,
+                value,
+                boardId: domain.boardId,
+                ...route,
               }),
             );
         }),
       );
+    });
+    return resolved as unknown as readonly DropTarget<G>[];
   }
   function sameTarget(left: DropTarget<G>, right: DropTarget<G>) {
     return (
       left.kind === right.kind &&
-      inputValueKey(left.id) === inputValueKey(right.id) &&
-      left.boardId === right.boardId &&
-      left.interaction === right.interaction
+      left.valueKind === right.valueKind &&
+      inputValueKey(left.value) === inputValueKey(right.value) &&
+      (left.valueKind !== "board-id" ||
+        (right.valueKind === "board-id" && left.boardId === right.boardId)) &&
+      left.interactionKey === right.interactionKey &&
+      left.cardInputKey === right.cardInputKey &&
+      left.inputKey === right.inputKey
     );
   }
   const pointer = createPointerSession({
@@ -133,7 +121,11 @@ export function dragFeature<G>(
       if (dragged) {
         if (finished.target)
           context.routeCardDrop(finished.cardId, finished.target);
-      } else context.routeTarget("card", finished.cardId, { interaction });
+      } else
+        context.routeTarget(
+          { kind: "card", value: finished.cardId },
+          selection,
+        );
     },
     cancel: () => {
       suppressPointerClick = true;
@@ -182,10 +174,7 @@ export function dragFeature<G>(
       },
     },
     card: {
-      getDragProps(
-        this: CardBase<G>,
-        options?: { interaction?: InteractionKey<G> },
-      ) {
+      getDragProps(this: CardBase<G>, options?: TargetOptions<G>) {
         return {
           style: {
             touchAction: "none" as const,
@@ -205,7 +194,7 @@ export function dragFeature<G>(
             if (!pointer.start(event)) return;
             suppressPointerClick = false;
             dragged = false;
-            interaction = options?.interaction;
+            selection = options;
             update({ cardId: this.id, offset: { x: 0, y: 0 }, target: null });
           },
           onClick: (event: { detail: number; preventDefault(): void }) => {

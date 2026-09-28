@@ -1,3 +1,4 @@
+import type { BoardDataOf, TargetOptions } from "../model.js";
 import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
 import { createHexBoardGeometry } from "../../shared/hex-board.js";
@@ -12,7 +13,6 @@ import type {
   CoreInstance,
   FeatureContext,
   IdOf,
-  InteractionKey,
   ReadModel,
 } from "../model.js";
 import type { Point } from "./pointer-session.js";
@@ -145,7 +145,10 @@ export function boardFeature<G>(
       boards?: Pick<RuntimeBoardCollections, "byId" | "hex" | "square">;
     } | null;
     const boards = Object.values(projected?.boards?.byId ?? {}).map((data) => {
-      const board = context.createBoard(data.id as IdOf<G, "boardId">, data);
+      const board = context.createBoard(
+        data.id as IdOf<G, "boardId">,
+        data as BoardDataOf<G, IdOf<G, "boardId">>,
+      );
       let geometry = geometries.get(data);
       if (!geometry && data.layout === "hex") {
         geometry = createHexBoardGeometry({
@@ -226,37 +229,39 @@ export function boardFeature<G>(
           id: string,
         ) {
           const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
-          return model.interactions.list().flatMap((interaction) =>
-            interaction
-              .getInputs()
-              .filter((input) => {
-                const domain = input.getDomain();
-                return (
-                  domain.type === "boardTarget" &&
-                  inputKinds.includes(String(domain.targetKind)) &&
-                  (domain.valueKind === "player-board-space"
-                    ? board.scope === "perPlayer" &&
-                      domain.boardId === board.baseId
-                    : domain.boardId === board.id)
-                );
-              })
-              .map((input) => {
-                const domain = input.getDomain();
-                return {
-                  interaction,
-                  input,
-                  value:
+          return (model as unknown as ReadModel<unknown>).interactions
+            .list()
+            .flatMap((interaction) =>
+              interaction
+                .getInputs()
+                .filter((input) => {
+                  const domain = input.getDomain();
+                  return (
                     domain.type === "boardTarget" &&
-                    domain.valueKind === "player-board-space"
-                      ? Object.freeze({
-                          boardId: board.baseId!,
-                          playerId: board.playerId!,
-                          spaceId: id,
-                        })
-                      : id,
-                };
-              }),
-          );
+                    inputKinds.includes(String(domain.targetKind)) &&
+                    (domain.valueKind === "player-board-space"
+                      ? board.scope === "perPlayer" &&
+                        domain.boardId === board.baseId
+                      : domain.boardId === board.id)
+                  );
+                })
+                .map((input) => {
+                  const domain = input.getDomain();
+                  return {
+                    interaction,
+                    input,
+                    value:
+                      domain.type === "boardTarget" &&
+                      domain.valueKind === "player-board-space"
+                        ? Object.freeze({
+                            boardId: board.baseId!,
+                            playerId: board.playerId!,
+                            spaceId: id,
+                          })
+                        : id,
+                  };
+                }),
+            );
         }
         function target(kind: TargetKind, id: string) {
           const matches = matchingTargets(captured.model, kind, id);
@@ -269,7 +274,7 @@ export function boardFeature<G>(
           const selectable = matches.some(
             ({ input, value }) => !input.getTargetProps(value).disabled,
           );
-          function select(options?: { interaction?: InteractionKey<G> }) {
+          function select(options?: TargetOptions<G>) {
             if (
               game.getOptions().source !== captured.source ||
               game.snapshot?.me !== captured.model.snapshot?.me
@@ -283,31 +288,45 @@ export function boardFeature<G>(
               ({ interaction, input, value }) =>
                 (!options?.interaction ||
                   options.interaction === interaction.key) &&
+                (!options?.input || options.input === input.key) &&
                 !input.getTargetProps(value).disabled,
             );
             if (!matching.length) return;
             if (matching.length > 1) throw new AmbiguousTargetError(id);
             const domain = matching[0]!.input.getDomain();
             if (domain.type !== "boardTarget") return;
-            context.routeTarget(kind, matching[0]!.value, {
-              ...options,
-              boardId: domain.boardId as
-                IdOf<G, "boardId"> | IdOf<G, "boardBaseId">,
-            });
+            const value = matching[0]!.value;
+            const target =
+              domain.valueKind === "player-board-space" &&
+              typeof value !== "string"
+                ? { kind: "space" as const, valueKind: domain.valueKind, value }
+                : {
+                    kind,
+                    valueKind: "board-id" as const,
+                    value: id,
+                    boardId: board.id,
+                  };
+            (context as unknown as FeatureContext<unknown>).routeTarget(
+              target,
+              {
+                interaction: matching[0]!.interaction.key,
+                input: matching[0]!.input.key,
+              },
+            );
           }
           return {
             id,
             getIsEligible: () => eligible,
             getIsSelectable: () => selectable,
             getIsSelected: () => selected,
-            getSelectHandler:
-              (options?: { interaction?: InteractionKey<G> }) => () =>
-                select(options),
-            getTargetProps(options?: { interaction?: InteractionKey<G> }) {
+            getSelectHandler: (options?: TargetOptions<G>) => () =>
+              select(options),
+            getTargetProps(options?: TargetOptions<G>) {
               const candidates = matches.filter(
                 ({ interaction, input, value }) =>
                   (!options?.interaction ||
                     interaction.key === options.interaction) &&
+                  (!options?.input || options.input === input.key) &&
                   !input.getTargetProps(value).disabled,
               );
               const only = candidates.length === 1 ? candidates[0] : undefined;

@@ -468,6 +468,17 @@ function choiceInput<
   };
 }
 
+type ChoiceListCollector<
+  Value extends string,
+  State extends CollectorState,
+> = InputCollector<SchemaLike<Value[]>, State, "form"> & {
+  readonly domain: (
+    state: CollectorState,
+    playerId: string,
+    q: unknown,
+  ) => ChoiceListDomainDescriptor;
+};
+
 function choiceListInput<
   Value extends string,
   State extends CollectorState = CollectorState,
@@ -476,7 +487,7 @@ function choiceListInput<
   min?: DomainNumber<State>;
   max?: DomainNumber<State>;
   defaultValue: Value[];
-}): InputCollector<SchemaLike<Value[]>, State, "form"> & {
+}): ChoiceListCollector<Value, State> & {
   readonly defaultValue: Value[];
 };
 function choiceListInput<
@@ -487,7 +498,7 @@ function choiceListInput<
   min?: DomainNumber<State>;
   max?: DomainNumber<State>;
   defaultValue?: ChoiceListDefaultValue<Value, State>;
-}): InputCollector<SchemaLike<Value[]>, State, "form">;
+}): ChoiceListCollector<Value, State>;
 function choiceListInput<
   Value extends string,
   State extends CollectorState = CollectorState,
@@ -496,7 +507,7 @@ function choiceListInput<
   min?: DomainNumber<State>;
   max?: DomainNumber<State>;
   defaultValue?: ChoiceListDefaultValue<Value, State>;
-}): InputCollector<SchemaLike<Value[]>, State, "form"> {
+}): ChoiceListCollector<Value, State> {
   if (Array.isArray(options.choices) && options.choices.length === 0) {
     throw new Error("formInput.choiceList requires at least one choice.");
   }
@@ -513,7 +524,7 @@ function choiceListInput<
     ...(staticDefaultValue !== undefined
       ? { defaultValue: staticDefaultValue }
       : {}),
-    domain: (state, playerId, q): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): ChoiceListDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
@@ -604,7 +615,7 @@ type FormInputForState<State extends CollectorState> = {
     min?: DomainNumber<State>;
     max?: DomainNumber<State>;
     defaultValue: Value[];
-  }): InputCollector<SchemaLike<Value[]>, State, "form"> & {
+  }): ChoiceListCollector<Value, State> & {
     readonly defaultValue: Value[];
   };
   choiceList<Value extends string>(options: {
@@ -612,7 +623,7 @@ type FormInputForState<State extends CollectorState> = {
     min?: DomainNumber<State>;
     max?: DomainNumber<State>;
     defaultValue?: ChoiceListDefaultValue<Value, State>;
-  }): InputCollector<SchemaLike<Value[]>, State, "form">;
+  }): ChoiceListCollector<Value, State>;
 };
 
 function formInputForState<
