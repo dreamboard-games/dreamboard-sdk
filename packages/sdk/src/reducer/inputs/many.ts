@@ -21,34 +21,12 @@ type NonRngCollector = InputCollector<SchemaLike<unknown>, CollectorState> & {
   readonly kind: Exclude<InputCollector["kind"], "rng">;
 };
 
-type CollectorSchema<Collector extends NonRngCollector> = [Collector] extends [
-  InputCollector<infer Schema, CollectorState>,
-]
-  ? Schema
-  : never;
-
-type CollectorStateOf<Collector extends NonRngCollector> = [Collector] extends [
-  InputCollector<SchemaLike<unknown>, infer State>,
-]
-  ? State
-  : never;
-
-type CollectorKindOf<Collector extends NonRngCollector> = [Collector] extends [
-  {
-    readonly kind: infer Kind extends Exclude<InputCollector["kind"], "rng">;
-  },
-]
-  ? Kind
-  : never;
-
-export type ManyInputCollector<
-  Schema extends SchemaLike<unknown> = SchemaLike<unknown>,
-  State extends CollectorState = CollectorState,
-  Kind extends Exclude<InputCollector["kind"], "rng"> = Exclude<
-    InputCollector["kind"],
-    "rng"
-  >,
-> = InputCollector<z.ZodArray<Schema>, State, Kind> & {
+/** Lift the value schema while retaining the collector's exact domain and routing. */
+export type ManyInputCollector<Collector extends NonRngCollector> = Omit<
+  Collector,
+  "schema" | "selection" | "defaultValue" | "resolveDefaultValue"
+> & {
+  readonly schema: z.ZodArray<Collector["schema"]>;
   readonly selection: Extract<InputSelectionDescriptor, { mode: "many" }>;
 };
 
@@ -89,39 +67,18 @@ function assertNonNegativeInteger(value: number, label: string): void {
 export function many<Collector extends NonRngCollector>(
   collector: Collector,
   options: ManyOptions,
-): ManyInputCollector<
-  CollectorSchema<Collector>,
-  CollectorStateOf<Collector>,
-  CollectorKindOf<Collector>
-> &
-  Pick<Collector, "meta"> {
-  if ((collector as InputCollector).kind === "rng") {
-    throw new Error("many(...) cannot wrap rngInput collectors.");
-  }
-  const selection = normalizeManyOptions(options);
-  const rest = { ...collector } as Omit<
-    Collector,
-    "schema" | "selection" | "defaultValue" | "resolveDefaultValue"
-  > & {
-    schema?: unknown;
-    selection?: unknown;
-    defaultValue?: unknown;
-    resolveDefaultValue?: unknown;
-  };
-  delete rest.schema;
-  delete rest.selection;
-  delete rest.defaultValue;
-  delete rest.resolveDefaultValue;
+): ManyInputCollector<Collector> {
+  const {
+    schema,
+    selection: _selection,
+    defaultValue: _defaultValue,
+    resolveDefaultValue: _resolveDefaultValue,
+    ...rest
+  } = collector;
+  void [_selection, _defaultValue, _resolveDefaultValue];
   return {
     ...rest,
-    schema: z.array(
-      collector.schema as CollectorSchema<Collector>,
-    ) as z.ZodArray<CollectorSchema<Collector>>,
-    selection,
-  } as unknown as ManyInputCollector<
-    CollectorSchema<Collector>,
-    CollectorStateOf<Collector>,
-    CollectorKindOf<Collector>
-  > &
-    Pick<Collector, "meta">;
+    schema: z.array<Collector["schema"]>(schema),
+    selection: normalizeManyOptions(options),
+  };
 }

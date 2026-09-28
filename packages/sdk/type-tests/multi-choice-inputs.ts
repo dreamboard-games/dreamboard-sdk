@@ -73,3 +73,23 @@ listInput.getSelectHandler("a");
 listInput.setValue(["a"]);
 // @ts-expect-error Choice-list domains also select members, not arrays.
 listInput.getSelectHandler(["a"]);
+
+// Wrapping and state binding preserve the exact domain contract.
+declare const state: Parameters<typeof picks.domain>[0];
+const choiceDomain: "choice" = picks.domain(state, "", undefined).type;
+const number = play.inputs.form.number({ min: 0, max: 4 });
+const numberDomain: "boundedNumber" = number.domain(state, "", undefined).type;
+const numbers = many(number, { min: 0, max: 2 });
+const numbersDomain: "boundedNumber" = numbers.domain(
+  state,
+  "",
+  undefined,
+).type;
+const values: z.infer<typeof numbers.schema> = [1, 2];
+// @ts-expect-error Wrapping removes the scalar default contract.
+picks.defaultValue;
+// @ts-expect-error Wrapping removes scalar default resolvers too.
+picks.resolveDefaultValue;
+// @ts-expect-error Numbers remain an array after wrapping.
+const wrongNumbers: z.infer<typeof numbers.schema> = 2;
+void [choiceDomain, numberDomain, numbersDomain, values, wrongNumbers];

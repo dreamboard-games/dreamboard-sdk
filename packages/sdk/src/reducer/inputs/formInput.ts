@@ -38,11 +38,21 @@ type ResourceMapInputOptions<State extends CollectorState> = {
 
 type ChoiceValue = string | null;
 
-type FormInputDomainDescriptor =
-  | ResourceMapDomainDescriptor
-  | BoundedNumberDomainDescriptor
-  | ChoiceDomainDescriptor
-  | ChoiceListDomainDescriptor;
+type FormCollector<
+  Schema extends SchemaLike<unknown>,
+  State extends CollectorState,
+  Domain extends
+    | ResourceMapDomainDescriptor
+    | BoundedNumberDomainDescriptor
+    | ChoiceDomainDescriptor
+    | ChoiceListDomainDescriptor,
+> = Omit<InputCollector<Schema, State, "form">, "domain"> & {
+  readonly domain: (
+    state: CollectorState,
+    playerId: string,
+    q: unknown,
+  ) => Domain;
+};
 
 type DomainChoice<Value extends ChoiceValue> = {
   value: Value;
@@ -188,26 +198,8 @@ function assertChoiceDefaultInChoices(
 function choiceSchema<Value extends ChoiceValue>(
   choices: ReadonlyArray<DomainChoice<Value>>,
 ): SchemaLike<Value> {
-  if (choices.length === 0) return z.never() as SchemaLike<Value>;
-  const values = choices.map((choice) => choice.value);
-  const stringValues = values.filter(
-    (value): value is Exclude<Value, null> => value !== null,
-  );
-  const hasNull = values.some((value) => value === null);
-
-  if (stringValues.length === 0) {
-    return z.null() as unknown as SchemaLike<Value>;
-  }
-
-  const stringSchema = z.enum(
-    stringValues as [Exclude<Value, null>, ...Array<Exclude<Value, null>>],
-  );
-
-  if (hasNull) {
-    return z.union([stringSchema, z.null()]) as unknown as SchemaLike<Value>;
-  }
-
-  return stringSchema as unknown as SchemaLike<Value>;
+  if (choices.length === 0) return z.never();
+  return z.literal(choices.map((choice) => choice.value));
 }
 
 function resolveResourceMapChoices<State extends CollectorState>(
@@ -291,26 +283,38 @@ function baseFormInput<
 
 function resourceMapInput<State extends CollectorState = CollectorState>(
   options: ResourceMapInputOptions<State>,
-): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form">;
+): FormCollector<
+  z.ZodRecord<z.ZodString, z.ZodNumber>,
+  State,
+  ResourceMapDomainDescriptor
+>;
 function resourceMapInput<State extends CollectorState = CollectorState>(
   options: ResourceMapInputOptions<State> & {
     defaultValue: Record<string, number>;
   },
-): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> & {
+): FormCollector<
+  z.ZodRecord<z.ZodString, z.ZodNumber>,
+  State,
+  ResourceMapDomainDescriptor
+> & {
   readonly defaultValue: Record<string, number>;
 };
 function resourceMapInput<State extends CollectorState = CollectorState>(
   options: ResourceMapInputOptions<State> & {
     defaultValue?: Record<string, number>;
   },
-): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> {
+): FormCollector<
+  z.ZodRecord<z.ZodString, z.ZodNumber>,
+  State,
+  ResourceMapDomainDescriptor
+> {
   return {
     kind: "form",
     schema: z.record(z.string(), z.number().int().nonnegative()),
     ...("defaultValue" in options
       ? { defaultValue: options.defaultValue }
       : {}),
-    domain: (state, playerId, q): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): ResourceMapDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
@@ -334,13 +338,13 @@ function numberInput<State extends CollectorState = CollectorState>(options: {
   min: DomainNumber<State>;
   max: DomainNumber<State>;
   step?: DomainNumber<State>;
-}): InputCollector<z.ZodNumber, State, "form">;
+}): FormCollector<z.ZodNumber, State, BoundedNumberDomainDescriptor>;
 function numberInput<State extends CollectorState = CollectorState>(options: {
   min: DomainNumber<State>;
   max: DomainNumber<State>;
   step?: DomainNumber<State>;
   defaultValue: number;
-}): InputCollector<z.ZodNumber, State, "form"> & {
+}): FormCollector<z.ZodNumber, State, BoundedNumberDomainDescriptor> & {
   readonly defaultValue: number;
 };
 function numberInput<State extends CollectorState = CollectorState>(options: {
@@ -348,14 +352,14 @@ function numberInput<State extends CollectorState = CollectorState>(options: {
   max: DomainNumber<State>;
   step?: DomainNumber<State>;
   defaultValue?: number;
-}): InputCollector<z.ZodNumber, State, "form"> {
+}): FormCollector<z.ZodNumber, State, BoundedNumberDomainDescriptor> {
   return {
     kind: "form",
     schema: z.number(),
     ...("defaultValue" in options
       ? { defaultValue: options.defaultValue }
       : {}),
-    domain: (state, playerId, q): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): BoundedNumberDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
@@ -380,7 +384,7 @@ function choiceInput<
 >(options: {
   choices: DomainChoices<Value, State>;
   defaultValue: Value;
-}): InputCollector<SchemaLike<Value>, State, "form"> & {
+}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> & {
   readonly defaultValue: Value;
 };
 function choiceInput<
@@ -389,14 +393,14 @@ function choiceInput<
 >(options: {
   choices: DomainChoices<Value, State>;
   defaultValue: ChoiceDefaultResolver<Value, State>;
-}): InputCollector<SchemaLike<Value>, State, "form">;
+}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor>;
 function choiceInput<
   Value extends ChoiceValue,
   State extends CollectorState = CollectorState,
 >(options: {
   choices: DomainChoices<Value, State>;
   defaultValue: ChoiceDefaultValue<Value, State>;
-}): InputCollector<SchemaLike<Value>, State, "form"> {
+}): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> {
   const staticChoices = Array.isArray(options.choices) ? options.choices : null;
   const hasStaticDefault = typeof options.defaultValue !== "function";
   const staticDefault = options.defaultValue as ChoiceValue;
@@ -418,7 +422,7 @@ function choiceInput<
     kind: "form",
     schema,
     ...(hasStaticDefault ? { defaultValue: staticDefault as Value } : {}),
-    domain: (state, playerId, q): FormInputDomainDescriptor => {
+    domain: (state, playerId, q): ChoiceDomainDescriptor => {
       const context = {
         state: state as State,
         playerId: playerId as PlayerIdOfState<State>,
@@ -586,30 +590,36 @@ type FormInputForState<State extends CollectorState> = {
   };
   resourceMap(
     options: ResourceMapInputOptions<State>,
-  ): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form">;
+  ): FormCollector<
+    z.ZodRecord<z.ZodString, z.ZodNumber>,
+    State,
+    ResourceMapDomainDescriptor
+  >;
   resourceMap(
     options: ResourceMapInputOptions<State> & {
       defaultValue: Record<string, number>;
     },
-  ): InputCollector<z.ZodRecord<z.ZodString, z.ZodNumber>, State, "form"> & {
+  ): FormCollector<
+    z.ZodRecord<z.ZodString, z.ZodNumber>,
+    State,
+    ResourceMapDomainDescriptor
+  > & {
     readonly defaultValue: Record<string, number>;
   };
   resourceChoices(options?: {
     decorate?: ResourceMapChoiceDecorator<State>;
   }): ResourceMapChoiceSource<State>;
-  number(
-    options: Parameters<typeof numberInput<State>>[0],
-  ): ReturnType<typeof numberInput<State>>;
+  number: typeof numberInput<State>;
   choice<Value extends ChoiceValue>(options: {
     choices: DomainChoices<Value, State>;
     defaultValue: Value;
-  }): InputCollector<SchemaLike<Value>, State, "form"> & {
+  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor> & {
     readonly defaultValue: Value;
   };
   choice<Value extends ChoiceValue>(options: {
     choices: DomainChoices<Value, State>;
     defaultValue: ChoiceDefaultResolver<Value, State>;
-  }): InputCollector<SchemaLike<Value>, State, "form">;
+  }): FormCollector<SchemaLike<Value>, State, ChoiceDomainDescriptor>;
   choiceList<Value extends string>(options: {
     choices: DomainChoices<Value, State>;
     min?: DomainNumber<State>;
@@ -629,26 +639,15 @@ type FormInputForState<State extends CollectorState> = {
 function formInputForState<
   State extends CollectorState,
 >(): FormInputForState<State> {
-  return Object.assign(
-    ((
-      schema: ManifestFormInputSchema & SchemaLike<unknown>,
-      options?: object,
-    ) => baseFormInput(schema, options as never)) as FormInputForState<State>,
-    {
-      resourceMap: (
-        options: ResourceMapInputOptions<State> & {
-          defaultValue?: Record<string, number>;
-        },
-      ) => resourceMapInput<State>(options),
-      resourceChoices: (options?: {
-        decorate?: ResourceMapChoiceDecorator<State>;
-      }) => formInput.resourceChoices<State>(options),
-      number: (options: Parameters<typeof numberInput<State>>[0]) =>
-        numberInput<State>(options),
-      choice: (options: never) => choiceInput(options),
-      choiceList: (options: never) => choiceListInput(options),
-    },
-  );
+  return Object.assign(baseFormInput.bind(undefined), {
+    resourceMap: resourceMapInput<State>,
+    resourceChoices: (options?: {
+      decorate?: ResourceMapChoiceDecorator<State>;
+    }) => formInput.resourceChoices<State>(options),
+    number: numberInput<State>,
+    choice: choiceInput,
+    choiceList: choiceListInput,
+  });
 }
 
 /**
