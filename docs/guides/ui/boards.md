@@ -27,7 +27,7 @@ space.getSelectHandler({ interaction: "play.place" })();
 
 Each space exposes `id`, typed `data`, its owning `board`, selection state, and
 `getTargetProps()` for native controls. No geometry is needed for a generic board.
-`board.getLayout().spaces` reuses those semantic controls and adds geometry.
+`board.getLayout({ hexSize: 40 }).getSpaces()` reuses those semantic controls and adds geometry.
 Retained spaces capture their state; selection handlers recheck current eligibility
 and ignore a replaced source or seat. Pass `input` alongside `interaction` when
 more than one input in the interaction accepts the same target.
