@@ -5,6 +5,11 @@ import type { ViewDefinition } from "../model";
 import type { z } from "zod";
 import type {
   CardIdOfManifest,
+  BoardIdOfTable,
+  DeckIdOfTable,
+  HandIdOfTable,
+  BoardStateOfTable,
+  SpaceIdOfTable,
   InputCollector,
   InteractionMap,
   InteractionRule,
@@ -73,52 +78,94 @@ type BoundFormInputs<Contract extends ContractWithPhases> = ReturnType<
   typeof formInput.forState<BoundState<Contract>>
 >;
 
-/** Board element collector options: the board and the predicates that filter it. */
-type BoundBoardInputOptions<Contract extends ContractWithPhases, Id> = {
-  boardId: string;
+/** The selected board owns the element namespace, including generic spaces. */
+type BoundBoardInputOptions<
+  Contract extends ContractWithPhases,
+  BoardId,
+  Id,
+> = {
+  boardId: BoardId;
   where?: BoundWhere<Contract, Id>;
 };
-
+type PlayerBoardBaseId<Table> = {
+  [B in BoardIdOfTable<Table>]: BoardStateOfTable<Table, B> extends {
+    scope: "perPlayer";
+    baseId: infer Base extends string;
+  }
+    ? Base
+    : never;
+}[BoardIdOfTable<Table>];
+type PlayerBoardRuntimeId<Table, Base extends string> = Extract<
+  BoardIdOfTable<Table>,
+  `${Base}:${string}`
+>;
 type BoundBoardInputs<Contract extends ContractWithPhases> = {
-  vertex<
-    Id extends string = TiledVertexIdOfTable<
-      BoundTable<Contract>,
-      TiledBoardIdOfTable<BoundTable<Contract>>
+  vertex<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+    options: BoundBoardInputOptions<
+      Contract,
+      B,
+      TiledVertexIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
-  >(
-    options: BoundBoardInputOptions<Contract, Id>,
-  ): InputCollector<z.ZodType<Id>, BoundState<Contract>, "board-vertex">;
-  edge<
-    Id extends string = TiledEdgeIdOfTable<
-      BoundTable<Contract>,
-      TiledBoardIdOfTable<BoundTable<Contract>>
+  ): InputCollector<
+    z.ZodType<TiledVertexIdOfTable<BoundTable<Contract>, B>>,
+    BoundState<Contract>,
+    "board-vertex"
+  >;
+  edge<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+    options: BoundBoardInputOptions<
+      Contract,
+      B,
+      TiledEdgeIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
-  >(
-    options: BoundBoardInputOptions<Contract, Id>,
-  ): InputCollector<z.ZodType<Id>, BoundState<Contract>, "board-edge">;
-  tile<Id extends string = string>(
-    options: BoundBoardInputOptions<Contract, Id>,
-  ): InputCollector<z.ZodType<Id>, BoundState<Contract>, "board-tile">;
-  space<
-    Id extends string = TiledSpaceIdOfTable<
-      BoundTable<Contract>,
-      TiledBoardIdOfTable<BoundTable<Contract>>
+  ): InputCollector<
+    z.ZodType<TiledEdgeIdOfTable<BoundTable<Contract>, B>>,
+    BoundState<Contract>,
+    "board-edge"
+  >;
+  tile<B extends TiledBoardIdOfTable<BoundTable<Contract>>>(
+    options: BoundBoardInputOptions<
+      Contract,
+      B,
+      TiledSpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
     >,
-  >(
-    options: BoundBoardInputOptions<Contract, Id>,
-  ): InputCollector<z.ZodType<Id>, BoundState<Contract>, "board-space">;
-  playerSpace<
-    BoardId extends string = string,
-    SpaceId extends string = string,
-    PlayerId extends string = PlayerIdOfState<BoundState<Contract>>,
-  >(options: {
-    boardId: BoardId;
+  ): InputCollector<
+    z.ZodType<TiledSpaceIdOfTable<BoundTable<Contract>, B>>,
+    BoundState<Contract>,
+    "board-tile"
+  >;
+  space<B extends BoardIdOfTable<BoundTable<Contract>>>(
+    options: BoundBoardInputOptions<
+      Contract,
+      B,
+      SpaceIdOfTable<BoundTable<Contract>, NoInfer<B>>
+    >,
+  ): InputCollector<
+    z.ZodType<SpaceIdOfTable<BoundTable<Contract>, B>>,
+    BoundState<Contract>,
+    "board-space"
+  >;
+  playerSpace<B extends PlayerBoardBaseId<BoundTable<Contract>>>(options: {
+    boardId: B;
     where?: BoundWhere<
       Contract,
-      PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
+      PlayerBoardSpaceTarget<
+        NoInfer<B>,
+        SpaceIdOfTable<
+          BoundTable<Contract>,
+          PlayerBoardRuntimeId<BoundTable<Contract>, NoInfer<B>>
+        >,
+        PlayerIdOfState<BoundState<Contract>>
+      >
     >;
   }): InputCollector<
-    PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,
+    PlayerSpaceInputSchema<
+      B,
+      SpaceIdOfTable<
+        BoundTable<Contract>,
+        PlayerBoardRuntimeId<BoundTable<Contract>, B>
+      >,
+      PlayerIdOfState<BoundState<Contract>>
+    >,
     BoundState<Contract>,
     "board-space"
   >;
@@ -156,12 +203,17 @@ type BoundCardCollector<
  * filter them. The target rule is built internally.
  */
 type BoundCardInput<Contract extends ContractWithPhases> = <
-  Id extends string = CardIdOfManifest<BoundManifest<Contract>>,
-  const ZoneIds extends readonly string[] = readonly string[],
+  const ZoneIds extends readonly (
+    DeckIdOfTable<BoundTable<Contract>> | HandIdOfTable<BoundTable<Contract>>
+  )[],
 >(options: {
   from: ZoneIds;
-  where?: BoundWhere<Contract, Id>;
-}) => BoundCardCollector<Contract, Id, ZoneIds>;
+  where?: BoundWhere<Contract, CardIdOfManifest<BoundManifest<Contract>>>;
+}) => BoundCardCollector<
+  Contract,
+  CardIdOfManifest<BoundManifest<Contract>>,
+  ZoneIds
+>;
 
 type BoundRngInputs<Contract extends ContractWithPhases> = {
   d6(count?: number): ReturnType<typeof rngInput.d6<BoundState<Contract>>>;

@@ -725,3 +725,25 @@ export type OptionsSchemaOfContract<Contract> = Contract extends {
 export type OptionsOfContract<Contract> = z.infer<
   OptionsSchemaOfContract<Contract>
 >;
+
+/** Slot hosts share the canonical piece and die inventories. */
+export type SlotHostOfTable<Table extends RuntimeTableRecord> =
+  | { kind: "piece"; id: keyof Table["pieces"] & string }
+  | { kind: "die"; id: keyof Table["dice"] & string };
+type SlotLocationOfTable<Table> = Table extends {
+  componentLocations: infer Locations;
+}
+  ? Extract<Locations[keyof Locations], { type: "InSlot" }>
+  : never;
+type SlotIdForHost<Location, Host> = Location extends {
+  host: infer Candidate;
+  slotId: infer Id;
+}
+  ? Host extends Candidate
+    ? Extract<Id, string>
+    : never
+  : never;
+export type SlotIdOfTable<Table, Host> = SlotIdForHost<
+  SlotLocationOfTable<Table>,
+  Host
+>;

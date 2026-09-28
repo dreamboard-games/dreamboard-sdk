@@ -47,7 +47,13 @@ function makeBoardCollector<
     State extends CollectorState = CollectorState,
     Id extends string = string,
   >(options: {
-    target: BoardTargetRule<State, Id>;
+    target: BoardTargetRule<
+      State,
+      Id,
+      Kind extends `board-${infer Target extends Exclude<TargetKind, "card">}`
+        ? Target
+        : never
+    >;
   }): InputCollector<z.ZodType<Id>, State, Kind> {
     const target = options.target;
     return {
@@ -116,7 +122,8 @@ export function playerSpaceInput<
 >(options: {
   target: BoardTargetRule<
     State,
-    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>
+    PlayerBoardSpaceTarget<BoardId, SpaceId, PlayerId>,
+    "space"
   >;
 }): InputCollector<
   PlayerSpaceInputSchema<BoardId, SpaceId, PlayerId>,

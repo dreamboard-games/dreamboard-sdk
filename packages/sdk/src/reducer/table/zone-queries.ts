@@ -12,6 +12,8 @@ import type {
   RuntimeComponentLocation,
   RuntimeTableRecord,
   SharedZoneIdOfTable,
+  SlotHostOfTable,
+  SlotIdOfTable,
 } from "../model";
 import {
   assertZoneScope,
@@ -280,6 +282,14 @@ export function getPlayerZoneCardCollection<
   };
 }
 
+export function getSlotOccupants<
+  Table extends RuntimeTableRecord,
+  Host extends SlotHostOfTable<Table>,
+>(
+  table: Table,
+  host: Host,
+  slotId: SlotIdOfTable<Table, NoInfer<Host>>,
+): ViewSlotOccupantForTable<Table>[];
 export function getSlotOccupants<Table extends RuntimeTableRecord>(
   table: Table,
   host: Extract<RuntimeComponentLocation, { type: "InSlot" }>["host"],
@@ -300,7 +310,7 @@ export function getSlotOccupants<Table extends RuntimeTableRecord>(
 
 export function getSlotOccupantsByHost<Table extends RuntimeTableRecord>(
   table: Table,
-  host: Extract<RuntimeComponentLocation, { type: "InSlot" }>["host"],
+  host: SlotHostOfTable<Table>,
 ): Readonly<Record<string, ViewSlotOccupantForTable<Table>[]>> {
   const occupantsBySlot: Record<string, ViewSlotOccupantForTable<Table>[]> = {};
 

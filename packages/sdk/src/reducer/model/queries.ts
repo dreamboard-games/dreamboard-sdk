@@ -15,6 +15,8 @@ import type {
   ResourceBalancesOfTable,
   ResourceIdOfTable,
   SpaceIdOfTable,
+  SlotHostOfTable,
+  SlotIdOfTable,
   TableOfState,
   TiledBoardIdOfTable,
   TiledEdgeIdOfTable,
@@ -343,25 +345,27 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
     ) => Table["visibility"][CardId];
   };
   slot: {
-    occupants: (
-      host: RuntimeSlotHostRef,
-      slotId: string,
+    occupants: <Host extends SlotHostOfTable<Table>>(
+      host: Host,
+      slotId: SlotIdOfTable<Table, NoInfer<Host>>,
     ) => SlotOccupantsOfTable<Table>;
     occupantsByHost: (
-      host: RuntimeSlotHostRef,
+      host: SlotHostOfTable<Table>,
     ) => SlotOccupantsBySlotIdOfTable<Table>;
-    pieceOccupants: (
-      hostId: string,
-      slotId: string,
+    pieceOccupants: <Id extends keyof Table["pieces"] & string>(
+      hostId: Id,
+      slotId: SlotIdOfTable<Table, { kind: "piece"; id: NoInfer<Id> }>,
     ) => SlotOccupantsOfTable<Table>;
     pieceOccupantsByHost: (
-      hostId: string,
+      hostId: keyof Table["pieces"] & string,
     ) => SlotOccupantsBySlotIdOfTable<Table>;
-    dieOccupants: (
-      hostId: string,
-      slotId: string,
+    dieOccupants: <Id extends keyof Table["dice"] & string>(
+      hostId: Id,
+      slotId: SlotIdOfTable<Table, { kind: "die"; id: NoInfer<Id> }>,
     ) => SlotOccupantsOfTable<Table>;
-    dieOccupantsByHost: (hostId: string) => SlotOccupantsBySlotIdOfTable<Table>;
+    dieOccupantsByHost: (
+      hostId: keyof Table["dice"] & string,
+    ) => SlotOccupantsBySlotIdOfTable<Table>;
   };
   player: {
     /** Seating order from the manifest / setup profile. */
