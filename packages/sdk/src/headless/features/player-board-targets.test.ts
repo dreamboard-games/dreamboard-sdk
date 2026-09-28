@@ -17,10 +17,10 @@ function authoredGame() {
       players: { minPlayers: 2, maxPlayers: 2 },
       cardSets: [
         {
-          type: "preset",
           id: "cards",
           name: "Cards",
-          presetId: "standard_52_deck",
+          cardSchema: { properties: {} },
+          cards: [{ id: "card", cardType: "card", count: 1, properties: {} }],
           defaultHome: { type: "zone", zoneId: "table" },
         },
       ],
