@@ -1,5 +1,6 @@
 import {
   boardFeature,
+  dragFeature,
   panZoomFeature,
   type ViewOf,
   type InteractionKey,
@@ -30,14 +31,16 @@ export const coverage = {
   | typeof Form
   | readonly (typeof StormtrailBoard | typeof Form)[]
 >;
-export const { GameProvider, useGame, Subscribe } = createGameHook<Game>()({
-  coverage,
-  features: (core, context) => ({
-    board: boardFeature(core, context),
-    viewport: panZoomFeature(core, context, {
-      initial: { x: 0, y: 0, scale: 0.9 },
-      minScale: 0.65,
-      maxScale: 1.35,
+export const { GameProvider, useGame, Subscribe, useCardDrag, useBoardDrop } =
+  createGameHook<Game>()({
+    coverage,
+    features: (core, context) => ({
+      board: boardFeature(core, context),
+      drag: dragFeature(core, context),
+      viewport: panZoomFeature(core, context, {
+        initial: { x: 0, y: 0, scale: 0.9 },
+        minScale: 0.65,
+        maxScale: 1.35,
+      }),
     }),
-  }),
-});
+  });

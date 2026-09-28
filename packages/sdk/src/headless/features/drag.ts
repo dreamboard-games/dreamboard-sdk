@@ -1,20 +1,23 @@
 import type { DropTarget, TargetOptions } from "../targets.js";
 export type { DropTarget } from "../targets.js";
 import { inputValueKey } from "../../shared/input-domain.js";
-import type { CardBase, CoreInstance, FeatureContext, IdOf } from "../model.js";
-import {
-  createPointerSession,
-  type Point,
-  type PointerInput,
-} from "./pointer-session.js";
-
+import type { CoreInstance, FeatureContext, IdOf } from "../model.js";
 export interface DragState<G> {
   readonly cardId: IdOf<G, "cardId">;
-  readonly offset: Point;
   readonly target: DropTarget<G> | null;
 }
 
-/** Card drag state and native props. The core router owns atomic card/drop writes. */
+export interface DragController<G> {
+  readonly active: DragState<G> | null;
+  getCanDrag(cardId: IdOf<G, "cardId">, options?: TargetOptions<G>): boolean;
+  begin(cardId: IdOf<G, "cardId">, options?: TargetOptions<G>): boolean;
+  getDropTargets(): readonly DropTarget<G>[];
+  setDropTarget(target: DropTarget<G> | null): void;
+  drop(): void;
+  cancel(): void;
+}
+
+/** Semantic card/drop routing. Browser sensors and feedback belong to /react. */
 export function dragFeature<G>(
   game: CoreInstance<G>,
   context: FeatureContext<G>,
@@ -24,26 +27,24 @@ export function dragFeature<G>(
   let source = game.getOptions().source;
   let seat = game.snapshot?.me;
   let disposed = false;
-  let suppressPointerClick = false;
-  let dragged = false;
+  let version = game.snapshot?.version;
   let lastInteractions = game.interactions;
   let lastCards = game.cards;
   let branch = snapshot();
   function update(next: DragState<G> | null) {
     if (disposed) return;
-    active =
-      next === null
-        ? null
-        : Object.freeze({ ...next, offset: Object.freeze(next.offset) });
+    active = next === null ? null : Object.freeze(next);
     branch = snapshot();
     context.invalidate();
   }
-  function targets(): readonly DropTarget<G>[] {
-    if (!active) return [];
-    const cardId = active.cardId;
+  function targets(
+    cardId = active?.cardId,
+    selected = selection,
+  ): readonly DropTarget<G>[] {
+    if (!cardId || game.connection !== "ready") return [];
     // Runtime projections are validated by the source; public results carry the bound game types.
     const runtime = game as unknown as CoreInstance<unknown>;
-    const options = selection as TargetOptions<unknown> | undefined;
+    const options = selected as TargetOptions<unknown> | undefined;
     const resolved = (
       runtime.cards.find(cardId)?.getInteractions() ?? []
     ).flatMap((candidate) => {
@@ -107,56 +108,60 @@ export function dragFeature<G>(
       left.inputKey === right.inputKey
     );
   }
-  const pointer = createPointerSession({
-    move: ({ delta }) => {
-      if (Math.hypot(delta.x, delta.y) >= 5) dragged = true;
-      if (active) update({ ...active, offset: delta });
-    },
-    end({ delta }) {
-      if (Math.hypot(delta.x, delta.y) >= 5) dragged = true;
-      suppressPointerClick = true;
-      const finished = active;
-      update(null);
-      if (!finished) return;
-      if (dragged) {
-        if (finished.target)
-          context.routeCardDrop(finished.cardId, finished.target);
-      } else
-        context.routeTarget(
-          { kind: "card", value: finished.cardId },
-          selection,
-        );
-    },
-    cancel: () => {
-      suppressPointerClick = true;
-      update(null);
-    },
-  });
-  function snapshot() {
+  function cancel() {
+    if (active) update(null);
+  }
+  function snapshot(): DragController<G> {
     const captured = active;
     const dropTargets = Object.freeze(targets());
-    return Object.freeze({
+    return Object.freeze<DragController<G>>({
       active: captured,
+      getCanDrag: (cardId, options) =>
+        !disposed && targets(cardId, options).length > 0,
+      begin(cardId, options) {
+        if (disposed || !targets(cardId, options).length) return false;
+        selection = options;
+        update({ cardId, target: null });
+        return true;
+      },
       getDropTargets: () => dropTargets,
       setDropTarget(target: DropTarget<G> | null) {
         if (!active || disposed) return;
         if (
           target &&
           !targets().some((candidate) => sameTarget(candidate, target))
-        )
+        ) {
+          update({ ...active, target: null });
           return;
+        }
         update({ ...active, target });
       },
-      cancel: () => pointer.cancel(),
+      drop() {
+        const finished = active;
+        const eligible =
+          finished?.target &&
+          targets().some((target) => sameTarget(target, finished.target!));
+        cancel();
+        if (!disposed && finished?.target && eligible)
+          context.routeCardDrop(finished.cardId, finished.target);
+      },
+      cancel,
     });
   }
   const unsubscribe = game.subscribe(() => {
     const nextSource = game.getOptions().source;
     const nextSeat = game.snapshot?.me;
-    if (nextSource !== source || nextSeat !== seat) {
+    const nextVersion = game.snapshot?.version;
+    if (
+      nextSource !== source ||
+      nextSeat !== seat ||
+      nextVersion !== version ||
+      game.connection !== "ready"
+    ) {
       source = nextSource;
       seat = nextSeat;
-      pointer.cancel();
+      version = nextVersion;
+      cancel();
     }
   });
   return {
@@ -173,49 +178,9 @@ export function dragFeature<G>(
         return branch;
       },
     },
-    card: {
-      getDragProps(this: CardBase<G>, options?: TargetOptions<G>) {
-        return {
-          style: {
-            touchAction: "none" as const,
-            transform:
-              active?.cardId === this.id
-                ? `translate(${active.offset.x}px, ${active.offset.y}px)`
-                : undefined,
-          },
-          "data-drag-card": this.id,
-          onPointerDown: (event: PointerInput) => {
-            if (
-              disposed ||
-              game.cards.find(this.id) !== this ||
-              !this.getCanSelect()
-            )
-              return;
-            if (!pointer.start(event)) return;
-            suppressPointerClick = false;
-            dragged = false;
-            selection = options;
-            update({ cardId: this.id, offset: { x: 0, y: 0 }, target: null });
-          },
-          onClick: (event: { detail: number; preventDefault(): void }) => {
-            if (disposed) return;
-            if (event.detail !== 0 && suppressPointerClick) {
-              suppressPointerClick = false;
-              event.preventDefault();
-              return;
-            }
-            this.select(options);
-          },
-          onPointerMove: pointer.move,
-          onPointerUp: pointer.end,
-          onPointerCancel: pointer.cancel,
-          onLostPointerCapture: pointer.cancel,
-        };
-      },
-    },
     dispose() {
       unsubscribe();
-      pointer.dispose();
+      cancel();
       disposed = true;
     },
   };

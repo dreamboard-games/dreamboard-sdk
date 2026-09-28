@@ -275,24 +275,9 @@ describe("per-player board target identity through local sources", () => {
 
   it("drops a real projected card on the opponent's complete tuple", async () => {
     const { source, game } = await setup();
-    const props = game.cards
-      .get(game.zones.get("table").getCards()[0]!.id)!
-      .getDragProps({ interaction: "play.drop" });
-    const captured = new Set<number>();
-    const currentTarget = {
-      setPointerCapture: (id: number) => captured.add(id),
-      hasPointerCapture: (id: number) => captured.has(id),
-      releasePointerCapture: (id: number) => captured.delete(id),
-    };
-    const event = {
-      pointerId: 1,
-      button: 0,
-      clientX: 0,
-      clientY: 0,
-      currentTarget,
-      preventDefault() {},
-    };
-    props.onPointerDown(event);
+    game.drag.begin(game.zones.get("table").getCards()[0]!.id, {
+      interaction: "play.drop",
+    });
     const targets = game.drag.getDropTargets();
     expect(targets.map((target) => target.value)).toEqual([
       ownTarget,
@@ -302,7 +287,7 @@ describe("per-player board target identity through local sources", () => {
       ...targets[1]!,
       value: { spaceId: "slot", playerId: "player-2", boardId: "mat" },
     });
-    props.onPointerUp({ ...event, clientX: 20 });
+    game.drag.drop();
     expect(game.state.drafts["play.drop"]).toEqual({
       card: game.zones.get("table").getCards()[0]!.id,
       space: opponentTarget,

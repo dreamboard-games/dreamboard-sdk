@@ -1,4 +1,5 @@
-import { useGame } from "@game";
+import type { RuntimeBoardTarget } from "@dreamboard-games/sdk";
+import { useGame, useBoardDrop } from "@game";
 import {
   useEffect,
   useRef,
@@ -12,10 +13,16 @@ type Board = NonNullable<ReturnType<Model["boards"]["get"]>>;
 type Layout = ReturnType<Board["getLayout"]>;
 type Space = ReturnType<Layout["getSpaces"]>[number];
 type Edge = ReturnType<Layout["getEdges"]>[number];
+type DropTarget = ReturnType<Model["drag"]["getDropTargets"]>[number];
+type DropRoute = Pick<
+  DropTarget,
+  "interactionKey" | "cardInputKey" | "inputKey"
+>;
 type Vertex = ReturnType<Layout["getVertices"]>[number];
 export interface BoardTargetsProps {
   boardId: Parameters<Model["boards"]["get"]>[0];
   hexSize?: number;
+  dropRoute?: DropRoute;
   label?: string;
   className?: string;
   renderSpace?(space: Space): ReactNode;
@@ -29,6 +36,7 @@ export interface BoardTargetsProps {
 export function BoardTargets({
   boardId,
   hexSize = 50,
+  dropRoute,
   label = "Board",
   className = "",
   renderSpace,
@@ -39,6 +47,7 @@ export function BoardTargets({
   vertexProps,
 }: BoardTargetsProps) {
   const board = useGame((game) => game.boards.find(boardId));
+  const dropTargets = useGame((game) => game.drag.getDropTargets());
   const viewport = useGame((game) => game.viewport);
   const surface = useRef<SVGSVGElement>(null);
   const [screenScale, setScreenScale] = useState(1);
@@ -121,6 +130,18 @@ export function BoardTargets({
     );
     return Math.max(24, Math.min(44, nearest - 4)) / pixels;
   }
+  function dropTarget(kind: "space" | "edge" | "vertex", id: string) {
+    const matches = dropTargets.filter(
+      (target) =>
+        matchesTarget(target, kind, boardId, id) &&
+        (!dropRoute ||
+          (target.interactionKey === dropRoute.interactionKey &&
+            target.cardInputKey === dropRoute.cardInputKey &&
+            target.inputKey === dropRoute.inputKey)),
+    );
+    // An ambiguous visual destination must be bound to an explicit route.
+    return matches.length === 1 ? matches[0]! : null;
+  }
   function control(target: Space | Edge | Vertex) {
     // SVG groups do not accept the native button type.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -167,7 +188,11 @@ export function BoardTargets({
         transform={`translate(${transform.x} ${transform.y}) scale(${transform.scale})`}
       >
         {layout.getSpaces().map((space) => (
-          <g key={space.id} {...control(space)}>
+          <DropControl
+            key={space.id}
+            dropTarget={dropTarget("space", space.id)}
+            {...control(space)}
+          >
             <polygon
               className="db-grid-cell"
               points={space
@@ -177,10 +202,15 @@ export function BoardTargets({
               {...spaceProps?.(space)}
             />
             {renderSpace?.(space)}
-          </g>
+          </DropControl>
         ))}
         {layout.getEdges().map((edge) => (
-          <g key={edge.id} {...control(edge)} data-target-kind="edge">
+          <DropControl
+            key={edge.id}
+            dropTarget={dropTarget("edge", edge.id)}
+            {...control(edge)}
+            data-target-kind="edge"
+          >
             {edge.getIsSelectable() && (
               <line
                 data-hit-area="edge"
@@ -203,10 +233,15 @@ export function BoardTargets({
               {...edgeProps?.(edge)}
             />
             {renderEdge?.(edge)}
-          </g>
+          </DropControl>
         ))}
         {layout.getVertices().map((vertex) => (
-          <g key={vertex.id} {...control(vertex)} data-target-kind="vertex">
+          <DropControl
+            key={vertex.id}
+            dropTarget={dropTarget("vertex", vertex.id)}
+            {...control(vertex)}
+            data-target-kind="vertex"
+          >
             {vertex.getIsSelectable() && (
               <circle
                 data-hit-area="vertex"
@@ -224,9 +259,64 @@ export function BoardTargets({
               {...vertexProps?.(vertex)}
             />
             {renderVertex?.(vertex)}
-          </g>
+          </DropControl>
         ))}
       </g>
     </svg>
+  );
+}
+
+/** Platform SVG hit tests honor the rendered polygons/strokes and every ancestor transform. */
+function DropControl({
+  dropTarget,
+  children,
+  ...props
+}: ComponentProps<"g"> & { dropTarget: DropTarget | null }) {
+  const element = useRef<SVGGElement | null>(null);
+  const drop = useBoardDrop(dropTarget, {
+    containsPoint(point) {
+      return [
+        ...(element.current?.querySelectorAll<SVGGeometryElement>(
+          "polygon, line, circle",
+        ) ?? []),
+      ].some((shape) => {
+        const matrix = shape.getScreenCTM();
+        if (!matrix) return false;
+        const local = new DOMPoint(point.x, point.y).matrixTransform(
+          matrix.inverse(),
+        );
+        return shape.tagName === "line"
+          ? shape.isPointInStroke(local)
+          : shape.isPointInFill(local);
+      });
+    },
+  });
+  return (
+    <g
+      {...props}
+      ref={(node) => {
+        element.current = node;
+        drop.ref(node);
+      }}
+      data-drop-target={dropTarget ? "true" : undefined}
+      data-drop-over={drop.isDropTarget || undefined}
+    >
+      {children}
+    </g>
+  );
+}
+
+function matchesTarget(
+  target: RuntimeBoardTarget,
+  kind: "space" | "edge" | "vertex",
+  boardId: string,
+  id: string,
+) {
+  return (
+    (target.kind === kind || (kind === "space" && target.kind === "tile")) &&
+    (target.valueKind === "player-board-space"
+      ? `${target.value.boardId}:${target.value.playerId}` === boardId &&
+        target.value.spaceId === id
+      : target.boardId === boardId && target.value === id)
   );
 }

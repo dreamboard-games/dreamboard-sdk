@@ -1,3 +1,4 @@
+import { proveCardDrag } from "./card-drag-proof.ts";
 import { chromium, expect } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -66,6 +67,7 @@ try {
           "resource-partial-draft": "play",
           "player-board-targets": "play",
           "generic-board-spaces": "play",
+          "card-drag-drop": "play",
           "hex-discard": "discardBarrier",
           "hex-production": "main",
           "hex-growing-network": "main",
@@ -134,11 +136,17 @@ try {
           '"selected":[{"boardId":"mat","playerId":"player-1","spaceId":"slot"},{"boardId":"mat","playerId":"player-2","spaceId":"slot"}]',
         );
       }
+      if (story.id.endsWith("card-drag-drop"))
+        await proveCardDrag(page, width === 390);
       if (story.id.endsWith("hearts-passing")) {
         await expect(
           page.getByRole("heading", { name: "passing", exact: true }),
         ).toBeVisible();
         const card = page.locator(".db-hand button:not(:disabled)").first();
+        await expect(card.locator("..")).not.toHaveAttribute(
+          "aria-disabled",
+          "true",
+        );
         await card.focus();
         await page.keyboard.press("Space");
         await expect(card).toHaveAttribute("aria-pressed", "true");

@@ -18,12 +18,19 @@ import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
 import { InteractionForm } from "../items/interaction-form";
 import { playerBoardGame, genericBoardGame } from "./player-board-game";
+import { cardDropGame } from "./card-drop-game";
 import { resourceGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
-function ScenarioModel() {
+function ScenarioModel({ compactBoards = false }: { compactBoards?: boolean }) {
   const model = useGame((game) => game);
   return (
     <main style={{ width: "min(900px, 90vw)" }}>
+      <output data-testid="scenario-drafts" hidden>
+        {JSON.stringify(model.state.drafts)}
+      </output>
+      <output data-testid="scenario-drag" hidden>
+        {JSON.stringify(model.drag.active)}
+      </output>
       <h2>{model.phase.current}</h2>
       {model.boards.getAll().map((board) =>
         board.data.layout === "generic" ? (
@@ -39,7 +46,16 @@ function ScenarioModel() {
             ))}
           </section>
         ) : (
-          <BoardTargets key={board.id} boardId={board.id} hexSize={40} />
+          <div
+            key={board.id}
+            style={
+              compactBoards
+                ? { width: 180, display: "inline-block" }
+                : undefined
+            }
+          >
+            <BoardTargets boardId={board.id} hexSize={40} />
+          </div>
         ),
       )}
       {model.zones
@@ -65,6 +81,7 @@ function ScenarioModel() {
   );
 }
 const fixtures = {
+  cardDrop: () => localSource(cardDropGame, { players: 2, seed: 1 }),
   genericBoards: () => localSource(genericBoardGame, { players: 2, seed: 1 }),
   playerBoards: () => localSource(playerBoardGame, { players: 2, seed: 1 }),
   hearts: () => localSource(hearts, { players: 4, seed: 1, as: "player-1" }),
@@ -111,13 +128,19 @@ interface CreatedSource {
   source: CommandSource;
   adopted: boolean;
 }
-function OwnedScenario({ created }: { created: CreatedSource }) {
+function OwnedScenario({
+  created,
+  compactBoards,
+}: {
+  created: CreatedSource;
+  compactBoards: boolean;
+}) {
   useLayoutEffect(() => {
     created.adopted = true;
   }, [created]);
   return (
     <GameProvider source={created.source}>
-      <ScenarioModel />
+      <ScenarioModel compactBoards={compactBoards} />
     </GameProvider>
   );
 }
@@ -145,7 +168,11 @@ function ScenarioLoader({ kind }: { kind: keyof typeof fixtures }) {
     };
   }, [kind]);
   if (error) return <p role="alert">{error}</p>;
-  return source ? <OwnedScenario created={source} /> : <p>Loading scenario…</p>;
+  return source ? (
+    <OwnedScenario created={source} compactBoards={kind === "cardDrop"} />
+  ) : (
+    <p>Loading scenario…</p>
+  );
 }
 function Scenario({ kind }: { kind: keyof typeof fixtures }) {
   return <ScenarioLoader key={kind} kind={kind} />;
@@ -193,3 +220,5 @@ export const HexTrade: Story = { args: { kind: "HexTrade" } };
 export const PlayerBoardTargets: Story = { args: { kind: "playerBoards" } };
 
 export const GenericBoardSpaces: Story = { args: { kind: "genericBoards" } };
+
+export const CardDragDrop: Story = { args: { kind: "cardDrop" } };

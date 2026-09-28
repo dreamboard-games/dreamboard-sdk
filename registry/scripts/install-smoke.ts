@@ -49,9 +49,13 @@ try {
     sdkArchive = path.join(project, `dreamboard-games-sdk-${pkg.version}.tgz`);
     await writeFile(
       path.join(project, "src/game.ts"),
-      `import type { GameSnapshot, boardFeature, handFeature, panZoomFeature } from "@dreamboard-games/sdk";
-      type Model = GameSnapshot<unknown, { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>> }>;
-      export declare function useGame<Value>(select: (game: Model) => Value): Value;`,
+      `import type { GameSnapshot, boardFeature, handFeature, panZoomFeature, dragFeature } from "@dreamboard-games/sdk";
+      type Model = GameSnapshot<unknown, { board: ReturnType<typeof boardFeature<unknown>>; hand: ReturnType<typeof handFeature<unknown>>; drag: ReturnType<typeof dragFeature<unknown>>; panZoom: ReturnType<typeof panZoomFeature<unknown>> }>;
+      export declare function useGame<Value>(select: (game: Model) => Value): Value;
+      import { createGameHook } from "@dreamboard-games/sdk/react";
+      type Hooks = ReturnType<ReturnType<typeof createGameHook<unknown>>>;
+      export declare const useCardDrag: Hooks["useCardDrag"];
+      export declare const useBoardDrop: Hooks["useBoardDrop"];`,
     );
   }
   await writeFile(

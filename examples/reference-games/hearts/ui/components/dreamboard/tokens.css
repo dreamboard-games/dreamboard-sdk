@@ -289,21 +289,33 @@
     overflow-x: auto;
     padding: 0.5rem;
   }
-  .db-hand > button {
+  .db-hand > div {
+    flex: 0 0 auto;
+    display: grid;
+    gap: 0.25rem;
+  }
+  .db-hand > div > button {
     flex: 0 0 auto;
     border: 0;
     padding: 0;
     background: transparent;
     border-radius: var(--radius);
   }
-  .db-hand > button[aria-pressed="true"] {
+  .db-hand > div > button[aria-pressed="true"] {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
-  .db-hand > button:focus-visible,
+  .db-hand > div > button:focus-visible,
   .db-grid [role="button"]:focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
+  }
+  .db-hand [data-drag-card] {
+    min-height: 2rem;
+    cursor: grab;
+  }
+  .db-grid [data-drop-over="true"] {
+    outline: 3px solid var(--ring);
   }
   .db-hand-drawer > summary {
     cursor: pointer;

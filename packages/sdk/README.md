@@ -13,7 +13,7 @@ pnpm add @dreamboard-games/sdk
 The package declarations and export map are the API authority. There are four entry points:
 
 - `@dreamboard-games/sdk`: framework-free instances, sources, features and canonical host protocol schemas.
-- `@dreamboard-games/sdk/react`: typed React provider, selector hook and subscription component.
+- `@dreamboard-games/sdk/react`: typed React provider, selectors, subscriptions, and dnd-kit card/drop hooks.
 - `@dreamboard-games/sdk/reducer`: game authoring, manifest compilation, execution and trusted worker admission.
 - `@dreamboard-games/sdk/testing`: browser-safe local/scenario sources, replay, inspection and bounded exploration.
 
@@ -295,6 +295,11 @@ pnpm add @dreamboard-games/sdk react@^19 react-dom@^19 @tanstack/react-store@0.1
 `@tanstack/react-store` is an optional peer of the SDK so headless consumers do not
 install the React adapter. The `/react` entry delegates selectors to that package;
 the application bundler resolves its supported React subscription dependencies.
+
+The SDK includes dnd-kit for `/react` drag and drop. Enable `dragFeature`, export
+`useCardDrag` and `useBoardDrop` from the binding, and use the copied Hand and
+BoardTargets components or your own renderer. GameProvider owns the drag provider.
+Headless `game.drag` remains browser-free and handles atomic domain routing.
 
 ## Local development and tests
 
