@@ -65,6 +65,7 @@ try {
           "hex-setup-targets": "setupCamp",
           "hex-opening": "setupCamp",
           "resource-partial-draft": "play",
+          "many-value-editors": "play",
           "player-board-targets": "play",
           "generic-board-spaces": "play",
           "card-drag-drop": "play",
@@ -197,6 +198,30 @@ try {
         const moved = await screen();
         expect(Math.abs(moved.x - anchored.x - 40)).toBeLessThan(1);
         expect(Math.abs(moved.y - anchored.y - 25)).toBeLessThan(1);
+      }
+      if (story.id.endsWith("many-value-editors")) {
+        await page
+          .getByRole("button", { name: "Add value", exact: true })
+          .click();
+        await page.getByLabel("counts 1", { exact: true }).fill("2");
+        await page
+          .getByRole("button", { name: "Add allocation", exact: true })
+          .click();
+        await page.locator('[data-resource="wood"]').fill("3");
+        await expect(page.getByTestId("scenario-drafts")).toHaveText(
+          JSON.stringify({
+            "play.batch": { counts: [2], bags: [{ wood: 3 }] },
+          }),
+        );
+        await page.locator('[data-action="submit"]').click();
+        await expect
+          .poll(
+            async () =>
+              JSON.parse(
+                (await page.getByTestId("scenario-view").textContent()) ?? "{}",
+              ).total,
+          )
+          .toBe(5);
       }
       if (story.id.endsWith("resource-partial-draft")) {
         const wood = page.locator('[data-resource="wood"]');

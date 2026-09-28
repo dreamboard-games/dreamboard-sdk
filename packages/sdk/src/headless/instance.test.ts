@@ -1146,3 +1146,51 @@ it("distinguishes required lookups from presence checks across a phase change", 
   expect(game.state.drafts["play.move"]).toBeUndefined();
   game.dispose();
 });
+
+it("descriptor controls preserve numeric and resource array drafts and captured lifetime", () => {
+  const x = setup([
+    action([
+      {
+        key: "counts",
+        kind: "form",
+        domain: {
+          type: "boundedNumber",
+          min: 0,
+          max: 5,
+          selection: { mode: "many", min: 1, max: 2 },
+        },
+      },
+      {
+        key: "bags",
+        kind: "form",
+        domain: {
+          type: "resourceMap",
+          resources: [{ resourceId: "wood", min: 0, max: 5 }],
+          selection: { mode: "many", min: 1, max: 2 },
+        },
+      },
+    ]),
+  ]);
+  const game = createGameInstance()({ source: x.source });
+  const counts = game.inputs.get("play.move", "counts").getControl();
+  const bags = game.inputs.get("play.move", "bags").getControl();
+  if (
+    counts.type !== "boundedNumber" ||
+    counts.mode !== "many" ||
+    bags.type !== "resourceMap" ||
+    bags.mode !== "many"
+  )
+    throw new Error("Wrong controls");
+  counts.setValue([2, 3]);
+  bags.setValue([{ wood: 2 }]);
+  expect(game.state.drafts["play.move"]).toEqual({
+    counts: [2, 3],
+    bags: [{ wood: 2 }],
+  });
+  expect(game.interactions.get("play.move").getIsReady()).toBe(true);
+  const other = setup();
+  game.setOptions({ source: other.source });
+  counts.setValue([1]);
+  expect(game.state.drafts).toEqual({});
+  game.dispose();
+});

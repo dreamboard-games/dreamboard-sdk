@@ -235,7 +235,7 @@ game.interactions.get(key) .list() .listAvailable()
   interaction.submit() .cancel() .getSubmitHandler() .getSubmitProps() .reset()
     input.key .kind .getDomain() .getValue() .setValue(v) .clear() .getIsReady()
     input.getEligibleTargets() .getIsEligible(t) .getIsSelected(t) .getTargetProps(t) .getSelectHandler(t)
-    input.getFieldProps()
+    input.getControl()
 game.zones.get(zoneId) .getCards({ sort? }) .getCard(id) .count .getIsEmpty()
   card.id .zone .index .view .hidden
   card.getIsEligible() .getIsSelected() .getCanSelect() .getInteractions()

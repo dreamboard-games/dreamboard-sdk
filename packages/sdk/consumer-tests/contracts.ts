@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { createGame, boardRefSchema } from "@dreamboard-games/sdk/reducer";
-import { createGameInstance, type CommandSource } from "@dreamboard-games/sdk";
+import {
+  createGameInstance,
+  type CommandSource,
+  type InputBase,
+} from "@dreamboard-games/sdk";
 import { createGameHook } from "@dreamboard-games/sdk/react";
 import { createScenarioAuthoring } from "@dreamboard-games/sdk/testing";
 
@@ -66,3 +70,13 @@ boardRefSchema<"main">();
 const board = boardRefSchema({ baseIdSchema: z.literal("main") });
 const id: "main" = board.parse({ baseId: "main" }).baseId;
 void id;
+
+// @ts-expect-error Ordinary assignment must not widen a literal setter.
+const erased: Pick<InputBase<unknown, string, string>, "setValue"> = input;
+void erased;
+const control = input.getControl();
+if (control.type === "boundedNumber" && control.mode === "many") {
+  control.setValue([1]);
+  // @ts-expect-error A many numeric control never accepts a scalar.
+  control.setValue(1);
+}

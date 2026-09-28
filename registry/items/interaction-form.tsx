@@ -1,4 +1,4 @@
-import type { InputBase } from "@dreamboard-games/sdk";
+import type { InputControl } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
 import type { ReactNode } from "react";
 import { Actions, type BoundInteraction, type InteractionKey } from "./actions";
@@ -8,9 +8,6 @@ export interface InteractionFormProps {
   renderInput?(
     input: ReturnType<BoundInteraction["getInputs"]>[number],
   ): ReactNode | undefined;
-}
-function record<T>(value: T): value is T & Record<string, unknown> {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 /** Descriptor-driven current-step fields. Saved server selections are never replayed. */
 export function InteractionForm({
@@ -49,108 +46,179 @@ export function InteractionForm({
         const custom = renderInput?.(typedInput);
         if (custom !== undefined)
           return <div key={typedInput.key}>{custom}</div>;
-        // The default renderer follows the validated runtime descriptor. Custom
-        // renderers above retain the game's correlated input union.
-        const input: Pick<
-          InputBase<unknown, string, string>,
-          | "key"
-          | "getDomain"
-          | "getValue"
-          | "setValue"
-          | "getFieldProps"
-          | "getEligibleTargets"
-          | "getTargetProps"
-          | "getIsSelected"
-        > = typedInput;
-        const domain = input.getDomain();
-        const current: unknown = input.getValue();
-        const field = input.getFieldProps();
-        if (domain.type === "resourceMap") {
-          const resources = domain.resources;
-          const values: Record<string, number> = Object.fromEntries(
-            resources.map((resource) => [
-              resource.resourceId,
-              record(current) ? Number(current[resource.resourceId] ?? 0) : 0,
-            ]),
-          );
-          return (
-            <fieldset key={input.key} disabled={field.disabled}>
-              <legend>{input.key}</legend>
-              {resources.map((resource) => (
-                <label key={resource.resourceId}>
-                  {resource.label ?? resource.resourceId}
-                  <input
-                    type="number"
-                    min={resource.min}
-                    max={resource.max}
-                    step={1}
-                    value={values[resource.resourceId]}
-                    data-interaction={key}
-                    data-input={input.key}
-                    data-resource={resource.resourceId}
-                    onChange={(event) => {
-                      const next = {
-                        ...values,
-                        [resource.resourceId]:
-                          event.currentTarget.value === ""
-                            ? 0
-                            : event.currentTarget.valueAsNumber,
-                      };
-                      input.setValue(next);
-                    }}
-                  />
-                </label>
-              ))}
-            </fieldset>
-          );
-        }
-        if (domain.type === "boundedNumber")
-          return (
-            <label key={input.key}>
-              {input.key}
-              <input
-                {...field}
-                value={typeof current === "number" ? current : ""}
-                type="number"
-                min={domain.min}
-                max={domain.max}
-                step={domain.step ?? 1}
-              />
-            </label>
-          );
-        const choices =
-          domain.type === "choice" || domain.type === "choiceList"
-            ? domain.choices
-            : [];
         return (
-          <fieldset key={input.key}>
-            <legend>{input.key}</legend>
-            {input.getEligibleTargets().map((value, index) => {
-              const option = choices.find((choice) => choice.value === value);
-              return (
-                <button
-                  key={index}
-                  {...input.getTargetProps(value)}
-                  aria-pressed={input.getIsSelected(value)}
-                >
-                  {String(
-                    option?.label ??
-                      (value === null
-                        ? "None"
-                        : typeof value === "object"
-                          ? JSON.stringify(value)
-                          : value),
-                  )}
-                </button>
-              );
-            })}
-            {input.getEligibleTargets().length === 0 && (
-              <p>No choices available</p>
-            )}
-          </fieldset>
+          <Control key={typedInput.key} control={typedInput.getControl()} />
         );
       })}
       <Actions interaction={key} />
     </section>
+  );
+}
+
+function Control({ control }: { control: InputControl }) {
+  if (control.type === "boundedNumber") {
+    const attributes = {
+      type: "number",
+      min: control.domain.min,
+      max: control.domain.max,
+      step: control.domain.step ?? 1,
+    };
+    if (control.mode === "single")
+      return (
+        <label>
+          {control.key}
+          <input
+            {...control.props}
+            {...attributes}
+            value={control.value ?? ""}
+            onChange={(event) =>
+              control.setValue(
+                event.currentTarget.value === ""
+                  ? undefined
+                  : event.currentTarget.valueAsNumber,
+              )
+            }
+          />
+        </label>
+      );
+    return (
+      <fieldset disabled={control.disabled}>
+        <legend>{control.key}</legend>
+        {control.value.map((value, index) => (
+          <div key={index}>
+            <label>
+              {control.key} {index + 1}
+              <input
+                {...control.props}
+                {...attributes}
+                value={value}
+                onChange={(event) =>
+                  control.setValue(
+                    control.value.map((previous, row) =>
+                      row === index
+                        ? event.currentTarget.valueAsNumber
+                        : previous,
+                    ),
+                  )
+                }
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() =>
+                control.setValue(
+                  control.value.filter((_, row) => row !== index),
+                )
+              }
+            >
+              Remove value {index + 1}
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          disabled={
+            control.value.length >=
+            (control.domain.selection?.mode === "many"
+              ? (control.domain.selection.max ?? Infinity)
+              : Infinity)
+          }
+          onClick={() =>
+            control.setValue([...control.value, control.domain.min])
+          }
+        >
+          Add value
+        </button>
+      </fieldset>
+    );
+  }
+  if (control.type === "resourceMap") {
+    const empty = Object.fromEntries(
+      control.domain.resources.map((resource) => [resource.resourceId, 0]),
+    );
+    const row = (
+      value: Record<string, number>,
+      change: (value: Record<string, number>) => void,
+    ) =>
+      control.domain.resources.map((resource) => (
+        <label key={resource.resourceId}>
+          {resource.label ?? resource.resourceId}
+          <input
+            {...control.props}
+            type="number"
+            min={resource.min}
+            max={resource.max}
+            step={1}
+            value={value[resource.resourceId] ?? 0}
+            data-resource={resource.resourceId}
+            onChange={(event) =>
+              change({
+                ...value,
+                [resource.resourceId]:
+                  event.currentTarget.value === ""
+                    ? 0
+                    : event.currentTarget.valueAsNumber,
+              })
+            }
+          />
+        </label>
+      ));
+    if (control.mode === "single")
+      return (
+        <fieldset disabled={control.disabled}>
+          <legend>{control.key}</legend>
+          {row(control.value ?? empty, control.setValue)}
+        </fieldset>
+      );
+    return (
+      <fieldset disabled={control.disabled}>
+        <legend>{control.key}</legend>
+        {control.value.map((value, index) => (
+          <fieldset key={index}>
+            <legend>Allocation {index + 1}</legend>
+            {row(value, (next) =>
+              control.setValue(
+                control.value.map((previous, row) =>
+                  row === index ? next : previous,
+                ),
+              ),
+            )}
+            <button
+              type="button"
+              onClick={() =>
+                control.setValue(
+                  control.value.filter((_, row) => row !== index),
+                )
+              }
+            >
+              Remove allocation {index + 1}
+            </button>
+          </fieldset>
+        ))}
+        <button
+          type="button"
+          disabled={
+            control.value.length >=
+            (control.domain.selection?.mode === "many"
+              ? (control.domain.selection.max ?? Infinity)
+              : Infinity)
+          }
+          onClick={() => control.setValue([...control.value, empty])}
+        >
+          Add allocation
+        </button>
+      </fieldset>
+    );
+  }
+  return (
+    <fieldset disabled={control.disabled}>
+      <legend>{control.key}</legend>
+      {control.options.map((option, index) => (
+        <button key={index} {...option.props} aria-pressed={option.selected}>
+          {option.label}
+        </button>
+      ))}
+      {control.options.length === 0 && <p>No choices available</p>}
+    </fieldset>
   );
 }

@@ -1,4 +1,4 @@
-import { createGame } from "@dreamboard-games/sdk/reducer";
+import { createGame, many } from "@dreamboard-games/sdk/reducer";
 import { z } from "zod";
 const model = createGame({
   manifest: {
@@ -52,6 +52,48 @@ export const resourceGame = model.assemble({
                 (sum, value) => sum + value,
                 0,
               ),
+            });
+          },
+        }),
+      },
+    }),
+  },
+  view: model.view(({ state }) => ({ total: state.publicState.total })),
+});
+
+/** Array editors must submit arrays even for scalar/object inner domains. */
+export const manyValueGame = model.assemble({
+  initial: { public: () => ({ total: 0 }) },
+  initialPhase: "play",
+  phases: {
+    play: play.define({
+      kind: "player",
+      initialState: () => ({}),
+      enter({ tx, state }) {
+        tx.setActivePlayers([state.table.playerOrder[0]]);
+      },
+      interactions: {
+        batch: play.interaction({
+          inputs: {
+            counts: many(play.inputs.form.number({ min: 0, max: 5 }), {
+              min: 1,
+              max: 2,
+            }),
+            bags: many(
+              play.inputs.form.resourceMap({
+                resources: [{ resourceId: "wood", min: 0, max: 5 }],
+              }),
+              { min: 1, max: 2 },
+            ),
+          },
+          reduce({ tx, input }) {
+            tx.patchPublicState({
+              total:
+                input.params.counts.reduce((a, b) => a + b, 0) +
+                input.params.bags.reduce(
+                  (sum, bag) => sum + (bag.wood ?? 0),
+                  0,
+                ),
             });
           },
         }),

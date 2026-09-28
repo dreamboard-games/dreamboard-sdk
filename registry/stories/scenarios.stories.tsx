@@ -19,7 +19,7 @@ import { BoardTargets } from "../items/board-targets";
 import { InteractionForm } from "../items/interaction-form";
 import { playerBoardGame, genericBoardGame } from "./player-board-game";
 import { cardDropGame } from "./card-drop-game";
-import { resourceGame } from "./resource-game";
+import { resourceGame, manyValueGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
 function ScenarioModel({ compactBoards = false }: { compactBoards?: boolean }) {
   const model = useGame((game) => game);
@@ -88,6 +88,7 @@ const fixtures = {
   hex: () =>
     scenarioSource(hex, bandits, { at: "ready-to-move", as: "player-1" }),
   "hex-setup": () => localSource(hex, { players: 3, seed: 1 }),
+  manyValues: () => localSource(manyValueGame, { players: 2, seed: 1 }),
   resources: () => localSource(resourceGame, { players: 2, seed: 1 }),
   HeartsOpening: () =>
     scenarioSource(hearts, heartsComplete, { at: "opening", as: "player-1" }),
@@ -222,3 +223,5 @@ export const PlayerBoardTargets: Story = { args: { kind: "playerBoards" } };
 export const GenericBoardSpaces: Story = { args: { kind: "genericBoards" } };
 
 export const CardDragDrop: Story = { args: { kind: "cardDrop" } };
+
+export const ManyValueEditors: Story = { args: { kind: "manyValues" } };
