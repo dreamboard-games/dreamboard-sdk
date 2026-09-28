@@ -1,7 +1,9 @@
+import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
 import {
   inputTargetInDomain,
+  inputValueKey,
   inputValueInDomain,
 } from "../shared/input-domain.js";
 import {
@@ -42,7 +44,7 @@ const equalValue = (a: unknown, b: unknown) =>
   Object.is(a, b) ||
   (typeof a === "object" &&
     typeof b === "object" &&
-    JSON.stringify(a) === JSON.stringify(b));
+    inputValueKey(a) === inputValueKey(b));
 function inDomain(
   input: InteractionInputDescriptor,
   value: unknown,
@@ -1056,8 +1058,13 @@ class Controller {
     if (missing.length)
       throw new Error(`Interactions not read: ${missing.join(", ")}`);
   }
-  routeTarget(kind: string, id: string, explicit?: string, boardId?: string) {
-    if (kind === "card") {
+  routeTarget(
+    kind: string,
+    id: string | PlayerBoardSpaceTarget,
+    explicit?: string,
+    boardId?: string,
+  ) {
+    if (kind === "card" && typeof id === "string") {
       this.selectCard(id, explicit);
       return;
     }
@@ -1077,7 +1084,10 @@ class Controller {
         )
         .map((input) => ({ interaction, input })),
     );
-    if (candidates.length > 1) throw new AmbiguousTargetError(id);
+    if (candidates.length > 1)
+      throw new AmbiguousTargetError(
+        typeof id === "string" ? id : JSON.stringify(id),
+      );
     const match = candidates[0];
     if (match) this.select(match.interaction.key, match.input.key, id);
   }
@@ -1085,7 +1095,7 @@ class Controller {
     cardId: string,
     target: {
       kind: string;
-      id: string;
+      id: string | PlayerBoardSpaceTarget;
       boardId?: string;
       interaction?: string;
     },
@@ -1128,7 +1138,10 @@ class Controller {
         )
         .map((input) => ({ interaction, cardInput, input }));
     });
-    if (candidates.length > 1) throw new AmbiguousTargetError(target.id);
+    if (candidates.length > 1)
+      throw new AmbiguousTargetError(
+        typeof target.id === "string" ? target.id : JSON.stringify(target.id),
+      );
     const candidate = candidates[0];
     if (!candidate) return;
     const { interaction, cardInput, input } = candidate;

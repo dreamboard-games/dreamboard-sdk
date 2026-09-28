@@ -1,3 +1,9 @@
+import {
+  isPlayerBoardSpaceTarget,
+  samePlayerBoardSpaceTarget,
+  type PlayerBoardSpaceTarget,
+} from "../../shared/board-target";
+export type { PlayerBoardSpaceTarget } from "../../shared/board-target";
 import type { CollectorState, TargetKind } from "../model/spec";
 import type {
   PlayerIdOfState,
@@ -31,16 +37,6 @@ export type BoardTargetBuilder<
   State extends CollectorState,
   Target,
 > = TargetRuleBuilder<State, Target, BoardTargetRule<State, Target>>;
-
-export type PlayerBoardSpaceTarget<
-  BoardId extends string,
-  SpaceId extends string,
-  PlayerId extends string,
-> = {
-  readonly boardId: BoardId;
-  readonly playerId: PlayerId;
-  readonly spaceId: SpaceId;
-};
 
 function candidateIdsForKind<State extends CollectorState, Id extends string>(
   q: TableQueriesOfState<State>,
@@ -143,27 +139,13 @@ function createPlayerSpaceTargetBuilder<
           equals: (left, right) =>
             isPlayerBoardSpaceTarget(left) &&
             isPlayerBoardSpaceTarget(right) &&
-            left.boardId === right.boardId &&
-            left.playerId === right.playerId &&
-            left.spaceId === right.spaceId,
+            samePlayerBoardSpaceTarget(left, right),
         },
       ),
       boardId,
       targetKind: "space",
       valueKind: "player-board-space",
     }),
-  );
-}
-
-function isPlayerBoardSpaceTarget(
-  value: unknown,
-): value is PlayerBoardSpaceTarget<string, string, string> {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "boardId" in value &&
-    "playerId" in value &&
-    "spaceId" in value
   );
 }
 

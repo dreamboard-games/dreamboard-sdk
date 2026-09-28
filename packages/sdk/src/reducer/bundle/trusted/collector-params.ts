@@ -16,26 +16,13 @@ import type {
 import { makeValidationError } from "./interaction-types";
 import { interactionInputsOf } from "./collector-introspection";
 
-export function normalizeCollectorValue(
-  collector: InputCollector,
-  value: unknown,
-  playerId?: string,
-): unknown {
-  return collector.kind === "board-space" &&
-    collector.meta?.valueKind === "player-board-space" &&
-    typeof value === "string" &&
-    playerId
-    ? { boardId: collector.meta.boardId, playerId, spaceId: value }
-    : value;
-}
-
 export function parseInteractionParams<
   DomainState extends CollectorState,
   Manifest extends ManifestContract<TableOfState<DomainState>>,
 >(
   interaction: AnyInteractionSpec<DomainState, Manifest>,
   rawParams: unknown,
-  options: { skipRng?: boolean; playerId?: string } = {},
+  options: { skipRng?: boolean } = {},
 ):
   | { ok: true; params: Record<string, unknown> }
   | { ok: false; message: string } {
@@ -57,15 +44,10 @@ export function parseInteractionParams<
   const issues: string[] = [];
   for (const [key, collector] of Object.entries(collectors)) {
     if (collector.kind === "rng" && options.skipRng) continue;
-    const rawValueBase =
+    const rawValue =
       record[key] === undefined && "defaultValue" in collector
         ? collector.defaultValue
         : record[key];
-    const rawValue = normalizeCollectorValue(
-      collector,
-      rawValueBase,
-      options.playerId,
-    );
     const result = collector.schema.safeParse(rawValue);
     if (!result.success) {
       for (const issue of result.error.issues) {

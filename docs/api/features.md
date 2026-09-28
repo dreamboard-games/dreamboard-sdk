@@ -68,7 +68,10 @@ boards expose data but reject spatial layout requests.
 `handFeature(core, { sort? })` sorts projected card objects only.
 `dragFeature(core, context)` owns a local pointer session and atomically routes
 card plus drop target through canonical drafts. `DropTarget` includes kind, id,
-boardId and interaction; `DragState` records the active card and offset.
+boardId, interaction and the `valueKind` discriminator. For `"board-id"`, id is a
+scalar and boardId is the runtime board ID. For `"player-board-space"`, id is a
+complete `{ boardId, playerId, spaceId }` tuple and boardId is the base manifest
+ID. `DragState` records the active card and offset.
 `panZoomFeature(core, context, { initial?, minScale?, maxScale? })` owns the viewport.
 Native wheel listeners must be non-passive. SVG rendering must convert client
 coordinates to user coordinates; the copied BoardTargets demonstrates this.

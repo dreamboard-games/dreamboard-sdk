@@ -99,7 +99,7 @@ describe("target rules", () => {
       type: "boardTarget",
       projection: "resolved",
       valueKind: "player-board-space",
-      eligibleTargets: ["s1", "s2"],
+      eligibleTargets: [ownedTarget, { ...ownedTarget, spaceId: "s2" }],
     });
     expect(input.schema.parse(ownedTarget)).toEqual(ownedTarget);
     expect(

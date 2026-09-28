@@ -1,3 +1,5 @@
+import type { PlayerBoardSpaceTarget } from "../../shared/board-target.js";
+import { inputValueKey } from "../../shared/input-domain.js";
 import type {
   CardBase,
   CoreInstance,
@@ -11,12 +13,21 @@ import {
   type PointerInput,
 } from "./pointer-session.js";
 
-export interface DropTarget<G> {
+export type DropTarget<G> = {
   readonly kind: "space" | "edge" | "vertex" | "tile";
-  readonly id: string;
-  readonly boardId: IdOf<G, "boardId">;
   readonly interaction: InteractionKey<G>;
-}
+} & (
+  | {
+      readonly valueKind: "board-id";
+      readonly id: string;
+      readonly boardId: IdOf<G, "boardId">;
+    }
+  | {
+      readonly valueKind: "player-board-space";
+      readonly id: PlayerBoardSpaceTarget;
+      readonly boardId: IdOf<G, "boardBaseId">;
+    }
+);
 export interface DragState<G> {
   readonly cardId: IdOf<G, "cardId">;
   readonly offset: Point;
@@ -73,17 +84,27 @@ export function dragFeature<G>(
             )
           )
             return [];
-          return input
-            .getEligibleTargets()
-            .filter(
-              (id): id is string =>
-                typeof id === "string" && !input.getTargetProps(id).disabled,
-            )
+          if (domain.valueKind === "player-board-space") {
+            return domain.eligibleTargets
+              .filter((id) => !input.getTargetProps(id).disabled)
+              .map((id) =>
+                Object.freeze({
+                  kind: domain.targetKind,
+                  valueKind: domain.valueKind,
+                  id,
+                  boardId: domain.boardId as IdOf<G, "boardBaseId">,
+                  interaction: candidate.key,
+                }),
+              );
+          }
+          return domain.eligibleTargets
+            .filter((id) => !input.getTargetProps(id).disabled)
             .map((id) =>
               Object.freeze({
-                kind: domain.targetKind as DropTarget<G>["kind"],
+                kind: domain.targetKind,
+                valueKind: domain.valueKind,
                 id,
-                boardId: String(domain.boardId) as IdOf<G, "boardId">,
+                boardId: domain.boardId as IdOf<G, "boardId">,
                 interaction: candidate.key,
               }),
             );
@@ -93,7 +114,7 @@ export function dragFeature<G>(
   function sameTarget(left: DropTarget<G>, right: DropTarget<G>) {
     return (
       left.kind === right.kind &&
-      left.id === right.id &&
+      inputValueKey(left.id) === inputValueKey(right.id) &&
       left.boardId === right.boardId &&
       left.interaction === right.interaction
     );

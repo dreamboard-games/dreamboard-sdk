@@ -73,7 +73,7 @@ describe("ordered committed prefix evaluation", () => {
     ).toEqual([]);
   });
 
-  test("normalizes per-player board wire strings and rejects another seat or board", () => {
+  test("accepts complete player-board targets and rejects scalar, seat, and board forgeries", () => {
     const target = boardTarget
       .playerSpace<typeof state, "home", "slot">("home")
       .build();
@@ -90,7 +90,9 @@ describe("ordered committed prefix evaluation", () => {
         targetKind: "space" as const,
         boardId: "home",
         valueKind: "player-board-space" as const,
-        eligibleTargets: ["slot"],
+        eligibleTargets: [
+          { boardId: "home", playerId: "player-1", spaceId: "slot" },
+        ],
       }),
       validateTarget: (
         _state: unknown,
@@ -106,10 +108,15 @@ describe("ordered committed prefix evaluation", () => {
     };
     const steps = new InteractionSteps<typeof state>().input("space", scoped);
     expect(
-      evaluateStepPrefix(steps, state, "player-1", ["slot"]).selected,
+      evaluateStepPrefix(steps, state, "player-1", [
+        { boardId: "home", playerId: "player-1", spaceId: "slot" },
+      ]).selected,
     ).toEqual({
       space: { boardId: "home", playerId: "player-1", spaceId: "slot" },
     });
+    expect(
+      evaluateStepPrefix(steps, state, "player-1", ["slot"]).complete,
+    ).toBe(false);
     expect(
       evaluateStepPrefix(steps, state, "player-1", [
         { boardId: "home", playerId: "player-2", spaceId: "slot" },

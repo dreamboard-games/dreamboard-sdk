@@ -17,6 +17,7 @@ import { Hand } from "../items/hand";
 import { Card, CardBack } from "../items/card";
 import { BoardTargets } from "../items/board-targets";
 import { InteractionForm } from "../items/interaction-form";
+import { playerBoardGame } from "./player-board-game";
 import { resourceGame } from "./resource-game";
 import { Inspector } from "../items/inspector";
 function ScenarioModel() {
@@ -50,6 +51,7 @@ function ScenarioModel() {
   );
 }
 const fixtures = {
+  playerBoards: () => localSource(playerBoardGame, { players: 2, seed: 1 }),
   hearts: () => localSource(hearts, { players: 4, seed: 1, as: "player-1" }),
   hex: () =>
     scenarioSource(hex, bandits, { at: "ready-to-move", as: "player-1" }),
@@ -172,3 +174,5 @@ export const HexGameOver: Story = { args: { kind: "HexGameOver" } };
 export const HexDepot: Story = { args: { kind: "HexDepot" } };
 
 export const HexTrade: Story = { args: { kind: "HexTrade" } };
+
+export const PlayerBoardTargets: Story = { args: { kind: "playerBoards" } };

@@ -762,6 +762,7 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
     kind: "board-space",
     domain: {
       type: "boardTarget",
+      valueKind: "board-id",
       projection: "resolved",
       targetKind: "space",
       boardId: "main",

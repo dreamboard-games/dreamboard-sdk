@@ -63,6 +63,7 @@ function descriptor(): InteractionDescriptor {
         kind: "board-space",
         domain: {
           type: "boardTarget",
+          valueKind: "board-id",
           projection: "resolved",
           targetKind: "space",
           boardId: "island",
@@ -73,7 +74,29 @@ function descriptor(): InteractionDescriptor {
   };
 }
 function source(board: RuntimeBoardState = hexBoard()) {
-  const action = descriptor();
+  let action = descriptor();
+  if (board.scope === "perPlayer") {
+    action = {
+      ...action,
+      inputs: action.inputs.map((input) =>
+        input.key === "space"
+          ? {
+              ...input,
+              domain: {
+                type: "boardTarget",
+                projection: "resolved",
+                targetKind: "space",
+                boardId: "island",
+                valueKind: "player-board-space",
+                eligibleTargets: [
+                  { boardId: "island", playerId: "alice", spaceId: "center" },
+                ],
+              },
+            }
+          : input,
+      ),
+    };
+  }
   return createTestSource({
     me: "alice",
     players: [{ playerId: "alice", displayName: "Alice" }],
@@ -194,7 +217,9 @@ describe("headless features", () => {
     expect(layout.pointToSpace(9999, 9999)).toBeUndefined();
     expect(cell.getIsSelectable()).toBe(true);
     cell.getSelectHandler()();
-    expect(game.state.drafts["play.move"]).toMatchObject({ space: "center" });
+    expect(game.state.drafts["play.move"]).toMatchObject({
+      space: { boardId: "island", playerId: "alice", spaceId: "center" },
+    });
     expect(cell.getIsSelected()).toBe(false);
     expect(
       game.boards
@@ -491,7 +516,7 @@ describe("headless features", () => {
     expect(game.state.drafts["play.move"]?.card).toBe("red");
     game.dispose();
   });
-  it("never routes a per-player board target for a different seat", () => {
+  it("does not route a per-player target absent from its projected domain", () => {
     const { game } = setup(hexBoard("island:bob", "bob"));
     const cell = game.boards
       .get("island:bob")!

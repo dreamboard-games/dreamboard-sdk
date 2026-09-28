@@ -200,6 +200,7 @@ describe("interaction input projection", () => {
         key: "spaceId",
         domain: {
           type: "boardTarget",
+          valueKind: "board-id",
           projection: "resolved",
           targetKind: "space",
           boardId: "main-board",
@@ -287,6 +288,7 @@ describe("committed current input projection", () => {
                     }
                   : {
                       type: "boardTarget",
+                      valueKind: "board-id",
                       projection: "resolved",
                       targetKind: "space",
                       boardId: "main",

@@ -87,19 +87,17 @@ function makeBoardCollector<
           projection: "resolved" as const,
           targetKind: target.targetKind as Exclude<TargetKind, "card">,
           boardId: target.boardId,
-          valueKind: target.valueKind,
-          eligibleTargets: target
-            .eligible({
-              state: state as State,
-              playerId: playerId as never,
-              q: q as never,
-            })
-            .map(String),
+          valueKind: "board-id" as const,
+          eligibleTargets: target.eligible({
+            state: state as State,
+            playerId: playerId as never,
+            q: q as never,
+          }),
         }) satisfies BoardTargetDomainDescriptor,
       meta: {
         targetKind: target.targetKind,
         boardId: target.boardId,
-        valueKind: target.valueKind,
+        valueKind: "board-id" as const,
       },
     } as unknown as InputCollector<z.ZodType<Id>, State, Kind>;
   };
@@ -132,7 +130,7 @@ export function playerSpaceInput<
   ) as unknown as ManifestIdSchema<PlayerId, "playerId">;
   return {
     kind: "board-space",
-    schema: z.object({
+    schema: z.strictObject({
       boardId: z.literal(target.boardId),
       playerId: playerIdSchema,
       spaceId: z.string() as unknown as z.ZodType<SpaceId>,
@@ -174,21 +172,19 @@ export function playerSpaceInput<
       ({
         type: "boardTarget" as const,
         projection: "resolved" as const,
-        targetKind: target.targetKind as Exclude<TargetKind, "card">,
+        targetKind: "space" as const,
         boardId: target.boardId,
-        valueKind: target.valueKind,
-        eligibleTargets: target
-          .eligible({
-            state: state as State,
-            playerId: playerId as never,
-            q: q as never,
-          })
-          .map((candidate) => candidate.spaceId),
+        valueKind: "player-board-space" as const,
+        eligibleTargets: target.eligible({
+          state: state as State,
+          playerId: playerId as never,
+          q: q as never,
+        }),
       }) satisfies BoardTargetDomainDescriptor,
     meta: {
       targetKind: target.targetKind,
       boardId: target.boardId,
-      valueKind: target.valueKind,
+      valueKind: "player-board-space" as const,
     },
   };
 }

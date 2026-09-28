@@ -4,10 +4,10 @@ import type {
   CollectorState,
   ManifestContract,
   TableOfState,
+  TableQueriesOfState,
 } from "../../model";
 import type { InteractionInputDescriptorShape } from "./interaction-types";
 import { interactionInputsOf } from "./collector-introspection";
-import type { CollectorProjectionOptions } from "./collector-eligibility";
 
 export function collectInteractionInputs<
   DomainState extends CollectorState,
@@ -17,7 +17,7 @@ export function collectInteractionInputs<
   interaction: AnyInteractionSpec<DomainState, Manifest>,
   domainState: DomainState,
   playerId: PlayerId,
-  options: CollectorProjectionOptions<DomainState> = {},
+  options: { readonly queries?: TableQueriesOfState<DomainState> } = {},
 ): InteractionInputDescriptorShape[] {
   const q = options.queries ?? createStateQueries(domainState);
   return Object.entries(interactionInputsOf(interaction)).flatMap(

@@ -419,7 +419,6 @@ export function createInteractionDecisionResolver<
         : parseForSubmit
           ? parseInteractionParams(interaction, params, {
               skipRng: true,
-              playerId,
             })
           : ({
               ok: true,
@@ -443,7 +442,7 @@ export function createInteractionDecisionResolver<
           trustedInteractionId,
           interaction,
           descriptorDecision,
-          { projection, includeEligibleTargets: false },
+          { projection },
         ),
         validation: makeValidationError(
           "invalid-action-params",
@@ -565,7 +564,6 @@ export function createInteractionDecisionResolver<
       {
         projection,
         stepPrefix: mode === "submit" ? undefined : prefix,
-        includeEligibleTargets: available || mode === "card",
         includeDiagnosticReasons: options.diagnostics === "verbose",
       },
     );
@@ -808,7 +806,6 @@ export function createInteractionDecisionResolver<
       { available: true },
       {
         projection,
-        includeEligibleTargets: true,
       },
     );
 

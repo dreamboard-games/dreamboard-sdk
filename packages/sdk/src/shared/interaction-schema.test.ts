@@ -1,3 +1,4 @@
+import { inputTargetInDomain, inputValueKey } from "./input-domain";
 import { describe, expect, test } from "vitest";
 import {
   InputDomainSchema,
@@ -32,7 +33,12 @@ describe("canonical interaction admission", () => {
     { type: "choice", choices: 123 },
     { type: "choice", choices: [{ value: "a" }] },
     { type: "choiceList", choices: [{ value: null, label: "Invalid" }] },
-    { type: "boardTarget", boardId: "map", eligibleTargets: [] },
+    {
+      type: "boardTarget",
+      valueKind: "board-id",
+      boardId: "map",
+      eligibleTargets: [],
+    },
     {
       type: "cardTarget",
       projection: "resolved",
@@ -137,4 +143,66 @@ describe("canonical interaction admission", () => {
       '{"a":1,"b":2}',
     );
   });
+});
+
+test("board domain admission distinguishes scalar IDs and complete player-board identities", () => {
+  const base = {
+    type: "boardTarget",
+    projection: "resolved",
+    targetKind: "space",
+    boardId: "mat",
+  };
+  const target = { boardId: "mat", playerId: "alice", spaceId: "slot" };
+  const domain = InputDomainSchema.parse({
+    ...base,
+    valueKind: "player-board-space",
+    eligibleTargets: [target],
+  });
+  expect(domain).toMatchObject({ eligibleTargets: [target] });
+  expect(
+    inputTargetInDomain(domain, {
+      spaceId: "slot",
+      playerId: "alice",
+      boardId: "mat",
+    }),
+  ).toBe(true);
+  for (const forged of [
+    "slot",
+    { ...target, boardId: "mat:alice" },
+    { ...target, playerId: "bob" },
+    { ...target, spaceId: "other" },
+  ])
+    expect(inputTargetInDomain(domain, forged)).toBe(false);
+  for (const invalid of [
+    { ...base, eligibleTargets: ["slot"] },
+    { ...base, valueKind: "player-board-space", eligibleTargets: ["slot"] },
+    { ...base, valueKind: "board-id", eligibleTargets: [target] },
+    {
+      ...base,
+      valueKind: "player-board-space",
+      targetKind: "edge",
+      eligibleTargets: [target],
+    },
+  ])
+    expect(InputDomainSchema.safeParse(invalid).success).toBe(false);
+  expect(
+    InputDomainSchema.parse({
+      ...base,
+      valueKind: "board-id",
+      eligibleTargets: ["slot"],
+    }),
+  ).toMatchObject({ eligibleTargets: ["slot"] });
+});
+
+test("canonical tuple keys ignore insertion order without changing custom object identity", () => {
+  const target = { boardId: "mat", playerId: "alice", spaceId: "slot" };
+  expect(inputValueKey(target)).toBe(
+    inputValueKey({ spaceId: "slot", playerId: "alice", boardId: "mat" }),
+  );
+  expect(inputValueKey({ ...target, payload: 1 })).not.toBe(
+    inputValueKey({ ...target, payload: 2 }),
+  );
+  expect(inputValueKey({ ...target, playerId: "bob" })).not.toBe(
+    inputValueKey(target),
+  );
 });
