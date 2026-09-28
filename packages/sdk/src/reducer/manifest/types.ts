@@ -18,6 +18,7 @@ import type {
   RuntimeCardData,
   RuntimePieceData,
   RuntimeDieData,
+  RuntimeComponentLocation,
   RuntimeBoardState,
   RuntimeGenericBoardState,
   RuntimeHexBoardState,
@@ -201,6 +202,52 @@ type CardState<M> =
 type InferredCards<M> = {
   [Card in CardState<M> as Card["id"]]: Card;
 };
+type SeedState<
+  M,
+  Seed,
+  Definition,
+  Data,
+  TypeKey extends string,
+> = Seed extends { typeId: infer TypeId extends string }
+  ? SeedIds<Seed> extends infer RuntimeId
+    ? RuntimeId extends string
+      ? Omit<Data, "id" | TypeKey | "properties"> & {
+          id: RuntimeId;
+          properties: ObjectFields<
+            Get<Extract<Definition, { id: TypeId }>, "fieldsSchema">,
+            M
+          >;
+        } & Record<TypeKey, TypeId>
+      : never
+    : never
+  : never;
+type PieceState<M> = SeedState<
+  M,
+  Entries<M, "pieceSeeds">,
+  Entries<M, "pieceTypes">,
+  RuntimePieceData,
+  "pieceTypeId"
+>;
+type DieState<M> = SeedState<
+  M,
+  Entries<M, "dieSeeds">,
+  Entries<M, "dieTypes">,
+  RuntimeDieData,
+  "dieTypeId"
+>;
+type EntityAtId<Entity, Id extends string> = Entity extends { id: infer Key }
+  ? Id extends Key
+    ? Entity & { id: Id }
+    : Key extends Id
+      ? Entity
+      : never
+  : never;
+type InferredPieces<M> = {
+  [Id in SeedIds<Entries<M, "pieceSeeds">>]: EntityAtId<PieceState<M>, Id>;
+};
+type InferredDice<M> = {
+  [Id in SeedIds<Entries<M, "dieSeeds">>]: EntityAtId<DieState<M>, Id>;
+};
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
   ? Spaces[keyof Spaces]
@@ -211,26 +258,26 @@ type BoardSpaceId<B> = B extends { layout: "hex" }
 type BoardParts<M, B> = {
   id: RuntimeBoardId<B>;
   baseId: Id<B>;
+  scope: B extends { scope: infer Scope } ? Scope : never;
   fields: BoardField<B, "boardFieldsSchema", M>;
   relations: (Omit<RuntimeHexBoardState["relations"][number], "typeId"> & {
     typeId:
       | Extract<Get<Entry<Get<B, "relations">>, "typeId">, string>
       | (B extends { layout: "hex" | "square" } ? "adjacent" : never);
   })[];
-  spaces: Record<
-    BoardSpaceId<B>,
-    (B extends { layout: "hex" }
+  spaces: {
+    [SpaceId in BoardSpaceId<B>]: (B extends { layout: "hex" }
       ? { q: number; r: number }
       : B extends { layout: "square" }
         ? { row: number; col: number }
         : unknown) & {
-      id: BoardSpaceId<B>;
+      id: SpaceId;
       name?: string | null;
       typeId?: Extract<Get<BoardSpaceEntry<B>, "typeId">, string> | null;
       fields: BoardField<B, "spaceFieldsSchema", M>;
       zoneId?: string | null;
-    }
-  >;
+    };
+  };
 };
 type BoardState<M, B> = B extends { layout: "hex" }
   ? Omit<
@@ -298,6 +345,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
       | "dice"
       | "boards"
       | "resources"
+      | "componentLocations"
     > & {
       boards: InferredBoards<M>;
       playerOrder: PlayerId[];
@@ -307,8 +355,12 @@ export type ManifestTable<M> = AuthoredManifest extends M
         Record<PlayerId, ManifestIdsOf<M>["cardId"][]>
       >;
       cards: InferredCards<M>;
-      pieces: Record<ManifestIdsOf<M>["pieceId"], RuntimePieceData>;
-      dice: Record<ManifestIdsOf<M>["dieId"], RuntimeDieData>;
+      pieces: InferredPieces<M>;
+      dice: InferredDice<M>;
+      componentLocations: Record<
+        ManifestIdsOf<M>["cardId" | "pieceId" | "dieId"],
+        RuntimeComponentLocation
+      >;
       resources: Record<
         PlayerId,
         Record<ManifestIdsOf<M>["resourceId"], number>

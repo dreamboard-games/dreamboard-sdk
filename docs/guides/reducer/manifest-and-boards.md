@@ -8,6 +8,12 @@ export const contract = compileManifest(manifest);
 
 The manifest owns identities, card metadata, zones and static board geometry. Hex topology uses canonical space/edge/vertex identities and shared layout math; generic and square boards use inline data, with no template identity or merging. Static boards enter frame.view.boards through the canonical materializer. See the real Hex manifest and geometry guide for authored shapes.
 
+Inferred tables preserve each card, piece, and die's runtime ID, authored type,
+and property schema. Component IDs are the union of those inventories, so
+component queries and movement commands reject unknown IDs at compile time.
+Board scope and space IDs stay literal; per-player runtime board IDs remain
+patterns whose actual player membership is checked at runtime.
+
 Card `frontImage` and `backImage` are repository paths under `assets/`, such as
 `assets/cards/queen-of-fire.webp`. Hosts publish those files with the game and
 deliver them with the session; card views then carry loadable URLs in the same
