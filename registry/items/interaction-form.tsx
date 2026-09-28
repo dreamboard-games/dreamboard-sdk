@@ -94,11 +94,13 @@ function Control({ control }: { control: InputControl }) {
                 value={value}
                 onChange={(event) =>
                   control.setValue(
-                    control.value.map((previous, row) =>
-                      row === index
-                        ? event.currentTarget.valueAsNumber
-                        : previous,
-                    ),
+                    event.currentTarget.value === ""
+                      ? control.value.filter((_, row) => row !== index)
+                      : control.value.map((previous, row) =>
+                          row === index
+                            ? event.currentTarget.valueAsNumber
+                            : previous,
+                        ),
                   )
                 }
               />

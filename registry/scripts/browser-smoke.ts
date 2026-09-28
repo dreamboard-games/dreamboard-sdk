@@ -205,6 +205,21 @@ try {
           .click();
         await page.getByLabel("counts 1", { exact: true }).fill("2");
         await page
+          .getByRole("button", { name: "Add value", exact: true })
+          .click();
+        await page.getByLabel("counts 2", { exact: true }).fill("4");
+        await page.getByLabel("counts 1", { exact: true }).fill("");
+        await expect(page.getByTestId("scenario-drafts")).toHaveText(
+          JSON.stringify({ "play.batch": { counts: [4] } }),
+        );
+        await expect(page.getByLabel("counts 2", { exact: true })).toHaveCount(
+          0,
+        );
+        await expect(page.getByLabel("counts 1", { exact: true })).toHaveValue(
+          "4",
+        );
+        await page.getByLabel("counts 1", { exact: true }).fill("2");
+        await page
           .getByRole("button", { name: "Add allocation", exact: true })
           .click();
         await page.locator('[data-resource="wood"]').fill("3");

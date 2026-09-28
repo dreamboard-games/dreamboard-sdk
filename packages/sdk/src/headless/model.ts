@@ -303,21 +303,19 @@ export type InputDomainOf<
 > = [CollectorOf<G, K, N>] extends [never]
   ? InputDomain
   : DomainOfCollector<CollectorOf<G, K, N>>;
+// Distribute over collector unions when an interaction key is not yet narrowed.
+type SelectionModeOfCollector<Collector> = Collector extends
+  | { readonly selection: { readonly mode: "many" } }
+  | { readonly domain: (...args: never[]) => { readonly type: "choiceList" } }
+  ? "many"
+  : "single";
 type InputSelectionMode<
   G,
   K extends InteractionKey<G>,
   N extends InputKey<G, K>,
 > = [CollectorOf<G, K, N>] extends [never]
   ? "single" | "many"
-  : CollectorOf<G, K, N> extends
-        | { readonly selection: { readonly mode: "many" } }
-        | {
-            readonly domain: (...args: never[]) => {
-              readonly type: "choiceList";
-            };
-          }
-    ? "many"
-    : "single";
+  : SelectionModeOfCollector<CollectorOf<G, K, N>>;
 
 export interface InputBase<
   G,
