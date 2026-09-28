@@ -73,8 +73,8 @@ Registry metadata follows the official [registry.json](https://ui.shadcn.com/doc
 ## Workspace-bound items
 
 `hand`, `hand-drawer`, `board-targets`, `interaction-form`, `actions` and
-`inspector` import the consuming game's `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export the hook there. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
-not a styled SDK package. `board-targets` requires the board and pan/zoom features;
+`inspector` import the consuming game's `useGame` from `@game`. Map `@game` directly to `ui/game.ts` in TypeScript and Vite, retain `@/*` for other UI imports, and export `useGame`, `useCardDrag`, and `useBoardDrop` from your `createGameHook` binding there. Enable `dragFeature` for `board-targets` and card dragging; `hand` keeps normal selection when no card/drop route is available. The dedicated binding alias survives shadcn import rewriting without modifying installed source. These items are copied source,
+not a styled SDK package. `board-targets` requires the board, drag, and pan/zoom features;
 install only the items supported by the game's binding. It installs a native
 non-passive wheel listener with cleanup, and uses canonical board geometry and
 handlers. App slots own terrain, pieces and optional animation.

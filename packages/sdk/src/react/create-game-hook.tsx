@@ -1,4 +1,13 @@
 import {
+  GameDragProvider,
+  useCardDraggable,
+  useBoardDroppable,
+  type BoardDropOptions,
+  type DragGame,
+} from "./drag.js";
+import type { IdOf } from "../headless/model.js";
+import type { DropTarget, TargetOptions } from "../headless/targets.js";
+import {
   createContext,
   useContext,
   useLayoutEffect,
@@ -81,7 +90,15 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
         lifetime.current?.instance.setOptions(options);
       });
       return instance ? (
-        <Context.Provider value={instance}>{children}</Context.Provider>
+        <Context.Provider value={instance}>
+          {"drag" in instance ? (
+            <GameDragProvider game={instance as unknown as DragGame}>
+              {children}
+            </GameDragProvider>
+          ) : (
+            children
+          )}
+        </Context.Provider>
       ) : null;
     }
 
@@ -121,6 +138,23 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       return children(useGame(selector, { compare }));
     }
 
-    return { GameProvider, useGame, Subscribe };
+    function useCardDrag(
+      cardId: IdOf<Game, "cardId">,
+      options?: TargetOptions<Game>,
+    ) {
+      const game = useGame();
+      return useCardDraggable(
+        game as unknown as DragGame,
+        cardId,
+        options as TargetOptions<unknown> | undefined,
+      );
+    }
+    function useBoardDrop(
+      target: DropTarget<Game> | null,
+      options?: BoardDropOptions,
+    ) {
+      return useBoardDroppable(target as DropTarget<unknown> | null, options);
+    }
+    return { GameProvider, useGame, Subscribe, useCardDrag, useBoardDrop };
   };
 }

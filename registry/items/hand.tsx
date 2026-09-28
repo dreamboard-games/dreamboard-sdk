@@ -1,4 +1,4 @@
-import { useGame } from "@game";
+import { useGame, useCardDrag } from "@game";
 import type { ReactNode } from "react";
 import "./tokens.css";
 type Model = Parameters<Parameters<typeof useGame>[0]>[0];
@@ -26,19 +26,50 @@ export function Hand({
   return (
     <section aria-label={label} className={`db-hand ${className}`}>
       {cards.map((card) => (
-        <button
+        <HandCard
           key={card.id}
-          {...card.getProps()}
-          aria-label={
+          card={card}
+          label={
             getCardLabel?.(card) ??
             (card.hidden ? "Face-down card" : String(card.id))
           }
-          aria-pressed={card.getIsSelected()}
         >
           {renderCard(card)}
-        </button>
+        </HandCard>
       ))}
       {cards.length === 0 && <p>No cards</p>}
     </section>
+  );
+}
+
+function HandCard({
+  card,
+  label,
+  children,
+}: {
+  card: Card;
+  label: string;
+  children: ReactNode;
+}) {
+  const drag = useCardDrag(card.id);
+  return (
+    <div ref={drag.ref} data-dragging={drag.isDragging || undefined}>
+      <button
+        {...card.getProps()}
+        aria-label={label}
+        aria-pressed={card.getIsSelected()}
+      >
+        {children}
+      </button>
+      {drag.canDrag && (
+        <button
+          ref={drag.handleRef}
+          {...drag.handleProps}
+          aria-label={`Drag ${label}`}
+        >
+          Drag
+        </button>
+      )}
+    </div>
   );
 }

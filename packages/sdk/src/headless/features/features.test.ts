@@ -380,11 +380,9 @@ describe("headless features", () => {
     expect(p.captured.size).toBe(0);
   });
 
-  it("routes a card drop atomically, suppresses synthetic clicks, and retains keyboard selection", () => {
+  it("routes a card drop atomically and leaves ordinary selection independent", () => {
     const { game } = setup();
-    const p = pointer();
-    const props = game.cards.get("red").getDragProps();
-    props.onPointerDown(p.event());
+    expect(game.drag.begin("red")).toBe(true);
     expect(game.state.drafts).toEqual({});
     const [target] = game.drag.getDropTargets();
     expect(target).toMatchObject({
@@ -395,40 +393,29 @@ describe("headless features", () => {
       inputKey: "space",
     });
     game.drag.setDropTarget(target!);
-    props.onPointerMove(p.event({ clientX: 30 }));
-    expect(game.drag.active?.offset).toEqual({ x: 20, y: 0 });
-    props.onPointerUp(p.event({ clientX: 30 }));
+    game.drag.drop();
     expect(game.state.drafts["play.move"]).toEqual({
       card: "red",
       space: "center",
     });
-    expect(p.captured.size).toBe(0);
-    const after = game.state.drafts;
-    props.onClick({ detail: 1, preventDefault: vi.fn() });
-    expect(game.state.drafts).toBe(after);
-    game.cards
-      .get("blue")!
-      .getDragProps()
-      .onClick({ detail: 0, preventDefault: vi.fn() });
+    expect(game.drag.active).toBeNull();
+    game.cards.get("blue").select();
     expect(game.state.drafts["play.move"]?.card).toBe("blue");
     game.dispose();
   });
 
-  it("cancels both captures on source replacement, without disabling future gestures", () => {
+  it("cancels drag and viewport on source replacement without disabling future gestures", () => {
     const { game } = setup();
-    const cardPointer = pointer();
     const viewportPointer = pointer();
-    game.cards.get("red").getDragProps().onPointerDown(cardPointer.event());
+    game.drag.begin("red");
     game.viewport.getProps().onPointerDown(viewportPointer.event());
-    const second = source();
-    game.setOptions({ source: second });
-    expect(cardPointer.captured.size).toBe(0);
+    game.setOptions({ source: source() });
     expect(viewportPointer.captured.size).toBe(0);
     expect(game.drag.active).toBeNull();
-    game.cards.get("red").getDragProps().onPointerDown(cardPointer.event());
-    expect(cardPointer.captured.size).toBe(1);
+    expect(game.drag.begin("red")).toBe(true);
+    const retained = game.drag;
     game.dispose();
-    expect(cardPointer.captured.size).toBe(0);
+    expect(retained.begin("red")).toBe(false);
   });
   it("uses per-card narrowed drop domains and captures old target lists", () => {
     const { game, input } = setup();
@@ -453,13 +440,14 @@ describe("headless features", () => {
         },
       });
     emit(["center"]);
-    const p = pointer();
-    game.cards.get("red").getDragProps().onPointerDown(p.event());
+    game.drag.begin("red");
     const old = game.getSnapshot().drag;
     expect(old.getDropTargets().map((target) => target.value)).toEqual([
       "center",
     ]);
     emit(["other"]);
+    expect(game.drag.active).toBeNull();
+    game.drag.begin("red");
     expect(game.drag.getDropTargets().map((target) => target.value)).toEqual([
       "other",
     ]);
@@ -511,19 +499,23 @@ describe("headless features", () => {
     expect(game.zones.get("hand")).not.toHaveProperty("getSelectedCardIds");
     game.dispose();
   });
-  it("does not select after an invalid drag, but keeps a stationary tap", () => {
+  it("leaves drafts untouched on cancellation or a drop without a destination", () => {
     const { game } = setup();
-    const p = pointer();
-    const props = game.cards.get("red").getDragProps();
-    props.onPointerDown(p.event());
-    props.onPointerMove(p.event({ clientX: 90 }));
-    props.onPointerUp(p.event({ clientX: 90 }));
-    props.onClick({ detail: 1, preventDefault: vi.fn() });
+    game.drag.begin("red");
+    game.drag.drop();
     expect(game.state.drafts).toEqual({});
-    const fresh = game.cards.get("red").getDragProps();
-    fresh.onPointerDown(p.event());
-    fresh.onPointerUp(p.event({ clientX: 12 }));
-    expect(game.state.drafts["play.move"]?.card).toBe("red");
+    game.drag.begin("red");
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]!);
+    game.drag.cancel();
+    game.drag.drop();
+    expect(game.state.drafts).toEqual({});
+    game.drag.begin("red");
+    const target = game.drag.getDropTargets()[0]!;
+    game.drag.setDropTarget(target);
+    game.drag.setDropTarget({ ...target, inputKey: "missing" });
+    expect(game.drag.active?.target).toBeNull();
+    game.drag.drop();
+    expect(game.state.drafts).toEqual({});
     game.dispose();
   });
   it("does not route a per-player target absent from its projected domain", () => {
@@ -585,11 +577,7 @@ it("retains both input keys when one interaction has multiple card and board inp
     .select({ interaction: "play.move", input: "secondCard" });
   expect(game.state.drafts["play.move"]).toEqual({ secondCard: "red" });
   game.interactions.get("play.move").reset();
-  const p = pointer();
-  const props = game.cards
-    .get("red")
-    .getDragProps({ interaction: "play.move", input: "secondCard" });
-  props.onPointerDown(p.event());
+  game.drag.begin("red", { interaction: "play.move", input: "secondCard" });
   const targets = game.drag.getDropTargets();
   expect(
     targets.map(({ cardInputKey, inputKey }) => [cardInputKey, inputKey]),
@@ -598,7 +586,7 @@ it("retains both input keys when one interaction has multiple card and board inp
     ["secondCard", "secondSpace"],
   ]);
   game.drag.setDropTarget(targets[1]!);
-  props.onPointerUp(p.event({ clientX: 30 }));
+  game.drag.drop();
   expect(game.state.drafts["play.move"]).toEqual({
     secondCard: "red",
     secondSpace: "center",
@@ -669,6 +657,28 @@ it.each(["shared", "perPlayer"] as const)(
     game.setOptions({ source: source(board) });
     stale();
     expect(game.state.drafts["play.move"]).toBeUndefined();
+    game.dispose();
+  },
+);
+
+it.each(["frame", "seat", "recovering"] as const)(
+  "cancels a pending drop on %s changes",
+  (change) => {
+    const { game, input } = setup();
+    game.drag.begin("red");
+    game.drag.setDropTarget(game.drag.getDropTargets()[0]!);
+    if (change === "recovering") input.recovering();
+    else {
+      const current = input.store.get().snapshot!;
+      input.emit({
+        ...current,
+        version: current.version + 1,
+        me: change === "seat" ? "bob" : current.me,
+      });
+    }
+    expect(game.drag.active).toBeNull();
+    game.drag.drop();
+    expect(game.state.drafts).toEqual({});
     game.dispose();
   },
 );

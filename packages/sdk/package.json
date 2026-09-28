@@ -41,6 +41,9 @@
     "test": "vitest run src"
   },
   "dependencies": {
+    "@dnd-kit/collision": "0.5.0",
+    "@dnd-kit/dom": "0.5.0",
+    "@dnd-kit/react": "0.5.0",
     "@noble/hashes": "catalog:",
     "@tanstack/store": "catalog:",
     "honeycomb-grid": "catalog:"
@@ -51,20 +54,20 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "esbuild": "catalog:",
     "eslint": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "zod": "catalog:",
-    "esbuild": "catalog:"
+    "zod": "catalog:"
   },
   "peerDependencies": {
+    "@tanstack/react-store": "0.11.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "zod": "^4.4.3",
-    "@tanstack/react-store": "0.11.1"
+    "zod": "^4.4.3"
   },
   "publishConfig": {
     "access": "public"

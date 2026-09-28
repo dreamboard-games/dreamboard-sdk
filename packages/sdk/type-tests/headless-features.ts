@@ -46,7 +46,7 @@ board.getLabel();
 board.getLayout({ hexSize: 12, viewport: game.viewport.getTransform() });
 board.game.boards.get("island").getLabel();
 const card = game.zones.get("hand").getCards()[0]!;
-card.getDragProps({ interaction: "playerTurn.pick" });
+game.drag.begin(card.id, { interaction: "playerTurn.pick" });
 card.getBadge();
 const selected: readonly ("card-1" | "card-2")[] = game.zones
   .get("hand")
@@ -57,14 +57,14 @@ game.getSnapshot().drag.getDropTargets();
 bare.boards;
 // @ts-expect-error Disabled drag API is absent.
 bare.drag;
-// @ts-expect-error Disabled per-card APIs are absent.
-bare.cards.get("card-1").getDragProps();
+// @ts-expect-error Drag card identities remain model-bound.
+game.drag.begin("missing");
 // @ts-expect-error Disabled per-zone APIs are absent.
 bare.zones.get("hand").getSelectedCardIds();
 // @ts-expect-error Board identities remain model-bound.
 game.boards.get("unknown");
 // @ts-expect-error Drag interaction identities remain model-bound.
-card.getDragProps({ interaction: "playerTurn.unknown" });
+game.drag.begin(card.id, { interaction: "playerTurn.unknown" });
 void [boardId, selected];
 
 const layout = board.getLayout({ hexSize: 12 });
@@ -76,3 +76,26 @@ layout.getSpaces()[0]!.center = { x: 0, y: 0 };
 layout.getEdges()[0]!.line[0].x = 1;
 // @ts-expect-error Captured viewBox is readonly.
 layout.viewBox.width = 1;
+
+// React hooks keep the same game-specific IDs and correlated input options.
+import { createGameHook } from "../src/react.js";
+const hooks = createGameHook<Game>()({
+  features: (core, context) => ({ drag: dragFeature(core, context) }),
+});
+function useTypedDragProof() {
+  hooks.useCardDrag("card-1", {
+    interaction: "playerTurn.pick",
+    input: "cardId",
+  });
+  // @ts-expect-error Unknown card identity.
+  hooks.useCardDrag("missing");
+  // @ts-expect-error Unknown interaction identity.
+  hooks.useCardDrag("card-1", { interaction: "unknown" });
+  hooks.useCardDrag("card-1", {
+    interaction: "playerTurn.pick",
+    // @ts-expect-error Input belongs to the selected interaction.
+    input: "missing",
+  });
+  hooks.useBoardDrop(null);
+}
+void useTypedDragProof;

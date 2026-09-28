@@ -7,14 +7,14 @@
 <!-- api: reducer createReducerBundle -->
 <!-- api: reducer memoize -->
 
-| Entry   | Constructor                                                    | Result                                                           |
-| ------- | -------------------------------------------------------------- | ---------------------------------------------------------------- |
-| root    | `createGameInstance<Game>()({ source, features, ...options })` | Stable typed instance                                            |
-| react   | `createGameHook<Game>()({ features, ...defaults })`            | `GameProvider`, `useGame`, `Subscribe`                           |
-| reducer | `createGame(model)`                                            | Bound authoring model                                            |
-| reducer | `compileManifest(manifest)`                                    | In-memory manifest contract                                      |
-| reducer | `createReducerBundle(definition)`                              | Authoritative initialize/dispatch/project/boardStatic operations |
-| reducer | `memoize(fn)`                                                  | WeakMap identity cache for one object argument                   |
+| Entry   | Constructor                                                    | Result                                                                |
+| ------- | -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| root    | `createGameInstance<Game>()({ source, features, ...options })` | Stable typed instance                                                 |
+| react   | `createGameHook<Game>()({ features, ...defaults })`            | `GameProvider`, `useGame`, `Subscribe`, `useCardDrag`, `useBoardDrop` |
+| reducer | `createGame(model)`                                            | Bound authoring model                                                 |
+| reducer | `compileManifest(manifest)`                                    | In-memory manifest contract                                           |
+| reducer | `createReducerBundle(definition)`                              | Authoritative initialize/dispatch/project/boardStatic operations      |
+| reducer | `memoize(fn)`                                                  | WeakMap identity cache for one object argument                        |
 
 The React provider requires its own source prop and owns source disposal. Its
 instance is created after commit; children wait until it exists. `useGame()` gives
