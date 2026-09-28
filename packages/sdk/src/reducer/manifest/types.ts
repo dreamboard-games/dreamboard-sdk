@@ -188,23 +188,54 @@ type ObjectFields<S, M> = [S] extends [never]
     : S extends { properties: infer P }
       ? ObjectProperties<P, M>
       : RuntimeRecord;
-type CardFields<S, M> = S extends { variants: infer V }
-  ? ObjectProperties<Get<S, "shared">, M> & ObjectFields<V[keyof V], M>
+type CardFields<S, Category extends string, M> = S extends {
+  variants: infer Variants;
+}
+  ? Category extends keyof Variants
+    ? ObjectFields<
+        {
+          properties: Omit<
+            S extends { shared: infer Shared } ? Shared : Record<never, never>,
+            keyof Get<Variants[Category], "properties">
+          > &
+            Get<Variants[Category], "properties">;
+        },
+        M
+      >
+    : never
   : ObjectFields<S, M>;
-type CardState<M> =
-  CardSets<M> extends infer S
-    ? S extends { id: infer I; cards: unknown }
+type CardStateFor<M, Set, Card> = Card extends {
+  id: infer BaseId extends string;
+  cardType: infer Category extends string;
+  count: infer Count extends number;
+}
+  ? RuntimeIdsFromCount<BaseId, Count> extends infer RuntimeId
+    ? RuntimeId extends string
       ? Omit<
           RuntimeCardData,
           "id" | "cardSetId" | "cardType" | "properties"
         > & {
-          id: ManifestIdsOf<M>["cardId"];
-          cardSetId: I;
-          cardType: ManifestIdsOf<M>["cardType"];
-          properties: CardFields<Get<S, "cardSchema">, M>;
+          id: RuntimeId;
+          cardSetId: Id<Set>;
+          cardType: Category;
+          properties: CardFields<Get<Set, "cardSchema">, Category, M>;
         }
       : never
+    : never
+  : never;
+type CardState<M> =
+  CardSets<M> extends infer Set
+    ? Set extends { cards: infer Cards }
+      ? Entry<Cards> extends infer Card
+        ? Card extends unknown
+          ? CardStateFor<M, Set, Card>
+          : never
+        : never
+      : never
     : never;
+type InferredCards<M> = {
+  [Card in CardState<M> as Card["id"]]: Card;
+};
 type BoardField<B, K extends PropertyKey, M> = ObjectFields<Get<B, K>, M>;
 type BoardSpaceEntry<B> = B extends { layout: "hex"; spaces: infer Spaces }
   ? Spaces[keyof Spaces]
@@ -311,7 +342,7 @@ export type ManifestTable<M> = AuthoredManifest extends M
         ManifestIdsOf<M>["handId"],
         Record<PlayerId, ManifestIdsOf<M>["cardId"][]>
       >;
-      cards: Record<ManifestIdsOf<M>["cardId"], CardState<M>>;
+      cards: InferredCards<M>;
       pieces: Record<ManifestIdsOf<M>["pieceId"], RuntimePieceData>;
       dice: Record<ManifestIdsOf<M>["dieId"], RuntimeDieData>;
       resources: Record<

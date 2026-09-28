@@ -1,0 +1,168 @@
+import { compileManifest } from "../src/reducer/manifest/compiler.js";
+
+const compiled = compileManifest({
+  players: { minPlayers: 1, maxPlayers: 2 },
+  cardSets: [
+    {
+      type: "manual",
+      id: "actions",
+      name: "Actions",
+      defaultHome: { type: "detached" },
+      cardSchema: {
+        shared: {
+          label: { type: "string", default: "shared" },
+          value: { type: "string", default: "shared" },
+          status: { type: "string", optional: true, nullable: true },
+        },
+        variants: {
+          attack: {
+            properties: {
+              value: { type: "integer", default: 3 },
+              damage: { type: "integer", default: 2 },
+              status: { type: "integer", nullable: true, default: 5 },
+            },
+          },
+          defense: {
+            properties: { shield: { type: "boolean", default: true } },
+          },
+        },
+      },
+      cards: [
+        {
+          id: "strike",
+          cardType: "attack",
+          name: "Strike",
+          count: 2,
+          properties: {},
+        },
+        {
+          id: "block",
+          cardType: "defense",
+          name: "Block",
+          count: 1,
+          properties: {},
+        },
+      ],
+    },
+    {
+      type: "manual",
+      id: "spells",
+      name: "Spells",
+      defaultHome: { type: "detached" },
+      cardSchema: {
+        variants: {
+          attack: {
+            properties: { mana: { type: "integer", default: 4 } },
+          },
+        },
+      },
+      cards: [
+        {
+          id: "spark",
+          cardType: "attack",
+          name: "Spark",
+          count: 1,
+          properties: {},
+        },
+      ],
+    },
+  ],
+  zones: [],
+  boards: [],
+});
+
+const table = compiled.createInitialTable();
+const strike = table.cards["strike-1"];
+const secondStrike = table.cards["strike-2"];
+const block = table.cards.block;
+const spark = table.cards.spark;
+
+const strikeId: "strike-1" = strike.id;
+const secondStrikeId: "strike-2" = secondStrike.id;
+const actionSet: "actions" = strike.cardSetId;
+const attackCategory: "attack" = strike.cardType;
+const damage: number = strike.properties.damage;
+const overriddenValue: number = strike.properties.value;
+const sharedLabel: string = strike.properties.label;
+const overriddenStatus: number | null = strike.properties.status;
+const defenseCategory: "defense" = block.cardType;
+const shield: boolean = block.properties.shield;
+const defenseValue: string = block.properties.value;
+const optionalDefenseStatus: string | null | undefined =
+  block.properties.status;
+const spellSet: "spells" = spark.cardSetId;
+const spellAttack: "attack" = spark.cardType;
+const mana: number = spark.properties.mana;
+
+// @ts-expect-error The attack variant has no shield field.
+const noShield = strike.properties.shield;
+// @ts-expect-error The defense variant has no damage field.
+const noDamage = block.properties.damage;
+// @ts-expect-error A shared category in another set does not share fields.
+const noSpellDamage = spark.properties.damage;
+// @ts-expect-error The variant's integer value overrides the shared string.
+const wrongOverride: string = strike.properties.value;
+// @ts-expect-error The variant's required default replaces the optional shared field.
+const missingRequiredStatus: typeof strike.properties = {
+  label: "shared",
+  value: 3,
+  damage: 2,
+};
+// @ts-expect-error Definition ids with multiple copies are suffixed.
+const unsuffixed = table.cards.strike;
+
+const defenseWithoutStatus: typeof block.properties = {
+  label: "shared",
+  value: "shared",
+  shield: true,
+};
+
+for (const card of Object.values(table.cards)) {
+  if (card.cardType === "attack") {
+    // Both sets use this category, so category alone cannot pick a field schema.
+    // @ts-expect-error Spells have no damage field.
+    card.properties.damage;
+    // @ts-expect-error Actions have no mana field.
+    card.properties.mana;
+    if (card.cardSetId === "actions") {
+      const actionId: "strike-1" | "strike-2" = card.id;
+      const actionDamage: number = card.properties.damage;
+      const actionStatus: number | null = card.properties.status;
+      void [actionId, actionDamage, actionStatus];
+    } else {
+      const spellId: "spark" = card.id;
+      const spellMana: number = card.properties.mana;
+      void [spellId, spellMana];
+    }
+  } else {
+    const defenseId: "block" = card.id;
+    const defenseSet: "actions" = card.cardSetId;
+    const defenseShield: boolean = card.properties.shield;
+    void [defenseId, defenseSet, defenseShield];
+  }
+}
+
+void [
+  strikeId,
+  secondStrikeId,
+  actionSet,
+  attackCategory,
+  damage,
+  overriddenValue,
+  sharedLabel,
+  overriddenStatus,
+  defenseCategory,
+  shield,
+  defenseValue,
+  optionalDefenseStatus,
+  spellSet,
+  spellAttack,
+  mana,
+  noShield,
+  noDamage,
+  noSpellDamage,
+  wrongOverride,
+  missingRequiredStatus,
+  unsuffixed,
+  defenseWithoutStatus,
+];
