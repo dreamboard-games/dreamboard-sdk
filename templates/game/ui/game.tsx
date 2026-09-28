@@ -9,7 +9,11 @@ export const { GameProvider, useGame, Subscribe } = createGameHook<
 
 export function Counter() {
   const view = useGame((game) => game.view);
-  const increment = useGame((game) => game.interactions.get("play.increment"));
+  const increment = useGame((game) =>
+    game.interactions
+      .list()
+      .find((interaction) => interaction.key === "play.increment"),
+  );
   if (!view) return <p>Connecting…</p>;
   return (
     <main>

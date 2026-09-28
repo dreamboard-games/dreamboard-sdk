@@ -40,16 +40,16 @@ const game = createGameInstance<Game>()({
     },
   }),
 });
-const board = game.boards.get("island")!;
+const board = game.boards.get("island");
 const boardId: "island" = board.id;
 board.getLabel();
 board.getLayout({ hexSize: 12, viewport: game.viewport.getTransform() });
-board.game.boards.get("island")!.getLabel();
-const card = game.zones.get("hand")!.getCards()[0]!;
+board.game.boards.get("island").getLabel();
+const card = game.zones.get("hand").getCards()[0]!;
 card.getDragProps({ interaction: "playerTurn.pick" });
 card.getBadge();
 const selected: readonly ("card-1" | "card-2")[] = game.zones
-  .get("hand")!
+  .get("hand")
   .getSelectedCardIds();
 game.getSnapshot().viewport.getTransform();
 game.getSnapshot().drag.getDropTargets();
@@ -58,9 +58,9 @@ bare.boards;
 // @ts-expect-error Disabled drag API is absent.
 bare.drag;
 // @ts-expect-error Disabled per-card APIs are absent.
-bare.cards.get("card-1")!.getDragProps();
+bare.cards.get("card-1").getDragProps();
 // @ts-expect-error Disabled per-zone APIs are absent.
-bare.zones.get("hand")!.getSelectedCardIds();
+bare.zones.get("hand").getSelectedCardIds();
 // @ts-expect-error Board identities remain model-bound.
 game.boards.get("unknown");
 // @ts-expect-error Drag interaction identities remain model-bound.

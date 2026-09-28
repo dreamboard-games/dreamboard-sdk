@@ -17,7 +17,7 @@ export function InteractionForm({
   className,
   renderInput,
 }: InteractionFormProps) {
-  const interaction = useGame((game) => game.interactions.get(key));
+  const interaction = useGame((game) => game.interactions.find(key));
   if (!interaction) return null;
   const step = interaction.getStep();
   return (

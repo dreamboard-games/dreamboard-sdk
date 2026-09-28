@@ -38,7 +38,7 @@ export function BoardTargets({
   edgeProps,
   vertexProps,
 }: BoardTargetsProps) {
-  const board = useGame((game) => game.boards.get(boardId));
+  const board = useGame((game) => game.boards.find(boardId));
   const viewport = useGame((game) => game.viewport);
   const surface = useRef<SVGSVGElement>(null);
   const [screenScale, setScreenScale] = useState(1);

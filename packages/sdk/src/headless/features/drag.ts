@@ -61,7 +61,7 @@ export function dragFeature<G>(
   function targets(): readonly DropTarget<G>[] {
     if (!active) return [];
     const cardId = active.cardId;
-    return (game.cards.get(cardId)?.getInteractions() ?? [])
+    return (game.cards.find(cardId)?.getInteractions() ?? [])
       .filter(
         (candidate) =>
           candidate.getIsAvailable() &&
@@ -198,7 +198,7 @@ export function dragFeature<G>(
           onPointerDown: (event: PointerInput) => {
             if (
               disposed ||
-              game.cards.get(this.id) !== this ||
+              game.cards.find(this.id) !== this ||
               !this.getCanSelect()
             )
               return;

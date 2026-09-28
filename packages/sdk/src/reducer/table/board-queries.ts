@@ -1,3 +1,4 @@
+import { requireLookup } from "../../shared/lookup.js";
 import { createHexBoardGeometry } from "../../shared/hex-board";
 import type {
   BoardContainerIdOfTable,
@@ -45,7 +46,11 @@ export function getBoard<
   Table extends RuntimeTableRecord,
   BoardId extends BoardIdOfTable<NoInfer<Table>>,
 >(table: Table, boardId: BoardId): Table["boards"]["byId"][BoardId] {
-  return table.boards.byId[boardId] as Table["boards"]["byId"][BoardId];
+  return requireLookup(
+    table.boards.byId[boardId],
+    "Board",
+    boardId,
+  ) as Table["boards"]["byId"][BoardId];
 }
 
 export function getHexBoard<
@@ -96,9 +101,11 @@ export function getSpace<
   boardId: BoardId,
   spaceId: SpaceId,
 ): Table["boards"]["byId"][BoardId]["spaces"][SpaceId] {
-  return getBoard(table, boardId).spaces[
-    spaceId
-  ] as Table["boards"]["byId"][BoardId]["spaces"][SpaceId];
+  return requireLookup(
+    getBoard(table, boardId).spaces[spaceId],
+    `Space on board ${boardId}`,
+    spaceId,
+  ) as Table["boards"]["byId"][BoardId]["spaces"][SpaceId];
 }
 
 export function getHexSpace<
@@ -113,7 +120,7 @@ export function getHexSpace<
   Table["boards"]["byId"][BoardId],
   { layout: "hex" }
 >["spaces"][SpaceId] {
-  return getHexBoard(table, boardId).spaces[spaceId] as Extract<
+  return getSpace(table, boardId, spaceId) as Extract<
     Table["boards"]["byId"][BoardId],
     { layout: "hex" }
   >["spaces"][SpaceId];
@@ -131,7 +138,7 @@ export function getSquareSpace<
   Table["boards"]["byId"][BoardId],
   { layout: "square" }
 >["spaces"][SpaceId] {
-  return getSquareBoard(table, boardId).spaces[spaceId] as Extract<
+  return getSpace(table, boardId, spaceId) as Extract<
     Table["boards"]["byId"][BoardId],
     { layout: "square" }
   >["spaces"][SpaceId];
@@ -146,9 +153,11 @@ export function getContainer<
   boardId: BoardId,
   containerId: ContainerId,
 ): Table["boards"]["byId"][BoardId]["containers"][ContainerId] {
-  return getBoard(table, boardId).containers[
-    containerId
-  ] as Table["boards"]["byId"][BoardId]["containers"][ContainerId];
+  return requireLookup(
+    getBoard(table, boardId).containers[containerId],
+    `Container on board ${boardId}`,
+    containerId,
+  ) as Table["boards"]["byId"][BoardId]["containers"][ContainerId];
 }
 
 export function getEdge<
@@ -626,10 +635,7 @@ export function bindBoardQueries<
   const common = {
     state,
     space: <SpaceId extends SpaceIdOfTable<Table, BoardId>>(id: SpaceId) => {
-      const space = getSpace(table, boardId, id);
-      if (!space)
-        throw new Error(`Unknown space '${id}' on board '${boardId}'.`);
-      return space;
+      return getSpace(table, boardId, id);
     },
     container: <ContainerId extends BoardContainerIdOfTable<Table, BoardId>>(
       id: ContainerId,

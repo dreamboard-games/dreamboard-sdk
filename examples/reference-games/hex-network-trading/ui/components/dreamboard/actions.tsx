@@ -11,7 +11,7 @@ export interface ActionsProps {
 }
 export function Actions({ interaction: key, className }: ActionsProps) {
   const connection = useGame((game) => game.connection);
-  const interaction = useGame((game) => game.interactions.get(key));
+  const interaction = useGame((game) => game.interactions.find(key));
   if (!interaction) return null;
   const step = interaction.getStep();
   const busy = interaction.getStatus() !== "open" || connection !== "ready";
