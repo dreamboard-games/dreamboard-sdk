@@ -21,7 +21,7 @@ export function Hand({
   getCardLabel,
   sort,
 }: HandProps) {
-  const zone = useGame((game) => game.zones.get(zoneId));
+  const zone = useGame((game) => game.zones.find(zoneId));
   const cards = zone?.getCards({ sort }) ?? [];
   return (
     <section aria-label={label} className={`db-hand ${className}`}>

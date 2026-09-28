@@ -35,11 +35,11 @@ const localHook = createGameHook<Game, typeof local>()({});
 function TypeProof() {
   const game = useGame();
   const value: "ready" | "wait" | undefined = game.inputs
-    .get("playerTurn.pick", "mood")!
+    .get("playerTurn.pick", "mood")
     .suggested();
   game.rolled();
   const selected: "ready" | "wait" | undefined = useGame((snapshot) =>
-    snapshot.inputs.get("playerTurn.pick", "mood")!.getValue(),
+    snapshot.inputs.get("playerTurn.pick", "mood").getValue(),
   );
   useGame((snapshot) => snapshot.rolled());
   const result: Promise<number> = localHook.useGame().apply({ kind: "local" });
@@ -52,7 +52,7 @@ function TypeProof() {
   // @ts-expect-error Automatic phase has no interaction key.
   game.interactions.get("setup.fake");
   // @ts-expect-error Input value retains the authored literal choices.
-  game.inputs.get("playerTurn.pick", "mood")!.setValue("invalid");
+  game.inputs.get("playerTurn.pick", "mood").setValue("invalid");
   void [value, selected, result];
   return createElement(GameProvider, {
     source,

@@ -10,9 +10,9 @@ export default function App() {
   if (!view || !me)
     return <main aria-live="polite">Connecting to Hearts…</main>;
   const playerName = (id: typeof me.id | null) =>
-    id ? (players.get(id)?.name ?? id) : "the table";
+    id ? players.get(id).name : "the table";
   const recipient = players.next(me.id);
-  const passing = game.interactions.get("passing.submit");
+  const passing = game.interactions.find("passing.submit");
   const phaseLabel = phase.switch({
     setup: () => "Shuffling and dealing",
     passing: () => "Sealed pass left",
@@ -22,7 +22,7 @@ export default function App() {
   });
   const status = phase.is("passing")
     ? passing?.getIsAvailable()
-      ? `Select three cards for ${recipient?.name ?? "the next player"}.`
+      ? `Select three cards for ${recipient.name}.`
       : "Your three cards are sealed while the table finishes."
     : phase.is("playing")
       ? turn.isMine
@@ -66,7 +66,7 @@ export default function App() {
           </p>
         )}
         {(phase.is("passing") || phase.is("playing")) && (
-          <HandRow recipientName={recipient?.name ?? "the next player"} />
+          <HandRow recipientName={recipient.name} />
         )}
       </main>
       <aside className="grid content-start gap-4">

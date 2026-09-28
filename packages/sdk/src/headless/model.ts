@@ -110,7 +110,8 @@ export type Board<
   K extends IdOf<G, "boardId"> = IdOf<G, "boardId">,
 > = BoardBase<G, K> & Hook<F, "board"> & { readonly game: GameInstance<G, F> };
 export interface BoardCollection<G, F extends Features = Record<never, never>> {
-  get<K extends IdOf<G, "boardId">>(id: K): Board<G, F, K> | undefined;
+  get<K extends IdOf<G, "boardId">>(id: K): Board<G, F, K>;
+  find<K extends IdOf<G, "boardId">>(id: K): Board<G, F, K> | undefined;
   getAll(): readonly Board<G, F>[];
 }
 type RootHooks<G, F extends Features> = {
@@ -242,7 +243,8 @@ export type Interaction<
 > = InteractionBase<G, K> &
   Hook<F, "interaction"> & {
     readonly game: GameInstance<G, F>;
-    getInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N> | undefined;
+    getInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N>;
+    findInput<N extends InputKey<G, K>>(key: N): Input<G, F, K, N> | undefined;
     getInputs(): readonly Input<G, F, K, InputKey<G, K>>[];
   };
 export type ReadonlyData<T> = T extends readonly (infer Item)[]
@@ -295,7 +297,8 @@ export type Zone<G, F extends Features> = ZoneBase<G> &
     getCards(options?: {
       sort?: (a: Card<G, F>, b: Card<G, F>) => number;
     }): readonly Card<G, F>[];
-    getCard<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
+    getCard<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K>;
+    findCard<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
   };
 export interface ReadModel<G, F extends Features = Record<never, never>> {
   readonly snapshot: SourceSnapshot | null;
@@ -313,13 +316,15 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     getCanAct(): boolean;
   } | null;
   readonly players: {
-    get(id: IdOf<G, "playerId">): Player<G> | undefined;
+    get(id: IdOf<G, "playerId">): Player<G>;
+    find(id: IdOf<G, "playerId">): Player<G> | undefined;
     getAll(): readonly Player<G>[];
-    next(id: IdOf<G, "playerId">): Player<G> | undefined;
+    next(id: IdOf<G, "playerId">): Player<G>;
     readonly order: readonly IdOf<G, "playerId">[];
   };
   readonly interactions: {
-    get<K extends InteractionKey<G>>(key: K): Interaction<G, F, K> | undefined;
+    get<K extends InteractionKey<G>>(key: K): Interaction<G, F, K>;
+    find<K extends InteractionKey<G>>(key: K): Interaction<G, F, K> | undefined;
     list(): readonly Interaction<G, F, InteractionKey<G>>[];
     listAvailable(): readonly Interaction<G, F, InteractionKey<G>>[];
   };
@@ -327,14 +332,20 @@ export interface ReadModel<G, F extends Features = Record<never, never>> {
     get<K extends InteractionKey<G>, N extends InputKey<G, K>>(
       interaction: K,
       input: N,
+    ): Input<G, F, K, N>;
+    find<K extends InteractionKey<G>, N extends InputKey<G, K>>(
+      interaction: K,
+      input: N,
     ): Input<G, F, K, N> | undefined;
   };
   readonly zones: {
-    get(id: IdOf<G, "zoneId">): Zone<G, F> | undefined;
+    get(id: IdOf<G, "zoneId">): Zone<G, F>;
+    find(id: IdOf<G, "zoneId">): Zone<G, F> | undefined;
     getAll(): readonly Zone<G, F>[];
   };
   readonly cards: {
-    get<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
+    get<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K>;
+    find<K extends IdOf<G, "cardId">>(id: K): Card<G, F, K> | undefined;
   };
   readonly events: { readonly recent: readonly GameEvent[] };
 }

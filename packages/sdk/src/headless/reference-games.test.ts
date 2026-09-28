@@ -43,10 +43,10 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
   });
   const game = createGameInstance<typeof hex>()({ source, debug: false });
   const key = "moveBandits.moveBandits" as const;
-  const first = game.interactions.get(key)!;
+  const first = game.interactions.get(key);
   expect(first.getInputs().map((input) => input.key)).toEqual(["hexId"]);
-  first.getInput("hexId")!.setValue("northForest");
-  expect(await game.interactions.get(key)!.submit()).toEqual({
+  first.getInput("hexId").setValue("northForest");
+  expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });
   const saved = source.checkpoint();
@@ -56,27 +56,27 @@ it("uses real Hex committed steps, restore, cancel and explicit null intent", as
       .getInputs()
       .map((input) => input.key),
   ).toEqual(["targetPlayerId"]);
-  expect(game.interactions.get(key)!.getStep()?.selected).toEqual({
+  expect(game.interactions.get(key).getStep()?.selected).toEqual({
     hexId: "northForest",
   });
   expect(game.state.drafts[key]).toBeUndefined();
-  expect(await game.interactions.get(key)!.cancel()).toEqual({
+  expect(await game.interactions.get(key).cancel()).toEqual({
     accepted: true,
   });
-  expect(game.interactions.get(key)!.getStepIndex()).toBe(0);
+  expect(game.interactions.get(key).getStepIndex()).toBe(0);
   source.restore(saved);
-  expect(game.interactions.get(key)!.getStepIndex()).toBe(1);
-  expect(await game.interactions.get(key)!.cancel()).toEqual({
+  expect(game.interactions.get(key).getStepIndex()).toBe(1);
+  expect(await game.interactions.get(key).cancel()).toEqual({
     accepted: true,
   });
-  game.interactions.get(key)!.getInput("hexId")!.setValue("southWestClay");
-  expect(await game.interactions.get(key)!.submit()).toEqual({
+  game.interactions.get(key).getInput("hexId").setValue("southWestClay");
+  expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });
   expect(game.phase.is("moveBandits")).toBe(true);
   expect(game.state.drafts[key]).toBeUndefined();
-  game.interactions.get(key)!.getInput("targetPlayerId")!.setValue(null);
-  expect(await game.interactions.get(key)!.submit()).toEqual({
+  game.interactions.get(key).getInput("targetPlayerId").setValue(null);
+  expect(await game.interactions.get(key).submit()).toEqual({
     accepted: true,
   });
   expect(game.phase.is("main")).toBe(true);

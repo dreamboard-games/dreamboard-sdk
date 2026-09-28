@@ -180,7 +180,7 @@ function pointer() {
 describe("headless features", () => {
   it("sorts projected hands without mutating zone order or exposing hidden data", () => {
     const { game } = setup();
-    const hand = game.zones.get("hand")!;
+    const hand = game.zones.get("hand");
     expect(hand.getSortedCardIds()).toEqual(["blue", "red", "hidden"]);
     expect(hand.getCards().map((card) => card.id)).toEqual([
       "red",
@@ -189,15 +189,15 @@ describe("headless features", () => {
     ]);
     expect(hand.getSelectableCardIds()).toEqual(["red", "blue"]);
     expect(hand.getCards()[2]!.view).toBeNull();
-    game.cards.get("red")!.select();
-    expect(game.zones.get("hand")!.getSelectedCardIds()).toEqual(["red"]);
+    game.cards.get("red").select();
+    expect(game.zones.get("hand").getSelectedCardIds()).toEqual(["red"]);
     expect(hand.getSelectedCardIds()).toEqual([]);
     game.dispose();
   });
 
   it("keeps hex boundary identities and round-trips origin plus viewport coordinates", () => {
     const { game } = setup(hexBoard("island:alice", "alice"));
-    const board = game.boards.get("island:alice")!;
+    const board = game.boards.get("island:alice");
     expect(board.game).toBe(game);
     const layout = board.getLayout({
       hexSize: 24,
@@ -328,7 +328,7 @@ describe("headless features", () => {
       .get("square")!
       .getLayout({ hexSize: 10, viewport: { x: 5, y: 3, scale: 2 } });
     expect(layout.getEdges().map((edge) => edge.id)).toEqual(["authored-edge"]);
-    expect(game.boards.get("square")!.data).toMatchObject({
+    expect(game.boards.get("square").data).toMatchObject({
       edges: expect.arrayContaining([
         { id: "unlocated-boundary", spaceIds: ["a"], fields: {} },
       ]),
@@ -345,11 +345,11 @@ describe("headless features", () => {
       relations: [],
       containers: {},
     });
-    expect(generic.game.boards.get("generic")!.data).toMatchObject({
+    expect(generic.game.boards.get("generic").data).toMatchObject({
       id: "generic",
     });
     expect(() =>
-      generic.game.boards.get("generic")!.getLayout({ hexSize: 10 }),
+      generic.game.boards.get("generic").getLayout({ hexSize: 10 }),
     ).toThrow("no spatial geometry");
     generic.game.dispose();
   });
@@ -383,7 +383,7 @@ describe("headless features", () => {
   it("routes a card drop atomically, suppresses synthetic clicks, and retains keyboard selection", () => {
     const { game } = setup();
     const p = pointer();
-    const props = game.cards.get("red")!.getDragProps();
+    const props = game.cards.get("red").getDragProps();
     props.onPointerDown(p.event());
     expect(game.state.drafts).toEqual({});
     const [target] = game.drag.getDropTargets();
@@ -412,14 +412,14 @@ describe("headless features", () => {
     const { game } = setup();
     const cardPointer = pointer();
     const viewportPointer = pointer();
-    game.cards.get("red")!.getDragProps().onPointerDown(cardPointer.event());
+    game.cards.get("red").getDragProps().onPointerDown(cardPointer.event());
     game.viewport.getProps().onPointerDown(viewportPointer.event());
     const second = source();
     game.setOptions({ source: second });
     expect(cardPointer.captured.size).toBe(0);
     expect(viewportPointer.captured.size).toBe(0);
     expect(game.drag.active).toBeNull();
-    game.cards.get("red")!.getDragProps().onPointerDown(cardPointer.event());
+    game.cards.get("red").getDragProps().onPointerDown(cardPointer.event());
     expect(cardPointer.captured.size).toBe(1);
     game.dispose();
     expect(cardPointer.captured.size).toBe(0);
@@ -448,7 +448,7 @@ describe("headless features", () => {
       });
     emit(["center"]);
     const p = pointer();
-    game.cards.get("red")!.getDragProps().onPointerDown(p.event());
+    game.cards.get("red").getDragProps().onPointerDown(p.event());
     const old = game.getSnapshot().drag;
     expect(old.getDropTargets().map((target) => target.id)).toEqual(["center"]);
     emit(["other"]);
@@ -504,13 +504,13 @@ describe("headless features", () => {
   it("does not select after an invalid drag, but keeps a stationary tap", () => {
     const { game } = setup();
     const p = pointer();
-    const props = game.cards.get("red")!.getDragProps();
+    const props = game.cards.get("red").getDragProps();
     props.onPointerDown(p.event());
     props.onPointerMove(p.event({ clientX: 90 }));
     props.onPointerUp(p.event({ clientX: 90 }));
     props.onClick({ detail: 1, preventDefault: vi.fn() });
     expect(game.state.drafts).toEqual({});
-    const fresh = game.cards.get("red")!.getDragProps();
+    const fresh = game.cards.get("red").getDragProps();
     fresh.onPointerDown(p.event());
     fresh.onPointerUp(p.event({ clientX: 12 }));
     expect(game.state.drafts["play.move"]?.card).toBe("red");
@@ -528,4 +528,19 @@ describe("headless features", () => {
     expect(game.state.drafts).toEqual({});
     game.dispose();
   });
+});
+
+it("reports missing boards and distinguishes card membership from identity", () => {
+  const game = createGameInstance()({
+    source: source(),
+    debug: false,
+    features: (game, context) => ({ board: boardFeature(game, context) }),
+  });
+  expect(() => game.boards.get("missing")).toThrow('Board "missing"');
+  expect(game.boards.find("missing")).toBeUndefined();
+  const hand = game.zones.get("hand");
+  expect(game.cards.get("red")).toBe(hand.getCard("red"));
+  expect(hand.findCard("missing")).toBeUndefined();
+  expect(() => hand.getCard("missing")).toThrow('Card in zone hand "missing"');
+  game.dispose();
 });

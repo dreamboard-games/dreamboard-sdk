@@ -1,3 +1,4 @@
+import { requireLookup } from "../../shared/lookup.js";
 import { AmbiguousTargetError } from "../instance.js";
 import { createHexBoardGeometry } from "../../shared/hex-board.js";
 import type {
@@ -160,6 +161,11 @@ export function boardFeature<G>(
     const byId = new Map(boards.map((board) => [board.id, board]));
     const result: BoardCollection<G> = Object.freeze({
       get<K extends IdOf<G, "boardId">>(id: K) {
+        return requireLookup(byId.get(id), "Board", id) as BoardBase<G, K> & {
+          readonly game: CoreInstance<G>;
+        };
+      },
+      find<K extends IdOf<G, "boardId">>(id: K) {
         return byId.get(id) as
           (BoardBase<G, K> & { readonly game: CoreInstance<G> }) | undefined;
       },

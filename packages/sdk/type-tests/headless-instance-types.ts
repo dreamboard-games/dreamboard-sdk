@@ -38,11 +38,11 @@ function customFeature(core: CoreInstance<Game>) {
     },
   };
 }
-const mood = game.interactions.get("playerTurn.pick")!.getInput("mood")!;
+const mood = game.interactions.get("playerTurn.pick").getInput("mood");
 const inferredMood: "ready" | "wait" | undefined = mood.suggested();
 mood.setValue("wait");
-const id: "card-1" = game.cards.get("card-1")!.id;
-game.cards.get("card-1")!.isSpecial();
+const id: "card-1" = game.cards.get("card-1").id;
+game.cards.get("card-1").isSpecial();
 game.phase.switch({ setup: () => 0, playerTurn: () => 1 });
 game.setOptions({
   source,
@@ -64,15 +64,15 @@ game.cards.get("invalid");
 // @ts-expect-error Unknown interaction.
 game.interactions.get("playerTurn.invalid");
 // @ts-expect-error Unknown input.
-game.interactions.get("playerTurn.pick")!.getInput("invalid");
+game.interactions.get("playerTurn.pick").getInput("invalid");
 // @ts-expect-error Value retains literal choice union.
 mood.setValue("invalid");
 // @ts-expect-error Disabled root feature is absent.
 bare.getRolled();
 // @ts-expect-error Disabled card feature is absent.
-bare.cards.get("card-1")!.isSpecial();
+bare.cards.get("card-1").isSpecial();
 // @ts-expect-error Disabled input feature is absent.
-bare.interactions.get("playerTurn.pick")!.getInput("mood")!.suggested();
+bare.interactions.get("playerTurn.pick").getInput("mood").suggested();
 // @ts-expect-error Hosted sources cannot apply local commands.
 bare.apply({});
 declare const local: CommandSource & {
@@ -85,12 +85,12 @@ void [inferredMood, id, localResult];
 // @ts-expect-error undefined is not a submitted value; clear() owns omission.
 mood.setValue(undefined);
 
-game.cards.get("card-1")!.getInteractions()[0]!.getInputs();
-game.cards.get("card-1")!.getInteractions()[0]!.customLabel();
+game.cards.get("card-1").getInteractions()[0]!.getInputs();
+game.cards.get("card-1").getInteractions()[0]!.customLabel();
 mood.interaction.customLabel();
 game.inspect().getRolled();
 // @ts-expect-error Disabled interaction feature is absent through card navigation.
-bare.cards.get("card-1")!.getInteractions()[0]!.customLabel();
+bare.cards.get("card-1").getInteractions()[0]!.customLabel();
 
 // @ts-expect-error Auto phases do not manufacture interaction keys.
 game.interactions.get("setup.anything");

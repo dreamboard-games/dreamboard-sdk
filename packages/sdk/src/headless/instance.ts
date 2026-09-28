@@ -1,3 +1,4 @@
+import { requireLookup } from "../shared/lookup.js";
 import type { PlayerBoardSpaceTarget } from "../shared/board-target.js";
 import { immutableCopy } from "./sources/immutable.js";
 import { createStore } from "@tanstack/store";
@@ -147,6 +148,13 @@ class InteractionObject {
     return this.descriptor.step?.index ?? null;
   }
   getInput(key: string) {
+    return requireLookup(
+      this.findInput(key),
+      `Input in interaction ${this.key}`,
+      key,
+    );
+  }
+  findInput(key: string) {
     return this.inputObjects.find((input) => input.key === key);
   }
   getInputs() {
@@ -420,6 +428,9 @@ class ZoneObject {
     return this.count === 0;
   }
   getCard(id: string) {
+    return requireLookup(this.findCard(id), `Card in zone ${this.id}`, id);
+  }
+  findCard(id: string) {
     return this.cards.find((card) => card.id === id);
   }
   getCards(options?: { sort?: (a: CardObject, b: CardObject) => number }) {
@@ -708,7 +719,7 @@ class Controller {
     return base;
   }
   current(key: string) {
-    return this.store.get().interactions.get(key) as unknown as
+    return this.store.get().interactions.find(key) as unknown as
       InteractionObject | undefined;
   }
   editable(key: string) {
@@ -722,11 +733,11 @@ class Controller {
   }
   setInput(key: string, inputKey: string, value: RuntimeJson) {
     const interaction = this.editable(key);
-    if (!interaction?.getInput(inputKey)) return;
+    if (!interaction?.findInput(inputKey)) return;
     this.writeDraft(key, { ...this.drafts()[key], [inputKey]: value });
   }
   clearInput(key: string, inputKey: string) {
-    if (!this.editable(key)?.getInput(inputKey)) return;
+    if (!this.editable(key)?.findInput(inputKey)) return;
     const value = { ...this.drafts()[key] };
     delete value[inputKey];
     this.writeDraft(key, value);
@@ -752,7 +763,7 @@ class Controller {
         this.pending)
     )
       return;
-    const input = interaction?.getInput(inputKey);
+    const input = interaction?.findInput(inputKey);
     if (!interaction || !input?.getIsEligible(value)) return;
     if (
       isManyInput(input.descriptor) ||
@@ -787,7 +798,7 @@ class Controller {
       this.handle(() => this.submit(key, false));
   }
   selectCard(id: string, explicit?: string) {
-    const card = this.store.get().cards.get(id) as unknown as
+    const card = this.store.get().cards.find(id) as unknown as
       CardObject | undefined;
     if (!card) return;
     let routes = card.routes.filter(
@@ -1107,7 +1118,7 @@ class Controller {
       this.sourceState.connection !== "ready"
     )
       return;
-    const card = this.store.get().cards.get(cardId) as unknown as
+    const card = this.store.get().cards.find(cardId) as unknown as
       CardObject | undefined;
     if (!card) return;
     const candidates = card.routes.flatMap((interaction) => {
@@ -1226,13 +1237,23 @@ class Controller {
         ? previous.players
         : {
             order: Object.freeze(playerObjects.map((p) => p.id)),
-            get: (id: string) => playerObjects.find((p) => p.id === id),
+            get: (id: string) =>
+              requireLookup(
+                playerObjects.find((p) => p.id === id),
+                "Player",
+                id,
+              ),
+            find: (id: string) => playerObjects.find((p) => p.id === id),
             getAll: () => playerObjects,
             next: (id: string) => {
               const index = playerObjects.findIndex((p) => p.id === id);
-              return index < 0
-                ? undefined
-                : playerObjects[(index + 1) % playerObjects.length];
+              return requireLookup(
+                index < 0
+                  ? undefined
+                  : playerObjects[(index + 1) % playerObjects.length],
+                "Next player after",
+                id,
+              );
             },
           };
     const me =
@@ -1241,7 +1262,7 @@ class Controller {
         : snapshot
           ? {
               id: snapshot.me,
-              player: players.get(snapshot.me)!,
+              player: players.get(snapshot.me),
               getCanAct: () =>
                 snapshot.frame.availableInteractions.some(
                   (value) => value.availability.status === "available",
@@ -1293,6 +1314,14 @@ class Controller {
       : {
           get: (key: string) => {
             this.observed.add(key);
+            return requireLookup(
+              interactionObjects.find((value) => value.key === key),
+              "Interaction",
+              key,
+            );
+          },
+          find: (key: string) => {
+            this.observed.add(key);
             return interactionObjects.find((value) => value.key === key);
           },
           list: () => {
@@ -1312,7 +1341,13 @@ class Controller {
         ? previous.inputs
         : {
             get: (key: string, name: string) =>
-              interactions.get(key)?.getInput(name),
+              requireLookup(
+                interactions.find(key)?.findInput(name),
+                `Input in interaction ${key}`,
+                name,
+              ),
+            find: (key: string, name: string) =>
+              interactions.find(key)?.findInput(name),
           };
     const zonesSame = sameSnapshot && interactionsSame && previous;
     const zones = zonesSame
@@ -1360,7 +1395,13 @@ class Controller {
               ),
           );
           return {
-            get: (id: string) => objects.find((zone) => zone.id === id),
+            get: (id: string) =>
+              requireLookup(
+                objects.find((zone) => zone.id === id),
+                "Zone",
+                id,
+              ),
+            find: (id: string) => objects.find((zone) => zone.id === id),
             getAll: () => Object.freeze(objects),
           };
         })();
@@ -1368,9 +1409,18 @@ class Controller {
       ? previous.cards
       : {
           get: (id: string) =>
+            requireLookup(
+              zones
+                .getAll()
+                .map((zone) => zone.findCard(id))
+                .find((card) => card !== undefined),
+              "Card",
+              id,
+            ),
+          find: (id: string) =>
             zones
               .getAll()
-              .map((zone) => zone.getCard(id))
+              .map((zone) => zone.findCard(id))
               .find((card) => card !== undefined),
         };
     const capturedState =

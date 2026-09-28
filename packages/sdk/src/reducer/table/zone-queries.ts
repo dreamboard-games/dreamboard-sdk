@@ -1,3 +1,4 @@
+import { requireLookup } from "../../shared/lookup.js";
 import type { CardCollection, ViewCard } from "../../shared/domain/cards.js";
 import type { ViewSlotOccupant } from "../../shared/domain/slots.js";
 import type {
@@ -212,7 +213,11 @@ export function getCard<
   Table extends RuntimeTableRecord,
   CardId extends CardIdOfTable<NoInfer<Table>>,
 >(table: Table, cardId: CardId): ViewCardForTable<Table, CardId> {
-  const card = table.cards[cardId] as Table["cards"][CardId];
+  const card = requireLookup(
+    table.cards[cardId],
+    "Card",
+    cardId,
+  ) as Table["cards"][CardId];
 
   return {
     id: card.id,
@@ -232,15 +237,12 @@ export function getCardsById<
   table: Table,
   cardIds: CardIds,
 ): Readonly<{
-  [Id in CardIds[number]]: ViewCardForTable<Table, Id> | undefined;
+  [Id in CardIds[number]]: ViewCardForTable<Table, Id>;
 }> {
   return Object.fromEntries(
-    cardIds.map((cardId) => [
-      cardId,
-      table.cards[cardId] ? getCard(table, cardId) : undefined,
-    ]),
+    cardIds.map((cardId) => [cardId, getCard(table, cardId)]),
   ) as Readonly<{
-    [Id in CardIds[number]]: ViewCardForTable<Table, Id> | undefined;
+    [Id in CardIds[number]]: ViewCardForTable<Table, Id>;
   }>;
 }
 

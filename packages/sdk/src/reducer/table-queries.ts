@@ -1,3 +1,4 @@
+import { requireLookup } from "../shared/lookup.js";
 import { bindBoardQueries } from "./table/board-queries";
 import type {
   BoardIdOfTable,
@@ -111,10 +112,13 @@ export function createTableQueries<Table extends RuntimeTableRecord>(
       data: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) =>
-        (table.cards[componentId] ??
-          table.pieces[componentId] ??
-          table.dice[componentId]) as
-          ComponentDataOfTable<Table, ComponentId> | undefined,
+        requireLookup(
+          table.cards[componentId] ??
+            table.pieces[componentId] ??
+            table.dice[componentId],
+          "Component",
+          componentId,
+        ) as ComponentDataOfTable<Table, ComponentId>,
       location: <ComponentId extends ComponentIdOfTable<Table>>(
         componentId: ComponentId,
       ) => getComponentLocation(table, componentId),

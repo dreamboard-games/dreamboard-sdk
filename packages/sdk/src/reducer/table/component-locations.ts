@@ -1,3 +1,4 @@
+import { requireLookup } from "../../shared/lookup.js";
 import type {
   BoardContainerIdOfTable,
   BoardIdOfTable,
@@ -35,9 +36,12 @@ export function getComponentLocation<
 >(
   table: Table,
   componentId: ComponentId,
-): ComponentLocationOfTable<Table, ComponentId> | undefined {
-  return table.componentLocations[componentId] as
-    ComponentLocationOfTable<Table, ComponentId> | undefined;
+): ComponentLocationOfTable<Table, ComponentId> {
+  return requireLookup(
+    table.componentLocations[componentId],
+    "Component location",
+    componentId,
+  ) as ComponentLocationOfTable<Table, ComponentId>;
 }
 
 export function getComponentDeckLocation<
@@ -48,7 +52,7 @@ export function getComponentDeckLocation<
   componentId: ComponentId,
 ): ResolvedDeckLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "InDeck") {
+  if (location.type !== "InDeck") {
     return null;
   }
 
@@ -68,7 +72,7 @@ export function getComponentHandLocation<
   componentId: ComponentId,
 ): ResolvedHandLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "InHand") {
+  if (location.type !== "InHand") {
     return null;
   }
 
@@ -92,7 +96,7 @@ export function getComponentZoneLocation<
   componentId: ComponentId,
 ): ResolvedZoneLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "InZone") {
+  if (location.type !== "InZone") {
     return null;
   }
 
@@ -111,7 +115,7 @@ export function getComponentSpaceLocation<
   componentId: ComponentId,
 ): ResolvedSpaceLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "OnSpace") {
+  if (location.type !== "OnSpace") {
     return null;
   }
 
@@ -135,7 +139,7 @@ export function getComponentContainerLocation<
   componentId: ComponentId,
 ): ResolvedContainerLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "InContainer") {
+  if (location.type !== "InContainer") {
     return null;
   }
 
@@ -162,7 +166,7 @@ export function getComponentEdgeLocation<
   componentId: ComponentId,
 ): ResolvedEdgeLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "OnEdge") {
+  if (location.type !== "OnEdge") {
     return null;
   }
 
@@ -186,7 +190,7 @@ export function getComponentVertexLocation<
   componentId: ComponentId,
 ): ResolvedVertexLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "OnVertex") {
+  if (location.type !== "OnVertex") {
     return null;
   }
 
@@ -213,7 +217,7 @@ export function getComponentSlotLocation<
   componentId: ComponentId,
 ): ResolvedSlotLocation<Table, ComponentId> | null {
   const location = getComponentLocation(table, componentId);
-  if (location?.type !== "InSlot") {
+  if (location.type !== "InSlot") {
     return null;
   }
 

@@ -173,10 +173,10 @@ test("source replacement keeps the instance and discards old source intent", asy
     </GameProvider>,
   );
   const first = game;
-  await act(async () => game.inputs.get("play.move", "choice")!.setValue("a"));
+  await act(async () => game.inputs.get("play.move", "choice").setValue("a"));
   let pending!: Promise<unknown>;
   await act(async () => {
-    pending = game.interactions.get("play.move")!.submit();
+    pending = game.interactions.get("play.move").submit();
   });
   const rejection = expect(pending).rejects.toThrow();
   await mounted.render(
@@ -203,7 +203,7 @@ test("controlled drafts use current callbacks and preserve newer edits through A
     game = useGame();
     return (
       <span>
-        {String(game.inputs.get("play.move", "choice")!.getValue() ?? "empty")}
+        {String(game.inputs.get("play.move", "choice").getValue() ?? "empty")}
       </span>
     );
   }
@@ -229,16 +229,16 @@ test("controlled drafts use current callbacks and preserve newer edits through A
     );
   }
   const mounted = await mount(<Owner callback={first} />);
-  await act(async () => game.inputs.get("play.move", "choice")!.setValue("a"));
+  await act(async () => game.inputs.get("play.move", "choice").setValue("a"));
   expect(mounted.host.textContent).toBe("a");
   await mounted.render(<Owner callback={current} />);
-  await act(async () => game.inputs.get("play.move", "choice")!.setValue("b"));
+  await act(async () => game.inputs.get("play.move", "choice").setValue("b"));
   expect(current).toHaveBeenLastCalledWith({ "play.move": { choice: "b" } });
   expect(first).toHaveBeenCalledTimes(1);
-  await act(async () => game.inputs.get("play.move", "choice")!.setValue("a"));
+  await act(async () => game.inputs.get("play.move", "choice").setValue("a"));
   let pending!: Promise<unknown>;
   await act(async () => {
-    pending = game.interactions.get("play.move")!.submit();
+    pending = game.interactions.get("play.move").submit();
   });
   await act(async () => edit({ "play.move": { choice: "b" } }));
   await act(async () => {

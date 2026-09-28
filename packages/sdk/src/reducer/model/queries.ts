@@ -54,7 +54,7 @@ type CardsByIdOfTable<
   Table extends RuntimeTableRecord,
   CardIds extends readonly CardIdOfTable<Table>[],
 > = Readonly<{
-  [Id in CardIds[number]]: ViewCardOfTable<Table, Id> | undefined;
+  [Id in CardIds[number]]: ViewCardOfTable<Table, Id>;
 }>;
 
 type DeckCardsForZone<
@@ -406,10 +406,10 @@ export type TableQueries<Table extends RuntimeTableRecord> = {
   component: {
     data: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
-    ) => ComponentDataOfTable<Table, ComponentId> | undefined;
+    ) => ComponentDataOfTable<Table, ComponentId>;
     location: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
-    ) => ComponentLocationOfTable<Table, ComponentId> | undefined;
+    ) => ComponentLocationOfTable<Table, ComponentId>;
     deck: <ComponentId extends ComponentIdOfTable<Table>>(
       componentId: ComponentId,
     ) => ResolvedDeckLocation<Table, ComponentId> | null;

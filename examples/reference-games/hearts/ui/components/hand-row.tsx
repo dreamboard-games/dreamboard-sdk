@@ -7,8 +7,8 @@ import { comparePlayingCards } from "./cards";
 export function HandRow({ recipientName }: { recipientName: string }) {
   const game = useGame();
   const passing = game.phase.is("passing");
-  const play = game.interactions.get("playing.playCard");
-  const selected = game.zones.get("hand")?.getSelectedCardIds() ?? [];
+  const play = game.interactions.find("playing.playCard");
+  const selected = game.zones.find("hand")?.getSelectedCardIds() ?? [];
   const byId = new Map(game.view?.hand.map((card) => [card.id, card]));
   return (
     <section className="grid gap-3" aria-label="Your cards">
@@ -58,7 +58,7 @@ export function HandRow({ recipientName }: { recipientName: string }) {
               ? ` · ${selected.map((id) => byId.get(id)?.name ?? id).join(", ")}`
               : ""}
           </p>
-          {game.interactions.get("passing.submit")?.getIsAvailable() && (
+          {game.interactions.find("passing.submit")?.getIsAvailable() && (
             <Actions
               interaction="passing.submit"
               className="flex flex-wrap gap-3 [&_button]:min-h-11 [&_button]:rounded-xl [&_button]:border-2 [&_button]:border-slate-900 [&_button]:bg-white [&_button]:px-4 [&_button]:py-2 [&_button]:disabled:opacity-50"
