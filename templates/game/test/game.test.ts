@@ -55,6 +55,8 @@ test("the hosted entry excludes executable game and testing code", async () => {
     format: "esm",
     write: false,
     metafile: true,
+    // This proof inspects executable imports; Vite and compiler tests compile CSS.
+    loader: { ".css": "empty" },
   });
   const inputs = Object.keys(result.metafile.inputs);
   expect(inputs.some((path) => /(?:^|\/)app\//.test(path))).toBe(false);
