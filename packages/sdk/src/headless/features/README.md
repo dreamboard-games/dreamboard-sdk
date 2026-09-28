@@ -5,14 +5,14 @@ They add no DOM, React, CSS dependencies, or executable game imports.
 
 - `handFeature` adds zone helpers for sorted, selected, and selectable card IDs.
   Sorting reads projected data; core card handlers own selection and ambiguity.
-- `boardFeature` adds `boards.get/getAll` and `board.getLayout`. Layout spaces,
+- `boardFeature` adds `boards.get/find/getAll`, `board.spaces`, and `board.getLayout`. Layout spaces,
   edges, and vertices expose captured eligibility/selection and native target
   props. Static metadata remains in `board.data` and each layout element's data.
   Hex geometry and IDs come from the shared honeycomb authority. Square cells
   use declared row/column coordinates; shared edges/vertices retain authored IDs.
   Square metadata with insufficient incidence to locate a unique line/corner
   (especially one-owner boundary entries) remains in `board.data` but is omitted
-  from spatial layout. Generic boards expose data; `getLayout` reports that they
+  from spatial layout. Generic boards expose semantic spaces with selection handlers; `getLayout` reports that they
   have no spatial geometry. No sides, corners, or topology are guessed.
 - `dragFeature` adds `card.getDragProps` and immutable `game.drag.active` state.
   Use the current drag's `getDropTargets()` and `setDropTarget()` with the

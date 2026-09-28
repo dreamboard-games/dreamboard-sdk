@@ -65,6 +65,7 @@ try {
           "hex-opening": "setupCamp",
           "resource-partial-draft": "play",
           "player-board-targets": "play",
+          "generic-board-spaces": "play",
           "hex-discard": "discardBarrier",
           "hex-production": "main",
           "hex-growing-network": "main",
@@ -107,12 +108,18 @@ try {
           await expect(label).toHaveCSS("pointer-events", "all");
         }
       }
-      if (story.id.endsWith("player-board-targets")) {
+      if (
+        story.id.endsWith("player-board-targets") ||
+        story.id.endsWith("generic-board-spaces")
+      ) {
+        const boardControl = story.id.endsWith("generic-board-spaces")
+          ? "section button"
+          : "svg";
         const own = page.locator(
-          'svg [data-board="mat:player-1"][data-action="select"]',
+          `${boardControl}[data-board="mat:player-1"][data-action="select"], ${boardControl} [data-board="mat:player-1"][data-action="select"]`,
         );
         const opponent = page.locator(
-          'svg [data-board="mat:player-2"][data-action="select"]',
+          `${boardControl}[data-board="mat:player-2"][data-action="select"], ${boardControl} [data-board="mat:player-2"][data-action="select"]`,
         );
         await own.focus();
         await page.keyboard.press("Enter");

@@ -612,3 +612,63 @@ it("retains both input keys when one interaction has multiple card and board inp
   expect(game.state.drafts["play.move"]).toEqual({ secondSpace: "center" });
   game.dispose();
 });
+
+it("shares semantic space handlers with geometry and captures immutable selection", () => {
+  const { game } = setup();
+  const board = game.boards.get("island");
+  const space = board.spaces.get("center");
+  expect(board.spaces).toBe(board.spaces);
+  expect(board.spaces.getAll()).toEqual([space]);
+  expect(space.board).toBe(board);
+  const spatial = board.getLayout({ hexSize: 20 }).getSpaces()[0]!;
+  expect(spatial.getSelectHandler).toBe(space.getSelectHandler);
+  expect(spatial.getTargetProps).toBe(space.getTargetProps);
+  space.getSelectHandler({ interaction: "play.move" })();
+  expect(game.state.drafts["play.move"]).toEqual({ space: "center" });
+  expect(space.getIsSelected()).toBe(false);
+  expect(game.boards.get("island").spaces.get("center").getIsSelected()).toBe(
+    true,
+  );
+  expect(board.spaces.find("missing")).toBeUndefined();
+  expect(() => board.spaces.get("missing")).toThrow(
+    'Space on board island "missing"',
+  );
+  game.dispose();
+});
+
+it.each(["shared", "perPlayer"] as const)(
+  "selects generic %s spaces without constructing geometry",
+  (scope) => {
+    const board: RuntimeBoardState = {
+      id: scope === "shared" ? "island" : "island:alice",
+      baseId: "island",
+      playerId: scope === "perPlayer" ? "alice" : null,
+      scope,
+      layout: "generic",
+      fields: {},
+      spaces: { center: { id: "center", fields: { score: 2 } } },
+      containers: {},
+      relations: [],
+    };
+    const { game } = setup(board);
+    const space = game.boards.get(board.id).spaces.get("center");
+    expect(space.getIsEligible()).toBe(true);
+    expect(space.data.fields).toEqual({ score: 2 });
+    space.getSelectHandler({ interaction: "play.move" })();
+    expect(game.state.drafts["play.move"]).toEqual({
+      space:
+        scope === "shared"
+          ? "center"
+          : {
+              boardId: "island",
+              playerId: "alice",
+              spaceId: "center",
+            },
+    });
+    const stale = space.getSelectHandler({ interaction: "play.move" });
+    game.setOptions({ source: source(board) });
+    stale();
+    expect(game.state.drafts["play.move"]).toBeUndefined();
+    game.dispose();
+  },
+);
