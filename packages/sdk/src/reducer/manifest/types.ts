@@ -24,12 +24,19 @@ import type {
   RuntimeSquareBoardState,
 } from "../model";
 import type { PlayerId } from "../per-player";
+import type { RuntimeIdsFromCount } from "./identity-types.js";
 
 type ReadonlyValue<T> = T extends readonly (infer V)[]
   ? readonly ReadonlyValue<V>[]
   : T extends object
     ? { readonly [K in keyof T]: ReadonlyValue<T[K]> }
     : T;
+declare const validatedManifest: unique symbol;
+/** Authored topology that passed the SDK's semantic validation. */
+export type ValidatedManifest<M extends AuthoredManifest = AuthoredManifest> =
+  ReadonlyValue<M> & { readonly [validatedManifest]: true };
+
+declare const compiledManifest: unique symbol;
 export type AuthoredManifest = ReadonlyValue<GameTopologyManifest>;
 type Entry<T> = T extends readonly (infer V)[] ? V : never;
 type Get<T, K extends PropertyKey> = T extends unknown
@@ -39,30 +46,14 @@ type Get<T, K extends PropertyKey> = T extends unknown
   : never;
 type Entries<M, K extends PropertyKey> = Entry<Get<M, K>>;
 type Id<T> = T extends { id: infer I extends string } ? I : never;
-type NumberRange<N extends number, A extends number[] = []> = number extends N
-  ? number
-  : A["length"] extends 64
-    ? number
-    : A["length"] extends N
-      ? A[number] | N
-      : NumberRange<N, [...A, A["length"]]>;
-type InstanceIds<Base extends string, Count> = [Count] extends [never]
-  ? Base
-  : Count extends number
-    ? number extends Count
-      ? Base | `${Base}-${number}`
-      : Count extends 0 | 1
-        ? Base
-        : `${Base}-${Exclude<NumberRange<Count>, 0>}`
-    : Base;
 type SeedIds<S> = S extends { typeId: infer T extends string }
-  ? InstanceIds<
+  ? RuntimeIdsFromCount<
       S extends { id: infer I extends string } ? I : T,
       Get<S, "count">
     >
   : never;
 type CardIds<C> = C extends { type: infer T extends string }
-  ? InstanceIds<T, Get<C, "count">>
+  ? RuntimeIdsFromCount<T, Get<C, "count">>
   : never;
 type StandardSuit = "SPADES" | "HEARTS" | "CLUBS" | "DIAMONDS";
 type StandardRank =
@@ -337,6 +328,7 @@ export type CompiledManifest<M extends AuthoredManifest> = Omit<
   >,
   "ids" | "literals" | "records" | "staticBoards"
 > & {
+  readonly [compiledManifest]: true;
   staticBoards: Pick<InferredBoards<M>, "byId" | "hex" | "square">;
   literals: Omit<
     ReducerManifestContract<

@@ -1,3 +1,6 @@
+import { assertValidManifest } from "./manifest-validation";
+import type { ValidatedManifest } from "./types";
+import type { ManifestCountValidation } from "./identity-types";
 import type {
   HexSpaceId,
   HexEdgeId,
@@ -10,6 +13,7 @@ import type {
   GameTopologyManifest as ApiGameTopologyManifest,
   JsonValue,
 } from "../../shared/domain/contracts.js";
+import type { RuntimeIdsFromCount } from "./identity-types.js";
 
 type DieTypeSpec = Omit<ApiDieTypeSpec, "sides"> & {
   sides?: ApiDieTypeSpec["sides"];
@@ -104,14 +108,6 @@ type ContainerIdForBoard<
   Manifest extends GameTopologyManifest,
   CurrentBoardId extends BoardId<Manifest>,
 > = ContainerIdOf<BoardOf<Manifest, CurrentBoardId>>;
-
-type RuntimeIdsFromCount<BaseId extends string, Count> = Count extends number
-  ? number extends Count
-    ? BaseId | `${BaseId}-${number}`
-    : Count extends 1
-      ? BaseId
-      : `${BaseId}-${OneTo<Count>}`
-  : BaseId;
 
 type CardRuntimeId<Card> = Card extends { type: infer TypeId extends string }
   ? RuntimeIdsFromCount<
@@ -1041,11 +1037,17 @@ type TopologyManifestValidation<Manifest> =
     : GameTopologyManifest;
 
 type DefinedTopologyManifest<Manifest> = Manifest extends GameTopologyManifest
-  ? Manifest
-  : GameTopologyManifest;
+  ? ValidatedManifest<Manifest>
+  : ValidatedManifest<GameTopologyManifest>;
 
 export function defineTopologyManifest<const Manifest>(
-  manifest: Manifest & TopologyManifestValidation<NoInfer<Manifest>>,
+  manifest: Manifest &
+    TopologyManifestValidation<NoInfer<Manifest>> &
+    ManifestCountValidation<NoInfer<Manifest>>,
 ): DefinedTopologyManifest<Manifest> {
-  return manifest as DefinedTopologyManifest<Manifest>;
+  const validated = structuredClone(manifest);
+  assertValidManifest(
+    validated as unknown as import("../../shared/domain/manifest").GameTopologyManifest,
+  );
+  return validated as DefinedTopologyManifest<Manifest>;
 }

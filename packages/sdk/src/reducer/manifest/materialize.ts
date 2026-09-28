@@ -34,7 +34,7 @@ import {
   materializeCardSet,
 } from "./preset-card-sets.js";
 
-import { validateManifestAuthoring } from "./manifest-validation.js";
+import { assertValidManifest } from "./manifest-validation.js";
 
 interface AnalyzedGenericBoard {
   layout: "generic";
@@ -732,6 +732,7 @@ export function analyzeManifest(
   inputManifest: GameTopologyManifest,
   runtimePlayerIds?: readonly string[],
 ): ManifestAnalysis {
+  assertValidManifest(inputManifest);
   const manifest = addStandardDecksIfNeeded(inputManifest);
   const playerIds = runtimePlayerIds
     ? [...runtimePlayerIds]
@@ -1285,13 +1286,6 @@ export function materializeManifestTable(options: {
   playerIds: readonly string[];
   shuffleItems: <Value>(values: readonly Value[]) => Value[];
 }): Record<string, unknown> {
-  const validation = validateManifestAuthoring(options.manifest);
-  if (validation.errors.length > 0) {
-    throw new Error(
-      `Cannot materialize invalid topology manifest:\n${validation.errors.join("\n")}`,
-    );
-  }
-
   const analysis = analyzeManifest(options.manifest, options.playerIds);
   const manifest = analysis.manifest;
   const playerIds = [...options.playerIds];

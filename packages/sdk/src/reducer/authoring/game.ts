@@ -1,3 +1,4 @@
+import type { ManifestCountValidation } from "../manifest/identity-types";
 import type { RuntimeRecord } from "../model/table";
 import { compileManifest } from "../manifest/compiler";
 import type {
@@ -6,12 +7,9 @@ import type {
   ManifestTable,
 } from "../manifest/types";
 import type {
-  PhaseMapOf,
-  ReducerGameDefinition,
   ReducerManifestContract,
   RuntimeTableRecord,
   SchemaLike,
-  ViewOfContract,
 } from "../model";
 import { createContractAuthoring } from "./contract-authoring";
 import {
@@ -19,27 +17,6 @@ import {
   type DefinedGameContract,
   type ReducerGameContractInput,
 } from "./contract";
-import type { AnyReducerGameContract } from "./types";
-import {
-  validateDefineGamePhaseNames,
-  validateDefineGameSimultaneousPhases,
-} from "./validation";
-
-export function defineGameDefinition<
-  const Contract extends AnyReducerGameContract,
-  Definitions extends PhaseMapOf<Contract>,
-  View extends ViewOfContract<Contract>,
->(
-  definition: { contract: Contract } & Omit<
-    ReducerGameDefinition<NoInfer<Contract>, Definitions, View>,
-    "contract"
-  >,
-): ReducerGameDefinition<Contract, Definitions, View> {
-  validateDefineGamePhaseNames(definition);
-  validateDefineGameSimultaneousPhases(definition);
-  return definition;
-}
-
 /**
  * Creates the bound authoring object for a model without assembling the game.
  *
@@ -59,7 +36,7 @@ export function createGame<
     Record<string, never>
   >,
 >(model: {
-  manifest: Manifest;
+  manifest: Manifest & ManifestCountValidation<NoInfer<Manifest>>;
   state: { public: PublicSchema; private: PrivateSchema; hidden: HiddenSchema };
   phases: Phases;
   errors?: Errors;

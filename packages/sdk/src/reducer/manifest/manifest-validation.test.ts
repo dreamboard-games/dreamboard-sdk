@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
 import type { GameTopologyManifest } from "../../shared/domain/manifest.js";
+import { compileManifest } from "./compiler.js";
 import { validateManifestAuthoring } from "./manifest-validation.js";
 
 const BASE_MANIFEST: GameTopologyManifest = {
@@ -479,8 +480,8 @@ test("validateManifestAuthoring rejects reserved record keys before generation",
   );
 });
 
-test("validateManifestAuthoring rejects generated handle key collisions", () => {
-  const validation = validateManifestAuthoring({
+test("distinct literal ids remain distinct when their old handles matched", () => {
+  const manifest = {
     ...BASE_MANIFEST,
     cardSets: [
       {
@@ -499,14 +500,15 @@ test("validateManifestAuthoring rejects generated handle key collisions", () => 
       { id: "draw-zone", name: "Draw Zone", scope: "shared" },
       { id: "draw_zone", name: "Draw Zone 2", scope: "shared" },
     ],
-  });
+  } as const;
 
-  expect(validation.errors).toContain(
-    "Card type values foo-bar, foo_bar all generate handle 'fooBar'.",
-  );
-  expect(validation.errors).toContain(
-    "Zone values draw-zone, draw_zone all generate handle 'drawZone'.",
-  );
+  expect(validateManifestAuthoring(manifest).errors).toEqual([]);
+  const compiled = compileManifest(manifest);
+  const table = compiled.createInitialTable();
+  expect(Object.keys(table.cards)).toEqual(["foo-bar", "foo_bar"]);
+  expect(Object.keys(table.decks)).toEqual(["draw-zone", "draw_zone"]);
+  expect(compiled.ids.cardId.safeParse("foo-bar").success).toBe(true);
+  expect(compiled.ids.cardId.safeParse("foo_bar").success).toBe(true);
 });
 
 test("validateManifestAuthoring warns when board-scoped category type ids are ambiguous across boards", () => {

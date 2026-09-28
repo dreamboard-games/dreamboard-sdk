@@ -311,14 +311,34 @@ export type InitialStateCallbacks<Contract extends ReducerGameContractLike> = {
   ) => z.infer<HiddenSchemaOfContract<Contract>>;
 };
 
+export const validatedReducerDefinition: unique symbol = Symbol(
+  "validatedReducerDefinition",
+);
+
+/** Authored input to game.assemble; no runtime contract or validation marker. */
+export type ReducerGameDefinitionInput<
+  Contract extends ReducerGameContractLike,
+  Definitions extends PhaseMapOf<Contract>,
+  View extends ViewOfContract<Contract>,
+> = {
+  initial?: InitialStateCallbacks<Contract>;
+  initialPhase?: PhaseNameOfContract<Contract>;
+  // The phase map requires declared keys; this also rejects extra keys in variables.
+  phases: Definitions &
+    Record<Exclude<keyof Definitions, PhaseNameOfContract<Contract>>, never>;
+  view: View;
+};
+
+/** Assembled definition accepted by reducer runtime consumers. */
 export type ReducerGameDefinition<
   Contract extends ReducerGameContractLike,
   Definitions extends PhaseMapOf<Contract>,
   View extends ViewOfContract<Contract>,
 > = {
+  readonly [validatedReducerDefinition]: true;
   contract: Contract;
-  initial?: InitialStateCallbacks<NoInfer<Contract>>;
-  initialPhase?: keyof Definitions & string;
+  initial?: InitialStateCallbacks<Contract>;
+  initialPhase?: PhaseNameOfContract<Contract>;
   phases: Definitions;
   view: View;
 };

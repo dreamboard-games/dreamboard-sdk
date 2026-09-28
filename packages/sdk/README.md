@@ -188,6 +188,29 @@ and pass a source to its `GameProvider`. The hosted UI imports `Game` only as a 
 `iframeSource()` supplies authoritative frames and handles commands.
 No authoring generation step or shared workspace files are needed.
 
+Manifest card counts and explicit piece/die seed counts must be positive safe
+integers. Omitted seed counts mean one copy. Zero, negative, fractional, non-finite,
+and unsafe counts fail before ID expansion; negative, zero, and fractional literals
+also fail typechecking. Widened `number` values still require runtime validation.
+Player bounds must be positive safe integers with `minPlayers <= maxPlayers`.
+
+`defineTopologyManifest` returns `ValidatedManifest<M>` after semantic validation.
+`compileManifest` returns a branded `CompiledManifest<M>` after validation and table
+materialization. Both snapshot the authored input so later source edits do not
+change the validated value or future initial tables. Literal IDs remain inferred.
+
+`ReducerGameDefinitionInput` describes the authored assembly fields. The assembled
+`ReducerGameDefinition` adds the bound contract and validation brand; authors never
+supply those output-only fields.
+
+`game.assemble` checks phase names, the initial phase, interaction declarations,
+and simultaneous-phase requirements, then returns a branded `ReducerGameDefinition`.
+Runtime consumers such as `createReducerBundle` require that assembled type;
+handwritten structural lookalikes do not satisfy it. These brands record SDK
+construction checks, not correctness of arbitrary reducer callbacks, and do not
+replace validation of runtime commands or state. As with other TypeScript types,
+explicit assertions can bypass them; treat constructed definitions as immutable.
+
 ## Reducer runner contract
 
 `createReducerBundle(game)` returns exactly the contract version and four

@@ -344,7 +344,7 @@ test("materializeManifestTable rejects unsafe manifest keys before materializati
       playerIds: ["player-1", "player-2"],
       shuffleItems: (values) => [...values],
     }),
-  ).toThrow("Cannot materialize invalid topology manifest");
+  ).toThrow("Invalid topology manifest");
 });
 
 test("inline square metadata and schemas survive topology materialization", () => {

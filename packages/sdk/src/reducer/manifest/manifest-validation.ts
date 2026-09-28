@@ -77,41 +77,6 @@ function collectKeyIssues(
   return entries.flatMap(({ value, path }) => validateRecordKey(value, path));
 }
 
-function toHandleKey(input: string): string {
-  if (!/[_-]/.test(input)) {
-    return input.charAt(0).toLowerCase() + input.slice(1);
-  }
-  const [first = "", ...rest] = input.split(/[_-]/g).filter(Boolean);
-  return [
-    first.toLowerCase(),
-    ...rest.map((part) => {
-      const lower = part.toLowerCase();
-      return lower.charAt(0).toUpperCase() + lower.slice(1);
-    }),
-  ].join("");
-}
-
-function collectHandleKeyCollisions(
-  values: readonly string[],
-  label: string,
-): string[] {
-  const idsByHandle = new Map<string, string[]>();
-  for (const value of values) {
-    const handle = toHandleKey(value);
-    idsByHandle.set(handle, [...(idsByHandle.get(handle) ?? []), value]);
-  }
-  return [...idsByHandle.entries()]
-    .filter(([, ids]) => ids.length > 1)
-    .map(
-      ([handle, ids]) =>
-        `${label} values ${ids.join(", ")} all generate handle '${handle}'.`,
-    );
-}
-
-function dedupeSorted(values: Iterable<string>): string[] {
-  return Array.from(new Set(values)).sort();
-}
-
 function renderCardInstanceIds(card: BoardCard): string[] {
   return card.count > 1
     ? Array.from(
@@ -858,21 +823,55 @@ function collectManifestRecordKeyIssues(
       ),
     ),
     ...collectBoardRecordKeyIssues(manifest),
-    ...collectHandleKeyCollisions(
-      dedupeSorted(manualCards.map(({ card }) => card.cardType ?? card.type)),
-      "Card type",
-    ),
-    ...collectHandleKeyCollisions(
-      dedupeSorted((manifest.zones ?? []).map((zone) => zone.id)),
-      "Zone",
-    ),
   ];
+}
+
+function validateCounts(manifest: GameTopologyManifest): string[] {
+  const errors: string[] = [];
+  const check = (count: number, path: string) => {
+    if (!Number.isSafeInteger(count) || count < 1) {
+      errors.push(`${path}: Expected a positive safe integer.`);
+    }
+  };
+  manifest.cardSets.forEach((set, setIndex) => {
+    if (set.type === "manual") {
+      set.cards.forEach((card, index) =>
+        check(
+          card.count,
+          `manifest.cardSets[${setIndex}].cards[${index}].count`,
+        ),
+      );
+    }
+  });
+  for (const family of ["pieceSeeds", "dieSeeds"] as const) {
+    manifest[family]?.forEach((seed, index) => {
+      if (seed.count !== undefined)
+        check(seed.count, `manifest.${family}[${index}].count`);
+    });
+  }
+  check(manifest.players.minPlayers, "manifest.players.minPlayers");
+  check(manifest.players.maxPlayers, "manifest.players.maxPlayers");
+  if (manifest.players.minPlayers > manifest.players.maxPlayers) {
+    errors.push("manifest.players: minPlayers must not exceed maxPlayers.");
+  }
+  return errors;
+}
+
+export function assertValidManifest(manifest: GameTopologyManifest): void {
+  const validation = validateManifestAuthoring(manifest);
+  if (validation.errors.length) {
+    throw new Error(
+      `Invalid topology manifest:\n${validation.errors.join("\n")}`,
+    );
+  }
 }
 
 export function validateManifestAuthoring(
   manifest: GameTopologyManifest,
 ): ManifestAuthoringValidationResult {
-  const errors: string[] = [];
+  const errors = validateCounts(manifest);
+  // Never expand invalid counts (including Infinity) into runtime ids.
+  if (errors.length) return { errors, warnings: [] };
 
   errors.push(...collectManifestRecordKeyIssues(manifest));
   errors.push(

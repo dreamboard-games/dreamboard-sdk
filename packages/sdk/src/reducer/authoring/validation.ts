@@ -71,7 +71,7 @@ function matchManifestScopedIdName(
 
 export function validateInteractionParamsSchema(
   schema: unknown,
-  context: "defineInteraction",
+  context: string,
   path: string,
 ): void {
   const inner = unwrapWrappers(schema);
@@ -103,7 +103,7 @@ export function validateInteractionParamsSchema(
 
 export function validateInteractionInputsSchema(
   inputs: Record<string, InputCollector> | undefined,
-  context: "defineInteraction",
+  context: string,
 ): void {
   if (!inputs) return;
   for (const [key, collector] of Object.entries(inputs)) {
@@ -135,7 +135,7 @@ export function validateInteractionLikeDefinition(
     commit?: { mode: string };
     paramsSchema?: unknown;
   },
-  context: "defineInteraction",
+  context: string,
 ): void {
   if (input.steps) {
     if (input.inputs !== undefined)
@@ -245,7 +245,7 @@ export function validateDefineGamePhaseNames(definition: {
   }
 }
 
-export function validateDefineGameSimultaneousPhases(definition: {
+export function validateDefineGamePhases(definition: {
   phases: Record<string, unknown>;
 }): void {
   for (const [phaseName, phase] of Object.entries(definition.phases)) {
@@ -258,6 +258,12 @@ export function validateDefineGameSimultaneousPhases(definition: {
             interactions?: Record<string, unknown>;
           })
         : null;
+    for (const interaction of Object.values(phaseRecord?.interactions ?? {})) {
+      validateInteractionLikeDefinition(
+        interaction as Parameters<typeof validateInteractionLikeDefinition>[0],
+        "defineInteraction",
+      );
+    }
     if (!phaseRecord || phaseRecord.kind !== "simultaneousPlayer") {
       continue;
     }
@@ -276,15 +282,10 @@ export function validateDefineGameSimultaneousPhases(definition: {
         `defineGame: phases.${phaseName}.interactions.submit conflicts with the reserved simultaneous submit interaction id.`,
       );
     }
-    validateInteractionInputsSchema(
-      phaseRecord.submit.inputs,
-      "defineInteraction",
+    validateInteractionLikeDefinition(
+      phaseRecord.submit,
+      `defineGame: phases.${phaseName}.submit`,
     );
-    validateManyCommitPolicy({
-      inputs: phaseRecord.submit.inputs,
-      commit: (phaseRecord.submit as { commit?: { mode: string } }).commit,
-      context: `defineGame: phases.${phaseName}.submit`,
-    });
   }
 }
 

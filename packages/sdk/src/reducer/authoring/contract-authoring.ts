@@ -1,3 +1,4 @@
+import { validatedReducerDefinition } from "../model/definition";
 import type { ViewData } from "../model/spec/views";
 import { InteractionSteps } from "./steps";
 import type { ViewDefinition } from "../model";
@@ -10,6 +11,8 @@ import type {
   InteractionSpec,
   PhaseDefinition,
   PhaseMapOf,
+  ReducerGameDefinition,
+  ReducerGameDefinitionInput,
   PhaseNameOfContract,
   PhaseSchemasOfContract,
   OptionsOfContract,
@@ -41,7 +44,10 @@ import type {
   ContractManifest,
   ContractState,
 } from "./types";
-import { defineGameDefinition } from "./game";
+import {
+  validateDefineGamePhaseNames,
+  validateDefineGamePhases,
+} from "./validation";
 import { defineInteraction, defineInteractionRule } from "./interaction";
 import { definePhase } from "./phase";
 import { defineView } from "./views";
@@ -305,18 +311,6 @@ export type ContractTypes<Contract extends ContractWithPhases> = {
   >;
 };
 
-/**
- * Rejects phase keys the model did not declare. `PhaseMapOf<Contract>` already
- * requires every declared phase; this closes the other direction so an extra
- * key fails at `assemble` instead of at runtime.
- */
-type NoUndeclaredPhases<Contract, Definitions> = {
-  [Name in Exclude<
-    keyof Definitions,
-    PhaseNameOfContract<Contract>
-  >]: `Phase '${Name & string}' is not declared in model.phases`;
-};
-
 export type GameAuthoring<Contract extends ContractWithPhases> = {
   readonly contract: Contract;
   view<Projection extends ViewData>(
@@ -333,13 +327,8 @@ export type GameAuthoring<Contract extends ContractWithPhases> = {
     Definitions extends PhaseMapOf<Contract>,
     View extends ViewOfContract<Contract>,
   >(
-    definition: Omit<
-      import("../model").ReducerGameDefinition<Contract, Definitions, View>,
-      "contract"
-    > & {
-      phases: NoUndeclaredPhases<Contract, Definitions>;
-    },
-  ): import("../model").ReducerGameDefinition<Contract, Definitions, View>;
+    definition: ReducerGameDefinitionInput<Contract, Definitions, View>,
+  ): ReducerGameDefinition<Contract, Definitions, View>;
   phase<Name extends PhaseNameOfContract<Contract>>(
     name: Name,
   ): PhaseAuthoring<Contract, PhaseSchemasOfContract<Contract>[Name]>;
@@ -472,18 +461,12 @@ export function createContractAuthoring<
   const Contract extends ContractWithPhases,
 >(contract: Contract): GameAuthoring<Contract> {
   const phaseCache = new Map<string, unknown>();
-  const assemble: GameAuthoring<Contract>["assemble"] = (definition) =>
-    defineGameDefinition({
-      contract,
-      ...(definition as Omit<
-        import("../model").ReducerGameDefinition<
-          Contract,
-          PhaseMapOf<Contract>,
-          ViewOfContract<Contract>
-        >,
-        "contract"
-      >),
-    }) as never;
+  const assemble: GameAuthoring<Contract>["assemble"] = (definition) => {
+    const game = { ...definition, contract };
+    validateDefineGamePhaseNames(game);
+    validateDefineGamePhases(game);
+    return { ...game, [validatedReducerDefinition]: true };
+  };
   return {
     contract,
     view: defineView<Contract>(),
