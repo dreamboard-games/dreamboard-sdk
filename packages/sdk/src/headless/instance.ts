@@ -1,3 +1,4 @@
+import { createInputControl } from "./input-control.js";
 import { requireLookup } from "../shared/lookup.js";
 import type {
   RuntimeBoardTarget,
@@ -38,7 +39,6 @@ import type {
   InteractionDescriptor,
   InteractionInputDescriptor,
   NativeEvent,
-  FieldEvent,
 } from "./model.js";
 
 type Values = Readonly<Record<string, RuntimeJson>>;
@@ -250,6 +250,30 @@ class InputObject {
   get game() {
     return this.interaction.game;
   }
+  get domainType() {
+    return this.descriptor.domain.type;
+  }
+  get selectionMode() {
+    return isManyInput(this.descriptor) ? "many" : "single";
+  }
+  getTargetOptions() {
+    const domain = this.getDomain();
+    return this.getEligibleTargets().map((value) => ({
+      value,
+      label:
+        (domain.type === "choice" || domain.type === "choiceList"
+          ? domain.choices.find((choice) => Object.is(choice.value, value))
+              ?.label
+          : undefined) ??
+        (value === null
+          ? "None"
+          : typeof value === "object"
+            ? JSON.stringify(value)
+            : String(value)),
+      selected: this.getIsSelected(value),
+      props: this.getTargetProps(value),
+    }));
+  }
   getDomain() {
     return this.descriptor.domain;
   }
@@ -325,29 +349,17 @@ class InputObject {
       onClick: () => this.getSelectHandler(value)(),
     };
   }
-  getFieldProps() {
+  getControl() {
     const disabled =
       !this.interaction.getIsAvailable() ||
       this.interaction.status !== "open" ||
       !this.interaction.connected;
-    return {
+    return createInputControl(this, {
       ...data("option", this.interaction.key, this.key),
       "data-seat": this.interaction.seat,
-      value: this.getValue() ?? "",
       disabled,
       "data-disabled": disabled,
-      onChange: (event: FieldEvent) => {
-        if (event.currentTarget.value === "") {
-          this.clear();
-          return;
-        }
-        this.setValue(
-          this.descriptor.domain.type === "boundedNumber"
-            ? Number(event.currentTarget.value)
-            : event.currentTarget.value,
-        );
-      },
-    };
+    });
   }
 }
 class CardObject {

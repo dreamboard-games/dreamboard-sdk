@@ -131,3 +131,12 @@ for (const interaction of game.interactions.list()) {
 // @ts-expect-error Input disambiguation belongs to the selected interaction.
 visibleCard.select({ interaction: "playerTurn.pick", input: "missing" });
 void [moodKind, moods, handId];
+
+// Ordinary assignment cannot erase a literal input's writable contract.
+// @ts-expect-error Function-property setters are contravariant.
+const erased: Pick<InputBase<unknown, string, string>, "setValue"> = mood;
+void erased;
+const options = mood.getTargetOptions();
+const optionValue: "ready" | "wait" = options[0]!.value;
+options[0]!.props.onClick();
+void optionValue;

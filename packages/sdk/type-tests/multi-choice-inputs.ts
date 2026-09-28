@@ -99,3 +99,8 @@ void [choiceDomain, numberDomain, numbersDomain, values, wrongNumbers];
 many(play.inputs.rng.d6(), { count: 2 });
 // @ts-expect-error many rejects coin collectors at the authoring boundary.
 many(play.inputs.rng.coin(), { min: 1 });
+const mode: "many" = manyInput.selectionMode;
+const domainType: "choice" = manyInput.domainType;
+const domain = manyInput.getDomain();
+const exactDomain: "choice" = domain.type;
+void [mode, domainType, exactDomain];

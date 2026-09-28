@@ -1,3 +1,5 @@
+import type { InputControl, InputTargetOption } from "./input-control.js";
+export type { InputControl, InputTargetOption } from "./input-control.js";
 import type { SelectionTarget, DropTarget, TargetOptions } from "./targets.js";
 export type * from "./targets.js";
 import type { z } from "zod";
@@ -261,12 +263,6 @@ export interface FeatureContext<G> {
 export interface NativeEvent {
   preventDefault(): void;
 }
-export interface FieldEvent {
-  readonly currentTarget: {
-    readonly value: string;
-    readonly valueAsNumber?: number;
-  };
-}
 export type ActionProps = {
   readonly onClick: (event?: NativeEvent) => void;
   readonly disabled: boolean;
@@ -295,6 +291,32 @@ export interface Turn<G> {
   readonly order: readonly IdOf<G, "playerId">[];
   readonly isMine: boolean;
 }
+type DomainOfCollector<Collector> = Collector extends {
+  readonly domain: (...args: never[]) => infer Domain extends InputDomain;
+}
+  ? Domain
+  : InputDomain;
+export type InputDomainOf<
+  G,
+  K extends InteractionKey<G>,
+  N extends InputKey<G, K>,
+> = [CollectorOf<G, K, N>] extends [never]
+  ? InputDomain
+  : DomainOfCollector<CollectorOf<G, K, N>>;
+// Distribute over collector unions when an interaction key is not yet narrowed.
+type SelectionModeOfCollector<Collector> = Collector extends
+  | { readonly selection: { readonly mode: "many" } }
+  | { readonly domain: (...args: never[]) => { readonly type: "choiceList" } }
+  ? "many"
+  : "single";
+type InputSelectionMode<
+  G,
+  K extends InteractionKey<G>,
+  N extends InputKey<G, K>,
+> = [CollectorOf<G, K, N>] extends [never]
+  ? "single" | "many"
+  : SelectionModeOfCollector<CollectorOf<G, K, N>>;
+
 export interface InputBase<
   G,
   K extends InteractionKey<G>,
@@ -304,22 +326,22 @@ export interface InputBase<
   readonly kind: InputKind<G, K, N>;
   readonly game: CoreInstance<G>;
   readonly interaction: InteractionBase<G, K>;
-  getDomain(): InputDomain;
+  readonly domainType: InputDomainOf<G, K, N>["type"];
+  readonly selectionMode: InputSelectionMode<G, K, N>;
+  getDomain(): InputDomainOf<G, K, N>;
+  getControl(): InputControl;
+  getTargetOptions(): readonly InputTargetOption<InputTarget<G, K, N>>[];
   getValue(): InteractionParams<G, K>[N] | undefined;
-  setValue(value: Exclude<InteractionParams<G, K>[N], undefined>): void;
+  readonly setValue: (
+    value: Exclude<InteractionParams<G, K>[N], undefined>,
+  ) => void;
   clear(): void;
   getIsReady(): boolean;
   getEligibleTargets(): readonly InputTarget<G, K, N>[];
-  getIsEligible(value: InputTarget<G, K, N>): boolean;
-  getIsSelected(value: InputTarget<G, K, N>): boolean;
-  getSelectHandler(value: InputTarget<G, K, N>): () => void;
-  getTargetProps(value: InputTarget<G, K, N>): ActionProps;
-  getFieldProps(): {
-    value: Exclude<InteractionParams<G, K>[N], null | undefined> | "";
-    disabled: boolean;
-    onChange(event: FieldEvent): void;
-    readonly [key: `data-${string}`]: string | number | boolean | undefined;
-  };
+  readonly getIsEligible: (value: InputTarget<G, K, N>) => boolean;
+  readonly getIsSelected: (value: InputTarget<G, K, N>) => boolean;
+  readonly getSelectHandler: (value: InputTarget<G, K, N>) => () => void;
+  readonly getTargetProps: (value: InputTarget<G, K, N>) => ActionProps;
 }
 export type Input<
   G,
