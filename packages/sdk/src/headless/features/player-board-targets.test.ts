@@ -294,13 +294,13 @@ describe("per-player board target identity through local sources", () => {
     };
     props.onPointerDown(event);
     const targets = game.drag.getDropTargets();
-    expect(targets.map((target) => target.id)).toEqual([
+    expect(targets.map((target) => target.value)).toEqual([
       ownTarget,
       opponentTarget,
     ]);
     game.drag.setDropTarget({
       ...targets[1]!,
-      id: { spaceId: "slot", playerId: "player-2", boardId: "mat" },
+      value: { spaceId: "slot", playerId: "player-2", boardId: "mat" },
     });
     props.onPointerUp({ ...event, clientX: 20 });
     expect(game.state.drafts["play.drop"]).toEqual({

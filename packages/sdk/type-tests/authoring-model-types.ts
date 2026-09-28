@@ -685,3 +685,10 @@ interface ProjectedCard {
 declare const projectedCards: readonly ProjectedCard[];
 const recordView = game.view(() => ({ cards: projectedCards }));
 void recordView;
+
+import type { CoreInstance } from "../src/headless/model.js";
+declare const steppedInstance: CoreInstance<typeof stepDefinition>;
+steppedInstance.inputs.get("playerTurn.choose", "count").setValue(1);
+steppedInstance.inputs.get("playerTurn.choose", "choice").setValue(null);
+// @ts-expect-error Step input value types remain distinct.
+steppedInstance.inputs.get("playerTurn.choose", "count").setValue("bad");

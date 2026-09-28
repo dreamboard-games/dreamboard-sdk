@@ -1,3 +1,4 @@
+import type { InputBase } from "@dreamboard-games/sdk";
 import { useGame } from "@game";
 import type { ReactNode } from "react";
 import { Actions, type BoundInteraction, type InteractionKey } from "./actions";
@@ -44,9 +45,23 @@ export function InteractionForm({
           </dl>
         </>
       )}
-      {interaction.getInputs().map((input) => {
-        const custom = renderInput?.(input);
-        if (custom !== undefined) return <div key={input.key}>{custom}</div>;
+      {interaction.getInputs().map((typedInput) => {
+        const custom = renderInput?.(typedInput);
+        if (custom !== undefined)
+          return <div key={typedInput.key}>{custom}</div>;
+        // The default renderer follows the validated runtime descriptor. Custom
+        // renderers above retain the game's correlated input union.
+        const input: Pick<
+          InputBase<unknown, string, string>,
+          | "key"
+          | "getDomain"
+          | "getValue"
+          | "setValue"
+          | "getFieldProps"
+          | "getEligibleTargets"
+          | "getTargetProps"
+          | "getIsSelected"
+        > = typedInput;
         const domain = input.getDomain();
         const current: unknown = input.getValue();
         const field = input.getFieldProps();
@@ -81,9 +96,7 @@ export function InteractionForm({
                             ? 0
                             : event.currentTarget.valueAsNumber,
                       };
-                      // Iterating heterogeneous inputs erases key/value correlation.
-                      // The descriptor owns this resource bag; setValue retains unfinished edits.
-                      input.setValue(next as never);
+                      input.setValue(next);
                     }}
                   />
                 </label>

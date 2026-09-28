@@ -387,7 +387,13 @@ describe("headless features", () => {
     props.onPointerDown(p.event());
     expect(game.state.drafts).toEqual({});
     const [target] = game.drag.getDropTargets();
-    expect(target).toMatchObject({ id: "center", boardId: "island" });
+    expect(target).toMatchObject({
+      value: "center",
+      boardId: "island",
+      interactionKey: "play.move",
+      cardInputKey: "card",
+      inputKey: "space",
+    });
     game.drag.setDropTarget(target!);
     props.onPointerMove(p.event({ clientX: 30 }));
     expect(game.drag.active?.offset).toEqual({ x: 20, y: 0 });
@@ -450,12 +456,16 @@ describe("headless features", () => {
     const p = pointer();
     game.cards.get("red").getDragProps().onPointerDown(p.event());
     const old = game.getSnapshot().drag;
-    expect(old.getDropTargets().map((target) => target.id)).toEqual(["center"]);
+    expect(old.getDropTargets().map((target) => target.value)).toEqual([
+      "center",
+    ]);
     emit(["other"]);
-    expect(game.drag.getDropTargets().map((target) => target.id)).toEqual([
+    expect(game.drag.getDropTargets().map((target) => target.value)).toEqual([
       "other",
     ]);
-    expect(old.getDropTargets().map((target) => target.id)).toEqual(["center"]);
+    expect(old.getDropTargets().map((target) => target.value)).toEqual([
+      "center",
+    ]);
     game.dispose();
   });
 
@@ -542,5 +552,63 @@ it("reports missing boards and distinguishes card membership from identity", () 
   expect(game.cards.get("red")).toBe(hand.getCard("red"));
   expect(hand.findCard("missing")).toBeUndefined();
   expect(() => hand.getCard("missing")).toThrow('Card in zone hand "missing"');
+  game.dispose();
+});
+
+it("retains both input keys when one interaction has multiple card and board inputs", () => {
+  const { game, input } = setup();
+  const original = descriptor();
+  const multi = {
+    ...original,
+    inputs: [
+      ...original.inputs,
+      { ...original.inputs[0]!, key: "secondCard" },
+      { ...original.inputs[1]!, key: "secondSpace" },
+    ],
+  };
+  const frame = input.store.get().snapshot!.frame;
+  emitFrame(input, {
+    ...frame,
+    availableInteractions: [multi],
+    zones: {
+      hand: {
+        ...frame.zones.hand!,
+        playableByCardId: { red: [multi], blue: [multi] },
+      },
+    },
+  });
+  expect(() =>
+    game.cards.get("red").select({ interaction: "play.move" }),
+  ).toThrow(AmbiguousTargetError);
+  game.cards
+    .get("red")
+    .select({ interaction: "play.move", input: "secondCard" });
+  expect(game.state.drafts["play.move"]).toEqual({ secondCard: "red" });
+  game.interactions.get("play.move").reset();
+  const p = pointer();
+  const props = game.cards
+    .get("red")
+    .getDragProps({ interaction: "play.move", input: "secondCard" });
+  props.onPointerDown(p.event());
+  const targets = game.drag.getDropTargets();
+  expect(
+    targets.map(({ cardInputKey, inputKey }) => [cardInputKey, inputKey]),
+  ).toEqual([
+    ["secondCard", "space"],
+    ["secondCard", "secondSpace"],
+  ]);
+  game.drag.setDropTarget(targets[1]!);
+  props.onPointerUp(p.event({ clientX: 30 }));
+  expect(game.state.drafts["play.move"]).toEqual({
+    secondCard: "red",
+    secondSpace: "center",
+  });
+  game.interactions.get("play.move").reset();
+  game.boards
+    .get("island")
+    .getLayout({ hexSize: 20 })
+    .getSpaces()[0]!
+    .getSelectHandler({ interaction: "play.move", input: "secondSpace" })();
+  expect(game.state.drafts["play.move"]).toEqual({ secondSpace: "center" });
   game.dispose();
 });

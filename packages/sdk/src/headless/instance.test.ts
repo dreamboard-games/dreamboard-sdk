@@ -793,8 +793,12 @@ it("per-card descriptor identity resolves against the latest frame and drop writ
       drop = () =>
         context.routeCardDrop("ace", {
           kind: "space",
-          id: "0,0",
+          valueKind: "board-id",
+          value: "0,0",
           boardId: "main",
+          interactionKey: "play.move",
+          cardInputKey: "card",
+          inputKey: "space",
         });
       return {};
     },

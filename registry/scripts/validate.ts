@@ -42,6 +42,12 @@ for (const item of registry.items) {
         name !== "react" &&
         !name.startsWith("./") &&
         !(item.meta?.binding === "workspace" && name === "@game") &&
+        // Workspace-bound renderers may share SDK types without a runtime import.
+        !(
+          item.meta?.binding === "workspace" &&
+          node.importClause?.isTypeOnly &&
+          name === "@dreamboard-games/sdk"
+        ) &&
         !(item.meta?.binding === "test" && name === "@playwright/test")
       )
         throw new Error(`Non-pure import in ${file.path}: ${name}`);
