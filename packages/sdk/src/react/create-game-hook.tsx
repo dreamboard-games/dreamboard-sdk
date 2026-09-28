@@ -3,7 +3,7 @@ import {
   useCardDraggable,
   useBoardDroppable,
   type BoardDropOptions,
-  type DragGame,
+  type DragBinding,
 } from "./drag.js";
 import type { IdOf } from "../headless/model.js";
 import type { DropTarget, TargetOptions } from "../headless/targets.js";
@@ -92,7 +92,7 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       return instance ? (
         <Context.Provider value={instance}>
           {"drag" in instance ? (
-            <GameDragProvider game={instance as unknown as DragGame}>
+            <GameDragProvider game={instance as DragBinding<Game>}>
               {children}
             </GameDragProvider>
           ) : (
@@ -120,10 +120,18 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       const instance = useInstance();
       const selected = useSelector(
         instance.store,
-        selector ?? ((snapshot) => snapshot as unknown as Value),
-        options,
+        (snapshot): { value: Value } | { snapshot: Snapshot } =>
+          selector ? { value: selector(snapshot) } : { snapshot },
+        {
+          compare: (previous, next) =>
+            "value" in previous && "value" in next
+              ? (options?.compare ?? Object.is)(previous.value, next.value)
+              : "snapshot" in previous &&
+                "snapshot" in next &&
+                Object.is(previous.snapshot, next.snapshot),
+        },
       );
-      return selector ? selected : instance;
+      return "value" in selected ? selected.value : instance;
     }
 
     function Subscribe<Value>({
@@ -143,17 +151,13 @@ export function createGameHook<Game, Source extends GameSource = GameSource>() {
       options?: TargetOptions<Game>,
     ) {
       const game = useGame();
-      return useCardDraggable(
-        game as unknown as DragGame,
-        cardId,
-        options as TargetOptions<unknown> | undefined,
-      );
+      return useCardDraggable(game as DragBinding<Game>, cardId, options);
     }
     function useBoardDrop(
       target: DropTarget<Game> | null,
       options?: BoardDropOptions,
     ) {
-      return useBoardDroppable(target as DropTarget<unknown> | null, options);
+      return useBoardDroppable(target, options);
     }
     return { GameProvider, useGame, Subscribe, useCardDrag, useBoardDrop };
   };

@@ -1,28 +1,42 @@
-import type {
-  BoardDataOf,
-  BoardSpaceId,
-  BoardSpaceCollection,
-  TargetOptions,
-} from "../model.js";
-import { requireLookup } from "../../shared/lookup.js";
-import { AmbiguousTargetError } from "../instance.js";
-import { createHexBoardGeometry } from "../../shared/hex-board.js";
-import type {
-  RuntimeBoardCollections,
-  RuntimeBoardState,
-  RuntimeSquareBoardState,
-} from "../../reducer/model/table.js";
+import {
+  runtimeFeatures,
+  type RuntimeBoard,
+  type RuntimeFeatureContext,
+  type RuntimeFeatureSnapshot,
+  type RuntimeCollection,
+} from "../runtime-features.js";
+import type { RuntimeTargetOptions } from "../targets.js";
 import type {
   BoardBase,
   BoardCollection,
+  BoardSpaceCollection,
+  BoardSpace,
   CoreInstance,
   FeatureContext,
-  IdOf,
-  ReadModel,
+  ReadonlyData,
+  TargetOptions,
+  ActionProps,
 } from "../model.js";
+import type {
+  RuntimeBoardSpaceState,
+  RuntimeSquareBoardState,
+} from "../../reducer/model/table.js";
+import { requireLookup } from "../../shared/lookup.js";
+import { AmbiguousTargetError } from "../instance.js";
+import { createHexBoardGeometry } from "../../shared/hex-board.js";
 import type { Point } from "./pointer-session.js";
 import type { ViewportTransform } from "./pan-zoom.js";
 
+interface RuntimeSpace {
+  readonly id: string;
+  readonly data: ReadonlyData<RuntimeBoardSpaceState>;
+  readonly board: RuntimeBoard;
+  getIsEligible(): boolean;
+  getIsSelectable(): boolean;
+  getIsSelected(): boolean;
+  getSelectHandler(options?: RuntimeTargetOptions): () => void;
+  getTargetProps(options?: RuntimeTargetOptions): ActionProps;
+}
 type TargetKind = "space" | "edge" | "vertex";
 export interface BoardLayoutOptions {
   /** Hex radius, or square cell width and height. */
@@ -43,7 +57,7 @@ interface Geometry {
 }
 
 function squareGeometry(
-  board: RuntimeSquareBoardState,
+  board: ReadonlyData<RuntimeSquareBoardState>,
   size: number,
   origin: Point,
 ): Geometry {
@@ -111,14 +125,12 @@ function squareGeometry(
 }
 
 /** Semantic board spaces and captured selection, with optional spatial geometry. */
-export function boardFeature<G>(
-  game: CoreInstance<G>,
-  context: FeatureContext<G>,
-) {
+function createRuntimeBoardFeature(context: RuntimeFeatureContext) {
+  const game = context.game;
   const captures = new WeakMap<
     object,
     {
-      model: ReadModel<G>;
+      model: RuntimeFeatureSnapshot;
       source: ReturnType<typeof game.getOptions>["source"];
       geometry?: ReturnType<typeof createHexBoardGeometry>;
     }
@@ -130,30 +142,23 @@ export function boardFeature<G>(
   let cached:
     | {
         view: unknown;
-        interactions: ReadModel<G>["interactions"];
+        interactions: RuntimeFeatureSnapshot["interactions"];
         source: ReturnType<typeof game.getOptions>["source"];
-        collection: BoardCollection<G>;
+        collection: RuntimeCollection<RuntimeBoard>;
       }
     | undefined;
-  function collection(): BoardCollection<G> {
+  function collection(): RuntimeCollection<RuntimeBoard> {
     const model = game.getSnapshot();
     const source = game.getOptions().source;
     if (
-      cached?.view === model.view &&
+      cached &&
+      cached.view === model.view &&
       cached.interactions === model.interactions &&
       cached.source === source
     )
       return cached.collection;
-    // The canonical materializer joins manifest.staticBoards at view.boards.
-    // Do not infer topology from arbitrary authored overlay fields.
-    const projected = model.view as {
-      boards?: Pick<RuntimeBoardCollections, "byId" | "hex" | "square">;
-    } | null;
-    const boards = Object.values(projected?.boards?.byId ?? {}).map((data) => {
-      const board = context.createBoard(
-        data.id as IdOf<G, "boardId">,
-        data as BoardDataOf<G, IdOf<G, "boardId">>,
-      );
+    const boards = Object.values(context.getBoards()).map((data) => {
+      const board = context.createBoard(data);
       let geometry = geometries.get(data);
       if (!geometry && data.layout === "hex") {
         geometry = createHexBoardGeometry({
@@ -167,16 +172,9 @@ export function boardFeature<G>(
       return board;
     });
     const byId = new Map(boards.map((board) => [board.id, board]));
-    const result: BoardCollection<G> = Object.freeze({
-      get<K extends IdOf<G, "boardId">>(id: K) {
-        return requireLookup(byId.get(id), "Board", id) as BoardBase<G, K> & {
-          readonly game: CoreInstance<G>;
-        };
-      },
-      find<K extends IdOf<G, "boardId">>(id: K) {
-        return byId.get(id) as
-          (BoardBase<G, K> & { readonly game: CoreInstance<G> }) | undefined;
-      },
+    const result: RuntimeCollection<RuntimeBoard> = Object.freeze({
+      get: (id: string) => requireLookup(byId.get(id), "Board", id),
+      find: (id: string) => byId.get(id),
       getAll: () => Object.freeze(boards),
     });
     cached = {
@@ -187,48 +185,45 @@ export function boardFeature<G>(
     };
     return result;
   }
-  function targetsFor(owner: BoardBase<G>) {
-    const board = owner.data as RuntimeBoardState;
+  function targetsFor(owner: RuntimeBoard) {
+    const board = owner.data;
     const captured = captures.get(owner)!;
     function matchingTargets(
-      model: ReadModel<G>,
+      model: RuntimeFeatureSnapshot,
       kind: TargetKind,
       id: string,
     ) {
       const inputKinds = kind === "space" ? ["space", "tile"] : [kind];
-      return (model as unknown as ReadModel<unknown>).interactions
-        .list()
-        .flatMap((interaction) =>
-          interaction
-            .getInputs()
-            .filter((input) => {
-              const domain = input.getDomain();
-              return (
+      return model.interactions.list().flatMap((interaction) =>
+        interaction
+          .getInputs()
+          .filter((input) => {
+            const domain = input.getDomain();
+            return (
+              domain.type === "boardTarget" &&
+              inputKinds.includes(String(domain.targetKind)) &&
+              (domain.valueKind === "player-board-space"
+                ? board.scope === "perPlayer" && domain.boardId === board.baseId
+                : domain.boardId === board.id)
+            );
+          })
+          .map((input) => {
+            const domain = input.getDomain();
+            return {
+              interaction,
+              input,
+              value:
                 domain.type === "boardTarget" &&
-                inputKinds.includes(String(domain.targetKind)) &&
-                (domain.valueKind === "player-board-space"
-                  ? board.scope === "perPlayer" &&
-                    domain.boardId === board.baseId
-                  : domain.boardId === board.id)
-              );
-            })
-            .map((input) => {
-              const domain = input.getDomain();
-              return {
-                interaction,
-                input,
-                value:
-                  domain.type === "boardTarget" &&
-                  domain.valueKind === "player-board-space"
-                    ? Object.freeze({
-                        boardId: board.baseId!,
-                        playerId: board.playerId!,
-                        spaceId: id,
-                      })
-                    : id,
-              };
-            }),
-        );
+                domain.valueKind === "player-board-space"
+                  ? Object.freeze({
+                      boardId: board.baseId!,
+                      playerId: board.playerId!,
+                      spaceId: id,
+                    })
+                  : id,
+            };
+          }),
+      );
     }
     function target(kind: TargetKind, id: string) {
       const matches = matchingTargets(captured.model, kind, id);
@@ -241,7 +236,7 @@ export function boardFeature<G>(
       const selectable = matches.some(
         ({ input, value }) => !input.getTargetProps(value).disabled,
       );
-      function select(options?: TargetOptions<G>) {
+      function select(options?: RuntimeTargetOptions) {
         if (
           game.getOptions().source !== captured.source ||
           game.snapshot?.me !== captured.model.snapshot?.me
@@ -268,7 +263,7 @@ export function boardFeature<G>(
                 value: id,
                 boardId: board.id,
               };
-        (context as unknown as FeatureContext<unknown>).routeTarget(target, {
+        context.routeTarget(target, {
           interaction: matching[0]!.interaction.key,
           input: matching[0]!.input.key,
         });
@@ -278,8 +273,9 @@ export function boardFeature<G>(
         getIsEligible: () => eligible,
         getIsSelectable: () => selectable,
         getIsSelected: () => selected,
-        getSelectHandler: (options?: TargetOptions<G>) => () => select(options),
-        getTargetProps(options?: TargetOptions<G>) {
+        getSelectHandler: (options?: RuntimeTargetOptions) => () =>
+          select(options),
+        getTargetProps(options?: RuntimeTargetOptions) {
           const candidates = matches.filter(
             ({ interaction, input, value }) =>
               (!options?.interaction ||
@@ -309,12 +305,15 @@ export function boardFeature<G>(
     }
     return target;
   }
-  const spaceCollections = new WeakMap<object, BoardSpaceCollection<G>>();
-  function spacesFor(owner: BoardBase<G>): BoardSpaceCollection<G> {
+  const spaceCollections = new WeakMap<
+    object,
+    RuntimeCollection<RuntimeSpace>
+  >();
+  function spacesFor(owner: RuntimeBoard): RuntimeCollection<RuntimeSpace> {
     const cached = spaceCollections.get(owner);
     if (cached) return cached;
     const target = targetsFor(owner);
-    const data = owner.data as RuntimeBoardState;
+    const data = owner.data;
     const values = Object.freeze(
       Object.values(data.spaces).map((space) =>
         Object.freeze({
@@ -330,7 +329,7 @@ export function boardFeature<G>(
         requireLookup(byId.get(id), `Space on board ${owner.id}`, id),
       find: (id: string) => byId.get(id),
       getAll: () => values,
-    }) as unknown as BoardSpaceCollection<G>;
+    });
     spaceCollections.set(owner, spaces);
     return spaces;
   }
@@ -341,11 +340,11 @@ export function boardFeature<G>(
       },
     },
     board: {
-      get spaces(): BoardSpaceCollection<G> {
-        return spacesFor(this as unknown as BoardBase<G>);
+      get spaces(): RuntimeCollection<RuntimeSpace> {
+        return spacesFor(this);
       },
-      getLayout(this: BoardBase<G>, options: BoardLayoutOptions) {
-        const board = this.data as RuntimeBoardState;
+      getLayout(this: RuntimeBoard, options: BoardLayoutOptions) {
+        const board = this.data;
         if (board.layout === "generic")
           throw new Error(
             `Board '${board.id}' has no spatial geometry; use board.spaces for semantic selection.`,
@@ -385,9 +384,7 @@ export function boardFeature<G>(
             const corners = Object.freeze(space.corners.map(point));
             const center = point(space.center);
             return Object.freeze({
-              ...semanticSpaces.get(
-                space.id as BoardSpaceId<G, IdOf<G, "boardId">>,
-              ),
+              ...semanticSpaces.get(space.id),
               center,
               points: () => corners,
               transform: `translate(${center.x} ${center.y})`,
@@ -429,6 +426,53 @@ export function boardFeature<G>(
           },
         });
       },
-    },
+    } satisfies ThisType<RuntimeBoard>,
   };
+}
+
+type RuntimeLayout = ReturnType<
+  ReturnType<typeof createRuntimeBoardFeature>["board"]["getLayout"]
+>;
+type LayoutTarget<G, Value> = Omit<
+  Value,
+  "getSelectHandler" | "getTargetProps"
+> & {
+  getSelectHandler(options?: TargetOptions<G>): () => void;
+  getTargetProps(options?: TargetOptions<G>): ActionProps;
+};
+export type BoardLayout<G> = Omit<
+  RuntimeLayout,
+  "getSpaces" | "getEdges" | "getVertices"
+> & {
+  getSpaces(): readonly (BoardSpace<G> & {
+    readonly center: Point;
+    points(): readonly Point[];
+    readonly transform: string;
+  })[];
+  getEdges(): readonly LayoutTarget<
+    G,
+    ReturnType<RuntimeLayout["getEdges"]>[number]
+  >[];
+  getVertices(): readonly LayoutTarget<
+    G,
+    ReturnType<RuntimeLayout["getVertices"]>[number]
+  >[];
+};
+export interface BoardFeature<G> {
+  readonly root: { readonly boards: BoardCollection<G> };
+  readonly board: {
+    readonly spaces: BoardSpaceCollection<G>;
+    getLayout(this: BoardBase<G>, options: BoardLayoutOptions): BoardLayout<G>;
+  };
+}
+/** Bind one runtime implementation to the same game/source contract as the instance. */
+export function boardFeature<G>(
+  _game: CoreInstance<G>,
+  context: FeatureContext<G>,
+): BoardFeature<G> {
+  // Game-binding boundary: source identities and installed hooks belong to G.
+  // Proven by headless-features/inline-boards type tests and board behavior tests.
+  return createRuntimeBoardFeature(
+    context[runtimeFeatures],
+  ) as unknown as BoardFeature<G>;
 }

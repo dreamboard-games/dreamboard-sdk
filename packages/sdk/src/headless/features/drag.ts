@@ -1,3 +1,8 @@
+import {
+  runtimeFeatures,
+  type RuntimeFeatureContext,
+} from "../runtime-features.js";
+import type { RuntimeDropTarget, RuntimeTargetOptions } from "../targets.js";
 import type { DropTarget, TargetOptions } from "../targets.js";
 export type { DropTarget } from "../targets.js";
 import { inputValueKey } from "../../shared/input-domain.js";
@@ -17,13 +22,23 @@ export interface DragController<G> {
   cancel(): void;
 }
 
-/** Semantic card/drop routing. Browser sensors and feedback belong to /react. */
-export function dragFeature<G>(
-  game: CoreInstance<G>,
-  context: FeatureContext<G>,
-) {
-  let active: DragState<G> | null = null;
-  let selection: TargetOptions<G> | undefined;
+interface RuntimeDragState {
+  readonly cardId: string;
+  readonly target: RuntimeDropTarget | null;
+}
+interface RuntimeDragController {
+  readonly active: RuntimeDragState | null;
+  getCanDrag(cardId: string, options?: RuntimeTargetOptions): boolean;
+  begin(cardId: string, options?: RuntimeTargetOptions): boolean;
+  getDropTargets(): readonly RuntimeDropTarget[];
+  setDropTarget(target: RuntimeDropTarget | null): void;
+  drop(): void;
+  cancel(): void;
+}
+function createRuntimeDragFeature(context: RuntimeFeatureContext) {
+  const game = context.game;
+  let active: RuntimeDragState | null = null;
+  let selection: RuntimeTargetOptions | undefined;
   let source = game.getOptions().source;
   let seat = game.snapshot?.me;
   let disposed = false;
@@ -31,7 +46,7 @@ export function dragFeature<G>(
   let lastInteractions = game.interactions;
   let lastCards = game.cards;
   let branch = snapshot();
-  function update(next: DragState<G> | null) {
+  function update(next: RuntimeDragState | null) {
     if (disposed) return;
     active = next === null ? null : Object.freeze(next);
     branch = snapshot();
@@ -40,63 +55,61 @@ export function dragFeature<G>(
   function targets(
     cardId = active?.cardId,
     selected = selection,
-  ): readonly DropTarget<G>[] {
+  ): readonly RuntimeDropTarget[] {
     if (!cardId || game.connection !== "ready") return [];
-    // Runtime projections are validated by the source; public results carry the bound game types.
-    const runtime = game as unknown as CoreInstance<unknown>;
-    const options = selected as TargetOptions<unknown> | undefined;
-    const resolved = (
-      runtime.cards.find(cardId)?.getInteractions() ?? []
-    ).flatMap((candidate) => {
-      if (
-        !candidate.getIsAvailable() ||
-        (options?.interaction && candidate.key !== options.interaction)
-      )
-        return [];
-      const inputs = candidate.getInputs();
-      const cardInputs = inputs.filter(
-        (input) =>
-          input.getDomain().type === "cardTarget" &&
-          (!options?.input || input.key === options.input) &&
-          input.getIsEligible(cardId),
-      );
-      return cardInputs.flatMap((cardInput) =>
-        inputs.flatMap((input): DropTarget<unknown>[] => {
-          const domain = input.getDomain();
-          if (domain.type !== "boardTarget") return [];
-          const route = {
-            interactionKey: candidate.key,
-            cardInputKey: cardInput.key,
-            inputKey: input.key,
-          };
-          if (domain.valueKind === "player-board-space")
+    const options = selected;
+    const resolved = (game.cards.find(cardId)?.getInteractions() ?? []).flatMap(
+      (candidate) => {
+        if (
+          !candidate.getIsAvailable() ||
+          (options?.interaction && candidate.key !== options.interaction)
+        )
+          return [];
+        const inputs = candidate.getInputs();
+        const cardInputs = inputs.filter(
+          (input) =>
+            input.getDomain().type === "cardTarget" &&
+            (!options?.input || input.key === options.input) &&
+            input.getIsEligible(cardId),
+        );
+        return cardInputs.flatMap((cardInput) =>
+          inputs.flatMap((input): RuntimeDropTarget[] => {
+            const domain = input.getDomain();
+            if (domain.type !== "boardTarget") return [];
+            const route = {
+              interactionKey: candidate.key,
+              cardInputKey: cardInput.key,
+              inputKey: input.key,
+            };
+            if (domain.valueKind === "player-board-space")
+              return domain.eligibleTargets
+                .filter((value) => !input.getTargetProps(value).disabled)
+                .map((value) =>
+                  Object.freeze({
+                    kind: "space",
+                    valueKind: domain.valueKind,
+                    value,
+                    ...route,
+                  }),
+                );
             return domain.eligibleTargets
               .filter((value) => !input.getTargetProps(value).disabled)
               .map((value) =>
                 Object.freeze({
-                  kind: "space",
+                  kind: domain.targetKind,
                   valueKind: domain.valueKind,
                   value,
+                  boardId: domain.boardId,
                   ...route,
                 }),
               );
-          return domain.eligibleTargets
-            .filter((value) => !input.getTargetProps(value).disabled)
-            .map((value) =>
-              Object.freeze({
-                kind: domain.targetKind,
-                valueKind: domain.valueKind,
-                value,
-                boardId: domain.boardId,
-                ...route,
-              }),
-            );
-        }),
-      );
-    });
-    return resolved as unknown as readonly DropTarget<G>[];
+          }),
+        );
+      },
+    );
+    return resolved;
   }
-  function sameTarget(left: DropTarget<G>, right: DropTarget<G>) {
+  function sameTarget(left: RuntimeDropTarget, right: RuntimeDropTarget) {
     return (
       left.kind === right.kind &&
       left.valueKind === right.valueKind &&
@@ -111,10 +124,10 @@ export function dragFeature<G>(
   function cancel() {
     if (active) update(null);
   }
-  function snapshot(): DragController<G> {
+  function snapshot(): RuntimeDragController {
     const captured = active;
     const dropTargets = Object.freeze(targets());
-    return Object.freeze<DragController<G>>({
+    return Object.freeze<RuntimeDragController>({
       active: captured,
       getCanDrag: (cardId, options) =>
         !disposed && targets(cardId, options).length > 0,
@@ -125,7 +138,7 @@ export function dragFeature<G>(
         return true;
       },
       getDropTargets: () => dropTargets,
-      setDropTarget(target: DropTarget<G> | null) {
+      setDropTarget(target: RuntimeDropTarget | null) {
         if (!active || disposed) return;
         if (
           target &&
@@ -183,5 +196,18 @@ export function dragFeature<G>(
       cancel();
       disposed = true;
     },
+  };
+}
+
+/** Semantic card/drop routing. Browser sensors and feedback belong to /react. */
+export function dragFeature<G>(
+  _game: CoreInstance<G>,
+  context: FeatureContext<G>,
+): { readonly root: { readonly drag: DragController<G> }; dispose(): void } {
+  // Game-binding boundary: routes come from this instance's admitted descriptors.
+  // The runtime implementation revalidates both inputs atomically on drop.
+  return createRuntimeDragFeature(context[runtimeFeatures]) as {
+    readonly root: { readonly drag: DragController<G> };
+    dispose(): void;
   };
 }
